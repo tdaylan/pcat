@@ -41,7 +41,7 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util
+import tdpy_util.util
 
 # pnts_tran
 from pnts_tran.cnfg import *
@@ -121,13 +121,17 @@ def plot_post(pathprobcatl):
     os.system(cmnd)
 
 
-    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal, apix = tdpy_util.retr_heal(globdata.numbsideheal)
+    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal, apix = tdpy_util.util.retr_heal(globdata.numbsideheal)
     globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
 
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
     
-    minmpsfipara, maxmpsfipara, factpsfipara, strgpsfipara,         scalpsfipara, jpsfiparainit = retr_psfimodl(globdata.numbformpara, globdata.exprtype, psfntype, globdata.numbener, globdata.numbevtt, globdata.indxenerincl, globdata.indxevttincl)
+    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata, globdata.modlpsfntype, 'modl')
+
+    if globdata.datatype == 'mock':
+        minmmockpsfipara, maxmmockpsfipara, factmockpsfipara, strgmockpsfipara,             scalmockpsfipara, indxmockpsfipara = retr_psfimodl(globdata, globdata.mockpsfntype, 'mock')
+
 
         
     listlgal = []
@@ -349,7 +353,7 @@ def plot_post(pathprobcatl):
                     truepara = truesampvarb[indxsamppsfipara[ipsfipara]]
                 else:
                     truepara = None
-                tdpy_util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=numbbins, quan=True)
+                tdpy_util.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=numbbins, quan=True)
                 
                 
             
@@ -396,7 +400,7 @@ def plot_post(pathprobcatl):
         for l in globdata.indxpopl:
             for i in globdata.indxener:
                 for h in range(globdata.numbspec):
-                    pntsprobcart[:, :, l, i, h] = tdpy_util.retr_cart(pntsprob[l, i, :, h], 
+                    pntsprobcart[:, :, l, i, h] = tdpy_util.util.retr_cart(pntsprob[l, i, :, h], 
                                                                       indxpixlrofi=globdata.indxpixlrofi, \
                                                                       numbsideinpt=globdata.numbsideheal, \
                                                                       minmlgal=globdata.minmlgal, \
@@ -445,20 +449,20 @@ def plot_post(pathprobcatl):
         truepara = globdata.truepsfipara
     else:
         truepara = array([None] * globdata.numbpsfipara)
-    tdpy_util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=numbbins, quan=True, ntickbins=3)
+    tdpy_util.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=numbbins, quan=True, ntickbins=3)
     
     for k in range(globdata.numbpsfipara):
         path = plotpath + 'psfipara%d_' % k + rtag + '.png'
-        tdpy_util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
+        tdpy_util.util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
     
     
     # log-likelihood
     path = plotpath + 'llik_' + rtag + '.png'
-    tdpy_util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
+    tdpy_util.util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
 
     # log-prior
     path = plotpath + 'lpri_' + rtag + '.png'
-    tdpy_util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
+    tdpy_util.util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
     
 
     # number, expected number of PS and flux conditional prior power law index 
@@ -470,7 +474,7 @@ def plot_post(pathprobcatl):
             truepara = globdata.truenumbpnts[l]
         else:
             truepara = None
-        tdpy_util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
+        tdpy_util.util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
 
         # mean number of point sources
         path = plotpath + 'fdfnnorm_popl%d_' % l + rtag + '.png'
@@ -478,7 +482,7 @@ def plot_post(pathprobcatl):
             truepara = globdata.truefdfnnorm[l]
         else:
             truepara = None
-        tdpy_util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
+        tdpy_util.util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
 
         # flux distribution power law index
         for i in globdata.indxenerfdfn:
@@ -489,7 +493,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl =  r'$\alpha_{%d}$' % i
-            tdpy_util.plot_trac(globdata.listfdfnslop[:, l, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy_util.util.plot_trac(globdata.listfdfnslop[:, l, i], labl, truepara=truepara, path=path, titl=titl)
         
         
     # isotropic background normalization
@@ -502,7 +506,7 @@ def plot_post(pathprobcatl):
                 truepara = None
         titl = globdata.binsenerstrg[i]
         labl = r'$\mathcal{I}_{%d}$' % i
-        tdpy_util.plot_trac(globdata.listnormback[:, 0, i], labl, truepara=truepara, path=path, titl=titl)
+        tdpy_util.util.plot_trac(globdata.listnormback[:, 0, i], labl, truepara=truepara, path=path, titl=titl)
        
     if globdata.exprtype == 'ferm':
         # diffuse model normalization
@@ -517,7 +521,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl = r'$\mathcal{D}_{%d}$' % i
-            tdpy_util.plot_trac(globdata.listnormback[:, 1, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy_util.util.plot_trac(globdata.listnormback[:, 1, i], labl, truepara=truepara, path=path, titl=titl)
 
     # plot log-likelihood
     figr, axrw = plt.subplots(2, 1, figsize=(7, 12))
@@ -608,9 +612,9 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     axis.legend()
 
     if post:
-        path = plotpath + 'compfracspec' + rtag + '.png'
+        path = plotpath + 'compfracspec_' + rtag + '.png'
     else:
-        path = plotpath + 'compfracspec' + rtag + '_%09d.png' % j
+        path = plotpath + 'compfracspec_' + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
     
@@ -631,9 +635,9 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     axis.axis('equal')
 
     if post:
-        path = plotpath + 'compfrac' + rtag + '.png'
+        path = plotpath + 'compfrac_' + rtag + '.png'
     else:
-        path = plotpath + 'compfrac' + rtag + '_%09d.png' % j
+        path = plotpath + 'compfrac_' + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
      
@@ -716,9 +720,9 @@ def plot_histspec(l, listspechist=None):
     figr.subplots_adjust(wspace=0.3, bottom=0.2)
     
     if post:
-        path = plotpath + 'histspec%d' % l + rtag + '.png'
+        path = plotpath + 'histspec%d_' % l + rtag + '.png'
     else:
-        path = plotpath + 'histspec%d' % l + rtag + '_%09d.png' % j
+        path = plotpath + 'histspec%d_' % l + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
  

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[23]:
+# In[17]:
 
 # plotting
 import matplotlib as mpl
@@ -41,7 +41,7 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util
+import tdpy_util.util
 
 # pnts_tran
 from pnts_tran.cnfg import *
@@ -52,7 +52,7 @@ from pnts_tran.visu import *
 from pnts_tran.plot import *
 
 
-# In[24]:
+# In[2]:
 
 def retr_cnfg(               verbtype=1,               
               plotperd=50000, \
@@ -317,7 +317,7 @@ def retr_cnfg(               verbtype=1,
     return cnfg
 
 
-# In[25]:
+# In[3]:
 
 def cnfg_ferm_psfn_expr(modlpsfntype):
      
@@ -328,7 +328,7 @@ def cnfg_ferm_psfn_expr(modlpsfntype):
     
 
 
-# In[26]:
+# In[4]:
 
 def cnfg_ferm_info():
     
@@ -352,7 +352,7 @@ def cnfg_ferm_info():
 
 
 
-# In[27]:
+# In[5]:
 
 def cnfg_ferm_expr_igal(exprfluxstrg, expostrg):
       
@@ -375,7 +375,7 @@ def cnfg_ferm_expr_igal(exprfluxstrg, expostrg):
     wrap(cnfg)
 
 
-# In[28]:
+# In[6]:
 
 def cnfg_ferm_mock_igal():
      
@@ -385,7 +385,7 @@ def cnfg_ferm_mock_igal():
     
 
 
-# In[29]:
+# In[7]:
 
 def cnfg_ferm_expr_ngal(exprfluxstrg, expostrg):
      
@@ -403,7 +403,7 @@ def cnfg_ferm_expr_ngal(exprfluxstrg, expostrg):
     wrap(cnfg)
 
 
-# In[30]:
+# In[8]:
 
 def cnfg_ferm_mock_ngal():
      
@@ -425,7 +425,7 @@ def cnfg_ferm_mock_ngal():
     
 
 
-# In[31]:
+# In[9]:
 
 def cnfg_sdss_mock():
 
@@ -435,7 +435,7 @@ def cnfg_sdss_mock():
     
 
 
-# In[32]:
+# In[10]:
 
 def cnfg_sdss_expr():
 
@@ -444,7 +444,7 @@ def cnfg_sdss_expr():
     wrap(cnfg)
 
 
-# In[33]:
+# In[11]:
 
 if __name__ == '__main__':
     

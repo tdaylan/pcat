@@ -41,7 +41,7 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util
+import tdpy_util.util
 
 # pnts_tran
 from pnts_tran.cnfg import *
@@ -102,7 +102,7 @@ def rjmc(indxprocwork):
             print '-' * 10
             print 'Sweep %d' % globdata.thisindxswep
 
-        thismakefram = (globdata.thisindxswep % plotperd == 0) and             indxprocwork == int(float(globdata.thisindxswep) / globdata.numbswep * numbproc) and makeplot
+        thismakefram = (globdata.thisindxswep % plotperd == 0) and             indxprocwork == int(float(globdata.thisindxswep) / globdata.numbswep * globdata.numbproc)             and globdata.makeplot
         globdata.reje = False
     
         # choose a proposal type
@@ -130,12 +130,12 @@ def rjmc(indxprocwork):
         if thismakefram:
             print
             print 'Process %d is in queue for making a frame.' % indxprocwork
-            if numbproc > 1:
+            if globdata.numbproc > 1:
                 lock.acquire()
             print 'Process %d started making a frame' % indxprocwork
             plot_samp()
             print 'Process %d finished making a frame' % indxprocwork
-            if numbproc > 1:
+            if globdata.numbproc > 1:
                 lock.release()
             
         # reject the sample if proposal is outside the prior
@@ -252,7 +252,7 @@ def rjmc(indxprocwork):
 
         # log the progress
         if verbtype > 0:
-            thiscntr = tdpy_util.show_prog(globdata.thisindxswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
+            thiscntr = tdpy_util.util.show_prog(globdata.thisindxswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
             
             
         if diagsamp:
