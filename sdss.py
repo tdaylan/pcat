@@ -1,30 +1,9 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
-# numpy
-import numpy as np
-from numpy import *
-from numpy.random import *
-from numpy.random import choice
-
-# scipy
-import scipy as sp
-from scipy import ndimage
-from scipy.interpolate import *
-from scipy.special import erfinv, erf
-from scipy.stats import poisson as pss
-from scipy import ndimage
-
-# pyfits
-import pyfits as pf
-
-# utilities
-import os, time, sys, datetime, warnings, getpass, glob
-
-# tdpy
-import tdpy_util
+from __init__ import *
 
 
 # In[2]:
