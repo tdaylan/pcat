@@ -233,7 +233,7 @@ def wrap(cnfg):
     globdata.maxmnormback = cnfg['maxmnormback']
     globdata.minmnormback = cnfg['minmnormback']
     
-    if globdata.dataype == 'mock':
+    if globdata.datatype == 'mock':
         
         globdata.mockfdfnslop = cnfg['mockfdfnslop']
         globdata.mocknumbpnts = cnfg['mocknumbpnts']
@@ -245,8 +245,8 @@ def wrap(cnfg):
     globdata.probprop = cnfg['probprop']
     
     exprfluxstrg = cnfg['exprfluxstrg']
-    listglobdata.backfluxstrg = cnfg['listglobdata.backfluxstrg']
-    globdata.expostrg = cnfg['globdata.expostrg']
+    listbackfluxstrg = cnfg['listbackfluxstrg']
+    expostrg = cnfg['expostrg']
     
     globdata.initnumbpnts = cnfg['initnumbpnts']
     globdata.trueinfo = cnfg['trueinfo']
@@ -276,7 +276,7 @@ def wrap(cnfg):
         print 'PNTS_TRAN started at ', globdata.datetimestrg
         print 'Initializing...'
     
-    globdata.strgfluxunit = retr_globdata.strgfluxunit(globdata.exprtype)
+    globdata.strgfluxunit = retr_strgfluxunit(globdata.exprtype)
         
     # number of bins
     globdata.numbspec = 10
@@ -771,7 +771,7 @@ def wrap(cnfg):
                 resicnts = (exprflux[i, :, m] - globdata.backfluxtemp) * globdata.expo[i, :, m] * globdata.apix * globdata.diffener[i]
 
                 
-                resicntstemp = tdpy_util.retr_cart(resicnts, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    globdata.minmlgal=globdata.minmlgal, globdata.maxmlgal=globdata.maxmlgal,                                                    globdata.minmbgal=globdata.minmbgal, globdata.maxmbgal=globdata.maxmbgal)
+                resicntstemp = tdpy_util.retr_cart(resicnts, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
                 figr, axis = plt.subplots()
                 imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
                 cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -1020,7 +1020,7 @@ def wrap(cnfg):
     if globdata.pixltype == 'heal':
         for i in globdata.indxener:
             for m in globdata.indxevtt:
-                globdata.datacntscarttemp = tdpy_util.retr_cart(globdata.datacnts[i, :, m], globdata.indxpixlrofiglobdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, globdata.minmlgal=globdata.minmlgal,                                                        globdata.maxmlgal=globdata.maxmlgal, globdata.minmbgal=globdata.minmbgal, globdata.maxmbgal=globdata.maxmbgal)
+                globdata.datacntscarttemp = tdpy_util.retr_cart(globdata.datacnts[i, :, m],                                                                 globdata.indxpixlrofi,                                                                 numbsideinpt=globdata.numbsideheal,                                                                 minmlgal=globdata.minmlgal,                                                                 maxmlgal=globdata.maxmlgal,                                                                 minmbgal=globdata.minmbgal,                                                                 maxmbgal=globdata.maxmbgal)
                 if i == 0 and m == 0:
                     globdata.datacntscart = zeros((globdata.datacntscarttemp.shape[0], globdata.datacntscarttemp.shape[1], globdata.numbener, globdata.numbevtt))
                 globdata.datacntscart[:, :, i, m] = globdata.datacntscarttemp

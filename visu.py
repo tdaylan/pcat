@@ -122,7 +122,7 @@ def plot_post(pathprobcatl):
 
 
     lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal, apix = tdpy_util.retr_heal(globdata.numbsideheal)
-    jpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
+    globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
 
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
@@ -396,7 +396,14 @@ def plot_post(pathprobcatl):
         for l in globdata.indxpopl:
             for i in globdata.indxener:
                 for h in range(globdata.numbspec):
-                    pntsprobcart[:, :, l, i, h] = tdpy_util.retr_cart(pntsprob[l, i, :, h], jpixlrofi=jpixlrofi, numbsideinpt=globdata.numbsideheal,                                                                       globdata.minmlgal=globdata.minmlgal, globdata.maxmlgal=globdata.maxmlgal,                                                                       globdata.minmbgal=globdata.minmbgal, globdata.maxmbgal=globdata.maxmbgal, reso=reso)
+                    pntsprobcart[:, :, l, i, h] = tdpy_util.retr_cart(pntsprob[l, i, :, h], 
+                                                                      indxpixlrofi=globdata.indxpixlrofi, \
+                                                                      numbsideinpt=globdata.numbsideheal, \
+                                                                      minmlgal=globdata.minmlgal, \
+                                                                      maxmlgal=globdata.maxmlgal, \
+                                                                      minmbgal=globdata.minmbgal, \
+                                                                      maxmbgal=globdata.maxmbgal, \
+                                                                      reso=reso)
     else:
         pntsprobcart = pntsprob.reshape((globdata.numbpopl, globdata.numbener, globdata.numbsidecart, globdata.numbsidecart, globdata.numbspec))
         pntsprobcart = swapaxes(swapaxes(pntsprobcart, 0, 2), 1, 3)
