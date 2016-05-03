@@ -127,11 +127,7 @@ def plot_post(pathprobcatl):
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
     
-    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata, globdata.modlpsfntype, 'modl')
-
-    if globdata.datatype == 'mock':
-        minmmockpsfipara, maxmmockpsfipara, factmockpsfipara, strgmockpsfipara,             scalmockpsfipara, indxmockpsfipara = retr_psfimodl(globdata, globdata.mockpsfntype, 'mock')
-
+    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata)
 
         
     listlgal = []

@@ -259,10 +259,8 @@ def plot_psfn(globdata, thispsfn):
                 axrw = [axrw]
             for i, axis in enumerate(axrw):
                 axis.plot(globdata.angldisptemp, thispsfn[i, :, m], label='Sample')
-                if trueinfo and datatype == 'mock':
-                    axis.plot(globdata.angldisptemp, truepsfn[i, :, m], label='Mock', color='g', ls='--')
-                if exprtype == 'ferm':
-                    axis.plot(globdata.angldisptemp, fermpsfn[i, :, m], label='Fermi-LAT', color='r', ls='-.', alpha=0.4)
+                if trueinfo:
+                    axis.plot(globdata.angldisptemp, globdata.truepsfn[i, :, m], label='Mock', color='g', ls='--')
                 axis.set_yscale('log')
                 if m == globdata.numbevtt - 1:
                     axis.set_xlabel(r'$\theta$ ' + strganglunit)

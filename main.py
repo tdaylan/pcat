@@ -107,10 +107,10 @@ def work(globdata, indxprocwork):
         globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = rand(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener))
     globdata.drmcsamp[globdata.indxsampnormback, 0] = rand(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener))
     if globdata.randinit or not globdata.trueinfo or globdata.truepsfipara == None:
-        globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbmodlpsfipara)
+        globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
     else:
-        for k in globdata.indxpsfipara:
-            globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata.truepsfipara[k], k)
+        for k in globdata.indxmodlpsfipara:
+            globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k, evaltype)
         
     for l in globdata.indxpopl:
         if globdata.pntscntr:
@@ -199,9 +199,9 @@ def wrap(cnfg):
     globdata.datatype = cnfg['datatype']
     
     if globdata.datatype == 'mock':
-        globdata.mockpsfntype = cnfg['mockpsfntype']
+        mockpsfntype = cnfg['mockpsfntype']
     
-    globdata.modlpsfntype = cnfg['modlpsfntype']
+    globdata.psfntype = cnfg['psfntype']
     
     globdata.liketype = cnfg['liketype']
     globdata.exprtype = cnfg['exprtype']
@@ -235,10 +235,10 @@ def wrap(cnfg):
     
     if globdata.datatype == 'mock':
         
-        globdata.mockfdfnslop = cnfg['mockfdfnslop']
-        globdata.mocknumbpnts = cnfg['mocknumbpnts']
-        globdata.mockfdfnnorm = cnfg['mockfdfnnorm']
-        globdata.mocknormback = cnfg['mocknormback']
+        mockfdfnslop = cnfg['mockfdfnslop']
+        mocknumbpnts = cnfg['mocknumbpnts']
+        mockfdfnnorm = cnfg['mockfdfnnorm']
+        mocknormback = cnfg['mocknormback']
 
     globdata.maxmnumbpnts = cnfg['maxmnumbpnts']
     
@@ -284,9 +284,9 @@ def wrap(cnfg):
     globdata.numbbins = 10
     
     if globdata.datatype == 'mock':
-        globdata.mocknormback = globdata.mocknormback[:, globdata.indxenerincl]
+        mocknormback = mocknormback[:, globdata.indxenerincl]
         if not globdata.colrprio:
-            globdata.mockfdfnslop = globdata.mockfdfnslop[:, globdata.indxenerincl]
+            mockfdfnslop = mockfdfnslop[:, globdata.indxenerincl]
 
     if not globdata.colrprio:
         globdata.minmspec = globdata.minmspec[globdata.indxenerincl]
@@ -325,7 +325,7 @@ def wrap(cnfg):
         
         if globdata.datatype == 'mock':
             
-            globdata.mockfdfnslop = tile(globdata.mockfdfnslop, (1, globdata.numbener))
+            mockfdfnslop = tile(mockfdfnslop, (1, globdata.numbener))
         
     else:
         globdata.indxenerfdfn = globdata.indxener
@@ -359,7 +359,7 @@ def wrap(cnfg):
         globdata.strganglunit = '[arcsec]'
         
     if globdata.exprtype == 'ferm':
-        globdata.fermpsfn = retr_fermpsfn(globdata)
+        globdata.fermpsfn, fermpsfipara = retr_fermpsfn(globdata)
         
     # energy bin string
     globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
@@ -384,33 +384,33 @@ def wrap(cnfg):
     globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
     
     # PSF parameters
-    if globdata.modlpsfntype == 'singgaus':
-        globdata.numbmodlformpara = 1
-    elif globdata.modlpsfntype == 'singking':
-        globdata.numbmodlformpara = 2 
-    elif globdata.modlpsfntype == 'doubgaus':
-        globdata.numbmodlformpara = 3
-    elif globdata.modlpsfntype == 'gausking':
-        globdata.numbmodlformpara = 4
-    elif globdata.modlpsfntype == 'doubking':
-        globdata.numbmodlformpara = 5
+    if globdata.psfntype == 'singgaus':
+        globdata.numbformpara = 1
+    elif globdata.psfntype == 'singking':
+        globdata.numbformpara = 2 
+    elif globdata.psfntype == 'doubgaus':
+        globdata.numbformpara = 3
+    elif globdata.psfntype == 'gausking':
+        globdata.numbformpara = 4
+    elif globdata.psfntype == 'doubking':
+        globdata.numbformpara = 5
         
-    globdata.numbmodlpsfiparaevtt = globdata.numbener * globdata.numbmodlformpara
-    globdata.numbmodlpsfipara = globdata.numbmodlpsfiparaevtt * globdata.numbevtt
-    globdata.indxmodlpsfipara = arange(globdata.numbmodlpsfipara)   
+    globdata.numbpsfiparaevtt = globdata.numbener * globdata.numbformpara
+    globdata.numbpsfipara = globdata.numbpsfiparaevtt * globdata.numbevtt
+    globdata.indxmodlpsfipara = arange(globdata.numbpsfipara)   
 
     if globdata.datatype == 'mock':
 
         # mock PSF parameters
-        if globdata.mockpsfntype == 'singgaus':
+        if mockpsfntype == 'singgaus':
             globdata.numbmockformpara = 1
-        elif globdata.mockpsfntype == 'singking':
+        elif mockpsfntype == 'singking':
             globdata.numbmockformpara = 2 
-        elif globdata.mockpsfntype == 'doubgaus':
+        elif mockpsfntype == 'doubgaus':
             globdata.numbmockformpara = 3
-        elif globdata.mockpsfntype == 'gausking':
+        elif mockpsfntype == 'gausking':
             globdata.numbmockformpara = 4
-        elif globdata.mockpsfntype == 'doubking':
+        elif mockpsfntype == 'doubking':
             globdata.numbmockformpara = 5
 
         globdata.numbmockpsfiparaevtt = globdata.numbener * globdata.numbmockformpara
@@ -441,7 +441,7 @@ def wrap(cnfg):
     globdata.indxsampnumbpnts = arange(globdata.numbpopl)
     globdata.indxsampfdfnnorm = arange(globdata.numbpopl) + amax(globdata.indxsampnumbpnts) + 1
     globdata.indxsampfdfnslop = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
-    globdata.indxsamppsfipara = arange(globdata.numbmodlpsfipara) + amax(globdata.indxsampfdfnslop) + 1
+    globdata.indxsamppsfipara = arange(globdata.numbpsfipara) + amax(globdata.indxsampfdfnslop) + 1
     globdata.indxsampnormback = arange(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener)) + amax(globdata.indxsamppsfipara) + 1
 
     globdata.fluxpivt = sqrt(globdata.minmspec * globdata.maxmspec)
@@ -481,7 +481,7 @@ def wrap(cnfg):
             #probfdfnslop = array([1.] * globdata.numbener)
             probfdfnslop = array([1.])
             
-        #probpsfipara = array([1.] * globdata.numbmodlpsfipara)
+        #probpsfipara = array([1.] * globdata.numbpsfipara)
         #probnormback = array([1.] * globdata.numbback * globdata.numbener)
         
         probpsfipara = array([1.])
@@ -649,7 +649,7 @@ def wrap(cnfg):
     globdata.numbspecprox = 1
     globdata.meanspecprox = globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
     
-    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata, globdata.modlpsfntype, 'modl')
+    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata)
 
 
  
@@ -718,38 +718,9 @@ def wrap(cnfg):
 
     if globdata.datatype == 'inpt':
         exprflux = exprflux[globdata.filtindx]
-        
-
-    if False:
-        if globdata.psfntype == 'singgaus':
-            indxfermformpara = array([1])
-        elif globdata.psfntype == 'singking':
-            jfermformpara = array([1, 2])
-        elif globdata.psfntype == 'doubgaus':
-            jfermformpara = array([0, 1, 3])
-        elif globdata.psfntype == 'gausking':
-            jfermformpara = array([0, 1, 3, 4])
-        elif globdata.psfntype == 'doubking':
-            jfermformpara = arange(5)
-
-        jfermpsfipara = tile(jfermformpara, globdata.numbener) + repeat(globdata.indxener, jfermformpara.size) * nfermformpara
-        jfermpsfipara = tile(jfermpsfipara, globdata.numbevtt) + repeat(globdata.indxevtt, jfermpsfipara.size) * globdata.numbener * nfermformpara
-
-        globdata.truepsfipara = fermpsfipara[jfermpsfipara]
-
-        # temp
-        globdata.truepsfipara = array([1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.])
-
-        print 'truepsfipara'
-        print globdata.truepsfipara
-        
-   
-    # temp
-    if globdata.trueinfo:
-        if globdata.exprtype == 'ferm':
-            globdata.truepsfipara = globdata.fermpsfipara
-        else:   
-            globdata.truepsfipara = None
+ 
+    if globdata.datatype == 'mock' or globdata.exprtype == 'ferm':
+        mockpsfipara = fermpsfipara
 
     # exposure
     if expostrg == 'unit':
@@ -876,56 +847,56 @@ def wrap(cnfg):
     ## mock data
     if globdata.datatype == 'mock':
 
-        if globdata.mocknumbpnts == None:
-            globdata.mocknumbpnts = empty(globdata.numbpopl)
+        if mocknumbpnts == None:
+            mocknumbpnts = empty(globdata.numbpopl)
             for l in globdata.indxpopl:
-                globdata.mocknumbpnts[l] = random_integers(globdata.minmnumbpnts, globdata.maxmnumbpnts[l])
+                mocknumbpnts[l] = random_integers(globdata.minmnumbpnts, globdata.maxmnumbpnts[l])
         
-        mockindxpntsfull = []    
+        if mockfdfnnorm == None:
+            mockfdfnnorm = icdfn_logt(rand(globdata.numbpopl), globdata.minmfdfnnorm, globdata.factfdfnnorm)
+            
+        if mockfdfnslop == None:
+            temp = rand(globdata.numbener * globdata.numbpopl)
+            mockfdfnslop = icdf_atan(temp, globdata.minmfdfnslop, globdata.factfdfnslop)
+            
+        if mockpsfipara == None: 
+            mockpsfntype = psfntpye
+            numbmockpsfipara = globdata.numbpsfipara
+            mockpsfipara = empty(numbmockpsfipara)
+            for k in arange(numbmockpsfipara):
+                mockpsfipara[k] = icdf_psfipara(globdata, rand(), k)
+   
+        if mocknormback == None:
+            for c in globdata.indxback:
+                mocknormback[c, :] = icdf_logt(rand(globdata.numbener),                                                     globdata.minmnormback[c], globdata.factnormback[c])
+
+        mockcnts = []
+        mocklgal = []
+        mockbgal = []
+        mockspec = []
+        if globdata.colrprio:
+            mocksind = []
         for l in globdata.indxpopl:
-            mockindxpntsfull.append(range(globdata.mocknumbpnts[l]))
-          
-        mockindxsamplgal, mockindxsampbgal, mockindxsampspec,             mockindxsampsind, mockindxsampcomp = retr_indx(globdata, mockindxpntsfull)
-
-        mocksamp = zeros(globdata.maxmsampsize)
-        mocksamp[globdata.indxsampnumbpnts] = globdata.mocknumbpnts
-
-        if globdata.mockfdfnnorm != None:
-            mocksamp[globdata.indxsampfdfnnorm] = cdfn_logt(globdata.mockfdfnnorm, globdata.minmfdfnnorm, globdata.factfdfnnorm)
-        else:
-            mocksamp[globdata.indxsampfdfnnorm] = rand(globdata.numbener)
-        
-            
-        if globdata.mockfdfnslop != None:
-            mocksamp[globdata.indxsampfdfnslop] = cdfn_atan(globdata.mockfdfnslop, globdata.minmfdfnslop, globdata.factfdfnslop)
-        else:
-            mocksamp[globdata.indxsampfdfnslop] = rand(globdata.numbener)
-            
-            
-        if globdata.truepsfipara != None: 
-            for k in globdata.indxpsfipara:
-                if globdata.exprtype == 'ferm':
-                    mocksamp[globdata.indxsamppsfipara[k]] = cdfn_psfipara(globdata.truepsfipara[k], k)
-        else:
-            mocksamp[globdata.indxsamppsfipara] = rand(globdata.numbmockpsfipara)
-            
-        for c in globdata.indxback:
-            mocksamp[globdata.indxsampnormback[c, :]] = cdfn_logt(globdata.mocknormback[c, :], globdata.minmnormback[c], globdata.factnormback[c])
-
-        if globdata.pntscntr:
-            for l in globdata.indxpopl:
-                mocksamp[mockindxsampcomp[l]] = 0.5
-        else:
-            for l in globdata.indxpopl:
-                mocksamp[mockindxsampcomp[l]] = rand(mockindxsampcomp[l].size)
+            mocklgal[l] = icdf_self(rand(mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
+            mockbgal[l] = icdf_self(rand(mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
+            mockspec[l] = empty((globdata.numbener, mocknumbpnts[l]))
+            for i in globdata.indxenerfdfn:
+                mockspec[l][i, :] = icdf_spec(rand(mocknumbpnts[l]),                                               mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+            if globdata.colrprio:
+                mocksind[l] = icdf_atan(rand(mocknumbpnts[l]), globdata.minmsind, globdata.factsind)
+                mockspec[l] = retr_spec(mockspec[l][globdata.indxenerfdfn, :], mocksind[l])
+            indxpixltemp = retr_indxpixl(globdata, mockbgal[l], mocklgal[l])
+            mockcnts[l] = mockspec[l][:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
+        mockpntsflux = retr_pntsflux(concatenate(mocklgal), concatenate(mockbgal),                                                concatenate(mockspec, axis=1), mockpsfipara)
+        mocktotlflux = retr_rofi_flux(mocknormback, mockpntsflux, fullindx)
+        mocktotlcnts = mocktotlflux * globdata.expo * apix * globdata.diffener[:, None, None] # [1]
 
         if globdata.verbtype > 1:
-            print 'mocksamp: '
-            for k in range(mocksamp.size):
-                print mocksamp[k]
-            print
-
-        mocksampvarb, mockppixl, mockcnts, mockpntsflux, mocktotlflux, mocktotlcnts = pars_samp(mockindxpntsfull, mocksamp)
+            print 'mocknumbpnts: ', mocknumbpnts
+            print 'mockfdfnnorm: ', mockfdfnnorm
+            print 'mockfdfnslop: ', mockfdfnslop
+            print 'mockpsfipara: ', mockpsfipara
+            print 'mocknormback: ', mocknormback
 
         globdata.datacnts = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
         for i in globdata.indxener:
@@ -949,15 +920,15 @@ def wrap(cnfg):
                     
             globdata.jtruepntstimevari = [array([])] * globdata.numbpopl
                     
-            globdata.truenumbpnts = globdata.mocknumbpnts
-            globdata.truefdfnnorm = globdata.mockfdfnnorm
-            globdata.truefdfnslop = globdata.mockfdfnslop
-            globdata.truenormback = globdata.mocknormback
+            globdata.truenumbpnts = mocknumbpnts
+            globdata.truefdfnnorm = mockfdfnnorm
+            globdata.truefdfnslop = mockfdfnslop
+            globdata.truenormback = mocknormback
             globdata.truecnts = mockcnts
             
             globdata.truespec = []
             for l in globdata.indxpopl:
-                globdata.truespectemp = empty((3, globdata.numbener, globdata.mocknumbpnts[l]))
+                globdata.truespectemp = empty((3, globdata.numbener, mocknumbpnts[l]))
                 globdata.truespectemp[:] = mocksampvarb[mockindxsampspec[l][None, :, :]]
                 globdata.truespec.append(globdata.truespectemp)
                 
@@ -1000,7 +971,7 @@ def wrap(cnfg):
                 
     if globdata.trueinfo:
         if globdata.datatype == 'mock':
-            globdata.truepsfn = retr_psfn(globdata, globdata.truepsfipara, globdata.indxener,                                           globdata.angldisp, globdata.mockpsfntype, 'mock')
+            globdata.truepsfn = retr_psfn(globdata, globdata.truepsfipara, globdata.indxener,                                           globdata.angldisp, mockpsfntype, 'mock')
         else:
             if globdata.exprtype == 'ferm':
                 globdata.truepsfn = globdata.fermpsfn
@@ -1245,8 +1216,8 @@ def wrap(cnfg):
     head['numbener'] = (globdata.numbener, 'Number of energy bins')
     head['numbevtt'] = (globdata.numbevtt, 'Number of PSF class bins')
     head['numbpopl'] = (globdata.numbpopl, 'Number of PS population')
-    head['numbmodlpsfipara'] = globdata.numbmodlpsfipara
-    head['numbmodlformpara'] = globdata.numbmodlformpara
+    head['numbpsfipara'] = globdata.numbpsfipara
+    head['numbformpara'] = globdata.numbformpara
     
     head['numbsamp'] = globdata.numbsamp
     head['numbburn'] = globdata.numbburn
@@ -1269,9 +1240,9 @@ def wrap(cnfg):
     
     head['datatype'] = globdata.datatype
     head['regitype'] = globdata.regitype
-    head['modlpsfntype'] = globdata.modlpsfntype
+    head['psfntype'] = globdata.psfntype
     if globdata.datatype == 'mock':
-        head['mockpsfntype'] = globdata.mockpsfntype
+        head['mockpsfntype'] = mockpsfntype
     head['exprtype'] = globdata.exprtype
     head['pixltype'] = globdata.pixltype
     

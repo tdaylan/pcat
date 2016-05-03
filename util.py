@@ -110,7 +110,7 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara):
     # convolve with the PSF
     pntsflux = empty((numbpnts, globdata.numbener, numbpixl, globdata.numbevtt))
     for k in range(numbpnts):
-        psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], globdata.modlpsfntype, 'modl')
+        psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], globdata.psfntype, 'modl')
         pntsflux[k, :, :, :] = spec[:, k, None, None] * psfn
 
     # sum contributions from all PS
@@ -227,25 +227,33 @@ def cdfn_atan(para, minmpara, factpara):
 
 
 def icdf_psfipara(globdata, psfiparaunit, thisindxpsfipara):
-    
-    if scalpsfipara[thisindxpsfipara] == 'self':
-        psfipara = icdf_self(psfiparaunit, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
-    if scalpsfipara[thisindxpsfipara] == 'logt':
-        psfipara = icdf_logt(psfiparaunit, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
-    if scalpsfipara[thisindxpsfipara] == 'atan':
-        psfipara = icdf_atan(psfiparaunit, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
+
+    minmpsfipara = globdata.minmpsfipara[thisindxpsfipara]
+    factpsfipara = globdata.factpsfipara[thisindxpsfipara]
+    scalpsfipara = globdata.scalpsfipara[thisindxpsfipara]
+        
+    if scalpsfipara == 'self':
+        psfipara = icdf_self(psfiparaunit, minmpsfipara, factpsfipara)
+    if scalpsfipara == 'logt':
+        psfipara = icdf_logt(psfiparaunit, minmpsfipara, factpsfipara)
+    if scalpsfipara == 'atan':
+        psfipara = icdf_atan(psfiparaunit, minmpsfipara, factpsfipara)
 
     return psfipara
 
 
 def cdfn_psfipara(globdata, psfipara, thisindxpsfipara):
     
-    if scalpsfipara[thisindxpsfipara] == 'self':
-        psfiparaunit = cdfn_self(psfipara, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
-    if scalpsfipara[thisindxpsfipara] == 'logt':
-        psfiparaunit = cdfn_logt(psfipara, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
-    if scalpsfipara[thisindxpsfipara] == 'atan':
-        psfiparaunit = cdfn_atan(psfipara, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
+    minmpsfipara = globdata.minmpsfipara[thisindxpsfipara]
+    factpsfipara = globdata.factpsfipara[thisindxpsfipara]
+    scalpsfipara = globdata.scalpsfipara[thisindxpsfipara]
+
+    if scalpsfipara == 'self':
+        psfiparaunit = cdfn_self(psfipara, minmpsfipara, factpsfipara)
+    if scalpsfipara == 'logt':
+        psfiparaunit = cdfn_logt(psfipara, minmpsfipara, factpsfipara)
+    if scalpsfipara == 'atan':
+        psfiparaunit = cdfn_atan(psfipara, minmpsfipara, factpsfipara)
     
     return psfiparaunit
 
@@ -357,7 +365,7 @@ def retr_llik(globdata, init=False):
                     temppsfipara = nextpsfipara
                 else:
                     temppsfipara = thissampvarb[indxsamppsfipara]
-                psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.modlpsfntype, 'modl')
+                psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.psfntype, 'modl')
                                 
                 # update the data cubes
                 for i in range(globdata.indxenermodi.size):
@@ -404,7 +412,7 @@ def retr_lpri(globdata, init=False):
     if init:
         thislpri = zeros((numbpopl, globdata.numbener))
         
-        for i in globdata.indxglobdata.enerfdfn:
+        for i in globdata.indxenerfdfn:
             for l in globdata.indxpopl:
                 fluxhistmodl = retr_fdfn(thissampvarb[indxsampfdfnnorm[l]], thissampvarb[indxsampfdfnslop[l, i]], i)
                 fluxhist = histogram(thissampvarb[thisindxsampspec[l][i, :]], binsspec[i, :])[0]
@@ -418,7 +426,7 @@ def retr_lpri(globdata, init=False):
         if globdata.thisindxprop == indxpropfdfnnorm or globdata.thisindxprop == indxpropfdfnslop             or globdata.thisindxprop >= indxpropbrth and globdata.thisindxprop <= indxpropmerg:
               
             if globdata.colrprio:
-                indxenertemp = globdata.indxglobdata.enerfdfn
+                indxenertemp = globdata.indxenerfdfn
             else:
                 indxenertemp = globdata.indxenermodi
             for i in indxenertemp:
@@ -481,7 +489,7 @@ def pars_samp(globdata, indxpntsfull, samp):
     for c in indxback:
         sampvarb[indxsampnormback[c, :]] = icdf_logt(samp[indxsampnormback[c, :]], minmnormback[c], factnormback[c])
     for k in ipsfipara:
-        sampvarb[indxsamppsfipara[k]] = icdf_psfipara(samp[indxsamppsfipara[k]], k)
+        sampvarb[indxsamppsfipara[k]] = icdf_psfipara(globdata, samp[indxsamppsfipara[k]], k, 'modl')
 
     cnts = []
     listspectemp = []
@@ -489,12 +497,12 @@ def pars_samp(globdata, indxpntsfull, samp):
     for l in globdata.indxpopl:
         sampvarb[indxsamplgal[l]] = icdf_self(samp[indxsamplgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
         sampvarb[indxsampbgal[l]] = icdf_self(samp[indxsampbgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
-        for i in globdata.indxglobdata.enerfdfn:
+        for i in globdata.indxenerfdfn:
             sampvarb[indxsampspec[l][i, :]] = icdf_spec(samp[indxsampspec[l][i, :]], sampvarb[indxsampfdfnslop[l, i]], globdata.minmspec[i], globdata.maxmspec[i])
             
         if globdata.colrprio:
-            sampvarb[indxsampsind[l]] = icdf_atan(samp[indxsampsind[l]], minmsind, factsind)
-            sampvarb[indxsampspec[l]] = retr_spec(sampvarb[indxsampspec[l][globdata.indxglobdata.enerfdfn, :]], sampvarb[indxsampsind[l]])
+            sampvarb[indxsampsind[l]] = icdf_atan(samp[indxsampsind[l]], globdata.minmsind, globdata.factsind)
+            sampvarb[indxsampspec[l]] = retr_spec(sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
             
         indxpixlpntstemp = retr_indxpixl(globdata, sampvarb[indxsampbgal[l]], sampvarb[indxsamplgal[l]])
     
@@ -544,7 +552,7 @@ def retr_fermpsfn(globdata):
     
     fermscal = zeros((globdata.numbevtt, globdata.numbfermscalpara))
     fermform = zeros((globdata.numbener, globdata.numbevtt, globdata.numbfermformpara))
-    globdata.fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
+    fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
     for m in globdata.indxevtt:
         fermscal[m, :] = pf.getdata(name, 2 + 3 * globdata.indxevttincl[m])['PSFSCALE']
         irfn = pf.getdata(name, 1 + 3 * globdata.indxevttincl[m])
@@ -564,7 +572,7 @@ def retr_fermpsfn(globdata):
     for m in globdata.indxevtt:
         for k in range(globdata.numbfermformpara):
             indxfermpsfiparatemp = m * globdata.numbfermformpara * globdata.numbener + globdata.indxener * globdata.numbfermformpara + k
-            globdata.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
+            fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
         
     frac = fermform[:, :, 0]
     sigc = fermform[:, :, 1]
@@ -572,9 +580,9 @@ def retr_fermpsfn(globdata):
     sigt = fermform[:, :, 3]
     gamt = fermform[:, :, 4]
     
-    psfn = retr_doubking(globdata.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], gamc[:, None, :],                          sigt[:, None, :], gamt[:, None, :])
+    fermpsfn = retr_doubking(globdata.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], gamc[:, None, :],                          sigt[:, None, :], gamt[:, None, :])
             
-    return psfn
+    return fermpsfn, fermpsfipara
 
 
 def updt_samp(globdata):
@@ -791,9 +799,9 @@ def retr_fgl3(globdata):
 def retr_rtag(globdata, indxprocwork):
     
     if indxprocwork == None:
-        rtag = 'AA_%d_%d_%d_%d_%s_%s_%s' % (globdata.numbproc, globdata.numbswep, globdata.numbburn,                                             globdata.factthin, globdata.datatype, globdata.regitype,                                             globdata.modlpsfntype)
+        rtag = 'AA_%d_%d_%d_%d_%s_%s_%s' % (globdata.numbproc, globdata.numbswep, globdata.numbburn,                                             globdata.factthin, globdata.datatype, globdata.regitype,                                             globdata.psfntype)
     else:
-        rtag = '%02d_%d_%d_%d_%d_%s_%s_%s' % (indxprocwork, globdata.numbproc, globdata.numbswep,                                               globdata.numbburn, globdata.factthin, globdata.datatype,                                               globdata.regitype, globdata.modlpsfntype)
+        rtag = '%02d_%d_%d_%d_%d_%s_%s_%s' % (indxprocwork, globdata.numbproc, globdata.numbswep,                                               globdata.numbburn, globdata.factthin, globdata.datatype,                                               globdata.regitype, globdata.psfntype)
         
     return rtag
 
@@ -838,28 +846,25 @@ def gmrb_test(griddata):
     return psrf
 
 
-def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype, evaltype):
+def retr_psfn(globdata, psfipara, indxenertemp, thisangl):
 
     thisangltemp = thisangl[None, :, None]
 
-    if evaltype == 'mock':
-        indxpsfiparatemp = indxenertemp[:, None] * globdata.numbmodlformpara +             globdata.indxevtt[None, :] * globdata.numbmodlpsfiparaevtt
-    else:
-        indxpsfiparatemp = indxenertemp[:, None] * globdata.numbmockformpara +             globdata.indxevtt[None, :] * globdata.numbmockpsfiparaevtt
+    indxpsfiparatemp = indxenertemp[:, None] * globdata.numbformpara +         globdata.indxevtt[None, :] * globdata.numbpsfiparaevtt
     
-    if globdata.modlpsfntype == 'singgaus':
+    if globdata.psfntype == 'singgaus':
         sigc = psfipara[indxpsfiparatemp]
         sigc = sigc[:, None, :]
         psfn = retr_singgaus(thisangltemp, sigc)
 
-    elif psfntype == 'singking':
+    elif globdata.psfntype == 'singking':
         sigc = psfipara[indxpsfiparatemp]
         gamc = psfipara[indxpsfiparatemp+1]
         sigc = sigc[:, None, :]
         gamc = gamc[:, None, :]
         psfn = retr_singking(thisangltemp, sigc, gamc)
         
-    elif psfntype == 'doubgaus':
+    elif globdata.psfntype == 'doubgaus':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         sigt = psfipara[indxpsfiparatemp+2]
@@ -868,7 +873,7 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype, evaltype):
         sigt = sigt[:, None, :]
         psfn = retr_doubgaus(thisangltemp, frac, sigc, sigt)
 
-    elif psfntype == 'gausking':
+    elif globdata.psfntype == 'gausking':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         sigt = psfipara[indxpsfiparatemp+2]
@@ -879,7 +884,7 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype, evaltype):
         gamt = gamt[:, None, :]
         psfn = retr_gausking(thisangltemp, frac, sigc, sigt, gamt)
         
-    elif psfntype == 'doubking':
+    elif globdata.psfntype == 'doubking':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         gamc = psfipara[indxpsfiparatemp+2]
@@ -942,15 +947,11 @@ def chsq_fdfnslop(globdata, para, i):
     return chsq
 
 
-def retr_psfimodl(globdata, psfntype, evaltype):
+def retr_psfimodl(globdata):
     
-    if evaltype == 'mock':
-        numbformpara = globdata.numbmockformpara
-        numbpsfiparaevtt = globdata.numbmockpsfiparaevtt
-    else:
-        numbformpara = globdata.numbmodlformpara
-        numbpsfiparaevtt = globdata.numbmodlpsfiparaevtt
-        
+    numbformpara = globdata.numbformpara
+    numbpsfiparaevtt = globdata.numbpsfiparaevtt
+
     minmformpara = zeros(numbformpara)
     maxmformpara = zeros(numbformpara)
     factformpara = zeros(numbformpara)
@@ -965,12 +966,12 @@ def retr_psfimodl(globdata, psfntype, evaltype):
     if globdata.exprtype == 'sdss':
         minmanglpsfn = deg2rad(0.01 / 3600.)
         maxmanglpsfn = deg2rad(2. / 3600.)
-    if psfntype == 'singgaus':
+    if globdata.psfntype == 'singgaus':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         scalformpara[0] = 'logt'
         strgformpara = [r'$\sigma']
-    elif psfntype == 'singking':
+    elif globdata.psfntype == 'singking':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         minmformpara[1] = minmgamm
@@ -978,7 +979,7 @@ def retr_psfimodl(globdata, psfntype, evaltype):
         scalformpara[0] = 'logt'
         scalformpara[1] = 'atan'
         strgformpara = [r'$\sigma', r'$\gamma']
-    elif psfntype == 'doubgaus':
+    elif globdata.psfntype == 'doubgaus':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -989,7 +990,7 @@ def retr_psfimodl(globdata, psfntype, evaltype):
         scalformpara[1] = 'logt'
         scalformpara[2] = 'logt'
         strgformpara = ['$f_c', r'$\sigma_c', r'$\sigma_t']
-    elif psfntype == 'gausking':
+    elif globdata.psfntype == 'gausking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -1003,7 +1004,7 @@ def retr_psfimodl(globdata, psfntype, evaltype):
         scalformpara[2] = 'logt'
         scalformpara[3] = 'atan'
         strgformpara = ['$f_g', r'$\sigma_g', r'$\sigma_k', r'$\gamma']
-    elif psfntype == 'doubking':
+    elif globdata.psfntype == 'doubking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -1039,12 +1040,12 @@ def retr_psfimodl(globdata, psfntype, evaltype):
     indxpsfiparainit = (arange(globdata.numbevtt)[:, None] * numbpsfiparaevtt + arange(globdata.numbener)[None, :] * numbformpara).flatten()
 
     for k in arange(numbformpara):
-        if psfntype == 'singgaus' or psfntype == 'singking':
+        if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
             strgpsfipara[indxpsfiparainit[k]] += ' ' + globdata.strganglunit
-        elif psfntype == 'doubgaus' or psfntype == 'gausking':
+        elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
             strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
             strgpsfipara[indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
-        elif psfntype == 'doubking':
+        elif globdata.psfntype == 'doubking':
             strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
             strgpsfipara[indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
 
