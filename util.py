@@ -238,7 +238,7 @@ def icdf_psfipara(globdata, psfiparaunit, thisindxpsfipara):
     return psfipara
 
 
-def cdfn_psfipara(globdata, psfipara, indxpsfipara):
+def cdfn_psfipara(globdata, psfipara, thisindxpsfipara):
     
     if scalpsfipara[thisindxpsfipara] == 'self':
         psfiparaunit = cdfn_self(psfipara, minmpsfipara[thisindxpsfipara], factpsfipara[thisindxpsfipara])
@@ -1036,19 +1036,19 @@ def retr_psfimodl(globdata, psfntype, evaltype):
     
     strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m])                         for m in globdata.indxevtt for i in globdata.indxener for k in range(numbformpara)]
 
-    indxpsfipara = (arange(globdata.numbevtt)[:, None] * numbpsfiparaevtt + arange(globdata.numbener)[None, :] * numbformpara).flatten()
+    indxpsfiparainit = (arange(globdata.numbevtt)[:, None] * numbpsfiparaevtt + arange(globdata.numbener)[None, :] * numbformpara).flatten()
 
-    for k in range(indxpsfipara.size):
+    for k in arange(numbformpara):
         if psfntype == 'singgaus' or psfntype == 'singking':
-            strgpsfipara[indxpsfipara[k]] += ' ' + globdata.strganglunit
+            strgpsfipara[indxpsfiparainit[k]] += ' ' + globdata.strganglunit
         elif psfntype == 'doubgaus' or psfntype == 'gausking':
-            strgpsfipara[indxpsfipara[k]+1] += ' ' + globdata.strganglunit
-            strgpsfipara[indxpsfipara[k]+2] += ' ' + globdata.strganglunit
+            strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            strgpsfipara[indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
         elif psfntype == 'doubking':
-            strgpsfipara[indxpsfipara[k]+1] += ' ' + globdata.strganglunit
-            strgpsfipara[indxpsfipara[k]+3] += ' ' + globdata.strganglunit
+            strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            strgpsfipara[indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
 
-    return minmpsfipara, maxmpsfipara, factpsfipara, strgpsfipara, scalpsfipara, indxpsfipara
+    return minmpsfipara, maxmpsfipara, factpsfipara, strgpsfipara, scalpsfipara, indxpsfiparainit
 
 
 def retr_strgfluxunit(globdata):
