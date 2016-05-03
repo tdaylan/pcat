@@ -55,7 +55,7 @@ from pnts_tran.plot import *
 
 # In[ ]:
 
-def plot_look():
+def plot_look(globdata):
 
     indxpixlproxsize = zeros(globdata.numbpixl)
     figr, axis = plt.subplots(figsize=(10, 6))
@@ -71,7 +71,7 @@ def plot_look():
     axis.set_ylabel("Number of tables")
     axis.legend()
     
-    plt.savefig(plotpath + 'look.png')
+    plt.savefig(globdata.plotpath + 'look.png')
     plt.close()
     
     
@@ -141,11 +141,11 @@ def plot_evidtest():
     plt.colorbar(imag, ax=axis, fraction=0.03)
     #figr.subplots_adjust(top=0.8)
 
-    plt.savefig(plotpath + 'evidtest_' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'evidtest_' + rtag + '.png')
     plt.close(figr)
     
     
-def plot_pntsprob(pntsprobcart, ptag, full=False, cumu=False):
+def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
     
     if cumu:
         numbcols = 1
@@ -180,9 +180,9 @@ def plot_pntsprob(pntsprobcart, ptag, full=False, cumu=False):
                     h = a * 2 + b
 
                     if h < 3 or full:
-                        imag = axis.imshow(pntsprobcart[:, :, l, i, h], origin='lower', cmap='Reds',                                            norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=extt)
+                        imag = axis.imshow(pntsprobcart[:, :, l, i, h], origin='lower', cmap='Reds',                                            norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=globdata.exttrofi)
                     else:
-                        imag = axis.imshow(sum(pntsprobcart[:, :, l, i, 3:], 2), origin='lower', cmap='Reds',                                            norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=extt)
+                        imag = axis.imshow(sum(pntsprobcart[:, :, l, i, 3:], 2), origin='lower', cmap='Reds',                                            norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=globdata.exttrofi)
 
                     # vmin=0.01, vmax=1
                 
@@ -210,12 +210,11 @@ def plot_pntsprob(pntsprobcart, ptag, full=False, cumu=False):
                             axis.set_title(tdpy_util.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy_util.util.mexp(binsspec[i, h+1]))
                         else:
                             axis.set_title(tdpy_util.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb)
-            figr.savefig(plotpath + 'pntsbind' + ptag + '%d%d' % (l, indxenerincl[i]) + '_' + rtag + '.png')
+            figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, indxenerincl[i]) + '_' + rtag + '.png')
             plt.close(figr)
        
     
-    
-def plot_king():
+def plot_king(globdata):
 
     figr, axgr = plt.subplots(1, 2, figsize=(12, 6))
     figr.suptitle('King Function', fontsize=20)
@@ -230,7 +229,7 @@ def plot_king():
             lloc = 1
         for sigm in sigmlist:
             for gamm in gammlist:
-                axis.plot(rad2deg(angldisp), retr_king(sigm, gamm), label=r'$\sigma = %.4g, \gamma = %.3g$' % (sigm, gamm))
+                axis.plot(rad2deg(globdata.angldisp), retr_king(sigm, gamm), label=r'$\sigma = %.4g, \gamma = %.3g$' % (sigm, gamm))
         axis.legend(loc=lloc)
         axis.set_yscale('log')
         axis.set_xlabel(r'$\theta$ ' + strganglunit)
@@ -238,16 +237,16 @@ def plot_king():
         plt.figtext(0.7, 0.7, '$\mathcal{K}(\theta) = \frac{1}{2\pi\sigma^2}(1-\frac{1}{\gamma}(\frac{x^2}{2\sigma^2\gamma})^{-\gamma})$')
         
     figr.subplots_adjust()
-    plt.savefig(plotpath + 'king.png')
+    plt.savefig(globdata.plotpath + 'king.png')
     plt.close(figr)
     
     
-def plot_psfn(thispsfn):
+def plot_psfn(globdata, thispsfn):
     
     if exprtype == 'sdss':
-        angldisptemp = rad2deg(angldisp) * 3600.
+        globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
     if exprtype == 'ferm':
-        angldisptemp = rad2deg(angldisp)
+        globdata.angldisptemp = rad2deg(globdata.angldisp)
 
     with sns.color_palette("Blues", globdata.numbevtt):
 
@@ -259,11 +258,11 @@ def plot_psfn(thispsfn):
             if globdata.numbener == 1:
                 axrw = [axrw]
             for i, axis in enumerate(axrw):
-                axis.plot(angldisptemp, thispsfn[i, :, m], label='Sample')
+                axis.plot(globdata.angldisptemp, thispsfn[i, :, m], label='Sample')
                 if trueinfo and datatype == 'mock':
-                    axis.plot(angldisptemp, truepsfn[i, :, m], label='Mock', color='g', ls='--')
+                    axis.plot(globdata.angldisptemp, truepsfn[i, :, m], label='Mock', color='g', ls='--')
                 if exprtype == 'ferm':
-                    axis.plot(angldisptemp, fermpsfn[i, :, m], label='Fermi-LAT', color='r', ls='-.', alpha=0.4)
+                    axis.plot(globdata.angldisptemp, fermpsfn[i, :, m], label='Fermi-LAT', color='r', ls='-.', alpha=0.4)
                 axis.set_yscale('log')
                 if m == globdata.numbevtt - 1:
                     axis.set_xlabel(r'$\theta$ ' + strganglunit)
@@ -309,11 +308,11 @@ def plot_psfn(thispsfn):
                 if exprtype == 'sdss':
                     axis.set_ylim([1e7, 1e11])
 
-        plt.savefig(plotpath + 'psfnprof_' + rtag + '_%09d.png' % j)
+        plt.savefig(globdata.plotpath + 'psfnprof_' + rtag + '_%09d.png' % j)
         plt.close(figr)
     
     
-def plot_fwhm(thisfwhm):
+def plot_fwhm(globdata, thisfwhm):
     
     figr, axis = plt.subplots()
 
@@ -333,11 +332,11 @@ def plot_fwhm(thisfwhm):
             axis.text(meanener[i], indxevttincl[m]+0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     figr.subplots_adjust(bottom=0.2)
-    plt.savefig(plotpath + 'fwhmcnts_' + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'fwhmcnts_' + rtag + '_%09d.png' % j)
     plt.close(figr)
     
     
-def plot_backcntsmean(backcntsmean):
+def plot_backcntsmean(globdata, backcntsmean):
     
     figr, axis = plt.subplots()
 
@@ -356,13 +355,12 @@ def plot_backcntsmean(backcntsmean):
             axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % tranumbbackcntsrofimean[m, i], ha='center', va='center')
             
     figr.subplots_adjust(bottom=0.2)
-    plt.savefig(plotpath + 'backcnts_' + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'backcnts_' + rtag + '_%09d.png' % j)
     plt.close(figr)
     
     
-def plot_datacntshist():
+def plot_datacntshist(globdata):
 
-    
     figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener, figsize=(7 * globdata.numbener, 7 * globdata.numbevtt))
     if globdata.numbevtt == 1:
         axgr = [axgr]
@@ -396,7 +394,7 @@ def plot_datacntshist():
                 axis.set_ylabel(evttstrg[m])
         
     figr.subplots_adjust(wspace=0.3, hspace=0.2)
-    plt.savefig(plotpath + 'datacntshist' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'datacntshist' + rtag + '.png')
     plt.close(figr)
     
     
@@ -437,15 +435,15 @@ def plot_intr():
         plt.close()  
         
         
-def plot_heal(heal, rofi=True, titl=''):
+def plot_heal(globdata, heal, rofi=True, titl=''):
     
     if rofi:
         healtemp = copy(heal)
         heal = zeros(globdata.numbpixlheal)
         heal[jpixlrofi] = healtemp
 
-    cart = tdpy_util.util.retr_cart(heal, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-    imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=extt)
+    cart = tdpy_util.util.retr_cart(heal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.title(titl)
     plt.show()
@@ -453,9 +451,7 @@ def plot_heal(heal, rofi=True, titl=''):
     
 def plot_3fgl_thrs():
 
-
     expoheal = sum(sum(expoheal, 2)[1:3, :], axis=0)
-
 
     path = os.environ["PNTS_TRAN_DATA_PATH"] + '/catl/3fgl_thrs.fits'
     fluxthrs = pf.getdata(path, 0)
@@ -474,64 +470,63 @@ def plot_3fgl_thrs():
     jlgal = where(abs(lgalexpo) < 10.)[0]
     extent = [-10, 10, -10, 10]
     
-
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(longlabl)
     axis.set_ylabel(latilabl)
 
     axis.set_title('3FGL Detection Flux Threshold [1/cm$^2$/s], 1.0 GeV - 10. GeV')
-    imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=extt)
+    imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, fraction=0.05)
-    plt.savefig(plotpath + 'thrs_' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'thrs_' + rtag + '.png')
     plt.close(figr)
     
     
-def plot_fgl3():
+def plot_fgl3(globdata):
     
     figr, axis = plt.subplots()
-    bins = logspace(log10(amin(fgl3timevari[where(fgl3timevari > 0.)[0]])), log10(amax(fgl3timevari)), 100)
-    axis.hist(fgl3timevari, bins=bins, label='All', log=True)
-    axis.hist(fgl3timevari[indxfgl3rofi], bins=bins, label='ROI', log=True)
+    bins = logspace(log10(amin(globdata.fgl3timevari[where(globdata.fgl3timevari > 0.)[0]])),                     log10(amax(globdata.fgl3timevari)), 100)
+    axis.hist(globdata.fgl3timevari, bins=bins, label='All', log=True)
+    axis.hist(globdata.fgl3timevari[globdata.indxfgl3rofi], bins=bins, label='ROI', log=True)
     axis.axvline(72.44, ls='--', alpha=0.5, color='black')
     axis.set_xlabel('3FGL time variability index')
     axis.set_xscale('log')
     axis.legend()
     axis.set_ylim([0.1, None])
-    plt.savefig(plotpath + 'fgl3timevari.png')
+    plt.savefig(globdata.plotpath + 'fgl3timevari.png')
     plt.close(figr)
     
 
     figr, axis = plt.subplots()
-    indxfgl3scut = where(isfinite(fgl3scut))[0]
-    bins = linspace(amin(fgl3scut[indxfgl3scut]), amax(fgl3scut[indxfgl3scut]), 100)
-    axis.hist(fgl3scut[indxfgl3scut], bins=bins, label='All', log=True)
-    axis.hist(fgl3scut[intersect1d(indxfgl3scut, indxfgl3rofi)], bins=bins, label='ROI', log=True)
+    indxfgl3scut = where(isfinite(globdata.fgl3scut))[0]
+    bins = linspace(amin(globdata.fgl3scut[indxfgl3scut]),                     amax(globdata.fgl3scut[indxfgl3scut]), 100)
+    axis.hist(globdata.fgl3scut[indxfgl3scut], bins=bins, label='All', log=True)
+    axis.hist(globdata.fgl3scut[intersect1d(indxfgl3scut, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral cutoff')
     axis.legend()
     axis.set_ylim([0.1, None])
-    plt.savefig(plotpath + 'fgl3scut.png')
+    plt.savefig(globdata.plotpath + 'fgl3scut.png')
     plt.close(figr)
     
     figr, axis = plt.subplots()
-    indxfgl3scur = where(isfinite(fgl3scur))[0]
-    bins = linspace(amin(fgl3scur[indxfgl3scur]), amax(fgl3scur[indxfgl3scur]), 100)
-    axis.hist(fgl3scur[indxfgl3scur], bins=bins, label='All', log=True)
-    axis.hist(fgl3scur[intersect1d(indxfgl3scur, indxfgl3rofi)], bins=bins, label='ROI', log=True)
+    indxfgl3scur = where(isfinite(globdata.fgl3scur))[0]
+    bins = linspace(amin(globdata.fgl3scur[indxfgl3scur]),                     amax(globdata.fgl3scur[indxfgl3scur]), 100)
+    axis.hist(globdata.fgl3scur[indxfgl3scur], bins=bins, label='All', log=True)
+    axis.hist(globdata.fgl3scur[intersect1d(indxfgl3scur, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral curvature')
     axis.legend()
     axis.set_ylim([0.1, None])
-    plt.savefig(plotpath + 'fgl3scur.png')
+    plt.savefig(globdata.plotpath + 'fgl3scur.png')
     plt.close(figr)
     
     figr, axis = plt.subplots()
-    indxfgl3sind = where(isfinite(fgl3sind))[0]
-    bins = linspace(amin(fgl3sind[indxfgl3sind]), amax(fgl3sind[indxfgl3sind]), 100)
-    axis.hist(fgl3sind[indxfgl3sind], bins=bins, label='All', log=True)
-    axis.hist(fgl3sind[intersect1d(indxfgl3sind, indxfgl3rofi)], bins=bins, label='ROI', log=True)
+    indxfgl3sind = where(isfinite(globdata.fgl3sind))[0]
+    bins = linspace(amin(globdata.fgl3sind[indxfgl3sind]),                     amax(globdata.fgl3sind[indxfgl3sind]), 100)
+    axis.hist(globdata.fgl3sind[indxfgl3sind], bins=bins, label='All', log=True)
+    axis.hist(globdata.fgl3sind[intersect1d(indxfgl3sind, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral index')
     axis.legend()
     axis.set_ylim([0.1, None])
-    plt.savefig(plotpath + 'fgl3sind.png')
+    plt.savefig(globdata.plotpath + 'fgl3sind.png')
     plt.close(figr)
     
     strgfgl3spectype = ['LogParabola', 'PLExpCutoff', 'PLSuperExpCutoff', 'PowerLaw']
@@ -540,13 +535,13 @@ def make_anim():
 
     listname = ['errrcnts0A', 'datacnts0A', 'resicnts0A', 'modlcnts0A', 'histspec',         'scatspec', 'psfnprof', 'compfrac0', 'compfracspec', 'scatpixl']
     
-    #print os.listdir(plotpath)
+    #print os.listdir(globdata.plotpath)
     for name in listname:
     
         strg = '%s*0.png' % name
-        listfile = fnmatch.filter(os.listdir(plotpath), strg)[int(numbburn/plotperd):]
+        listfile = fnmatch.filter(os.listdir(globdata.plotpath), strg)[int(numbburn/plotperd):]
         
-        print fnmatch.filter(os.listdir(plotpath), strg)
+        print fnmatch.filter(os.listdir(globdata.plotpath), strg)
         print listfile
 
         nfile = len(listfile)
@@ -558,13 +553,14 @@ def make_anim():
         cmnd += ' %s.gif' % name
         os.system(cmnd)
 
-def plot_samp():
+        
+def plot_samp(globdata):
 
     global thisresicnts, errrmodlcnts
     
     thisresicnts = datacnts - thismodlcnts
 
-    thispsfn = retr_psfn(thissampvarb[indxsamppsfipara], indxener, angldisp, psfntype=modlpsfntype)
+    thispsfn = retr_psfn(thissampvarb[indxsamppsfipara], indxener, globdata.angldisp, psfntype=modlpsfntype)
     if pixltype == 'cart':
         thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
             
@@ -573,14 +569,10 @@ def plot_samp():
     
     plot_psfn(thispsfn)
     
-    
-
     global thisbackcntsmean
     thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
     for c in indxback:
         thisbackcntsmean += mean(thissampvarb[indxsampnormback[c, :, None, None]] * backflux[c] * expo *                                     diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
-
-    
     
     thiscnts = []
     for l in indxpopl:
@@ -597,42 +589,42 @@ def plot_samp():
 
     if thissampvarb[indxsampnumbpnts[l]] > 1:
         for l in indxpopl:
-            if colrprio:
-                plot_histsind(l)
-            plot_scatpixl(l)
+            if globdata.colrprio:
+                plot_histsind(globdata, l)
+            plot_scatpixl(globdata, l)
             if trueinfo:
-                plot_scatspec(l, thisspecmtch=thisspecmtch)
-            plot_histspec(l)
-            plot_histcnts(l, thiscnts)
-            plot_compfrac()
+                plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
+            plot_histspec(globdata, l)
+            plot_histcnts(globdata, l, thiscnts)
+            plot_compfrac(globdata)
 
     for i in indxener:
         
-        plot_datacnts(i, None)
-        #plot_catl(i, None, thiscnts)
-        plot_modlcnts(i, None)
-        plot_resicnts(i, None, thisresicnts)
+        plot_datacnts(globdata, i, None)
+        #plot_catl(globdata, i, None, thiscnts)
+        plot_modlcnts(globdata, i, None)
+        plot_resicnts(globdata, i, None, thisresicnts)
 
         #for m in indxevtt:
-        #    plot_datacnts(i, m)
-        #    plot_catl(i, m, thiscnts)
-        #    plot_modlcnts(i, m)
-        #    plot_resicnts(i, m, thisresicnts)
+        #    plot_datacnts(globdata, i, m)
+        #    plot_catl(globdata, i, m, thiscnts)
+        #    plot_modlcnts(globdata, i, m)
+        #    plot_resicnts(globdata, i, m, thisresicnts)
         
     #if globdata.numbener == 3:
-    #    plot_datacnts(None, None)
+    #    plot_datacnts(globdata, None, None)
         
-    #plot_fwhm(thisfwhm)
-    #plot_backcntsmean(thisbackcntsmean)
+    #plot_fwhm(globdata, thisfwhm)
+    #plot_backcntsmean(globdata, thisbackcntsmean)
     
     tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(thisindxpntsfull, drmcsamp[:, 0])
     errrmodlcnts = thismodlcnts - tempmodlcnts
     
     for i in indxener:
-        plot_errrcnts(i, None, errrmodlcnts)
+        plot_errrcnts(globdata, i, None, errrmodlcnts)
     
     
-def plot_histcnts(l, thiscnts):
+def plot_histcnts(globdata, l, thiscnts):
 
     figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener, figsize=(7 * globdata.numbener, 7 * globdata.numbevtt))
     if globdata.numbevtt == 1:
@@ -659,13 +651,11 @@ def plot_histcnts(l, thiscnts):
                 axis.legend()
         
     figr.subplots_adjust(wspace=0.3)
-    plt.savefig(plotpath + 'histcnts%d_' % l + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'histcnts%d_' % l + rtag + '_%09d.png' % j)
     plt.close(figr)
     
-def plot_datacnts(pener, pevtt, nextstat=False):
+def plot_datacnts(globdata, pener, pevtt, nextstat=False):
 
-    
-    # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(longlabl)
     axis.set_ylabel(latilabl)
@@ -682,23 +672,20 @@ def plot_datacnts(pener, pevtt, nextstat=False):
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
 
-
-        
     # plot the model count map
     if pevtt == None:
         if pener == None:
-            imag = axis.imshow(sum(datacntscart, axis=3), origin='lower', extent=extt, interpolation='none')
+            imag = axis.imshow(sum(datacntscart, axis=3), origin='lower', extent=globdata.exttrofi, interpolation='none')
         else:
-            imag = axis.imshow(sum(datacntscart[:, :, pener, :], axis=2), origin='lower',                              interpolation='none', cmap='Reds', extent=extt)
+            imag = axis.imshow(sum(datacntscart[:, :, pener, :], axis=2), origin='lower',                              interpolation='none', cmap='Reds', extent=globdata.exttrofi)
     else:
-        imag = axis.imshow(datacntscart[:, :, pener, pevtt], origin='lower', interpolation='none',                          cmap='Reds', extent=extt)
+        imag = axis.imshow(datacntscart[:, :, pener, pevtt], origin='lower', interpolation='none',                          cmap='Reds', extent=globdata.exttrofi)
     
     if pevtt != None or pener != None:
         cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
     
     # superimpose catalogs
     for l in indxpopl:
-
 
         # true catalog
         if trueinfo:
@@ -716,7 +703,6 @@ def plot_datacnts(pener, pevtt, nextstat=False):
                 if jtruepntstimevari[l].size > 0:
                     axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=truelabl + ', variable', marker='*', linewidth=2, color='y')
 
-
         # model catalog
         mrkrsize = retr_mrkrsize(thissampvarb[thisindxsampspec[l]][pener, :], pener)
         lgal = thissampvarb[thisindxsamplgal[l]]
@@ -726,7 +712,6 @@ def plot_datacnts(pener, pevtt, nextstat=False):
             bgal *= 3600.
             
         axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
-
 
     if nextstat:
         
@@ -776,7 +761,6 @@ def plot_datacnts(pener, pevtt, nextstat=False):
             print 'nextspec'
             print nextspec  
         
-        
         for k in range(modilgal.size):
             if modispec[pener, k] > 0:
                 colr = 'yellow'
@@ -813,15 +797,16 @@ def plot_datacnts(pener, pevtt, nextstat=False):
     
     if pevtt == None:
         if pener == None:
-            path = plotpath + 'datacntsAA_' + rtag + '_%09d.png' % j
+            path = globdata.plotpath + 'datacntsAA_' + rtag + '_%09d.png' % j
         else:
-            path = plotpath + 'datacnts%dA_' % pener + rtag + '_%09d.png' % j
+            path = globdata.plotpath + 'datacnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
-        path = plotpath + 'datacnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'datacnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
     
-def plot_modlcnts(pener, pevtt):
+    
+def plot_modlcnts(globdata, pener, pevtt):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -843,12 +828,12 @@ def plot_modlcnts(pener, pevtt):
     else:
         modlcntstemp = thismodlcnts[pener, :, pevtt]
     if pixltype == 'heal':
-        modlcntstemp = tdpy_util.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=minmlgal, maxmlgal=maxmlgal,                                            minmbgal=minmbgal, maxmbgal=maxmbgal)
+        modlcntstemp = tdpy_util.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         modlcntstemp = modlcntstemp.reshape((nsidecart, nsidecart)).T
     modlcntstemp[where(modlcntstemp > datacntssatu[pener])] = datacntssatu[pener]
     
-    imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=extt)
+    imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
     
@@ -882,14 +867,14 @@ def plot_modlcnts(pener, pevtt):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = plotpath + 'modlcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'modlcnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
-        path = plotpath + 'modlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'modlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_resicnts(pener, pevtt, resicnts, nextstat=False):
+def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -911,13 +896,13 @@ def plot_resicnts(pener, pevtt, resicnts, nextstat=False):
     else:
         resicntstemp = resicnts[pener, :, pevtt]
     if pixltype == 'heal':
-        resicntstemp = tdpy_util.util.retr_cart(resicntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=minmlgal, maxmlgal=maxmlgal,                                            minmbgal=minmbgal, maxmbgal=maxmbgal)
+        resicntstemp = tdpy_util.util.retr_cart(resicntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         resicntstemp = resicntstemp.reshape((nsidecart, nsidecart))
     resicntstemp[where(resicntstemp > resicntssatu[pener])] = resicntssatu[pener]
     resicntstemp[where(resicntstemp < -resicntssatu[pener])] = -resicntssatu[pener]
     
-    imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=extt)
+    imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
     # superimpose catalogs
@@ -975,15 +960,15 @@ def plot_resicnts(pener, pevtt, resicnts, nextstat=False):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = plotpath + 'resicnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'resicnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
-        path = plotpath + 'resicnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'resicnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
     
     plt.close(figr)
     
     
-def plot_errrcnts(pener, pevtt, errrcntsrofi):
+def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
 
     if pevtt == None:
         errrcntstemp = sum(errrcntsrofi[pener, :, :], axis=1)
@@ -991,7 +976,7 @@ def plot_errrcnts(pener, pevtt, errrcntsrofi):
         errrcntstemp = errrcntsrofi[pener, :, pevtt]
     
     if pixltype == 'heal':
-        errrcntstemp = tdpy_util.util.retr_cart(errrcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=minmlgal, maxmlgal=maxmlgal,                                            minmbgal=minmbgal, maxmbgal=maxmbgal)
+        errrcntstemp = tdpy_util.util.retr_cart(errrcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         errrcntstemp = errrcntstemp.reshape((nsidecart, nsidecart))
     
@@ -1010,7 +995,7 @@ def plot_errrcnts(pener, pevtt, errrcntsrofi):
         axis.set_title(titl)
 
     # plot the error count map
-    imag = axis.imshow(errrcntstemp, origin='lower', cmap='Reds', extent=extt)
+    imag = axis.imshow(errrcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
     axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
@@ -1019,14 +1004,14 @@ def plot_errrcnts(pener, pevtt, errrcntsrofi):
     axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
     
     if pevtt == None:
-        path = plotpath + 'errrcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'errrcnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
-        path = plotpath + 'errrcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'errrcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_catl(pener, pevtt, thiscnts):
+def plot_catl(globdata, pener, pevtt, thiscnts):
     
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -1099,21 +1084,20 @@ def plot_catl(pener, pevtt, thiscnts):
         plt.figtext(0.76, 0.92, '$C_{back} = %d$' % thisbackcntsmean[pener, pevtt], fontsize=18)
         
     if pevtt == None:
-        path = plotpath + 'catlcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'catlcnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
-        path = plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
     
     plt.close(figr)
 
 def plot_topo():
     
-        
     figr, axis = plt.subplots()
     datacnts = zeros(globdata.numbpixlheal)
     datacnts[jpixlrofi] = datacnts[0,:,3]
-    testcart = tdpy_util.util.retr_cart(datacnts, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-    imag = axis.imshow(testcart, origin='lower', cmap='Reds', extent=extt)
+    testcart = tdpy_util.util.retr_cart(datacnts, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    imag = axis.imshow(testcart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.scatter(mocklgal, mockbgal, c='g')
     axis.scatter(lgal, bgal, c='b', s=50)
@@ -1139,27 +1123,27 @@ def plot_topo():
     indxsamp = arange(5, npara, dtype=int)
     xlog = ones(ncomb, dtype=bool)
     ylog = ones(ncomb, dtype=bool)
-    extt = zeros((ncomb, 4))
+    globdata.exttrofi = zeros((ncomb, 4))
     thiscntr = -1
     for k in range(ncomb):
         
         for i in range(2):
             if indxlist[k][i] == indxsampnormback[1, :]:
-                extt[k, 2 * i] = minmnfdm
-                extt[k, 2 * i + 1] = maxmnfdm
+                globdata.exttrofi[k, 2 * i] = minmnfdm
+                globdata.exttrofi[k, 2 * i + 1] = maxmnfdm
             elif where(indxlist[k][i] == indxsamplgal[indxpnts])[0].size > 0:
-                extt[k, 2 * i] = minmgang
-                extt[k, 2 * i + 1] = maxmgang
+                globdata.exttrofi[k, 2 * i] = minmgang
+                globdata.exttrofi[k, 2 * i + 1] = maxmgang
             elif where(indxlist[k][i] == indxsampbgal[indxpnts])[0].size > 0:
-                extt[k, 2 * i] = 0.
-                extt[k, 2 * i + 1] = 2. * pi
+                globdata.exttrofi[k, 2 * i] = 0.
+                globdata.exttrofi[k, 2 * i + 1] = 2. * pi
                 if i == 0:
                     xlog[k] = False
                 else:
                     ylog[k] = False
             else:
-                extt[k, 2 * i] = hyprmflx[0]
-                extt[k, 2 * i + 1] = maxmflux
+                globdata.exttrofi[k, 2 * i] = hyprmflx[0]
+                globdata.exttrofi[k, 2 * i + 1] = maxmflux
 
             
 
@@ -1187,7 +1171,7 @@ def plot_topo():
     for x, axrw in enumerate(axgr):
         for y, axis in enumerate(axrw):  
             k = x * numbcols + y
-            im = axis.imshow(llik[k, :, :], origin='lower', cmap='Reds', extent=extt[k,:], aspect='auto')
+            im = axis.imshow(llik[k, :, :], origin='lower', cmap='Reds', extent=globdata.exttrofi[k,:], aspect='auto')
             figr.colorbar(im, ax=axis, fraction=0.04)
             axis.set_xlabel(labllist[k][0])
             axis.set_ylabel(labllist[k][1])
@@ -1243,33 +1227,33 @@ def plot_pntsdiff():
         hist1[k, :] *= 1. / sum(hist1[k, :]) / diffcnts
         
     
-    totlcntscart0 = tdpy_util.util.retr_cart(totlcntsheal0[0, :], minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-    totlcntscart1 = tdpy_util.util.retr_cart(totlcntsheal1[0, :], minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+    totlcntscart0 = tdpy_util.util.retr_cart(totlcntsheal0[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    totlcntscart1 = tdpy_util.util.retr_cart(totlcntsheal1[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     
     fig = plt.figure(figsize=(12, 12))
     axis = figr.add_subplot(221)
-    imag = axis.imshow(totlcntscart0, origin='lower', cmap='Reds', extent=extt)
+    imag = axis.imshow(totlcntscart0, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     
     axis.set_xlabel(longlabl)
     axis.set_ylabel(latilabl)
     if exprtype == 'ferm':
-        axis.set_xlim([maxmlgal, minmlgal])
-        axis.set_ylim([minmbgal, maxmbgal])
+        axis.set_xlim([globdata.maxmlgal, globdata.minmlgal])
+        axis.set_ylim([globdata.minmbgal, globdata.maxmbgal])
     else:
-        axis.set_xlim(array([maxmlgal, minmlgal]) * 3600.)
-        axis.set_ylim(array([minmbgal, maxmbgal]) * 3600.)
+        axis.set_xlim(array([globdata.maxmlgal, globdata.minmlgal]) * 3600.)
+        axis.set_ylim(array([globdata.minmbgal, globdata.maxmbgal]) * 3600.)
     
     axis.set_title('Isotropic')
 
     
     axis = figr.add_subplot(222)
-    imag = axis.imshow(totlcntscart1, origin='lower', cmap='Reds', extent=extt)
+    imag = axis.imshow(totlcntscart1, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
 
     axis.set_xlabel(r'$x$ [$^\circ$]')
-    axis.set_xlim([maxmlgal, minmlgal])
-    axis.set_ylim([minmbgal, maxmbgal])
+    axis.set_xlim([globdata.maxmlgal, globdata.minmlgal])
+    axis.set_ylim([globdata.minmbgal, globdata.maxmbgal])
     axis.set_title('Isotropic + Unresolved PS')
     
     axis.scatter(tempsampvarb[trueindxsamplgal], tempsampvarb[trueindxsampbgal],                s=50, alpha=0.8, marker='x', color='g', linewidth=2)
@@ -1286,7 +1270,7 @@ def plot_pntsdiff():
     axis.set_yscale('log')
     axis.legend()
 
-    plt.savefig(plotpath + 'pntsdiff.png')
+    plt.savefig(globdata.plotpath + 'pntsdiff.png')
     plt.close(figr)
     
 

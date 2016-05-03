@@ -39,11 +39,11 @@ from healpy import ang2pix
 import pyfits as pf
 
 # utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch
+import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle
 import functools
 
 # tdpy
-import tdpy_util
+import tdpy_util.util
 
 # pnts_tran
 from pnts_tran.cnfg import *
@@ -84,7 +84,7 @@ def work(globdata, indxprocwork):
     for l in globdata.indxpopl:
         globdata.thisindxpntsfull.append(range(thisnumbpnts[l]))
         globdata.thisindxpntsempt.append(range(thisnumbpnts[l], globdata.maxmnumbpnts[l]))
-    globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec,         globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata.thisindxpntsfull)
+    globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec,         globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
       
     if globdata.verbtype > 2:
         print 'thisindxpntsfull: ', globdata.thisindxpntsfull
@@ -666,7 +666,7 @@ def wrap(cnfg):
     # region of interest
     if globdata.pixltype == 'heal':
         
-        lgalheal, bgalheal, globdata.numbsideheal, globdata.numbpixlheal, globdata.apix = tdpy_util.retr_healgrid(globdata.numbsideheal)
+        lgalheal, bgalheal, globdata.numbsideheal, globdata.numbpixlheal, globdata.apix = tdpy_util.util.retr_healgrid(globdata.numbsideheal)
 
         globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
         globdata.indxpixlrofimarg = where((abs(lgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal) &                               (abs(bgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal))[0]
@@ -719,40 +719,43 @@ def wrap(cnfg):
     if globdata.datatype == 'inpt':
         exprflux = exprflux[globdata.filtindx]
         
-    # temp
-    if globdata.exprtype == 'ferm':
-        
-        if psfntype == 'singgaus':
-            jfermformpara = array([1])
-        elif psfntype == 'singking':
+
+    if False:
+        if globdata.psfntype == 'singgaus':
+            indxfermformpara = array([1])
+        elif globdata.psfntype == 'singking':
             jfermformpara = array([1, 2])
-        elif psfntype == 'doubgaus':
+        elif globdata.psfntype == 'doubgaus':
             jfermformpara = array([0, 1, 3])
-        elif psfntype == 'gausking':
+        elif globdata.psfntype == 'gausking':
             jfermformpara = array([0, 1, 3, 4])
-        elif psfntype == 'doubking':
+        elif globdata.psfntype == 'doubking':
             jfermformpara = arange(5)
 
         jfermpsfipara = tile(jfermformpara, globdata.numbener) + repeat(globdata.indxener, jfermformpara.size) * nfermformpara
         jfermpsfipara = tile(jfermpsfipara, globdata.numbevtt) + repeat(globdata.indxevtt, jfermpsfipara.size) * globdata.numbener * nfermformpara
 
         globdata.truepsfipara = fermpsfipara[jfermpsfipara]
-        
-    else:   
-        
-        globdata.truepsfipara = None
 
+        # temp
+        globdata.truepsfipara = array([1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.,                               1., deg2rad(0.1), deg2rad(2.), 10.])
+
+        print 'truepsfipara'
+        print globdata.truepsfipara
+        
+   
     # temp
-    globdata.truepsfipara = array([1., deg2rad(0.1), deg2rad(2.), 10.,                           1., deg2rad(0.1), deg2rad(2.), 10.,                           1., deg2rad(0.1), deg2rad(2.), 10.,                           1., deg2rad(0.1), deg2rad(2.), 10.,                           1., deg2rad(0.1), deg2rad(2.), 10.])
+    if globdata.trueinfo:
+        if globdata.exprtype == 'ferm':
+            globdata.truepsfipara = globdata.fermpsfipara
+        else:   
+            globdata.truepsfipara = None
 
-    print 'truepsfipara'
-    print globdata.truepsfipara
-    
     # exposure
-    if globdata.expostrg == 'unit':
+    if expostrg == 'unit':
         globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     else:
-        path = os.environ["PNTS_TRAN_DATA_PATH"] + '/' + globdata.expostrg
+        path = os.environ["PNTS_TRAN_DATA_PATH"] + '/' + expostrg
         globdata.expo = pf.getdata(path)
 
         if globdata.pixltype == 'heal':
@@ -766,16 +769,16 @@ def wrap(cnfg):
     # backgrounds
     globdata.backflux = []
     globdata.backfluxmean = []
-    for c, globdata.backfluxstrg in enumerate(listglobdata.backfluxstrg):
-        path = os.environ["PNTS_TRAN_DATA_PATH"] + '/' + globdata.backfluxstrg
-        globdata.backfluxtemp = pf.getdata(path)
+    for c, backfluxstrg in enumerate(listbackfluxstrg):
+        path = os.environ["PNTS_TRAN_DATA_PATH"] + '/' + backfluxstrg
+        backfluxtemp = pf.getdata(path)
         if globdata.pixltype == 'heal':
-            globdata.backfluxtemp = globdata.backfluxtemp[healindx]
+            backfluxtemp = backfluxtemp[healindx]
         else:
-            globdata.backfluxtemp = globdata.backfluxtemp.reshape((globdata.backfluxtemp.shape[0], -1, globdata.backfluxtemp.shape[-1]))
-        globdata.backfluxtemp = globdata.backfluxtemp[globdata.filtindx]
-        globdata.backflux.append(globdata.backfluxtemp)
-        globdata.backfluxmean.append(mean(sum(globdata.backfluxtemp * globdata.expo, 2) / sum(globdata.expo, 2), 1))
+            backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
+        backfluxtemp = backfluxtemp[globdata.filtindx]
+        globdata.backflux.append(backfluxtemp)
+        globdata.backfluxmean.append(mean(sum(backfluxtemp * globdata.expo, 2) / sum(globdata.expo, 2), 1))
         
 
         
@@ -790,28 +793,28 @@ def wrap(cnfg):
                 resicnts = (exprflux[i, :, m] - globdata.backfluxtemp) * globdata.expo[i, :, m] * globdata.apix * globdata.diffener[i]
 
                 
-                resicntstemp = tdpy_util.retr_cart(resicnts, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+                resicntstemp = tdpy_util.util.retr_cart(resicnts, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
                 figr, axis = plt.subplots()
                 imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
                 cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
                 plt.savefig(globdata.plotpath + 'testresiflux%d%d_' % (i, m) + globdata.rtag + '.png')
                 plt.close(figr)
                 
-                cart = tdpy_util.retr_cart(exprflux[i, :, m], indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+                cart = tdpy_util.util.retr_cart(exprflux[i, :, m], indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
                 figr, axis = plt.subplots()
                 imag = axis.imshow(cart, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
                 cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
                 plt.savefig(globdata.plotpath + 'testexprflux%d%d_' % (i, m) + globdata.rtag + '.png')
                 plt.close(figr)
                 
-                cart = tdpy_util.retr_cart(globdata.backfluxtemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+                cart = tdpy_util.util.retr_cart(globdata.backfluxtemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
                 figr, axis = plt.subplots()
                 imag = axis.imshow(cart, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
                 cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
                 plt.savefig(globdata.plotpath + 'testglobdata.backflux%d%d_' % (i, m) + globdata.rtag + '.png')
                 plt.close(figr)
 
-                cart = tdpy_util.retr_cart(globdata.expo[i, :, m], indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+                cart = tdpy_util.util.retr_cart(globdata.expo[i, :, m], indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal,                                                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                                    minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
                 figr, axis = plt.subplots()
                 imag = axis.imshow(cart, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
                 cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -822,7 +825,7 @@ def wrap(cnfg):
                 
     # get 3FGL catalog
     if globdata.exprtype == 'ferm':
-        globdata.fgl3lgal, globdata.fgl3bgal, globdata.fgl3spec, fgl3gang,             globdata.fgl3cnts, globdata.fgl3timevari, globdata.fgl3sind, globdata.fgl3spectype, globdata.fgl3scur, globdata.fgl3scut = retr_fgl3()
+        globdata.fgl3lgal, globdata.fgl3bgal, globdata.fgl3spec, fgl3gang,             globdata.fgl3cnts, globdata.fgl3timevari, globdata.fgl3sind, globdata.fgl3spectype, globdata.fgl3scur, globdata.fgl3scut = retr_fgl3(globdata)
         
         if globdata.regitype == 'ngal':
             rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
@@ -834,10 +837,10 @@ def wrap(cnfg):
             globdata.indxfgl3rofi = intersect1d(where((globdata.fgl3spec[0, i, :] > globdata.minmspec[i]) & (globdata.fgl3spec[0, i, :] < globdata.maxmspec[i]))[0], globdata.indxfgl3rofi)
         globdata.indxfgl3rofi = intersect1d(where((abs(globdata.fgl3lgal) < globdata.maxmgangmarg) & (abs(globdata.fgl3bgal) < globdata.maxmgangmarg))[0], globdata.indxfgl3rofi)
 
-        globdata.indxglobdata.fgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
+        globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
         
 
-        plot_fgl3()
+        plot_fgl3(globdata)
         
         globdata.fgl3lgal = globdata.fgl3lgal[globdata.indxfgl3rofi]
         globdata.fgl3bgal = globdata.fgl3bgal[globdata.indxfgl3rofi]
@@ -848,7 +851,7 @@ def wrap(cnfg):
         globdata.fgl3scut = globdata.fgl3scut[globdata.indxfgl3rofi]
         globdata.fgl3timevari = globdata.fgl3timevari[globdata.indxfgl3rofi]
 
-        globdata.indxglobdata.fgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
+        globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
 
         globdata.fgl3numbpnts = globdata.fgl3lgal.size
         
@@ -882,7 +885,7 @@ def wrap(cnfg):
         for l in globdata.indxpopl:
             mockindxpntsfull.append(range(globdata.mocknumbpnts[l]))
           
-        mockindxsamplgal, mockindxsampbgal, mockindxsampspec, mockindxsampsind, mockindxsampcomp = retr_indx(mockindxpntsfull)
+        mockindxsamplgal, mockindxsampbgal, mockindxsampspec,             mockindxsampsind, mockindxsampcomp = retr_indx(globdata, mockindxpntsfull)
 
         mocksamp = zeros(globdata.maxmsampsize)
         mocksamp[globdata.indxsampnumbpnts] = globdata.mocknumbpnts
@@ -960,9 +963,7 @@ def wrap(cnfg):
                 
 
         #plot_pntsdiff()
-         
-    #plot_globdata.datacntshist()
-    
+    #plot_datacntshist()
 
     if amax(abs(globdata.datacnts - globdata.datacnts.astype(int)) / globdata.datacnts) > 1e-3:
         print 'Fractional counts!'
@@ -993,7 +994,7 @@ def wrap(cnfg):
             if globdata.colrprio:
                 globdata.truesind = [globdata.fgl3sind]
             globdata.truecnts = [globdata.fgl3spec[0, :, :, None] * globdata.expo[:, retr_pixl(globdata.truebgal[0], globdata.truelgal[0]), :] *                             globdata.diffener[:, None, None]]
-            globdata.jtruepntstimevari = [globdata.indxglobdata.fgl3timevari]
+            globdata.jtruepntstimevari = [globdata.indxfgl3timevari]
             if globdata.exprtype == 'ferm':
                 globdata.truespec = [globdata.fgl3spec]
                 
@@ -1039,7 +1040,7 @@ def wrap(cnfg):
     if globdata.pixltype == 'heal':
         for i in globdata.indxener:
             for m in globdata.indxevtt:
-                globdata.datacntscarttemp = tdpy_util.retr_cart(globdata.datacnts[i, :, m],                                                                 globdata.indxpixlrofi,                                                                 numbsideinpt=globdata.numbsideheal,                                                                 minmlgal=globdata.minmlgal,                                                                 maxmlgal=globdata.maxmlgal,                                                                 minmbgal=globdata.minmbgal,                                                                 maxmbgal=globdata.maxmbgal)
+                globdata.datacntscarttemp = tdpy_util.util.retr_cart(globdata.datacnts[i, :, m],                                                                 globdata.indxpixlrofi,                                                                 numbsideinpt=globdata.numbsideheal,                                                                 minmlgal=globdata.minmlgal,                                                                 maxmlgal=globdata.maxmlgal,                                                                 minmbgal=globdata.minmbgal,                                                                 maxmbgal=globdata.maxmbgal)
                 if i == 0 and m == 0:
                     globdata.datacntscart = zeros((globdata.datacntscarttemp.shape[0], globdata.datacntscarttemp.shape[1], globdata.numbener, globdata.numbevtt))
                 globdata.datacntscart[:, :, i, m] = globdata.datacntscarttemp
@@ -1185,7 +1186,7 @@ def wrap(cnfg):
     for k in range(globdata.numbproc):
         for j in range(globdata.numbsamp):            
             n = k * globdata.numbsamp + j
-            indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(listindxpntsfull[k][j])
+            indxsamplgal, indxsampbgal, indxsampspec,                 indxsampsind, indxsampcomp = retr_indx(globdata, listindxpntsfull[k][j])
             for l in globdata.indxpopl:
                 listlgal[l].append(listsampvarb[j, k, indxsamplgal[l]])
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
@@ -1431,7 +1432,7 @@ def wrap(cnfg):
     pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True)
     
     if globdata.makeplot:
-        plot_post(pathprobcatl)
+        plot_post(globdata, pathprobcatl)
 
     timetotlreal = time.time() - timetotlreal
     timetotlproc = time.clock() - timetotlproc

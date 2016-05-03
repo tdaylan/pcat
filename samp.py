@@ -333,7 +333,7 @@ def retr_prop():
         print 'thisindxsampbgal: ', thisindxsampbgal
         print 'thisindxsampspec: '
         print thisindxsampspec
-        if colrprio:
+        if globdata.colrprio:
             print 'thisindxsampsind: ', thisindxsampsind
         print 'thisindxsampcomp: ', thisindxsampcomp
         print
@@ -344,21 +344,21 @@ def retr_prop():
         indxsampmodi = indxsampfdfnnorm[indxpoplmodi]
         retr_gaus(indxsampmodi, stdvfdfnnorm)
         nextsampvarb[indxsampfdfnnorm] = icdf_logt(globdata.drmcsamp[indxsampmodi, -1], minmfdfnnorm, factfdfnnorm)
-        if colrprio:
+        if globdata.colrprio:
             indxenermodi = indxenerfdfn
         else:
             indxenermodi = indxener
         
     # flux distribution function slope
     if thisindxprop == thisindxpropfdfnslop:
-        if colrprio:
+        if globdata.colrprio:
             indxenermodi = indxenerfdfn
         else:
             indxenermodi = choice(indxener)
         indxsampmodi = indxsampfdfnslop[indxpoplmodi, indxenermodi]
         retr_gaus(indxsampmodi, stdvfdfnslop)
         nextsampvarb[indxsampfdfnslop[indxpoplmodi, indxenermodi]] = icdf_atan(globdata.drmcsamp[indxsampmodi, -1], minmfdfnslop, factfdfnslop)
-        if colrprio:
+        if globdata.colrprio:
             indxsampmodi = concatenate((indxsampmodi, thisindxsampspec[indxpoplmodi][indxener, :].flatten()))
         else:
             indxsampmodi = concatenate((array([indxsampmodi]), thisindxsampspec[indxpoplmodi][indxenermodi, :]))
@@ -436,13 +436,13 @@ def retr_prop():
         indxbrth = indxcompinit + maxmglobdata.numbcomp * indxpoplmodi + thisindxpntsempt[indxpoplmodi][0] * globdata.numbcomp
         
         # sample auxiliary variables
-        if colrprio:
+        if globdata.colrprio:
             numbauxipara = globdata.numbcompcolr
         else:
             numbauxipara = globdata.numbcomp
         auxipara = rand(numbauxipara)
 
-        if colrprio:
+        if globdata.colrprio:
             globdata.drmcsamp[indxbrth:indxbrth+2, -1] = auxipara[0:2]
             globdata.drmcsamp[indxbrth+2+indxenerfdfn, -1] = auxipara[-2]
             globdata.drmcsamp[indxbrth+globdata.numbcomp-1, -1] = auxipara[-1]
@@ -455,7 +455,7 @@ def retr_prop():
         # modification catalog
         modilgal = empty(1)
         modibgal = empty(1)
-        if colrprio:
+        if globdata.colrprio:
             modiflux = empty(1)
             modisind = empty(1)
         modispec = zeros((globdata.numbener, 1))
@@ -463,7 +463,7 @@ def retr_prop():
         modilgal[0] = icdf_self(globdata.drmcsamp[indxbrth, -1], -maxmgangmarg, 2. * maxmgangmarg)
         modibgal[0] = icdf_self(globdata.drmcsamp[indxbrth+1, -1], -maxmgangmarg, 2. * maxmgangmarg)
 
-        if colrprio:
+        if globdata.colrprio:
             modiflux[0] = icdf_spec(globdata.drmcsamp[indxbrth+2+indxenerfdfn, -1],                                     thissampvarb[indxsampfdfnslop[indxpoplmodi, indxenerfdfn]],                                     minmspec[indxenerfdfn], maxmspec[indxenerfdfn])
             modisind[0] = icdf_atan(globdata.drmcsamp[indxbrth+globdata.numbcomp-1, -1], minmsind, factsind)
             modispec[:, 0] = retr_spec(modiflux[0], modisind[0]).flatten()
@@ -777,7 +777,7 @@ def retr_prop():
                 indxcompmodi = 1
             indxenermodi = indxener
         else:
-            if colrprio:
+            if globdata.colrprio:
                 indxenermodi = indxener
                 if thisindxprop == thisindxpropspec:
                     indxcompmodi = 2 + indxenerfdfn
@@ -798,7 +798,7 @@ def retr_prop():
         
         # sample index to be modified
         indxsampmodi = indxsampmodiinit + indxcompmodi
-        if colrprio:
+        if globdata.colrprio:
             indxsampmodispec = indxsampmodiinit + 2 + indxener
         
         # propose
@@ -812,7 +812,7 @@ def retr_prop():
         modibgal = empty(2)
         modispec = empty((indxenermodi.size, 2))
   
-        if colrprio:
+        if globdata.colrprio:
             thisflux = thissampvarb[thisindxsampspec[indxpoplmodi][indxenerfdfn, modiindxindxpnts]]
             thissind = thissampvarb[thisindxsampsind[indxpoplmodi][modiindxindxpnts]]
             thisspec = retr_spec(thisflux, thissind)
@@ -833,7 +833,7 @@ def retr_prop():
         else:
             modilgal[:] = thissampvarb[thisindxsamplgal[indxpoplmodi][modiindxindxpnts]]
             modibgal[:] = thissampvarb[thisindxsampbgal[indxpoplmodi][modiindxindxpnts]]
-            if colrprio:
+            if globdata.colrprio:
                 if thisindxprop == thisindxpropspec:
                     modiflux = icdf_spec(globdata.drmcsamp[indxsampmodi, -1], thissampvarb[indxsampfdfnslop[indxpoplmodi, indxenerfdfn]], 
                                          minmspec[indxenerfdfn], maxmspec[indxenerfdfn])
