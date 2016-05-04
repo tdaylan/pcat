@@ -263,9 +263,9 @@ def retr_indxprop(globdata, samp):
     # choose the population to be modified
     globdata.indxpoplmodi = choice(globdata.indxpopl)
     
-    if thissampvarb[indxsampnumbpnts[globdata.indxpoplmodi]] == maxmnumbpnts[globdata.indxpoplmodi]:
+    if thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] == maxmnumbpnts[globdata.indxpoplmodi]:
         globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probpropmaxm)
-    elif thissampvarb[indxsampnumbpnts[globdata.indxpoplmodi]] == minmnumbpnts:
+    elif thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] == minmnumbpnts:
         globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probpropminm)
     else:
         globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probprop)
@@ -320,7 +320,7 @@ def retr_llik(globdata, init=False):
         if globdata.thisindxprop == indxproppsfipara or globdata.thisindxprop >= indxpropbrth:
             
             if globdata.thisindxprop == indxproppsfipara:
-                numbpnts = int(sum(thissampvarb[indxsampnumbpnts]))
+                numbpnts = int(sum(thissampvarb[globdata.indxsampnumbpnts]))
                 lgal = thissampvarb[concatenate(thisindxsamplgal)]
                 bgal = thissampvarb[concatenate(thisindxsampbgal)]
                 spec = thissampvarb[concatenate(thisindxsampspec)[globdata.indxenermodi, :]]
@@ -364,7 +364,7 @@ def retr_llik(globdata, init=False):
                 if globdata.thisindxprop == indxproppsfipara:
                     temppsfipara = nextpsfipara
                 else:
-                    temppsfipara = thissampvarb[indxsamppsfipara]
+                    temppsfipara = thissampvarb[globdata.indxsamppsfipara]
                 psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.psfntype)
                                 
                 # update the data cubes
@@ -376,14 +376,14 @@ def retr_llik(globdata, init=False):
             normbacktemp = empty((numbback, 1))
             for c in globdata.indxback:
                 if c == indxbackmodi:
-                    normbacktemp[c, 0] = nextsampvarb[indxsampnormback[c, globdata.indxenermodi]]
+                    normbacktemp[c, 0] = nextsampvarb[globdata.indxsampnormback[c, globdata.indxenermodi]]
                 else:
-                    normbacktemp[c, 0] = thissampvarb[indxsampnormback[c, globdata.indxenermodi]]
+                    normbacktemp[c, 0] = thissampvarb[globdata.indxsampnormback[c, globdata.indxenermodi]]
                 
             nextmodlflux[modiindx] = retr_rofi_flux(globdata, normbacktemp, thispntsflux, modiindx)
 
         if globdata.thisindxprop == indxproppsfipara or globdata.thisindxprop >= indxpropbrth:
-            normback = thissampvarb[indxsampnormback[meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')]]
+            normback = thissampvarb[globdata.indxsampnormback[meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')]]
             nextmodlflux[modiindx] = retr_rofi_flux(globdata, normback, nextpntsflux, modiindx)
 
         nextmodlcnts[modiindx] = nextmodlflux[modiindx] * globdata.expo[modiindx] *             globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
@@ -415,7 +415,7 @@ def retr_lpri(globdata, init=False):
         
         for i in globdata.indxenerfdfn:
             for l in globdata.indxpopl:
-                fluxhistmodl = retr_fdfn(thissampvarb[indxsampfdfnnorm[l]], thissampvarb[indxsampfdfnslop[l, i]], i)
+                fluxhistmodl = retr_fdfn(thissampvarb[globdata.indxsampfdfnnorm[l]], thissampvarb[globdata.indxsampfdfnslop[l, i]], i)
                 fluxhist = histogram(thissampvarb[thisindxsampspec[l][i, :]], binsspec[i, :])[0]
                 lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
                 thislpri[l, i] = sum(lprbpois)            
@@ -432,14 +432,14 @@ def retr_lpri(globdata, init=False):
                 indxenertemp = globdata.indxenermodi
             for i in indxenertemp:
                 if globdata.thisindxprop == indxpropfdfnnorm:
-                    fdfnnorm = nextsampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = thissampvarb[indxsampfdfnslop[globdata.indxpoplmodi, i]]
+                    fdfnnorm = nextsampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
+                    fdfnslop = thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
                 elif globdata.thisindxprop == indxpropfdfnslop:
-                    fdfnnorm = thissampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = nextsampvarb[indxsampfdfnslop[globdata.indxpoplmodi, i]]
+                    fdfnnorm = thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
+                    fdfnslop = nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
                 else:
-                    fdfnnorm = thissampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = thissampvarb[indxsampfdfnslop[globdata.indxpoplmodi, i]]
+                    fdfnnorm = thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
+                    fdfnslop = thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
                 fluxhistmodl = retr_fdfn(fdfnnorm, fdfnslop, i)
                               
                 fluxhist = histogram(thissampvarb[thisindxsampspec[globdata.indxpoplmodi][i, :]], binsspec[i, :])[0] 
@@ -456,7 +456,7 @@ def retr_lpri(globdata, init=False):
                 
                 if False:
                     
-                    prevfluxhistmodl = retr_fdfn(thissampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]], thissampvarb[indxsampfdfnslop[globdata.indxpoplmodi, i]], i)
+                    prevfluxhistmodl = retr_fdfn(thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]], thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], i)
                     get_ipython().magic(u'matplotlib inline')
                     plt.loglog(meanspec[i, :], fluxhistmodl)
                     plt.loglog(meanspec[i, :], fluxhist)
@@ -480,17 +480,15 @@ def retr_lpri(globdata, init=False):
         
 def pars_samp(globdata, indxpntsfull, samp):
     
-
-    indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(indxpntsfull)    
+    indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(globdata, indxpntsfull)    
     sampvarb = zeros_like(samp)
-    sampvarb[indxsampnumbpnts] = samp[indxsampnumbpnts]
-    sampvarb[indxsampfdfnnorm] = icdf_logt(samp[indxsampfdfnnorm], minmfdfnnorm, factfdfnnorm)
-    sampvarb[indxsampfdfnslop] = icdf_atan(samp[indxsampfdfnslop], minmfdfnslop, factfdfnslop)
-         
+    sampvarb[globdata.indxsampnumbpnts] = samp[globdata.indxsampnumbpnts]
+    sampvarb[globdata.indxsampfdfnnorm] = icdf_logt(samp[globdata.indxsampfdfnnorm],                                                     globdata.minmfdfnnorm, globdata.factfdfnnorm)
+    sampvarb[globdata.indxsampfdfnslop] = icdf_atan(samp[globdata.indxsampfdfnslop],                                                     globdata.minmfdfnslop, globdata.factfdfnslop)
     for c in globdata.indxback:
-        sampvarb[indxsampnormback[c, :]] = icdf_logt(samp[indxsampnormback[c, :]], minmnormback[c], factnormback[c])
-    for k in ipsfipara:
-        sampvarb[indxsamppsfipara[k]] = icdf_psfipara(globdata, samp[indxsamppsfipara[k]], k, 'modl')
+        sampvarb[globdata.indxsampnormback[c, :]] = icdf_logt(samp[globdata.indxsampnormback[c, :]],                                                               globdata.minmnormback[c], globdata.factnormback[c])
+    for k in globdata.indxpsfipara:
+        sampvarb[globdata.indxsamppsfipara[k]] = icdf_psfipara(globdata,                                                                samp[globdata.indxsamppsfipara[k]], k)
 
     cnts = []
     listspectemp = []
@@ -499,11 +497,10 @@ def pars_samp(globdata, indxpntsfull, samp):
         sampvarb[indxsamplgal[l]] = icdf_self(samp[indxsamplgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
         sampvarb[indxsampbgal[l]] = icdf_self(samp[indxsampbgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
         for i in globdata.indxenerfdfn:
-            sampvarb[indxsampspec[l][i, :]] = icdf_spec(samp[indxsampspec[l][i, :]], sampvarb[indxsampfdfnslop[l, i]], globdata.minmspec[i], globdata.maxmspec[i])
-            
+            sampvarb[indxsampspec[l][i, :]] = icdf_spec(samp[indxsampspec[l][i, :]],                                                         sampvarb[globdata.indxsampfdfnslop[l, i]],                                                         globdata.minmspec[i], globdata.maxmspec[i])
         if globdata.colrprio:
             sampvarb[indxsampsind[l]] = icdf_atan(samp[indxsampsind[l]], globdata.minmsind, globdata.factsind)
-            sampvarb[indxsampspec[l]] = retr_spec(sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
+            sampvarb[indxsampspec[l]] = retr_spec(sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]],                                                   sampvarb[indxsampsind[l]])
             
         indxpixlpntstemp = retr_indxpixl(globdata, sampvarb[indxsampbgal[l]], sampvarb[indxsamplgal[l]])
     
@@ -513,9 +510,9 @@ def pars_samp(globdata, indxpntsfull, samp):
         indxpixlpnts.append(indxpixlpntstemp)
         listspectemp.append(sampvarb[indxsampspec[l]])
         
-    pntsflux = retr_pntsflux(globdata,                              sampvarb[concatenate(indxsamplgal)],                              sampvarb[concatenate(indxsampbgal)],                              concatenate(listspectemp, axis=1),                              sampvarb[indxsamppsfipara], globdata.psfntype)
+    pntsflux = retr_pntsflux(globdata,                              sampvarb[concatenate(indxsamplgal)],                              sampvarb[concatenate(indxsampbgal)],                              concatenate(listspectemp, axis=1),                              sampvarb[globdata.indxsamppsfipara], globdata.psfntype)
     
-    totlflux = retr_rofi_flux(sampvarb[indxsampnormback], pntsflux, globdata.fullindx)
+    totlflux = retr_rofi_flux(sampvarb[globdata.indxsampnormback], pntsflux, globdata.fullindx)
     totlcnts = totlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
     
     return sampvarb, indxpixlpnts, cnts, pntsflux, totlflux, totlcnts
@@ -591,16 +588,16 @@ def updt_samp(globdata):
     global thissampvarb, thispntsflux, thismodlcnts, thisindxpntsfull,         thisindxpntsempt, thisllik, thislpri
 
     if globdata.thisindxprop == indxpropfdfnnorm:
-        thissampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]] = nextsampvarb[indxsampfdfnnorm[globdata.indxpoplmodi]]
+        thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]] = nextsampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
         thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
 
     if globdata.thisindxprop == indxpropfdfnslop:
  
         # update the unit sample vector
-        drmcsamp[thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :], -1] =             cdfn_spec(thissampvarb[thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]],                       nextsampvarb[indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]],                       globdata.minmspec[globdata.indxenermodi], globdata.maxmspec[globdata.indxenermodi])
+        drmcsamp[thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :], -1] =             cdfn_spec(thissampvarb[thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]],                       nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]],                       globdata.minmspec[globdata.indxenermodi], globdata.maxmspec[globdata.indxenermodi])
         
         # update the sample vector
-        thissampvarb[indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] =             nextsampvarb[indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
+        thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] =             nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
             
         # update the prior register
         thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
@@ -611,17 +608,17 @@ def updt_samp(globdata):
         thismodlcnts[modiindx] = nextmodlcnts[modiindx]
         
     if globdata.thisindxprop == indxproppsfipara:
-        thissampvarb[indxsamppsfipara[indxpsfiparamodi]] = nextpsfipara[indxpsfiparamodi]
+        thissampvarb[globdata.indxsamppsfipara[indxpsfiparamodi]] = nextpsfipara[indxpsfiparamodi]
         
     if globdata.thisindxprop == indxpropnormback:
-        thissampvarb[indxsampnormback[indxbackmodi, globdata.indxenermodi]] =             nextsampvarb[indxsampnormback[indxbackmodi, globdata.indxenermodi]]
+        thissampvarb[globdata.indxsampnormback[indxbackmodi, globdata.indxenermodi]] =             nextsampvarb[globdata.indxsampnormback[indxbackmodi, globdata.indxenermodi]]
         
     if globdata.thisindxprop >= indxpropbrth or globdata.thisindxprop == indxproppsfipara:
         thispntsflux[modiindx] = nextpntsflux[modiindx]
         
     # transdimensinal updates
     if globdata.thisindxprop >= indxpropbrth and globdata.thisindxprop <= indxpropmerg:
-        thissampvarb[indxsampnumbpnts[globdata.indxpoplmodi]] = nextsampvarb[indxsampnumbpnts[globdata.indxpoplmodi]]
+        thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]]
         thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
         
     # birth
