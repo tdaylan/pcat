@@ -128,7 +128,7 @@ def work(globdata, indxprocwork):
                 else:
                     for i in globdata.indxenerfdfn:
                         fdfnsloptemp = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0], globdata.minmfdfnslop, globdata.factfdfnslop)
-                        globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(cdfn_spec(globdata.truespec[l][0, i, :],                                                                                 fdfnsloptemp, globdata.minmspec[i], globdata.maxmspec[i]))
+                        globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(cdfn_spec(globdata, globdata.truespec[l][0, i, :],                                                                                 fdfnsloptemp, globdata.minmspec[i], globdata.maxmspec[i]))
 
 
     
@@ -870,18 +870,18 @@ def wrap(cnfg):
             for c in globdata.indxback:
                 mocknormback[c, :] = icdf_logt(rand(globdata.numbener),                                                     globdata.minmnormback[c], globdata.factnormback[c])
 
-        mockcnts = []
-        mocklgal = []
-        mockbgal = []
-        mockspec = []
+        mockcnts = [[] for l in globdata.indxpopl]
+        mocklgal = [[] for l in globdata.indxpopl]
+        mockbgal = [[] for l in globdata.indxpopl]
+        mockspec = [[] for l in globdata.indxpopl]
         if globdata.colrprio:
-            mocksind = []
+            mocksind = [[] for l in globdata.indxpopl]
         for l in globdata.indxpopl:
             mocklgal[l] = icdf_self(rand(mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
             mockbgal[l] = icdf_self(rand(mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
             mockspec[l] = empty((globdata.numbener, mocknumbpnts[l]))
             for i in globdata.indxenerfdfn:
-                mockspec[l][i, :] = icdf_spec(rand(mocknumbpnts[l]),                                               mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+                mockspec[l][i, :] = icdf_spec(globdata, rand(mocknumbpnts[l]),                                               mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
             if globdata.colrprio:
                 mocksind[l] = icdf_atan(rand(mocknumbpnts[l]), globdata.minmsind, globdata.factsind)
                 mockspec[l] = retr_spec(mockspec[l][globdata.indxenerfdfn, :], mocksind[l])

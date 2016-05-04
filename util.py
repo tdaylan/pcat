@@ -184,14 +184,14 @@ def cdfn_spec(globdata, flux, fdfnslop, minmspectemp, maxmspectemp):
 
 def icdf_spec(globdata, fluxunit, fdfnslop, minmspectemp, maxmspectemp):
     
-    flux = (fluxunit * (globdata.maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) + minmspectemp**(1. - fdfnslop))**(1. / (1. - fdfnslop))
+    flux = (fluxunit * (maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) + minmspectemp**(1. - fdfnslop))**(1. / (1. - fdfnslop))
     
     return flux
 
 
 def pdfn_spec(globdata, flux, fdfnslop, minmspectemp, maxmspectemp):
   
-    pdfnflux = (1. - fdfnslop) / (globdata.maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) * flux**(-fdfnslop)
+    pdfnflux = (1. - fdfnslop) / (maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) * flux**(-fdfnslop)
           
     return pdfnflux
 
@@ -380,12 +380,13 @@ def retr_llik(globdata, init=False):
                 else:
                     normbacktemp[c, 0] = thissampvarb[indxsampnormback[c, globdata.indxenermodi]]
                 
-            nextmodlflux[modiindx] = retr_rofi_flux(normbacktemp, thispntsflux, modiindx)
+            nextmodlflux[modiindx] = retr_rofi_flux(globdata, normbacktemp, thispntsflux, modiindx)
 
         if globdata.thisindxprop == indxproppsfipara or globdata.thisindxprop >= indxpropbrth:
-            nextmodlflux[modiindx] = retr_rofi_flux(thissampvarb[indxsampnormback[meshgrid(indxback, globdata.indxenermodi, indexing='ij')]],                                                     nextpntsflux, modiindx)
+            normback = thissampvarb[indxsampnormback[meshgrid(indxback, globdata.indxenermodi, indexing='ij')]]
+            nextmodlflux[modiindx] = retr_rofi_flux(globdata, normback, nextpntsflux, modiindx)
 
-        nextmodlcnts[modiindx] = nextmodlflux[modiindx] * globdata.expo[modiindx] * apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
+        nextmodlcnts[modiindx] = nextmodlflux[modiindx] * globdata.expo[modiindx] *             apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
         nextllik[modiindx] = datacnts[modiindx] * log(nextmodlcnts[modiindx]) - nextmodlcnts[modiindx]
             
         if not isfinite(nextllik[modiindx]).any():
@@ -513,7 +514,7 @@ def pars_samp(globdata, indxpntsfull, samp):
         listspectemp.append(sampvarb[indxsampspec[l]])
         
 
-    pntsflux = retr_pntsflux(sampvarb[concatenate(indxsamplgal)],                                            sampvarb[concatenate(indxsampbgal)],                                            concatenate(listspectemp, axis=1), sampvarb[indxsamppsfipara])
+    pntsflux = retr_pntsflux(globdata, sampvarb[concatenate(indxsamplgal)],                                            sampvarb[concatenate(indxsampbgal)],                                            concatenate(listspectemp, axis=1), sampvarb[indxsamppsfipara])
     
     totlflux = retr_rofi_flux(sampvarb[indxsampnormback], pntsflux, fullindx)
     totlcnts = totlflux * globdata.expo * apix * globdata.diffener[:, None, None] # [1]
