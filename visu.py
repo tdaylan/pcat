@@ -41,15 +41,15 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util.util
+import tdpy.util
 
-# pnts_tran
-from pnts_tran.cnfg import *
-from pnts_tran.main import *
-from pnts_tran.samp import *
-from pnts_tran.util import *
-from pnts_tran.visu import *
-from pnts_tran.plot import *
+# pcat
+from pcat.cnfg import *
+from pcat.main import *
+from pcat.samp import *
+from pcat.util import *
+from pcat.visu import *
+from pcat.plot import *
 
 
 
@@ -113,15 +113,15 @@ def plot_post(pathprobcatl):
     rtag = retr_rtag(None)
 
     if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
-        plotfold = '/n/pan/www/tansu/png/pnts_tran/'
+        plotfold = '/n/pan/www/tansu/png/pcat/'
     else:
-        plotfold = os.environ["PNTS_TRAN_DATA_PATH"] + '/png/'
+        plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
     plotpath = plotfold + globdata.datetimestrg + '_' + rtag + '/'
     cmnd = 'mkdir -p ' + plotpath
     os.system(cmnd)
 
 
-    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal, apix = tdpy_util.util.retr_heal(globdata.numbsideheal)
+    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal,         globdata.apix = tdpy.util.retr_heal(globdata.numbsideheal)
     globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
 
     globdata.indxenerincl = hdun['indxenerincl'].data
@@ -349,7 +349,7 @@ def plot_post(pathprobcatl):
                     truepara = truesampvarb[indxsamppsfipara[ipsfipara]]
                 else:
                     truepara = None
-                tdpy_util.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=numbbins, quan=True)
+                tdpy.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=numbbins, quan=True)
                 
                 
             
@@ -379,7 +379,7 @@ def plot_post(pathprobcatl):
             plot_scatspec(l, postspecmtch=postspecmtch)
 
             # store the comparison
-            path = os.environ["PNTS_TRAN_DATA_PATH"] + '/pcatcomp_popl%d_' % l + rtag + '.fits'
+            path = os.environ["PCAT_DATA_PATH"] + '/pcatcomp_popl%d_' % l + rtag + '.fits'
             compbund = stack((globdata.truespec[l], postspecmtch))
 
     tim1 = time.time()
@@ -396,7 +396,7 @@ def plot_post(pathprobcatl):
         for l in globdata.indxpopl:
             for i in globdata.indxener:
                 for h in range(globdata.numbspec):
-                    pntsprobcart[:, :, l, i, h] = tdpy_util.util.retr_cart(pntsprob[l, i, :, h], 
+                    pntsprobcart[:, :, l, i, h] = tdpy.util.retr_cart(pntsprob[l, i, :, h], 
                                                                       indxpixlrofi=globdata.indxpixlrofi, \
                                                                       numbsideinpt=globdata.numbsideheal, \
                                                                       minmlgal=globdata.minmlgal, \
@@ -445,20 +445,20 @@ def plot_post(pathprobcatl):
         truepara = globdata.truepsfipara
     else:
         truepara = array([None] * globdata.numbpsfipara)
-    tdpy_util.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=numbbins, quan=True, ntickbins=3)
+    tdpy.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=numbbins, quan=True, ntickbins=3)
     
     for k in range(globdata.numbpsfipara):
         path = plotpath + 'psfipara%d_' % k + rtag + '.png'
-        tdpy_util.util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
+        tdpy.util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
     
     
     # log-likelihood
     path = plotpath + 'llik_' + rtag + '.png'
-    tdpy_util.util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
+    tdpy.util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
 
     # log-prior
     path = plotpath + 'lpri_' + rtag + '.png'
-    tdpy_util.util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
+    tdpy.util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
     
 
     # number, expected number of PS and flux conditional prior power law index 
@@ -470,7 +470,7 @@ def plot_post(pathprobcatl):
             truepara = globdata.truenumbpnts[l]
         else:
             truepara = None
-        tdpy_util.util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
+        tdpy.util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
 
         # mean number of point sources
         path = plotpath + 'fdfnnorm_popl%d_' % l + rtag + '.png'
@@ -478,7 +478,7 @@ def plot_post(pathprobcatl):
             truepara = globdata.truefdfnnorm[l]
         else:
             truepara = None
-        tdpy_util.util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
+        tdpy.util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
 
         # flux distribution power law index
         for i in globdata.indxenerfdfn:
@@ -489,7 +489,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl =  r'$\alpha_{%d}$' % i
-            tdpy_util.util.plot_trac(globdata.listfdfnslop[:, l, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy.util.plot_trac(globdata.listfdfnslop[:, l, i], labl, truepara=truepara, path=path, titl=titl)
         
         
     # isotropic background normalization
@@ -502,7 +502,7 @@ def plot_post(pathprobcatl):
                 truepara = None
         titl = globdata.binsenerstrg[i]
         labl = r'$\mathcal{I}_{%d}$' % i
-        tdpy_util.util.plot_trac(globdata.listnormback[:, 0, i], labl, truepara=truepara, path=path, titl=titl)
+        tdpy.util.plot_trac(globdata.listnormback[:, 0, i], labl, truepara=truepara, path=path, titl=titl)
        
     if globdata.exprtype == 'ferm':
         # diffuse model normalization
@@ -517,7 +517,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl = r'$\mathcal{D}_{%d}$' % i
-            tdpy_util.util.plot_trac(globdata.listnormback[:, 1, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy.util.plot_trac(globdata.listnormback[:, 1, i], labl, truepara=truepara, path=path, titl=titl)
 
     # plot log-likelihood
     figr, axrw = plt.subplots(2, 1, figsize=(7, 12))
@@ -562,12 +562,12 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     if post:
         listydat[1, :] = postpntsfluxmean[0, :]
         listyerr[:, 1, :] = retr_errrvarb(postpntsfluxmean)
-        for c in indxback:
+        for c in globdata.indxback:
             listydat[c+2, :] = postnormback[0, c, :] * backfluxmean[c]
             listyerr[:, c+2, :] = retr_errrvarb(postnormback[:, c, :]) * backfluxmean[c]
     else:
         listydat[1, :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
-        for c in indxback:
+        for c in globdata.indxback:
             listydat[c+2, :] = thissampvarb[indxsampnormback[c, :]] * backfluxmean[c]
 
     
@@ -591,7 +591,7 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
                 listcolr = ['g', 'g', 'g', 'g', 'g', 'g']
                 listlabl = ['Fermi-LAT Data', r'Fermi-LAT $\pi^0$', 'Fermi-LAT ICS', 'Fermi-LAT Brem', 'Fermi-LAT PS', 'Fermi-LAT Iso']
                 for k, name in enumerate(listname):
-                    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermspec' + name + '.csv'
+                    path = os.environ["PCAT_DATA_PATH"] + '/fermspec' + name + '.csv'
                     data = loadtxt(path)
                     enertemp = data[:, 0] # [GeV]
                     fluxtemp = data[:, 1] * 1e-3 # [GeV/cm^2/s/sr]

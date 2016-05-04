@@ -41,15 +41,15 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util.util
+import tdpy.util
 
-# pnts_tran
-from pnts_tran.cnfg import *
-from pnts_tran.main import *
-from pnts_tran.samp import *
-from pnts_tran.util import *
-from pnts_tran.visu import *
-from pnts_tran.plot import *
+# pcat
+from pcat.cnfg import *
+from pcat.main import *
+from pcat.samp import *
+from pcat.util import *
+from pcat.visu import *
+from pcat.plot import *
 
 
 
@@ -117,7 +117,7 @@ def plot_minmspecinfo(minmspecarry, listinfo, listlevi):
     ax_.set_ylabel(r'$\log P(D)$ [nats]')
     axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
     axis.set_xscale('log')
-    figr.savefig(os.environ["PNTS_TRAN_DATA_PATH"] + '/png/minmspecinfo.png')
+    figr.savefig(os.environ["PCAT_DATA_PATH"] + '/png/minmspecinfo.png')
     plt.close(figr)
     
     
@@ -207,9 +207,9 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
                     axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
                     if not cumu:
                         if h < 3 or full:
-                            axis.set_title(tdpy_util.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy_util.util.mexp(binsspec[i, h+1]))
+                            axis.set_title(tdpy.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(binsspec[i, h+1]))
                         else:
-                            axis.set_title(tdpy_util.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb)
+                            axis.set_title(tdpy.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb)
             figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, indxenerincl[i]) + '_' + rtag + '.png')
             plt.close(figr)
        
@@ -429,7 +429,7 @@ def plot_intr():
         axis.set_axis_bgcolor('black')
         figr.set_facecolor('black')
         figr.subplots_adjust(bottom=0.15, top=0.9)
-        plt.savefig(os.environ["PNTS_TRAN_DATA_PATH"] + '/png/talkintr.png', facecolor=figr.get_facecolor())
+        plt.savefig(os.environ["PCAT_DATA_PATH"] + '/png/talkintr.png', facecolor=figr.get_facecolor())
         plt.close()  
         
         
@@ -440,7 +440,7 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
         heal = zeros(globdata.numbpixlheal)
         heal[jpixlrofi] = healtemp
 
-    cart = tdpy_util.util.retr_cart(heal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    cart = tdpy.util.retr_cart(heal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.title(titl)
@@ -451,7 +451,7 @@ def plot_3fgl_thrs():
 
     expoheal = sum(sum(expoheal, 2)[1:3, :], axis=0)
 
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/catl/3fgl_thrs.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/catl/3fgl_thrs.fits'
     fluxthrs = pf.getdata(path, 0)
 
     bgalfgl3 = linspace(-90., 90., 481)
@@ -563,13 +563,13 @@ def plot_samp(globdata):
         thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
             
 
-    thisfwhm = retr_fwhm(thispsfn)
+    thisfwhm = retr_fwhm(globdata, thispsfn)
     
     plot_psfn(thispsfn)
     
     global thisbackcntsmean
     thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
-    for c in indxback:
+    for c in globdata.indxback:
         thisbackcntsmean += mean(thissampvarb[indxsampnormback[c, :, None, None]] * backflux[c] * expo *                                     diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
     
     thiscnts = []
@@ -826,7 +826,7 @@ def plot_modlcnts(globdata, pener, pevtt):
     else:
         modlcntstemp = thismodlcnts[pener, :, pevtt]
     if pixltype == 'heal':
-        modlcntstemp = tdpy_util.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+        modlcntstemp = tdpy.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         modlcntstemp = modlcntstemp.reshape((nsidecart, nsidecart)).T
     modlcntstemp[where(modlcntstemp > datacntssatu[pener])] = datacntssatu[pener]
@@ -894,7 +894,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     else:
         resicntstemp = resicnts[pener, :, pevtt]
     if pixltype == 'heal':
-        resicntstemp = tdpy_util.util.retr_cart(resicntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+        resicntstemp = tdpy.util.retr_cart(resicntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         resicntstemp = resicntstemp.reshape((nsidecart, nsidecart))
     resicntstemp[where(resicntstemp > resicntssatu[pener])] = resicntssatu[pener]
@@ -974,7 +974,7 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
         errrcntstemp = errrcntsrofi[pener, :, pevtt]
     
     if pixltype == 'heal':
-        errrcntstemp = tdpy_util.util.retr_cart(errrcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+        errrcntstemp = tdpy.util.retr_cart(errrcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         errrcntstemp = errrcntstemp.reshape((nsidecart, nsidecart))
     
@@ -1094,7 +1094,7 @@ def plot_topo():
     figr, axis = plt.subplots()
     datacnts = zeros(globdata.numbpixlheal)
     datacnts[jpixlrofi] = datacnts[0,:,3]
-    testcart = tdpy_util.util.retr_cart(datacnts, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    testcart = tdpy.util.retr_cart(datacnts, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     imag = axis.imshow(testcart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.scatter(mocklgal, mockbgal, c='g')
@@ -1158,7 +1158,7 @@ def plot_topo():
                 samp[indxlist[k][1]] = data[m]
                 llik[k, n, m] = retr_llik(samp)
 
-        thiscntr = tdpy_util.util.show_prog(k, ncomb, thiscntr)
+        thiscntr = tdpy.util.show_prog(k, ncomb, thiscntr)
             
     
     llik *= 1e-7
@@ -1192,13 +1192,13 @@ def plot_pntsdiff():
     tempsamp[indxsampfdfnnorm] = cdfn_logt(array([tempnumbpnts]), minmfdfnnorm, factfdfnnorm)
     tempsamp[indxsampfdfnslop] = cdfn_atan(array([1.5]), minmfdfnslop, factfdfnslop)
     tempsamp[indxsamppsfipara] = 0.5
-    for c in indxback:
+    for c in globdata.indxback:
         tempsamp[indxsampnormback[c, 0]] = cdfn_logt(array([1.]), minmnormback[c], factnormback[c])
     tempsampvarb, tempppixl, tempcnts,         temppntsflux, tempflux, tempcntsrofi = pars_samp(tempindxpntsfull, tempsamp)
 
 
-    pntscnts = tempcnts[0, :, 0] * expo[0, :, 0] * apix * diffener[0]
-    isotcnts = isotflux[0, :, 0] * expo[0, :, 0] * apix * diffener[0]
+    pntscnts = tempcnts[0, :, 0] * expo[0, :, 0] * globdata.apix * diffener[0]
+    isotcnts = isotflux[0, :, 0] * expo[0, :, 0] * globdata.apix * diffener[0]
     
     totlcnts0 = isotcnts
     totlcnts1 = pntscnts / 1e6 + isotcnts
@@ -1225,8 +1225,8 @@ def plot_pntsdiff():
         hist1[k, :] *= 1. / sum(hist1[k, :]) / diffcnts
         
     
-    totlcntscart0 = tdpy_util.util.retr_cart(totlcntsheal0[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
-    totlcntscart1 = tdpy_util.util.retr_cart(totlcntsheal1[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    totlcntscart0 = tdpy.util.retr_cart(totlcntsheal0[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    totlcntscart1 = tdpy.util.retr_cart(totlcntsheal1[0, :], minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     
     fig = plt.figure(figsize=(12, 12))
     axis = figr.add_subplot(221)
@@ -1259,8 +1259,8 @@ def plot_pntsdiff():
     axis = figr.add_subplot(212)
 
 
-    tdpy_util.util.plot_braz(ax, meancnts, hist0,  lcol='lightgreen',                         alpha=0.3, dcol='green', mcol='darkgreen', labl='Isotropic')
-    tdpy_util.util.plot_braz(ax, meancnts, hist1, lcol='lightblue',                         alpha=0.3, dcol='blue', mcol='darkblue', labl='Isotropic + Unresolved PS')
+    tdpy.util.plot_braz(ax, meancnts, hist0,  lcol='lightgreen',                         alpha=0.3, dcol='green', mcol='darkgreen', labl='Isotropic')
+    tdpy.util.plot_braz(ax, meancnts, hist1, lcol='lightblue',                         alpha=0.3, dcol='blue', mcol='darkblue', labl='Isotropic + Unresolved PS')
 
     axis.set_title('Count PDF')
     axis.set_xlabel('$k$')

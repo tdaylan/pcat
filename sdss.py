@@ -3,7 +3,43 @@
 
 # In[ ]:
 
-from __init__ import *
+# numpy
+import numpy as np
+from numpy import *
+from numpy.random import *
+from numpy.random import choice
+
+import matplotlib.pyplot as plt
+
+# scipy
+import scipy as sp
+from scipy import ndimage
+from scipy.interpolate import *
+from scipy.special import erfinv, erf
+from scipy.stats import poisson as pss
+from scipy import ndimage
+
+
+# multiprocessing
+import multiprocessing as mp
+
+# healpy
+import healpy as hp
+from healpy.rotator import angdist
+from healpy import ang2pix
+
+# pyfits
+import pyfits as pf
+
+# utilities
+import os, time, sys, datetime, warnings, getpass, glob, inspect
+
+# tdpy
+import tdpy
+
+
+import sympy
+
 
 
 # In[2]:
@@ -26,7 +62,7 @@ def writ_sdss():
 
     sdssdataflux = zeros((nener, npixlside, npixlside, nevtt))
     for i in iener:
-        path = os.environ["PNTS_TRAN_DATA_PATH"] + '/frame-' + enerstrg[i] + '-001458-4-0700.fits'
+        path = os.environ["PCAT_DATA_PATH"] + '/frame-' + enerstrg[i] + '-001458-4-0700.fits'
         data, hdr = pf.getdata(path, 0, header=True)
         rasccntr = hdr['CRVAL1']
         declcntr = hdr['CRVAL2']
@@ -107,15 +143,15 @@ def writ_sdss():
         
         sdssdataflux[i, :, :, 0] = data[-npixlside:, -npixlside:]
         
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/sdssdataflux.fits' 
+    path = os.environ["PCAT_DATA_PATH"] + '/sdssdataflux.fits' 
     pf.writeto(path, sdssdataflux, clobber=True)
 
     sdssbackflux = ones((nener, npixlside, npixlside, nevtt)) / apix
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/sdssbackflux.fits' 
+    path = os.environ["PCAT_DATA_PATH"] + '/sdssbackflux.fits' 
     pf.writeto(path, sdssbackflux, clobber=True)
     
     sdssexpo = ones((nener, npixlside, npixlside, nevtt))
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/sdssexpo.fits' 
+    path = os.environ["PCAT_DATA_PATH"] + '/sdssexpo.fits' 
     pf.writeto(path, sdssexpo, clobber=True)
 
     

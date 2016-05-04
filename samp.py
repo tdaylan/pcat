@@ -41,15 +41,15 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util.util
+import tdpy.util
 
-# pnts_tran
-from pnts_tran.cnfg import *
-from pnts_tran.main import *
-from pnts_tran.samp import *
-from pnts_tran.util import *
-from pnts_tran.visu import *
-from pnts_tran.plot import *
+# pcat
+from pcat.cnfg import *
+from pcat.main import *
+from pcat.samp import *
+from pcat.util import *
+from pcat.visu import *
+from pcat.plot import *
 
 
 
@@ -252,7 +252,7 @@ def rjmc(indxprocwork):
 
         # log the progress
         if verbtype > 0:
-            thiscntr = tdpy_util.util.show_prog(globdata.thisindxswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
+            thiscntr = tdpy.util.show_prog(globdata.thisindxswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
             
             
         if diagsamp:
@@ -410,7 +410,7 @@ def retr_prop():
 
         # determine the sample index to be changed
         indxenermodi = choice(indxener)
-        indxbackmodi = choice(indxback)
+        indxbackmodi = choice(globdata.indxback)
         indxsampmodi = indxsampnormback[indxbackmodi, indxenermodi]
         
         # propose

@@ -41,15 +41,15 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 
 # tdpy
-import tdpy_util.util
+import tdpy.util
 
-# pnts_tran
-from pnts_tran.cnfg import *
-from pnts_tran.main import *
-from pnts_tran.samp import *
-from pnts_tran.util import *
-from pnts_tran.visu import *
-from pnts_tran.plot import *
+# pcat
+from pcat.cnfg import *
+from pcat.main import *
+from pcat.samp import *
+from pcat.util import *
+from pcat.visu import *
+from pcat.plot import *
 
 
 
@@ -99,7 +99,7 @@ def retr_indx(globdata, indxpntsfull):
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp
 
 
-def retr_pntsflux(globdata, lgal, bgal, spec, psfipara):
+def retr_pntsflux(globdata, lgal, bgal, spec, psfipara, psfntype):
     
     numbpnts = lgal.size
     
@@ -110,7 +110,7 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara):
     # convolve with the PSF
     pntsflux = empty((numbpnts, globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     for k in range(numbpnts):
-        psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], globdata.psfntype, 'modl')
+        psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], psfntype)
         pntsflux[k, :, :, :] = spec[:, k, None, None] * psfn
 
     # sum contributions from all PS
@@ -122,7 +122,7 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara):
 def retr_rofi_flux(globdata, normback, pntsflux, tempindx):
 
     modlflux = pntsflux[tempindx]
-    for c in indxback:
+    for c in globdata.indxback:
         modlflux += normback[c, :, None, None] * globdata.backflux[c][tempindx]        
     
     return modlflux
@@ -365,7 +365,7 @@ def retr_llik(globdata, init=False):
                     temppsfipara = nextpsfipara
                 else:
                     temppsfipara = thissampvarb[indxsamppsfipara]
-                psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.psfntype, 'modl')
+                psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.psfntype)
                                 
                 # update the data cubes
                 for i in range(globdata.indxenermodi.size):
@@ -374,7 +374,7 @@ def retr_llik(globdata, init=False):
         if globdata.thisindxprop == indxpropnormback:
             
             normbacktemp = empty((numbback, 1))
-            for c in indxback:
+            for c in globdata.indxback:
                 if c == indxbackmodi:
                     normbacktemp[c, 0] = nextsampvarb[indxsampnormback[c, globdata.indxenermodi]]
                 else:
@@ -383,10 +383,10 @@ def retr_llik(globdata, init=False):
             nextmodlflux[modiindx] = retr_rofi_flux(globdata, normbacktemp, thispntsflux, modiindx)
 
         if globdata.thisindxprop == indxproppsfipara or globdata.thisindxprop >= indxpropbrth:
-            normback = thissampvarb[indxsampnormback[meshgrid(indxback, globdata.indxenermodi, indexing='ij')]]
+            normback = thissampvarb[indxsampnormback[meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')]]
             nextmodlflux[modiindx] = retr_rofi_flux(globdata, normback, nextpntsflux, modiindx)
 
-        nextmodlcnts[modiindx] = nextmodlflux[modiindx] * globdata.expo[modiindx] *             apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
+        nextmodlcnts[modiindx] = nextmodlflux[modiindx] * globdata.expo[modiindx] *             globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
         nextllik[modiindx] = datacnts[modiindx] * log(nextmodlcnts[modiindx]) - nextmodlcnts[modiindx]
             
         if not isfinite(nextllik[modiindx]).any():
@@ -487,7 +487,7 @@ def pars_samp(globdata, indxpntsfull, samp):
     sampvarb[indxsampfdfnnorm] = icdf_logt(samp[indxsampfdfnnorm], minmfdfnnorm, factfdfnnorm)
     sampvarb[indxsampfdfnslop] = icdf_atan(samp[indxsampfdfnslop], minmfdfnslop, factfdfnslop)
          
-    for c in indxback:
+    for c in globdata.indxback:
         sampvarb[indxsampnormback[c, :]] = icdf_logt(samp[indxsampnormback[c, :]], minmnormback[c], factnormback[c])
     for k in ipsfipara:
         sampvarb[indxsamppsfipara[k]] = icdf_psfipara(globdata, samp[indxsamppsfipara[k]], k, 'modl')
@@ -513,11 +513,10 @@ def pars_samp(globdata, indxpntsfull, samp):
         indxpixlpnts.append(indxpixlpntstemp)
         listspectemp.append(sampvarb[indxsampspec[l]])
         
-
-    pntsflux = retr_pntsflux(globdata, sampvarb[concatenate(indxsamplgal)],                                            sampvarb[concatenate(indxsampbgal)],                                            concatenate(listspectemp, axis=1), sampvarb[indxsamppsfipara])
+    pntsflux = retr_pntsflux(globdata,                              sampvarb[concatenate(indxsamplgal)],                              sampvarb[concatenate(indxsampbgal)],                              concatenate(listspectemp, axis=1),                              sampvarb[indxsamppsfipara], globdata.psfntype)
     
-    totlflux = retr_rofi_flux(sampvarb[indxsampnormback], pntsflux, fullindx)
-    totlcnts = totlflux * globdata.expo * apix * globdata.diffener[:, None, None] # [1]
+    totlflux = retr_rofi_flux(sampvarb[indxsampnormback], pntsflux, globdata.fullindx)
+    totlcnts = totlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
     
     return sampvarb, indxpixlpnts, cnts, pntsflux, totlflux, totlcnts
     
@@ -540,7 +539,7 @@ def retr_anglfromscal(globdata, scalangl, i, m):
 
 def retr_fermpsfn(globdata):
    
-    name = os.environ["PNTS_TRAN_DATA_PATH"] + '/irf/psf_P8R2_SOURCE_V6_PSF.fits'
+    name = os.environ["PCAT_DATA_PATH"] + '/irf/psf_P8R2_SOURCE_V6_PSF.fits'
     irfn = pf.getdata(name, 1)
     minmener = irfn['energ_lo'].squeeze() * 1e-3 # [GeV]
     maxmener = irfn['energ_hi'].squeeze() * 1e-3 # [GeV]
@@ -554,6 +553,7 @@ def retr_fermpsfn(globdata):
     fermscal = zeros((globdata.numbevtt, globdata.numbfermscalpara))
     fermform = zeros((globdata.numbener, globdata.numbevtt, globdata.numbfermformpara))
     fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
+    
     for m in globdata.indxevtt:
         fermscal[m, :] = pf.getdata(name, 2 + 3 * globdata.indxevttincl[m])['PSFSCALE']
         irfn = pf.getdata(name, 1 + 3 * globdata.indxevttincl[m])
@@ -757,7 +757,7 @@ def pair_catl(globdata, modllgal, modlbgal, modlspec):
 
 def retr_fgl3(globdata):
         
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/catl/gll_psc_v16.fit'
+    path = os.environ["PCAT_DATA_PATH"] + '/catl/gll_psc_v16.fit'
 
     fgl3 = pf.getdata(path)
     
@@ -847,25 +847,36 @@ def gmrb_test(griddata):
     return psrf
 
 
-def retr_psfn(globdata, psfipara, indxenertemp, thisangl):
+def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype):
 
+    if psfntype == 'singgaus':
+        numbformpara = 1
+    elif psfntype == 'singking':
+        numbformpara = 2
+    elif psfntype == 'doubgaus':
+        numbformpara = 3
+    elif psfntype == 'gausking':
+        numbformpara = 4
+    elif psfntype == 'doubking':
+        numbformpara = 5
+    
     thisangltemp = thisangl[None, :, None]
 
-    indxpsfiparatemp = indxenertemp[:, None] * globdata.numbformpara +         globdata.indxevtt[None, :] * globdata.numbpsfiparaevtt
+    indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + globdata.numbener * globdata.indxevtt[None, :])
     
-    if globdata.psfntype == 'singgaus':
+    if psfntype == 'singgaus':
         sigc = psfipara[indxpsfiparatemp]
         sigc = sigc[:, None, :]
         psfn = retr_singgaus(thisangltemp, sigc)
 
-    elif globdata.psfntype == 'singking':
+    elif psfntype == 'singking':
         sigc = psfipara[indxpsfiparatemp]
         gamc = psfipara[indxpsfiparatemp+1]
         sigc = sigc[:, None, :]
         gamc = gamc[:, None, :]
         psfn = retr_singking(thisangltemp, sigc, gamc)
         
-    elif globdata.psfntype == 'doubgaus':
+    elif psfntype == 'doubgaus':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         sigt = psfipara[indxpsfiparatemp+2]
@@ -874,7 +885,7 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl):
         sigt = sigt[:, None, :]
         psfn = retr_doubgaus(thisangltemp, frac, sigc, sigt)
 
-    elif globdata.psfntype == 'gausking':
+    elif psfntype == 'gausking':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         sigt = psfipara[indxpsfiparatemp+2]
@@ -885,7 +896,7 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl):
         gamt = gamt[:, None, :]
         psfn = retr_gausking(thisangltemp, frac, sigc, sigt, gamt)
         
-    elif globdata.psfntype == 'doubking':
+    elif psfntype == 'doubking':
         frac = psfipara[indxpsfiparatemp]
         sigc = psfipara[indxpsfiparatemp+1]
         gamc = psfipara[indxpsfiparatemp+2]

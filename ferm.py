@@ -35,7 +35,7 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, inspect
 
 # tdpy
-import tdpy_util
+import tdpy
 
 
 import sympy
@@ -177,7 +177,7 @@ def writ_isot():
     reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
 
     # isotropic background
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/iso_P8R2_ULTRACLEAN_V6_v06.txt'
+    path = os.environ["PCAT_DATA_PATH"] + '/iso_P8R2_ULTRACLEAN_V6_v06.txt'
     isotdata = loadtxt(path)
     enerisot = isotdata[:, 0] * 1e-3 # [GeV]
     isotflux = isotdata[:, 1] * 1e3 # [1/cm^2/s/sr/GeV]
@@ -188,16 +188,16 @@ def writ_isot():
     for i in range(numbener):
         isotfluxheal[i, :, :] = trapz(isotflux[i*nsampbins:(i+1)*nsampbins],                              enersamp[i*nsampbins:(i+1)*nsampbins]) / diffener[i]
         
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermisotflux.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/fermisotflux.fits'
     pf.writeto(path, isotfluxheal, clobber=True)
 
-    nfwpfluxtemp = tdpy_util.retr_nfwp(1., nside, norm=5.)
+    nfwpfluxtemp = tdpy.retr_nfwp(1., nside, norm=5.)
     nfwpspec = ones(numbener)
     nfwpfluxheal = zeros((numbener, numbpixl, numbevtt))
     for i in indxener:
         for m in indxevtt:
             nfwpfluxheal[i, :, m] = nfwpspec[i] * nfwpfluxtemp
-    path4 = os.environ["PNTS_TRAN_DATA_PATH"] + '/nfwpflux.fits'
+    path4 = os.environ["PCAT_DATA_PATH"] + '/nfwpflux.fits'
     pf.writeto(path4, nfwpfluxheal, clobber=True)
 
 
@@ -224,12 +224,12 @@ def prep_maps_neww():
         for m in indxevtt:
             if m < 2:
                 continue
-            path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermexpo_%s_evtt%d.fits' % (datatype, m)
+            path = os.environ["PCAT_DATA_PATH"] + '/fermexpo_%s_evtt%d.fits' % (datatype, m)
             expoarry = pf.getdata(path, 1)
             for i in indxener:
                 expo[i, :, m] = expoarry[liststrgener[i]]
 
-            path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermcnts_%s_evtt%d.fits' % (datatype, m)
+            path = os.environ["PCAT_DATA_PATH"] + '/fermcnts_%s_evtt%d.fits' % (datatype, m)
             cntsarry = pf.getdata(path)
             for i in indxener:
                 cnts[i, :, m] = cntsarry[liststrgchan[i]]
@@ -252,10 +252,10 @@ def prep_maps_neww():
                         hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
                         expo[i, :, m] = hp.alm2map(almc, nside)
 
-            path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermexpo_%s_%s.fits' % (datatype, regitype)
+            path = os.environ["PCAT_DATA_PATH"] + '/fermexpo_%s_%s.fits' % (datatype, regitype)
             pf.writeto(path, expo, clobber=True)
 
-            path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermflux_%s_%s.fits' % (datatype, regitype)
+            path = os.environ["PCAT_DATA_PATH"] + '/fermflux_%s_%s.fits' % (datatype, regitype)
             pf.writeto(path, flux, clobber=True)
 
 
@@ -360,9 +360,9 @@ def prep_maps():
 
             for t in range(numbtime):
 
-                path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermflux_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
+                path = os.environ["PCAT_DATA_PATH"] + '/fermflux_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
                 pf.writeto(path, flux[:, :, :, t], clobber=True)
-                path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermexpo_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
+                path = os.environ["PCAT_DATA_PATH"] + '/fermexpo_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
                 pf.writeto(path, expo[:, :, :, t], clobber=True)
 
 
@@ -376,13 +376,13 @@ def writ_fdfm_doug():
     numbpixl = nside**2 * 12
     fermfdfmfluxigal = zeros((numbener, numbpixl, numbevtt))
     fermfdfmfluxngal = zeros((numbener, numbpixl, numbevtt))
-    fermfdfmfluxigal[0, :, :] = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/diff0.fits')[:, None]
-    fermfdfmfluxigal[1, :, :] = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/diff1.fits')[:, None]
-    fermfdfmfluxigal[2, :, :] = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/diff2.fits')[:, None]
-    fermfdfmfluxigal[3, :, :] = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/diff3.fits')[:, None]
-    fermfdfmfluxigal[4, :, :] = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/diff4.fits')[:, None]
+    fermfdfmfluxigal[0, :, :] = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/diff0.fits')[:, None]
+    fermfdfmfluxigal[1, :, :] = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/diff1.fits')[:, None]
+    fermfdfmfluxigal[2, :, :] = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/diff2.fits')[:, None]
+    fermfdfmfluxigal[3, :, :] = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/diff3.fits')[:, None]
+    fermfdfmfluxigal[4, :, :] = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/diff4.fits')[:, None]
     
-    path =os.environ["PNTS_TRAN_DATA_PATH"] + '/fermfdfmflux_igal.fits'
+    path =os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_igal.fits'
     pf.writeto(path, fermfdfmfluxigal, clobber=True)
     
     for i in range(numbener):
@@ -391,7 +391,7 @@ def writ_fdfm_doug():
         hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
         fermfdfmfluxngal[i, :, :] = hp.alm2map(almc, nside)[:, None]
         
-    path =os.environ["PNTS_TRAN_DATA_PATH"] + '/fermfdfmflux_ngal.fits'
+    path =os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_ngal.fits'
     pf.writeto(path, fermfdfmfluxngal, clobber=True)
     
         
@@ -409,7 +409,7 @@ def writ_fdfm():
 
     binsener = array([0.3, 1., 3., 10.])
     
-    fermfdfmfluxigaltemp = tdpy_util.retr_fdfm(binsener, nside)
+    fermfdfmfluxigaltemp = tdpy.retr_fdfm(binsener, nside)
 
     fermfdfmfluxngaltemp = zeros((numbener, numbpixl))
     for i in range(numbener):
@@ -423,10 +423,10 @@ def writ_fdfm():
         fermfdfmfluxigal[:, :, m] = fermfdfmfluxigaltemp
         fermfdfmfluxngal[:, :, m] = fermfdfmfluxngaltemp
 
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermfdfmflux_igal.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_igal.fits'
     pf.writeto(path, fermfdfmfluxigal, clobber=True)
 
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermfdfmflux_ngal.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_ngal.fits'
     pf.writeto(path, fermfdfmfluxngal, clobber=True)
 
 
@@ -449,7 +449,7 @@ def plot_heal(maps):
     #satu = 1e9
     #maps[where(maps > satu)] = satu
     #maps[where(maps < -satu)] = -satu
-    cart = tdpy_util.retr_cart(maps, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+    cart = tdpy.retr_cart(maps, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
     figr, axis = plt.subplots(figsize=(14, 14))
     axis.set_xlabel(r'$l$ [$^\circ$]')
     axis.set_ylabel(r'$b$ [$^\circ$]')
@@ -463,7 +463,7 @@ def plot_heal(maps):
 def plot_maps():
     
     global numbpixl
-    lgalheal, bgalheal, numbside, numbpixl, apix = tdpy_util.retr_heal(256)
+    lgalheal, bgalheal, numbside, numbpixl, apix = tdpy.retr_heal(256)
     
     binsener = array([0.1, 0.3, 1., 3., 10., 100.])
     meanener = sqrt(binsener[1:] * binsener[:-1])
@@ -476,7 +476,7 @@ def plot_maps():
     
     get_ipython().magic(u'matplotlib inline')
 
-    path = os.environ["PNTS_TRAN_DATA_PATH"] + '/fermflux_igal_full.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_igal_full.fits'
     maps = sum(pf.getdata(path), 2)
     maps *= meanener[:, None]**2
     for i in range(5):
@@ -501,11 +501,11 @@ def plot_maps():
 
 minmgang = 20.
 
-data = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/fermfdfmflux_ngal.fits')
+data = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_ngal.fits')
 get_ipython().magic(u'matplotlib inline')
 print data.shape
 for i in range(5):
-    cart = tdpy_util.retr_cart(data[i, :, 0], minmlgal=-minmgang, maxmlgal=minmgang,                                minmbgal=-minmgang, maxmbgal=minmgang)
+    cart = tdpy.retr_cart(data[i, :, 0], minmlgal=-minmgang, maxmlgal=minmgang,                                minmbgal=-minmgang, maxmbgal=minmgang)
     figr, axis = plt.subplots(figsize=(7, 7))
     axis.set_xlabel(r'$l$ [$^\circ$]')
     axis.set_ylabel(r'$b$ [$^\circ$]')
@@ -513,7 +513,7 @@ for i in range(5):
     plt.show()
     
     
-redd = pf.getdata(os.environ["PNTS_TRAN_DATA_PATH"] + '/lambda_sfd_ebv.fits')['TEMPERATURE']
+redd = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits')['TEMPERATURE']
 
 numbside = 512
 numbpixl = numbside**2 * 12
@@ -532,7 +532,7 @@ plt.show()
 
 redd[where(redd > 1.)] = 1.
 figr, axis = plt.subplots(figsize=(7, 7))
-cart = tdpy_util.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
+cart = tdpy.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
 imag = axis.imshow(cart, origin='lower', cmap='Reds')
 plt.colorbar(imag, ax=axis)
 plt.show()
