@@ -103,12 +103,12 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara):
     
     numbpnts = lgal.size
     
-    dist = empty((numbpixl, numbpnts))
+    dist = empty((globdata.numbpixl, numbpnts))
     for k in range(numbpnts):
-        dist[:, k] = retr_dist(lgal[k], bgal[k], globdata.lgalgrid, globdata.bgalgrid)
+        dist[:, k] = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid, globdata.bgalgrid)
 
     # convolve with the PSF
-    pntsflux = empty((numbpnts, globdata.numbener, numbpixl, globdata.numbevtt))
+    pntsflux = empty((numbpnts, globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     for k in range(numbpnts):
         psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], globdata.psfntype, 'modl')
         pntsflux[k, :, :, :] = spec[:, k, None, None] * psfn
@@ -358,7 +358,7 @@ def retr_llik(globdata, init=False):
             for k in range(numbpnts):
                 
                 # calculate the distance to the pixels to be updated
-                dist = retr_dist(lgal[k], bgal[k], globdata.lgalgrid[thisindxpixlprox[k]], globdata.bgalgrid[thisindxpixlprox[k]])
+                dist = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid[thisindxpixlprox[k]],                                      globdata.bgalgrid[thisindxpixlprox[k]])
 
                 # evaluate the PSF over the set of data cubes to be updated
                 if globdata.thisindxprop == indxproppsfipara:
@@ -818,7 +818,7 @@ def retr_gaus(indxsamp, stdv):
         drmcsamp[indxsamp, 1] = drmcsamp[indxsamp, 0] + normal(scale=stdv)
 
         
-def retr_dist(lgal0, bgal0, lgal1, bgal1):
+def retr_dist(globdata, lgal0, bgal0, lgal1, bgal1):
     
     if globdata.pixltype == 'heal':
         dir1 = array([lgal0, bgal0])

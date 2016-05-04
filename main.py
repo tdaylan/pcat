@@ -683,7 +683,7 @@ def wrap(cnfg):
         else:
             globdata.pixlcnvt = zeros(globdata.numbpixlheal, dtype=int)
             for k in range(globdata.indxpixlrofimarg.size):
-                dist = retr_dist(lgalheal[globdata.indxpixlrofimarg[k]], bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
+                dist = retr_dist(globdata, lgalheal[globdata.indxpixlrofimarg[k]],                                  bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
                 globdata.pixlcnvt[globdata.indxpixlrofimarg[k]] = argmin(dist)
 
             fobj = open(path, 'wb')
@@ -887,8 +887,8 @@ def wrap(cnfg):
                 mockspec[l] = retr_spec(mockspec[l][globdata.indxenerfdfn, :], mocksind[l])
             indxpixltemp = retr_indxpixl(globdata, mockbgal[l], mocklgal[l])
             mockcnts[l] = mockspec[l][:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
-        mockpntsflux = retr_pntsflux(concatenate(mocklgal), concatenate(mockbgal),                                                concatenate(mockspec, axis=1), mockpsfipara)
-        mocktotlflux = retr_rofi_flux(mocknormback, mockpntsflux, fullindx)
+        mockpntsflux = retr_pntsflux(globdata, concatenate(mocklgal), concatenate(mockbgal),                                                concatenate(mockspec, axis=1), mockpsfipara)
+        mocktotlflux = retr_rofi_flux(globdata, mocknormback, mockpntsflux, fullindx)
         mocktotlcnts = mocktotlflux * globdata.expo * apix * globdata.diffener[:, None, None] # [1]
 
         if globdata.verbtype > 1:
@@ -1033,7 +1033,7 @@ def wrap(cnfg):
     else:
         globdata.indxpixlprox = [[] for h in range(globdata.numbspecprox)]
         for j in globdata.indxpixl:
-            dist = retr_dist(globdata.lgalgrid[j], globdata.bgalgrid[j], globdata.lgalgrid, globdata.bgalgrid)
+            dist = retr_dist(globdata, globdata.lgalgrid[j], globdata.bgalgrid[j], globdata.lgalgrid, globdata.bgalgrid)
             for h in range(globdata.numbspecprox):
                 # temp
                 globdata.indxpixlproxtemp = where(dist < deg2rad(globdata.maxmangleval))[0]
