@@ -3,6 +3,11 @@
 
 # In[1]:
 
+import pcat
+
+
+__all__ = ['cnfg', 'main', 'plot', 'samp', 'util', 'visu']
+
 # plotting
 import matplotlib as mpl
 mpl.use('Agg')
@@ -17,7 +22,6 @@ import numpy as np
 from numpy import *
 from numpy.random import *
 from numpy.random import choice
-
 
 # scipy
 import scipy as sp
@@ -46,13 +50,8 @@ import functools
 import tdpy.util
 
 # pcat
-from pcat.cnfg import *
-from pcat.main import *
-from pcat.samp import *
-from pcat.util import *
-from pcat.visu import *
-from pcat.plot import *
-
+from util import *
+from visu import *
 
 
 # In[2]:

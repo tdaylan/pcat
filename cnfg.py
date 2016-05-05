@@ -3,7 +3,7 @@
 
 # In[1]:
 
-# plotting
+#### plotting
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -38,18 +38,16 @@ from healpy import ang2pix
 import pyfits as pf
 
 # utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch
+import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle
+import functools
 
 # tdpy
 import tdpy.util
 
 # pcat
-from pcat.cnfg import *
-from pcat.main import *
-from pcat.samp import *
-from pcat.util import *
-from pcat.visu import *
-from pcat.plot import *
+from main import wrap
+#from util import *
+#from visu import *
 
 
 # In[2]:
@@ -492,14 +490,4 @@ if __name__ == '__main__':
     
     #cnfg_sdss_mock()
     #cnfg_sdss_expr()
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
 
