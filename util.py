@@ -715,23 +715,6 @@ def retr_pairlist(lgal, bgal):
     return pairlist
 
 
-def pair_catl(globdata, modllgal, modlbgal, modlspec):
-
-    indxmodl = zeros_like(truelgal, dtype=int) - 1
-    dir2 = array([modllgal, modlbgal])
-    for k in range(truelgal.size):
-        dir1 = array([truelgal[k], truebgal[k]])
-        dist = angdist(dir1, dir2, lonlat=True)
-        jdist = argmin(dist) 
-        if dist[jdist] < deg2rad(0.5):
-            indxmodl[k] = jdist
-
-    jtruepntsbias = where(amax(abs(modlspec[:, indxmodl] - truespec) / truespec, axis=0) > 1.2)[0]
-    jtruepntsmiss = where(indxmodl == -1)[0]
-    
-    return indxmodl, jtruepntsbias, jtruepntsmiss
-
-
 def retr_fgl3(globdata):
         
     path = os.environ["PCAT_DATA_PATH"] + '/catl/gll_psc_v16.fit'

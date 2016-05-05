@@ -1349,34 +1349,29 @@ def plot_samp(globdata):
 
     globdata.thisresicnts = globdata.datacnts - globdata.thismodlcnts
 
-    print dir()
-    
-    if False:
-        thispsfn = retr_psfn(globdata, globdata.thissampvarb[indxsamppsfipara],                              globdata.indxener, globdata.angldisp, globdata.psfntype)
-        if pixltype == 'cart':
-            thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
-        thisfwhm = retr_fwhm(globdata, thispsfn)
-    
-        plot_psfn(thispsfn)
-    
-        globdata.thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
-        for c in globdata.indxback:
-            globdata.thisbackcntsmean += mean(globdata.thissampvarb[globdata.indxsampnormback[c, :, None, None]] *                                               globdata.backflux[c] * globdata.expo *                                               globdata.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
+    thispsfn = retr_psfn(globdata, globdata.thissampvarb[indxsamppsfipara],                          globdata.indxener, globdata.angldisp, globdata.psfntype)
+    if pixltype == 'cart':
+        thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
+    thisfwhm = retr_fwhm(globdata, thispsfn)
 
-        thiscnts = []
-        for l in indxpopl:
-            ppixl = retr_pixl(globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
-            cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *                 globdata.expo[:, ppixl, :] * globdata.diffener[:, None, None]
-            thiscnts.append(cntstemp)
+    plot_psfn(thispsfn)
 
-    indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata.truelgal[l],                          globdata.truebgal[l],                          globdata.truespec[l][0, :, :],                          globdata.thissampvarb[globdata.thisindxsamplgal[l]],                          globdata.thissampvarb[globdata.thisindxsampbgal[l]],                          globdata.thissampvarb[globdata.thisindxsampspec[l]])
+    globdata.thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
+    for c in globdata.indxback:
+        globdata.thisbackcntsmean += mean(globdata.thissampvarb[globdata.indxsampnormback[c, :, None, None]] *                                           globdata.backflux[c] * globdata.expo *                                           globdata.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
 
-    thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
-    thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
+    thiscnts = []
+    for l in indxpopl:
+        indxpixltemp = retr_pixl(globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
+        cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *             globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
+        thiscnts.append(cntstemp)
 
+        indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata.truelgal[l],                              globdata.truebgal[l],                              globdata.truespec[l][0, :, :],                              globdata.thissampvarb[globdata.thisindxsamplgal[l]],                              globdata.thissampvarb[globdata.thisindxsampbgal[l]],                              globdata.thissampvarb[globdata.thisindxsampspec[l]])
 
-    if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
-        for l in indxpopl:
+        thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
+        thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
+
+        if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
             if globdata.colrprio:
                 plot_histsind(globdata, l)
             plot_scatpixl(globdata, l)
