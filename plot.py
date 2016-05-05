@@ -168,7 +168,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
     titl = strgvarb + strgunit
 
     for l in indxpopl:
-        for i in indxenerfdfn:
+        for i in globdata.indxenerfdfn:
             figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * 7, numbrows * 7), sharex='all', sharey='all')
             if numbrows == 1:
                 axgr = [axgr]            
@@ -210,7 +210,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
                             axis.set_title(tdpy.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(binsspec[i, h+1]))
                         else:
                             axis.set_title(tdpy.util.mexp(binsspec[i, h]) + ' $<$ ' + strgvarb)
-            figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, indxenerincl[i]) + '_' + rtag + '.png')
+            figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, globdata.indxenerincl[i]) + '_' + rtag + '.png')
             plt.close(figr)
        
     
@@ -271,12 +271,12 @@ def plot_psfn(globdata, thispsfn):
                 if i == globdata.numbener - 1 and m == globdata.numbevtt - 1:
                     axis.legend(loc=2)
                 indxsamp = indxsamppsfipara[i*nformpara+m*globdata.numbener*nformpara]
-                if psfntype == 'singgaus':
+                if globdata.psfntype == 'singgaus':
                     strg = r'$\sigma = %.3g$ ' % rad2deg(thissampvarb[indxsamp]) + strganglunit
-                elif psfntype == 'singking':
+                elif globdata.psfntype == 'singking':
                     strg = r'$\sigma = %.3g$ ' % rad2deg(thissampvarb[indxsamp]) + strganglunit + '\n'
                     strg += r'$\gamma = %.3g$' % thissampvarb[indxsamp+1]
-                elif psfntype == 'doubgaus':
+                elif globdata.psfntype == 'doubgaus':
                     strg = r'$f = %.3g$' % thissampvarb[indxsamp] + '\n'
                     if exprtype == 'sdss':
                         paratemp = rad2deg(thissampvarb[indxsamp+1]) * 3600.
@@ -288,12 +288,12 @@ def plot_psfn(globdata, thispsfn):
                     if exprtype == 'ferm':
                         paratemp = rad2deg(thissampvarb[indxsamp+2])
                     strg += r'$\sigma = %.3g$ ' % paratemp + strganglunit
-                elif psfntype == 'gausking':
+                elif globdata.psfntype == 'gausking':
                     strg = r'$f_G = %.3g$' % thissampvarb[indxsamp] + '\n'
                     strg += r'$\sigma_G = %.3g$ ' % rad2deg(thissampvarb[indxsamp+1]) + strganglunit + '\n'
                     strg += r'$\sigma_K = %.3g$ ' % rad2deg(thissampvarb[indxsamp+2]) + strganglunit + '\n'
                     strg += r'$\gamma = %.3g$' % thissampvarb[indxsamp+3]
-                elif psfntype == 'doubking':
+                elif globdata.psfntype == 'doubking':
                     strg = r'$f_c = %.3g$' % thissampvarb[indxsamp] + '\n'
                     strg += r'$\sigma_c = %.3g$ ' % rad2deg(thissampvarb[indxsamp+1]) + strganglunit + '\n'
                     strg += r'$\gamma_c = %.3g$' % thissampvarb[indxsamp+2] + '\n'
@@ -323,9 +323,9 @@ def plot_fwhm(globdata, thisfwhm):
     axis.set_yticks([0.5, 1.5, 2.5, 3.5])
     axis.set_yticklabels(['0', '1', '2', '3'])
     axis.set_xticks(binsener)
-    axis.set_xticklabels(['%.2g' % binsener[i] for i in indxener])
+    axis.set_xticklabels(['%.2g' % binsener[i] for i in globdata.indxener])
     axis.set_title('PSF FWHM')
-    for i in indxener:
+    for i in globdata.indxener:
         for m in indxevtt:
             axis.text(meanener[i], indxevttincl[m]+0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
@@ -348,7 +348,7 @@ def plot_backcntsmean(globdata, backcntsmean):
     axis.set_yticks([0.5, 1.5, 2.5, 3.5])
     axis.set_yticklabels(['0', '1', '2', '3'])
     axis.set_title('Mean FDM counts inside a PSF FWHM')
-    for i in indxener:
+    for i in globdata.indxener:
         for m in indxevtt:
             axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % tranumbbackcntsrofimean[m, i], ha='center', va='center')
             
@@ -367,7 +367,7 @@ def plot_datacntshist(globdata):
             axrw = [axrw]
         for i, axis in enumerate(axrw):
             
-            datacntstemp = datacnts[i, :, m]
+            datacntstemp = globdata.datacnts[i, :, m]
             
             maxmdatacntstemp = amax(datacntstemp)
             minmdatacntstemp = amin(datacntstemp[where(datacntstemp > 0.)])
@@ -379,9 +379,6 @@ def plot_datacntshist(globdata):
 
             init = [meancntstemp[argmax(datacntshist)], 1.]
             
-            global datacntshistglob
-            datacntshistglob = diffcntstemp * sum(datacntshist)
-    
             axis.set_xlim([amin(binscntstemp), amax(binscntstemp)])
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
@@ -554,11 +551,9 @@ def make_anim():
         
 def plot_samp(globdata):
 
-    global thisresicnts, errrmodlcnts
-    
-    thisresicnts = datacnts - thismodlcnts
+    globdata.thisresicnts = globdata.datacnts - globdata.thismodlcnts
 
-    thispsfn = retr_psfn(thissampvarb[indxsamppsfipara], indxener, globdata.angldisp, psfntype=modlpsfntype)
+    thispsfn = pcat.util.retr_psfn(globdata, thissampvarb[indxsamppsfipara],                          globdata.indxener, globdata.angldisp, globdata.psfntype)
     if pixltype == 'cart':
         thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
             
@@ -567,10 +562,9 @@ def plot_samp(globdata):
     
     plot_psfn(thispsfn)
     
-    global thisbackcntsmean
-    thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
+    globdata.thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
     for c in globdata.indxback:
-        thisbackcntsmean += mean(thissampvarb[indxsampnormback[c, :, None, None]] * backflux[c] * expo *                                     diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
+        globdata.thisbackcntsmean += mean(thissampvarb[indxsampnormback[c, :, None, None]] * backflux[c] * expo *                                     diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
     
     thiscnts = []
     for l in indxpopl:
@@ -578,11 +572,10 @@ def plot_samp(globdata):
         cntstemp = thissampvarb[thisindxsampspec[l]][:, :, None] * expo[:, ppixl, :] * diffener[:, None, None]
         thiscnts.append(cntstemp)
 
-    global jtruepntsbias, jtruepntsmiss, specmtch
-    indxmodl, jtruepntsbias, jtruepntsmiss = pair_catl(truelgal[l],                          truebgal[l],                          truespec[l][0, :, :],                          thissampvarb[thisindxsamplgal[l]],                          thissampvarb[thisindxsampbgal[l]],                          thissampvarb[thisindxsampspec[l]])
+    indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(truelgal[l],                          truebgal[l],                          truespec[l][0, :, :],                          thissampvarb[thisindxsamplgal[l]],                          thissampvarb[thisindxsampbgal[l]],                          thissampvarb[thisindxsampspec[l]])
 
     thisspecmtch = thissampvarb[thisindxsampspec[l]][:, indxmodl]
-    thisspecmtch[:, jtruepntsmiss] = 0.
+    thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
 
 
     if thissampvarb[indxsampnumbpnts[l]] > 1:
@@ -596,30 +589,30 @@ def plot_samp(globdata):
             plot_histcnts(globdata, l, thiscnts)
             plot_compfrac(globdata)
 
-    for i in indxener:
+    for i in globdata.indxener:
         
         plot_datacnts(globdata, i, None)
         #plot_catl(globdata, i, None, thiscnts)
         plot_modlcnts(globdata, i, None)
-        plot_resicnts(globdata, i, None, thisresicnts)
+        plot_resicnts(globdata, i, None, globdata.thisresicnts)
 
         #for m in indxevtt:
         #    plot_datacnts(globdata, i, m)
         #    plot_catl(globdata, i, m, thiscnts)
         #    plot_modlcnts(globdata, i, m)
-        #    plot_resicnts(globdata, i, m, thisresicnts)
+        #    plot_resicnts(globdata, i, m, globdata.thisresicnts)
         
     #if globdata.numbener == 3:
     #    plot_datacnts(globdata, None, None)
         
     #plot_fwhm(globdata, thisfwhm)
-    #plot_backcntsmean(globdata, thisbackcntsmean)
+    #plot_backcntsmean(globdata, globdata.thisbackcntsmean)
     
     tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(thisindxpntsfull, drmcsamp[:, 0])
-    errrmodlcnts = thismodlcnts - tempmodlcnts
+    globdata.errrmodlcnts = globdata.thismodlcnts - tempmodlcnts
     
-    for i in indxener:
-        plot_errrcnts(globdata, i, None, errrmodlcnts)
+    for i in globdata.indxener:
+        plot_errrcnts(globdata, i, None, globdata.errrmodlcnts)
     
     
 def plot_histcnts(globdata, l, thiscnts):
@@ -693,9 +686,9 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             if exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal[jtruepntsmiss], bgal[jtruepntsmiss], s=mrkrsize[jtruepntsmiss],                        alpha=mrkralph, label=truelabl + ', missed', marker='x', linewidth=2, color='g')
-            axis.scatter(lgal[jtruepntsbias], bgal[jtruepntsbias], s=mrkrsize[jtruepntsbias],                        alpha=mrkralph, label=truelabl + ', biased', marker='o', linewidth=2, color='g')
-            indxpnts = setdiff1d(arange(truenumbpnts, dtype=int), concatenate((jtruepntsbias, jtruepntsmiss)))
+            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=mrkralph, label=truelabl + ', missed', marker='x', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=mrkralph, label=truelabl + ', biased', marker='o', linewidth=2, color='g')
+            indxpnts = setdiff1d(arange(truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
             axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=mrkralph, label=truelabl + ', hit', marker='D', linewidth=2, color='g')
             for l in indxpopl:
                 if jtruepntstimevari[l].size > 0:
@@ -822,9 +815,9 @@ def plot_modlcnts(globdata, pener, pevtt):
         
     # plot the model count map
     if pevtt == None:
-        modlcntstemp = sum(thismodlcnts[pener, :, :], axis=1)
+        modlcntstemp = sum(globdata.thismodlcnts[pener, :, :], axis=1)
     else:
-        modlcntstemp = thismodlcnts[pener, :, pevtt]
+        modlcntstemp = globdata.thismodlcnts[pener, :, pevtt]
     if pixltype == 'heal':
         modlcntstemp = tdpy.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
@@ -1077,110 +1070,17 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % mean(thisbackcntsmean[pener, :]), fontsize=18)
+        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % mean(globdata.thisbackcntsmean[pener, :]), fontsize=18)
     else:
-        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % thisbackcntsmean[pener, pevtt], fontsize=18)
+        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[pener, pevtt], fontsize=18)
         
     if pevtt == None:
         path = globdata.plotpath + 'catlcnts%dA_' % pener + rtag + '_%09d.png' % j
     else:
         path = globdata.plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
     plt.savefig(path)
-    
     plt.close(figr)
 
-def plot_topo():
-    
-    figr, axis = plt.subplots()
-    datacnts = zeros(globdata.numbpixlheal)
-    datacnts[jpixlrofi] = datacnts[0,:,3]
-    testcart = tdpy.util.retr_cart(datacnts, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
-    imag = axis.imshow(testcart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
-    plt.colorbar(imag, ax=axis, fraction=0.05)
-    axis.scatter(mocklgal, mockbgal, c='g')
-    axis.scatter(lgal, bgal, c='b', s=50)
-    axis.set_xlim(extent[0:2])
-    axis.set_ylim(extent[2:4])
-    axis.set_title('PSF3 Mock count map')
-    plt.show()
-    
-    data = linspace(0., 1., numbbins)
-
-    # parameters of interest
-    indxpnts = choice(arange(numbpnts), size=3, replace=False)
-    jpara = sort(concatenate((indxsampnormback[1, :], indxsamplgal[indxpnts], indxsampbgal[indxpnts], indxsampspec[0, indxpnts])))
-    
-    
-    labl = ['A', '$\psi_1$', '$\phi_1$', '$f_1$', '$\psi_2$', '$\phi_2$', '$f_2$', '$\psi_3$', '$\phi_3$', '$f_3$']
-    labllist = list(itertools.combinations(labl, 2))
-    indxlist = list(itertools.combinations(jpara, 2))
-    ncomb = len(labllist)
-    
-
-    llik = zeros((ncomb, numbbins, numbbins))        
-    indxsamp = arange(5, npara, dtype=int)
-    xlog = ones(ncomb, dtype=bool)
-    ylog = ones(ncomb, dtype=bool)
-    globdata.exttrofi = zeros((ncomb, 4))
-    thiscntr = -1
-    for k in range(ncomb):
-        
-        for i in range(2):
-            if indxlist[k][i] == indxsampnormback[1, :]:
-                globdata.exttrofi[k, 2 * i] = minmnfdm
-                globdata.exttrofi[k, 2 * i + 1] = maxmnfdm
-            elif where(indxlist[k][i] == indxsamplgal[indxpnts])[0].size > 0:
-                globdata.exttrofi[k, 2 * i] = minmgang
-                globdata.exttrofi[k, 2 * i + 1] = maxmgang
-            elif where(indxlist[k][i] == indxsampbgal[indxpnts])[0].size > 0:
-                globdata.exttrofi[k, 2 * i] = 0.
-                globdata.exttrofi[k, 2 * i + 1] = 2. * pi
-                if i == 0:
-                    xlog[k] = False
-                else:
-                    ylog[k] = False
-            else:
-                globdata.exttrofi[k, 2 * i] = hyprmflx[0]
-                globdata.exttrofi[k, 2 * i + 1] = maxmflux
-
-            
-
-    for k in range(ncomb):
-
-        # set all the other parameters to random values
-        indxsamprand = setdiff1d(indxsamp, array(indxlist[k]))
-        samp[indxsamprand] = rand()
-
-        # scan over the two parameters of interest
-        for n in range(numbbins):
-            for m in range(numbbins):
-                samp[indxlist[k][0]] = data[n]
-                samp[indxlist[k][1]] = data[m]
-                llik[k, n, m] = retr_llik(samp)
-
-        thiscntr = tdpy.util.show_prog(k, ncomb, thiscntr)
-            
-    
-    llik *= 1e-7
-    numbrows = 15
-    numbcols = 3
-    figr, axgr = plt.subplots(numbrows, numbcols, figsize=(24, 90))
-    figr.suptitle('Likelihood Topology', fontsize=40)
-    for x, axrw in enumerate(axgr):
-        for y, axis in enumerate(axrw):  
-            k = x * numbcols + y
-            im = axis.imshow(llik[k, :, :], origin='lower', cmap='Reds', extent=globdata.exttrofi[k,:], aspect='auto')
-            figr.colorbar(im, ax=axis, fraction=0.04)
-            axis.set_xlabel(labllist[k][0])
-            axis.set_ylabel(labllist[k][1])
-            if xlog[k]:
-                axis.set_xscale('log')
-            if ylog[k]:
-                axis.set_yscale('log')
-                  
-    figr.subplots_adjust(top=0.97, hspace=0.4, wspace=0.4)
-    plt.show()
-    
     
 def plot_pntsdiff():
 

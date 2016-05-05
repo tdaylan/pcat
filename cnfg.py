@@ -81,6 +81,8 @@ def retr_cnfg(               verbtype=1,
               minmfdfnslop=None, \
               maxmfdfnslop=None, \
 
+              fdfntype='singpowr', \
+              
               psfntype='doubking', \
               
               colrprio=False, \
@@ -235,6 +237,9 @@ def retr_cnfg(               verbtype=1,
     # flag to use truth information
     cnfg['trueinfo'] = trueinfo
     
+    # Flux distribution function model
+    cnfg['fdfntype'] = fdfntype
+    
     # initial state setup
     ## number of point sources
     cnfg['initnumbpnts'] = initnumbpnts
@@ -318,6 +323,22 @@ def retr_cnfg(               verbtype=1,
 
 # In[3]:
 
+def cnfg_topo():
+    
+    cnfg = retr_cnfg(                      numbswep=10000,                      factthin=1,                      plotperd=20000,                      trueinfo=True,                      datatype='inpt',                      psfntype=psfntype,                      maxmgang=3.,                      minmspec=array([3e-10, 3e-11, 3e-12]),                      maxmspec=array([1e-6, 1e-7, 1e-8]),                      regitype='ngal',                      exprfluxstrg='fermflux_ngal.fits',                      listbackfluxstrg=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'],                      expostrg='fermexpo_ngal.fits',                      maxmnormback=array([5., 5.]),                      minmnormback=array([0.2, 0.2]),                      stdvback=0.05,                      probprop=array([0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),                     )
+                
+    wrap(cnfg)
+    
+    labl = ['A', '$\psi_1$', '$\phi_1$', '$f_1$', '$\psi_2$', '$\phi_2$', '$f_2$', '$\psi_3$', '$\phi_3$', '$f_3$']
+    labllist = list(itertools.combinations(labl, 2))
+    indxlist = list(itertools.combinations(jpara, 2))
+    ncomb = len(labllist)
+    
+    
+
+
+# In[4]:
+
 def cnfg_ferm_psfn_expr(psfntype):
      
 
@@ -327,7 +348,7 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 
 
-# In[4]:
+# In[5]:
 
 def cnfg_ferm_info():
     
@@ -351,7 +372,7 @@ def cnfg_ferm_info():
 
 
 
-# In[5]:
+# In[6]:
 
 def cnfg_ferm_expr_igal(exprfluxstrg, expostrg):
       
@@ -374,7 +395,7 @@ def cnfg_ferm_expr_igal(exprfluxstrg, expostrg):
     wrap(cnfg)
 
 
-# In[6]:
+# In[7]:
 
 def cnfg_ferm_mock_igal():
      
@@ -384,7 +405,7 @@ def cnfg_ferm_mock_igal():
     
 
 
-# In[7]:
+# In[8]:
 
 def cnfg_ferm_expr_ngal(exprfluxstrg, expostrg):
      
@@ -402,7 +423,7 @@ def cnfg_ferm_expr_ngal(exprfluxstrg, expostrg):
     wrap(cnfg)
 
 
-# In[8]:
+# In[9]:
 
 def cnfg_ferm_mock_ngal():
      
@@ -418,13 +439,13 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = array([[1.8, 1.8, 1.8, 1.8, 1.8]])
       
     
-    cnfg = retr_cnfg(                      psfntype='gausking',                      numbswep=200000,                      plotperd=50000,                      trueinfo=True,                      maxmgang=20.,                      colrprio=colrprio,                      verbtype=3,                      indxevttincl=arange(3, 4),                      indxenerincl=arange(5),                      maxmnumbpnts=array([200]),                      mocknumbpnts=array([100]),                      probprop=array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype=float),                      minmspec=minmspec,                      maxmspec=maxmspec,                      regitype='ngal',                      maxmnormback=array([2., 2.]),                      minmnormback=array([0.5, 0.5]),                      listbackfluxstrg=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'],                      expostrg='fermexpo_ngal_comp.fits',                      stdvback=0.1,                      datatype='mock',                      numbsideheal=256,                      mockfdfnslop=mockfdfnslop,                      mockfdfnnorm=array([10.]),                      mocknormback=ones((2, 5)),                     )
+    cnfg = retr_cnfg(                      psfntype='gausking',                      numbswep=200000,                      plotperd=50000,                      trueinfo=True,                      maxmgang=20.,                      colrprio=colrprio,                      verbtype=1,                      indxevttincl=arange(3, 4),                      indxenerincl=arange(5),                      maxmnumbpnts=array([200]),                      mocknumbpnts=array([100]),                      probprop=array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype=float),                      minmspec=minmspec,                      maxmspec=maxmspec,                      regitype='ngal',                      maxmnormback=array([2., 2.]),                      minmnormback=array([0.5, 0.5]),                      listbackfluxstrg=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'],                      expostrg='fermexpo_ngal_comp.fits',                      stdvback=0.1,                      datatype='mock',                      numbsideheal=256,                      mockfdfnslop=mockfdfnslop,                      mockfdfnnorm=array([10.]),                      mocknormback=ones((2, 5)),                     )
 
     wrap(cnfg)
     
 
 
-# In[9]:
+# In[10]:
 
 def cnfg_sdss_mock():
 
@@ -434,7 +455,7 @@ def cnfg_sdss_mock():
     
 
 
-# In[10]:
+# In[11]:
 
 def cnfg_sdss_expr():
 
@@ -443,7 +464,7 @@ def cnfg_sdss_expr():
     wrap(cnfg)
 
 
-# In[11]:
+# In[12]:
 
 if __name__ == '__main__':
     
@@ -468,7 +489,6 @@ if __name__ == '__main__':
     #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
     
     cnfg_ferm_mock_ngal()
-    
     
     #cnfg_sdss_mock()
     #cnfg_sdss_expr()

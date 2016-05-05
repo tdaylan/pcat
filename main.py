@@ -156,7 +156,7 @@ def work(indxprocwork, globdata):
     # auxiliary variable standard globdata.deviation for merge/split
     globdata.maxmdistpnts = 2. # [deg]
  
-    listchan = rjmc(indxprocwork)
+    listchan = rjmc(globdata, indxprocwork)
     
     timereal = time.time() - timereal
     timeproc = time.clock() - timeproc
@@ -180,7 +180,6 @@ def wrap(cnfg):
     
     globdata = globdatastrt()
     
-
     globdata.verbtype = cnfg['verbtype']
     globdata.plotperd = cnfg['plotperd']
     globdata.makeplot = cnfg['makeplot']
@@ -215,7 +214,8 @@ def wrap(cnfg):
     
     globdata.regitype = cnfg['regitype']
     globdata.randinit = cnfg['randinit']
-    globdata.pntscntr = cnfg['pntscntr']
+    
+    globdata.fdfntype = cnfg['fdfntype']
 
     globdata.colrprio = cnfg['colrprio']
     globdata.numbpopl = cnfg['numbpopl']
@@ -403,6 +403,7 @@ def wrap(cnfg):
         
     globdata.numbpsfiparaevtt = globdata.numbener * globdata.numbformpara
     globdata.numbpsfipara = globdata.numbpsfiparaevtt * globdata.numbevtt
+    globdata.indxpsfipara = arange(globdata.numbpsfipara)
     globdata.indxmodlpsfipara = arange(globdata.numbpsfipara)   
 
     if globdata.datatype == 'mock':
@@ -453,10 +454,10 @@ def wrap(cnfg):
     globdata.fluxpivt = sqrt(globdata.minmspec * globdata.maxmspec)
     
     globdata.maxmnumbcomp = globdata.maxmnumbpnts * globdata.numbcomp
-    globdata.indxcompinit = amax(globdata.indxsampnormback) + 1
+    globdata.indxsampcompinit = amax(globdata.indxsampnormback) + 1
     
     # maximum number of parameters
-    globdata.maxmsampsize = globdata.indxcompinit + globdata.maxmnumbcomp * globdata.numbpopl
+    globdata.maxmsampsize = globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.numbpopl
     
     if globdata.numbburn == None:
         globdata.numbburn = globdata.numbswep / 5
@@ -508,7 +509,6 @@ def wrap(cnfg):
             #probspec = array([sum(globdata.maxmnumbpnts) / 2.] * globdata.numbener)
             probsind = array([0.])
             
-                            
         globdata.probprop = concatenate((probfdfnnorm, probfdfnslop,                                 probpsfipara, probnormback,                                 probbrth, probdeth,                                 probsplt, probmerg,                                 problgal, probbgal,                                 probspec, probsind))
         
 
@@ -516,7 +516,8 @@ def wrap(cnfg):
         
     # number of proposal types
     globdata.numbprop = globdata.probprop.size
-   
+    globdata.indxprop = arange(globdata.numbprop)
+    
     if globdata.verbtype > 1:
         print 'probprop: '
         print vstack((arange(globdata.numbprop), globdata.strgprop, globdata.probprop)).T
@@ -655,9 +656,112 @@ def wrap(cnfg):
     globdata.numbspecprox = 1
     globdata.meanspecprox = globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
     
-    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata)
+    
+    # construct the PSF model
+    numbformpara = globdata.numbformpara
+    numbpsfiparaevtt = globdata.numbpsfiparaevtt
+
+    minmformpara = zeros(numbformpara)
+    maxmformpara = zeros(numbformpara)
+    factformpara = zeros(numbformpara)
+    scalformpara = zeros(numbformpara, dtype=object)
+    if globdata.exprtype == 'ferm':
+        minmanglpsfn = deg2rad(0.01)
+        maxmanglpsfn = deg2rad(3.)
+        minmgamm = 2.
+        maxmgamm = 20.
+        minmpsfnfrac = 0.
+        maxmpsfnfrac = 1.
+    if globdata.exprtype == 'sdss':
+        minmanglpsfn = deg2rad(0.01 / 3600.)
+        maxmanglpsfn = deg2rad(2. / 3600.)
+    if globdata.psfntype == 'singgaus':
+        minmformpara[0] = minmanglpsfn
+        maxmformpara[0] = maxmanglpsfn
+        scalformpara[0] = 'logt'
+        strgformpara = [r'$\sigma']
+    elif globdata.psfntype == 'singking':
+        minmformpara[0] = minmanglpsfn
+        maxmformpara[0] = maxmanglpsfn
+        minmformpara[1] = minmgamm
+        maxmformpara[1] = maxmgamm
+        scalformpara[0] = 'logt'
+        scalformpara[1] = 'atan'
+        strgformpara = [r'$\sigma', r'$\gamma']
+    elif globdata.psfntype == 'doubgaus':
+        minmformpara[0] = minmpsfnfrac
+        maxmformpara[0] = maxmpsfnfrac
+        minmformpara[1] = minmanglpsfn
+        maxmformpara[1] = maxmanglpsfn
+        minmformpara[2] = minmanglpsfn
+        maxmformpara[2] = maxmanglpsfn
+        scalformpara[0] = 'self'
+        scalformpara[1] = 'logt'
+        scalformpara[2] = 'logt'
+        strgformpara = ['$f_c', r'$\sigma_c', r'$\sigma_t']
+    elif globdata.psfntype == 'gausking':
+        minmformpara[0] = minmpsfnfrac
+        maxmformpara[0] = maxmpsfnfrac
+        minmformpara[1] = minmanglpsfn
+        maxmformpara[1] = maxmanglpsfn
+        minmformpara[2] = minmanglpsfn
+        maxmformpara[2] = maxmanglpsfn
+        minmformpara[3] = minmgamm
+        maxmformpara[3] = maxmgamm
+        scalformpara[0] = 'self'
+        scalformpara[1] = 'logt'
+        scalformpara[2] = 'logt'
+        scalformpara[3] = 'atan'
+        strgformpara = ['$f_g', r'$\sigma_g', r'$\sigma_k', r'$\gamma']
+    elif globdata.psfntype == 'doubking':
+        minmformpara[0] = minmpsfnfrac
+        maxmformpara[0] = maxmpsfnfrac
+        minmformpara[1] = minmanglpsfn
+        maxmformpara[1] = maxmanglpsfn
+        minmformpara[2] = minmgamm
+        maxmformpara[2] = maxmgamm
+        minmformpara[3] = minmanglpsfn
+        maxmformpara[3] = maxmanglpsfn
+        minmformpara[4] = minmgamm
+        maxmformpara[4] = maxmgamm
+        scalformpara[0] = 'self'
+        scalformpara[1] = 'logt'
+        scalformpara[2] = 'atan'
+        scalformpara[3] = 'logt'
+        scalformpara[4] = 'atan'
+        strgformpara = ['$f_c', r'$\sigma_c', r'$\gamma_c', r'$\sigma_t', r'$\gamma_t']
+    
+    for k in range(numbformpara):
+        if scalformpara[k] == 'self':
+            factformpara[k] = maxmformpara[k] - minmformpara[k]
+        if scalformpara[k] == 'logt':
+            factformpara[k] = log(maxmformpara[k] / minmformpara[k])
+        if scalformpara[k] == 'atan':
+            factformpara[k] = arctan(maxmformpara[k]) - arctan(minmformpara[k])
+            
+    globdata.minmpsfipara = tile(tile(minmformpara, globdata.numbener), globdata.numbevtt)
+    globdata.maxmpsfipara = tile(tile(maxmformpara, globdata.numbener), globdata.numbevtt)
+    globdata.scalpsfipara = tile(tile(scalformpara, globdata.numbener), globdata.numbevtt)
+    globdata.factpsfipara = tile(tile(factformpara, globdata.numbener), globdata.numbevtt)
+    
+    # PSF parameter strings
+    globdata.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m])                         for m in globdata.indxevtt for i in globdata.indxener for k in range(numbformpara)]
+    indxpsfiparainit = (arange(globdata.numbevtt)[:, None] * numbpsfiparaevtt +                             arange(globdata.numbener)[None, :] * numbformpara).flatten()
+    for k in arange(numbformpara):
+        if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
+            globdata.strgpsfipara[indxpsfiparainit[k]] += ' ' + globdata.strganglunit
+        elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
+            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
+        elif globdata.psfntype == 'doubking':
+            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
+            
+    globdata.indxpsfipara = arange(globdata.numbpsfipara)
 
 
+
+            
  
     if globdata.verbtype > 1:
         print 'indxsampnumbpnts: ', globdata.indxsampnumbpnts
@@ -666,7 +770,7 @@ def wrap(cnfg):
         print 'indxsamppsfipara: ', globdata.indxsamppsfipara
         print 'indxsampnormback: '
         print globdata.indxsampnormback
-        print 'indxcompinit: ', globdata.indxcompinit
+        print 'indxsampcompinit: ', globdata.indxsampcompinit
 
         
     # region of interest
@@ -1104,7 +1208,7 @@ def wrap(cnfg):
     listllik = zeros((globdata.numbsamp, globdata.numbproc))
     listlpri = zeros((globdata.numbsamp, globdata.numbproc))
     listaccp = zeros((globdata.numbswep, globdata.numbproc))
-    listmodlcnts = zeros((globdata.numbsamp, globdata.numbproc, ngpixl))
+    listmodlcnts = zeros((globdata.numbsamp, globdata.numbproc, globdata.numbpixlsave))
     listpntsfluxmean = zeros((globdata.numbsamp, globdata.numbproc, globdata.numbener))
     listindxpntsfull = []
     listindxsampmodi = zeros((globdata.numbswep, globdata.numbproc), dtype=int)
@@ -1216,9 +1320,9 @@ def wrap(cnfg):
         print 'Performing Gelman-Rubin convergence test...'
         tim0 = time.time()
 
-    gmrbstat = zeros(ngpixl)
-    for n in range(ngpixl):
-        gmrbstat[n] = gmrb_test(listmodlcnts[:, :, n])
+    gmrbstat = zeros(globdata.numbpixlsave)
+    for n in range(globdata.numbpixlsave):
+        gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
 
             

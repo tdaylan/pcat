@@ -693,7 +693,7 @@ def plot_histspec(l, listspechist=None):
             
             if not globdata.colrprio or i == globdata.indxenerfdfn:
                 fdfnslop = thissampvarb[indxsampfdfnslop[l, i]]  
-                fluxhistmodl = retr_fdfn(thissampvarb[indxsampfdfnnorm[l]], fdfnslop, i)
+                fluxhistmodl = retr_fdfn(globdata, thissampvarb[indxsampfdfnnorm[l]], fdfnslop, i)
                 axis.plot(globdata.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
             
         if globdata.trueglobdata.info:
