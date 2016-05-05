@@ -46,8 +46,6 @@ import tdpy.util
 
 # pcat
 from main import wrap
-#from util import *
-#from visu import *
 
 
 # In[2]:

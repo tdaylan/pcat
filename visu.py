@@ -43,10 +43,6 @@ import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 # tdpy
 import tdpy.util
 
-# pcat
-#from main import *
-from util import *
-
 
 # In[ ]:
 
@@ -957,10 +953,10 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
     else:
         numbrows = 2
         
-    if exprtype == 'ferm':
+    if globdata.exprtype == 'ferm':
         strgvarb = '$f$'
         strgunit = ' [1/cm$^2$/s/GeV]'
-    if exprtype == 'sdss':
+    if globdata.exprtype == 'sdss':
         strgvarb = '$C$'
         strgunit = ' [counts]'
     titl = strgvarb + strgunit
@@ -987,7 +983,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
                     plt.colorbar(imag, fraction=0.05, ax=axis)
 
                     # superimpose true PS
-                    if trueinfo:
+                    if globdata.trueinfo:
                         if h < 3 or full:
                             indxpnts = where((globdata.binsspec[i, h] < globdata.truespec[l][0, i, :]) &                                           (globdata.truespec[l][0, i, :] < globdata.binsspec[i, h+1]))[0]
                         else:
@@ -1030,7 +1026,7 @@ def plot_king(globdata):
                 axis.plot(rad2deg(globdata.angldisp), retr_king(sigm, gamm), label=r'$\sigma = %.4g, \gamma = %.3g$' % (sigm, gamm))
         axis.legend(loc=lloc)
         axis.set_yscale('log')
-        axis.set_xlabel(r'$\theta$ ' + strganglunit)
+        axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
         axis.set_xlabel(r'$\mathcal{K}(\theta)$')
         plt.figtext(0.7, 0.7, '$\mathcal{K}(\theta) = \frac{1}{2\pi\sigma^2}(1-\frac{1}{\gamma}(\frac{x^2}{2\sigma^2\gamma})^{-\gamma})$')
         
@@ -1041,9 +1037,9 @@ def plot_king(globdata):
     
 def plot_psfn(globdata, thispsfn):
     
-    if exprtype == 'sdss':
+    if globdata.exprtype == 'sdss':
         globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
-    if exprtype == 'ferm':
+    if globdata.exprtype == 'ferm':
         globdata.angldisptemp = rad2deg(globdata.angldisp)
 
     with sns.color_palette("Blues", globdata.numbevtt):
@@ -1057,12 +1053,12 @@ def plot_psfn(globdata, thispsfn):
                 axrw = [axrw]
             for i, axis in enumerate(axrw):
                 axis.plot(globdata.angldisptemp, thispsfn[i, :, m], label='Sample')
-                if trueinfo:
+                if globdata.trueinfo:
                     axis.plot(globdata.angldisptemp, globdata.truepsfn[i, :, m], label='Mock', color='g', ls='--')
                 axis.set_yscale('log')
                 if m == globdata.numbevtt - 1:
-                    axis.set_xlabel(r'$\theta$ ' + strganglunit)
-                if i == 0 and exprtype == 'ferm':
+                    axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
+                if i == 0 and globdata.exprtype == 'ferm':
                     axis.set_ylabel(evttstrg[m])
                 if m == 0:
                     axis.set_title(enerstrg[i])  
@@ -1070,38 +1066,38 @@ def plot_psfn(globdata, thispsfn):
                     axis.legend(loc=2)
                 indxsamp = indxsamppsfipara[i*nformpara+m*globdata.numbener*nformpara]
                 if globdata.psfntype == 'singgaus':
-                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + strganglunit
+                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit
                 elif globdata.psfntype == 'singking':
-                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + strganglunit + '\n'
+                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit + '\n'
                     strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+1]
                 elif globdata.psfntype == 'doubgaus':
                     strg = r'$f = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    if exprtype == 'sdss':
+                    if globdata.exprtype == 'sdss':
                         paratemp = rad2deg(globdata.thissampvarb[indxsamp+1]) * 3600.
-                    if exprtype == 'ferm':
+                    if globdata.exprtype == 'ferm':
                         paratemp = rad2deg(globdata.thissampvarb[indxsamp+1])
-                    strg += r'$\sigma = %.3g$ ' % paratemp + strganglunit + '\n'
-                    if exprtype == 'sdss':
+                    strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit + '\n'
+                    if globdata.exprtype == 'sdss':
                         paratemp = rad2deg(globdata.thissampvarb[indxsamp+2]) * 3600.
-                    if exprtype == 'ferm':
+                    if globdata.exprtype == 'ferm':
                         paratemp = rad2deg(globdata.thissampvarb[indxsamp+2])
-                    strg += r'$\sigma = %.3g$ ' % paratemp + strganglunit
+                    strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit
                 elif globdata.psfntype == 'gausking':
                     strg = r'$f_G = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    strg += r'$\sigma_G = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + strganglunit + '\n'
-                    strg += r'$\sigma_K = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + strganglunit + '\n'
+                    strg += r'$\sigma_G = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
+                    strg += r'$\sigma_K = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + globdata.strganglunit + '\n'
                     strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+3]
                 elif globdata.psfntype == 'doubking':
                     strg = r'$f_c = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    strg += r'$\sigma_c = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + strganglunit + '\n'
+                    strg += r'$\sigma_c = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
                     strg += r'$\gamma_c = %.3g$' % globdata.thissampvarb[indxsamp+2] + '\n'
-                    strg += r'$\sigma_t = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+3]) + strganglunit + '\n'
+                    strg += r'$\sigma_t = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+3]) + globdata.strganglunit + '\n'
                     strg += r'$\gamma_t = %.3g$' % globdata.thissampvarb[indxsamp+4]
                 axis.text(0.75, 0.75, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
                 
-                if exprtype == 'ferm':
+                if globdata.exprtype == 'ferm':
                     axis.set_ylim([1e0, 1e6])
-                if exprtype == 'sdss':
+                if globdata.exprtype == 'sdss':
                     axis.set_ylim([1e7, 1e11])
 
         plt.savefig(globdata.plotpath + 'psfnprof_' + rtag + '_%09d.png' % j)
@@ -1183,7 +1179,7 @@ def plot_datacntshist(globdata):
             #axis.set_xscale('log')
             if m == 0:
                 axis.set_title(binsenerstrg[i])
-            if i == 0 and exprtype == 'ferm':
+            if i == 0 and globdata.exprtype == 'ferm':
                 axis.set_ylabel(evttstrg[m])
         
     figr.subplots_adjust(wspace=0.3, hspace=0.2)
@@ -1345,68 +1341,6 @@ def make_anim():
         os.system(cmnd)
 
         
-def plot_samp(globdata):
-
-    globdata.thisresicnts = globdata.datacnts - globdata.thismodlcnts
-
-    thispsfn = retr_psfn(globdata, globdata.thissampvarb[indxsamppsfipara],                          globdata.indxener, globdata.angldisp, globdata.psfntype)
-    if pixltype == 'cart':
-        thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
-    thisfwhm = retr_fwhm(globdata, thispsfn)
-
-    plot_psfn(thispsfn)
-
-    globdata.thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
-    for c in globdata.indxback:
-        globdata.thisbackcntsmean += mean(globdata.thissampvarb[globdata.indxsampnormback[c, :, None, None]] *                                           globdata.backflux[c] * globdata.expo *                                           globdata.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
-
-    thiscnts = []
-    for l in indxpopl:
-        indxpixltemp = retr_pixl(globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
-        cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *             globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
-        thiscnts.append(cntstemp)
-
-        indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata.truelgal[l],                              globdata.truebgal[l],                              globdata.truespec[l][0, :, :],                              globdata.thissampvarb[globdata.thisindxsamplgal[l]],                              globdata.thissampvarb[globdata.thisindxsampbgal[l]],                              globdata.thissampvarb[globdata.thisindxsampspec[l]])
-
-        thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
-        thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
-
-        if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
-            if globdata.colrprio:
-                plot_histsind(globdata, l)
-            plot_scatpixl(globdata, l)
-            if trueinfo:
-                plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
-            plot_histspec(globdata, l)
-            plot_histcnts(globdata, l, thiscnts)
-            plot_compfrac(globdata)
-
-    for i in globdata.indxener:
-        
-        plot_datacnts(globdata, i, None)
-        #plot_catl(globdata, i, None, thiscnts)
-        plot_modlcnts(globdata, i, None)
-        plot_resicnts(globdata, i, None, globdata.thisresicnts)
-
-        #for m in indxevtt:
-        #    plot_datacnts(globdata, i, m)
-        #    plot_catl(globdata, i, m, thiscnts)
-        #    plot_modlcnts(globdata, i, m)
-        #    plot_resicnts(globdata, i, m, globdata.thisresicnts)
-        
-    #if globdata.numbener == 3:
-    #    plot_datacnts(globdata, None, None)
-        
-    #plot_fwhm(globdata, thisfwhm)
-    #plot_backcntsmean(globdata, globdata.thisbackcntsmean)
-    
-    tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
-    globdata.errrmodlcnts = globdata.thismodlcnts - tempmodlcnts
-    
-    for i in globdata.indxener:
-        plot_errrcnts(globdata, i, None, globdata.errrmodlcnts)
-    
-    
 def plot_histcnts(globdata, l, thiscnts):
 
     figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener, figsize=(7 * globdata.numbener, 7 * globdata.numbevtt))
@@ -1416,7 +1350,7 @@ def plot_histcnts(globdata, l, thiscnts):
         if globdata.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            if trueinfo:
+            if globdata.trueinfo:
                 truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=truelabl)
                 if datatype == 'mock':
                     axis.hist(fgl3cnts[i, :, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
@@ -1424,11 +1358,11 @@ def plot_histcnts(globdata, l, thiscnts):
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
-            if trueinfo:
+            if globdata.trueinfo:
                 axis.set_ylim([0.1, 1e3])
             if m == 0:
                 axis.set_title(binsenerstrg[i])
-            if i == 0 and exprtype == 'ferm':
+            if i == 0 and globdata.exprtype == 'ferm':
                 axis.set_ylabel(evttstrg[m])
             if m == globdata.numbevtt / 2 and i == globdata.numbener / 2:
                 axis.legend()
@@ -1451,7 +1385,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             axis.set_title(binsenerstrg[pener])
     else:
         titl = binsenerstrg[pener]
-        if exprtype == 'ferm':
+        if globdata.exprtype == 'ferm':
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
 
@@ -1471,11 +1405,11 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     for l in indxpopl:
 
         # true catalog
-        if trueinfo:
+        if globdata.trueinfo:
             mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
-            if exprtype == 'sdss':
+            if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
             axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=mrkralph, label=truelabl + ', missed', marker='x', linewidth=2, color='g')
@@ -1490,7 +1424,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if exprtype == 'sdss':
+        if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
             
@@ -1505,7 +1439,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                 colr = 'red'
             mrkrsize = retr_mrkrsize(abs(modispec[pener, k]), pener)
             
-            if exprtype == 'ferm':
+            if globdata.exprtype == 'ferm':
                 xaxi = modilgal[k]
                 yaxi = modibgal[k]
             else:
@@ -1555,7 +1489,7 @@ def plot_modlcnts(globdata, pener, pevtt):
         axis.set_title(binsenerstrg[pener])
     else:
         titl = binsenerstrg[pener]
-        if exprtype == 'ferm':
+        if globdata.exprtype == 'ferm':
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
         
@@ -1581,17 +1515,17 @@ def plot_modlcnts(globdata, pener, pevtt):
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if exprtype == 'sdss':
+        if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
         axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
-        if trueinfo:
+        if globdata.trueinfo:
             mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
             lgal = globdata.truelgal[l]
             bgal = globdata.truebgal[l]
-            if exprtype == 'sdss':
+            if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
             axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
@@ -1623,7 +1557,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
         axis.set_title(binsenerstrg[pener])
     else:
         titl = binsenerstrg[pener]
-        if exprtype == 'ferm':
+        if globdata.exprtype == 'ferm':
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
         
@@ -1649,17 +1583,17 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if exprtype == 'sdss':
+        if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
         axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
-        if trueinfo:
+        if globdata.trueinfo:
             mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
-            if exprtype == 'sdss':
+            if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
             axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
@@ -1674,7 +1608,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
             mrkrsize = retr_mrkrsize(abs(modispec[pener, k]), pener)
             
             
-            if exprtype == 'ferm':
+            if globdata.exprtype == 'ferm':
                 xaxi = modilgal[k]
                 yaxi = modibgal[k]
             else:
@@ -1727,7 +1661,7 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
         axis.set_title(binsenerstrg[pener])
     else:
         titl = binsenerstrg[pener]
-        if exprtype == 'ferm':
+        if globdata.exprtype == 'ferm':
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
 
@@ -1760,7 +1694,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
         axis.set_title(binsenerstrg[pener])
     else:
         titl = binsenerstrg[pener]
-        if exprtype == 'ferm':
+        if globdata.exprtype == 'ferm':
             titl += ', ' + evttstrg[pevtt]
         axis.set_title(titl)
         
@@ -1771,23 +1705,23 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
         # model catalog
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if exprtype == 'sdss':
+        if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
         axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
-        if trueinfo:
+        if globdata.trueinfo:
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
-            if exprtype == 'sdss':
+            if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
             axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
 
     
     
-    if trueinfo:
+    if globdata.trueinfo:
         for l in indxpopl:
             numbpnts = int(truenumbpnts[l])
             for a in range(numbpnts):
@@ -1881,7 +1815,7 @@ def plot_pntsdiff():
     
     axis.set_xlabel(longlabl)
     axis.set_ylabel(latilabl)
-    if exprtype == 'ferm':
+    if globdata.exprtype == 'ferm':
         axis.set_xlim([globdata.maxmlgal, globdata.minmlgal])
         axis.set_ylim([globdata.minmbgal, globdata.maxmbgal])
     else:
