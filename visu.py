@@ -990,12 +990,12 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
                         
                     axis.set_xlabel(globdata.longlabl)
                     axis.set_ylabel(globdata.latilabl)
-                    axis.set_xlim([frambndrmarg, -frambndrmarg])
-                    axis.set_ylim([-frambndrmarg, frambndrmarg])
-                    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-                    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-                    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-                    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+                    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+                    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
+                    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+                    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+                    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+                    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
                     if not cumu:
                         if h < 3 or full:
                             axis.set_title(tdpy.util.mexp(globdata.binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(globdata.binsspec[i, h+1]))
@@ -1373,8 +1373,8 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([frambndrmarg, -frambndrmarg])
-    axis.set_ylim([-frambndrmarg, frambndrmarg])
+    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
         if pener == None:
             axis.set_title('')
@@ -1456,10 +1456,10 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                 text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])
             axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
 
-    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
 
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
@@ -1480,8 +1480,8 @@ def plot_modlcnts(globdata, pener, pevtt):
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([frambndrmarg, -frambndrmarg])
-    axis.set_ylim([-frambndrmarg, frambndrmarg])
+    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
         axis.set_title(globdata.binsenerstrg[pener])
     else:
@@ -1527,10 +1527,10 @@ def plot_modlcnts(globdata, pener, pevtt):
                 bgal *= 3600.
             axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
-    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
     
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
@@ -1548,8 +1548,8 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([frambndrmarg, -frambndrmarg])
-    axis.set_ylim([-frambndrmarg, frambndrmarg])
+    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
         axis.set_title(globdata.binsenerstrg[pener])
     else:
@@ -1620,10 +1620,10 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
             axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
 
             
-    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
 
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
@@ -1652,8 +1652,8 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([frambndrmarg, -frambndrmarg])
-    axis.set_ylim([-frambndrmarg, frambndrmarg])
+    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
         axis.set_title(globdata.binsenerstrg[pener])
     else:
@@ -1666,10 +1666,10 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     imag = axis.imshow(errrcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
-    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
     
     if pevtt == None:
         path = globdata.plotpath + 'errrcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
@@ -1685,8 +1685,8 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([frambndrmarg, -frambndrmarg])
-    axis.set_ylim([-frambndrmarg, frambndrmarg])
+    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
+    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
         axis.set_title(globdata.binsenerstrg[pener])
     else:
@@ -1739,10 +1739,10 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
                 cnts = thiscnts[l][pener, a, pevtt]
             axis.text(globdata.thissampvarb[globdata.thisindxsamplgal[l][a]] - 0.5, globdata.thissampvarb[globdata.thisindxsampbgal[l][a]] + 0.3,                     '%d' % cnts, color='b', fontsize=13)
     
-    axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
     
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
