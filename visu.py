@@ -222,11 +222,11 @@ def plot_post(pathprobcatl):
         globdata.latilabl = r'$\mu$'
         
     if globdata.exprtype == 'ferm':
-        longlabl += r' [$^\circ$]'
-        latilabl += r' [$^\circ$]'
+        globdata.longlabl += r' [$^\circ$]'
+        globdata.latilabl += r' [$^\circ$]'
     if globdata.exprtype == 'sdss':
-        longlabl += ' [arcsec]'
-        latilabl += ' [arcsec]'
+        globdata.longlabl += ' [arcsec]'
+        globdata.latilabl += ' [arcsec]'
         
     if globdata.trueinfo:
         if globdata.datatype == 'mock':
@@ -547,24 +547,24 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
 
     figr, axis = plt.subplots(figsize=(7 * globdata.numbener, 7))
     
-    listydat = empty((numbback + 2, globdata.numbener))
-    listyerr = zeros((2, numbback + 2, globdata.numbener))
+    listydat = empty((globdata.numbback + 2, globdata.numbener))
+    listyerr = zeros((2, globdata.numbback + 2, globdata.numbener))
     
-    listydat[0, :] = datafluxmean
+    listydat[0, :] = globdata.datafluxmean
     if post:
         listydat[1, :] = postpntsfluxmean[0, :]
         listyerr[:, 1, :] = retr_errrvarb(postpntsfluxmean)
         for c in globdata.indxback:
-            listydat[c+2, :] = postnormback[0, c, :] * backfluxmean[c]
-            listyerr[:, c+2, :] = retr_errrvarb(postnormback[:, c, :]) * backfluxmean[c]
+            listydat[c+2, :] = postnormback[0, c, :] * globdata.backfluxmean[c]
+            listyerr[:, c+2, :] = retr_errrvarb(postnormback[:, c, :]) * globdata.backfluxmean[c]
     else:
-        listydat[1, :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
+        listydat[1, :] = mean(sum(globdata.thispntsflux * globdata.expo, 2) / sum(globdata.expo, 2), 1)
         for c in globdata.indxback:
-            listydat[c+2, :] = globdata.thissampvarb[indxsampnormback[c, :]] * backfluxmean[c]
+            listydat[c+2, :] = globdata.thissampvarb[globdata.indxsampnormback[c, :]] * globdata.backfluxmean[c]
 
     
     xdat = globdata.meanener
-    for k in range(numbback + 2):
+    for k in range(globdata.numbback + 2):
         ydat = globdata.meanener**2 * listydat[k, :]
         yerr = globdata.meanener**2 * listyerr[:, k, :]
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5,                     ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
@@ -609,8 +609,8 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     listlabl = ['PS', 'Iso', 'FDM']
     listexpl = [0.1, 0, 0]
 
-    listsize = zeros(numbback + 1)
-    for k in range(numbback + 1):
+    listsize = zeros(globdata.numbback + 1)
+    for k in range(globdata.numbback + 1):
         if globdata.numbener == 1:
             listsize[k] = diffener * listydat[k+1, :]
         else:
@@ -988,8 +988,8 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
 
                         mar1 = axis.scatter(globdata.truelgal[l][indxpnts],                                           globdata.truebgal[l][indxpnts],                                           s=100, alpha=0.5, marker='x', lw=2, color='g')
                         
-                    axis.set_xlabel(longlabl)
-                    axis.set_ylabel(latilabl)
+                    axis.set_xlabel(globdata.longlabl)
+                    axis.set_ylabel(globdata.latilabl)
                     axis.set_xlim([frambndrmarg, -frambndrmarg])
                     axis.set_ylim([-frambndrmarg, frambndrmarg])
                     axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
@@ -1129,9 +1129,9 @@ def plot_backcntsmean(globdata, backcntsmean):
     
     figr, axis = plt.subplots()
 
-    tranumbbackcntsrofimean = transpose(backcntsmean)
+    traglobdata.numbbackcntsrofimean = transpose(backcntsmean)
     
-    imag = axis.imshow(tranumbbackcntsrofimean, origin='lower', extent=[binsener[0], binsener[-1], 0, 4],                      cmap='BuPu', interpolation='none', alpha=0.4)
+    imag = axis.imshow(traglobdata.numbbackcntsrofimean, origin='lower', extent=[binsener[0], binsener[-1], 0, 4],                      cmap='BuPu', interpolation='none', alpha=0.4)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.set_xscale('log')
     axis.set_ylabel('PSF Class')
@@ -1141,7 +1141,7 @@ def plot_backcntsmean(globdata, backcntsmean):
     axis.set_title('Mean FDM counts inside a PSF FWHM')
     for i in globdata.indxener:
         for m in indxevtt:
-            axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % tranumbbackcntsrofimean[m, i], ha='center', va='center')
+            axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % traglobdata.numbbackcntsrofimean[m, i], ha='center', va='center')
             
     figr.subplots_adjust(bottom=0.2)
     plt.savefig(globdata.plotpath + 'backcnts_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
@@ -1243,20 +1243,20 @@ def plot_3fgl_thrs():
     bgalfgl3 = linspace(-90., 90., 481)
     lgalfgl3 = linspace(-180., 180., 960)
 
-    bgalexpo = linspace(-90., 90., 400)
-    lgalexpo = linspace(-180., 180., 800)
+    bgalglobdata.expo = linspace(-90., 90., 400)
+    lgalglobdata.expo = linspace(-180., 180., 800)
 
-    fluxthrs = interp2d(lgalfgl3, bgalfgl3, fluxthrs)(lgalexpo, bgalexpo)
+    fluxthrs = interp2d(lgalfgl3, bgalfgl3, fluxthrs)(lgalglobdata.expo, bgalglobdata.expo)
 
     cntsthrs = fluxthrs * globdata.expo
 
-    jbgal = where(abs(bgalexpo) < 10.)[0]
-    jlgal = where(abs(lgalexpo) < 10.)[0]
+    jbgal = where(abs(bgalglobdata.expo) < 10.)[0]
+    jlgal = where(abs(lgalglobdata.expo) < 10.)[0]
     extent = [-10, 10, -10, 10]
     
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
 
     axis.set_title('3FGL Detection Flux Threshold [1/cm$^2$/s], 1.0 GeV - 10. GeV')
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=globdata.exttrofi)
@@ -1371,8 +1371,8 @@ def plot_histcnts(globdata, l, thiscnts):
 def plot_datacnts(globdata, pener, pevtt, nextstat=False):
 
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
@@ -1478,8 +1478,8 @@ def plot_modlcnts(globdata, pener, pevtt):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
@@ -1546,8 +1546,8 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
@@ -1650,8 +1650,8 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
@@ -1683,8 +1683,8 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
@@ -1810,8 +1810,8 @@ def plot_pntsdiff():
     imag = axis.imshow(totlcntscart0, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     
-    axis.set_xlabel(longlabl)
-    axis.set_ylabel(latilabl)
+    axis.set_xlabel(globdata.longlabl)
+    axis.set_ylabel(globdata.latilabl)
     if globdata.exprtype == 'ferm':
         axis.set_xlim([globdata.maxmlgal, globdata.minmlgal])
         axis.set_ylim([globdata.minmbgal, globdata.maxmbgal])
