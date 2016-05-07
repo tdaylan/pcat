@@ -1552,8 +1552,7 @@ def plot_samp(globdata):
                 plot_histsind(globdata, l)
             plot_scatpixl(globdata, l)
 			
-			# temp
-            if False and globdata.trueinfo:
+            if globdata.trueinfo:
                 indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata, l,                                      globdata.thissampvarb[globdata.thisindxsamplgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampbgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampspec[l]])
 
                 thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]

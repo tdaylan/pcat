@@ -498,7 +498,8 @@ def pars_samp(globdata, indxpntsfull, samp):
     
 def retr_mrkrsize(globdata, spec, indxenertemp):
 
-    mrkrsize = (spec - globdata.minmspec[indxenertemp]) / (globdata.maxmspec[indxenertemp] - globdata.minmspec[indxenertemp]) *                     (maxmmrkrsize - minmmrkrsize) + minmmrkrsize
+    mrkrsize = (spec - globdata.minmspec[indxenertemp]) / (globdata.maxmspec[indxenertemp] - globdata.minmspec[indxenertemp]) * \
+		(globdata.maxmmrkrsize - globdata.minmmrkrsize) + globdata.minmmrkrsize
         
     return mrkrsize
 
