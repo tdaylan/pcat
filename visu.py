@@ -1350,7 +1350,7 @@ def plot_histcnts(globdata, l, thiscnts):
             if globdata.trueinfo:
                 truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
                 if globdata.datatype == 'mock':
-                    axis.hist(fgl3cnts[i, :, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
+                    axis.hist(globdata.fgl3cnts[i, :, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
             axis.hist(thiscnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
