@@ -43,6 +43,7 @@ import os, time, sys, datetime, warnings, getpass, glob, fnmatch
 # tdpy
 import tdpy.util
 
+from util import *
 
 # In[ ]:
 
@@ -79,7 +80,7 @@ def plot_post(pathprobcatl):
     globdata.minmbgal = hdun[0].header['minmbgal']
     globdata.maxmbgal = hdun[0].header['maxmbgal']
 
-    globdata.datatype = hdun[0].header['datatype']
+    globdata.datatype = hdun[0].header['globdata.datatype']
     globdata.regitype = hdun[0].header['regitype']
     globdata.modlpsfntype = hdun[0].header['modlpsfntype']
     if globdata.datatype == 'mock':
@@ -92,7 +93,7 @@ def plot_post(pathprobcatl):
     else:
         globdata.numbsidecart = hdun[0].header['numbsidecart']
 
-    globdata.trueglobdata.info = hdun[0].header['trueglobdata.info']
+    globdata.trueinfo = hdun[0].header['trueinfo']
     globdata.colrprio = hdun[0].header['colrprio']
     
     globdata.margsize = hdun[0].header['margsize']
@@ -101,14 +102,14 @@ def plot_post(pathprobcatl):
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
     
-    rtag = retr_rtag(None)
+    globdata.rtag = retr_rtag(None)
 
     if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
         plotfold = '/n/pan/www/tansu/png/pcat/'
     else:
         plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-    plotpath = plotfold + globdata.datetimestrg + '_' + rtag + '/'
-    cmnd = 'mkdir -p ' + plotpath
+    globdata.plotpath = plotfold + globdata.datetimestrg + '_' + globdata.rtag + '/'
+    cmnd = 'mkdir -p ' + globdata.plotpath
     os.system(cmnd)
 
 
@@ -143,7 +144,7 @@ def plot_post(pathprobcatl):
     listmodlcnts = hdun['modlcnts'].data
     
     # truth globdata.information
-    if globdata.trueglobdata.info:
+    if globdata.trueinfo:
         globdata.truenumbpnts = hdun['truenumbpnts'].data
         globdata.truelgal = []
         globdata.truebgal = []
@@ -151,8 +152,8 @@ def plot_post(pathprobcatl):
         globdata.truesind = []
         globdata.truespec = []
         for l in globdata.indxpopl:
-            globdata.truelgal.append(hdun['truelgalpopl%d' % l].data)
-            globdata.truebgal.append(hdun['truebgalpopl%d' % l].data)
+            globdata.truelgal.append(hdun['globdata.truelgalpopl%d' % l].data)
+            globdata.truebgal.append(hdun['globdata.truebgalpopl%d' % l].data)
             globdata.truespec.append(hdun['truespecpopl%d' % l].data)
         globdata.truefdfnnorm = hdun['truefdfnnorm'].data
         globdata.truefdfnslop = hdun['truefdfnslop'].data
@@ -208,10 +209,10 @@ def plot_post(pathprobcatl):
         globdata.frambndr = globdata.maxmgang
         globdata.frambndrmarg = globdata.maxmgangmarg
         
-    globdata.strgfluxunit = retr_strgfluxunit(globdata.exprtype)
+    globdata.strgfluxunit = retr_globdata.strgfluxunit(globdata.exprtype)
 
     # energy bin string
-    globdata.enerstrg, globdata.globdata.binsenerstrg = retr_enerstrg(globdata.exprtype)
+    globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata.exprtype)
     
     if globdata.regitype == 'igal':
         globdata.longlabl = '$l$'
@@ -227,7 +228,7 @@ def plot_post(pathprobcatl):
         longlabl += ' [arcsec]'
         latilabl += ' [arcsec]'
         
-    if globdata.trueglobdata.info:
+    if globdata.trueinfo:
         if globdata.datatype == 'mock':
             globdata.truelabl = 'Mock data'
         else:
@@ -244,7 +245,7 @@ def plot_post(pathprobcatl):
         axis.set_title('Gelman-Rubin Convergence Test')
         axis.set_xlabel('PSRF')
         axis.set_ylabel('$N_{pix}$')
-        figr.savefig(plotpath + 'gmrbdist_' + rtag + '.png')
+        figr.savefig(globdata.plotpath + 'gmrbdist_' + globdata.rtag + '.png')
         plt.close(figr)
         
         tim1 = time.time()
@@ -262,7 +263,7 @@ def plot_post(pathprobcatl):
         axis.set_ylabel('%d' % g)
         if g == numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
-    figr.savefig(plotpath + 'propeffi_' + rtag + '.png')
+    figr.savefig(globdata.plotpath + 'propeffi_' + globdata.rtag + '.png')
     figr.subplots_adjust(hspace=0.)
     plt.close(figr)
      
@@ -279,7 +280,7 @@ def plot_post(pathprobcatl):
         axis.set_ylabel('$N_{samp}$')
         axis.set_xlabel(listname[k])
         figr.subplots_adjust(bottom=0.2)
-        figr.savefig(plotpath + listname[k] + rtag + '.png')
+        figr.savefig(globdata.plotpath + listname[k] + globdata.rtag + '.png')
         plt.close(figr)
     
     
@@ -302,7 +303,7 @@ def plot_post(pathprobcatl):
         axis.set_xlim([amin(binstime), amax(binstime)])
         axis.set_ylim([0.5, None])
         axis.legend(loc=2)
-        figr.savefig(plotpath + 'chroprop_' + rtag + '.png')
+        figr.savefig(globdata.plotpath + 'chroprop_' + globdata.rtag + '.png')
         plt.close(figr)
 
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood']
@@ -319,7 +320,7 @@ def plot_post(pathprobcatl):
     axcl[1].set_ylim([0.5, None])
     axcl[0].legend(loc=1)
     axcl[1].legend(loc=2)
-    figr.savefig(plotpath + 'chrototl_' + rtag + '.png')
+    figr.savefig(globdata.plotpath + 'chrototl_' + globdata.rtag + '.png')
     plt.close(figr)
 
     tim1 = time.time()
@@ -335,23 +336,23 @@ def plot_post(pathprobcatl):
                 listpostdist[:, 0*k:1*k] = listlgalpnts[0][k]
                 listpostdist[:, 1*k:2*k] = listbgalpnts[0][k]
                 listpostdist[:, 2*k:3*k] = listspecpnts[0][k][0, :]
-                path = plotpath + 'postdist_%d_' % k + rtag
-                if globdata.trueglobdata.info:
-                    truepara = truesampvarb[indxsamppsfipara[ipsfipara]]
+                path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
+                if globdata.trueinfo:
+                    truepara = truesampvarb[globdata.indxsamppsfipara[ipsfipara]]
                 else:
                     truepara = None
-                tdpy.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=numbbins, quan=True)
+                tdpy.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=globdata.numbbins, quan=True)
                 
                 
             
     # flux match with the true catalog
-    if globdata.trueglobdata.info:
+    if globdata.trueinfo:
         for l in globdata.indxpopl:
             
             discspecmtch = zeros(globdata.truenumbpnts) + globdata.numbsamp
             listindxmodl = []
             for k in range(globdata.numbsamp):
-                indxmodl, jtruepntsbias, jtruepntsmiss = pair_catl(globdata.truelgal[l],                                      globdata.truebgal[l],                                      globdata.truespec[l][0, :, :],                                      listlgal[l][k, :],                                      listbgal[l][k, :],                                      listspec[l][k, :, :])
+                indxmodl, jtruepntsbias, jtruepntsmiss = pair_catl(globdata, l,                                      listlgal[l][k, :],                                      listbgal[l][k, :],                                      listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
                 discspecmtch[jtruepntsmiss] -= 1.
             discspecmtch /= globdata.numbsamp
@@ -370,7 +371,7 @@ def plot_post(pathprobcatl):
             plot_scatspec(l, postspecmtch=postspecmtch)
 
             # store the comparison
-            path = os.environ["PCAT_DATA_PATH"] + '/pcatcomp_popl%d_' % l + rtag + '.fits'
+            path = os.environ["PCAT_DATA_PATH"] + '/pcatcomp_popl%d_' % l + globdata.rtag + '.fits'
             compbund = stack((globdata.truespec[l], postspecmtch))
 
     tim1 = time.time()
@@ -415,40 +416,40 @@ def plot_post(pathprobcatl):
 
 
     # PSF parameters
-    path = plotpath + 'psfipara_' + rtag
+    path = globdata.plotpath + 'psfipara_' + globdata.rtag
     if globdata.modlpsfntype == 'singgaus' or globdata.modlpsfntype == 'singking':
         globdata.listpsfipara[:, jpsfiparainit] = rad2deg(globdata.listpsfipara[:, jpsfiparainit])
-        if globdata.trueglobdata.info:
+        if globdata.trueinfo:
             globdata.truepsfipara[jpsfiparainit] = rad2deg(globdata.truepsfipara[jpsfiparainit])
     elif globdata.modlpsfntype == 'doubgaus' or globdata.modlpsfntype == 'gausking':
         globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
         globdata.listpsfipara[:, jpsfiparainit+2] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+2])
-        if globdata.trueglobdata.info:
+        if globdata.trueinfo:
             globdata.truepsfipara[jpsfiparainit+1] = rad2deg(globdata.truepsfipara[jpsfiparainit+1])
             globdata.truepsfipara[jpsfiparainit+2] = rad2deg(globdata.truepsfipara[jpsfiparainit+2])
     elif globdata.modlpsfntype == 'doubking':
         globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
         globdata.listpsfipara[:, jpsfiparainit+3] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+3])
-        if globdata.trueglobdata.info:
+        if globdata.trueinfo:
             globdata.truepsfipara[jpsfiparainit+1] = rad2deg(globdata.truepsfipara[jpsfiparainit+1])
             globdata.truepsfipara[jpsfiparainit+3] = rad2deg(globdata.truepsfipara[jpsfiparainit+3])
-    if globdata.trueglobdata.info and psfntype == 'doubking':
+    if globdata.trueinfo and psfntype == 'doubking':
         truepara = globdata.truepsfipara
     else:
         truepara = array([None] * globdata.numbpsfipara)
-    tdpy.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=numbbins, quan=True, ntickbins=3)
+    tdpy.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=globdata.numbbins, quan=True, ntickbins=3)
     
     for k in range(globdata.numbpsfipara):
-        path = plotpath + 'psfipara%d_' % k + rtag + '.png'
+        path = globdata.plotpath + 'psfipara%d_' % k + globdata.rtag + '.png'
         tdpy.util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
     
     
     # log-likelihood
-    path = plotpath + 'llik_' + rtag + '.png'
+    path = globdata.plotpath + 'llik_' + globdata.rtag + '.png'
     tdpy.util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
 
     # log-prior
-    path = plotpath + 'lpri_' + rtag + '.png'
+    path = globdata.plotpath + 'lpri_' + globdata.rtag + '.png'
     tdpy.util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
     
 
@@ -456,16 +457,16 @@ def plot_post(pathprobcatl):
     for l in range(globdata.numbpopl):
         
         # number of point sources
-        path = plotpath + 'numbpntsdist_popl%d_' % l + rtag + '.png'
-        if globdata.trueglobdata.info and globdata.truenumbpnts != None:
+        path = globdata.plotpath + 'numbpntsdist_popl%d_' % l + globdata.rtag + '.png'
+        if globdata.trueinfo and globdata.truenumbpnts != None:
             truepara = globdata.truenumbpnts[l]
         else:
             truepara = None
         tdpy.util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
 
         # mean number of point sources
-        path = plotpath + 'fdfnnorm_popl%d_' % l + rtag + '.png'
-        if globdata.trueglobdata.info and globdata.truefdfnnorm != None:
+        path = globdata.plotpath + 'fdfnnorm_popl%d_' % l + globdata.rtag + '.png'
+        if globdata.trueinfo and globdata.truefdfnnorm != None:
             truepara = globdata.truefdfnnorm[l]
         else:
             truepara = None
@@ -473,8 +474,8 @@ def plot_post(pathprobcatl):
 
         # flux distribution power law index
         for i in globdata.indxenerfdfn:
-            path = plotpath + 'fdfnslopdist_popl%d%d_' % (l, i) + rtag + '.png'
-            if globdata.trueglobdata.info and globdata.truefdfnslop != None:
+            path = globdata.plotpath + 'fdfnslopdist_popl%d%d_' % (l, i) + globdata.rtag + '.png'
+            if globdata.trueinfo and globdata.truefdfnslop != None:
                 truepara = globdata.truefdfnslop[l, i]
             else:
                 truepara = None
@@ -485,8 +486,8 @@ def plot_post(pathprobcatl):
         
     # isotropic background normalization
     for i in globdata.indxener:
-        path = plotpath + 'nisodist%d_' % i + rtag + '.png'
-        if globdata.trueglobdata.info:
+        path = globdata.plotpath + 'nisodist%d_' % i + globdata.rtag + '.png'
+        if globdata.trueinfo:
             if globdata.datatype == 'mock':
                 truepara = globdata.truenormback[0, i]
             else:
@@ -498,8 +499,8 @@ def plot_post(pathprobcatl):
     if globdata.exprtype == 'ferm':
         # diffuse model normalization
         for i in globdata.indxener:
-            path = plotpath + 'nfdmdist%d_' % i + rtag + '.png'
-            if globdata.trueglobdata.info:
+            path = globdata.plotpath + 'nfdmdist%d_' % i + globdata.rtag + '.png'
+            if globdata.trueinfo:
                 if globdata.datatype == 'mock':
                     truepara = globdata.truenormback[1, i]
                 else:
@@ -524,7 +525,7 @@ def plot_post(pathprobcatl):
                 axis.hist(listlpri.flatten())
                 axis.set_ylabel(r'$N_{samp}$')
                 axis.set_xlabel(r'$\ln P(x)$')
-    figr.savefig(plotpath + 'globdata.leviglobdata.info_' + rtag + '.png')
+    figr.savefig(globdata.plotpath + 'globdata.leviglobdata.info_' + globdata.rtag + '.png')
     plt.close(figr)
 
     #make_anim()
@@ -532,7 +533,7 @@ def plot_post(pathprobcatl):
     tim1 = time.time()
     print 'Plots are produced in %.3g seconds.' % (tim1 - tim0)
 
-def plot_compfrac(postpntsfluxmean=None, postnormback=None):
+def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     
     if postpntsfluxmean != None:
         post = True
@@ -559,7 +560,7 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     else:
         listydat[1, :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
         for c in globdata.indxback:
-            listydat[c+2, :] = thissampvarb[indxsampnormback[c, :]] * backfluxmean[c]
+            listydat[c+2, :] = globdata.thissampvarb[indxsampnormback[c, :]] * backfluxmean[c]
 
     
     xdat = globdata.meanener
@@ -569,7 +570,7 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5,                     ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
 
     # Fermi-LAT results
-    if globdata.trueglobdata.info:
+    if globdata.trueinfo:
         if globdata.datatype == 'mock':
             
             pass
@@ -599,9 +600,9 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     axis.legend()
 
     if post:
-        path = plotpath + 'compfracspec_' + rtag + '.png'
+        path = globdata.plotpath + 'compfracspec_' + globdata.rtag + '.png'
     else:
-        path = plotpath + 'compfracspec_' + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'compfracspec_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -622,14 +623,14 @@ def plot_compfrac(postpntsfluxmean=None, postnormback=None):
     axis.axis('equal')
 
     if post:
-        path = plotpath + 'compfrac_' + rtag + '.png'
+        path = globdata.plotpath + 'compfrac_' + globdata.rtag + '.png'
     else:
-        path = plotpath + 'compfrac_' + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'compfrac_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
      
 
-def plot_histsind(l, postsindhist=None):
+def plot_histsind(globdata, l, postsindhist=None):
     
     if postsindhist == None:
         post = False
@@ -643,9 +644,9 @@ def plot_histsind(l, postsindhist=None):
         yerr = retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
-        axis.hist(thissampvarb[thisindxsampsind[l]], globdata.binssind, alpha=0.5, color='b', log=True, label='Sample')
-    if globdata.trueglobdata.info:
-        axis.hist(globdata.truesind[l], globdata.binssind, alpha=0.5, color='g', log=True, label=truelabl)
+        axis.hist(globdata.thissampvarb[thisindxsampsind[l]], globdata.binssind, alpha=0.5, color='b', log=True, label='Sample')
+    if globdata.trueinfo:
+        axis.hist(globdata.truesind[l], globdata.binssind, alpha=0.5, color='g', log=True, label=globdata.truelabl)
         if globdata.datatype == 'mock':
             axis.hist(fgl3sind, globdata.binssind, alpha=0.1, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
@@ -653,14 +654,14 @@ def plot_histsind(l, postsindhist=None):
     axis.set_xlim([globdata.minmsind, globdata.maxmsind])
     axis.set_ylabel('$N$')
     if post:
-        path = plotpath + 'histsind_popl%d' % l + rtag + '.png'
+        path = globdata.plotpath + 'histsind_popl%d' % l + globdata.rtag + '.png'
     else:
-        path = plotpath + 'histsind_popl%d' % l + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'histsind_popl%d' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
 
-def plot_histspec(l, listspechist=None):
+def plot_histspec(globdata, l, listspechist=None):
     
     if listspechist == None:
         post = False
@@ -680,23 +681,23 @@ def plot_histspec(l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            axis.hist(thissampvarb[thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b',                     log=True, label='Sample')
+            axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b',                     log=True, label='Sample')
             
             if not globdata.colrprio or i == globdata.indxenerfdfn:
-                fdfnslop = thissampvarb[indxsampfdfnslop[l, i]]  
-                fluxhistmodl = retr_fdfn(globdata, thissampvarb[indxsampfdfnnorm[l]], fdfnslop, i)
+                fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]  
+                fluxhistmodl = retr_fdfn(globdata, globdata.thissampvarb[globdata.indxsampfdfnnorm[l]], fdfnslop, i)
                 axis.plot(globdata.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
             
-        if globdata.trueglobdata.info:
-            truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :],                                alpha=0.5, color='g', log=True, label=truelabl)
+        if globdata.trueinfo:
+            truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :],                                alpha=0.5, color='g', log=True, label=globdata.truelabl)
             if globdata.datatype == 'mock':
-                axis.hist(fgl3spec[0, i, :], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
+                axis.hist(globdata.fgl3spec[0, i, :], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
 
         axis.set_yscale('log')
-        axis.set_xlabel('$f$ ' + strgfluxunit)
+        axis.set_xlabel('$f$ ' + globdata.strgfluxunit)
         axis.set_xscale('log')
-        axis.set_title(enerstrg[i])
-        if globdata.trueglobdata.info:
+        axis.set_title(globdata.enerstrg[i])
+        if globdata.trueinfo:
             axis.set_ylim([0.1, 1e3])
         axis.set_xlim([globdata.minmspec[i], globdata.maxmspec[i]])
         if i == 0:
@@ -707,14 +708,14 @@ def plot_histspec(l, listspechist=None):
     figr.subplots_adjust(wspace=0.3, bottom=0.2)
     
     if post:
-        path = plotpath + 'histspec%d_' % l + rtag + '.png'
+        path = globdata.plotpath + 'histspec%d_' % l + globdata.rtag + '.png'
     else:
-        path = plotpath + 'histspec%d_' % l + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'histspec%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
- 
+    
 
-def plot_scatspec(l, postspecmtch=None, thisspecmtch=None):
+def plot_scatspec(globdata, l, postspecmtch=None, thisspecmtch=None):
     
     figr, axrw = plt.subplots(1, globdata.numbener, figsize=(7 * globdata.numbener, 6))
     if globdata.numbener == 1:
@@ -726,7 +727,7 @@ def plot_scatspec(l, postspecmtch=None, thisspecmtch=None):
         yerr = zeros((2, xdat.size))
  
         if postspecmtch != None or thisspecmtch != None:
-            labl = '$f_{samp}$ ' + strgfluxunit
+            labl = '$f_{samp}$ ' + globdata.strgfluxunit
             axis.plot(globdata.meanspec[i, :], globdata.meanspec[i, :], ls='--', color='black', alpha=0.2)
             if postspecmtch != None:
                 yerr[0, :] = postspecmtch[0, i, :]
@@ -742,12 +743,12 @@ def plot_scatspec(l, postspecmtch=None, thisspecmtch=None):
             axis.errorbar(xdat[jtruepntstimevari[l]], ydat[jtruepntstimevari[l]],                           ls='', yerr=yerr[:, jtruepntstimevari[l]],                           lw=1, marker='o', markersize=5, color='red')
             
     
-        axis.set_xlabel('$f_{true}$ ' + strgfluxunit)
+        axis.set_xlabel('$f_{true}$ ' + globdata.strgfluxunit)
         if i == 0:
             axis.set_ylabel(labl)
         axis.set_xscale('log')
         axis.set_yscale('log')
-        axis.set_title(enerstrg[i])
+        axis.set_title(globdata.enerstrg[i])
 
         ylim = [globdata.minmspec[i], globdata.maxmspec[i]]
         
@@ -758,15 +759,15 @@ def plot_scatspec(l, postspecmtch=None, thisspecmtch=None):
     figr.subplots_adjust(wspace=0.4, bottom=0.2)
 
     if postspecmtch != None:
-        path = plotpath + 'scatspec%d_' % l + rtag + '.png'
+        path = globdata.plotpath + 'scatspec%d_' % l + globdata.rtag + '.png'
     elif thisspecmtch != None:
-        path = plotpath + 'scatspec%d_' % l + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'scatspec%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep
 
     plt.savefig(path)
     plt.close(figr)
 
 
-def plot_scatpixl(l):
+def plot_scatpixl(globdata, l):
     
     figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener, figsize=(globdata.numbener * 7, globdata.numbevtt * 7))
     if globdata.numbevtt == 1:
@@ -776,10 +777,10 @@ def plot_scatpixl(l):
             axrw = [axrw]
         for i, axis in enumerate(axrw):
             
-            slop, intc, coef, pval, stdv = sp.stats.linregress(datacnts[i, :, m], thismodlcnts[i, :, m])
-            axis.scatter(datacnts[i, :, m], thismodlcnts[i, :, m], alpha=0.5)
+            slop, intc, coef, pval, stdv = sp.stats.linregress(globdata.datacnts[i, :, m], globdata.thismodlcnts[i, :, m])
+            axis.scatter(globdata.datacnts[i, :, m], globdata.thismodlcnts[i, :, m], alpha=0.5)
 
-            axislimt = [0., amax(datacnts[i, :, m]) * 1.5]
+            axislimt = [0., amax(globdata.datacnts[i, :, m]) * 1.5]
             axis.set_xlim(axislimt)
             axis.set_ylim(axislimt)
             
@@ -789,19 +790,19 @@ def plot_scatpixl(l):
             if i == 0:
                 labl = 'Model Counts'
                 if globdata.exprtype == 'ferm':
-                    labl += ', ' + evttstrg[m]
+                    labl += ', ' + globdata.evttstrg[m]
                 axis.set_ylabel(labl)
             if m == 0:
-                axis.set_title(enerstrg[i])
+                axis.set_title(globdata.enerstrg[i])
 
 
             
     figr.subplots_adjust(hspace=0.4, wspace=0.4, top=0.8)
-    plt.savefig(plotpath + 'scatpixl%d_' % l + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'scatpixl%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
     
-def plot_discspec(l, discspecmtch=None):
+def plot_discspec(globdata, l, discspecmtch=None):
     
     figr, axrw = plt.subplots(1, globdata.numbener, figsize=(7 * globdata.numbener, 6))
     if globdata.numbener == 1:
@@ -815,7 +816,7 @@ def plot_discspec(l, discspecmtch=None):
             labl = '$f_{hit}$'
             ylim = [0., 1.]
         if postspecmtch != None or thisspecmtch != None:
-            labl = '$f_{samp}$ ' + strgfluxunit
+            labl = '$f_{samp}$ ' + globdata.strgfluxunit
             axis.set_yscale('log')
             axis.plot(globdata.meanspec[i, :], globdata.meanspec[i, :], ls='--', color='black', alpha=0.2)
             if postspecmtch != None:
@@ -826,11 +827,11 @@ def plot_discspec(l, discspecmtch=None):
             else:
                 ydat = thisspecmtch[i, :]
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
-        axis.set_xlabel('$f_{true}$ ' + strgfluxunit)
+        axis.set_xlabel('$f_{true}$ ' + globdata.strgfluxunit)
         if i == 0:
             axis.set_ylabel(labl)
         axis.set_xscale('log')
-        axis.set_title(enerstrg[i])
+        axis.set_title(globdata.enerstrg[i])
         if globdata.colrprio:
             if i == globdata.indxenerfdfn[0]:
                 ylim = [globdata.minmspec[i], globdata.maxmspec[i]]
@@ -840,21 +841,17 @@ def plot_discspec(l, discspecmtch=None):
         axis.set_xlim([globdata.minmspec[i], globdata.maxmspec[i]])
         axis.set_title(globdata.binsenerstrg[i])
     figr.subplots_adjust(wspace=0.4, bottom=0.2)
-    path = plotpath + 'discspec%d_' % l + rtag + '_%09d.png' % j
+    path = globdata.plotpath + 'discspec%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
 
-     
-
-
-# In[ ]:
-
+    
 def plot_look(globdata):
 
     indxpixlproxsize = zeros(globdata.numbpixl)
     figr, axis = plt.subplots(figsize=(10, 6))
     for h in range(numbspecprox):
-        for j in ipixl:
+        for j in indxpixl:
             indxpixlproxsize[j] = indxpixlprox[h][j].size
         binspixlsize = logspace(log10(amin(indxpixlproxsize)), log10(amax(indxpixlproxsize)), 100)
         hist, bins = histogram(indxpixlproxsize, binspixlsize)
@@ -935,7 +932,7 @@ def plot_evidtest():
     plt.colorbar(imag, ax=axis, fraction=0.03)
     #figr.subplots_adjust(top=0.8)
 
-    plt.savefig(globdata.plotpath + 'evidtest_' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'evidtest_' + globdata.rtag + '.png')
     plt.close(figr)
     
     
@@ -1004,7 +1001,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
                             axis.set_title(tdpy.util.mexp(globdata.binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(globdata.binsspec[i, h+1]))
                         else:
                             axis.set_title(tdpy.util.mexp(globdata.binsspec[i, h]) + ' $<$ ' + strgvarb)
-            figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, globdata.indxenerincl[i]) + '_' + rtag + '.png')
+            figr.savefig(globdata.plotpath + 'pntsbind' + ptag + '%d%d' % (l, globdata.indxenerincl[i]) + '_' + globdata.rtag + '.png')
             plt.close(figr)
        
     
@@ -1059,12 +1056,12 @@ def plot_psfn(globdata, thispsfn):
                 if m == globdata.numbevtt - 1:
                     axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
                 if i == 0 and globdata.exprtype == 'ferm':
-                    axis.set_ylabel(evttstrg[m])
+                    axis.set_ylabel(globdata.evttstrg[m])
                 if m == 0:
-                    axis.set_title(enerstrg[i])  
+                    axis.set_title(globdata.enerstrg[i])  
                 if i == globdata.numbener - 1 and m == globdata.numbevtt - 1:
                     axis.legend(loc=2)
-                indxsamp = indxsamppsfipara[i*nformpara+m*globdata.numbener*nformpara]
+                indxsamp = globdata.indxsamppsfipara[i*globdata.numbformpara+m*globdata.numbener*globdata.numbformpara]
                 if globdata.psfntype == 'singgaus':
                     strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit
                 elif globdata.psfntype == 'singking':
@@ -1100,7 +1097,7 @@ def plot_psfn(globdata, thispsfn):
                 if globdata.exprtype == 'sdss':
                     axis.set_ylim([1e7, 1e11])
 
-        plt.savefig(globdata.plotpath + 'psfnprof_' + rtag + '_%09d.png' % j)
+        plt.savefig(globdata.plotpath + 'psfnprof_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
         plt.close(figr)
     
     
@@ -1124,7 +1121,7 @@ def plot_fwhm(globdata, thisfwhm):
             axis.text(meanener[i], indxevttincl[m]+0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     figr.subplots_adjust(bottom=0.2)
-    plt.savefig(globdata.plotpath + 'fwhmcnts_' + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'fwhmcnts_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
     
@@ -1147,7 +1144,7 @@ def plot_backcntsmean(globdata, backcntsmean):
             axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % tranumbbackcntsrofimean[m, i], ha='center', va='center')
             
     figr.subplots_adjust(bottom=0.2)
-    plt.savefig(globdata.plotpath + 'backcnts_' + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'backcnts_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
     
@@ -1178,12 +1175,12 @@ def plot_datacntshist(globdata):
                 axis.set_xlabel(r'$k$')
             #axis.set_xscale('log')
             if m == 0:
-                axis.set_title(binsenerstrg[i])
+                axis.set_title(globdata.binsenerstrg[i])
             if i == 0 and globdata.exprtype == 'ferm':
-                axis.set_ylabel(evttstrg[m])
+                axis.set_ylabel(globdata.evttstrg[m])
         
     figr.subplots_adjust(wspace=0.3, hspace=0.2)
-    plt.savefig(globdata.plotpath + 'datacntshist' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'datacntshist' + globdata.rtag + '.png')
     plt.close(figr)
     
     
@@ -1264,7 +1261,7 @@ def plot_3fgl_thrs():
     axis.set_title('3FGL Detection Flux Threshold [1/cm$^2$/s], 1.0 GeV - 10. GeV')
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=globdata.exttrofi)
     plt.colorbar(imag, fraction=0.05)
-    plt.savefig(globdata.plotpath + 'thrs_' + rtag + '.png')
+    plt.savefig(globdata.plotpath + 'thrs_' + globdata.rtag + '.png')
     plt.close(figr)
     
     
@@ -1351,8 +1348,8 @@ def plot_histcnts(globdata, l, thiscnts):
             axrw = [axrw]
         for i, axis in enumerate(axrw):
             if globdata.trueinfo:
-                truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=truelabl)
-                if datatype == 'mock':
+                truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
+                if globdata.datatype == 'mock':
                     axis.hist(fgl3cnts[i, :, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
             axis.hist(thiscnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == globdata.numbevtt - 1:
@@ -1361,14 +1358,14 @@ def plot_histcnts(globdata, l, thiscnts):
             if globdata.trueinfo:
                 axis.set_ylim([0.1, 1e3])
             if m == 0:
-                axis.set_title(binsenerstrg[i])
+                axis.set_title(globdata.binsenerstrg[i])
             if i == 0 and globdata.exprtype == 'ferm':
-                axis.set_ylabel(evttstrg[m])
+                axis.set_ylabel(globdata.evttstrg[m])
             if m == globdata.numbevtt / 2 and i == globdata.numbener / 2:
                 axis.legend()
         
     figr.subplots_adjust(wspace=0.3)
-    plt.savefig(globdata.plotpath + 'histcnts%d_' % l + rtag + '_%09d.png' % j)
+    plt.savefig(globdata.plotpath + 'histcnts%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
 def plot_datacnts(globdata, pener, pevtt, nextstat=False):
@@ -1382,11 +1379,11 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
         if pener == None:
             axis.set_title('')
         else:
-            axis.set_title(binsenerstrg[pener])
+            axis.set_title(globdata.binsenerstrg[pener])
     else:
-        titl = binsenerstrg[pener]
+        titl = globdata.binsenerstrg[pener]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
 
     # plot the model count map
@@ -1412,13 +1409,13 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=mrkralph, label=truelabl + ', missed', marker='x', linewidth=2, color='g')
-            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=mrkralph, label=truelabl + ', biased', marker='o', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=mrkralph, label=globdata.truelabl + ', missed', marker='x', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
             indxpnts = setdiff1d(arange(truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
-            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=mrkralph, label=truelabl + ', hit', marker='D', linewidth=2, color='g')
+            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
             for l in indxpopl:
                 if jtruepntstimevari[l].size > 0:
-                    axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=truelabl + ', variable', marker='*', linewidth=2, color='y')
+                    axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
@@ -1468,11 +1465,11 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     
     if pevtt == None:
         if pener == None:
-            path = globdata.plotpath + 'datacntsAA_' + rtag + '_%09d.png' % j
+            path = globdata.plotpath + 'datacntsAA_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
         else:
-            path = globdata.plotpath + 'datacnts%dA_' % pener + rtag + '_%09d.png' % j
+            path = globdata.plotpath + 'datacnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'datacnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'datacnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -1486,11 +1483,11 @@ def plot_modlcnts(globdata, pener, pevtt):
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
-        axis.set_title(binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[pener])
     else:
-        titl = binsenerstrg[pener]
+        titl = globdata.binsenerstrg[pener]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
         
     # plot the model count map
@@ -1502,7 +1499,7 @@ def plot_modlcnts(globdata, pener, pevtt):
         modlcntstemp = tdpy.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         modlcntstemp = modlcntstemp.reshape((nsidecart, nsidecart)).T
-    modlcntstemp[where(modlcntstemp > datacntssatu[pener])] = datacntssatu[pener]
+    modlcntstemp[where(modlcntstemp > globdata.datacntssatu[pener])] = globdata.datacntssatu[pener]
     
     imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -1528,7 +1525,7 @@ def plot_modlcnts(globdata, pener, pevtt):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
     axis.axvline(frambndr, ls='--', alpha=0.3, color='black')
     axis.axvline(-frambndr, ls='--', alpha=0.3, color='black')
@@ -1538,9 +1535,9 @@ def plot_modlcnts(globdata, pener, pevtt):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = globdata.plotpath + 'modlcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'modlcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'modlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'modlcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -1554,11 +1551,11 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
-        axis.set_title(binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[pener])
     else:
-        titl = binsenerstrg[pener]
+        titl = globdata.binsenerstrg[pener]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
         
     # plot the model count map
@@ -1596,7 +1593,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
         
     if nextstat:
@@ -1631,9 +1628,9 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = globdata.plotpath + 'resicnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'resicnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'resicnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'resicnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     
     plt.close(figr)
@@ -1658,11 +1655,11 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
-        axis.set_title(binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[pener])
     else:
-        titl = binsenerstrg[pener]
+        titl = globdata.binsenerstrg[pener]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
 
     # plot the error count map
@@ -1675,9 +1672,9 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     axis.axhline(-frambndr, ls='--', alpha=0.3, color='black')
     
     if pevtt == None:
-        path = globdata.plotpath + 'errrcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'errrcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'errrcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'errrcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -1691,11 +1688,11 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     axis.set_xlim([frambndrmarg, -frambndrmarg])
     axis.set_ylim([-frambndrmarg, frambndrmarg])
     if pevtt == None:
-        axis.set_title(binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[pener])
     else:
-        titl = binsenerstrg[pener]
+        titl = globdata.binsenerstrg[pener]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
         
 
@@ -1717,7 +1714,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label=truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
     
     
@@ -1755,9 +1752,9 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
         plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[pener, pevtt], fontsize=18)
         
     if pevtt == None:
-        path = globdata.plotpath + 'catlcnts%dA_' % pener + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'catlcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + rtag + '_%09d.png' % j
+        path = globdata.plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
 
@@ -1769,9 +1766,9 @@ def plot_pntsdiff():
     tempindxpntsfull.append(range(tempnumbpnts))
     tempsamp = rand(maxmsampsize)
     tempsamp[globdata.indxsampnumbpnts] = array([tempnumbpnts])
-    tempsamp[indxsampfdfnnorm] = cdfn_logt(array([tempnumbpnts]), minmfdfnnorm, factfdfnnorm)
-    tempsamp[indxsampfdfnslop] = cdfn_atan(array([1.5]), minmfdfnslop, factfdfnslop)
-    tempsamp[indxsamppsfipara] = 0.5
+    tempsamp[globdata.indxsampfdfnnorm] = cdfn_logt(array([tempnumbpnts]), minmfdfnnorm, factfdfnnorm)
+    tempsamp[globdata.indxsampfdfnslop] = cdfn_atan(array([1.5]), minmfdfnslop, factfdfnslop)
+    tempsamp[globdata.indxsamppsfipara] = 0.5
     for c in globdata.indxback:
         tempsamp[globdata.indxsampnormback[c, 0]] = cdfn_logt(array([1.]), minmnormback[c], factnormback[c])
     tempsampvarb, tempppixl, tempcnts,         temppntsflux, tempflux, tempcntsrofi = pars_samp(tempindxpntsfull, tempsamp)
@@ -1852,12 +1849,12 @@ def plot_pntsdiff():
     plt.close(figr)
     
 
-def pair_catl(globdata, modllgal, modlbgal, modlspec):
+def pair_catl(globdata, thisindxpopl, modllgal, modlbgal, modlspec):
 
-    indxmodl = zeros_like(truelgal, dtype=int) - 1
+    indxmodl = zeros_like(globdata.truelgal, dtype=int) - 1
     dir2 = array([modllgal, modlbgal])
-    for k in range(truelgal.size):
-        dir1 = array([truelgal[k], truebgal[k]])
+    for k in range(globdata.truelgal[thisindxpopl].size):
+        dir1 = array([globdata.truelgal[thisindxpopl][k], globdata.truebgal[thisindxpopl][k]])
         dist = angdist(dir1, dir2, lonlat=True)
         jdist = argmin(dist) 
         if dist[jdist] < deg2rad(0.5):
@@ -1867,4 +1864,5 @@ def pair_catl(globdata, modllgal, modlbgal, modlspec):
     jtruepntsmiss = where(indxmodl == -1)[0]
     
     return indxmodl, jtruepntsbias, jtruepntsmiss
+     
 

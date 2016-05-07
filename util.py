@@ -731,26 +731,26 @@ def retr_fgl3(globdata):
 
     fgl3sind = fgl3['Spectral_Index']
     
-    fgl3spectype = fgl3['SpectrumType']
+    globdata.fgl3spectype = fgl3['SpectrumType']
     fgl3scur = fgl3['beta']
     fgl3scut = fgl3['Cutoff'] * 1e-3
     
     fgl3timevari = fgl3['Variability_Index']
     
-    fgl3spectemp = stack((fgl3['Flux100_300'],                           fgl3['Flux300_1000'],                           fgl3['Flux1000_3000'],                           fgl3['Flux3000_10000'],                           fgl3['Flux10000_100000']))[globdata.indxenerincl, :] / globdata.diffener[:, None]
-    fgl3specstdv = stack((fgl3['Unc_Flux100_300'],                           fgl3['Unc_Flux300_1000'],                           fgl3['Unc_Flux1000_3000'],                           fgl3['Unc_Flux3000_10000'],                           fgl3['Unc_Flux10000_100000']))[globdata.indxenerincl, :, :] / globdata.diffener[:, None, None]
+    globdata.fgl3spectemp = stack((fgl3['Flux100_300'],                           fgl3['Flux300_1000'],                           fgl3['Flux1000_3000'],                           fgl3['Flux3000_10000'],                           fgl3['Flux10000_100000']))[globdata.indxenerincl, :] / globdata.diffener[:, None]
+    globdata.fgl3specstdv = stack((fgl3['Unc_Flux100_300'],                           fgl3['Unc_Flux300_1000'],                           fgl3['Unc_Flux1000_3000'],                           fgl3['Unc_Flux3000_10000'],                           fgl3['Unc_Flux10000_100000']))[globdata.indxenerincl, :, :] / globdata.diffener[:, None, None]
     
-    fgl3spec = zeros((3, globdata.numbener, fgl3numbpnts))
-    fgl3spec[0, :, :] = fgl3spectemp
-    fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdv[:, :, 0]
-    fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdv[:, :, 1]
+    globdata.fgl3spec = zeros((3, globdata.numbener, fgl3numbpnts))
+    globdata.fgl3spec[0, :, :] = globdata.fgl3spectemp
+    globdata.fgl3spec[1, :, :] = globdata.fgl3spectemp - globdata.fgl3specstdv[:, :, 0]
+    globdata.fgl3spec[2, :, :] = globdata.fgl3spectemp + globdata.fgl3specstdv[:, :, 1]
     
     # get PS counts
     indxpixlfgl3 = retr_indxpixl(globdata, fgl3bgal, fgl3lgal)
-    fgl3cnts = fgl3spec[0, :, :, None] * globdata.expo[:, indxpixlfgl3, :] * globdata.diffener[:, None, None]
+    fgl3cnts = globdata.fgl3spec[0, :, :, None] * globdata.expo[:, indxpixlfgl3, :] * globdata.diffener[:, None, None]
     fgl3gang = rad2deg(arccos(cos(deg2rad(fgl3lgal)) * cos(deg2rad(fgl3bgal))))
     
-    return fgl3lgal, fgl3bgal, fgl3spec, fgl3gang, fgl3cnts,         fgl3timevari, fgl3sind, fgl3spectype, fgl3scur, fgl3scut
+    return fgl3lgal, fgl3bgal, globdata.fgl3spec, fgl3gang, fgl3cnts,         fgl3timevari, fgl3sind, globdata.fgl3spectype, fgl3scur, fgl3scut
     
     
 def retr_rtag(globdata, indxprocwork):
@@ -835,7 +835,7 @@ def chsq_fdfnslop(globdata, para, i):
     
     fluxhistmodl = fdfnnormnorm * globdata.diffspec[i, :] * pdfn_spec(globdata.meanspec[i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
 
-    chsq = sum(((fluxhistmodl.flatten()[jspecfgl3] - fgl3spechist[i, jspecfgl3]) / fgl3spechist[i, jspecfgl3])**2)
+    chsq = sum(((fluxhistmodl.flatten()[jspecfgl3] - globdata.fgl3spechist[i, jspecfgl3]) / globdata.fgl3spechist[i, jspecfgl3])**2)
     
     return chsq
 
@@ -865,9 +865,6 @@ def retr_enerstrg(globdata):
         
     return enerstrg, binsenerstrg
 
-
-
-# In[ ]:
 
 def retr_prop(globdata):
   

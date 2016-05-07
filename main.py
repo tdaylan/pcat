@@ -78,10 +78,10 @@ def work(indxprocwork, globdata):
     for l in globdata.indxpopl:
         globdata.thisindxpntsfull.append(range(thisnumbpnts[l]))
         globdata.thisindxpntsempt.append(range(thisnumbpnts[l], globdata.maxmnumbpnts[l]))
-    globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec,         globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
-      
-
-    globdata.drmcsamp = zeros((globdata.maxmsampsize, 2))
+	globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec, \
+		globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
+	
+    globdata.drmcsamp = zeros((int(globdata.maxmsampsize), 2))
     
     globdata.drmcsamp[globdata.indxsampnumbpnts, 0] = thisnumbpnts
     globdata.drmcsamp[globdata.indxsampfdfnnorm, 0] = rand(globdata.numbpopl)
@@ -1166,9 +1166,7 @@ def wrap(cnfg):
     timeproc = zeros(globdata.numbproc)
     if globdata.numbproc == 1:
         gridchan = [work(0, globdata)]
-        
     else:
-
         if globdata.verbtype > 0:
             print 'Forking the sampler...'
 
@@ -1252,7 +1250,7 @@ def wrap(cnfg):
     listnumbpnts = listsampvarb[:, :, globdata.indxsampnumbpnts].astype(int).reshape(globdata.numbsamp * globdata.numbproc, -1)
     listfdfnnorm = listsampvarb[:, :, globdata.indxsampfdfnnorm].reshape(globdata.numbsamp * globdata.numbproc, -1)
     listfdfnslop = listsampvarb[:, :, globdata.indxsampfdfnslop].reshape(globdata.numbsamp * globdata.numbproc, globdata.numbpopl, globdata.numbener)
-    listpsfipara = listsampvarb[:, :, globdata.globdata.indxsamppsfipara].reshape(globdata.numbsamp * globdata.numbproc, -1)
+    listpsfipara = listsampvarb[:, :, globdata.indxsamppsfipara].reshape(globdata.numbsamp * globdata.numbproc, -1)
     listnormback = listsampvarb[:, :, globdata.indxsampnormback].reshape(globdata.numbsamp * globdata.numbproc, globdata.numbback, globdata.numbener)
     
     listpntsfluxmean = listpntsfluxmean.reshape(globdata.numbsamp * globdata.numbproc, globdata.numbener)
@@ -1527,10 +1525,7 @@ def wrap(cnfg):
         
     return gridchan
     
-
-
-# In[ ]:
-
+    
 def plot_samp(globdata):
 
     globdata.thisresicnts = globdata.datacnts - globdata.thismodlcnts
@@ -1547,21 +1542,22 @@ def plot_samp(globdata):
         globdata.thisbackcntsmean += mean(globdata.thissampvarb[globdata.indxsampnormback[c, :, None, None]] *                                           globdata.backflux[c] * globdata.expo *                                           globdata.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
 
     thiscnts = []
-    for l in indxpopl:
-        indxpixltemp = retr_pixl(globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
+    for l in globdata.indxpopl:
+        indxpixltemp = retr_indxpixl(globdata, globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
         cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *             globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
         thiscnts.append(cntstemp)
-
-        indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata.truelgal[l],                              globdata.truebgal[l],                              globdata.truespec[l][0, :, :],                              globdata.thissampvarb[globdata.thisindxsamplgal[l]],                              globdata.thissampvarb[globdata.thisindxsampbgal[l]],                              globdata.thissampvarb[globdata.thisindxsampspec[l]])
-
-        thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
-        thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
 
         if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
             if globdata.colrprio:
                 plot_histsind(globdata, l)
             plot_scatpixl(globdata, l)
-            if trueinfo:
+			
+			# temp
+            if False and globdata.trueinfo:
+                indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata, l,                                      globdata.thissampvarb[globdata.thisindxsamplgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampbgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampspec[l]])
+
+                thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
+                thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
                 plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
             plot_histspec(globdata, l)
             plot_histcnts(globdata, l, thiscnts)
@@ -1603,7 +1599,7 @@ def rjmc(globdata, indxprocwork):
     sampindx = zeros(globdata.numbswep, dtype=int)
     sampindx[indxswepsave] = arange(globdata.numbsamp)
 
-    listsampvarb = zeros((globdata.numbsamp, globdata.maxmsampsize)) + -1.
+    listsampvarb = zeros((globdata.numbsamp, int(globdata.maxmsampsize))) + -1.
     listindxprop = zeros(globdata.numbswep)
     listchro = zeros((globdata.numbswep, 4))
     listllik = zeros(globdata.numbsamp)
@@ -1629,24 +1625,24 @@ def rjmc(globdata, indxprocwork):
     # current sample index
     thiscntr = -1
     
-    globdata.thisindxswep = 0
-    while globdata.thisindxswep < globdata.numbswep:
+    globdata.cntrswep = 0
+    while globdata.cntrswep < globdata.numbswep:
         
         timeinit = time.time()
         
         if globdata.verbtype > 1:
             print
             print '-' * 10
-            print 'Sweep %d' % globdata.thisindxswep
+            print 'Sweep %d' % globdata.cntrswep
 
-        thismakefram = (globdata.thisindxswep % globdata.plotperd == 0) and             indxprocwork == int(float(globdata.thisindxswep) / globdata.numbswep * globdata.numbproc)             and globdata.makeplot
+        thismakefram = (globdata.cntrswep % globdata.plotperd == 0) and             indxprocwork == int(float(globdata.cntrswep) / globdata.numbswep * globdata.numbproc)             and globdata.makeplot
         globdata.reje = False
     
         # choose a proposal type
         retr_indxprop(globdata, globdata.drmcsamp[:, 0])
             
         # save the proposal type
-        listindxprop[globdata.thisindxswep] = globdata.thisindxprop
+        listindxprop[globdata.cntrswep] = globdata.thisindxprop
         if globdata.verbtype > 1:
             print 'indxprop: ', strgprop[indxprop]
         
@@ -1661,7 +1657,7 @@ def rjmc(globdata, indxprocwork):
         timebegn = time.time()
         retr_prop(globdata)
         timefinl = time.time()
-        listchro[globdata.thisindxswep, 1] = timefinl - timebegn
+        listchro[globdata.cntrswep, 1] = timefinl - timebegn
 
         # plot the current sample
         if thismakefram:
@@ -1670,8 +1666,6 @@ def rjmc(globdata, indxprocwork):
             if globdata.numbproc > 1:
                 lock.acquire()
             print 'Process %d started making a frame' % indxprocwork
-            print dir()
-    
             plot_samp(globdata)
             print 'Process %d finished making a frame' % indxprocwork
             if globdata.numbproc > 1:
@@ -1697,13 +1691,13 @@ def rjmc(globdata, indxprocwork):
             timebegn = time.time()
             retr_lpri(globdata)
             timefinl = time.time()
-            listchro[globdata.thisindxswep, 2] = timefinl - timebegn
+            listchro[globdata.cntrswep, 2] = timefinl - timebegn
 
             # evaluate the log-likelihood
             timebegn = time.time()
             retr_llik(globdata)          
             timefinl = time.time()
-            listchro[globdata.thisindxswep, 3] = timefinl - timebegn
+            listchro[globdata.cntrswep, 3] = timefinl - timebegn
             
             # evaluate the acceptance probability
             accpprob = exp(deltllik + deltlpri + laccfrac)
@@ -1730,7 +1724,7 @@ def rjmc(globdata, indxprocwork):
             # update the current state
             updt_samp()
 
-            listaccp[globdata.thisindxswep] = True
+            listaccp[globdata.cntrswep] = True
 
         # reject the sample
         else:
@@ -1738,12 +1732,12 @@ def rjmc(globdata, indxprocwork):
             if globdata.verbtype > 1:
                 print 'Rejected.'
 
-            listaccp[globdata.thisindxswep] = False
+            listaccp[globdata.cntrswep] = False
              
         # sanity checks
         if where((globdata.drmcsamp[1:, 0] > 1.) | (globdata.drmcsamp[1:, 0] < 0.))[0].size > 0:
             print 'Unit sample vector went outside [0,1]!'
-        for l in indxpopl:
+        for l in globdata.indxpopl:
             for i in globdata.indxenerfdfn:
                 if where(globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]] < globdata.minmspec[i])[0].size > 0:
                     print 'Spectrum of some PS went below the prior range!'
@@ -1753,15 +1747,15 @@ def rjmc(globdata, indxprocwork):
             print 'Approximation error went above the limit!'
 
         # save the sample
-        if boolsave[globdata.thisindxswep]:
-            listsampvarb[sampindx[globdata.thisindxswep], :] = globdata.thissampvarb
-            listmodlcnts[sampindx[globdata.thisindxswep], :] = thismodlcnts[0, gpixl, 0]
-            listpntsfluxmean[sampindx[globdata.thisindxswep], :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
+        if boolsave[globdata.cntrswep]:
+            listsampvarb[sampindx[globdata.cntrswep], :] = globdata.thissampvarb
+            listmodlcnts[sampindx[globdata.cntrswep], :] = thismodlcnts[0, gpixl, 0]
+            listpntsfluxmean[sampindx[globdata.cntrswep], :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
             listindxpntsfull.append(globdata.thisindxpntsfull)
-            listllik[sampindx[globdata.thisindxswep]] = sum(thisllik)
+            listllik[sampindx[globdata.cntrswep]] = sum(thisllik)
             
             lpri = 0.
-            for l in indxpopl:
+            for l in globdata.indxpopl:
                 numbpnts = globdata.thissampvarb[globdata.indxsampnumbpnts[l]]
                 fdfnnorm = globdata.thissampvarb[globdata.indxsampfdfnnorm[l]]
                 lpri += numbpnts * priofactlgalbgal + priofactfdfnslop + fdfnnormfact - log(fdfnnorm)
@@ -1770,7 +1764,7 @@ def rjmc(globdata, indxprocwork):
                     fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]
                     lpri -= log(1. + fdfnslop**2)
                     lpri += sum(log(pdfn_spec(flux, fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])))
-            listlpri[sampindx[globdata.thisindxswep]] = lpri
+            listlpri[sampindx[globdata.cntrswep]] = lpri
             
             
             if tracsamp:
@@ -1781,17 +1775,17 @@ def rjmc(globdata, indxprocwork):
                     diffllikdiffpara[k]
                 listdiffllikdiffpara.append(diffllikdiffpara)
 
-                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[globdata.thisindxswep-1][None, :]
+                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[globdata.cntrswep-1][None, :]
                 listtranmatr.append(tranmatr)
 
         # save the execution time for the sweep
         if not thismakefram:
             tim1 = time.time()
-            listchro[globdata.thisindxswep, 0] = tim1 - timeinit
+            listchro[globdata.cntrswep, 0] = tim1 - timeinit
 
         # log the progress
         if globdata.verbtype > 0:
-            thiscntr = tdpy.util.show_prog(globdata.thisindxswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
+            thiscntr = tdpy.util.show_prog(globdata.cntrswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
             
             
         if diagsamp:
@@ -1815,7 +1809,7 @@ def rjmc(globdata, indxprocwork):
         
         
         # update the sweep counter
-        j += 1
+        globdata.cntrsamp += 1
 
     
     if globdata.verbtype > 1:
@@ -1835,5 +1829,4 @@ def rjmc(globdata, indxprocwork):
     listchan = [listsampvarb, listindxprop, listchro, listllik, listlpri, listaccp,                 listmodlcnts, listindxpntsfull, listindxsampmodi,                 globdata.listauxipara, globdata.listlaccfrac, globdata.listnumbpair,                 globdata.listjcbnfact, globdata.listcombfact, levi, info, listpntsfluxmean]
     
     return listchan
-
 

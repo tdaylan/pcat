@@ -1,5 +1,3 @@
-#__all__ = ['cnfg', 'main', 'plot', 'samp', 'util', 'visu']
-
 # plotting
 import matplotlib as mpl
 mpl.use('Agg')
