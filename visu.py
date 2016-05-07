@@ -958,7 +958,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
         strgunit = ' [counts]'
     titl = strgvarb + strgunit
 
-    for l in indxpopl:
+    for l in globdata.indxpopl:
         for i in globdata.indxenerfdfn:
             figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * 7, numbrows * 7), sharex='all', sharey='all')
             if numbrows == 1:
@@ -1399,7 +1399,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
         cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
     
     # superimpose catalogs
-    for l in indxpopl:
+    for l in globdata.indxpopl:
 
         # true catalog
         if globdata.trueinfo:
@@ -1413,7 +1413,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
             indxpnts = setdiff1d(arange(truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
             axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
-            for l in indxpopl:
+            for l in globdata.indxpopl:
                 if jtruepntstimevari[l].size > 0:
                     axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
@@ -1506,7 +1506,7 @@ def plot_modlcnts(globdata, pener, pevtt):
 
     
     # superimpose catalogs
-    for l in indxpopl:
+    for l in globdata.indxpopl:
 
         # model catalog
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
@@ -1574,7 +1574,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
     # superimpose catalogs
-    for l in indxpopl:
+    for l in globdata.indxpopl:
 
         # model catalog
         mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
@@ -1697,7 +1697,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
         
 
     # superimpose catalogs
-    for l in indxpopl:
+    for l in globdata.indxpopl:
         
         # model catalog
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
@@ -1719,7 +1719,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     
     
     if globdata.trueinfo:
-        for l in indxpopl:
+        for l in globdata.indxpopl:
             numbpnts = int(truenumbpnts[l])
             for a in range(numbpnts):
                 if pevtt == None:
@@ -1730,7 +1730,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
                     sigm = truesigm[l][pener, a, pevtt]
                 axis.text(globdata.truelgal[l][a] + 0.7, globdata.truelgal[l][a] - 0.7,                         '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
 
-    for l in indxpopl:
+    for l in globdata.indxpopl:
         numbpnts = int(globdata.thissampvarb[globdata.indxsampnumbpnts[l]])
         for a in range(numbpnts):
             if pevtt == None:
@@ -1849,12 +1849,12 @@ def plot_pntsdiff():
     plt.close(figr)
     
 
-def pair_catl(globdata, thisindxpopl, modllgal, modlbgal, modlspec):
+def pair_catl(globdata, thisglobdata.indxpopl, modllgal, modlbgal, modlspec):
 
     indxmodl = zeros_like(globdata.truelgal, dtype=int) - 1
     dir2 = array([modllgal, modlbgal])
-    for k in range(globdata.truelgal[thisindxpopl].size):
-        dir1 = array([globdata.truelgal[thisindxpopl][k], globdata.truebgal[thisindxpopl][k]])
+    for k in range(globdata.truelgal[thisglobdata.indxpopl].size):
+        dir1 = array([globdata.truelgal[thisglobdata.indxpopl][k], globdata.truebgal[thisglobdata.indxpopl][k]])
         dist = angdist(dir1, dir2, lonlat=True)
         jdist = argmin(dist) 
         if dist[jdist] < deg2rad(0.5):
