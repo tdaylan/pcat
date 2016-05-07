@@ -1849,12 +1849,12 @@ def plot_pntsdiff():
     plt.close(figr)
     
 
-def pair_catl(globdata, thisglobdata.indxpopl, modllgal, modlbgal, modlspec):
+def pair_catl(globdata, thisindxpopl, modllgal, modlbgal, modlspec):
 
     indxmodl = zeros_like(globdata.truelgal, dtype=int) - 1
     dir2 = array([modllgal, modlbgal])
-    for k in range(globdata.truelgal[thisglobdata.indxpopl].size):
-        dir1 = array([globdata.truelgal[thisglobdata.indxpopl][k], globdata.truebgal[thisglobdata.indxpopl][k]])
+    for k in range(globdata.truelgal[thisindxpopl].size):
+        dir1 = array([globdata.truelgal[thisindxpopl][k], globdata.truebgal[thisindxpopl][k]])
         dist = angdist(dir1, dir2, lonlat=True)
         jdist = argmin(dist) 
         if dist[jdist] < deg2rad(0.5):
