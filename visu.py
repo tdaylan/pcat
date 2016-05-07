@@ -1403,7 +1403,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
             if globdata.exprtype == 'sdss':
@@ -1418,7 +1418,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                     axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1434,7 +1434,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                 colr = 'yellow'
             else:
                 colr = 'red'
-            mrkrsize = retr_mrkrsize(abs(modispec[pener, k]), pener)
+            mrkrsize = retr_mrkrsize(globdata, abs(modispec[pener, k]), pener)
             
             if globdata.exprtype == 'ferm':
                 xaxi = modilgal[k]
@@ -1509,7 +1509,7 @@ def plot_modlcnts(globdata, pener, pevtt):
     for l in globdata.indxpopl:
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1519,7 +1519,7 @@ def plot_modlcnts(globdata, pener, pevtt):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
             lgal = globdata.truelgal[l]
             bgal = globdata.truebgal[l]
             if globdata.exprtype == 'sdss':
@@ -1577,7 +1577,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     for l in globdata.indxpopl:
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1587,7 +1587,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
             if globdata.exprtype == 'sdss':
@@ -1602,7 +1602,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
                 colr = 'yellow'
             else:
                 colr = 'red'
-            mrkrsize = retr_mrkrsize(abs(modispec[pener, k]), pener)
+            mrkrsize = retr_mrkrsize(globdata, abs(modispec[pener, k]), pener)
             
             
             if globdata.exprtype == 'ferm':
