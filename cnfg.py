@@ -419,7 +419,34 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = array([[1.8, 1.8, 1.8, 1.8, 1.8]])
       
     
-    cnfg = retr_cnfg(                      psfntype='gausking',                      numbswep=200000,                      plotperd=50000,                      trueinfo=True,                      maxmgang=20.,                      colrprio=colrprio,                      verbtype=1,                      indxevttincl=arange(3, 4),                      indxenerincl=arange(5),                      maxmnumbpnts=array([200]),                      mocknumbpnts=array([100]),                      probprop=array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype=float),                      minmspec=minmspec,                      maxmspec=maxmspec,                      regitype='ngal',                      maxmnormback=array([2., 2.]),                      minmnormback=array([0.5, 0.5]),                      listbackfluxstrg=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'],                      expostrg='fermexpo_ngal_comp.fits',                      stdvback=0.1,                      datatype='mock',                      numbsideheal=256,                      mockfdfnslop=mockfdfnslop,                      mockfdfnnorm=array([10.]),                      mocknormback=ones((2, 5)),                     )
+    cnfg = retr_cnfg(psfntype='gausking', \
+					 numbproc=1, \
+					 numbswep=100000, \
+                     plotperd=20000, \
+                     makeplot=True, \
+                     trueinfo=True, \
+                     maxmgang=20., \
+                     colrprio=colrprio, \
+                     verbtype=1, \
+                     indxevttincl=arange(3, 4), \
+                     indxenerincl=arange(5), \
+                     maxmnumbpnts=array([300]), \
+                     mocknumbpnts=array([200]), \
+                     #probprop=array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype=float), \
+                     minmspec=minmspec, \
+                     maxmspec=maxmspec, \
+                     regitype='ngal', \
+                     maxmnormback=array([2., 2.]), \
+                     minmnormback=array([0.5, 0.5]), \
+                     listbackfluxstrg=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                     expostrg='fermexpo_ngal_comp.fits', \
+                     stdvback=0.1, \
+                     datatype='mock', \
+                     numbsideheal=256, \
+                     mockfdfnslop=mockfdfnslop, \
+                     mockfdfnnorm=array([10.]), \
+                     mocknormback=ones((2, 5)), \
+                    )
 
     wrap(cnfg)
     

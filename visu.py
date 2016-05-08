@@ -80,9 +80,9 @@ def plot_post(pathprobcatl):
     globdata.minmbgal = hdun[0].header['minmbgal']
     globdata.maxmbgal = hdun[0].header['maxmbgal']
 
-    globdata.datatype = hdun[0].header['globdata.datatype']
+    globdata.datatype = hdun[0].header['datatype']
     globdata.regitype = hdun[0].header['regitype']
-    globdata.modlpsfntype = hdun[0].header['modlpsfntype']
+    globdata.psfntype = hdun[0].header['psfntype']
     if globdata.datatype == 'mock':
         globdata.mockpsfntype = hdun[0].header['mockpsfntype']
     globdata.exprtype = hdun[0].header['exprtype']
@@ -102,7 +102,7 @@ def plot_post(pathprobcatl):
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
     
-    globdata.rtag = retr_rtag(None)
+    globdata.rtag = retr_rtag(globdata, None)
 
     if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
         plotfold = '/n/pan/www/tansu/png/pcat/'
@@ -113,13 +113,14 @@ def plot_post(pathprobcatl):
     os.system(cmnd)
 
 
-    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal,         globdata.apix = tdpy.util.retr_heal(globdata.numbsideheal)
+    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal,         globdata.apix = tdpy.util.retr_healgrid(globdata.numbsideheal)
     globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
 
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
     
-    globdata.minmmodlpsfipara, globdata.maxmmodlpsfipara,         globdata.factmodlpsfipara, globdata.strgmodlpsfipara,         globdata.scalmodlpsfipara, globdata.indxmodlpsfipara = retr_psfimodl(globdata)
+    # PSF model
+    retr_psfimodl(globdata)
 
         
     listlgal = []
@@ -127,13 +128,19 @@ def plot_post(pathprobcatl):
     listspec = []
     if globdata.colrprio:
         listsind = []
+    globdata.maxmnumbpnts = zeros(globdata.numbpopl)
     for l in globdata.indxpopl:
         listlgal.append(hdun['lgalpopl%d' % l].data)
         listbgal.append(hdun['bgalpopl%d' % l].data)
         listspec.append(hdun['specpopl%d' % l].data)
         if globdata.colrprio:
             listsind.append(hdun['sindpopl%d' % l].data)
+        globdata.maxmnumbpnts[l] = hdun['maxmnumbpntspopl%d' % l].data
         
+    # proposals
+    globdata.probprop = None
+    retr_propmodl(globdata)
+
     listspechist = hdun['spechist'].data
     pntsprob = hdun['pntsprob'].data
     
@@ -152,9 +159,11 @@ def plot_post(pathprobcatl):
         globdata.truesind = []
         globdata.truespec = []
         for l in globdata.indxpopl:
-            globdata.truelgal.append(hdun['globdata.truelgalpopl%d' % l].data)
-            globdata.truebgal.append(hdun['globdata.truebgalpopl%d' % l].data)
+            globdata.truelgal.append(hdun['truelgalpopl%d' % l].data)
+            globdata.truebgal.append(hdun['truebgalpopl%d' % l].data)
             globdata.truespec.append(hdun['truespecpopl%d' % l].data)
+            if globdata.colrprio:
+                globdata.truespec.append(hdun['truesindpopl%d' % l].data)
         globdata.truefdfnnorm = hdun['truefdfnnorm'].data
         globdata.truefdfnslop = hdun['truefdfnslop'].data
         globdata.truenormback = hdun['truenormback'].data
@@ -209,10 +218,10 @@ def plot_post(pathprobcatl):
         globdata.frambndr = globdata.maxmgang
         globdata.frambndrmarg = globdata.maxmgangmarg
         
-    globdata.strgfluxunit = retr_globdata.strgfluxunit(globdata.exprtype)
+    globdata.strgfluxunit = retr_strgfluxunit(globdata)
 
     # energy bin string
-    globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata.exprtype)
+    globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
     
     if globdata.regitype == 'igal':
         globdata.longlabl = '$l$'
@@ -268,8 +277,8 @@ def plot_post(pathprobcatl):
     plt.close(figr)
      
 
-    indxsampsplt = where(globdata.listindxprop == indxpropsplt)[0]
-    indxsampmerg = where(globdata.listindxprop == indxpropmerg)[0]
+    indxsampsplt = where(globdata.listindxprop == globdata.indxpropsplt)[0]
+    indxsampmerg = where(globdata.listindxprop == globdata.indxpropmerg)[0]
             
     listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfact']
     listvarb = [globdata.listlaccfrac, globdata.listnumbpair, globdata.listcombfact, globdata.listjcbnfact]
@@ -352,9 +361,9 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(globdata.truenumbpnts) + globdata.numbsamp
             listindxmodl = []
             for k in range(globdata.numbsamp):
-                indxmodl, jtruepntsbias, jtruepntsmiss = pair_catl(globdata, l,                                      listlgal[l][k, :],                                      listbgal[l][k, :],                                      listspec[l][k, :, :])
+                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(globdata, l,                                      listlgal[l][k, :],                                      listbgal[l][k, :],                                      listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
-                discspecmtch[jtruepntsmiss] -= 1.
+                discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= globdata.numbsamp
 
             
@@ -368,7 +377,7 @@ def plot_post(pathprobcatl):
                 postspecmtch[1, i, :] = percentile(listspecmtch, 50., axis=0)
                 postspecmtch[2, i, :] = percentile(listspecmtch, 84., axis=0)
             
-            plot_scatspec(l, postspecmtch=postspecmtch)
+            plot_scatspec(globdata, l, postspecmtch=postspecmtch)
 
             # store the comparison
             path = os.environ["PCAT_DATA_PATH"] + '/pcatcomp_popl%d_' % l + globdata.rtag + '.fits'
@@ -417,17 +426,17 @@ def plot_post(pathprobcatl):
 
     # PSF parameters
     path = globdata.plotpath + 'psfipara_' + globdata.rtag
-    if globdata.modlpsfntype == 'singgaus' or globdata.modlpsfntype == 'singking':
+    if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
         globdata.listpsfipara[:, jpsfiparainit] = rad2deg(globdata.listpsfipara[:, jpsfiparainit])
         if globdata.trueinfo:
             globdata.truepsfipara[jpsfiparainit] = rad2deg(globdata.truepsfipara[jpsfiparainit])
-    elif globdata.modlpsfntype == 'doubgaus' or globdata.modlpsfntype == 'gausking':
+    elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
         globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
         globdata.listpsfipara[:, jpsfiparainit+2] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+2])
         if globdata.trueinfo:
             globdata.truepsfipara[jpsfiparainit+1] = rad2deg(globdata.truepsfipara[jpsfiparainit+1])
             globdata.truepsfipara[jpsfiparainit+2] = rad2deg(globdata.truepsfipara[jpsfiparainit+2])
-    elif globdata.modlpsfntype == 'doubking':
+    elif globdata.psfntype == 'doubking':
         globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
         globdata.listpsfipara[:, jpsfiparainit+3] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+3])
         if globdata.trueinfo:
@@ -525,7 +534,7 @@ def plot_post(pathprobcatl):
                 axis.hist(listlpri.flatten())
                 axis.set_ylabel(r'$N_{samp}$')
                 axis.set_xlabel(r'$\ln P(x)$')
-    figr.savefig(globdata.plotpath + 'globdata.leviglobdata.info_' + globdata.rtag + '.png')
+    figr.savefig(globdata.plotpath + 'leviinfo_' + globdata.rtag + '.png')
     plt.close(figr)
 
     #make_anim()
@@ -725,6 +734,7 @@ def plot_scatspec(globdata, l, postspecmtch=None, thisspecmtch=None):
         xdat = globdata.truespec[l][0, i, :]
         xerr = retr_errrvarb(globdata.truespec[l][:, i, :])
         yerr = zeros((2, xdat.size))
+
  
         if postspecmtch != None or thisspecmtch != None:
             labl = '$f_{samp}$ ' + globdata.strgfluxunit
@@ -737,11 +747,12 @@ def plot_scatspec(globdata, l, postspecmtch=None, thisspecmtch=None):
             else:
                 ydat = thisspecmtch[i, :]
 
-        axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
+        indx = where(ydat > 0.)[0]
+        if indx.size > 0:
+            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], lw=1, marker='o', markersize=5, color='black')
     
-        if jtruepntstimevari[l].size > 0:
-            axis.errorbar(xdat[jtruepntstimevari[l]], ydat[jtruepntstimevari[l]],                           ls='', yerr=yerr[:, jtruepntstimevari[l]],                           lw=1, marker='o', markersize=5, color='red')
-            
+        if globdata.indxtruepntstimevari[l].size > 0:
+            axis.errorbar(xdat[globdata.indxtruepntstimevari[l]], ydat[globdata.indxtruepntstimevari[l]], ls='', yerr=yerr[:, globdata.indxtruepntstimevari[l]], lw=1, marker='o', markersize=5, color='red')
     
         axis.set_xlabel('$f_{true}$ ' + globdata.strgfluxunit)
         if i == 0:
@@ -1138,7 +1149,7 @@ def plot_backcntsmean(globdata, backcntsmean):
     axis.set_xlabel(r'$E_\gamma$ [GeV]')
     axis.set_yticks([0.5, 1.5, 2.5, 3.5])
     axis.set_yticklabels(['0', '1', '2', '3'])
-    axis.set_title('Mean FDM counts inside a PSF FWHM')
+    axis.set_title('Mean FDM counts inumbside a PSF FWHM')
     for i in globdata.indxener:
         for m in indxevtt:
             axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % traglobdata.numbbackcntsrofimean[m, i], ha='center', va='center')
@@ -1226,7 +1237,7 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
     if rofi:
         healtemp = copy(heal)
         heal = zeros(globdata.numbpixlheal)
-        heal[jpixlrofi] = healtemp
+        heal[globdata.indxpixlrofi] = healtemp
 
     cart = tdpy.util.retr_cart(heal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=globdata.exttrofi)
@@ -1409,13 +1420,13 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=mrkralph, label=globdata.truelabl + ', missed', marker='x', linewidth=2, color='g')
-            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
-            indxpnts = setdiff1d(arange(truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
-            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', missed', marker='x', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
+            indxpnts = setdiff1d(arange(globdata.truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
+            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
             for l in globdata.indxpopl:
-                if jtruepntstimevari[l].size > 0:
-                    axis.scatter(lgal[jtruepntstimevari[l]], bgal[jtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
+                if globdata.indxtruepntstimevari[l].size > 0:
+                    axis.scatter(lgal[globdata.indxtruepntstimevari[l]], bgal[globdata.indxtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
         mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
@@ -1425,7 +1436,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             lgal *= 3600.
             bgal *= 3600.
             
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+        axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
     if nextstat:
         
@@ -1442,7 +1453,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             else:
                 xaxi = modilgal[k] * 3600.
                 yaxi = modibgal[k] * 3600.
-            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=mrkralph,                        marker='o', linewidth=2, color=colr)
+            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph,                        marker='o', linewidth=2, color=colr)
             
             if False:
                 print 'modilgal[k]'
@@ -1452,7 +1463,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                 print
                 
             text = r'indxprop = %d, lnL = %.3g' % (indxprop, deltllik)
-            if indxprop == indxpropsplt or indxprop == indxpropmerg:
+            if indxprop == globdata.indxpropsplt or indxprop == globdata.indxpropmerg:
                 text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])
             axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
 
@@ -1495,10 +1506,11 @@ def plot_modlcnts(globdata, pener, pevtt):
         modlcntstemp = sum(globdata.thismodlcnts[pener, :, :], axis=1)
     else:
         modlcntstemp = globdata.thismodlcnts[pener, :, pevtt]
-    if pixltype == 'heal':
-        modlcntstemp = tdpy.util.retr_cart(modlcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    if globdata.pixltype == 'heal':
+        modlcntstemp = tdpy.util.retr_cart(modlcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
+            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
-        modlcntstemp = modlcntstemp.reshape((nsidecart, nsidecart)).T
+        modlcntstemp = modlcntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart)).T
     modlcntstemp[where(modlcntstemp > globdata.datacntssatu[pener])] = globdata.datacntssatu[pener]
     
     imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
@@ -1515,7 +1527,7 @@ def plot_modlcnts(globdata, pener, pevtt):
         if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+        axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
         if globdata.trueinfo:
@@ -1525,7 +1537,7 @@ def plot_modlcnts(globdata, pener, pevtt):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
     axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
     axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
@@ -1563,12 +1575,13 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
         resicntstemp = sum(resicnts[pener, :, :], axis=1)
     else:
         resicntstemp = resicnts[pener, :, pevtt]
-    if pixltype == 'heal':
-        resicntstemp = tdpy.util.retr_cart(resicntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    if globdata.pixltype == 'heal':
+        resicntstemp = tdpy.util.retr_cart(resicntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
+            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
-        resicntstemp = resicntstemp.reshape((nsidecart, nsidecart))
-    resicntstemp[where(resicntstemp > resicntssatu[pener])] = resicntssatu[pener]
-    resicntstemp[where(resicntstemp < -resicntssatu[pener])] = -resicntssatu[pener]
+        resicntstemp = resicntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart))
+    resicntstemp[where(resicntstemp > globdata.resicntssatu[pener])] = globdata.resicntssatu[pener]
+    resicntstemp[where(resicntstemp < -globdata.resicntssatu[pener])] = -globdata.resicntssatu[pener]
     
     imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -1583,7 +1596,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
         if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+        axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
         if globdata.trueinfo:
@@ -1593,7 +1606,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
         
     if nextstat:
@@ -1611,11 +1624,11 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
             else:
                 xaxi = modilgal[k] * 3600.
                 yaxi = modibgal[k] * 3600.
-            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=mrkralph,                        marker='o', linewidth=2, color=colr)
+            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph,                        marker='o', linewidth=2, color=colr)
 
             
             text = r'indxprop = %d, lnL = %.3g' % (indxprop, deltllik)
-            if indxprop == indxpropsplt or indxprop == indxpropmerg:
+            if indxprop == globdata.indxpropsplt or indxprop == globdata.indxpropmerg:
                 text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])
             axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
 
@@ -1643,10 +1656,11 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     else:
         errrcntstemp = errrcntsrofi[pener, :, pevtt]
     
-    if pixltype == 'heal':
-        errrcntstemp = tdpy.util.retr_cart(errrcntstemp, jpixlrofi=jpixlrofi, nsideinpt=nsideheal,                                            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal,                                            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    if globdata.pixltype == 'heal':
+        errrcntstemp = tdpy.util.retr_cart(errrcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
+            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
-        errrcntstemp = errrcntstemp.reshape((nsidecart, nsidecart))
+        errrcntstemp = errrcntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart))
     
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -1705,7 +1719,7 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
         if globdata.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
-        axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+        axis.scatter(lgal, bgal, s=300, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
         # true catalog
         if globdata.trueinfo:
@@ -1714,13 +1728,13 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal, bgal, s=300, alpha=mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
+            axis.scatter(lgal, bgal, s=300, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
     
     
     if globdata.trueinfo:
         for l in globdata.indxpopl:
-            numbpnts = int(truenumbpnts[l])
+            numbpnts = int(globdata.truenumbpnts[l])
             for a in range(numbpnts):
                 if pevtt == None:
                     cnts = sum(globdata.truecnts[l][pener, a, :])
@@ -1784,9 +1798,9 @@ def plot_pntsdiff():
     totlcntsheal0 = zeros((nrept, globdata.numbpixlheal))
     totlcntsheal1 = zeros((nrept, globdata.numbpixlheal))
     for k in range(nrept):
-        for n in range(jpixlrofi.size):
-            totlcntsheal0[k, jpixlrofi[n]] = poisson(totlcnts0[n])
-            totlcntsheal1[k, jpixlrofi[n]] = poisson(totlcnts1[n])
+        for n in range(globdata.indxpixlrofi.size):
+            totlcntsheal0[k, globdata.indxpixlrofi[n]] = poisson(totlcnts0[n])
+            totlcntsheal1[k, globdata.indxpixlrofi[n]] = poisson(totlcnts1[n])
           
     maxmcnts = max(amax(totlcntsheal0), amax(totlcntsheal1))
     globdata.binscnts = linspace(0., maxmcnts, maxmcnts + 2)
@@ -1796,9 +1810,9 @@ def plot_pntsdiff():
     hist0 = empty((nrept, maxmcnts + 1))
     hist1 = empty((nrept, maxmcnts + 1))
     for k in range(nrept):
-        hist0[k, :] = histogram(totlcntsheal0[k, jpixlrofi], globdata.binscnts)[0].astype(float)
+        hist0[k, :] = histogram(totlcntsheal0[k, globdata.indxpixlrofi], globdata.binscnts)[0].astype(float)
         hist0[k, :] *= 1. / sum(hist0[k, :]) / diffcnts
-        hist1[k, :] = histogram(totlcntsheal1[k, jpixlrofi], globdata.binscnts)[0].astype(float)
+        hist1[k, :] = histogram(totlcntsheal1[k, globdata.indxpixlrofi], globdata.binscnts)[0].astype(float)
         hist1[k, :] *= 1. / sum(hist1[k, :]) / diffcnts
         
     
@@ -1851,18 +1865,18 @@ def plot_pntsdiff():
 
 def pair_catl(globdata, thisindxpopl, modllgal, modlbgal, modlspec):
 
-    indxmodl = zeros_like(globdata.truelgal, dtype=int) - 1
+    indxmodl = zeros_like(globdata.truelgal[thisindxpopl], dtype=int) - 1
     dir2 = array([modllgal, modlbgal])
     for k in range(globdata.truelgal[thisindxpopl].size):
         dir1 = array([globdata.truelgal[thisindxpopl][k], globdata.truebgal[thisindxpopl][k]])
         dist = angdist(dir1, dir2, lonlat=True)
-        jdist = argmin(dist) 
-        if dist[jdist] < deg2rad(0.5):
-            indxmodl[k] = jdist
+        indxdist = argmin(dist) 
+        if dist[indxdist] < deg2rad(0.5):
+            indxmodl[k] = indxdist
 
-    jtruepntsbias = where(amax(abs(modlspec[:, indxmodl] - truespec) / truespec, axis=0) > 1.2)[0]
-    jtruepntsmiss = where(indxmodl == -1)[0]
+    indxtruepntsbias = where(amax(abs(modlspec[:, indxmodl] - globdata.truespec[thisindxpopl][0, :, :]) / globdata.truespec[thisindxpopl][0, :, :], axis=0) > 1.2)[0]
+    indxtruepntsmiss = where(indxmodl == -1)[0]
     
-    return indxmodl, jtruepntsbias, jtruepntsmiss
+    return indxmodl, indxtruepntsbias, indxtruepntsmiss
      
 

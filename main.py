@@ -43,15 +43,14 @@ import functools
 
 # tdpy
 import tdpy.util
+import tdpy.mcmc
 
 # pcat
 from util import *
 from visu import *
 
 
-# In[2]:
-
-def work(indxprocwork, globdata):
+def work(globdata, indxprocwork):
 
     timereal = time.time()
     timeproc = time.clock()
@@ -78,15 +77,15 @@ def work(indxprocwork, globdata):
     for l in globdata.indxpopl:
         globdata.thisindxpntsfull.append(range(thisnumbpnts[l]))
         globdata.thisindxpntsempt.append(range(thisnumbpnts[l], globdata.maxmnumbpnts[l]))
-	globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec, \
-		globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
-	
-    globdata.drmcsamp = zeros((int(globdata.maxmsampsize), 2))
+    globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec, \
+        globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
+    
+    globdata.drmcsamp = zeros((globdata.maxmsampsize, 2))
     
     globdata.drmcsamp[globdata.indxsampnumbpnts, 0] = thisnumbpnts
     globdata.drmcsamp[globdata.indxsampfdfnnorm, 0] = rand(globdata.numbpopl)
     if globdata.trueinfo and globdata.datatype == 'mock':
-        globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = cdfn_atan(globdata.truefdfnslop,                                                                     globdata.minmfdfnslop, globdata.factfdfnslop)
+        globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = cdfn_atan(globdata.truefdfnslop, globdata.minmfdfnslop, globdata.factfdfnslop)
     else:
         globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = rand(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener))
     globdata.drmcsamp[globdata.indxsampnormback, 0] = rand(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener))
@@ -101,18 +100,18 @@ def work(indxprocwork, globdata):
             globdata.drmcsamp[globdata.thisindxsampcomp[l], 0] = rand(globdata.thisindxsampcomp[l].size)
         else:
             globdata.drmcsamp[globdata.thisindxsamplgal[l], 0] = copy(cdfn_self(globdata.truelgal[l], 
-                                                                                -globdata.maxmgangmarg, 
-                                                                                2. * globdata.maxmgangmarg))
+            -globdata.maxmgangmarg, 
+            2. * globdata.maxmgangmarg))
             globdata.drmcsamp[globdata.thisindxsampbgal[l], 0] = copy(cdfn_self(globdata.truebgal[l], 
-                                                                                -globdata.maxmgangmarg, 
-                                                                                2. * globdata.maxmgangmarg))
+            -globdata.maxmgangmarg, 
+            2. * globdata.maxmgangmarg))
             for i in globdata.indxenerfdfn:
                 fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0],                                      globdata.minmfdfnslop, globdata.factfdfnslop)
                 spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], 
                                  fdfnsloptemp, globdata.minmspec[i], globdata.maxmspec[i])
                 globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(spec)
             if globdata.colrprio:
-                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l],                                                                                     globdata.minmsind,                                                                                     globdata.factsind))
+                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l],                 globdata.minmsind,                 globdata.factsind))
                 flux = globdata.drmcsamp[globdata.thisindxsampspec[l][globdata.indxenerfdfn, :], 0]
                 sind = globdata.drmcsamp[globdata.thisindxsampsind[l], 0]
                 globdata.drmcsamp[globdata.thisindxsampspec[l], 0] = retr_spec(flux, sind)
@@ -159,12 +158,6 @@ def work(indxprocwork, globdata):
     listchan.append(timeproc)
     
     return listchan
-
-
-class globdatastrt(object):
-    
-    def __init__(self):
-        pass
 
 
 def wrap(cnfg):
@@ -246,7 +239,7 @@ def wrap(cnfg):
     
     exprfluxstrg = cnfg['exprfluxstrg']
     listbackfluxstrg = cnfg['listbackfluxstrg']
-    expostrg = cnfg['expostrg']
+    globdata.expostrg = cnfg['expostrg']
     
     globdata.initnumbpnts = cnfg['initnumbpnts']
     globdata.trueinfo = cnfg['trueinfo']
@@ -271,9 +264,9 @@ def wrap(cnfg):
             globdata.numbproc = 1
         
     # date and time
-    globdata.datetimestrg = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+    globdata.strgtime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
     if globdata.verbtype > 0:
-        print 'PCAT started at ', globdata.datetimestrg
+        print 'PCAT started at ', globdata.strgtime
         print 'Initializing...'
     
     globdata.strgfluxunit = retr_strgfluxunit(globdata)
@@ -383,22 +376,6 @@ def wrap(cnfg):
     # limits on the number of point sources
     globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
     
-    # PSF parameters
-    if globdata.psfntype == 'singgaus':
-        globdata.numbformpara = 1
-    elif globdata.psfntype == 'singking':
-        globdata.numbformpara = 2 
-    elif globdata.psfntype == 'doubgaus':
-        globdata.numbformpara = 3
-    elif globdata.psfntype == 'gausking':
-        globdata.numbformpara = 4
-    elif globdata.psfntype == 'doubking':
-        globdata.numbformpara = 5
-        
-    globdata.numbpsfiparaevtt = globdata.numbener * globdata.numbformpara
-    globdata.numbpsfipara = globdata.numbpsfiparaevtt * globdata.numbevtt
-    globdata.indxpsfipara = arange(globdata.numbpsfipara)
-    globdata.indxmodlpsfipara = arange(globdata.numbpsfipara)   
 
     if globdata.datatype == 'mock':
 
@@ -432,11 +409,17 @@ def wrap(cnfg):
     if globdata.exprtype == 'sdss':
         globdata.longlabl += ' [arcsec]'
         globdata.latilabl += ' [arcsec]'
-        
+    
+    # construct the PSF model
+    retr_psfimodl(globdata)
+
+    # proposals
+    retr_propmodl(globdata)
+    
     # factors in the prior expression
     globdata.priofactlgalbgal = 2. * log(1. / 2. / globdata.maxmgang)
     globdata.priofactfdfnslop = globdata.numbener * log(1. / (arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)))
-    globdata.fdfnnormfact = log(1. / (log(globdata.maxmfdfnnorm) - log(globdata.minmfdfnnorm)))
+    globdata.priofactfdfnnorm = log(1. / (log(globdata.maxmfdfnnorm) - log(globdata.minmfdfnnorm)))
 
     # sample vector indices  
     globdata.indxsampnumbpnts = arange(globdata.numbpopl)
@@ -451,66 +434,15 @@ def wrap(cnfg):
     globdata.indxsampcompinit = amax(globdata.indxsampnormback) + 1
     
     # maximum number of parameters
-    globdata.maxmsampsize = globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.numbpopl
+    globdata.maxmsampsize = int(globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.numbpopl)
     
     if globdata.numbburn == None:
         globdata.numbburn = globdata.numbswep / 5
     if globdata.factthin == None:
-        globdata.factthin = min(int(globdata.maxmsampsize) * 5, globdata.numbswep / 2)
+        globdata.factthin = min(globdata.maxmsampsize * 5, globdata.numbswep / 2)
 
-    globdata.strgprop = ['fdfnnorm', 'fdfnslop', 'psfipara', 'normback', 'brth',                 'deth', 'splt', 'merg', 'lgal', 'bgal', 'spec', 'sind']
 
-    globdata.indxpropfdfnnorm = 0
-    globdata.indxpropfdfnslop = 1
-    globdata.indxproppsfipara = 2
-    globdata.indxpropnormback = 3
-    globdata.indxpropbrth = 4
-    globdata.indxpropdeth = 5
-    globdata.indxpropsplt = 6
-    globdata.indxpropmerg = 7
-    globdata.indxproplgal = 8
-    globdata.indxpropbgal = 9
-    globdata.indxpropspec = 10
-    globdata.indxpropsind = 11
 
-    if globdata.probprop == None:
-
-        probfdfnnorm = array([1.])
-        if globdata.colrprio:
-            probfdfnslop = array([1.])
-        else:
-            #probfdfnslop = array([1.] * globdata.numbener)
-            probfdfnslop = array([1.])
-            
-        #probpsfipara = array([1.] * globdata.numbpsfipara)
-        #probnormback = array([1.] * globdata.numbback * globdata.numbener)
-        
-        probpsfipara = array([1.])
-        probnormback = array([1.])
-        
-        probbrth = array([0.1 * sum(globdata.maxmnumbpnts)])
-        probdeth = array([0.1 * sum(globdata.maxmnumbpnts)])
-        probsplt = array([0. * sum(globdata.maxmnumbpnts)])
-        probmerg = array([0. * sum(globdata.maxmnumbpnts)])
-        
-        problgal = array([sum(globdata.maxmnumbpnts) / 2.])
-        probbgal = array([sum(globdata.maxmnumbpnts) / 2.])
-        if globdata.colrprio:
-            probspec = array([sum(globdata.maxmnumbpnts) / 2.])
-            probsind = array([sum(globdata.maxmnumbpnts) / 2.])
-        else:
-            probspec = array([sum(globdata.maxmnumbpnts) / 2.])
-            #probspec = array([sum(globdata.maxmnumbpnts) / 2.] * globdata.numbener)
-            probsind = array([0.])
-            
-        globdata.probprop = concatenate((probfdfnnorm, probfdfnslop,                                 probpsfipara, probnormback,                                 probbrth, probdeth,                                 probsplt, probmerg,                                 problgal, probbgal,                                 probspec, probsind))
-        
-
-        globdata.probprop /= sum(globdata.probprop)
-        
-    # number of proposal types
-    globdata.numbprop = globdata.probprop.size
-    globdata.indxprop = arange(globdata.numbprop)
     
     if globdata.verbtype > 1:
         print 'probprop: '
@@ -526,7 +458,7 @@ def wrap(cnfg):
             plotfold = '/n/pan/www/tansu/png/pcat/'
         else:
             plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-        globdata.plotpath = plotfold + globdata.datetimestrg + '_' + globdata.rtag + '/'
+        globdata.plotpath = plotfold + globdata.strgtime + '_' + globdata.rtag + '/'
         cmnd = 'mkdir -p ' + globdata.plotpath
         os.system(cmnd)
 
@@ -650,113 +582,6 @@ def wrap(cnfg):
     globdata.numbspecprox = 1
     globdata.meanspecprox = globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
     
-    
-    # construct the PSF model
-    numbformpara = globdata.numbformpara
-    numbpsfiparaevtt = globdata.numbpsfiparaevtt
-
-    minmformpara = zeros(numbformpara)
-    maxmformpara = zeros(numbformpara)
-    factformpara = zeros(numbformpara)
-    scalformpara = zeros(numbformpara, dtype=object)
-    if globdata.exprtype == 'ferm':
-        minmanglpsfn = deg2rad(0.01)
-        maxmanglpsfn = deg2rad(3.)
-        minmgamm = 2.
-        maxmgamm = 20.
-        minmpsfnfrac = 0.
-        maxmpsfnfrac = 1.
-    if globdata.exprtype == 'sdss':
-        minmanglpsfn = deg2rad(0.01 / 3600.)
-        maxmanglpsfn = deg2rad(2. / 3600.)
-    if globdata.psfntype == 'singgaus':
-        minmformpara[0] = minmanglpsfn
-        maxmformpara[0] = maxmanglpsfn
-        scalformpara[0] = 'logt'
-        strgformpara = [r'$\sigma']
-    elif globdata.psfntype == 'singking':
-        minmformpara[0] = minmanglpsfn
-        maxmformpara[0] = maxmanglpsfn
-        minmformpara[1] = minmgamm
-        maxmformpara[1] = maxmgamm
-        scalformpara[0] = 'logt'
-        scalformpara[1] = 'atan'
-        strgformpara = [r'$\sigma', r'$\gamma']
-    elif globdata.psfntype == 'doubgaus':
-        minmformpara[0] = minmpsfnfrac
-        maxmformpara[0] = maxmpsfnfrac
-        minmformpara[1] = minmanglpsfn
-        maxmformpara[1] = maxmanglpsfn
-        minmformpara[2] = minmanglpsfn
-        maxmformpara[2] = maxmanglpsfn
-        scalformpara[0] = 'self'
-        scalformpara[1] = 'logt'
-        scalformpara[2] = 'logt'
-        strgformpara = ['$f_c', r'$\sigma_c', r'$\sigma_t']
-    elif globdata.psfntype == 'gausking':
-        minmformpara[0] = minmpsfnfrac
-        maxmformpara[0] = maxmpsfnfrac
-        minmformpara[1] = minmanglpsfn
-        maxmformpara[1] = maxmanglpsfn
-        minmformpara[2] = minmanglpsfn
-        maxmformpara[2] = maxmanglpsfn
-        minmformpara[3] = minmgamm
-        maxmformpara[3] = maxmgamm
-        scalformpara[0] = 'self'
-        scalformpara[1] = 'logt'
-        scalformpara[2] = 'logt'
-        scalformpara[3] = 'atan'
-        strgformpara = ['$f_g', r'$\sigma_g', r'$\sigma_k', r'$\gamma']
-    elif globdata.psfntype == 'doubking':
-        minmformpara[0] = minmpsfnfrac
-        maxmformpara[0] = maxmpsfnfrac
-        minmformpara[1] = minmanglpsfn
-        maxmformpara[1] = maxmanglpsfn
-        minmformpara[2] = minmgamm
-        maxmformpara[2] = maxmgamm
-        minmformpara[3] = minmanglpsfn
-        maxmformpara[3] = maxmanglpsfn
-        minmformpara[4] = minmgamm
-        maxmformpara[4] = maxmgamm
-        scalformpara[0] = 'self'
-        scalformpara[1] = 'logt'
-        scalformpara[2] = 'atan'
-        scalformpara[3] = 'logt'
-        scalformpara[4] = 'atan'
-        strgformpara = ['$f_c', r'$\sigma_c', r'$\gamma_c', r'$\sigma_t', r'$\gamma_t']
-    
-    for k in range(numbformpara):
-        if scalformpara[k] == 'self':
-            factformpara[k] = maxmformpara[k] - minmformpara[k]
-        if scalformpara[k] == 'logt':
-            factformpara[k] = log(maxmformpara[k] / minmformpara[k])
-        if scalformpara[k] == 'atan':
-            factformpara[k] = arctan(maxmformpara[k]) - arctan(minmformpara[k])
-            
-    globdata.minmpsfipara = tile(tile(minmformpara, globdata.numbener), globdata.numbevtt)
-    globdata.maxmpsfipara = tile(tile(maxmformpara, globdata.numbener), globdata.numbevtt)
-    globdata.scalpsfipara = tile(tile(scalformpara, globdata.numbener), globdata.numbevtt)
-    globdata.factpsfipara = tile(tile(factformpara, globdata.numbener), globdata.numbevtt)
-    
-    # PSF parameter strings
-    globdata.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m])                         for m in globdata.indxevtt for i in globdata.indxener for k in range(numbformpara)]
-    indxpsfiparainit = (arange(globdata.numbevtt)[:, None] * numbpsfiparaevtt +                             arange(globdata.numbener)[None, :] * numbformpara).flatten()
-    for k in arange(numbformpara):
-        if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
-            globdata.strgpsfipara[indxpsfiparainit[k]] += ' ' + globdata.strganglunit
-        elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
-            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
-        elif globdata.psfntype == 'doubking':
-            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
-            
-    globdata.indxpsfipara = arange(globdata.numbpsfipara)
-
-
-
-            
- 
     if globdata.verbtype > 1:
         print 'indxsampnumbpnts: ', globdata.indxsampnumbpnts
         print 'indxsampfdfnnorm: ', globdata.indxsampfdfnnorm
@@ -826,11 +651,11 @@ def wrap(cnfg):
     if globdata.datatype == 'mock' or globdata.exprtype == 'ferm':
         mockpsfipara = fermpsfipara
 
-    # exposure
-    if expostrg == 'unit':
+    # globdata.exposure
+    if globdata.expostrg == 'unit':
         globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + expostrg
+        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.expostrg
         globdata.expo = pf.getdata(path)
 
         if globdata.pixltype == 'heal':
@@ -915,7 +740,8 @@ def wrap(cnfg):
         globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
         
 
-        plot_fgl3(globdata)
+        if globdata.makeplot:
+            plot_fgl3(globdata)
         
         globdata.fgl3lgal = globdata.fgl3lgal[globdata.indxfgl3rofi]
         globdata.fgl3bgal = globdata.fgl3bgal[globdata.indxfgl3rofi]
@@ -1025,7 +851,7 @@ def wrap(cnfg):
                 if globdata.colrprio:
                     globdata.truesind.append(mocksind[l])
                     
-            globdata.jtruepntstimevari = [array([])] * globdata.numbpopl
+            globdata.indxtruepntstimevari = [array([])] * globdata.numbpopl
                     
             globdata.truenumbpnts = mocknumbpnts
             globdata.truefdfnnorm = mockfdfnnorm
@@ -1075,7 +901,7 @@ def wrap(cnfg):
                 globdata.truesind = [globdata.fgl3sind]
             indxpixltemp = retr_indxpixl(globdata, globdata.truebgal[0], globdata.truelgal[0])
             globdata.truecnts = [globdata.fgl3spec[0, :, :, None] * globdata.expo[:, indxpixltemp, :] *                             globdata.diffener[:, None, None]]
-            globdata.jtruepntstimevari = [globdata.indxfgl3timevari]
+            globdata.indxtruepntstimevari = [globdata.indxfgl3timevari]
             if globdata.exprtype == 'ferm':
                 globdata.truespec = [globdata.fgl3spec]
                 
@@ -1165,20 +991,21 @@ def wrap(cnfg):
     timereal = zeros(globdata.numbproc)
     timeproc = zeros(globdata.numbproc)
     if globdata.numbproc == 1:
-        gridchan = [work(0, globdata)]
+        gridchan = [work(globdata, 0)]
     else:
         if globdata.verbtype > 0:
             print 'Forking the sampler...'
 
         # process lock for simultaneous plotting
-        globdata.lock = mp.Lock()
+        globdata.lock = mp.Manager().Lock()
 
         # process pool
         pool = mp.Pool(globdata.numbproc)
         
         # spawn the processes
         workpart = functools.partial(work, globdata)
-        gridchan = pool.map(workpart, range(globdata.numbproc))
+        indxproc = arange(globdata.numbproc)
+        gridchan = pool.map(workpart, indxproc)
 
         pool.close()
         pool.join()
@@ -1204,17 +1031,17 @@ def wrap(cnfg):
     listindxpntsfull = []
     listindxsampmodi = zeros((globdata.numbswep, globdata.numbproc), dtype=int)
     
-    listauxipara = empty((globdata.numbswep, globdata.numbproc, globdata.numbcomp))
-    listlaccfrac = empty((globdata.numbswep, globdata.numbproc))
-    listnumbpair = empty((globdata.numbswep, globdata.numbproc))
-    listjcbnfact = empty((globdata.numbswep, globdata.numbproc))
-    listcombfact = empty((globdata.numbswep, globdata.numbproc))
+    globdata.listauxipara = empty((globdata.numbswep, globdata.numbproc, globdata.numbcomp))
+    globdata.listlaccfrac = empty((globdata.numbswep, globdata.numbproc))
+    globdata.listnumbpair = empty((globdata.numbswep, globdata.numbproc))
+    globdata.listjcbnfact = empty((globdata.numbswep, globdata.numbproc))
+    globdata.listcombfact = empty((globdata.numbswep, globdata.numbproc))
 
     levi = 0.
     info = 0.
     
     for k in range(globdata.numbproc):
-        globdata.rtag = retr_globdata.rtag(k)
+        globdata.rtag = retr_rtag(globdata, k)
         listchan = gridchan[k]
         listsampvarb[:, k, :] = listchan[0]
         listindxprop[:, k] = listchan[1]
@@ -1225,21 +1052,21 @@ def wrap(cnfg):
         listmodlcnts[:, k, :] = listchan[6]    
         listindxpntsfull.append(listchan[7])
         listindxsampmodi[:, k] = listchan[8]
-        listauxipara[:, k, :] = listchan[9]
-        listlaccfrac[:, k] = listchan[10]
-        listnumbpair[:, k] = listchan[11]
-        listjcbnfact[:, k] = listchan[12]
-        listcombfact[:, k] = listchan[13]
+        globdata.listauxipara[:, k, :] = listchan[9]
+        globdata.listlaccfrac[:, k] = listchan[10]
+        globdata.listnumbpair[:, k] = listchan[11]
+        globdata.listjcbnfact[:, k] = listchan[12]
+        globdata.listcombfact[:, k] = listchan[13]
         levi += listchan[14]
         info += listchan[15]
         listpntsfluxmean[:, k, :] = listchan[16]
 
     listindxprop = listindxprop.flatten()
-    listauxipara = listauxipara.reshape((globdata.numbswep * globdata.numbproc, globdata.numbcomp))
-    listlaccfrac = listlaccfrac.reshape(globdata.numbswep * globdata.numbproc)
-    listnumbpair = listnumbpair.reshape(globdata.numbswep * globdata.numbproc)
-    listjcbnfact = listjcbnfact.reshape(globdata.numbswep * globdata.numbproc)
-    listcombfact = listcombfact.reshape(globdata.numbswep * globdata.numbproc)
+    globdata.listauxipara = globdata.listauxipara.reshape((globdata.numbswep * globdata.numbproc, globdata.numbcomp))
+    globdata.listlaccfrac = globdata.listlaccfrac.reshape(globdata.numbswep * globdata.numbproc)
+    globdata.listnumbpair = globdata.listnumbpair.reshape(globdata.numbswep * globdata.numbproc)
+    globdata.listjcbnfact = globdata.listjcbnfact.reshape(globdata.numbswep * globdata.numbproc)
+    globdata.listcombfact = globdata.listcombfact.reshape(globdata.numbswep * globdata.numbproc)
     
     listchro = listchro.reshape((globdata.numbproc * globdata.numbswep, 4)) 
     listaccp = listaccp.flatten()
@@ -1317,14 +1144,14 @@ def wrap(cnfg):
 
 
             
-    pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + globdata.datetimestrg + '_' + globdata.rtag + '.fits'  
+    pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + globdata.strgtime + '_' + globdata.rtag + '.fits'  
     
     head = pf.Header()
     head['numbener'] = (globdata.numbener, 'Number of energy bins')
     head['numbevtt'] = (globdata.numbevtt, 'Number of PSF class bins')
     head['numbpopl'] = (globdata.numbpopl, 'Number of PS population')
-    head['numbpsfipara'] = globdata.numbpsfipara
-    head['numbformpara'] = globdata.numbformpara
+    #head['numbpsfipara'] = globdata.numbpsfipara
+    #head['numbformpara'] = globdata.numbformpara
     
     head['numbsamp'] = globdata.numbsamp
     head['numbburn'] = globdata.numbburn
@@ -1337,8 +1164,8 @@ def wrap(cnfg):
     head['lgalcntr'] = globdata.lgalcntr
     head['bgalcntr'] = globdata.bgalcntr
     head['numbspec'] = globdata.numbspec
-    head['numbsideheal'] = globdata.numbsideheal
-    head['numbsidecart'] = globdata.numbsidecart
+    #head['numbsideheal'] = globdata.numbsideheal
+    #head['numbsidecart'] = globdata.numbsidecart
     
     head['minmlgal'] = globdata.minmlgal
     head['maxmlgal'] = globdata.maxmlgal
@@ -1348,15 +1175,15 @@ def wrap(cnfg):
     head['datatype'] = globdata.datatype
     head['regitype'] = globdata.regitype
     head['psfntype'] = globdata.psfntype
-    if globdata.datatype == 'mock':
-        head['mockpsfntype'] = mockpsfntype
+    #if globdata.datatype == 'mock':
+    #    head['mockpsfntype'] = mockpsfntype
     head['exprtype'] = globdata.exprtype
     head['pixltype'] = globdata.pixltype
     
     head['colrprio'] = globdata.colrprio
     head['trueinfo'] = globdata.trueinfo
     head['margsize'] = globdata.margsize
-    head['datetimestrg'] = globdata.datetimestrg
+    head['strgtime'] = globdata.strgtime
     
     head['levi'] = levi
     head['info'] = info
@@ -1370,10 +1197,11 @@ def wrap(cnfg):
         listhdun[-1].header['EXTNAME'] = 'bgalpopl%d' % l
         listhdun.append(pf.ImageHDU(listspec[l]))
         listhdun[-1].header['EXTNAME'] = 'specpopl%d' % l
-        # temp
         if globdata.colrprio:
             listhdun.append(pf.ImageHDU(listsind[l]))
             listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
+        listhdun.append(pf.ImageHDU(globdata.maxmnumbpnts[l]))
+        listhdun[-1].header['EXTNAME'] = 'maxmnumbpntspopl%d' % l
 
     
     listhdun.append(pf.ImageHDU(listnumbpnts))
@@ -1471,9 +1299,9 @@ def wrap(cnfg):
     listhdun.append(pf.ImageHDU(globdata.indxevttincl))
     listhdun[-1].header['EXTNAME'] = 'indxevttincl'
     
-    
+   
+ 
     # utilities
-    
     listhdun.append(pf.ImageHDU(listpntsfluxmean))
     listhdun[-1].header['EXTNAME'] = 'listpntsfluxmean'
     
@@ -1492,25 +1320,28 @@ def wrap(cnfg):
     listhdun.append(pf.ImageHDU(listindxsampmodi))
     listhdun[-1].header['EXTNAME'] = 'sampmodi'
     
-    listhdun.append(pf.ImageHDU(listauxipara))
+    listhdun.append(pf.ImageHDU(globdata.listauxipara))
     listhdun[-1].header['EXTNAME'] = 'auxipara'
     
-    listhdun.append(pf.ImageHDU(listlaccfrac))
+    listhdun.append(pf.ImageHDU(globdata.listlaccfrac))
     listhdun[-1].header['EXTNAME'] = 'laccfrac'
     
-    listhdun.append(pf.ImageHDU(listnumbpair))
+    listhdun.append(pf.ImageHDU(globdata.listnumbpair))
     listhdun[-1].header['EXTNAME'] = 'numbpair'
     
-    listhdun.append(pf.ImageHDU(listjcbnfact))
+    listhdun.append(pf.ImageHDU(globdata.listjcbnfact))
     listhdun[-1].header['EXTNAME'] = 'jcbnfact'
     
-    listhdun.append(pf.ImageHDU(listcombfact))
+    listhdun.append(pf.ImageHDU(globdata.listcombfact))
     listhdun[-1].header['EXTNAME'] = 'combfact'
     
-    pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True)
+    pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True, output_verify='ignore')
+
+    # temp
+    print pf.info(pathprobcatl)
     
     if globdata.makeplot:
-        plot_post(globdata, pathprobcatl)
+        plot_post(pathprobcatl)
 
     timetotlreal = time.time() - timetotlreal
     timetotlproc = time.clock() - timetotlproc
@@ -1547,20 +1378,24 @@ def plot_samp(globdata):
         cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *             globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
         thiscnts.append(cntstemp)
 
-        if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
-            if globdata.colrprio:
-                plot_histsind(globdata, l)
-            plot_scatpixl(globdata, l)
-			
-            if globdata.trueinfo:
-                indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata, l,                                      globdata.thissampvarb[globdata.thisindxsamplgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampbgal[l]],                                      globdata.thissampvarb[globdata.thisindxsampspec[l]])
+        #if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
+        if globdata.colrprio:
+            plot_histsind(globdata, l)
+        plot_scatpixl(globdata, l)
+       
+        if globdata.trueinfo:
+            indxmodl, globdata.trueindxpntsbias, globdata.trueindxpntsmiss = pair_catl(globdata, l, globdata.thissampvarb[globdata.thisindxsamplgal[l]], \
+                globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsampspec[l]])
 
-                thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
-                thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
-                plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
-            plot_histspec(globdata, l)
-            plot_histcnts(globdata, l, thiscnts)
-            plot_compfrac(globdata)
+            thisspecmtch = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, indxmodl]
+            thisspecmtch[:, globdata.trueindxpntsmiss] = 0.
+            if globdata.verbtype > 1:
+                print 'thisspecmtch: (popl%d) ' % l
+                print thisspecmtch
+            plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
+        plot_histspec(globdata, l)
+        plot_histcnts(globdata, l, thiscnts)
+        plot_compfrac(globdata)
 
     for i in globdata.indxener:
         
@@ -1581,11 +1416,14 @@ def plot_samp(globdata):
     #plot_fwhm(globdata, thisfwhm)
     #plot_backcntsmean(globdata, globdata.thisbackcntsmean)
     
-    tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
+    tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
     globdata.errrmodlcnts = globdata.thismodlcnts - tempmodlcnts
     
     for i in globdata.indxener:
         plot_errrcnts(globdata, i, None, globdata.errrmodlcnts)
+
+    if amax(abs(globdata.errrmodlcnts)) > 0.1 and False:
+        print 'Approximation error went above the limit!'
     
     
 def rjmc(globdata, indxprocwork):
@@ -1598,7 +1436,7 @@ def rjmc(globdata, indxprocwork):
     sampindx = zeros(globdata.numbswep, dtype=int)
     sampindx[indxswepsave] = arange(globdata.numbsamp)
 
-    listsampvarb = zeros((globdata.numbsamp, int(globdata.maxmsampsize))) + -1.
+    listsampvarb = zeros((globdata.numbsamp, globdata.maxmsampsize)) + -1.
     listindxprop = zeros(globdata.numbswep)
     listchro = zeros((globdata.numbswep, 4))
     listllik = zeros(globdata.numbsamp)
@@ -1634,17 +1472,16 @@ def rjmc(globdata, indxprocwork):
             print '-' * 10
             print 'Sweep %d' % globdata.cntrswep
 
-        thismakefram = (globdata.cntrswep % globdata.plotperd == 0) and             indxprocwork == int(float(globdata.cntrswep) / globdata.numbswep * globdata.numbproc)             and globdata.makeplot
+        thismakefram = (globdata.cntrswep % globdata.plotperd == 0) and indxprocwork == int(float(globdata.cntrswep) / globdata.numbswep * globdata.numbproc) and globdata.makeplot
         globdata.reje = False
     
         # choose a proposal type
-        retr_indxprop(globdata, globdata.drmcsamp[:, 0])
+        retr_thisindxprop(globdata, globdata.drmcsamp[:, 0])
             
         # save the proposal type
         listindxprop[globdata.cntrswep] = globdata.thisindxprop
         if globdata.verbtype > 1:
-            print 'indxprop: ', strgprop[indxprop]
-        
+            print 'thisindxprop: ', globdata.strgprop[globdata.thisindxprop]
         
         if globdata.verbtype > 1:        
             print
@@ -1663,22 +1500,22 @@ def rjmc(globdata, indxprocwork):
             print
             print 'Process %d is in queue for making a frame.' % indxprocwork
             if globdata.numbproc > 1:
-                lock.acquire()
+                globdata.lock.acquire()
             print 'Process %d started making a frame' % indxprocwork
             plot_samp(globdata)
             print 'Process %d finished making a frame' % indxprocwork
             if globdata.numbproc > 1:
-                lock.release()
+                globdata.lock.release()
             
         # reject the sample if proposal is outside the prior
         if globdata.thisindxprop != globdata.indxpropbrth and             globdata.thisindxprop != globdata.indxpropdeth and not globdata.reje:
             if where((globdata.drmcsamp[globdata.indxsampmodi, 1] < 0.) |                      (globdata.drmcsamp[globdata.indxsampmodi, 1] > 1.))[0].size > 0:
                 globdata.reje = True
         if globdata.thisindxprop == globdata.indxproppsfipara:
-            if modlpsfntype == 'doubking':
+            if globdata.psfntype == 'doubking':
                 if globdata.nextpsfipara[1] > globdata.nextpsfipara[3]:
                     globdata.reje = True
-            elif modlpsfntype == 'doubgaus':
+            elif globdata.psfntype == 'doubgaus':
                 if globdata.nextpsfipara[1] > globdata.nextpsfipara[2]:
                     globdata.reje = True
                 
@@ -1699,15 +1536,15 @@ def rjmc(globdata, indxprocwork):
             listchro[globdata.cntrswep, 3] = timefinl - timebegn
             
             # evaluate the acceptance probability
-            accpprob = exp(deltllik + deltlpri + laccfrac)
+            accpprob = exp(globdata.deltllik + globdata.deltlpri + globdata.laccfrac)
 
             if globdata.verbtype > 1:
                 print 'deltlpri'
-                print deltlpri
+                print globdata.deltlpri
                 print 'deltllik'
-                print deltllik
+                print globdata.deltllik
                 print 'laccfrac'
-                print laccfrac
+                print globdata.laccfrac
                 print
                 
         else:
@@ -1721,7 +1558,7 @@ def rjmc(globdata, indxprocwork):
                 print 'Accepted.'
 
             # update the current state
-            updt_samp()
+            updt_samp(globdata)
 
             listaccp[globdata.cntrswep] = True
 
@@ -1742,31 +1579,29 @@ def rjmc(globdata, indxprocwork):
                     print 'Spectrum of some PS went below the prior range!'
                 if where(globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]] > globdata.maxmspec[i])[0].size > 0:
                     print 'Spectrum of some PS went above the prior range!'          
-        if amax(abs(errrmodlcnts)) > 0.1 and False:
-            print 'Approximation error went above the limit!'
 
         # save the sample
         if boolsave[globdata.cntrswep]:
             listsampvarb[sampindx[globdata.cntrswep], :] = globdata.thissampvarb
-            listmodlcnts[sampindx[globdata.cntrswep], :] = thismodlcnts[0, gpixl, 0]
-            listpntsfluxmean[sampindx[globdata.cntrswep], :] = mean(sum(thispntsflux * expo, 2) / sum(expo, 2), 1)
+            listmodlcnts[sampindx[globdata.cntrswep], :] = globdata.thismodlcnts[0, globdata.indxpixlsave, 0]
+            listpntsfluxmean[sampindx[globdata.cntrswep], :] = mean(sum(globdata.thispntsflux * globdata.expo, 2) / sum(globdata.expo, 2), 1)
             listindxpntsfull.append(globdata.thisindxpntsfull)
-            listllik[sampindx[globdata.cntrswep]] = sum(thisllik)
+            listllik[sampindx[globdata.cntrswep]] = sum(globdata.thisllik)
             
             lpri = 0.
             for l in globdata.indxpopl:
                 numbpnts = globdata.thissampvarb[globdata.indxsampnumbpnts[l]]
                 fdfnnorm = globdata.thissampvarb[globdata.indxsampfdfnnorm[l]]
-                lpri += numbpnts * priofactlgalbgal + priofactfdfnslop + fdfnnormfact - log(fdfnnorm)
+                lpri += numbpnts * globdata.priofactlgalbgal + globdata.priofactfdfnslop + globdata.priofactfdfnnorm - log(fdfnnorm)
                 for i in globdata.indxenerprio:
                     flux = globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]]
                     fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]
                     lpri -= log(1. + fdfnslop**2)
-                    lpri += sum(log(pdfn_spec(flux, fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])))
+                    lpri += sum(log(pdfn_spec(globdata, flux, fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])))
             listlpri[sampindx[globdata.cntrswep]] = lpri
             
             
-            if tracsamp:
+            if globdata.tracsamp:
                 
                 numbpnts = globdata.thissampvarb[globdata.indxsampnumbpnts[0]]
                 diffllikdiffpara = empty(numbpnts)
@@ -1784,10 +1619,10 @@ def rjmc(globdata, indxprocwork):
 
         # log the progress
         if globdata.verbtype > 0:
-            thiscntr = tdpy.util.show_prog(globdata.cntrswep, globdata.numbswep,                                            thiscntr, indxprocwork=indxprocwork)
+            thiscntr = tdpy.util.show_prog(globdata.cntrswep, globdata.numbswep, thiscntr, indxprocwork=indxprocwork)
             
             
-        if diagsamp:
+        if globdata.diagsamp:
             plot_datacnts(0, 0, nextstat=True)
             plot_resicnts(0, 0, thisresicnts, nextstat=True)
         
@@ -1808,7 +1643,7 @@ def rjmc(globdata, indxprocwork):
         
         
         # update the sweep counter
-        globdata.cntrsamp += 1
+        globdata.cntrswep += 1
 
     
     if globdata.verbtype > 1:
@@ -1817,7 +1652,7 @@ def rjmc(globdata, indxprocwork):
     
     
     # correct the likelihoods for the constant data dependent factorial
-    listllik -= sum(sp.special.gammaln(datacnts + 1))
+    listllik -= sum(sp.special.gammaln(globdata.datacnts + 1))
     
     # calculate the log-evidence and relative entropy using the harmonic mean estimator
     minmlistllik = amin(listllik)
@@ -1825,7 +1660,9 @@ def rjmc(globdata, indxprocwork):
     
     info = mean(listllik) - levi
 
-    listchan = [listsampvarb, listindxprop, listchro, listllik, listlpri, listaccp,                 listmodlcnts, listindxpntsfull, listindxsampmodi,                 globdata.listauxipara, globdata.listlaccfrac, globdata.listnumbpair,                 globdata.listjcbnfact, globdata.listcombfact, levi, info, listpntsfluxmean]
+    listchan = [listsampvarb, listindxprop, listchro, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxsampmodi, \
+        globdata.listauxipara, globdata.listlaccfrac, globdata.listnumbpair, globdata.listjcbnfact, globdata.listcombfact, \
+        levi, info, listpntsfluxmean]
     
     return listchan
 
