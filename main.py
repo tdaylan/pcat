@@ -93,7 +93,7 @@ def work(globdata, indxprocwork):
         globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
     else:
         for k in globdata.indxmodlpsfipara:
-            globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k, evaltype)
+            globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k)
         
     for l in globdata.indxpopl:
         if globdata.randinit or not globdata.trueinfo:
@@ -106,9 +106,8 @@ def work(globdata, indxprocwork):
             -globdata.maxmgangmarg, 
             2. * globdata.maxmgangmarg))
             for i in globdata.indxenerfdfn:
-                fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0],                                      globdata.minmfdfnslop, globdata.factfdfnslop)
-                spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], 
-                                 fdfnsloptemp, globdata.minmspec[i], globdata.maxmspec[i])
+                fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0], globdata.minmfdfnslop, globdata.factfdfnslop)
+                spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
                 globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(spec)
             if globdata.colrprio:
                 globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l],                 globdata.minmsind,                 globdata.factsind))

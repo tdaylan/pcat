@@ -424,6 +424,7 @@ def cnfg_ferm_mock_ngal():
 					 numbswep=100000, \
                      plotperd=20000, \
                      makeplot=True, \
+                     randinit=False, \
                      trueinfo=True, \
                      maxmgang=20., \
                      colrprio=colrprio, \
