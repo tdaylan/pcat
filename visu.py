@@ -97,7 +97,7 @@ def plot_post(pathprobcatl):
     globdata.colrprio = hdun[0].header['colrprio']
     
     globdata.margsize = hdun[0].header['margsize']
-    globdata.datetimestrg = hdun[0].header['datetimestrg']
+    globdata.strgtime = hdun[0].header['strgtime']
 
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
@@ -108,7 +108,7 @@ def plot_post(pathprobcatl):
         plotfold = '/n/pan/www/tansu/png/pcat/'
     else:
         plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-    globdata.plotpath = plotfold + globdata.datetimestrg + '_' + globdata.rtag + '/'
+    globdata.plotpath = plotfold + globdata.strgtime + '_' + globdata.rtag + '/'
     cmnd = 'mkdir -p ' + globdata.plotpath
     os.system(cmnd)
 
@@ -128,14 +128,14 @@ def plot_post(pathprobcatl):
     listspec = []
     if globdata.colrprio:
         listsind = []
-    globdata.maxmnumbpnts = zeros(globdata.numbpopl)
     for l in globdata.indxpopl:
         listlgal.append(hdun['lgalpopl%d' % l].data)
         listbgal.append(hdun['bgalpopl%d' % l].data)
         listspec.append(hdun['specpopl%d' % l].data)
         if globdata.colrprio:
             listsind.append(hdun['sindpopl%d' % l].data)
-        globdata.maxmnumbpnts[l] = hdun['maxmnumbpntspopl%d' % l].data
+        
+    globdata.maxmnumbpnts = hdun['maxmnumbpnts'].data
         
     # proposals
     globdata.probprop = None

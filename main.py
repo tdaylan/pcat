@@ -1149,8 +1149,8 @@ def wrap(cnfg):
     head['numbener'] = (globdata.numbener, 'Number of energy bins')
     head['numbevtt'] = (globdata.numbevtt, 'Number of PSF class bins')
     head['numbpopl'] = (globdata.numbpopl, 'Number of PS population')
-    #head['numbpsfipara'] = globdata.numbpsfipara
-    #head['numbformpara'] = globdata.numbformpara
+    head['numbpsfipara'] = globdata.numbpsfipara
+    head['numbformpara'] = globdata.numbformpara
     
     head['numbsamp'] = globdata.numbsamp
     head['numbburn'] = globdata.numbburn
@@ -1163,8 +1163,8 @@ def wrap(cnfg):
     head['lgalcntr'] = globdata.lgalcntr
     head['bgalcntr'] = globdata.bgalcntr
     head['numbspec'] = globdata.numbspec
-    #head['numbsideheal'] = globdata.numbsideheal
-    #head['numbsidecart'] = globdata.numbsidecart
+    head['numbsideheal'] = globdata.numbsideheal
+    head['numbsidecart'] = globdata.numbsidecart
     
     head['minmlgal'] = globdata.minmlgal
     head['maxmlgal'] = globdata.maxmlgal
@@ -1174,8 +1174,8 @@ def wrap(cnfg):
     head['datatype'] = globdata.datatype
     head['regitype'] = globdata.regitype
     head['psfntype'] = globdata.psfntype
-    #if globdata.datatype == 'mock':
-    #    head['mockpsfntype'] = mockpsfntype
+    if globdata.datatype == 'mock':
+        head['mockpsfntype'] = mockpsfntype
     head['exprtype'] = globdata.exprtype
     head['pixltype'] = globdata.pixltype
     
@@ -1189,6 +1189,7 @@ def wrap(cnfg):
     
     listhdun = []
     listhdun.append(pf.PrimaryHDU(header=head))
+
     for l in globdata.indxpopl:
         listhdun.append(pf.ImageHDU(listlgal[l]))
         listhdun[-1].header['EXTNAME'] = 'lgalpopl%d' % l
@@ -1199,10 +1200,10 @@ def wrap(cnfg):
         if globdata.colrprio:
             listhdun.append(pf.ImageHDU(listsind[l]))
             listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
-        listhdun.append(pf.ImageHDU(globdata.maxmnumbpnts[l]))
-        listhdun[-1].header['EXTNAME'] = 'maxmnumbpntspopl%d' % l
 
-    
+    listhdun.append(pf.ImageHDU(globdata.maxmnumbpnts))
+    listhdun[-1].header['EXTNAME'] = 'maxmnumbpnts'
+
     listhdun.append(pf.ImageHDU(listnumbpnts))
     listhdun[-1].header['EXTNAME'] = 'numbpnts'
 
@@ -1336,9 +1337,6 @@ def wrap(cnfg):
     
     pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True, output_verify='ignore')
 
-    # temp
-    print pf.info(pathprobcatl)
-    
     if globdata.makeplot:
         plot_post(pathprobcatl)
 

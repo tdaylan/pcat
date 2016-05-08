@@ -419,10 +419,10 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = array([[1.8, 1.8, 1.8, 1.8, 1.8]])
       
     
-    cnfg = retr_cnfg(psfntype='gausking', \
+    cnfg = retr_cnfg(psfntype='doubking', \
 					 numbproc=1, \
-					 numbswep=100000, \
-                     plotperd=20000, \
+					 numbswep=100, \
+                     plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \
                      trueinfo=True, \
@@ -431,9 +431,9 @@ def cnfg_ferm_mock_ngal():
                      verbtype=1, \
                      indxevttincl=arange(3, 4), \
                      indxenerincl=arange(5), \
-                     maxmnumbpnts=array([300]), \
-                     mocknumbpnts=array([200]), \
-                     #probprop=array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype=float), \
+                     maxmnumbpnts=array([3]), \
+                     mocknumbpnts=array([2]), \
+                     probprop=array([0.1, 0.1, 0, 0.1, 1., 1., 0, 0, 1., 1., 1., 0], dtype=float), \
                      minmspec=minmspec, \
                      maxmspec=maxmspec, \
                      regitype='ngal', \
