@@ -1,51 +1,8 @@
+# common imports
+from __init__ import *
 
-# coding: utf-8
-
-# In[ ]:
-
-# plotting
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-mpl.rc('image', interpolation='none', origin='lower')
-
-import seaborn as sns
-sns.set(context='poster', style='ticks', color_codes=True)
-
-# numpy
-import numpy as np
-from numpy import *
-from numpy.random import *
-from numpy.random import choice
-
-# scipy
-import scipy as sp
-from scipy import ndimage
-from scipy.interpolate import *
-from scipy.special import erfinv, erf
-from scipy.stats import poisson as pss
-from scipy import ndimage
-
-# multiprocessing
-import multiprocessing as mp
-
-# healpy
-import healpy as hp
-from healpy.rotator import angdist
-from healpy import ang2pix
-
-# pyfits
-import pyfits as pf
-
-# utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch
-
-# tdpy
-import tdpy.util
-
+# internal functions
 from util import *
-
-# In[ ]:
 
 def plot_post(pathprobcatl):
          
@@ -102,12 +59,19 @@ def plot_post(pathprobcatl):
     globdata.minmfdfnslop = hdun[0].header['minmfdfnslop']
     globdata.maxmfdfnslop = hdun[0].header['maxmfdfnslop']
 
-    if globdata.datatype == 'mock':
-        globdata.mocknumbpnts = hdun[0].header['mocknumbpnts']
-        globdata.mockfdfnslop = hdun[0].header['mockfdfnslop']
-        globdata.mocknormback = hdun[0].header['mocknormback']
+    globdata.stdvfdfnnorm = hdun[0].header['stdvfdfnnorm']
+    globdata.stdvfdfnslop = hdun[0].header['stdvfdfnslop']
+    globdata.stdvpsfipara = hdun[0].header['stdvpsfipara']
+    globdata.stdvback = hdun[0].header['stdvback']
+    globdata.stdvlbhl = hdun[0].header['stdvlbhl']
+    globdata.stdvspec = hdun[0].header['stdvspec']
+    globdata.spmrlbhl = hdun[0].header['spmrlbhl']
+    globdata.fracrand = hdun[0].header['fracrand']
+
+    if globdata.trueinfo and globdata.datatype == 'mock':
         globdata.mockpsfntype = hdun[0].header['mockpsfntype']
 
+    globdata.strgexpo = hdun[0].header['strgexpo']
     globdata.liststrgbackflux = []
     k = 0
     while True:
@@ -134,6 +98,11 @@ def plot_post(pathprobcatl):
     gmrbstat = hdun['gmrbstat'].data
     listmodlcnts = hdun['modlcnts'].data
     
+    if globdata.trueinfo and globdata.datatype == 'mock':
+        globdata.mockfdfnslop = hdun['mockfdfnslop'].data
+        globdata.mocknormback = hdun['mocknormback'].data
+        globdata.mocknumbpnts = hdun['mocknumbpnts'].data
+
     # prior boundaries
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data
@@ -141,6 +110,9 @@ def plot_post(pathprobcatl):
         globdata.binssind = hdun['binssind'].data
         globdata.meansind = hdun['meansind'].data
         
+    globdata.minmnormback = hdun['minmnormback'].data
+    globdata.maxmnormback = hdun['maxmnormback'].data
+
     globdata.minmspec = hdun['minmspec'].data
     globdata.maxmspec = hdun['maxmspec'].data
     globdata.binsspec = hdun['binsspec'].data
@@ -172,6 +144,8 @@ def plot_post(pathprobcatl):
     globdata.listpsfipara = hdun['psfipara'].data
     globdata.listnormback = hdun['normback'].data
 
+
+    globdata.makeplot = True
 
     # setup the sampler
     init(globdata) 
@@ -232,7 +206,7 @@ def plot_post(pathprobcatl):
     # proposals
     #globdata.probprop = None
     #retr_propmodl(globdata)
-    #numbprop = len(globdata.probprop)
+    #globdata.numbprop = len(globdata.probprop)
     #globdata.maxmgangmarg = globdata.maxmgang + globdata.margsize
     #globdata.exttrofi = [globdata.minmlgal, globdata.maxmlgal, globdata.minmbgal, globdata.maxmbgal]
     #if globdata.exprtype == 'sdss':
@@ -273,12 +247,12 @@ def plot_post(pathprobcatl):
     tim0 = time.time()
 
     mcmctimebins = linspace(0., globdata.numbswep, 100)
-    figr, axgr = plt.subplots(numbprop, 1, figsize=(10, 15), sharex='all')
+    figr, axgr = plt.subplots(globdata.numbprop, 1, figsize=(10, 15), sharex='all')
     for g, axis in enumerate(axgr):
         axis.hist(where(globdata.listindxprop == g)[0], bins=mcmctimebins)
         axis.hist(where((globdata.listindxprop == g) & (globdata.listaccp == True))[0], bins=mcmctimebins)
         axis.set_ylabel('%d' % g)
-        if g == numbprop - 1:
+        if g == globdata.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
     figr.savefig(globdata.plotpath + 'propeffi_' + globdata.rtag + '.png')
     figr.subplots_adjust(hspace=0.)
@@ -309,11 +283,11 @@ def plot_post(pathprobcatl):
     retr_strgprop(globdata)
     
     binstime = logspace(log10(amin(globdata.listchro[where(globdata.listchro > 0)] * 1e3)), log10(amax(globdata.listchro * 1e3)), 50)
-    with sns.color_palette("nipy_spectral", numbprop):
+    with sns.color_palette("nipy_spectral", globdata.numbprop):
         figr, axis = plt.subplots(figsize=(14, 12))
         
         axis.hist(globdata.listchro[where(globdata.listchro[:, 0] > 0)[0], 0] * 1e3, binstime, facecolor='none', log=True, lw=1, ls='--', edgecolor='black')
-        for g in range(numbprop):
+        for g in range(globdata.numbprop):
             indxlistchro = where((globdata.listindxprop == g) & (globdata.listchro[:, 0] > 0))[0]
             axis.hist(globdata.listchro[indxlistchro, 0] * 1e3, binstime, edgecolor='none', log=True, alpha=0.3, label=globdata.strgprop[g])
         axis.set_xlabel('$t$ [ms]')
@@ -347,22 +321,23 @@ def plot_post(pathprobcatl):
     tim0 = time.time()
 
     
-    if False:
-        if maxmnumbpnts[0] == 4 and globdata.numbener == 1 and globdata.numbpopl == 1:
-            for k in range(maxmnumbpnts[0]):
-                listpostdist = zeros((globdata.numbsamp, 3 * k)) 
-                listpostdist[:, 0*k:1*k] = listlgalpnts[0][k]
-                listpostdist[:, 1*k:2*k] = listbgalpnts[0][k]
-                listpostdist[:, 2*k:3*k] = listspecpnts[0][k][0, :]
-                path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
-                if globdata.trueinfo:
-                    truepara = truesampvarb[globdata.indxsamppsfipara[ipsfipara]]
-                else:
-                    truepara = None
-                tdpy.util.plot_mcmc(listpostdist, parastrgpsfipara[ipsfipara],                                     truepara=truepara, path=path, numbbins=globdata.numbbins, quan=True)
+    if globdata.trueinfo and globdata.colrprio and globdata.datatype == 'mock' and globdata.mocknumbpnts[0] == 3 and globdata.numbpopl == 1:
+        numbpnts = globdata.mocknumbpnts[0]
+        numbpara = numbpnts * globdata.numbcompcolr + 1
+        listpost = zeros((globdata.numbsamp, numbpara))
+        for k in range(numbpnts):
+            listpost[:, 0*numbpnts:1*numbpnts] = listlgal[0][:, k]
+            listpost[:, 1*numbpnts:2*numbpnts] = listbgal[0][:, k]
+            listpost[:, 2*numbpnts:3*numbpnts] = listspec[0][:, globdata.indxenerfdfn, k]
+            listpost[:, 3*numbpnts:4*numbpnts] = listspec[0][:, k]
+        truepost = zeros((globdata.numbsamp, numbpara))
+        truepost[0*numbpnts:1*numbpnts] = globdata.truelgal[0][k]
+        truepost[1*numbpnts:2*numbpnts] = globdata.truebgal[0][k]
+        truepost[2*numbpnts:3*numbpnts] = globdata.truespec[0][0, globdata.indxenerfdfn, k]
+        truepost[3*numbpnts:4*numbpnts] = globdata.truesind[0][k]
+        path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
+        tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbbins=globdata.numbbins, quan=True)
                 
-                
-            
     # flux match with the true catalog
     if globdata.trueinfo:
         for l in globdata.indxpopl:
@@ -370,12 +345,10 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(globdata.truenumbpnts) + globdata.numbsamp
             listindxmodl = []
             for k in range(globdata.numbsamp):
-                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(globdata, l,                                      listlgal[l][k, :],                                      listbgal[l][k, :],                                      listspec[l][k, :, :])
+                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(globdata, l, listlgal[l][k, :], listbgal[l][k, :], listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= globdata.numbsamp
-
-            
             postspecmtch = zeros((3, globdata.numbener, globdata.truenumbpnts[l]))
             for i in globdata.indxener:
                 listspecmtch = zeros((globdata.numbsamp, globdata.truenumbpnts[l]))
@@ -432,47 +405,48 @@ def plot_post(pathprobcatl):
         plot_histspec(globdata, l, listspechist=listspechist[:, l, :, :])
 
     # fraction of emission components
-    postpntsfluxmean = retr_postvarb(globdata.listpntsfluxmean)
-    postnormback = retr_postvarb(globdata.listnormback)
-    plot_compfrac(globdata, postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
-
+    if globdata.numbback == 2:
+        postpntsfluxmean = retr_postvarb(globdata.listpntsfluxmean)
+        postnormback = retr_postvarb(globdata.listnormback)
+        plot_compfrac(globdata, postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
 
     # PSF parameters
     path = globdata.plotpath + 'psfipara_' + globdata.rtag
     if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
-        globdata.listpsfipara[:, jpsfiparainit] = rad2deg(globdata.listpsfipara[:, jpsfiparainit])
+        globdata.listpsfipara[:, globdata.indxpsfiparainit] = rad2deg(globdata.listpsfipara[:, globdata.indxpsfiparainit])
         if globdata.trueinfo:
-            globdata.truepsfipara[jpsfiparainit] = rad2deg(globdata.truepsfipara[jpsfiparainit])
+            globdata.truepsfipara[globdata.indxpsfiparainit] = rad2deg(globdata.truepsfipara[globdata.indxpsfiparainit])
     elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
-        globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
-        globdata.listpsfipara[:, jpsfiparainit+2] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+2])
+        globdata.listpsfipara[:, globdata.indxpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, globdata.indxpsfiparainit+1])
+        globdata.listpsfipara[:, globdata.indxpsfiparainit+2] = rad2deg(globdata.listpsfipara[:, globdata.indxpsfiparainit+2])
         if globdata.trueinfo:
-            globdata.truepsfipara[jpsfiparainit+1] = rad2deg(globdata.truepsfipara[jpsfiparainit+1])
-            globdata.truepsfipara[jpsfiparainit+2] = rad2deg(globdata.truepsfipara[jpsfiparainit+2])
+            globdata.truepsfipara[globdata.indxpsfiparainit+1] = rad2deg(globdata.truepsfipara[globdata.indxpsfiparainit+1])
+            globdata.truepsfipara[globdata.indxpsfiparainit+2] = rad2deg(globdata.truepsfipara[globdata.indxpsfiparainit+2])
     elif globdata.psfntype == 'doubking':
-        globdata.listpsfipara[:, jpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+1])
-        globdata.listpsfipara[:, jpsfiparainit+3] = rad2deg(globdata.listpsfipara[:, jpsfiparainit+3])
+        globdata.listpsfipara[:, globdata.indxpsfiparainit+1] = rad2deg(globdata.listpsfipara[:, globdata.indxpsfiparainit+1])
+        globdata.listpsfipara[:, globdata.indxpsfiparainit+3] = rad2deg(globdata.listpsfipara[:, globdata.indxpsfiparainit+3])
         if globdata.trueinfo:
-            globdata.truepsfipara[jpsfiparainit+1] = rad2deg(globdata.truepsfipara[jpsfiparainit+1])
-            globdata.truepsfipara[jpsfiparainit+3] = rad2deg(globdata.truepsfipara[jpsfiparainit+3])
-    if globdata.trueinfo and psfntype == 'doubking':
+            globdata.truepsfipara[globdata.indxpsfiparainit+1] = rad2deg(globdata.truepsfipara[globdata.indxpsfiparainit+1])
+            globdata.truepsfipara[globdata.indxpsfiparainit+3] = rad2deg(globdata.truepsfipara[globdata.indxpsfiparainit+3])
+    if globdata.trueinfo and globdata.psfntype == 'doubking':
         truepara = globdata.truepsfipara
     else:
         truepara = array([None] * globdata.numbpsfipara)
-    tdpy.util.plot_mcmc(globdata.listpsfipara, strgpsfipara, truepara=truepara,                         nplot=globdata.numbformpara, path=path, numbbins=globdata.numbbins, quan=True, ntickbins=3)
+    tdpy.mcmc.plot_grid(path, globdata.listpsfipara, globdata.strgpsfipara, truepara=truepara, numbplotside=globdata.numbformpara, \
+        numbbins=globdata.numbbins, quan=True, ntickbins=3)
     
     for k in range(globdata.numbpsfipara):
         path = globdata.plotpath + 'psfipara%d_' % k + globdata.rtag + '.png'
-        tdpy.util.plot_trac(globdata.listpsfipara[:, k], strgpsfipara[k], path=path, quan=True)
+        tdpy.mcmc.plot_trac(path, globdata.listpsfipara[:, k], globdata.strgpsfipara[k])
     
     
     # log-likelihood
     path = globdata.plotpath + 'llik_' + globdata.rtag + '.png'
-    tdpy.util.plot_trac(listllik.flatten(), '$P(D|y)$', path=path)
+    tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
 
     # log-prior
     path = globdata.plotpath + 'lpri_' + globdata.rtag + '.png'
-    tdpy.util.plot_trac(listlpri.flatten(), '$P(y)$', path=path)
+    tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(y)$')
     
 
     # number, expected number of PS and flux conditional prior power law index 
@@ -484,12 +458,12 @@ def plot_post(pathprobcatl):
             truepara = globdata.truenumbpnts[l]
         else:
             truepara = None
-        tdpy.util.plot_trac(globdata.listnumbpnts[:, l], '$N$', truepara=truepara, path=path)
+        tdpy.mcmc.plot_trac(path, globdata.listnumbpnts[:, l], '$N$', truepara=truepara)
 
         # mean number of point sources
         path = globdata.plotpath + 'fdfnnorm_popl%d_' % l + globdata.rtag + '.png'
         truepara = None
-        tdpy.util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
+        tdpy.mcmc.plot_trac(path, globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
 
         # flux distribution power law index
         for i in globdata.indxenerfdfn:
@@ -500,7 +474,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl =  r'$\alpha_{%d}$' % i
-            tdpy.util.plot_trac(globdata.listfdfnslop[:, l, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy.mcmc.plot_trac(path, globdata.listfdfnslop[:, l, i], labl, truepara=truepara, titl=titl)
         
         
     # isotropic background normalization
@@ -513,7 +487,7 @@ def plot_post(pathprobcatl):
                 truepara = None
         titl = globdata.binsenerstrg[i]
         labl = r'$\mathcal{I}_{%d}$' % i
-        tdpy.util.plot_trac(globdata.listnormback[:, 0, i], labl, truepara=truepara, path=path, titl=titl)
+        tdpy.mcmc.plot_trac(path, globdata.listnormback[:, 0, i], labl, truepara=truepara, titl=titl)
        
     if globdata.exprtype == 'ferm':
         # diffuse model normalization
@@ -528,7 +502,7 @@ def plot_post(pathprobcatl):
                 truepara = None
             titl = globdata.binsenerstrg[i]
             labl = r'$\mathcal{D}_{%d}$' % i
-            tdpy.util.plot_trac(globdata.listnormback[:, 1, i], labl, truepara=truepara, path=path, titl=titl)
+            tdpy.mcmc.plot_trac(path, globdata.listnormback[:, 1, i], labl, truepara=truepara, titl=titl)
 
     # plot log-likelihood
     figr, axrw = plt.subplots(2, 1, figsize=(7, 12))
@@ -551,6 +525,7 @@ def plot_post(pathprobcatl):
 
     tim1 = time.time()
     print 'Plots are produced in %.3g seconds.' % (tim1 - tim0)
+
 
 def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     
@@ -586,7 +561,7 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     for k in range(globdata.numbback + 2):
         ydat = globdata.meanener**2 * listydat[k, :]
         yerr = globdata.meanener**2 * listyerr[:, k, :]
-        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5,                     ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
+        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
 
     # Fermi-LAT results
     if globdata.trueinfo:
@@ -624,8 +599,8 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
         path = globdata.plotpath + 'compfracspec_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
-    
-    listlabl = ['PS', 'Iso', 'FDM']
+   
+    listlablbackflux = ['PS', 'Iso', 'FDM']
     listexpl = [0.1, 0, 0]
 
     listsize = zeros(globdata.numbback + 1)
@@ -638,7 +613,7 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
         
     figr, axis = plt.subplots()
 
-    axis.pie(listsize, explode=listexpl, labels=listlabl, autopct='%1.1f%%')
+    axis.pie(listsize, explode=listexpl, labels=listlablbackflux, autopct='%1.1f%%')
     axis.axis('equal')
 
     if post:
@@ -663,11 +638,11 @@ def plot_histsind(globdata, l, postsindhist=None):
         yerr = retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
-        axis.hist(globdata.thissampvarb[thisindxsampsind[l]], globdata.binssind, alpha=0.5, color='b', log=True, label='Sample')
+        axis.hist(globdata.thissampvarb[globdata.thisindxsampsind[l]], globdata.binssind, alpha=0.5, color='b', log=True, label='Sample')
     if globdata.trueinfo:
         axis.hist(globdata.truesind[l], globdata.binssind, alpha=0.5, color='g', log=True, label=globdata.truelabl)
         if globdata.datatype == 'mock':
-            axis.hist(fgl3sind, globdata.binssind, alpha=0.1, color='red', log=True, label='3FGL')
+            axis.hist(globdata.fgl3sind, globdata.binssind, alpha=0.1, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
     axis.set_xlabel('$s$')
     axis.set_xlim([globdata.minmsind, globdata.maxmsind])
@@ -1862,9 +1837,8 @@ def plot_pntsdiff():
     
     axis = figr.add_subplot(212)
 
-
-    tdpy.util.plot_braz(ax, meancnts, hist0,  lcol='lightgreen',                         alpha=0.3, dcol='green', mcol='darkgreen', labl='Isotropic')
-    tdpy.util.plot_braz(ax, meancnts, hist1, lcol='lightblue',                         alpha=0.3, dcol='blue', mcol='darkblue', labl='Isotropic + Unresolved PS')
+    tdpy.mcmc.plot_braz(ax, meancnts, hist0,  lcol='lightgreen',                         alpha=0.3, dcol='green', mcol='darkgreen', labl='Isotropic')
+    tdpy.mcmc.plot_braz(ax, meancnts, hist1, lcol='lightblue',                         alpha=0.3, dcol='blue', mcol='darkblue', labl='Isotropic + Unresolved PS')
 
     axis.set_title('Count PDF')
     axis.set_xlabel('$k$')

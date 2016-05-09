@@ -1,48 +1,5 @@
-
-# coding: utf-8
-
-# In[1]:
-
-# plotting
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-mpl.rc('image', interpolation='none', origin='lower')
-
-import seaborn as sns
-sns.set(context='poster', style='ticks', color_codes=True)
-
-# numpy
-import numpy as np
-from numpy import *
-from numpy.random import *
-from numpy.random import choice
-
-# scipy
-import scipy as sp
-from scipy import ndimage
-from scipy.interpolate import *
-from scipy.special import erfinv, erf
-from scipy.stats import poisson as pss
-from scipy import ndimage
-
-# multiprocessing
-import multiprocessing as mp
-
-# healpy
-import healpy as hp
-from healpy.rotator import angdist
-from healpy import ang2pix
-
-# pyfits
-import pyfits as pf
-
-# utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch
-
-# tdpy
-import tdpy.util, cPickle
-
+# common imports
+from __init__ import *
 
 class globdatastrt(object):
     
@@ -98,11 +55,12 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara, psfntype):
     
     numbpnts = lgal.size
     
+    # calculate the distance to all pixels from each point source
     dist = empty((globdata.numbpixl, numbpnts))
     for k in range(numbpnts):
         dist[:, k] = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid, globdata.bgalgrid)
 
-    # convolve with the PSF
+    # evaluate the PSF
     pntsflux = empty((numbpnts, globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     for k in range(numbpnts):
         psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], psfntype)
@@ -464,7 +422,7 @@ def pars_samp(globdata, indxpntsfull, samp):
             sampvarb[indxsampspec[l][i, :]] = icdf_spec(globdata, samp[indxsampspec[l][i, :]], sampvarb[globdata.indxsampfdfnslop[l, i]], globdata.minmspec[i], globdata.maxmspec[i])
         if globdata.colrprio:
             sampvarb[indxsampsind[l]] = icdf_atan(samp[indxsampsind[l]], globdata.minmsind, globdata.factsind)
-            sampvarb[indxsampspec[l]] = retr_spec(sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
+            sampvarb[indxsampspec[l]] = retr_spec(globdata, sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
             
         indxpixlpntstemp = retr_indxpixl(globdata, sampvarb[indxsampbgal[l]], sampvarb[indxsamplgal[l]])
     
@@ -651,8 +609,8 @@ def updt_samp(globdata):
             globdata.thissampvarb[globdata.indxsampmodi] = globdata.modibgal[1]
         else:
             if globdata.colrprio:
-                globdata.thissampvarb[globdata.indxsampglobdata.modispec] = globdata.modispec[:, 1]
-                if globdata.thisindxprop == indxpropsind:
+                globdata.thissampvarb[globdata.indxsampmodispec] = globdata.modispec[:, 1]
+                if globdata.thisindxprop == globdata.indxpropsind:
                     globdata.thissampvarb[globdata.indxsampmodi] = globdata.modisind
             else:
                 globdata.thissampvarb[globdata.indxsampmodi] = globdata.modispec[0, 1]
@@ -764,7 +722,7 @@ def retr_dist(globdata, lgal0, bgal0, lgal1, bgal1):
     if globdata.pixltype == 'heal':
         dir1 = array([lgal0, bgal0])
         dir2 = array([lgal1, bgal1])
-        dist = angdist(dir1, dir2, lonlat=True) # [rad]
+        dist = angdist(dir1, dir2, lonlat=True)
     else:
         dist = deg2rad(sqrt((lgal0 - lgal1)**2 + (bgal0 - bgal1)**2))
 
@@ -1007,12 +965,15 @@ def retr_prop(globdata):
         globdata.modibgal[0] = icdf_self(globdata.drmcsamp[indxsampbrth+1, -1], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
 
         if globdata.colrprio:
-            globdata.modiflux[0] = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+globdata.indxenerfdfn, -1],           globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]],           globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
-            globdata.modisind[0] = icdf_atan(globdata.drmcsamp[indxsampbrth+globdata.numbcomp-1, -1], minmsind, factsind)
-            globdata.modispec[:, 0] = retr_spec(globdata.modiflux[0], globdata.modisind[0]).flatten()
+            globdata.modiflux[0] = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+globdata.indxenerfdfn, -1], \
+                    globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]], \
+                    globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
+            globdata.modisind[0] = icdf_atan(globdata.drmcsamp[indxsampbrth+globdata.numbcomp-1, -1], globdata.minmsind, globdata.factsind)
+            globdata.modispec[:, 0] = retr_spec(globdata, globdata.modiflux[0], globdata.modisind[0]).flatten()
         else:
             for i in globdata.indxener:
-                globdata.modispec[i, 0] = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+i, -1],                  globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]],                  globdata.minmspec[i], globdata.maxmspec[i])
+                globdata.modispec[i, 0] = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+i, -1], \
+                    globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], globdata.minmspec[i], globdata.maxmspec[i])
     
         if globdata.verbtype > 1:
             print 'auxipara: ', globdata.auxipara
@@ -1177,8 +1138,6 @@ def retr_prop(globdata):
             globdata.modibgal[2] = nextbgal1
             globdata.modispec[:, 2] = nextspec1.flatten()
 
-        
-    # merge
     if globdata.thisindxprop == globdata.indxpropmerg:
         
         globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] - 1
@@ -1340,7 +1299,7 @@ def retr_prop(globdata):
         # sample index to be modified
         globdata.indxsampmodi = globdata.indxsampmodiinit + globdata.indxcompmodi
         if globdata.colrprio:
-            globdata.indxsampglobdata.modispec = globdata.indxsampmodiinit + 2 + globdata.indxener
+            globdata.indxsampmodispec = globdata.indxsampmodiinit + 2 + globdata.indxener
         
         # propose
         if globdata.thisindxprop == globdata.indxpropspec:
@@ -1356,7 +1315,7 @@ def retr_prop(globdata):
         if globdata.colrprio:
             thisflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
             thissind = globdata.thissampvarb[globdata.thisindxsampsind[globdata.indxpoplmodi][modiindxindxpnts]]
-            thisspec = retr_spec(thisflux, thissind)
+            thisspec = retr_spec(globdata, thisflux, thissind)
         else:
             thisspec = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, modiindxindxpnts]]
             
@@ -1381,9 +1340,9 @@ def retr_prop(globdata):
                     globdata.modisind = globdata.thissampvarb[globdata.thisindxsampsind[globdata.indxpoplmodi][modiindxindxpnts]]
                 else:
                     globdata.modiflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
-                    globdata.modisind = icdf_atan(globdata.drmcsamp[globdata.indxsampmodi, -1], minmsind, factsind)
+                    globdata.modisind = icdf_atan(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.minmsind, globdata.factsind)
 
-                globdata.modispec[:, 1] = retr_spec(globdata.modiflux, globdata.modisind).flatten()
+                globdata.modispec[:, 1] = retr_spec(globdata, globdata.modiflux, globdata.modisind).flatten()
             else:
                 specunit = globdata.drmcsamp[globdata.indxsampmodi, -1]
                 fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
@@ -1607,16 +1566,16 @@ def retr_psfimodl(globdata):
     # PSF parameter strings
     globdata.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m]) \
         for m in globdata.indxevtt for i in globdata.indxener for k in globdata.indxformpara]
-    indxpsfiparainit = (globdata.indxevtt[:, None] * globdata.numbpsfiparaevtt + globdata.indxener[None, :] * globdata.numbformpara).flatten()
-    for k in arange(indxpsfiparainit.size):
+    globdata.indxpsfiparainit = (globdata.indxevtt[:, None] * globdata.numbpsfiparaevtt + globdata.indxener[None, :] * globdata.numbformpara).flatten()
+    for k in arange(globdata.indxpsfiparainit.size):
         if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
-            globdata.strgpsfipara[indxpsfiparainit[k]] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[globdata.indxpsfiparainit[k]] += ' ' + globdata.strganglunit
         elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
-            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
         elif globdata.psfntype == 'doubking':
-            globdata.strgpsfipara[indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
+            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
             
     globdata.indxpsfipara = arange(globdata.numbpsfipara)
 
@@ -1733,10 +1692,10 @@ def retr_indxcube(globdata):
 
 def retr_expo(globdata):
  
-    if globdata.expostrg == 'unit':
+    if globdata.strgexpo == 'unit':
         globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.expostrg
+        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpo
         globdata.expo = pf.getdata(path)
 
         if globdata.pixltype == 'heal':
@@ -1762,11 +1721,6 @@ def init(globdata):
     globdata.numbspec = 10
     
     globdata.numbbins = 10
-    
-    if globdata.datatype == 'mock':
-        globdata.mocknormback = globdata.mocknormback[:, globdata.indxenerincl]
-        if not globdata.colrprio:
-            globdata.mockfdfnslop = globdata.mockfdfnslop[:, globdata.indxenerincl]
 
     if not globdata.colrprio:
         globdata.minmspec = globdata.minmspec[globdata.indxenerincl]
@@ -1799,14 +1753,10 @@ def init(globdata):
     if globdata.colrprio: 
         # temp
         globdata.indxenerfdfn = array([globdata.numbener / 2])
-        f
         globdata.minmspec = globdata.minmspec * (globdata.meanener[globdata.indxenerfdfn] / globdata.meanener)**2
         globdata.maxmspec = globdata.maxmspec * (globdata.meanener[globdata.indxenerfdfn] / globdata.meanener)**2
-        
         if globdata.datatype == 'mock':
-            
             globdata.mockfdfnslop = tile(globdata.mockfdfnslop, (1, globdata.numbener))
-        
     else:
         globdata.indxenerfdfn = globdata.indxener
 
@@ -1878,9 +1828,6 @@ def init(globdata):
         elif globdata.mockpsfntype == 'doubking':
             globdata.numbmockformpara = 5
 
-        print 'hey'
-        print globdata.mockpsfntype
-
         globdata.numbmockpsfiparaevtt = globdata.numbener * globdata.numbmockformpara
         globdata.numbmockpsfipara = globdata.numbmockpsfiparaevtt * globdata.numbevtt
         globdata.indxmockpsfipara = arange(globdata.numbmockpsfipara)   
@@ -1930,13 +1877,6 @@ def init(globdata):
         globdata.numbburn = globdata.numbswep / 5
     if globdata.factthin == None:
         globdata.factthin = min(globdata.maxmsampsize * 5, globdata.numbswep / 2)
-
-
-
-    
-    if globdata.verbtype > 1:
-        print 'probprop: '
-        print vstack((arange(globdata.numbprop), globdata.strgprop, globdata.probprop)).T
 
 
     # run tag
@@ -2072,14 +2012,6 @@ def init(globdata):
     globdata.numbspecprox = 1
     globdata.meanspecprox = globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
     
-    if globdata.verbtype > 1:
-        print 'indxsampnumbpnts: ', globdata.indxsampnumbpnts
-        print 'indxsampfdfnnorm: ', globdata.indxsampfdfnnorm
-        print 'indxsampfdfnslop: ', globdata.indxsampfdfnslop
-        print 'indxsamppsfipara: ', globdata.indxsamppsfipara
-        print 'indxsampnormback: '
-        print globdata.indxsampnormback
-        print 'indxsampcompinit: ', globdata.indxsampcompinit
 
         
     # region of interest
@@ -2123,7 +2055,7 @@ def init(globdata):
     
     globdata.indxcubefilt = meshgrid(globdata.indxenerincl, globdata.indxpixl, globdata.indxevttincl, indexing='ij')
     
-    globdata.numbpixlsave = 1000
+    globdata.numbpixlsave = min(1000, globdata.numbpixl)
     globdata.indxpixlsave = choice(arange(globdata.numbpixlsave), size=globdata.numbpixlsave)
 
 
@@ -2139,13 +2071,13 @@ def init(globdata):
         exprflux = exprflux[globdata.indxcubefilt]
  
     if globdata.datatype == 'mock' or globdata.exprtype == 'ferm':
-        mockpsfipara = fermpsfipara
+        globdata.mockpsfipara = fermpsfipara
 
-    # globdata.exposure
-    if globdata.expostrg == 'unit':
+    # exposure
+    if globdata.strgexpo == 'unit':
         globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.expostrg
+        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpo
         globdata.expo = pf.getdata(path)
 
         if globdata.pixltype == 'heal':
@@ -2226,12 +2158,12 @@ def init(globdata):
             temp = rand(globdata.numbener * globdata.numbpopl)
             globdata.mockfdfnslop = icdf_atan(temp, globdata.minmfdfnslop, globdata.factfdfnslop)
             
-        if mockpsfipara == None: 
+        if globdata.mockpsfipara == None: 
             globdata.mockpsfntype = psfntpye
             numbmockpsfipara = globdata.numbpsfipara
-            mockpsfipara = empty(numbmockpsfipara)
+            globdata.mockpsfipara = empty(numbmockpsfipara)
             for k in arange(numbmockpsfipara):
-                mockpsfipara[k] = icdf_psfipara(globdata, rand(), k)
+                globdata.mockpsfipara[k] = icdf_psfipara(globdata, rand(), k)
    
         if globdata.mocknormback == None:
             for c in globdata.indxback:
@@ -2248,23 +2180,16 @@ def init(globdata):
             mockbgal[l] = icdf_self(rand(globdata.mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
             mockspec[l] = empty((globdata.numbener, globdata.mocknumbpnts[l]))
             for i in globdata.indxenerfdfn:
-                mockspec[l][i, :] = icdf_spec(globdata, rand(globdata.mocknumbpnts[l]),     globdata.mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+                mockspec[l][i, :] = icdf_spec(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
             if globdata.colrprio:
                 mocksind[l] = icdf_atan(rand(globdata.mocknumbpnts[l]), globdata.minmsind, globdata.factsind)
-                mockspec[l] = retr_spec(mockspec[l][globdata.indxenerfdfn, :], mocksind[l])
+                mockspec[l] = retr_spec(globdata, mockspec[l][globdata.indxenerfdfn, :].flatten(), mocksind[l])
             indxpixltemp = retr_indxpixl(globdata, mockbgal[l], mocklgal[l])
             mockcnts[l] = mockspec[l][:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
-        mockpntsflux = retr_pntsflux(globdata, concatenate(mocklgal), concatenate(mockbgal),      concatenate(mockspec, axis=1), mockpsfipara, globdata.mockpsfntype)
+        mockpntsflux = retr_pntsflux(globdata, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), globdata.mockpsfipara, globdata.mockpsfntype)
         mocktotlflux = retr_rofi_flux(globdata, globdata.mocknormback, mockpntsflux, globdata.indxcubefull)
         mocktotlcnts = mocktotlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
 
-        if globdata.verbtype > 1:
-            print 'mocknumbpnts: ', globdata.mocknumbpnts
-            print 'mockfdfnslop: ', globdata.mockfdfnslop
-            print 'mockpsfipara: '
-            print mockpsfipara
-            print 'mocknormback: '
-            print globdata.mocknormback
             
             
         globdata.datacnts = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
@@ -2300,7 +2225,7 @@ def init(globdata):
                 globdata.truespectemp[:] = mockspec[l][None, :, :]
                 globdata.truespec.append(globdata.truespectemp)
                 
-            globdata.truepsfipara = mockpsfipara
+            globdata.truepsfipara = globdata.mockpsfipara
                 
 
         #plot_pntsdiff()
@@ -2361,16 +2286,6 @@ def init(globdata):
             truebackcnts.append(truebackcntstemp)
             globdata.truesigm.append(globdata.truecnts[l] / sqrt(truebackcntstemp))
         
-        if globdata.verbtype > 1:
-            print 'truelgal: ', globdata.truelgal
-            print 'truebgal: ', globdata.truebgal
-            print 'truespec: '
-            print globdata.truespec
-            print 'truenumbpnts: ', globdata.truenumbpnts
-            print 'truefdfnslop: ', globdata.truefdfnslop
-            print 'truenormback: '
-            print globdata.truenormback
-            print
         
     globdata.datafluxmean = mean(sum(globdata.datacnts, 2) / sum(globdata.expo, 2), 1) / globdata.apix / globdata.diffener
     globdata.datacntsmean = mean(sum(globdata.datacnts, 2), 1)

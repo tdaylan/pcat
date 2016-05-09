@@ -1,54 +1,9 @@
+# common imports
+from __init__ import *
 
-# coding: utf-8
-
-# In[1]:
-
-# plotting
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-mpl.rc('image', interpolation='none', origin='lower')
-
-import seaborn as sns
-sns.set(context='poster', style='ticks', color_codes=True)
-
-# numpy
-import numpy as np
-from numpy import *
-from numpy.random import *
-from numpy.random import choice
-
-# scipy
-import scipy as sp
-from scipy import ndimage
-from scipy.interpolate import *
-from scipy.special import erfinv, erf
-from scipy.stats import poisson as pss
-from scipy import ndimage
-
-# multiprocessing
-import multiprocessing as mp
-
-# healpy
-import healpy as hp
-from healpy.rotator import angdist
-from healpy import ang2pix
-
-# pyfits
-import pyfits as pf
-
-# utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle
-import functools
-
-# tdpy
-import tdpy.util
-import tdpy.mcmc
-
-# pcat
+# internal functions
 from util import *
 from visu import *
-
 
 def work(globdata, indxprocwork):
 
@@ -113,7 +68,7 @@ def work(globdata, indxprocwork):
                 globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l],                 globdata.minmsind,                 globdata.factsind))
                 flux = globdata.drmcsamp[globdata.thisindxsampspec[l][globdata.indxenerfdfn, :], 0]
                 sind = globdata.drmcsamp[globdata.thisindxsampsind[l], 0]
-                globdata.drmcsamp[globdata.thisindxsampspec[l], 0] = retr_spec(flux, sind)
+                globdata.drmcsamp[globdata.thisindxsampspec[l], 0] = retr_spec(globdata, flux, sind)
 
     
     globdata.thissampvarb, thisindxpixlpnts, thiscnts, globdata.thispntsflux,         thismodlflux, globdata.thismodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
@@ -184,9 +139,7 @@ def wrap(cnfg):
     globdata.stdvback = cnfg['stdvback']
     globdata.stdvlbhl = cnfg['stdvlbhl']
     globdata.stdvspec = cnfg['stdvspec']
-    
     globdata.spmrlbhl = cnfg['spmrlbhl']
-    
     globdata.fracrand = cnfg['fracrand']
     
     globdata.datatype = cnfg['datatype']
@@ -237,7 +190,7 @@ def wrap(cnfg):
     
     exprfluxstrg = cnfg['exprfluxstrg']
     globdata.liststrgbackflux = cnfg['liststrgbackflux']
-    globdata.expostrg = cnfg['expostrg']
+    globdata.strgexpo = cnfg['strgexpo']
     
     globdata.initnumbpnts = cnfg['initnumbpnts']
     globdata.trueinfo = cnfg['trueinfo']
@@ -262,6 +215,35 @@ def wrap(cnfg):
     
     # setup the sampler
     init(globdata) 
+
+    if globdata.verbtype > 1:
+        print 'probprop: '
+        print vstack((arange(globdata.numbprop), globdata.strgprop, globdata.probprop)).T
+        print 'indxsampnumbpnts: ', globdata.indxsampnumbpnts
+        print 'indxsampfdfnnorm: ', globdata.indxsampfdfnnorm
+        print 'indxsampfdfnslop: ', globdata.indxsampfdfnslop
+        print 'indxsamppsfipara: ', globdata.indxsamppsfipara
+        print 'indxsampnormback: '
+        print globdata.indxsampnormback
+        print 'indxsampcompinit: ', globdata.indxsampcompinit
+        if globdata.trueinfo:
+            print 'truelgal: ', globdata.truelgal
+            print 'truebgal: ', globdata.truebgal
+            print 'truespec: '
+            print globdata.truespec
+            print 'truenumbpnts: ', globdata.truenumbpnts
+            print 'truefdfnslop: ', globdata.truefdfnslop
+            print 'truenormback: '
+            print globdata.truenormback
+            print
+            if globdata.datatype == 'mock':
+                print 'mocknumbpnts: ', globdata.mocknumbpnts
+                print 'mockfdfnslop: ', globdata.mockfdfnslop
+                print 'mockpsfipara: '
+                print globdata.mockpsfipara
+                print 'mocknormback: '
+                print globdata.mocknormback
+
 
     # make initial plots
     if globdata.makeplot:
@@ -455,8 +437,10 @@ def wrap(cnfg):
     head['lgalcntr'] = globdata.lgalcntr
     head['bgalcntr'] = globdata.bgalcntr
     head['numbspec'] = globdata.numbspec
-    head['numbsideheal'] = globdata.numbsideheal
-    head['numbsidecart'] = globdata.numbsidecart
+    if globdata.pixltype == 'heal':
+        head['numbsideheal'] = globdata.numbsideheal
+    if globdata.pixltype == 'cart':
+        head['numbsidecart'] = globdata.numbsidecart
     
     head['minmlgal'] = globdata.minmlgal
     head['maxmlgal'] = globdata.maxmlgal
@@ -479,13 +463,19 @@ def wrap(cnfg):
     head['minmfdfnslop'] = globdata.minmfdfnslop
     head['maxmfdfnslop'] = globdata.maxmfdfnslop
 
+    head['stdvfdfnnorm'] = globdata.stdvfdfnnorm
+    head['stdvfdfnslop'] = globdata.stdvfdfnslop
+    head['stdvpsfipara'] = globdata.stdvpsfipara
+    head['stdvback'] = globdata.stdvback
+    head['stdvlbhl'] = globdata.stdvlbhl
+    head['stdvspec'] = globdata.stdvspec
+    head['spmrlbhl'] = globdata.spmrlbhl
+    head['fracrand'] = globdata.fracrand
+
     if globdata.trueinfo and globdata.datatype == 'mock':
-        head['mocknumbpnts'] = globdata.mocknumbpnts
-        head['mockfdfnslop'] = globdata.mockfdfnslop
-        head['mocknormback'] = globdata.mocknormback
         head['mockpsfntype'] = globdata.mockpsfntype
 
-    # boundaries
+    head['strgexpo'] = globdata.strgexpo
     for k in globdata.indxback:
         head['strgbackflux%04d' % k] = globdata.liststrgbackflux[k]
     
@@ -505,6 +495,14 @@ def wrap(cnfg):
         if globdata.colrprio:
             listhdun.append(pf.ImageHDU(listsind[l]))
             listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
+
+    
+    listhdun.append(pf.ImageHDU(globdata.minmnormback))
+    listhdun[-1].header['EXTNAME'] = 'minmnormback'
+
+    listhdun.append(pf.ImageHDU(globdata.maxmnormback))
+    listhdun[-1].header['EXTNAME'] = 'maxmnormback'
+
 
     listhdun.append(pf.ImageHDU(globdata.maxmnumbpnts))
     listhdun[-1].header['EXTNAME'] = 'maxmnumbpnts'
@@ -533,6 +531,16 @@ def wrap(cnfg):
     listhdun.append(pf.ImageHDU(listlpri))
     listhdun[-1].header['EXTNAME'] = 'lpri'
     
+    if globdata.trueinfo and globdata.datatype == 'mock':
+        listhdun.append(pf.ImageHDU(globdata.mocknumbpnts))
+        listhdun[-1].header['EXTNAME'] = 'mocknumbpnts'
+        
+        listhdun.append(pf.ImageHDU(globdata.mockfdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'mockfdfnslop'
+        
+        listhdun.append(pf.ImageHDU(globdata.mocknormback))
+        listhdun[-1].header['EXTNAME'] = 'mocknormback'
+
     # convergence diagnostics
     listhdun.append(pf.ImageHDU(gmrbstat))
     listhdun[-1].header['EXTNAME'] = 'gmrbstat'
@@ -557,6 +565,10 @@ def wrap(cnfg):
 
             listhdun.append(pf.ImageHDU(globdata.truespec[l]))
             listhdun[-1].header['EXTNAME'] = 'truespecpopl%d' % l
+
+            if globdata.colrprio:
+                listhdun.append(pf.ImageHDU(globdata.truesind[l]))
+                listhdun[-1].header['EXTNAME'] = 'truesindpopl%d' % l
 
         listhdun.append(pf.ImageHDU(globdata.truefdfnslop))
         listhdun[-1].header['EXTNAME'] = 'truefdfnslop'
@@ -697,7 +709,8 @@ def plot_samp(globdata):
             plot_scatspec(globdata, l, thisspecmtch=thisspecmtch)
         plot_histspec(globdata, l)
         plot_histcnts(globdata, l, thiscnts)
-        plot_compfrac(globdata)
+        if globdata.numbback == 2:
+            plot_compfrac(globdata)
 
     for i in globdata.indxener:
         
