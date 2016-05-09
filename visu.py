@@ -102,45 +102,17 @@ def plot_post(pathprobcatl):
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
     
-    globdata.rtag = retr_rtag(globdata, None)
-
-    if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
-        plotfold = '/n/pan/www/tansu/png/pcat/'
-    else:
-        plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-    globdata.plotpath = plotfold + globdata.strgtime + '_' + globdata.rtag + '/'
-    cmnd = 'mkdir -p ' + globdata.plotpath
-    os.system(cmnd)
-
-
-    lgalheal, bgalheal, globdata.numbsideheal, numbpixlheal,         globdata.apix = tdpy.util.retr_healgrid(globdata.numbsideheal)
-    globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
-
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
-    
-    # PSF model
-    retr_psfimodl(globdata)
 
-        
-    listlgal = []
-    listbgal = []
-    listspec = []
-    if globdata.colrprio:
-        listsind = []
-    for l in globdata.indxpopl:
-        listlgal.append(hdun['lgalpopl%d' % l].data)
-        listbgal.append(hdun['bgalpopl%d' % l].data)
-        listspec.append(hdun['specpopl%d' % l].data)
-        if globdata.colrprio:
-            listsind.append(hdun['sindpopl%d' % l].data)
-        
+    if globdata.datatype == 'mock':
+        globdata.mocknumbpnts = hdun['mocknumbpnts'].data
+        globdata.mockfdfnslop = hdun['mockfdfnslop'].data
+        globdata.mocknormback = hdun['mocknormback'].data
+        globdata.mockpsfntype = hdun['mockpsfntype'].data
+
     globdata.maxmnumbpnts = hdun['maxmnumbpnts'].data
         
-    # proposals
-    globdata.probprop = None
-    retr_propmodl(globdata)
-
     listspechist = hdun['spechist'].data
     pntsprob = hdun['pntsprob'].data
     
@@ -150,25 +122,6 @@ def plot_post(pathprobcatl):
     gmrbstat = hdun['gmrbstat'].data
     listmodlcnts = hdun['modlcnts'].data
     
-    # truth globdata.information
-    if globdata.trueinfo:
-        globdata.truenumbpnts = hdun['truenumbpnts'].data
-        globdata.truelgal = []
-        globdata.truebgal = []
-        globdata.truespec = []
-        globdata.truesind = []
-        globdata.truespec = []
-        for l in globdata.indxpopl:
-            globdata.truelgal.append(hdun['truelgalpopl%d' % l].data)
-            globdata.truebgal.append(hdun['truebgalpopl%d' % l].data)
-            globdata.truespec.append(hdun['truespecpopl%d' % l].data)
-            if globdata.colrprio:
-                globdata.truespec.append(hdun['truesindpopl%d' % l].data)
-        globdata.truefdfnnorm = hdun['truefdfnnorm'].data
-        globdata.truefdfnslop = hdun['truefdfnslop'].data
-        globdata.truenormback = hdun['truenormback'].data
-        globdata.truepsfipara = hdun['truepsfipara'].data
-        
     # prior boundaries
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data
@@ -183,7 +136,9 @@ def plot_post(pathprobcatl):
     
     # bins
     globdata.binsener = hdun['binsener'].data
+    globdata.diffener = hdun['diffener'].data
     globdata.meanener = hdun['meanener'].data
+    globdata.indxenerfdfn = hdun['indxenerfdfn'].data
     
     # utilities
     globdata.probprop = hdun['probprop'].data
@@ -204,44 +159,86 @@ def plot_post(pathprobcatl):
     globdata.listfdfnslop = hdun['fdfnslop'].data
     globdata.listpsfipara = hdun['psfipara'].data
     globdata.listnormback = hdun['normback'].data
-    
-    numbprop = len(globdata.probprop)
 
-    globdata.maxmgangmarg = globdata.maxmgang + globdata.margsize
-     
-    globdata.exttrofi = [globdata.minmlgal, globdata.maxmlgal, globdata.minmbgal, globdata.maxmbgal]
-    if globdata.exprtype == 'sdss':
-        globdata.exttrofi *= 3600.
-        globdata.frambndr = globdata.maxmgang * 3600.
-        globdata.frambndrmarg = globdata.maxmgangmarg * 3600.
-    else:
-        globdata.frambndr = globdata.maxmgang
-        globdata.frambndrmarg = globdata.maxmgangmarg
+    globdata.listbackfluxstrg = hdun['listbackfluxstrg'].data
+
+    # setup the sampler
+    init(globdata) 
+
+    # truth globdata.information
+    if globdata.trueinfo:
+        globdata.truenumbpnts = hdun['truenumbpnts'].data
+        globdata.truelgal = []
+        globdata.truebgal = []
+        globdata.truespec = []
+        globdata.truesind = []
+        globdata.truespec = []
+        for l in globdata.indxpopl:
+            globdata.truelgal.append(hdun['truelgalpopl%d' % l].data)
+            globdata.truebgal.append(hdun['truebgalpopl%d' % l].data)
+            globdata.truespec.append(hdun['truespecpopl%d' % l].data)
+            if globdata.colrprio:
+                globdata.truespec.append(hdun['truesindpopl%d' % l].data)
+        globdata.indxtruepntstimevari = hdun['indxtruepntstimevari'].data
+        globdata.truefdfnslop = hdun['truefdfnslop'].data
+        globdata.truenormback = hdun['truenormback'].data
+        globdata.truepsfipara = hdun['truepsfipara'].data
         
-    globdata.strgfluxunit = retr_strgfluxunit(globdata)
+    listlgal = []
+    listbgal = []
+    listspec = []
+    if globdata.colrprio:
+        listsind = []
+    for l in globdata.indxpopl:
+        listlgal.append(hdun['lgalpopl%d' % l].data)
+        listbgal.append(hdun['bgalpopl%d' % l].data)
+        listspec.append(hdun['specpopl%d' % l].data)
+        if globdata.colrprio:
+            listsind.append(hdun['sindpopl%d' % l].data)
+
+    #globdata.rtag = retr_rtag(globdata, None)
+
+    #if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
+    #    plotfold = '/n/pan/www/tansu/png/pcat/'
+    #else:
+    #    plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
+    #globdata.plotpath = plotfold + globdata.strgtime + '_' + globdata.rtag + '/'
+    #cmnd = 'mkdir -p ' + globdata.plotpath
+    #os.system(cmnd)
+
+    # get data cube indices
+    #retr_indxcube(globdata)
+
+    # load exposure map
+    #retr_expo(globdata)
+
+    # get strings            
+    #retr_strgangl(globdata)
+
+    # PSF model
+    #retr_psfimodl(globdata)
+
+    # proposals
+    #globdata.probprop = None
+    #retr_propmodl(globdata)
+    #numbprop = len(globdata.probprop)
+    #globdata.maxmgangmarg = globdata.maxmgang + globdata.margsize
+    #globdata.exttrofi = [globdata.minmlgal, globdata.maxmlgal, globdata.minmbgal, globdata.maxmbgal]
+    #if globdata.exprtype == 'sdss':
+    #    globdata.exttrofi *= 3600.
+    #    globdata.frambndr = globdata.maxmgang * 3600.
+    #    globdata.frambndrmarg = globdata.maxmgangmarg * 3600.
+    #else:
+    #    globdata.frambndr = globdata.maxmgang
+    #    globdata.frambndrmarg = globdata.maxmgangmarg
+        
+    #globdata.strgfluxunit = retr_strgfluxunit(globdata)
 
     # energy bin string
-    globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
+    #globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
     
-    if globdata.regitype == 'igal':
-        globdata.longlabl = '$l$'
-        globdata.latilabl = '$b$'
-    else:
-        globdata.longlabl = r'$\nu$'
-        globdata.latilabl = r'$\mu$'
-        
-    if globdata.exprtype == 'ferm':
-        globdata.longlabl += r' [$^\circ$]'
-        globdata.latilabl += r' [$^\circ$]'
-    if globdata.exprtype == 'sdss':
-        globdata.longlabl += ' [arcsec]'
-        globdata.latilabl += ' [arcsec]'
-        
-    if globdata.trueinfo:
-        if globdata.datatype == 'mock':
-            globdata.truelabl = 'Mock data'
-        else:
-            globdata.truelabl = '3FGL'
+    #if globdata.pixltype == 'heal':
+    #    retr_pixlcnvt(globdata)
 
         
     # Gelman-Rubin test
@@ -298,15 +295,16 @@ def plot_post(pathprobcatl):
     print 'Calculating proposal execution times...'
     tim0 = time.time()
 
+    retr_strgprop(globdata)
+    
     binstime = logspace(log10(amin(globdata.listchro[where(globdata.listchro > 0)] * 1e3)), log10(amax(globdata.listchro * 1e3)), 50)
     with sns.color_palette("nipy_spectral", numbprop):
         figr, axis = plt.subplots(figsize=(14, 12))
         
         axis.hist(globdata.listchro[where(globdata.listchro[:, 0] > 0)[0], 0] * 1e3, binstime, facecolor='none', log=True, lw=1, ls='--', edgecolor='black')
         for g in range(numbprop):
-            indxglobdata.listchro = where((globdata.listindxprop == g) & (globdata.listchro[:, 0] > 0))[0]
-            # temp
-            axis.hist(globdata.listchro[indxglobdata.listchro, 0] * 1e3, binstime, edgecolor='none', log=True, alpha=0.3)#, label=propstrg[g])
+            indxlistchro = where((globdata.listindxprop == g) & (globdata.listchro[:, 0] > 0))[0]
+            axis.hist(globdata.listchro[indxlistchro, 0] * 1e3, binstime, edgecolor='none', log=True, alpha=0.3, label=globdata.strgprop[g])
         axis.set_xlabel('$t$ [ms]')
         axis.set_xscale('log')
         axis.set_xlim([amin(binstime), amax(binstime)])
@@ -367,9 +365,9 @@ def plot_post(pathprobcatl):
             discspecmtch /= globdata.numbsamp
 
             
-            postspecmtch = zeros((3, globdata.numbener, globdata.truenumbpnts))
+            postspecmtch = zeros((3, globdata.numbener, globdata.truenumbpnts[l]))
             for i in globdata.indxener:
-                listspecmtch = zeros((globdata.numbsamp, globdata.truenumbpnts))
+                listspecmtch = zeros((globdata.numbsamp, globdata.truenumbpnts[l]))
                 for k in range(globdata.numbsamp):
                     indxpntstrue = where(listindxmodl[k] >= 0)[0]
                     listspecmtch[k, indxpntstrue] = listspec[l][k][i, listindxmodl[k][indxpntstrue]]
@@ -390,8 +388,8 @@ def plot_post(pathprobcatl):
     if globdata.pixltype == 'heal':
         
         reso = 60. / globdata.numbsideheal
-        numbbinslgcr = (globdata.maxmlgal - globdata.minmlgal) / reso
-        numbbinsbgcr = (globdata.maxmbgal - globdata.minmbgal) / reso
+        numbbinslgcr = int((globdata.maxmlgal - globdata.minmlgal) / reso)
+        numbbinsbgcr = int((globdata.maxmbgal - globdata.minmbgal) / reso)
 
         pntsprobcart = zeros((numbbinslgcr, numbbinsbgcr, globdata.numbpopl, globdata.numbener, globdata.numbspec))
         for l in globdata.indxpopl:
@@ -410,18 +408,22 @@ def plot_post(pathprobcatl):
         pntsprobcart = swapaxes(swapaxes(pntsprobcart, 0, 2), 1, 3)
         
     # stacked posteiors binned in position and flux
-    plot_pntsprob(pntsprobcart, ptag='quad')
-    plot_pntsprob(pntsprobcart, ptag='full', full=True)
-    plot_pntsprob(pntsprobcart, ptag='cumu', cumu=True)
-   
+    plot_pntsprob(globdata, pntsprobcart, ptag='quad')
+    plot_pntsprob(globdata, pntsprobcart, ptag='full', full=True)
+    plot_pntsprob(globdata, pntsprobcart, ptag='cumu', cumu=True)
+  
+                                
+    if globdata.exprtype == 'ferm':
+        retr_fgl3(globdata)
+
     # flux distribution
     for l in globdata.indxpopl:
-        plot_histspec(l, listspechist=listspechist[:, l, :, :])
+        plot_histspec(globdata, l, listspechist=listspechist[:, l, :, :])
 
     # fraction of emission components
     postpntsfluxmean = retr_postvarb(globdata.listpntsfluxmean)
     postnormback = retr_postvarb(globdata.listnormback)
-    plot_compfrac(postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
+    plot_compfrac(globdata, postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
 
 
     # PSF parameters
@@ -475,10 +477,7 @@ def plot_post(pathprobcatl):
 
         # mean number of point sources
         path = globdata.plotpath + 'fdfnnorm_popl%d_' % l + globdata.rtag + '.png'
-        if globdata.trueinfo and globdata.truefdfnnorm != None:
-            truepara = globdata.truefdfnnorm[l]
-        else:
-            truepara = None
+        truepara = None
         tdpy.util.plot_trac(globdata.listfdfnnorm[:, l], '$\mu$', truepara=truepara, path=path)
 
         # flux distribution power law index
@@ -861,9 +860,9 @@ def plot_look(globdata):
 
     indxpixlproxsize = zeros(globdata.numbpixl)
     figr, axis = plt.subplots(figsize=(10, 6))
-    for h in range(numbspecprox):
-        for j in indxpixl:
-            indxpixlproxsize[j] = indxpixlprox[h][j].size
+    for h in range(globdata.numbspecprox):
+        for j in globdata.indxpixl:
+            indxpixlproxsize[j] = globdata.indxpixlprox[h][j].size
         binspixlsize = logspace(log10(amin(indxpixlproxsize)), log10(amax(indxpixlproxsize)), 100)
         hist, bins = histogram(indxpixlproxsize, binspixlsize)
         mean = sqrt(bins[:-1] * bins[1:])
@@ -957,7 +956,7 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
     if cumu:
         numbrows = 1
     elif full:
-        numbrows = numbspec / 2
+        numbrows = globdata.numbspec / 2
     else:
         numbrows = 2
         
@@ -1018,6 +1017,8 @@ def plot_pntsprob(globdata, pntsprobcart, ptag, full=False, cumu=False):
     
 def plot_king(globdata):
 
+    angl = rad2deg(globdata.angldisp)
+
     figr, axgr = plt.subplots(1, 2, figsize=(12, 6))
     figr.suptitle('King Function', fontsize=20)
     for k, axis in enumerate(axgr):
@@ -1031,7 +1032,7 @@ def plot_king(globdata):
             lloc = 1
         for sigm in sigmlist:
             for gamm in gammlist:
-                axis.plot(rad2deg(globdata.angldisp), retr_king(sigm, gamm), label=r'$\sigma = %.4g, \gamma = %.3g$' % (sigm, gamm))
+                axis.plot(angl, retr_singking(angl, sigm, gamm), label=r'$\sigma = %.4g, \gamma = %.3g$' % (sigm, gamm))
         axis.legend(loc=lloc)
         axis.set_yscale('log')
         axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
@@ -1246,23 +1247,24 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
     plt.show()
     
     
-def plot_3fgl_thrs():
+def plot_3fgl_thrs(globdata):
 
-    path = os.environ["PCAT_DATA_PATH"] + '/catl/3fgl_thrs.fits'
+    path = os.environ["PCAT_DATA_PATH"] + '/detthresh_P7v15source_4years_PL22.fits'
     fluxthrs = pf.getdata(path, 0)
 
     bgalfgl3 = linspace(-90., 90., 481)
     lgalfgl3 = linspace(-180., 180., 960)
 
-    bgalglobdata.expo = linspace(-90., 90., 400)
-    lgalglobdata.expo = linspace(-180., 180., 800)
+    bgalexpo = linspace(-90., 90., 400)
+    lgalexpo = linspace(-180., 180., 800)
 
-    fluxthrs = interp2d(lgalfgl3, bgalfgl3, fluxthrs)(lgalglobdata.expo, bgalglobdata.expo)
+    #fluxthrs = interp2d(lgalfgl3, bgalfgl3, fluxthrs)(lgalexpo, bgalexpo)
+    fluxthrs = griddata([lgalfgl3, bgalfgl3], fluxthrs, [globdata.lgalheal, globdata.bgalheal])
 
     cntsthrs = fluxthrs * globdata.expo
 
-    jbgal = where(abs(bgalglobdata.expo) < 10.)[0]
-    jlgal = where(abs(lgalglobdata.expo) < 10.)[0]
+    jbgal = where(abs(bgalexpo) < 10.)[0]
+    jlgal = where(abs(lgalexpo) < 10.)[0]
     extent = [-10, 10, -10, 10]
     
     figr, axis = plt.subplots(figsize=(12, 12))
