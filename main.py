@@ -466,8 +466,6 @@ def wrap(cnfg):
     head['datatype'] = globdata.datatype
     head['regitype'] = globdata.regitype
     head['psfntype'] = globdata.psfntype
-    if globdata.datatype == 'mock':
-        head['mockpsfntype'] = globdata.mockpsfntype
     head['exprtype'] = globdata.exprtype
     head['pixltype'] = globdata.pixltype
     
@@ -476,6 +474,18 @@ def wrap(cnfg):
     head['margsize'] = globdata.margsize
     head['strgtime'] = globdata.strgtime
     
+    head['minmfdfnnorm'] = globdata.minmfdfnnorm
+    head['maxmfdfnnorm'] = globdata.maxmfdfnnorm
+    head['minmfdfnslop'] = globdata.minmfdfnslop
+    head['maxmfdfnslop'] = globdata.maxmfdfnslop
+
+    if globdata.trueinfo and globdata.datatype == 'mock':
+        head['mocknumbpnts'] = globdata.mocknumbpnts
+        head['mockfdfnslop'] = globdata.mockfdfnslop
+        head['mocknormback'] = globdata.mocknormback
+        head['mockpsfntype'] = globdata.mockpsfntype
+
+    # boundaries
     for k in globdata.indxback:
         head['strgbackflux%04d' % k] = globdata.liststrgbackflux[k]
     
@@ -559,31 +569,6 @@ def wrap(cnfg):
 
         listhdun.append(pf.ImageHDU(globdata.indxtruepntstimevari))
         listhdun[-1].header['EXTNAME'] = 'indxtruepntstimevari'
-
-        if globdata.datatype == 'mock':
-            listhdun.append(pf.ImageHDU(globdata.mocknormback))
-            listhdun[-1].header['EXTNAME'] = 'mocknumbpnts'
-
-            listhdun.append(pf.ImageHDU(globdata.mocknormback))
-            listhdun[-1].header['EXTNAME'] = 'mockfdfnslop'
-
-            listhdun.append(pf.ImageHDU(globdata.mocknormback))
-            listhdun[-1].header['EXTNAME'] = 'mocknormback'
-
-            listhdun.append(pf.ImageHDU(globdata.mocknormback))
-            listhdun[-1].header['EXTNAME'] = 'mockpsfntype'
-
-    # boundaries
-    if False:
-        listhdun.append(pf.ImageHDU(globdata.minmfdfnnorm))
-        listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
-        listhdun.append(pf.ImageHDU(globdata.maxmfdfnnorm))
-        listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
-    
-        listhdun.append(pf.ImageHDU(globdata.minmfdfnslop))
-        listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
-        listhdun.append(pf.ImageHDU(globdata.maxmfdfnslop))
-        listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
 
     listhdun.append(pf.ImageHDU(globdata.minmspec))
     listhdun[-1].header['EXTNAME'] = 'minmspec'

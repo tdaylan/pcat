@@ -83,8 +83,6 @@ def plot_post(pathprobcatl):
     globdata.datatype = hdun[0].header['datatype']
     globdata.regitype = hdun[0].header['regitype']
     globdata.psfntype = hdun[0].header['psfntype']
-    if globdata.datatype == 'mock':
-        globdata.mockpsfntype = hdun[0].header['mockpsfntype']
     globdata.exprtype = hdun[0].header['exprtype']
     globdata.pixltype = hdun[0].header['pixltype']
 
@@ -98,6 +96,17 @@ def plot_post(pathprobcatl):
     
     globdata.margsize = hdun[0].header['margsize']
     globdata.strgtime = hdun[0].header['strgtime']
+
+    globdata.minmfdfnnorm = hdun[0].header['minmfdfnnorm']
+    globdata.maxmfdfnnorm = hdun[0].header['maxmfdfnnorm']
+    globdata.minmfdfnslop = hdun[0].header['minmfdfnslop']
+    globdata.maxmfdfnslop = hdun[0].header['maxmfdfnslop']
+
+    if globdata.datatype == 'mock':
+        globdata.mocknumbpnts = hdun[0].header['mocknumbpnts']
+        globdata.mockfdfnslop = hdun[0].header['mockfdfnslop']
+        globdata.mocknormback = hdun[0].header['mocknormback']
+        globdata.mockpsfntype = hdun[0].header['mockpsfntype']
 
     globdata.liststrgbackflux = []
     k = 0
@@ -114,12 +123,6 @@ def plot_post(pathprobcatl):
     globdata.indxenerincl = hdun['indxenerincl'].data
     globdata.indxevttincl = hdun['indxevttincl'].data
 
-    if globdata.datatype == 'mock':
-        globdata.mocknumbpnts = hdun['mocknumbpnts'].data
-        globdata.mockfdfnslop = hdun['mockfdfnslop'].data
-        globdata.mocknormback = hdun['mocknormback'].data
-        globdata.mockpsfntype = hdun['mockpsfntype'].data
-
     globdata.maxmnumbpnts = hdun['maxmnumbpnts'].data
         
     listspechist = hdun['spechist'].data
@@ -132,17 +135,6 @@ def plot_post(pathprobcatl):
     listmodlcnts = hdun['modlcnts'].data
     
     # prior boundaries
-    if False:
-        globdata.minmfdfnnorm = hdun['minmfdfnnorm'].data
-        globdata.maxmfdfnnorm = hdun['maxmfdfnnorm'].data
-        globdata.minmfdfnslop = hdun['minmfdfnslop'].data
-        globdata.maxmfdfnslop = hdun['maxmfdfnslop'].data
-    else:
-        globdata.minmfdfnnorm = 1.
-        globdata.maxmfdfnnorm = 100.
-        globdata.minmfdfnslop = 1.5
-        globdata.maxmfdfnslop = 2.5
-
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data
         globdata.maxmsind = hdun['maxmsind'].data
