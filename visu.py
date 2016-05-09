@@ -99,6 +99,15 @@ def plot_post(pathprobcatl):
     globdata.margsize = hdun[0].header['margsize']
     globdata.strgtime = hdun[0].header['strgtime']
 
+    globdata.liststrgbackflux = []
+    k = 0
+    while True:
+        try:
+            globdata.liststrgbackflux.append(hdun[0].header['strgbackflux%04d' % k])
+            k += 1
+        except:
+            break
+
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
     
@@ -123,6 +132,11 @@ def plot_post(pathprobcatl):
     listmodlcnts = hdun['modlcnts'].data
     
     # prior boundaries
+    globdata.minmfdfnnorm = hdun['minmfdfnnorm'].data
+    globdata.maxmfdfnnorm = hdun['maxmfdfnnorm'].data
+    globdata.minmfdfnslop = hdun['minmfdfnslop'].data
+    globdata.maxmfdfnslop = hdun['maxmfdfnslop'].data
+
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data
         globdata.maxmsind = hdun['maxmsind'].data
@@ -160,7 +174,6 @@ def plot_post(pathprobcatl):
     globdata.listpsfipara = hdun['psfipara'].data
     globdata.listnormback = hdun['normback'].data
 
-    globdata.listbackfluxstrg = hdun['listbackfluxstrg'].data
 
     # setup the sampler
     init(globdata) 

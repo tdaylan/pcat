@@ -1775,7 +1775,7 @@ def init(globdata):
 
     globdata.minmnumbpnts = 1
 
-    globdata.numbback = len(globdata.listbackfluxstrg)
+    globdata.numbback = len(globdata.liststrgbackflux)
     globdata.indxback = arange(globdata.numbback)
     
     if globdata.numbback == 1:
@@ -2156,7 +2156,7 @@ def init(globdata):
     # backgrounds
     globdata.backflux = []
     globdata.backfluxmean = []
-    for c, backfluxstrg in enumerate(globdata.listbackfluxstrg):
+    for c, backfluxstrg in enumerate(globdata.liststrgbackflux):
         path = os.environ["PCAT_DATA_PATH"] + '/' + backfluxstrg
         backfluxtemp = pf.getdata(path)
         if globdata.pixltype == 'heal':

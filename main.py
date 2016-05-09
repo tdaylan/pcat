@@ -236,7 +236,7 @@ def wrap(cnfg):
     globdata.probprop = cnfg['probprop']
     
     exprfluxstrg = cnfg['exprfluxstrg']
-    globdata.listbackfluxstrg = cnfg['listbackfluxstrg']
+    globdata.liststrgbackflux = cnfg['liststrgbackflux']
     globdata.expostrg = cnfg['expostrg']
     
     globdata.initnumbpnts = cnfg['initnumbpnts']
@@ -476,6 +476,9 @@ def wrap(cnfg):
     head['margsize'] = globdata.margsize
     head['strgtime'] = globdata.strgtime
     
+    for k in globdata.indxback:
+        head['strgbackflux%04d' % k] = globdata.liststrgbackflux[k]
+    
     head['levi'] = levi
     head['info'] = info
     
@@ -529,11 +532,7 @@ def wrap(cnfg):
     
     listhdun.append(pf.ImageHDU(pntsprob))
     listhdun[-1].header['EXTNAME'] = 'pntsprob'
-    
-    listhdun.append(pf.ImageHDU(globdata.listbackfluxstrg))
-    listhdun[-1].header['EXTNAME'] = 'listbackfluxstrg'
-    
-    
+   
     # truth information
     if globdata.trueinfo:
         listhdun.append(pf.ImageHDU(globdata.truenumbpnts))
@@ -574,8 +573,17 @@ def wrap(cnfg):
             listhdun.append(pf.ImageHDU(globdata.mocknormback))
             listhdun[-1].header['EXTNAME'] = 'mockpsfntype'
 
-        
     # boundaries
+    listhdun.append(pf.ImageHDU(globdata.minmfdfnnorm))
+    listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
+    listhdun.append(pf.ImageHDU(globdata.maxmfdfnnorm))
+    listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
+
+    listhdun.append(pf.ImageHDU(globdata.minmfdfnslop))
+    listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
+    listhdun.append(pf.ImageHDU(globdata.maxmfdfnslop))
+    listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
+
     listhdun.append(pf.ImageHDU(globdata.minmspec))
     listhdun[-1].header['EXTNAME'] = 'minmspec'
     listhdun.append(pf.ImageHDU(globdata.maxmspec))
