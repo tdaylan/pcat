@@ -138,10 +138,10 @@ def plot_post(pathprobcatl):
         globdata.minmfdfnslop = hdun['minmfdfnslop'].data
         globdata.maxmfdfnslop = hdun['maxmfdfnslop'].data
     else:
-        minmfdfnnorm = 1.
-        maxmfdfnnorm = 100.
-        minmfdfnslop = 1.
-        maxmfdfnslop = 3.
+        globdata.minmfdfnnorm = 1.
+        globdata.maxmfdfnnorm = 100.
+        globdata.minmfdfnslop = 1.5
+        globdata.maxmfdfnslop = 2.5
 
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data

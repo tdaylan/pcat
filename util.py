@@ -1878,6 +1878,9 @@ def init(globdata):
         elif globdata.mockpsfntype == 'doubking':
             globdata.numbmockformpara = 5
 
+        print 'hey'
+        print globdata.mockpsfntype
+
         globdata.numbmockpsfiparaevtt = globdata.numbener * globdata.numbmockformpara
         globdata.numbmockpsfipara = globdata.numbmockpsfiparaevtt * globdata.numbevtt
         globdata.indxmockpsfipara = arange(globdata.numbmockpsfipara)   
