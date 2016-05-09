@@ -187,9 +187,15 @@ def wrap(cnfg):
     globdata.maxmnumbpnts = cnfg['maxmnumbpnts']
     
     globdata.probprop = cnfg['probprop']
-    
-    exprfluxstrg = cnfg['exprfluxstrg']
-    globdata.liststrgbackflux = cnfg['liststrgbackflux']
+   
+    # input
+    ## experimental data
+    globdata.strgexpr = cnfg['strgexpr']
+    ## background
+    globdata.strgback = cnfg['strgback']
+    globdata.lablback = cnfg['lablback']
+    globdata.nameback = cnfg['nameback']
+    ## exposure
     globdata.strgexpo = cnfg['strgexpo']
     
     globdata.initnumbpnts = cnfg['initnumbpnts']
@@ -475,9 +481,12 @@ def wrap(cnfg):
     if globdata.trueinfo and globdata.datatype == 'mock':
         head['mockpsfntype'] = globdata.mockpsfntype
 
-    head['strgexpo'] = globdata.strgexpo
+    head['strgexpr'] = globdata.strgexpr
     for k in globdata.indxback:
-        head['strgbackflux%04d' % k] = globdata.liststrgbackflux[k]
+        head['strgback%04d' % k] = globdata.strgback[k]
+        head['lablback%04d' % k] = globdata.lablback[k]
+        head['nameback%04d' % k] = globdata.nameback[k]
+    head['strgexpo'] = globdata.strgexpo
     
     head['levi'] = levi
     head['info'] = info

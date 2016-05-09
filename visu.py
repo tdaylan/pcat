@@ -71,15 +71,20 @@ def plot_post(pathprobcatl):
     if globdata.trueinfo and globdata.datatype == 'mock':
         globdata.mockpsfntype = hdun[0].header['mockpsfntype']
 
-    globdata.strgexpo = hdun[0].header['strgexpo']
-    globdata.liststrgbackflux = []
+    globdata.strgexpr = hdun[0].header['strgexpr']
+    globdata.strgback = []
+    globdata.lablback = []
+    globdata.nameback = []
     k = 0
     while True:
         try:
-            globdata.liststrgbackflux.append(hdun[0].header['strgbackflux%04d' % k])
+            globdata.strgback.append(hdun[0].header['strgback%04d' % k])
+            globdata.lablback.append(hdun[0].header['lablback%04d' % k])
+            globdata.nameback.append(hdun[0].header['nameback%04d' % k])
             k += 1
         except:
             break
+    globdata.strgexpo = hdun[0].header['strgexpo']
 
     globdata.levi = hdun[0].header['levi']
     globdata.info = hdun[0].header['info']
@@ -156,14 +161,14 @@ def plot_post(pathprobcatl):
         globdata.truelgal = []
         globdata.truebgal = []
         globdata.truespec = []
-        globdata.truesind = []
-        globdata.truespec = []
+        if globdata.colrprio:
+            globdata.truesind = []
         for l in globdata.indxpopl:
             globdata.truelgal.append(hdun['truelgalpopl%d' % l].data)
             globdata.truebgal.append(hdun['truebgalpopl%d' % l].data)
             globdata.truespec.append(hdun['truespecpopl%d' % l].data)
             if globdata.colrprio:
-                globdata.truespec.append(hdun['truesindpopl%d' % l].data)
+                globdata.truesind.append(hdun['truesindpopl%d' % l].data)
         globdata.indxtruepntstimevari = hdun['indxtruepntstimevari'].data
         globdata.truefdfnslop = hdun['truefdfnslop'].data
         globdata.truenormback = hdun['truenormback'].data
@@ -330,12 +335,13 @@ def plot_post(pathprobcatl):
             listpost[:, 1*numbpnts:2*numbpnts] = listbgal[0][:, k]
             listpost[:, 2*numbpnts:3*numbpnts] = listspec[0][:, globdata.indxenerfdfn, k]
             listpost[:, 3*numbpnts:4*numbpnts] = listspec[0][:, k]
-        truepost = zeros((globdata.numbsamp, numbpara))
+        truepost = zeros(numbpara)
         truepost[0*numbpnts:1*numbpnts] = globdata.truelgal[0][k]
         truepost[1*numbpnts:2*numbpnts] = globdata.truebgal[0][k]
         truepost[2*numbpnts:3*numbpnts] = globdata.truespec[0][0, globdata.indxenerfdfn, k]
         truepost[3*numbpnts:4*numbpnts] = globdata.truesind[0][k]
         path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
+        strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbbins=globdata.numbbins, quan=True)
                 
     # flux match with the true catalog
@@ -476,33 +482,17 @@ def plot_post(pathprobcatl):
             labl =  r'$\alpha_{%d}$' % i
             tdpy.mcmc.plot_trac(path, globdata.listfdfnslop[:, l, i], labl, truepara=truepara, titl=titl)
         
-        
-    # isotropic background normalization
+    # background normalization
     for i in globdata.indxener:
-        path = globdata.plotpath + 'nisodist%d_' % i + globdata.rtag + '.png'
-        if globdata.trueinfo:
-            if globdata.datatype == 'mock':
-                truepara = globdata.truenormback[0, i]
-            else:
-                truepara = None
-        titl = globdata.binsenerstrg[i]
-        labl = r'$\mathcal{I}_{%d}$' % i
-        tdpy.mcmc.plot_trac(path, globdata.listnormback[:, 0, i], labl, truepara=truepara, titl=titl)
-       
-    if globdata.exprtype == 'ferm':
-        # diffuse model normalization
-        for i in globdata.indxener:
-            path = globdata.plotpath + 'nfdmdist%d_' % i + globdata.rtag + '.png'
-            if globdata.trueinfo:
-                if globdata.datatype == 'mock':
-                    truepara = globdata.truenormback[1, i]
-                else:
-                    truepara = None
+        for c in globdata.indxback:
+            path = globdata.plotpath + globdata.nameback[c] + '%d_' % i + globdata.rtag + '.png'
+            if globdata.trueinfo and globdata.datatype == 'mock':
+                truepara = globdata.truenormback[c, i]
             else:
                 truepara = None
             titl = globdata.binsenerstrg[i]
-            labl = r'$\mathcal{D}_{%d}$' % i
-            tdpy.mcmc.plot_trac(path, globdata.listnormback[:, 1, i], labl, truepara=truepara, titl=titl)
+            labl = globdata.lablback[c] + '$_{%d}$' % i
+            tdpy.mcmc.plot_trac(path, globdata.listnormback[:, c, i], labl, truepara=truepara, titl=titl)
 
     # plot log-likelihood
     figr, axrw = plt.subplots(2, 1, figsize=(7, 12))

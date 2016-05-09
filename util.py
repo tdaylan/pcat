@@ -1715,6 +1715,14 @@ def init(globdata):
         else:
             globdata.numbproc = 1
         
+    if globdata.exprtype == 'ferm':
+        if globdata.strgback == None:
+            globdata.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+        if globdata.lablback == None:
+            globdata.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+        if globdata.nameback == None:
+            globdata.nameback = ['normisot', 'normfdfm']
+
     globdata.strgfluxunit = retr_strgfluxunit(globdata)
         
     # number of bins
@@ -1729,7 +1737,7 @@ def init(globdata):
 
     globdata.minmnumbpnts = 1
 
-    globdata.numbback = len(globdata.liststrgbackflux)
+    globdata.numbback = len(globdata.strgback)
     globdata.indxback = arange(globdata.numbback)
     
     if globdata.numbback == 1:
@@ -1932,7 +1940,7 @@ def init(globdata):
     # input data
     if globdata.datatype == 'inpt':
         
-        path = os.environ["PCAT_DATA_PATH"] + '/' + exprfluxstrg
+        path = os.environ["PCAT_DATA_PATH"] + '/' + strgexpr
         exprflux = pf.getdata(path)
 
         globdata.indxenerinclfull = arange(exprflux.shape[0])
@@ -2091,7 +2099,7 @@ def init(globdata):
     # backgrounds
     globdata.backflux = []
     globdata.backfluxmean = []
-    for c, backfluxstrg in enumerate(globdata.liststrgbackflux):
+    for c, backfluxstrg in enumerate(globdata.strgback):
         path = os.environ["PCAT_DATA_PATH"] + '/' + backfluxstrg
         backfluxtemp = pf.getdata(path)
         if globdata.pixltype == 'heal':
