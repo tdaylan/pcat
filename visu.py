@@ -132,10 +132,16 @@ def plot_post(pathprobcatl):
     listmodlcnts = hdun['modlcnts'].data
     
     # prior boundaries
-    globdata.minmfdfnnorm = hdun['minmfdfnnorm'].data
-    globdata.maxmfdfnnorm = hdun['maxmfdfnnorm'].data
-    globdata.minmfdfnslop = hdun['minmfdfnslop'].data
-    globdata.maxmfdfnslop = hdun['maxmfdfnslop'].data
+    if False:
+        globdata.minmfdfnnorm = hdun['minmfdfnnorm'].data
+        globdata.maxmfdfnnorm = hdun['maxmfdfnnorm'].data
+        globdata.minmfdfnslop = hdun['minmfdfnslop'].data
+        globdata.maxmfdfnslop = hdun['maxmfdfnslop'].data
+    else:
+        minmfdfnnorm = 1.
+        maxmfdfnnorm = 100.
+        minmfdfnslop = 1.
+        maxmfdfnslop = 3.
 
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data

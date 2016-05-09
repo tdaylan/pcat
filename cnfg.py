@@ -438,7 +438,7 @@ def cnfg_ferm_mock_ngal():
     
     cnfg = retr_cnfg(psfntype='doubking', \
 					 numbproc=1, \
-					 numbswep=100000, \
+					 numbswep=1000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \

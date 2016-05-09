@@ -574,15 +574,16 @@ def wrap(cnfg):
             listhdun[-1].header['EXTNAME'] = 'mockpsfntype'
 
     # boundaries
-    listhdun.append(pf.ImageHDU(globdata.minmfdfnnorm))
-    listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
-    listhdun.append(pf.ImageHDU(globdata.maxmfdfnnorm))
-    listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
-
-    listhdun.append(pf.ImageHDU(globdata.minmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
-    listhdun.append(pf.ImageHDU(globdata.maxmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
+    if False:
+        listhdun.append(pf.ImageHDU(globdata.minmfdfnnorm))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
+        listhdun.append(pf.ImageHDU(globdata.maxmfdfnnorm))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
+    
+        listhdun.append(pf.ImageHDU(globdata.minmfdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
+        listhdun.append(pf.ImageHDU(globdata.maxmfdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
 
     listhdun.append(pf.ImageHDU(globdata.minmspec))
     listhdun[-1].header['EXTNAME'] = 'minmspec'
