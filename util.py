@@ -1926,7 +1926,7 @@ def init(globdata):
     # input data
     if globdata.datatype == 'inpt':
         
-        path = os.environ["PCAT_DATA_PATH"] + '/' + strgexpr
+        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpr
         exprflux = pf.getdata(path)
 
         globdata.indxenerinclfull = arange(exprflux.shape[0])

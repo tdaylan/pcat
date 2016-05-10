@@ -94,7 +94,7 @@ def plot_post(pathprobcatl):
 
     globdata.maxmnumbpnts = hdun['maxmnumbpnts'].data
         
-    listspechist = hdun['spechist'].data
+    globdata.listspechist = hdun['spechist'].data
     pntsprob = hdun['pntsprob'].data
     
     listllik = hdun['llik'].data
@@ -174,17 +174,17 @@ def plot_post(pathprobcatl):
         globdata.truenormback = hdun['truenormback'].data
         globdata.truepsfipara = hdun['truepsfipara'].data
         
-    listlgal = []
-    listbgal = []
-    listspec = []
+    globdata.listlgal = []
+    globdata.listbgal = []
+    globdata.listspec = []
     if globdata.colrprio:
-        listsind = []
+        globdata.listsind = []
     for l in globdata.indxpopl:
-        listlgal.append(hdun['lgalpopl%d' % l].data)
-        listbgal.append(hdun['bgalpopl%d' % l].data)
-        listspec.append(hdun['specpopl%d' % l].data)
+        globdata.listlgal.append(hdun['lgalpopl%d' % l].data)
+        globdata.listbgal.append(hdun['bgalpopl%d' % l].data)
+        globdata.listspec.append(hdun['specpopl%d' % l].data)
         if globdata.colrprio:
-            listsind.append(hdun['sindpopl%d' % l].data)
+            globdata.listsind.append(hdun['sindpopl%d' % l].data)
 
     #globdata.rtag = retr_rtag(globdata, None)
 
@@ -328,18 +328,29 @@ def plot_post(pathprobcatl):
     
     if globdata.trueinfo and globdata.colrprio and globdata.datatype == 'mock' and globdata.mocknumbpnts[0] == 3 and globdata.numbpopl == 1:
         numbpnts = globdata.mocknumbpnts[0]
-        numbpara = numbpnts * globdata.numbcompcolr + 1
+        numbpara = numbpnts * globdata.numbcompcolr + globdata.numbener
         listpost = zeros((globdata.numbsamp, numbpara))
         for k in range(numbpnts):
-            listpost[:, 0*numbpnts:1*numbpnts] = listlgal[0][:, k]
-            listpost[:, 1*numbpnts:2*numbpnts] = listbgal[0][:, k]
-            listpost[:, 2*numbpnts:3*numbpnts] = listspec[0][:, globdata.indxenerfdfn, k]
-            listpost[:, 3*numbpnts:4*numbpnts] = listspec[0][:, k]
+            print 'hey'
+            print 'globdata.listlgal[0][:, k]'
+            print globdata.listlgal[0][:, k].shape
+            print 'numbpnts'
+            print numbpnts
+            print 'listpost'
+            print listpost.shape
+            print
+            listpost[:, 0*numbpnts+k] = globdata.listlgal[0][:, k]
+            listpost[:, 1*numbpnts+k] = globdata.listbgal[0][:, k]
+            listpost[:, 2*numbpnts+k] = globdata.listspec[0][:, globdata.indxenerfdfn, k].flatten()
+            listpost[:, 3*numbpnts+k] = globdata.listsind[0][:, k]
+        for i in globdata.indxener:
+            listpost[:, 4*numbpnts+i] = globdata.listnormback[:, 0, i]
         truepost = zeros(numbpara)
         truepost[0*numbpnts:1*numbpnts] = globdata.truelgal[0][k]
         truepost[1*numbpnts:2*numbpnts] = globdata.truebgal[0][k]
         truepost[2*numbpnts:3*numbpnts] = globdata.truespec[0][0, globdata.indxenerfdfn, k]
         truepost[3*numbpnts:4*numbpnts] = globdata.truesind[0][k]
+        truepost[4*numbpnts:] = globdata.truenormback[0, :]
         path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbbins=globdata.numbbins, quan=True)
@@ -351,19 +362,19 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(globdata.truenumbpnts) + globdata.numbsamp
             listindxmodl = []
             for k in range(globdata.numbsamp):
-                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(globdata, l, listlgal[l][k, :], listbgal[l][k, :], listspec[l][k, :, :])
+                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(globdata, l, globdata.listlgal[l][k, :], globdata.listbgal[l][k, :], globdata.listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= globdata.numbsamp
             postspecmtch = zeros((3, globdata.numbener, globdata.truenumbpnts[l]))
             for i in globdata.indxener:
-                listspecmtch = zeros((globdata.numbsamp, globdata.truenumbpnts[l]))
+                globdata.listspecmtch = zeros((globdata.numbsamp, globdata.truenumbpnts[l]))
                 for k in range(globdata.numbsamp):
                     indxpntstrue = where(listindxmodl[k] >= 0)[0]
-                    listspecmtch[k, indxpntstrue] = listspec[l][k][i, listindxmodl[k][indxpntstrue]]
-                postspecmtch[0, i, :] = percentile(listspecmtch, 16., axis=0)
-                postspecmtch[1, i, :] = percentile(listspecmtch, 50., axis=0)
-                postspecmtch[2, i, :] = percentile(listspecmtch, 84., axis=0)
+                    globdata.listspecmtch[k, indxpntstrue] = globdata.listspec[l][k][i, listindxmodl[k][indxpntstrue]]
+                postspecmtch[0, i, :] = percentile(globdata.listspecmtch, 16., axis=0)
+                postspecmtch[1, i, :] = percentile(globdata.listspecmtch, 50., axis=0)
+                postspecmtch[2, i, :] = percentile(globdata.listspecmtch, 84., axis=0)
             
             plot_scatspec(globdata, l, postspecmtch=postspecmtch)
 
@@ -408,7 +419,7 @@ def plot_post(pathprobcatl):
 
     # flux distribution
     for l in globdata.indxpopl:
-        plot_histspec(globdata, l, listspechist=listspechist[:, l, :, :])
+        plot_histspec(globdata, l, listspechist=globdata.listspechist[:, l, :, :])
 
     # fraction of emission components
     if globdata.numbback == 2:
