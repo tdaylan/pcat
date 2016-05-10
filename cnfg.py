@@ -35,6 +35,7 @@ def retr_cnfg(               verbtype=1,
               
               psfntype='doubking', \
               
+              proppsfn=True, \
               colrprio=False, \
               
               numbpopl=1, \
@@ -177,7 +178,10 @@ def retr_cnfg(               verbtype=1,
         
     # color priors
     cnfg['colrprio'] = colrprio
-    
+   
+    # flag to turn off PSF parameter updates
+    cnfg['proppsfn'] = proppsfn
+
     # input data
     ## measured data
     cnfg['strgexpr'] = strgexpr
@@ -346,25 +350,29 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
      
     colrprio = False
     
+    indxenerincl = arange(1, 4)
+
     if colrprio:
         minmspec = array([1e-11])
         maxmspec = array([1e-7])
     else:
-        minmspec = array([3e-9, 3e-10, 3e-11, 3e-12, 3e-13])
-        maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])
+        minmspec = array([3e-9, 3e-10, 3e-11, 3e-12, 3e-13])[indxenerincl]
+        maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
-    cnfg = retr_cnfg(psfntype='gausking', \
-                    numbswep=20000, \
+    cnfg = retr_cnfg(psfntype='doubking', \
+                    numbswep=100000, \
                     numbburn=10000, 
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
-                    initnumbpnts=array([100]), \
+                    randinit=False, \
+                    proppsfn=False, \
+                    #initnumbpnts=array([100]), \
                     maxmnumbpnts=array([200]), \
                     trueinfo=True, \
                     maxmgang=20., \
                     colrprio=colrprio, \
-                    indxenerincl=arange(5), \
+                    indxenerincl=indxenerincl, \
                     indxevttincl=arange(2, 4), \
                     minmspec=minmspec, \
                     maxmspec=maxmspec, \
@@ -431,7 +439,7 @@ def cnfg_ferm_mock_ngal():
       
     cnfg = retr_cnfg(psfntype='doubking', \
 					 numbproc=1, \
-					 numbswep=300000, \
+					 numbswep=100000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \

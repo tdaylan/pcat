@@ -1626,7 +1626,10 @@ def retr_propmodl(globdata):
         #probpsfipara = array([1.] * globdata.numbpsfipara)
         #probnormback = array([1.] * globdata.numbback * globdata.numbener)
         
-        probpsfipara = array([1.])
+        if globdata.proppsfn:
+            probpsfipara = array([1.])
+        else:
+            probpsfipara = array([0.])
         probnormback = array([1.])
         
         probbrth = array([0.1 * sum(globdata.maxmnumbpnts)])

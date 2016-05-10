@@ -565,13 +565,11 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
 
     # Fermi-LAT results
-    if globdata.trueinfo:
+    # temp
+    if False and globdata.trueinfo:
         if globdata.datatype == 'mock':
-            
             pass
-            
         else:
-            
             if globdata.exprtype == 'ferm':
                 listname = ['data', 'pion', 'invc', 'brem', 'pnts', 'isot']
                 listmrkr = ['o', 's', 'p', '*', 'D', '^']

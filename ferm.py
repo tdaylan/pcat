@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
 # numpy
 import numpy as np
 from numpy import *
@@ -18,7 +13,6 @@ from scipy.interpolate import *
 from scipy.special import erfinv, erf
 from scipy.stats import poisson as pss
 from scipy import ndimage
-
 
 # multiprocessing
 import multiprocessing as mp
@@ -37,11 +31,7 @@ import os, time, sys, datetime, warnings, getpass, glob, inspect
 # tdpy
 import tdpy
 
-
 import sympy
-
-
-# In[2]:
 
 def retr_axes():
 
@@ -67,8 +57,6 @@ def retr_axes():
     
     return reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
 
-
-# In[3]:
 
 def make_maps():
     
@@ -116,9 +104,6 @@ def make_maps():
         pool.close()
         pool.join()
 
-
-
-# In[4]:
 
 def make_maps_sing(indxproc):
 
@@ -485,8 +470,6 @@ def plot_maps():
     plot_heal(maps[3, :] - maps[2, :])
     plot_heal(maps[2, :] - maps[1, :])
 
-
-# In[13]:
 
 #writ_isot()
 #make_maps()

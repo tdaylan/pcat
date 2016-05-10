@@ -156,6 +156,7 @@ def wrap(cnfg):
     
     globdata.fdfntype = cnfg['fdfntype']
 
+    globdata.proppsfn = cnfg['proppsfn']
     globdata.colrprio = cnfg['colrprio']
     globdata.numbpopl = cnfg['numbpopl']
     globdata.indxenerincl = cnfg['indxenerincl']
