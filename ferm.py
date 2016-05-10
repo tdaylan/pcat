@@ -188,7 +188,7 @@ def make_maps():
    
     cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt; touch $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
-    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass8.txt'
+    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
 
     weekinit = 9
