@@ -188,11 +188,11 @@ def make_maps():
    
     cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
-    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
+    cmnd = 'ls -d -1 $FERMI_DATA' + 'weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
 
     weekinit = 9
-    weekfinl = 217
+    weekfinl = 218
     listtimefrac = array([1., 0.75, 0.5, 0.25])
     for t, timefrac in enumerate(listtimefrac):
         numbweek = (weekfinl - weekinit) * timefrac
