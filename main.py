@@ -259,7 +259,7 @@ def wrap(cnfg):
         #plot_3fgl_thrs(globdata)
         #plot_datacntshist()
         plot_fgl3(globdata)
-        plot_intr()
+        #plot_intr()
         plot_king(globdata)
         plot_look(globdata)
         #if globdata.datatype == 'mock':

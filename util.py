@@ -2300,10 +2300,12 @@ def init(globdata):
     # make a look-up table of nearby pixels for each pixel
     path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d.p' % globdata.maxmgang
     if os.path.isfile(path):
+        print 'Retrieving previously computed pixel look-up table...'
         fobj = open(path, 'rb')
         globdata.indxpixlprox = cPickle.load(fobj)
         fobj.close()
     else:
+        print 'Computing the look-up table...'
         globdata.indxpixlprox = [[] for h in range(globdata.numbspecprox)]
         for j in globdata.indxpixl:
             dist = retr_dist(globdata, globdata.lgalgrid[j], globdata.bgalgrid[j], globdata.lgalgrid, globdata.bgalgrid)
