@@ -1029,71 +1029,64 @@ def plot_king(globdata):
     
 def plot_psfn(globdata):
     
-    if globdata.exprtype == 'sdss':
-        globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
-    if globdata.exprtype == 'ferm':
-        globdata.angldisptemp = rad2deg(globdata.angldisp)
-
-    with sns.color_palette("Blues", globdata.numbevtt):
-
-        figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener,                                   figsize=(7 * globdata.numbener, 7 * globdata.numbevtt))
-        figr.suptitle(r'Point Spread Function, d$P$/d$\Omega$ [1/sr]', fontsize=20)
-        if globdata.numbevtt == 1:
-            axgr = [axgr]
-        for m, axrw in enumerate(axgr):
-            if globdata.numbener == 1:
-                axrw = [axrw]
-            for i, axis in enumerate(axrw):
-                axis.plot(globdata.angldisptemp, globdata.thispsfn[i, :, m], label='Sample')
-                if globdata.trueinfo:
-                    axis.plot(globdata.angldisptemp, globdata.truepsfn[i, :, m], label='Mock', color='g', ls='--')
-                axis.set_yscale('log')
-                if m == globdata.numbevtt - 1:
-                    axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
-                if i == 0 and globdata.exprtype == 'ferm':
-                    axis.set_ylabel(globdata.evttstrg[m])
-                if m == 0:
-                    axis.set_title(globdata.enerstrg[i])  
-                if i == globdata.numbener - 1 and m == globdata.numbevtt - 1:
-                    axis.legend(loc=2)
-                indxsamp = globdata.indxsamppsfipara[i*globdata.numbformpara+m*globdata.numbener*globdata.numbformpara]
-                if globdata.psfntype == 'singgaus':
-                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit
-                elif globdata.psfntype == 'singking':
-                    strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit + '\n'
-                    strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+1]
-                elif globdata.psfntype == 'doubgaus':
-                    strg = r'$f = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    if globdata.exprtype == 'sdss':
-                        paratemp = rad2deg(globdata.thissampvarb[indxsamp+1]) * 3600.
-                    if globdata.exprtype == 'ferm':
-                        paratemp = rad2deg(globdata.thissampvarb[indxsamp+1])
-                    strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit + '\n'
-                    if globdata.exprtype == 'sdss':
-                        paratemp = rad2deg(globdata.thissampvarb[indxsamp+2]) * 3600.
-                    if globdata.exprtype == 'ferm':
-                        paratemp = rad2deg(globdata.thissampvarb[indxsamp+2])
-                    strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit
-                elif globdata.psfntype == 'gausking':
-                    strg = r'$f_G = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    strg += r'$\sigma_G = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
-                    strg += r'$\sigma_K = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + globdata.strganglunit + '\n'
-                    strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+3]
-                elif globdata.psfntype == 'doubking':
-                    strg = r'$f_c = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                    strg += r'$\sigma_c = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
-                    strg += r'$\gamma_c = %.3g$' % globdata.thissampvarb[indxsamp+2] + '\n'
-                    strg += r'$\sigma_t = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+3]) + globdata.strganglunit + '\n'
-                    strg += r'$\gamma_t = %.3g$' % globdata.thissampvarb[indxsamp+4]
-                axis.text(0.75, 0.75, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
-                
-                if globdata.exprtype == 'ferm':
-                    axis.set_ylim([1e0, 1e6])
+    figr, axgr = plt.subplots(globdata.numbevtt, globdata.numbener, figsize=(7 * globdata.numbener, 7 * globdata.numbevtt))
+    figr.suptitle(r'Point Spread Function, d$P$/d$\Omega$ [1/sr]', fontsize=20)
+    if globdata.numbevtt == 1:
+        axgr = [axgr]
+    for m, axrw in enumerate(axgr):
+        if globdata.numbener == 1:
+            axrw = [axrw]
+        for i, axis in enumerate(axrw):
+            axis.plot(globdata.angldisptemp, globdata.thispsfn[i, :, m], label='Sample')
+            if globdata.trueinfo:
+                axis.plot(globdata.angldisptemp, globdata.truepsfn[i, :, m], label='Mock', color='g', ls='--')
+            axis.set_yscale('log')
+            if m == globdata.numbevtt - 1:
+                axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
+            if i == 0 and globdata.exprtype == 'ferm':
+                axis.set_ylabel(globdata.evttstrg[m])
+            if m == 0:
+                axis.set_title(globdata.enerstrg[i])  
+            if i == globdata.numbener - 1 and m == globdata.numbevtt - 1:
+                axis.legend(loc=2)
+            indxsamp = globdata.indxsamppsfipara[i*globdata.numbformpara+m*globdata.numbener*globdata.numbformpara]
+            if globdata.psfntype == 'singgaus':
+                strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit
+            elif globdata.psfntype == 'singking':
+                strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit + '\n'
+                strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+1]
+            elif globdata.psfntype == 'doubgaus':
+                strg = r'$f = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
                 if globdata.exprtype == 'sdss':
-                    axis.set_ylim([1e7, 1e11])
+                    paratemp = rad2deg(globdata.thissampvarb[indxsamp+1]) * 3600.
+                if globdata.exprtype == 'ferm':
+                    paratemp = rad2deg(globdata.thissampvarb[indxsamp+1])
+                strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit + '\n'
+                if globdata.exprtype == 'sdss':
+                    paratemp = rad2deg(globdata.thissampvarb[indxsamp+2]) * 3600.
+                if globdata.exprtype == 'ferm':
+                    paratemp = rad2deg(globdata.thissampvarb[indxsamp+2])
+                strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit
+            elif globdata.psfntype == 'gausking':
+                strg = r'$f_G = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
+                strg += r'$\sigma_G = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
+                strg += r'$\sigma_K = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + globdata.strganglunit + '\n'
+                strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+3]
+            elif globdata.psfntype == 'doubking':
+                strg = r'$f_c = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
+                strg += r'$\sigma_c = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
+                strg += r'$\gamma_c = %.3g$' % globdata.thissampvarb[indxsamp+2] + '\n'
+                strg += r'$\sigma_t = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+3]) + globdata.strganglunit + '\n'
+                strg += r'$\gamma_t = %.3g$' % globdata.thissampvarb[indxsamp+4]
+            axis.text(0.75, 0.75, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
+            
+            if globdata.exprtype == 'ferm':
+                axis.set_ylim([1e0, 1e6])
+            if globdata.exprtype == 'sdss':
+                axis.set_ylim([1e7, 1e11])
 
-        plt.savefig(globdata.plotpath + 'psfnprof_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
-        plt.close(figr)
+    plt.savefig(globdata.plotpath + 'psfnprof_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
+    plt.close(figr)
     
     
 def plot_fwhm(globdata, thisfwhm):
@@ -1229,7 +1222,23 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
     plt.title(titl)
     plt.show()
     
-    
+
+def plot_eval(globdata):
+
+    figr, axis = plt.subplots()
+    axis.plot(globdata.angldisptemp, globdata.minmspec[0] * globdata.fermpsfn[0, :, 0], label='Dimmest PS')
+    axis.plot(globdata.angldisptemp, globdata.maxmspec[0] * globdata.fermpsfn[0, :, 0], label='Brightest PS')
+    axis.set_yscale('log')
+    axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
+    axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
+    axis.set_title('PSF Evaluation Region')  
+    axis.legend()
+    #axis.set_ylim([1e0, 1e6])
+    axis.axhline(globdata.specfraceval * amax(globdata.maxmspec[0] * globdata.fermpsfn[0, :, 0]), label='Likelihood Evaluation radius')
+    plt.savefig(globdata.plotpath + 'eval_' + globdata.rtag + '.png')
+    plt.close(figr)
+
+
 def plot_3fgl_thrs(globdata):
 
     path = os.environ["PCAT_DATA_PATH"] + '/detthresh_P7v15source_4years_PL22.fits'

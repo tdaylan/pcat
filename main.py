@@ -263,6 +263,7 @@ def wrap(cnfg):
         #plot_intr()
         plot_king(globdata)
         plot_look(globdata)
+        plot_eval(globdata)
         #if globdata.datatype == 'mock':
         #    plot_pntsdiff()
 

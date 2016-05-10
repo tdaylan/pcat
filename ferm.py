@@ -58,7 +58,7 @@ def retr_axes():
     return reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
 
 
-def make_maps():
+def make_maps_depr():
     
     cmnd = 'mkdir -p $FERMI_DATA/exposure/ferm_line'
     os.system(cmnd)
@@ -105,7 +105,7 @@ def make_maps():
         pool.join()
 
 
-def make_maps_sing(indxproc):
+def make_maps_sing_depr(indxproc):
 
     for t in listweek[indxproc]:
         
@@ -142,7 +142,9 @@ def make_maps_sing(indxproc):
             cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' +                 ' outfile=' + filt + ' roicut=no'
             os.system(cmnd)
 
-            cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts +                 ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' +                 ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
+            cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts + \
+                ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
+                ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
             os.system(cmnd)
             
             cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live +                 ' dcostheta=0.025 binsz=1'
@@ -151,10 +153,6 @@ def make_maps_sing(indxproc):
             cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo +                 ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
             os.system(cmnd)
 
-
-
-
-# In[5]:
 
 def writ_isot():
     
@@ -186,11 +184,27 @@ def writ_isot():
     pf.writeto(path4, nfwpfluxheal, clobber=True)
 
 
+def make_maps():
+   
+    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt; touch $PCAT_DATA_PATH/phot_pass8.txt'
+    os.system(cmnd)
+    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass8.txt'
+    os.system(cmnd)
 
+    weekinit = 9
+    weekfinl = 217
+    listtimefrac = array([1., 0.75, 0.5, 0.25])
+    for t, timefrac in enumerate(listtimefrac):
+        numbweek = (weekfinl - weekinit) * timefrac
+        listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
+        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt; touch $PCAT_DATA_PATH/phot_pass7_time%d.txt'
+        os.system(cmnd)
+        for week in listweek:
+            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d' % (week, t)
+            os.system(cmnd)
+                
 
-# In[6]:
-
-def prep_maps_neww():
+def prep_maps():
     
     global reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
     reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
@@ -242,109 +256,6 @@ def prep_maps_neww():
 
             path = os.environ["PCAT_DATA_PATH"] + '/fermflux_%s_%s.fits' % (datatype, regitype)
             pf.writeto(path, flux, clobber=True)
-
-
-def prep_maps():
-    
-    global reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
-    reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
-
-    liststrgener = ['ENERGY1', 'ENERGY2', 'ENERGY3', 'ENERGY4', 'ENERGY5']
-    liststrgchan = ['CHANNEL1', 'CHANNEL2', 'CHANNEL3', 'CHANNEL4', 'CHANNEL5']
-
-    listdatatype = ['comp', 'full']
-    for datatype in listdatatype:
-
-        if datatype == 'full':
-            reco = 8
-            evtc = 128
-            weekinit = 11
-            weekfinl = 409
-            listtimefrac = array([1.])
-        if datatype == 'comp':
-            reco = 7
-            evtc = 2
-            weekinit = 9
-            weekfinl = 217
-            numbtime = 4
-            listtimefrac = array([1., 0.75, 0.5, 0.25])
-
-        numbtime = listtimefrac.size
-                
-        cntstemp = zeros((numbener, numbpixl, numbevtt))
-        expotemp = zeros((numbener, numbpixl, numbevtt))
-        
-        cnts = zeros((numbener, numbpixl, numbevtt, numbtime))
-        expo = zeros((numbener, numbpixl, numbevtt, numbtime))
-
-        for t, timefrac in enumerate(listtimefrac):
-            
-            numbweek = (weekfinl - weekinit) * timefrac
-            listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
-            
-            print 'numbweek'
-            print numbweek
-            print 'listweek'
-            print listweek
-            for w in listweek:
-
-                print inspect.stack()[0][3] + ' is working on week %d...' % w 
-
-                for m in indxevtt:
-                    
-                    if datatype == 'comp':
-                        if m == 2:
-                            thisevtt = 2
-                        elif m == 3:
-                            thisevtt = 1
-                        else:
-                            continue
-                    if datatype == 'full':
-                        thisevtt = evtt[m]
-
-                    path = os.environ["FERMI_DATA"] + '/exposure/gcps_time/' + datatype +                         '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, w)
-
-                    expoarry = pf.getdata(path, 1)
-                    for i in indxener:
-                        expotemp[i, :, m] = expoarry[liststrgener[i]]
-
-                    path = os.environ["FERMI_DATA"] + '/exposure/gcps_time/' + datatype +                         '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, w)
-
-                    cntsarry = pf.getdata(path)
-                    for i in indxener:
-                        cntstemp[i, :, m] = cntsarry[liststrgchan[i]]
-
-                expo[:, :, :, t] += expotemp
-                cnts[:, :, :, t] += cntstemp
-                
-        flux = zeros((numbener, numbpixl, numbevtt, numbtime)) 
-        indxexpo = where(expo > 0.) 
-        flux[indxexpo] = cnts[indxexpo] / expo[indxexpo] / apix
-        flux /= diffener[:, None, None, None]
-
-
-        listregitype = ['igal', 'ngal']
-        for regitype in listregitype:
-
-            if regitype == 'ngal':
-
-                for i in indxener:
-                    for m in indxevtt:
-                        for t in range(numbtime):
-                            almc = hp.map2alm(flux[i, :, m, t])
-                            hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
-                            flux[i, :, m, t] = hp.alm2map(almc, nside)
-
-                            almc = hp.map2alm(expo[i, :, m, t])
-                            hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
-                            expo[i, :, m, t] = hp.alm2map(almc, nside)
-
-            for t in range(numbtime):
-
-                path = os.environ["PCAT_DATA_PATH"] + '/fermflux_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
-                pf.writeto(path, flux[:, :, :, t], clobber=True)
-                path = os.environ["PCAT_DATA_PATH"] + '/fermexpo_' + regitype + '_' + datatype +                     '_time%d' % t + '.fits'
-                pf.writeto(path, expo[:, :, :, t], clobber=True)
 
 
 def writ_fdfm_doug():
@@ -444,62 +355,36 @@ def plot_maps():
     plot_heal(maps[2, :] - maps[1, :])
 
 
+def plot_dust():
+    
+    redd = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits')['TEMPERATURE']
+    
+    numbside = 512
+    numbpixl = numbside**2 * 12
+    
+    indxpixl = hp.ring2nest(numbside, arange(numbpixl))
+    
+    redd = redd[indxpixl]
+    
+    almc = hp.map2alm(redd)
+    hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
+    redd = hp.alm2map(almc, numbside)
+    
+    hist = plt.hist(redd, log=True)
+    plt.show()
+    
+    redd[where(redd > 1.)] = 1.
+    figr, axis = plt.subplots(figsize=(7, 7))
+    cart = tdpy.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
+    imag = axis.imshow(cart, origin='lower', cmap='Reds')
+    plt.colorbar(imag, ax=axis)
+    plt.show()
+
+
 #writ_isot()
-#make_maps()
 #prep_maps()
-#prep_maps_neww()
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-
-
-# In[14]:
-
-minmgang = 20.
-
-data = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_ngal.fits')
-get_ipython().magic(u'matplotlib inline')
-print data.shape
-for i in range(5):
-    cart = tdpy.retr_cart(data[i, :, 0], minmlgal=-minmgang, maxmlgal=minmgang,                                minmbgal=-minmgang, maxmbgal=minmgang)
-    figr, axis = plt.subplots(figsize=(7, 7))
-    axis.set_xlabel(r'$l$ [$^\circ$]')
-    axis.set_ylabel(r'$b$ [$^\circ$]')
-    imag = axis.imshow(cart, origin='lower', cmap='Reds', extent=[-minmgang, minmgang, -minmgang, minmgang])
-    plt.show()
-    
-    
-redd = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits')['TEMPERATURE']
-
-numbside = 512
-numbpixl = numbside**2 * 12
-
-indxpixl = hp.ring2nest(numbside, arange(numbpixl))
-
-redd = redd[indxpixl]
-
-almc = hp.map2alm(redd)
-hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
-redd = hp.alm2map(almc, numbside)
-
-get_ipython().magic(u'matplotlib inline')
-hist = plt.hist(redd, log=True)
-plt.show()
-
-redd[where(redd > 1.)] = 1.
-figr, axis = plt.subplots(figsize=(7, 7))
-cart = tdpy.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
-imag = axis.imshow(cart, origin='lower', cmap='Reds')
-plt.colorbar(imag, ax=axis)
-plt.show()
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
+make_maps()
 

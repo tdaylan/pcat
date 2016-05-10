@@ -1809,6 +1809,11 @@ def init(globdata):
     maxmangl = deg2rad(3.5 * globdata.maxmgang) # [rad]
     angl = linspace(0., maxmangl, globdata.numbangl) # [rad]
 
+    if globdata.exprtype == 'sdss':
+        globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
+    if globdata.exprtype == 'ferm':
+        globdata.angldisptemp = rad2deg(globdata.angldisp)
+
     if globdata.trueinfo:
         if globdata.datatype == 'mock':
             globdata.truelabl = 'Mock'
@@ -2043,8 +2048,8 @@ def init(globdata):
     if globdata.exprtype == 'ferm':
         globdata.maxmangleval = empty(globdata.numbspecprox)
         for h in globdata.indxspecprox:
-            frac = 1e-2 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
-            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, frac)))
+            globdata.specfraceval = 1e-2 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
+            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, globdata.specfraceval)))
     if globdata.exprtype == 'sdss':
         globdata.maxmangleval = 10. / 3600.
 
