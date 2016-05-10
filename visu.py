@@ -529,7 +529,7 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     listcolr = ['black', 'b', 'b', 'b']
     listlabl = ['Data', 'PS', 'Iso', 'FDM']
 
-    figr, axis = plt.subplots(figsize=(7 * globdata.numbener, 7))
+    figr, axis = plt.subplots()
     
     listydat = empty((globdata.numbback + 2, globdata.numbener))
     listyerr = zeros((2, globdata.numbback + 2, globdata.numbener))
@@ -632,7 +632,7 @@ def plot_histsind(globdata, l, postsindhist=None):
     if globdata.trueinfo:
         axis.hist(globdata.truesind[l], globdata.binssind, alpha=0.5, color='g', log=True, label=globdata.truelabl)
         if globdata.datatype == 'mock':
-            axis.hist(globdata.fgl3sind, globdata.binssind, alpha=0.1, color='red', log=True, label='3FGL')
+            axis.hist(globdata.fgl3sind[globdata.indxfgl3rofi], globdata.binssind, alpha=0.1, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
     axis.set_xlabel('$s$')
     axis.set_xlim([globdata.minmsind, globdata.maxmsind])
@@ -665,6 +665,11 @@ def plot_histspec(globdata, l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
+            print 'hey'
+            print 'binsspec'
+            print globdata.binsspec[i, :]
+            print globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :]
+            print
             axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b',                     log=True, label='Sample')
             
             if not globdata.colrprio or i == globdata.indxenerfdfn:
@@ -673,9 +678,9 @@ def plot_histspec(globdata, l, listspechist=None):
                 axis.plot(globdata.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
             
         if globdata.trueinfo:
-            truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :],                                alpha=0.5, color='g', log=True, label=globdata.truelabl)
+            truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
             if globdata.datatype == 'mock':
-                axis.hist(globdata.fgl3spec[0, i, :], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
+                axis.hist(globdata.fgl3spec[0, i, globdata.indxfgl3rofi], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
 
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + globdata.strgfluxunit)
@@ -840,14 +845,12 @@ def plot_look(globdata):
         for j in globdata.indxpixl:
             indxpixlproxsize[j] = globdata.indxpixlprox[h][j].size
         binspixlsize = logspace(log10(amin(indxpixlproxsize)), log10(amax(indxpixlproxsize)), 100)
-        hist, bins = histogram(indxpixlproxsize, binspixlsize)
-        mean = sqrt(bins[:-1] * bins[1:])
-        axis.loglog(mean, hist, label='Flux bin %d' % h)
+        axis.hist(indxpixlproxsize, binspixlsize, log=True, label='Flux bin %d' % h)
     axis.set_title("Number of pixels in the pixel lookup tables")
     axis.set_xlabel('Number of pixels')
     axis.set_ylabel("Number of tables")
-    axis.legend()
-    
+    axis.legend(loc=2)
+    plt.subplots_adjust(bottom=0.2)
     plt.savefig(globdata.plotpath + 'look.png')
     plt.close()
     
@@ -1013,9 +1016,8 @@ def plot_king(globdata):
         axis.set_yscale('log')
         axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
         axis.set_xlabel(r'$\mathcal{K}(\theta)$')
-        plt.figtext(0.7, 0.7, '$\mathcal{K}(\theta) = \frac{1}{2\pi\sigma^2}(1-\frac{1}{\gamma}(\frac{x^2}{2\sigma^2\gamma})^{-\gamma})$')
         
-    figr.subplots_adjust()
+    figr.subplots_adjust(bottom=0.2)
     plt.savefig(globdata.plotpath + 'king.png')
     plt.close(figr)
     
@@ -1257,7 +1259,7 @@ def plot_3fgl_thrs(globdata):
 def plot_fgl3(globdata):
     
     figr, axis = plt.subplots()
-    bins = logspace(log10(amin(globdata.fgl3timevari[where(globdata.fgl3timevari > 0.)[0]])),                     log10(amax(globdata.fgl3timevari)), 100)
+    bins = logspace(log10(amin(globdata.fgl3timevari[where(globdata.fgl3timevari > 0.)[0]])), log10(amax(globdata.fgl3timevari)), 100)
     axis.hist(globdata.fgl3timevari, bins=bins, label='All', log=True)
     axis.hist(globdata.fgl3timevari[globdata.indxfgl3rofi], bins=bins, label='ROI', log=True)
     axis.axvline(72.44, ls='--', alpha=0.5, color='black')
@@ -1271,9 +1273,9 @@ def plot_fgl3(globdata):
 
     figr, axis = plt.subplots()
     indxfgl3scut = where(isfinite(globdata.fgl3scut))[0]
-    bins = linspace(amin(globdata.fgl3scut[indxfgl3scut]),                     amax(globdata.fgl3scut[indxfgl3scut]), 100)
+    bins = linspace(amin(globdata.fgl3scut[indxfgl3scut]), amax(globdata.fgl3scut[indxfgl3scut]), 100)
     axis.hist(globdata.fgl3scut[indxfgl3scut], bins=bins, label='All', log=True)
-    axis.hist(globdata.fgl3scut[intersect1d(indxfgl3scut, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
+    axis.hist(globdata.fgl3scut[intersect1d(indxfgl3scut, globdata.indxfgl3rofi)], bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral cutoff')
     axis.legend()
     axis.set_ylim([0.1, None])
@@ -1282,9 +1284,9 @@ def plot_fgl3(globdata):
     
     figr, axis = plt.subplots()
     indxfgl3scur = where(isfinite(globdata.fgl3scur))[0]
-    bins = linspace(amin(globdata.fgl3scur[indxfgl3scur]),                     amax(globdata.fgl3scur[indxfgl3scur]), 100)
+    bins = linspace(amin(globdata.fgl3scur[indxfgl3scur]), amax(globdata.fgl3scur[indxfgl3scur]), 100)
     axis.hist(globdata.fgl3scur[indxfgl3scur], bins=bins, label='All', log=True)
-    axis.hist(globdata.fgl3scur[intersect1d(indxfgl3scur, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
+    axis.hist(globdata.fgl3scur[intersect1d(indxfgl3scur, globdata.indxfgl3rofi)], bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral curvature')
     axis.legend()
     axis.set_ylim([0.1, None])
@@ -1293,9 +1295,9 @@ def plot_fgl3(globdata):
     
     figr, axis = plt.subplots()
     indxfgl3sind = where(isfinite(globdata.fgl3sind))[0]
-    bins = linspace(amin(globdata.fgl3sind[indxfgl3sind]),                     amax(globdata.fgl3sind[indxfgl3sind]), 100)
+    bins = linspace(amin(globdata.fgl3sind[indxfgl3sind]), amax(globdata.fgl3sind[indxfgl3sind]), 100)
     axis.hist(globdata.fgl3sind[indxfgl3sind], bins=bins, label='All', log=True)
-    axis.hist(globdata.fgl3sind[intersect1d(indxfgl3sind, globdata.indxfgl3rofi)],               bins=bins, label='ROI', log=True)
+    axis.hist(globdata.fgl3sind[intersect1d(indxfgl3sind, globdata.indxfgl3rofi)], bins=bins, label='ROI', log=True)
     axis.set_xlabel('3FGL spectral index')
     axis.legend()
     axis.set_ylim([0.1, None])
@@ -1306,7 +1308,7 @@ def plot_fgl3(globdata):
 
 def make_anim():
 
-    listname = ['errrcnts0A', 'datacnts0A', 'resicnts0A', 'modlcnts0A', 'histspec',         'scatspec', 'psfnprof', 'compfrac0', 'compfracspec', 'scatpixl']
+    listname = ['errrcnts0A', 'datacnts0A', 'resicnts0A', 'modlcnts0A', 'histspec', 'scatspec', 'psfnprof', 'compfrac0', 'compfracspec', 'scatpixl']
     
     #print os.listdir(globdata.plotpath)
     for name in listname:
@@ -1339,7 +1341,7 @@ def plot_histcnts(globdata, l, thiscnts):
             if globdata.trueinfo:
                 truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
                 if globdata.datatype == 'mock':
-                    axis.hist(globdata.fgl3cnts[i, :, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
+                    axis.hist(globdata.fgl3cnts[i, globdata.indxfgl3rofi], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
             axis.hist(thiscnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')

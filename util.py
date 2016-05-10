@@ -7,15 +7,15 @@ class globdatastrt(object):
         pass
 
 
-def retr_fwhm(globdata, psfn):
+def retr_psfnwdth(globdata, psfn, frac):
     
     fwhm = zeros((globdata.numbener, globdata.numbevtt))
     for i in globdata.indxener:
         for m in globdata.indxevtt:
             indxangldispgood = argsort(psfn[i, :, m])
-            intpfwhm = max(amax(psfn[i, :, m]) / 2., amin(psfn[i, :, m]))
+            intpfwhm = max(frac * amax(psfn[i, :, m]), amin(psfn[i, :, m]))
             if intpfwhm > amin(psfn[i, indxangldispgood, m]) and intpfwhm < amax(psfn[i, indxangldispgood, m]):
-                fwhm[i, m] = 2. * interp1d(psfn[i, indxangldispgood, m], globdata.angldisp[indxangldispgood])(intpfwhm) # [rad]
+                fwhm[i, m] = interp1d(psfn[i, indxangldispgood, m], globdata.angldisp[indxangldispgood])(intpfwhm)
     return fwhm
 
 
@@ -276,12 +276,6 @@ def retr_llik(globdata, init=False):
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
             indxpixlmodi = unique(concatenate(thisindxpixlprox))
 
-            #print 'thisindxpixlprox[0].size: '
-            #print thisindxpixlprox[0].size
-            #print 'indxpixlmodi.size'
-            #print indxpixlmodi.size
-            #print
-            
         # construct the mesh grid for likelihood evaluation
         if globdata.thisindxprop >= globdata.indxproppsfipara:
             globdata.indxcubemodi = meshgrid(globdata.indxenermodi, indxpixlmodi, globdata.indxevtt, indexing='ij')
@@ -297,7 +291,7 @@ def retr_llik(globdata, init=False):
             for k in range(numbpnts):
                 
                 # calculate the distance to the pixels to be updated
-                dist = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid[thisindxpixlprox[k]],            globdata.bgalgrid[thisindxpixlprox[k]])
+                dist = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid[thisindxpixlprox[k]], globdata.bgalgrid[thisindxpixlprox[k]])
 
                 # evaluate the PSF over the set of data cubes to be updated
                 temppsfipara = copy(globdata.thissampvarb[globdata.indxsamppsfipara])
@@ -324,16 +318,16 @@ def retr_llik(globdata, init=False):
             normback = globdata.thissampvarb[globdata.indxsampnormback[meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')]]
             globdata.nextmodlflux[globdata.indxcubemodi] = retr_rofi_flux(globdata, normback, globdata.nextpntsflux, globdata.indxcubemodi)
 
-        globdata.nextmodlcnts[globdata.indxcubemodi] = globdata.nextmodlflux[globdata.indxcubemodi] * globdata.expo[globdata.indxcubemodi] *             globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
-        globdata.nextllik[globdata.indxcubemodi] = globdata.datacnts[globdata.indxcubemodi] * log(globdata.nextmodlcnts[globdata.indxcubemodi]) - globdata.nextmodlcnts[globdata.indxcubemodi]
+        globdata.nextmodlcnts[globdata.indxcubemodi] = globdata.nextmodlflux[globdata.indxcubemodi] * globdata.expo[globdata.indxcubemodi] * \
+            globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
+        globdata.nextllik[globdata.indxcubemodi] = globdata.datacnts[globdata.indxcubemodi] * log(globdata.nextmodlcnts[globdata.indxcubemodi]) - \
+            globdata.nextmodlcnts[globdata.indxcubemodi]
             
         if not isfinite(globdata.nextllik[globdata.indxcubemodi]).any():
             warnings.warn('Log-likelihood went NAN!')
             
         globdata.deltllik = sum(globdata.nextllik[globdata.indxcubemodi] - globdata.thisllik[globdata.indxcubemodi])
-        
     else:
-        
         globdata.deltllik = 0.
         
     
@@ -1727,13 +1721,7 @@ def init(globdata):
         
     # number of bins
     globdata.numbspec = 10
-    
     globdata.numbbins = 10
-
-    if not globdata.colrprio:
-        globdata.minmspec = globdata.minmspec[globdata.indxenerincl]
-        globdata.maxmspec = globdata.maxmspec[globdata.indxenerincl]
-        
 
     globdata.minmnumbpnts = 1
 
@@ -1807,7 +1795,6 @@ def init(globdata):
     for m in globdata.indxevtt:
         globdata.evttstrg.append('PSF%d' % globdata.indxevttincl[m])
         
-    globdata.mrkralph = 0.8
 
     globdata.spltjcbnfact = log(2.**(2 - globdata.numbener))
     
@@ -1818,8 +1805,11 @@ def init(globdata):
     globdata.numbcompcolr = 4
     globdata.jcbnsplt = 2.**(2 - globdata.numbener)
     
-    # limits on the number of point sources
+    # convenience factors for CDF and ICDF transforms
     globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
+    globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
+    if globdata.colrprio:
+        globdata.factsind = arctan(globdata.maxmsind) - arctan(globdata.minmsind)
     
 
     if globdata.datatype == 'mock':
@@ -1900,10 +1890,6 @@ def init(globdata):
         cmnd = 'mkdir -p ' + globdata.plotpath
         os.system(cmnd)
 
-    globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
-    if globdata.colrprio:
-        globdata.factsind = arctan(globdata.maxmsind) - arctan(globdata.minmsind)
-
     # number of samples to be saved
     globdata.numbsamp = (globdata.numbswep - globdata.numbburn) / globdata.factthin
 
@@ -1978,14 +1964,13 @@ def init(globdata):
     else:
         globdata.cntrlghp, globdata.cntrbghp = 0., 90.
     
-    
     # plot settings
-    
+    ## marker opacity
+    globdata.mrkralph = 0.8
     ## marker size
     globdata.minmmrkrsize = 50
     globdata.maxmmrkrsize = 500
-    
-    ## roi
+    ## ROI
     globdata.exttrofi = [globdata.minmlgal, globdata.maxmlgal, globdata.minmbgal, globdata.maxmbgal]
     if globdata.exprtype == 'sdss':
         globdata.exttrofi *= 3600.
@@ -1994,10 +1979,9 @@ def init(globdata):
     else:
         globdata.frambndr = globdata.maxmgang
         globdata.frambndrmarg = globdata.maxmgangmarg
-      
-    
-    
-    ## FDM normalization prior limits
+     
+
+    # FDM normalization prior limits
     globdata.factnormback = log(globdata.maxmnormback / globdata.minmnormback)
 
     # sky coordinates
@@ -2016,20 +2000,26 @@ def init(globdata):
         globdata.meansind = icdf_atan(globdata.meansindunit, globdata.minmsind, globdata.factsind)
         globdata.diffsind = globdata.binssind[1:] - globdata.binssind[:-1]
 
-    # temp
-    globdata.numbspecprox = 1
-    globdata.meanspecprox = globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
-    
-
+    globdata.numbspecprox = 10
+    globdata.indxspecprox = arange(globdata.numbspecprox)
+    globdata.meanspecprox = globdata.meanspec # globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
         
-    # region of interest
+    if globdata.exprtype == 'ferm':
+        globdata.maxmangleval = empty(globdata.numbspecprox)
+        for h in globdata.indxspecprox:
+            frac = 0.1 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
+            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, frac)))
+    if globdata.exprtype == 'sdss':
+        globdata.maxmangleval = 10. / 3600.
+
+    # pizelization
     if globdata.pixltype == 'heal':
         
         lgalheal, bgalheal, globdata.numbsideheal, globdata.numbpixlheal, globdata.apix = tdpy.util.retr_healgrid(globdata.numbsideheal)
 
         globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
-        globdata.indxpixlrofimarg = where((abs(lgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal) &                               (abs(bgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal))[0]
-
+        globdata.indxpixlrofimarg = where((abs(lgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal) & \
+                (abs(bgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal))[0]
         
         globdata.lgalgrid = lgalheal[globdata.indxpixlrofi]
         globdata.bgalgrid = bgalheal[globdata.indxpixlrofi]
@@ -2042,7 +2032,7 @@ def init(globdata):
         else:
             globdata.pixlcnvt = zeros(globdata.numbpixlheal, dtype=int)
             for k in range(globdata.indxpixlrofimarg.size):
-                dist = retr_dist(globdata, lgalheal[globdata.indxpixlrofimarg[k]],                                  bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
+                dist = retr_dist(globdata, lgalheal[globdata.indxpixlrofimarg[k]], bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
                 globdata.pixlcnvt[globdata.indxpixlrofimarg[k]] = argmin(dist)
 
             fobj = open(path, 'wb')
@@ -2198,8 +2188,6 @@ def init(globdata):
         mocktotlflux = retr_rofi_flux(globdata, globdata.mocknormback, mockpntsflux, globdata.indxcubefull)
         mocktotlcnts = mocktotlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
 
-            
-            
         globdata.datacnts = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
         for i in globdata.indxener:
             for k in range(globdata.numbpixl):
@@ -2281,7 +2269,7 @@ def init(globdata):
             if globdata.exprtype == 'sdss':
                 globdata.truepsfn = sdsspsfn
                 
-        truefwhm = retr_fwhm(globdata, globdata.truepsfn)
+        truefwhm = 2. * retr_psfnwdth(globdata, globdata.truepsfn, 0.5)
         
         truebackcnts = []
         globdata.truesigm = []
@@ -2329,8 +2317,7 @@ def init(globdata):
         for j in globdata.indxpixl:
             dist = retr_dist(globdata, globdata.lgalgrid[j], globdata.bgalgrid[j], globdata.lgalgrid, globdata.bgalgrid)
             for h in range(globdata.numbspecprox):
-                # temp
-                globdata.indxpixlproxtemp = where(dist < deg2rad(globdata.maxmangleval))[0]
+                globdata.indxpixlproxtemp = where(dist < deg2rad(globdata.maxmangleval[h]))[0]
                 globdata.indxpixlprox[h].append(globdata.indxpixlproxtemp)
         fobj = open(path, 'wb')
         cPickle.dump(globdata.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)

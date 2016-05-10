@@ -232,6 +232,8 @@ def wrap(cnfg):
         print 'indxsampnormback: '
         print globdata.indxsampnormback
         print 'indxsampcompinit: ', globdata.indxsampcompinit
+        print 'maxmangleval'
+        print globdata.maxmangleval
         if globdata.trueinfo:
             print 'truelgal: ', globdata.truelgal
             print 'truebgal: ', globdata.truebgal
@@ -687,7 +689,7 @@ def plot_samp(globdata):
     thispsfn = retr_psfn(globdata, globdata.thissampvarb[globdata.indxsamppsfipara],                          globdata.indxener, globdata.angldisp, globdata.psfntype)
     if globdata.pixltype == 'cart':
         thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
-    thisfwhm = retr_fwhm(globdata, thispsfn)
+    thisfwhm = 2. * retr_psfnwdth(globdata, thispsfn, 0.5)
 
     plot_psfn(globdata, thispsfn)
 
