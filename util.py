@@ -466,7 +466,7 @@ def retr_fermpsfn(globdata):
     
     fermscal = zeros((globdata.numbevtt, globdata.numbfermscalpara))
     fermform = zeros((globdata.numbener, globdata.numbevtt, globdata.numbfermformpara))
-    fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
+    globdata.fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
     
     for m in globdata.indxevtt:
         fermscal[m, :] = pf.getdata(name, 2 + 3 * globdata.indxevttincl[m])['PSFSCALE']
@@ -487,7 +487,7 @@ def retr_fermpsfn(globdata):
     for m in globdata.indxevtt:
         for k in range(globdata.numbfermformpara):
             indxfermpsfiparatemp = m * globdata.numbfermformpara * globdata.numbener + globdata.indxener * globdata.numbfermformpara + k
-            fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
+            globdata.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
         
     frac = fermform[:, :, 0]
     sigc = fermform[:, :, 1]
@@ -495,9 +495,7 @@ def retr_fermpsfn(globdata):
     sigt = fermform[:, :, 3]
     gamt = fermform[:, :, 4]
     
-    fermpsfn = retr_doubking(globdata.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], gamc[:, None, :],sigt[:, None, :], gamt[:, None, :])
-            
-    return fermpsfn, fermpsfipara
+    globdata.fermpsfn = retr_doubking(globdata.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], gamc[:, None, :],sigt[:, None, :], gamt[:, None, :])
 
 
 def updt_samp(globdata):
@@ -672,6 +670,7 @@ def retr_fgl3(globdata):
     globdata.fgl3scut = fgl3['Cutoff'] * 1e-3
     
     globdata.fgl3timevari = fgl3['Variability_Index']
+    globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
     
     fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
     fgl3spectemp = fgl3spectemp[globdata.indxenerincl, :] / globdata.diffener[:, None]
@@ -686,8 +685,29 @@ def retr_fgl3(globdata):
     indxpixlfgl3 = retr_indxpixl(globdata, globdata.fgl3bgal, globdata.fgl3lgal)
     globdata.fgl3cnts = globdata.fgl3spec[0, :, :, None] * globdata.expo[:, indxpixlfgl3, :] * globdata.diffener[:, None, None]
     globdata.fgl3gang = rad2deg(arccos(cos(deg2rad(globdata.fgl3lgal)) * cos(deg2rad(globdata.fgl3bgal))))
-    
-    
+        
+    # adjust 3FGL positions according to the ROI center
+    if globdata.regitype == 'ngal':
+        rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
+        globdata.fgl3bgal, globdata.fgl3lgal = rad2deg(rttr(deg2rad(90. - globdata.fgl3bgal), deg2rad(globdata.fgl3lgal)))
+        globdata.fgl3bgal = 90. - globdata.fgl3bgal
+
+    # select the 3FGL point sources in the ROI
+    globdata.indxfgl3rofi = arange(globdata.fgl3lgal.size, dtype=int)
+    for i in globdata.indxener:
+        globdata.indxfgl3rofi = intersect1d(where((globdata.fgl3spec[0, i, :] > globdata.minmspec[i]) & \
+            (globdata.fgl3spec[0, i, :] < globdata.maxmspec[i]))[0], globdata.indxfgl3rofi)
+    globdata.indxfgl3rofi = intersect1d(where((abs(globdata.fgl3lgal) < globdata.maxmgangmarg) & \
+            (abs(globdata.fgl3bgal) < globdata.maxmgangmarg))[0], globdata.indxfgl3rofi)
+    globdata.fgl3numbpntsrofi = globdata.indxfgl3rofi.size
+    globdata.indxfgl3timevarirofi = where(globdata.fgl3timevari[globdata.indxfgl3rofi] > 72.44)[0]
+
+    # sanity check
+    for i in globdata.indxener:
+        if (globdata.fgl3spec[0, i, globdata.indxfgl3rofi] > globdata.maxmspec[i]).any():
+            print 'maxmspec %d is bad!' % i
+
+
 def retr_rtag(globdata, indxprocwork):
     
     if indxprocwork == None:
@@ -1779,13 +1799,19 @@ def init(globdata):
     maxmangl = deg2rad(3.5 * globdata.maxmgang) # [rad]
     angl = linspace(0., maxmangl, globdata.numbangl) # [rad]
 
+    if globdata.trueinfo:
+        if globdata.datatype == 'mock':
+            globdata.truelabl = 'Mock'
+        if globdata.datatype == 'inpt':
+            globdata.truelabl = '3FGL'
+            
     if globdata.exprtype == 'ferm':
         globdata.strganglunit = '[deg]'
     if globdata.exprtype == 'sdss':
         globdata.strganglunit = '[arcsec]'
         
     if globdata.exprtype == 'ferm':
-        globdata.fermpsfn, fermpsfipara = retr_fermpsfn(globdata)
+        retr_fermpsfn(globdata)
 
     # energy bin string
     globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
@@ -2069,7 +2095,7 @@ def init(globdata):
         exprflux = exprflux[globdata.indxcubefilt]
  
     if globdata.datatype == 'mock' or globdata.exprtype == 'ferm':
-        globdata.mockpsfipara = fermpsfipara
+        globdata.mockpsfipara = globdata.fermpsfipara
 
     # exposure
     if globdata.strgexpo == 'unit':
@@ -2100,46 +2126,19 @@ def init(globdata):
         globdata.backflux.append(backfluxtemp)
         globdata.backfluxmean.append(mean(sum(backfluxtemp * globdata.expo, 2) / sum(globdata.expo, 2), 1))
                 
+    # count axis
+    globdata.expotemp = mean(globdata.expo, 1)
+    globdata.minmcnts = globdata.minmspec * amin(globdata.expotemp, 1) * globdata.diffener
+    globdata.maxmcnts = globdata.maxmspec * amax(globdata.expotemp, 1) * globdata.diffener
+    globdata.binscnts = zeros((globdata.numbener, globdata.numbspec + 1))
+    for i in globdata.indxener:
+        globdata.binscnts[i, :] = logspace(log10(globdata.minmcnts[i]), log10(globdata.maxmcnts[i]), globdata.numbspec + 1) # [1]
+        
     # get 3FGL catalog
     if globdata.exprtype == 'ferm':
         retr_fgl3(globdata)
-        
-        globdata.fgl3numbpnts = globdata.fgl3lgal.size
-        if globdata.regitype == 'ngal':
-            rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
-            globdata.fgl3bgal, globdata.fgl3lgal = rad2deg(rttr(deg2rad(90. - globdata.fgl3bgal), deg2rad(globdata.fgl3lgal)))
-            globdata.fgl3bgal = 90. - globdata.fgl3bgal
 
-        globdata.indxfgl3rofi = arange(globdata.fgl3lgal.size, dtype=int)
-        for i in globdata.indxener:
-            globdata.indxfgl3rofi = intersect1d(where((globdata.fgl3spec[0, i, :] > globdata.minmspec[i]) & \
-                (globdata.fgl3spec[0, i, :] < globdata.maxmspec[i]))[0], globdata.indxfgl3rofi)
-        globdata.indxfgl3rofi = intersect1d(where((abs(globdata.fgl3lgal) < globdata.maxmgangmarg) & (abs(globdata.fgl3bgal) < globdata.maxmgangmarg))[0], globdata.indxfgl3rofi)
-
-        globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
-        
-        #globdata.fgl3lgal = globdata.fgl3lgal[globdata.indxfgl3rofi]
-        #globdata.fgl3bgal = globdata.fgl3bgal[globdata.indxfgl3rofi]
-        #globdata.fgl3spec = globdata.fgl3spec[:, :, globdata.indxfgl3rofi]
-        #globdata.fgl3cnts = globdata.fgl3cnts[:, globdata.indxfgl3rofi, :]
-        #globdata.fgl3spectype = globdata.fgl3spectype[globdata.indxfgl3rofi]
-        #globdata.fgl3scur = globdata.fgl3scur[globdata.indxfgl3rofi]
-        #globdata.fgl3scut = globdata.fgl3scut[globdata.indxfgl3rofi]
-        #globdata.fgl3timevari = globdata.fgl3timevari[globdata.indxfgl3rofi]
-
-        for i in globdata.indxener:
-            if (globdata.fgl3spec[0, i, globdata.indxfgl3rofi] > globdata.maxmspec[i]).any():
-                print 'maxmspec %d is bad!' % i
-
-
-    # true data
-    if globdata.datatype == 'inpt':
-        globdata.truenumbpnts = None
-        globdata.truefdfnslop = None
-        globdata.truenormback = None
-    
     # get count data
-
     ## input data
     if globdata.datatype == 'inpt':
         globdata.datacnts = exprflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
@@ -2222,45 +2221,31 @@ def init(globdata):
                 globdata.truespec.append(globdata.truespectemp)
                 
             globdata.truepsfipara = globdata.mockpsfipara
-                
 
-        #plot_pntsdiff()
-    #plot_datacntshist()
 
-    if amax(abs(globdata.datacnts - globdata.datacnts.astype(int)) / globdata.datacnts) > 1e-3:
-        print 'Fractional counts!'
-        
-    if amin(globdata.datacnts) < 0.:
-        print 'Negative counts!'
-
-    globdata.expotemp = mean(globdata.expo, 1)
-    globdata.minmcnts = globdata.minmspec * amin(globdata.expotemp, 1) * globdata.diffener
-    globdata.maxmcnts = globdata.maxmspec * amax(globdata.expotemp, 1) * globdata.diffener
-    globdata.binscnts = zeros((globdata.numbener, globdata.numbspec + 1))
-    for i in globdata.indxener:
-        globdata.binscnts[i, :] = logspace(log10(globdata.minmcnts[i]), log10(globdata.maxmcnts[i]), globdata.numbspec + 1) # [1]
-        
-    if globdata.trueinfo:
-        if globdata.datatype == 'mock':
-            globdata.truelabl = 'Mock data'
-        else:
-            globdata.truelabl = '3FGL'
-            
     ## Real data
-    if globdata.datatype == 'inpt':
-        if globdata.trueinfo:
+    # true data
+    if globdata.trueinfo:
+        if globdata.datatype == 'inpt':
+            globdata.truenumbpnts = None
+            globdata.truefdfnslop = None
+            globdata.truenormback = None
+    
             if globdata.exprtype == 'ferm':
-                globdata.truenumbpnts = array([globdata.fgl3numbpnts], dtype=int)
+                globdata.truenumbpnts = array([globdata.fgl3numbpntsrofi], dtype=int)
                 globdata.truelgal = [globdata.fgl3lgal[globdata.indxfgl3rofi]]
                 globdata.truebgal = [globdata.fgl3bgal[globdata.indxfgl3rofi]]
                 globdata.truespec = [globdata.fgl3spec[:, :, globdata.indxfgl3rofi]]
                 if globdata.colrprio:
                     globdata.truesind = [globdata.fgl3sind[globdata.indxfgl3rofi]]
                 indxpixltemp = retr_indxpixl(globdata, globdata.truebgal[0], globdata.truelgal[0])
-                globdata.truecnts = [globdata.fgl3spec[0, :, globdata.indxfgl3rofi, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]]
-                globdata.indxtruepntstimevari = [intersect1d([globdata.indxfgl3timevari, globdata.indxfgl3rofi])]
+                spec = globdata.fgl3spec[0, :, globdata.indxfgl3rofi]
+                # temp
+                spec = spec.T
+                globdata.truecnts = [spec[:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]]
+                globdata.indxtruepntstimevari = [globdata.indxfgl3timevarirofi]
+                globdata.truepsfipara = globdata.fermpsfipara
                 
-    if globdata.trueinfo:
         if globdata.datatype == 'mock':
             globdata.truepsfn = retr_psfn(globdata, globdata.truepsfipara, globdata.indxener, globdata.angldisp, globdata.mockpsfntype)
         else:
@@ -2282,7 +2267,13 @@ def init(globdata):
             truebackcnts.append(truebackcntstemp)
             globdata.truesigm.append(globdata.truecnts[l] / sqrt(truebackcntstemp))
         
+    # sanity checks
+    if amax(abs(globdata.datacnts - globdata.datacnts.astype(int)) / globdata.datacnts) > 1e-3:
+        print 'Fractional counts!'
         
+    if amin(globdata.datacnts) < 0.:
+        print 'Negative counts!'
+
     globdata.datafluxmean = mean(sum(globdata.datacnts, 2) / sum(globdata.expo, 2), 1) / globdata.apix / globdata.diffener
     globdata.datacntsmean = mean(sum(globdata.datacnts, 2), 1)
     globdata.datacntssatu = ceil((amax(sum(globdata.datacnts, 2), 1) - globdata.datacntsmean) * 0.05 + globdata.datacntsmean)

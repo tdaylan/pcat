@@ -743,7 +743,8 @@ def plot_scatspec(globdata, l, postspecmtch=None, thisspecmtch=None):
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], lw=1, marker='o', markersize=5, color='black')
     
         if globdata.indxtruepntstimevari[l].size > 0:
-            axis.errorbar(xdat[globdata.indxtruepntstimevari[l]], ydat[globdata.indxtruepntstimevari[l]], ls='', yerr=yerr[:, globdata.indxtruepntstimevari[l]], lw=1, marker='o', markersize=5, color='red')
+            axis.errorbar(xdat[globdata.indxtruepntstimevari[l]], ydat[globdata.indxtruepntstimevari[l]], ls='', yerr=yerr[:, globdata.indxtruepntstimevari[l]], \
+                lw=1, marker='o', markersize=5, color='red')
     
         axis.set_xlabel('$f_{true}$ ' + globdata.strgfluxunit)
         if i == 0:
@@ -1411,13 +1412,16 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
             if globdata.exprtype == 'sdss':
                 lgal *= 3600.
                 bgal *= 3600.
-            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', missed', marker='x', linewidth=2, color='g')
-            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsmiss], bgal[globdata.trueindxpntsmiss], s=mrkrsize[globdata.trueindxpntsmiss], \
+                alpha=globdata.mrkralph, label=globdata.truelabl + ', missed', marker='x', linewidth=2, color='g')
+            axis.scatter(lgal[globdata.trueindxpntsbias], bgal[globdata.trueindxpntsbias], s=mrkrsize[globdata.trueindxpntsbias], \
+                alpha=globdata.mrkralph, label=globdata.truelabl + ', biased', marker='o', linewidth=2, color='g')
             indxpnts = setdiff1d(arange(globdata.truenumbpnts, dtype=int), concatenate((globdata.trueindxpntsbias, globdata.trueindxpntsmiss)))
-            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts],                        alpha=globdata.mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
+            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=globdata.mrkralph, label=globdata.truelabl + ', hit', marker='D', linewidth=2, color='g')
             for l in globdata.indxpopl:
                 if globdata.indxtruepntstimevari[l].size > 0:
-                    axis.scatter(lgal[globdata.indxtruepntstimevari[l]], bgal[globdata.indxtruepntstimevari[l]], s=100,                                label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
+                    axis.scatter(lgal[globdata.indxtruepntstimevari[l]], bgal[globdata.indxtruepntstimevari[l]], s=100, \
+                        label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
         mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
