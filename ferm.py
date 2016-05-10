@@ -197,7 +197,7 @@ def make_maps():
     for t, timefrac in enumerate(listtimefrac):
         numbweek = (weekfinl - weekinit) * timefrac
         listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
-        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt'
+        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt' % t
         os.system(cmnd)
         for week in listweek:
             cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d.txt' % (week, t)
