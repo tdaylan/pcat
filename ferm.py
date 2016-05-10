@@ -186,7 +186,7 @@ def writ_isot():
 
 def make_maps():
    
-    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt; touch $PCAT_DATA_PATH/phot_pass8.txt'
+    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
     cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
     os.system(cmnd)
@@ -197,7 +197,7 @@ def make_maps():
     for t, timefrac in enumerate(listtimefrac):
         numbweek = (weekfinl - weekinit) * timefrac
         listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
-        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt; touch $PCAT_DATA_PATH/phot_pass7_time%d.txt'
+        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt'
         os.system(cmnd)
         for week in listweek:
             cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d' % (week, t)
