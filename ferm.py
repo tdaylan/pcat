@@ -200,7 +200,7 @@ def make_maps():
         cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt'
         os.system(cmnd)
         for week in listweek:
-            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d' % (week, t)
+            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d.txt' % (week, t)
             os.system(cmnd)
                 
 
