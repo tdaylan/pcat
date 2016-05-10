@@ -513,7 +513,8 @@ def updt_samp(globdata):
             globdata.minmspec[globdata.indxenermodi], globdata.maxmspec[globdata.indxenermodi])
         
         # update the sample vector
-        globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] =             globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
+        globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] = \
+            globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
             
         # update the prior register
         globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
@@ -527,7 +528,8 @@ def updt_samp(globdata):
         globdata.thissampvarb[globdata.indxsampmodi] = globdata.nextsampvarb[globdata.indxsampmodi]
         
     if globdata.thisindxprop == globdata.indxpropnormback:
-        globdata.thissampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]] =             globdata.nextsampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]]
+        globdata.thissampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]] = \
+            globdata.nextsampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]]
         
     if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
         globdata.thispntsflux[globdata.indxcubemodi] = globdata.nextpntsflux[globdata.indxcubemodi]
@@ -900,22 +902,30 @@ def retr_prop(globdata):
 
         # the energy bin of the PS flux map to be modified
         globdata.indxenermodi = array([(globdata.indxpsfiparamodi % globdata.numbpsfiparaevtt) // globdata.numbformpara])
+        
+        # sample index to be modified
         globdata.indxsampmodi = globdata.indxsamppsfipara[globdata.indxpsfiparamodi]
         retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvpsfipara)
-        globdata.nextpsfipara = copy(globdata.thissampvarb[globdata.indxsamppsfipara])
-        globdata.nextpsfipara[globdata.indxpsfiparamodi] = icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)
-
+        globdata.nextsampvarb[globdata.indxsamppsfipara] = copy(globdata.thissampvarb[globdata.indxsamppsfipara])
+        globdata.nextsampvarb[globdata.indxsamppsfipara[globdata.indxpsfiparamodi]] = \
+            icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)
         globdata.modilgal = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi]]
         globdata.modibgal = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi]]
         globdata.modispec = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi]]
         
         if globdata.verbtype > 1:
-            
-            print 'thissampvarb[indxsamppsfipara]: ', globdata.thissampvarb[globdata.indxsamppsfipara]
-            print 'nextpsfipara: ', globdata.nextpsfipara
+           
             print 'indxpsfiparamodi: ', globdata.indxpsfiparamodi
+            print 'indxenermodi: ', globdata.indxenermodi
+            print 'indxsampmodi: ', globdata.indxsampmodi
+            print 'globdata.drmcsamp[globdata.indxsampmodi, -1]'
+            print globdata.drmcsamp[globdata.indxsampmodi, -1]
+            print 'icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)'
+            print icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)
+            print 'thispsfipara: ', globdata.thissampvarb[globdata.indxsamppsfipara]
             print 'thissampvarb[indxsampmodi]: ', globdata.thissampvarb[globdata.indxsampmodi]
-            print 'nextpsfipara: ', globdata.nextpsfipara[globdata.indxpsfiparamodi]
+            print 'nextpsfipara: ', globdata.nextsampvarb[globdata.indxsamppsfipara]
+            print 'nextpsfipara[indxsampmodi]: ', globdata.nextsampvarb[globdata.indxsampmodi]
             print 
 
         
@@ -1104,20 +1114,17 @@ def retr_prop(globdata):
             print 'nextspec0: ', nextspec0
             print 'nextspec1: ', nextspec1
 
-            
-
-
-
-        if abs(nextlgal0) > globdata.maxmgangmarg or abs(nextlgal1) > globdata.maxmgangmarg or         abs(nextbgal0) > globdata.maxmgangmarg or abs(nextbgal1) > globdata.maxmgangmarg or         where((nextspec0 > globdata.maxmspec) | (nextspec0 < globdata.minmspec))[0].size > 0 or         where((nextspec1 > globdata.maxmspec) | (nextspec1 < globdata.minmspec))[0].size > 0:
-            globdata.reje = True
+        if abs(nextlgal0) > globdata.maxmgangmarg or abs(nextlgal1) > globdata.maxmgangmarg or \
+           abs(nextbgal0) > globdata.maxmgangmarg or abs(nextbgal1) > globdata.maxmgangmarg or \
+           where((nextspec0 > globdata.maxmspec) | (nextspec0 < globdata.minmspec))[0].size > 0 or \
+           where((nextspec1 > globdata.maxmspec) | (nextspec1 < globdata.minmspec))[0].size > 0:
+               globdata.reje = True
                 
         if not globdata.reje:
 
-            
             lgal = concatenate((array([nextlgal0, nextlgal1]), setdiff1d(globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi]], thislgal)))
             bgal = concatenate((array([nextbgal0, nextbgal1]), setdiff1d(globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi]], thisbgal)))
             pairlist = retr_pairlist(lgal, bgal)
-
 
             ## first new component
             globdata.drmcsamp[globdata.indxsampchd0, -1] = cdfn_self(nextlgal0, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
@@ -2036,7 +2043,7 @@ def init(globdata):
     if globdata.exprtype == 'ferm':
         globdata.maxmangleval = empty(globdata.numbspecprox)
         for h in globdata.indxspecprox:
-            frac = 0.1 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
+            frac = 1e-2 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
             globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, frac)))
     if globdata.exprtype == 'sdss':
         globdata.maxmangleval = 10. / 3600.

@@ -360,13 +360,13 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
     cnfg = retr_cnfg(psfntype='doubking', \
-                    numbswep=100000, \
-                    numbburn=10000, 
+                    numbswep=1000000, \
+                    numbburn=500000, 
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
                     randinit=False, \
-                    proppsfn=False, \
+                    proppsfn=True, \
                     #initnumbpnts=array([100]), \
                     maxmnumbpnts=array([200]), \
                     trueinfo=True, \
@@ -421,6 +421,52 @@ def cnfg_ferm_post():
     wrap(cnfg)
 
 
+def cnfg_test():
+     
+    colrprio = False
+    
+    indxenerincl = arange(1, 3)
+    numbener = indxenerincl.size
+
+    if colrprio:
+        minmspec = array([3e-11])
+        maxmspec = array([1e-7])
+        mockfdfnslop = array([[1.8]])
+    else:
+        minmspec = array([3e-9, 3e-10, 3e-11, 3e-12, 3e-13])[indxenerincl]
+        maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
+        mockfdfnslop = tile(array([1.8]), (1, numbener))
+      
+    cnfg = retr_cnfg(psfntype='doubking', \
+					 numbproc=1, \
+					 numbswep=10, \
+                     plotperd=9, \
+                     makeplot=True, \
+                     randinit=False, \
+                     trueinfo=True, \
+                     maxmgang=20., \
+                     colrprio=colrprio, \
+                     verbtype=3, \
+                     indxevttincl=arange(3, 4), \
+                     indxenerincl=indxenerincl, \
+                     maxmnumbpnts=array([3]), \
+                     mocknumbpnts=array([2]), \
+                     probprop=array([0., 0., 1., 0., 0., 0., 0, 0, 0., 0., 0., 0], dtype=float), \
+                     minmspec=minmspec, \
+                     maxmspec=maxmspec, \
+                     regitype='ngal', \
+                     maxmnormback=array([2., 2.]), \
+                     minmnormback=array([0.5, 0.5]), \
+                     strgexpo='fermexpo_ngal_comp.fits', \
+                     stdvback=0.1, \
+                     datatype='mock', \
+                     numbsideheal=256, \
+                     mockfdfnslop=mockfdfnslop, \
+                     mocknormback=ones((2, numbener)), \
+                                         )
+    wrap(cnfg)
+
+
 def cnfg_ferm_mock_ngal():
      
     colrprio = False
@@ -438,8 +484,7 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = tile(array([1.8]), (1, numbener))
       
     cnfg = retr_cnfg(psfntype='doubking', \
-					 numbproc=1, \
-					 numbswep=100000, \
+					 numbswep=3000000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \
@@ -451,14 +496,12 @@ def cnfg_ferm_mock_ngal():
                      indxenerincl=indxenerincl, \
                      maxmnumbpnts=array([200]), \
                      mocknumbpnts=array([100]), \
-                     probprop=array([0.1, 0.1, 0, 0.1, 1., 1., 0, 0, 1., 1., 1., 0], dtype=float), \
                      minmspec=minmspec, \
                      maxmspec=maxmspec, \
                      regitype='ngal', \
                      maxmnormback=array([2., 2.]), \
                      minmnormback=array([0.5, 0.5]), \
                      strgexpo='fermexpo_ngal_comp.fits', \
-                     stdvback=0.1, \
                      datatype='mock', \
                      numbsideheal=256, \
                      mockfdfnslop=mockfdfnslop, \
@@ -507,6 +550,7 @@ if __name__ == '__main__':
     
     #cnfg_ferm_post()
     #cnfg_ferm_mock_ngal()
+    #cnfg_test()
     
     #cnfg_sdss_mock()
     #cnfg_sdss_expr()

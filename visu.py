@@ -674,11 +674,6 @@ def plot_histspec(globdata, l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            print 'hey'
-            print 'binsspec'
-            print globdata.binsspec[i, :]
-            print globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :]
-            print
             axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b',                     log=True, label='Sample')
             
             if not globdata.colrprio or i == globdata.indxenerfdfn:
@@ -1032,7 +1027,7 @@ def plot_king(globdata):
     plt.close(figr)
     
     
-def plot_psfn(globdata, thispsfn):
+def plot_psfn(globdata):
     
     if globdata.exprtype == 'sdss':
         globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
@@ -1049,7 +1044,7 @@ def plot_psfn(globdata, thispsfn):
             if globdata.numbener == 1:
                 axrw = [axrw]
             for i, axis in enumerate(axrw):
-                axis.plot(globdata.angldisptemp, thispsfn[i, :, m], label='Sample')
+                axis.plot(globdata.angldisptemp, globdata.thispsfn[i, :, m], label='Sample')
                 if globdata.trueinfo:
                     axis.plot(globdata.angldisptemp, globdata.truepsfn[i, :, m], label='Mock', color='g', ls='--')
                 axis.set_yscale('log')
@@ -1351,7 +1346,7 @@ def plot_histcnts(globdata, l, thiscnts):
             if globdata.trueinfo:
                 truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
                 if globdata.datatype == 'mock':
-                    axis.hist(globdata.fgl3cnts[i, globdata.indxfgl3rofi], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
+                    axis.hist(globdata.fgl3cnts[i, globdata.indxfgl3rofi, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
             axis.hist(thiscnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
@@ -1447,14 +1442,6 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                 xaxi = modilgal[k] * 3600.
                 yaxi = modibgal[k] * 3600.
             axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph,                        marker='o', linewidth=2, color=colr)
-            
-            if False:
-                print 'modilgal[k]'
-                print modilgal[k]
-                print 'modibgal[k]'
-                print modibgal[k]
-                print
-                
             text = r'indxprop = %d, lnL = %.3g' % (indxprop, deltllik)
             if indxprop == globdata.indxpropsplt or indxprop == globdata.indxpropmerg:
                 text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])

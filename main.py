@@ -687,12 +687,12 @@ def plot_samp(globdata):
 
     globdata.thisresicnts = globdata.datacnts - globdata.thismodlcnts
 
-    thispsfn = retr_psfn(globdata, globdata.thissampvarb[globdata.indxsamppsfipara],                          globdata.indxener, globdata.angldisp, globdata.psfntype)
+    globdata.thispsfn = retr_psfn(globdata, globdata.thissampvarb[globdata.indxsamppsfipara], globdata.indxener, globdata.angldisp, globdata.psfntype)
     if globdata.pixltype == 'cart':
-        thispsfn = thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
-    thisfwhm = 2. * retr_psfnwdth(globdata, thispsfn, 0.5)
+        globdata.thispsfn = globdata.thispsfn.reshape((globdata.numbener, -1, globdata.numbevtt))
+    thisfwhm = 2. * retr_psfnwdth(globdata, globdata.thispsfn, 0.5)
 
-    plot_psfn(globdata, thispsfn)
+    plot_psfn(globdata)
 
     globdata.thisbackcntsmean = empty((globdata.numbener, globdata.numbevtt))
     for c in globdata.indxback:
@@ -839,13 +839,11 @@ def rjmc(globdata, indxprocwork):
                 globdata.reje = True
         if globdata.thisindxprop == globdata.indxproppsfipara:
             if globdata.psfntype == 'doubking':
-                if globdata.nextpsfipara[1] > globdata.nextpsfipara[3]:
+                if globdata.nextsampvarb[globdata.indxsamppsfipara[1]] >= globdata.nextsampvarb[globdata.indxsamppsfipara[3]]:
                     globdata.reje = True
             elif globdata.psfntype == 'doubgaus':
-                if globdata.nextpsfipara[1] > globdata.nextpsfipara[2]:
+                if globdata.nextsampvarb[globdata.indxsamppsfipara[1]] >= globdata.nextsampvarb[globdata.indxsamppsfipara[2]]:
                     globdata.reje = True
-                
-  
             
         if not globdata.reje:
 

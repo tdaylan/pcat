@@ -244,10 +244,6 @@ def prep_maps_neww():
             pf.writeto(path, flux, clobber=True)
 
 
-
-
-# In[7]:
-
 def prep_maps():
     
     global reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
@@ -351,8 +347,6 @@ def prep_maps():
                 pf.writeto(path, expo[:, :, :, t], clobber=True)
 
 
-# In[8]:
-
 def writ_fdfm_doug():
     
     numbevtt = 4
@@ -378,12 +372,7 @@ def writ_fdfm_doug():
         
     path =os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_ngal.fits'
     pf.writeto(path, fermfdfmfluxngal, clobber=True)
-    
         
-        
-
-
-# In[9]:
 
 def writ_fdfm():
     
@@ -415,35 +404,19 @@ def writ_fdfm():
     pf.writeto(path, fermfdfmfluxngal, clobber=True)
 
 
-# In[10]:
-
 def retr_jcbn():
     
     lgl0, algl, bgl0, abgl, flx0, aflx = sympy.symbols('lgl0 algl bgl0 abgl flx0 aflx')
-    matr = sympy.Matrix([[1, 1 - aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0],                        [1,    -aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0],                        [0,               0, 1, 1 - aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0],                        [0,               0, 1,    -aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0],                        [0,               0, 0,               0,                     1,            0],                        [0,               0, 0,               0,                    -1,            1]])
+    matr = sympy.Matrix([[1, 1 - aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [1,    -aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [0,               0, 1, 1 - aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,               0, 1,    -aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,               0, 0,               0,                     1,            0], \
+                         [0,               0, 0,               0,                    -1,            1]])
 
     jcbn = matr.det()
     return jcbn
 
-
-# In[11]:
-
-def plot_heal(maps):
-
-    #satu = percentile(maps, 99)
-    #satu = 1e9
-    #maps[where(maps > satu)] = satu
-    #maps[where(maps < -satu)] = -satu
-    cart = tdpy.retr_cart(maps, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-    figr, axis = plt.subplots(figsize=(14, 14))
-    axis.set_xlabel(r'$l$ [$^\circ$]')
-    axis.set_ylabel(r'$b$ [$^\circ$]')
-    imag = axis.imshow(cart, origin='lower', cmap='Reds', extent=extt)
-    plt.show()
-            
-
-
-# In[12]:
 
 def plot_maps():
     
