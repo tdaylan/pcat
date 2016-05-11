@@ -1224,13 +1224,14 @@ def plot_eval(globdata):
     for k in range(globdata.numbspecprox):
         if k == 0 or k == globdata.numbspecprox - 1:
             alph = 1.
-            colr = None
             if k == 0:
                 labl = 'Dimmest PS'
+                colr = 'b'
             else:
                 labl = 'Brightest PS'
+                colr = 'g'
         else:
-            alph = 0.3
+            alph = 0.2
             labl = None
             colr = 'black'
         axis.plot(globdata.angldisptemp, globdata.meanspec[0, k] * globdata.fermpsfn[0, :, 0], label=labl, color=colr, alpha=alph)
@@ -1239,8 +1240,8 @@ def plot_eval(globdata):
     axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
     axis.set_title('PSF Evaluation Radius')  
+    axis.axhline(globdata.specfraceval * amax(globdata.meanspec[0, -1] * globdata.fermpsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
     axis.legend(loc=3)
-    axis.axhline(globdata.specfraceval * amax(globdata.meanspec[0, -1] * globdata.fermpsfn[0, :, 0]), color='red', ls='--')
     plt.savefig(globdata.plotpath + 'eval_' + globdata.rtag + '.png')
     plt.close(figr)
 

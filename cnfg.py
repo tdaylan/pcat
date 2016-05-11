@@ -503,7 +503,7 @@ def cnfg_ferm_mock_ngal():
                      regitype='ngal', \
                      maxmnormback=array([2., 2.]), \
                      minmnormback=array([0.5, 0.5]), \
-                     strgexpo='fermexpo_ngal_comp.fits', \
+                     strgexpo='fermexpo_comp_ngal.fits', \
                      datatype='mock', \
                      numbsideheal=256, \
                      mockfdfnslop=mockfdfnslop, \
