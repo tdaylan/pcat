@@ -252,26 +252,35 @@ def retr_llik(globdata, init=False):
         
     elif globdata.thisindxprop >= globdata.indxproppsfipara:
 
+        # load convenience variables
+        if globdata.thisindxprop == globdata.indxproppsfipara:
+            numbpnts = int(sum(globdata.thissampvarb[globdata.indxsampnumbpnts]))
+            lgal = globdata.thissampvarb[concatenate(globdata.thisindxsamplgal)]
+            bgal = globdata.thissampvarb[concatenate(globdata.thisindxsampbgal)]
+            spec = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenermodi, :]]
+        if globdata.thisindxprop >= globdata.indxpropbrth:
+            numbpnts = globdata.modilgal.shape[0]
+            lgal = globdata.modilgal
+            bgal = globdata.modibgal
+            spec = globdata.modispec
+        
         # determine pixels over which to evaluate the log-likelihood
         if globdata.thisindxprop == globdata.indxpropnormback:
             indxpixlmodi = globdata.indxpixl
-            
-        if globdata.thisindxprop == globdata.indxproppsfipara or globdata.thisindxprop >= globdata.indxpropbrth:
-            
-            if globdata.thisindxprop == globdata.indxproppsfipara:
-                numbpnts = int(sum(globdata.thissampvarb[globdata.indxsampnumbpnts]))
-                lgal = globdata.thissampvarb[concatenate(globdata.thisindxsamplgal)]
-                bgal = globdata.thissampvarb[concatenate(globdata.thisindxsampbgal)]
-                spec = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenermodi, :]]
-            else:
-                numbpnts = globdata.modilgal.shape[0]
-                lgal = globdata.modilgal
-                bgal = globdata.modibgal
-                spec = globdata.modispec
-                
+        if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
             thisindxpixlprox = []
             for k in range(numbpnts):
-                indxspecproxtemp = argmin(spec[0, k] - globdata.meanspecprox)
+                #print 'hey'
+                #print 'globdata.thisindxprop'
+                #print globdata.thisindxprop
+                #print 'spec.shape'
+                #print spec.shape
+                #print
+                if globdata.thisindxprop == globdata.indxproppsfipara:
+                    spectemp = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenerfdfn, k]]
+                else:
+                    spectemp = globdata.modispec[globdata.indxenerfdfn, k]
+                indxspecproxtemp = amin(where(globdata.meanspecprox - spectemp > 0.)[0])
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
             indxpixlmodi = unique(concatenate(thisindxpixlprox))
@@ -2039,15 +2048,15 @@ def init(globdata):
         globdata.meansind = (globdata.binssind[1:] + globdata.binssind[0:-1]) / 2.
         globdata.diffsind = globdata.binssind[1:] - globdata.binssind[:-1]
 
-    globdata.numbspecprox = 10
+    globdata.numbspecprox = 3
     globdata.indxspecprox = arange(globdata.numbspecprox)
-    globdata.meanspecprox = globdata.meanspec # globdata.binsspec[globdata.indxenerfdfn, globdata.numbspec / 2]
-        
+    globdata.meanspecprox = logspace(log10(globdata.minmspec[globdata.indxenerfdfn]), log10(globdata.maxmspec[globdata.indxenerfdfn]), globdata.numbspecprox)
+    globdata.specfraceval = 0.01
     if globdata.exprtype == 'ferm':
         globdata.maxmangleval = empty(globdata.numbspecprox)
         for h in globdata.indxspecprox:
-            globdata.specfraceval = 1e-2 * globdata.meanspec[0, 0] / globdata.meanspecprox[0, h]
-            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, globdata.specfraceval)))
+            frac = globdata.specfraceval * globdata.meanspecprox[0] / globdata.meanspecprox[h]
+            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, frac)))
     if globdata.exprtype == 'sdss':
         globdata.maxmangleval = 10. / 3600.
 

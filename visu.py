@@ -1234,13 +1234,13 @@ def plot_eval(globdata):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(globdata.angldisptemp, globdata.meanspec[0, k] * globdata.fermpsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.plot(globdata.angldisptemp, globdata.meanspecprox[k] * globdata.fermpsfn[0, :, 0], label=labl, color=colr, alpha=alph)
         axis.axvline(globdata.maxmangleval[k], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
     axis.set_title('PSF Evaluation Radius')  
-    axis.axhline(globdata.specfraceval * amax(globdata.meanspec[0, -1] * globdata.fermpsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
+    axis.axhline(globdata.specfraceval * amax(globdata.meanspecprox[0] * globdata.fermpsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
     axis.legend(loc=3)
     plt.savefig(globdata.plotpath + 'eval_' + globdata.rtag + '.png')
     plt.close(figr)

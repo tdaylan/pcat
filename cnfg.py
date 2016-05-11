@@ -486,7 +486,8 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = tile(array([1.8]), (1, numbener))
       
     cnfg = retr_cnfg(psfntype='doubking', \
-					 numbswep=2000000, \
+					 #numbproc=2, \
+                     numbswep=2000000, \
 					 numbburn=400000, \
                      plotperd=50000, \
                      makeplot=True, \
