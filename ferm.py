@@ -124,16 +124,11 @@ def make_maps_sing(indxprocwork):
         if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
                 
-        sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
-            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
-        filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
-            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
-        live = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/live_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
-            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
-        cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
-            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
-        expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
-            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
+        sele = '$PCAT_DATA/sele_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
+        filt = '$PCAT_DATA/filt_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
+        live = '$PCAT_DATA/live_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
+        cnts = '$PCAT_DATA/cnts_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
+        expo = '$PCAT_DATA/expo_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
 
         cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
         os.system(cmnd)
