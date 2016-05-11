@@ -393,14 +393,15 @@ def cnfg_ferm_post():
     numbener = indxenerincl.size
     cnfg = retr_cnfg(psfntype='doubking', \
 					 numbproc=1, \
-					 numbswep=10, \
-                     plotperd=10000, \
+					 numbswep=100000, \
+                     plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \
                      trueinfo=True, \
-                     maxmgang=3., \
+                     maxmgang=2., \
+                     margsize=0., \
                      colrprio=True, \
-                     verbtype=3, \
+                     verbtype=1, \
                      indxevttincl=arange(3, 4), \
                      indxenerincl=indxenerincl, \
                      maxmnumbpnts=array([3]), \

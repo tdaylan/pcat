@@ -121,7 +121,7 @@ def make_maps_sing(indxprocwork):
                 thisevtt = 2
             else:
                 continue
-        if reco == 8:
+        if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
                 
         sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' \

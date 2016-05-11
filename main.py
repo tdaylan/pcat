@@ -54,25 +54,16 @@ def work(globdata, indxprocwork):
         if globdata.randinit or not globdata.trueinfo:
             globdata.drmcsamp[globdata.thisindxsampcomp[l], 0] = rand(globdata.thisindxsampcomp[l].size)
         else:
-            globdata.drmcsamp[globdata.thisindxsamplgal[l], 0] = copy(cdfn_self(globdata.truelgal[l], 
-            -globdata.maxmgangmarg, 
-            2. * globdata.maxmgangmarg))
-            globdata.drmcsamp[globdata.thisindxsampbgal[l], 0] = copy(cdfn_self(globdata.truebgal[l], 
-            -globdata.maxmgangmarg, 
-            2. * globdata.maxmgangmarg))
+            globdata.drmcsamp[globdata.thisindxsamplgal[l], 0] = copy(cdfn_self(globdata.truelgal[l], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg))
+            globdata.drmcsamp[globdata.thisindxsampbgal[l], 0] = copy(cdfn_self(globdata.truebgal[l], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg))
             for i in globdata.indxenerfdfn:
                 fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0], globdata.minmfdfnslop, globdata.factfdfnslop)
                 spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
                 globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(spec)
             if globdata.colrprio:
-                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l],                 globdata.minmsind,                 globdata.factsind))
-                flux = globdata.drmcsamp[globdata.thisindxsampspec[l][globdata.indxenerfdfn, :], 0]
-                sind = globdata.drmcsamp[globdata.thisindxsampsind[l], 0]
-                globdata.drmcsamp[globdata.thisindxsampspec[l], 0] = retr_spec(globdata, flux, sind)
-
-    
-    globdata.thissampvarb, thisindxpixlpnts, thiscnts, globdata.thispntsflux,         thismodlflux, globdata.thismodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
-
+                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l], globdata.minmsind, globdata.factsind))
+    globdata.thissampvarb, thisindxpixlpnts, thiscnts, globdata.thispntsflux, thismodlflux, \
+        globdata.thismodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
         
     if globdata.verbtype > 2:
         print 'thisindxpntsfull: ', globdata.thisindxpntsfull
@@ -84,10 +75,6 @@ def work(globdata, indxprocwork):
         if globdata.colrprio:
             print 'thisindxsampsind: ', globdata.thisindxsampsind
         print 'thisindxsampcomp: ', globdata.thisindxsampcomp
-
-
-        
-
 
     globdata.nextpntsflux = zeros_like(globdata.thispntsflux)
     globdata.nextmodlflux = zeros_like(globdata.thispntsflux)

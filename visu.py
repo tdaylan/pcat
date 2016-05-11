@@ -663,7 +663,7 @@ def plot_histspec(globdata, l, listspechist=None):
         axcl = [axcl]
     for i, axis in enumerate(axcl):
         if globdata.colrprio:
-            i = globdata.indxenerfdfn
+            i = globdata.indxenerfdfn[0]
         if post:
             xdat = globdata.meanspec[i, :]
             yerr = empty((2, globdata.numbspec))
@@ -673,7 +673,7 @@ def plot_histspec(globdata, l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            spec = globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :].flatten()
+            spec = globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :]
             axis.hist(spec, globdata.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if not globdata.colrprio or i == globdata.indxenerfdfn:
                 fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]  
