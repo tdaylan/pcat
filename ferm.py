@@ -101,8 +101,8 @@ def make_maps():
     pool = mp.Pool(numbproc)
 
     # spawn the processes
-    pool.map(make_maps_sing, range(numbproc))
-
+    #pool.map(make_maps_sing, range(numbproc))
+    make_maps_sing(0)
     pool.close()
     pool.join()
 
