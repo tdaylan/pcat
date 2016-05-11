@@ -58,100 +58,105 @@ def retr_axes():
     return reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
 
 
-def make_maps_depr():
+def make_maps():
     
-    cmnd = 'mkdir -p $FERMI_DATA/exposure/ferm_line'
+    cmnd = 'mkdir -p $FERMI_DATA/exposure/pcat'
     os.system(cmnd)
     
-    global reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
-    reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
+    global reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
+    reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
 
-    numbproc = 40
-    minmweek = 9
-    maxmweek = 411
-    weekpart = (maxmweek - minmweek) / numbproc
-    
-    global listweek
-    listweek = []
-    for k in range(numbproc):
-        listweek.append(arange(minmweek + k * weekpart, minmweek + (k + 1) * weekpart))
-    
     global strgregi
     strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
-
-    global rtag, strgtime
     
-    for k in range(2):
+    
+    # make file lists
+    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt'
+    os.system(cmnd)
+    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
+    os.system(cmnd)
+
+    weekinit = 9
+    weekfinl = 218
+    listtimefrac = array([1., 0.75, 0.5, 0.25])
+    numbtime = listtimefrac.size
+    for t, timefrac in enumerate(listtimefrac):
+        numbweek = (weekfinl - weekinit) * timefrac
+        listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
+        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt' % t
+        os.system(cmnd)
+        for week in listweek:
+            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d.txt' % (week, t)
+            os.system(cmnd)
+   
+    numbproc = numbtime + 1
+
+    global rtag, reco, evtc, strgtime
+    rtag = ['full'] + ['cmp%d' % t for t in range(numbtime)]
+    reco = [8] + [7 for t in range(numbtime)] 
+    evtc = [128] + [2 for t in range(numbtime)] 
+    strgtime = ['tmin=INDEF tmax=INDEF'] + ['tmin=239155201 tmax=364953603' for t in range(numbtime)] 
         
-        if k == 0:
-            rtag = 'comp'
-            reco = 7
-            evtc = 2
-            strgtime = 'tmin=239155201 tmax=364953603'
-            
-        if k == 1:
-            rtag = 'full'
-            reco = 8
-            evtc = 128
-            strgtime = 'tmin=INDEF tmax=INDEF'
-            
-        # process pool
-        pool = mp.Pool(numbproc)
+    # process pool
+    pool = mp.Pool(numbproc)
 
-        # spawn the processes
-        pool.map(make_maps_sing, range(numbproc))
+    # spawn the processes
+    pool.map(make_maps_sing, range(numbproc))
 
-        pool.close()
-        pool.join()
+    pool.close()
+    pool.join()
 
 
-def make_maps_sing_depr(indxproc):
+def make_maps_sing(indxproc):
 
-    for t in listweek[indxproc]:
+    pathlist = '$PCAT_DATA_PATH/phot_pass%d_%s.txt' % (reco, rtag)
         
-        print inspect.stack()[0][3] + ', proc%d is working on week %d...' % (indxproc, t)
+    for m in indxevtt:
         
-        for m in indxevtt:
-            
-            if reco == 7:
-                if m == 2:
-                    thisevtt = 2
-                elif m == 3:
-                    thisevtt = 1
-                else:
-                    continue
-            if reco == 8:
-                thisevtt = evtt[m]
-            
-            if reco == 7:
-                evnt = os.environ["FERMI_DATA"] +                     'weekly/p7v6c/lat_photon_weekly_w%03d_p202_v001.fits' % t
-            if reco == 8:
-                evnt = os.environ["FERMI_DATA"] +                     'weekly/photon/lat_photon_weekly_w%03d_p302_v001.fits' % t
-                    
-            spac = os.environ["FERMI_DATA"] +                 'weekly/spacecraft/lat_spacecraft_weekly_w%03d_p202_v001.fits' % t
-                    
-            sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag +                 '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-            filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag +                 '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-            live = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag +                 '/live_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-            cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag +                 '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-            expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag +                 '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        if reco == 7:
+            if m == 3:
+                thisevtt = 1
+            elif m == 2:
+                thisevtt = 2
+            else:
+                continue
+        if reco == 8:
+            thisevtt = evtt[m]
+        
+        if reco == 7:
+            evnt = os.environ["FERMI_DATA"] + 'weekly/p7v6c/lat_photon_weekly_w%03d_p202_v001.fits' % t
+        if reco == 8:
+            evnt = os.environ["FERMI_DATA"] + 'weekly/photon/lat_photon_weekly_w%03d_p302_v001.fits' % t
+                
+        spac = os.environ["FERMI_DATA"] + 'weekly/spacecraft/lat_spacecraft_weekly_w%03d_p202_v001.fits' % t
+                
+        sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        live = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/live_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
 
-            cmnd = 'gtselect infile=' + evnt + ' outfile=' + sele + strgregi + strgtime +                 ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc, thisevtt)
-            os.system(cmnd)
+        cmnd = 'gtselect infile=' + evnt + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc, thisevtt)
+        os.system(cmnd)
+        print '%d, ' % indxproc + cmnd
 
-            cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' +                 ' outfile=' + filt + ' roicut=no'
-            os.system(cmnd)
+        cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
+        os.system(cmnd)
+        print '%d, ' % indxproc + cmnd
 
-            cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts + \
-                ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
-                ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
-            os.system(cmnd)
-            
-            cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live +                 ' dcostheta=0.025 binsz=1'
-            os.system(cmnd)
-            
-            cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo +                 ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
-            os.system(cmnd)
+        cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts + \
+            ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
+            ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
+        os.system(cmnd)
+        print '%d, ' % indxproc + cmnd
+        
+        cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
+        os.system(cmnd)
+        print '%d, ' % indxproc + cmnd
+        
+        cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
+        os.system(cmnd)
+        print '%d, ' % indxproc + cmnd
 
 
 def writ_isot():
@@ -183,26 +188,6 @@ def writ_isot():
     path4 = os.environ["PCAT_DATA_PATH"] + '/nfwpflux.fits'
     pf.writeto(path4, nfwpfluxheal, clobber=True)
 
-
-def make_maps():
-   
-    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt'
-    os.system(cmnd)
-    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
-    os.system(cmnd)
-
-    weekinit = 9
-    weekfinl = 218
-    listtimefrac = array([1., 0.75, 0.5, 0.25])
-    for t, timefrac in enumerate(listtimefrac):
-        numbweek = (weekfinl - weekinit) * timefrac
-        listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
-        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt' % t
-        os.system(cmnd)
-        for week in listweek:
-            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d.txt' % (week, t)
-            os.system(cmnd)
-                
 
 def prep_maps():
     
