@@ -1802,9 +1802,9 @@ def init(globdata):
     # angular globdata.deviation
     globdata.numbangl = 100
     if globdata.exprtype == 'sdss':
-        globdata.maxmangldisp = deg2rad(5. / 3600.) # [rad]
+        globdata.maxmangldisp = deg2rad(10. / 3600.) # [rad]
     if globdata.exprtype == 'ferm':
-        globdata.maxmangldisp = deg2rad(5.) # [rad]
+        globdata.maxmangldisp = deg2rad(10.) # [rad]
     globdata.angldisp = linspace(0., globdata.maxmangldisp, globdata.numbangl) # [rad]
     maxmangl = deg2rad(3.5 * globdata.maxmgang) # [rad]
     angl = linspace(0., maxmangl, globdata.numbangl) # [rad]
@@ -2035,10 +2035,8 @@ def init(globdata):
     globdata.diffspec = globdata.binsspec[:, 1:] - globdata.binsspec[:, 0:-1]
 
     if globdata.colrprio:
-        globdata.binssindunit = arange(globdata.numbbins + 1.) / globdata.numbbins
-        globdata.meansindunit = (globdata.binssindunit[:-1] + globdata.binssindunit[1:]) / 2.
-        globdata.binssind = icdf_atan(globdata.binssindunit, globdata.minmsind, globdata.factsind)
-        globdata.meansind = icdf_atan(globdata.meansindunit, globdata.minmsind, globdata.factsind)
+        globdata.binssind = linspace(globdata.minmsind, globdata.maxmsind, globdata.numbbins + 1)
+        globdata.meansind = (globdata.binssind[1:] + globdata.binssind[0:-1]) / 2.
         globdata.diffsind = globdata.binssind[1:] - globdata.binssind[:-1]
 
     globdata.numbspecprox = 10
@@ -2048,7 +2046,7 @@ def init(globdata):
     if globdata.exprtype == 'ferm':
         globdata.maxmangleval = empty(globdata.numbspecprox)
         for h in globdata.indxspecprox:
-            globdata.specfraceval = 1e-2 * amax(globdata.minmspec) / amax(globdata.meanspecprox[:, h])
+            globdata.specfraceval = 1e-2 * globdata.meanspec[0, 0] / globdata.meanspecprox[0, h]
             globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, globdata.specfraceval)))
     if globdata.exprtype == 'sdss':
         globdata.maxmangleval = 10. / 3600.

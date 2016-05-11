@@ -639,6 +639,7 @@ def plot_histsind(globdata, l, postsindhist=None):
     axis.set_xlabel('$s$')
     axis.set_xlim([globdata.minmsind, globdata.maxmsind])
     axis.set_ylabel('$N$')
+    axis.legend()
     if post:
         path = globdata.plotpath + 'histsind_popl%d' % l + globdata.rtag + '.png'
     else:
@@ -690,9 +691,9 @@ def plot_histspec(globdata, l, listspechist=None):
         if globdata.trueinfo:
             axis.set_ylim([0.1, 1e3])
         axis.set_xlim([globdata.minmspec[i], globdata.maxmspec[i]])
-        if i == 0:
+        if i == 0 or globdata.colrprio:
             axis.set_ylabel('$N$')
-        if i == numbcols / 2:
+        if i == numbcols / 2 or globdata.colrprio:
             axis.legend()
     figr.subplots_adjust(wspace=0.3, bottom=0.2)
     if post:
@@ -849,7 +850,6 @@ def plot_look(globdata):
     axis.set_title("Number of pixels in the pixel lookup tables")
     axis.set_xlabel('Number of pixels')
     axis.set_ylabel("Number of tables")
-    axis.legend(loc=2)
     plt.subplots_adjust(bottom=0.2)
     plt.savefig(globdata.plotpath + 'look.png')
     plt.close()
@@ -1221,15 +1221,26 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
 def plot_eval(globdata):
 
     figr, axis = plt.subplots()
-    axis.plot(globdata.angldisptemp, globdata.minmspec[0] * globdata.fermpsfn[0, :, 0], label='Dimmest PS')
-    axis.plot(globdata.angldisptemp, globdata.maxmspec[0] * globdata.fermpsfn[0, :, 0], label='Brightest PS')
+    for k in range(globdata.numbspecprox):
+        if k == 0 or k == globdata.numbspecprox - 1:
+            alph = 1.
+            colr = None
+            if k == 0:
+                labl = 'Dimmest PS'
+            else:
+                labl = 'Brightest PS'
+        else:
+            alph = 0.3
+            labl = None
+            colr = 'black'
+        axis.plot(globdata.angldisptemp, globdata.meanspec[0, k] * globdata.fermpsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.axvline(globdata.maxmangleval[k], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
-    axis.set_title('PSF Evaluation Region')  
-    axis.legend()
-    #axis.set_ylim([1e0, 1e6])
-    axis.axhline(globdata.specfraceval * amax(globdata.maxmspec[0] * globdata.fermpsfn[0, :, 0]), label='Likelihood Evaluation radius')
+    axis.set_title('PSF Evaluation Radius')  
+    axis.legend(loc=3)
+    axis.axhline(globdata.specfraceval * amax(globdata.meanspec[0, -1] * globdata.fermpsfn[0, :, 0]), color='red', ls='--')
     plt.savefig(globdata.plotpath + 'eval_' + globdata.rtag + '.png')
     plt.close(figr)
 

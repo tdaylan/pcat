@@ -348,7 +348,7 @@ def cnfg_ferm_mock_igal():
     
 def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
      
-    colrprio = False
+    colrprio = True
     
     indxenerincl = arange(1, 4)
 
@@ -360,8 +360,8 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
     cnfg = retr_cnfg(psfntype='doubking', \
-                    numbswep=1000000, \
-                    numbburn=500000, 
+                    numbswep=60000, \
+                    numbburn=50000, 
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
@@ -380,7 +380,6 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
                     maxmnormback=array([2., 2.]), \
                     minmnormback=array([0.5, 0.5]), \
                     strgexpo=strgexpo, \
-                    stdvback=0.1, \
                     datatype='inpt', \
                     strgexpr=strgexpr, \
                     )
@@ -487,7 +486,7 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = tile(array([1.8]), (1, numbener))
       
     cnfg = retr_cnfg(psfntype='doubking', \
-					 numbswep=3000000, \
+					 numbswep=60000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \
@@ -509,7 +508,7 @@ def cnfg_ferm_mock_ngal():
                      numbsideheal=256, \
                      mockfdfnslop=mockfdfnslop, \
                      mocknormback=ones((2, numbener)), \
-                                         )
+                    )
 
     wrap(cnfg)
     
@@ -531,30 +530,32 @@ def cnfg_sdss_expr():
     
 if __name__ == '__main__':
     
-    pass
+    if len(sys.argv) > 1:
+        eval(sys.argv[1])()
+    else:
 
-    #cnfg_ferm_info()
+        #cnfg_ferm_info()
+        
+        #cnfg_ferm_psfn_mock('gausking')
+        #cnfg_ferm_psfn_mock('doubking')
     
-    #cnfg_ferm_psfn_mock('gausking')
-    #cnfg_ferm_psfn_mock('doubking')
-
-    #cnfg_ferm_psfn_expr('gausking')
-    #cnfg_ferm_psfn_expr('doubking')
-    
-    #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
-    #cnfg_ferm_mock_igal()
-    
-    #cnfg_ferm_expr_ngal('fermflux_comp_ngal.fits', 'fermexpo_comp_ngal.fits')
-    #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time0.fits', 'fermexpo_ngal_comp_time0.fits')
-    #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time1.fits', 'fermexpo_ngal_comp_time1.fits')
-    #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time2.fits', 'fermexpo_ngal_comp_time2.fits')
-    #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
-    #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
-    
-    #cnfg_ferm_post()
-    cnfg_ferm_mock_ngal()
-    #cnfg_test()
-    
-    #cnfg_sdss_mock()
-    #cnfg_sdss_expr()
+        #cnfg_ferm_psfn_expr('gausking')
+        #cnfg_ferm_psfn_expr('doubking')
+        
+        #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
+        #cnfg_ferm_mock_igal()
+        
+        cnfg_ferm_expr_ngal('fermflux_comp_ngal.fits', 'fermexpo_comp_ngal.fits')
+        #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time0.fits', 'fermexpo_ngal_comp_time0.fits')
+        #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time1.fits', 'fermexpo_ngal_comp_time1.fits')
+        #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time2.fits', 'fermexpo_ngal_comp_time2.fits')
+        #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
+        #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
+        
+        #cnfg_ferm_post()
+        #cnfg_ferm_mock_ngal()
+        #cnfg_test()
+        
+        #cnfg_sdss_mock()
+        #cnfg_sdss_expr()
 
