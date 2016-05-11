@@ -109,11 +109,12 @@ def make_maps():
 
 def make_maps_sing(indxprocwork):
 
-    pathlist = '$PCAT_DATA_PATH/phot_pass%d_%s.txt' % (reco, rtag)
+    infl = '$PCAT_DATA_PATH/phot_pass%d_%s.txt' % (reco[indxprocwork], rtag[indxprocwork])
+    spac = '$PCAT_DATA_PATH/spac_pass%d_%s.txt' % (reco[indxprocwork], rtag[indxprocwork])
         
     for m in indxevtt:
         
-        if reco == 7:
+        if reco[indxprocwork] == 7:
             if m == 3:
                 thisevtt = 1
             elif m == 2:
@@ -122,13 +123,6 @@ def make_maps_sing(indxprocwork):
                 continue
         if reco == 8:
             thisevtt = evtt[m]
-        
-        if reco == 7:
-            evnt = os.environ["FERMI_DATA"] + 'weekly/p7v6c/lat_photon_weekly_w%03d_p202_v001.fits' % t
-        if reco == 8:
-            evnt = os.environ["FERMI_DATA"] + 'weekly/photon/lat_photon_weekly_w%03d_p302_v001.fits' % t
-                
-        spac = os.environ["FERMI_DATA"] + 'weekly/spacecraft/lat_spacecraft_weekly_w%03d_p202_v001.fits' % t
                 
         sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
         filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
@@ -136,7 +130,7 @@ def make_maps_sing(indxprocwork):
         cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
         expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
 
-        cmnd = 'gtselect infile=' + evnt + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc, thisevtt)
+        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc, thisevtt)
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
 

@@ -653,11 +653,17 @@ def plot_histspec(globdata, l, listspechist=None):
         post = False
     else:
         post = True
-        
-    figr, axcl = plt.subplots(1, globdata.numbener, figsize=(7 * globdata.numbener, 7))
-    if globdata.numbener == 1:
+    
+    if globdata.colrprio:
+        numbcols = 1
+    else:
+        numbcols = globdata.numbener
+    figr, axcl = plt.subplots(1, numbcols, figsize=(7 * numbcols, 7))
+    if numbcols == 1:
         axcl = [axcl]
     for i, axis in enumerate(axcl):
+        if globdata.colrprio:
+            i = globdata.indxenerfdfn
         if post:
             xdat = globdata.meanspec[i, :]
             yerr = empty((2, globdata.numbspec))
@@ -667,18 +673,15 @@ def plot_histspec(globdata, l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b',                     log=True, label='Sample')
-            
+            axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if not globdata.colrprio or i == globdata.indxenerfdfn:
                 fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]  
                 fluxhistmodl = retr_fdfn(globdata, globdata.thissampvarb[globdata.indxsampfdfnnorm[l]], fdfnslop, i)
                 axis.plot(globdata.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
-            
         if globdata.trueinfo:
             truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
             if globdata.datatype == 'mock':
                 axis.hist(globdata.fgl3spec[0, i, globdata.indxfgl3rofi], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
-
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + globdata.strgfluxunit)
         axis.set_xscale('log')
@@ -688,11 +691,9 @@ def plot_histspec(globdata, l, listspechist=None):
         axis.set_xlim([globdata.minmspec[i], globdata.maxmspec[i]])
         if i == 0:
             axis.set_ylabel('$N$')
-        if i == globdata.numbener / 2:
+        if i == numbcols / 2:
             axis.legend()
-        
     figr.subplots_adjust(wspace=0.3, bottom=0.2)
-    
     if post:
         path = globdata.plotpath + 'histspec%d_' % l + globdata.rtag + '.png'
     else:
