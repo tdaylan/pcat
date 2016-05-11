@@ -353,6 +353,8 @@ def plot_post(pathprobcatl):
         truepost[4*numbpnts:] = globdata.truenormback[0, :]
         path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
+        strgpost += ['A_{%d}' % i for i in indxener]
+        print strgpost
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbbins=globdata.numbbins, quan=True)
                 
     # flux match with the true catalog
