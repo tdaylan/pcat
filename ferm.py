@@ -107,7 +107,7 @@ def make_maps():
     pool.join()
 
 
-def make_maps_sing(indxproc):
+def make_maps_sing(indxprocwork):
 
     pathlist = '$PCAT_DATA_PATH/phot_pass%d_%s.txt' % (reco, rtag)
         
