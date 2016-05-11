@@ -673,7 +673,8 @@ def plot_histspec(globdata, l, listspechist=None):
             yerr = abs(yerr - ydat)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            axis.hist(globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :], globdata.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
+            spec = globdata.thissampvarb[globdata.thisindxsampspec[l]][i, :].flatten()
+            axis.hist(spec, globdata.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if not globdata.colrprio or i == globdata.indxenerfdfn:
                 fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]  
                 fluxhistmodl = retr_fdfn(globdata, globdata.thissampvarb[globdata.indxsampfdfnnorm[l]], fdfnslop, i)

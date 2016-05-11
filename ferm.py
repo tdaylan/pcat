@@ -124,13 +124,18 @@ def make_maps_sing(indxprocwork):
         if reco == 8:
             thisevtt = evtt[m]
                 
-        sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-        filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-        live = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/live_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-        cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
-        expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag + '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' % (reco, evtc, thisevtt, t)
+        sele = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/sele_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
+            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
+        filt = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/filt_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
+            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
+        live = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/live_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
+            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
+        cnts = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/cnts_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
+            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
+        expo = os.environ["FERMI_DATA"] + 'exposure/gcps_time/' + rtag[indxprocwork] + '/expo_pass%d_evtc%03d_evtt%03d_week%03d.fits' \
+            % (reco[indxprocwork], evtc[indxprocwork], thisevtt, t)
 
-        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc, thisevtt)
+        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
 
