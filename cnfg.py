@@ -389,18 +389,20 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
     
 def cnfg_ferm_post():
      
+    indxenerincl = arange(1, 3)
+    numbener = indxenerincl.size
     cnfg = retr_cnfg(psfntype='doubking', \
 					 numbproc=1, \
-					 numbswep=10000, \
+					 numbswep=10, \
                      plotperd=10000, \
                      makeplot=True, \
                      randinit=False, \
                      trueinfo=True, \
                      maxmgang=3., \
                      colrprio=True, \
-                     verbtype=1, \
+                     verbtype=3, \
                      indxevttincl=arange(3, 4), \
-                     indxenerincl=arange(1, 4), \
+                     indxenerincl=indxenerincl, \
                      maxmnumbpnts=array([3]), \
                      mocknumbpnts=array([3]), \
                      probprop=array([0., 0., 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
@@ -416,7 +418,7 @@ def cnfg_ferm_post():
                      datatype='mock', \
                      numbsideheal=256, \
                      mockfdfnslop=array([[1.8]]), \
-                     mocknormback=ones((1, 3)), \
+                     mocknormback=ones((1, numbener)), \
                                          )
     wrap(cnfg)
 
