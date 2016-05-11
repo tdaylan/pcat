@@ -130,8 +130,8 @@ def make_maps_sing(indxprocwork):
         cnts = '$PCAT_DATA_PATH/cnts_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
         expo = '$PCAT_DATA_PATH/expo_pass%d_evtc%03d_evtt%03d_%s.fits' % (reco[indxprocwork], evtc[indxprocwork], thisevtt, rtag[indxprocwork])
 
-        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi[indxprocwork] + \
-            strgtime + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
+        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
+            strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
 
