@@ -68,35 +68,21 @@ def make_maps():
 
     global strgregi
     strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
-    
-    
-    # make file lists
-    cmnd = 'rm $PCAT_DATA_PATH/phot_pass8.txt'
-    os.system(cmnd)
-    cmnd = 'ls -d -1 $FERMI_DATA/weekly/photon/*.fits >> $PCAT_DATA_PATH/phot_pass8.txt'
-    os.system(cmnd)
-
-    weekinit = 9
-    weekfinl = 218
-    listtimefrac = array([1., 0.75, 0.5, 0.25])
-    numbtime = listtimefrac.size
-    for t, timefrac in enumerate(listtimefrac):
-        numbweek = (weekfinl - weekinit) * timefrac
-        listweek = floor(linspace(weekinit, weekfinl - 1, numbweek)).astype(int)
-        cmnd = 'rm $PCAT_DATA_PATH/phot_pass7_time%d.txt' % t
-        os.system(cmnd)
-        for week in listweek:
-            cmnd = 'ls -d -1 $FERMI_DATA/weekly/p7v6c/*_w%03d_* >> $PCAT_DATA_PATH/phot_pass7_time%d.txt' % (week, t)
-            os.system(cmnd)
    
+    global listtimefrac, numbtime
+    numbtime = 4
     numbproc = numbtime + 1
 
-    global rtag, reco, evtc, strgtime
+    global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, plotpath
     rtag = ['full'] + ['cmp%d' % t for t in range(numbtime)]
     reco = [8] + [7 for t in range(numbtime)] 
     evtc = [128] + [2 for t in range(numbtime)] 
     strgtime = ['tmin=INDEF tmax=INDEF'] + ['tmin=239155201 tmax=364953603' for t in range(numbtime)] 
-        
+    weekinit = [11] + [9 for t in range(numbtime)]
+    weekfinl = [411] + [218 for t in range(numbtime)]
+    listtimefrac = [1.] + [1., 0.75, 0.5, 0.25]
+    photpath = ['photon'] + ['p7v6c' for t in range(numbtime)]
+
     # process pool
     pool = mp.Pool(numbproc)
 
@@ -109,9 +95,22 @@ def make_maps():
 
 def make_maps_sing(indxprocwork):
 
-    infl = '$PCAT_DATA_PATH/phot_pass%d_%s.txt' % (reco[indxprocwork], rtag[indxprocwork])
-    spac = '$PCAT_DATA_PATH/spac_pass%d_%s.txt' % (reco[indxprocwork], rtag[indxprocwork])
+    # make file lists
+    infl = '$PCAT_DATA_PATH/phot_%s.txt' % (reco[indxprocwork], rtag[indxprocwork])
+    spac = '$PCAT_DATA_PATH/spac_%s.txt' % rtag[indxprocwork]
         
+    numbweek = (weekfinl[indxprocwork] - weekinit[indxprocwork]) * listtimefrac[indxprocwork]
+    listweek = floor(linspace(weekinit[indxprocwork], weekfinl[indxprocwork] - 1, numbweek)).astype(int)
+    cmnd = 'rm ' + infl
+    os.system(cmnd)
+    cmnd = 'rm ' + spac
+    os.system(cmnd)
+    for week in listweek:
+        cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % (week, rtag[indxprocwork]) + spac
+        os.system(cmnd)
+        cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week, rtag[indxprocwork]) + infl
+        os.system(cmnd)
+    
     for m in indxevtt:
         
         if reco[indxprocwork] == 7:
