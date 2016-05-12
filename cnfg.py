@@ -361,7 +361,6 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         
     cnfg = retr_cnfg(psfntype='doubking', \
                     numbswep=2000000, \
-                    numbburn=400000, 
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
@@ -487,8 +486,7 @@ def cnfg_ferm_mock_ngal():
       
     cnfg = retr_cnfg(psfntype='doubking', \
 					 #numbproc=2, \
-                     numbswep=2000000, \
-					 numbburn=400000, \
+                     numbswep=60000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \
@@ -554,8 +552,8 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
         
-        cnfg_ferm_post()
-        #cnfg_ferm_mock_ngal()
+        #cnfg_ferm_post()
+        cnfg_ferm_mock_ngal()
         #cnfg_test()
         
         #cnfg_sdss_mock()

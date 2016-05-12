@@ -277,16 +277,18 @@ def retr_llik(globdata, init=False):
                 indxspecproxtemp = amin(where(globdata.meanspecprox - abs(spectemp) > 0.)[0])
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
-                print 'hey'
-                print 'globdata.meanspecprox'
-                print globdata.meanspecprox
-                print 'globdata.meanspec'
-                print globdata.meanspec
-                print 'absspectemp'
-                print abs(spectemp)
-                print 'indxspecproxtemp'
-                print indxspecproxtemp
-                print
+                
+                if False:
+                    print 'hey'
+                    print 'globdata.meanspecprox'
+                    print globdata.meanspecprox
+                    print 'globdata.meanspec'
+                    print globdata.meanspec
+                    print 'absspectemp'
+                    print abs(spectemp)
+                    print 'indxspecproxtemp'
+                    print indxspecproxtemp
+                    print
             indxpixlmodi = unique(concatenate(thisindxpixlprox))
 
         # construct the mesh grid for likelihood evaluation
