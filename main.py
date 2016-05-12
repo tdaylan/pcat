@@ -486,6 +486,8 @@ def wrap(cnfg):
     listhdun.append(pf.PrimaryHDU(header=head))
 
     for l in globdata.indxpopl:
+        print 'listlgal[l]'
+        print listlgal[l]
         listhdun.append(pf.ImageHDU(listlgal[l]))
         listhdun[-1].header['EXTNAME'] = 'lgalpopl%d' % l
         listhdun.append(pf.ImageHDU(listbgal[l]))
@@ -493,6 +495,8 @@ def wrap(cnfg):
         listhdun.append(pf.ImageHDU(listspec[l]))
         listhdun[-1].header['EXTNAME'] = 'specpopl%d' % l
         if globdata.colrprio:
+            print 'listsind[l]'
+            print listsind[l]
             listhdun.append(pf.ImageHDU(listsind[l]))
             listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
 
