@@ -449,9 +449,13 @@ def pars_samp(globdata, indxpntsfull, samp):
     return sampvarb, indxpixlpnts, cnts, pntsflux, totlflux, totlcnts
     
     
-def retr_mrkrsize(globdata, spec, indxenertemp):
+def retr_mrkrsize(globdata, spec, indxenerplot):
+    if globdata.colrprio:
+        indxenertemp = globdata.indxenerfdfn[0]
+    else:
+        indxenertemp = indxenerplot
 
-    mrkrsize = (spec - globdata.minmspec[indxenertemp]) / (globdata.maxmspec[indxenertemp] - globdata.minmspec[indxenertemp]) * \
+    mrkrsize = (spec[indxenertemp, :] - globdata.minmspec[indxenertemp]) / (globdata.maxmspec[indxenertemp] - globdata.minmspec[indxenertemp]) * \
 		(globdata.maxmmrkrsize - globdata.minmmrkrsize) + globdata.minmmrkrsize
         
     return mrkrsize
@@ -1338,10 +1342,12 @@ def retr_prop(globdata):
             globdata.indxsampmodispec = globdata.indxsampmodiinit + 2 + globdata.indxener
         
         # propose
+        if globdata.thisindxprop == globdata.indxproplgal or globdata.thisindxprop == globdata.indxpropbgal:
+            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvlbhl) 
         if globdata.thisindxprop == globdata.indxpropspec:
             retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvspec)
-        else:
-            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvlbhl) 
+        if globdata.thisindxprop == globdata.indxpropsind:
+            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvsind)
 
         # modification catalog
         globdata.modilgal = empty(2)

@@ -346,7 +346,7 @@ def plot_post(pathprobcatl):
         path = globdata.plotpath + 'postdist_%d_' % k + globdata.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in globdata.indxener]
-        tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbbins=globdata.numbbins, quan=True)
+        tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
                 
     # flux match with the true catalog
     if globdata.trueinfo:
@@ -443,7 +443,7 @@ def plot_post(pathprobcatl):
     else:
         truepara = array([None] * globdata.numbpsfipara)
     tdpy.mcmc.plot_grid(path, globdata.listpsfipara, globdata.strgpsfipara, truepara=truepara, numbplotside=globdata.numbformpara, \
-        numbbins=globdata.numbbins, quan=True, ntickbins=3)
+        numbbins=globdata.numbbins, numbtickbins=3)
     
     for k in range(globdata.numbpsfipara):
         path = globdata.plotpath + 'psfipara%d_' % k + globdata.rtag + '.png'
@@ -1380,7 +1380,7 @@ def plot_histcnts(globdata, l, thiscnts):
     plt.savefig(globdata.plotpath + 'histcnts%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
-def plot_datacnts(globdata, pener, pevtt, nextstat=False):
+def plot_datacnts(globdata, indxenerplot, pevtt, nextstat=False):
 
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
@@ -1388,26 +1388,26 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
-        if pener == None:
+        if indxenerplot == None:
             axis.set_title('')
         else:
-            axis.set_title(globdata.binsenerstrg[pener])
+            axis.set_title(globdata.binsenerstrg[indxenerplot])
     else:
-        titl = globdata.binsenerstrg[pener]
+        titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
             titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
 
     # plot the model count map
     if pevtt == None:
-        if pener == None:
+        if indxenerplot == None:
             imag = axis.imshow(sum(globdata.datacntscart, axis=3), origin='lower', extent=globdata.exttrofi, interpolation='none')
         else:
-            imag = axis.imshow(sum(globdata.datacntscart[:, :, pener, :], axis=2), origin='lower',                              interpolation='none', cmap='Reds', extent=globdata.exttrofi)
+            imag = axis.imshow(sum(globdata.datacntscart[:, :, indxenerplot, :], axis=2), origin='lower',                              interpolation='none', cmap='Reds', extent=globdata.exttrofi)
     else:
-        imag = axis.imshow(globdata.datacntscart[:, :, pener, pevtt], origin='lower', interpolation='none',                          cmap='Reds', extent=globdata.exttrofi)
+        imag = axis.imshow(globdata.datacntscart[:, :, indxenerplot, pevtt], origin='lower', interpolation='none',                          cmap='Reds', extent=globdata.exttrofi)
     
-    if pevtt != None or pener != None:
+    if pevtt != None or indxenerplot != None:
         cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
     
     # superimpose catalogs
@@ -1415,7 +1415,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, :, :], indxenerplot)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
             if globdata.exprtype == 'sdss':
@@ -1433,7 +1433,7 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
                         label=globdata.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]], indxenerplot)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1445,11 +1445,11 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     if nextstat:
         
         for k in range(modilgal.size):
-            if modispec[pener, k] > 0:
+            if modispec[indxenerplot, k] > 0:
                 colr = 'yellow'
             else:
                 colr = 'red'
-            mrkrsize = retr_mrkrsize(globdata, abs(modispec[pener, k]), pener)
+            mrkrsize = retr_mrkrsize(globdata, abs(modispec[:, k]), indxenerplot)
             
             if globdata.exprtype == 'ferm':
                 xaxi = modilgal[k]
@@ -1471,17 +1471,17 @@ def plot_datacnts(globdata, pener, pevtt, nextstat=False):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        if pener == None:
+        if indxenerplot == None:
             path = globdata.plotpath + 'datacntsAA_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
         else:
-            path = globdata.plotpath + 'datacnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
+            path = globdata.plotpath + 'datacnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'datacnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'datacnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_modlcnts(globdata, pener, pevtt):
+def plot_modlcnts(globdata, indxenerplot, pevtt):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -1490,24 +1490,24 @@ def plot_modlcnts(globdata, pener, pevtt):
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[indxenerplot])
     else:
-        titl = globdata.binsenerstrg[pener]
+        titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
             titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
         
     # plot the model count map
     if pevtt == None:
-        modlcntstemp = sum(globdata.thismodlcnts[pener, :, :], axis=1)
+        modlcntstemp = sum(globdata.thismodlcnts[indxenerplot, :, :], axis=1)
     else:
-        modlcntstemp = globdata.thismodlcnts[pener, :, pevtt]
+        modlcntstemp = globdata.thismodlcnts[indxenerplot, :, pevtt]
     if globdata.pixltype == 'heal':
         modlcntstemp = tdpy.util.retr_cart(modlcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
             minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         modlcntstemp = modlcntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart)).T
-    modlcntstemp[where(modlcntstemp > globdata.datacntssatu[pener])] = globdata.datacntssatu[pener]
+    modlcntstemp[where(modlcntstemp > globdata.datacntssatu[indxenerplot])] = globdata.datacntssatu[indxenerplot]
     
     imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -1517,7 +1517,7 @@ def plot_modlcnts(globdata, pener, pevtt):
     for l in globdata.indxpopl:
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]], indxenerplot)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1527,7 +1527,7 @@ def plot_modlcnts(globdata, pener, pevtt):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, :, :], indxenerplot)
             lgal = globdata.truelgal[l]
             bgal = globdata.truebgal[l]
             if globdata.exprtype == 'sdss':
@@ -1543,14 +1543,14 @@ def plot_modlcnts(globdata, pener, pevtt):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = globdata.plotpath + 'modlcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'modlcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'modlcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'modlcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
+def plot_resicnts(globdata, indxenerplot, pevtt, resicnts, nextstat=False):
 
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -1559,25 +1559,25 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[indxenerplot])
     else:
-        titl = globdata.binsenerstrg[pener]
+        titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
             titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
         
     # plot the model count map
     if pevtt == None:
-        resicntstemp = sum(resicnts[pener, :, :], axis=1)
+        resicntstemp = sum(resicnts[indxenerplot, :, :], axis=1)
     else:
-        resicntstemp = resicnts[pener, :, pevtt]
+        resicntstemp = resicnts[indxenerplot, :, pevtt]
     if globdata.pixltype == 'heal':
         resicntstemp = tdpy.util.retr_cart(resicntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
             minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
         resicntstemp = resicntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart))
-    resicntstemp[where(resicntstemp > globdata.resicntssatu[pener])] = globdata.resicntssatu[pener]
-    resicntstemp[where(resicntstemp < -globdata.resicntssatu[pener])] = -globdata.resicntssatu[pener]
+    resicntstemp[where(resicntstemp > globdata.resicntssatu[indxenerplot])] = globdata.resicntssatu[indxenerplot]
+    resicntstemp[where(resicntstemp < -globdata.resicntssatu[indxenerplot])] = -globdata.resicntssatu[indxenerplot]
     
     imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
@@ -1586,7 +1586,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     for l in globdata.indxpopl:
 
         # model catalog
-        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]][pener, :], pener)
+        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]], indxenerplot)
         lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
         bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
         if globdata.exprtype == 'sdss':
@@ -1596,7 +1596,7 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
 
         # true catalog
         if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, pener, :], pener)
+            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, :, :], indxenerplot)
             lgal = copy(globdata.truelgal[l])
             bgal = copy(globdata.truebgal[l])
             if globdata.exprtype == 'sdss':
@@ -1607,11 +1607,11 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
         
     if nextstat:
         for k in range(modilgal.size):
-            if modispec[pener, k] > 0:
+            if modispec[indxenerplot, k] > 0:
                 colr = 'yellow'
             else:
                 colr = 'red'
-            mrkrsize = retr_mrkrsize(globdata, abs(modispec[pener, k]), pener)
+            mrkrsize = retr_mrkrsize(globdata, abs(modispec[:, k]), indxenerplot)
             
             
             if globdata.exprtype == 'ferm':
@@ -1637,20 +1637,20 @@ def plot_resicnts(globdata, pener, pevtt, resicnts, nextstat=False):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        path = globdata.plotpath + 'resicnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'resicnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'resicnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'resicnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     
     plt.close(figr)
     
     
-def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
+def plot_errrcnts(globdata, indxenerplot, pevtt, errrcntsrofi):
 
     if pevtt == None:
-        errrcntstemp = sum(errrcntsrofi[pener, :, :], axis=1)
+        errrcntstemp = sum(errrcntsrofi[indxenerplot, :, :], axis=1)
     else:
-        errrcntstemp = errrcntsrofi[pener, :, pevtt]
+        errrcntstemp = errrcntsrofi[indxenerplot, :, pevtt]
     
     if globdata.pixltype == 'heal':
         errrcntstemp = tdpy.util.retr_cart(errrcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
@@ -1665,9 +1665,9 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[indxenerplot])
     else:
-        titl = globdata.binsenerstrg[pener]
+        titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
             titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
@@ -1682,14 +1682,14 @@ def plot_errrcnts(globdata, pener, pevtt, errrcntsrofi):
     axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
     
     if pevtt == None:
-        path = globdata.plotpath + 'errrcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'errrcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'errrcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'errrcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_catl(globdata, pener, pevtt, thiscnts):
+def plot_catl(globdata, indxenerplot, pevtt, thiscnts):
     
     # begin figure
     figr, axis = plt.subplots(figsize=(12, 12))
@@ -1698,9 +1698,9 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
     if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[pener])
+        axis.set_title(globdata.binsenerstrg[indxenerplot])
     else:
-        titl = globdata.binsenerstrg[pener]
+        titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
             titl += ', ' + globdata.evttstrg[pevtt]
         axis.set_title(titl)
@@ -1733,20 +1733,20 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
             numbpnts = int(globdata.truenumbpnts[l])
             for a in range(numbpnts):
                 if pevtt == None:
-                    cnts = sum(globdata.truecnts[l][pener, a, :])
-                    sigm = sqrt(sum(truesigm[l][pener, a, :]**2))
+                    cnts = sum(globdata.truecnts[l][indxenerplot, a, :])
+                    sigm = sqrt(sum(truesigm[l][indxenerplot, a, :]**2))
                 else:
-                    cnts = globdata.truecnts[l][pener, a, pevtt]
-                    sigm = truesigm[l][pener, a, pevtt]
+                    cnts = globdata.truecnts[l][indxenerplot, a, pevtt]
+                    sigm = truesigm[l][indxenerplot, a, pevtt]
                 axis.text(globdata.truelgal[l][a] + 0.7, globdata.truelgal[l][a] - 0.7,                         '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
 
     for l in globdata.indxpopl:
         numbpnts = int(globdata.thissampvarb[globdata.indxsampnumbpnts[l]])
         for a in range(numbpnts):
             if pevtt == None:
-                cnts = sum(thiscnts[l][pener, a, :])
+                cnts = sum(thiscnts[l][indxenerplot, a, :])
             else:
-                cnts = thiscnts[l][pener, a, pevtt]
+                cnts = thiscnts[l][indxenerplot, a, pevtt]
             axis.text(globdata.thissampvarb[globdata.thisindxsamplgal[l][a]] - 0.5, globdata.thissampvarb[globdata.thisindxsampbgal[l][a]] + 0.3,                     '%d' % cnts, color='b', fontsize=13)
     
     axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
@@ -1757,14 +1757,14 @@ def plot_catl(globdata, pener, pevtt, thiscnts):
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
     
     if pevtt == None:
-        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % mean(globdata.thisbackcntsmean[pener, :]), fontsize=18)
+        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % mean(globdata.thisbackcntsmean[indxenerplot, :]), fontsize=18)
     else:
-        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[pener, pevtt], fontsize=18)
+        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[indxenerplot, pevtt], fontsize=18)
         
     if pevtt == None:
-        path = globdata.plotpath + 'catlcnts%dA_' % pener + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'catlcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        path = globdata.plotpath + 'catlcnts%d%d_' % (pener, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+        path = globdata.plotpath + 'catlcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
 

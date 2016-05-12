@@ -126,6 +126,7 @@ def wrap(cnfg):
     globdata.stdvback = cnfg['stdvback']
     globdata.stdvlbhl = cnfg['stdvlbhl']
     globdata.stdvspec = cnfg['stdvspec']
+    globdata.stdvsind = cnfg['stdvsind']
     globdata.spmrlbhl = cnfg['spmrlbhl']
     globdata.fracrand = cnfg['fracrand']
     

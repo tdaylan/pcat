@@ -4,7 +4,8 @@ from __init__ import *
 # internal functions
 from main import wrap
 
-def retr_cnfg(               verbtype=1,               
+def retr_cnfg( \
+              verbtype=1, \
               plotperd=50000, \
               
               makeplot=True, \
@@ -70,13 +71,13 @@ def retr_cnfg(               verbtype=1,
               
               spmrlbhl=2., \
             
-              stdvlbhl=0.1, \
-              stdvback=0.04, \
-              stdvspec=0.15, \
-              
               stdvfdfnnorm=0.05, \
               stdvfdfnslop=0.001, \
               stdvpsfipara=0.1, \
+              stdvback=0.04, \
+              stdvlbhl=0.1, \
+              stdvspec=0.15, \
+              stdvsind=0.15, \
               
               fracrand=0.05, \
               
@@ -254,6 +255,7 @@ def retr_cnfg(               verbtype=1,
     cnfg['stdvback'] = stdvback
     cnfg['stdvlbhl'] = stdvlbhl
     cnfg['stdvspec'] = stdvspec
+    cnfg['stdvsind'] = stdvsind
 
     ## fraction of heavy-tailed proposals
     cnfg['fracrand'] = fracrand
@@ -307,7 +309,7 @@ def cnfg_ferm_info():
 
     for k in range(nruns):
         
-        cnfg = retr_cnfg(     psfntype='gausking',     numbswep=50000,     plotperd=50000,     trueinfo=True,     maxmgang=10.,     maxmnumbpnts=array([3000]),     colrprio=True,     indxenerincl=arange(1),     indxevttincl=arange(3, 4),     minmspec=array([minmspec[k]]),     maxmspec=array([3e-7]),     regitype='ngal',     maxmnormback=array([5., 5.]),     minmnormback=array([0.2, 0.2]), strgexpo='fermexpo_ngal.fits',     stdvback=0.1,     datatype='mock',     mocknumbpnts=array([100]),     numbsideheal=256,     makeplot=False,     mocknormback=ones((2, 3)),    )
+        cnfg = retr_cnfg(     psfntype='gausking',     numbswep=50000,     plotperd=50000,     trueinfo=True,     maxmgang=10.,     maxmnumbpnts=array([3000]),     colrprio=True,     indxenerincl=arange(1),     indxevttincl=arange(3, 4),     minmspec=array([minmspec[k]]),     maxmspec=array([3e-7]),     regitype='ngal',     maxmnormback=array([5., 5.]),     minmnormback=array([0.2, 0.2]), strgexpo='fermexpo_ngal.fits',     stdvback=0.1,     datatype='mock',     mocknumbpnts=array([100]),     numbsideheal=256, mocknormback=ones((2, 3)),    )
         
         gridchan = wrap(cnfg)
         numbproc = len(gridchan)
@@ -321,7 +323,7 @@ def cnfg_ferm_info():
 
 def cnfg_ferm_expr_igal(strgexpr, strgexpo):
       
-    cnfg = retr_cnfg( psfntype='gausking', numbswep=3000000, numbburn=1500000, verbtype=1, makeplot=True, plotperd=50000, initnumbpnts=array([100]), maxmnumbpnts=array([600]), trueinfo=True, maxmgang=20., colrprio=False, #indxenerincl=arange(1), \
+    cnfg = retr_cnfg( psfntype='gausking', numbswep=3000000, numbburn=1500000, plotperd=50000, initnumbpnts=array([100]), maxmnumbpnts=array([600]), trueinfo=True, maxmgang=20., colrprio=False, #indxenerincl=arange(1), \
 #indxevttincl=arange(3, 4), \
 #minmspec=array([1e-8]), \
 #maxmspec=array([3e-6]), \
@@ -361,8 +363,6 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         
     cnfg = retr_cnfg(psfntype='doubking', \
                     numbswep=2000000, \
-                    verbtype=1, \
-                    makeplot=True, \
                     plotperd=50000, \
                     randinit=False, \
                     proppsfn=True, \
@@ -389,16 +389,13 @@ def cnfg_ferm_post():
     indxenerincl = arange(1, 3)
     numbener = indxenerincl.size
     cnfg = retr_cnfg(psfntype='doubking', \
-					 numbproc=1, \
-					 numbswep=100, \
+					 numbswep=1000000, \
                      plotperd=50000, \
-                     makeplot=True, \
                      randinit=False, \
                      trueinfo=True, \
                      maxmgang=2., \
                      margsize=0., \
                      colrprio=True, \
-                     verbtype=1, \
                      indxevttincl=arange(3, 4), \
                      indxenerincl=indxenerincl, \
                      maxmnumbpnts=array([3]), \
@@ -413,6 +410,10 @@ def cnfg_ferm_post():
                      lablback=[r'$\mathcal{I}$'], \
                      nameback=['normisot'], \
                      strgexpo='fermexpo_ngal_comp.fits', \
+                     stdvback=0.15, \
+                     stdvlbhl=0.01, \
+                     stdvspec=0.1, \
+                     stdvsind=0.15, \
                      datatype='mock', \
                      numbsideheal=256, \
                      mockfdfnslop=array([[1.8]]), \
@@ -487,12 +488,10 @@ def cnfg_ferm_mock_ngal():
                      numbswep=20000, \
                      numbproc=2, \
                      plotperd=50000, \
-                     makeplot=True, \
                      randinit=False, \
                      trueinfo=True, \
                      maxmgang=20., \
                      colrprio=colrprio, \
-                     verbtype=1, \
                      indxevttincl=arange(2, 4), \
                      indxenerincl=indxenerincl, \
                      maxmnumbpnts=array([200]), \
@@ -515,14 +514,14 @@ def cnfg_ferm_mock_ngal():
 def cnfg_sdss_mock():
 
     
-    cnfg = retr_cnfg(psfntype='doubgaus', trueinfo=False, numbswep=100000, plotperd=20000, verbtype=1, minmspec=ones(3) * 1e3, maxmspec=ones(3) * 1e5, initnumbpnts=array([100]), exprtype='sdss', datatype='mock', pixltype='cart', regitype='mes5', stdvlbhl=2./3600., lgalcntr=202., bgalcntr=2., mocknormback=ones((1, 3)), spmrlbhl=5./3600., maxmnormback=array([1e3]), minmnormback=array([1e2]), maxmgang=30./3600., numbsidecart=100, margsize=2./3600., strgexpo='sdssexpo.fits', stdvback=0.01, indxevttincl=arange(1), indxenerincl=arange(1))
+    cnfg = retr_cnfg(psfntype='doubgaus', trueinfo=False, numbswep=100000, plotperd=20000, minmspec=ones(3) * 1e3, maxmspec=ones(3) * 1e5, initnumbpnts=array([100]), exprtype='sdss', datatype='mock', pixltype='cart', regitype='mes5', stdvlbhl=2./3600., lgalcntr=202., bgalcntr=2., mocknormback=ones((1, 3)), spmrlbhl=5./3600., maxmnormback=array([1e3]), minmnormback=array([1e2]), maxmgang=30./3600., numbsidecart=100, margsize=2./3600., strgexpo='sdssexpo.fits', stdvback=0.01, indxevttincl=arange(1), indxenerincl=arange(1))
 
     wrap(cnfg)
     
     
 def cnfg_sdss_expr():
 
-    cnfg = retr_cnfg(psfntype='doubgaus', trueinfo=False, numbswep=1000000, plotperd=20000, verbtype=1, minmspec=ones(3) * 1e3, maxmspec=ones(3) * 1e5, initnumbpnts=array([10]), maxmnumbpnts=20, exprtype='sdss', datatype='inpt', pixltype='cart', regitype='mes5', stdvlbhl=2./3600., lgalcntr=202., bgalcntr=2., spmrlbhl=0.5/3600., stdvspec=0.05, maxmnormback=array([1e3]), minmnormback=array([1e2]), margsize=2./3600., maxmgang=30./3600., strgexpr='sdssflux.fits', strgexpo='sdssexpo.fits', stdvback=1e-4, indxevttincl=arange(1), indxenerincl=arange(1))
+    cnfg = retr_cnfg(psfntype='doubgaus', trueinfo=False, numbswep=1000000, plotperd=20000, minmspec=ones(3) * 1e3, maxmspec=ones(3) * 1e5, initnumbpnts=array([10]), maxmnumbpnts=20, exprtype='sdss', datatype='inpt', pixltype='cart', regitype='mes5', stdvlbhl=2./3600., lgalcntr=202., bgalcntr=2., spmrlbhl=0.5/3600., stdvspec=0.05, maxmnormback=array([1e3]), minmnormback=array([1e2]), margsize=2./3600., maxmgang=30./3600., strgexpr='sdssflux.fits', strgexpo='sdssexpo.fits', stdvback=1e-4, indxevttincl=arange(1), indxenerincl=arange(1))
 
     wrap(cnfg)
     
@@ -551,8 +550,8 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
         
-        #cnfg_ferm_post()
-        cnfg_ferm_mock_ngal()
+        cnfg_ferm_post()
+        #cnfg_ferm_mock_ngal()
         #cnfg_test()
         
         #cnfg_sdss_mock()
