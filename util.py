@@ -274,12 +274,16 @@ def retr_llik(globdata, init=False):
                     spectemp = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenerfdfn, k]]
                 else:
                     spectemp = globdata.modispec[globdata.indxenerfdfn, k]
-                indxspecproxtemp = amin(where(globdata.meanspecprox - spectemp > 0.)[0])
+                indxspecproxtemp = amin(where(globdata.meanspecprox - abs(spectemp) > 0.)[0])
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
                 print 'hey'
-                print 'spectemp'
-                print spectemp
+                print 'globdata.meanspecprox'
+                print globdata.meanspecprox
+                print 'globdata.meanspec'
+                print globdata.meanspec
+                print 'absspectemp'
+                print abs(spectemp)
                 print 'indxspecproxtemp'
                 print indxspecproxtemp
                 print
