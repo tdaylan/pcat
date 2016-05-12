@@ -73,7 +73,7 @@ def make_maps():
     numbtime = 4
     numbproc = numbtime + 1
 
-    global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, plotpath
+    global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, photpath
     rtag = ['full'] + ['cmp%d' % t for t in range(numbtime)]
     reco = [8] + [7 for t in range(numbtime)] 
     evtc = [128] + [2 for t in range(numbtime)] 
