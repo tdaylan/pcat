@@ -360,7 +360,7 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
     cnfg = retr_cnfg(psfntype='doubking', \
-                    numbswep=60000, \
+                    numbswep=10000, \
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
