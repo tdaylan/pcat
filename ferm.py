@@ -79,8 +79,8 @@ def make_maps():
     evtc = [128] + [2 for t in range(numbtime)] 
     strgtime = ['tmin=INDEF tmax=INDEF'] + ['tmin=239155201 tmax=364953603' for t in range(numbtime)] 
     weekinit = [11] + [9 for t in range(numbtime)]
-    weekfinl = [12] + [13 for t in range(numbtime)]
-    #weekfinl = [411] + [218 for t in range(numbtime)]
+    #weekfinl = [12] + [13 for t in range(numbtime)]
+    weekfinl = [411] + [218 for t in range(numbtime)]
     listtimefrac = [1.] + [1., 0.75, 0.5, 0.25]
     photpath = ['photon'] + ['p7v6c' for t in range(numbtime)]
 
