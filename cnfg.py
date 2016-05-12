@@ -360,13 +360,12 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
     cnfg = retr_cnfg(psfntype='doubking', \
-                    numbswep=2000000, \
+                    numbswep=60000, \
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
                     randinit=False, \
                     proppsfn=True, \
-                    #initnumbpnts=array([100]), \
                     maxmnumbpnts=array([200]), \
                     trueinfo=True, \
                     maxmgang=20., \
@@ -545,7 +544,7 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
         #cnfg_ferm_mock_igal()
         
-        #cnfg_ferm_expr_ngal('fermflux_comp_ngal.fits', 'fermexpo_comp_ngal.fits')
+        cnfg_ferm_expr_ngal('fermflux_comp_ngal.fits', 'fermexpo_comp_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time0.fits', 'fermexpo_ngal_comp_time0.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time1.fits', 'fermexpo_ngal_comp_time1.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time2.fits', 'fermexpo_ngal_comp_time2.fits')
@@ -553,7 +552,7 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
         
         #cnfg_ferm_post()
-        cnfg_ferm_mock_ngal()
+        #cnfg_ferm_mock_ngal()
         #cnfg_test()
         
         #cnfg_sdss_mock()
