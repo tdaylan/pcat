@@ -88,8 +88,8 @@ def make_maps():
     pool = mp.Pool(numbproc)
 
     # spawn the processes
-    #pool.map(make_maps_sing, range(numbproc))
-    make_maps_sing(4)
+    pool.map(make_maps_sing, range(numbproc))
+    #make_maps_sing(4)
     pool.close()
     pool.join()
 
@@ -109,13 +109,8 @@ def make_maps_sing(indxprocwork):
     for week in listweek:
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % week + spac
         os.system(cmnd)
-        print cmnd
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week) + infl
         os.system(cmnd)
-        print
-    print
-    print
-    print
     for m in indxevtt:
         
         if reco[indxprocwork] == 7:
@@ -137,32 +132,21 @@ def make_maps_sing(indxprocwork):
         cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
             strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
         os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
-        print
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
         os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
-        print
 
         cmnd = 'gtbin evfile=' + filt + ' scfile=NONE outfile=' + cnts + \
             ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
             ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
         os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
-        print
 
         cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
         os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
-        print
 
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
         os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
-        print
-        print
-        print
+
 
 def writ_isot():
     
