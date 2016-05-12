@@ -88,8 +88,8 @@ def make_maps():
     pool = mp.Pool(numbproc)
 
     # spawn the processes
-    #pool.map(make_maps_sing, range(numbproc))
-    make_maps_sing(0)
+    pool.map(make_maps_sing, range(numbproc))
+    #make_maps_sing(0)
     pool.close()
     pool.join()
 
@@ -132,9 +132,9 @@ def make_maps_sing(indxprocwork):
 
         cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
             strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
-        #os.system(cmnd)
-        #print '%d, ' % indxprocwork + cmnd
-        #print
+        os.system(cmnd)
+        print '%d, ' % indxprocwork + cmnd
+        print
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
         os.system(cmnd)
