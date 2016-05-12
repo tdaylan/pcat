@@ -270,12 +270,6 @@ def retr_llik(globdata, init=False):
         if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
             thisindxpixlprox = []
             for k in range(numbpnts):
-                #print 'hey'
-                #print 'globdata.thisindxprop'
-                #print globdata.thisindxprop
-                #print 'spec.shape'
-                #print spec.shape
-                #print
                 if globdata.thisindxprop == globdata.indxproppsfipara:
                     spectemp = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenerfdfn, k]]
                 else:
@@ -283,6 +277,12 @@ def retr_llik(globdata, init=False):
                 indxspecproxtemp = amin(where(globdata.meanspecprox - spectemp > 0.)[0])
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
+                print 'hey'
+                print 'spectemp'
+                print spectemp
+                print 'indxspecproxtemp'
+                print indxspecproxtemp
+                print
             indxpixlmodi = unique(concatenate(thisindxpixlprox))
 
         # construct the mesh grid for likelihood evaluation

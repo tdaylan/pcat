@@ -132,27 +132,33 @@ def make_maps_sing(indxprocwork):
 
         cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
             strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
-        os.system(cmnd)
-        print '%d, ' % indxprocwork + cmnd
+        #os.system(cmnd)
+        #print '%d, ' % indxprocwork + cmnd
+        #print
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
+        print
 
         cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts + \
             ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
             ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
-        
+        print
+
         cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
-        
+        print
+
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
         os.system(cmnd)
         print '%d, ' % indxprocwork + cmnd
-
+        print
+        print
+        print
 
 def writ_isot():
     

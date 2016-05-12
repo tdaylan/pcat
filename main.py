@@ -731,7 +731,7 @@ def plot_samp(globdata):
     #plot_fwhm(globdata, thisfwhm)
     #plot_backcntsmean(globdata, globdata.thisbackcntsmean)
     
-    tempsampvarb, tempppixl, tempcnts, temppntsflux,         tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
+    tempsampvarb, tempppixl, tempcnts, temppntsflux, tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
     globdata.errrmodlcnts = globdata.thismodlcnts - tempmodlcnts
     
     for i in globdata.indxener:
