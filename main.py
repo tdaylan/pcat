@@ -378,7 +378,7 @@ def wrap(cnfg):
         listlgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         listbgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         listspectemp = zeros((globdata.numbsamp, globdata.numbener, globdata.maxmnumbpnts[l])) - 1.
-        listlgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
+        listsindtemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         for k in range(globdata.numbsamp):
             listlgaltemp[k, 0:listlgal[l][k].size] = listlgal[l][k]
             listbgaltemp[k, 0:listbgal[l][k].size] = listbgal[l][k]
