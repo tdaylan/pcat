@@ -88,8 +88,8 @@ def make_maps():
     pool = mp.Pool(numbproc)
 
     # spawn the processes
-    pool.map(make_maps_sing, range(numbproc))
-    #make_maps_sing(0)
+    #pool.map(make_maps_sing, range(numbproc))
+    make_maps_sing(4)
     pool.close()
     pool.join()
 
@@ -109,9 +109,13 @@ def make_maps_sing(indxprocwork):
     for week in listweek:
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % week + spac
         os.system(cmnd)
+        print cmnd
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week) + infl
         os.system(cmnd)
-    
+        print
+    print
+    print
+    print
     for m in indxevtt:
         
         if reco[indxprocwork] == 7:
