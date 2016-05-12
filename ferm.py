@@ -145,7 +145,7 @@ def make_maps_sing(indxprocwork):
         print '%d, ' % indxprocwork + cmnd
         print
 
-        cmnd = 'gtbin evfile=' + filt + ' scfile=' + spac + ' outfile=' + cnts + \
+        cmnd = 'gtbin evfile=' + filt + ' scfile=NONE outfile=' + cnts + \
             ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
             ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
         os.system(cmnd)
