@@ -107,9 +107,9 @@ def make_maps_sing(indxprocwork):
     cmnd = 'rm ' + spac
     os.system(cmnd)
     for week in listweek:
-        cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % (week, rtag[indxprocwork]) + spac
+        cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % week + spac
         os.system(cmnd)
-        cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week, rtag[indxprocwork]) + infl
+        cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week) + infl
         os.system(cmnd)
     
     for m in indxevtt:
