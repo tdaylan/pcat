@@ -360,8 +360,7 @@ def cnfg_ferm_expr_ngal(strgexpr, strgexpo):
         maxmspec = array([1e-5, 1e-6, 1e-7, 1e-8, 1e-9])[indxenerincl]
         
     cnfg = retr_cnfg(psfntype='doubking', \
-                    numbproc=10, \
-                    numbswep=10000, \
+                    numbswep=2000000, \
                     verbtype=1, \
                     makeplot=True, \
                     plotperd=50000, \
@@ -485,8 +484,7 @@ def cnfg_ferm_mock_ngal():
         mockfdfnslop = tile(array([1.8]), (1, numbener))
       
     cnfg = retr_cnfg(psfntype='doubking', \
-					 #numbproc=2, \
-                     numbswep=60000, \
+                     numbswep=2000000, \
                      plotperd=50000, \
                      makeplot=True, \
                      randinit=False, \

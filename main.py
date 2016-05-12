@@ -344,14 +344,18 @@ def wrap(cnfg):
     
     globdata.rtag = retr_rtag(globdata, None)
 
+    # collect posterior samples from the processes
+    ## number of PS
     listnumbpnts = listsampvarb[:, :, globdata.indxsampnumbpnts].astype(int).reshape(globdata.numbsamp * globdata.numbproc, -1)
+    ## FDF normalization
     listfdfnnorm = listsampvarb[:, :, globdata.indxsampfdfnnorm].reshape(globdata.numbsamp * globdata.numbproc, -1)
+    ## FDF slope
     listfdfnslop = listsampvarb[:, :, globdata.indxsampfdfnslop].reshape(globdata.numbsamp * globdata.numbproc, globdata.numbpopl, globdata.numbener)
+    ## PSF parameters
     listpsfipara = listsampvarb[:, :, globdata.indxsamppsfipara].reshape(globdata.numbsamp * globdata.numbproc, -1)
+    ## Background normalization
     listnormback = listsampvarb[:, :, globdata.indxsampnormback].reshape(globdata.numbsamp * globdata.numbproc, globdata.numbback, globdata.numbener)
-    
-    listpntsfluxmean = listpntsfluxmean.reshape(globdata.numbsamp * globdata.numbproc, globdata.numbener)
-    
+    ## PS parameters
     listlgal = [[] for l in globdata.indxpopl]
     listbgal = [[] for l in globdata.indxpopl]
     listspec = [[] for l in globdata.indxpopl]
@@ -361,7 +365,7 @@ def wrap(cnfg):
     for k in range(globdata.numbproc):
         for j in range(globdata.numbsamp):            
             n = k * globdata.numbsamp + j
-            indxsamplgal, indxsampbgal, indxsampspec,                 indxsampsind, indxsampcomp = retr_indx(globdata, listindxpntsfull[k][j])
+            indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(globdata, listindxpntsfull[k][j])
             for l in globdata.indxpopl:
                 listlgal[l].append(listsampvarb[j, k, indxsamplgal[l]])
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
@@ -370,22 +374,24 @@ def wrap(cnfg):
                     listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
                 for i in globdata.indxener:
                     listspechist[n, l, i, :] = histogram(listspec[l][n][i, :], globdata.binsspec[i, :])[0]
-        
-    
     for l in globdata.indxpopl:
-        
         listlgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         listbgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         listspectemp = zeros((globdata.numbsamp, globdata.numbener, globdata.maxmnumbpnts[l])) - 1.
+        listlgaltemp = zeros((globdata.numbsamp, globdata.maxmnumbpnts[l])) - 1.
         for k in range(globdata.numbsamp):
             listlgaltemp[k, 0:listlgal[l][k].size] = listlgal[l][k]
             listbgaltemp[k, 0:listbgal[l][k].size] = listbgal[l][k]
             listspectemp[k, :, 0:listspec[l][k].shape[1]] = listspec[l][k]
-
+            listsindtemp[k, 0:listsind[l][k].size] = listsind[l][k]
         listlgal[l] = listlgaltemp
         listbgal[l] = listbgaltemp 
         listspec[l] = listspectemp    
+        listsind[l] = listsindtemp
 
+    # auxiliary variables
+    listpntsfluxmean = listpntsfluxmean.reshape(globdata.numbsamp * globdata.numbproc, globdata.numbener)
+   
         
         
     if globdata.verbtype > 0:
@@ -486,8 +492,6 @@ def wrap(cnfg):
     listhdun.append(pf.PrimaryHDU(header=head))
 
     for l in globdata.indxpopl:
-        print 'listlgal[l]'
-        print listlgal[l]
         listhdun.append(pf.ImageHDU(listlgal[l]))
         listhdun[-1].header['EXTNAME'] = 'lgalpopl%d' % l
         listhdun.append(pf.ImageHDU(listbgal[l]))
@@ -495,8 +499,6 @@ def wrap(cnfg):
         listhdun.append(pf.ImageHDU(listspec[l]))
         listhdun[-1].header['EXTNAME'] = 'specpopl%d' % l
         if globdata.colrprio:
-            print 'listsind[l]'
-            print listsind[l]
             listhdun.append(pf.ImageHDU(listsind[l]))
             listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
 
