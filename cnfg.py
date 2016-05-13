@@ -393,7 +393,7 @@ def cnfg_ferm_post():
                      plotperd=50000, \
                      randinit=False, \
                      trueinfo=True, \
-                     maxmgang=2., \
+                     maxmgang=0.5, \
                      margsize=0., \
                      colrprio=True, \
                      indxevttincl=arange(3, 4), \
