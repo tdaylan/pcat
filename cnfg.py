@@ -389,7 +389,7 @@ def cnfg_ferm_post():
     indxenerincl = arange(1, 3)
     numbener = indxenerincl.size
     cnfg = retr_cnfg(psfntype='doubking', \
-					 numbswep=1000000, \
+					 numbswep=100000, \
                      plotperd=50000, \
                      randinit=False, \
                      trueinfo=True, \
@@ -412,8 +412,8 @@ def cnfg_ferm_post():
                      strgexpo='fermexpo_ngal_comp.fits', \
                      stdvback=0.15, \
                      stdvlbhl=0.01, \
-                     stdvspec=0.1, \
-                     stdvsind=0.15, \
+                     stdvspec=0.05, \
+                     stdvsind=0.05, \
                      datatype='mock', \
                      numbsideheal=256, \
                      mockfdfnslop=array([[1.8]]), \
@@ -550,8 +550,8 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
         
-        #cnfg_ferm_post()
-        cnfg_ferm_mock_ngal()
+        cnfg_ferm_post()
+        #cnfg_ferm_mock_ngal()
         #cnfg_test()
         
         #cnfg_sdss_mock()
