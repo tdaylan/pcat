@@ -1403,9 +1403,9 @@ def plot_datacnts(globdata, indxenerplot, pevtt, nextstat=False):
         if indxenerplot == None:
             imag = axis.imshow(sum(globdata.datacntscart, axis=3), origin='lower', extent=globdata.exttrofi, interpolation='none')
         else:
-            imag = axis.imshow(sum(globdata.datacntscart[:, :, indxenerplot, :], axis=2), origin='lower',                              interpolation='none', cmap='Reds', extent=globdata.exttrofi)
+            imag = axis.imshow(sum(globdata.datacntscart[:, :, indxenerplot, :], axis=2), origin='lower', interpolation='none', cmap='Reds', extent=globdata.exttrofi)
     else:
-        imag = axis.imshow(globdata.datacntscart[:, :, indxenerplot, pevtt], origin='lower', interpolation='none',                          cmap='Reds', extent=globdata.exttrofi)
+        imag = axis.imshow(globdata.datacntscart[:, :, indxenerplot, pevtt], origin='lower', interpolation='none', cmap='Reds', extent=globdata.exttrofi)
     
     if pevtt != None or indxenerplot != None:
         cbar = plt.colorbar(imag, ax=axis, fraction=0.05)

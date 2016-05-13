@@ -550,8 +550,8 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_ngal('fermflux_ngal_comp_time3.fits', 'fermexpo_ngal_comp_time3.fits')
         #cnfg_ferm_expr_ngal('fermflux_ngal_full.fits', 'fermexpo_ngal_full.fits')
         
-        cnfg_ferm_post()
-        #cnfg_ferm_mock_ngal()
+        #cnfg_ferm_post()
+        cnfg_ferm_mock_ngal()
         #cnfg_test()
         
         #cnfg_sdss_mock()
