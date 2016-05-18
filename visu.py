@@ -127,7 +127,8 @@ def plot_post(pathprobcatl):
     # utilities
     globdata.probprop = hdun['probprop'].data
     globdata.listindxprop = hdun['indxprop'].data
-    globdata.listchro = hdun['chro'].data
+    globdata.listchrototl = hdun['listchrototl'].data
+    globdata.listchrollik = hdun['listchrollik'].data
     globdata.listaccp = hdun['accp'].data
     globdata.listindxsampmodi = hdun['sampmodi'].data
     globdata.listauxipara = hdun['auxipara'].data
@@ -222,10 +223,6 @@ def plot_post(pathprobcatl):
     # energy bin string
     #globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
     
-    #if globdata.pixltype == 'heal':
-    #    retr_pixlcnvt(globdata)
-
-        
     # Gelman-Rubin test
     if globdata.numbproc > 1:
         print 'Making the Gelman-Rubin TS plot...'
@@ -280,41 +277,8 @@ def plot_post(pathprobcatl):
     print 'Calculating proposal execution times...'
     tim0 = time.time()
 
-    retr_strgprop(globdata)
+    plot_chro(globdata)
     
-    binstime = logspace(log10(amin(globdata.listchro[where(globdata.listchro > 0)] * 1e3)), log10(amax(globdata.listchro * 1e3)), 50)
-    with sns.color_palette("nipy_spectral", globdata.numbprop):
-        figr, axis = plt.subplots(figsize=(14, 12))
-        
-        axis.hist(globdata.listchro[where(globdata.listchro[:, 0] > 0)[0], 0] * 1e3, binstime, facecolor='none', log=True, lw=1, ls='--', edgecolor='black')
-        for g in range(globdata.numbprop):
-            indxlistchro = where((globdata.listindxprop == g) & (globdata.listchro[:, 0] > 0))[0]
-            axis.hist(globdata.listchro[indxlistchro, 0] * 1e3, binstime, edgecolor='none', log=True, alpha=0.3, label=globdata.strgprop[g])
-        axis.set_xlabel('$t$ [ms]')
-        axis.set_xscale('log')
-        axis.set_xlim([amin(binstime), amax(binstime)])
-        axis.set_ylim([0.5, None])
-        axis.legend(loc=2)
-        figr.savefig(globdata.plotpath + 'chroprop_' + globdata.rtag + '.png')
-        plt.close(figr)
-
-    labl = ['Total', 'Proposal', 'Prior', 'Likelihood']
-    figr, axcl = plt.subplots(2, 1, figsize=(14, 10))
-    for k in range(1, 4):
-        axcl[0].hist(globdata.listchro[where(globdata.listchro[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=labl[k])
-    axcl[1].hist(globdata.listchro[where(globdata.listchro[:, 0] > 0)[0], 0] * 1e3, binstime, log=True, label=labl[0], color='black')
-    axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(globdata.listchro[where(globdata.listchro[:, 0] > 0)[0], 0] * 1e3))
-    axcl[0].set_xlim([amin(binstime), amax(binstime)])
-    axcl[1].set_xlabel('$t$ [ms]')
-    axcl[0].set_xscale('log')
-    axcl[1].set_xscale('log')
-    axcl[0].set_ylim([0.5, None])
-    axcl[1].set_ylim([0.5, None])
-    axcl[0].legend(loc=1)
-    axcl[1].legend(loc=2)
-    figr.savefig(globdata.plotpath + 'chrototl_' + globdata.rtag + '.png')
-    plt.close(figr)
-
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
     print 'Parsing the sample bundle and making frames...'
@@ -514,6 +478,53 @@ def plot_post(pathprobcatl):
 
     tim1 = time.time()
     print 'Plots are produced in %.3g seconds.' % (tim1 - tim0)
+
+
+def plot_chro(globdata):
+
+    binstime = logspace(log10(amin(globdata.listchrototl[where(globdata.listchrototl > 0)] * 1e3)), log10(amax(globdata.listchrototl * 1e3)), 50)
+    figr, axcl = plt.subplots(globdata.numbprop, 1, figsize=(10, 5 * globdata.numbprop))
+    for k in range(globdata.numbprop):
+        indxlistchrototl = where((globdata.listindxprop == k) & (globdata.listchrototl[:, 0] > 0))[0]
+        if indxlistchrototl.size > 0:
+            axcl[k].hist(globdata.listchrototl[indxlistchrototl, 0] * 1e3, binstime, log=True, label=globdata.strgprop[k])
+        axcl[k].set_xlim([amin(binstime), amax(binstime)])
+        axcl[k].set_ylim([0.5, None])
+        axcl[k].set_ylabel(globdata.strgprop[k])
+        axcl[k].set_xscale('log')
+    axcl[-1].set_xlabel('$t$ [ms]')
+    figr.savefig(globdata.plotpath + 'chroprop_' + globdata.rtag + '.png')
+    plt.close(figr)
+
+    labl = ['Total', 'Proposal', 'Prior', 'Likelihood']
+    figr, axcl = plt.subplots(2, 1, figsize=(14, 10))
+    for k in range(1, 4):
+        axcl[0].hist(globdata.listchrototl[where(globdata.listchrototl[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=labl[k])
+    axcl[1].hist(globdata.listchrototl[where(globdata.listchrototl[:, 0] > 0)[0], 0] * 1e3, binstime, log=True, label=labl[0], color='black')
+    axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(globdata.listchrototl[where(globdata.listchrototl[:, 0] > 0)[0], 0] * 1e3))
+    axcl[0].set_xlim([amin(binstime), amax(binstime)])
+    axcl[1].set_xlabel('$t$ [ms]')
+    axcl[0].set_xscale('log')
+    axcl[1].set_xscale('log')
+    axcl[0].set_ylim([0.5, None])
+    axcl[1].set_ylim([0.5, None])
+    axcl[0].legend(loc=1)
+    axcl[1].legend(loc=2)
+    figr.savefig(globdata.plotpath + 'chrototl_' + globdata.rtag + '.png')
+    plt.close(figr)
+
+    listlabl = ['Setup', 'Pixel', 'Mesh', 'PS Flux', 'Total Flux', 'Counts', 'Likelihood']
+    figr, axcl = plt.subplots(globdata.numbchrollik, 1, figsize=(10, 26))
+    binstime = logspace(log10(amin(globdata.listchrollik[where(globdata.listchrollik > 0)] * 1e3)), log10(amax(globdata.listchrollik * 1e3)), 50)
+    for k in range(globdata.numbchrollik):
+        axcl[k].hist(globdata.listchrollik[where(globdata.listchrollik[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=listlabl[k])
+        axcl[k].set_xlim([amin(binstime), amax(binstime)])
+        axcl[k].set_ylim([0.5, None])
+        axcl[k].set_ylabel(listlabl[k])
+        axcl[k].set_xscale('log')
+    axcl[-1].set_xlabel('$t$ [ms]')
+    figr.savefig(globdata.plotpath + 'chrollik_' + globdata.rtag + '.png')
+    plt.close(figr)
 
 
 def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
@@ -1039,40 +1050,33 @@ def plot_psfn(globdata):
             if i == globdata.numbener - 1 and m == globdata.numbevtt - 1:
                 axis.legend(loc=2)
             indxsamp = globdata.indxsamppsfipara[i*globdata.numbformpara+m*globdata.numbener*globdata.numbformpara]
+    
             if globdata.psfntype == 'singgaus':
                 strg = r'$\sigma = %.3g$ ' % globdata.thissampvarb[indxsamp]
             elif globdata.psfntype == 'singking':
-                strg = r'$\sigma = %.3g$ ' % globdata.thissampvarb[indxsamp] + '\n'
+                strg = r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp]) + globdata.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+1]
             elif globdata.psfntype == 'doubgaus':
                 strg = r'$f = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                if globdata.exprtype == 'sdss':
-                    paratemp = globdata.thissampvarb[indxsamp+1]
-                if globdata.exprtype == 'ferm':
-                    paratemp = globdata.thissampvarb[indxsamp+1]
-                strg += r'$\sigma = %.3g$ ' % paratemp + '\n'
-                if globdata.exprtype == 'sdss':
-                    paratemp = globdata.thissampvarb[indxsamp+2]
-                if globdata.exprtype == 'ferm':
-                    paratemp = globdata.thissampvarb[indxsamp+2]
-                strg += r'$\sigma = %.3g$ ' % paratemp + globdata.strganglunit
+                strg += r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
+                strg += r'$\sigma = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + globdata.strganglunit
             elif globdata.psfntype == 'gausking':
                 strg = r'$f_G = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                strg += r'$\sigma_G = %.3g$ ' % globdata.thissampvarb[indxsamp+1] + '\n'
-                strg += r'$\sigma_K = %.3g$ ' % globdata.thissampvarb[indxsamp+2] + '\n'
+                strg += r'$\sigma_G = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
+                strg += r'$\sigma_K = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+2]) + globdata.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % globdata.thissampvarb[indxsamp+3]
             elif globdata.psfntype == 'doubking':
                 strg = r'$f_c = %.3g$' % globdata.thissampvarb[indxsamp] + '\n'
-                strg += r'$\sigma_c = %.3g$ ' % globdata.thissampvarb[indxsamp+1] + '\n'
+                strg += r'$\sigma_c = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+1]) + globdata.strganglunit + '\n'
                 strg += r'$\gamma_c = %.3g$' % globdata.thissampvarb[indxsamp+2] + '\n'
-                strg += r'$\sigma_t = %.3g$ ' % globdata.thissampvarb[indxsamp+3] + '\n'
+                strg += r'$\sigma_t = %.3g$ ' % rad2deg(globdata.thissampvarb[indxsamp+3]) + globdata.strganglunit + '\n'
                 strg += r'$\gamma_t = %.3g$' % globdata.thissampvarb[indxsamp+4]
             axis.text(0.75, 0.75, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
             
             if globdata.exprtype == 'ferm':
-                axis.set_ylim([1e0, 1e6])
+                axis.set_ylim([1e-3, 1e6])
             if globdata.exprtype == 'sdss':
-                axis.set_ylim([1e7, 1e11])
+                axis.set_ylim([1e4, 1e11])
 
     plt.savefig(globdata.plotpath + 'psfnprof_' + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
@@ -1645,7 +1649,9 @@ def plot_errrcnts(globdata, indxenerplot, pevtt, errrcntsrofi):
         errrcntstemp = sum(errrcntsrofi[indxenerplot, :, :], axis=1)
     else:
         errrcntstemp = errrcntsrofi[indxenerplot, :, pevtt]
-    
+    errrcntstemp[where(errrcntstemp > 1.)] = 1.
+    errrcntstemp[where(errrcntstemp < -1.)] = -1.
+
     if globdata.pixltype == 'heal':
         errrcntstemp = tdpy.util.retr_cart(errrcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
             minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)

@@ -283,8 +283,8 @@ def init(cnfg):
         pool.join()
 
     for k in range(globdata.numbproc):
-        timereal[k] = gridchan[k][17]
-        timeproc[k] = gridchan[k][18]
+        timereal[k] = gridchan[k][18]
+        timeproc[k] = gridchan[k][19]
 
 
     if globdata.verbtype > 0:
@@ -294,7 +294,8 @@ def init(cnfg):
     # parse the sample bundle
     listsampvarb = zeros((globdata.numbsamp, globdata.numbproc, globdata.maxmsampsize))
     listindxprop = zeros((globdata.numbswep, globdata.numbproc))
-    listchro = zeros((globdata.numbswep, globdata.numbproc, 4))
+    listchrollik = zeros((globdata.numbswep, globdata.numbproc, globdata.numbchrollik))
+    listchrototl = zeros((globdata.numbswep, globdata.numbproc, globdata.numbchrototl))
     listllik = zeros((globdata.numbsamp, globdata.numbproc))
     listlpri = zeros((globdata.numbsamp, globdata.numbproc))
     listaccp = zeros((globdata.numbswep, globdata.numbproc))
@@ -302,7 +303,6 @@ def init(cnfg):
     listpntsfluxmean = zeros((globdata.numbsamp, globdata.numbproc, globdata.numbener))
     listindxpntsfull = []
     listindxsampmodi = zeros((globdata.numbswep, globdata.numbproc), dtype=int)
-    
     globdata.listauxipara = empty((globdata.numbswep, globdata.numbproc, globdata.numbcomp))
     globdata.listlaccfrac = empty((globdata.numbswep, globdata.numbproc))
     globdata.listnumbpair = empty((globdata.numbswep, globdata.numbproc))
@@ -317,7 +317,7 @@ def init(cnfg):
         listchan = gridchan[k]
         listsampvarb[:, k, :] = listchan[0]
         listindxprop[:, k] = listchan[1]
-        listchro[:, k, :] = listchan[2]
+        listchrototl[:, k, :] = listchan[2]
         listllik[:, k] = listchan[3]
         listlpri[:, k] = listchan[4]
         listaccp[:, k] = listchan[5]
@@ -332,6 +332,7 @@ def init(cnfg):
         levi += listchan[14]
         info += listchan[15]
         listpntsfluxmean[:, k, :] = listchan[16]
+        listchrollik[:, k, :] = listchan[17]
 
     listindxprop = listindxprop.flatten()
     globdata.listauxipara = globdata.listauxipara.reshape((globdata.numbswep * globdata.numbproc, globdata.numbcomp))
@@ -340,7 +341,8 @@ def init(cnfg):
     globdata.listjcbnfact = globdata.listjcbnfact.reshape(globdata.numbswep * globdata.numbproc)
     globdata.listcombfact = globdata.listcombfact.reshape(globdata.numbswep * globdata.numbproc)
     
-    listchro = listchro.reshape((globdata.numbproc * globdata.numbswep, 4)) 
+    listchrototl = listchrototl.reshape((globdata.numbproc * globdata.numbswep, globdata.numbchrototl)) 
+    listchrollik = listchrollik.reshape((globdata.numbproc * globdata.numbswep, globdata.numbchrollik)) 
     listaccp = listaccp.flatten()
     listindxsampmodi = listindxsampmodi.flatten()
     
@@ -630,8 +632,11 @@ def init(cnfg):
     listhdun.append(pf.ImageHDU(listindxprop))
     listhdun[-1].header['EXTNAME'] = 'indxprop'
     
-    listhdun.append(pf.ImageHDU(listchro))
-    listhdun[-1].header['EXTNAME'] = 'chro'
+    listhdun.append(pf.ImageHDU(listchrototl))
+    listhdun[-1].header['EXTNAME'] = 'listchrototl'
+    
+    listhdun.append(pf.ImageHDU(listchrollik))
+    listhdun[-1].header['EXTNAME'] = 'listchrollik'
     
     listhdun.append(pf.ImageHDU(listaccp))
     listhdun[-1].header['EXTNAME'] = 'accp'
@@ -735,7 +740,7 @@ def plot_samp(globdata):
     #plot_backcntsmean(globdata, globdata.thisbackcntsmean)
     
     tempsampvarb, tempppixl, tempcnts, temppntsflux, tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
-    globdata.errrmodlcnts = globdata.thismodlcnts - tempmodlcnts
+    globdata.errrmodlcnts = 100. * (globdata.thismodlcnts - tempmodlcnts) / tempmodlcnts
     
     for i in globdata.indxener:
         plot_errrcnts(globdata, i, None, globdata.errrmodlcnts)
@@ -756,7 +761,8 @@ def rjmc(globdata, indxprocwork):
 
     listsampvarb = zeros((globdata.numbsamp, globdata.maxmsampsize)) + -1.
     listindxprop = zeros(globdata.numbswep)
-    listchro = zeros((globdata.numbswep, 4))
+    listchrototl = zeros((globdata.numbswep, globdata.numbchrototl))
+    listchrollik = zeros((globdata.numbswep, globdata.numbchrollik))
     listllik = zeros(globdata.numbsamp)
     listlprising = zeros(globdata.numbsamp)
     listlpri = zeros(globdata.numbsamp)
@@ -773,14 +779,15 @@ def rjmc(globdata, indxprocwork):
     globdata.listjcbnfact = zeros(globdata.numbswep)
     globdata.listcombfact = zeros(globdata.numbswep)
 
+    globdata.cntrswep = 0
+    
     # initialize the chain
-    retr_llik(globdata, init=True)
+    retr_llik(globdata, listchrollik, init=True)
     retr_lpri(globdata, init=True)
 
     # current sample index
     thiscntr = -1
     
-    globdata.cntrswep = 0
     while globdata.cntrswep < globdata.numbswep:
         
         timeinit = time.time()
@@ -811,7 +818,7 @@ def rjmc(globdata, indxprocwork):
         timebegn = time.time()
         retr_prop(globdata)
         timefinl = time.time()
-        listchro[globdata.cntrswep, 1] = timefinl - timebegn
+        listchrototl[globdata.cntrswep, 1] = timefinl - timebegn
 
         # plot the current sample
         if thismakefram:
@@ -825,9 +832,13 @@ def rjmc(globdata, indxprocwork):
                 globdata.lock.release()
             
         # reject the sample if proposal is outside the prior
-        if globdata.thisindxprop != globdata.indxpropbrth and             globdata.thisindxprop != globdata.indxpropdeth and not globdata.reje:
-            if where((globdata.drmcsamp[globdata.indxsampmodi, 1] < 0.) |                      (globdata.drmcsamp[globdata.indxsampmodi, 1] > 1.))[0].size > 0:
+        if globdata.thisindxprop == globdata.indxpropfdfnslop:
+            if globdata.drmcsamp[globdata.indxsampfdfnslopmodi, 1] < 0. or globdata.drmcsamp[globdata.indxsampfdfnslopmodi, 1] > 1.:
                 globdata.reje = True
+        elif globdata.thisindxprop != globdata.indxpropbrth and globdata.thisindxprop != globdata.indxpropdeth and not globdata.reje:
+            if where((globdata.drmcsamp[globdata.indxsampmodi, 1] < 0.) | (globdata.drmcsamp[globdata.indxsampmodi, 1] > 1.))[0].size > 0:
+                globdata.reje = True
+
         if globdata.thisindxprop == globdata.indxproppsfipara:
             if globdata.psfntype == 'doubking':
                 if globdata.nextsampvarb[globdata.indxsamppsfipara[1]] >= globdata.nextsampvarb[globdata.indxsamppsfipara[3]]:
@@ -842,13 +853,13 @@ def rjmc(globdata, indxprocwork):
             timebegn = time.time()
             retr_lpri(globdata)
             timefinl = time.time()
-            listchro[globdata.cntrswep, 2] = timefinl - timebegn
+            listchrototl[globdata.cntrswep, 2] = timefinl - timebegn
 
             # evaluate the log-likelihood
             timebegn = time.time()
-            retr_llik(globdata)          
+            retr_llik(globdata, listchrollik) 
             timefinl = time.time()
-            listchro[globdata.cntrswep, 3] = timefinl - timebegn
+            listchrototl[globdata.cntrswep, 3] = timefinl - timebegn
             
             # evaluate the acceptance probability
             accpprob = exp(globdata.deltllik + globdata.deltlpri + globdata.laccfrac)
@@ -930,7 +941,7 @@ def rjmc(globdata, indxprocwork):
         # save the execution time for the sweep
         if not thismakefram:
             tim1 = time.time()
-            listchro[globdata.cntrswep, 0] = tim1 - timeinit
+            listchrototl[globdata.cntrswep, 0] = tim1 - timeinit
 
         # log the progress
         if globdata.verbtype > 0:
@@ -965,7 +976,8 @@ def rjmc(globdata, indxprocwork):
         print 'listsampvarb: '
         print listsampvarb
     
-    
+    listchrollik = array(listchrollik)
+
     # correct the likelihoods for the constant data dependent factorial
     listllik -= sum(sp.special.gammaln(globdata.datacnts + 1))
     
@@ -975,9 +987,9 @@ def rjmc(globdata, indxprocwork):
     
     info = mean(listllik) - levi
 
-    listchan = [listsampvarb, listindxprop, listchro, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxsampmodi, \
+    listchan = [listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxsampmodi, \
         globdata.listauxipara, globdata.listlaccfrac, globdata.listnumbpair, globdata.listjcbnfact, globdata.listcombfact, \
-        levi, info, listpntsfluxmean]
+        levi, info, listpntsfluxmean, listchrollik]
     
     return listchan
 

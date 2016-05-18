@@ -244,7 +244,7 @@ def retr_indxpixl(globdata, bgal, lgal):
     return indxpixl
 
 
-def retr_llik(globdata, init=False):
+def retr_llik(globdata, listchrollik, init=False):
 
     if init:
 
@@ -253,6 +253,8 @@ def retr_llik(globdata, init=False):
     elif globdata.thisindxprop >= globdata.indxproppsfipara:
 
         # load convenience variables
+        timebegn = time.time()
+        
         if globdata.thisindxprop == globdata.indxproppsfipara:
             numbpnts = int(sum(globdata.thissampvarb[globdata.indxsampnumbpnts]))
             lgal = globdata.thissampvarb[concatenate(globdata.thisindxsamplgal)]
@@ -264,7 +266,12 @@ def retr_llik(globdata, init=False):
             bgal = globdata.modibgal
             spec = globdata.modispec
         
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 0] = timefinl - timebegn
+        
         # determine pixels over which to evaluate the log-likelihood
+        timebegn = time.time()
+        
         if globdata.thisindxprop == globdata.indxpropnormback:
             indxpixlmodi = globdata.indxpixl
         if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
@@ -274,16 +281,36 @@ def retr_llik(globdata, init=False):
                     spectemp = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenerfdfn, k]]
                 else:
                     spectemp = globdata.modispec[globdata.indxenerfdfn, k]
-                indxspecproxtemp = amin(where(globdata.meanspecprox - abs(spectemp) > 0.)[0])
+                indxspecproxtemp = amin(where(globdata.binsspecprox - abs(spectemp) > 0.)[0]) - 1
+               
+                if False:
+                    print 'spectemp'
+                    print spectemp
+                    print 'globdata.binsspecprox'
+                    print globdata.binsspecprox
+                    print 'indxspecproxtemp'
+                    print indxspecproxtemp
+                    print
+
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
             indxpixlmodi = unique(concatenate(thisindxpixlprox))
+        
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 1] = timefinl - timebegn
 
         # construct the mesh grid for likelihood evaluation
+        timebegn = time.time()
+        
         if globdata.thisindxprop >= globdata.indxproppsfipara:
             globdata.indxcubemodi = meshgrid(globdata.indxenermodi, indxpixlmodi, globdata.indxevtt, indexing='ij')
 
-        # update the point source flux map
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 2] = timefinl - timebegn
+
+        # update the model point source flux map, if needed
+        timebegn = time.time()
+        
         if globdata.thisindxprop == globdata.indxproppsfipara or globdata.thisindxprop >= globdata.indxpropbrth:
 
             if globdata.thisindxprop == globdata.indxproppsfipara:
@@ -306,26 +333,43 @@ def retr_llik(globdata, init=False):
                 for i in range(globdata.indxenermodi.size):
                     globdata.nextpntsflux[globdata.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[i, :, :]
             
-        if globdata.thisindxprop == globdata.indxpropnormback:
-            
-            normbacktemp = empty((globdata.numbback, 1))
-            for c in globdata.indxback:
-                if c == globdata.indxbackmodi:
-                    normbacktemp[c, 0] = globdata.nextsampvarb[globdata.indxsampnormback[c, globdata.indxenermodi]]
-                else:
-                    normbacktemp[c, 0] = globdata.thissampvarb[globdata.indxsampnormback[c, globdata.indxenermodi]]
-                
-            globdata.nextmodlflux[globdata.indxcubemodi] = retr_rofi_flux(globdata, normbacktemp, globdata.thispntsflux, globdata.indxcubemodi)
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 3] = timefinl - timebegn
 
+        # update the total model flux map
+        timebegn = time.time()
+        
+        if globdata.thisindxprop == globdata.indxpropnormback:
+            normback = empty((globdata.numbback, 1))
+            for c in globdata.indxback:
+                normback[c, 0] = globdata.nextsampvarb[globdata.indxsampnormback[c, globdata.indxenermodi]]
+            pntsflux = globdata.thispntsflux
         if globdata.thisindxprop == globdata.indxproppsfipara or globdata.thisindxprop >= globdata.indxpropbrth:
             normback = globdata.thissampvarb[globdata.indxsampnormback[meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')]]
-            globdata.nextmodlflux[globdata.indxcubemodi] = retr_rofi_flux(globdata, normback, globdata.nextpntsflux, globdata.indxcubemodi)
+            pntsflux = globdata.nextpntsflux
+        globdata.nextmodlflux[globdata.indxcubemodi] = retr_rofi_flux(globdata, normback, pntsflux, globdata.indxcubemodi)
 
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 4] = timefinl - timebegn
+
+        # calculate the total model count map
+        timebegn = time.time()
+        
         globdata.nextmodlcnts[globdata.indxcubemodi] = globdata.nextmodlflux[globdata.indxcubemodi] * globdata.expo[globdata.indxcubemodi] * \
             globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
+        
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 5] = timefinl - timebegn
+
+        # calculate the likelihood
+        timebegn = time.time()
+        
         globdata.nextllik[globdata.indxcubemodi] = globdata.datacnts[globdata.indxcubemodi] * log(globdata.nextmodlcnts[globdata.indxcubemodi]) - \
             globdata.nextmodlcnts[globdata.indxcubemodi]
             
+        timefinl = time.time()
+        listchrollik[globdata.cntrswep, 6] = timefinl - timebegn
+
         if not isfinite(globdata.nextllik[globdata.indxcubemodi]).any():
             warnings.warn('Log-likelihood went NAN!')
             
@@ -360,7 +404,8 @@ def retr_lpri(globdata, init=False):
                 
     else:
         globdata.nextlpri = copy(globdata.thislpri)
-        if globdata.thisindxprop == globdata.indxpropfdfnnorm or globdata.thisindxprop == globdata.indxpropfdfnslop             or globdata.thisindxprop >= globdata.indxpropbrth and globdata.thisindxprop <= globdata.indxpropmerg:
+        if globdata.thisindxprop == globdata.indxpropfdfnnorm or globdata.thisindxprop == globdata.indxpropfdfnslop \
+            or globdata.thisindxprop >= globdata.indxpropbrth and globdata.thisindxprop <= globdata.indxpropmerg:
               
             if globdata.colrprio:
                 indxenertemp = globdata.indxenerfdfn
@@ -396,7 +441,7 @@ def retr_lpri(globdata, init=False):
             globdata.deltlpri = sum(globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi] - globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi])
         else:
             globdata.deltlpri = 0.
-
+        
         
 def pars_samp(globdata, indxpntsfull, samp):
     
@@ -488,7 +533,10 @@ def retr_fermpsfn(globdata):
         for i in globdata.indxener:
             fermform[i, m, 0] = 1. / (1. + fermform[i, m, 0] * fermform[i, m, 3]**2 / fermform[i, m, 1]**2)
 
-    scalangl = retr_scalangl(globdata, globdata.angldisp)
+    #scalangl = retr_scalangl(globdata, globdata.angldisp)
+    
+    fermform[:, :, 1] = globdata.fermscalfact * fermform[:, :, 1]
+    fermform[:, :, 3] = globdata.fermscalfact * fermform[:, :, 3]
 
     # store the fermi PSF parameters
     for m in globdata.indxevtt:
@@ -502,21 +550,10 @@ def retr_fermpsfn(globdata):
     sigt = fermform[:, :, 3]
     gamt = fermform[:, :, 4]
    
-    print 'sigc'
-    print sigc
-    print 'sigt'
-    print sigt
-    print 'scalangl'
-    print scalangl
-    print 'globdata.fangldisp'
-    print globdata.angldisp
-    globdata.fermpsfn = retr_doubking(scalangl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
-
-    print 'globdata.fermpsfn'
-    print amin(globdata.fermpsfn), amax(globdata.fermpsfn)
-
-    print 'globdata.fermpsfipara'
-    print globdata.fermpsfipara
+    # temp
+    angl = globdata.angldisp[None, :, None]
+    #angl = scalangl
+    globdata.fermpsfn = retr_doubking(angl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
 
 
 def retr_sdsspsfn(globdata):
@@ -902,29 +939,31 @@ def retr_prop(globdata):
             globdata.indxenermodi = globdata.indxenerfdfn
         else:
             globdata.indxenermodi = choice(globdata.indxener)
-        globdata.indxsampmodi = globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]
-        retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvfdfnslop)
+        globdata.indxsampfdfnslopmodi = globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]
+        retr_gaus(globdata, globdata.indxsampfdfnslopmodi, globdata.stdvfdfnslop)
         
         globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] = \
-            icdf_atan(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.minmfdfnslop, globdata.factfdfnslop)
+            icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslopmodi, -1], globdata.minmfdfnslop, globdata.factfdfnslop)
         if globdata.colrprio:
-            globdata.indxsampmodi = concatenate((globdata.indxsampmodi, globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxener, :].flatten()))
+            globdata.indxsampmodi = concatenate((globdata.indxsampfdfnslopmodi, globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxener, :].flatten()))
         else:
-            globdata.indxsampmodi = concatenate((array([globdata.indxsampmodi]), globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]))
-            
-            
+            globdata.indxsampmodi = concatenate((array([globdata.indxsampfdfnslopmodi]), globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]))
+           
         if globdata.verbtype > 2:
-            print 'indxpoplmodi'
-            print globdata.indxpoplmodi
             print 'indxenermodi'
             print globdata.indxenermodi
-            print 'nextsampvarb[globdata.indxsampfdfnslop]'
-            print globdata.nextsampvarb[globdata.indxsampfdfnslop]
+            print 'indxpoplmodi'
+            print globdata.indxpoplmodi
             print 'indxsampmodi'
             print globdata.indxsampmodi
-        
-        
-            
+            print 'drmcsamp[indxsampmodi, :]'
+            print globdata.drmcsamp[globdata.indxsampmodi, :]
+            print 'thissampvarb[globdata.indxsampfdfnslop]'
+            print globdata.thissampvarb[globdata.indxsampfdfnslop]
+            print 'nextsampvarb[globdata.indxsampfdfnslop]'
+            print globdata.nextsampvarb[globdata.indxsampfdfnslop]
+            print
+
     # PSF parameter change 
     if globdata.thisindxprop == globdata.indxproppsfipara:
         
@@ -957,7 +996,7 @@ def retr_prop(globdata):
             print 'thissampvarb[indxsampmodi]: ', globdata.thissampvarb[globdata.indxsampmodi]
             print 'nextpsfipara: ', globdata.nextsampvarb[globdata.indxsamppsfipara]
             print 'nextpsfipara[indxsampmodi]: ', globdata.nextsampvarb[globdata.indxsampmodi]
-            print 
+            print
 
         
     # background changes
@@ -1389,8 +1428,9 @@ def retr_prop(globdata):
             globdata.modibgal[:] = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][modiindxindxpnts]]
             if globdata.colrprio:
                 if globdata.thisindxprop == globdata.indxpropspec:
-                    globdata.modiflux = icdf_spec(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]], 
-               globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
+                    globdata.modiflux = icdf_spec(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], \
+                        globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]], 
+                        globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
                     globdata.modisind = globdata.thissampvarb[globdata.thisindxsampsind[globdata.indxpoplmodi][modiindxindxpnts]]
                 else:
                     globdata.modiflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
@@ -1461,11 +1501,8 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype):
         numbformpara = 4
     elif psfntype == 'doubking':
         numbformpara = 5
-   
-    if globdata.exprtype == 'ferm':
-        thisangltemp = retr_scalangl(globdata, thisangl)
-    else:
-        thisangltemp = thisangl[None, :, None]
+  
+    thisangltemp = thisangl[None, :, None]
 
     indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + globdata.numbener * globdata.indxevtt[None, :])
     
@@ -1542,8 +1579,10 @@ def retr_psfimodl(globdata):
     factformpara = zeros(globdata.numbformpara)
     scalformpara = zeros(globdata.numbformpara, dtype=object)
     if globdata.exprtype == 'ferm':
-        minmanglpsfn = 0.01
-        maxmanglpsfn = 3.
+        minmanglpsfn = deg2rad(0.0001)
+        maxmanglpsfn = deg2rad(5.)
+        #minmanglpsfn = 0.01
+        #maxmanglpsfn = 3.
         minmgamm = 2.
         maxmgamm = 20.
     if globdata.exprtype == 'sdss':
@@ -1623,11 +1662,6 @@ def retr_psfimodl(globdata):
     globdata.scalpsfipara = tile(tile(scalformpara, globdata.numbener), globdata.numbevtt)
     globdata.factpsfipara = tile(tile(factformpara, globdata.numbener), globdata.numbevtt)
    
-    print 'globdata.minmpsfipara'
-    print globdata.minmpsfipara
-    print 'globdata.maxmpsfipara'
-    print globdata.maxmpsfipara
-
     # PSF parameter strings
     globdata.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m]) \
         for m in globdata.indxevtt for i in globdata.indxener for k in globdata.indxformpara]
@@ -1641,9 +1675,7 @@ def retr_psfimodl(globdata):
         elif globdata.psfntype == 'doubking':
             globdata.strgpsfipara[globdata.indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
             globdata.strgpsfipara[globdata.indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
-            
     globdata.indxpsfipara = arange(globdata.numbpsfipara)
-
 
 
 def retr_propmodl(globdata):
@@ -1698,27 +1730,10 @@ def retr_propmodl(globdata):
             #probspec = array([sum(globdata.maxmnumbpnts) / 2.] * globdata.numbener)
             probsind = array([0.])
             
-        globdata.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, probsplt, probmerg, problgal, probbgal, probspec, probsind))
+        globdata.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, \
+                probsplt, probmerg, problgal, probbgal, probspec, probsind))
         globdata.probprop /= sum(globdata.probprop)
        
-
-def retr_pixlcnvt(globdata):
- 
-    path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % globdata.maxmgang
-    if os.path.isfile(path):
-        fobj = open(path, 'rb')
-        globdata.pixlcnvt = cPickle.load(fobj)
-        fobj.close()
-    else:
-        globdata.pixlcnvt = zeros(globdata.numbpixlheal, dtype=int)
-        for k in range(globdata.indxpixlrofimarg.size):
-            dist = retr_dist(globdata, globdata.lgalheal[globdata.indxpixlrofimarg[k]], globdata.bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
-            globdata.pixlcnvt[globdata.indxpixlrofimarg[k]] = argmin(dist)
-
-        fobj = open(path, 'wb')
-        cPickle.dump(globdata.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
-        fobj.close()
-
 
 def retr_strgangl(globdata):
 
@@ -1792,7 +1807,10 @@ def setp(globdata):
             globdata.nameback = ['normisot', 'normfdfm']
 
     globdata.strgfluxunit = retr_strgfluxunit(globdata)
-        
+    
+    globdata.numbchrototl = 4
+    globdata.numbchrollik = 7
+
     # number of bins
     globdata.numbspec = 10
     globdata.numbbins = 10
@@ -1836,13 +1854,14 @@ def setp(globdata):
 
     globdata.indxspecpivt = globdata.numbspec / 2
     
+    retr_strgprop(globdata)
+
     # temp
     if globdata.exprtype == 'sdss':
         globdata.diffener = ones(globdata.numbener)
         
     # angular globdata.deviation
-    # temp
-    globdata.numbangl = 10
+    globdata.numbangl = 100
     if globdata.exprtype == 'sdss':
         globdata.maxmangldisp = deg2rad(10. / 3600.) # [rad]
     if globdata.exprtype == 'ferm':
@@ -2087,8 +2106,9 @@ def setp(globdata):
     if globdata.exprtype == 'sdss':
         globdata.numbspecprox = 1
     globdata.indxspecprox = arange(globdata.numbspecprox)
-    globdata.meanspecprox = logspace(log10(globdata.minmspec[globdata.indxenerfdfn]), log10(globdata.maxmspec[globdata.indxenerfdfn]), globdata.numbspecprox)
-    globdata.specfraceval = 0.01
+    globdata.binsspecprox = logspace(log10(globdata.minmspec[globdata.indxenerfdfn]), log10(globdata.maxmspec[globdata.indxenerfdfn]), globdata.numbspecprox + 1)
+    globdata.meanspecprox = sqrt(globdata.binsspecprox[1:] * globdata.binsspecprox[:-1])
+    globdata.specfraceval = 1e-3
     if globdata.exprtype == 'ferm':
         globdata.maxmangleval = empty(globdata.numbspecprox)
         for h in globdata.indxspecprox:
@@ -2109,7 +2129,7 @@ def setp(globdata):
         globdata.lgalgrid = lgalheal[globdata.indxpixlrofi]
         globdata.bgalgrid = bgalheal[globdata.indxpixlrofi]
         
-        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d_%s.p' % (globdata.maxmgang, globdata.pixltype)
+        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (globdata.maxmgang)
         if os.path.isfile(path):
             fobj = open(path, 'rb')
             globdata.pixlcnvt = cPickle.load(fobj)
@@ -2123,9 +2143,6 @@ def setp(globdata):
             fobj = open(path, 'wb')
             cPickle.dump(globdata.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
-
-
-            
     else:
         isidecart = arange(globdata.numbsidecart)
         temp = meshgrid(isidecart, isidecart, indexing='ij')
@@ -2364,7 +2381,9 @@ def setp(globdata):
         globdata.datacntscart[indxdatacntscartsatu[0], indxdatacntscartsatu[1], i, indxdatacntscartsatu[2]] = globdata.datacntssatu[i]
 
     # make a look-up table of nearby pixels for each pixel
-    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s.p' % (globdata.maxmgang, globdata.pixltype)
+
+    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.3g_%.3g.p' % (globdata.maxmgang, globdata.pixltype, \
+                                                                                        globdata.minmspec[globdata.indxenerfdfn[0]], globdata.maxmspec[globdata.indxenerfdfn[0]])
     if os.path.isfile(path):
         print 'Retrieving previously computed pixel look-up table...'
         fobj = open(path, 'rb')
