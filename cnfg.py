@@ -117,7 +117,7 @@ def retr_cnfg( \
         if meansind == None:
             meansind = array([2.2])
         if stdvsind == None:
-            stdvsind = array([0.5])
+            stdvsind = array([0.3])
             
         if minmfdfnnorm == None:
             minmfdfnnorm = array([1e0])
