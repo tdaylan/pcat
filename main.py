@@ -47,8 +47,11 @@ def work(globdata, indxprocwork):
     if globdata.randinit or not globdata.trueinfo or globdata.truepsfipara == None:
         globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
     else:
-        for k in globdata.indxmodlpsfipara:
-            globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k)
+        if globdata.psfntype == globdata.truepsfntype:
+            for k in globdata.indxmodlpsfipara:
+                globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k)
+        else:
+            globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
         
     for l in globdata.indxpopl:
         if globdata.randinit or not globdata.trueinfo:
@@ -61,10 +64,12 @@ def work(globdata, indxprocwork):
                 spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
                 globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(spec)
             if globdata.colrprio:
-                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l], globdata.minmsind, globdata.factsind))
+                #globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l], globdata.minmsind, globdata.factsind))
+                globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = cdfn_eerr(globdata.truesind[l], globdata.meansind[l], globdata.stdvsind[l], \
+                                                                                        globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
     globdata.thissampvarb, thisindxpixlpnts, thiscnts, globdata.thispntsflux, thismodlflux, \
         globdata.thismodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
-        
+    
     if globdata.verbtype > 2:
         print 'thisindxpntsfull: ', globdata.thisindxpntsfull
         print 'thisindxpntsempt: ', globdata.thisindxpntsempt  
@@ -126,7 +131,7 @@ def init(cnfg):
     globdata.stdvback = cnfg['stdvback']
     globdata.stdvlbhl = cnfg['stdvlbhl']
     globdata.stdvspec = cnfg['stdvspec']
-    globdata.stdvsind = cnfg['stdvsind']
+    globdata.stdvpropsind = cnfg['stdvpropsind']
     globdata.spmrlbhl = cnfg['spmrlbhl']
     globdata.fracrand = cnfg['fracrand']
     
@@ -157,7 +162,10 @@ def init(cnfg):
     if globdata.colrprio:
         globdata.minmsind = cnfg['minmsind']
         globdata.maxmsind = cnfg['maxmsind']
-    
+        globdata.meansind = cnfg['meansind']
+        globdata.stdvsind = cnfg['stdvsind']
+   
+
     globdata.minmfdfnnorm = cnfg['minmfdfnnorm']
     globdata.maxmfdfnnorm = cnfg['maxmfdfnnorm']
     globdata.minmfdfnslop = cnfg['minmfdfnslop']
@@ -610,6 +618,10 @@ def init(cnfg):
         listhdun[-1].header['EXTNAME'] = 'minmsind'
         listhdun.append(pf.ImageHDU(globdata.maxmsind))
         listhdun[-1].header['EXTNAME'] = 'maxmsind'
+        listhdun.append(pf.ImageHDU(globdata.meansind))
+        listhdun[-1].header['EXTNAME'] = 'meansind'
+        listhdun.append(pf.ImageHDU(globdata.stdvsind))
+        listhdun[-1].header['EXTNAME'] = 'stdvsind'
     
     listhdun.append(pf.ImageHDU(globdata.binsener))
     listhdun[-1].header['EXTNAME'] = 'binsener'
@@ -897,14 +909,34 @@ def rjmc(globdata, indxprocwork):
             listaccp[globdata.cntrswep] = False
              
         # sanity checks
-        if where((globdata.drmcsamp[1:, 0] > 1.) | (globdata.drmcsamp[1:, 0] < 0.))[0].size > 0:
+        indxsampbadd = where((globdata.drmcsamp[1:, 0] > 1.) | (globdata.drmcsamp[1:, 0] < 0.))[0] + 1
+        if indxsampbadd.size > 0:
             print 'Unit sample vector went outside [0,1]!'
+            print 'cntrswep'
+            print globdata.cntrswep
+            print 'thisindxprop'
+            print globdata.thisindxprop
+            print 'indxsampbadd'
+            print indxsampbadd
+            print 'drmcsamp'
+            print globdata.drmcsamp[indxsampbadd, :]
+            return
+            
         for l in globdata.indxpopl:
             for i in globdata.indxenerfdfn:
                 if where(globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]] < globdata.minmspec[i])[0].size > 0:
                     print 'Spectrum of some PS went below the prior range!'
                 if where(globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]] > globdata.maxmspec[i])[0].size > 0:
                     print 'Spectrum of some PS went above the prior range!'          
+
+        # temp
+        if False:
+            tempsampvarb, tempppixl, tempcnts, temppntsflux, tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
+            globdata.errrmodlcnts = 100. * (globdata.thismodlcnts - tempmodlcnts) / tempmodlcnts
+            print 'globdata.errrmodlcnts'
+            print amin(globdata.errrmodlcnts), amax(globdata.errrmodlcnts)
+            if amax(globdata.errrmodlcnts) > 0.1 or amin(globdata.errrmodlcnts) < -0.1:
+                return
 
         # save the sample
         if boolsave[globdata.cntrswep]:
@@ -926,7 +958,6 @@ def rjmc(globdata, indxprocwork):
                     lpri += sum(log(pdfn_spec(globdata, flux, fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])))
             listlpri[sampindx[globdata.cntrswep]] = lpri
             
-            
             if globdata.tracsamp:
                 
                 numbpnts = globdata.thissampvarb[globdata.indxsampnumbpnts[0]]
@@ -947,7 +978,6 @@ def rjmc(globdata, indxprocwork):
         if globdata.verbtype > 0:
             thiscntr = tdpy.util.show_prog(globdata.cntrswep, globdata.numbswep, thiscntr, indxprocwork=indxprocwork)
             
-            
         if globdata.diagsamp:
             plot_datacnts(0, 0, nextstat=True)
             plot_resicnts(0, 0, thisresicnts, nextstat=True)
@@ -965,8 +995,6 @@ def rjmc(globdata, indxprocwork):
             print
             print
             print
-            
-        
         
         # update the sweep counter
         globdata.cntrswep += 1

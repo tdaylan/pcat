@@ -113,6 +113,8 @@ def plot_post(pathprobcatl):
     if globdata.colrprio:
         globdata.minmsind = hdun['minmsind'].data
         globdata.maxmsind = hdun['maxmsind'].data
+        globdata.meansind = hdun['meansind'].data
+        globdata.stdvsind = hdun['stdvsind'].data
         
     # bins
     globdata.binsener = hdun['binsener'].data
@@ -499,7 +501,7 @@ def plot_chro(globdata):
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood']
     figr, axcl = plt.subplots(2, 1, figsize=(14, 10))
     for k in range(1, 4):
-        axcl[0].hist(globdata.listchrototl[where(globdata.listchrototl[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=labl[k])
+        axcl[0].hist(globdata.listchrototl[where(globdata.listchrototl[:, k] > 0)[0], k] * 1e3, binstime, log=True, label=labl[k])
     axcl[1].hist(globdata.listchrototl[where(globdata.listchrototl[:, 0] > 0)[0], 0] * 1e3, binstime, log=True, label=labl[0], color='black')
     axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(globdata.listchrototl[where(globdata.listchrototl[:, 0] > 0)[0], 0] * 1e3))
     axcl[0].set_xlim([amin(binstime), amax(binstime)])
@@ -515,16 +517,21 @@ def plot_chro(globdata):
 
     listlabl = ['Setup', 'Pixel', 'Mesh', 'PS Flux', 'Total Flux', 'Counts', 'Likelihood']
     figr, axcl = plt.subplots(globdata.numbchrollik, 1, figsize=(10, 26))
-    binstime = logspace(log10(amin(globdata.listchrollik[where(globdata.listchrollik > 0)] * 1e3)), log10(amax(globdata.listchrollik * 1e3)), 50)
-    for k in range(globdata.numbchrollik):
-        axcl[k].hist(globdata.listchrollik[where(globdata.listchrollik[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=listlabl[k])
-        axcl[k].set_xlim([amin(binstime), amax(binstime)])
-        axcl[k].set_ylim([0.5, None])
-        axcl[k].set_ylabel(listlabl[k])
-        axcl[k].set_xscale('log')
-    axcl[-1].set_xlabel('$t$ [ms]')
-    figr.savefig(globdata.plotpath + 'chrollik_' + globdata.rtag + '.png')
-    plt.close(figr)
+    
+    maxmchrollik = amax(globdata.listchrollik * 1e3)
+    if maxmchrollik > 0.:
+        minmchrollik = amin(globdata.listchrollik[where(globdata.listchrollik > 0)] * 1e3)
+        if maxmchrollik != minmchrollik:
+            binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
+            for k in range(globdata.numbchrollik):
+                axcl[k].hist(globdata.listchrollik[where(globdata.listchrollik[:, k] > 0)[0], k] * 1e3, binstime, log=True, alpha=0.5, label=listlabl[k])
+                axcl[k].set_xlim([amin(binstime), amax(binstime)])
+                axcl[k].set_ylim([0.5, None])
+                axcl[k].set_ylabel(listlabl[k])
+                axcl[k].set_xscale('log')
+            axcl[-1].set_xlabel('$t$ [ms]')
+            figr.savefig(globdata.plotpath + 'chrollik_' + globdata.rtag + '.png')
+            plt.close(figr)
 
 
 def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
@@ -604,7 +611,7 @@ def plot_compfrac(globdata, postpntsfluxmean=None, postnormback=None):
     listsize = zeros(globdata.numbback + 1)
     for k in range(globdata.numbback + 1):
         if globdata.numbener == 1:
-            listsize[k] = diffener * listydat[k+1, :]
+            listsize[k] = globdata.diffener * listydat[k+1, :]
         else:
             listsize[k] = trapz(listydat[k+1, :], globdata.meanener)
     listsize *= 100. / sum(listsize)
@@ -645,6 +652,7 @@ def plot_histsind(globdata, l, postsindhist=None):
     axis.set_xlabel('$s$')
     axis.set_xlim([globdata.minmsind, globdata.maxmsind])
     axis.set_ylabel('$N$')
+    axis.set_ylim([0.1, None])
     axis.legend()
     if post:
         path = globdata.plotpath + 'histsind_popl%d' % l + globdata.rtag + '.png'
@@ -689,7 +697,8 @@ def plot_histspec(globdata, l, listspechist=None):
         if globdata.trueinfo:
             truehist = axis.hist(globdata.truespec[l][0, i, :], globdata.binsspec[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
             if globdata.datatype == 'mock':
-                axis.hist(globdata.fgl3spec[0, i, globdata.indxfgl3rofi], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
+                if globdata.exprtype == 'ferm':
+                    axis.hist(globdata.fgl3spec[0, i, globdata.indxfgl3rofi], globdata.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + globdata.strgfluxunit)
         axis.set_xscale('log')
@@ -701,7 +710,7 @@ def plot_histspec(globdata, l, listspechist=None):
             axis.set_ylabel('$N$')
         if i == numbcols / 2 or globdata.colrprio:
             axis.legend()
-    figr.subplots_adjust(wspace=0.3, bottom=0.2)
+    figr.subplots_adjust(wspace=0.3, bottom=0.2, left=0.15)
     if post:
         path = globdata.plotpath + 'histspec%d_' % l + globdata.rtag + '.png'
     else:
@@ -1360,7 +1369,8 @@ def plot_histcnts(globdata, l, thiscnts):
             if globdata.trueinfo:
                 truehist = axis.hist(globdata.truecnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='g', log=True, label=globdata.truelabl)
                 if globdata.datatype == 'mock':
-                    axis.hist(globdata.fgl3cnts[i, globdata.indxfgl3rofi, m], globdata.binscnts[i, :], alpha=0.5, color='red', log=True, label='3FGL')
+                    if globdata.exprtype == 'ferm':
+                        axis.hist(globdata.fgl3cnts[i, globdata.indxfgl3rofi, m], globdata.binscnts[i, :], alpha=0.1, color='red', log=True, label='3FGL')
             axis.hist(thiscnts[l][i, :, m], globdata.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == globdata.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
