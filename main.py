@@ -105,107 +105,299 @@ def work(globdata, indxprocwork):
     
     return listchan
 
-
-
-
-def init(cnfg):
     
+def init( \
+         verbtype=1, \
+         plotperd=50000, \
+         makeplot=True, \
+         diagsamp=False, \
+         numbswep=1000000, \
+         numbburn=None, \
+         factthin=None, \
+         regitype='ngal', \
+         datatype='inpt', \
+         randinit=True, \
+         maxmgang=None, \
+         minmspec=None, \
+         maxmspec=None, \
+         minmsind=None, \
+         maxmsind=None, \
+         meansind=None, \
+         stdvsind=None, \
+         minmfdfnnorm=None, \
+         maxmfdfnnorm=None, \
+         minmfdfnslop=None, \
+         maxmfdfnslop=None, \
+         fdfntype='powr', \
+         psfntype=None, \
+         proppsfn=True, \
+         colrprio=True, \
+         numbpopl=1, \
+         indxevttincl=arange(2, 4), \
+         indxenerincl=arange(5), \
+         maxmnumbpnts=array([1000]), \
+         initnumbpnts=None, \
+         trueinfo=False, \
+         pntscntr=False, \
+         numbproc=None, \
+         liketype='pois', \
+         pixltype='heal', \
+         exprtype='ferm', \
+         lgalcntr=0., \
+         bgalcntr=0., \
+         margsize=None, \
+         maxmnormback=None, \
+         minmnormback=None, \
+         numbsidecart=None, \
+         numbsideheal=None, \
+         maxmangleval=None, \
+         spmrlbhl=2., \
+         stdvfdfnnorm=0.05, \
+         stdvfdfnslop=0.1, \
+         stdvpsfipara=0.1, \
+         stdvback=0.04, \
+         stdvlbhl=0.1, \
+         stdvspec=0.15, \
+         stdvpropsind=0.15, \
+         fracrand=0.05, \
+         mocknumbpnts=None, \
+         mockfdfnslop=None, \
+         mockfdfnsloplowr=None, \
+         mockfdfnslopuppr=None, \
+         mockfdfnbrek=None, \
+         mocknormback=None, \
+         mockfdfntype='powr', \
+         mockpsfntype=None, \
+         strgexpr=None, \
+         strgback=None, \
+         lablback=None, \
+         nameback=None, \
+         strgexpo=None, \
+         probprop=None, \
+        ):
+    
+    # start the timer
     timetotlreal = time.time()
     timetotlproc = time.clock()
+   
+    # defaults
+    ## Fermi-LAT
+    if exprtype == 'ferm':
+        if maxmgang == None:
+            maxmgang = 20.
+        if minmsind == None:
+            minmsind = array([1.2])
+        if maxmsind == None:
+            maxmsind = array([3.2])
+        if meansind == None:
+            meansind = array([2.2])
+        if stdvsind == None:
+            stdvsind = array([0.3])
+        if minmfdfnnorm == None:
+            minmfdfnnorm = array([1e0])
+        if maxmfdfnnorm == None:
+            maxmfdfnnorm = array([1e2])
+        if minmfdfnslop == None:
+            minmfdfnslop = array([1.5])
+        if maxmfdfnslop == None:
+            maxmfdfnslop = array([2.5])
+        if margsize == None:
+            margsize = 1.
+        if psfntype == None:
+            psfntype = 'singking'
+        if mockpsfntype == None:
+            mockpsfntype = 'doubking'
+    ## SDSS
+    if exprtype == 'sdss':
+        if maxmgang == None:
+            maxmgang = 20. / 3600.
+        if minmsind == None:
+            minmsind = array([1.])
+        if maxmsind == None:
+            maxmsind = array([3.])
+        if meansind == None:
+            meansind = array([2.2])
+        if stdvsind == None:
+            stdvsind = array([0.5])
+        if minmfdfnnorm == None:
+            minmfdfnnorm = 1e0
+        if maxmfdfnnorm == None:
+            maxmfdfnnorm = 1e2
+        if minmfdfnslop == None:
+            minmfdfnslop = array([1.5])
+        if maxmfdfnslop == None:
+            maxmfdfnslop = array([2.5])
+        if margsize == None:
+            margsize = 1.
+        if psfntype == None:
+            psfntype = 'doubgaus'
+        if mockpsfntype == None:
+            mockpsfntype = 'doubgaus'
     
+    # initialize the global object 
     globdata = globdatastrt()
-    
-    globdata.verbtype = cnfg['verbtype']
-    globdata.plotperd = cnfg['plotperd']
-    globdata.makeplot = cnfg['makeplot']
-    globdata.diagsamp = cnfg['diagsamp']
-    
-    globdata.numbproc = cnfg['numbproc']
-    globdata.numbswep = cnfg['numbswep']
-    globdata.numbburn = cnfg['numbburn']
-    globdata.factthin = cnfg['factthin']
-    
-    globdata.stdvfdfnnorm = cnfg['stdvfdfnnorm']
-    globdata.stdvfdfnslop = cnfg['stdvfdfnslop']
-    globdata.stdvpsfipara = cnfg['stdvpsfipara']
-    globdata.stdvback = cnfg['stdvback']
-    globdata.stdvlbhl = cnfg['stdvlbhl']
-    globdata.stdvspec = cnfg['stdvspec']
-    globdata.stdvpropsind = cnfg['stdvpropsind']
-    globdata.spmrlbhl = cnfg['spmrlbhl']
-    globdata.fracrand = cnfg['fracrand']
-    
-    globdata.datatype = cnfg['datatype']
-    
-    
-    globdata.psfntype = cnfg['psfntype']
-    
-    globdata.liketype = cnfg['liketype']
-    globdata.exprtype = cnfg['exprtype']
-    globdata.pixltype = cnfg['pixltype']
-    
-    globdata.regitype = cnfg['regitype']
-    globdata.randinit = cnfg['randinit']
-    
-    globdata.fdfntype = cnfg['fdfntype']
-
-    globdata.proppsfn = cnfg['proppsfn']
-    globdata.colrprio = cnfg['colrprio']
-    globdata.numbpopl = cnfg['numbpopl']
-    globdata.indxenerincl = cnfg['indxenerincl']
-    globdata.indxevttincl = cnfg['indxevttincl']
-    
-    globdata.maxmangleval = cnfg['maxmangleval']
-
-    globdata.minmspec = cnfg['minmspec']
-    globdata.maxmspec = cnfg['maxmspec']
-    if globdata.colrprio:
-        globdata.minmsind = cnfg['minmsind']
-        globdata.maxmsind = cnfg['maxmsind']
-        globdata.meansind = cnfg['meansind']
-        globdata.stdvsind = cnfg['stdvsind']
    
-
-    globdata.minmfdfnnorm = cnfg['minmfdfnnorm']
-    globdata.maxmfdfnnorm = cnfg['maxmfdfnnorm']
-    globdata.minmfdfnslop = cnfg['minmfdfnslop']
-    globdata.maxmfdfnslop = cnfg['maxmfdfnslop']
+    # load the global object
+    ## verbosity level
+    ### 0 - no output
+    ### 1 - progress
+    ### 2 - sampler diagnostics
+    globdata.verbtype = verbtype
     
+    ## plot settings
+    ### MCMC time period over which a frame is produced
+    globdata.plotperd = plotperd
+    ### flag to control generation of plots
+    globdata.makeplot = makeplot
 
-    globdata.maxmnormback = cnfg['maxmnormback']
-    globdata.minmnormback = cnfg['minmnormback']
+    ## flag to diagnose the sampler
+    globdata.diagsamp = diagsamp
     
-    if globdata.datatype == 'mock':
-        globdata.mocknumbpnts = cnfg['mocknumbpnts']
-        globdata.mockfdfnslop = cnfg['mockfdfnslop']
-        globdata.mocknormback = cnfg['mocknormback']
-        globdata.mockpsfntype = cnfg['mockpsfntype']
+    ## MCMC setup
+    ### number of sweeps, i.e., number of samples before thinning and including burn-in
+    globdata.numbswep = numbswep
+    ### number of burn-in samples
+    globdata.numbburn = numbburn
+    ### number of processes
+    globdata.numbproc = numbproc
+    ### the factor by which to thin the chain
+    globdata.factthin = factthin
+    
+    ## region type
+    ###- ngal - NGPR (North Galactic Polar Region)
+    ###- igal - IG (inner Galaxy)
+    globdata.regitype = regitype
 
-    globdata.maxmnumbpnts = cnfg['maxmnumbpnts']
+    ## data type
+    ###- mock - mock data
+    ###- inpt - input data
+    globdata.datatype = datatype
     
-    globdata.probprop = cnfg['probprop']
+    ## likelihood function type
+    globdata.liketype = liketype
+    
+    ## experiment type
+    globdata.exprtype = exprtype
+    
+    ## pixelization type
+    globdata.pixltype = pixltype
+    
+    ## PSF model type
+    globdata.psfntype = psfntype
+    
+    ## color priors
+    globdata.colrprio = colrprio
    
-    # input
-    ## experimental data
-    globdata.strgexpr = cnfg['strgexpr']
-    ## background
-    globdata.strgback = cnfg['strgback']
-    globdata.lablback = cnfg['lablback']
-    globdata.nameback = cnfg['nameback']
-    ## exposure
-    globdata.strgexpo = cnfg['strgexpo']
+    ## flag to turn off PSF parameter updates
+    globdata.proppsfn = proppsfn
+
+    ## input data
+    ### measured data
+    globdata.strgexpr = strgexpr
+    ### background
+    globdata.strgback = strgback
+    globdata.lablback = lablback
+    globdata.nameback = nameback
+    ### exposure
+    globdata.strgexpo = strgexpo
     
-    globdata.initnumbpnts = cnfg['initnumbpnts']
-    globdata.trueinfo = cnfg['trueinfo']
+    ## flag to use truth information
+    globdata.trueinfo = trueinfo
     
-    globdata.margsize = cnfg['margsize']
-    globdata.maxmgang = cnfg['maxmgang']
-    globdata.lgalcntr = cnfg['lgalcntr']
-    globdata.bgalcntr = cnfg['bgalcntr']
+    ## Flux distribution function model
+    globdata.fdfntype = fdfntype
     
-    globdata.numbsideheal = cnfg['numbsideheal']
-    globdata.numbsidecart = cnfg['numbsidecart']
+    ## initial state setup
+    ### number of point sources
+    globdata.initnumbpnts = initnumbpnts
+    ### flag to draw the initial state from the prior
+    globdata.randinit = randinit
+
+    ## energy bins to be included
+    globdata.indxenerincl = indxenerincl
     
+    ## PSF bins to be included
+    globdata.indxevttincl = indxevttincl
+    
+    ## number of Point Source (PS) populations
+    globdata.numbpopl = numbpopl
+    
+    ## maximum angle from the PSs to evaluate the likelihood
+    globdata.maxmangleval = maxmangleval
+    
+    ## parameter limits
+    ### flux distribution function normalization
+    globdata.minmfdfnnorm = minmfdfnnorm
+    globdata.maxmfdfnnorm = maxmfdfnnorm
+    ### flux distribution function power law index
+    globdata.minmfdfnslop = minmfdfnslop
+    globdata.maxmfdfnslop = maxmfdfnslop
+    ### flux
+    globdata.minmspec = minmspec
+    globdata.maxmspec = maxmspec
+    ### spectral power-law index
+    globdata.minmsind = minmsind
+    globdata.maxmsind = maxmsind
+    globdata.meansind = meansind
+    globdata.stdvsind = stdvsind
+    ### background normalizations
+    globdata.minmnormback = minmnormback
+    globdata.maxmnormback = maxmnormback
+
+    ## model indicator limits
+    globdata.maxmnumbpnts = maxmnumbpnts
+    
+    ## Region of interest
+    ### image center
+    globdata.lgalcntr = lgalcntr
+    globdata.bgalcntr = bgalcntr
+    ### half of the image size
+    globdata.maxmgang = maxmgang
+    ### image margin size
+    globdata.margsize = margsize
+
+    ## proposals
+    ### proposal scales
+    globdata.stdvfdfnnorm = stdvfdfnnorm
+    globdata.stdvfdfnslop = stdvfdfnslop
+    globdata.stdvpsfipara = stdvpsfipara
+    globdata.stdvback = stdvback
+    globdata.stdvlbhl = stdvlbhl
+    globdata.stdvspec = stdvspec
+    globdata.stdvpropsind = stdvpropsind
+
+    ### fraction of heavy-tailed proposals
+    globdata.fracrand = fracrand
+    
+    ### maximum angle over which splits and merges are proposed
+    globdata.spmrlbhl = spmrlbhl
+    
+    ## mock data setup
+    if datatype == 'mock':
+        ### mock PSF model type
+        globdata.mockpsfntype = mockpsfntype
+        ### mock FDF model type
+        globdata.mockfdfntype = mockfdfntype
+        ### mock number of PS
+        globdata.mocknumbpnts = mocknumbpnts
+        if globdata.fdfntype == 'brok':
+            globdata.mockfdfnsloplowr = mockfdfnsloplowr
+            globdata.mockfdfnslopuppr = mockfdfnslopuppr
+            globdata.mockfdfnbrek = mockfdfnbrek
+        else:
+            globdata.mockfdfnslop = mockfdfnslop
+        globdata.mocknormback = mocknormback
+        ### flag to position mock point sources at the image center
+        globdata.pntscntr = pntscntr
+        ### mock image resolution
+        globdata.numbsidecart = numbsidecart
+        globdata.numbsideheal = numbsideheal
+
+    ## proposal frequencies
+    globdata.probprop = probprop
+
+
+    # check inputs
     if globdata.colrprio:
         if globdata.minmspec.size != 1 or globdata.minmspec.size != 1:
             print 'Spectral limits must be numpy scalars when color priors are used!'
