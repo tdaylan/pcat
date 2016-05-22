@@ -1889,11 +1889,11 @@ def setp(globdata):
         globdata.maxmspec = globdata.maxmspec * (globdata.meanener[globdata.indxenerfdfn] / globdata.meanener)**2
         if globdata.datatype == 'mock':
             if globdata.mockfdfntype == 'brok':
-                globdata.mockfdfnslop = tile(globdata.mockfdfnslop, (1, globdata.numbener))
-            else:
                 globdata.mockfdfnsloplowr = tile(globdata.mockfdfnsloplowr, (1, globdata.numbener))
                 globdata.mockfdfnslopuppr = tile(globdata.mockfdfnslopuppr, (1, globdata.numbener))
                 globdata.mockfdfnbrek = tile(globdata.mockfdfnbrek, (1, globdata.numbener))
+            else:
+                globdata.mockfdfnslop = tile(globdata.mockfdfnslop, (1, globdata.numbener))
     else:
         globdata.indxenerfdfn = globdata.indxener
     globdata.numbenerfdfn = globdata.indxenerfdfn.size
