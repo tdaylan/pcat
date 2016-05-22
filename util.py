@@ -148,14 +148,14 @@ def cdfn_self(para, minmpara, factpara):
 
 def icdf_eerr(paraunit, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
     cdfnnormpara = paraunit * cdfnnormdiff + cdfnnormminm
-    tranpara = sp.special.erfinv(cdfnnormpara)
+    tranpara = sp.special.erfinv(2. * cdfnnormpara - 1.) * sqrt(2)
     para = tranpara * stdvpara + meanpara
     return para
 
 
 def cdfn_eerr(para, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
     tranpara = (para - meanpara) / stdvpara
-    cdfnnormpara = sp.special.erf(tranpara)
+    cdfnnormpara = 0.5 * (sp.special.erf(tranpara / sqrt(2.)) + 1.)
     paraunit = (cdfnnormpara - cdfnnormminm) / cdfnnormdiff
     return paraunit
 
@@ -1484,8 +1484,8 @@ def retr_prop(globdata):
                 else:
                     globdata.modiflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
                     #globdata.modisind = icdf_atan(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.minmsind, globdata.factsind)
-                    globdata.modisind = icdf_eerr(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.meansind[l], globdata.stdvsind[l], \
-                                                                                        globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
+                    globdata.modisind = icdf_eerr(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.meansind[globdata.indxpoplmodi], \
+                            globdata.stdvsind[globdata.indxpoplmodi], globdata.sindcdfnnormminm[globdata.indxpoplmodi], globdata.sindcdfnnormdiff[globdata.indxpoplmodi])
                 globdata.modispec[:, 1] = retr_spec(globdata, globdata.modiflux, globdata.modisind).flatten()
             else:
                 specunit = globdata.drmcsamp[globdata.indxsampmodi, -1]
@@ -1956,10 +1956,9 @@ def setp(globdata):
     globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
     if globdata.colrprio:
         globdata.factsind = arctan(globdata.maxmsind) - arctan(globdata.minmsind)
-        globdata.sindcdfnnormminm = sp.special.erf((globdata.minmsind - globdata.meansind) / globdata.stdvsind)
-        globdata.sindcdfnnormmaxm = sp.special.erf((globdata.maxmsind - globdata.meansind) / globdata.stdvsind)
+        globdata.sindcdfnnormminm = 0.5 * (sp.special.erf((globdata.minmsind - globdata.meansind) / globdata.stdvsind / sqrt(2.)) + 1.)
+        globdata.sindcdfnnormmaxm = 0.5 * (sp.special.erf((globdata.maxmsind - globdata.meansind) / globdata.stdvsind / sqrt(2.)) + 1.)
         globdata.sindcdfnnormdiff = globdata.sindcdfnnormmaxm - globdata.sindcdfnnormminm
-    
 
     if globdata.datatype == 'mock':
 
@@ -2144,7 +2143,6 @@ def setp(globdata):
 
     if globdata.colrprio:
         globdata.binssind = linspace(globdata.minmsind, globdata.maxmsind, globdata.numbbins + 1)
-        globdata.meansind = (globdata.binssind[1:] + globdata.binssind[0:-1]) / 2.
         globdata.diffsind = globdata.binssind[1:] - globdata.binssind[:-1]
 
     if globdata.exprtype == 'ferm':

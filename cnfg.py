@@ -111,9 +111,9 @@ def retr_cnfg( \
             maxmgang = 20.
             
         if minmsind == None:
-            minmsind = array([1.])
+            minmsind = array([1.2])
         if maxmsind == None:
-            maxmsind = array([3.])
+            maxmsind = array([3.2])
         if meansind == None:
             meansind = array([2.2])
         if stdvsind == None:
@@ -268,13 +268,13 @@ def retr_cnfg( \
     cnfg['minmfdfnslop'] = minmfdfnslop
     cnfg['maxmfdfnslop'] = maxmfdfnslop
     ## flux
+    cnfg['minmspec'] = minmspec
+    cnfg['maxmspec'] = maxmspec
+    ## spectral power-law index
     cnfg['minmsind'] = minmsind
     cnfg['maxmsind'] = maxmsind
     cnfg['meansind'] = meansind
     cnfg['stdvsind'] = stdvsind
-    ## spectral power-law index
-    cnfg['minmspec'] = minmspec
-    cnfg['maxmspec'] = maxmspec
     ## background normalizations
     cnfg['minmnormback'] = minmnormback
     cnfg['maxmnormback'] = maxmnormback
