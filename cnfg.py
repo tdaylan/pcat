@@ -333,7 +333,7 @@ if __name__ == '__main__':
         name.update(locals())
         numbargs = len(sys.argv) - 2
         if numbargs == 0:
-            print sys.argv[1]
+            print 'Running PCAT configuration %s...' % sys.argv[1]
             name.get(sys.argv[1])()
         else:
             listargs = []

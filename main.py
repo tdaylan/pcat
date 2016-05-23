@@ -40,7 +40,13 @@ def work(globdata, indxprocwork):
     globdata.drmcsamp[globdata.indxsampnumbpnts, 0] = thisnumbpnts
     globdata.drmcsamp[globdata.indxsampfdfnnorm, 0] = rand(globdata.numbpopl)
     if globdata.trueinfo and globdata.datatype == 'mock':
-        globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = cdfn_atan(globdata.truefdfnslop, globdata.minmfdfnslop, globdata.factfdfnslop)
+        for l in globdata.indxpopl:
+            if globdata.fdfntype == 'brok':
+                globdata.drmcsamp[globdata.indxsampfdfnsloplowr[l], 0] = cdfn_atan(globdata.truefdfnsloplowr[l], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
+                globdata.drmcsamp[globdata.indxsampfdfnslopuppr[l], 0] = cdfn_atan(globdata.truefdfnslopuppr[l], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
+                globdata.drmcsamp[globdata.indxsampfdfnbrek[l], 0] = cdfn_logt(globdata.truefdfnbrek[l], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
+            else:
+                globdata.drmcsamp[globdata.indxsampfdfnslop[l], 0] = cdfn_atan(globdata.truefdfnslop[l], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
     else:
         globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = rand(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener))
     globdata.drmcsamp[globdata.indxsampnormback, 0] = rand(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener))
@@ -60,11 +66,16 @@ def work(globdata, indxprocwork):
             globdata.drmcsamp[globdata.thisindxsamplgal[l], 0] = copy(cdfn_self(globdata.truelgal[l], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg))
             globdata.drmcsamp[globdata.thisindxsampbgal[l], 0] = copy(cdfn_self(globdata.truebgal[l], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg))
             for i in globdata.indxenerfdfn:
-                fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0], globdata.minmfdfnslop, globdata.factfdfnslop)
-                spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
+                if globdata.fdfntype == 'brok':
+                    fdfnsloplowr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnsloplowr[l, i], 0], globdata.minmfdfnslop[l, i], globdata.factfdfnslop[l, i])
+                    fdfnslopuppr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslopuppr[l, i], 0], globdata.minmfdfnslop[l, i], globdata.factfdfnslop[l, i])
+                    fdfnbrek = icdf_logt(globdata.drmcsamp[globdata.indxsampfdfnbrek[l, i], 0], globdata.minmfdfnbrek[l, i], globdata.factfdfnbrek[l, i])
+                    spec = icdf_spec_brok(globdata, globdata.truespec[l][0, i, :], fdfnsloplowr, fdfnslopuppr, fdfnbrek, globdata.minmspec[i], globdata.maxmspec[i])
+                else:
+                    fdfnslop = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslop[l, i], 0], globdata.minmfdfnslop, globdata.factfdfnslop)
+                    spec = cdfn_spec(globdata, globdata.truespec[l][0, i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
                 globdata.drmcsamp[globdata.thisindxsampspec[l][i, :], 0] = copy(spec)
             if globdata.colrprio:
-                #globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = copy(cdfn_atan(globdata.truesind[l], globdata.minmsind, globdata.factsind))
                 globdata.drmcsamp[globdata.thisindxsampsind[l], 0] = cdfn_eerr(globdata.truesind[l], globdata.meansind[l], globdata.stdvsind[l], \
                                                                                         globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
     globdata.thissampvarb, thisindxpixlpnts, thiscnts, globdata.thispntsflux, thismodlflux, \

@@ -81,62 +81,62 @@ def retr_rofi_flux(globdata, normback, pntsflux, tempindx):
     return modlflux
 
 
-def cdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, i):
+def cdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
 
-    norm = 1. / ((1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
-        ((globdata.maxmspec[i] / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
-    if flux <= fluxbrek:
-        fluxunit = norm / (1. - fdfnsloplowr) * ((flux / fluxbrek)**(1. - fdfnsloplowr) - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr))
-    else:
-        fluxunit = norm / (1. - fdfnsloplowr) * (1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr)) - \
-            norm / (1. - fdfnslopuppr) * (1. - (flux / fluxbrek)**(1. - fdfnslopuppr))
-       
+    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
+                    ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
+    
+    indxflux = where(flux >= fluxbrek)[0]
+    fluxunit = norm / (1. - fdfnsloplowr) * ((flux / fluxbrek)**(1. - fdfnsloplowr) - (minmspec / fluxbrek)**(1. - fdfnsloplowr))
+    fluxunit[indxflux] = norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) - \
+                                norm / (1. - fdfnslopuppr) * (1. - (flux[indxflux] / fluxbrek)**(1. - fdfnslopuppr))
+      
     return fluxunit
 
 
-def pdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, i):
+def pdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
 
-    norm = 1. / ((1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
-        ((globdata.maxmspec[i] / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
-    if flux <= fluxbrek:
-        pdfnflux = norm * (flux / fluxbrek)**(1. - fdfnsloplowr)
-    else:
-        pdfnflux = norm * (flux / fluxbrek)**(1. - fdfnslopuppr)
+    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
+                    ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
+    
+    indxflux = where(flux >= fluxbrek)[0]
+    pdfnflux = norm * (flux / fluxbrek)**(1. - fdfnsloplowr)
+    pdfnflux = norm * (flux[indxflux] / fluxbrek)**(1. - fdfnslopuppr)
         
     return pdfnflux
 
 
-def icdf_spec_brok(globdata, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, i):
+def icdf_spec_brok(globdata, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
     
-    norm = 1. / ((1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
-        (1. - (globdata.maxmspec[i] / fluxbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
-    fluxunitbrek = norm / (1. - fdfnsloplowr) * (1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr))
-    if fluxunit < fluxunitbrek:
-        flux = fluxbrek * (fluxunit * (1. - fdfnsloplowr) / norm + (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
-    else:
-        flux = fluxbrek * (1. - (norm / (1. - fdfnsloplowr) * (1. - (globdata.minmspec[i] / fluxbrek)**(1. - fdfnsloplowr)) - \
-            fluxunit) * (1. - fdfnslopuppr) / norm)**(1. / (1. - fdfnslopuppr))
+    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
+                    (1. - (maxmspec / fluxbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
+    fluxunitbrek = norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr))
+    
+    indxfluxunit = where(fluxunit >= fluxunitbrek)[0]
+    flux = fluxbrek * (fluxunit * (1. - fdfnsloplowr) / norm + (minmspec / fluxbrek)**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
+    flux[indxfluxunit] = fluxbrek * (1. - (norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) - \
+                fluxunit[indxfluxunit]) * (1. - fdfnslopuppr) / norm)**(1. / (1. - fdfnslopuppr))
 
     return flux
 
 
-def cdfn_spec(globdata, flux, fdfnslop, minmspectemp, maxmspectemp):
+def cdfn_spec(globdata, flux, fdfnslop, minmspec, maxmspec):
         
-    fluxunit = (flux**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) / (maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop))
+    fluxunit = (flux**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop))
         
     return fluxunit
 
 
-def icdf_spec(globdata, fluxunit, fdfnslop, minmspectemp, maxmspectemp):
+def icdf_spec(globdata, fluxunit, fdfnslop, minmspec, maxmspec):
     
-    flux = (fluxunit * (maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) + minmspectemp**(1. - fdfnslop))**(1. / (1. - fdfnslop))
+    flux = (fluxunit * (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) + minmspec**(1. - fdfnslop))**(1. / (1. - fdfnslop))
     
     return flux
 
 
-def pdfn_spec(globdata, flux, fdfnslop, minmspectemp, maxmspectemp):
+def pdfn_spec(globdata, flux, fdfnslop, minmspec, maxmspec):
   
-    pdfnflux = (1. - fdfnslop) / (maxmspectemp**(1. - fdfnslop) - minmspectemp**(1. - fdfnslop)) * flux**(-fdfnslop)
+    pdfnflux = (1. - fdfnslop) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) * flux**(-fdfnslop)
           
     return pdfnflux
 
@@ -1961,7 +1961,10 @@ def setp(globdata):
     globdata.numbcompcolr = 4
     globdata.jcbnsplt = 2.**(2 - globdata.numbener)
     
+
+    minm
     # convenience factors for CDF and ICDF transforms
+    globdata.factfdfnbrek = log(globdata.maxmspec / globdata.minmspec)
     globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
     globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
     if globdata.colrprio:
@@ -2017,8 +2020,15 @@ def setp(globdata):
     # sample vector indices  
     globdata.indxsampnumbpnts = arange(globdata.numbpopl)
     globdata.indxsampfdfnnorm = arange(globdata.numbpopl) + amax(globdata.indxsampnumbpnts) + 1
-    globdata.indxsampfdfnslop = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
-    globdata.indxsamppsfipara = arange(globdata.numbpsfipara) + amax(globdata.indxsampfdfnslop) + 1
+    if globdata.fdfntype == 'brok':
+        globdata.indxsampfdfnsloplowr = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
+        globdata.indxsampfdfnslopuppr = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnsloplowr) + 1
+        globdata.indxsampfdfnbrek = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnslopuppr) + 1
+        indxsamptemp = amax(globdata.indxsampfdfnbrek) + 1
+    else:
+        globdata.indxsampfdfnslop = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
+        indxsamptemp = amax(globdata.indxsampfdfnslop) + 1
+    globdata.indxsamppsfipara = arange(globdata.numbpsfipara) + indxsamptemp
     globdata.indxsampnormback = arange(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener)) + amax(globdata.indxsamppsfipara) + 1
 
     globdata.fluxpivt = sqrt(globdata.minmspec * globdata.maxmspec)
@@ -2292,11 +2302,13 @@ def setp(globdata):
             for l in globdata.indxpopl:
                 globdata.mocknumbpnts[l] = random_integers(globdata.minmnumbpnts, globdata.maxmnumbpnts[l])
         
-        if globdata.mockfdfnslop == None:
-            globdata.mockfdfnslop = empty((globdata.numbpopl, globdata.numbenerfdfn))
-            for l in globdata.indxpopl:
-                globdata.mockfdfnslop[l, :] = icdf_atan(rand(globdata.numbenerfdfn), globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
-            
+        if globdata.mockfdfntype == 'brok':
+            pass
+        else:
+            if globdata.mockfdfnslop == None:
+                globdata.mockfdfnslop = empty((globdata.numbpopl, globdata.numbenerfdfn))
+                for l in globdata.indxpopl:
+                    globdata.mockfdfnslop[l, :] = icdf_atan(rand(globdata.numbenerfdfn), globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
         if globdata.mockpsfipara == None: 
             globdata.mockpsfntype = psfntpye
             numbmockpsfipara = globdata.numbpsfipara
@@ -2319,9 +2331,12 @@ def setp(globdata):
             mockbgal[l] = icdf_self(rand(globdata.mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
             mockspec[l] = empty((globdata.numbener, globdata.mocknumbpnts[l]))
             for i in globdata.indxenerfdfn:
-                mockspec[l][i, :] = icdf_spec(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+                if globdata.mockfdfntype == 'brok':
+                    mockspec[l][i, :] = icdf_spec_brok(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnsloplowr[l, i], \
+                        globdata.mockfdfnslopuppr[l, i], globdata.mockfdfnbrek[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+                else:
+                    mockspec[l][i, :] = icdf_spec(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
             if globdata.colrprio:
-                #mocksind[l] = icdf_atan(rand(globdata.mocknumbpnts[l]), globdata.minmsind, globdata.factsind)
                 mocksind[l] = icdf_eerr(rand(globdata.mocknumbpnts[l]), globdata.meansind[l], globdata.stdvsind[l], \
                                                                                         globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
                 mockspec[l] = retr_spec(globdata, mockspec[l][globdata.indxenerfdfn, :].flatten(), mocksind[l])
@@ -2354,7 +2369,12 @@ def setp(globdata):
             globdata.indxtruepntstimevari = [array([])] * globdata.numbpopl
                     
             globdata.truenumbpnts = globdata.mocknumbpnts
-            globdata.truefdfnslop = globdata.mockfdfnslop
+            if globdata.mockfdfntype == 'brok':
+                globdata.truefdfnsloplowr = globdata.mockfdfnsloplowr
+                globdata.truefdfnslopuppr = globdata.mockfdfnslopuppr
+                globdata.truefdfnbrek = globdata.mockfdfnbrek
+            else:
+                globdata.truefdfnslop = globdata.mockfdfnslop
             globdata.truenormback = globdata.mocknormback
             globdata.truecnts = mockcnts
             
