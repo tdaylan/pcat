@@ -67,8 +67,8 @@ def work(globdata, indxprocwork):
             globdata.drmcsamp[globdata.thisindxsampbgal[l], 0] = copy(cdfn_self(globdata.truebgal[l], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg))
             for i in globdata.indxenerfdfn:
                 if globdata.fdfntype == 'brok':
-                    fdfnsloplowr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnsloplowr[l, i], 0], globdata.minmfdfnslop[l, i], globdata.factfdfnslop[l, i])
-                    fdfnslopuppr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslopuppr[l, i], 0], globdata.minmfdfnslop[l, i], globdata.factfdfnslop[l, i])
+                    fdfnsloplowr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnsloplowr[l, i], 0], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
+                    fdfnslopuppr = icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslopuppr[l, i], 0], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
                     fdfnbrek = icdf_logt(globdata.drmcsamp[globdata.indxsampfdfnbrek[l, i], 0], globdata.minmfdfnbrek[l, i], globdata.factfdfnbrek[l, i])
                     spec = icdf_spec_brok(globdata, globdata.truespec[l][0, i, :], fdfnsloplowr, fdfnslopuppr, fdfnbrek, globdata.minmspec[i], globdata.maxmspec[i])
                 else:

@@ -1961,10 +1961,18 @@ def setp(globdata):
     globdata.numbcompcolr = 4
     globdata.jcbnsplt = 2.**(2 - globdata.numbener)
     
+    # population index vector
+    globdata.indxpopl = arange(globdata.numbpopl, dtype=int)
 
-    minm
+    # hyperpriors
+    globdata.minmfdfnbrek = empty((globdata.numbpopl, globdata.numbener))
+    globdata.maxmfdfnbrek = empty((globdata.numbpopl, globdata.numbener))
+    for l in globdata.indxpopl:
+        globdata.minmfdfnbrek[l, :] = globdata.minmspec
+        globdata.maxmfdfnbrek[l, :] = globdata.maxmspec
+
     # convenience factors for CDF and ICDF transforms
-    globdata.factfdfnbrek = log(globdata.maxmspec / globdata.minmspec)
+    globdata.factfdfnbrek = log(globdata.maxmfdfnbrek / globdata.minmfdfnbrek)
     globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
     globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
     if globdata.colrprio:
@@ -2076,9 +2084,6 @@ def setp(globdata):
     globdata.probpropmaxm /= sum(globdata.probpropmaxm)
     globdata.probpropminm /= sum(globdata.probpropminm)
     
-    # population indices
-    globdata.indxpopl = arange(globdata.numbpopl, dtype=int)
-
     globdata.maxmgangmarg = globdata.maxmgang + globdata.margsize
     
     globdata.minmlgalmarg = -globdata.maxmgangmarg
