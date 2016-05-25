@@ -305,11 +305,6 @@ def retr_llik(globdata, listchrollik, init=False):
                     spectemp = globdata.modispec[globdata.indxenerpivt, k]
 
                 # find the flux index
-                print 'globdata.binsspecprox'
-                print globdata.binsspecprox
-                print 'spectemp'
-                print spectemp
-                print
                 indxspecproxtemp = amin(where(globdata.binsspecprox - abs(spectemp) > 0.)[0]) - 1
                 indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
                 thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])

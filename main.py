@@ -1112,6 +1112,7 @@ def rjmc(globdata, indxprocwork):
             # make diagnostic plots for the next step
             if thismakefram and globdata.thisindxprop >= globdata.indxproppsfipara:
                 globdata.thispntsfluxmodi = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
+                globdata.nextpntsfluxmodi = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
                 for i in globdata.indxener:
                     for m in globdata.indxevtt:
                         globdata.thispntsfluxmodi[i, globdata.indxpixlmodi, m] = copy(globdata.thispntsflux[i, globdata.indxpixlmodi, m])
