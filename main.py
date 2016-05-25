@@ -34,7 +34,9 @@ def work(globdata, indxprocwork):
         globdata.thisindxpntsempt.append(range(thisnumbpnts[l], globdata.maxmnumbpnts[l]))
     globdata.thisindxsamplgal, globdata.thisindxsampbgal, globdata.thisindxsampspec, \
         globdata.thisindxsampsind, globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
-    
+   
+    globdata.deltllik = 0.
+
     globdata.drmcsamp = zeros((globdata.maxmsampsize, 2))
     
     globdata.drmcsamp[globdata.indxsampnumbpnts, 0] = thisnumbpnts
@@ -51,14 +53,29 @@ def work(globdata, indxprocwork):
         globdata.drmcsamp[globdata.indxsampfdfnslop, 0] = rand(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener))
     globdata.drmcsamp[globdata.indxsampnormback, 0] = rand(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener))
     if globdata.randinit or not globdata.trueinfo or globdata.truepsfipara == None:
-        globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
+        globdata.drmcsamp[globdata.indxsamppsfipara, 0] = retr_randunitpsfipara()
     else:
         if globdata.psfntype == globdata.truepsfntype:
             for k in globdata.indxmodlpsfipara:
                 globdata.drmcsamp[globdata.indxsamppsfipara[k], 0] = cdfn_psfipara(globdata, globdata.truepsfipara[k], k)
         else:
-            globdata.drmcsamp[globdata.indxsamppsfipara, 0] = rand(globdata.numbpsfipara)
-        
+            globdata.drmcsamp[globdata.indxsamppsfipara, 0] = retr_randunitpsfipara()
+   
+    if False:
+        print
+        print 'hey'
+        for k in range(globdata.truepsfipara.size):
+            if k % 5 == 0:
+                print
+            print globdata.truepsfipara[k]
+        print
+        print 'hey'
+        for k in range(globdata.indxsamppsfipara.size):
+            if k % 5 == 0:
+                print
+            print globdata.drmcsamp[globdata.indxsamppsfipara[k], 0]
+
+    
     for l in globdata.indxpopl:
         if globdata.randinit or not globdata.trueinfo:
             globdata.drmcsamp[globdata.thisindxsampcomp[l], 0] = rand(globdata.thisindxsampcomp[l].size)
@@ -122,7 +139,7 @@ def init( \
          plotperd=50000, \
          makeplot=True, \
          diagsamp=False, \
-         numbswep=1000000, \
+         numbswep=2000000, \
          numbburn=None, \
          factthin=None, \
          regitype='ngal', \
@@ -670,6 +687,7 @@ def init( \
     head['psfntype'] = globdata.psfntype
     head['exprtype'] = globdata.exprtype
     head['pixltype'] = globdata.pixltype
+    head['fdfntype'] = globdata.fdfntype
     
     head['colrprio'] = globdata.colrprio
     head['trueinfo'] = globdata.trueinfo
@@ -686,6 +704,7 @@ def init( \
     head['fracrand'] = globdata.fracrand
 
     if globdata.trueinfo and globdata.datatype == 'mock':
+        head['mockfdfntype'] = globdata.mockfdfntype
         head['mockpsfntype'] = globdata.mockpsfntype
 
     head['strgexpr'] = globdata.strgexpr
@@ -912,10 +931,9 @@ def plot_samp(globdata):
     thiscnts = []
     for l in globdata.indxpopl:
         indxpixltemp = retr_indxpixl(globdata, globdata.thissampvarb[globdata.thisindxsampbgal[l]], globdata.thissampvarb[globdata.thisindxsamplgal[l]])
-        cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] *             globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
+        cntstemp = globdata.thissampvarb[globdata.thisindxsampspec[l]][:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
         thiscnts.append(cntstemp)
 
-        #if globdata.thissampvarb[globdata.indxsampnumbpnts[l]] > 1:
         if globdata.colrprio:
             plot_histsind(globdata, l)
         plot_scatpixl(globdata, l)
@@ -938,11 +956,11 @@ def plot_samp(globdata):
     for i in globdata.indxener:
         
         plot_datacnts(globdata, i, None)
-        #plot_catl(globdata, i, None, thiscnts)
         plot_modlcnts(globdata, i, None)
-        plot_resicnts(globdata, i, None, globdata.thisresicnts)
+        plot_resicnts(globdata, i, None)
+        #plot_catlfram(globdata, i, None, thiscnts)
 
-        #for m in indxevtt:
+        #for m in globdata.indxevtt:
         #    plot_datacnts(globdata, i, m)
         #    plot_catl(globdata, i, m, thiscnts)
         #    plot_modlcnts(globdata, i, m)
@@ -956,7 +974,10 @@ def plot_samp(globdata):
     
     tempsampvarb, tempppixl, tempcnts, temppntsflux, tempmodlflux, tempmodlcnts = pars_samp(globdata, globdata.thisindxpntsfull, globdata.drmcsamp[:, 0])
     globdata.errrmodlcnts = 100. * (globdata.thismodlcnts - tempmodlcnts) / tempmodlcnts
-    
+   
+    # temp
+    globdata.errrmodlcnts = log10(abs(globdata.errrmodlcnts) + 1e-10)
+
     for i in globdata.indxener:
         plot_errrcnts(globdata, i, None, globdata.errrmodlcnts)
 
@@ -1087,10 +1108,16 @@ def rjmc(globdata, indxprocwork):
                 print 'laccfrac'
                 print globdata.laccfrac
                 print
-                
+            
+            # make diagnostic plots for the next step
+            if thismakefram:
+                for i in globdata.indxener:
+                    for m in globdata.indxevtt:
+                        if globdata.thisindxprop >= globdata.indxproppsfipara:
+                            plot_nextfram(globdata, i, m)
+                            plot_diagfram(globdata, i, m)
         else:
             accpprob = 0.
-    
     
         # accept the sample
         if accpprob >= rand():
@@ -1182,8 +1209,10 @@ def rjmc(globdata, indxprocwork):
             thiscntr = tdpy.util.show_prog(globdata.cntrswep, globdata.numbswep, thiscntr, indxprocwork=indxprocwork)
             
         if globdata.diagsamp:
-            plot_datacnts(0, 0, nextstat=True)
-            plot_resicnts(0, 0, thisresicnts, nextstat=True)
+            for i in globdata.indxener:
+                for m in globdata.indxevtt:
+                    plot_diagfram(i, m)
+                    plot_nextfram(i, m)
         
         if globdata.verbtype > 1:
             print

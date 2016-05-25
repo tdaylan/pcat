@@ -15,7 +15,7 @@ def cnfg_ferm_psfn_expr(psfntype):
          datatype='inpt', \
          psfntype=psfntype, \
          maxmgang=10., \
-         minmspec=array([3e-10, 3e-11, 3e-12]), \
+         minmspec=array([1e-10, 1e-11, 1e-12]), \
          maxmspec=array([1e-6, 1e-7, 1e-8]), \
          regitype='ngal', \
          strgexpr='fermflux_ngal.fits', \
@@ -28,7 +28,7 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmspec = array([3e-12, 1e-11, 3e-11, 1e-10, 3e-10])
+    minmspec = array([1e-12, 1e-11, 1e-11, 1e-10, 1e-10])
     mocknumbpnts = 20 * array([100, 30, 10, 3, 1], dtype=int)
     numbswep = mocknumbpnts * 100 + 10000
     maxmnumbpnts = 2 * mocknumbpnts
@@ -184,45 +184,49 @@ def cnfg_ferm_post():
 
 def cnfg_test():
      
-    colrprio = True
+    colrprio = False
     
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmspec = array([3e-11])
+    minmspec = array([1e-11])
     maxmspec = array([1e-7])
+    mockfdfnslop = array([[1.9]])
     mockfdfnsloplowr = array([[1.]])
     mockfdfnslopuppr = array([[1.9]])
     mockfdfnbrek = array([[1e-10]])
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=200000, \
-         plotperd=50000, \
+		 numbswep=500000, \
+         #plotperd=1, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
-         fdfntype='brok', \
-         mockfdfntype='brok', \
+         #fdfntype='brok', \
          colrprio=colrprio, \
-         verbtype=1, \
-         indxevttincl=arange(2, 4), \
+         #verbtype=3, \
+         indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         maxmnumbpnts=array([300]), \
-         mocknumbpnts=array([200]), \
-         probprop=array([0., 0., 0.1, 0.1, 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
+         #maxmnumbpnts=array([2]), \
+         maxmnumbpnts=array([500]), \
+         #probprop=array([0., 0., 0.1, 0.1, 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          minmspec=minmspec, \
          maxmspec=maxmspec, \
          regitype='ngal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
+         #initnumbpnts=array([2]), \
          #datatype='inpt', \
          #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
+         #mockfdfntype='brok', \
+         #mocknumbpnts=array([1]), \
+         mocknumbpnts=array([500]), \
          numbsideheal=256, \
-         #mockfdfnslop=mockfdfnslop, \
+         mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
          mockfdfnslopuppr=mockfdfnslopuppr, \
          mockfdfnbrek=mockfdfnbrek, \
@@ -235,7 +239,7 @@ def cnfg_ferm_mock_ngal():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmspec = array([3e-11])
+    minmspec = array([1e-11])
     maxmspec = array([1e-7])
     mockfdfnslop = array([[1.9]])
       
@@ -247,7 +251,7 @@ def cnfg_ferm_mock_ngal():
          maxmgang=20., \
          indxevttincl=arange(2, 4), \
          indxenerincl=indxenerincl, \
-         mocknumbpnts=array([300]), \
+         mocknumbpnts=array([500]), \
          minmspec=minmspec, \
          maxmspec=maxmspec, \
          regitype='ngal', \
@@ -339,6 +343,9 @@ if __name__ == '__main__':
             listargs = []
             for k in range(numbargs):
                 listargs.append(sys.argv[k+2])
+            print 'listargs'
+            print listargs
+
             name.get(sys.argv[1])(listargs)
     else:
 
@@ -353,15 +360,14 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
         #cnfg_ferm_mock_igal()
         
-        #cnfg_ferm_expr_ngal()
+        cnfg_ferm_expr_ngal()
         #cnfg_ferm_expr_ngal('fermflux_cmp1_ngal.fits', 'fermexpo_cmp1_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp2_ngal.fits', 'fermexpo_cmp2_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', 'fermexpo_cmp3_ngal.fits')
-        #cnfg_ferm_expr_ngal('fermflux_full_ngal.fits', 'fermexpo_full_ngal.fits')
         
         #cnfg_ferm_post()
         #cnfg_ferm_mock_ngal()
-        cnfg_test()
+        #cnfg_test()
         
         #cnfg_sdss_mock()
         #cnfg_sdss_expr()

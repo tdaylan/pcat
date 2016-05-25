@@ -15,11 +15,9 @@ from numpy.random import choice
 
 # scipy
 import scipy as sp
-from scipy import ndimage
 from scipy.interpolate import *
 from scipy.special import erfinv, erf
 from scipy.stats import poisson as pss
-from scipy import ndimage
 
 # multiprocessing
 import multiprocessing as mp
@@ -42,3 +40,6 @@ import tdpy.mcmc
 
 import warnings
 warnings.simplefilter(action = "ignore", category = FutureWarning)
+
+np.set_printoptions(linewidth=180)
+

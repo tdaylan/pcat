@@ -42,6 +42,7 @@ def plot_post(pathprobcatl):
     globdata.psfntype = hdun[0].header['psfntype']
     globdata.exprtype = hdun[0].header['exprtype']
     globdata.pixltype = hdun[0].header['pixltype']
+    globdata.fdfntype = hdun[0].header['fdfntype']
 
     if globdata.pixltype == 'heal':
         globdata.numbsideheal = hdun[0].header['numbsideheal']
@@ -98,7 +99,9 @@ def plot_post(pathprobcatl):
     gmrbstat = hdun['gmrbstat'].data
     listmodlcnts = hdun['modlcnts'].data
     
+    
     if globdata.trueinfo and globdata.datatype == 'mock':
+        globdata.mockfdfntype = hdun[0].header['mockfdfntype']
         globdata.mockfdfnslop = hdun['mockfdfnslop'].data
         globdata.mocknormback = hdun['mocknormback'].data
         globdata.mocknumbpnts = hdun['mocknumbpnts'].data
@@ -1228,8 +1231,8 @@ def plot_heal(globdata, heal, rofi=True, titl=''):
 def plot_eval(globdata):
 
     figr, axis = plt.subplots()
-    for k in range(globdata.numbspecprox):
-        if k == 0 or k == globdata.numbspecprox - 1:
+    for k in range(globdata.numbspecprox + 1):
+        if k == 0 or k == globdata.numbspecprox:
             alph = 1.
             if k == 0:
                 labl = 'Dimmest PS'
@@ -1241,13 +1244,14 @@ def plot_eval(globdata):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(globdata.angldisptemp, globdata.meanspecprox[k] * globdata.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
-        axis.axvline(globdata.maxmangleval[k], ls='--', alpha=alph, color=colr)
+        axis.plot(globdata.angldisptemp, globdata.binsspecprox[k] * globdata.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        if k > 0:
+            axis.axvline(globdata.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + globdata.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
     axis.set_title('PSF Evaluation Radius')  
-    axis.axhline(globdata.specfraceval * amax(globdata.meanspecprox[0] * globdata.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
+    axis.axhline(globdata.specfraceval * amax(globdata.binsspecprox[0] * globdata.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
     axis.legend(loc=3)
     plt.savefig(globdata.plotpath + 'eval_' + globdata.rtag + '.png')
     plt.close(figr)
@@ -1388,14 +1392,15 @@ def plot_histcnts(globdata, l, thiscnts):
     plt.savefig(globdata.plotpath + 'histcnts%d_' % l + globdata.rtag + '_%09d.png' % globdata.cntrswep)
     plt.close(figr)
     
-def plot_datacnts(globdata, indxenerplot, pevtt, nextstat=False):
+
+def init_fram(globdata, indxevttplot, indxenerplot, strgplot):
 
     figr, axis = plt.subplots(figsize=(12, 12))
     axis.set_xlabel(globdata.longlabl)
     axis.set_ylabel(globdata.latilabl)
     axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
     axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
-    if pevtt == None:
+    if indxevttplot == None:
         if indxenerplot == None:
             axis.set_title('')
         else:
@@ -1403,22 +1408,24 @@ def plot_datacnts(globdata, indxenerplot, pevtt, nextstat=False):
     else:
         titl = globdata.binsenerstrg[indxenerplot]
         if globdata.exprtype == 'ferm':
-            titl += ', ' + globdata.evttstrg[pevtt]
+            titl += ', ' + globdata.evttstrg[indxevttplot]
         axis.set_title(titl)
 
-    # plot the model count map
-    if pevtt == None:
-        if indxenerplot == None:
-            imag = axis.imshow(sum(globdata.datacntscart, axis=3), origin='lower', extent=globdata.exttrofi, interpolation='none')
-        else:
-            imag = axis.imshow(sum(globdata.datacntscart[:, :, indxenerplot, :], axis=2), origin='lower', interpolation='none', cmap='Reds', extent=globdata.exttrofi)
+    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
+
+    if indxevttplot == None:
+        path = globdata.plotpath + strgplot + '%dA_' % globdata.indxenerincl[indxenerplot] + globdata.rtag + '_%09d.png' % globdata.cntrswep
     else:
-        imag = axis.imshow(globdata.datacntscart[:, :, indxenerplot, pevtt], origin='lower', interpolation='none', cmap='Reds', extent=globdata.exttrofi)
+        path = globdata.plotpath + strgplot + '%d%d_' % (globdata.indxenerincl[indxenerplot], globdata.indxevttincl[indxevttplot]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     
-    if pevtt != None or indxenerplot != None:
-        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-    
-    # superimpose catalogs
+    return figr, axis, path
+
+
+def supr_fram(globdata, axis, indxenerplot):
+
     for l in globdata.indxpopl:
 
         # true catalog
@@ -1449,332 +1456,164 @@ def plot_datacnts(globdata, indxenerplot, pevtt, nextstat=False):
             bgal *= 3600.
             
         axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
-
-    if nextstat:
-        
-        for k in range(modilgal.size):
-            if modispec[indxenerplot, k] > 0:
-                colr = 'yellow'
-            else:
-                colr = 'red'
-            mrkrsize = retr_mrkrsize(globdata, abs(modispec[:, k]), indxenerplot)
-            
-            if globdata.exprtype == 'ferm':
-                xaxi = modilgal[k]
-                yaxi = modibgal[k]
-            else:
-                xaxi = modilgal[k] * 3600.
-                yaxi = modibgal[k] * 3600.
-            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph,                        marker='o', linewidth=2, color=colr)
-            text = r'indxprop = %d, lnL = %.3g' % (indxprop, deltllik)
-            if indxprop == globdata.indxpropsplt or indxprop == globdata.indxpropmerg:
-                text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])
-            axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
-
-    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
-    
-    if pevtt == None:
-        if indxenerplot == None:
-            path = globdata.plotpath + 'datacntsAA_' + globdata.rtag + '_%09d.png' % globdata.cntrswep
+
+
+def retr_imag(globdata, axis, maps, thisindxener, thisindxevtt, flux=False, satuuppr=None, satulowr=None):
+
+    # filter the map
+    if thisindxevtt == None:
+        if thisindxener == None:
+            maps = sum(maps, axis=2)
         else:
-            path = globdata.plotpath + 'datacnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
+            maps = sum(maps[thisindxener, :, :], axis=1)
     else:
-        path = globdata.plotpath + 'datacnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    plt.savefig(path)
-    plt.close(figr)
+        maps = maps[thisindxener, :, thisindxevtt]
     
+    # temp
+    maps = maps.squeeze()
     
-def plot_modlcnts(globdata, indxenerplot, pevtt):
-
-    # begin figure
-    figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(globdata.longlabl)
-    axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
-    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
-    if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[indxenerplot])
-    else:
-        titl = globdata.binsenerstrg[indxenerplot]
-        if globdata.exprtype == 'ferm':
-            titl += ', ' + globdata.evttstrg[pevtt]
-        axis.set_title(titl)
-        
-    # plot the model count map
-    if pevtt == None:
-        modlcntstemp = sum(globdata.thismodlcnts[indxenerplot, :, :], axis=1)
-    else:
-        modlcntstemp = globdata.thismodlcnts[indxenerplot, :, pevtt]
+    # project the map to 2D
     if globdata.pixltype == 'heal':
-        modlcntstemp = tdpy.util.retr_cart(modlcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
+        maps = tdpy.util.retr_cart(maps, \
+            indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
+            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
             minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
     else:
-        modlcntstemp = modlcntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart)).T
-    modlcntstemp[where(modlcntstemp > globdata.datacntssatu[indxenerplot])] = globdata.datacntssatu[indxenerplot]
+        maps = maps.reshape((globdata.numbsidecart, globdata.numbsidecart)).T
     
-    imag = plt.imshow(modlcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
-    cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-
+    # saturate the map
+    if satulowr != None:
+        maps[where(maps < satulowr[thisindxener])] = satulowr[thisindxener]
+    if satuuppr != None:
+        maps[where(maps > satuuppr[thisindxener])] = satuuppr[thisindxener]
+   
+    # plot
+    imag = axis.imshow(maps, cmap='Reds', origin='lower', extent=globdata.exttrofi, interpolation='none')
     
-    # superimpose catalogs
-    for l in globdata.indxpopl:
+    # make a color bar
+    if thisindxevtt != None or thisindxener != None:
+        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
 
-        # model catalog
-        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]], indxenerplot)
-        lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
-        bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if globdata.exprtype == 'sdss':
-            lgal *= 3600.
-            bgal *= 3600.
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+    return axis, cbar
 
-        # true catalog
-        if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, :, :], indxenerplot)
-            lgal = globdata.truelgal[l]
-            bgal = globdata.truebgal[l]
-            if globdata.exprtype == 'sdss':
-                lgal *= 3600.
-                bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
 
-    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    
-    axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
-    
-    if pevtt == None:
-        path = globdata.plotpath + 'modlcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    else:
-        path = globdata.plotpath + 'modlcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+def plot_diagfram(globdata, indxenerplot, indxevttplot):
+
+    temp = zeros(globdata.numbpixl)
+    temp[globdata.indxpixlmodi] = copy(globdata.thispntsflux[indxenerplot, globdata.indxpixlmodi, indxenerevtt])
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'thisfram')
+    axis, cbar = retr_imag(globdata, axis, temp, indxenerplot, indxevttplot)
+    plt.savefig(path)
+    plt.close(figr)
+
+    temp = zeros(globdata.numbpixl)
+    temp[globdata.indxpixlmodi] = copy(globdata.nextpntsflux[indxenerplot, globdata.indxpixlmodi, indxenerevtt])
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'nextfram')
+    axis, cbar = retr_imag(globdata, axis, globdata.thispntsflux, indxenerplot, indxevttplot)
+    plt.savefig(path)
+    plt.close(figr)
+
+
+def plot_nextfram(globdata, indxenerplot, indxevttplot):
+
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'nextfram')
+    axis, cbar = retr_imag(globdata, axis, globdata.nextpntsflux, indxenerplot, indxevttplot)
+   
+    mrkrsize = retr_mrkrsize(globdata, abs(globdata.modispec), indxenerplot)
+    for k in range(globdata.numbmodipnts):
+        if globdata.modispec[indxenerplot, k] > 0:
+            colr = 'yellow'
+        else:
+            colr = 'red'
+        if globdata.exprtype == 'ferm':
+            xaxi = globdata.modilgal[k]
+            yaxi = globdata.modibgal[k]
+        else:
+            xaxi = globdata.modilgal[k] * 3600.
+            yaxi = globdata.modibgal[k] * 3600.
+        axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph, marker='o', linewidth=2, color=colr)
+        text = r'indxprop = %d, lnL = %.3g' % (globdata.thisindxprop, globdata.deltllik)
+        if globdata.thisindxprop == globdata.indxpropsplt or globdata.thisindxprop == globdata.indxpropmerg:
+            text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (globdata.laccfrac, globdata.thisjcbnfact, globdata.thiscombfact, globdata.listaccp[j])
+        axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
+
+    plt.savefig(path)
+    plt.close(figr)
+
+
+def plot_datacnts(globdata, indxenerplot, indxevttplot):
+
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'datacnts')
+    axis, cbar = retr_imag(globdata, axis, globdata.datacnts, indxenerplot, indxevttplot, satuuppr=globdata.datacntssatu)
+    supr_fram(globdata, axis, indxenerplot)
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_resicnts(globdata, indxenerplot, pevtt, resicnts, nextstat=False):
+def plot_modlcnts(globdata, indxenerplot, indxevttplot):
 
-    # begin figure
-    figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(globdata.longlabl)
-    axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
-    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
-    if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[indxenerplot])
-    else:
-        titl = globdata.binsenerstrg[indxenerplot]
-        if globdata.exprtype == 'ferm':
-            titl += ', ' + globdata.evttstrg[pevtt]
-        axis.set_title(titl)
-        
-    # plot the model count map
-    if pevtt == None:
-        resicntstemp = sum(resicnts[indxenerplot, :, :], axis=1)
-    else:
-        resicntstemp = resicnts[indxenerplot, :, pevtt]
-    if globdata.pixltype == 'heal':
-        resicntstemp = tdpy.util.retr_cart(resicntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, \
-            minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
-    else:
-        resicntstemp = resicntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart))
-    resicntstemp[where(resicntstemp > globdata.resicntssatu[indxenerplot])] = globdata.resicntssatu[indxenerplot]
-    resicntstemp[where(resicntstemp < -globdata.resicntssatu[indxenerplot])] = -globdata.resicntssatu[indxenerplot]
-    
-    imag = axis.imshow(resicntstemp, origin='lower', cmap='RdGy', extent=globdata.exttrofi)
-    cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-
-    # superimpose catalogs
-    for l in globdata.indxpopl:
-
-        # model catalog
-        mrkrsize = retr_mrkrsize(globdata, globdata.thissampvarb[globdata.thisindxsampspec[l]], indxenerplot)
-        lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
-        bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if globdata.exprtype == 'sdss':
-            lgal *= 3600.
-            bgal *= 3600.
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
-
-        # true catalog
-        if globdata.trueinfo:
-            mrkrsize = retr_mrkrsize(globdata, globdata.truespec[l][0, :, :], indxenerplot)
-            lgal = copy(globdata.truelgal[l])
-            bgal = copy(globdata.truebgal[l])
-            if globdata.exprtype == 'sdss':
-                lgal *= 3600.
-                bgal *= 3600.
-            axis.scatter(lgal, bgal, s=mrkrsize, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
-
-        
-    if nextstat:
-        for k in range(modilgal.size):
-            if modispec[indxenerplot, k] > 0:
-                colr = 'yellow'
-            else:
-                colr = 'red'
-            mrkrsize = retr_mrkrsize(globdata, abs(modispec[:, k]), indxenerplot)
-            
-            
-            if globdata.exprtype == 'ferm':
-                xaxi = modilgal[k]
-                yaxi = modibgal[k]
-            else:
-                xaxi = modilgal[k] * 3600.
-                yaxi = modibgal[k] * 3600.
-            axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=globdata.mrkralph,                        marker='o', linewidth=2, color=colr)
-
-            
-            text = r'indxprop = %d, lnL = %.3g' % (indxprop, deltllik)
-            if indxprop == globdata.indxpropsplt or indxprop == globdata.indxpropmerg:
-                text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (laccfrac, thisjcbnfact, thiscombfact, listaccp[j])
-            axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
-
-            
-    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-
-    axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
-    
-    if pevtt == None:
-        path = globdata.plotpath + 'resicnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    else:
-        path = globdata.plotpath + 'resicnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    plt.savefig(path)
-    
-    plt.close(figr)
-    
-    
-def plot_errrcnts(globdata, indxenerplot, pevtt, errrcntsrofi):
-
-    if pevtt == None:
-        errrcntstemp = sum(errrcntsrofi[indxenerplot, :, :], axis=1)
-    else:
-        errrcntstemp = errrcntsrofi[indxenerplot, :, pevtt]
-    errrcntstemp[where(errrcntstemp > 1.)] = 1.
-    errrcntstemp[where(errrcntstemp < -1.)] = -1.
-
-    if globdata.pixltype == 'heal':
-        errrcntstemp = tdpy.util.retr_cart(errrcntstemp, indxpixlrofi=globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
-            minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
-    else:
-        errrcntstemp = errrcntstemp.reshape((globdata.numbsidecart, globdata.numbsidecart))
-    
-    # begin figure
-    figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(globdata.longlabl)
-    axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
-    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
-    if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[indxenerplot])
-    else:
-        titl = globdata.binsenerstrg[indxenerplot]
-        if globdata.exprtype == 'ferm':
-            titl += ', ' + globdata.evttstrg[pevtt]
-        axis.set_title(titl)
-
-    # plot the error count map
-    imag = axis.imshow(errrcntstemp, origin='lower', cmap='Reds', extent=globdata.exttrofi)
-    cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-
-    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    
-    if pevtt == None:
-        path = globdata.plotpath + 'errrcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    else:
-        path = globdata.plotpath + 'errrcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'modlcnts')
+    axis, cbar = retr_imag(globdata, axis, globdata.thismodlcnts, indxenerplot, indxevttplot, satuuppr=globdata.datacntssatu)
+    supr_fram(globdata, axis, indxenerplot)
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_catl(globdata, indxenerplot, pevtt, thiscnts):
-    
-    # begin figure
-    figr, axis = plt.subplots(figsize=(12, 12))
-    axis.set_xlabel(globdata.longlabl)
-    axis.set_ylabel(globdata.latilabl)
-    axis.set_xlim([globdata.frambndrmarg, -globdata.frambndrmarg])
-    axis.set_ylim([-globdata.frambndrmarg, globdata.frambndrmarg])
-    if pevtt == None:
-        axis.set_title(globdata.binsenerstrg[indxenerplot])
-    else:
-        titl = globdata.binsenerstrg[indxenerplot]
-        if globdata.exprtype == 'ferm':
-            titl += ', ' + globdata.evttstrg[pevtt]
-        axis.set_title(titl)
-        
+def plot_resicnts(globdata, indxenerplot, indxevttplot):
 
-    # superimpose catalogs
-    for l in globdata.indxpopl:
-        
-        # model catalog
-        lgal = globdata.thissampvarb[globdata.thisindxsamplgal[l]]
-        bgal = globdata.thissampvarb[globdata.thisindxsampbgal[l]]
-        if globdata.exprtype == 'sdss':
-            lgal *= 3600.
-            bgal *= 3600.
-        axis.scatter(lgal, bgal, s=300, alpha=globdata.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
-
-        # true catalog
-        if globdata.trueinfo:
-            lgal = copy(globdata.truelgal[l])
-            bgal = copy(globdata.truebgal[l])
-            if globdata.exprtype == 'sdss':
-                lgal *= 3600.
-                bgal *= 3600.
-            axis.scatter(lgal, bgal, s=300, alpha=globdata.mrkralph, label=globdata.truelabl, marker='x', linewidth=2, color='g')
-
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'resicnts')
+    axis, cbar = retr_imag(globdata, axis, globdata.thisresicnts, indxenerplot, indxevttplot, satulowr=-globdata.resicntssatu, satuuppr=globdata.resicntssatu)
+    supr_fram(globdata, axis, indxenerplot)
+    plt.savefig(path)
+    plt.close(figr)
     
     
+def plot_errrcnts(globdata, indxenerplot, indxevttplot, errrcntsrofi):
+
+    # temp
+    #satulowr = -1.
+    #satuuppr = 1.
+    satulowr = None
+    satuuppr = None
+
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'errrcnts')
+    axis, cbar = retr_imag(globdata, axis, errrcntsrofi, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr)
+    plt.savefig(path)
+    plt.close(figr)
+    
+    
+def plot_catlfram(globdata, indxenerplot, indxevttplot, thiscnts):
+    
+    figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'catlfram')
+
     if globdata.trueinfo:
         for l in globdata.indxpopl:
             numbpnts = int(globdata.truenumbpnts[l])
             for a in range(numbpnts):
-                if pevtt == None:
+                if indxevttplot == None:
                     cnts = sum(globdata.truecnts[l][indxenerplot, a, :])
-                    sigm = sqrt(sum(truesigm[l][indxenerplot, a, :]**2))
+                    sigm = sqrt(sum(globdata.truesigm[l][indxenerplot, a, :]**2))
                 else:
-                    cnts = globdata.truecnts[l][indxenerplot, a, pevtt]
-                    sigm = truesigm[l][indxenerplot, a, pevtt]
-                axis.text(globdata.truelgal[l][a] + 0.7, globdata.truelgal[l][a] - 0.7,                         '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
+                    cnts = globdata.truecnts[l][indxenerplot, a, indxevttplot]
+                    sigm = globdata.truesigm[l][indxenerplot, a, indxevttplot]
+                axis.text(globdata.truelgal[l][a] + 0.7, globdata.truelgal[l][a] - 0.7, '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
 
     for l in globdata.indxpopl:
         numbpnts = int(globdata.thissampvarb[globdata.indxsampnumbpnts[l]])
         for a in range(numbpnts):
-            if pevtt == None:
+            if indxevttplot == None:
                 cnts = sum(thiscnts[l][indxenerplot, a, :])
             else:
-                cnts = thiscnts[l][indxenerplot, a, pevtt]
-            axis.text(globdata.thissampvarb[globdata.thisindxsamplgal[l][a]] - 0.5, globdata.thissampvarb[globdata.thisindxsampbgal[l][a]] + 0.3,                     '%d' % cnts, color='b', fontsize=13)
+                cnts = thiscnts[l][indxenerplot, a, indxevttplot]
+            axis.text(globdata.thissampvarb[globdata.thisindxsamplgal[l][a]] - 0.5, globdata.thissampvarb[globdata.thisindxsampbgal[l][a]] + 0.3, \
+                '%d' % cnts, color='b', fontsize=13)
     
-    axis.axvline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axvline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(globdata.frambndr, ls='--', alpha=0.3, color='black')
-    axis.axhline(-globdata.frambndr, ls='--', alpha=0.3, color='black')
-    
-    axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
-    
-    if pevtt == None:
+    if indxevttplot == None:
         plt.figtext(0.76, 0.92, '$C_{back} = %d$' % mean(globdata.thisbackcntsmean[indxenerplot, :]), fontsize=18)
     else:
-        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[indxenerplot, pevtt], fontsize=18)
+        plt.figtext(0.76, 0.92, '$C_{back} = %d$' % globdata.thisbackcntsmean[indxenerplot, indxevttplot], fontsize=18)
         
-    if pevtt == None:
-        path = globdata.plotpath + 'catlcnts%dA_' % indxenerplot + globdata.rtag + '_%09d.png' % globdata.cntrswep
-    else:
-        path = globdata.plotpath + 'catlcnts%d%d_' % (indxenerplot, indxevttincl[pevtt]) + globdata.rtag + '_%09d.png' % globdata.cntrswep
     plt.savefig(path)
     plt.close(figr)
 
