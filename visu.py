@@ -1500,15 +1500,13 @@ def retr_imag(globdata, axis, maps, thisindxener, thisindxevtt, flux=False, satu
 
 def plot_diagfram(globdata, indxenerplot, indxevttplot):
 
-    temp = zeros(globdata.numbpixl)
-    temp[globdata.indxpixlmodi] = copy(globdata.thispntsflux[indxenerplot, globdata.indxpixlmodi, indxenerevtt])
     figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'thisfram')
     axis, cbar = retr_imag(globdata, axis, temp, indxenerplot, indxevttplot)
     plt.savefig(path)
     plt.close(figr)
 
     temp = zeros(globdata.numbpixl)
-    temp[globdata.indxpixlmodi] = copy(globdata.nextpntsflux[indxenerplot, globdata.indxpixlmodi, indxenerevtt])
+    temp[globdata.indxpixlmodi] = copy(globdata.nextpntsflux[indxenerplot, globdata.indxpixlmodi, indxevttplot])
     figr, axis, path = init_fram(globdata, indxevttplot, indxenerplot, 'nextfram')
     axis, cbar = retr_imag(globdata, axis, globdata.thispntsflux, indxenerplot, indxevttplot)
     plt.savefig(path)
