@@ -246,7 +246,7 @@ def cnfg_ferm_mock_ngal():
     maxmspec = array([1e-7])
     mockfdfnslop = array([[1.9]])
       
-    init(psfntype='doubking', \
+    init(psfntype='singking', \
          numbswep=3000000, \
          plotperd=50000, \
          randinit=False, \

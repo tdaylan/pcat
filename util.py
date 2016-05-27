@@ -1838,7 +1838,7 @@ def retr_strgangl(gdat):
         gdat.latilabl += ' [arcsec]'
 
     
-def retr_randunitpsfipara():
+def retr_randunitpsfipara(gdat):
 
     while True:
         randunitpsfipara = rand(gdat.numbpsfipara)
