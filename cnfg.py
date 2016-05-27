@@ -186,13 +186,14 @@ def cnfg_test():
      
     colrprio = True
     
-    #indxenerincl = arange(2, 3)
-    indxenerincl = arange(1, 4)
+    indxenerincl = arange(2, 3)
+    #indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmspec = array([1e-8])
-    #minmspec = array([1e-11])
-    maxmspec = array([1e-7])
+    #minmspec = array([1e-8])
+    minmspec = array([1e-11])
+    maxmspec = array([1e-10])
+    #maxmspec = array([1e-7])
     mockfdfnslop = array([[1.9]])
     mockfdfnsloplowr = array([[1.]])
     mockfdfnslopuppr = array([[1.9]])
@@ -200,7 +201,7 @@ def cnfg_test():
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=5, \
+		 numbswep=50, \
          plotperd=1, \
          makeplot=True, \
          randinit=False, \
@@ -208,10 +209,10 @@ def cnfg_test():
          maxmgang=20., \
          #fdfntype='brok', \
          colrprio=colrprio, \
-         verbtype=3, \
+         verbtype=1, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         maxmnumbpnts=array([10]), \
+         maxmnumbpnts=array([3]), \
          #maxmnumbpnts=array([500]), \
          #probprop=array([0., 0., 0.1, 0.1, 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          minmspec=minmspec, \
@@ -225,7 +226,7 @@ def cnfg_test():
          #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
          #mockfdfntype='brok', \
-         mocknumbpnts=array([9]), \
+         mocknumbpnts=array([2]), \
          #mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
@@ -246,7 +247,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([[1.9]])
       
     init(psfntype='doubking', \
-         numbswep=300000, \
+         numbswep=3000000, \
          plotperd=50000, \
          randinit=False, \
          trueinfo=True, \

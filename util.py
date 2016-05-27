@@ -648,25 +648,51 @@ def updt_samp(gdat):
     if gdat.thisindxprop >= gdat.indxpropbrth or gdat.thisindxprop == gdat.indxproppsfipara:
 
         # temp
-        figr, axis, path = init_fram(gdat, 0, 0, 'thispntsflux')
-        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsflux')
-        plt.savefig(path)
-        plt.close(figr)
-        
-        modipixl = zeros_like(gdat.thispntsflux)
-        modipixl[0, gdat.indxpixlmodi, 0] = 1.
-        figr, axis, path = init_fram(gdat, 0, 0, 'pixlmodi')
-        axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=False, titl='pixlmodi')
-        plt.savefig(path)
-        plt.close(figr)
+        if False:
+            print 'hey'
+            
+            gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
+            print 'gdat.thispntsflux'
+            print amin(gdat.thispntsflux), mean(gdat.thispntsflux), amax(gdat.thispntsflux)
+            print 'gdat.temppntsflux'
+            print amin(gdat.temppntsflux), mean(gdat.temppntsflux), amax(gdat.temppntsflux)
+            errr = gdat.temppntsflux - gdat.thispntsflux
+            print 'errr'
+            print amin(errr), mean(errr), amax(errr)
 
+            # temp
+            figr, axis, path = init_fram(gdat, 0, 0, 'thispntsflux')
+            axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsflux')
+            plt.savefig(path)
+            plt.close(figr)
+            
+            modipixl = zeros_like(gdat.thispntsflux)
+            modipixl[0, gdat.indxpixlmodi, 0] = 1.
+            figr, axis, path = init_fram(gdat, 0, 0, 'pixlmodi')
+            axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=False, titl='pixlmodi')
+            plt.savefig(path)
+            plt.close(figr)
+
+            figr, axis, path = init_fram(gdat, 0, 0, 'nextpntsflux')
+            axis, cbar = retr_imag(gdat, axis, gdat.nextpntsflux, 0, 0, logt=False, titl='nextpntsflux')
+            plt.savefig(path)
+            plt.close(figr)
+       
+            temp = zeros_like(gdat.nextpntsflux)
+            temp[0, gdat.indxpixlmodi, 0] = gdat.nextpntsflux[0, gdat.indxpixlmodi, 0]
+            figr, axis, path = init_fram(gdat, 0, 0, 'nextpntsfluxmodi')
+            axis, cbar = retr_imag(gdat, axis, temp, 0, 0, logt=False, titl='nextpntsfluxmodi')
+            plt.savefig(path)
+            plt.close(figr)
+            
         gdat.thispntsflux[gdat.indxcubemodi] = gdat.nextpntsflux[gdat.indxcubemodi]
         
-        # temp
-        figr, axis, path = init_fram(gdat, 0, 0, 'thispntsfluxprim')
-        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsfluxprim')
-        plt.savefig(path)
-        plt.close(figr)
+        if False:
+            # temp
+            figr, axis, path = init_fram(gdat, 0, 0, 'thispntsfluxprim')
+            axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsfluxprim')
+            plt.savefig(path)
+            plt.close(figr)
 
     # transdimensinal updates
     if gdat.thisindxprop >= gdat.indxpropbrth and gdat.thisindxprop <= gdat.indxpropmerg:

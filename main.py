@@ -472,14 +472,13 @@ def init( \
 
     # make initial plots
     if gdat.makeplot:
-        # temp
         #plot_3fgl_thrs(gdat)
         #plot_datacntshist()
-        if gdat.exprtype == 'ferm':
-            plot_fgl3(gdat)
+        #if gdat.exprtype == 'ferm':
+        #    plot_fgl3(gdat)
         #plot_intr()
-        plot_king(gdat)
-        plot_look(gdat)
+        #plot_king(gdat)
+        #plot_look(gdat)
         plot_eval(gdat)
         #if gdat.datatype == 'mock':
         #    plot_pntsdiff()
@@ -932,35 +931,21 @@ def plot_samp(gdat):
     
     gdat.thispntscnts = gdat.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdat.errrpnts = 100. * (gdat.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
-  
-
-    print 'hey'
-    print 'gdat.thispntscnts'
-    print amin(gdat.thispntscnts), mean(gdat.thispntscnts), amax(gdat.thispntscnts)
-    print 'gdat.temppntscnts'
-    print amin(gdat.temppntscnts), mean(gdat.temppntscnts), amax(gdat.temppntscnts)
-    print 'gdat.errrpnts'
-    print amin(gdat.errrpnts), mean(gdat.errrpnts), amax(gdat.errrpnts)
 
     thiscnts = []
     for l in gdat.indxpopl:
+    
         indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
         cntstemp = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         thiscnts.append(cntstemp)
-
         if gdat.colrprio:
             plot_histsind(gdat, l)
         plot_scatpixl(gdat, l)
-       
         if gdat.trueinfo:
             indxmodl, gdat.trueindxpntsbias, gdat.trueindxpntsmiss = pair_catl(gdat, l, gdat.thissampvarb[gdat.thisindxsamplgal[l]], \
                 gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsampspec[l]])
-
             thisspecmtch = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, indxmodl]
             thisspecmtch[:, gdat.trueindxpntsmiss] = 0.
-            if gdat.verbtype > 1:
-                print 'thisspecmtch: (popl%d) ' % l
-                print thisspecmtch
             plot_scatspec(gdat, l, thisspecmtch=thisspecmtch)
         plot_histspec(gdat, l)
         plot_histcnts(gdat, l, thiscnts)
