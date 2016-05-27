@@ -1469,7 +1469,7 @@ def plot_resicnts(gdat, indxenerplot, indxevttplot):
 def plot_temppntscnts(gdat, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'temppntscnts')
-    axis, cbar = retr_imag(gdat, axis, gdat.temppntscnts, indxenerplot, indxevttplot, logt=True)
+    axis, cbar = retr_imag(gdat, axis, gdat.temppntscnts, indxenerplot, indxevttplot, logt=False)
     plt.savefig(path)
     plt.close(figr)
     
@@ -1477,7 +1477,7 @@ def plot_temppntscnts(gdat, indxenerplot, indxevttplot):
 def plot_thispntscnts(gdat, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'thispntscnts')
-    axis, cbar = retr_imag(gdat, axis, gdat.thispntscnts, indxenerplot, indxevttplot, logt=True)
+    axis, cbar = retr_imag(gdat, axis, gdat.thispntscnts, indxenerplot, indxevttplot, logt=False)
     plt.savefig(path)
     plt.close(figr)
 
@@ -1491,7 +1491,7 @@ def plot_errrpnts(gdat, indxenerplot, indxevttplot):
     satuuppr = None
 
     figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'errrpnts')
-    axis, cbar = retr_imag(gdat, axis, gdat.errrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', logt=True, mean=True)
+    axis, cbar = retr_imag(gdat, axis, gdat.errrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', logt=False, mean=True)
     plt.savefig(path)
     plt.close(figr)
     

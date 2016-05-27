@@ -649,14 +649,14 @@ def updt_samp(gdat):
 
         # temp
         figr, axis, path = init_fram(gdat, 0, 0, 'thispntsflux')
-        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=True, titl='thispntsflux')
+        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsflux')
         plt.savefig(path)
         plt.close(figr)
         
         modipixl = zeros_like(gdat.thispntsflux)
         modipixl[0, gdat.indxpixlmodi, 0] = 1.
         figr, axis, path = init_fram(gdat, 0, 0, 'pixlmodi')
-        axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=True, titl='pixlmodi')
+        axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=False, titl='pixlmodi')
         plt.savefig(path)
         plt.close(figr)
 
@@ -664,7 +664,7 @@ def updt_samp(gdat):
         
         # temp
         figr, axis, path = init_fram(gdat, 0, 0, 'thispntsfluxprim')
-        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=True, titl='thispntsfluxprim')
+        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsfluxprim')
         plt.savefig(path)
         plt.close(figr)
 
