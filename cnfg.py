@@ -184,9 +184,9 @@ def cnfg_ferm_post():
 
 def cnfg_test():
      
-    colrprio = False
+    colrprio = True
     
-    indxenerincl = arange(1, 4)
+    indxenerincl = arange(2, 3)
     numbener = indxenerincl.size
 
     minmspec = array([1e-11])
@@ -198,8 +198,8 @@ def cnfg_test():
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=500000, \
-         #plotperd=1, \
+		 numbswep=5, \
+         plotperd=1, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \

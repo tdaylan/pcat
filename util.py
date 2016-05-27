@@ -1,25 +1,25 @@
 # common imports
 from __init__ import *
 
-class globdatastrt(object):
+class gdatstrt(object):
     
     def __init__(self):
         pass
 
 
-def retr_psfnwdth(globdata, psfn, frac):
+def retr_psfnwdth(gdat, psfn, frac):
     
-    fwhm = zeros((globdata.numbener, globdata.numbevtt))
-    for i in globdata.indxener:
-        for m in globdata.indxevtt:
+    fwhm = zeros((gdat.numbener, gdat.numbevtt))
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
             indxangldispgood = argsort(psfn[i, :, m])
             intpfwhm = max(frac * amax(psfn[i, :, m]), amin(psfn[i, :, m]))
             if intpfwhm > amin(psfn[i, indxangldispgood, m]) and intpfwhm < amax(psfn[i, indxangldispgood, m]):
-                fwhm[i, m] = interp1d(psfn[i, indxangldispgood, m], globdata.angldisp[indxangldispgood])(intpfwhm)
+                fwhm[i, m] = interp1d(psfn[i, indxangldispgood, m], gdat.angldisp[indxangldispgood])(intpfwhm)
     return fwhm
 
 
-def retr_spec(globdata, flux, sind):
+def retr_spec(gdat, flux, sind):
 
     if isscalar(flux):
         flux = array([flux])
@@ -27,43 +27,43 @@ def retr_spec(globdata, flux, sind):
     if isscalar(sind):
         sind = array([sind])
         
-    spec = flux[None, :] * (globdata.meanener[:, None] / globdata.enerfdfn)**(-sind[None, :])
+    spec = flux[None, :] * (gdat.meanener[:, None] / gdat.enerfdfn)**(-sind[None, :])
     
     return spec
 
 
-def retr_indx(globdata, indxpntsfull):    
+def retr_indx(gdat, indxpntsfull):    
 
     indxsamplgal = []
     indxsampbgal = []
     indxsampspec = []
     indxsampsind = []
     indxsampcomp = []
-    for l in globdata.indxpopl:
-        indxsamplgaltemp = globdata.indxsampcompinit + globdata.maxmnumbcomp * l +             array(indxpntsfull[l], dtype=int) * globdata.numbcomp
+    for l in gdat.indxpopl:
+        indxsamplgaltemp = gdat.indxsampcompinit + gdat.maxmnumbcomp * l +             array(indxpntsfull[l], dtype=int) * gdat.numbcomp
         indxsamplgal.append(indxsamplgaltemp)
         indxsampbgal.append(indxsamplgaltemp + 1)
-        indxsampspec.append(repeat((indxsamplgaltemp + 2)[None, :], globdata.numbener, 0) +repeat(arange(globdata.numbener), len(indxpntsfull[l])).reshape(globdata.numbener, -1))
-        if globdata.colrprio:
-            indxsampsind.append(indxsamplgaltemp + 2 + globdata.numbener)
-        indxsampcomp.append(repeat(indxsamplgaltemp, globdata.numbcomp) + tile(arange(globdata.numbcomp, dtype=int), len(indxpntsfull[l])))
+        indxsampspec.append(repeat((indxsamplgaltemp + 2)[None, :], gdat.numbener, 0) +repeat(arange(gdat.numbener), len(indxpntsfull[l])).reshape(gdat.numbener, -1))
+        if gdat.colrprio:
+            indxsampsind.append(indxsamplgaltemp + 2 + gdat.numbener)
+        indxsampcomp.append(repeat(indxsamplgaltemp, gdat.numbcomp) + tile(arange(gdat.numbcomp, dtype=int), len(indxpntsfull[l])))
 
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp
 
 
-def retr_pntsflux(globdata, lgal, bgal, spec, psfipara, psfntype):
+def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
     
     numbpnts = lgal.size
     
     # calculate the distance to all pixels from each point source
-    dist = empty((globdata.numbpixl, numbpnts))
+    dist = empty((gdat.numbpixl, numbpnts))
     for k in range(numbpnts):
-        dist[:, k] = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid, globdata.bgalgrid)
+        dist[:, k] = retr_dist(gdat, lgal[k], bgal[k], gdat.lgalgrid, gdat.bgalgrid)
 
     # evaluate the PSF
-    pntsflux = empty((numbpnts, globdata.numbener, globdata.numbpixl, globdata.numbevtt))
+    pntsflux = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
-        psfn = retr_psfn(globdata, psfipara, globdata.indxener, dist[:, k], psfntype)
+        psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist[:, k], psfntype)
         pntsflux[k, :, :, :] = spec[:, k, None, None] * psfn
 
     # sum contributions from all PS
@@ -72,16 +72,16 @@ def retr_pntsflux(globdata, lgal, bgal, spec, psfipara, psfntype):
     return pntsfluxtemp
 
 
-def retr_rofi_flux(globdata, normback, pntsflux, tempindx):
+def retr_rofi_flux(gdat, normback, pntsflux, tempindx):
 
     modlflux = pntsflux[tempindx]
-    for c in globdata.indxback:
-        modlflux += normback[c, :, None, None] * globdata.backflux[c][tempindx]        
+    for c in gdat.indxback:
+        modlflux += normback[c, :, None, None] * gdat.backflux[c][tempindx]        
     
     return modlflux
 
 
-def cdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def cdfn_spec_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
 
     norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
                     ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
@@ -94,7 +94,7 @@ def cdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspe
     return fluxunit
 
 
-def pdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def pdfn_spec_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
 
     norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
                     ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
@@ -106,7 +106,7 @@ def pdfn_spec_brok(globdata, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspe
     return pdfnflux
 
 
-def icdf_spec_brok(globdata, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def icdf_spec_brok(gdat, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
     
     norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
                     (1. - (maxmspec / fluxbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
@@ -120,21 +120,21 @@ def icdf_spec_brok(globdata, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, min
     return flux
 
 
-def cdfn_spec(globdata, flux, fdfnslop, minmspec, maxmspec):
+def cdfn_spec(gdat, flux, fdfnslop, minmspec, maxmspec):
         
     fluxunit = (flux**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop))
         
     return fluxunit
 
 
-def icdf_spec(globdata, fluxunit, fdfnslop, minmspec, maxmspec):
+def icdf_spec(gdat, fluxunit, fdfnslop, minmspec, maxmspec):
     
     flux = (fluxunit * (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) + minmspec**(1. - fdfnslop))**(1. / (1. - fdfnslop))
     
     return flux
 
 
-def pdfn_spec(globdata, flux, fdfnslop, minmspec, maxmspec):
+def pdfn_spec(gdat, flux, fdfnslop, minmspec, maxmspec):
   
     pdfnflux = (1. - fdfnslop) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) * flux**(-fdfnslop)
           
@@ -185,11 +185,11 @@ def cdfn_atan(para, minmpara, factpara):
     return paraunit
 
 
-def icdf_psfipara(globdata, psfiparaunit, thisindxpsfipara):
+def icdf_psfipara(gdat, psfiparaunit, thisindxpsfipara):
 
-    minmpsfipara = globdata.minmpsfipara[thisindxpsfipara]
-    factpsfipara = globdata.factpsfipara[thisindxpsfipara]
-    scalpsfipara = globdata.scalpsfipara[thisindxpsfipara]
+    minmpsfipara = gdat.minmpsfipara[thisindxpsfipara]
+    factpsfipara = gdat.factpsfipara[thisindxpsfipara]
+    scalpsfipara = gdat.scalpsfipara[thisindxpsfipara]
         
     if scalpsfipara == 'self':
         psfipara = icdf_self(psfiparaunit, minmpsfipara, factpsfipara)
@@ -201,11 +201,11 @@ def icdf_psfipara(globdata, psfiparaunit, thisindxpsfipara):
     return psfipara
 
 
-def cdfn_psfipara(globdata, psfipara, thisindxpsfipara):
+def cdfn_psfipara(gdat, psfipara, thisindxpsfipara):
     
-    minmpsfipara = globdata.minmpsfipara[thisindxpsfipara]
-    factpsfipara = globdata.factpsfipara[thisindxpsfipara]
-    scalpsfipara = globdata.scalpsfipara[thisindxpsfipara]
+    minmpsfipara = gdat.minmpsfipara[thisindxpsfipara]
+    factpsfipara = gdat.factpsfipara[thisindxpsfipara]
+    scalpsfipara = gdat.scalpsfipara[thisindxpsfipara]
 
     if scalpsfipara == 'self':
         psfiparaunit = cdfn_self(psfipara, minmpsfipara, factpsfipara)
@@ -217,314 +217,315 @@ def cdfn_psfipara(globdata, psfipara, thisindxpsfipara):
     return psfiparaunit
 
 
-def retr_thisindxprop(globdata, samp):
+def retr_thisindxprop(gdat, samp):
     
     # choose the population to be modified
-    globdata.indxpoplmodi = choice(globdata.indxpopl)
+    gdat.indxpoplmodi = choice(gdat.indxpopl)
     
-    numbpnts = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]]
-    if numbpnts == globdata.maxmnumbpnts[globdata.indxpoplmodi]:
-        globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probpropmaxm)
-    elif numbpnts == globdata.minmnumbpnts:
-        globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probpropminm)
+    numbpnts = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]
+    if numbpnts == gdat.maxmnumbpnts[gdat.indxpoplmodi]:
+        gdat.thisindxprop = choice(gdat.indxprop, p=gdat.probpropmaxm)
+    elif numbpnts == gdat.minmnumbpnts:
+        gdat.thisindxprop = choice(gdat.indxprop, p=gdat.probpropminm)
     else:
-        globdata.thisindxprop = choice(globdata.indxprop, p=globdata.probprop)
+        gdat.thisindxprop = choice(gdat.indxprop, p=gdat.probprop)
         
 
-def retr_indxpixl(globdata, bgal, lgal):
+def retr_indxpixl(gdat, bgal, lgal):
 
-    if globdata.pixltype == 'heal':
-        indxpixl = globdata.pixlcnvt[ang2pix(globdata.numbsideheal, deg2rad(90. - bgal), deg2rad(lgal))]
+    if gdat.pixltype == 'heal':
+        indxpixl = gdat.pixlcnvt[ang2pix(gdat.numbsideheal, deg2rad(90. - bgal), deg2rad(lgal))]
     else:
         
-        indxlgcr = floor(globdata.numbsidecart * (lgal - globdata.minmlgal) / 2. / globdata.maxmgang).astype(int)
-        indxbgcr = floor(globdata.numbsidecart * (bgal - globdata.minmbgal) / 2. / globdata.maxmgang).astype(int)
+        indxlgcr = floor(gdat.numbsidecart * (lgal - gdat.minmlgal) / 2. / gdat.maxmgang).astype(int)
+        indxbgcr = floor(gdat.numbsidecart * (bgal - gdat.minmbgal) / 2. / gdat.maxmgang).astype(int)
 
         if isscalar(indxlgcr):
             if indxlgcr < 0:
                 indxlgcr = 0
-            if indxlgcr >= globdata.numbsidecart:
-                indxlgcr = globdata.numbsidecart - 1
+            if indxlgcr >= gdat.numbsidecart:
+                indxlgcr = gdat.numbsidecart - 1
         else:
             indxlgcr[where(indxlgcr < 0)] = 0
-            indxlgcr[where(indxlgcr >= globdata.numbsidecart)] = globdata.numbsidecart - 1
+            indxlgcr[where(indxlgcr >= gdat.numbsidecart)] = gdat.numbsidecart - 1
             
         if isscalar(indxbgcr):
             if indxbgcr < 0:
                 indxbgcr = 0
-            if indxbgcr >= globdata.numbsidecart:
-                indxbgcr = globdata.numbsidecart - 1
+            if indxbgcr >= gdat.numbsidecart:
+                indxbgcr = gdat.numbsidecart - 1
         else:
             indxbgcr[where(indxbgcr < 0)] = 0
-            indxbgcr[where(indxbgcr >= globdata.numbsidecart)] = globdata.numbsidecart - 1
+            indxbgcr[where(indxbgcr >= gdat.numbsidecart)] = gdat.numbsidecart - 1
             
-        indxpixl = indxbgcr * globdata.numbsidecart + indxlgcr
+        indxpixl = indxbgcr * gdat.numbsidecart + indxlgcr
 
     return indxpixl
 
 
-def retr_llik(globdata, listchrollik, init=False):
+def retr_llik(gdat, listchrollik, init=False):
 
     if init:
 
-        globdata.thisllik = globdata.datacnts * log(globdata.thismodlcnts) - globdata.thismodlcnts
+        gdat.thisllik = gdat.datacnts * log(gdat.thismodlcnts) - gdat.thismodlcnts
         
-    elif globdata.thisindxprop >= globdata.indxproppsfipara:
+    elif gdat.thisindxprop >= gdat.indxproppsfipara:
 
         # load convenience variables
         timebegn = time.time()
         
         ## save time by not reloading all PS into modi structure for PSF parameter updates
-        if globdata.thisindxprop == globdata.indxproppsfipara:
-            lgal = globdata.thissampvarb[concatenate(globdata.thisindxsamplgal)]
-            bgal = globdata.thissampvarb[concatenate(globdata.thisindxsampbgal)]
-            spec = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenermodi, :]]
-        if globdata.thisindxprop >= globdata.indxpropbrth:
-            lgal = globdata.modilgal[0:globdata.numbmodipnts]
-            bgal = globdata.modibgal[0:globdata.numbmodipnts]
-            spec = globdata.modispec[meshgrid(globdata.indxenermodi, arange(globdata.numbmodipnts), indexing='ij')]
+        if gdat.thisindxprop == gdat.indxproppsfipara:
+            lgal = gdat.thissampvarb[concatenate(gdat.thisindxsamplgal)]
+            bgal = gdat.thissampvarb[concatenate(gdat.thisindxsampbgal)]
+            spec = gdat.thissampvarb[concatenate(gdat.thisindxsampspec)[gdat.indxenermodi, :]]
+        if gdat.thisindxprop >= gdat.indxpropbrth:
+            lgal = gdat.modilgal[0:gdat.numbmodipnts]
+            bgal = gdat.modibgal[0:gdat.numbmodipnts]
+            spec = gdat.modispec[meshgrid(gdat.indxenermodi, arange(gdat.numbmodipnts), indexing='ij')]
         
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 0] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 0] = timefinl - timebegn
         
         # determine pixels over which to evaluate the log-likelihood
         timebegn = time.time()
         
-        if globdata.thisindxprop == globdata.indxpropnormback:
-            globdata.indxpixlmodi = globdata.indxpixl
-        if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
+        if gdat.thisindxprop == gdat.indxpropnormback:
+            gdat.indxpixlmodi = gdat.indxpixl
+        if gdat.thisindxprop >= gdat.indxpropbrth or gdat.thisindxprop == gdat.indxproppsfipara:
             thisindxpixlprox = []
-            for k in range(globdata.numbmodipnts):
+            for k in range(gdat.numbmodipnts):
                 
                 # temp
                 # this may not work for extreme color PS!
                 # take the flux at the pivot energy
-                if globdata.thisindxprop == globdata.indxproppsfipara:
-                    spectemp = globdata.thissampvarb[concatenate(globdata.thisindxsampspec)[globdata.indxenerpivt, k]]
+                if gdat.thisindxprop == gdat.indxproppsfipara:
+                    spectemp = gdat.thissampvarb[concatenate(gdat.thisindxsampspec)[gdat.indxenerpivt, k]]
                 else:
-                    spectemp = globdata.modispec[globdata.indxenerpivt, k]
+                    spectemp = gdat.modispec[gdat.indxenerpivt, k]
 
                 # find the flux index
-                indxspecproxtemp = amin(where(globdata.binsspecprox - abs(spectemp) > 0.)[0]) - 1
-                indxpixltemp = retr_indxpixl(globdata, bgal[k], lgal[k])
-                thisindxpixlprox.append(globdata.indxpixlprox[indxspecproxtemp][indxpixltemp])
-            globdata.indxpixlmodi = unique(concatenate(thisindxpixlprox))
+                indxspecproxtemp = amin(where(gdat.binsspecprox - abs(spectemp) > 0.)[0]) - 1
+                indxpixltemp = retr_indxpixl(gdat, bgal[k], lgal[k])
+                thisindxpixlprox.append(gdat.indxpixlprox[indxspecproxtemp][indxpixltemp])
+            gdat.indxpixlmodi = unique(concatenate(thisindxpixlprox))
         
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 1] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 1] = timefinl - timebegn
 
         # construct the mesh grid for likelihood evaluation
         timebegn = time.time()
         
-        if globdata.thisindxprop >= globdata.indxproppsfipara:
-            globdata.indxcubemodi = meshgrid(globdata.indxenermodi, globdata.indxpixlmodi, globdata.indxevtt, indexing='ij')
+        if gdat.thisindxprop >= gdat.indxproppsfipara:
+            gdat.indxcubemodi = meshgrid(gdat.indxenermodi, gdat.indxpixlmodi, gdat.indxevtt, indexing='ij')
 
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 2] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 2] = timefinl - timebegn
 
         # update the model point source flux map, if needed
         timebegn = time.time()
         
-        if globdata.thisindxprop == globdata.indxproppsfipara or globdata.thisindxprop >= globdata.indxpropbrth:
+        if gdat.thisindxprop == gdat.indxproppsfipara or gdat.thisindxprop >= gdat.indxpropbrth:
 
-            if globdata.thisindxprop == globdata.indxproppsfipara:
-                globdata.nextpntsflux[globdata.indxcubemodi] = 0.
+            if gdat.thisindxprop == gdat.indxproppsfipara:
+                gdat.nextpntsflux[gdat.indxcubemodi] = 0.
             else:
-                globdata.nextpntsflux[globdata.indxcubemodi] = globdata.thispntsflux[globdata.indxcubemodi]
+                gdat.nextpntsflux[gdat.indxcubemodi] = gdat.thispntsflux[gdat.indxcubemodi]
                 
-            for k in range(globdata.numbmodipnts):
+            for k in range(gdat.numbmodipnts):
                 
                 # calculate the distance to the pixels to be updated
-                dist = retr_dist(globdata, lgal[k], bgal[k], globdata.lgalgrid[thisindxpixlprox[k]], globdata.bgalgrid[thisindxpixlprox[k]])
+                dist = retr_dist(gdat, lgal[k], bgal[k], gdat.lgalgrid[thisindxpixlprox[k]], gdat.bgalgrid[thisindxpixlprox[k]])
 
                 # evaluate the PSF over the set of data cubes to be updated
-                temppsfipara = copy(globdata.thissampvarb[globdata.indxsamppsfipara])
-                if globdata.thisindxprop == globdata.indxproppsfipara:
-                    temppsfipara[globdata.indxpsfiparamodi] = globdata.nextsampvarb[globdata.indxsampmodi]
-                psfn = retr_psfn(globdata, temppsfipara, globdata.indxenermodi, dist, globdata.psfntype)
+                temppsfipara = copy(gdat.thissampvarb[gdat.indxsamppsfipara])
+                if gdat.thisindxprop == gdat.indxproppsfipara:
+                    temppsfipara[gdat.indxpsfiparamodi] = gdat.nextsampvarb[gdat.indxsampmodi]
+                psfn = retr_psfn(gdat, temppsfipara, gdat.indxenermodi, dist, gdat.psfntype)
                 
                 # update the data cubes
-                for i in range(globdata.indxenermodi.size):
-                    globdata.nextpntsflux[globdata.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[i, :, :]
+                for i in range(gdat.indxenermodi.size):
+                    gdat.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[i, :, :]
             
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 3] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 3] = timefinl - timebegn
 
         # update the total model flux map
         timebegn = time.time()
        
-        indxtemp = meshgrid(globdata.indxback, globdata.indxenermodi, indexing='ij')
+        indxtemp = meshgrid(gdat.indxback, gdat.indxenermodi, indexing='ij')
 
-        if globdata.thisindxprop == globdata.indxpropnormback:
-            normback = globdata.nextsampvarb[globdata.indxsampnormback[indxtemp]]
-            pntsflux = globdata.thispntsflux
-        if globdata.thisindxprop == globdata.indxproppsfipara or globdata.thisindxprop >= globdata.indxpropbrth:
-            normback = globdata.thissampvarb[globdata.indxsampnormback[indxtemp]]
-            pntsflux = globdata.nextpntsflux
-        globdata.nextmodlflux[globdata.indxcubemodi] = retr_rofi_flux(globdata, normback, pntsflux, globdata.indxcubemodi)
+        if gdat.thisindxprop == gdat.indxpropnormback:
+            normback = gdat.nextsampvarb[gdat.indxsampnormback[indxtemp]]
+            pntsflux = gdat.thispntsflux
+        if gdat.thisindxprop == gdat.indxproppsfipara or gdat.thisindxprop >= gdat.indxpropbrth:
+            normback = gdat.thissampvarb[gdat.indxsampnormback[indxtemp]]
+            pntsflux = gdat.nextpntsflux
+        gdat.nextmodlflux[gdat.indxcubemodi] = retr_rofi_flux(gdat, normback, pntsflux, gdat.indxcubemodi)
 
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 4] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 4] = timefinl - timebegn
 
         # calculate the total model count map
         timebegn = time.time()
         
-        globdata.nextmodlcnts[globdata.indxcubemodi] = globdata.nextmodlflux[globdata.indxcubemodi] * globdata.expo[globdata.indxcubemodi] * \
-            globdata.apix * globdata.diffener[globdata.indxenermodi, None, None] # [1]
+        gdat.nextmodlcnts[gdat.indxcubemodi] = gdat.nextmodlflux[gdat.indxcubemodi] * gdat.expo[gdat.indxcubemodi] * \
+            gdat.apix * gdat.diffener[gdat.indxenermodi, None, None] # [1]
         
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 5] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 5] = timefinl - timebegn
 
         # calculate the likelihood
         timebegn = time.time()
         
-        globdata.nextllik[globdata.indxcubemodi] = globdata.datacnts[globdata.indxcubemodi] * log(globdata.nextmodlcnts[globdata.indxcubemodi]) - \
-            globdata.nextmodlcnts[globdata.indxcubemodi]
+        gdat.nextllik[gdat.indxcubemodi] = gdat.datacnts[gdat.indxcubemodi] * log(gdat.nextmodlcnts[gdat.indxcubemodi]) - \
+            gdat.nextmodlcnts[gdat.indxcubemodi]
             
         timefinl = time.time()
-        listchrollik[globdata.cntrswep, 6] = timefinl - timebegn
+        listchrollik[gdat.cntrswep, 6] = timefinl - timebegn
 
-        if not isfinite(globdata.nextllik[globdata.indxcubemodi]).any():
+        if not isfinite(gdat.nextllik[gdat.indxcubemodi]).any():
             warnings.warn('Log-likelihood went NAN!')
             
-        globdata.deltllik = sum(globdata.nextllik[globdata.indxcubemodi] - globdata.thisllik[globdata.indxcubemodi])
+        gdat.deltllik = sum(gdat.nextllik[gdat.indxcubemodi] - gdat.thisllik[gdat.indxcubemodi])
     else:
-        globdata.deltllik = 0.
+        gdat.deltllik = 0.
         
     
-def retr_fdfn(globdata, fdfnnorm, fdfnslop, i):
+def retr_fdfn(gdat, fdfnnorm, fdfnslop, i):
                
-    fluxhistmodl = fdfnnorm / globdata.diffspec[i, globdata.indxspecpivt] *         globdata.diffspec[i, :] * (globdata.meanspec[i, :] / globdata.fluxpivt[i])**(-fdfnslop)
+    fluxhistmodl = fdfnnorm / gdat.diffspec[i, gdat.indxspecpivt] *         gdat.diffspec[i, :] * (gdat.meanspec[i, :] / gdat.fluxpivt[i])**(-fdfnslop)
           
     return fluxhistmodl
 
 
-def retr_lpri(globdata, init=False):
+def retr_lpri(gdat, init=False):
         
     if init:
-        globdata.thislpri = zeros((globdata.numbpopl, globdata.numbener))
+        gdat.thislpri = zeros((gdat.numbpopl, gdat.numbener))
         
-        for i in globdata.indxenerfdfn:
-            for l in globdata.indxpopl:
-                fdfnnorm = globdata.thissampvarb[globdata.indxsampfdfnnorm[l]]
-                fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[l, i]]
-                fluxhistmodl = retr_fdfn(globdata, fdfnnorm, fdfnslop, i)
-                spec = globdata.thissampvarb[globdata.thisindxsampspec[l][i, :]]
-                fluxhist = histogram(spec, globdata.binsspec[i, :])[0]
+        for i in gdat.indxenerfdfn:
+            for l in gdat.indxpopl:
+                fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
+                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l, i]]
+                fluxhistmodl = retr_fdfn(gdat, fdfnnorm, fdfnslop, i)
+                spec = gdat.thissampvarb[gdat.thisindxsampspec[l][i, :]]
+                fluxhist = histogram(spec, gdat.binsspec[i, :])[0]
                 lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-                globdata.thislpri[l, i] = sum(lprbpois)            
+                gdat.thislpri[l, i] = sum(lprbpois)            
       
-        globdata.nextlpri = copy(globdata.thislpri)
+        gdat.nextlpri = copy(gdat.thislpri)
                 
     else:
-        globdata.nextlpri = copy(globdata.thislpri)
-        if globdata.thisindxprop == globdata.indxpropfdfnnorm or globdata.thisindxprop == globdata.indxpropfdfnslop \
-            or globdata.thisindxprop >= globdata.indxpropbrth and globdata.thisindxprop <= globdata.indxpropmerg:
+        gdat.nextlpri = copy(gdat.thislpri)
+        if gdat.thisindxprop == gdat.indxpropfdfnnorm or gdat.thisindxprop == gdat.indxpropfdfnslop \
+            or gdat.thisindxprop >= gdat.indxpropbrth and gdat.thisindxprop <= gdat.indxpropmerg:
               
-            if globdata.colrprio:
-                indxenertemp = globdata.indxenerfdfn
+            if gdat.colrprio:
+                indxenertemp = gdat.indxenerfdfn
             else:
-                indxenertemp = globdata.indxenermodi
+                indxenertemp = gdat.indxenermodi
             for i in indxenertemp:
-                if globdata.thisindxprop == globdata.indxpropfdfnnorm:
-                    fdfnnorm = globdata.nextsampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
-                elif globdata.thisindxprop == globdata.indxpropfdfnslop:
-                    fdfnnorm = globdata.thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
+                if gdat.thisindxprop == gdat.indxpropfdfnnorm:
+                    fdfnnorm = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
+                elif gdat.thisindxprop == gdat.indxpropfdfnslop:
+                    fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+                    fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
                 else:
-                    fdfnnorm = globdata.thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
-                    fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]]
-                fluxhistmodl = retr_fdfn(globdata, fdfnnorm, fdfnslop, i)
+                    fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
+                fluxhistmodl = retr_fdfn(gdat, fdfnnorm, fdfnslop, i)
     
-                fluxhist = histogram(globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][i, :]], globdata.binsspec[i, :])[0] 
-                if globdata.thisindxprop == globdata.indxpropbrth:
-                    fluxhist += histogram(globdata.modispec[i, 0], globdata.binsspec[i, :])[0]
-                elif globdata.thisindxprop == globdata.indxpropdeth:
-                    fluxhist -= histogram(-globdata.modispec[i, 0], globdata.binsspec[i, :])[0]
-                elif globdata.thisindxprop == globdata.indxpropsplt:
-                    fluxhist -= histogram(-globdata.modispec[i, 0], globdata.binsspec[i, :])[0]
-                    fluxhist += histogram(globdata.modispec[i, 1:3], globdata.binsspec[i, :])[0]
-                elif globdata.thisindxprop == globdata.indxpropmerg:
-                    fluxhist -= histogram(-globdata.modispec[i, 0:2], globdata.binsspec[i, :])[0]
-                    fluxhist += histogram(globdata.modispec[i, 2], globdata.binsspec[i, :])[0]
+                fluxhist = histogram(gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][i, :]], gdat.binsspec[i, :])[0] 
+                if gdat.thisindxprop == gdat.indxpropbrth:
+                    fluxhist += histogram(gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
+                elif gdat.thisindxprop == gdat.indxpropdeth:
+                    fluxhist -= histogram(-gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
+                elif gdat.thisindxprop == gdat.indxpropsplt:
+                    fluxhist -= histogram(-gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
+                    fluxhist += histogram(gdat.modispec[i, 1:3], gdat.binsspec[i, :])[0]
+                elif gdat.thisindxprop == gdat.indxpropmerg:
+                    fluxhist -= histogram(-gdat.modispec[i, 0:2], gdat.binsspec[i, :])[0]
+                    fluxhist += histogram(gdat.modispec[i, 2], gdat.binsspec[i, :])[0]
                 
                 lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-                globdata.nextlpri[globdata.indxpoplmodi, i] = sum(lprbpois)
+                gdat.nextlpri[gdat.indxpoplmodi, i] = sum(lprbpois)
 
-            globdata.deltlpri = sum(globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi] - globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi])
+            gdat.deltlpri = sum(gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi] - gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi])
         else:
-            globdata.deltlpri = 0.
+            gdat.deltlpri = 0.
         
         
-def pars_samp(globdata, indxpntsfull, samp):
+def retr_sampvarb(gdat, indxpntsfull, samp):
     
-    indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(globdata, indxpntsfull)    
+    indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, indxpntsfull)    
     sampvarb = zeros_like(samp)
-    sampvarb[globdata.indxsampnumbpnts] = samp[globdata.indxsampnumbpnts]
-    sampvarb[globdata.indxsampfdfnnorm] = icdf_logt(samp[globdata.indxsampfdfnnorm], globdata.minmfdfnnorm, globdata.factfdfnnorm)
-    for l in globdata.indxpopl:
-        if globdata.fdfntype == 'brok':
-            sampvarb[globdata.indxsampfdfnsloplowr[l]] = icdf_atan(samp[globdata.indxsampfdfnsloplowr[l]], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
-            sampvarb[globdata.indxsampfdfnslopuppr[l]] = icdf_atan(samp[globdata.indxsampfdfnslopuppr[l]], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
-            sampvarb[globdata.indxsampfdfnbrek[l]] = icdf_logt(samp[globdata.indxsampfdfnbrek[l]], globdata.minmfdfnbrek[l, i], globdata.factfdfnbrek[l, i])
+    sampvarb[gdat.indxsampnumbpnts] = samp[gdat.indxsampnumbpnts]
+    sampvarb[gdat.indxsampfdfnnorm] = icdf_logt(samp[gdat.indxsampfdfnnorm], gdat.minmfdfnnorm, gdat.factfdfnnorm)
+    for l in gdat.indxpopl:
+        if gdat.fdfntype == 'brok':
+            sampvarb[gdat.indxsampfdfnsloplowr[l]] = icdf_atan(samp[gdat.indxsampfdfnsloplowr[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+            sampvarb[gdat.indxsampfdfnslopuppr[l]] = icdf_atan(samp[gdat.indxsampfdfnslopuppr[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+            sampvarb[gdat.indxsampfdfnbrek[l]] = icdf_logt(samp[gdat.indxsampfdfnbrek[l]], gdat.minmfdfnbrek[l, i], gdat.factfdfnbrek[l, i])
         else:
-            sampvarb[globdata.indxsampfdfnslop[l]] = icdf_atan(samp[globdata.indxsampfdfnslop[l]], globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
-    for c in globdata.indxback:
-        sampvarb[globdata.indxsampnormback[c, :]] = icdf_logt(samp[globdata.indxsampnormback[c, :]], globdata.minmnormback[c], globdata.factnormback[c])
-    for k in globdata.indxpsfipara:
-        sampvarb[globdata.indxsamppsfipara[k]] = icdf_psfipara(globdata, samp[globdata.indxsamppsfipara[k]], k)
-    cnts = []
+            sampvarb[gdat.indxsampfdfnslop[l]] = icdf_atan(samp[gdat.indxsampfdfnslop[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+    for c in gdat.indxback:
+        sampvarb[gdat.indxsampnormback[c, :]] = icdf_logt(samp[gdat.indxsampnormback[c, :]], gdat.minmnormback[c], gdat.factnormback[c])
+    for k in gdat.indxpsfipara:
+        sampvarb[gdat.indxsamppsfipara[k]] = icdf_psfipara(gdat, samp[gdat.indxsamppsfipara[k]], k)
+    
+    for l in gdat.indxpopl:
+        sampvarb[indxsamplgal[l]] = icdf_self(samp[indxsamplgal[l]], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+        sampvarb[indxsampbgal[l]] = icdf_self(samp[indxsampbgal[l]], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+        for i in gdat.indxenerfdfn:
+            sampvarb[indxsampspec[l][i, :]] = icdf_spec(gdat, samp[indxsampspec[l][i, :]], sampvarb[gdat.indxsampfdfnslop[l, i]], gdat.minmspec[i], gdat.maxmspec[i])
+        if gdat.colrprio:
+            sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
+    
+    return sampvarb
+    
+
+def retr_maps(gdat, indxpntsfull, sampvarb):
+    
+    indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, indxpntsfull)    
+     
     listspectemp = []
-    indxpixlpnts = []
-    for l in globdata.indxpopl:
-        sampvarb[indxsamplgal[l]] = icdf_self(samp[indxsamplgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-        sampvarb[indxsampbgal[l]] = icdf_self(samp[indxsampbgal[l]], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
-        for i in globdata.indxenerfdfn:
-            sampvarb[indxsampspec[l][i, :]] = icdf_spec(globdata, samp[indxsampspec[l][i, :]], sampvarb[globdata.indxsampfdfnslop[l, i]], globdata.minmspec[i], globdata.maxmspec[i])
-        if globdata.colrprio:
-            #sampvarb[indxsampsind[l]] = icdf_atan(samp[indxsampsind[l]], globdata.minmsind, globdata.factsind)
-            sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], globdata.meansind[l], globdata.stdvsind[l], \
-                                                                                        globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
-            sampvarb[indxsampspec[l]] = retr_spec(globdata, sampvarb[indxsampspec[l][globdata.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
-            
-        indxpixlpntstemp = retr_indxpixl(globdata, sampvarb[indxsampbgal[l]], sampvarb[indxsamplgal[l]])
-    
-        cntstemp = sampvarb[indxsampspec[l]][:, :, None] * globdata.expo[:, indxpixlpntstemp, :] * globdata.diffener[:, None, None]
-            
-        cnts.append(cntstemp)
-        indxpixlpnts.append(indxpixlpntstemp)
+    for l in gdat.indxpopl:
         listspectemp.append(sampvarb[indxsampspec[l]])
-        
-    pntsflux = retr_pntsflux(globdata,    sampvarb[concatenate(indxsamplgal)],    sampvarb[concatenate(indxsampbgal)],    concatenate(listspectemp, axis=1),    sampvarb[globdata.indxsamppsfipara], globdata.psfntype)
+
+    pntsflux = retr_pntsflux(gdat, sampvarb[concatenate(indxsamplgal)], sampvarb[concatenate(indxsampbgal)], \
+        concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfipara], gdat.psfntype)
+    totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxsampnormback], pntsflux, gdat.indxcubefull)
     
-    totlflux = retr_rofi_flux(globdata, sampvarb[globdata.indxsampnormback], pntsflux, globdata.indxcubefull)
-    totlcnts = totlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
+    pntscnts = pntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+    totlcnts = totlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     
-    return sampvarb, indxpixlpnts, cnts, pntsflux, totlflux, totlcnts
-    
-    
-def retr_mrkrsize(globdata, spec, indxenerplot):
-    if globdata.colrprio:
-        indxenertemp = globdata.indxenerfdfn[0]
+    return pntsflux, pntscnts, totlflux, totlcnts
+
+
+def retr_mrkrsize(gdat, spec, indxenerplot):
+    if gdat.colrprio:
+        indxenertemp = gdat.indxenerfdfn[0]
     else:
         indxenertemp = indxenerplot
 
-    mrkrsize = (spec[indxenertemp, :] - globdata.minmspec[indxenertemp]) / (globdata.maxmspec[indxenertemp] - globdata.minmspec[indxenertemp]) * \
-		(globdata.maxmmrkrsize - globdata.minmmrkrsize) + globdata.minmmrkrsize
+    mrkrsize = (spec[indxenertemp, :] - gdat.minmspec[indxenertemp]) / (gdat.maxmspec[indxenertemp] - gdat.minmspec[indxenertemp]) * \
+		(gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
         
     return mrkrsize
 
 
-def retr_scalangl(globdata, angl):
+def retr_scalangl(gdat, angl):
     
     temp = sqrt(2. - 2. * cos(angl[None, :, None]))
-    scalangl = 2. * arcsin(temp / 2.) / globdata.fermscalfact[:, None, :]
+    scalangl = 2. * arcsin(temp / 2.) / gdat.fermscalfact[:, None, :]
     
     return scalangl
 
 
-def retr_fermpsfn(globdata):
+def retr_fermpsfn(gdat):
    
     name = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
     irfn = pf.getdata(name, 1)
@@ -534,37 +535,37 @@ def retr_fermpsfn(globdata):
 
     parastrg = ['ntail', 'score', 'gcore', 'stail', 'gtail']
 
-    globdata.numbfermscalpara = 3
-    globdata.numbfermformpara = 5
+    gdat.numbfermscalpara = 3
+    gdat.numbfermformpara = 5
     
-    fermscal = zeros((globdata.numbevtt, globdata.numbfermscalpara))
-    fermform = zeros((globdata.numbener, globdata.numbevtt, globdata.numbfermformpara))
-    globdata.fermpsfipara = zeros((globdata.numbener * globdata.numbfermformpara * globdata.numbevtt))
+    fermscal = zeros((gdat.numbevtt, gdat.numbfermscalpara))
+    fermform = zeros((gdat.numbener, gdat.numbevtt, gdat.numbfermformpara))
+    gdat.fermpsfipara = zeros((gdat.numbener * gdat.numbfermformpara * gdat.numbevtt))
     
-    for m in globdata.indxevtt:
-        fermscal[m, :] = pf.getdata(name, 2 + 3 * globdata.indxevttincl[m])['PSFSCALE']
-        irfn = pf.getdata(name, 1 + 3 * globdata.indxevttincl[m])
-        for k in range(globdata.numbfermformpara):
-            fermform[:, m, k] = interp1d(enerirfn, mean(irfn[parastrg[k]].squeeze(), axis=0))(globdata.meanener)
+    for m in gdat.indxevtt:
+        fermscal[m, :] = pf.getdata(name, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
+        irfn = pf.getdata(name, 1 + 3 * gdat.indxevttincl[m])
+        for k in range(gdat.numbfermformpara):
+            fermform[:, m, k] = interp1d(enerirfn, mean(irfn[parastrg[k]].squeeze(), axis=0))(gdat.meanener)
 
-    factener = (10. * globdata.meanener[:, None])**fermscal[None, :, 2]
-    globdata.fermscalfact = sqrt((fermscal[None, :, 0] * factener)**2 + fermscal[None, :, 1]**2)
+    factener = (10. * gdat.meanener[:, None])**fermscal[None, :, 2]
+    gdat.fermscalfact = sqrt((fermscal[None, :, 0] * factener)**2 + fermscal[None, :, 1]**2)
     
     # convert N_tail to f_core
-    for m in globdata.indxevtt:
-        for i in globdata.indxener:
+    for m in gdat.indxevtt:
+        for i in gdat.indxener:
             fermform[i, m, 0] = 1. / (1. + fermform[i, m, 0] * fermform[i, m, 3]**2 / fermform[i, m, 1]**2)
 
-    #scalangl = retr_scalangl(globdata, globdata.angldisp)
+    #scalangl = retr_scalangl(gdat, gdat.angldisp)
     
-    fermform[:, :, 1] = globdata.fermscalfact * fermform[:, :, 1]
-    fermform[:, :, 3] = globdata.fermscalfact * fermform[:, :, 3]
+    fermform[:, :, 1] = gdat.fermscalfact * fermform[:, :, 1]
+    fermform[:, :, 3] = gdat.fermscalfact * fermform[:, :, 3]
 
     # store the fermi PSF parameters
-    for m in globdata.indxevtt:
-        for k in range(globdata.numbfermformpara):
-            indxfermpsfiparatemp = m * globdata.numbfermformpara * globdata.numbener + globdata.indxener * globdata.numbfermformpara + k
-            globdata.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
+    for m in gdat.indxevtt:
+        for k in range(gdat.numbfermformpara):
+            indxfermpsfiparatemp = m * gdat.numbfermformpara * gdat.numbener + gdat.indxener * gdat.numbfermformpara + k
+            gdat.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
         
     frac = fermform[:, :, 0]
     sigc = fermform[:, :, 1]
@@ -573,160 +574,180 @@ def retr_fermpsfn(globdata):
     gamt = fermform[:, :, 4]
    
     # temp
-    angl = globdata.angldisp[None, :, None]
+    angl = gdat.angldisp[None, :, None]
     #angl = scalangl
-    globdata.fermpsfn = retr_doubking(angl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
+    gdat.fermpsfn = retr_doubking(angl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
 
 
-def retr_sdsspsfn(globdata):
+def retr_sdsspsfn(gdat):
    
-    numbpsfiparaevtt = globdata.numbener * 3
+    numbpsfiparaevtt = gdat.numbener * 3
     frac = array([[0.5, 0.5, 0.5]]).T
     sigc = array([[0.5, 1., 3.]]).T
     sigt = array([[0.5, 1., 3.]]).T
-    globdata.sdsspsfipara = empty(numbpsfiparaevtt)
-    globdata.sdsspsfn = retr_doubgaus(globdata.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], sigt[:, None, :])
+    gdat.sdsspsfipara = empty(numbpsfiparaevtt)
+    gdat.sdsspsfn = retr_doubgaus(gdat.angldisp[None, :, None], frac[:, None, :], sigc[:, None, :], sigt[:, None, :])
 
 
-def updt_samp(globdata):
+def updt_samp(gdat):
     
-    if globdata.thisindxprop == globdata.indxpropfdfnnorm:
-        globdata.thissampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]] = globdata.nextsampvarb[globdata.indxsampfdfnnorm[globdata.indxpoplmodi]]
-        globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
+    if gdat.thisindxprop == gdat.indxpropfdfnnorm:
+        gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]] = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+        gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi] = gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi]
 
-    if globdata.thisindxprop == globdata.indxpropfdfnslop:
+    if gdat.thisindxprop == gdat.indxpropfdfnslop:
  
         # update the unit sample vector
-        if globdata.colrprio:
-            indxenertemp = globdata.indxenerfdfn
+        if gdat.colrprio:
+            indxenertemp = gdat.indxenerfdfn
         else:
-            indxenertemp = globdata.indxenermodi
+            indxenertemp = gdat.indxenermodi
         
         if False:
-            print 'globdata.thissampvarb[globdata.thisindxsampspec]'
-            for k in range(globdata.thisindxsampspec[0].shape[1]):
-                print globdata.thissampvarb[globdata.thisindxsampspec[0][:, k]]
-            print 'globdata.drmcsamp[globdata.thisindxsampspec]'
-            for k in range(globdata.thisindxsampspec[0].shape[1]):
-                print globdata.drmcsamp[globdata.thisindxsampspec[0][:, k]]
+            print 'gdat.thissampvarb[gdat.thisindxsampspec]'
+            for k in range(gdat.thisindxsampspec[0].shape[1]):
+                print gdat.thissampvarb[gdat.thisindxsampspec[0][:, k]]
+            print 'gdat.drmcsamp[gdat.thisindxsampspec]'
+            for k in range(gdat.thisindxsampspec[0].shape[1]):
+                print gdat.drmcsamp[gdat.thisindxsampspec[0][:, k]]
         
-        globdata.drmcsamp[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :], -1] = \
-            cdfn_spec(globdata, globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]], \
-            globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]], \
-            globdata.minmspec[globdata.indxenermodi], globdata.maxmspec[globdata.indxenermodi])
+        gdat.drmcsamp[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :], -1] = \
+            cdfn_spec(gdat, gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :]], \
+            gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]], \
+            gdat.minmspec[gdat.indxenermodi], gdat.maxmspec[gdat.indxenermodi])
        
         if False:
-            print 'globdata.thissampvarb[globdata.thisindxsampspec]'
-            for k in range(globdata.thisindxsampspec[0].shape[1]):
-                print globdata.thissampvarb[globdata.thisindxsampspec[0][:, k]]
-            print 'globdata.drmcsamp[globdata.thisindxsampspec]'
-            for k in range(globdata.thisindxsampspec[0].shape[1]):
-                print globdata.drmcsamp[globdata.thisindxsampspec[0][:, k]]
+            print 'gdat.thissampvarb[gdat.thisindxsampspec]'
+            for k in range(gdat.thisindxsampspec[0].shape[1]):
+                print gdat.thissampvarb[gdat.thisindxsampspec[0][:, k]]
+            print 'gdat.drmcsamp[gdat.thisindxsampspec]'
+            for k in range(gdat.thisindxsampspec[0].shape[1]):
+                print gdat.drmcsamp[gdat.thisindxsampspec[0][:, k]]
             print
             print
 
         # update the sample vector
-        globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] = \
-            globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
+        gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]] = \
+            gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]]
             
         # update the prior register
-        globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
+        gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi] = gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi]
 
     # likelihood updates
-    if globdata.thisindxprop >= globdata.indxproppsfipara:
-        globdata.thisllik[globdata.indxcubemodi] = globdata.nextllik[globdata.indxcubemodi]
-        globdata.thismodlcnts[globdata.indxcubemodi] = globdata.nextmodlcnts[globdata.indxcubemodi]
+    if gdat.thisindxprop >= gdat.indxproppsfipara:
+        gdat.thisllik[gdat.indxcubemodi] = gdat.nextllik[gdat.indxcubemodi]
+        gdat.thismodlcnts[gdat.indxcubemodi] = gdat.nextmodlcnts[gdat.indxcubemodi]
         
-    if globdata.thisindxprop == globdata.indxproppsfipara:
-        globdata.thissampvarb[globdata.indxsampmodi] = globdata.nextsampvarb[globdata.indxsampmodi]
+    if gdat.thisindxprop == gdat.indxproppsfipara:
+        gdat.thissampvarb[gdat.indxsampmodi] = gdat.nextsampvarb[gdat.indxsampmodi]
         
-    if globdata.thisindxprop == globdata.indxpropnormback:
-        globdata.thissampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]] = \
-            globdata.nextsampvarb[globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]]
+    if gdat.thisindxprop == gdat.indxpropnormback:
+        gdat.thissampvarb[gdat.indxsampnormback[gdat.indxbackmodi, gdat.indxenermodi]] = \
+            gdat.nextsampvarb[gdat.indxsampnormback[gdat.indxbackmodi, gdat.indxenermodi]]
         
-    if globdata.thisindxprop >= globdata.indxpropbrth or globdata.thisindxprop == globdata.indxproppsfipara:
-        globdata.thispntsflux[globdata.indxcubemodi] = globdata.nextpntsflux[globdata.indxcubemodi]
+    if gdat.thisindxprop >= gdat.indxpropbrth or gdat.thisindxprop == gdat.indxproppsfipara:
+
+        # temp
+        figr, axis, path = init_fram(gdat, 0, 0, 'thispntsflux')
+        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=True, titl='thispntsflux')
+        plt.savefig(path)
+        plt.close(figr)
         
+        modipixl = zeros_like(gdat.thispntsflux)
+        modipixl[0, gdat.indxpixlmodi, 0] = 1.
+        figr, axis, path = init_fram(gdat, 0, 0, 'pixlmodi')
+        axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=True, titl='pixlmodi')
+        plt.savefig(path)
+        plt.close(figr)
+
+        gdat.thispntsflux[gdat.indxcubemodi] = gdat.nextpntsflux[gdat.indxcubemodi]
+        
+        # temp
+        figr, axis, path = init_fram(gdat, 0, 0, 'thispntsfluxprim')
+        axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=True, titl='thispntsfluxprim')
+        plt.savefig(path)
+        plt.close(figr)
+
     # transdimensinal updates
-    if globdata.thisindxprop >= globdata.indxpropbrth and globdata.thisindxprop <= globdata.indxpropmerg:
-        globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]]
-        globdata.thislpri[globdata.indxpoplmodi, globdata.indxenermodi] = globdata.nextlpri[globdata.indxpoplmodi, globdata.indxenermodi]
+    if gdat.thisindxprop >= gdat.indxpropbrth and gdat.thisindxprop <= gdat.indxpropmerg:
+        gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]
+        gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi] = gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi]
         
     # birth
-    if globdata.thisindxprop == globdata.indxpropbrth:
+    if gdat.thisindxprop == gdat.indxpropbrth:
         
         # update the PS index lists
-        globdata.thisindxpntsfull[globdata.indxpoplmodi].append(globdata.thisindxpntsempt[globdata.indxpoplmodi][0])
-        del globdata.thisindxpntsempt[globdata.indxpoplmodi][0]
+        gdat.thisindxpntsfull[gdat.indxpoplmodi].append(gdat.thisindxpntsempt[gdat.indxpoplmodi][0])
+        del gdat.thisindxpntsempt[gdat.indxpoplmodi][0]
 
         # update the components
-        globdata.thissampvarb[globdata.indxsampmodi[0]] = globdata.modilgal[0]
-        globdata.thissampvarb[globdata.indxsampmodi[1]] = globdata.modibgal[0]
-        if globdata.colrprio:
-            globdata.thissampvarb[globdata.indxsampmodi[2+globdata.indxener]] = globdata.modispec[:, 0]
-            globdata.thissampvarb[globdata.indxsampmodi[2+globdata.numbener]] = globdata.modisind[0]
+        gdat.thissampvarb[gdat.indxsampmodi[0]] = gdat.modilgal[0]
+        gdat.thissampvarb[gdat.indxsampmodi[1]] = gdat.modibgal[0]
+        if gdat.colrprio:
+            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.indxener]] = gdat.modispec[:, 0]
+            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.numbener]] = gdat.modisind[0]
         else:
-            globdata.thissampvarb[globdata.indxsampmodi[2:]] = globdata.modispec[globdata.indxenermodi, 0]
+            gdat.thissampvarb[gdat.indxsampmodi[2:]] = gdat.modispec[gdat.indxenermodi, 0]
         
     # death
-    if globdata.thisindxprop == globdata.indxpropdeth:
+    if gdat.thisindxprop == gdat.indxpropdeth:
         
         # update the PS index lists
-        globdata.thisindxpntsempt[globdata.indxpoplmodi].append(globdata.killindxpnts)
-        globdata.thisindxpntsfull[globdata.indxpoplmodi].remove(globdata.killindxpnts)
+        gdat.thisindxpntsempt[gdat.indxpoplmodi].append(gdat.killindxpnts)
+        gdat.thisindxpntsfull[gdat.indxpoplmodi].remove(gdat.killindxpnts)
 
 
     # split
-    if globdata.thisindxprop == globdata.indxpropsplt:
+    if gdat.thisindxprop == gdat.indxpropsplt:
 
         # update the PS index lists
-        globdata.thisindxpntsfull[globdata.indxpoplmodi].append(globdata.thisindxpntsempt[globdata.indxpoplmodi][0])
-        del globdata.thisindxpntsempt[globdata.indxpoplmodi][0]
+        gdat.thisindxpntsfull[gdat.indxpoplmodi].append(gdat.thisindxpntsempt[gdat.indxpoplmodi][0])
+        del gdat.thisindxpntsempt[gdat.indxpoplmodi][0]
         
         # update the components
         # first component
-        globdata.thissampvarb[globdata.indxsampchd0] = globdata.modilgal[1]
-        globdata.thissampvarb[globdata.indxsampchd0+1] = globdata.modibgal[1]
-        globdata.thissampvarb[globdata.indxsampchd0+2:globdata.indxsampchd0+2+globdata.numbener] = globdata.modispec[:, 1]
+        gdat.thissampvarb[gdat.indxsampchd0] = gdat.modilgal[1]
+        gdat.thissampvarb[gdat.indxsampchd0+1] = gdat.modibgal[1]
+        gdat.thissampvarb[gdat.indxsampchd0+2:gdat.indxsampchd0+2+gdat.numbener] = gdat.modispec[:, 1]
   
         # second component
-        globdata.thissampvarb[globdata.indxsampchd1] = globdata.modilgal[2]
-        globdata.thissampvarb[globdata.indxsampchd1+1] = globdata.modibgal[2]
-        globdata.thissampvarb[globdata.indxsampchd1+2:globdata.indxsampchd1+2+globdata.numbener] = globdata.modispec[:, 2]
+        gdat.thissampvarb[gdat.indxsampchd1] = gdat.modilgal[2]
+        gdat.thissampvarb[gdat.indxsampchd1+1] = gdat.modibgal[2]
+        gdat.thissampvarb[gdat.indxsampchd1+2:gdat.indxsampchd1+2+gdat.numbener] = gdat.modispec[:, 2]
         
     # merge
-    if globdata.thisindxprop == globdata.indxpropmerg:
+    if gdat.thisindxprop == gdat.indxpropmerg:
         
         # update the PS index lists
-        globdata.thisindxpntsfull[globdata.indxpoplmodi].remove(globdata.mergindxchd1)
-        globdata.thisindxpntsempt[globdata.indxpoplmodi].append(globdata.mergindxchd1)
+        gdat.thisindxpntsfull[gdat.indxpoplmodi].remove(gdat.mergindxchd1)
+        gdat.thisindxpntsempt[gdat.indxpoplmodi].append(gdat.mergindxchd1)
 
         # update the component
-        globdata.thissampvarb[globdata.indxsampmodi[0]] = globdata.modilgal[2]
-        globdata.thissampvarb[globdata.indxsampmodi[1]] = globdata.modibgal[2]
-        if globdata.colrprio:
-            globdata.thissampvarb[globdata.indxsampmodi[2:2+globdata.indxener]] = globdata.modispec[:, 2]
-            globdata.thissampvarb[globdata.indxsampmodi[2+globdata.numbener]] = globdata.modisind[2]
+        gdat.thissampvarb[gdat.indxsampmodi[0]] = gdat.modilgal[2]
+        gdat.thissampvarb[gdat.indxsampmodi[1]] = gdat.modibgal[2]
+        if gdat.colrprio:
+            gdat.thissampvarb[gdat.indxsampmodi[2:2+gdat.indxener]] = gdat.modispec[:, 2]
+            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.numbener]] = gdat.modisind[2]
         else:
-            globdata.thissampvarb[globdata.indxsampmodi[2:]] = globdata.modispec[:, 2]
+            gdat.thissampvarb[gdat.indxsampmodi[2:]] = gdat.modispec[:, 2]
         
     # component change
-    if globdata.thisindxprop >= globdata.indxproplgal:  
-        if globdata.thisindxprop == globdata.indxproplgal:
-            globdata.thissampvarb[globdata.indxsampmodi] = globdata.modilgal[1]
-        elif globdata.thisindxprop == globdata.indxpropbgal:
-            globdata.thissampvarb[globdata.indxsampmodi] = globdata.modibgal[1]
+    if gdat.thisindxprop >= gdat.indxproplgal:  
+        if gdat.thisindxprop == gdat.indxproplgal:
+            gdat.thissampvarb[gdat.indxsampmodi] = gdat.modilgal[1]
+        elif gdat.thisindxprop == gdat.indxpropbgal:
+            gdat.thissampvarb[gdat.indxsampmodi] = gdat.modibgal[1]
         else:
-            if globdata.colrprio:
-                globdata.thissampvarb[globdata.indxsampmodispec] = globdata.modispec[:, 1]
-                if globdata.thisindxprop == globdata.indxpropsind:
-                    globdata.thissampvarb[globdata.indxsampmodi] = globdata.modisind[1]
+            if gdat.colrprio:
+                gdat.thissampvarb[gdat.indxsampmodispec] = gdat.modispec[:, 1]
+                if gdat.thisindxprop == gdat.indxpropsind:
+                    gdat.thissampvarb[gdat.indxsampmodi] = gdat.modisind[1]
             else:
-                globdata.thissampvarb[globdata.indxsampmodi] = globdata.modispec[globdata.indxenermodi, 1]
+                gdat.thissampvarb[gdat.indxsampmodi] = gdat.modispec[gdat.indxenermodi, 1]
 
     # update the unit sample vector
-    if globdata.indxsampmodi.size > 0:
-        globdata.drmcsamp[globdata.indxsampmodi, 0] = globdata.drmcsamp[globdata.indxsampmodi, 1]
+    if gdat.indxsampmodi.size > 0:
+        gdat.drmcsamp[gdat.indxsampmodi, 0] = gdat.drmcsamp[gdat.indxsampmodi, 1]
 
 
 def retr_postvarb(listvarb):
@@ -762,95 +783,95 @@ def retr_pairlist(lgal, bgal):
     return pairlist
 
 
-def retr_fgl3(globdata):
+def retr_fgl3(gdat):
         
     path = os.environ["PCAT_DATA_PATH"] + '/gll_psc_v16.fit'
 
     fgl3 = pf.getdata(path)
     
-    globdata.fgl3numbpnts = fgl3['glon'].size
+    gdat.fgl3numbpnts = fgl3['glon'].size
     
-    globdata.fgl3lgal = fgl3['glon']
-    globdata.fgl3lgal = ((globdata.fgl3lgal - 180.) % 360.) - 180.
+    gdat.fgl3lgal = fgl3['glon']
+    gdat.fgl3lgal = ((gdat.fgl3lgal - 180.) % 360.) - 180.
 
-    globdata.fgl3bgal = fgl3['glat']
+    gdat.fgl3bgal = fgl3['glat']
 
     fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
     fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng']) # [rad]
-    globdata.fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
-    globdata.fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
+    gdat.fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
+    gdat.fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
 
-    globdata.fgl3sind = fgl3['Spectral_Index']
+    gdat.fgl3sind = fgl3['Spectral_Index']
     
-    globdata.fgl3spectype = fgl3['SpectrumType']
-    globdata.fgl3scur = fgl3['beta']
-    globdata.fgl3scut = fgl3['Cutoff'] * 1e-3
+    gdat.fgl3spectype = fgl3['SpectrumType']
+    gdat.fgl3scur = fgl3['beta']
+    gdat.fgl3scut = fgl3['Cutoff'] * 1e-3
     
-    globdata.fgl3timevari = fgl3['Variability_Index']
-    globdata.indxfgl3timevari = where(globdata.fgl3timevari > 72.44)[0]
+    gdat.fgl3timevari = fgl3['Variability_Index']
+    gdat.indxfgl3timevari = where(gdat.fgl3timevari > 72.44)[0]
     
     fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
-    fgl3spectemp = fgl3spectemp[globdata.indxenerincl, :] / globdata.diffener[:, None]
+    fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
     fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], fgl3['Unc_Flux10000_100000']))
-    fgl3specstdvtemp = fgl3specstdvtemp[globdata.indxenerincl, :, :] / globdata.diffener[:, None, None]
+    fgl3specstdvtemp = fgl3specstdvtemp[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None]
     
-    globdata.fgl3spec = zeros((3, globdata.numbener, globdata.fgl3numbpnts))
-    globdata.fgl3spec[0, :, :] = fgl3spectemp
-    globdata.fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
-    globdata.fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
+    gdat.fgl3spec = zeros((3, gdat.numbener, gdat.fgl3numbpnts))
+    gdat.fgl3spec[0, :, :] = fgl3spectemp
+    gdat.fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
+    gdat.fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
     
-    indxpixlfgl3 = retr_indxpixl(globdata, globdata.fgl3bgal, globdata.fgl3lgal)
-    globdata.fgl3cnts = globdata.fgl3spec[0, :, :, None] * globdata.expo[:, indxpixlfgl3, :] * globdata.diffener[:, None, None]
-    globdata.fgl3gang = rad2deg(arccos(cos(deg2rad(globdata.fgl3lgal)) * cos(deg2rad(globdata.fgl3bgal))))
+    indxpixlfgl3 = retr_indxpixl(gdat, gdat.fgl3bgal, gdat.fgl3lgal)
+    gdat.fgl3cnts = gdat.fgl3spec[0, :, :, None] * gdat.expo[:, indxpixlfgl3, :] * gdat.diffener[:, None, None]
+    gdat.fgl3gang = rad2deg(arccos(cos(deg2rad(gdat.fgl3lgal)) * cos(deg2rad(gdat.fgl3bgal))))
         
     # adjust 3FGL positions according to the ROI center
-    if globdata.regitype == 'ngal':
+    if gdat.regitype == 'ngal':
         rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
-        globdata.fgl3bgal, globdata.fgl3lgal = rad2deg(rttr(deg2rad(90. - globdata.fgl3bgal), deg2rad(globdata.fgl3lgal)))
-        globdata.fgl3bgal = 90. - globdata.fgl3bgal
+        gdat.fgl3bgal, gdat.fgl3lgal = rad2deg(rttr(deg2rad(90. - gdat.fgl3bgal), deg2rad(gdat.fgl3lgal)))
+        gdat.fgl3bgal = 90. - gdat.fgl3bgal
 
     # select the 3FGL point sources in the ROI
-    globdata.indxfgl3rofi = arange(globdata.fgl3lgal.size, dtype=int)
-    for i in globdata.indxener:
-        globdata.indxfgl3rofi = intersect1d(where((globdata.fgl3spec[0, i, :] > globdata.minmspec[i]) & \
-            (globdata.fgl3spec[0, i, :] < globdata.maxmspec[i]))[0], globdata.indxfgl3rofi)
-    globdata.indxfgl3rofi = intersect1d(where((abs(globdata.fgl3lgal) < globdata.maxmgangmarg) & \
-            (abs(globdata.fgl3bgal) < globdata.maxmgangmarg))[0], globdata.indxfgl3rofi)
-    globdata.fgl3numbpntsrofi = globdata.indxfgl3rofi.size
-    globdata.indxfgl3timevarirofi = where(globdata.fgl3timevari[globdata.indxfgl3rofi] > 72.44)[0]
+    gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
+    for i in gdat.indxener:
+        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & \
+            (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
+    gdat.indxfgl3rofi = intersect1d(where((abs(gdat.fgl3lgal) < gdat.maxmgangmarg) & \
+            (abs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
+    gdat.fgl3numbpntsrofi = gdat.indxfgl3rofi.size
+    gdat.indxfgl3timevarirofi = where(gdat.fgl3timevari[gdat.indxfgl3rofi] > 72.44)[0]
 
     # sanity check
-    for i in globdata.indxener:
-        if (globdata.fgl3spec[0, i, globdata.indxfgl3rofi] > globdata.maxmspec[i]).any():
+    for i in gdat.indxener:
+        if (gdat.fgl3spec[0, i, gdat.indxfgl3rofi] > gdat.maxmspec[i]).any():
             print 'maxmspec %d is bad!' % i
 
 
-def retr_rtag(globdata, indxprocwork):
+def retr_rtag(gdat, indxprocwork):
     
     if indxprocwork == None:
-        rtag = 'AA_%d_%d_%d_%d_%s_%s_%s' % (globdata.numbproc, globdata.numbswep, globdata.numbburn, globdata.factthin, \
-            globdata.datatype, globdata.regitype, globdata.psfntype)
+        rtag = 'AA_%d_%d_%d_%d_%s_%s_%s' % (gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, \
+            gdat.datatype, gdat.regitype, gdat.psfntype)
     else:
-        rtag = '%02d_%d_%d_%d_%d_%s_%s_%s' % (indxprocwork, globdata.numbproc, globdata.numbswep, globdata.numbburn, globdata.factthin, \
-            globdata.datatype, globdata.regitype, globdata.psfntype)
+        rtag = '%02d_%d_%d_%d_%d_%s_%s_%s' % (indxprocwork, gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, \
+            gdat.datatype, gdat.regitype, gdat.psfntype)
         
     return rtag
 
 
-def retr_gaus(globdata, indxsamp, stdv):
+def retr_gaus(gdat, indxsamp, stdv):
     
-    if globdata.fracrand > 0.:
-        if rand() < globdata.fracrand:
-            globdata.drmcsamp[indxsamp, 1] = rand()
+    if gdat.fracrand > 0.:
+        if rand() < gdat.fracrand:
+            gdat.drmcsamp[indxsamp, 1] = rand()
         else:
-            globdata.drmcsamp[indxsamp, 1] = globdata.drmcsamp[indxsamp, 0] + normal(scale=stdv)
+            gdat.drmcsamp[indxsamp, 1] = gdat.drmcsamp[indxsamp, 0] + normal(scale=stdv)
     else:
-        globdata.drmcsamp[indxsamp, 1] = globdata.drmcsamp[indxsamp, 0] + normal(scale=stdv)
+        gdat.drmcsamp[indxsamp, 1] = gdat.drmcsamp[indxsamp, 0] + normal(scale=stdv)
 
         
-def retr_dist(globdata, lgal0, bgal0, lgal1, bgal1):
+def retr_dist(gdat, lgal0, bgal0, lgal1, bgal1):
     
-    if globdata.pixltype == 'heal':
+    if gdat.pixltype == 'heal':
         dir1 = array([lgal0, bgal0])
         dir2 = array([lgal1, bgal1])
         dist = angdist(dir1, dir2, lonlat=True)
@@ -860,9 +881,9 @@ def retr_dist(globdata, lgal0, bgal0, lgal1, bgal1):
     return dist
        
     
-def retr_strgprop(globdata):
+def retr_strgprop(gdat):
     
-    globdata.strgprop = ['FDF Norm', 'FDF Slope', 'PSF', 'Back. Norm', 'Birth', 'Death', 'Split', 'Merge', \
+    gdat.strgprop = ['FDF Norm', 'FDF Slope', 'PSF', 'Back. Norm', 'Birth', 'Death', 'Split', 'Merge', \
   'Longitude Update', 'Latitude Update', 'Flux Update', 'Spectral Index Update']
 
 
@@ -902,288 +923,288 @@ def retr_doubking(scaldevi, frac, sigc, gamc, sigt, gamt):
     return psfn
 
 
-def chsq_fdfnslop(globdata, para, i):
+def chsq_fdfnslop(gdat, para, i):
 
     fdfnslop = para[0]
     fdfnnormnorm = para[1]
     
-    fluxhistmodl = fdfnnormnorm * globdata.diffspec[i, :] * pdfn_spec(globdata.meanspec[i, :], fdfnslop, globdata.minmspec[i], globdata.maxmspec[i])
+    fluxhistmodl = fdfnnormnorm * gdat.diffspec[i, :] * pdfn_spec(gdat.meanspec[i, :], fdfnslop, gdat.minmspec[i], gdat.maxmspec[i])
 
-    chsq = sum(((fluxhistmodl.flatten()[jspecfgl3] - globdata.fgl3spechist[i, jspecfgl3]) / globdata.fgl3spechist[i, jspecfgl3])**2)
+    chsq = sum(((fluxhistmodl.flatten()[jspecfgl3] - gdat.fgl3spechist[i, jspecfgl3]) / gdat.fgl3spechist[i, jspecfgl3])**2)
     
     return chsq
 
 
-def retr_strgfluxunit(globdata):
+def retr_strgfluxunit(gdat):
     
-    if globdata.exprtype == 'ferm':
+    if gdat.exprtype == 'ferm':
         strgfluxunit = r'[1/cm$^2$/s/GeV]'
-    if globdata.exprtype == 'sdss':
+    if gdat.exprtype == 'sdss':
         strgfluxunit = '[nMgy]'
         
     return strgfluxunit
      
     
-def retr_enerstrg(globdata):
+def retr_enerstrg(gdat):
     
     binsenerstrg = []
-    if globdata.exprtype == 'ferm':
+    if gdat.exprtype == 'ferm':
         enerstrg = []
-        for i in globdata.indxener:
-            binsenerstrg.append('%.3g GeV - %.3g GeV' % (globdata.binsener[i], globdata.binsener[i+1]))
-            enerstrg.append('%.3g GeV' % globdata.meanener[i])
+        for i in gdat.indxener:
+            binsenerstrg.append('%.3g GeV - %.3g GeV' % (gdat.binsener[i], gdat.binsener[i+1]))
+            enerstrg.append('%.3g GeV' % gdat.meanener[i])
             
-    if globdata.exprtype == 'sdss':
-        globdata.binsenerstrg = ['i-band', 'r-band', 'g-band']
+    if gdat.exprtype == 'sdss':
+        gdat.binsenerstrg = ['i-band', 'r-band', 'g-band']
         enerstrg = ['i-band', 'r-band', 'g-band']
     
     return enerstrg, binsenerstrg
 
 
-def retr_prop(globdata):
+def retr_prop(gdat):
   
-    globdata.thisindxsamplgal, globdata.thisindxsampbgal,  globdata.thisindxsampspec, globdata.thisindxsampsind, \
-            globdata.thisindxsampcomp = retr_indx(globdata, globdata.thisindxpntsfull)
+    gdat.thisindxsamplgal, gdat.thisindxsampbgal,  gdat.thisindxsampspec, gdat.thisindxsampsind, \
+            gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
     
-    if globdata.verbtype > 2:
+    if gdat.verbtype > 2:
         print 'retr_prop(): '
 
         print 'drmcsamp'
-        print globdata.drmcsamp
+        print gdat.drmcsamp
         
         print 'thissampvarb: '
-        for k in range(globdata.thissampvarb.size):
-            if k == globdata.indxsampcompinit:
+        for k in range(gdat.thissampvarb.size):
+            if k == gdat.indxsampcompinit:
                 print
-            if k > globdata.indxsampcompinit and (k - globdata.indxsampcompinit) % globdata.numbcomp == 0:
+            if k > gdat.indxsampcompinit and (k - gdat.indxsampcompinit) % gdat.numbcomp == 0:
                 print
-            print globdata.thissampvarb[k]
+            print gdat.thissampvarb[k]
         print
             
-        print 'thisindxpntsfull: ', globdata.thisindxpntsfull
-        print 'thisindxpntsempt: ', globdata.thisindxpntsempt  
-        print 'thisindxsamplgal: ', globdata.thisindxsamplgal
-        print 'thisindxsampbgal: ', globdata.thisindxsampbgal
+        print 'thisindxpntsfull: ', gdat.thisindxpntsfull
+        print 'thisindxpntsempt: ', gdat.thisindxpntsempt  
+        print 'thisindxsamplgal: ', gdat.thisindxsamplgal
+        print 'thisindxsampbgal: ', gdat.thisindxsampbgal
         print 'thisindxsampspec: '
-        print globdata.thisindxsampspec
-        if globdata.colrprio:
-            print 'thisindxsampsind: ', globdata.thisindxsampsind
-        print 'thisindxsampcomp: ', globdata.thisindxsampcomp
+        print gdat.thisindxsampspec
+        if gdat.colrprio:
+            print 'thisindxsampsind: ', gdat.thisindxsampsind
+        print 'thisindxsampcomp: ', gdat.thisindxsampcomp
         print
         
     # hyper-parameter changes
     # mean number of point sources
-    if globdata.thisindxprop == globdata.indxpropfdfnnorm:
-        globdata.indxsampmodi = globdata.indxsampfdfnnorm[globdata.indxpoplmodi]
-        retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvfdfnnorm)
-        globdata.nextsampvarb[globdata.indxsampfdfnnorm] = icdf_logt(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.minmfdfnnorm, globdata.factfdfnnorm)
-        if globdata.colrprio:
-            globdata.indxenermodi = globdata.indxenerfdfn
+    if gdat.thisindxprop == gdat.indxpropfdfnnorm:
+        gdat.indxsampmodi = gdat.indxsampfdfnnorm[gdat.indxpoplmodi]
+        retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvfdfnnorm)
+        gdat.nextsampvarb[gdat.indxsampfdfnnorm] = icdf_logt(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.minmfdfnnorm, gdat.factfdfnnorm)
+        if gdat.colrprio:
+            gdat.indxenermodi = gdat.indxenerfdfn
         else:
-            globdata.indxenermodi = globdata.indxener
+            gdat.indxenermodi = gdat.indxener
         
     # flux distribution function slope
-    if globdata.thisindxprop == globdata.indxpropfdfnslop:
-        if globdata.colrprio:
-            globdata.indxenermodi = globdata.indxenerfdfn
+    if gdat.thisindxprop == gdat.indxpropfdfnslop:
+        if gdat.colrprio:
+            gdat.indxenermodi = gdat.indxenerfdfn
         else:
-            globdata.indxenermodi = choice(globdata.indxener)
-        globdata.indxsampfdfnslopmodi = globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]
-        retr_gaus(globdata, globdata.indxsampfdfnslopmodi, globdata.stdvfdfnslop)
+            gdat.indxenermodi = choice(gdat.indxener)
+        gdat.indxsampfdfnslopmodi = gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]
+        retr_gaus(gdat, gdat.indxsampfdfnslopmodi, gdat.stdvfdfnslop)
         
-        globdata.nextsampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]] = \
-            icdf_atan(globdata.drmcsamp[globdata.indxsampfdfnslopmodi, -1], globdata.minmfdfnslop, globdata.factfdfnslop)
-        if globdata.colrprio:
-            globdata.indxsampmodi = concatenate((globdata.indxsampfdfnslopmodi, globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxener, :].flatten()))
+        gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]] = \
+            icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopmodi, -1], gdat.minmfdfnslop, gdat.factfdfnslop)
+        if gdat.colrprio:
+            gdat.indxsampmodi = concatenate((gdat.indxsampfdfnslopmodi, gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxener, :].flatten()))
         else:
-            globdata.indxsampmodi = concatenate((array([globdata.indxsampfdfnslopmodi]), globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, :]))
+            gdat.indxsampmodi = concatenate((array([gdat.indxsampfdfnslopmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :]))
            
-        if globdata.verbtype > 2:
+        if gdat.verbtype > 2:
             print 'indxenermodi'
-            print globdata.indxenermodi
+            print gdat.indxenermodi
             print 'indxpoplmodi'
-            print globdata.indxpoplmodi
+            print gdat.indxpoplmodi
             print 'indxsampmodi'
-            print globdata.indxsampmodi
+            print gdat.indxsampmodi
             print 'drmcsamp[indxsampmodi, :]'
-            print globdata.drmcsamp[globdata.indxsampmodi, :]
-            print 'thissampvarb[globdata.indxsampfdfnslop]'
-            print globdata.thissampvarb[globdata.indxsampfdfnslop]
-            print 'nextsampvarb[globdata.indxsampfdfnslop]'
-            print globdata.nextsampvarb[globdata.indxsampfdfnslop]
+            print gdat.drmcsamp[gdat.indxsampmodi, :]
+            print 'thissampvarb[gdat.indxsampfdfnslop]'
+            print gdat.thissampvarb[gdat.indxsampfdfnslop]
+            print 'nextsampvarb[gdat.indxsampfdfnslop]'
+            print gdat.nextsampvarb[gdat.indxsampfdfnslop]
             print
 
     # PSF parameter change 
-    if globdata.thisindxprop == globdata.indxproppsfipara:
+    if gdat.thisindxprop == gdat.indxproppsfipara:
         
         # index of the PSF parameter to change
-        globdata.indxpsfiparamodi = choice(globdata.indxpsfipara)
+        gdat.indxpsfiparamodi = choice(gdat.indxpsfipara)
 
         # the energy bin of the PS flux map to be modified
-        globdata.indxenermodi = array([(globdata.indxpsfiparamodi % globdata.numbpsfiparaevtt) // globdata.numbformpara])
+        gdat.indxenermodi = array([(gdat.indxpsfiparamodi % gdat.numbpsfiparaevtt) // gdat.numbformpara])
         
         # sample index to be modified
-        globdata.indxsampmodi = globdata.indxsamppsfipara[globdata.indxpsfiparamodi]
-        retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvpsfipara)
-        globdata.nextsampvarb[globdata.indxsamppsfipara] = copy(globdata.thissampvarb[globdata.indxsamppsfipara])
-        globdata.nextsampvarb[globdata.indxsamppsfipara[globdata.indxpsfiparamodi]] = \
-            icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)
+        gdat.indxsampmodi = gdat.indxsamppsfipara[gdat.indxpsfiparamodi]
+        retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvpsfipara)
+        gdat.nextsampvarb[gdat.indxsamppsfipara] = copy(gdat.thissampvarb[gdat.indxsamppsfipara])
+        gdat.nextsampvarb[gdat.indxsamppsfipara[gdat.indxpsfiparamodi]] = \
+            icdf_psfipara(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.indxpsfiparamodi)
             
-        globdata.numbmodipnts = int(sum(globdata.thissampvarb[globdata.indxsampnumbpnts]))
+        gdat.numbmodipnts = int(sum(gdat.thissampvarb[gdat.indxsampnumbpnts]))
         
-        if globdata.verbtype > 1:
+        if gdat.verbtype > 1:
            
-            print 'indxpsfiparamodi: ', globdata.indxpsfiparamodi
-            print 'indxenermodi: ', globdata.indxenermodi
-            print 'indxsampmodi: ', globdata.indxsampmodi
-            print 'globdata.drmcsamp[globdata.indxsampmodi, -1]'
-            print globdata.drmcsamp[globdata.indxsampmodi, -1]
-            print 'icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)'
-            print icdf_psfipara(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.indxpsfiparamodi)
-            print 'thispsfipara: ', globdata.thissampvarb[globdata.indxsamppsfipara]
-            print 'thissampvarb[indxsampmodi]: ', globdata.thissampvarb[globdata.indxsampmodi]
-            print 'nextpsfipara: ', globdata.nextsampvarb[globdata.indxsamppsfipara]
-            print 'nextpsfipara[indxsampmodi]: ', globdata.nextsampvarb[globdata.indxsampmodi]
+            print 'indxpsfiparamodi: ', gdat.indxpsfiparamodi
+            print 'indxenermodi: ', gdat.indxenermodi
+            print 'indxsampmodi: ', gdat.indxsampmodi
+            print 'gdat.drmcsamp[gdat.indxsampmodi, -1]'
+            print gdat.drmcsamp[gdat.indxsampmodi, -1]
+            print 'icdf_psfipara(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.indxpsfiparamodi)'
+            print icdf_psfipara(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.indxpsfiparamodi)
+            print 'thispsfipara: ', gdat.thissampvarb[gdat.indxsamppsfipara]
+            print 'thissampvarb[indxsampmodi]: ', gdat.thissampvarb[gdat.indxsampmodi]
+            print 'nextpsfipara: ', gdat.nextsampvarb[gdat.indxsamppsfipara]
+            print 'nextpsfipara[indxsampmodi]: ', gdat.nextsampvarb[gdat.indxsampmodi]
             print
 
         
     # background changes
     
     # diffuse model
-    if globdata.thisindxprop == globdata.indxpropnormback:
+    if gdat.thisindxprop == gdat.indxpropnormback:
 
         # determine the sample index to be changed
-        globdata.indxenermodi = choice(globdata.indxener)
-        globdata.indxbackmodi = choice(globdata.indxback)
-        globdata.indxsampmodi = globdata.indxsampnormback[globdata.indxbackmodi, globdata.indxenermodi]
+        gdat.indxenermodi = choice(gdat.indxener)
+        gdat.indxbackmodi = choice(gdat.indxback)
+        gdat.indxsampmodi = gdat.indxsampnormback[gdat.indxbackmodi, gdat.indxenermodi]
         
         # propose
-        retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvback)
+        retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvback)
 
         # transform back from the unit space
-        globdata.nextsampvarb[globdata.indxsampnormback] = copy(globdata.thissampvarb[globdata.indxsampnormback])
-        globdata.nextsampvarb[globdata.indxsampmodi] = icdf_logt(globdata.drmcsamp[globdata.indxsampmodi, -1], \
-            globdata.minmnormback[globdata.indxbackmodi], globdata.factnormback[globdata.indxbackmodi])
+        gdat.nextsampvarb[gdat.indxsampnormback] = copy(gdat.thissampvarb[gdat.indxsampnormback])
+        gdat.nextsampvarb[gdat.indxsampmodi] = icdf_logt(gdat.drmcsamp[gdat.indxsampmodi, -1], \
+            gdat.minmnormback[gdat.indxbackmodi], gdat.factnormback[gdat.indxbackmodi])
 
-        if globdata.verbtype > 1:
-            print 'indxenermodi: ', globdata.indxenermodi
-            print 'indxbackmodi: ', globdata.indxbackmodi
-            print 'indxsampmodi: ', globdata.indxsampmodi
-            print 'thissampvarb[globdata.indxsampnormback]: ', globdata.thissampvarb[globdata.indxsampnormback]
-            print 'nextsampvarb[globdata.indxsampnormback]: ', globdata.nextsampvarb[globdata.indxsampnormback]
-            print 'globdata.drmcsamp[globdata.indxsampnormback, :]'
-            print globdata.drmcsamp[globdata.indxsampnormback, :]
+        if gdat.verbtype > 1:
+            print 'indxenermodi: ', gdat.indxenermodi
+            print 'indxbackmodi: ', gdat.indxbackmodi
+            print 'indxsampmodi: ', gdat.indxsampmodi
+            print 'thissampvarb[gdat.indxsampnormback]: ', gdat.thissampvarb[gdat.indxsampnormback]
+            print 'nextsampvarb[gdat.indxsampnormback]: ', gdat.nextsampvarb[gdat.indxsampnormback]
+            print 'gdat.drmcsamp[gdat.indxsampnormback, :]'
+            print gdat.drmcsamp[gdat.indxsampnormback, :]
             print
 
     # birth
-    if globdata.thisindxprop == globdata.indxpropbrth:
+    if gdat.thisindxprop == gdat.indxpropbrth:
 
         # change the number of PS
-        globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] + 1
+        gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] + 1
     
         # initial sample index to add the new PS
-        indxsampbrth = int(globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.indxpoplmodi + globdata.thisindxpntsempt[globdata.indxpoplmodi][0] * globdata.numbcomp)
+        indxsampbrth = int(gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.indxpoplmodi + gdat.thisindxpntsempt[gdat.indxpoplmodi][0] * gdat.numbcomp)
         
         # sample auxiliary variables
-        if globdata.colrprio:
-            numbauxipara = globdata.numbcompcolr
+        if gdat.colrprio:
+            numbauxipara = gdat.numbcompcolr
         else:
-            numbauxipara = globdata.numbcomp
-        globdata.auxipara = rand(numbauxipara)
+            numbauxipara = gdat.numbcomp
+        gdat.auxipara = rand(numbauxipara)
 
-        if globdata.colrprio:
-            globdata.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = globdata.auxipara[0:2]
-            globdata.drmcsamp[indxsampbrth+2+globdata.indxenerfdfn, -1] = globdata.auxipara[-2]
-            globdata.drmcsamp[indxsampbrth+globdata.numbcomp-1, -1] = globdata.auxipara[-1]
+        if gdat.colrprio:
+            gdat.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = gdat.auxipara[0:2]
+            gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1] = gdat.auxipara[-2]
+            gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1] = gdat.auxipara[-1]
         else:   
-            globdata.drmcsamp[indxsampbrth:indxsampbrth+globdata.numbcomp, -1] = globdata.auxipara
+            gdat.drmcsamp[indxsampbrth:indxsampbrth+gdat.numbcomp, -1] = gdat.auxipara
 
         # sample indices to be modified
-        globdata.indxsampmodi = arange(indxsampbrth, indxsampbrth + globdata.numbcomp, dtype=int)
+        gdat.indxsampmodi = arange(indxsampbrth, indxsampbrth + gdat.numbcomp, dtype=int)
 
         # modification catalog
-        globdata.numbmodipnts = 1
-        globdata.modilgal[0] = icdf_self(globdata.drmcsamp[indxsampbrth, -1], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-        globdata.modibgal[0] = icdf_self(globdata.drmcsamp[indxsampbrth+1, -1], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-        if globdata.colrprio:
-            modiflux = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+globdata.indxenerfdfn, -1], \
-                    globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]], \
-                    globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
-            globdata.modisind[0] = icdf_eerr(globdata.drmcsamp[indxsampbrth+globdata.numbcomp-1, -1], globdata.meansind[globdata.indxpoplmodi], \
-                        globdata.stdvsind[globdata.indxpoplmodi], globdata.sindcdfnnormminm[globdata.indxpoplmodi], globdata.sindcdfnnormdiff[globdata.indxpoplmodi])
-            globdata.modispec[:, 0] = retr_spec(globdata, modiflux, globdata.modisind[0]).flatten()
+        gdat.numbmodipnts = 1
+        gdat.modilgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+        gdat.modibgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth+1, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+        if gdat.colrprio:
+            modiflux = icdf_spec(gdat, gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1], \
+                    gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenerfdfn]], \
+                    gdat.minmspec[gdat.indxenerfdfn], gdat.maxmspec[gdat.indxenerfdfn])
+            gdat.modisind[0] = icdf_eerr(gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1], gdat.meansind[gdat.indxpoplmodi], \
+                        gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
+            gdat.modispec[:, 0] = retr_spec(gdat, modiflux, gdat.modisind[0]).flatten()
         else:
-            for i in globdata.indxener:
-                globdata.modispec[i, 0] = icdf_spec(globdata, globdata.drmcsamp[indxsampbrth+2+i, -1], \
-                    globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], globdata.minmspec[i], globdata.maxmspec[i])
+            for i in gdat.indxener:
+                gdat.modispec[i, 0] = icdf_spec(gdat, gdat.drmcsamp[indxsampbrth+2+i, -1], \
+                    gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
     
-        if globdata.verbtype > 1:
-            print 'auxipara: ', globdata.auxipara
-            print 'modilgal: ', globdata.modilgal
-            print 'modibgal: ', globdata.modibgal
+        if gdat.verbtype > 1:
+            print 'auxipara: ', gdat.auxipara
+            print 'modilgal: ', gdat.modilgal
+            print 'modibgal: ', gdat.modibgal
             print 'modispec: '
-            print globdata.modispec
+            print gdat.modispec
             print
             
     # kill
-    if globdata.thisindxprop == globdata.indxpropdeth:
+    if gdat.thisindxprop == gdat.indxpropdeth:
         
         # change the number of PS
-        globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] - 1
+        gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] - 1
 
         # occupied PS index to be killed
-        killindxindxpnts = choice(arange(globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]], dtype=int))
+        killindxindxpnts = choice(arange(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]], dtype=int))
         
         # PS index to be killed
-        globdata.killindxpnts = globdata.thisindxpntsfull[globdata.indxpoplmodi][killindxindxpnts]
+        gdat.killindxpnts = gdat.thisindxpntsfull[gdat.indxpoplmodi][killindxindxpnts]
         
         # sample indices to be modified 
-        globdata.indxsampmodi = array([])
+        gdat.indxsampmodi = array([])
             
         # modification catalog
-        globdata.numbmodipnts = 1
-        globdata.modilgal[0] = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][killindxindxpnts]]
-        globdata.modibgal[0] = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][killindxindxpnts]]
-        globdata.modispec[:, 0] = -globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][:, killindxindxpnts]]
+        gdat.numbmodipnts = 1
+        gdat.modilgal[0] = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][killindxindxpnts]]
+        gdat.modibgal[0] = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][killindxindxpnts]]
+        gdat.modispec[:, 0] = -gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, killindxindxpnts]]
 
-        if globdata.verbtype > 1:
-            print 'killindxpnts: ', globdata.killindxpnts
+        if gdat.verbtype > 1:
+            print 'killindxpnts: ', gdat.killindxpnts
             print 'killindxindxpnts: ', killindxindxpnts
-            print 'modilgal: ', globdata.modilgal
-            print 'modibgal: ', globdata.modibgal
+            print 'modilgal: ', gdat.modilgal
+            print 'modibgal: ', gdat.modibgal
             print 'modispec: '
-            print globdata.modispec
+            print gdat.modispec
             print
             
   
     # split
-    if globdata.thisindxprop == globdata.indxpropsplt:
+    if gdat.thisindxprop == gdat.indxpropsplt:
         
-        globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] + 1
+        gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] + 1
         
         # determine which point source to split
-        spltindxindxpnts = choice(arange(globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]], dtype=int))
-        spltindxpnts = globdata.thisindxpntsfull[globdata.indxpoplmodi][spltindxindxpnts]
+        spltindxindxpnts = choice(arange(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]], dtype=int))
+        spltindxpnts = gdat.thisindxpntsfull[gdat.indxpoplmodi][spltindxindxpnts]
     
         # update the sample vector
-        globdata.indxsampchd0 = globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.indxpoplmodi + globdata.thisindxpntsfull[globdata.indxpoplmodi][spltindxindxpnts] * globdata.numbcomp
-        indxfinl0 = globdata.indxsampchd0 + globdata.numbcomp
-        globdata.indxsampchd1 = globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.indxpoplmodi + globdata.thisindxpntsempt[globdata.indxpoplmodi][0] * globdata.numbcomp
-        indxfinl1 = globdata.indxsampchd1 + globdata.numbcomp
+        gdat.indxsampchd0 = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.indxpoplmodi + gdat.thisindxpntsfull[gdat.indxpoplmodi][spltindxindxpnts] * gdat.numbcomp
+        indxfinl0 = gdat.indxsampchd0 + gdat.numbcomp
+        gdat.indxsampchd1 = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.indxpoplmodi + gdat.thisindxpntsempt[gdat.indxpoplmodi][0] * gdat.numbcomp
+        indxfinl1 = gdat.indxsampchd1 + gdat.numbcomp
         
         # determine the modified sample vector indices
-        globdata.indxsampmodi = concatenate((arange(globdata.indxsampchd0, indxfinl0, dtype=int), arange(globdata.indxsampchd1, indxfinl1, dtype=int)))
+        gdat.indxsampmodi = concatenate((arange(gdat.indxsampchd0, indxfinl0, dtype=int), arange(gdat.indxsampchd1, indxfinl1, dtype=int)))
         
-        thislgal = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][spltindxindxpnts]]
-        thisbgal = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][spltindxindxpnts]]
-        thisspec = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][:, spltindxindxpnts]]
+        thislgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][spltindxindxpnts]]
+        thisbgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][spltindxindxpnts]]
+        thisspec = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, spltindxindxpnts]]
         
-        if globdata.verbtype > 1:
+        if gdat.verbtype > 1:
             print 'spltindxindxpnts: ', spltindxindxpnts
             print 'spltindxpnts: ', spltindxpnts
-            print 'indxsampchd0: ', globdata.indxsampchd0
+            print 'indxsampchd0: ', gdat.indxsampchd0
             print 'indxfinl0: ', indxfinl0
-            print 'indxsampchd1: ', globdata.indxsampchd1
+            print 'indxsampchd1: ', gdat.indxsampchd1
             print 'indxfinl1: ', indxfinl1
             if pixltype == 'heal':
                 print 'thislgal: ', thislgal
@@ -1195,28 +1216,28 @@ def retr_prop(globdata):
             
             
         # determine the new components
-        globdata.auxipara = empty(globdata.numbcomp)
-        globdata.auxipara[0:2] = rand(2) * spmrlbhl
-        globdata.auxipara[2:] = (exp(rand(globdata.numbener)) - 1.) / (exp(1.) - 1.) * (globdata.maxmspec - globdata.minmspec) + globdata.minmspec
+        gdat.auxipara = empty(gdat.numbcomp)
+        gdat.auxipara[0:2] = rand(2) * spmrlbhl
+        gdat.auxipara[2:] = (exp(rand(gdat.numbener)) - 1.) / (exp(1.) - 1.) * (gdat.maxmspec - gdat.minmspec) + gdat.minmspec
         
-        if globdata.verbtype > 1:
+        if gdat.verbtype > 1:
             if pixltype == 'heal':
-                print 'auxipara[0]: ', globdata.auxipara[0]
-                print 'auxipara[1]: ', globdata.auxipara[1]
+                print 'auxipara[0]: ', gdat.auxipara[0]
+                print 'auxipara[1]: ', gdat.auxipara[1]
             else:
-                print 'auxipara[0]: ', 3600. * globdata.auxipara[0]
-                print 'auxipara[1]: ', 3600. * globdata.auxipara[1]
-            print 'auxipara[2:]: ', globdata.auxipara[2:]
+                print 'auxipara[0]: ', 3600. * gdat.auxipara[0]
+                print 'auxipara[1]: ', 3600. * gdat.auxipara[1]
+            print 'auxipara[2:]: ', gdat.auxipara[2:]
             print
             
-        nextlgal0 = thislgal + globdata.auxipara[0]
-        nextlgal1 = thislgal - globdata.auxipara[0]
-        nextbgal0 = thisbgal + globdata.auxipara[1]
-        nextbgal1 = thisbgal - globdata.auxipara[1]
-        nextspec0 = (thisspec + globdata.auxipara[2:]) / 2.
-        nextspec1 = (thisspec - globdata.auxipara[2:]) / 2.
+        nextlgal0 = thislgal + gdat.auxipara[0]
+        nextlgal1 = thislgal - gdat.auxipara[0]
+        nextbgal0 = thisbgal + gdat.auxipara[1]
+        nextbgal1 = thisbgal - gdat.auxipara[1]
+        nextspec0 = (thisspec + gdat.auxipara[2:]) / 2.
+        nextspec1 = (thisspec - gdat.auxipara[2:]) / 2.
         
-        if globdata.verbtype > 1:
+        if gdat.verbtype > 1:
             if pixltype == 'heal':
                 print 'nextlgal0: ', nextlgal0
                 print 'nextlgal1: ', nextlgal1
@@ -1230,58 +1251,58 @@ def retr_prop(globdata):
             print 'nextspec0: ', nextspec0
             print 'nextspec1: ', nextspec1
 
-        if abs(nextlgal0) > globdata.maxmgangmarg or abs(nextlgal1) > globdata.maxmgangmarg or \
-           abs(nextbgal0) > globdata.maxmgangmarg or abs(nextbgal1) > globdata.maxmgangmarg or \
-           where((nextspec0 > globdata.maxmspec) | (nextspec0 < globdata.minmspec))[0].size > 0 or \
-           where((nextspec1 > globdata.maxmspec) | (nextspec1 < globdata.minmspec))[0].size > 0:
-               globdata.reje = True
+        if abs(nextlgal0) > gdat.maxmgangmarg or abs(nextlgal1) > gdat.maxmgangmarg or \
+           abs(nextbgal0) > gdat.maxmgangmarg or abs(nextbgal1) > gdat.maxmgangmarg or \
+           where((nextspec0 > gdat.maxmspec) | (nextspec0 < gdat.minmspec))[0].size > 0 or \
+           where((nextspec1 > gdat.maxmspec) | (nextspec1 < gdat.minmspec))[0].size > 0:
+               gdat.reje = True
                 
-        if not globdata.reje:
+        if not gdat.reje:
 
-            lgal = concatenate((array([nextlgal0, nextlgal1]), setdiff1d(globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi]], thislgal)))
-            bgal = concatenate((array([nextbgal0, nextbgal1]), setdiff1d(globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi]], thisbgal)))
+            lgal = concatenate((array([nextlgal0, nextlgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]], thislgal)))
+            bgal = concatenate((array([nextbgal0, nextbgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]], thisbgal)))
             pairlist = retr_pairlist(lgal, bgal)
 
             ## first new component
-            globdata.drmcsamp[globdata.indxsampchd0, -1] = cdfn_self(nextlgal0, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            globdata.drmcsamp[globdata.indxsampchd0+1, -1] = cdfn_self(nextbgal0, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            for i in globdata.indxener:
-                globdata.drmcsamp[globdata.indxsampchd0+2+i, -1] = cdfn_spec(nextspec0[i], globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], globdata.minmspec[i], globdata.maxmspec[i])
+            gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            for i in gdat.indxener:
+                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_spec(nextspec0[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
 
             ## second new component
-            globdata.drmcsamp[globdata.indxsampchd1, -1] = cdfn_self(nextlgal1, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            globdata.drmcsamp[globdata.indxsampchd1+1, -1] = cdfn_self(nextbgal1, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            for i in globdata.indxener:
-                globdata.drmcsamp[globdata.indxsampchd1+2+i, -1] = cdfn_spec(nextspec1[i], globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], globdata.minmspec[i], globdata.maxmspec[i])
+            gdat.drmcsamp[gdat.indxsampchd1, -1] = cdfn_self(nextlgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd1+1, -1] = cdfn_self(nextbgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            for i in gdat.indxener:
+                gdat.drmcsamp[gdat.indxsampchd1+2+i, -1] = cdfn_spec(nextspec1[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
 
-            globdata.numbmodipnts = 3
+            gdat.numbmodipnts = 3
             ## component to be removed
-            globdata.modilgal[0] = thislgal
-            globdata.modibgal[0] = thisbgal
-            globdata.modispec[:, 0] = -thisspec.flatten()
+            gdat.modilgal[0] = thislgal
+            gdat.modibgal[0] = thisbgal
+            gdat.modispec[:, 0] = -thisspec.flatten()
 
             ## first component to be added
-            globdata.modilgal[1] = nextlgal0
-            globdata.modibgal[1] = nextbgal0
-            globdata.modispec[:, 1] = nextspec0.flatten()
+            gdat.modilgal[1] = nextlgal0
+            gdat.modibgal[1] = nextbgal0
+            gdat.modispec[:, 1] = nextspec0.flatten()
 
             # second component to be added
-            globdata.modilgal[2] = nextlgal1
-            globdata.modibgal[2] = nextbgal1
-            globdata.modispec[:, 2] = nextspec1.flatten()
+            gdat.modilgal[2] = nextlgal1
+            gdat.modibgal[2] = nextbgal1
+            gdat.modispec[:, 2] = nextspec1.flatten()
 
-    if globdata.thisindxprop == globdata.indxpropmerg:
+    if gdat.thisindxprop == gdat.indxpropmerg:
         
-        globdata.nextsampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] = globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]] - 1
+        gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] - 1
 
         # determine the first PS to merge
-        #dir2 = array([globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi]], globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi]]])
+        #dir2 = array([gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]], gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]]])
             
-        lgal = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi]]
-        bgal = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi]]
+        lgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]]
+        bgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]]
         pairlist = retr_pairlist(lgal, bgal)
         
-        if globdata.verbtype > 1:
+        if gdat.verbtype > 1:
             print 'lgal'
             print lgal
             print 'bgal'
@@ -1291,82 +1312,82 @@ def retr_prop(globdata):
             
             
         if len(pairlist) == 0:
-            globdata.reje = True
+            gdat.reje = True
         else:
-            globdata.reje = False
+            gdat.reje = False
             jpair = choice(arange(len(pairlist)))
             mergindxindxpnts0 = pairlist[jpair][0]
             mergindxindxpnts1 = pairlist[jpair][1]
   
-        if not globdata.reje:
+        if not gdat.reje:
 
             # fisrt PS index to be merged
-            mergindxchd0 = globdata.thisindxpntsfull[globdata.indxpoplmodi][mergindxindxpnts0]
-            mergindxsampinit0 = globdata.indxsampcompinit + mergindxchd0 * globdata.numbcomp
+            mergindxchd0 = gdat.thisindxpntsfull[gdat.indxpoplmodi][mergindxindxpnts0]
+            mergindxsampinit0 = gdat.indxsampcompinit + mergindxchd0 * gdat.numbcomp
 
             # second PS index to be merged
-            globdata.mergindxchd1 = globdata.thisindxpntsfull[globdata.indxpoplmodi][mergindxindxpnts1]
-            mergindxsampinit1 = globdata.indxsampcompinit + globdata.mergindxchd1 * globdata.numbcomp
+            gdat.mergindxchd1 = gdat.thisindxpntsfull[gdat.indxpoplmodi][mergindxindxpnts1]
+            mergindxsampinit1 = gdat.indxsampcompinit + gdat.mergindxchd1 * gdat.numbcomp
 
             # determine the modified sample vector indices
-            globdata.indxsampchd0 = globdata.indxsampcompinit + globdata.numbcomp * mergindxchd0
-            indxfinl0 = globdata.indxsampchd0 + globdata.numbcomp
-            globdata.indxsampchd1 = globdata.indxsampcompinit + globdata.numbcomp * globdata.mergindxchd1
-            indxfinl1 = globdata.indxsampchd1 + globdata.numbcomp
+            gdat.indxsampchd0 = gdat.indxsampcompinit + gdat.numbcomp * mergindxchd0
+            indxfinl0 = gdat.indxsampchd0 + gdat.numbcomp
+            gdat.indxsampchd1 = gdat.indxsampcompinit + gdat.numbcomp * gdat.mergindxchd1
+            indxfinl1 = gdat.indxsampchd1 + gdat.numbcomp
 
-            globdata.indxsampmodi = arange(globdata.indxsampchd0, indxfinl0)
+            gdat.indxsampmodi = arange(gdat.indxsampchd0, indxfinl0)
 
             # indices of the PS to be merges
-            mergindxpnts = sort(array([mergindxchd0, globdata.mergindxchd1], dtype=int))
+            mergindxpnts = sort(array([mergindxchd0, gdat.mergindxchd1], dtype=int))
 
-            thislgal0 = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][mergindxindxpnts0]]
-            thisbgal0 = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][mergindxindxpnts0]]
-            thisspec0 = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][:, mergindxindxpnts0]]
+            thislgal0 = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][mergindxindxpnts0]]
+            thisbgal0 = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][mergindxindxpnts0]]
+            thisspec0 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts0]]
 
-            thislgal1 = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][mergindxindxpnts1]]
-            thisbgal1 = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][mergindxindxpnts1]]
-            thisspec1 = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][:, mergindxindxpnts1]]
+            thislgal1 = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][mergindxindxpnts1]]
+            thisbgal1 = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][mergindxindxpnts1]]
+            thisspec1 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts1]]
 
             # auxiliary component
-            globdata.auxipara = zeros(globdata.numbcomp)
-            globdata.auxipara[0] = (thislgal0 - thislgal1) / 2.
-            globdata.auxipara[1] = (thisbgal0 - thisbgal1) / 2.
-            globdata.auxipara[2:] = thisspec0 - thisspec1
+            gdat.auxipara = zeros(gdat.numbcomp)
+            gdat.auxipara[0] = (thislgal0 - thislgal1) / 2.
+            gdat.auxipara[1] = (thisbgal0 - thisbgal1) / 2.
+            gdat.auxipara[2:] = thisspec0 - thisspec1
 
             # merged PS
             nextlgal = (thislgal0 + thislgal1) / 2.
             nextbgal = (thisbgal0 + thisbgal1) / 2.
             nextspec = thisspec0 + thisspec1
             
-            globdata.drmcsamp[globdata.indxsampchd0, -1] = cdfn_self(nextlgal, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            globdata.drmcsamp[globdata.indxsampchd0+1, -1] = cdfn_self(nextbgal, -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            for i in globdata.indxener:
-                globdata.drmcsamp[globdata.indxsampchd0+2+i, -1] = cdfn_spec(nextspec[i], globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, i]], globdata.minmspec[i], globdata.maxmspec[i])
+            gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            for i in gdat.indxener:
+                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_spec(nextspec[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
 
-            globdata.numbmodipnts = 3
+            gdat.numbmodipnts = 3
             ## first component to be merged
-            globdata.modilgal[0] = thislgal0
-            globdata.modibgal[0] = thisbgal0
-            globdata.modispec[:, 0] = -thisspec0.flatten()
+            gdat.modilgal[0] = thislgal0
+            gdat.modibgal[0] = thisbgal0
+            gdat.modispec[:, 0] = -thisspec0.flatten()
 
             ## first component to be merged
-            globdata.modilgal[1] = thislgal1
-            globdata.modibgal[1] = thisbgal1
-            globdata.modispec[:, 1] = -thisspec1.flatten()
+            gdat.modilgal[1] = thislgal1
+            gdat.modibgal[1] = thisbgal1
+            gdat.modispec[:, 1] = -thisspec1.flatten()
 
             ## component to be added
-            globdata.modilgal[2] = nextlgal
-            globdata.modibgal[2] = nextbgal
-            globdata.modispec[:, 2] = nextspec.flatten()
+            gdat.modilgal[2] = nextlgal
+            gdat.modibgal[2] = nextbgal
+            gdat.modispec[:, 2] = nextspec.flatten()
 
-            if globdata.verbtype > 1:
+            if gdat.verbtype > 1:
                 print 'mergindxchd0: ', mergindxchd0
                 print 'mergindxindxpnts0: ', mergindxindxpnts0
-                print 'mergindxchd1: ', globdata.mergindxchd1
+                print 'mergindxchd1: ', gdat.mergindxchd1
                 print 'mergindxindxpnts1: ', mergindxindxpnts1
-                print 'indxsampchd0: ', globdata.indxsampchd0
+                print 'indxsampchd0: ', gdat.indxsampchd0
                 print 'indxfinl0: ', indxfinl0
-                print 'indxsampchd1: ', globdata.indxsampchd1
+                print 'indxsampchd1: ', gdat.indxsampchd1
                 print 'indxfinl1: ', indxfinl1
                 if pixltype == 'heal':
                     print 'thislgal0: ', thislgal0
@@ -1384,145 +1405,145 @@ def retr_prop(globdata):
                 if pixltype == 'heal':
                     print 'nextlgal: ', nextlgal
                     print 'nextbgal: ', nextbgal
-                    print 'auxipara[0]: ', globdata.auxipara[0]
-                    print 'auxipara[1]: ', globdata.auxipara[1]
+                    print 'auxipara[0]: ', gdat.auxipara[0]
+                    print 'auxipara[1]: ', gdat.auxipara[1]
                 else:
                     print 'nextlgal: ', 3600. * nextlgal
                     print 'nextbgal: ', 3600. * nextbgal
-                    print 'auxipara[0]: ', 3600. * globdata.auxipara[0]
-                    print 'auxipara[1]: ', 3600. * globdata.auxipara[1]
+                    print 'auxipara[0]: ', 3600. * gdat.auxipara[0]
+                    print 'auxipara[1]: ', 3600. * gdat.auxipara[1]
                 print 'nextspec: ', nextspec
-                print 'auxipara[2:]: ', globdata.auxipara[2:]
+                print 'auxipara[2:]: ', gdat.auxipara[2:]
                 print
 
     # component change
-    if globdata.thisindxprop >= globdata.indxproplgal:     
+    if gdat.thisindxprop >= gdat.indxproplgal:     
         
-        if globdata.thisindxprop == globdata.indxproplgal or globdata.thisindxprop == globdata.indxpropbgal:
-            if globdata.thisindxprop == globdata.indxproplgal:
-                globdata.indxcompmodi = 0
+        if gdat.thisindxprop == gdat.indxproplgal or gdat.thisindxprop == gdat.indxpropbgal:
+            if gdat.thisindxprop == gdat.indxproplgal:
+                gdat.indxcompmodi = 0
             else:
-                globdata.indxcompmodi = 1
-            globdata.indxenermodi = globdata.indxener
+                gdat.indxcompmodi = 1
+            gdat.indxenermodi = gdat.indxener
         else:
-            if globdata.colrprio:
-                globdata.indxenermodi = globdata.indxener
-                if globdata.thisindxprop == globdata.indxpropspec:
-                    globdata.indxcompmodi = 2 + globdata.indxenerfdfn
-                elif globdata.thisindxprop == globdata.indxpropsind:
-                    globdata.indxcompmodi = array([2 + globdata.numbener])
+            if gdat.colrprio:
+                gdat.indxenermodi = gdat.indxener
+                if gdat.thisindxprop == gdat.indxpropspec:
+                    gdat.indxcompmodi = 2 + gdat.indxenerfdfn
+                elif gdat.thisindxprop == gdat.indxpropsind:
+                    gdat.indxcompmodi = array([2 + gdat.numbener])
             else:
-                globdata.indxenermodi = choice(globdata.indxener)
-                globdata.indxcompmodi = globdata.indxenermodi + 2
+                gdat.indxenermodi = choice(gdat.indxener)
+                gdat.indxcompmodi = gdat.indxenermodi + 2
             
         # occupied PS index to be modified
-        modiindxindxpnts = choice(arange(globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]], dtype=int))
+        modiindxindxpnts = choice(arange(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]], dtype=int))
         
         # PS index to be modified
-        modiindxpnts = globdata.thisindxpntsfull[globdata.indxpoplmodi][modiindxindxpnts]
+        modiindxpnts = gdat.thisindxpntsfull[gdat.indxpoplmodi][modiindxindxpnts]
         
         # initial sample index of the PS to be modified
-        globdata.indxsampmodiinit = globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.indxpoplmodi + modiindxpnts * globdata.numbcomp
+        gdat.indxsampmodiinit = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.indxpoplmodi + modiindxpnts * gdat.numbcomp
         
         # sample index to be modified
-        globdata.indxsampmodi = globdata.indxsampmodiinit + globdata.indxcompmodi
-        if globdata.colrprio:
-            globdata.indxsampmodispec = globdata.indxsampmodiinit + 2 + globdata.indxener
+        gdat.indxsampmodi = gdat.indxsampmodiinit + gdat.indxcompmodi
+        if gdat.colrprio:
+            gdat.indxsampmodispec = gdat.indxsampmodiinit + 2 + gdat.indxener
         
         # propose
-        if globdata.thisindxprop == globdata.indxproplgal or globdata.thisindxprop == globdata.indxpropbgal:
-            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvlbhl) 
-        if globdata.thisindxprop == globdata.indxpropspec:
-            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvspec)
-        if globdata.thisindxprop == globdata.indxpropsind:
-            retr_gaus(globdata, globdata.indxsampmodi, globdata.stdvpropsind)
+        if gdat.thisindxprop == gdat.indxproplgal or gdat.thisindxprop == gdat.indxpropbgal:
+            retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvlbhl) 
+        if gdat.thisindxprop == gdat.indxpropspec:
+            retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvspec)
+        if gdat.thisindxprop == gdat.indxpropsind:
+            retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvpropsind)
 
-        if globdata.colrprio:
-            thisflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
-            thissind = globdata.thissampvarb[globdata.thisindxsampsind[globdata.indxpoplmodi][modiindxindxpnts]]
-            thisspec = retr_spec(globdata, thisflux, thissind)
+        if gdat.colrprio:
+            thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
+            thissind = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
+            thisspec = retr_spec(gdat, thisflux, thissind)
         else:
-            thisspec = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenermodi, modiindxindxpnts]]
+            thisspec = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, modiindxindxpnts]]
             
-        globdata.numbmodipnts = 2
-        globdata.modispec[:, 0] = -thisspec.flatten()
-        if globdata.thisindxprop == globdata.indxproplgal or globdata.thisindxprop == globdata.indxpropbgal:
-            if globdata.indxcompmodi == 0:
-                globdata.modilgal[0] = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][modiindxindxpnts]]
-                globdata.modilgal[1] = icdf_self(globdata.drmcsamp[globdata.indxsampmodi, -1], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-                globdata.modibgal[:] = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][modiindxindxpnts]]
+        gdat.numbmodipnts = 2
+        gdat.modispec[:, 0] = -thisspec.flatten()
+        if gdat.thisindxprop == gdat.indxproplgal or gdat.thisindxprop == gdat.indxpropbgal:
+            if gdat.indxcompmodi == 0:
+                gdat.modilgal[0] = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][modiindxindxpnts]]
+                gdat.modilgal[1] = icdf_self(gdat.drmcsamp[gdat.indxsampmodi, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+                gdat.modibgal[:] = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][modiindxindxpnts]]
             else:
-                globdata.modilgal[:] = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][modiindxindxpnts]]
-                globdata.modibgal[0] = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][modiindxindxpnts]]
-                globdata.modibgal[1] = icdf_self(globdata.drmcsamp[globdata.indxsampmodi, -1], -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            globdata.modispec[:, 1] = thisspec.flatten()
+                gdat.modilgal[:] = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][modiindxindxpnts]]
+                gdat.modibgal[0] = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][modiindxindxpnts]]
+                gdat.modibgal[1] = icdf_self(gdat.drmcsamp[gdat.indxsampmodi, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.modispec[:, 1] = thisspec.flatten()
         else:
-            globdata.modilgal[:] = globdata.thissampvarb[globdata.thisindxsamplgal[globdata.indxpoplmodi][modiindxindxpnts]]
-            globdata.modibgal[:] = globdata.thissampvarb[globdata.thisindxsampbgal[globdata.indxpoplmodi][modiindxindxpnts]]
-            if globdata.colrprio:
-                if globdata.thisindxprop == globdata.indxpropspec:
-                    modiflux = icdf_spec(globdata, globdata.drmcsamp[globdata.indxsampmodi, -1], \
-                        globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenerfdfn]], 
-                        globdata.minmspec[globdata.indxenerfdfn], globdata.maxmspec[globdata.indxenerfdfn])
-                    globdata.modisind[1] = globdata.thissampvarb[globdata.thisindxsampsind[globdata.indxpoplmodi][modiindxindxpnts]]
+            gdat.modilgal[:] = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][modiindxindxpnts]]
+            gdat.modibgal[:] = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][modiindxindxpnts]]
+            if gdat.colrprio:
+                if gdat.thisindxprop == gdat.indxpropspec:
+                    modiflux = icdf_spec(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], \
+                        gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenerfdfn]], 
+                        gdat.minmspec[gdat.indxenerfdfn], gdat.maxmspec[gdat.indxenerfdfn])
+                    gdat.modisind[1] = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
                 else:
-                    modiflux = globdata.thissampvarb[globdata.thisindxsampspec[globdata.indxpoplmodi][globdata.indxenerfdfn, modiindxindxpnts]]
-                    globdata.modisind[1] = icdf_eerr(globdata.drmcsamp[globdata.indxsampmodi, -1], globdata.meansind[globdata.indxpoplmodi], \
-                            globdata.stdvsind[globdata.indxpoplmodi], globdata.sindcdfnnormminm[globdata.indxpoplmodi], globdata.sindcdfnnormdiff[globdata.indxpoplmodi])
-                globdata.modispec[:, 1] = retr_spec(globdata, modiflux, globdata.modisind[1]).flatten()
+                    modiflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
+                    gdat.modisind[1] = icdf_eerr(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.meansind[gdat.indxpoplmodi], \
+                            gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
+                gdat.modispec[:, 1] = retr_spec(gdat, modiflux, gdat.modisind[1]).flatten()
             else:
-                specunit = globdata.drmcsamp[globdata.indxsampmodi, -1]
-                fdfnslop = globdata.thissampvarb[globdata.indxsampfdfnslop[globdata.indxpoplmodi, globdata.indxenermodi]]
-                globdata.modispec[:, 1] = icdf_spec(globdata, specunit, fdfnslop, globdata.minmspec[globdata.indxenermodi], globdata.maxmspec[globdata.indxenermodi])
+                specunit = gdat.drmcsamp[gdat.indxsampmodi, -1]
+                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]]
+                gdat.modispec[:, 1] = icdf_spec(gdat, specunit, fdfnslop, gdat.minmspec[gdat.indxenermodi], gdat.maxmspec[gdat.indxenermodi])
 
         # log
-        if globdata.verbtype > 1:
-            print 'modilgal: ', globdata.modilgal
-            print 'modibgal: ', globdata.modibgal
+        if gdat.verbtype > 1:
+            print 'modilgal: ', gdat.modilgal
+            print 'modibgal: ', gdat.modibgal
             print 'modispec: '
-            print globdata.modispec
-            print 'indxcompmodi: ', globdata.indxcompmodi
+            print gdat.modispec
+            print 'indxcompmodi: ', gdat.indxcompmodi
             print 'modiindxindxpnts: ', modiindxindxpnts
             print 'modiindxpnts: ', modiindxpnts
 
 
     # energy bin in which to evaluate the log-likelihood
-    if globdata.indxpropbrth <= globdata.thisindxprop <= globdata.indxpropmerg:
-        globdata.indxenermodi = arange(globdata.numbener)
+    if gdat.indxpropbrth <= gdat.thisindxprop <= gdat.indxpropmerg:
+        gdat.indxenermodi = arange(gdat.numbener)
 
-    if type(globdata.indxenermodi) == int64:
-        globdata.indxenermodi = array([globdata.indxenermodi])
+    if type(gdat.indxenermodi) == int64:
+        gdat.indxenermodi = array([gdat.indxenermodi])
 
-    if globdata.verbtype > 1:
-        print 'indxsampmodi: ', globdata.indxsampmodi
-        print 'indxenermodi: ', globdata.indxenermodi
+    if gdat.verbtype > 1:
+        print 'indxsampmodi: ', gdat.indxsampmodi
+        print 'indxenermodi: ', gdat.indxenermodi
 
     # auxiliary variable density fraction and jacobian
-    if (globdata.thisindxprop == globdata.indxpropsplt or globdata.thisindxprop == globdata.indxpropmerg) and not globdata.reje:
+    if (gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg) and not gdat.reje:
 
-        spltglobdata.combfact = log(globdata.thissampvarb[globdata.indxsampnumbpnts[globdata.indxpoplmodi]]**2 / len(pairlist))
+        spltgdat.combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / len(pairlist))
         
-        if globdata.thisindxprop == globdata.indxpropsplt:
-            thisglobdata.combfact = spltglobdata.combfact 
-            thisglobdata.jcbnfact = spltglobdata.jcbnfact
+        if gdat.thisindxprop == gdat.indxpropsplt:
+            thisgdat.combfact = spltgdat.combfact 
+            thisgdat.jcbnfact = spltgdat.jcbnfact
         else:
-            thisglobdata.combfact = -spltglobdata.combfact 
-            thisglobdata.jcbnfact = -spltglobdata.jcbnfact
+            thisgdat.combfact = -spltgdat.combfact 
+            thisgdat.jcbnfact = -spltgdat.jcbnfact
 
 
-        globdata.laccfrac = thisglobdata.jcbnfact + thisglobdata.combfact
+        gdat.laccfrac = thisgdat.jcbnfact + thisgdat.combfact
 
-        globdata.listglobdata.numbpair[globdata.thisindxswep] = len(pairlist)
-        globdata.listglobdata.jcbnfact[globdata.thisindxswep] = thisglobdata.jcbnfact
-        globdata.listglobdata.combfact[globdata.thisindxswep] = thisglobdata.combfact
-        globdata.listglobdata.auxipara[globdata.thisindxswep, :] = globdata.auxipara
-        globdata.listglobdata.laccfrac[globdata.thisindxswep] = globdata.laccfrac
+        gdat.listgdat.numbpair[gdat.thisindxswep] = len(pairlist)
+        gdat.listgdat.jcbnfact[gdat.thisindxswep] = thisgdat.jcbnfact
+        gdat.listgdat.combfact[gdat.thisindxswep] = thisgdat.combfact
+        gdat.listgdat.auxipara[gdat.thisindxswep, :] = gdat.auxipara
+        gdat.listgdat.laccfrac[gdat.thisindxswep] = gdat.laccfrac
 
     else:
-        globdata.laccfrac = 0.  
+        gdat.laccfrac = 0.  
         
         
-def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype):
+def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
 
     if psfntype == 'singgaus':
         numbformpara = 1
@@ -1537,7 +1558,7 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype):
   
     thisangltemp = thisangl[None, :, None]
 
-    indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + globdata.numbener * globdata.indxevtt[None, :])
+    indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
     
     if psfntype == 'singgaus':
         sigc = psfipara[indxpsfiparatemp]
@@ -1587,51 +1608,51 @@ def retr_psfn(globdata, psfipara, indxenertemp, thisangl, psfntype):
     return psfn
 
 
-def retr_psfimodl(globdata):
+def retr_psfimodl(gdat):
     
     # PSF parameters
-    if globdata.psfntype == 'singgaus':
-        globdata.numbformpara = 1
-    elif globdata.psfntype == 'singking':
-        globdata.numbformpara = 2 
-    elif globdata.psfntype == 'doubgaus':
-        globdata.numbformpara = 3
-    elif globdata.psfntype == 'gausking':
-        globdata.numbformpara = 4
-    elif globdata.psfntype == 'doubking':
-        globdata.numbformpara = 5
+    if gdat.psfntype == 'singgaus':
+        gdat.numbformpara = 1
+    elif gdat.psfntype == 'singking':
+        gdat.numbformpara = 2 
+    elif gdat.psfntype == 'doubgaus':
+        gdat.numbformpara = 3
+    elif gdat.psfntype == 'gausking':
+        gdat.numbformpara = 4
+    elif gdat.psfntype == 'doubking':
+        gdat.numbformpara = 5
        
-    globdata.indxformpara = arange(globdata.numbformpara) 
-    globdata.numbpsfiparaevtt = globdata.numbener * globdata.numbformpara
-    globdata.numbpsfipara = globdata.numbpsfiparaevtt * globdata.numbevtt
-    globdata.indxpsfipara = arange(globdata.numbpsfipara)
-    globdata.indxmodlpsfipara = arange(globdata.numbpsfipara)   
+    gdat.indxformpara = arange(gdat.numbformpara) 
+    gdat.numbpsfiparaevtt = gdat.numbener * gdat.numbformpara
+    gdat.numbpsfipara = gdat.numbpsfiparaevtt * gdat.numbevtt
+    gdat.indxpsfipara = arange(gdat.numbpsfipara)
+    gdat.indxmodlpsfipara = arange(gdat.numbpsfipara)   
 
-    minmformpara = zeros(globdata.numbformpara)
-    maxmformpara = zeros(globdata.numbformpara)
-    factformpara = zeros(globdata.numbformpara)
-    scalformpara = zeros(globdata.numbformpara, dtype=object)
-    if globdata.exprtype == 'ferm':
+    minmformpara = zeros(gdat.numbformpara)
+    maxmformpara = zeros(gdat.numbformpara)
+    factformpara = zeros(gdat.numbformpara)
+    scalformpara = zeros(gdat.numbformpara, dtype=object)
+    if gdat.exprtype == 'ferm':
         minmanglpsfn = deg2rad(0.0001)
         maxmanglpsfn = deg2rad(5.)
         #minmanglpsfn = 0.01
         #maxmanglpsfn = 3.
         minmgamm = 2.
         maxmgamm = 20.
-    if globdata.exprtype == 'sdss':
+    if gdat.exprtype == 'sdss':
         minmanglpsfn = deg2rad(0.01 / 3600.)
         maxmanglpsfn = deg2rad(3. / 3600.)
     minmpsfnfrac = 0.
     maxmpsfnfrac = 1.
-    if globdata.exprtype == 'sdss':
+    if gdat.exprtype == 'sdss':
         minmanglpsfn = deg2rad(0.01 / 3600.)
         maxmanglpsfn = deg2rad(2. / 3600.)
-    if globdata.psfntype == 'singgaus':
+    if gdat.psfntype == 'singgaus':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         scalformpara[0] = 'logt'
         strgformpara = [r'$\sigma']
-    elif globdata.psfntype == 'singking':
+    elif gdat.psfntype == 'singking':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         minmformpara[1] = minmgamm
@@ -1639,7 +1660,7 @@ def retr_psfimodl(globdata):
         scalformpara[0] = 'logt'
         scalformpara[1] = 'atan'
         strgformpara = [r'$\sigma', r'$\gamma']
-    elif globdata.psfntype == 'doubgaus':
+    elif gdat.psfntype == 'doubgaus':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -1650,7 +1671,7 @@ def retr_psfimodl(globdata):
         scalformpara[1] = 'logt'
         scalformpara[2] = 'logt'
         strgformpara = ['$f_c', r'$\sigma_c', r'$\sigma_t']
-    elif globdata.psfntype == 'gausking':
+    elif gdat.psfntype == 'gausking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -1664,7 +1685,7 @@ def retr_psfimodl(globdata):
         scalformpara[2] = 'logt'
         scalformpara[3] = 'atan'
         strgformpara = ['$f_g', r'$\sigma_g', r'$\sigma_k', r'$\gamma']
-    elif globdata.psfntype == 'doubking':
+    elif gdat.psfntype == 'doubking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -1682,7 +1703,7 @@ def retr_psfimodl(globdata):
         scalformpara[4] = 'atan'
         strgformpara = ['$f_c', r'$\sigma_c', r'$\gamma_c', r'$\sigma_t', r'$\gamma_t']
 
-    for k in globdata.indxformpara:
+    for k in gdat.indxformpara:
         if scalformpara[k] == 'self':
             factformpara[k] = maxmformpara[k] - minmformpara[k]
         if scalformpara[k] == 'logt':
@@ -1690,119 +1711,119 @@ def retr_psfimodl(globdata):
         if scalformpara[k] == 'atan':
             factformpara[k] = arctan(maxmformpara[k]) - arctan(minmformpara[k])
             
-    globdata.minmpsfipara = tile(tile(minmformpara, globdata.numbener), globdata.numbevtt)
-    globdata.maxmpsfipara = tile(tile(maxmformpara, globdata.numbener), globdata.numbevtt)
-    globdata.scalpsfipara = tile(tile(scalformpara, globdata.numbener), globdata.numbevtt)
-    globdata.factpsfipara = tile(tile(factformpara, globdata.numbener), globdata.numbevtt)
+    gdat.minmpsfipara = tile(tile(minmformpara, gdat.numbener), gdat.numbevtt)
+    gdat.maxmpsfipara = tile(tile(maxmformpara, gdat.numbener), gdat.numbevtt)
+    gdat.scalpsfipara = tile(tile(scalformpara, gdat.numbener), gdat.numbevtt)
+    gdat.factpsfipara = tile(tile(factformpara, gdat.numbener), gdat.numbevtt)
    
     # PSF parameter strings
-    globdata.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (globdata.indxenerincl[i], globdata.indxevttincl[m]) \
-        for m in globdata.indxevtt for i in globdata.indxener for k in globdata.indxformpara]
-    globdata.indxpsfiparainit = (globdata.indxevtt[:, None] * globdata.numbpsfiparaevtt + globdata.indxener[None, :] * globdata.numbformpara).flatten()
-    for k in arange(globdata.indxpsfiparainit.size):
-        if globdata.psfntype == 'singgaus' or globdata.psfntype == 'singking':
-            globdata.strgpsfipara[globdata.indxpsfiparainit[k]] += ' ' + globdata.strganglunit
-        elif globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
-            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+2] += ' ' + globdata.strganglunit
-        elif globdata.psfntype == 'doubking':
-            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+1] += ' ' + globdata.strganglunit
-            globdata.strgpsfipara[globdata.indxpsfiparainit[k]+3] += ' ' + globdata.strganglunit
-    globdata.indxpsfipara = arange(globdata.numbpsfipara)
+    gdat.strgpsfipara = [strgformpara[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) \
+        for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxformpara]
+    gdat.indxpsfiparainit = (gdat.indxevtt[:, None] * gdat.numbpsfiparaevtt + gdat.indxener[None, :] * gdat.numbformpara).flatten()
+    for k in arange(gdat.indxpsfiparainit.size):
+        if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
+            gdat.strgpsfipara[gdat.indxpsfiparainit[k]] += ' ' + gdat.strganglunit
+        elif gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
+            gdat.strgpsfipara[gdat.indxpsfiparainit[k]+1] += ' ' + gdat.strganglunit
+            gdat.strgpsfipara[gdat.indxpsfiparainit[k]+2] += ' ' + gdat.strganglunit
+        elif gdat.psfntype == 'doubking':
+            gdat.strgpsfipara[gdat.indxpsfiparainit[k]+1] += ' ' + gdat.strganglunit
+            gdat.strgpsfipara[gdat.indxpsfiparainit[k]+3] += ' ' + gdat.strganglunit
+    gdat.indxpsfipara = arange(gdat.numbpsfipara)
 
 
-def retr_propmodl(globdata):
+def retr_propmodl(gdat):
 
-    globdata.strgprop = ['fdfnnorm', 'fdfnslop', 'psfipara', 'normback', 'brth', 'deth', 'splt', 'merg', 'lgal', 'bgal', 'spec', 'sind']
+    gdat.strgprop = ['fdfnnorm', 'fdfnslop', 'psfipara', 'normback', 'brth', 'deth', 'splt', 'merg', 'lgal', 'bgal', 'spec', 'sind']
 
-    globdata.numbprop = len(globdata.strgprop)
-    globdata.indxprop = arange(globdata.numbprop)
-    globdata.indxpropfdfnnorm = 0
-    globdata.indxpropfdfnslop = 1
-    globdata.indxproppsfipara = 2
-    globdata.indxpropnormback = 3
-    globdata.indxpropbrth = 4
-    globdata.indxpropdeth = 5
-    globdata.indxpropsplt = 6
-    globdata.indxpropmerg = 7
-    globdata.indxproplgal = 8
-    globdata.indxpropbgal = 9
-    globdata.indxpropspec = 10
-    globdata.indxpropsind = 11
+    gdat.numbprop = len(gdat.strgprop)
+    gdat.indxprop = arange(gdat.numbprop)
+    gdat.indxpropfdfnnorm = 0
+    gdat.indxpropfdfnslop = 1
+    gdat.indxproppsfipara = 2
+    gdat.indxpropnormback = 3
+    gdat.indxpropbrth = 4
+    gdat.indxpropdeth = 5
+    gdat.indxpropsplt = 6
+    gdat.indxpropmerg = 7
+    gdat.indxproplgal = 8
+    gdat.indxpropbgal = 9
+    gdat.indxpropspec = 10
+    gdat.indxpropsind = 11
 
-    if globdata.probprop == None:
+    if gdat.probprop == None:
 
         probfdfnnorm = array([1.])
         probfdfnslop = array([1.])
             
-        if globdata.proppsfn:
+        if gdat.proppsfn:
             probpsfipara = array([1.])
         else:
             probpsfipara = array([0.])
         probnormback = array([1.])
         
-        probbrth = array([0.1 * sum(globdata.maxmnumbpnts)])
-        probdeth = array([0.1 * sum(globdata.maxmnumbpnts)])
-        probsplt = array([0. * sum(globdata.maxmnumbpnts)])
-        probmerg = array([0. * sum(globdata.maxmnumbpnts)])
+        probbrth = array([0.1 * sum(gdat.maxmnumbpnts)])
+        probdeth = array([0.1 * sum(gdat.maxmnumbpnts)])
+        probsplt = array([0. * sum(gdat.maxmnumbpnts)])
+        probmerg = array([0. * sum(gdat.maxmnumbpnts)])
         
-        problgal = array([sum(globdata.maxmnumbpnts) / 2.])
-        probbgal = array([sum(globdata.maxmnumbpnts) / 2.])
-        if globdata.colrprio:
-            probspec = array([sum(globdata.maxmnumbpnts) / 2.])
-            probsind = array([sum(globdata.maxmnumbpnts) / 2.])
+        problgal = array([sum(gdat.maxmnumbpnts) / 2.])
+        probbgal = array([sum(gdat.maxmnumbpnts) / 2.])
+        if gdat.colrprio:
+            probspec = array([sum(gdat.maxmnumbpnts) / 2.])
+            probsind = array([sum(gdat.maxmnumbpnts) / 2.])
         else:
-            probspec = array([sum(globdata.maxmnumbpnts) / 2.])
-            #probspec = array([sum(globdata.maxmnumbpnts) / 2.] * globdata.numbener)
+            probspec = array([sum(gdat.maxmnumbpnts) / 2.])
+            #probspec = array([sum(gdat.maxmnumbpnts) / 2.] * gdat.numbener)
             probsind = array([0.])
             
-        globdata.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, \
+        gdat.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, \
                 probsplt, probmerg, problgal, probbgal, probspec, probsind))
-        globdata.probprop /= sum(globdata.probprop)
+        gdat.probprop /= sum(gdat.probprop)
        
 
-def retr_strgangl(globdata):
+def retr_strgangl(gdat):
 
-    if globdata.trueinfo:
-        if globdata.datatype == 'mock':
-            globdata.truelabl = 'Mock'
-        if globdata.datatype == 'inpt':
-            if globdata.exprtype == 'ferm':
-                globdata.truelabl = '3FGL'
-            if globdata.exprtype == 'sdss':
-                globdata.truelabl = 'Hubble'
+    if gdat.trueinfo:
+        if gdat.datatype == 'mock':
+            gdat.truelabl = 'Mock'
+        if gdat.datatype == 'inpt':
+            if gdat.exprtype == 'ferm':
+                gdat.truelabl = '3FGL'
+            if gdat.exprtype == 'sdss':
+                gdat.truelabl = 'Hubble'
 
-    if globdata.exprtype == 'ferm':
-        globdata.strganglunit = '[deg]'
-    if globdata.exprtype == 'sdss':
-        globdata.strganglunit = '[arcsec]'
+    if gdat.exprtype == 'ferm':
+        gdat.strganglunit = '[deg]'
+    if gdat.exprtype == 'sdss':
+        gdat.strganglunit = '[arcsec]'
 
-    if globdata.regitype == 'igal':
-        globdata.longlabl = '$l$'
-        globdata.latilabl = '$b$'
-    if globdata.regitype == 'ngal':
-        globdata.longlabl = r'$\nu$'
-        globdata.latilabl = r'$\mu$'
-    if globdata.exprtype == 'ferm':
-        globdata.longlabl += r' [$^\circ$]'
-        globdata.latilabl += r' [$^\circ$]'
-    if globdata.exprtype == 'sdss':
-        globdata.longlabl += ' [arcsec]'
-        globdata.latilabl += ' [arcsec]'
+    if gdat.regitype == 'igal':
+        gdat.longlabl = '$l$'
+        gdat.latilabl = '$b$'
+    if gdat.regitype == 'ngal':
+        gdat.longlabl = r'$\nu$'
+        gdat.latilabl = r'$\mu$'
+    if gdat.exprtype == 'ferm':
+        gdat.longlabl += r' [$^\circ$]'
+        gdat.latilabl += r' [$^\circ$]'
+    if gdat.exprtype == 'sdss':
+        gdat.longlabl += ' [arcsec]'
+        gdat.latilabl += ' [arcsec]'
 
     
 def retr_randunitpsfipara():
 
     while True:
-        randunitpsfipara = rand(globdata.numbpsfipara)
+        randunitpsfipara = rand(gdat.numbpsfipara)
         indxpar0 = 1
-        if globdata.psfntype == 'doubgaus' or globdata.psfntype == 'gausking':
+        if gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
             indxpar1 = 2
-        if globdata.psfntype == 'doubking':
+        if gdat.psfntype == 'doubking':
             indxpar1 = 3
         thisbool = True
-        for i in globdata.indxener:
-            for m in globdata.indxevtt:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
                 indx = m * numbpsfiparaevtt + i * numbformpara
                 thisbool = thisbool and randunitpsfipara[indx+indxpar1] > randunitpsfipara[indx+indxpar0]
         if thisbool:
@@ -1813,677 +1834,793 @@ def retr_randunitpsfipara():
     return randunitpsfipara
 
 
-def retr_indxcube(globdata):
+def retr_indxcube(gdat):
 
-    globdata.indxcubefull = meshgrid(globdata.indxener, globdata.indxpixl, globdata.indxevtt, indexing='ij')
-    globdata.indxcubefilt = meshgrid(globdata.indxenerincl, globdata.indxpixl, globdata.indxevttincl, indexing='ij')
-    if globdata.pixltype == 'heal':
-        globdata.indxcubeheal = meshgrid(globdata.indxenerinclfull, globdata.indxpixlrofi, globdata.indxevttinclfull, indexing='ij')
+    gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+    gdat.indxcubefilt = meshgrid(gdat.indxenerincl, gdat.indxpixl, gdat.indxevttincl, indexing='ij')
+    if gdat.pixltype == 'heal':
+        gdat.indxcubeheal = meshgrid(gdat.indxenerinclfull, gdat.indxpixlrofi, gdat.indxevttinclfull, indexing='ij')
 
 
-def retr_expo(globdata):
+def retr_expo(gdat):
  
-    if globdata.strgexpo == 'unit':
-        globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
+    if gdat.strgexpo == 'unit':
+        gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpo
-        globdata.expo = pf.getdata(path)
+        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpo
+        gdat.expo = pf.getdata(path)
 
-        if globdata.pixltype == 'heal':
-            globdata.expo = globdata.expo[globdata.indxcubeheal]
+        if gdat.pixltype == 'heal':
+            gdat.expo = gdat.expo[gdat.indxcubeheal]
         else:
-            globdata.expo = globdata.expo.reshape((globdata.expo.shape[0], -1, globdata.expo.shape[-1]))
+            gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
             
-        globdata.expo = globdata.expo[globdata.indxcubefilt]
+        gdat.expo = gdat.expo[gdat.indxcubefilt]
     
 
-def setp(globdata):
+def setp(gdat):
     
-    # the number of processes (each with globdata.numbswep samples)
-    if globdata.numbproc == None:
+    # the number of processes (each with gdat.numbswep samples)
+    if gdat.numbproc == None:
         if os.uname()[1] == 'fink1.rc.fas.harvard.edu':
-            globdata.numbproc = 10
+            gdat.numbproc = 10
         else:
-            globdata.numbproc = 1
+            gdat.numbproc = 1
         
-    if globdata.exprtype == 'ferm':
-        if globdata.strgback == None:
-            globdata.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-        if globdata.lablback == None:
-            globdata.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
-        if globdata.nameback == None:
-            globdata.nameback = ['normisot', 'normfdfm']
+    if gdat.exprtype == 'ferm':
+        if gdat.strgback == None:
+            gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+        if gdat.lablback == None:
+            gdat.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+        if gdat.nameback == None:
+            gdat.nameback = ['normisot', 'normfdfm']
 
-    globdata.strgfluxunit = retr_strgfluxunit(globdata)
+    gdat.strgfluxunit = retr_strgfluxunit(gdat)
     
-    globdata.numbchrototl = 4
-    globdata.numbchrollik = 7
+    gdat.numbchrototl = 4
+    gdat.numbchrollik = 7
 
     # number of bins
-    globdata.numbspec = 10
-    globdata.numbbins = 10
+    gdat.numbspec = 10
+    gdat.numbbins = 10
 
-    globdata.minmnumbpnts = 1
+    gdat.minmnumbpnts = 1
 
-    globdata.numbback = len(globdata.strgback)
-    globdata.indxback = arange(globdata.numbback)
+    gdat.numbback = len(gdat.strgback)
+    gdat.indxback = arange(gdat.numbback)
     
-    globdata.numbevtt = globdata.indxevttincl.size
-    globdata.indxevtt = arange(globdata.numbevtt)
+    gdat.numbevtt = gdat.indxevttincl.size
+    gdat.indxevtt = arange(gdat.numbevtt)
     
     # energy axis
-    globdata.numbener = globdata.indxenerincl.size
-    globdata.indxenerinclbins = empty(globdata.numbener+1, dtype=int)
-    globdata.indxenerinclbins[0:-1] = globdata.indxenerincl
-    globdata.indxenerinclbins[-1] = globdata.indxenerincl[-1] + 1
-    globdata.binsener = array([0.1, 0.3, 1., 3., 10., 100.])[globdata.indxenerinclbins]
-    globdata.diffener = (roll(globdata.binsener, -1) - globdata.binsener)[0:-1]
+    gdat.numbener = gdat.indxenerincl.size
+    gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
+    gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
+    gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
+    gdat.binsener = array([0.1, 0.3, 1., 3., 10., 100.])[gdat.indxenerinclbins]
+    gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
 
-    globdata.meanener = sqrt(roll(globdata.binsener, -1) * globdata.binsener)[0:-1]
-    globdata.indxener = arange(globdata.numbener, dtype=int)
+    gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
+    gdat.indxener = arange(gdat.numbener, dtype=int)
     
-    globdata.indxenerpivt = array([globdata.numbener / 2])
-    if globdata.colrprio: 
-        globdata.indxenerfdfn = globdata.indxenerpivt
+    gdat.indxenerpivt = array([gdat.numbener / 2])
+    if gdat.colrprio: 
+        gdat.indxenerfdfn = gdat.indxenerpivt
     else:
-        globdata.indxenerfdfn = globdata.indxener
-    globdata.numbenerfdfn = globdata.indxenerfdfn.size
-    globdata.enerfdfn = globdata.meanener[globdata.indxenerfdfn]
+        gdat.indxenerfdfn = gdat.indxener
+    gdat.numbenerfdfn = gdat.indxenerfdfn.size
+    gdat.enerfdfn = gdat.meanener[gdat.indxenerfdfn]
         
-    globdata.minmspec = globdata.minmspec * (globdata.meanener[globdata.indxenerpivt] / globdata.meanener)**2
-    globdata.maxmspec = globdata.maxmspec * (globdata.meanener[globdata.indxenerpivt] / globdata.meanener)**2
-    if globdata.datatype == 'mock':
-        if globdata.mockfdfntype == 'brok':
-            globdata.mockfdfnsloplowr = tile(globdata.mockfdfnsloplowr, (1, globdata.numbener))
-            globdata.mockfdfnslopuppr = tile(globdata.mockfdfnslopuppr, (1, globdata.numbener))
-            globdata.mockfdfnbrek = tile(globdata.mockfdfnbrek, (1, globdata.numbener))
+    gdat.minmspec = gdat.minmspec * (gdat.meanener[gdat.indxenerpivt] / gdat.meanener)**2
+    gdat.maxmspec = gdat.maxmspec * (gdat.meanener[gdat.indxenerpivt] / gdat.meanener)**2
+    if gdat.datatype == 'mock':
+        if gdat.mockfdfntype == 'brok':
+            gdat.mockfdfnsloplowr = tile(gdat.mockfdfnsloplowr, (1, gdat.numbener))
+            gdat.mockfdfnslopuppr = tile(gdat.mockfdfnslopuppr, (1, gdat.numbener))
+            gdat.mockfdfnbrek = tile(gdat.mockfdfnbrek, (1, gdat.numbener))
         else:
-            globdata.mockfdfnslop = tile(globdata.mockfdfnslop, (1, globdata.numbener))
+            gdat.mockfdfnslop = tile(gdat.mockfdfnslop, (1, gdat.numbener))
 
-    globdata.indxspecpivt = globdata.numbspec / 2
+    gdat.indxspecpivt = gdat.numbspec / 2
     
-    retr_strgprop(globdata)
+    retr_strgprop(gdat)
 
     # temp
-    if globdata.exprtype == 'sdss':
-        globdata.diffener = ones(globdata.numbener)
+    if gdat.exprtype == 'sdss':
+        gdat.diffener = ones(gdat.numbener)
         
-    # angular globdata.deviation
-    globdata.numbangl = 100
-    if globdata.exprtype == 'sdss':
-        globdata.maxmangldisp = deg2rad(10. / 3600.) # [rad]
-    if globdata.exprtype == 'ferm':
-        globdata.maxmangldisp = deg2rad(10.) # [rad]
-    globdata.angldisp = linspace(0., globdata.maxmangldisp, globdata.numbangl) # [rad]
-    maxmangl = deg2rad(3.5 * globdata.maxmgang) # [rad]
-    angl = linspace(0., maxmangl, globdata.numbangl) # [rad]
+    # angular gdat.deviation
+    gdat.numbangl = 100
+    if gdat.exprtype == 'sdss':
+        gdat.maxmangldisp = deg2rad(10. / 3600.) # [rad]
+    if gdat.exprtype == 'ferm':
+        gdat.maxmangldisp = deg2rad(10.) # [rad]
+    gdat.angldisp = linspace(0., gdat.maxmangldisp, gdat.numbangl) # [rad]
+    maxmangl = deg2rad(3.5 * gdat.maxmgang) # [rad]
+    angl = linspace(0., maxmangl, gdat.numbangl) # [rad]
 
-    if globdata.exprtype == 'sdss':
-        globdata.angldisptemp = rad2deg(globdata.angldisp) * 3600.
-    if globdata.exprtype == 'ferm':
-        globdata.angldisptemp = rad2deg(globdata.angldisp)
+    if gdat.exprtype == 'sdss':
+        gdat.angldisptemp = rad2deg(gdat.angldisp) * 3600.
+    if gdat.exprtype == 'ferm':
+        gdat.angldisptemp = rad2deg(gdat.angldisp)
 
-    if globdata.trueinfo:
-        if globdata.datatype == 'mock':
-            globdata.truelabl = 'Mock'
-        if globdata.datatype == 'inpt':
-            globdata.truelabl = '3FGL'
+    if gdat.trueinfo:
+        if gdat.datatype == 'mock':
+            gdat.truelabl = 'Mock'
+        if gdat.datatype == 'inpt':
+            gdat.truelabl = '3FGL'
             
-    if globdata.exprtype == 'ferm':
-        globdata.strganglunit = '[deg]'
-    if globdata.exprtype == 'sdss':
-        globdata.strganglunit = '[arcsec]'
+    if gdat.exprtype == 'ferm':
+        gdat.strganglunit = '[deg]'
+    if gdat.exprtype == 'sdss':
+        gdat.strganglunit = '[arcsec]'
         
     # energy bin string
-    globdata.enerstrg, globdata.binsenerstrg = retr_enerstrg(globdata)
+    gdat.enerstrg, gdat.binsenerstrg = retr_enerstrg(gdat)
     
     # PSF class string
-    globdata.evttstrg = []
-    for m in globdata.indxevtt:
-        globdata.evttstrg.append('PSF%d' % globdata.indxevttincl[m])
+    gdat.evttstrg = []
+    for m in gdat.indxevtt:
+        gdat.evttstrg.append('PSF%d' % gdat.indxevttincl[m])
         
-    if globdata.exprtype == 'ferm':
-        retr_fermpsfn(globdata)
-    if globdata.exprtype == 'sdss':
-        retr_sdsspsfn(globdata)
+    if gdat.exprtype == 'ferm':
+        retr_fermpsfn(gdat)
+    if gdat.exprtype == 'sdss':
+        retr_sdsspsfn(gdat)
 
-    globdata.spltjcbnfact = log(2.**(2 - globdata.numbener))
+    gdat.spltjcbnfact = log(2.**(2 - gdat.numbener))
     
     # number of components
-    globdata.numbcomp = 2 + globdata.numbener
-    if globdata.colrprio:
-        globdata.numbcomp += 1
-    globdata.numbcompcolr = 4
-    globdata.jcbnsplt = 2.**(2 - globdata.numbener)
+    gdat.numbcomp = 2 + gdat.numbener
+    if gdat.colrprio:
+        gdat.numbcomp += 1
+    gdat.numbcompcolr = 4
+    gdat.jcbnsplt = 2.**(2 - gdat.numbener)
     
     # population index vector
-    globdata.indxpopl = arange(globdata.numbpopl, dtype=int)
+    gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
 
     # hyperpriors
-    globdata.minmfdfnbrek = empty((globdata.numbpopl, globdata.numbener))
-    globdata.maxmfdfnbrek = empty((globdata.numbpopl, globdata.numbener))
-    for l in globdata.indxpopl:
-        globdata.minmfdfnbrek[l, :] = globdata.minmspec
-        globdata.maxmfdfnbrek[l, :] = globdata.maxmspec
+    gdat.minmfdfnbrek = empty((gdat.numbpopl, gdat.numbener))
+    gdat.maxmfdfnbrek = empty((gdat.numbpopl, gdat.numbener))
+    for l in gdat.indxpopl:
+        gdat.minmfdfnbrek[l, :] = gdat.minmspec
+        gdat.maxmfdfnbrek[l, :] = gdat.maxmspec
 
     # convenience factors for CDF and ICDF transforms
-    globdata.factfdfnbrek = log(globdata.maxmfdfnbrek / globdata.minmfdfnbrek)
-    globdata.factfdfnnorm = log(globdata.maxmfdfnnorm / globdata.minmfdfnnorm)
-    globdata.factfdfnslop = arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)
-    if globdata.colrprio:
-        globdata.factsind = arctan(globdata.maxmsind) - arctan(globdata.minmsind)
-        globdata.sindcdfnnormminm = 0.5 * (sp.special.erf((globdata.minmsind - globdata.meansind) / globdata.stdvsind / sqrt(2.)) + 1.)
-        globdata.sindcdfnnormmaxm = 0.5 * (sp.special.erf((globdata.maxmsind - globdata.meansind) / globdata.stdvsind / sqrt(2.)) + 1.)
-        globdata.sindcdfnnormdiff = globdata.sindcdfnnormmaxm - globdata.sindcdfnnormminm
+    gdat.factfdfnbrek = log(gdat.maxmfdfnbrek / gdat.minmfdfnbrek)
+    gdat.factfdfnnorm = log(gdat.maxmfdfnnorm / gdat.minmfdfnnorm)
+    gdat.factfdfnslop = arctan(gdat.maxmfdfnslop) - arctan(gdat.minmfdfnslop)
+    if gdat.colrprio:
+        gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
+        gdat.sindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
+        gdat.sindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
+        gdat.sindcdfnnormdiff = gdat.sindcdfnnormmaxm - gdat.sindcdfnnormminm
 
-    if globdata.datatype == 'mock':
+    if gdat.datatype == 'mock':
 
         # mock PSF parameters
-        if globdata.mockpsfntype == 'singgaus':
-            globdata.numbmockformpara = 1
-        elif globdata.mockpsfntype == 'singking':
-            globdata.numbmockformpara = 2 
-        elif globdata.mockpsfntype == 'doubgaus':
-            globdata.numbmockformpara = 3
-        elif globdata.mockpsfntype == 'gausking':
-            globdata.numbmockformpara = 4
-        elif globdata.mockpsfntype == 'doubking':
-            globdata.numbmockformpara = 5
+        if gdat.mockpsfntype == 'singgaus':
+            gdat.numbmockformpara = 1
+        elif gdat.mockpsfntype == 'singking':
+            gdat.numbmockformpara = 2 
+        elif gdat.mockpsfntype == 'doubgaus':
+            gdat.numbmockformpara = 3
+        elif gdat.mockpsfntype == 'gausking':
+            gdat.numbmockformpara = 4
+        elif gdat.mockpsfntype == 'doubking':
+            gdat.numbmockformpara = 5
 
-        globdata.numbmockpsfiparaevtt = globdata.numbener * globdata.numbmockformpara
-        globdata.numbmockpsfipara = globdata.numbmockpsfiparaevtt * globdata.numbevtt
-        globdata.indxmockpsfipara = arange(globdata.numbmockpsfipara)   
+        gdat.numbmockpsfiparaevtt = gdat.numbener * gdat.numbmockformpara
+        gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
+        gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
 
     # modification catalog variables
-    numbmodipnts = int(max(3, globdata.maxmnumbpnts))
-    globdata.modilgal = empty(numbmodipnts)
-    globdata.modibgal = empty(numbmodipnts)
-    globdata.modisind = empty(numbmodipnts)
-    globdata.modispec = empty((globdata.numbener, numbmodipnts))
+    numbmodipnts = int(max(3, gdat.maxmnumbpnts))
+    gdat.modilgal = empty(numbmodipnts)
+    gdat.modibgal = empty(numbmodipnts)
+    gdat.modisind = empty(numbmodipnts)
+    gdat.modispec = empty((gdat.numbener, numbmodipnts))
 
-    if globdata.regitype == 'igal':
-        globdata.longlabl = '$l$'
-        globdata.latilabl = '$b$'
+    if gdat.regitype == 'igal':
+        gdat.longlabl = '$l$'
+        gdat.latilabl = '$b$'
     else:
-        globdata.longlabl = r'$\nu$'
-        globdata.latilabl = r'$\mu$'
+        gdat.longlabl = r'$\nu$'
+        gdat.latilabl = r'$\mu$'
         
-    if globdata.exprtype == 'ferm':
-        globdata.longlabl += r' [$^\circ$]'
-        globdata.latilabl += r' [$^\circ$]'
-    if globdata.exprtype == 'sdss':
-        globdata.longlabl += ' [arcsec]'
-        globdata.latilabl += ' [arcsec]'
+    if gdat.exprtype == 'ferm':
+        gdat.longlabl += r' [$^\circ$]'
+        gdat.latilabl += r' [$^\circ$]'
+    if gdat.exprtype == 'sdss':
+        gdat.longlabl += ' [arcsec]'
+        gdat.latilabl += ' [arcsec]'
     
     # construct the PSF model
-    retr_psfimodl(globdata)
+    retr_psfimodl(gdat)
 
     # proposals
-    retr_propmodl(globdata)
+    retr_propmodl(gdat)
     
     # factors in the prior expression
-    globdata.priofactlgalbgal = 2. * log(1. / 2. / globdata.maxmgang)
-    globdata.priofactfdfnslop = globdata.numbener * log(1. / (arctan(globdata.maxmfdfnslop) - arctan(globdata.minmfdfnslop)))
-    globdata.priofactfdfnnorm = log(1. / (log(globdata.maxmfdfnnorm) - log(globdata.minmfdfnnorm)))
+    gdat.priofactlgalbgal = 2. * log(1. / 2. / gdat.maxmgang)
+    gdat.priofactfdfnslop = gdat.numbener * log(1. / (arctan(gdat.maxmfdfnslop) - arctan(gdat.minmfdfnslop)))
+    gdat.priofactfdfnnorm = log(1. / (log(gdat.maxmfdfnnorm) - log(gdat.minmfdfnnorm)))
 
     # sample vector indices  
-    globdata.indxsampnumbpnts = arange(globdata.numbpopl)
-    globdata.indxsampfdfnnorm = arange(globdata.numbpopl) + amax(globdata.indxsampnumbpnts) + 1
-    if globdata.fdfntype == 'brok':
-        globdata.indxsampfdfnsloplowr = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
-        globdata.indxsampfdfnslopuppr = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnsloplowr) + 1
-        globdata.indxsampfdfnbrek = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnslopuppr) + 1
-        indxsamptemp = amax(globdata.indxsampfdfnbrek) + 1
+    gdat.indxsampnumbpnts = arange(gdat.numbpopl)
+    gdat.indxsampfdfnnorm = arange(gdat.numbpopl) + amax(gdat.indxsampnumbpnts) + 1
+    if gdat.fdfntype == 'brok':
+        gdat.indxsampfdfnsloplowr = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnnorm) + 1
+        gdat.indxsampfdfnslopuppr = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnsloplowr) + 1
+        gdat.indxsampfdfnbrek = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnslopuppr) + 1
+        indxsamptemp = amax(gdat.indxsampfdfnbrek) + 1
     else:
-        globdata.indxsampfdfnslop = arange(globdata.numbpopl * globdata.numbener).reshape((globdata.numbpopl, globdata.numbener)) + amax(globdata.indxsampfdfnnorm) + 1
-        indxsamptemp = amax(globdata.indxsampfdfnslop) + 1
-    globdata.indxsamppsfipara = arange(globdata.numbpsfipara) + indxsamptemp
-    globdata.indxsampnormback = arange(globdata.numbback * globdata.numbener).reshape((globdata.numbback, globdata.numbener)) + amax(globdata.indxsamppsfipara) + 1
+        gdat.indxsampfdfnslop = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnnorm) + 1
+        indxsamptemp = amax(gdat.indxsampfdfnslop) + 1
+    gdat.indxsamppsfipara = arange(gdat.numbpsfipara) + indxsamptemp
+    gdat.indxsampnormback = arange(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener)) + amax(gdat.indxsamppsfipara) + 1
 
-    globdata.fluxpivt = sqrt(globdata.minmspec * globdata.maxmspec)
+    gdat.fluxpivt = sqrt(gdat.minmspec * gdat.maxmspec)
     
-    globdata.maxmnumbcomp = globdata.maxmnumbpnts * globdata.numbcomp
-    globdata.indxsampcompinit = amax(globdata.indxsampnormback) + 1
+    gdat.maxmnumbcomp = gdat.maxmnumbpnts * gdat.numbcomp
+    gdat.indxsampcompinit = amax(gdat.indxsampnormback) + 1
     
     # maximum number of parameters
-    globdata.maxmsampsize = int(globdata.indxsampcompinit + globdata.maxmnumbcomp * globdata.numbpopl)
+    gdat.maxmsampsize = int(gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.numbpopl)
     
-    if globdata.numbburn == None:
-        globdata.numbburn = globdata.numbswep / 5
-    if globdata.factthin == None:
-        globdata.factthin = min(globdata.maxmsampsize * 5, globdata.numbswep / 2)
+    if gdat.numbburn == None:
+        gdat.numbburn = gdat.numbswep / 5
+    if gdat.factthin == None:
+        gdat.factthin = min(gdat.maxmsampsize * 5, gdat.numbswep / 2)
 
 
     # run tag
-    globdata.rtag = retr_rtag(globdata, None)
+    gdat.rtag = retr_rtag(gdat, None)
     
     # plots
-    if globdata.makeplot:
+    if gdat.makeplot:
         if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
             plotfold = '/n/pan/www/tansu/png/pcat/'
         else:
             plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-        globdata.plotpath = plotfold + globdata.strgtime + '_' + globdata.rtag + '/'
-        cmnd = 'mkdir -p ' + globdata.plotpath
+        gdat.plotpath = plotfold + gdat.strgtime + '_' + gdat.rtag + '/'
+        cmnd = 'mkdir -p ' + gdat.plotpath
         os.system(cmnd)
 
     # number of samples to be saved
-    globdata.numbsamp = (globdata.numbswep - globdata.numbburn) / globdata.factthin
+    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
 
     # rescale the positional update scale
-    globdata.stdvlbhl /= 2. * globdata.maxmgang
+    gdat.stdvlbhl /= 2. * gdat.maxmgang
 
     # determine proposal probabilities
-    globdata.probpropminm = copy(globdata.probprop)
-    globdata.probpropmaxm = copy(globdata.probprop)
+    gdat.probpropminm = copy(gdat.probprop)
+    gdat.probpropmaxm = copy(gdat.probprop)
     
     ## do not allow death or merge when the number of PS is at its minimum or 
     ## births or splits when the number of PS is at its maximum
-    globdata.probpropminm[[globdata.indxpropdeth, globdata.indxpropmerg]] = 0.
-    globdata.probpropmaxm[[globdata.indxpropbrth, globdata.indxpropsplt]] = 0.
-    globdata.probprop /= sum(globdata.probprop)
-    globdata.probpropmaxm /= sum(globdata.probpropmaxm)
-    globdata.probpropminm /= sum(globdata.probpropminm)
+    gdat.probpropminm[[gdat.indxpropdeth, gdat.indxpropmerg]] = 0.
+    gdat.probpropmaxm[[gdat.indxpropbrth, gdat.indxpropsplt]] = 0.
+    gdat.probprop /= sum(gdat.probprop)
+    gdat.probpropmaxm /= sum(gdat.probpropmaxm)
+    gdat.probpropminm /= sum(gdat.probpropminm)
     
-    globdata.maxmgangmarg = globdata.maxmgang + globdata.margsize
+    gdat.maxmgangmarg = gdat.maxmgang + gdat.margsize
     
-    globdata.minmlgalmarg = -globdata.maxmgangmarg
-    globdata.maxmlgalmarg = globdata.maxmgangmarg
-    globdata.minmbgalmarg = -globdata.maxmgangmarg
-    globdata.maxmbgalmarg = globdata.maxmgangmarg
-    globdata.minmlgal = -globdata.maxmgang
-    globdata.maxmlgal = globdata.maxmgang
-    globdata.minmbgal = -globdata.maxmgang
-    globdata.maxmbgal = globdata.maxmgang
+    gdat.minmlgalmarg = -gdat.maxmgangmarg
+    gdat.maxmlgalmarg = gdat.maxmgangmarg
+    gdat.minmbgalmarg = -gdat.maxmgangmarg
+    gdat.maxmbgalmarg = gdat.maxmgangmarg
+    gdat.minmlgal = -gdat.maxmgang
+    gdat.maxmlgal = gdat.maxmgang
+    gdat.minmbgal = -gdat.maxmgang
+    gdat.maxmbgal = gdat.maxmgang
     
 
     # input data
-    if globdata.datatype == 'inpt':
+    if gdat.datatype == 'inpt':
         
-        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpr
+        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpr
         exprflux = pf.getdata(path)
 
-        globdata.indxenerinclfull = arange(exprflux.shape[0])
-        globdata.indxevttinclfull = arange(exprflux.shape[2])
+        gdat.indxenerinclfull = arange(exprflux.shape[0])
+        gdat.indxevttinclfull = arange(exprflux.shape[2])
 
-        if globdata.pixltype == 'heal':
-            globdata.numbpixlheal = exprflux.shape[1]
-            globdata.numbsideheal = int(sqrt(globdata.numbpixlheal / 12))
+        if gdat.pixltype == 'heal':
+            gdat.numbpixlheal = exprflux.shape[1]
+            gdat.numbsideheal = int(sqrt(gdat.numbpixlheal / 12))
         else:
-            globdata.numbsidecart = exprflux.shape[1]
-            exprflux = exprflux.reshape((exprflux.shape[0], globdata.numbsidecart**2, exprflux.shape[3]))
+            gdat.numbsidecart = exprflux.shape[1]
+            exprflux = exprflux.reshape((exprflux.shape[0], gdat.numbsidecart**2, exprflux.shape[3]))
             
     else:
         
-        if globdata.exprtype == 'ferm':
-            globdata.indxenerinclfull = arange(5)
-            globdata.indxevttinclfull = arange(4)
+        if gdat.exprtype == 'ferm':
+            gdat.indxenerinclfull = arange(5)
+            gdat.indxevttinclfull = arange(4)
          
-    if globdata.pixltype == 'heal':
-        globdata.numbpixlheal = globdata.numbsideheal**2 * 12
-        globdata.apix = 4. * pi / globdata.numbpixlheal
-    if globdata.pixltype == 'cart':
-        globdata.binslgalcart = linspace(globdata.minmlgal, globdata.maxmlgal, globdata.numbsidecart + 1)
-        globdata.binsbgalcart = linspace(globdata.minmbgal, globdata.maxmbgal, globdata.numbsidecart + 1)
-        globdata.lgalcart = (globdata.binslgalcart[0:-1] + globdata.binslgalcart[1:]) / 2.
-        globdata.bgalcart = (globdata.binsbgalcart[0:-1] + globdata.binsbgalcart[1:]) / 2.
-        globdata.apix = deg2rad(2. * globdata.maxmgang / globdata.numbsidecart)**2
+    if gdat.pixltype == 'heal':
+        gdat.numbpixlheal = gdat.numbsideheal**2 * 12
+        gdat.apix = 4. * pi / gdat.numbpixlheal
+    if gdat.pixltype == 'cart':
+        gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
+        gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
+        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
+        gdat.apix = deg2rad(2. * gdat.maxmgang / gdat.numbsidecart)**2
         
     # temp
-    globdata.tracsamp = False
+    gdat.tracsamp = False
     
     # center of the ROI
-    if globdata.regitype == 'igal':
-        globdata.cntrlghp, globdata.cntrbghp = 0., 0.
+    if gdat.regitype == 'igal':
+        gdat.cntrlghp, gdat.cntrbghp = 0., 0.
     else:
-        globdata.cntrlghp, globdata.cntrbghp = 0., 90.
+        gdat.cntrlghp, gdat.cntrbghp = 0., 90.
     
     # plot settings
     ## marker opacity
-    globdata.mrkralph = 0.8
+    gdat.mrkralph = 0.8
     ## marker size
-    globdata.minmmrkrsize = 50
-    globdata.maxmmrkrsize = 500
+    gdat.minmmrkrsize = 50
+    gdat.maxmmrkrsize = 500
     ## ROI
-    globdata.exttrofi = array([globdata.minmlgal, globdata.maxmlgal, globdata.minmbgal, globdata.maxmbgal])
-    if globdata.exprtype == 'sdss':
-        globdata.exttrofi *= 3600.
-        globdata.frambndr = globdata.maxmgang * 3600.
-        globdata.frambndrmarg = globdata.maxmgangmarg * 3600.
+    gdat.exttrofi = array([gdat.minmlgal, gdat.maxmlgal, gdat.minmbgal, gdat.maxmbgal])
+    if gdat.exprtype == 'sdss':
+        gdat.exttrofi *= 3600.
+        gdat.frambndr = gdat.maxmgang * 3600.
+        gdat.frambndrmarg = gdat.maxmgangmarg * 3600.
     else:
-        globdata.frambndr = globdata.maxmgang
-        globdata.frambndrmarg = globdata.maxmgangmarg
+        gdat.frambndr = gdat.maxmgang
+        gdat.frambndrmarg = gdat.maxmgangmarg
      
 
     # FDM normalization prior limits
-    globdata.factnormback = log(globdata.maxmnormback / globdata.minmnormback)
+    gdat.factnormback = log(gdat.maxmnormback / gdat.minmnormback)
 
     # sky coordinates
-    globdata.binslbhl = linspace(-globdata.maxmgang, globdata.maxmgang, globdata.numbbins + 1)
+    gdat.binslbhl = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbins + 1)
 
-    globdata.binsspec = zeros((globdata.numbener, globdata.numbspec + 1))
-    for i in globdata.indxener:
-        globdata.binsspec[i, :] = logspace(log10(globdata.minmspec[i]), log10(globdata.maxmspec[i]), globdata.numbspec + 1)
-    globdata.meanspec = sqrt(globdata.binsspec[:, 1:] * globdata.binsspec[:, 0:-1])
-    globdata.diffspec = globdata.binsspec[:, 1:] - globdata.binsspec[:, 0:-1]
+    gdat.binsspec = zeros((gdat.numbener, gdat.numbspec + 1))
+    for i in gdat.indxener:
+        gdat.binsspec[i, :] = logspace(log10(gdat.minmspec[i]), log10(gdat.maxmspec[i]), gdat.numbspec + 1)
+    gdat.meanspec = sqrt(gdat.binsspec[:, 1:] * gdat.binsspec[:, 0:-1])
+    gdat.diffspec = gdat.binsspec[:, 1:] - gdat.binsspec[:, 0:-1]
 
-    if globdata.colrprio:
-        globdata.binssind = linspace(globdata.minmsind, globdata.maxmsind, globdata.numbbins + 1)
-        globdata.diffsind = globdata.binssind[1:] - globdata.binssind[:-1]
+    if gdat.colrprio:
+        gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbbins + 1)
+        gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
-    if globdata.exprtype == 'ferm':
-        globdata.numbspecprox = 4
-    if globdata.exprtype == 'sdss':
-        globdata.numbspecprox = 1
-    globdata.indxspecprox = arange(globdata.numbspecprox)
-    globdata.binsspecprox = logspace(log10(globdata.minmspec[globdata.indxenerpivt]), log10(globdata.maxmspec[globdata.indxenerpivt]), globdata.numbspecprox + 1)
-    globdata.meanspecprox = sqrt(globdata.binsspecprox[1:] * globdata.binsspecprox[:-1])
-    globdata.specfraceval = 1e-2
-    if globdata.exprtype == 'ferm':
-        globdata.maxmangleval = empty(globdata.numbspecprox)
-        for h in globdata.indxspecprox:
-            frac = globdata.specfraceval * globdata.binsspecprox[0] / globdata.binsspecprox[h+1]
-            globdata.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(globdata, globdata.fermpsfn, frac)))
-    if globdata.exprtype == 'sdss':
-        globdata.maxmangleval = array([10. / 3600.])
+    if gdat.exprtype == 'ferm':
+        gdat.numbspecprox = 4
+    if gdat.exprtype == 'sdss':
+        gdat.numbspecprox = 1
+    gdat.indxspecprox = arange(gdat.numbspecprox)
+    gdat.binsspecprox = logspace(log10(gdat.minmspec[gdat.indxenerpivt]), log10(gdat.maxmspec[gdat.indxenerpivt]), gdat.numbspecprox + 1)
+    gdat.meanspecprox = sqrt(gdat.binsspecprox[1:] * gdat.binsspecprox[:-1])
+    gdat.specfraceval = 1e-2
+    if gdat.exprtype == 'ferm':
+        gdat.maxmangleval = empty(gdat.numbspecprox)
+        for h in gdat.indxspecprox:
+            frac = gdat.specfraceval * gdat.binsspecprox[0] / gdat.binsspecprox[h+1]
+            gdat.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(gdat, gdat.fermpsfn, frac)))
+    if gdat.exprtype == 'sdss':
+        gdat.maxmangleval = array([10. / 3600.])
 
     # pizelization
-    if globdata.pixltype == 'heal':
+    if gdat.pixltype == 'heal':
         
-        lgalheal, bgalheal, globdata.numbsideheal, globdata.numbpixlheal, globdata.apix = tdpy.util.retr_healgrid(globdata.numbsideheal)
+        lgalheal, bgalheal, gdat.numbsideheal, gdat.numbpixlheal, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
 
-        globdata.indxpixlrofi = where((abs(lgalheal) < globdata.maxmgang) & (abs(bgalheal) < globdata.maxmgang))[0]
-        globdata.indxpixlrofimarg = where((abs(lgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal) & \
-                (abs(bgalheal) < globdata.maxmgangmarg + 300. / globdata.numbsideheal))[0]
+        gdat.indxpixlrofi = where((abs(lgalheal) < gdat.maxmgang) & (abs(bgalheal) < gdat.maxmgang))[0]
+        gdat.indxpixlrofimarg = where((abs(lgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal) & \
+                (abs(bgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal))[0]
         
-        globdata.lgalgrid = lgalheal[globdata.indxpixlrofi]
-        globdata.bgalgrid = bgalheal[globdata.indxpixlrofi]
+        gdat.lgalgrid = lgalheal[gdat.indxpixlrofi]
+        gdat.bgalgrid = bgalheal[gdat.indxpixlrofi]
         
-        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (globdata.maxmgang)
+        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (gdat.maxmgang)
         if os.path.isfile(path):
             fobj = open(path, 'rb')
-            globdata.pixlcnvt = cPickle.load(fobj)
+            gdat.pixlcnvt = cPickle.load(fobj)
             fobj.close()
         else:
-            globdata.pixlcnvt = zeros(globdata.numbpixlheal, dtype=int)
-            for k in range(globdata.indxpixlrofimarg.size):
-                dist = retr_dist(globdata, lgalheal[globdata.indxpixlrofimarg[k]], bgalheal[globdata.indxpixlrofimarg[k]], globdata.lgalgrid, globdata.bgalgrid)
-                globdata.pixlcnvt[globdata.indxpixlrofimarg[k]] = argmin(dist)
+            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int)
+            for k in range(gdat.indxpixlrofimarg.size):
+                dist = retr_dist(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.lgalgrid, gdat.bgalgrid)
+                gdat.pixlcnvt[gdat.indxpixlrofimarg[k]] = argmin(dist)
 
             fobj = open(path, 'wb')
-            cPickle.dump(globdata.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
     else:
-        isidecart = arange(globdata.numbsidecart)
+        isidecart = arange(gdat.numbsidecart)
         temp = meshgrid(isidecart, isidecart, indexing='ij')
-        globdata.bgalgrid = globdata.bgalcart[temp[1].flatten()]
-        globdata.lgalgrid = globdata.lgalcart[temp[0].flatten()]
+        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
+        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
         
-    globdata.numbpixl = globdata.lgalgrid.size
-    globdata.indxpixl = arange(globdata.numbpixl)
-    globdata.indxcubefull = meshgrid(globdata.indxener, globdata.indxpixl, globdata.indxevtt, indexing='ij')
+    gdat.numbpixl = gdat.lgalgrid.size
+    gdat.indxpixl = arange(gdat.numbpixl)
+    gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
     
-    globdata.indxcubefilt = meshgrid(globdata.indxenerincl, globdata.indxpixl, globdata.indxevttincl, indexing='ij')
+    gdat.indxcubefilt = meshgrid(gdat.indxenerincl, gdat.indxpixl, gdat.indxevttincl, indexing='ij')
     
-    globdata.numbpixlsave = min(1000, globdata.numbpixl)
-    globdata.indxpixlsave = choice(arange(globdata.numbpixlsave), size=globdata.numbpixlsave)
+    gdat.numbpixlsave = min(1000, gdat.numbpixl)
+    gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
 
 
-    if globdata.pixltype == 'heal':
-        globdata.indxcubeheal = meshgrid(globdata.indxenerinclfull, globdata.indxpixlrofi, globdata.indxevttinclfull, indexing='ij')
+    if gdat.pixltype == 'heal':
+        gdat.indxcubeheal = meshgrid(gdat.indxenerinclfull, gdat.indxpixlrofi, gdat.indxevttinclfull, indexing='ij')
         
 
-    if globdata.datatype == 'inpt' and globdata.pixltype == 'heal':
-        exprflux = exprflux[globdata.indxcubeheal]
+    if gdat.datatype == 'inpt' and gdat.pixltype == 'heal':
+        exprflux = exprflux[gdat.indxcubeheal]
 
 
-    if globdata.datatype == 'inpt':
-        exprflux = exprflux[globdata.indxcubefilt]
+    if gdat.datatype == 'inpt':
+        exprflux = exprflux[gdat.indxcubefilt]
  
-    if globdata.datatype == 'mock':
-        if globdata.exprtype == 'ferm':
-            globdata.mockpsfipara = globdata.fermpsfipara
-        if globdata.exprtype == 'sdss':
-            globdata.mockpsfipara = globdata.sdsspsfipara
+    if gdat.datatype == 'mock':
+        if gdat.exprtype == 'ferm':
+            gdat.mockpsfipara = gdat.fermpsfipara
+        if gdat.exprtype == 'sdss':
+            gdat.mockpsfipara = gdat.sdsspsfipara
 
     # exposure
-    if globdata.strgexpo == 'unit':
-        globdata.expo = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
+    if gdat.strgexpo == 'unit':
+        gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgexpo
-        globdata.expo = pf.getdata(path)
+        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpo
+        gdat.expo = pf.getdata(path)
 
-        if globdata.pixltype == 'heal':
-            globdata.expo = globdata.expo[globdata.indxcubeheal]
+        if gdat.pixltype == 'heal':
+            gdat.expo = gdat.expo[gdat.indxcubeheal]
         else:
-            globdata.expo = globdata.expo.reshape((globdata.expo.shape[0], -1, globdata.expo.shape[-1]))
+            gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
             
-        globdata.expo = globdata.expo[globdata.indxcubefilt]
+        gdat.expo = gdat.expo[gdat.indxcubefilt]
     
 
     # backgrounds
-    globdata.backflux = []
-    globdata.backfluxmean = []
-    for c in globdata.indxback:
-        if globdata.strgback[c] == 'unit':
-            backfluxtemp = ones((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
+    gdat.backflux = []
+    gdat.backfluxmean = []
+    for c in gdat.indxback:
+        if gdat.strgback[c] == 'unit':
+            backfluxtemp = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         else:
-            path = os.environ["PCAT_DATA_PATH"] + '/' + globdata.strgback[c]
+            path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
-            if globdata.pixltype == 'heal':
-                backfluxtemp = backfluxtemp[globdata.indxcubeheal]
+            if gdat.pixltype == 'heal':
+                backfluxtemp = backfluxtemp[gdat.indxcubeheal]
             else:
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
-            backfluxtemp = backfluxtemp[globdata.indxcubefilt]
-        globdata.backflux.append(backfluxtemp)
-        globdata.backfluxmean.append(mean(sum(globdata.backflux[c] * globdata.expo, 2) / sum(globdata.expo, 2), 1))
+            backfluxtemp = backfluxtemp[gdat.indxcubefilt]
+        gdat.backflux.append(backfluxtemp)
+        gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
     # count axis
-    globdata.expotemp = mean(globdata.expo, 1)
-    globdata.minmcnts = repeat(1e-1, globdata.numbener) # globdata.minmspec * amin(globdata.expotemp, 1) * globdata.diffener
-    globdata.maxmcnts = repeat(1e4, globdata.numbener) # globdata.maxmspec * amax(globdata.expotemp, 1) * globdata.diffener
-    globdata.binscnts = zeros((globdata.numbener, globdata.numbspec + 1))
-    for i in globdata.indxener:
-        globdata.binscnts[i, :] = logspace(log10(globdata.minmcnts[i]), log10(globdata.maxmcnts[i]), globdata.numbspec + 1) # [1]
+    gdat.expotemp = mean(gdat.expo, 1)
+    gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmspec * amin(gdat.expotemp, 1) * gdat.diffener
+    gdat.maxmcnts = repeat(1e4, gdat.numbener) # gdat.maxmspec * amax(gdat.expotemp, 1) * gdat.diffener
+    gdat.binscnts = zeros((gdat.numbener, gdat.numbspec + 1))
+    for i in gdat.indxener:
+        gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbspec + 1) # [1]
         
     # get 3FGL catalog
-    if globdata.exprtype == 'ferm':
-        retr_fgl3(globdata)
+    if gdat.exprtype == 'ferm':
+        retr_fgl3(gdat)
 
     # get count data
     ## input data
-    if globdata.datatype == 'inpt':
-        globdata.datacnts = exprflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
+    if gdat.datatype == 'inpt':
+        gdat.datacnts = exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
 
     ## mock data
-    if globdata.datatype == 'mock':
+    if gdat.datatype == 'mock':
 
-        if globdata.mocknumbpnts == None:
-            globdata.mocknumbpnts = empty(globdata.numbpopl)
-            for l in globdata.indxpopl:
-                globdata.mocknumbpnts[l] = random_integers(globdata.minmnumbpnts, globdata.maxmnumbpnts[l])
+        if gdat.mocknumbpnts == None:
+            gdat.mocknumbpnts = empty(gdat.numbpopl)
+            for l in gdat.indxpopl:
+                gdat.mocknumbpnts[l] = random_integers(gdat.minmnumbpnts, gdat.maxmnumbpnts[l])
         
-        if globdata.mockfdfntype == 'brok':
+        if gdat.mockfdfntype == 'brok':
             pass
         else:
-            if globdata.mockfdfnslop == None:
-                globdata.mockfdfnslop = empty((globdata.numbpopl, globdata.numbenerfdfn))
-                for l in globdata.indxpopl:
-                    globdata.mockfdfnslop[l, :] = icdf_atan(rand(globdata.numbenerfdfn), globdata.minmfdfnslop[l], globdata.factfdfnslop[l])
-        if globdata.mockpsfipara == None: 
-            globdata.mockpsfntype = psfntpye
-            numbmockpsfipara = globdata.numbpsfipara
-            globdata.mockpsfipara = empty(numbmockpsfipara)
+            if gdat.mockfdfnslop == None:
+                gdat.mockfdfnslop = empty((gdat.numbpopl, gdat.numbenerfdfn))
+                for l in gdat.indxpopl:
+                    gdat.mockfdfnslop[l, :] = icdf_atan(rand(gdat.numbenerfdfn), gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+        if gdat.mockpsfipara == None: 
+            gdat.mockpsfntype = psfntpye
+            numbmockpsfipara = gdat.numbpsfipara
+            gdat.mockpsfipara = empty(numbmockpsfipara)
             for k in arange(numbmockpsfipara):
-                globdata.mockpsfipara[k] = icdf_psfipara(globdata, rand(), k)
+                gdat.mockpsfipara[k] = icdf_psfipara(gdat, rand(), k)
    
-        if globdata.mocknormback == None:
-            for c in globdata.indxback:
-                globdata.mocknormback[c, :] = icdf_logt(rand(globdata.numbener), globdata.minmnormback[c], globdata.factnormback[c])
+        if gdat.mocknormback == None:
+            for c in gdat.indxback:
+                gdat.mocknormback[c, :] = icdf_logt(rand(gdat.numbener), gdat.minmnormback[c], gdat.factnormback[c])
 
-        mockcnts = [[] for l in globdata.indxpopl]
-        mocklgal = [[] for l in globdata.indxpopl]
-        mockbgal = [[] for l in globdata.indxpopl]
-        mockspec = [[] for l in globdata.indxpopl]
-        if globdata.colrprio:
-            mocksind = [[] for l in globdata.indxpopl]
-        for l in globdata.indxpopl:
-            mocklgal[l] = icdf_self(rand(globdata.mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg)
-            mockbgal[l] = icdf_self(rand(globdata.mocknumbpnts[l]), -globdata.maxmgangmarg, 2. * globdata.maxmgangmarg) 
-            mockspec[l] = empty((globdata.numbener, globdata.mocknumbpnts[l]))
-            for i in globdata.indxenerfdfn:
-                if globdata.mockfdfntype == 'brok':
-                    mockspec[l][i, :] = icdf_spec_brok(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnsloplowr[l, i], \
-                        globdata.mockfdfnslopuppr[l, i], globdata.mockfdfnbrek[l, i], globdata.minmspec[i], globdata.maxmspec[i])
+        mockcnts = [[] for l in gdat.indxpopl]
+        mocklgal = [[] for l in gdat.indxpopl]
+        mockbgal = [[] for l in gdat.indxpopl]
+        mockspec = [[] for l in gdat.indxpopl]
+        if gdat.colrprio:
+            mocksind = [[] for l in gdat.indxpopl]
+        for l in gdat.indxpopl:
+            mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+            mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
+            for i in gdat.indxenerfdfn:
+                if gdat.mockfdfntype == 'brok':
+                    mockspec[l][i, :] = icdf_spec_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnsloplowr[l, i], \
+                        gdat.mockfdfnslopuppr[l, i], gdat.mockfdfnbrek[l, i], gdat.minmspec[i], gdat.maxmspec[i])
                 else:
-                    mockspec[l][i, :] = icdf_spec(globdata, rand(globdata.mocknumbpnts[l]), globdata.mockfdfnslop[l, i], globdata.minmspec[i], globdata.maxmspec[i])
-            if globdata.colrprio:
-                mocksind[l] = icdf_eerr(rand(globdata.mocknumbpnts[l]), globdata.meansind[l], globdata.stdvsind[l], \
-                                                                                        globdata.sindcdfnnormminm[l], globdata.sindcdfnnormdiff[l])
-                mockspec[l] = retr_spec(globdata, mockspec[l][globdata.indxenerfdfn, :].flatten(), mocksind[l])
-            indxpixltemp = retr_indxpixl(globdata, mockbgal[l], mocklgal[l])
-            mockcnts[l] = mockspec[l][:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]
-        mockpntsflux = retr_pntsflux(globdata, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), globdata.mockpsfipara, globdata.mockpsfntype)
-        mocktotlflux = retr_rofi_flux(globdata, globdata.mocknormback, mockpntsflux, globdata.indxcubefull)
-        mocktotlcnts = mocktotlflux * globdata.expo * globdata.apix * globdata.diffener[:, None, None] # [1]
+                    mockspec[l][i, :] = icdf_spec(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnslop[l, i], gdat.minmspec[i], gdat.maxmspec[i])
+            if gdat.colrprio:
+                mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.meansind[l], gdat.stdvsind[l], \
+                                                                                        gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+                mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn, :].flatten(), mocksind[l])
+            indxpixltemp = retr_indxpixl(gdat, mockbgal[l], mocklgal[l])
+            mockcnts[l] = mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+        mockpntsflux = retr_pntsflux(gdat, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
+        mocktotlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcubefull)
+        mocktotlcnts = mocktotlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
 
-        globdata.datacnts = zeros((globdata.numbener, globdata.numbpixl, globdata.numbevtt))
-        for i in globdata.indxener:
-            for k in range(globdata.numbpixl):
-                for m in globdata.indxevtt:
-                    globdata.datacnts[i, k, m] = poisson(mocktotlcnts[i, k, m])
+        gdat.datacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        for i in gdat.indxener:
+            for k in range(gdat.numbpixl):
+                for m in gdat.indxevtt:
+                    gdat.datacnts[i, k, m] = poisson(mocktotlcnts[i, k, m])
               
-        if globdata.trueinfo:
+        if gdat.trueinfo:
             
-            globdata.truelgal = []
-            globdata.truebgal = []
-            globdata.truespec = []
-            if globdata.colrprio:
-                globdata.truesind = []
-            for i in globdata.indxpopl:
-                globdata.truelgal.append(mocklgal[l])
-                globdata.truebgal.append(mockbgal[l])
-                globdata.truespec.append(mockspec[l])
-                if globdata.colrprio:
-                    globdata.truesind.append(mocksind[l])
+            gdat.truelgal = []
+            gdat.truebgal = []
+            gdat.truespec = []
+            if gdat.colrprio:
+                gdat.truesind = []
+            for i in gdat.indxpopl:
+                gdat.truelgal.append(mocklgal[l])
+                gdat.truebgal.append(mockbgal[l])
+                gdat.truespec.append(mockspec[l])
+                if gdat.colrprio:
+                    gdat.truesind.append(mocksind[l])
                     
-            globdata.indxtruepntstimevari = [array([])] * globdata.numbpopl
+            gdat.indxtruepntstimevari = [array([])] * gdat.numbpopl
                     
-            globdata.truenumbpnts = globdata.mocknumbpnts
-            if globdata.mockfdfntype == 'brok':
-                globdata.truefdfnsloplowr = globdata.mockfdfnsloplowr
-                globdata.truefdfnslopuppr = globdata.mockfdfnslopuppr
-                globdata.truefdfnbrek = globdata.mockfdfnbrek
+            gdat.truenumbpnts = gdat.mocknumbpnts
+            if gdat.mockfdfntype == 'brok':
+                gdat.truefdfnsloplowr = gdat.mockfdfnsloplowr
+                gdat.truefdfnslopuppr = gdat.mockfdfnslopuppr
+                gdat.truefdfnbrek = gdat.mockfdfnbrek
             else:
-                globdata.truefdfnslop = globdata.mockfdfnslop
-            globdata.truenormback = globdata.mocknormback
-            globdata.truecnts = mockcnts
+                gdat.truefdfnslop = gdat.mockfdfnslop
+            gdat.truenormback = gdat.mocknormback
+            gdat.truecnts = mockcnts
             
-            globdata.truespec = []
-            for l in globdata.indxpopl:
-                globdata.truespectemp = empty((3, globdata.numbener, globdata.mocknumbpnts[l]))
-                globdata.truespectemp[:] = mockspec[l][None, :, :]
-                globdata.truespec.append(globdata.truespectemp)
+            gdat.truespec = []
+            for l in gdat.indxpopl:
+                gdat.truespectemp = empty((3, gdat.numbener, gdat.mocknumbpnts[l]))
+                gdat.truespectemp[:] = mockspec[l][None, :, :]
+                gdat.truespec.append(gdat.truespectemp)
                 
-            globdata.truepsfipara = globdata.mockpsfipara
-            globdata.truepsfntype = globdata.mockpsfntype
+            gdat.truepsfipara = gdat.mockpsfipara
+            gdat.truepsfntype = gdat.mockpsfntype
 
 
     ## Real data
     # true data
-    if globdata.trueinfo:
-        if globdata.datatype == 'inpt':
-            globdata.truenumbpnts = None
-            globdata.truefdfnslop = None
-            globdata.truenormback = None
+    if gdat.trueinfo:
+        if gdat.datatype == 'inpt':
+            gdat.truenumbpnts = None
+            gdat.truefdfnslop = None
+            gdat.truenormback = None
     
-            if globdata.exprtype == 'ferm':
-                globdata.truenumbpnts = array([globdata.fgl3numbpntsrofi], dtype=int)
-                globdata.truelgal = [globdata.fgl3lgal[globdata.indxfgl3rofi]]
-                globdata.truebgal = [globdata.fgl3bgal[globdata.indxfgl3rofi]]
-                globdata.truespec = [globdata.fgl3spec[:, :, globdata.indxfgl3rofi]]
-                if globdata.colrprio:
-                    globdata.truesind = [globdata.fgl3sind[globdata.indxfgl3rofi]]
-                indxpixltemp = retr_indxpixl(globdata, globdata.truebgal[0], globdata.truelgal[0])
-                spec = globdata.fgl3spec[0, :, globdata.indxfgl3rofi]
+            if gdat.exprtype == 'ferm':
+                gdat.truenumbpnts = array([gdat.fgl3numbpntsrofi], dtype=int)
+                gdat.truelgal = [gdat.fgl3lgal[gdat.indxfgl3rofi]]
+                gdat.truebgal = [gdat.fgl3bgal[gdat.indxfgl3rofi]]
+                gdat.truespec = [gdat.fgl3spec[:, :, gdat.indxfgl3rofi]]
+                if gdat.colrprio:
+                    gdat.truesind = [gdat.fgl3sind[gdat.indxfgl3rofi]]
+                indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[0], gdat.truelgal[0])
+                spec = gdat.fgl3spec[0, :, gdat.indxfgl3rofi]
                 # temp
                 spec = spec.T
-                globdata.truecnts = [spec[:, :, None] * globdata.expo[:, indxpixltemp, :] * globdata.diffener[:, None, None]]
-                globdata.indxtruepntstimevari = [globdata.indxfgl3timevarirofi]
-                globdata.truepsfipara = globdata.fermpsfipara
-                globdata.truepsfntype = 'doubking'
+                gdat.truecnts = [spec[:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]]
+                gdat.indxtruepntstimevari = [gdat.indxfgl3timevarirofi]
+                gdat.truepsfipara = gdat.fermpsfipara
+                gdat.truepsfntype = 'doubking'
                 
-        if globdata.datatype == 'mock':
-            globdata.truepsfn = retr_psfn(globdata, globdata.truepsfipara, globdata.indxener, globdata.angldisp, globdata.mockpsfntype)
+        if gdat.datatype == 'mock':
+            gdat.truepsfn = retr_psfn(gdat, gdat.truepsfipara, gdat.indxener, gdat.angldisp, gdat.mockpsfntype)
         else:
-            if globdata.exprtype == 'ferm':
-                globdata.truepsfn = globdata.fermpsfn
-            if globdata.exprtype == 'sdss':
-                globdata.truepsfn = globdata.sdsspsfn
+            if gdat.exprtype == 'ferm':
+                gdat.truepsfn = gdat.fermpsfn
+            if gdat.exprtype == 'sdss':
+                gdat.truepsfn = gdat.sdsspsfn
                 
-        truefwhm = 2. * retr_psfnwdth(globdata, globdata.truepsfn, 0.5)
+        truefwhm = 2. * retr_psfnwdth(gdat, gdat.truepsfn, 0.5)
         
         truebackcnts = []
-        globdata.truesigm = []
-        for l in globdata.indxpopl:
-            indxpixltemp = retr_indxpixl(globdata, globdata.truebgal[l], globdata.truelgal[l])
-            truebackcntstemp = zeros((globdata.numbener, globdata.truenumbpnts[l], globdata.numbevtt))
-            for c in globdata.indxback:
-                truebackcntstemp += globdata.backflux[c][:, indxpixltemp, :] * globdata.expo[:, indxpixltemp, :] * \
-                    globdata.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
+        gdat.truesigm = []
+        for l in gdat.indxpopl:
+            indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
+            truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
+            for c in gdat.indxback:
+                truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * \
+                    gdat.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
             truebackcnts.append(truebackcntstemp)
-            globdata.truesigm.append(globdata.truecnts[l] / sqrt(truebackcntstemp))
+            gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
         
     # sanity checks
-    if amax(abs(globdata.datacnts - globdata.datacnts.astype(int)) / globdata.datacnts) > 1e-3:
+    if amax(abs(gdat.datacnts - gdat.datacnts.astype(int)) / gdat.datacnts) > 1e-3:
         print 'Fractional counts!'
         
-    if amin(globdata.datacnts) < 0.:
+    if amin(gdat.datacnts) < 0.:
         print 'Negative counts!'
 
-    globdata.datafluxmean = mean(sum(globdata.datacnts, 2) / sum(globdata.expo, 2), 1) / globdata.apix / globdata.diffener
-    globdata.datacntsmean = mean(sum(globdata.datacnts, 2), 1)
-    globdata.datacntssatu = ceil((amax(sum(globdata.datacnts, 2), 1) - globdata.datacntsmean) * 0.05 + globdata.datacntsmean)
-    globdata.resicntssatu = ceil(globdata.datacntssatu * 0.5)
+    gdat.datafluxmean = mean(sum(gdat.datacnts, 2) / sum(gdat.expo, 2), 1) / gdat.apix / gdat.diffener
+    gdat.datacntsmean = mean(sum(gdat.datacnts, 2), 1)
+    gdat.datacntssatu = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
+    gdat.resicntssatu = ceil(gdat.datacntssatu * 0.5)
     
     # auxiliary variables for plots
-    if globdata.pixltype == 'heal':
-        for i in globdata.indxener:
-            for m in globdata.indxevtt:
-                globdata.datacntscarttemp = tdpy.util.retr_cart(globdata.datacnts[i, :, m], globdata.indxpixlrofi, numbsideinpt=globdata.numbsideheal, \
-                    minmlgal=globdata.minmlgal, maxmlgal=globdata.maxmlgal, minmbgal=globdata.minmbgal, maxmbgal=globdata.maxmbgal)
+    if gdat.pixltype == 'heal':
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                gdat.datacntscarttemp = tdpy.util.retr_cart(gdat.datacnts[i, :, m], gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
+                    minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
                 if i == 0 and m == 0:
-                    globdata.datacntscart = zeros((globdata.datacntscarttemp.shape[0], globdata.datacntscarttemp.shape[1], globdata.numbener, globdata.numbevtt))
-                globdata.datacntscart[:, :, i, m] = globdata.datacntscarttemp
+                    gdat.datacntscart = zeros((gdat.datacntscarttemp.shape[0], gdat.datacntscarttemp.shape[1], gdat.numbener, gdat.numbevtt))
+                gdat.datacntscart[:, :, i, m] = gdat.datacntscarttemp
         
     else:
-        globdata.datacntscart = globdata.datacnts.reshape((globdata.numbener, globdata.numbsidecart, globdata.numbsidecart, globdata.numbevtt))
-        globdata.datacntscart = swapaxes(swapaxes(globdata.datacntscart, 0, 2), 0, 1)
+        gdat.datacntscart = gdat.datacnts.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
+        gdat.datacntscart = swapaxes(swapaxes(gdat.datacntscart, 0, 2), 0, 1)
 
-    for i in globdata.indxener:
-        indxdatacntscartsatu = where(globdata.datacntscart[:, :, i, :] > globdata.datacntssatu[i])
-        globdata.datacntscart[indxdatacntscartsatu[0], indxdatacntscartsatu[1], i, indxdatacntscartsatu[2]] = globdata.datacntssatu[i]
+    for i in gdat.indxener:
+        indxdatacntscartsatu = where(gdat.datacntscart[:, :, i, :] > gdat.datacntssatu[i])
+        gdat.datacntscart[indxdatacntscartsatu[0], indxdatacntscartsatu[1], i, indxdatacntscartsatu[2]] = gdat.datacntssatu[i]
 
     # make a look-up table of nearby pixels for each pixel
     # temp
     # does not work for colrprio = False
     # needs to be generated for the lowest energy bin, i.e., indxenerincl = 0
-    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.5g_%.5g_%02d.p' % (globdata.maxmgang, globdata.pixltype, \
-                                                               globdata.minmspec[globdata.indxenerfdfn[0]], globdata.maxmspec[globdata.indxenerfdfn[0]], globdata.numbspecprox)
+    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.5g_%.5g_%02d.p' % (gdat.maxmgang, gdat.pixltype, \
+                                                               gdat.minmspec[gdat.indxenerfdfn[0]], gdat.maxmspec[gdat.indxenerfdfn[0]], gdat.numbspecprox)
     if os.path.isfile(path):
         print 'Retrieving previously computed pixel look-up table...'
         fobj = open(path, 'rb')
-        globdata.indxpixlprox = cPickle.load(fobj)
+        gdat.indxpixlprox = cPickle.load(fobj)
         fobj.close()
     else:
         print 'Computing the look-up table...'
-        globdata.indxpixlprox = [[] for h in range(globdata.numbspecprox)]
-        for j in globdata.indxpixl:
-            dist = retr_dist(globdata, globdata.lgalgrid[j], globdata.bgalgrid[j], globdata.lgalgrid, globdata.bgalgrid)
-            for h in range(globdata.numbspecprox):
-                globdata.indxpixlproxtemp = where(dist < deg2rad(globdata.maxmangleval[h]))[0]
-                globdata.indxpixlprox[h].append(globdata.indxpixlproxtemp)
+        gdat.indxpixlprox = [[] for h in range(gdat.numbspecprox)]
+        for j in gdat.indxpixl:
+            dist = retr_dist(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.lgalgrid, gdat.bgalgrid)
+            for h in range(gdat.numbspecprox):
+                gdat.indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
+                gdat.indxpixlprox[h].append(gdat.indxpixlproxtemp)
         fobj = open(path, 'wb')
-        cPickle.dump(globdata.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
         fobj.close()
+
+
+def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
+
+    figr, axis = plt.subplots(figsize=(12, 12))
+    axis.set_xlabel(gdat.longlabl)
+    axis.set_ylabel(gdat.latilabl)
+    axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
+    axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
+    if indxevttplot == None:
+        if indxenerplot == None:
+            axis.set_title('')
+        else:
+            axis.set_title(gdat.binsenerstrg[indxenerplot])
+    else:
+        titl = gdat.binsenerstrg[indxenerplot]
+        if gdat.exprtype == 'ferm':
+            titl += ', ' + gdat.evttstrg[indxevttplot]
+        axis.set_title(titl)
+
+    axis.axvline(gdat.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axvline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(gdat.frambndr, ls='--', alpha=0.3, color='black')
+    axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
+
+    if indxevttplot == None:
+        path = gdat.plotpath + strgplot + '%dA_' % gdat.indxenerincl[indxenerplot] + gdat.rtag + '_%09d.png' % gdat.cntrswep
+    else:
+        path = gdat.plotpath + strgplot + '%d%d_' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot]) + gdat.rtag + '_%09d.png' % gdat.cntrswep
+    
+    return figr, axis, path
+
+
+def supr_fram(gdat, axis, indxenerplot):
+
+    for l in gdat.indxpopl:
+
+        # true catalog
+        if gdat.trueinfo:
+            mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, :, :], indxenerplot)
+            lgal = copy(gdat.truelgal[l])
+            bgal = copy(gdat.truebgal[l])
+            if gdat.exprtype == 'sdss':
+                lgal *= 3600.
+                bgal *= 3600.
+            axis.scatter(lgal[gdat.trueindxpntsmiss], bgal[gdat.trueindxpntsmiss], s=mrkrsize[gdat.trueindxpntsmiss], \
+                alpha=gdat.mrkralph, label=gdat.truelabl + ', missed', marker='x', linewidth=2, color='g')
+            axis.scatter(lgal[gdat.trueindxpntsbias], bgal[gdat.trueindxpntsbias], s=mrkrsize[gdat.trueindxpntsbias], \
+                alpha=gdat.mrkralph, label=gdat.truelabl + ', biased', marker='o', linewidth=2, color='g')
+            indxpnts = setdiff1d(arange(gdat.truenumbpnts, dtype=int), concatenate((gdat.trueindxpntsbias, gdat.trueindxpntsmiss)))
+            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelabl + ', hit', marker='D', linewidth=2, color='g')
+            for l in gdat.indxpopl:
+                if gdat.indxtruepntstimevari[l].size > 0:
+                    axis.scatter(lgal[gdat.indxtruepntstimevari[l]], bgal[gdat.indxtruepntstimevari[l]], s=100, \
+                        label=gdat.truelabl + ', variable', marker='*', linewidth=2, color='y')
+
+        # model catalog
+        mrkrsize = retr_mrkrsize(gdat, gdat.thissampvarb[gdat.thisindxsampspec[l]], indxenerplot)
+        lgal = gdat.thissampvarb[gdat.thisindxsamplgal[l]]
+        bgal = gdat.thissampvarb[gdat.thisindxsampbgal[l]]
+        if gdat.exprtype == 'sdss':
+            lgal *= 3600.
+            bgal *= 3600.
+            
+        axis.scatter(lgal, bgal, s=mrkrsize, alpha=gdat.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+    axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
+
+
+def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, logt=False, cmap='Reds', mean=False, satuuppr=None, satulowr=None, titl=''):
+
+    if logt:
+        maps = log10(abs(copy(maps)) + 1e-10)
+
+    # filter the map
+    if thisindxevtt == None:
+        if thisindxener == None:
+            if mean:
+                maps = sum(maps * gdat.expo, axis=2) / sum(gdat.expo, axis=2)
+            else:
+                maps = sum(maps, axis=2)
+        else:
+            if mean:
+                maps = sum(maps[thisindxener, :, :] * gdat.expo[thisindxener, :, :], axis=1) / sum(gdat.expo[thisindxener, :, :], axis=1)
+            else:
+                maps = sum(maps[thisindxener, :, :], axis=1)
+    else:
+        maps = maps[thisindxener, :, thisindxevtt]
+    
+    # temp
+    maps = maps.squeeze()
+    
+    # project the map to 2D
+    if gdat.pixltype == 'heal':
+        maps = tdpy.util.retr_cart(maps, \
+            indxpixlrofi=gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
+            minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, \
+            minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    else:
+        maps = maps.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
+    
+    # saturate the map
+    if satulowr != None:
+        maps[where(maps < satulowr[thisindxener])] = satulowr[thisindxener]
+    if satuuppr != None:
+        maps[where(maps > satuuppr[thisindxener])] = satuuppr[thisindxener]
+   
+    # plot
+    imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='none')
+    axis.set_title(titl)
+
+    # make a color bar
+    if thisindxevtt != None or thisindxener != None:
+        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
+
+    return axis, cbar
+
 
