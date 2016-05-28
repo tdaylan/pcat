@@ -579,6 +579,7 @@ def retr_fermpsfn(gdat):
     gdat.fermpsfn = retr_doubking(angl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
 
 
+
 def retr_sdsspsfn(gdat):
    
     numbpsfiparaevtt = gdat.numbener * 3
@@ -1652,7 +1653,6 @@ def retr_psfimodl(gdat):
     gdat.numbpsfiparaevtt = gdat.numbener * gdat.numbformpara
     gdat.numbpsfipara = gdat.numbpsfiparaevtt * gdat.numbevtt
     gdat.indxpsfipara = arange(gdat.numbpsfipara)
-    gdat.indxmodlpsfipara = arange(gdat.numbpsfipara)   
 
     minmformpara = zeros(gdat.numbformpara)
     maxmformpara = zeros(gdat.numbformpara)
@@ -1842,20 +1842,23 @@ def retr_randunitpsfipara(gdat):
 
     while True:
         randunitpsfipara = rand(gdat.numbpsfipara)
-        indxpar0 = 1
-        if gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
-            indxpar1 = 2
-        if gdat.psfntype == 'doubking':
-            indxpar1 = 3
-        thisbool = True
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                indx = m * numbpsfiparaevtt + i * numbformpara
-                thisbool = thisbool and randunitpsfipara[indx+indxpar1] > randunitpsfipara[indx+indxpar0]
-        if thisbool:
+        if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
             break
         else:
-            print 'Repeating the PSF parameter seed...'
+            indxpar0 = 1
+            if gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
+                indxpar1 = 2
+            if gdat.psfntype == 'doubking':
+                indxpar1 = 3
+            thisbool = True
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    indx = m * gdat.numbpsfiparaevtt + i * gdat.numbformpara
+                    thisbool = thisbool and randunitpsfipara[indx+indxpar1] > randunitpsfipara[indx+indxpar0]
+            if thisbool:
+                break
+            else:
+                print 'Repeating the PSF parameter seed...'
 
     return randunitpsfipara
 
@@ -2480,7 +2483,7 @@ def setp(gdat):
                     gdat.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
             truebackcnts.append(truebackcntstemp)
             gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
-        
+       
     # sanity checks
     if amax(abs(gdat.datacnts - gdat.datacnts.astype(int)) / gdat.datacnts) > 1e-3:
         print 'Fractional counts!'
