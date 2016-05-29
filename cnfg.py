@@ -10,7 +10,7 @@ def cnfg_ferm_psfn_expr(psfntype):
     init( \
          numbswep=100000, \
          factthin=1, \
-         plotperd=20000, \
+         plotperd=50000, \
          trueinfo=True, \
          datatype='inpt', \
          psfntype=psfntype, \
@@ -28,8 +28,8 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmspec = array([1e-12, 1e-11, 1e-11, 1e-10, 1e-10])
-    mocknumbpnts = 20 * array([100, 30, 10, 3, 1], dtype=int)
+    minmspec = array([1e-12, 3e-12, 1e-11, 3e-11, 1e-10])
+    mocknumbpnts = 10 * array([100, 30, 10, 3, 1], dtype=int)
     numbswep = mocknumbpnts * 100 + 10000
     maxmnumbpnts = 2 * mocknumbpnts
     
@@ -48,11 +48,11 @@ def cnfg_ferm_info():
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
                         plotperd=50000, \
-                        probprop=array([0.1, 0.1, 0., 0., 1., 1., 0, 0, 1., 1., 1., 0.], dtype=float), \
+                        probprop=array([0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 0.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
                         factthin=1, \
-                        maxmgang=20., \
+                        maxmgang=10., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
                         indxevttincl=indxevttincl, \
@@ -126,13 +126,14 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     minmspec = array([1e-11])
     maxmspec = array([1e-7])
         
-    init(psfntype='singking', \
+    init(psfntype='doubking', \
          numbswep=2000000, \
          numbburn=50000, \
+         proppsfn=False, \
          plotperd=50000, \
          randinit=False, \
          trueinfo=True, \
-         maxmgang=20., \
+         maxmgang=13., \
          indxenerincl=indxenerincl, \
          indxevttincl=arange(2, 4), \
          minmspec=minmspec, \
@@ -352,6 +353,7 @@ if __name__ == '__main__':
             name.get(sys.argv[1])(listargs)
     else:
 
+        pass
         #cnfg_ferm_info()
         
         #cnfg_ferm_psfn_mock('gausking')
@@ -363,7 +365,8 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
         #cnfg_ferm_mock_igal()
         
-        cnfg_ferm_expr_ngal()
+        #cnfg_ferm_expr_ngal('fermflux_comp_ngal.fits', 'fermexpo_comp_ngal.fits')
+        #cnfg_ferm_expr_ngal('fermsflxneww_ngal.fits', 'fermsexpneww_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp1_ngal.fits', 'fermexpo_cmp1_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp2_ngal.fits', 'fermexpo_cmp2_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', 'fermexpo_cmp3_ngal.fits')

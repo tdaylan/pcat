@@ -54,33 +54,12 @@ def work(gdat, indxprocwork):
     gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
     if gdat.randinit or not gdat.trueinfo or gdat.truepsfipara == None:
         gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
-        print 'hey0'
     else:
         if gdat.psfntype == gdat.truepsfntype:
-            print 'hey1'
             for k in gdat.indxpsfipara:
                 gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
         else:
-            print 'hey2'
             gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
-            
-
-    print 'hey'
-    print 'gdat.truepsfntype'
-    print gdat.truepsfntype
-    print 'gdat.psfntype'
-    print gdat.psfntype
-    print 'true'
-    for k in range(5 * 2 * 3):
-        print gdat.truepsfipara[k]
-        if (k + 1) % 5 == 0:
-            print
-    print 'this'
-    for k in range(gdat.numbpsfipara):
-        print gdat.drmcsamp[gdat.indxsamppsfipara[k]]
-        if (k + 1) % gdat.numbformpara == 0:
-            print
-    
     for l in gdat.indxpopl:
         if gdat.randinit or not gdat.trueinfo:
             gdat.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
