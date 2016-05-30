@@ -2331,7 +2331,7 @@ def setp(gdat):
     # count axis
     gdat.expotemp = mean(gdat.expo, 1)
     gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmspec * amin(gdat.expotemp, 1) * gdat.diffener
-    gdat.maxmcnts = repeat(1e4, gdat.numbener) # gdat.maxmspec * amax(gdat.expotemp, 1) * gdat.diffener
+    gdat.maxmcnts = repeat(1e5, gdat.numbener) # gdat.maxmspec * amax(gdat.expotemp, 1) * gdat.diffener
     gdat.binscnts = zeros((gdat.numbener, gdat.numbspec + 1))
     for i in gdat.indxener:
         gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbspec + 1) # [1]
