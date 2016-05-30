@@ -311,7 +311,11 @@ def plot_post(pathprobcatl):
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
-                
+           
+    print 'hey'
+
+
+
     # flux match with the true catalog
     if gdat.trueinfo:
         for l in gdat.indxpopl:
@@ -319,14 +323,22 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(gdat.truenumbpnts) + gdat.numbsamp
             listindxmodl = []
             for k in range(gdat.numbsamp):
+                print 'k'
+                print k
+
                 indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k, :], gdat.listbgal[l][k, :], gdat.listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
+
+            print 'hey'
             discspecmtch /= gdat.numbsamp
             postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
             for i in gdat.indxener:
                 gdat.listspecmtch = zeros((gdat.numbsamp, gdat.truenumbpnts[l]))
                 for k in range(gdat.numbsamp):
+                    print 'k'
+                    print k
+
                     indxpntstrue = where(listindxmodl[k] >= 0)[0]
                     gdat.listspecmtch[k, indxpntstrue] = gdat.listspec[l][k][i, listindxmodl[k][indxpntstrue]]
                 postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)

@@ -31,7 +31,7 @@ def cnfg_ferm_info():
     minmspec = array([1e-10, 3e-11, 1e-11, 3e-12, 1e-12])
     mocknumbpnts = 20 * array([1, 3, 10, 30, 100], dtype=int)
     
-    numbswep = mocknumbpnts * 100 + 10000
+    numbswep = mocknumbpnts * 400 + 100000
     maxmnumbpnts = 2 * mocknumbpnts
     
     numbiter = minmspec.size
@@ -52,7 +52,7 @@ def cnfg_ferm_info():
                         probprop=array([0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 0.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
-                        factthin=1, \
+                        factthin=100, \
                         maxmgang=10., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
@@ -128,13 +128,14 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     maxmspec = array([1e-7])
         
     init(psfntype='doubking', \
-         numbswep=2000000, \
-         numbburn=50000, \
+         numbswep=10000000, \
+         numbproc=20, \
+         numbburn=200000, \
          proppsfn=False, \
          plotperd=50000, \
          randinit=False, \
          trueinfo=True, \
-         maxmgang=13., \
+         maxmgang=20., \
          indxenerincl=indxenerincl, \
          indxevttincl=arange(2, 4), \
          minmspec=minmspec, \
