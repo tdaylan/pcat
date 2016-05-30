@@ -2420,6 +2420,11 @@ def setp(gdat):
             gdat.indxtruepntstimevari = [array([])] * gdat.numbpopl
                     
             gdat.truenumbpnts = gdat.mocknumbpnts
+            
+            # temp
+            gdat.truefdfnnorm = array([10.])
+            #gdat.truefdfnnorm = gdat.mocktruenorm
+            
             if gdat.mockfdfntype == 'brok':
                 gdat.truefdfnsloplowr = gdat.mockfdfnsloplowr
                 gdat.truefdfnslopuppr = gdat.mockfdfnslopuppr
@@ -2444,6 +2449,7 @@ def setp(gdat):
     if gdat.trueinfo:
         if gdat.datatype == 'inpt':
             gdat.truenumbpnts = None
+            gdat.truefdfnnorm = None
             gdat.truefdfnslop = None
             gdat.truenormback = None
     

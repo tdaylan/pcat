@@ -40,9 +40,9 @@ def work(gdat, indxprocwork):
     gdat.drmcsamp = zeros((gdat.maxmsampsize, 2))
     
     gdat.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
-    gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
     if gdat.trueinfo and gdat.datatype == 'mock':
         for l in gdat.indxpopl:
+            gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
             if gdat.fdfntype == 'brok':
                 gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.truefdfnsloplowr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.truefdfnslopuppr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
@@ -51,6 +51,7 @@ def work(gdat, indxprocwork):
                 gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.truefdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
     else:
         gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener))
+        gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
     gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
     if gdat.randinit or not gdat.trueinfo or gdat.truepsfipara == None:
         gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
