@@ -44,8 +44,7 @@ def retr_indx(gdat, indxpntsfull):
         indxsamplgal.append(indxsamplgaltemp)
         indxsampbgal.append(indxsamplgaltemp + 1)
         indxsampspec.append(repeat((indxsamplgaltemp + 2)[None, :], gdat.numbener, 0) +repeat(arange(gdat.numbener), len(indxpntsfull[l])).reshape(gdat.numbener, -1))
-        if gdat.colrprio:
-            indxsampsind.append(indxsamplgaltemp + 2 + gdat.numbener)
+        indxsampsind.append(indxsamplgaltemp + 2 + gdat.numbener)
         indxsampcomp.append(repeat(indxsamplgaltemp, gdat.numbcomp) + tile(arange(gdat.numbcomp, dtype=int), len(indxpntsfull[l])))
 
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp
@@ -81,62 +80,133 @@ def retr_rofi_flux(gdat, normback, pntsflux, tempindx):
     return modlflux
 
 
-def cdfn_spec_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def cdfn_flux_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fdfnbrek):
 
-    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
-                    ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
+    if True:
+        print
+        print 'cdfn_flux_brok'
+        print 'flux'
+        print flux
+        print 'fdfnsloplowr'
+        print fdfnsloplowr
+        print 'fdfnslopuppr'
+        print fdfnslopuppr
+        print 'fdfnbrek'
+        print fdfnbrek
+        print 'gdat.minmflux'
+        print gdat.minmflux
+        print 'gdat.maxmflux'
+        print gdat.maxmflux
+    norm = 1. / ((1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
+                    (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     
-    indxflux = where(flux >= fluxbrek)[0]
-    fluxunit = norm / (1. - fdfnsloplowr) * ((flux / fluxbrek)**(1. - fdfnsloplowr) - (minmspec / fluxbrek)**(1. - fdfnsloplowr))
-    fluxunit[indxflux] = norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) - \
-                                norm / (1. - fdfnslopuppr) * (1. - (flux[indxflux] / fluxbrek)**(1. - fdfnslopuppr))
+    indxflux = where(flux >= fdfnbrek)[0]
+    fluxunit = norm / (1. - fdfnsloplowr) * ((flux / fdfnbrek)**(1. - fdfnsloplowr) - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))
+    fluxunit[indxflux] = norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) - \
+                                norm / (1. - fdfnslopuppr) * (1. - (flux[indxflux] / fdfnbrek)**(1. - fdfnslopuppr))
       
+    if True:
+        print 'norm'
+        print norm
+        print 'indxflux'
+        print indxflux
+        print 'fluxunit'
+        print fluxunit
+        print
+        print
+    
     return fluxunit
 
 
-def pdfn_spec_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def pdfn_flux_brok(gdat, flux, fdfnsloplowr, fdfnslopuppr, fdfnbrek):
 
-    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
-                    ((maxmspec / fluxbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
+    if False:
+        print 'pdfn_flux_brok'
+        print 'flux'
+        print flux
+        print 'fdfnsloplowr'
+        print fdfnsloplowr
+        print 'fdfnslopuppr'
+        print fdfnslopuppr
+        print 'fdfnbrek'
+        print fdfnbrek
+        print 'gdat.minmflux'
+        print gdat.minmflux
+        print 'gdat.maxmflux'
+        print gdat.maxmflux
+    norm = 1. / ((1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
+                    (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     
-    indxflux = where(flux >= fluxbrek)[0]
-    pdfnflux = norm * (flux / fluxbrek)**(1. - fdfnsloplowr)
-    pdfnflux = norm * (flux[indxflux] / fluxbrek)**(1. - fdfnslopuppr)
+    indxflux = where(flux >= fdfnbrek)[0]
+    pdfnflux = norm * (flux / fdfnbrek)**(1. - fdfnsloplowr)
+    pdfnflux = norm * (flux[indxflux] / fdfnbrek)**(1. - fdfnslopuppr)
         
     return pdfnflux
 
 
-def icdf_spec_brok(gdat, fluxunit, fdfnsloplowr, fdfnslopuppr, fluxbrek, minmspec, maxmspec):
+def icdf_flux_brok(gdat, fluxunit, fdfnsloplowr, fdfnslopuppr, fdfnbrek):
+   
+    if True:
+        print
+        print 'icdf_flux_brok'
+        print 'fluxunit'
+        print fluxunit
+        print 'fdfnsloplowr'
+        print fdfnsloplowr
+        print 'fdfnslopuppr'
+        print fdfnslopuppr
+        print 'fdfnbrek'
+        print fdfnbrek
+        print 'gdat.minmflux'
+        print gdat.minmflux
+        print 'gdat.maxmflux'
+        print gdat.maxmflux
     
-    norm = 1. / ((1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
-                    (1. - (maxmspec / fluxbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
-    fluxunitbrek = norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr))
+    norm = 1. / ((1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) - \
+                    (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     
+    fluxunitbrek = norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))
     indxfluxunit = where(fluxunit >= fluxunitbrek)[0]
-    flux = fluxbrek * (fluxunit * (1. - fdfnsloplowr) / norm + (minmspec / fluxbrek)**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
-    flux[indxfluxunit] = fluxbrek * (1. - (norm / (1. - fdfnsloplowr) * (1. - (minmspec / fluxbrek)**(1. - fdfnsloplowr)) - \
+    flux = fdfnbrek * (fluxunit * (1. - fdfnsloplowr) / norm + (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
+    flux[indxfluxunit] = fdfnbrek * (1. - (norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) - \
                 fluxunit[indxfluxunit]) * (1. - fdfnslopuppr) / norm)**(1. / (1. - fdfnslopuppr))
 
+    if True:
+        print 'norm'
+        print norm
+        print 'fluxunitbrek'
+        print fluxunitbrek
+        print 'indxfluxunit'
+        print indxfluxunit
+        print 'flux'
+        print flux
+        print
+        print
+    
     return flux
 
 
-def cdfn_spec(gdat, flux, fdfnslop, minmspec, maxmspec):
+def cdfn_flux(gdat, flux, fdfnslop):
         
-    fluxunit = (flux**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop))
+    fluxunit = (flux**(1. - fdfnslop) - gdat.minmflux**(1. - fdfnslop)) / (gdat.maxmflux**(1. - fdfnslop) - gdat.minmflux**(1. - fdfnslop))
         
     return fluxunit
 
 
-def icdf_spec(gdat, fluxunit, fdfnslop, minmspec, maxmspec):
+def icdf_flux(gdat, fluxunit, fdfnslop):
     
-    flux = (fluxunit * (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) + minmspec**(1. - fdfnslop))**(1. / (1. - fdfnslop))
+
+    print 'hey'
+    print fdfnslop
+
+    flux = (fluxunit * (gdat.maxmflux**(1. - fdfnslop) - gdat.minmflux**(1. - fdfnslop)) + gdat.minmflux**(1. - fdfnslop))**(1. / (1. - fdfnslop))
     
     return flux
 
 
-def pdfn_spec(gdat, flux, fdfnslop, minmspec, maxmspec):
+def pdfn_flux(gdat, flux, fdfnslop):
   
-    pdfnflux = (1. - fdfnslop) / (maxmspec**(1. - fdfnslop) - minmspec**(1. - fdfnslop)) * flux**(-fdfnslop)
+    pdfnflux = (1. - fdfnslop) / (gdat.maxmflux**(1. - fdfnslop) - gdat.minmflux**(1. - fdfnslop)) * flux**(-fdfnslop)
           
     return pdfnflux
 
@@ -300,14 +370,14 @@ def retr_llik(gdat, listchrollik, init=False):
                 # this may not work for extreme color PS!
                 # take the flux at the pivot energy
                 if gdat.thisindxprop == gdat.indxproppsfipara:
-                    spectemp = gdat.thissampvarb[concatenate(gdat.thisindxsampspec)[gdat.indxenerpivt, k]]
+                    fluxtemp = gdat.thissampvarb[concatenate(gdat.thisindxsampspec)[gdat.indxenerfdfn, k]]
                 else:
-                    spectemp = gdat.modispec[gdat.indxenerpivt, k]
+                    fluxtemp = gdat.modispec[gdat.indxenerfdfn, k]
 
                 # find the flux index
-                indxspecproxtemp = amin(where(gdat.binsspecprox - abs(spectemp) > 0.)[0]) - 1
+                indxfluxproxtemp = amin(where(gdat.binsfluxprox - abs(fluxtemp) > 0.)[0]) - 1
                 indxpixltemp = retr_indxpixl(gdat, bgal[k], lgal[k])
-                thisindxpixlprox.append(gdat.indxpixlprox[indxspecproxtemp][indxpixltemp])
+                thisindxpixlprox.append(gdat.indxpixlprox[indxfluxproxtemp][indxpixltemp])
             gdat.indxpixlmodi = unique(concatenate(thisindxpixlprox))
         
         timefinl = time.time()
@@ -330,7 +400,7 @@ def retr_llik(gdat, listchrollik, init=False):
             if gdat.thisindxprop == gdat.indxproppsfipara:
                 gdat.nextpntsflux[gdat.indxcubemodi] = 0.
             else:
-                gdat.nextpntsflux[gdat.indxcubemodi] = gdat.thispntsflux[gdat.indxcubemodi]
+                gdat.nextpntsflux[gdat.indxcubemodi] = copy(gdat.thispntsflux[gdat.indxcubemodi])
                 
             for k in range(gdat.numbmodipnts):
                 
@@ -392,27 +462,44 @@ def retr_llik(gdat, listchrollik, init=False):
         gdat.deltllik = 0.
         
     
-def retr_fdfn(gdat, fdfnnorm, fdfnslop, i):
+def retr_fdfnpowr(gdat, fdfnnorm, fdfnslop):
                
-    fluxhistmodl = fdfnnorm / gdat.diffspec[i, gdat.indxspecpivt] *         gdat.diffspec[i, :] * (gdat.meanspec[i, :] / gdat.fluxpivt[i])**(-fdfnslop)
+    fluxhistmodl = fdfnnorm / gdat.pivtflux * gdat.diffflux * (gdat.meanflux / gdat.pivtflux)**(-fdfnslop)
           
     return fluxhistmodl
+
+
+def retr_fdfnbrok(gdat, fdfnnorm, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
+    
+    indxfluxlowr = where(gdat.meanflux < fdfnbrek)[0]
+    indxfluxuppr = where(gdat.meanflux >= fdfnbrek)[0]
+    norm = 1. / ((1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + ((gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
+    gdat.fluxhistmodl[indxfluxlowr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxlowr] * norm * (gdat.meanflux[indxfluxlowr] / fdfnbrek)**(1. - fdfnsloplowr)
+    gdat.fluxhistmodl[indxfluxuppr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxuppr] * norm * (gdat.meanflux[indxfluxuppr] / fdfnbrek)**(1. - fdfnslopuppr)
+          
+    return gdat.fluxhistmodl
 
 
 def retr_lpri(gdat, init=False):
         
     if init:
-        gdat.thislpri = zeros((gdat.numbpopl, gdat.numbener))
+        gdat.thislpri = zeros(gdat.numbpopl)
         
         for i in gdat.indxenerfdfn:
             for l in gdat.indxpopl:
                 fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
-                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l, i]]
-                fluxhistmodl = retr_fdfn(gdat, fdfnnorm, fdfnslop, i)
-                spec = gdat.thissampvarb[gdat.thisindxsampspec[l][i, :]]
-                fluxhist = histogram(spec, gdat.binsspec[i, :])[0]
+                if gdat.fdfntype == 'powr':
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]
+                    fluxhistmodl = retr_fdfnpowr(gdat, fdfnnorm, fdfnslop)
+                if gdat.fdfntype == 'brok':
+                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]
+                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
+                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
+                    fluxhistmodl = retr_fdfnbrok(gdat, fdfnnorm, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+                spec = gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
+                fluxhist = histogram(spec, gdat.binsflux)[0]
                 lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-                gdat.thislpri[l, i] = sum(lprbpois)            
+                gdat.thislpri[l] = sum(lprbpois) 
       
         gdat.nextlpri = copy(gdat.thislpri)
                 
@@ -421,38 +508,66 @@ def retr_lpri(gdat, init=False):
         if gdat.thisindxprop == gdat.indxpropfdfnnorm or gdat.thisindxprop == gdat.indxpropfdfnslop \
             or gdat.thisindxprop >= gdat.indxpropbrth and gdat.thisindxprop <= gdat.indxpropmerg:
               
-            if gdat.colrprio:
-                indxenertemp = gdat.indxenerfdfn
-            else:
-                indxenertemp = gdat.indxenermodi
-            for i in indxenertemp:
-                if gdat.thisindxprop == gdat.indxpropfdfnnorm:
-                    fdfnnorm = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
-                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
-                elif gdat.thisindxprop == gdat.indxpropfdfnslop:
+            if gdat.thisindxprop == gdat.indxpropfdfnnorm:
+                fdfnnorm = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+                if gdat.fdfntype == 'powr':
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                if gdat.fdfntype == 'brok':
+                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
+                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
+                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            if gdat.fdfntype == 'powr':
+                if  gdat.thisindxprop == gdat.indxpropfdfnslop:
                     fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
-                    fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
-                else:
+                    fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            if gdat.fdfntype == 'brok':
+                if  gdat.thisindxprop == gdat.indxpropfdfnbrek or gdat.thisindxprop == gdat.indxpropfdfnsloplowr or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
                     fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
-                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]]
-                fluxhistmodl = retr_fdfn(gdat, fdfnnorm, fdfnslop, i)
+                    if  gdat.thisindxprop == gdat.indxpropfdfnbrek:
+                        fdfnbrek = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                        fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                        fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                    if  gdat.thisindxprop == gdat.indxpropfdfnsloplowr:
+                        fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
+                        fdfnsloplowr = gdat.nextsampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
+                        fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+                    if  gdat.thisindxprop == gdat.indxpropfdfnbrek:
+                        fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
+                        fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
+                        fdfnslopuppr = gdat.nextsampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            if gdat.thisindxprop == gdat.indxpropbrth or gdat.thisindxprop == gdat.indxpropdeth or \
+                gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg:
+                fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
+                if gdat.fdfntype == 'powr':
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                if gdat.fdfntype == 'brok':
+                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
+                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            
+            # flux prior
+            if gdat.fdfntype == 'powr':
+                fluxhistmodl = retr_fdfnpowr(gdat, fdfnnorm, fdfnslop)
+            if gdat.fdfntype == 'brok':
+                fluxhistmodl = retr_fdfnbrok(gdat, fdfnnorm, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
     
-                fluxhist = histogram(gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][i, :]], gdat.binsspec[i, :])[0] 
-                if gdat.thisindxprop == gdat.indxpropbrth:
-                    fluxhist += histogram(gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
-                elif gdat.thisindxprop == gdat.indxpropdeth:
-                    fluxhist -= histogram(-gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
-                elif gdat.thisindxprop == gdat.indxpropsplt:
-                    fluxhist -= histogram(-gdat.modispec[i, 0], gdat.binsspec[i, :])[0]
-                    fluxhist += histogram(gdat.modispec[i, 1:3], gdat.binsspec[i, :])[0]
-                elif gdat.thisindxprop == gdat.indxpropmerg:
-                    fluxhist -= histogram(-gdat.modispec[i, 0:2], gdat.binsspec[i, :])[0]
-                    fluxhist += histogram(gdat.modispec[i, 2], gdat.binsspec[i, :])[0]
-                
-                lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-                gdat.nextlpri[gdat.indxpoplmodi, i] = sum(lprbpois)
+            # model flux distribution
+            fluxhist = histogram(gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]], gdat.binsflux)[0] 
+            if gdat.thisindxprop == gdat.indxpropbrth:
+                fluxhist += histogram(gdat.modispec[gdat.indxenerfdfn, 0], gdat.binsflux)[0]
+            elif gdat.thisindxprop == gdat.indxpropdeth:
+                fluxhist -= histogram(-gdat.modispec[gdat.indxenerfdfn, 0], gdat.binsflux)[0]
+            elif gdat.thisindxprop == gdat.indxpropsplt:
+                fluxhist -= histogram(-gdat.modispec[gdat.indxenerfdfn, 0], gdat.binsflux)[0]
+                fluxhist += histogram(gdat.modispec[gdat.indxenerfdfn, 1:3], gdat.binsflux)[0]
+            elif gdat.thisindxprop == gdat.indxpropmerg:
+                fluxhist -= histogram(-gdat.modispec[gdat.indxenerfdfn, 0:2], gdat.binsflux)[0]
+                fluxhist += histogram(gdat.modispec[gdat.indxenerfdfn, 2], gdat.binsflux)[0]
+            
+            lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
+            gdat.nextlpri[gdat.indxpoplmodi] = sum(lprbpois)
 
-            gdat.deltlpri = sum(gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi] - gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi])
+            gdat.deltlpri = sum(gdat.nextlpri[gdat.indxpoplmodi] - gdat.thislpri[gdat.indxpoplmodi])
         else:
             gdat.deltlpri = 0.
         
@@ -467,7 +582,7 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
         if gdat.fdfntype == 'brok':
             sampvarb[gdat.indxsampfdfnsloplowr[l]] = icdf_atan(samp[gdat.indxsampfdfnsloplowr[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
             sampvarb[gdat.indxsampfdfnslopuppr[l]] = icdf_atan(samp[gdat.indxsampfdfnslopuppr[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-            sampvarb[gdat.indxsampfdfnbrek[l]] = icdf_logt(samp[gdat.indxsampfdfnbrek[l]], gdat.minmfdfnbrek[l, i], gdat.factfdfnbrek[l, i])
+            sampvarb[gdat.indxsampfdfnbrek[l]] = icdf_logt(samp[gdat.indxsampfdfnbrek[l]], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
         else:
             sampvarb[gdat.indxsampfdfnslop[l]] = icdf_atan(samp[gdat.indxsampfdfnslop[l]], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
     for c in gdat.indxback:
@@ -478,11 +593,13 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
     for l in gdat.indxpopl:
         sampvarb[indxsamplgal[l]] = icdf_self(samp[indxsamplgal[l]], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
         sampvarb[indxsampbgal[l]] = icdf_self(samp[indxsampbgal[l]], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
-        for i in gdat.indxenerfdfn:
-            sampvarb[indxsampspec[l][i, :]] = icdf_spec(gdat, samp[indxsampspec[l][i, :]], sampvarb[gdat.indxsampfdfnslop[l, i]], gdat.minmspec[i], gdat.maxmspec[i])
-        if gdat.colrprio:
-            sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
-            sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
+        if gdat.fdfntype == 'powr':
+            sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux(gdat, samp[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[gdat.indxsampfdfnslop[l]])
+        if gdat.fdfntype == 'brok':
+            sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_brok(gdat, samp[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[gdat.indxsampfdfnbrek[l]], \
+                        sampvarb[gdat.indxsampfdfnsloplowr[l]], sampvarb[gdat.indxsampfdfnslopuppr[l]])
+        sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+        sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
     
     return sampvarb
     
@@ -505,14 +622,9 @@ def retr_maps(gdat, indxpntsfull, sampvarb):
     return pntsflux, pntscnts, totlflux, totlcnts
 
 
-def retr_mrkrsize(gdat, spec, indxenerplot):
-    if gdat.colrprio:
-        indxenertemp = gdat.indxenerfdfn[0]
-    else:
-        indxenertemp = indxenerplot
+def retr_mrkrsize(gdat, flux):
 
-    mrkrsize = (spec[indxenertemp, :] - gdat.minmspec[indxenertemp]) / (gdat.maxmspec[indxenertemp] - gdat.minmspec[indxenertemp]) * \
-		(gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
+    mrkrsize = (flux - gdat.minmflux) / (gdat.maxmflux - gdat.minmflux) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
         
     return mrkrsize
 
@@ -594,39 +706,24 @@ def updt_samp(gdat):
     
     if gdat.thisindxprop == gdat.indxpropfdfnnorm:
         gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]] = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
-        gdat.thislpri[gdat.indxpoplmodi, gdat.indxenermodi] = gdat.nextlpri[gdat.indxpoplmodi, gdat.indxenermodi]
+        gdat.thislpri[gdat.indxpoplmodi] = gdat.nextlpri[gdat.indxpoplmodi]
 
-    if gdat.thisindxprop == gdat.indxpropfdfnslop:
+    if gdat.thisindxprop == gdat.indxpropfdfnslop or gdat.thisindxprop == gdat.indxpropfdfnbrek or gdat.thisindxprop == gdat.indxpropfdfnsloplowr \
+        or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
  
         # update the unit sample vector
-        if gdat.colrprio:
-            indxenertemp = gdat.indxenerfdfn
-        else:
-            indxenertemp = gdat.indxenermodi
-        
-        if False:
-            print 'gdat.thissampvarb[gdat.thisindxsampspec]'
-            for k in range(gdat.thisindxsampspec[0].shape[1]):
-                print gdat.thissampvarb[gdat.thisindxsampspec[0][:, k]]
-            print 'gdat.drmcsamp[gdat.thisindxsampspec]'
-            for k in range(gdat.thisindxsampspec[0].shape[1]):
-                print gdat.drmcsamp[gdat.thisindxsampspec[0][:, k]]
-        
-        gdat.drmcsamp[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :], -1] = \
-            cdfn_spec(gdat, gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :]], \
-            gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]], \
-            gdat.minmspec[gdat.indxenermodi], gdat.maxmspec[gdat.indxenermodi])
-       
-        if False:
-            print 'gdat.thissampvarb[gdat.thisindxsampspec]'
-            for k in range(gdat.thisindxsampspec[0].shape[1]):
-                print gdat.thissampvarb[gdat.thisindxsampspec[0][:, k]]
-            print 'gdat.drmcsamp[gdat.thisindxsampspec]'
-            for k in range(gdat.thisindxsampspec[0].shape[1]):
-                print gdat.drmcsamp[gdat.thisindxsampspec[0][:, k]]
-            print
-            print
+        flux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]]
+        if gdat.fdfntype == 'powr':
+            fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            fluxunit = cdfn_flux_powr(gdat, flux, fdfnslop)
+        if gdat.fdfntype == 'brok':
+            fdfnbrek = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            fdfnslop = gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
 
+        gdat.drmcsamp[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :], -1] = specunit
+        
         # update the sample vector
         gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]] = \
             gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]]
@@ -647,53 +744,7 @@ def updt_samp(gdat):
             gdat.nextsampvarb[gdat.indxsampnormback[gdat.indxbackmodi, gdat.indxenermodi]]
         
     if gdat.thisindxprop >= gdat.indxpropbrth or gdat.thisindxprop == gdat.indxproppsfipara:
-
-        # temp
-        if False:
-            print 'hey'
-            
-            gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
-            print 'gdat.thispntsflux'
-            print amin(gdat.thispntsflux), mean(gdat.thispntsflux), amax(gdat.thispntsflux)
-            print 'gdat.temppntsflux'
-            print amin(gdat.temppntsflux), mean(gdat.temppntsflux), amax(gdat.temppntsflux)
-            errr = gdat.temppntsflux - gdat.thispntsflux
-            print 'errr'
-            print amin(errr), mean(errr), amax(errr)
-
-            # temp
-            figr, axis, path = init_fram(gdat, 0, 0, 'thispntsflux')
-            axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsflux')
-            plt.savefig(path)
-            plt.close(figr)
-            
-            modipixl = zeros_like(gdat.thispntsflux)
-            modipixl[0, gdat.indxpixlmodi, 0] = 1.
-            figr, axis, path = init_fram(gdat, 0, 0, 'pixlmodi')
-            axis, cbar = retr_imag(gdat, axis, modipixl, 0, 0, logt=False, titl='pixlmodi')
-            plt.savefig(path)
-            plt.close(figr)
-
-            figr, axis, path = init_fram(gdat, 0, 0, 'nextpntsflux')
-            axis, cbar = retr_imag(gdat, axis, gdat.nextpntsflux, 0, 0, logt=False, titl='nextpntsflux')
-            plt.savefig(path)
-            plt.close(figr)
-       
-            temp = zeros_like(gdat.nextpntsflux)
-            temp[0, gdat.indxpixlmodi, 0] = gdat.nextpntsflux[0, gdat.indxpixlmodi, 0]
-            figr, axis, path = init_fram(gdat, 0, 0, 'nextpntsfluxmodi')
-            axis, cbar = retr_imag(gdat, axis, temp, 0, 0, logt=False, titl='nextpntsfluxmodi')
-            plt.savefig(path)
-            plt.close(figr)
-            
-        gdat.thispntsflux[gdat.indxcubemodi] = gdat.nextpntsflux[gdat.indxcubemodi]
-        
-        if False:
-            # temp
-            figr, axis, path = init_fram(gdat, 0, 0, 'thispntsfluxprim')
-            axis, cbar = retr_imag(gdat, axis, gdat.thispntsflux, 0, 0, logt=False, titl='thispntsfluxprim')
-            plt.savefig(path)
-            plt.close(figr)
+        gdat.thispntsflux[gdat.indxcubemodi] = copy(gdat.nextpntsflux[gdat.indxcubemodi])
 
     # transdimensinal updates
     if gdat.thisindxprop >= gdat.indxpropbrth and gdat.thisindxprop <= gdat.indxpropmerg:
@@ -708,13 +759,10 @@ def updt_samp(gdat):
         del gdat.thisindxpntsempt[gdat.indxpoplmodi][0]
 
         # update the components
-        gdat.thissampvarb[gdat.indxsampmodi[0]] = gdat.modilgal[0]
-        gdat.thissampvarb[gdat.indxsampmodi[1]] = gdat.modibgal[0]
-        if gdat.colrprio:
-            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.indxener]] = gdat.modispec[:, 0]
-            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.numbener]] = gdat.modisind[0]
-        else:
-            gdat.thissampvarb[gdat.indxsampmodi[2:]] = gdat.modispec[gdat.indxenermodi, 0]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcomplgal]] = gdat.modilgal[0]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompbgal]] = gdat.modibgal[0]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompspec]] = gdat.modispec[:, 0]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompsind]] = gdat.modisind[0]
         
     # death
     if gdat.thisindxprop == gdat.indxpropdeth:
@@ -750,13 +798,10 @@ def updt_samp(gdat):
         gdat.thisindxpntsempt[gdat.indxpoplmodi].append(gdat.mergindxchd1)
 
         # update the component
-        gdat.thissampvarb[gdat.indxsampmodi[0]] = gdat.modilgal[2]
-        gdat.thissampvarb[gdat.indxsampmodi[1]] = gdat.modibgal[2]
-        if gdat.colrprio:
-            gdat.thissampvarb[gdat.indxsampmodi[2:2+gdat.indxener]] = gdat.modispec[:, 2]
-            gdat.thissampvarb[gdat.indxsampmodi[2+gdat.numbener]] = gdat.modisind[2]
-        else:
-            gdat.thissampvarb[gdat.indxsampmodi[2:]] = gdat.modispec[:, 2]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcomplgal]] = gdat.modilgal[2]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompbgal]] = gdat.modibgal[2]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompspec]] = gdat.modispec[:, 2]
+        gdat.thissampvarb[gdat.indxsampmodi[gdat.indxcompsind]] = gdat.modisind[2]
         
     # component change
     if gdat.thisindxprop >= gdat.indxproplgal:  
@@ -765,12 +810,9 @@ def updt_samp(gdat):
         elif gdat.thisindxprop == gdat.indxpropbgal:
             gdat.thissampvarb[gdat.indxsampmodi] = gdat.modibgal[1]
         else:
-            if gdat.colrprio:
-                gdat.thissampvarb[gdat.indxsampmodispec] = gdat.modispec[:, 1]
-                if gdat.thisindxprop == gdat.indxpropsind:
-                    gdat.thissampvarb[gdat.indxsampmodi] = gdat.modisind[1]
-            else:
-                gdat.thissampvarb[gdat.indxsampmodi] = gdat.modispec[gdat.indxenermodi, 1]
+            gdat.thissampvarb[gdat.indxsampmodispec] = gdat.modispec[:, 1]
+            if gdat.thisindxprop == gdat.indxpropsind:
+                gdat.thissampvarb[gdat.indxsampmodi] = gdat.modisind[1]
 
     # update the unit sample vector
     if gdat.indxsampmodi.size > 0:
@@ -860,8 +902,8 @@ def retr_fgl3(gdat):
     # select the 3FGL point sources in the ROI
     gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
     for i in gdat.indxener:
-        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & \
-            (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
+        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmflux[i]) & \
+            (gdat.fgl3spec[0, i, :] < gdat.maxmflux[i]))[0], gdat.indxfgl3rofi)
     gdat.indxfgl3rofi = intersect1d(where((abs(gdat.fgl3lgal) < gdat.maxmgangmarg) & \
             (abs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
     gdat.fgl3numbpntsrofi = gdat.indxfgl3rofi.size
@@ -869,8 +911,8 @@ def retr_fgl3(gdat):
 
     # sanity check
     for i in gdat.indxener:
-        if (gdat.fgl3spec[0, i, gdat.indxfgl3rofi] > gdat.maxmspec[i]).any():
-            print 'maxmspec %d is bad!' % i
+        if (gdat.fgl3spec[0, i, gdat.indxfgl3rofi] > gdat.maxmflux[i]).any():
+            print 'maxmflux %d is bad!' % i
 
 
 def retr_rtag(gdat, indxprocwork):
@@ -906,12 +948,6 @@ def retr_dist(gdat, lgal0, bgal0, lgal1, bgal1):
         dist = deg2rad(sqrt((lgal0 - lgal1)**2 + (bgal0 - bgal1)**2))
 
     return dist
-       
-    
-def retr_strgprop(gdat):
-    
-    gdat.strgprop = ['FDF Norm', 'FDF Slope', 'PSF', 'Back. Norm', 'Birth', 'Death', 'Split', 'Merge', \
-  'Longitude Update', 'Latitude Update', 'Flux Update', 'Spectral Index Update']
 
 
 def retr_singgaus(scaldevi, sigc):
@@ -948,18 +984,6 @@ def retr_doubking(scaldevi, frac, sigc, gamc, sigt, gamt):
         (1. - frac) / 2. / pi / sigt**2 * (1. - 1. / gamt) * (1. + scaldevi**2 / 2. / gamt / sigt**2)**(-gamt)
     
     return psfn
-
-
-def chsq_fdfnslop(gdat, para, i):
-
-    fdfnslop = para[0]
-    fdfnnormnorm = para[1]
-    
-    fluxhistmodl = fdfnnormnorm * gdat.diffspec[i, :] * pdfn_spec(gdat.meanspec[i, :], fdfnslop, gdat.minmspec[i], gdat.maxmspec[i])
-
-    chsq = sum(((fluxhistmodl.flatten()[jspecfgl3] - gdat.fgl3spechist[i, jspecfgl3]) / gdat.fgl3spechist[i, jspecfgl3])**2)
-    
-    return chsq
 
 
 def retr_strgfluxunit(gdat):
@@ -1014,8 +1038,7 @@ def retr_prop(gdat):
         print 'thisindxsampbgal: ', gdat.thisindxsampbgal
         print 'thisindxsampspec: '
         print gdat.thisindxsampspec
-        if gdat.colrprio:
-            print 'thisindxsampsind: ', gdat.thisindxsampsind
+        print 'thisindxsampsind: ', gdat.thisindxsampsind
         print 'thisindxsampcomp: ', gdat.thisindxsampcomp
         print
         
@@ -1025,30 +1048,30 @@ def retr_prop(gdat):
         gdat.indxsampmodi = gdat.indxsampfdfnnorm[gdat.indxpoplmodi]
         retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvfdfnnorm)
         gdat.nextsampvarb[gdat.indxsampfdfnnorm] = icdf_logt(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.minmfdfnnorm, gdat.factfdfnnorm)
-        if gdat.colrprio:
-            gdat.indxenermodi = gdat.indxenerfdfn
-        else:
-            gdat.indxenermodi = gdat.indxener
         
     # flux distribution function slope
-    if gdat.thisindxprop == gdat.indxpropfdfnslop:
-        if gdat.colrprio:
-            gdat.indxenermodi = gdat.indxenerfdfn
-        else:
-            gdat.indxenermodi = choice(gdat.indxener)
-        gdat.indxsampfdfnslopmodi = gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]
-        retr_gaus(gdat, gdat.indxsampfdfnslopmodi, gdat.stdvfdfnslop)
+    if gdat.thisindxprop == gdat.indxpropfdfnslop or gdat.thisindxprop == gdat.indxpropfdfnbrek or \
+            gdat.thisindxprop == gdat.indxpropfdfnsloplowr or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
+        if gdat.thisindxprop == gdat.indxpropfdfnslop:
+            gdat.indxsampvarbmodi = gdat.indxsampfdfnslop[gdat.indxpoplmodi]
+        if gdat.thisindxprop == gdat.indxpropfdfnbrek:
+            gdat.indxsampvarbmodi = gdat.indxsampfdfnbrek[gdat.indxpoplmodi]
+        if gdat.thisindxprop == gdat.indxpropfdfnsloplowr:
+            gdat.indxsampvarbmodi = gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]
+        if gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
+            gdat.indxsampvarbmodi = gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]
+        retr_gaus(gdat, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
         
-        gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]] = \
-            icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopmodi, -1], gdat.minmfdfnslop, gdat.factfdfnslop)
-        if gdat.colrprio:
-            gdat.indxsampmodi = concatenate((gdat.indxsampfdfnslopmodi, gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxener, :].flatten()))
-        else:
-            gdat.indxsampmodi = concatenate((array([gdat.indxsampfdfnslopmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, :]))
+        gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnslop, gdat.factfdfnslop)
+        print 'hey'
+        print 'gdat.indxsampvarbmodi'
+        print gdat.indxsampvarbmodi
+        print 'gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]'
+        print gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]
+
+        gdat.indxsampmodi = concatenate((gdat.indxsampvarbmodi, gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]))
            
         if gdat.verbtype > 2:
-            print 'indxenermodi'
-            print gdat.indxenermodi
             print 'indxpoplmodi'
             print gdat.indxpoplmodi
             print 'indxsampmodi'
@@ -1133,18 +1156,12 @@ def retr_prop(gdat):
         indxsampbrth = int(gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.indxpoplmodi + gdat.thisindxpntsempt[gdat.indxpoplmodi][0] * gdat.numbcomp)
         
         # sample auxiliary variables
-        if gdat.colrprio:
-            numbauxipara = gdat.numbcompcolr
-        else:
-            numbauxipara = gdat.numbcomp
+        numbauxipara = gdat.numbcompcolr
         gdat.auxipara = rand(numbauxipara)
 
-        if gdat.colrprio:
-            gdat.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = gdat.auxipara[0:2]
-            gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1] = gdat.auxipara[-2]
-            gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1] = gdat.auxipara[-1]
-        else:   
-            gdat.drmcsamp[indxsampbrth:indxsampbrth+gdat.numbcomp, -1] = gdat.auxipara
+        gdat.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = gdat.auxipara[0:2]
+        gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1] = gdat.auxipara[-2]
+        gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1] = gdat.auxipara[-1]
 
         # sample indices to be modified
         gdat.indxsampmodi = arange(indxsampbrth, indxsampbrth + gdat.numbcomp, dtype=int)
@@ -1153,17 +1170,10 @@ def retr_prop(gdat):
         gdat.numbmodipnts = 1
         gdat.modilgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
         gdat.modibgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth+1, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-        if gdat.colrprio:
-            modiflux = icdf_spec(gdat, gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1], \
-                    gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenerfdfn]], \
-                    gdat.minmspec[gdat.indxenerfdfn], gdat.maxmspec[gdat.indxenerfdfn])
-            gdat.modisind[0] = icdf_eerr(gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1], gdat.meansind[gdat.indxpoplmodi], \
-                        gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
-            gdat.modispec[:, 0] = retr_spec(gdat, modiflux, gdat.modisind[0]).flatten()
-        else:
-            for i in gdat.indxener:
-                gdat.modispec[i, 0] = icdf_spec(gdat, gdat.drmcsamp[indxsampbrth+2+i, -1], \
-                    gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
+        modiflux = icdf_flux(gdat, gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+        gdat.modisind[0] = icdf_eerr(gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1], gdat.meansind[gdat.indxpoplmodi], \
+                    gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
+        gdat.modispec[:, 0] = retr_spec(gdat, modiflux, gdat.modisind[0]).flatten()
     
         if gdat.verbtype > 1:
             print 'auxipara: ', gdat.auxipara
@@ -1245,7 +1255,7 @@ def retr_prop(gdat):
         # determine the new components
         gdat.auxipara = empty(gdat.numbcomp)
         gdat.auxipara[0:2] = rand(2) * spmrlbhl
-        gdat.auxipara[2:] = (exp(rand(gdat.numbener)) - 1.) / (exp(1.) - 1.) * (gdat.maxmspec - gdat.minmspec) + gdat.minmspec
+        gdat.auxipara[2:] = (exp(rand(gdat.numbener)) - 1.) / (exp(1.) - 1.) * (gdat.maxmflux - gdat.minmflux) + gdat.minmflux
         
         if gdat.verbtype > 1:
             if pixltype == 'heal':
@@ -1280,8 +1290,8 @@ def retr_prop(gdat):
 
         if abs(nextlgal0) > gdat.maxmgangmarg or abs(nextlgal1) > gdat.maxmgangmarg or \
            abs(nextbgal0) > gdat.maxmgangmarg or abs(nextbgal1) > gdat.maxmgangmarg or \
-           where((nextspec0 > gdat.maxmspec) | (nextspec0 < gdat.minmspec))[0].size > 0 or \
-           where((nextspec1 > gdat.maxmspec) | (nextspec1 < gdat.minmspec))[0].size > 0:
+           where((nextspec0 > gdat.maxmflux) | (nextspec0 < gdat.minmflux))[0].size > 0 or \
+           where((nextspec1 > gdat.maxmflux) | (nextspec1 < gdat.minmflux))[0].size > 0:
                gdat.reje = True
                 
         if not gdat.reje:
@@ -1294,13 +1304,13 @@ def retr_prop(gdat):
             gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_spec(nextspec0[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
+                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_flux(nextspec0[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
 
             ## second new component
             gdat.drmcsamp[gdat.indxsampchd1, -1] = cdfn_self(nextlgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd1+1, -1] = cdfn_self(nextbgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd1+2+i, -1] = cdfn_spec(nextspec1[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
+                gdat.drmcsamp[gdat.indxsampchd1+2+i, -1] = cdfn_flux(nextspec1[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
 
             gdat.numbmodipnts = 3
             ## component to be removed
@@ -1389,7 +1399,7 @@ def retr_prop(gdat):
             gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_spec(nextspec[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, i]], gdat.minmspec[i], gdat.maxmspec[i])
+                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_flux(nextspec[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
 
             gdat.numbmodipnts = 3
             ## first component to be merged
@@ -1446,22 +1456,17 @@ def retr_prop(gdat):
     # component change
     if gdat.thisindxprop >= gdat.indxproplgal:     
         
+        gdat.indxenermodi = gdat.indxener
         if gdat.thisindxprop == gdat.indxproplgal or gdat.thisindxprop == gdat.indxpropbgal:
             if gdat.thisindxprop == gdat.indxproplgal:
-                gdat.indxcompmodi = 0
+                gdat.indxcompmodi = gdat.indxcomplgal
             else:
-                gdat.indxcompmodi = 1
-            gdat.indxenermodi = gdat.indxener
+                gdat.indxcompmodi = gdat.indxcompbgal
         else:
-            if gdat.colrprio:
-                gdat.indxenermodi = gdat.indxener
-                if gdat.thisindxprop == gdat.indxpropspec:
-                    gdat.indxcompmodi = 2 + gdat.indxenerfdfn
-                elif gdat.thisindxprop == gdat.indxpropsind:
-                    gdat.indxcompmodi = array([2 + gdat.numbener])
-            else:
-                gdat.indxenermodi = choice(gdat.indxener)
-                gdat.indxcompmodi = gdat.indxenermodi + 2
+            if gdat.thisindxprop == gdat.indxpropflux:
+                gdat.indxcompmodi = gdat.indxcompflux
+            elif gdat.thisindxprop == gdat.indxpropsind:
+                gdat.indxcompmodi = gdat.indxcompsind
             
         # occupied PS index to be modified
         modiindxindxpnts = choice(arange(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]], dtype=int))
@@ -1474,23 +1479,19 @@ def retr_prop(gdat):
         
         # sample index to be modified
         gdat.indxsampmodi = gdat.indxsampmodiinit + gdat.indxcompmodi
-        if gdat.colrprio:
-            gdat.indxsampmodispec = gdat.indxsampmodiinit + 2 + gdat.indxener
+        gdat.indxsampmodispec = gdat.indxsampmodiinit + 2 + gdat.indxener
         
         # propose
         if gdat.thisindxprop == gdat.indxproplgal or gdat.thisindxprop == gdat.indxpropbgal:
             retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvlbhl) 
-        if gdat.thisindxprop == gdat.indxpropspec:
+        if gdat.thisindxprop == gdat.indxpropflux:
             retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvspec)
         if gdat.thisindxprop == gdat.indxpropsind:
             retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvpropsind)
 
-        if gdat.colrprio:
-            thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
-            thissind = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
-            thisspec = retr_spec(gdat, thisflux, thissind)
-        else:
-            thisspec = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenermodi, modiindxindxpnts]]
+        thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
+        thissind = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
+        thisspec = retr_spec(gdat, thisflux, thissind)
             
         gdat.numbmodipnts = 2
         gdat.modispec[:, 0] = -thisspec.flatten()
@@ -1507,21 +1508,14 @@ def retr_prop(gdat):
         else:
             gdat.modilgal[:] = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][modiindxindxpnts]]
             gdat.modibgal[:] = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][modiindxindxpnts]]
-            if gdat.colrprio:
-                if gdat.thisindxprop == gdat.indxpropspec:
-                    modiflux = icdf_spec(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], \
-                        gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenerfdfn]], 
-                        gdat.minmspec[gdat.indxenerfdfn], gdat.maxmspec[gdat.indxenerfdfn])
-                    gdat.modisind[1] = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
-                else:
-                    modiflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
-                    gdat.modisind[1] = icdf_eerr(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.meansind[gdat.indxpoplmodi], \
-                            gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
-                gdat.modispec[:, 1] = retr_spec(gdat, modiflux, gdat.modisind[1]).flatten()
+            if gdat.thisindxprop == gdat.indxpropflux:
+                modiflux = icdf_flux(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+                gdat.modisind[1] = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
             else:
-                specunit = gdat.drmcsamp[gdat.indxsampmodi, -1]
-                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi, gdat.indxenermodi]]
-                gdat.modispec[:, 1] = icdf_spec(gdat, specunit, fdfnslop, gdat.minmspec[gdat.indxenermodi], gdat.maxmspec[gdat.indxenermodi])
+                modiflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
+                gdat.modisind[1] = icdf_eerr(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.meansind[gdat.indxpoplmodi], \
+                        gdat.stdvsind[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
+            gdat.modispec[:, 1] = retr_spec(gdat, modiflux, gdat.modisind[1]).flatten()
 
         # log
         if gdat.verbtype > 1:
@@ -1536,14 +1530,16 @@ def retr_prop(gdat):
 
     # energy bin in which to evaluate the log-likelihood
     if gdat.indxpropbrth <= gdat.thisindxprop <= gdat.indxpropmerg:
-        gdat.indxenermodi = arange(gdat.numbener)
+        gdat.indxenermodi = gdat.indxener
 
-    if type(gdat.indxenermodi) == int64:
-        gdat.indxenermodi = array([gdat.indxenermodi])
+    # temp
+    #if type(gdat.indxenermodi) == int64:
+    #    gdat.indxenermodi = array([gdat.indxenermodi])
 
     if gdat.verbtype > 1:
         print 'indxsampmodi: ', gdat.indxsampmodi
-        print 'indxenermodi: ', gdat.indxenermodi
+        if gdat.thisindxprop >= gdat.indxproppsfipara:
+            print 'indxenermodi: ', gdat.indxenermodi
 
     # auxiliary variable density fraction and jacobian
     if (gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg) and not gdat.reje:
@@ -1760,28 +1756,76 @@ def retr_psfimodl(gdat):
 
 def retr_propmodl(gdat):
 
-    gdat.strgprop = ['fdfnnorm', 'fdfnslop', 'psfipara', 'normback', 'brth', 'deth', 'splt', 'merg', 'lgal', 'bgal', 'spec', 'sind']
+    gdat.strgprop = []
+    cntr = tdpy.util.cntr()
+    
+    ## normalization of the FDF
+    gdat.indxpropfdfnnorm = cntr.incr()
+    gdat.strgprop.append('fdfnnorm')
+
+    ## FDF shape
+    ### dummy definitions
+    gdat.indxpropfdfnslop = -1
+    gdat.indxpropfdfnbrek = -1
+    gdat.indxpropfdfnsloplowr = -1
+    gdat.indxpropfdfnslopuppr = -1
+    if gdat.fdfntype == 'powr':
+        gdat.indxpropfdfnslop = cntr.incr()
+        gdat.strgprop.append('fdfnslop')
+    if gdat.fdfntype == 'brok':
+        gdat.indxpropfdfnbrek = cntr.incr()
+        gdat.indxpropfdfnsloplowr = cntr.incr()
+        gdat.indxpropfdfnslopuppr = cntr.incr()
+        gdat.strgprop.append('fdfnsloplowr')
+        gdat.strgprop.append('fdfnslopuppr')
+        gdat.strgprop.append('fdfnbrek')
+
+    # PSF parameters
+    gdat.indxproppsfipara = cntr.incr()
+    gdat.strgprop.append('psfipara')
+    
+    # background normalization
+    gdat.indxpropnormback = cntr.incr()
+    gdat.strgprop.append('normback')
+    
+    # birth
+    gdat.indxpropbrth = cntr.incr()
+    gdat.strgprop.append('brth')
+    
+    # death
+    gdat.indxpropdeth = cntr.incr()
+    gdat.strgprop.append('deth')
+    
+    # split
+    gdat.strgprop.append('splt')
+    gdat.indxpropsplt = cntr.incr()
+    
+    # merge
+    gdat.strgprop.append('merg')
+    gdat.indxpropmerg = cntr.incr()
+    
+    # lgal
+    gdat.strgprop.append('lgal')
+    gdat.indxproplgal = cntr.incr()
+    
+    # bgal
+    gdat.strgprop.append('bgal')
+    gdat.indxpropbgal = cntr.incr()
+    
+    # spec
+    gdat.strgprop.append('spec')
+    gdat.indxpropflux = cntr.incr()
+    
+    # sind
+    gdat.strgprop.append('sind')
+    gdat.indxpropsind = cntr.incr()
 
     gdat.numbprop = len(gdat.strgprop)
     gdat.indxprop = arange(gdat.numbprop)
-    gdat.indxpropfdfnnorm = 0
-    gdat.indxpropfdfnslop = 1
-    gdat.indxproppsfipara = 2
-    gdat.indxpropnormback = 3
-    gdat.indxpropbrth = 4
-    gdat.indxpropdeth = 5
-    gdat.indxpropsplt = 6
-    gdat.indxpropmerg = 7
-    gdat.indxproplgal = 8
-    gdat.indxpropbgal = 9
-    gdat.indxpropspec = 10
-    gdat.indxpropsind = 11
 
     if gdat.probprop == None:
-
-        probfdfnnorm = array([1.])
-        probfdfnslop = array([1.])
             
+        temp = array([1.])
         if gdat.proppsfn:
             probpsfipara = array([1.])
         else:
@@ -1795,15 +1839,14 @@ def retr_propmodl(gdat):
         
         problgal = array([sum(gdat.maxmnumbpnts) / 2.])
         probbgal = array([sum(gdat.maxmnumbpnts) / 2.])
-        if gdat.colrprio:
-            probspec = array([sum(gdat.maxmnumbpnts) / 2.])
-            probsind = array([sum(gdat.maxmnumbpnts) / 2.])
-        else:
-            probspec = array([sum(gdat.maxmnumbpnts) / 2.])
-            #probspec = array([sum(gdat.maxmnumbpnts) / 2.] * gdat.numbener)
-            probsind = array([0.])
-            
-        gdat.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, \
+        probspec = array([sum(gdat.maxmnumbpnts) / 2.])
+        probsind = array([sum(gdat.maxmnumbpnts) / 2.])
+           
+        if gdat.fdfntype == 'powr':
+            gdat.probprop = concatenate((temp, temp, probpsfipara, probnormback, probbrth, probdeth, \
+                probsplt, probmerg, problgal, probbgal, probspec, probsind))
+        if gdat.fdfntype == 'brok':
+            gdat.probprop = concatenate((temp, temp, temp, temp, probpsfipara, probnormback, probbrth, probdeth, \
                 probsplt, probmerg, problgal, probbgal, probspec, probsind))
         gdat.probprop /= sum(gdat.probprop)
        
@@ -1898,7 +1941,10 @@ def setp(gdat):
         
     if gdat.exprtype == 'ferm':
         if gdat.strgback == None:
-            gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            if gdat.regitype == 'ngal':
+                gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            if gdat.regitype == 'igal':
+                gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_igal.fits']
         if gdat.lablback == None:
             gdat.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if gdat.nameback == None:
@@ -1910,7 +1956,7 @@ def setp(gdat):
     gdat.numbchrollik = 7
 
     # number of bins
-    gdat.numbspec = 10
+    gdat.numbflux = 10
     gdat.numbbins = 10
 
     gdat.minmnumbpnts = 1
@@ -1932,16 +1978,12 @@ def setp(gdat):
     gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
     gdat.indxener = arange(gdat.numbener, dtype=int)
     
-    gdat.indxenerpivt = array([gdat.numbener / 2])
-    if gdat.colrprio: 
-        gdat.indxenerfdfn = gdat.indxenerpivt
-    else:
-        gdat.indxenerfdfn = gdat.indxener
-    gdat.numbenerfdfn = gdat.indxenerfdfn.size
+    #gdat.indxenerfdfn = array([gdat.numbener / 2])
+    gdat.indxenerfdfn = gdat.numbener / 2
     gdat.enerfdfn = gdat.meanener[gdat.indxenerfdfn]
         
-    gdat.minmspec = gdat.minmspec * (gdat.meanener[gdat.indxenerpivt] / gdat.meanener)**2
-    gdat.maxmspec = gdat.maxmspec * (gdat.meanener[gdat.indxenerpivt] / gdat.meanener)**2
+    gdat.minmspec = gdat.minmflux * (gdat.meanener[gdat.indxenerfdfn] / gdat.meanener)**2
+    gdat.maxmspec = gdat.maxmflux * (gdat.meanener[gdat.indxenerfdfn] / gdat.meanener)**2
     if gdat.datatype == 'mock':
         if gdat.mockfdfntype == 'brok':
             gdat.mockfdfnsloplowr = tile(gdat.mockfdfnsloplowr, (1, gdat.numbener))
@@ -1950,9 +1992,7 @@ def setp(gdat):
         else:
             gdat.mockfdfnslop = tile(gdat.mockfdfnslop, (1, gdat.numbener))
 
-    gdat.indxspecpivt = gdat.numbspec / 2
-    
-    retr_strgprop(gdat)
+    gdat.indxfluxpivt = gdat.numbflux / 2
 
     # temp
     if gdat.exprtype == 'sdss':
@@ -1961,9 +2001,9 @@ def setp(gdat):
     # angular gdat.deviation
     gdat.numbangl = 100
     if gdat.exprtype == 'sdss':
-        gdat.maxmangldisp = deg2rad(10. / 3600.) # [rad]
+        gdat.maxmangldisp = deg2rad(15. / 3600.) # [rad]
     if gdat.exprtype == 'ferm':
-        gdat.maxmangldisp = deg2rad(10.) # [rad]
+        gdat.maxmangldisp = deg2rad(15.) # [rad]
     gdat.angldisp = linspace(0., gdat.maxmangldisp, gdat.numbangl) # [rad]
     maxmangl = deg2rad(3.5 * gdat.maxmgang) # [rad]
     angl = linspace(0., maxmangl, gdat.numbangl) # [rad]
@@ -2001,10 +2041,16 @@ def setp(gdat):
     
     # number of components
     gdat.numbcomp = 2 + gdat.numbener
-    if gdat.colrprio:
-        gdat.numbcomp += 1
+    gdat.numbcomp += 1
     gdat.numbcompcolr = 4
     gdat.jcbnsplt = 2.**(2 - gdat.numbener)
+    
+    # component indices
+    gdat.indxcomplgal = 0
+    gdat.indxcompbgal = 1
+    gdat.indxcompspec = 2 + gdat.indxener
+    gdat.indxcompflux = 2 + gdat.indxenerfdfn
+    gdat.indxcompsind = 2 + gdat.numbener
     
     # population index vector
     gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
@@ -2013,18 +2059,17 @@ def setp(gdat):
     gdat.minmfdfnbrek = empty((gdat.numbpopl, gdat.numbener))
     gdat.maxmfdfnbrek = empty((gdat.numbpopl, gdat.numbener))
     for l in gdat.indxpopl:
-        gdat.minmfdfnbrek[l, :] = gdat.minmspec
-        gdat.maxmfdfnbrek[l, :] = gdat.maxmspec
+        gdat.minmfdfnbrek[l, :] = gdat.minmflux
+        gdat.maxmfdfnbrek[l, :] = gdat.maxmflux
 
     # convenience factors for CDF and ICDF transforms
     gdat.factfdfnbrek = log(gdat.maxmfdfnbrek / gdat.minmfdfnbrek)
     gdat.factfdfnnorm = log(gdat.maxmfdfnnorm / gdat.minmfdfnnorm)
     gdat.factfdfnslop = arctan(gdat.maxmfdfnslop) - arctan(gdat.minmfdfnslop)
-    if gdat.colrprio:
-        gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
-        gdat.sindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
-        gdat.sindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
-        gdat.sindcdfnnormdiff = gdat.sindcdfnnormmaxm - gdat.sindcdfnnormminm
+    gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
+    gdat.sindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
+    gdat.sindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.meansind) / gdat.stdvsind / sqrt(2.)) + 1.)
+    gdat.sindcdfnnormdiff = gdat.sindcdfnnormmaxm - gdat.sindcdfnnormminm
 
     if gdat.datatype == 'mock':
 
@@ -2076,32 +2121,40 @@ def setp(gdat):
     gdat.priofactfdfnslop = gdat.numbener * log(1. / (arctan(gdat.maxmfdfnslop) - arctan(gdat.minmfdfnslop)))
     gdat.priofactfdfnnorm = log(1. / (log(gdat.maxmfdfnnorm) - log(gdat.minmfdfnnorm)))
 
+    # initialize the counter
+    cntr = tdpy.util.cntr()
+    
     # sample vector indices  
-    gdat.indxsampnumbpnts = arange(gdat.numbpopl)
-    gdat.indxsampfdfnnorm = arange(gdat.numbpopl) + amax(gdat.indxsampnumbpnts) + 1
-    if gdat.fdfntype == 'brok':
-        gdat.indxsampfdfnsloplowr = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnnorm) + 1
-        gdat.indxsampfdfnslopuppr = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnsloplowr) + 1
-        gdat.indxsampfdfnbrek = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnslopuppr) + 1
-        indxsamptemp = amax(gdat.indxsampfdfnbrek) + 1
-    else:
-        gdat.indxsampfdfnslop = arange(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener)) + amax(gdat.indxsampfdfnnorm) + 1
-        indxsamptemp = amax(gdat.indxsampfdfnslop) + 1
-    gdat.indxsamppsfipara = arange(gdat.numbpsfipara) + indxsamptemp
-    gdat.indxsampnormback = arange(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener)) + amax(gdat.indxsamppsfipara) + 1
+    gdat.indxsampnumbpnts = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+    gdat.indxsampfdfnnorm = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+    
+    # dummy definitions
+    gdat.indxsampfdfnslop = -1.
+    gdat.indxsampfdfnbrek = -1
+    gdat.indxsampfdfnsloplowr = -1
+    gdat.indxsampfdfnslopuppr = -1
 
-    gdat.fluxpivt = sqrt(gdat.minmspec * gdat.maxmspec)
+    if gdat.fdfntype == 'powr':
+        gdat.indxsampfdfnslop = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+    if gdat.fdfntype == 'brok':
+        gdat.indxsampfdfnbrek = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+        gdat.indxsampfdfnsloplowr = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+        gdat.indxsampfdfnslopuppr = arange(gdat.numbpopl) + cntr.incr(gdat.numbpopl)
+    gdat.indxsamppsfipara = arange(gdat.numbpsfipara) + cntr.incr(gdat.numbpsfipara)
+    gdat.indxsampnormback = arange(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener)) + cntr.incr(gdat.numbback * gdat.numbener)
+
+    gdat.pivtflux = sqrt(gdat.minmflux * gdat.maxmflux)
     
     gdat.maxmnumbcomp = gdat.maxmnumbpnts * gdat.numbcomp
     gdat.indxsampcompinit = amax(gdat.indxsampnormback) + 1
     
     # maximum number of parameters
-    gdat.maxmsampsize = int(gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.numbpopl)
+    gdat.numbpara = int(gdat.indxsampcompinit + gdat.maxmnumbcomp * gdat.numbpopl)
     
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 5
     if gdat.factthin == None:
-        gdat.factthin = min(gdat.maxmsampsize * 5, gdat.numbswep / 2)
+        gdat.factthin = min(gdat.numbpara * 5, gdat.numbswep / 2)
 
 
     # run tag
@@ -2126,6 +2179,11 @@ def setp(gdat):
     # determine proposal probabilities
     gdat.probpropminm = copy(gdat.probprop)
     gdat.probpropmaxm = copy(gdat.probprop)
+   
+    # initialize the catalog match
+    # temp
+    gdat.trueindxpntsmiss = array([0])
+    gdat.trueindxpntsbias = array([0])
     
     ## do not allow death or merge when the number of PS is at its minimum or 
     ## births or splits when the number of PS is at its maximum
@@ -2187,7 +2245,7 @@ def setp(gdat):
         gdat.cntrlghp, gdat.cntrbghp = 0., 0.
     else:
         gdat.cntrlghp, gdat.cntrbghp = 0., 90.
-    
+   
     # plot settings
     ## marker opacity
     gdat.mrkralph = 0.8
@@ -2203,37 +2261,41 @@ def setp(gdat):
     else:
         gdat.frambndr = gdat.maxmgang
         gdat.frambndrmarg = gdat.maxmgangmarg
-     
 
     # FDM normalization prior limits
     gdat.factnormback = log(gdat.maxmnormback / gdat.minmnormback)
 
-    # sky coordinates
+    # axes
+    # spatial
     gdat.binslbhl = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbins + 1)
+    
+    # flux
+    gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
+    gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
+    gdat.diffflux = gdat.binsflux[1:] - gdat.binsflux[:-1]
+    gdat.pivtflux = gdat.meanflux[gdat.indxfluxpivt]
 
-    gdat.binsspec = zeros((gdat.numbener, gdat.numbspec + 1))
-    for i in gdat.indxener:
-        gdat.binsspec[i, :] = logspace(log10(gdat.minmspec[i]), log10(gdat.maxmspec[i]), gdat.numbspec + 1)
-    gdat.meanspec = sqrt(gdat.binsspec[:, 1:] * gdat.binsspec[:, 0:-1])
-    gdat.diffspec = gdat.binsspec[:, 1:] - gdat.binsspec[:, 0:-1]
-
-    if gdat.colrprio:
-        gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbbins + 1)
-        gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
+    # convenience variables
+    gdat.fluxhistmodl = empty(gdat.numbflux)
+    
+    gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbbins + 1)
+    gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
     if gdat.exprtype == 'ferm':
-        gdat.numbspecprox = 4
+        gdat.numbfluxprox = 4
     if gdat.exprtype == 'sdss':
-        gdat.numbspecprox = 1
-    gdat.indxspecprox = arange(gdat.numbspecprox)
-    gdat.binsspecprox = logspace(log10(gdat.minmspec[gdat.indxenerpivt]), log10(gdat.maxmspec[gdat.indxenerpivt]), gdat.numbspecprox + 1)
-    gdat.meanspecprox = sqrt(gdat.binsspecprox[1:] * gdat.binsspecprox[:-1])
+        gdat.numbfluxprox = 1
+    gdat.indxfluxprox = arange(gdat.numbfluxprox)
+    gdat.binsfluxprox = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbfluxprox + 1)
+    gdat.meanfluxprox = sqrt(gdat.binsfluxprox[1:] * gdat.binsfluxprox[:-1])
     gdat.specfraceval = 1e-2
     if gdat.exprtype == 'ferm':
-        gdat.maxmangleval = empty(gdat.numbspecprox)
-        for h in gdat.indxspecprox:
-            frac = gdat.specfraceval * gdat.binsspecprox[0] / gdat.binsspecprox[h+1]
-            gdat.maxmangleval[h] = rad2deg(amax(retr_psfnwdth(gdat, gdat.fermpsfn, frac)))
+        gdat.maxmangleval = empty(gdat.numbfluxprox)
+        for h in gdat.indxfluxprox:
+            frac = gdat.specfraceval * gdat.binsfluxprox[0] / gdat.binsfluxprox[h+1]
+            psfnwdth = retr_psfnwdth(gdat, gdat.fermpsfn, frac)
+            gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
+            gdat.maxmangleval[h] = rad2deg(psfnwdth[gdat.indxmaxmangl])
     if gdat.exprtype == 'sdss':
         gdat.maxmangleval = array([10. / 3600.])
 
@@ -2330,11 +2392,11 @@ def setp(gdat):
 
     # count axis
     gdat.expotemp = mean(gdat.expo, 1)
-    gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmspec * amin(gdat.expotemp, 1) * gdat.diffener
-    gdat.maxmcnts = repeat(1e5, gdat.numbener) # gdat.maxmspec * amax(gdat.expotemp, 1) * gdat.diffener
-    gdat.binscnts = zeros((gdat.numbener, gdat.numbspec + 1))
+    gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmflux * amin(gdat.expotemp, 1) * gdat.diffener
+    gdat.maxmcnts = repeat(1e5, gdat.numbener) # gdat.maxmflux * amax(gdat.expotemp, 1) * gdat.diffener
+    gdat.binscnts = zeros((gdat.numbener, gdat.numbflux + 1))
     for i in gdat.indxener:
-        gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbspec + 1) # [1]
+        gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbflux + 1) # [1]
         
     # get 3FGL catalog
     if gdat.exprtype == 'ferm':
@@ -2375,22 +2437,17 @@ def setp(gdat):
         mocklgal = [[] for l in gdat.indxpopl]
         mockbgal = [[] for l in gdat.indxpopl]
         mockspec = [[] for l in gdat.indxpopl]
-        if gdat.colrprio:
-            mocksind = [[] for l in gdat.indxpopl]
+        mocksind = [[] for l in gdat.indxpopl]
         for l in gdat.indxpopl:
             mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
             mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
-            for i in gdat.indxenerfdfn:
-                if gdat.mockfdfntype == 'brok':
-                    mockspec[l][i, :] = icdf_spec_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnsloplowr[l, i], \
-                        gdat.mockfdfnslopuppr[l, i], gdat.mockfdfnbrek[l, i], gdat.minmspec[i], gdat.maxmspec[i])
-                else:
-                    mockspec[l][i, :] = icdf_spec(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnslop[l, i], gdat.minmspec[i], gdat.maxmspec[i])
-            if gdat.colrprio:
-                mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.meansind[l], gdat.stdvsind[l], \
-                                                                                        gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
-                mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn, :].flatten(), mocksind[l])
+            if gdat.mockfdfntype == 'powr':
+                mockspec[l][gdat.indxenerfdfn, :] = icdf_flux(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnslop[l])
+            if gdat.mockfdfntype == 'brok':
+                mockspec[l][gdat.indxenerfdfn, :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnsloplowr[l], gdat.mockfdfnslopuppr[l], gdat.mockfdfnbrek[l])
+            mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn, :].flatten(), mocksind[l])
             indxpixltemp = retr_indxpixl(gdat, mockbgal[l], mocklgal[l])
             mockcnts[l] = mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         mockpntsflux = retr_pntsflux(gdat, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
@@ -2408,14 +2465,12 @@ def setp(gdat):
             gdat.truelgal = []
             gdat.truebgal = []
             gdat.truespec = []
-            if gdat.colrprio:
-                gdat.truesind = []
+            gdat.truesind = []
             for i in gdat.indxpopl:
                 gdat.truelgal.append(mocklgal[l])
                 gdat.truebgal.append(mockbgal[l])
                 gdat.truespec.append(mockspec[l])
-                if gdat.colrprio:
-                    gdat.truesind.append(mocksind[l])
+                gdat.truesind.append(mocksind[l])
                     
             gdat.indxtruepntstimevari = [array([])] * gdat.numbpopl
                     
@@ -2458,8 +2513,7 @@ def setp(gdat):
                 gdat.truelgal = [gdat.fgl3lgal[gdat.indxfgl3rofi]]
                 gdat.truebgal = [gdat.fgl3bgal[gdat.indxfgl3rofi]]
                 gdat.truespec = [gdat.fgl3spec[:, :, gdat.indxfgl3rofi]]
-                if gdat.colrprio:
-                    gdat.truesind = [gdat.fgl3sind[gdat.indxfgl3rofi]]
+                gdat.truesind = [gdat.fgl3sind[gdat.indxfgl3rofi]]
                 indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[0], gdat.truelgal[0])
                 spec = gdat.fgl3spec[0, :, gdat.indxfgl3rofi]
                 # temp
@@ -2521,11 +2575,16 @@ def setp(gdat):
         gdat.datacntscart[indxdatacntscartsatu[0], indxdatacntscartsatu[1], i, indxdatacntscartsatu[2]] = gdat.datacntssatu[i]
 
     # make a look-up table of nearby pixels for each pixel
-    # temp
-    # does not work for colrprio = False
-    # needs to be generated for the lowest energy bin, i.e., indxenerincl = 0
-    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.5g_%.5g_%02d.p' % (gdat.maxmgang, gdat.pixltype, \
-                                                               gdat.minmspec[gdat.indxenerfdfn[0]], gdat.maxmspec[gdat.indxenerfdfn[0]], gdat.numbspecprox)
+    print 'hey'
+    print 'gdat.indxmaxmangl'
+    print gdat.indxmaxmangl
+    print 'gdat.indxenerincl'
+    print gdat.indxenerincl
+    print 'gdat.indxevttincl'
+    print gdat.indxevttincl
+    path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.7g_%.7g_%02d_%04d_%04d.p' % (gdat.maxmgang, gdat.pixltype, \
+                     gdat.minmflux, gdat.maxmflux, gdat.numbfluxprox, gdat.indxenerincl[gdat.indxmaxmangl[0]], gdat.indxevttincl[gdat.indxmaxmangl[1]])
+
     if os.path.isfile(path):
         print 'Retrieving previously computed pixel look-up table...'
         fobj = open(path, 'rb')
@@ -2533,10 +2592,10 @@ def setp(gdat):
         fobj.close()
     else:
         print 'Computing the look-up table...'
-        gdat.indxpixlprox = [[] for h in range(gdat.numbspecprox)]
+        gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
         for j in gdat.indxpixl:
             dist = retr_dist(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.lgalgrid, gdat.bgalgrid)
-            for h in range(gdat.numbspecprox):
+            for h in range(gdat.numbfluxprox):
                 gdat.indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
                 gdat.indxpixlprox[h].append(gdat.indxpixlproxtemp)
         fobj = open(path, 'wb')
@@ -2581,7 +2640,7 @@ def supr_fram(gdat, axis, indxenerplot):
 
         # true catalog
         if gdat.trueinfo:
-            mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, :, :], indxenerplot)
+            mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :].flatten())
             lgal = copy(gdat.truelgal[l])
             bgal = copy(gdat.truebgal[l])
             if gdat.exprtype == 'sdss':
@@ -2599,7 +2658,7 @@ def supr_fram(gdat, axis, indxenerplot):
                         label=gdat.truelabl + ', variable', marker='*', linewidth=2, color='y')
 
         # model catalog
-        mrkrsize = retr_mrkrsize(gdat, gdat.thissampvarb[gdat.thisindxsampspec[l]], indxenerplot)
+        mrkrsize = retr_mrkrsize(gdat, gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]])
         lgal = gdat.thissampvarb[gdat.thisindxsamplgal[l]]
         bgal = gdat.thissampvarb[gdat.thisindxsampbgal[l]]
         if gdat.exprtype == 'sdss':

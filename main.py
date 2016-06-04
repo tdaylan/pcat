@@ -37,22 +37,29 @@ def work(gdat, indxprocwork):
    
     gdat.deltllik = 0.
 
-    gdat.drmcsamp = zeros((gdat.maxmsampsize, 2))
+    gdat.drmcsamp = zeros((gdat.numbpara, 2))
     
+    # number of PSs
     gdat.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
+    
+    # FDF
     if gdat.trueinfo and gdat.datatype == 'mock':
         for l in gdat.indxpopl:
             gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
             if gdat.fdfntype == 'brok':
                 gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.truefdfnsloplowr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.truefdfnslopuppr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.truefdfnbrek[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.truefdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
             else:
                 gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.truefdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+        for c in gdat.indxback:
+            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
     else:
         gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener))
         gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
-    gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
+        gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
+    
+    # PSF parameters
     if gdat.randinit or not gdat.trueinfo or gdat.truepsfipara == None:
         gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     else:
@@ -61,28 +68,31 @@ def work(gdat, indxprocwork):
                 gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
         else:
             gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
+    
+    # PS components
     for l in gdat.indxpopl:
         if gdat.randinit or not gdat.trueinfo:
             gdat.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
         else:
             gdat.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
             gdat.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-            for i in gdat.indxenerfdfn:
-                if gdat.fdfntype == 'brok':
-                    fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l, i], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                    fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l, i], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                    fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l, i], 0], gdat.minmfdfnbrek[l, i], gdat.factfdfnbrek[l, i])
-                    spec = icdf_spec_brok(gdat, gdat.truespec[l][0, i, :], fdfnsloplowr, fdfnslopuppr, fdfnbrek, gdat.minmspec[i], gdat.maxmspec[i])
-                else:
-                    fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l, i], 0], gdat.minmfdfnslop, gdat.factfdfnslop)
-                    spec = cdfn_spec(gdat, gdat.truespec[l][0, i, :], fdfnslop, gdat.minmspec[i], gdat.maxmspec[i])
-                gdat.drmcsamp[gdat.thisindxsampspec[l][i, :], 0] = copy(spec)
-            if gdat.colrprio:
-                gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            if gdat.fdfntype == 'brok':
+                fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+            else:
+                fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop, gdat.factfdfnslop)
+                fluxunit = cdfn_flux(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
+            print 'fluxunit'
+            print fluxunit
+            gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
+            gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
     gdat.thissampvarb = retr_sampvarb(gdat, gdat.thisindxpntsfull, gdat.drmcsamp[:, 0])
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
-    
+    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
+   
     if gdat.verbtype > 2:
         print 'thisindxpntsfull: ', gdat.thisindxpntsfull
         print 'thisindxpntsempt: ', gdat.thisindxpntsempt  
@@ -90,8 +100,7 @@ def work(gdat, indxprocwork):
         print 'thisindxsampbgal: ', gdat.thisindxsampbgal
         print 'thisindxsampspec: '
         print gdat.thisindxsampspec
-        if gdat.colrprio:
-            print 'thisindxsampsind: ', gdat.thisindxsampsind
+        print 'thisindxsampsind: ', gdat.thisindxsampsind
         print 'thisindxsampcomp: ', gdat.thisindxsampcomp
 
     gdat.nextpntsflux = zeros_like(gdat.thispntsflux)
@@ -131,8 +140,8 @@ def init( \
          datatype='inpt', \
          randinit=True, \
          maxmgang=None, \
-         minmspec=None, \
-         maxmspec=None, \
+         minmflux=None, \
+         maxmflux=None, \
          minmsind=None, \
          maxmsind=None, \
          meansind=None, \
@@ -144,7 +153,6 @@ def init( \
          fdfntype='powr', \
          psfntype=None, \
          proppsfn=True, \
-         colrprio=True, \
          numbpopl=1, \
          indxevttincl=arange(2, 4), \
          indxenerincl=arange(5), \
@@ -178,7 +186,7 @@ def init( \
          mockfdfnsloplowr=None, \
          mockfdfnslopuppr=None, \
          mockfdfnbrek=None, \
-         mocknormback=None, \
+         mocknormback=1., \
          mockfdfntype='powr', \
          mockpsfntype=None, \
          strgexpr=None, \
@@ -298,9 +306,6 @@ def init( \
     ## PSF model type
     gdat.psfntype = psfntype
     
-    ## color priors
-    gdat.colrprio = colrprio
-   
     ## flag to turn off PSF parameter updates
     gdat.proppsfn = proppsfn
 
@@ -346,8 +351,8 @@ def init( \
     gdat.minmfdfnslop = minmfdfnslop
     gdat.maxmfdfnslop = maxmfdfnslop
     ### flux
-    gdat.minmspec = minmspec
-    gdat.maxmspec = maxmspec
+    gdat.minmflux = minmflux
+    gdat.maxmflux = maxmflux
     ### spectral power-law index
     gdat.minmsind = minmsind
     gdat.maxmsind = maxmsind
@@ -409,11 +414,9 @@ def init( \
     ## proposal frequencies
     gdat.probprop = probprop
 
-
     # check inputs
-    if gdat.colrprio:
-        if gdat.minmspec.size != 1 or gdat.minmspec.size != 1:
-            print 'Spectral limits must be numpy scalars when color priors are used!'
+    if gdat.minmflux.size != 1 or gdat.minmflux.size != 1:
+        print 'Spectral limits must be numpy scalars when color priors are used!'
     
     # date and time
     gdat.strgtime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
@@ -429,7 +432,12 @@ def init( \
         print vstack((arange(gdat.numbprop), gdat.strgprop, gdat.probprop)).T
         print 'indxsampnumbpnts: ', gdat.indxsampnumbpnts
         print 'indxsampfdfnnorm: ', gdat.indxsampfdfnnorm
-        print 'indxsampfdfnslop: ', gdat.indxsampfdfnslop
+        if gdat.fdfntype == 'powr':
+            print 'indxsampfdfnslop: ', gdat.indxsampfdfnslop
+        if gdat.fdfntype == 'brok':
+            print 'indxsampfdfnbrek: ', gdat.indxsampfdfnbrek
+            print 'indxsampfdfnsloplowr: ', gdat.indxsampfdfnsloplowr
+            print 'indxsampfdfnslopuppr: ', gdat.indxsampfdfnslopuppr
         print 'indxsamppsfipara: ', gdat.indxsamppsfipara
         print 'indxsampnormback: '
         print gdat.indxsampnormback
@@ -442,18 +450,19 @@ def init( \
             print 'truespec: '
             print gdat.truespec
             print 'truenumbpnts: ', gdat.truenumbpnts
-            print 'truefdfnslop: ', gdat.truefdfnslop
-            print 'truenormback: '
-            print gdat.truenormback
             print
             if gdat.datatype == 'mock':
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
-                print 'mockfdfnslop: ', gdat.mockfdfnslop
+                if gdat.mockfdfntype == 'powr':
+                    print 'mockfdfnslop: ', gdat.mockfdfnslop
+                if gdat.mockfdfntype == 'brok':
+                    print 'mockfdfnbrek: ', gdat.mockfdfnbrek
+                    print 'mockfdfnsloplowr: ', gdat.mockfdfnsloplowr
+                    print 'mockfdfnslopuppr: ', gdat.mockfdfnslopuppr
                 print 'mockpsfipara: '
                 print gdat.mockpsfipara
                 print 'mocknormback: '
                 print gdat.mocknormback
-
 
     # make initial plots
     if gdat.makeplot:
@@ -468,7 +477,6 @@ def init( \
         #if gdat.datatype == 'mock':
         #    plot_pntsdiff()
 
- 
     if gdat.verbtype > 0:
         print 'Sampling...'
     
@@ -495,16 +503,16 @@ def init( \
         pool.join()
 
     for k in range(gdat.numbproc):
-        timereal[k] = gridchan[k][18]
-        timeproc[k] = gridchan[k][19]
-
+        timereal[k] = gridchan[k][17]
+        timeproc[k] = gridchan[k][18]
 
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
         tim0 = time.time()
 
     # parse the sample bundle
-    listsampvarb = zeros((gdat.numbsamp, gdat.numbproc, gdat.maxmsampsize))
+    listsamp = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpara))
+    listsampvarb = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpara))
     listindxprop = zeros((gdat.numbswep, gdat.numbproc))
     listchrollik = zeros((gdat.numbswep, gdat.numbproc, gdat.numbchrollik))
     listchrototl = zeros((gdat.numbswep, gdat.numbproc, gdat.numbchrototl))
@@ -514,37 +522,33 @@ def init( \
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbener))
     listindxpntsfull = []
-    listindxsampmodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int)
+    listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int)
     gdat.listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcomp))
     gdat.listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
     gdat.listnumbpair = empty((gdat.numbswep, gdat.numbproc))
     gdat.listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
     gdat.listcombfact = empty((gdat.numbswep, gdat.numbproc))
 
-    levi = 0.
-    info = 0.
-    
     for k in range(gdat.numbproc):
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
-        listsampvarb[:, k, :] = listchan[0]
-        listindxprop[:, k] = listchan[1]
-        listchrototl[:, k, :] = listchan[2]
-        listllik[:, k] = listchan[3]
-        listlpri[:, k] = listchan[4]
-        listaccp[:, k] = listchan[5]
-        listmodlcnts[:, k, :] = listchan[6]    
-        listindxpntsfull.append(listchan[7])
-        listindxsampmodi[:, k] = listchan[8]
-        gdat.listauxipara[:, k, :] = listchan[9]
-        gdat.listlaccfrac[:, k] = listchan[10]
-        gdat.listnumbpair[:, k] = listchan[11]
-        gdat.listjcbnfact[:, k] = listchan[12]
-        gdat.listcombfact[:, k] = listchan[13]
-        levi += listchan[14]
-        info += listchan[15]
-        listpntsfluxmean[:, k, :] = listchan[16]
-        listchrollik[:, k, :] = listchan[17]
+        listsamp[:, k, :] = listchan[0]
+        listsampvarb[:, k, :] = listchan[1]
+        listindxprop[:, k] = listchan[2]
+        listchrototl[:, k, :] = listchan[3]
+        listllik[:, k] = listchan[4]
+        listlpri[:, k] = listchan[5]
+        listaccp[:, k] = listchan[6]
+        listmodlcnts[:, k, :] = listchan[7]    
+        listindxpntsfull.append(listchan[8])
+        listindxparamodi[:, k] = listchan[9]
+        gdat.listauxipara[:, k, :] = listchan[10]
+        gdat.listlaccfrac[:, k] = listchan[11]
+        gdat.listnumbpair[:, k] = listchan[12]
+        gdat.listjcbnfact[:, k] = listchan[13]
+        gdat.listcombfact[:, k] = listchan[14]
+        listpntsfluxmean[:, k, :] = listchan[15]
+        listchrollik[:, k, :] = listchan[16]
 
     listindxprop = listindxprop.flatten()
     gdat.listauxipara = gdat.listauxipara.reshape((gdat.numbswep * gdat.numbproc, gdat.numbcomp))
@@ -556,9 +560,50 @@ def init( \
     listchrototl = listchrototl.reshape((gdat.numbproc * gdat.numbswep, gdat.numbchrototl)) 
     listchrollik = listchrollik.reshape((gdat.numbproc * gdat.numbswep, gdat.numbchrollik)) 
     listaccp = listaccp.flatten()
-    listindxsampmodi = listindxsampmodi.flatten()
+    listindxparamodi = listindxparamodi.flatten()
     
     gdat.rtag = retr_rtag(gdat, None)
+
+    # correct the likelihoods for the constant data dependent factorial
+    listllik -= sum(sp.special.gammaln(gdat.datacnts + 1))
+    
+    # calculate the log-evidence and relative entropy using the harmonic mean estimator
+    minmlistllik = amin(listllik)
+    
+    listsamp = listsamp.reshape(gdat.numbsamp * gdat.numbproc, -1)
+    samplowr = percentile(listsamp, 0., axis=0)
+    sampuppr = percentile(listsamp, 100., axis=0)
+    lnorregu = sampuppr - samplowr
+    if (lnorregu > 0.).all():
+        if gdat.verbtype > 0:
+            print 'Estimating the Bayesian evidence...'
+            tim0 = time.time()
+
+        indxsampregu = arange(gdat.numbsamp)
+        print 'hey'
+        print 'lnorregu'
+        print lnorregu
+        for k in range(1, gdat.numbpara):
+            print 'k: ', k
+            print 'samplowr[k]'
+            print samplowr[k]
+            print 'sampuppr[k]'
+            print sampuppr[k]
+            print 'listsamp[:, k]'
+            print listsamp[:, k]
+            indxsampregutemp = where((listsamp[:, k] >= samplowr[k]) & (listsamp[:, k] <= sampuppr[k]))[0]
+            indxsampregu = intersect1d(indxsampregu, indxsampregutemp)
+            print 'indxsampregutemp'
+            print indxsampregutemp
+            print
+        print 'indxsampregu'
+        print indxsampregu
+        levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
+    else:
+        levi = 0.
+    
+    # relative entropy
+    info = mean(listllik) - levi
 
     # collect posterior samples from the processes
     ## number of PS
@@ -575,8 +620,7 @@ def init( \
     listlgal = [[] for l in gdat.indxpopl]
     listbgal = [[] for l in gdat.indxpopl]
     listspec = [[] for l in gdat.indxpopl]
-    if gdat.colrprio:
-        listsind = [[] for l in gdat.indxpopl]
+    listsind = [[] for l in gdat.indxpopl]
     listspechist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener, gdat.numbspec))
     for k in range(gdat.numbproc):
         for j in range(gdat.numbsamp):            
@@ -586,8 +630,7 @@ def init( \
                 listlgal[l].append(listsampvarb[j, k, indxsamplgal[l]])
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
                 listspec[l].append(listsampvarb[j, k, indxsampspec[l]])
-                if gdat.colrprio:
-                    listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
+                listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
                 for i in gdat.indxener:
                     listspechist[n, l, i, :] = histogram(listspec[l][n][i, :], gdat.binsspec[i, :])[0]
     for l in gdat.indxpopl:
@@ -673,7 +716,6 @@ def init( \
     head['pixltype'] = gdat.pixltype
     head['fdfntype'] = gdat.fdfntype
     
-    head['colrprio'] = gdat.colrprio
     head['trueinfo'] = gdat.trueinfo
     head['margsize'] = gdat.margsize
     head['strgtime'] = gdat.strgtime
@@ -704,30 +746,17 @@ def init( \
     listhdun = []
     listhdun.append(pf.PrimaryHDU(header=head))
 
+    # posterior
+    ## primaries
     for l in gdat.indxpopl:
         listhdun.append(pf.ImageHDU(listlgal[l]))
-        listhdun[-1].header['EXTNAME'] = 'lgalpopl%d' % l
+        listhdun[-1].header['EXTNAME'] = 'lgalpop%d' % l
         listhdun.append(pf.ImageHDU(listbgal[l]))
-        listhdun[-1].header['EXTNAME'] = 'bgalpopl%d' % l
+        listhdun[-1].header['EXTNAME'] = 'bgalpop%d' % l
         listhdun.append(pf.ImageHDU(listspec[l]))
-        listhdun[-1].header['EXTNAME'] = 'specpopl%d' % l
-        if gdat.colrprio:
-            listhdun.append(pf.ImageHDU(listsind[l]))
-            listhdun[-1].header['EXTNAME'] = 'sindpopl%d' % l
-
-    
-    listhdun.append(pf.ImageHDU(gdat.minmnormback))
-    listhdun[-1].header['EXTNAME'] = 'minmnormback'
-
-    listhdun.append(pf.ImageHDU(gdat.maxmnormback))
-    listhdun[-1].header['EXTNAME'] = 'maxmnormback'
-
-
-    listhdun.append(pf.ImageHDU(gdat.maxmnumbpnts))
-    listhdun[-1].header['EXTNAME'] = 'maxmnumbpnts'
-
-    listhdun.append(pf.ImageHDU(listnumbpnts))
-    listhdun[-1].header['EXTNAME'] = 'numbpnts'
+        listhdun[-1].header['EXTNAME'] = 'specpop%d' % l
+        listhdun.append(pf.ImageHDU(listsind[l]))
+        listhdun[-1].header['EXTNAME'] = 'sindpop%d' % l
 
     listhdun.append(pf.ImageHDU(listfdfnnorm))
     listhdun[-1].header['EXTNAME'] = 'fdfnnorm'
@@ -740,131 +769,59 @@ def init( \
     
     listhdun.append(pf.ImageHDU(listnormback))
     listhdun[-1].header['EXTNAME'] = 'normback'
+   
+    ## unit sample
+    listhdun.append(pf.ImageHDU(listsamp))
+    listhdun[-1].header['EXTNAME'] = 'listsamp'
     
-    listhdun.append(pf.ImageHDU(listspechist))
-    listhdun[-1].header['EXTNAME'] = 'spechist'
-    
-    
+    ## log-likelihood
     listhdun.append(pf.ImageHDU(listllik))
     listhdun[-1].header['EXTNAME'] = 'llik'
+    
+    ## log-prior
     listhdun.append(pf.ImageHDU(listlpri))
     listhdun[-1].header['EXTNAME'] = 'lpri'
     
-    if gdat.trueinfo and gdat.datatype == 'mock':
-        listhdun.append(pf.ImageHDU(gdat.mocknumbpnts))
-        listhdun[-1].header['EXTNAME'] = 'mocknumbpnts'
-        
-        listhdun.append(pf.ImageHDU(gdat.mockfdfnslop))
-        listhdun[-1].header['EXTNAME'] = 'mockfdfnslop'
-        
-        listhdun.append(pf.ImageHDU(gdat.mocknormback))
-        listhdun[-1].header['EXTNAME'] = 'mocknormback'
+    ## number of PS
+    listhdun.append(pf.ImageHDU(listnumbpnts))
+    listhdun[-1].header['EXTNAME'] = 'numbpnts'
 
-    # convergence diagnostics
-    listhdun.append(pf.ImageHDU(gmrbstat))
-    listhdun[-1].header['EXTNAME'] = 'gmrbstat'
-    listhdun.append(pf.ImageHDU(listmodlcnts))
-    listhdun[-1].header['EXTNAME'] = 'modlcnts'
-    
-    
-    listhdun.append(pf.ImageHDU(pntsprob))
-    listhdun[-1].header['EXTNAME'] = 'pntsprob'
-   
-    # truth information
-    if gdat.trueinfo:
-        listhdun.append(pf.ImageHDU(gdat.truenumbpnts))
-        listhdun[-1].header['EXTNAME'] = 'truenumbpnts'
-
-        for l in gdat.indxpopl:
-            listhdun.append(pf.ImageHDU(gdat.truelgal[l]))
-            listhdun[-1].header['EXTNAME'] = 'truelgalpopl%d' % l
-
-            listhdun.append(pf.ImageHDU(gdat.truebgal[l]))
-            listhdun[-1].header['EXTNAME'] = 'truebgalpopl%d' % l
-
-            listhdun.append(pf.ImageHDU(gdat.truespec[l]))
-            listhdun[-1].header['EXTNAME'] = 'truespecpopl%d' % l
-
-            if gdat.colrprio:
-                listhdun.append(pf.ImageHDU(gdat.truesind[l]))
-                listhdun[-1].header['EXTNAME'] = 'truesindpopl%d' % l
-
-        listhdun.append(pf.ImageHDU(gdat.truefdfnslop))
-        listhdun[-1].header['EXTNAME'] = 'truefdfnslop'
-
-        listhdun.append(pf.ImageHDU(gdat.truenormback))
-        listhdun[-1].header['EXTNAME'] = 'truenormback'
-
-        listhdun.append(pf.ImageHDU(gdat.truepsfipara))
-        listhdun[-1].header['EXTNAME'] = 'truepsfipara'
-
-        listhdun.append(pf.ImageHDU(gdat.indxtruepntstimevari))
-        listhdun[-1].header['EXTNAME'] = 'indxtruepntstimevari'
-
-    if gdat.colrprio:
-        gdat.minmspec = gdat.minmspec[gdat.indxenerfdfn]
-        gdat.maxmspec = gdat.maxmspec[gdat.indxenerfdfn]
-
-    # hyperprior limits
-    listhdun.append(pf.ImageHDU(gdat.minmfdfnnorm))
-    listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
-    listhdun.append(pf.ImageHDU(gdat.maxmfdfnnorm))
-    listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
-    listhdun.append(pf.ImageHDU(gdat.minmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
-    listhdun.append(pf.ImageHDU(gdat.maxmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
-
-    listhdun.append(pf.ImageHDU(gdat.minmspec))
-    listhdun[-1].header['EXTNAME'] = 'minmspec'
-    listhdun.append(pf.ImageHDU(gdat.maxmspec))
-    listhdun[-1].header['EXTNAME'] = 'maxmspec'
-    if gdat.colrprio:
-        listhdun.append(pf.ImageHDU(gdat.minmsind))
-        listhdun[-1].header['EXTNAME'] = 'minmsind'
-        listhdun.append(pf.ImageHDU(gdat.maxmsind))
-        listhdun[-1].header['EXTNAME'] = 'maxmsind'
-        listhdun.append(pf.ImageHDU(gdat.meansind))
-        listhdun[-1].header['EXTNAME'] = 'meansind'
-        listhdun.append(pf.ImageHDU(gdat.stdvsind))
-        listhdun[-1].header['EXTNAME'] = 'stdvsind'
-    
-    listhdun.append(pf.ImageHDU(gdat.binsener))
-    listhdun[-1].header['EXTNAME'] = 'binsener'
-    listhdun.append(pf.ImageHDU(gdat.indxenerfdfn))
-    listhdun[-1].header['EXTNAME'] = 'indxenerfdfn'
-    
-    listhdun.append(pf.ImageHDU(gdat.indxenerincl))
-    listhdun[-1].header['EXTNAME'] = 'indxenerincl'
-    
-    listhdun.append(pf.ImageHDU(gdat.indxevttincl))
-    listhdun[-1].header['EXTNAME'] = 'indxevttincl'
- 
-    # utilities
+    ## mean PS flux
     listhdun.append(pf.ImageHDU(listpntsfluxmean))
     listhdun[-1].header['EXTNAME'] = 'listpntsfluxmean'
     
-    listhdun.append(pf.ImageHDU(gdat.probprop))
-    listhdun[-1].header['EXTNAME'] = 'probprop'
-
+    ## histogram of fluxes
+    listhdun.append(pf.ImageHDU(listspechist))
+    listhdun[-1].header['EXTNAME'] = 'spechist'
+    
+    ## stored model counts in random pixels
+    listhdun.append(pf.ImageHDU(listmodlcnts))
+    listhdun[-1].header['EXTNAME'] = 'modlcnts'
+   
+    ## proposal type
     listhdun.append(pf.ImageHDU(listindxprop))
     listhdun[-1].header['EXTNAME'] = 'indxprop'
-    
+   
+    ## section timings
     listhdun.append(pf.ImageHDU(listchrototl))
     listhdun[-1].header['EXTNAME'] = 'listchrototl'
     
+    ## likelihood timings
     listhdun.append(pf.ImageHDU(listchrollik))
     listhdun[-1].header['EXTNAME'] = 'listchrollik'
     
+    ## acceptance
     listhdun.append(pf.ImageHDU(listaccp))
     listhdun[-1].header['EXTNAME'] = 'accp'
     
-    listhdun.append(pf.ImageHDU(listindxsampmodi))
-    listhdun[-1].header['EXTNAME'] = 'sampmodi'
+    ## index of the modified parameter
+    listhdun.append(pf.ImageHDU(listindxparamodi))
+    listhdun[-1].header['EXTNAME'] = 'indxparamodi'
     
+    ## split and merge diagnostics
     listhdun.append(pf.ImageHDU(gdat.listauxipara))
     listhdun[-1].header['EXTNAME'] = 'auxipara'
-    
+   
     listhdun.append(pf.ImageHDU(gdat.listlaccfrac))
     listhdun[-1].header['EXTNAME'] = 'laccfrac'
     
@@ -876,6 +833,123 @@ def init( \
     
     listhdun.append(pf.ImageHDU(gdat.listcombfact))
     listhdun[-1].header['EXTNAME'] = 'combfact'
+    
+    # priors
+    ## prior limits
+    listhdun.append(pf.ImageHDU(gdat.minmpsfipara))
+    listhdun[-1].header['EXTNAME'] = 'minmpsfipara'
+
+    listhdun.append(pf.ImageHDU(gdat.maxmpsfipara))
+    listhdun[-1].header['EXTNAME'] = 'maxmpsfipara'
+
+    listhdun.append(pf.ImageHDU(gdat.minmnormback))
+    listhdun[-1].header['EXTNAME'] = 'minmnormback'
+
+    listhdun.append(pf.ImageHDU(gdat.maxmnormback))
+    listhdun[-1].header['EXTNAME'] = 'maxmnormback'
+
+    ## hyperprior limits
+    listhdun.append(pf.ImageHDU(gdat.minmfdfnnorm))
+    listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
+    
+    listhdun.append(pf.ImageHDU(gdat.maxmfdfnnorm))
+    listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
+    
+    listhdun.append(pf.ImageHDU(gdat.minmfdfnslop))
+    listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
+    
+    listhdun.append(pf.ImageHDU(gdat.maxmfdfnslop))
+    listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
+    
+    listhdun.append(pf.ImageHDU(gdat.minmflux))
+    listhdun[-1].header['EXTNAME'] = 'minmflux'
+    
+    listhdun.append(pf.ImageHDU(gdat.maxmflux))
+    listhdun[-1].header['EXTNAME'] = 'maxmflux'
+    
+    listhdun.append(pf.ImageHDU(gdat.minmsind))
+    listhdun[-1].header['EXTNAME'] = 'minmsind'
+    
+    listhdun.append(pf.ImageHDU(gdat.maxmsind))
+    listhdun[-1].header['EXTNAME'] = 'maxmsind'
+    
+    listhdun.append(pf.ImageHDU(gdat.meansind))
+    listhdun[-1].header['EXTNAME'] = 'meansind'
+    
+    listhdun.append(pf.ImageHDU(gdat.stdvsind))
+    listhdun[-1].header['EXTNAME'] = 'stdvsind'
+    
+    listhdun.append(pf.ImageHDU(gdat.binsener))
+    listhdun[-1].header['EXTNAME'] = 'binsener'
+    
+    # sampler setup
+    ## maximum number of point sources
+    listhdun.append(pf.ImageHDU(gdat.maxmnumbpnts))
+    listhdun[-1].header['EXTNAME'] = 'maxmnumbpnts'
+
+    ## index of the energy bin, where the FDF is defined
+    listhdun.append(pf.ImageHDU(gdat.indxenerfdfn))
+    listhdun[-1].header['EXTNAME'] = 'indxenerfdfn'
+    
+    ## indices of energy bins included in the analysis
+    listhdun.append(pf.ImageHDU(gdat.indxenerincl))
+    listhdun[-1].header['EXTNAME'] = 'indxenerincl'
+    
+    ## indices of PSF classes included in the analysis
+    listhdun.append(pf.ImageHDU(gdat.indxevttincl))
+    listhdun[-1].header['EXTNAME'] = 'indxevttincl'
+ 
+    ## proposal frequencies
+    listhdun.append(pf.ImageHDU(gdat.probprop))
+    listhdun[-1].header['EXTNAME'] = 'probprop'
+
+    # processed output products
+    ## convergence diagnostic
+    listhdun.append(pf.ImageHDU(gmrbstat))
+    listhdun[-1].header['EXTNAME'] = 'gmrbstat'
+    
+    ## PDF of PS positions
+    listhdun.append(pf.ImageHDU(pntsprob))
+    listhdun[-1].header['EXTNAME'] = 'pntsprob'
+   
+    # mock data
+    # truth information
+    if gdat.trueinfo:
+        listhdun.append(pf.ImageHDU(gdat.truenumbpnts))
+        listhdun[-1].header['EXTNAME'] = 'truenumbpnts'
+
+        for l in gdat.indxpopl:
+            listhdun.append(pf.ImageHDU(gdat.truelgal[l]))
+            listhdun[-1].header['EXTNAME'] = 'truelgalpop%d' % l
+
+            listhdun.append(pf.ImageHDU(gdat.truebgal[l]))
+            listhdun[-1].header['EXTNAME'] = 'truebgalpop%d' % l
+
+            listhdun.append(pf.ImageHDU(gdat.truespec[l]))
+            listhdun[-1].header['EXTNAME'] = 'truespecpop%d' % l
+
+            listhdun.append(pf.ImageHDU(gdat.truesind[l]))
+            listhdun[-1].header['EXTNAME'] = 'truesindpop%d' % l
+
+        listhdun.append(pf.ImageHDU(gdat.truefdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'truefdfnslop'
+
+        listhdun.append(pf.ImageHDU(gdat.truenormback))
+        listhdun[-1].header['EXTNAME'] = 'truenormback'
+
+        listhdun.append(pf.ImageHDU(gdat.truepsfipara))
+        listhdun[-1].header['EXTNAME'] = 'truepsfipara'
+
+        if gdat.datatype == 'mock':
+            listhdun.append(pf.ImageHDU(gdat.mocknumbpnts))
+            listhdun[-1].header['EXTNAME'] = 'mocknumbpnts'
+            
+            listhdun.append(pf.ImageHDU(gdat.mockfdfnslop))
+            listhdun[-1].header['EXTNAME'] = 'mockfdfnslop'
+            
+            listhdun.append(pf.ImageHDU(gdat.mocknormback))
+            listhdun[-1].header['EXTNAME'] = 'mocknormback'
+
     
     pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True, output_verify='ignore')
 
@@ -905,34 +979,43 @@ def plot_samp(gdat):
         gdat.thispsfn = gdat.thispsfn.reshape((gdat.numbener, -1, gdat.numbevtt))
     thisfwhm = 2. * retr_psfnwdth(gdat, gdat.thispsfn, 0.5)
 
-    plot_psfn(gdat)
+    # temp
+    #plot_psfn(gdat)
 
     gdat.thisbackcntsmean = empty((gdat.numbener, gdat.numbevtt))
     for c in gdat.indxback:
         gdat.thisbackcntsmean += mean(gdat.thissampvarb[gdat.indxsampnormback[c, :, None, None]] * gdat.backflux[c] * gdat.expo * \
             gdat.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
 
+    # temp
+    gdat.thispntscntsprev = copy(gdat.thispntscnts)
+    gdat.temppntscntsprev = copy(gdat.temppntscnts)
+
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
-    
     gdat.thispntscnts = gdat.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdat.errrpnts = 100. * (gdat.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
+    
 
     thiscnts = []
     for l in gdat.indxpopl:
-    
+   
+        # temp
+        continue
+
         indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
         cntstemp = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         thiscnts.append(cntstemp)
-        if gdat.colrprio:
-            plot_histsind(gdat, l)
-        plot_scatpixl(gdat, l)
         if gdat.trueinfo:
             indxmodl, gdat.trueindxpntsbias, gdat.trueindxpntsmiss = pair_catl(gdat, l, gdat.thissampvarb[gdat.thisindxsamplgal[l]], \
                 gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsampspec[l]])
             thisspecmtch = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, indxmodl]
             thisspecmtch[:, gdat.trueindxpntsmiss] = 0.
             plot_scatspec(gdat, l, thisspecmtch=thisspecmtch)
+        
+        plot_scatpixl(gdat, l)
+        
         plot_histspec(gdat, l)
+        plot_histsind(gdat, l)
         plot_histcnts(gdat, l, thiscnts)
         if gdat.numbback == 2:
             plot_compfrac(gdat)
@@ -946,6 +1029,10 @@ def plot_samp(gdat):
         plot_thispntscnts(gdat, i, None)
         plot_temppntscnts(gdat, i, None)
         plot_errrpnts(gdat, i, None)
+
+        # temp
+        plot_thispntscntsdiff(gdat, i, None)
+        plot_temppntscntsdiff(gdat, i, None)
         
         #plot_catlfram(gdat, i, None, thiscnts)
 
@@ -976,7 +1063,8 @@ def rjmc(gdat, indxprocwork):
     sampindx = zeros(gdat.numbswep, dtype=int)
     sampindx[indxswepsave] = arange(gdat.numbsamp)
 
-    listsampvarb = zeros((gdat.numbsamp, gdat.maxmsampsize)) + -1.
+    listsamp = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
+    listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
     listindxprop = zeros(gdat.numbswep)
     listchrototl = zeros((gdat.numbswep, gdat.numbchrototl))
     listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
@@ -985,7 +1073,7 @@ def rjmc(gdat, indxprocwork):
     listlpri = zeros(gdat.numbsamp)
     listaccp = zeros(gdat.numbswep, dtype=bool)
     listaccpspec = []
-    listindxsampmodi = zeros(gdat.numbswep, dtype=int)
+    listindxparamodi = zeros(gdat.numbswep, dtype=int)
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
@@ -1050,7 +1138,7 @@ def rjmc(gdat, indxprocwork):
             
         # reject the sample if proposal is outside the prior
         if gdat.thisindxprop == gdat.indxpropfdfnslop:
-            if gdat.drmcsamp[gdat.indxsampfdfnslopmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampfdfnslopmodi, 1] > 1.:
+            if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
                 gdat.reje = True
         elif gdat.thisindxprop != gdat.indxpropbrth and gdat.thisindxprop != gdat.indxpropdeth and not gdat.reje:
             if where((gdat.drmcsamp[gdat.indxsampmodi, 1] < 0.) | (gdat.drmcsamp[gdat.indxsampmodi, 1] > 1.))[0].size > 0:
@@ -1089,20 +1177,6 @@ def rjmc(gdat, indxprocwork):
                 print 'laccfrac'
                 print gdat.laccfrac
                 print
-            
-            # make diagnostic plots for the next step
-            # temp
-            if False and thismakefram and gdat.thisindxprop >= gdat.indxproppsfipara:
-                gdat.thispntsfluxmodi = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) - 1e-6
-                gdat.nextpntsfluxmodi = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) - 1e-6
-                gdat.diffpntsfluxmodi = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) - 1e-6
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        gdat.thispntsfluxmodi[i, gdat.indxpixlmodi, m] = copy(gdat.thispntsflux[i, gdat.indxpixlmodi, m])
-                        gdat.nextpntsfluxmodi[i, gdat.indxpixlmodi, m] = copy(gdat.nextpntsflux[i, gdat.indxpixlmodi, m])
-                        gdat.diffpntsfluxmodi[i, gdat.indxpixlmodi, m] = gdat.nextpntsfluxmodi[i, gdat.indxpixlmodi,  m] - gdat.thispntsfluxmodi[i, gdat.indxpixlmodi, m]
-                        plot_nextstat(gdat, i, m)
-                        plot_diag(gdat, i, m)
         else:
             accpprob = 0.
     
@@ -1140,14 +1214,14 @@ def rjmc(gdat, indxprocwork):
             return
             
         for l in gdat.indxpopl:
-            for i in gdat.indxenerfdfn:
-                if where(gdat.thissampvarb[gdat.thisindxsampspec[l][i, :]] < gdat.minmspec[i])[0].size > 0:
-                    print 'Spectrum of some PS went below the prior range!'
-                if where(gdat.thissampvarb[gdat.thisindxsampspec[l][i, :]] > gdat.maxmspec[i])[0].size > 0:
-                    print 'Spectrum of some PS went above the prior range!'          
+            if where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]] < gdat.minmflux)[0].size > 0:
+                print 'Spectrum of some PS went below the prior range!'
+            if where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]] > gdat.maxmflux)[0].size > 0:
+                print 'Spectrum of some PS went above the prior range!'          
 
         # save the sample
         if boolsave[gdat.cntrswep]:
+            listsamp[sampindx[gdat.cntrswep], :] = gdat.drmcsamp[:, 0]
             listsampvarb[sampindx[gdat.cntrswep], :] = gdat.thissampvarb
             listmodlcnts[sampindx[gdat.cntrswep], :] = gdat.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[sampindx[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
@@ -1159,11 +1233,10 @@ def rjmc(gdat, indxprocwork):
                 numbpnts = gdat.thissampvarb[gdat.indxsampnumbpnts[l]]
                 fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfdfnslop + gdat.priofactfdfnnorm - log(fdfnnorm)
-                for i in gdat.indxenerfdfn:
-                    flux = gdat.thissampvarb[gdat.thisindxsampspec[l][i, :]]
-                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l, i]]
-                    lpri -= log(1. + fdfnslop**2)
-                    lpri += sum(log(pdfn_spec(gdat, flux, fdfnslop, gdat.minmspec[i], gdat.maxmspec[i])))
+                flux = gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
+                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]
+                lpri -= log(1. + fdfnslop**2)
+                lpri += sum(log(pdfn_spec(gdat, flux, fdfnslop, gdat.minmflux, gdat.maxmflux)))
             listlpri[sampindx[gdat.cntrswep]] = lpri
             
             if gdat.tracsamp:
@@ -1179,14 +1252,15 @@ def rjmc(gdat, indxprocwork):
 
         # save the execution time for the sweep
         if not thismakefram:
-            tim1 = time.time()
-            listchrototl[gdat.cntrswep, 0] = tim1 - timeinit
+            timefinl = time.time()
+            listchrototl[gdat.cntrswep, 0] = timefinl - timeinit
 
         # log the progress
         if gdat.verbtype > 0:
             thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
             
-        if gdat.diagsamp:
+        # temp
+        if False and gdat.diagsamp:
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
                     plot_diagfram(i, m)
@@ -1216,18 +1290,10 @@ def rjmc(gdat, indxprocwork):
     
     listchrollik = array(listchrollik)
 
-    # correct the likelihoods for the constant data dependent factorial
-    listllik -= sum(sp.special.gammaln(gdat.datacnts + 1))
-    
-    # calculate the log-evidence and relative entropy using the harmonic mean estimator
-    minmlistllik = amin(listllik)
-    levi = -log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
-    
-    info = mean(listllik) - levi
 
-    listchan = [listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxsampmodi, \
+    listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         gdat.listauxipara, gdat.listlaccfrac, gdat.listnumbpair, gdat.listjcbnfact, gdat.listcombfact, \
-        levi, info, listpntsfluxmean, listchrollik]
+        listpntsfluxmean, listchrollik]
     
     return listchan
 
