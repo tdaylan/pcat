@@ -83,9 +83,7 @@ def work(gdat, indxprocwork):
                 fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             else:
                 fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop, gdat.factfdfnslop)
-                fluxunit = cdfn_flux(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
-            print 'fluxunit'
-            print fluxunit
+                fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
@@ -130,7 +128,7 @@ def work(gdat, indxprocwork):
     
 def init( \
          verbtype=1, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          makeplot=True, \
          diagsamp=False, \
          numbswep=2000000, \
@@ -267,7 +265,7 @@ def init( \
     
     ## plot settings
     ### MCMC time period over which a frame is produced
-    gdat.plotperd = plotperd
+    gdat.numbswepplot = numbswepplot
     ### flag to control generation of plots
     gdat.makeplot = makeplot
 
@@ -578,26 +576,10 @@ def init( \
         if gdat.verbtype > 0:
             print 'Estimating the Bayesian evidence...'
             tim0 = time.time()
-
         indxsampregu = arange(gdat.numbsamp)
-        print 'hey'
-        print 'lnorregu'
-        print lnorregu
         for k in range(1, gdat.numbpara):
-            print 'k: ', k
-            print 'samplowr[k]'
-            print samplowr[k]
-            print 'sampuppr[k]'
-            print sampuppr[k]
-            print 'listsamp[:, k]'
-            print listsamp[:, k]
             indxsampregutemp = where((listsamp[:, k] >= samplowr[k]) & (listsamp[:, k] <= sampuppr[k]))[0]
             indxsampregu = intersect1d(indxsampregu, indxsampregutemp)
-            print 'indxsampregutemp'
-            print indxsampregutemp
-            print
-        print 'indxsampregu'
-        print indxsampregu
         levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
     else:
         levi = 0.
@@ -610,8 +592,13 @@ def init( \
     listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamp * gdat.numbproc, -1)
     ## FDF normalization
     listfdfnnorm = listsampvarb[:, :, gdat.indxsampfdfnnorm].reshape(gdat.numbsamp * gdat.numbproc, -1)
-    ## FDF slope
-    listfdfnslop = listsampvarb[:, :, gdat.indxsampfdfnslop].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener)
+    ## FDF shape
+    if gdat.fdfntype == 'powr':
+        listfdfnslop = listsampvarb[:, :, gdat.indxsampfdfnslop].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
+    if gdat.fdfntype == 'brok':
+        listfdfnbrek = listsampvarb[:, :, gdat.indxsampfdfnbrek].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
+        listfdfnsloplowr = listsampvarb[:, :, gdat.indxsampfdfnsloplowr].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
+        listfdfnslopuppr = listsampvarb[:, :, gdat.indxsampfdfnslopuppr].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
     ## PSF parameters
     listpsfipara = listsampvarb[:, :, gdat.indxsamppsfipara].reshape(gdat.numbsamp * gdat.numbproc, -1)
     ## Background normalization
@@ -621,7 +608,7 @@ def init( \
     listbgal = [[] for l in gdat.indxpopl]
     listspec = [[] for l in gdat.indxpopl]
     listsind = [[] for l in gdat.indxpopl]
-    listspechist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener, gdat.numbspec))
+    listspechist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener, gdat.numbflux))
     for k in range(gdat.numbproc):
         for j in range(gdat.numbsamp):            
             n = k * gdat.numbsamp + j
@@ -658,11 +645,11 @@ def init( \
         tim0 = time.time()
 
     # posterior maps
-    pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbspec))
+    pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbflux))
     for k in range(gdat.numbsamp):
         for l in gdat.indxpopl:
             for i in gdat.indxener:
-                for h in range(gdat.numbspec):
+                for h in range(gdat.numbflux):
                     indxpnts = where((gdat.binsspec[i, h] < listspec[l][k, i, :]) & (listspec[l][k, i, :] < gdat.binsspec[i, h+1]))[0]
                     hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
                     pntsprob[l, i, hpixl, h] += 1.
@@ -698,7 +685,7 @@ def init( \
     head['maxmgang'] = gdat.maxmgang
     head['lgalcntr'] = gdat.lgalcntr
     head['bgalcntr'] = gdat.bgalcntr
-    head['numbspec'] = gdat.numbspec
+    head['numbflux'] = gdat.numbflux
     if gdat.pixltype == 'heal':
         head['numbsideheal'] = gdat.numbsideheal
     if gdat.pixltype == 'cart':
@@ -1000,7 +987,7 @@ def plot_samp(gdat):
     for l in gdat.indxpopl:
    
         # temp
-        continue
+        #continue
 
         indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
         cntstemp = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
@@ -1026,13 +1013,14 @@ def plot_samp(gdat):
         plot_modlcnts(gdat, i, None)
         plot_resicnts(gdat, i, None)
         
-        plot_thispntscnts(gdat, i, None)
-        plot_temppntscnts(gdat, i, None)
         plot_errrpnts(gdat, i, None)
 
         # temp
-        plot_thispntscntsdiff(gdat, i, None)
-        plot_temppntscntsdiff(gdat, i, None)
+        if gdat.numbswepplot == 1:
+            plot_thispntscnts(gdat, i, None)
+            plot_temppntscnts(gdat, i, None)
+            plot_thispntscntsdiff(gdat, i, None)
+            plot_temppntscntsdiff(gdat, i, None)
         
         #plot_catlfram(gdat, i, None, thiscnts)
 
@@ -1102,7 +1090,7 @@ def rjmc(gdat, indxprocwork):
             print '-' * 10
             print 'Sweep %d' % gdat.cntrswep
 
-        thismakefram = (gdat.cntrswep % gdat.plotperd == 0) and indxprocwork == int(float(gdat.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
+        thismakefram = (gdat.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdat.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
         gdat.reje = False
     
         # choose a proposal type
@@ -1234,9 +1222,17 @@ def rjmc(gdat, indxprocwork):
                 fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfdfnslop + gdat.priofactfdfnnorm - log(fdfnnorm)
                 flux = gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
-                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]
-                lpri -= log(1. + fdfnslop**2)
-                lpri += sum(log(pdfn_spec(gdat, flux, fdfnslop, gdat.minmflux, gdat.maxmflux)))
+                if gdat.fdfntype == 'powr':
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]
+                    lpri -= log(1. + fdfnslop**2)
+                    lpri += sum(log(pdfn_flux_powr(gdat, flux, fdfnslop)))
+                if gdat.fdfntype == 'brok':
+                    # temp
+                    # brok terms are not complete
+                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]
+                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
+                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
+                    lpri += sum(log(pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)))
             listlpri[sampindx[gdat.cntrswep]] = lpri
             
             if gdat.tracsamp:

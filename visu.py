@@ -629,19 +629,21 @@ def plot_histsind(gdat, l, postsindhist=None):
     plt.close(figr)
     
 
-def plot_histspec(gdat, l, listspechist=None):
+def plot_histspec(gdat, l, numbcols=1, listspechist=None):
     
     if listspechist == None:
         post = False
     else:
         post = True
     
-    numbcols = 1
     figr, axcl = plt.subplots(1, numbcols, figsize=(7 * numbcols, 7))
     if numbcols == 1:
-        axcl = [axcl]
-    for i, axis in enumerate(axcl):
-        i = gdat.indxenerfdfn[0]
+        indxenertemp = array([gdat.indxenerfdfn])
+        axcl = [None, axcl, None]
+    else:
+        indxenertemp = gdat.indxener
+    for i in indxenertemp:
+        axis = axcl[i]
         if post:
             xdat = gdat.meanspec[i, :]
             yerr = empty((2, gdat.numbflux))
@@ -654,8 +656,14 @@ def plot_histspec(gdat, l, listspechist=None):
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]][i, :]
             axis.hist(spec, gdat.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if i == gdat.indxenerfdfn:
-                fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l, i]]  
-                fluxhistmodl = retr_fdfnpowr(gdat, gdat.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnslop, i)
+                if gdat.fdfntype == 'powr':
+                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]  
+                    fluxhistmodl = retr_fdfnpowr(gdat, gdat.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnslop)
+                if gdat.fdfntype == 'brok':
+                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]  
+                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]  
+                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]  
+                    fluxhistmodl = retr_fdfnpowr(gdat, gdat.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
         if gdat.trueinfo:
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=0.5, color='g', log=True, label=gdat.truelabl)
@@ -1296,7 +1304,7 @@ def make_anim():
     for name in listname:
     
         strg = '%s*0.png' % name
-        listfile = fnmatch.filter(os.listdir(gdat.plotpath), strg)[int(numbburn/plotperd):]
+        listfile = fnmatch.filter(os.listdir(gdat.plotpath), strg)[int(numbburn/numbswepplot):]
         
         print fnmatch.filter(os.listdir(gdat.plotpath), strg)
         print listfile

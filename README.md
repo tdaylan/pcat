@@ -12,7 +12,7 @@ Verbosity level
 - 2: full log of internal variables, to be used only for diagnostic purposes
 Default: 1
 
-`plotperd`
+`numbswepplot`
 Number of sweeps between frames
 Default: 50000
 

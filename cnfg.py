@@ -10,13 +10,13 @@ def cnfg_ferm_psfn_expr(psfntype):
     init( \
          numbswep=100000, \
          factthin=1, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          trueinfo=True, \
          datatype='inpt', \
          psfntype=psfntype, \
          maxmgang=10., \
-         minmflux=array([1e-10, 1e-11, 1e-12]), \
-         maxmflux=array([1e-6, 1e-7, 1e-8]), \
+         minmflux=array([1e-8]), \
+         maxmflux=array([1e-7]), \
          regitype='ngal', \
          strgexpr='fermflux_ngal.fits', \
          strgexpo='fermexpo_ngal.fits', \
@@ -48,7 +48,7 @@ def cnfg_ferm_info():
         gridchan = init( \
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
-                        plotperd=50000, \
+                        numbswepplot=50000, \
                         probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 0.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
@@ -66,7 +66,7 @@ def cnfg_ferm_info():
                         datatype='mock', \
                         mocknumbpnts=array([mocknumbpnts[k]]), \
                         numbsideheal=256, \
-                        mockfdfnslop=array([[1.9]]), \
+                        mockfdfnslop=array([1.9]), \
                         mocknormback=ones((2, numbener)), \
                        )
         numbproc = len(gridchan)
@@ -83,16 +83,14 @@ def cnfg_ferm_expr_igal(strgexpr, strgexpo):
          psfntype='gausking', \
          numbswep=3000000, \
          numbburn=1500000, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          initnumbpnts=array([100]), \
          trueinfo=True, \
          maxmgang=20., \
          indxenerincl=arange(1), \
          #indxevttincl=arange(3, 4), \
-         #minmflux=array([1e-8]), \
-         #maxmflux=array([3e-6]), \
-         minmflux=array([1e-8, 1e-9, 1e-10, 1e-11, 1e-12]), \
-         maxmflux=array([3e-6, 3e-7, 3e-8, 3e-9, 3e-10]), \
+         minmflux=array([3e-11]), \
+         maxmflux=array([3e-6]), \
          regitype='igal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
@@ -110,12 +108,12 @@ def cnfg_ferm_mock_igal():
 
     minmflux = array([1e-11])
     maxmflux = array([1e-7])
-    mockfdfnslop = array([[1.9]])
+    mockfdfnslop = array([1.9])
       
     init( \
          psfntype='singking', \
          numbswep=100, \
-         plotperd=1, \
+         numbswepplot=1, \
          randinit=False, \
          trueinfo=True, \
          verbtype=3, \
@@ -149,7 +147,7 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
          numbproc=20, \
          numbburn=200000, \
          proppsfn=False, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
@@ -172,7 +170,7 @@ def cnfg_ferm_post():
     numbener = indxenerincl.size
     init(psfntype='doubking', \
 		 numbswep=500000, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=1.5, \
@@ -197,41 +195,39 @@ def cnfg_ferm_post():
          stdvpropsind=0.05, \
          datatype='mock', \
          numbsideheal=256, \
-         mockfdfnslop=array([[1.9]]), \
+         mockfdfnslop=array([1.9]), \
          mocknormback=ones((1, numbener)), \
         )
 
 
 def cnfg_test():
      
-    indxenerincl = arange(2, 3)
-    #indxenerincl = arange(1, 4)
+    #indxenerincl = arange(2, 3)
+    indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    #minmflux = array([1e-8])
     minmflux = array([1e-11])
-    #maxmflux = array([1e-10])
     maxmflux = array([1e-7])
-    mockfdfnslop = array([[1.9]])
-    mockfdfnsloplowr = array([[0.9]])
-    mockfdfnslopuppr = array([[1.9]])
-    mockfdfnbrek = array([[1e-10]])
+    mockfdfnslop = array([1.9])
+    mockfdfnsloplowr = array([0.9])
+    mockfdfnslopuppr = array([1.9])
+    mockfdfnbrek = array([1e-10])
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=30, \
+		 numbswep=100000, \
          factthin=1, \
-         #plotperd=1, \
+         numbswepplot=20000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
          #fdfntype='brok', \
-         verbtype=3, \
+         #verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         maxmnumbpnts=array([3]), \
-         #maxmnumbpnts=array([500]), \
+         #maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([1000]), \
          #probprop=array([0., 0., 0.1, 0.1, 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
@@ -244,8 +240,8 @@ def cnfg_test():
          #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
          #mockfdfntype='brok', \
-         mocknumbpnts=array([2]), \
-         #mocknumbpnts=array([500]), \
+         #mocknumbpnts=array([2]), \
+         mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
@@ -262,11 +258,11 @@ def cnfg_ferm_mock_ngal():
 
     minmflux = array([1e-11])
     maxmflux = array([1e-7])
-    mockfdfnslop = array([[1.9]])
+    mockfdfnslop = array([1.9])
       
     init(psfntype='singking', \
          numbswep=3000000, \
-         plotperd=50000, \
+         numbswepplot=50000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
@@ -295,7 +291,7 @@ def cnfg_sdss_mock():
 
     init(psfntype='doubgaus', \
          numbswep=100000, \
-         plotperd=20000, \
+         numbswepplot=20000, \
          minmflux=array([1e3]), \
          maxmflux=array([1e5]), \
          initnumbpnts=array([100]), \
@@ -316,7 +312,7 @@ def cnfg_sdss_mock():
          indxenerincl=indxenerincl, \
          datatype='mock', \
          numbsidecart=100, \
-         mockfdfnslop=array([[1.9]]), \
+         mockfdfnslop=array([1.9]), \
          mocknormback=ones((1, numbener)), \
         )
     
@@ -326,7 +322,7 @@ def cnfg_sdss_expr():
     init(psfntype='doubgaus', \
          trueinfo=False, \
          numbswep=1000000, \
-         plotperd=20000, \
+         numbswepplot=20000, \
          minmflux=ones(3) * 1e3, \
          maxmflux=ones(3) * 1e5, \
          initnumbpnts=array([10]), \
