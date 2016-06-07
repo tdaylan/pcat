@@ -69,7 +69,7 @@ Default: True
          stdvpsfipara=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
-         stdvspec=0.15, \
+         stdvflux=0.15, \
          stdvpropsind=0.15, \
          fracrand=0.05, \
          mocknumbpnts=None, \

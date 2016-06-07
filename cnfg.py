@@ -191,7 +191,7 @@ def cnfg_ferm_post():
          strgexpo='fermexpo_ngal_comp.fits', \
          stdvback=0.3, \
          stdvlbhl=0.01, \
-         stdvspec=0.05, \
+         stdvflux=0.05, \
          stdvpropsind=0.05, \
          datatype='mock', \
          numbsideheal=256, \
@@ -215,20 +215,20 @@ def cnfg_test():
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=100000, \
+		 numbswep=100, \
          factthin=1, \
          numbswepplot=20000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
-         #fdfntype='brok', \
-         #verbtype=3, \
+         fdfntype='brok', \
+         verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         #maxmnumbpnts=array([3]), \
-         maxmnumbpnts=array([1000]), \
-         #probprop=array([0., 0., 0.1, 0.1, 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
+         maxmnumbpnts=array([3]), \
+         #maxmnumbpnts=array([1000]), \
+         probprop=array([1., 0., 0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
@@ -239,9 +239,9 @@ def cnfg_test():
          #datatype='inpt', \
          #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
-         #mockfdfntype='brok', \
-         #mocknumbpnts=array([2]), \
-         mocknumbpnts=array([500]), \
+         mockfdfntype='brok', \
+         mocknumbpnts=array([2]), \
+         #mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
@@ -334,7 +334,7 @@ def cnfg_sdss_expr():
          lgalcntr=202., \
          bgalcntr=2., \
          spmrlbhl=0.5/3600., \
-         stdvspec=0.05, \
+         stdvflux=0.05, \
          maxmnormback=array([1e3]), \
          minmnormback=array([1e2]), \
          margsize=2./3600., \

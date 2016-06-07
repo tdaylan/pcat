@@ -62,7 +62,7 @@ def plot_post(pathprobcatl):
     gdat.stdvpsfipara = hdun[0].header['stdvpsfipara']
     gdat.stdvback = hdun[0].header['stdvback']
     gdat.stdvlbhl = hdun[0].header['stdvlbhl']
-    gdat.stdvspec = hdun[0].header['stdvspec']
+    gdat.stdvflux = hdun[0].header['stdvflux']
     gdat.spmrlbhl = hdun[0].header['spmrlbhl']
     gdat.fracrand = hdun[0].header['fracrand']
 
@@ -157,20 +157,25 @@ def plot_post(pathprobcatl):
     setp(gdat) 
 
     # truth gdat.information
-    if gdat.trueinfo:
-        gdat.truenumbpnts = hdun['truenumbpnts'].data
+    if gdat.datatype == 'mock':
+        gdat.truenumbpnts = hdun['mocknumbpnts'].data
         gdat.truelgal = []
         gdat.truebgal = []
         gdat.truespec = []
         gdat.truesind = []
         for l in gdat.indxpopl:
-            gdat.truelgal.append(hdun['truelgalpop%d' % l].data)
-            gdat.truebgal.append(hdun['truebgalpop%d' % l].data)
-            gdat.truespec.append(hdun['truespecpop%d' % l].data)
-            gdat.truesind.append(hdun['truesindpop%d' % l].data)
-        gdat.truefdfnslop = hdun['truefdfnslop'].data
-        gdat.truenormback = hdun['truenormback'].data
-        gdat.truepsfipara = hdun['truepsfipara'].data
+            gdat.truelgal.append(hdun['mocklgalpop%d' % l].data)
+            gdat.truebgal.append(hdun['mockbgalpop%d' % l].data)
+            gdat.truespec.append(hdun['mockspecpop%d' % l].data)
+            gdat.truesind.append(hdun['mocksindpop%d' % l].data)
+        if gdat.mockfdfntype == 'powr':
+            gdat.truefdfnslop = hdun['mockfdfnslop'].data
+        if gdat.mockfdfntype == 'brok':
+            gdat.truefdfnbrek = hdun['mockfdfnbrek'].data
+            gdat.truefdfnsloplowr = hdun['mockfdfnsloplowr'].data
+            gdat.truefdfnslopuppr = hdun['mockfdfnslopuppr'].data
+        gdat.truenormback = hdun['mocknormback'].data
+        gdat.truepsfipara = hdun['mockpsfipara'].data
         
     gdat.listlgal = []
     gdat.listbgal = []
@@ -654,6 +659,11 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]][i, :]
+            print 'hey'
+            print 'spec'
+            print spec
+            print 'gdat.binsspec[i, :]'
+            print gdat.binsspec[i, :]
             axis.hist(spec, gdat.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if i == gdat.indxenerfdfn:
                 if gdat.fdfntype == 'powr':
@@ -663,7 +673,7 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
                     fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]  
                     fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]  
                     fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]  
-                    fluxhistmodl = retr_fdfnpowr(gdat, gdat.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+                    fluxhistmodl = retr_fdfnbrok(gdat, gdat.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
         if gdat.trueinfo:
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=0.5, color='g', log=True, label=gdat.truelabl)
