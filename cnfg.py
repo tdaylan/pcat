@@ -28,18 +28,18 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    #minmflux = array([1e-10, 3e-11, 1e-11, 3e-12, 1e-12])
-    #mocknumbpnts = 20 * array([1, 3, 10, 30, 100], dtype=int)
-    minmflux = array([1e-10, 1e-11, 1e-12])
-    mocknumbpnts = 20 * array([1, 10, 100], dtype=int)
-    
-    numbswep = mocknumbpnts * 100 + 100
-    maxmnumbpnts = mocknumbpnts
+    minmflux = array([1e-10, 3e-11, 1e-11, 3e-12, 1e-12])
+    maxmnumbpnts = zeros(5, dtype=int) + 500
+    numbswep = 20000 * array([1, 3, 10, 30, 100], dtype=int) + 10000
+    numbburn = numbswep / 2
     
     numbiter = minmflux.size
 
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
+    
+    strgexpo='fermexpo_comp_ngal.fits'
+    strgexpr='fermflux_comp_ngal.fits'
 
     indxenerincl = arange(2, 3)
     indxevttincl = arange(3, 4)
@@ -51,8 +51,9 @@ def cnfg_ferm_info():
         gridchan = init( \
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
+                        numbburn=numbburn[k], \
                         numbswepplot=50000, \
-                        probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 0.], dtype=float), \
+                        probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
                         factthin=1000, \
@@ -66,12 +67,9 @@ def cnfg_ferm_info():
                         regitype='ngal', \
                         maxmnormback=array([5., 5.]), \
                         minmnormback=array([0.2, 0.2]), \
-                        strgexpo='fermexpo_cmp0_ngal.fits', \
-                        datatype='mock', \
-                        mocknumbpnts=array([mocknumbpnts[k]]), \
-                        numbsideheal=256, \
-                        mockfdfnslop=array([1.9]), \
-                        mocknormback=ones((2, numbener)), \
+                        strgexpo=strgexpo, \
+                        datatype='inpt', \
+                        strgexpr=strgexpr, \
                        )
         listlevi[k] = gridchan[numbproc]
         listinfo[k] = gridchan[numbproc+1]
@@ -135,7 +133,7 @@ def cnfg_ferm_mock_igal():
         )
 
     
-def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits'):
+def cnfg_ferm_expr_ngal(strgexpr='fermflux_comp_ngal.fits', strgexpo='fermexpo_comp_ngal.fits'):
     
     indxenerincl = arange(1, 4)
 
@@ -143,8 +141,8 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     maxmflux = array([1e-7])
         
     init(psfntype='doubking', \
-         numbswep=10000000, \
-         numbburn=200000, \
+         numbswep=1000000, \
+         numbburn=400000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \
@@ -311,7 +309,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=30000, \
+         numbswep=1000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

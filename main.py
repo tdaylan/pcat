@@ -606,7 +606,8 @@ def init( \
         else:
             break
     
-    levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
+    #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
+    levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
     gridchan.append(levi)
   
     # relative entropy

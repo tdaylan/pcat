@@ -2403,6 +2403,11 @@ def setp(gdat):
             
         gdat.expo = gdat.expo[gdat.indxcubefilt]
     
+    # temp
+    if gdat.datatype == 'inpt' and gdat.numbener == 3:
+        gdat.expo[0, :, :] *= 0.9
+        gdat.expo[1, :, :] *= 0.9
+        gdat.expo[2, :, :] *= 0.9
 
     # backgrounds
     gdat.backflux = []
