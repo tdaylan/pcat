@@ -83,7 +83,7 @@ def retr_rofi_flux(gdat, normback, pntsflux, tempindx):
 
 def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
 
-    if True:
+    if False:
         print
         print 'cdfn_flux_brok'
         print 'flux'
@@ -105,7 +105,7 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     fluxunit[indxflux] = norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) + \
                                 norm / (1. - fdfnslopuppr) * ((flux[indxflux] / fdfnbrek)**(1. - fdfnslopuppr) - 1.)
       
-    if True:
+    if False:
         print 'norm'
         print norm
         print 'indxflux'
@@ -470,8 +470,8 @@ def retr_fdfnbrok(gdat, fdfnnorm, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     indxfluxlowr = where(gdat.meanflux < fdfnbrek)[0]
     indxfluxuppr = where(gdat.meanflux >= fdfnbrek)[0]
     norm = 1. / ((1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + ((gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr) - 1.) / (1. - fdfnslopuppr))
-    gdat.fluxhistmodl[indxfluxlowr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxlowr] * norm * (gdat.meanflux[indxfluxlowr] / fdfnbrek)**(1. - fdfnsloplowr)
-    gdat.fluxhistmodl[indxfluxuppr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxuppr] * norm * (gdat.meanflux[indxfluxuppr] / fdfnbrek)**(1. - fdfnslopuppr)
+    gdat.fluxhistmodl[indxfluxlowr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxlowr] * norm * (gdat.meanflux[indxfluxlowr] / fdfnbrek)**(-fdfnsloplowr)
+    gdat.fluxhistmodl[indxfluxuppr] = fdfnnorm / gdat.pivtflux * gdat.diffflux[indxfluxuppr] * norm * (gdat.meanflux[indxfluxuppr] / fdfnbrek)**(-fdfnslopuppr)
           
     return gdat.fluxhistmodl
 
@@ -2019,13 +2019,12 @@ def setp(gdat):
     gdat.indxenerfdfn = gdat.numbener / 2
     gdat.enerfdfn = gdat.meanener[gdat.indxenerfdfn]
         
-    factmeanener = (gdat.meanener[gdat.indxenerfdfn] / gdat.meanener)**2
-    factbinsener = (gdat.meanener[gdat.indxenerfdfn] / gdat.binsener)**2
-    gdat.minmspec = gdat.minmflux * factmeanener
-    gdat.maxmspec = gdat.maxmflux * factmeanener
-    gdat.diffspec = gdat.diffflux[None, :] * factmeanener[:, None]
-    gdat.meanspec = gdat.diffflux[None, :] * factmeanener[:, None]
-    gdat.binsspec = gdat.binsflux[None, :] * factbinsener[:, None]
+    factener = (gdat.meanener[gdat.indxenerfdfn] / gdat.meanener)**2
+    gdat.minmspec = gdat.minmflux * factener
+    gdat.maxmspec = gdat.maxmflux * factener
+    gdat.diffspec = gdat.diffflux[None, :] * factener[:, None]
+    gdat.meanspec = gdat.diffflux[None, :] * factener[:, None]
+    gdat.binsspec = gdat.binsflux[None, :] * factener[:, None]
     
     # temp
     if gdat.exprtype == 'sdss':
@@ -2500,11 +2499,11 @@ def setp(gdat):
             #gdat.truefdfnnorm = gdat.mockfdfnnorm
             
             if gdat.mockfdfntype == 'brok':
-                gdat.truefdfnsloplowr = gdat.mockfdfnsloplowr
-                gdat.truefdfnslopuppr = gdat.mockfdfnslopuppr
-                gdat.truefdfnbrek = gdat.mockfdfnbrek
+                gdat.mockfdfnsloplowr = gdat.mockfdfnsloplowr
+                gdat.mockfdfnslopuppr = gdat.mockfdfnslopuppr
+                gdat.mockfdfnbrek = gdat.mockfdfnbrek
             else:
-                gdat.truefdfnslop = gdat.mockfdfnslop
+                gdat.mockfdfnslop = gdat.mockfdfnslop
             gdat.truecnts = mockcnts
             
             gdat.truespec = []
@@ -2524,7 +2523,6 @@ def setp(gdat):
         if gdat.datatype == 'inpt':
             gdat.truenumbpnts = None
             gdat.truefdfnnorm = None
-            gdat.truefdfnslop = None
             gdat.truenormback = None
     
             if gdat.exprtype == 'ferm':

@@ -103,7 +103,12 @@ def plot_post(pathprobcatl):
     
     if gdat.trueinfo and gdat.datatype == 'mock':
         gdat.mockfdfntype = hdun[0].header['mockfdfntype']
-        gdat.mockfdfnslop = hdun['mockfdfnslop'].data
+        if gdat.mockfdfntype == 'powr':
+            gdat.mockfdfnslop = hdun['mockfdfnslop'].data
+        if gdat.mockfdfntype == 'brok':
+            gdat.mockfdfnsloplowr = hdun['mockfdfnsloplowr'].data
+            gdat.mockfdfnslopuppr = hdun['mockfdfnslopuppr'].data
+            gdat.mockfdfnbrek = hdun['mockfdfnbrek'].data
         gdat.mocknormback = hdun['mocknormback'].data
         gdat.mocknumbpnts = hdun['mocknumbpnts'].data
 
@@ -111,8 +116,8 @@ def plot_post(pathprobcatl):
     gdat.minmnormback = hdun['minmnormback'].data
     gdat.maxmnormback = hdun['maxmnormback'].data
 
-    gdat.minmspec = hdun['minmspec'].data
-    gdat.maxmspec = hdun['maxmspec'].data
+    gdat.minmflux = hdun['minmflux'].data
+    gdat.maxmflux = hdun['maxmflux'].data
     
     gdat.minmsind = hdun['minmsind'].data
     gdat.maxmsind = hdun['maxmsind'].data
@@ -121,7 +126,7 @@ def plot_post(pathprobcatl):
         
     # bins
     gdat.binsener = hdun['binsener'].data
-    gdat.indxenerfdfn = hdun['indxenerfdfn'].data
+    gdat.indxenerfdfn = hdun[0].header['indxenerfdfn']
    
     # hyperprior limits
     gdat.minmfdfnnorm = hdun['minmfdfnnorm'].data 
@@ -147,7 +152,12 @@ def plot_post(pathprobcatl):
     # posterior distributions
     gdat.listnumbpnts = hdun['numbpnts'].data
     gdat.listfdfnnorm = hdun['fdfnnorm'].data
-    gdat.listfdfnslop = hdun['fdfnslop'].data
+    if gdat.fdfntype == 'powr':
+        gdat.listfdfnslop = hdun['fdfnslop'].data
+    if gdat.fdfntype == 'brok':
+        gdat.listfdfnsloplowr = hdun['fdfnsloplowr'].data
+        gdat.listfdfnslopuppr = hdun['fdfnslopuppr'].data
+        gdat.listfdfnbrek = hdun['fdfnbrek'].data
     gdat.listpsfipara = hdun['psfipara'].data
     gdat.listnormback = hdun['normback'].data
 
@@ -169,11 +179,11 @@ def plot_post(pathprobcatl):
             gdat.truespec.append(hdun['mockspecpop%d' % l].data)
             gdat.truesind.append(hdun['mocksindpop%d' % l].data)
         if gdat.mockfdfntype == 'powr':
-            gdat.truefdfnslop = hdun['mockfdfnslop'].data
+            gdat.mockfdfnslop = hdun['mockfdfnslop'].data
         if gdat.mockfdfntype == 'brok':
-            gdat.truefdfnbrek = hdun['mockfdfnbrek'].data
-            gdat.truefdfnsloplowr = hdun['mockfdfnsloplowr'].data
-            gdat.truefdfnslopuppr = hdun['mockfdfnslopuppr'].data
+            gdat.mockfdfnbrek = hdun['mockfdfnbrek'].data
+            gdat.mockfdfnsloplowr = hdun['mockfdfnsloplowr'].data
+            gdat.mockfdfnslopuppr = hdun['mockfdfnslopuppr'].data
         gdat.truenormback = hdun['mocknormback'].data
         gdat.truepsfipara = hdun['mockpsfipara'].data
         
@@ -260,11 +270,13 @@ def plot_post(pathprobcatl):
     
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print 'Parsing the sample bundle and making frames...'
+    print 'Making the grid posterior plot...'
     tim0 = time.time()
     
+    numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
+    indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
     path = gdat.plotpath + 'listsamp_' + gdat.rtag
-    tdpy.mcmc.plot_grid(path, gdat.listsamp, ['%d' % k for k in range(gdat.numbpara)], numbplotside=10)
+    tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
 
     if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == 3 and gdat.numbpopl == 1:
         numbpnts = gdat.mocknumbpnts[0]
@@ -288,6 +300,11 @@ def plot_post(pathprobcatl):
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
            
+    tim1 = time.time()
+    print 'Done in %.3g seconds.' % (tim1 - tim0)
+    print 'Parsing the sample bundle and making frames...'
+    tim0 = time.time()
+    
     # flux match with the true catalog
     if gdat.trueinfo:
         for l in gdat.indxpopl:
@@ -408,15 +425,45 @@ def plot_post(pathprobcatl):
         truepara = None
         tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
 
-        # flux distribution power law index
-        path = gdat.plotpath + 'fdfnslopdist_pop%d_' % l + gdat.rtag
-        if gdat.trueinfo and gdat.truefdfnslop != None:
-            truepara = gdat.truefdfnslop[l]
-        else:
-            truepara = None
+        # flux distribution
         titl = gdat.binsenerstrg[gdat.indxenerfdfn]
-        labl =  r'$\alpha$'
-        tdpy.mcmc.plot_trac(path, gdat.listfdfnslop[:, l], labl, truepara=truepara, titl=titl)
+        if gdat.fdfntype == 'powr':
+            # power law index
+            path = gdat.plotpath + 'fdfnslop_pop%d_' % l + gdat.rtag
+            if gdat.trueinfo and gdat.mockfdfntype == 'powr':
+                truepara = gdat.mockfdfnslop[l]
+            else:
+                truepara = None
+            labl =  r'$\alpha$'
+            tdpy.mcmc.plot_trac(path, gdat.listfdfnslop[:, l], labl, truepara=truepara, titl=titl)
+        
+        if gdat.fdfntype == 'brok':
+            # lower power law index
+            path = gdat.plotpath + 'fdfnsloplowr_pop%d_' % l + gdat.rtag
+            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+                truepara = gdat.mockfdfnsloplowr[l]
+            else:
+                truepara = None
+            labl =  r'$\alpha_1$'
+            tdpy.mcmc.plot_trac(path, gdat.listfdfnsloplowr[:, l], labl, truepara=truepara, titl=titl)
+        
+            # uppr power law index
+            path = gdat.plotpath + 'fdfnslopuppr_pop%d_' % l + gdat.rtag
+            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+                truepara = gdat.mockfdfnslopuppr[l]
+            else:
+                truepara = None
+            labl =  r'$\alpha_2$'
+            tdpy.mcmc.plot_trac(path, gdat.listfdfnslopuppr[:, l], labl, truepara=truepara, titl=titl)
+        
+            # break flux
+            path = gdat.plotpath + 'fdfnbrek_pop%d_' % l + gdat.rtag
+            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+                truepara = gdat.mockfdfnbrek[l]
+            else:
+                truepara = None
+            labl =  r'$f_b$'
+            tdpy.mcmc.plot_trac(path, gdat.listfdfnbrek[:, l], labl, truepara=truepara, titl=titl)
         
     # background normalization
     for i in gdat.indxener:
@@ -635,7 +682,7 @@ def plot_histsind(gdat, l, postsindhist=None):
     
 
 def plot_histspec(gdat, l, numbcols=1, listspechist=None):
-    
+   
     if listspechist == None:
         post = False
     else:
@@ -644,9 +691,16 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
     figr, axcl = plt.subplots(1, numbcols, figsize=(7 * numbcols, 7))
     if numbcols == 1:
         indxenertemp = array([gdat.indxenerfdfn])
-        axcl = [None, axcl, None]
+        axcltemp = []
+        for i in gdat.indxener:
+            if i == gdat.indxenerfdfn:
+                axcltemp.append(axcl)
+            else:
+                axcltemp.append(None)
+        axcl = axcltemp
     else:
         indxenertemp = gdat.indxener
+
     for i in indxenertemp:
         axis = axcl[i]
         if post:
@@ -659,11 +713,7 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]][i, :]
-            print 'hey'
-            print 'spec'
-            print spec
-            print 'gdat.binsspec[i, :]'
-            print gdat.binsspec[i, :]
+            
             axis.hist(spec, gdat.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if i == gdat.indxenerfdfn:
                 if gdat.fdfntype == 'powr':
@@ -950,17 +1000,20 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
             for b, axis in enumerate(axrw):
                 h = a * 2 + b
                 if h < 3 or full:
-                    imag = axis.imshow(pntsprobcart[:, :, l, i, h], origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
+                    imag = axis.imshow(pntsprobcart[:, :, l, gdat.indxenerfdfn, h], origin='lower', cmap='Reds', \
+                        norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 else:
-                    imag = axis.imshow(sum(pntsprobcart[:, :, l, i, 3:], 2), origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
+                    imag = axis.imshow(sum(pntsprobcart[:, :, l, gdat.indxenerfdfn, 3:], 2), origin='lower', cmap='Reds', \
+                        norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
                 # superimpose true PS
                 if gdat.trueinfo:
                     if h < 3 or full:
-                        indxpnts = where((gdat.binsspec[i, h] < gdat.truespec[l][0, i, :]) & (gdat.truespec[l][0, i, :] < gdat.binsspec[i, h+1]))[0]
+                        indxpnts = where((gdat.binsspec[gdat.indxenerfdfn, h] < gdat.truespec[l][0, gdat.indxenerfdfn, :]) & \
+                            (gdat.truespec[l][0, gdat.indxenerfdfn, :] < gdat.binsspec[gdat.indxenerfdfn, h+1]))[0]
                     else:
-                        indxpnts = where(gdat.binsspec[i, 3] < gdat.truespec[l][0, i, :])[0]
+                        indxpnts = where(gdat.binsspec[gdat.indxenerfdfn, 3] < gdat.truespec[l][0, gdat.indxenerfdfn, :])[0]
                     mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
@@ -972,10 +1025,10 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
                 if not cumu:
                     if h < 3 or full:
-                        axis.set_title(tdpy.util.mexp(gdat.binsspec[i, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[i, h+1]))
+                        axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h+1]))
                     else:
-                        axis.set_title(tdpy.util.mexp(gdat.binsspec[i, h]) + ' $<$ ' + strgvarb)
-        figr.savefig(gdat.plotpath + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[i]) + '_' + gdat.rtag + '.png')
+                        axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h]) + ' $<$ ' + strgvarb)
+        figr.savefig(gdat.plotpath + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfdfn]) + '_' + gdat.rtag + '.png')
         plt.close(figr)
        
     

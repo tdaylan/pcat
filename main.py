@@ -36,7 +36,6 @@ def work(gdat, indxprocwork):
         gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
    
     gdat.deltllik = 0.
-
     gdat.drmcsamp = zeros((gdat.numbpara, 2))
     
     # number of PSs
@@ -47,22 +46,11 @@ def work(gdat, indxprocwork):
         for l in gdat.indxpopl:
             gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
             if gdat.fdfntype == 'brok':
-                print 'hey'
-                print 'gdat.indxsampfdfnbrek[l]'
-                print gdat.indxsampfdfnbrek[l]
-                print 'gdat.truefdfnbrek[l]'
-                print gdat.truefdfnbrek[l]
-                print 'gdat.minmfdfnbrek[l]'
-                print gdat.minmfdfnbrek[l]
-                print 'gdat.factfdfnbrek[l]'
-                print gdat.factfdfnbrek[l]
-                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.truefdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                print 'gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0]'
-                print gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0]
-                gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.truefdfnsloplowr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.truefdfnslopuppr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
             else:
-                gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.truefdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
         for c in gdat.indxback:
             gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
     else:
@@ -727,6 +715,9 @@ def init( \
     head['spmrlbhl'] = gdat.spmrlbhl
     head['fracrand'] = gdat.fracrand
 
+    ## index of the energy bin, where the FDF is defined
+    head['indxenerfdfn'] = gdat.indxenerfdfn
+
     if gdat.trueinfo and gdat.datatype == 'mock':
         head['mockfdfntype'] = gdat.mockfdfntype
         head['mockpsfntype'] = gdat.mockpsfntype
@@ -858,6 +849,7 @@ def init( \
     listhdun[-1].header['EXTNAME'] = 'maxmnormback'
 
     ## hyperprior limits
+    
     listhdun.append(pf.ImageHDU(gdat.minmfdfnnorm))
     listhdun[-1].header['EXTNAME'] = 'minmfdfnnorm'
     
@@ -890,15 +882,11 @@ def init( \
     
     listhdun.append(pf.ImageHDU(gdat.binsener))
     listhdun[-1].header['EXTNAME'] = 'binsener'
-    
+
     # sampler setup
     ## maximum number of point sources
     listhdun.append(pf.ImageHDU(gdat.maxmnumbpnts))
     listhdun[-1].header['EXTNAME'] = 'maxmnumbpnts'
-
-    ## index of the energy bin, where the FDF is defined
-    listhdun.append(pf.ImageHDU(gdat.indxenerfdfn))
-    listhdun[-1].header['EXTNAME'] = 'indxenerfdfn'
     
     ## indices of energy bins included in the analysis
     listhdun.append(pf.ImageHDU(gdat.indxenerincl))
@@ -907,11 +895,11 @@ def init( \
     ## indices of PSF classes included in the analysis
     listhdun.append(pf.ImageHDU(gdat.indxevttincl))
     listhdun[-1].header['EXTNAME'] = 'indxevttincl'
- 
+    
     ## proposal frequencies
     listhdun.append(pf.ImageHDU(gdat.probprop))
     listhdun[-1].header['EXTNAME'] = 'probprop'
-
+    
     # processed output products
     ## convergence diagnostic
     listhdun.append(pf.ImageHDU(gmrbstat))
@@ -941,17 +929,17 @@ def init( \
             listhdun[-1].header['EXTNAME'] = 'mocksindpop%d' % l
 
         if gdat.mockfdfntype == 'powr':
-            listhdun.append(pf.ImageHDU(gdat.truefdfnslop))
+            listhdun.append(pf.ImageHDU(gdat.mockfdfnslop))
             listhdun[-1].header['EXTNAME'] = 'mockfdfnslop'
 
         if gdat.mockfdfntype == 'brok':
-            listhdun.append(pf.ImageHDU(gdat.truefdfnbrek))
+            listhdun.append(pf.ImageHDU(gdat.mockfdfnbrek))
             listhdun[-1].header['EXTNAME'] = 'mockfdfnbrek'
 
-            listhdun.append(pf.ImageHDU(gdat.truefdfnsloplowr))
+            listhdun.append(pf.ImageHDU(gdat.mockfdfnsloplowr))
             listhdun[-1].header['EXTNAME'] = 'mockfdfnsloplowr'
 
-            listhdun.append(pf.ImageHDU(gdat.truefdfnslopuppr))
+            listhdun.append(pf.ImageHDU(gdat.mockfdfnslopuppr))
             listhdun[-1].header['EXTNAME'] = 'mockfdfnslopuppr'
 
         listhdun.append(pf.ImageHDU(gdat.truenormback))
@@ -960,28 +948,6 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.truepsfipara))
         listhdun[-1].header['EXTNAME'] = 'mockpsfipara'
         
-        print 'hey'
-        print 'gdat.truenumbpnts'
-        print gdat.truenumbpnts
-        print 'gdat.truelgal[0]'
-        print gdat.truelgal[0]
-        print 'gdat.truebgal[0]'
-        print gdat.truebgal[0]
-        print 'gdat.truespec[0]'
-        print gdat.truespec[0]
-        print 'gdat.truesind[0]'
-        print gdat.truesind[0]
-        print 'gdat.mockfdfnbrek'
-        print gdat.mockfdfnbrek
-        print 'gdat.mockfdfnsloplowr'
-        print gdat.mockfdfnsloplowr
-        print 'gdat.mockfdfnslopuppr'
-        print gdat.mockfdfnslopuppr
-        print 'gdat.mocknormback'
-        print gdat.mocknormback
-        print 'gdat.mockpsfipara'
-        print gdat.mockpsfipara
-
     pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True, output_verify='ignore')
 
     if gdat.makeplot:
