@@ -2312,7 +2312,7 @@ def setp(gdat):
     gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
     if gdat.exprtype == 'ferm':
-        gdat.numbfluxprox = 4
+        gdat.numbfluxprox = 3
     if gdat.exprtype == 'sdss':
         gdat.numbfluxprox = 1
     gdat.indxfluxprox = arange(gdat.numbfluxprox)

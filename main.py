@@ -578,8 +578,8 @@ def init( \
     listsamp = listsamp.reshape(gdat.numbsamp * gdat.numbproc, -1)
     
     targsampfrac = 0.05
-    perclowr = 10.
-    percuppr = 90.
+    perclowr = 30.
+    percuppr = 70.
     cntr = 0
     while True:
         samplowr = percentile(listsamp, perclowr, axis=0)
