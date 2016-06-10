@@ -142,7 +142,7 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_comp_ngal.fits', strgexpo='fermexpo_c
         
     init(psfntype='doubking', \
          numbswep=1000000, \
-         numbburn=400000, \
+         numbburn=600000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \

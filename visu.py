@@ -366,6 +366,10 @@ def plot_post(pathprobcatl):
     for l in gdat.indxpopl:
         plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
 
+    # color distribution
+    for l in gdat.indxpopl:
+        plot_histspec(gdat, l, postsindhist=gdat.listsindhist[:, l, :, :])
+
     # fraction of emission components
     if gdat.numbback == 2:
         postpntsfluxmean = retr_postvarb(gdat.listpntsfluxmean)

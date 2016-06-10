@@ -2195,8 +2195,7 @@ def setp(gdat):
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 5
     if gdat.factthin == None:
-        gdat.factthin = min(gdat.numbpara * 5, gdat.numbswep / 2)
-
+        gdat.factthin = min(gdat.numbpara, gdat.numbswep / 2)
 
     # run tag
     gdat.rtag = retr_rtag(gdat, None)
@@ -2405,8 +2404,8 @@ def setp(gdat):
     
     # temp
     if gdat.datatype == 'inpt' and gdat.numbener == 3:
-        gdat.expo[0, :, :] *= 0.9
-        gdat.expo[1, :, :] *= 0.9
+        gdat.expo[0, :, :] *= 0.7
+        gdat.expo[1, :, :] *= 0.8
         gdat.expo[2, :, :] *= 0.9
 
     # backgrounds
