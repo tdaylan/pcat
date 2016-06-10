@@ -430,7 +430,8 @@ def plot_post(pathprobcatl):
         if gdat.fdfntype == 'powr':
             # power law index
             path = gdat.plotpath + 'fdfnslop_pop%d_' % l + gdat.rtag
-            if gdat.trueinfo and gdat.mockfdfntype == 'powr':
+            # temp
+            if False and gdat.trueinfo and gdat.mockfdfntype == 'powr':
                 truepara = gdat.mockfdfnslop[l]
             else:
                 truepara = None
@@ -440,7 +441,7 @@ def plot_post(pathprobcatl):
         if gdat.fdfntype == 'brok':
             # lower power law index
             path = gdat.plotpath + 'fdfnsloplowr_pop%d_' % l + gdat.rtag
-            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
                 truepara = gdat.mockfdfnsloplowr[l]
             else:
                 truepara = None
@@ -449,7 +450,7 @@ def plot_post(pathprobcatl):
         
             # uppr power law index
             path = gdat.plotpath + 'fdfnslopuppr_pop%d_' % l + gdat.rtag
-            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
                 truepara = gdat.mockfdfnslopuppr[l]
             else:
                 truepara = None
@@ -458,7 +459,7 @@ def plot_post(pathprobcatl):
         
             # break flux
             path = gdat.plotpath + 'fdfnbrek_pop%d_' % l + gdat.rtag
-            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
+            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
                 truepara = gdat.mockfdfnbrek[l]
             else:
                 truepara = None
@@ -793,7 +794,7 @@ def plot_scatspec(gdat, l, postspecmtch=None, thisspecmtch=None):
         axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
         axis.set_title(gdat.binsenerstrg[i])
 
-    figr.subplots_adjust(wspace=0.4, bottom=0.2)
+    figr.subplots_adjust(left=0.2, wspace=0.4, bottom=0.2)
 
     if postspecmtch != None:
         path = gdat.plotpath + 'scatspec%d_' % l + gdat.rtag + '.png'
@@ -924,8 +925,7 @@ def plot_psfn_type():
     axis.set_ylim([1e-3, None])
     plt.show()
     
-    
-def plot_minmspecinfo(minmspecarry, listinfo, listlevi):
+def plot_minmfluxinfo(minmspecarry, listinfo, listlevi):
     
     figr, axis = plt.subplots(figsize=(14, 10))
     ax_ = axis.twinx()
@@ -970,27 +970,25 @@ def plot_evidtest():
 def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
     
     if cumu:
+        numbrows = 1
         numbcols = 1
     else:
         numbcols = 2
-        
-    if cumu:
-        numbrows = 1
-    elif full:
-        numbrows = gdat.numbflux / 2
-    else:
-        numbrows = 2
+        if full:
+            numbrows = gdat.numbflux / 2
+        else:
+            numbrows = 2
         
     if gdat.exprtype == 'ferm':
         strgvarb = '$f$'
-        strgunit = ' [1/cm$^2$/s/GeV]'
+        strgunit = ' [cm$^2$ s GeV]'
     if gdat.exprtype == 'sdss':
         strgvarb = '$C$'
         strgunit = ' [counts]'
     titl = strgvarb + strgunit
 
     for l in gdat.indxpopl:
-        figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * 7, numbrows * 7), sharex='all', sharey='all')
+        figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * 10, numbrows * 10), sharex='all', sharey='all')
         if numbrows == 1:
             axgr = [axgr]            
         figr.suptitle(titl, fontsize=18)
@@ -999,21 +997,27 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 axrw = [axrw]
             for b, axis in enumerate(axrw):
                 h = a * 2 + b
-                if h < 3 or full:
-                    imag = axis.imshow(pntsprobcart[:, :, l, gdat.indxenerfdfn, h], origin='lower', cmap='Reds', \
-                        norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
+                if full:
+                    indxlowr = h
+                    indxuppr = h + 1
+                elif cumu:
+                    indxlowr = 0
+                    indxuppr = gdat.numbflux
                 else:
-                    imag = axis.imshow(sum(pntsprobcart[:, :, l, gdat.indxenerfdfn, 3:], 2), origin='lower', cmap='Reds', \
-                        norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
+                    if h < 3:
+                        indxlowr = 2 * h
+                        indxuppr = 2 * (h + 1)
+                    else:
+                        indxlowr = 2 * h
+                        indxuppr = gdat.numbflux
+                temp = sum(pntsprobcart[:, :, l, gdat.indxenerfdfn, indxlowr:indxuppr], 2)
+                imag = axis.imshow(temp, origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
                 # superimpose true PS
                 if gdat.trueinfo:
-                    if h < 3 or full:
-                        indxpnts = where((gdat.binsspec[gdat.indxenerfdfn, h] < gdat.truespec[l][0, gdat.indxenerfdfn, :]) & \
-                            (gdat.truespec[l][0, gdat.indxenerfdfn, :] < gdat.binsspec[gdat.indxenerfdfn, h+1]))[0]
-                    else:
-                        indxpnts = where(gdat.binsspec[gdat.indxenerfdfn, 3] < gdat.truespec[l][0, gdat.indxenerfdfn, :])[0]
+                    indxpnts = where((gdat.binsspec[gdat.indxenerfdfn, indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn, :]) & \
+                        (gdat.truespec[l][0, gdat.indxenerfdfn, :] < gdat.binsspec[gdat.indxenerfdfn, indxuppr]))[0]
                     mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
@@ -1023,11 +1027,9 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 axis.axvline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
                 axis.axhline(gdat.frambndr, ls='--', alpha=0.3, color='black')
                 axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
-                if not cumu:
-                    if h < 3 or full:
-                        axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h+1]))
-                    else:
-                        axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, h]) + ' $<$ ' + strgvarb)
+                axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxlowr]) + ' $<$ ' + \
+                    strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxuppr]))
+        figr.subplots_adjust(hspace=0.2, wspace=0.2)
         figr.savefig(gdat.plotpath + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfdfn]) + '_' + gdat.rtag + '.png')
         plt.close(figr)
        

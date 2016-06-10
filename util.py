@@ -731,7 +731,6 @@ def updt_samp(gdat):
             fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
         gdat.drmcsamp[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :], -1] = fluxunit
         
-            
         # update the prior register
         gdat.thislpri[gdat.indxpoplmodi] = gdat.nextlpri[gdat.indxpoplmodi]
 
@@ -1088,10 +1087,25 @@ def retr_prop(gdat):
             print gdat.indxsampmodi
             print 'drmcsamp[indxsampmodi, :]'
             print gdat.drmcsamp[gdat.indxsampmodi, :]
-            print 'thissampvarb[gdat.indxsampfdfnslop]'
-            print gdat.thissampvarb[gdat.indxsampfdfnslop]
-            print 'nextsampvarb[gdat.indxsampfdfnslop]'
-            print gdat.nextsampvarb[gdat.indxsampfdfnslop]
+            if gdat.fdfntype == 'powr':
+                print 'thissampvarb[gdat.indxsampfdfnslop]'
+                print gdat.thissampvarb[gdat.indxsampfdfnslop]
+                print 'nextsampvarb[gdat.indxsampfdfnslop]'
+                print gdat.nextsampvarb[gdat.indxsampfdfnslop]
+            if gdat.fdfntype == 'brok':
+                print 'thissampvarb[gdat.indxsampfdfnbrek]'
+                print gdat.thissampvarb[gdat.indxsampfdfnbrek]
+                print 'nextsampvarb[gdat.indxsampfdfnbrek]'
+                print gdat.nextsampvarb[gdat.indxsampfdfnbrek]
+                print 'thissampvarb[gdat.indxsampfdfnsloplowr]'
+                print gdat.thissampvarb[gdat.indxsampfdfnsloplowr]
+                print 'nextsampvarb[gdat.indxsampfdfnsloplowr]'
+                print gdat.nextsampvarb[gdat.indxsampfdfnsloplowr]
+                print 'thissampvarb[gdat.indxsampfdfnslopuppr]'
+                print gdat.thissampvarb[gdat.indxsampfdfnslopuppr]
+                print 'nextsampvarb[gdat.indxsampfdfnslopuppr]'
+                print gdat.nextsampvarb[gdat.indxsampfdfnslopuppr]
+            
             print
 
     # PSF parameter change 
@@ -1994,7 +2008,7 @@ def setp(gdat):
     # axes
     ## spatial
     gdat.binslbhl = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbins + 1)
-    
+
     ## flux
     gdat.numbflux = 10
     gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)

@@ -54,7 +54,12 @@ def work(gdat, indxprocwork):
         for c in gdat.indxback:
             gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
     else:
-        gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl * gdat.numbener).reshape((gdat.numbpopl, gdat.numbener))
+        if gdat.fdfntype == 'powr':
+            gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
+        if gdat.fdfntype == 'brok':
+            gdat.drmcsamp[gdat.indxsampfdfnbrek, 0] = rand(gdat.numbpopl)
+            gdat.drmcsamp[gdat.indxsampfdfnsloplowr, 0] = rand(gdat.numbpopl)
+            gdat.drmcsamp[gdat.indxsampfdfnslopuppr, 0] = rand(gdat.numbpopl)
         gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
         gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
     
@@ -565,26 +570,56 @@ def init( \
     listllik -= sum(sp.special.gammaln(gdat.datacnts + 1))
     
     # calculate the log-evidence and relative entropy using the harmonic mean estimator
+    if gdat.verbtype > 0:
+        print 'Estimating the Bayesian evidence...'
+        tim0 = time.time()
     minmlistllik = amin(listllik)
     
     listsamp = listsamp.reshape(gdat.numbsamp * gdat.numbproc, -1)
-    samplowr = percentile(listsamp, 0., axis=0)
-    sampuppr = percentile(listsamp, 100., axis=0)
-    lnorregu = sampuppr - samplowr
-    if (lnorregu > 0.).all():
-        if gdat.verbtype > 0:
-            print 'Estimating the Bayesian evidence...'
-            tim0 = time.time()
+    
+    targsampfrac = 0.05
+    perclowr = 0.
+    percuppr = 100.
+    cntr = 0
+    while True:
+        samplowr = percentile(listsamp, perclowr, axis=0)
+        sampuppr = percentile(listsamp, percuppr, axis=0)
+        indxparatemp = where(samplowr >= sampuppr)[0]
+        samplowr[indxparatemp] = 0.
+        sampuppr[indxparatemp] = 1.
+        lnorregu = sum(log(sampuppr - samplowr))
         indxsampregu = arange(gdat.numbsamp)
         for k in range(1, gdat.numbpara):
             indxsampregutemp = where((listsamp[:, k] >= samplowr[k]) & (listsamp[:, k] <= sampuppr[k]))[0]
             indxsampregu = intersect1d(indxsampregu, indxsampregutemp)
-        levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
-    else:
-        levi = 0.
+        thissampfrac = indxsampregu.size / gdat.numbsamp
+        errr = thissampfrac / targsampfrac - 1.
+        cntr += 1
+        
+        # temp
+        break
+
+        if abs(errr) > 0.10 and cntr < 5:
+            fact = 2.**errr
+            perclowr *= fact
+            percuppr /= fact
+        else:
+            break
     
+    levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
+    gridchan.append(levi)
+  
     # relative entropy
     info = mean(listllik) - levi
+    gridchan.append(info)
+
+    print 'hey'
+    print 'levi'
+    print levi
+    print 'info'
+    print info
+    print 
+    print
 
     # collect posterior samples from the processes
     ## number of PS
@@ -637,8 +672,6 @@ def init( \
     # auxiliary variables
     listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamp * gdat.numbproc, gdat.numbener)
    
-        
-        
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         tim0 = time.time()
@@ -653,8 +686,6 @@ def init( \
                     hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
                     pntsprob[l, i, hpixl, h] += 1.
     
-    
-        
     if gdat.verbtype > 0:
         print 'Performing Gelman-Rubin convergence test...'
         tim0 = time.time()
@@ -663,8 +694,6 @@ def init( \
     for n in range(gdat.numbpixlsave):
         gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
-
-            
     pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + gdat.strgtime + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
