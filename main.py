@@ -577,34 +577,16 @@ def init( \
     
     listsamp = listsamp.reshape(gdat.numbsamp * gdat.numbproc, -1)
     
-    targsampfrac = 0.05
-    perclowr = 30.
-    percuppr = 70.
-    cntr = 0
-    while True:
-        samplowr = percentile(listsamp, perclowr, axis=0)
-        sampuppr = percentile(listsamp, percuppr, axis=0)
-        indxparatemp = where(samplowr >= sampuppr)[0]
-        samplowr[indxparatemp] = 0.
-        sampuppr[indxparatemp] = 1.
-        lnorregu = sum(log(sampuppr - samplowr))
-        indxsampregu = arange(gdat.numbsamp)
-        for k in range(1, gdat.numbpara):
-            indxsampregutemp = where((listsamp[:, k] >= samplowr[k]) & (listsamp[:, k] <= sampuppr[k]))[0]
-            indxsampregu = intersect1d(indxsampregu, indxsampregutemp)
+    ## get an ellipse 
+    gdat.elpscntr = percentile(listsamp, 50., axis=0)
+    def retr_elpsfrac(elpsaxis):
+        distnorm = sum(((listsamp - gdat.elpscntr[None, :]) / elpsaxis[None, :])**2, axis=1)
+        indxsampregu = where(distnorm < 1.)[0]
         thissampfrac = indxsampregu.size / gdat.numbsamp
-        errr = thissampfrac / targsampfrac - 1.
-        cntr += 1
-        
-        # temp
-        break
-
-        if abs(errr) > 0.10 and cntr < 5:
-            fact = 2.**errr
-            perclowr *= fact
-            percuppr /= fact
-        else:
-            break
+        vari = (thissampfrac / 0.05 - 1.)**2
+        return vari        
+    elpsaxis, minmfunc = minm(rand(gdat.numbpara), retr_elpsfrac, tolrfunc=1e-6, verbtype=1, optiprop=True)
+    lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
     levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik

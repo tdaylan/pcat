@@ -57,7 +57,7 @@ def cnfg_ferm_info():
                         trueinfo=True, \
                         randinit=False, \
                         factthin=1000, \
-                        makeplot=True, \
+                        makeplot=False, \
                         maxmgang=10., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
