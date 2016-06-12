@@ -55,7 +55,7 @@ def retr_axes():
     numbpixl = nside**2 * 12
     apix = 4. * pi / numbpixl
     
-    return reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
+    return reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
 
 
 def make_maps():
@@ -67,29 +67,29 @@ def make_maps():
     reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
 
     global strgregi
-    strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
-   
+    # temp
+    #strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
+    strgregi = ' ra=192.8595 dec=27.1283 rad=20' 
+    
     global listtimefrac, numbtime
     numbtime = 4
     numbproc = numbtime + 1
 
     global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, photpath
-    rtag = ['full'] + ['cmp%d' % t for t in range(numbtime)]
-    reco = [8] + [7 for t in range(numbtime)] 
-    evtc = [128] + [2 for t in range(numbtime)] 
-    strgtime = ['tmin=INDEF tmax=INDEF'] + ['tmin=239155201 tmax=364953603' for t in range(numbtime)] 
-    weekinit = [11] + [9 for t in range(numbtime)]
-    #weekfinl = [12] + [13 for t in range(numbtime)]
-    weekfinl = [411] + [218 for t in range(numbtime)]
-    listtimefrac = [1.] + [1., 0.75, 0.5, 0.25]
-    photpath = ['photon'] + ['p7v6c' for t in range(numbtime)]
+    rtag = ['cmp%d' % (numbtime - t) for t in range(numbtime)] + ['full']
+    reco = [7 for t in range(numbtime)] + [8]
+    evtc = [2 for t in range(numbtime)] + [128]
+    strgtime = ['tmin=239155201 tmax=364953603' for t in range(numbtime)] + ['tmin=INDEF tmax=INDEF']
+    weekinit = [9 for t in range(numbtime)] + [11]
+    weekfinl = [218 for t in range(numbtime)] + [411]
+    listtimefrac = [0.25, 0.50, 0.75, 1.] + [1.]
+    photpath = ['p7v6c' for t in range(numbtime)] + ['photon']
 
     # process pool
     pool = mp.Pool(numbproc)
 
     # spawn the processes
     pool.map(make_maps_sing, range(numbproc))
-    #make_maps_sing(4)
     pool.close()
     pool.join()
 
@@ -112,7 +112,11 @@ def make_maps_sing(indxprocwork):
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week) + infl
         os.system(cmnd)
     for m in indxevtt:
-        
+
+        # temp
+        if m != 3:
+            continue
+
         if reco[indxprocwork] == 7:
             if m == 3:
                 thisevtt = 1
@@ -146,36 +150,6 @@ def make_maps_sing(indxprocwork):
 
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
         os.system(cmnd)
-
-
-def writ_isot():
-    
-    global reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
-    reco, evtc, numbevtt, numbevtt, evtt, numbener,         minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
-
-    # isotropic background
-    path = os.environ["PCAT_DATA_PATH"] + '/iso_P8R2_ULTRACLEAN_V6_v06.txt'
-    isotdata = loadtxt(path)
-    enerisot = isotdata[:, 0] * 1e-3 # [GeV]
-    isotflux = isotdata[:, 1] * 1e3 # [1/cm^2/s/sr/GeV]
-    isotfluxheal = empty((numbener, numbpixl, numbevtt))
-    nsampbins = 10
-    enersamp = logspace(log10(amin(binsener)), log10(amax(binsener)), nsampbins * numbener)
-    isotflux = interpolate.interp1d(enerisot, isotflux)(enersamp)
-    for i in range(numbener):
-        isotfluxheal[i, :, :] = trapz(isotflux[i*nsampbins:(i+1)*nsampbins],                              enersamp[i*nsampbins:(i+1)*nsampbins]) / diffener[i]
-        
-    path = os.environ["PCAT_DATA_PATH"] + '/fermisotflux.fits'
-    pf.writeto(path, isotfluxheal, clobber=True)
-
-    nfwpfluxtemp = tdpy.retr_nfwp(1., nside, norm=5.)
-    nfwpspec = ones(numbener)
-    nfwpfluxheal = zeros((numbener, numbpixl, numbevtt))
-    for i in indxener:
-        for m in indxevtt:
-            nfwpfluxheal[i, :, m] = nfwpspec[i] * nfwpfluxtemp
-    path4 = os.environ["PCAT_DATA_PATH"] + '/nfwpflux.fits'
-    pf.writeto(path4, nfwpfluxheal, clobber=True)
 
 
 def prep_maps():
@@ -248,6 +222,36 @@ def prep_maps():
 
             path = os.environ["PCAT_DATA_PATH"] + '/fermflux_%s_%s.fits' % (datatype, regitype)
             pf.writeto(path, flux, clobber=True)
+
+
+def writ_isot():
+    
+    global reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
+    reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
+
+    # isotropic background
+    path = os.environ["PCAT_DATA_PATH"] + '/iso_P8R2_ULTRACLEAN_V6_v06.txt'
+    isotdata = loadtxt(path)
+    enerisot = isotdata[:, 0] * 1e-3 # [GeV]
+    isotflux = isotdata[:, 1] * 1e3 # [1/cm^2/s/sr/GeV]
+    isotfluxheal = empty((numbener, numbpixl, numbevtt))
+    nsampbins = 10
+    enersamp = logspace(log10(amin(binsener)), log10(amax(binsener)), nsampbins * numbener)
+    isotflux = interpolate.interp1d(enerisot, isotflux)(enersamp)
+    for i in range(numbener):
+        isotfluxheal[i, :, :] = trapz(isotflux[i*nsampbins:(i+1)*nsampbins], enersamp[i*nsampbins:(i+1)*nsampbins]) / diffener[i]
+        
+    path = os.environ["PCAT_DATA_PATH"] + '/fermisotflux.fits'
+    pf.writeto(path, isotfluxheal, clobber=True)
+
+    nfwpfluxtemp = tdpy.retr_nfwp(1., nside, norm=5.)
+    nfwpspec = ones(numbener)
+    nfwpfluxheal = zeros((numbener, numbpixl, numbevtt))
+    for i in indxener:
+        for m in indxevtt:
+            nfwpfluxheal[i, :, m] = nfwpspec[i] * nfwpfluxtemp
+    path4 = os.environ["PCAT_DATA_PATH"] + '/nfwpflux.fits'
+    pf.writeto(path4, nfwpfluxheal, clobber=True)
 
 
 def writ_fdfm_doug():

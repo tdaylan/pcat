@@ -584,8 +584,10 @@ def init( \
         indxsampregu = where(distnorm < 1.)[0]
         thissampfrac = indxsampregu.size / gdat.numbsamp
         vari = (thissampfrac / 0.05 - 1.)**2
-        return vari        
-    elpsaxis, minmfunc = minm(rand(gdat.numbpara), retr_elpsfrac, tolrfunc=1e-6, verbtype=1, optiprop=True)
+        return vari
+    thissamp = rand(gdat.numbpara) * 1e-6
+    varipara = ones(gdat.numbpara) * 1e-6
+    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, varipara=varipara, tolrfunc=1e-6, verbtype=2, optiprop=True)
     lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
