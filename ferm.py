@@ -378,9 +378,9 @@ def plot_dust():
 
 
 #writ_isot()
-prep_maps()
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-#make_maps()
+make_maps()
+prep_maps()
 

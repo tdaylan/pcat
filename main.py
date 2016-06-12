@@ -587,7 +587,9 @@ def init( \
         return vari
     thissamp = rand(gdat.numbpara) * 1e-6
     varipara = ones(gdat.numbpara) * 1e-6
-    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, varipara=varipara, tolrfunc=1e-6, verbtype=2, optiprop=True)
+    limtpara = zeros((2, gdat.numbpara))
+    limtpara[1, :] = 1.
+    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, varipara=varipara, limtpara=limtpara, tolrfunc=1e-6, verbtype=2, optiprop=True)
     lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
