@@ -76,7 +76,7 @@ def make_maps():
     numbproc = numbtime + 1
 
     global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, photpath
-    rtag = ['cmp%d' % (numbtime - t) for t in range(numbtime)] + ['full']
+    rtag = ['cmp%d' % (numbtime - t - 1) for t in range(numbtime)] + ['full']
     reco = [7 for t in range(numbtime)] + [8]
     evtc = [2 for t in range(numbtime)] + [128]
     strgtime = ['tmin=239155201 tmax=364953603' for t in range(numbtime)] + ['tmin=INDEF tmax=INDEF']
