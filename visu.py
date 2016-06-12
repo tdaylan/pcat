@@ -92,7 +92,13 @@ def plot_post(pathprobcatl):
 
     gdat.maxmnumbpnts = hdun['maxmnumbpnts'].data
         
+    gdat.listlgalhist = hdun['lgalhist'].data
+    gdat.listbgalhist = hdun['bgalhist'].data
+    gdat.listganghist = hdun['ganghist'].data
+    gdat.listaanghist = hdun['aanghist'].data
     gdat.listspechist = hdun['spechist'].data
+    gdat.listsindhist = hdun['sindhist'].data
+    
     pntsprob = hdun['pntsprob'].data
     
     listllik = hdun['llik'].data
@@ -368,7 +374,7 @@ def plot_post(pathprobcatl):
 
     # color distribution
     for l in gdat.indxpopl:
-        plot_histspec(gdat, l, postsindhist=gdat.listsindhist[:, l, :, :])
+        plot_histsind(gdat, l, listsindhist=gdat.listsindhist[:, l, :, :])
 
     # fraction of emission components
     if gdat.numbback == 2:
@@ -653,9 +659,9 @@ def plot_compfrac(gdat, postpntsfluxmean=None, postnormback=None):
     plt.close(figr)
      
 
-def plot_histsind(gdat, l, postsindhist=None):
+def plot_histsind(gdat, l, listsindhist=None):
     
-    if postsindhist == None:
+    if listsindhist == None:
         post = False
     else:
         post = True
@@ -663,8 +669,8 @@ def plot_histsind(gdat, l, postsindhist=None):
     figr, axis = plt.subplots()
     if post:
         xdat = gdat.meansind[i, :]
-        ydat = postsindhist[0, :]
-        yerr = retr_errrvarb(postsindhist)
+        ydat = listsindhist[0, :]
+        yerr = retr_errrvarb(listsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         axis.hist(gdat.thissampvarb[gdat.thisindxsampsind[l]], gdat.binssind, alpha=0.5, color='b', log=True, label='Sample')

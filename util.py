@@ -998,7 +998,21 @@ def retr_strgfluxunit(gdat):
         
     return strgfluxunit
      
+   
+def retr_gang(lgal, bgal):
     
+    gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
+
+    return gang
+
+
+def retr_aang(lgal, bgal):
+
+    aang = arctan2(bgal, lgal)
+
+    return aang
+
+
 def retr_enerstrg(gdat):
     
     binsenerstrg = []
@@ -1971,13 +1985,14 @@ def retr_expo(gdat):
 
 def setp(gdat):
     
-    # the number of processes (each with gdat.numbswep samples)
+    # number of processes
     if gdat.numbproc == None:
         if os.uname()[1] == 'fink1.rc.fas.harvard.edu':
             gdat.numbproc = 10
         else:
             gdat.numbproc = 1
-        
+    gdat.indxproc = arange(gdat.numbproc) 
+
     if gdat.exprtype == 'ferm':
         if gdat.strgback == None:
             if gdat.regitype == 'ngal':
@@ -2006,8 +2021,21 @@ def setp(gdat):
     gdat.indxevtt = arange(gdat.numbevtt)
     
     # axes
-    ## spatial
-    gdat.binslbhl = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbins + 1)
+    ## longitude
+    gdat.numblgal = 10
+    gdat.binslgal = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numblgal + 1)
+
+    ## latitude
+    gdat.numbbgal = 10
+    gdat.binsbgal = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbgal + 1)
+
+    ## radial
+    gdat.numbgang = 10
+    gdat.binsgang = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbgang + 1)
+
+    ## azimuthal
+    gdat.numbaang = 10
+    gdat.binsaang = linspace(0., 2. * pi, gdat.numbaang + 1)
 
     ## flux
     gdat.numbflux = 10
@@ -2017,6 +2045,11 @@ def setp(gdat):
     ### pivot flux bin
     gdat.indxfluxpivt = gdat.numbflux / 2
     gdat.pivtflux = gdat.meanflux[gdat.indxfluxpivt]
+
+    ## color
+    gdat.numbsind = 10
+    gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbsind + 1)
+    gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
     ## energy
     gdat.numbener = gdat.indxenerincl.size
@@ -2212,6 +2245,7 @@ def setp(gdat):
 
     # number of samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    gdat.indxsamp = arange(gdat.numbsamp)
 
     # rescale the positional update scale
     gdat.stdvlbhl /= 2. * gdat.maxmgang
@@ -2308,9 +2342,6 @@ def setp(gdat):
     # convenience variables
     gdat.fluxhistmodl = empty(gdat.numbflux)
     
-    gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbbins + 1)
-    gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
-
     if gdat.exprtype == 'ferm':
         gdat.numbfluxprox = 3
     if gdat.exprtype == 'sdss':
@@ -2449,7 +2480,16 @@ def setp(gdat):
             gdat.mocknumbpnts = empty(gdat.numbpopl)
             for l in gdat.indxpopl:
                 gdat.mocknumbpnts[l] = random_integers(gdat.minmnumbpnts, gdat.maxmnumbpnts[l])
-        
+       
+        # find the FDF normalization at the pivot flux that corresponds to the chosen number of mock PS
+        pdfn = empty(gdat.numbpopl)
+        for l in gdat.indxpopl:
+            if gdat.mockfdfntype == 'powr':
+                pdfn[l] = pdfn_flux(gdat, pivtflux, mockfdfnslop[l])
+            if gdat.mockfdfntype == 'brok':
+                pdfn[l] = pdfn_flux_brok(gdat, pivtflux, mockfdfnbrek[l], mockfdfnsloplowr[l], mockfdfnslopuppr[l])
+        gdat.mockfdfnnorm = gdat.mocknumbpnts * pdfn * gdat.diffflux[gdat.indxfluxpivt]
+
         if gdat.mockfdfntype == 'brok':
             pass
         else:
@@ -2511,11 +2551,7 @@ def setp(gdat):
             gdat.indxtruepntstimevari = [array([])] * gdat.numbpopl
                     
             gdat.truenumbpnts = gdat.mocknumbpnts
-            
-            # temp
-            gdat.truefdfnnorm = array([10.])
-            #gdat.truefdfnnorm = gdat.mockfdfnnorm
-            
+            gdat.truefdfnnorm = gdat.mockfdfnnorm
             if gdat.mockfdfntype == 'brok':
                 gdat.mockfdfnsloplowr = gdat.mockfdfnsloplowr
                 gdat.mockfdfnslopuppr = gdat.mockfdfnslopuppr

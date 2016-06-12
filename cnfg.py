@@ -57,13 +57,13 @@ def cnfg_ferm_info():
                         trueinfo=True, \
                         randinit=False, \
                         factthin=1000, \
-                        makeplot=False, \
+                        makeplot=True, \
                         maxmgang=10., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
                         indxevttincl=indxevttincl, \
                         minmflux=array([minmflux[k]]), \
-                        maxmflux=array([3e-7]), \
+                        maxmflux=array([1e-7]), \
                         regitype='ngal', \
                         maxmnormback=array([5., 5.]), \
                         minmnormback=array([0.2, 0.2]), \
@@ -112,7 +112,7 @@ def cnfg_ferm_mock_igal():
       
     init( \
          psfntype='singking', \
-         numbswep=100000, \
+         numbswep=1000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

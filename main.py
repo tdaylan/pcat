@@ -627,11 +627,19 @@ def init( \
     ## PS parameters
     listlgal = [[] for l in gdat.indxpopl]
     listbgal = [[] for l in gdat.indxpopl]
+    listgang = [[] for l in gdat.indxpopl]
+    listaang = [[] for l in gdat.indxpopl]
     listspec = [[] for l in gdat.indxpopl]
     listsind = [[] for l in gdat.indxpopl]
+    ## binned PS parameters
+    listlgalhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
+    listbgalhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
+    listganghist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
+    listaanghist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
     listspechist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener, gdat.numbflux))
-    for k in range(gdat.numbproc):
-        for j in range(gdat.numbsamp):            
+    listsindhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
+    for k in gdat.indxproc:
+        for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
             indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, listindxpntsfull[k][j])
             for l in gdat.indxpopl:
@@ -639,8 +647,16 @@ def init( \
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
                 listspec[l].append(listsampvarb[j, k, indxsampspec[l]])
                 listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
+                listgang[l].append(retr_gang(listlgal[l], listbgal[l]))
+                listaang[l].append(retr_aang(listlgal[l], listbgal[l]))
+                listlgalhist[n, l, :] = histogram(listlgal[l][n], gdat.binslgal)[0]
+                listbgalhist[n, l, :] = histogram(listbgal[l][n], gdat.binsbgal)[0]
+                listganghist[n, l, :] = histogram(listgang[l][n], gdat.binsgang)[0]
+                listaanghist[n, l, :] = histogram(listaang[l][n], gdat.binsaang)[0]
                 for i in gdat.indxener:
                     listspechist[n, l, i, :] = histogram(listspec[l][n][i, :], gdat.binsspec[i, :])[0]
+                listsindhist[n, l, :] = histogram(listsind[l][n], gdat.binssind)[0]
+    
     for l in gdat.indxpopl:
         listlgaltemp = zeros((gdat.numbsamp, gdat.maxmnumbpnts[l])) - 1.
         listbgaltemp = zeros((gdat.numbsamp, gdat.maxmnumbpnts[l])) - 1.
@@ -806,9 +822,24 @@ def init( \
     listhdun.append(pf.ImageHDU(listpntsfluxmean))
     listhdun[-1].header['EXTNAME'] = 'listpntsfluxmean'
     
-    ## histogram of fluxes
+    ## binned PS parameters
+    listhdun.append(pf.ImageHDU(listlgalhist))
+    listhdun[-1].header['EXTNAME'] = 'lgalhist'
+    
+    listhdun.append(pf.ImageHDU(listbgalhist))
+    listhdun[-1].header['EXTNAME'] = 'bgalhist'
+    
+    listhdun.append(pf.ImageHDU(listganghist))
+    listhdun[-1].header['EXTNAME'] = 'ganghist'
+    
+    listhdun.append(pf.ImageHDU(listaanghist))
+    listhdun[-1].header['EXTNAME'] = 'aanghist'
+    
     listhdun.append(pf.ImageHDU(listspechist))
     listhdun[-1].header['EXTNAME'] = 'spechist'
+    
+    listhdun.append(pf.ImageHDU(listsindhist))
+    listhdun[-1].header['EXTNAME'] = 'sindhist'
     
     ## stored model counts in random pixels
     listhdun.append(pf.ImageHDU(listmodlcnts))
