@@ -269,11 +269,11 @@ def cnfg_test():
          maxmgang=20., \
          fdfntype='brok', \
          #fdfntype='powr', \
-         #verbtype=3, \
+         verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
          #maxmnumbpnts=array([3]), \
-         maxmnumbpnts=array([700]), \
+         maxmnumbpnts=array([3]), \
          probprop=array([1., 0., 0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          #probprop=array([1., 1., 0., 0., 0., 0., 0, 0, 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
@@ -288,7 +288,7 @@ def cnfg_test():
          datatype='mock', \
          mockfdfntype='brok', \
          #mockfdfntype='powr', \
-         mocknumbpnts=array([600]), \
+         mocknumbpnts=array([2]), \
          #mocknumbpnts=array([100]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \

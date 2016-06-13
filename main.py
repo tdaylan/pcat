@@ -217,7 +217,7 @@ def init( \
         if stdvsind == None:
             stdvsind = array([0.3])
         if minmfdfnnorm == None:
-            minmfdfnnorm = array([1e0])
+            minmfdfnnorm = array([1e-2])
         if maxmfdfnnorm == None:
             maxmfdfnnorm = array([1e2])
         if minmfdfnslop == None:
@@ -455,6 +455,7 @@ def init( \
             print
             if gdat.datatype == 'mock':
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
+                print 'mockfdfnnorm: ', gdat.mockfdfnnorm
                 if gdat.mockfdfntype == 'powr':
                     print 'mockfdfnslop: ', gdat.mockfdfnslop
                 if gdat.mockfdfntype == 'brok':

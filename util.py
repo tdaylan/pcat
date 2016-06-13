@@ -98,8 +98,8 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
         print gdat.minmflux
         print 'gdat.maxmflux'
         print gdat.maxmflux
-    norm = -1. / (((gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr) - 1.) / (1. - fdfnsloplowr) + (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
-
+    norm = 1. / (gdat.pivtflux**fdfnsloplowr * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
+                 gdat.pivtflux**fdfnslopuppr * (gdat.maxmflux**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     indxflux = where(flux >= fdfnbrek)[0]
     fluxunit = norm / (1. - fdfnsloplowr) * ((flux / fdfnbrek)**(1. - fdfnsloplowr) - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))
     fluxunit[indxflux] = norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr)) + \
@@ -120,7 +120,7 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
 
 def pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
 
-    if False:
+    if True:
         print 'pdfn_flux_brok'
         print 'flux'
         print flux
@@ -134,13 +134,11 @@ def pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
         print gdat.minmflux
         print 'gdat.maxmflux'
         print gdat.maxmflux
-    norm = -1. / (((gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr) - 1.) / (1. - fdfnsloplowr) + \
-                    (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
-    
-
+    norm = 1. / (gdat.pivtflux**fdfnsloplowr * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
+                 gdat.pivtflux**fdfnslopuppr * (gdat.maxmflux**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     indxflux = where(flux >= fdfnbrek)[0]
     pdfnflux = norm * (flux / fdfnbrek)**(1. - fdfnsloplowr)
-    pdfnflux = norm * (flux[indxflux] / fdfnbrek)**(1. - fdfnslopuppr)
+    pdfnflux[indxflux] = norm * (flux[indxflux] / fdfnbrek)**(1. - fdfnslopuppr)
         
     return pdfnflux
 
@@ -162,9 +160,8 @@ def icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
         print gdat.minmflux
         print 'gdat.maxmflux'
         print gdat.maxmflux
-    norm = -1. / (((gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr) - 1.) / (1. - fdfnsloplowr) + \
-                    (1. - (gdat.maxmflux / fdfnbrek)**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
-    
+    norm = 1. / (gdat.pivtflux**fdfnsloplowr * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr)) / (1. - fdfnsloplowr) + \
+                 gdat.pivtflux**fdfnslopuppr * (gdat.maxmflux**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     fluxunitbrek = norm / (1. - fdfnsloplowr) * (1. - (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))
     indxfluxunit = where(fluxunit >= fluxunitbrek)[0]
     flux = fdfnbrek * (fluxunit * (1. - fdfnsloplowr) / norm + (gdat.minmflux / fdfnbrek)**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
@@ -2485,9 +2482,16 @@ def setp(gdat):
         pdfn = empty(gdat.numbpopl)
         for l in gdat.indxpopl:
             if gdat.mockfdfntype == 'powr':
-                pdfn[l] = pdfn_flux(gdat, pivtflux, mockfdfnslop[l])
+                pdfn[l] = pdfn_flux_powr(gdat, array([gdat.pivtflux]), gdat.mockfdfnslop[l])
             if gdat.mockfdfntype == 'brok':
-                pdfn[l] = pdfn_flux_brok(gdat, pivtflux, mockfdfnbrek[l], mockfdfnsloplowr[l], mockfdfnslopuppr[l])
+                pdfn[l] = pdfn_flux_brok(gdat, array([gdat.pivtflux]), gdat.mockfdfnbrek[l], gdat.mockfdfnsloplowr[l], gdat.mockfdfnslopuppr[l])
+        
+        print 'hey'
+        print 'pdfn'
+        print pdfn
+        print 'gdat.diffflux[gdat.indxfluxpivt]'
+        print gdat.diffflux[gdat.indxfluxpivt]
+
         gdat.mockfdfnnorm = gdat.mocknumbpnts * pdfn * gdat.diffflux[gdat.indxfluxpivt]
 
         if gdat.mockfdfntype == 'brok':
