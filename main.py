@@ -41,30 +41,32 @@ def work(gdat, indxprocwork):
     # number of PSs
     gdat.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
     
-    # FDF
-    if gdat.trueinfo and gdat.datatype == 'mock':
+    # mean number of PSs
+    if gdat.randinit or gdat.datatype != 'mock':
+        gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
+    else:
         for l in gdat.indxpopl:
             gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
-            if gdat.fdfntype == 'brok':
-                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-            else:
-                gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-        for c in gdat.indxback:
-            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
-    else:
+    
+    # FDF shape
+    if gdat.randinit or gdat.datatype != 'mock' or gdat.fdfntype != gdat.mockfdfntype:
         if gdat.fdfntype == 'powr':
             gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
         if gdat.fdfntype == 'brok':
             gdat.drmcsamp[gdat.indxsampfdfnbrek, 0] = rand(gdat.numbpopl)
             gdat.drmcsamp[gdat.indxsampfdfnsloplowr, 0] = rand(gdat.numbpopl)
             gdat.drmcsamp[gdat.indxsampfdfnslopuppr, 0] = rand(gdat.numbpopl)
-        gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
-        gdat.drmcsamp[gdat.indxsampnormback, 0] = rand(gdat.numbback * gdat.numbener).reshape((gdat.numbback, gdat.numbener))
+    else:
+        for l in gdat.indxpopl:
+            if gdat.fdfntype == 'powr':
+                gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+            if gdat.fdfntype == 'brok':
+                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
+                gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
     
     # PSF parameters
-    if gdat.randinit or not gdat.trueinfo or gdat.truepsfipara == None:
+    if gdat.randinit or gdat.truepsfipara == None:
         gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     else:
         if gdat.psfntype == gdat.truepsfntype:
@@ -73,21 +75,38 @@ def work(gdat, indxprocwork):
         else:
             gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     
+    # background normalization
+    for c in gdat.indxback:
+        if gdat.randinit or gdat.datatype != 'mock':
+            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
+        else:
+            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
+    
     # PS components
     for l in gdat.indxpopl:
-        if gdat.randinit or not gdat.trueinfo:
+        if gdat.randinit:
             gdat.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
         else:
             gdat.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
             gdat.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-            if gdat.fdfntype == 'brok':
-                fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            else:
-                fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop, gdat.factfdfnslop)
+
+            if gdat.fdfntype == 'powr':
+                fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
+            if gdat.fdfntype == 'brok':
+                fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
+                fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+                fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+            
+            print 'hey'
+            print 'fdfnbrek'
+            print fdfnbrek
+            print 'fdfnsloplowr'
+            print fdfnsloplowr
+            print 'fdfnslopuppr'
+            print fdfnslopuppr
+            print 
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
@@ -113,7 +132,9 @@ def work(gdat, indxprocwork):
     gdat.nextsampvarb = copy(gdat.thissampvarb)
     
     if gdat.verbtype > 1:
-        print 'thissampvarb: ', gdat.thissampvarb
+        print 'thissampvarb'
+        for k in gdat.indxpara:
+            print gdat.thissampvarb[k]
         
     # sampler setup
     # auxiliary variable standard gdat.deviation for merge/split
@@ -152,10 +173,15 @@ def init( \
          maxmfdfnnorm=None, \
          minmfdfnslop=None, \
          maxmfdfnslop=None, \
+         minmfdfnbrek=None, \
+         maxmfdfnbrek=None, \
+         minmfdfnsloplowr=None, \
+         maxmfdfnsloplowr=None, \
+         minmfdfnslopuppr=None, \
+         maxmfdfnslopuppr=None, \
          fdfntype='powr', \
          psfntype=None, \
          proppsfn=True, \
-         numbpopl=1, \
          indxevttincl=arange(2, 4), \
          indxenerincl=arange(5), \
          maxmnumbpnts=array([1000]), \
@@ -209,21 +235,33 @@ def init( \
         if maxmgang == None:
             maxmgang = 20.
         if minmsind == None:
-            minmsind = array([1.2])
+            minmsind = 1.2
         if maxmsind == None:
-            maxmsind = array([3.2])
+            maxmsind = 3.2
         if meansind == None:
             meansind = array([2.2])
         if stdvsind == None:
             stdvsind = array([0.3])
         if minmfdfnnorm == None:
-            minmfdfnnorm = array([1e-2])
+            minmfdfnnorm = array([1e-1])
         if maxmfdfnnorm == None:
             maxmfdfnnorm = array([1e2])
         if minmfdfnslop == None:
             minmfdfnslop = array([0.5])
         if maxmfdfnslop == None:
             maxmfdfnslop = array([3.5])
+        if minmfdfnbrek == None:
+            minmfdfnbrek = array([minmflux])
+        if maxmfdfnbrek == None:
+            maxmfdfnbrek = array([maxmflux])
+        if minmfdfnsloplowr == None:
+            minmfdfnsloplowr = minmfdfnslop
+        if maxmfdfnsloplowr == None:
+            maxmfdfnsloplowr = maxmfdfnslop
+        if minmfdfnslopuppr == None:
+            minmfdfnslopuppr = minmfdfnslop
+        if maxmfdfnslopuppr == None:
+            maxmfdfnslopuppr = maxmfdfnslop
         if margsize == None:
             margsize = 1.
         if psfntype == None:
@@ -243,9 +281,9 @@ def init( \
         if stdvsind == None:
             stdvsind = array([0.5])
         if minmfdfnnorm == None:
-            minmfdfnnorm = 1e0
+            minmfdfnnorm = array([1e-1])
         if maxmfdfnnorm == None:
-            maxmfdfnnorm = 1e2
+            maxmfdfnnorm = array([1e2])
         if minmfdfnslop == None:
             minmfdfnslop = array([1.5])
         if maxmfdfnslop == None:
@@ -257,6 +295,9 @@ def init( \
         if mockpsfntype == None:
             mockpsfntype = 'doubgaus'
     
+    ## number of populations
+    numbpopl = maxmnumbpnts.size
+        
     # initialize the global object 
     gdat = gdatstrt()
    
@@ -346,12 +387,23 @@ def init( \
     gdat.maxmangleval = maxmangleval
     
     ## parameter limits
-    ### flux distribution function normalization
+    ### FDF normalization
     gdat.minmfdfnnorm = minmfdfnnorm
     gdat.maxmfdfnnorm = maxmfdfnnorm
-    ### flux distribution function power law index
-    gdat.minmfdfnslop = minmfdfnslop
-    gdat.maxmfdfnslop = maxmfdfnslop
+    if fdfntype == 'powr':
+        ### FDF power law index
+        gdat.minmfdfnslop = minmfdfnslop
+        gdat.maxmfdfnslop = maxmfdfnslop
+    if fdfntype == 'brok':
+        ### FDF break flux
+        gdat.minmfdfnbrek = minmfdfnbrek
+        gdat.maxmfdfnbrek = maxmfdfnbrek
+        ### FDF lower power law index
+        gdat.minmfdfnsloplowr = minmfdfnsloplowr
+        gdat.maxmfdfnsloplowr = maxmfdfnsloplowr
+        ### FDF upper power law index
+        gdat.minmfdfnslopuppr = minmfdfnslopuppr
+        gdat.maxmfdfnslopuppr = maxmfdfnslopuppr
     ### flux
     gdat.minmflux = minmflux
     gdat.maxmflux = maxmflux
@@ -400,12 +452,12 @@ def init( \
         gdat.mockfdfntype = mockfdfntype
         ### mock number of PS
         gdat.mocknumbpnts = mocknumbpnts
+        if gdat.fdfntype == 'powr':
+            gdat.mockfdfnslop = mockfdfnslop
         if gdat.fdfntype == 'brok':
+            gdat.mockfdfnbrek = mockfdfnbrek
             gdat.mockfdfnsloplowr = mockfdfnsloplowr
             gdat.mockfdfnslopuppr = mockfdfnslopuppr
-            gdat.mockfdfnbrek = mockfdfnbrek
-        else:
-            gdat.mockfdfnslop = mockfdfnslop
         gdat.mocknormback = mocknormback
         ### flag to position mock point sources at the image center
         gdat.pntscntr = pntscntr
@@ -416,9 +468,8 @@ def init( \
     ## proposal frequencies
     gdat.probprop = probprop
 
+    # temp
     # check inputs
-    if gdat.minmflux.size != 1 or gdat.minmflux.size != 1:
-        print 'Spectral limits must be numpy scalars when color priors are used!'
     
     # date and time
     gdat.strgtime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
@@ -447,10 +498,15 @@ def init( \
         print 'maxmangleval'
         print gdat.maxmangleval
         if gdat.trueinfo:
-            print 'truelgal: ', gdat.truelgal
-            print 'truebgal: ', gdat.truebgal
-            print 'truespec: '
-            print gdat.truespec
+            print 'truelgal'
+            for l in gdat.indxpopl:
+                print gdat.truelgal[l]
+            print 'truebgal'
+            for l in gdat.indxpopl:
+                print gdat.truebgal[l]
+            print 'truespec'
+            for l in gdat.indxpopl:
+                print gdat.truespec[l]
             print 'truenumbpnts: ', gdat.truenumbpnts
             print
             if gdat.datatype == 'mock':
@@ -587,10 +643,10 @@ def init( \
         vari = (thissampfrac / 0.05 - 1.)**2
         return vari
     thissamp = rand(gdat.numbpara) * 1e-6
-    varipara = ones(gdat.numbpara) * 1e-6
+    stdvpara = ones(gdat.numbpara) * 1e-6
     limtpara = zeros((2, gdat.numbpara))
     limtpara[1, :] = 1.
-    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, varipara=varipara, limtpara=limtpara, tolrfunc=1e-6, verbtype=2, optiprop=True)
+    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=2, optiprop=True)
     lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
@@ -600,14 +656,6 @@ def init( \
     # relative entropy
     info = mean(listllik) - levi
     gridchan.append(info)
-
-    print 'hey'
-    print 'levi'
-    print levi
-    print 'info'
-    print info
-    print 
-    print
 
     # collect posterior samples from the processes
     ## number of PS
@@ -904,11 +952,31 @@ def init( \
     listhdun.append(pf.ImageHDU(gdat.maxmfdfnnorm))
     listhdun[-1].header['EXTNAME'] = 'maxmfdfnnorm'
     
-    listhdun.append(pf.ImageHDU(gdat.minmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
+    if gdat.fdfntype == 'powr':
+        listhdun.append(pf.ImageHDU(gdat.minmfdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnslop'
     
-    listhdun.append(pf.ImageHDU(gdat.maxmfdfnslop))
-    listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
+        listhdun.append(pf.ImageHDU(gdat.maxmfdfnslop))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnslop'
+    
+    if gdat.fdfntype == 'brok':
+        listhdun.append(pf.ImageHDU(gdat.minmfdfnbrek))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnbrek'
+    
+        listhdun.append(pf.ImageHDU(gdat.maxmfdfnbrek))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnbrek'
+    
+        listhdun.append(pf.ImageHDU(gdat.minmfdfnsloplowr))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnsloplowr'
+    
+        listhdun.append(pf.ImageHDU(gdat.maxmfdfnsloplowr))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnsloplowr'
+    
+        listhdun.append(pf.ImageHDU(gdat.minmfdfnslopuppr))
+        listhdun[-1].header['EXTNAME'] = 'minmfdfnslopuppr'
+    
+        listhdun.append(pf.ImageHDU(gdat.maxmfdfnslopuppr))
+        listhdun[-1].header['EXTNAME'] = 'maxmfdfnslopuppr'
     
     listhdun.append(pf.ImageHDU(gdat.minmflux))
     listhdun[-1].header['EXTNAME'] = 'minmflux'
@@ -1042,19 +1110,21 @@ def plot_samp(gdat):
     
 
     thiscnts = []
+    gdat.trueindxpntsbias = []
+    gdat.trueindxpntsmiss = []
     for l in gdat.indxpopl:
-   
-        # temp
-        #continue
-
         indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
         cntstemp = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         thiscnts.append(cntstemp)
         if gdat.trueinfo:
-            indxmodl, gdat.trueindxpntsbias, gdat.trueindxpntsmiss = pair_catl(gdat, l, gdat.thissampvarb[gdat.thisindxsamplgal[l]], \
-                gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsampspec[l]])
-            thisspecmtch = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, indxmodl]
-            thisspecmtch[:, gdat.trueindxpntsmiss] = 0.
+            lgal = gdat.thissampvarb[gdat.thisindxsamplgal[l]]
+            bgal = gdat.thissampvarb[gdat.thisindxsampbgal[l]]
+            spec = gdat.thissampvarb[gdat.thisindxsampspec[l]]
+            indxmodl, trueindxpntsbias, trueindxpntsmiss = pair_catl(gdat, l, lgal, bgal, spec)
+            gdat.trueindxpntsbias.append(trueindxpntsbias)
+            gdat.trueindxpntsmiss.append(trueindxpntsmiss)
+            thisspecmtch = copy(spec[:, indxmodl])
+            thisspecmtch[:, trueindxpntsmiss] = 0.
             plot_scatspec(gdat, l, thisspecmtch=thisspecmtch)
         
         plot_scatpixl(gdat, l)
@@ -1183,10 +1253,16 @@ def rjmc(gdat, indxprocwork):
                 gdat.lock.release()
             
         # reject the sample if proposal is outside the prior
-        if gdat.thisindxprop == gdat.indxpropfdfnslop:
-            if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
-                gdat.reje = True
-        elif gdat.thisindxprop != gdat.indxpropbrth and gdat.thisindxprop != gdat.indxpropdeth and not gdat.reje:
+        if gdat.fdfntype == 'powr':
+            if gdat.thisindxprop == gdat.indxpropfdfnslop:
+                if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                    gdat.reje = True
+        if gdat.fdfntype == 'brok':
+            if gdat.thisindxprop == gdat.indxpropfdfnbrek or gdat.thisindxprop == gdat.indxpropfdfnsloplowr or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
+                if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                    gdat.reje = True
+        if (gdat.thisindxprop == gdat.indxpropfdfnnorm or \
+                    gdat.thisindxprop >= gdat.indxproppsfipara and gdat.thisindxprop != gdat.indxpropbrth and gdat.thisindxprop != gdat.indxpropdeth) and not gdat.reje:
             if where((gdat.drmcsamp[gdat.indxsampmodi, 1] < 0.) | (gdat.drmcsamp[gdat.indxsampmodi, 1] > 1.))[0].size > 0:
                 gdat.reje = True
 
@@ -1276,6 +1352,10 @@ def rjmc(gdat, indxprocwork):
             
             lpri = 0.
             for l in gdat.indxpopl:
+                # temp
+                ## brok terms are not complete
+                ## lpri calculation is turned off
+                break
                 numbpnts = gdat.thissampvarb[gdat.indxsampnumbpnts[l]]
                 fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfdfnslop + gdat.priofactfdfnnorm - log(fdfnnorm)
@@ -1285,8 +1365,6 @@ def rjmc(gdat, indxprocwork):
                     lpri -= log(1. + fdfnslop**2)
                     lpri += sum(log(pdfn_flux_powr(gdat, flux, fdfnslop)))
                 if gdat.fdfntype == 'brok':
-                    # temp
-                    # brok terms are not complete
                     fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]
                     fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
                     fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
