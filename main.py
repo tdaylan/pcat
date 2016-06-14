@@ -226,7 +226,6 @@ def init( \
          numbsidecart=None, \
          numbsideheal=None, \
          maxmangleval=None, \
-         radispmrlbhl=2., \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
          stdvpsfipara=0.1, \
@@ -235,6 +234,8 @@ def init( \
          stdvflux=0.15, \
          stdvsind=0.15, \
          fracrand=0.05, \
+         radispmrlbhl=None, \
+         stdvspmrsind=0.2, \
          mocknumbpnts=None, \
          mockfdfnslop=None, \
          mockfdfnsloplowr=None, \
@@ -294,6 +295,8 @@ def init( \
             psfntype = 'singking'
         if mockpsfntype == None:
             mockpsfntype = 'doubking'
+        if radispmrlbhl == None:
+            radispmrlbhl = 2.
     ## SDSS
     if exprtype == 'sdss':
         if maxmgang == None:
@@ -320,6 +323,8 @@ def init( \
             psfntype = 'doubgaus'
         if mockpsfntype == None:
             mockpsfntype = 'doubgaus'
+        if radispmrlbhl == None:
+            radispmrlbhl = 2. / 3600.
     
     ## number of populations
     numbpopl = maxmnumbpnts.size
