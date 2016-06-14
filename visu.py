@@ -1252,25 +1252,6 @@ def plot_intr():
         plt.close()  
         
         
-def plot_heal(gdat, heal, rofi=True, titl='', path=None):
-    
-    if rofi:
-        healtemp = copy(heal)
-        heal = zeros(gdat.numbpixlheal)
-        heal[gdat.indxpixlrofi] = healtemp
-
-    cart = tdpy.util.retr_cart(heal, minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-    imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=gdat.exttrofi)
-    plt.colorbar(imag, fraction=0.05)
-    plt.title(titl)
-
-    if path != None:
-        plt.savefig(path)
-        plt.close(figr)
-    else:
-        plt.show()
-    
-
 def plot_eval(gdat):
 
     figr, axis = plt.subplots()
