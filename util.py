@@ -833,7 +833,7 @@ def retr_pairlist(gdat, lgal, bgal):
     pairlist = []
     for k in range(lgal.size):
         indxpnts = k + 1 + where((lgal[k+1:] < lgal[k] + gdat.radispmrlbhl) & \
-            (lgal[k+1:] > lgal[k] - gdat.spmrlbhl) & (bgal[k+1:] < bgal[k] + gdat.radispmrlbhl) & (bgal[k+1:] > bgal[k] - gdat.radispmrlbhl))[0]
+            (lgal[k+1:] > lgal[k] - gdat.radispmrlbhl) & (bgal[k+1:] < bgal[k] + gdat.radispmrlbhl) & (bgal[k+1:] > bgal[k] - gdat.radispmrlbhl))[0]
         for l in range(indxpnts.size):
             pairlist.append([k, indxpnts[l]])
             
@@ -1302,7 +1302,7 @@ def retr_prop(gdat):
                                     gdat.stdvsdfn[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
         
         if gdat.verbtype > 1:
-            if pixltype == 'heal':
+            if gdat.pixltype == 'heal':
                 print 'auxipara[0]: ', gdat.auxipara[0]
                 print 'auxipara[1]: ', gdat.auxipara[1]
             else:

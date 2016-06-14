@@ -5,24 +5,34 @@ PCAT is a Bayesian framework to sample from the catalog space.
 ## Usage
 
 ### Options
+#### Diagnostics
+`diagsamp`
+Boolean flag to run the sampler in diagnostic mode
+---
+#### User interaction
 `verbtype`
 Verbosity level
-- 0: no standard output
-- 1: print only critical statements along with periodic progress
-- 2: full log of internal variables, to be used only for diagnostic purposes
+- `0`: no standard output
+- `1`: print only critical statements along with periodic progress
+- `2`: full log of internal variables, to be used only for diagnostic purposes
 
+---
+#### Plotting
 `numbswepplot`
 Number of sweeps between frames
 
 `makeplot`
 Boolean flag to allow making of plots
 
-`diagsamp`
-Boolean flag to run the sampler in diagnostic mode
+`trueinfo`
+
+---
+#### Sampler
+
+`numbproc`
 
 `numbswep`
 Number of sweeps
-
 
 `numbburn`
 Number of sweeps to be discarded during burn-in
@@ -30,69 +40,156 @@ Number of sweeps to be discarded during burn-in
 `factthin`
 The factor by which to thin the chain
 
+`probprop`
+
 `datatype`
 Type of data
 - `'inpt'`: provided by the user
 - `'mock'`: generated (mock) data
-         
 
-         
-         regitype='ngal', \
-         datatype='inpt', \
-         randinit=True, \
-         maxmgang=None, \
-         minmspec=None, \
-         maxmspec=None, \
-         minmsind=None, \
-         maxmsind=None, \
-         meansdfn=None, \
-         stdvsdfn=None, \
-         minmfdfnnorm=None, \
-         maxmfdfnnorm=None, \
-         minmfdfnslop=None, \
-         maxmfdfnslop=None, \
-         fdfntype='powr', \
-         psfntype=None, \
-         proppsfn=True, \
-         numbpopl=1, \
-         indxevttincl=arange(2, 4), \
-         indxenerincl=arange(5), \
-         maxmnumbpnts=array([1000]), \
-         initnumbpnts=None, \
-         trueinfo=False, \
-         pntscntr=False, \
-         numbproc=None, \
-         liketype='pois', \
-         pixltype='heal', \
-         exprtype='ferm', \
-         lgalcntr=0., \
-         bgalcntr=0., \
-         margsize=None, \
-         maxmnormback=None, \
-         minmnormback=None, \
-         numbsidecart=None, \
-         numbsideheal=None, \
-         maxmangleval=None, \
-         radispmrlbhl=2., \
-         stdvfdfnnorm=0.05, \
-         stdvfdfnslop=0.1, \
-         stdvpsfipara=0.1, \
-         stdvback=0.04, \
-         stdvlbhl=0.1, \
-         stdvflux=0.15, \
-         stdvsind=0.15, \
-         fracrand=0.05, \
-         mocknumbpnts=None, \
-         mockfdfnslop=None, \
-         mockfdfnsloplowr=None, \
-         mockfdfnslopuppr=None, \
-         mockfdfnbrek=None, \
-         mocknormback=None, \
-         mockfdfntype='powr', \
-         mockpsfntype=None, \
-         strgexpr=None, \
-         strgback=None, \
-         lablback=None, \
-         nameback=None, \
-         strgexpo=None, \
-         probprop=None, \
+`regitype`
+Type of region
+- `'igal'`: ROI centered at the galactic center
+- `'ngal'`: ROI centered at the North Galactic Pole
+
+
+---
+#### Initial state
+`initnumbpnts`
+
+`randinit`
+Boolean flag to start the MCMC state randomly from the prior
+
+`maxmgang`
+Half-size of the ROI window
+
+`minmflux`
+Minimum PS flux allowed by the model
+
+`maxmflux`
+Maximum PS flux allowed by the model
+
+`minmsind`
+Minimum spectral index allowed by the model
+
+`maxmsind`
+Maximum spectral index allowed by the model
+
+`maxmnormback`
+
+`minmnormback`
+
+#### Hyperpriors
+`minmfdfnnorm`
+
+`maxmfdfnnorm`
+
+`fdfntype`
+
+`minmfdfnslop`
+
+`maxmfdfnslop`
+
+`minmfdfnbrek`
+
+`maxmfdfnbrek`
+
+`minmfdfnsloplowr`
+
+`maxmfdfnsloplowr`
+
+`minmfdfnslopuppr`
+
+`maxmfdfnslopuppr`
+
+`meansdfn`
+
+`stdvsdfn`
+
+#### PSF
+`psfntype`
+
+`proppsfn`
+
+`maxmangleval`
+
+---
+#### General
+`maxmnumbpnts`
+
+`liketype`
+
+`exprtype`
+
+---
+#### ROI
+`pixltype`
+
+`lgalcntr`
+
+`bgalcntr`
+
+`margsize`
+
+`numbsidecart`
+
+`numbsideheal`
+
+---
+#### Proposal scales
+`stdvfdfnnorm`
+
+`stdvfdfnslop`
+
+`stdvpsfipara`
+
+`stdvback`
+
+`stdvlbhl`
+
+`stdvflux`
+
+`stdvsind`
+
+`fracrand`
+
+`radispmrlbhl`
+
+---
+#### Mock data
+`mocknumbpnts`
+
+`mockfdfnslop`
+
+`mockfdfnsloplowr`
+
+`mockfdfnslopuppr`
+
+`mockfdfnbrek`
+
+`mocknormback`
+
+`mockfdfntype`
+
+`mockpsfntype`
+
+---
+#### Exposure
+`strgexpo`
+
+---
+#### User-provided aata
+`strgexpr`
+`indxevttincl`
+
+`indxenerincl`
+
+
+---
+#### Background modeling
+`strgback`
+
+`lablback`
+
+`nameback`
+
