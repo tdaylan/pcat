@@ -10,23 +10,33 @@ Verbosity level
 - 0: no standard output
 - 1: print only critical statements along with periodic progress
 - 2: full log of internal variables, to be used only for diagnostic purposes
-Default: 1
 
 `numbswepplot`
 Number of sweeps between frames
-Default: 50000
 
 `makeplot`
 Boolean flag to allow making of plots
-Default: True
 
-`di`
+`diagsamp`
+Boolean flag to run the sampler in diagnostic mode
+
+`numbswep`
+Number of sweeps
 
 
-         diagsamp=False, \
-         numbswep=2000000, \
-         numbburn=None, \
-         factthin=None, \
+`numbburn`
+Number of sweeps to be discarded during burn-in
+         
+`factthin`
+The factor by which to thin the chain
+
+`datatype`
+Type of data
+- `'inpt'`: provided by the user
+- `'mock'`: generated (mock) data
+         
+
+         
          regitype='ngal', \
          datatype='inpt', \
          randinit=True, \
