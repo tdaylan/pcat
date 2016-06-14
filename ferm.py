@@ -1,3 +1,8 @@
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+mpl.rc('image', interpolation='none', origin='lower')
+
 # numpy
 import numpy as np
 from numpy import *

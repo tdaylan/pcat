@@ -303,7 +303,7 @@ def cnfg_test_popl():
         )
 
 
-def cnfg_test():
+def cnfg_test_brok():
      
     #indxenerincl = arange(2, 3)
     indxenerincl = arange(1, 4)
@@ -327,11 +327,11 @@ def cnfg_test():
          maxmgang=20., \
          fdfntype='brok', \
          #fdfntype='powr', \
-         #verbtype=3, \
+         verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         #maxmnumbpnts=array([3]), \
-         maxmnumbpnts=array([1000]), \
+         maxmnumbpnts=array([3]), \
+         #maxmnumbpnts=array([1000]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          probprop=array([0.1, 0., 0., 0., 0.1, 0.1, 0.5, 0.5, 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -348,8 +348,8 @@ def cnfg_test():
          datatype='mock', \
          mockfdfntype='brok', \
          #mockfdfntype='powr', \
-         #mocknumbpnts=array([2]), \
-         mocknumbpnts=array([500]), \
+         mocknumbpnts=array([2]), \
+         #mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
