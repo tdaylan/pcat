@@ -318,7 +318,7 @@ def cnfg_test():
       
     init(psfntype='doubking', \
 		 numbproc=1, \
-		 numbswep=10, \
+		 numbswep=10000, \
          #factthin=1, \
          numbswepplot=5000, \
          makeplot=True, \
