@@ -99,14 +99,6 @@ def work(gdat, indxprocwork):
                 fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             
-            print 'hey'
-            print 'fdfnbrek'
-            print fdfnbrek
-            print 'fdfnsloplowr'
-            print fdfnsloplowr
-            print 'fdfnslopuppr'
-            print fdfnslopuppr
-            print 
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     

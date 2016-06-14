@@ -133,7 +133,7 @@ def cnfg_ferm_mock_igal():
         )
 
     
-def cnfg_ferm_expr_ngal(strgexpr='fermflux_comp_ngal.fits', strgexpo='fermexpo_comp_ngal.fits'):
+def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits'):
     
     indxenerincl = arange(1, 4)
 
@@ -149,7 +149,7 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_comp_ngal.fits', strgexpo='fermexpo_c
          trueinfo=True, \
          maxmgang=20., \
          indxenerincl=indxenerincl, \
-         indxevttincl=arange(2, 4), \
+         indxevttincl=arange(3, 4), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
