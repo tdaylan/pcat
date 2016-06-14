@@ -72,9 +72,9 @@ def make_maps():
     reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
 
     global strgregi
+    strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
     # temp
-    #strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
-    strgregi = ' ra=192.8595 dec=27.1283 rad=20' 
+    #strgregi = ' ra=192.8595 dec=27.1283 rad=20' 
     
     global listtimefrac, numbtime
     numbtime = 4
@@ -118,19 +118,19 @@ def make_maps_sing(indxprocwork):
         os.system(cmnd)
     for m in indxevtt:
 
-        # temp
-        if m != 3:
-            continue
-
         if reco[indxprocwork] == 7:
             if m == 3:
                 thisevtt = 1
             elif m == 2:
                 thisevtt = 2
-            else:
+            strgpsfn = 'convtype=%d' % thisevtt
+            
+            if m == 0 or m == 1:
                 continue
+
         if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
+            strgpsfn = 'evtype=%d' % thisevtt
                 
         sele = '$PCAT_DATA_PATH/sele_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
         filt = '$PCAT_DATA_PATH/filt_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
@@ -139,21 +139,36 @@ def make_maps_sing(indxprocwork):
         expo = '$PCAT_DATA_PATH/expo_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
 
         cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
-            strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d evtype=%d' % (evtc[indxprocwork], thisevtt)
+            strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d %s' % (evtc[indxprocwork], strgpsfn)
+        print ''
+        print cmnd
+        print ''
         os.system(cmnd)
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
+        print ''
+        print cmnd
+        print ''
         os.system(cmnd)
 
         cmnd = 'gtbin evfile=' + filt + ' scfile=NONE outfile=' + cnts + \
             ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
             ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
+        print ''
+        print cmnd
+        print ''
         os.system(cmnd)
 
         cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
+        print ''
+        print cmnd
+        print ''
         os.system(cmnd)
 
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
+        print ''
+        print cmnd
+        print ''
         os.system(cmnd)
 
 

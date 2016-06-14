@@ -1323,7 +1323,7 @@ def retr_prop(gdat):
         nextbgal1 = thisbgal - gdat.auxipara[1]
         
         if gdat.verbtype > 1:
-            if pixltype == 'heal':
+            if gdat.pixltype == 'heal':
                 print 'nextlgal0: ', nextlgal0
                 print 'nextlgal1: ', nextlgal1
                 print 'nextbgal0: ', nextbgal0
@@ -1475,7 +1475,7 @@ def retr_prop(gdat):
                 print 'indxfinl0: ', indxfinl0
                 print 'indxsampchd1: ', gdat.indxsampchd1
                 print 'indxfinl1: ', indxfinl1
-                if pixltype == 'heal':
+                if gdat.pixltype == 'heal':
                     print 'thislgal0: ', thislgal0
                     print 'thisbgal0: ', thisbgal0
                     print 'thislgal1: ', thislgal1
@@ -1488,7 +1488,7 @@ def retr_prop(gdat):
                 print 'thisflux0: ', thisflux0
                 print 'thisflux1: ', thisflux1
 
-                if pixltype == 'heal':
+                if gdat.pixltype == 'heal':
                     print 'nextlgal: ', nextlgal
                     print 'nextbgal: ', nextbgal
                     print 'auxipara[0]: ', gdat.auxipara[0]
@@ -1598,7 +1598,6 @@ def retr_prop(gdat):
     #    gdat.indxenermodi = array([gdat.indxenermodi])
 
     if gdat.verbtype > 1:
-        print 'indxsampmodi: ', gdat.indxsampmodi
         if gdat.thisindxprop >= gdat.indxproppsfipara:
             print 'indxenermodi: ', gdat.indxenermodi
 
