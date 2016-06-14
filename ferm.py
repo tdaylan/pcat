@@ -339,16 +339,19 @@ def plot_maps():
     maxmbgal = 10.
     extt = [minmlgal, maxmlgal, minmbgal, maxmbgal]
     
-    get_ipython().magic(u'matplotlib inline')
+    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_cmp0_ngal.fits'
+    cmp0 = pf.getdata(path)[2, :, 3]
+    path = '/n/pan/www/tansu/png/pcat/cmp0.png'
+    plot_heal(cmp0, path=path)
+    
+    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_comp_ngal.fits'
+    comp = pf.getdata(path)[2, :, 3]
+    path = '/n/pan/www/tansu/png/pcat/comp.png'
+    plot_heal(comp, path=path)
 
-    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_igal_full.fits'
-    maps = sum(pf.getdata(path), 2)
-    maps *= meanener[:, None]**2
-    for i in range(5):
-        maps[i, :] = hp.smoothing(maps[i, :], deg2rad(2.))
-
-    plot_heal(maps[3, :] - maps[2, :])
-    plot_heal(maps[2, :] - maps[1, :])
+    diff = cmp0 - comp
+    path = '/n/pan/www/tansu/png/pcat/diff.png'
+    plot_heal(diff, path=path)
 
 
 def plot_dust():

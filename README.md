@@ -35,8 +35,8 @@ Default: True
          maxmspec=None, \
          minmsind=None, \
          maxmsind=None, \
-         meansind=None, \
-         stdvsind=None, \
+         meansdfn=None, \
+         stdvsdfn=None, \
          minmfdfnnorm=None, \
          maxmfdfnnorm=None, \
          minmfdfnslop=None, \
@@ -101,10 +101,10 @@ Default: True
             minmsind = array([1.2])
         if maxmsind == None:
             maxmsind = array([3.2])
-        if meansind == None:
-            meansind = array([2.2])
-        if stdvsind == None:
-            stdvsind = array([0.3])
+        if meansdfn == None:
+            meansdfn = array([2.2])
+        if stdvsdfn == None:
+            stdvsdfn = array([0.3])
         if minmfdfnnorm == None:
             minmfdfnnorm = array([1e0])
         if maxmfdfnnorm == None:

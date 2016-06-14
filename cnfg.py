@@ -276,8 +276,8 @@ def cnfg_test_popl():
          maxmfdfnslopuppr=array([3., 3.]), \
          minmfdfnbrek=array([minmflux, minmflux]), \
          maxmfdfnbrek=array([maxmflux, maxmflux]), \
-         stdvsind=array([.5, .5]), \
-         meansind=array([2., 2.]), \
+         stdvsdfn=array([.5, .5]), \
+         meansdfn=array([2., 2.]), \
          #probprop=array([1., 0., 0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
          #probprop=array([1., 1., 0., 0., 0., 0., 0, 0, 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \

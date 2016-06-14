@@ -39,6 +39,11 @@ def plot_post(pathprobcatl):
     gdat.maxmlgal = hdun[0].header['maxmlgal']
     gdat.minmbgal = hdun[0].header['minmbgal']
     gdat.maxmbgal = hdun[0].header['maxmbgal']
+    
+    gdat.minmflux = hdun[0].header['minmflux']
+    gdat.maxmflux = hdun[0].header['maxmflux']
+    gdat.minmsind = hdun[0].header['minmsind']
+    gdat.maxmsind = hdun[0].header['maxmsind']
 
     gdat.datatype = hdun[0].header['datatype']
     gdat.regitype = hdun[0].header['regitype']
@@ -122,13 +127,8 @@ def plot_post(pathprobcatl):
     gdat.minmnormback = hdun['minmnormback'].data
     gdat.maxmnormback = hdun['maxmnormback'].data
 
-    gdat.minmflux = hdun['minmflux'].data
-    gdat.maxmflux = hdun['maxmflux'].data
-    
-    gdat.minmsind = hdun['minmsind'].data
-    gdat.maxmsind = hdun['maxmsind'].data
-    gdat.meansind = hdun['meansind'].data
-    gdat.stdvsind = hdun['stdvsind'].data
+    gdat.meansdfn = hdun['meansdfn'].data
+    gdat.stdvsdfn = hdun['stdvsdfn'].data
         
     # bins
     gdat.binsener = hdun['binsener'].data
@@ -137,9 +137,17 @@ def plot_post(pathprobcatl):
     # hyperprior limits
     gdat.minmfdfnnorm = hdun['minmfdfnnorm'].data 
     gdat.maxmfdfnnorm = hdun['maxmfdfnnorm'].data
-    gdat.minmfdfnslop = hdun['minmfdfnslop'].data
-    gdat.maxmfdfnslop = hdun['maxmfdfnslop'].data
-
+    if gdat.fdfntype == 'powr':
+        gdat.minmfdfnslop = hdun['minmfdfnslop'].data
+        gdat.maxmfdfnslop = hdun['maxmfdfnslop'].data
+    if gdat.fdfntype == 'brok':
+        gdat.minmfdfnbrek = hdun['minmfdfnbrek'].data
+        gdat.maxmfdfnbrek = hdun['maxmfdfnbrek'].data
+        gdat.minmfdfnsloplowr = hdun['minmfdfnsloplowr'].data
+        gdat.maxmfdfnsloplowr = hdun['maxmfdfnsloplowr'].data
+        gdat.minmfdfnslopuppr = hdun['minmfdfnslopuppr'].data
+        gdat.maxmfdfnslopuppr = hdun['maxmfdfnslopuppr'].data
+        
     # utilities
     gdat.listsamp = hdun['listsamp'].data
     gdat.probprop = hdun['probprop'].data
@@ -374,7 +382,7 @@ def plot_post(pathprobcatl):
 
     # color distribution
     for l in gdat.indxpopl:
-        plot_histsind(gdat, l, listsindhist=gdat.listsindhist[:, l, :, :])
+        plot_histsind(gdat, l, listsindhist=gdat.listsindhist[:, l, :])
 
     # fraction of emission components
     if gdat.numbback == 2:
@@ -668,9 +676,10 @@ def plot_histsind(gdat, l, listsindhist=None):
         
     figr, axis = plt.subplots()
     if post:
-        xdat = gdat.meansind[i, :]
-        ydat = listsindhist[0, :]
-        yerr = retr_errrvarb(listsindhist)
+        xdat = gdat.meansind
+        postsindhist = retr_postvarb(listsindhist)
+        ydat = postsindhist[0, :]
+        yerr = retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         axis.hist(gdat.thissampvarb[gdat.thisindxsampsind[l]], gdat.binssind, alpha=0.5, color='b', log=True, label='Sample')
@@ -716,11 +725,9 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
         axis = axcl[i]
         if post:
             xdat = gdat.meanspec[i, :]
-            yerr = empty((2, gdat.numbflux))
-            ydat = percentile(listspechist[:, i, :], 50., axis=0)
-            yerr[0, :] = percentile(listspechist[:, i, :], 16., axis=0)
-            yerr[1, :] = percentile(listspechist[:, i, :], 84., axis=0)
-            yerr = abs(yerr - ydat)
+            postspechist = retr_postvarb(listspechist[:, i, :])
+            ydat = postspechist[0, :]
+            yerr = retr_errrvarb(postspechist)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]][i, :]
@@ -832,7 +839,7 @@ def plot_scatpixl(gdat, l):
             axis.set_xlim(axislimt)
             axis.set_ylim(axislimt)
             
-            axis.text(0.5, 0.9, '$m = %.3g, b = %.3g, r = %.3g$' % (slop, intc, coef),                     va='center', ha='center', transform=axis.transAxes, fontsize=16)
+            axis.text(0.5, 0.9, '$m = %.3g, b = %.3g, r = %.3g$' % (slop, intc, coef), va='center', ha='center', transform=axis.transAxes, fontsize=16)
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel('Data Counts')
             if i == 0:
@@ -842,8 +849,6 @@ def plot_scatpixl(gdat, l):
                 axis.set_ylabel(labl)
             if m == 0:
                 axis.set_title(gdat.enerstrg[i])
-
-
             
     figr.subplots_adjust(hspace=0.4, wspace=0.4, top=0.8)
     plt.savefig(gdat.plotpath + 'scatpixl%d_' % l + gdat.rtag + '_%09d.png' % gdat.cntrswep)
@@ -1247,7 +1252,7 @@ def plot_intr():
         plt.close()  
         
         
-def plot_heal(gdat, heal, rofi=True, titl=''):
+def plot_heal(gdat, heal, rofi=True, titl='', path=None):
     
     if rofi:
         healtemp = copy(heal)
@@ -1258,7 +1263,12 @@ def plot_heal(gdat, heal, rofi=True, titl=''):
     imag = plt.imshow(cart, origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.title(titl)
-    plt.show()
+
+    if path != None:
+        plt.savefig(path)
+        plt.close(figr)
+    else:
+        plt.show()
     
 
 def plot_eval(gdat):

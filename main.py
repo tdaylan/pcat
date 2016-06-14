@@ -94,27 +94,59 @@ def work(gdat, indxprocwork):
                 fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
             if gdat.fdfntype == 'brok':
+                flux = gdat.truespec[l][0, gdat.indxenerfdfn, :]
                 fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
-                fluxunit = cdfn_flux_brok(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            
+                print 'flux'
+                print flux
+                print 'fdfnbrek'
+                print fdfnbrek
+                print 'fdfnsloplowr'
+                print fdfnsloplowr
+                print 'fdfnslopuppr'
+                print fdfnslopuppr
+                fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+                print 'fluxunit'
+                print fluxunit
+                print
+
+
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
-            gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansind[l], gdat.stdvsind[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
     gdat.thissampvarb = retr_sampvarb(gdat, gdat.thisindxpntsfull, gdat.drmcsamp[:, 0])
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
    
     if gdat.verbtype > 2:
-        print 'thisindxpntsfull: ', gdat.thisindxpntsfull
-        print 'thisindxpntsempt: ', gdat.thisindxpntsempt  
-        print 'thisindxsamplgal: ', gdat.thisindxsamplgal
-        print 'thisindxsampbgal: ', gdat.thisindxsampbgal
-        print 'thisindxsampspec: '
-        print gdat.thisindxsampspec
-        print 'thisindxsampsind: ', gdat.thisindxsampsind
-        print 'thisindxsampcomp: ', gdat.thisindxsampcomp
+        print 'thisindxpntsfull'
+        for l in gdat.indxpopl:
+            print gdat.thisindxpntsfull[l]
+        
+        print 'thisindxpntsempt'
+        for l in gdat.indxpopl:
+            print gdat.thisindxpntsempt  
+        
+        print 'thisindxsamplgal'
+        for l in gdat.indxpopl:
+            print gdat.thisindxsamplgal[l]
+        
+        print 'thisindxsampbgal'
+        for l in gdat.indxpopl:
+            print gdat.thisindxsampbgal[l]
+        
+        print 'thisindxsampspec'
+        for l in gdat.indxpopl:
+            print gdat.thisindxsampspec[l]
+        
+        print 'thisindxsampsind'
+        for l in gdat.indxpopl:
+            print gdat.thisindxsampsind[l]
+        
+        print 'thisindxsampcomp'
+        for l in gdat.indxpopl:
+            print gdat.thisindxsampcomp[l]
 
     gdat.nextpntsflux = zeros_like(gdat.thispntsflux)
     gdat.nextmodlflux = zeros_like(gdat.thispntsflux)
@@ -124,6 +156,9 @@ def work(gdat, indxprocwork):
     gdat.nextsampvarb = copy(gdat.thissampvarb)
     
     if gdat.verbtype > 1:
+        print 'drmcsamp'
+        for k in gdat.indxpara:
+            print gdat.drmcsamp[k, :]
         print 'thissampvarb'
         for k in gdat.indxpara:
             print gdat.thissampvarb[k]
@@ -159,8 +194,8 @@ def init( \
          maxmflux=None, \
          minmsind=None, \
          maxmsind=None, \
-         meansind=None, \
-         stdvsind=None, \
+         meansdfn=None, \
+         stdvsdfn=None, \
          minmfdfnnorm=None, \
          maxmfdfnnorm=None, \
          minmfdfnslop=None, \
@@ -230,10 +265,10 @@ def init( \
             minmsind = 1.2
         if maxmsind == None:
             maxmsind = 3.2
-        if meansind == None:
-            meansind = array([2.2])
-        if stdvsind == None:
-            stdvsind = array([0.3])
+        if meansdfn == None:
+            meansdfn = array([2.2])
+        if stdvsdfn == None:
+            stdvsdfn = array([0.3])
         if minmfdfnnorm == None:
             minmfdfnnorm = array([1e-1])
         if maxmfdfnnorm == None:
@@ -268,10 +303,10 @@ def init( \
             minmsind = array([1.])
         if maxmsind == None:
             maxmsind = array([3.])
-        if meansind == None:
-            meansind = array([2.2])
-        if stdvsind == None:
-            stdvsind = array([0.5])
+        if meansdfn == None:
+            meansdfn = array([2.2])
+        if stdvsdfn == None:
+            stdvsdfn = array([0.5])
         if minmfdfnnorm == None:
             minmfdfnnorm = array([1e-1])
         if maxmfdfnnorm == None:
@@ -402,8 +437,8 @@ def init( \
     ### spectral power-law index
     gdat.minmsind = minmsind
     gdat.maxmsind = maxmsind
-    gdat.meansind = meansind
-    gdat.stdvsind = stdvsind
+    gdat.meansdfn = meansdfn
+    gdat.stdvsdfn = stdvsdfn
     ### background normalizations
     gdat.minmnormback = minmnormback
     gdat.maxmnormback = maxmnormback
@@ -643,6 +678,12 @@ def init( \
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
     levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
+    print 'hey'
+    print levi
+    # temp
+    if not isfinite(levi):
+        levi = 0.
+
     gridchan.append(levi)
   
     # relative entropy
@@ -763,10 +804,16 @@ def init( \
     if gdat.pixltype == 'cart':
         head['numbsidecart'] = gdat.numbsidecart
     
+    # axes
     head['minmlgal'] = gdat.minmlgal
     head['maxmlgal'] = gdat.maxmlgal
     head['minmbgal'] = gdat.minmbgal
     head['maxmbgal'] = gdat.maxmbgal
+    
+    head['minmflux'] = gdat.minmflux
+    head['maxmflux'] = gdat.maxmflux
+    head['minmsind'] = gdat.minmsind
+    head['maxmsind'] = gdat.maxmsind
     
     head['datatype'] = gdat.datatype
     head['regitype'] = gdat.regitype
@@ -970,23 +1017,11 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.maxmfdfnslopuppr))
         listhdun[-1].header['EXTNAME'] = 'maxmfdfnslopuppr'
     
-    listhdun.append(pf.ImageHDU(gdat.minmflux))
-    listhdun[-1].header['EXTNAME'] = 'minmflux'
+    listhdun.append(pf.ImageHDU(gdat.meansdfn))
+    listhdun[-1].header['EXTNAME'] = 'meansdfn'
     
-    listhdun.append(pf.ImageHDU(gdat.maxmflux))
-    listhdun[-1].header['EXTNAME'] = 'maxmflux'
-    
-    listhdun.append(pf.ImageHDU(gdat.minmsind))
-    listhdun[-1].header['EXTNAME'] = 'minmsind'
-    
-    listhdun.append(pf.ImageHDU(gdat.maxmsind))
-    listhdun[-1].header['EXTNAME'] = 'maxmsind'
-    
-    listhdun.append(pf.ImageHDU(gdat.meansind))
-    listhdun[-1].header['EXTNAME'] = 'meansind'
-    
-    listhdun.append(pf.ImageHDU(gdat.stdvsind))
-    listhdun[-1].header['EXTNAME'] = 'stdvsind'
+    listhdun.append(pf.ImageHDU(gdat.stdvsdfn))
+    listhdun[-1].header['EXTNAME'] = 'stdvsdfn'
     
     listhdun.append(pf.ImageHDU(gdat.binsener))
     listhdun[-1].header['EXTNAME'] = 'binsener'
