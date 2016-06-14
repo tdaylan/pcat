@@ -122,11 +122,10 @@ def make_maps_sing(indxprocwork):
             if m == 3:
                 thisevtt = 1
             elif m == 2:
-                thisevtt = 2
-            strgpsfn = 'convtype=%d' % thisevtt
-            
-            if m == 0 or m == 1:
+                thisevtt = 2:
+            else:
                 continue
+            strgpsfn = 'convtype=%d' % thisevtt
 
         if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
