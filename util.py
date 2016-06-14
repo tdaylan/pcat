@@ -1312,10 +1312,10 @@ def retr_prop(gdat):
             print gdat.auxipara[2:]
             print
             
-        nextflux0 = thisflux / (thisflux + auxipara[2])
-        nextflux1 = auxipara[2] / (thisflux + auxipara[2])
+        nextflux0 = thisflux / (thisflux + gdat.auxipara[2])
+        nextflux1 = gdat.auxipara[2] / (thisflux + gdat.auxipara[2])
         nextsind0 = thissind
-        nextsind1 = auxipara[3]
+        nextsind1 = gdat.auxipara[3]
 
         nextlgal0 = thislgal + gdat.auxipara[0]
         nextlgal1 = thislgal - gdat.auxipara[0]

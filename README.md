@@ -5,9 +5,11 @@ PCAT is a Bayesian framework to sample from the catalog space.
 ## Usage
 
 ### Options
+---
 #### Diagnostics
 `diagsamp`
 Boolean flag to run the sampler in diagnostic mode
+
 ---
 #### User interaction
 `verbtype`
@@ -28,7 +30,6 @@ Boolean flag to allow making of plots
 
 ---
 #### Sampler
-
 `numbproc`
 
 `numbswep`
@@ -79,6 +80,7 @@ Maximum spectral index allowed by the model
 
 `minmnormback`
 
+---
 #### Hyperpriors
 `minmfdfnnorm`
 
@@ -106,6 +108,7 @@ Maximum spectral index allowed by the model
 
 `stdvsdfn`
 
+---
 #### PSF
 `psfntype`
 
@@ -183,7 +186,6 @@ Maximum spectral index allowed by the model
 `indxevttincl`
 
 `indxenerincl`
-
 
 ---
 #### Background modeling
