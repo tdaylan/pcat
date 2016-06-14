@@ -87,6 +87,19 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
                  gdat.pivtflux**fdfnslopuppr * (gdat.maxmflux**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr)) / (1. - fdfnslopuppr))
     fluxunit = norm / (1. - fdfnsloplowr) * gdat.pivtflux**fdfnsloplowr * (flux**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
     indxflux = where(flux >= fdfnbrek)[0]
+    
+    if False:
+        print 'hey'
+        print 'cdfn_flux_brok'
+        print 'flux'
+        print flux
+        print 'norm'
+        print norm
+        print 'fluxunit'
+        print fluxunit
+        print 'indxflux'
+        print indxflux
+   
     if indxflux.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
         fluxunit[indxflux] = temp + norm / (1. - fdfnslopuppr) * gdat.pivtflux**fdfnslopuppr * (flux**(1. - fdfnsloplowr) - fdfnbrek**(1. - fdfnslopuppr))
@@ -113,16 +126,18 @@ def icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     flux = (fluxunit * (1. - fdfnsloplowr) / norm / gdat.pivtflux**fdfnsloplowr + gdat.minmflux**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
     indxfluxunit = where(fluxunit >= fluxunitbrek)[0]
     
+    if False:
+        print 'hey'
+        print 'icdf_flux_brok'
+        print 'fluxunit'
+        print fluxunit
+        print 'norm'
+        print norm
+        print 'flux'
+        print flux
+        print 'indxfluxunit'
+        print indxfluxunit
     
-    print 'icdf_flux_brok'
-    print 'fluxunit'
-    print fluxunit
-    print 'norm'
-    print norm
-    print 'flux'
-    print flux
-    print 'indxfluxunit'
-    print indxfluxunit
     if indxfluxunit.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
         flux[indxfluxunit] = ((fluxunit - temp) * (1. - fdfnslopuppr) / norm / gdat.pivtflux**fdfnslopuppr + fdfnbrek**(1. - fdfnslopuppr))**(1. / (1. - fdfnslopuppr))
@@ -813,7 +828,7 @@ def retr_errrvarb(postvarb):
     return errr
 
 
-def retr_pairlist(lgal, bgal):
+def retr_pairlist(gdat, lgal, bgal):
     
     pairlist = []
     for k in range(lgal.size):
@@ -1316,7 +1331,7 @@ def retr_prop(gdat):
 
             lgal = concatenate((array([nextlgal0, nextlgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]], thislgal)))
             bgal = concatenate((array([nextbgal0, nextbgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]], thisbgal)))
-            pairlist = retr_pairlist(lgal, bgal)
+            pairlist = retr_pairlist(gdat, lgal, bgal)
 
             ## first new component
             gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
@@ -1355,7 +1370,7 @@ def retr_prop(gdat):
             
         lgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]]
         bgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]]
-        pairlist = retr_pairlist(lgal, bgal)
+        pairlist = retr_pairlist(gdat, lgal, bgal)
         
         if gdat.verbtype > 1:
             print 'lgal'

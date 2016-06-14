@@ -29,7 +29,7 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, inspect
 
 # tdpy
-import tdpy
+import tdpy.util
 
 import sympy
 
@@ -244,7 +244,7 @@ def writ_isot():
     path = os.environ["PCAT_DATA_PATH"] + '/fermisotflux.fits'
     pf.writeto(path, isotfluxheal, clobber=True)
 
-    nfwpfluxtemp = tdpy.retr_nfwp(1., nside, norm=5.)
+    nfwpfluxtemp = tdpy.util.retr_nfwp(1., nside, norm=5.)
     nfwpspec = ones(numbener)
     nfwpfluxheal = zeros((numbener, numbpixl, numbevtt))
     for i in indxener:
@@ -290,7 +290,7 @@ def writ_fdfm():
 
     binsener = array([0.3, 1., 3., 10.])
     
-    fermfdfmfluxigaltemp = tdpy.retr_fdfm(binsener, nside)
+    fermfdfmfluxigaltemp = tdpy.util.retr_fdfm(binsener, nside)
 
     fermfdfmfluxngaltemp = zeros((numbener, numbpixl))
     for i in range(numbener):
@@ -374,7 +374,7 @@ def plot_dust():
     
     redd[where(redd > 1.)] = 1.
     figr, axis = plt.subplots(figsize=(7, 7))
-    cart = tdpy.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
+    cart = tdpy.util.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
     imag = axis.imshow(cart, origin='lower', cmap='Reds')
     plt.colorbar(imag, ax=axis)
     plt.show()
