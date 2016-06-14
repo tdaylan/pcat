@@ -86,27 +86,3 @@ Default: True
          nameback=None, \
          strgexpo=None, \
          probprop=None, \
-        ):
-    
-    # start the timer
-    timetotlreal = time.time()
-    timetotlproc = time.clock()
-   
-    # defaults
-    ## Fermi-LAT
-    if exprtype == 'ferm':
-        if maxmgang == None:
-            maxmgang = 20.
-        if minmsind == None:
-            minmsind = array([1.2])
-        if maxmsind == None:
-            maxmsind = array([3.2])
-        if meansdfn == None:
-            meansdfn = array([2.2])
-        if stdvsdfn == None:
-            stdvsdfn = array([0.3])
-        if minmfdfnnorm == None:
-            minmfdfnnorm = array([1e0])
-        if maxmfdfnnorm == None:
-            maxmfdfnnorm = array([1e2])
-
