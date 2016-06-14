@@ -832,7 +832,8 @@ def retr_pairlist(gdat, lgal, bgal):
     
     pairlist = []
     for k in range(lgal.size):
-        indxpnts = k + 1 + where((lgal[k+1:] < lgal[k] + gdat.spmrlbhl) & (lgal[k+1:] > lgal[k] - gdat.spmrlbhl) & (bgal[k+1:] < bgal[k] + gdat.spmrlbhl) & (bgal[k+1:] > bgal[k] - gdat.spmrlbhl))[0]
+        indxpnts = k + 1 + where((lgal[k+1:] < lgal[k] + gdat.radispmrlbhl) & \
+            (lgal[k+1:] > lgal[k] - gdat.spmrlbhl) & (bgal[k+1:] < bgal[k] + gdat.radispmrlbhl) & (bgal[k+1:] > bgal[k] - gdat.radispmrlbhl))[0]
         for l in range(indxpnts.size):
             pairlist.append([k, indxpnts[l]])
             
@@ -1014,7 +1015,7 @@ def retr_enerstrg(gdat):
 
 
 def retr_prop(gdat):
-  
+ 
     gdat.thisindxsamplgal, gdat.thisindxsampbgal,  gdat.thisindxsampspec, gdat.thisindxsampsind, \
             gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
     
@@ -1247,6 +1248,8 @@ def retr_prop(gdat):
     # split
     if gdat.thisindxprop == gdat.indxpropsplt:
         
+        gdat.numbmodipnts = 3
+        
         gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] + 1
         
         # determine which point source to split
@@ -1264,7 +1267,8 @@ def retr_prop(gdat):
         
         thislgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][spltindxindxpnts]]
         thisbgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][spltindxindxpnts]]
-        thisspec = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, spltindxindxpnts]]
+        thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, spltindxindxpnts]]
+        thissind = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][spltindxindxpnts]]
         
         if gdat.verbtype > 1:
             print 'spltindxindxpnts: ', spltindxindxpnts
@@ -1279,16 +1283,23 @@ def retr_prop(gdat):
             else:
                 print 'thislgal: ', 3600. * thislgal
                 print 'thisbgal: ', 3600. * thisbgal
-            print 'thisspec: ', thisspec
-            
+            print 'thisflux: ', thisflux
             
         # determine the new components
         # temp -- only valid for power-law energy spectrum
         gdat.auxipara = empty(gdat.numbcompcolr)
-        gdat.auxipara[0:2] = rand(2) * gdat.spmrlbhl
-        gdat.auxipara[2] = rand()
-        gdat.auxipara[3] = rand()
-        gdat.auxipara[gdat.indxenerfdfn] = rand(2) (exp(rand()) - 1.) / (exp(1.) - 1.) * (gdat.maxmflux - gdat.minmflux) + gdat.minmflux
+        gdat.auxipara[0:2] = rand(2) * gdat.radispmrlbhl
+        if gdat.fdfntype == 'powr':
+            fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
+            flux = icdf_flux_powr(gdat, rand(), fdfnslop)
+        if gdat.fdfntype == 'brok':
+            fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
+            fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
+            fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            flux = icdf_flux_brok(gdat, rand(), fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+        gdat.auxipara[2] = flux
+        gdat.auxipara[3] = icdf_eerr(rand(), gdat.meansdfn[gdat.indxpoplmodi], \
+                                    gdat.stdvsdfn[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
         
         if gdat.verbtype > 1:
             if pixltype == 'heal':
@@ -1297,15 +1308,19 @@ def retr_prop(gdat):
             else:
                 print 'auxipara[0]: ', 3600. * gdat.auxipara[0]
                 print 'auxipara[1]: ', 3600. * gdat.auxipara[1]
-            print 'auxipara[2:]: ', gdat.auxipara[2:]
+            print 'auxipara[2:]'
+            print gdat.auxipara[2:]
             print
             
+        nextflux0 = thisflux / (thisflux + auxipara[2])
+        nextflux1 = auxipara[2] / (thisflux + auxipara[2])
+        nextsind0 = thissind
+        nextsind1 = auxipara[3]
+
         nextlgal0 = thislgal + gdat.auxipara[0]
         nextlgal1 = thislgal - gdat.auxipara[0]
         nextbgal0 = thisbgal + gdat.auxipara[1]
         nextbgal1 = thisbgal - gdat.auxipara[1]
-        nextspec0 = (thisspec + gdat.auxipara[2:]) / 2.
-        nextspec1 = (thisspec - gdat.auxipara[2:]) / 2.
         
         if gdat.verbtype > 1:
             if pixltype == 'heal':
@@ -1318,14 +1333,12 @@ def retr_prop(gdat):
                 print 'nextlgal1: ', 3600. * nextlgal1
                 print 'nextbgal0: ', 3600. * nextbgal0
                 print 'nextbgal1: ', 3600. * nextbgal1
-            print 'nextspec0: ', nextspec0
-            print 'nextspec1: ', nextspec1
+            print 'nextflux0: ', nextflux0
+            print 'nextflux1: ', nextflux1
 
-        if abs(nextlgal0) > gdat.maxmgangmarg or abs(nextlgal1) > gdat.maxmgangmarg or \
-           abs(nextbgal0) > gdat.maxmgangmarg or abs(nextbgal1) > gdat.maxmgangmarg or \
-           where((nextspec0 > gdat.maxmflux) | (nextspec0 < gdat.minmflux))[0].size > 0 or \
-           where((nextspec1 > gdat.maxmflux) | (nextspec1 < gdat.minmflux))[0].size > 0:
-               gdat.reje = True
+        if fabs(nextlgal0) > gdat.maxmgangmarg or fabs(nextlgal1) > gdat.maxmgangmarg or fabs(nextbgal0) > gdat.maxmgangmarg or fabs(nextbgal1) > gdat.maxmgangmarg or \
+                                    nextflux0 < gdat.minmflux or nextflux1 < gdat.minmflux:
+            gdat.reje = True
                 
         if not gdat.reje:
 
@@ -1334,18 +1347,19 @@ def retr_prop(gdat):
             pairlist = retr_pairlist(gdat, lgal, bgal)
 
             ## first new component
-            gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_flux_powr(nextspec0[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcomplgal, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompbgal, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompflux, -1] = cdfn_flux_powr(nextflux0, gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompsind, -1] = cdfn_eerr(nextsind0, gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            nextspec0 = retr_spec(gdat, nextflux0, nextsind0)
 
             ## second new component
-            gdat.drmcsamp[gdat.indxsampchd1, -1] = cdfn_self(nextlgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            gdat.drmcsamp[gdat.indxsampchd1+1, -1] = cdfn_self(nextbgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd1+2+i, -1] = cdfn_flux_powr(nextspec1[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+            gdat.drmcsamp[gdat.indxsampchd1+gdat.indxcomplgal, -1] = cdfn_self(nextlgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd1+gdat.indxcompbgal, -1] = cdfn_self(nextbgal1, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdat.drmcsamp[gdat.indxsampchd1+gdat.indxcompflux, -1] = cdfn_flux_powr(nextflux1, gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+            gdat.drmcsamp[gdat.indxsampchd1+gdat.indxcompsind, -1] = cdfn_eerr(nextsind1, gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            nextspec1 = retr_spec(gdat, nextflux1, nextsind1)
 
-            gdat.numbmodipnts = 3
             ## component to be removed
             gdat.modilgal[0] = thislgal
             gdat.modibgal[0] = thisbgal
@@ -1362,6 +1376,8 @@ def retr_prop(gdat):
             gdat.modispec[:, 2] = nextspec1.flatten()
 
     if gdat.thisindxprop == gdat.indxpropmerg:
+        
+        gdat.numbmodipnts = 3
         
         gdat.nextsampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] = gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]] - 1
 
@@ -1380,11 +1396,9 @@ def retr_prop(gdat):
             print 'pairlist'
             print pairlist
             
-            
         if len(pairlist) == 0:
             gdat.reje = True
         else:
-            gdat.reje = False
             jpair = choice(arange(len(pairlist)))
             mergindxindxpnts0 = pairlist[jpair][0]
             mergindxindxpnts1 = pairlist[jpair][1]
@@ -1412,27 +1426,29 @@ def retr_prop(gdat):
 
             thislgal0 = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][mergindxindxpnts0]]
             thisbgal0 = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][mergindxindxpnts0]]
-            thisspec0 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts0]]
+            thisflux0 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts0]]
+            thissind0 = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][mergindxindxpnts0]]
 
             thislgal1 = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][mergindxindxpnts1]]
             thisbgal1 = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][mergindxindxpnts1]]
-            thisspec1 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts1]]
+            thisflux1 = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][:, mergindxindxpnts1]]
+            thissind1 = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][mergindxindxpnts1]]
 
             # auxiliary component
             gdat.auxipara = zeros(gdat.numbcomp)
             gdat.auxipara[0] = (thislgal0 - thislgal1) / 2.
             gdat.auxipara[1] = (thisbgal0 - thisbgal1) / 2.
-            gdat.auxipara[2:] = thisspec0 - thisspec1
+            gdat.auxipara[2:] = thisflux0 - thisflux1
 
             # merged PS
             nextlgal = (thislgal0 + thislgal1) / 2.
             nextbgal = (thisbgal0 + thisbgal1) / 2.
-            nextspec = thisspec0 + thisspec1
+            nextflux = thisflux0 + thisflux1
             
             gdat.drmcsamp[gdat.indxsampchd0, -1] = cdfn_self(nextlgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+1, -1] = cdfn_self(nextbgal, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             for i in gdat.indxener:
-                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_flux_powr(nextspec[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+                gdat.drmcsamp[gdat.indxsampchd0+2+i, -1] = cdfn_flux_powr(nextflux[i], gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
 
             gdat.numbmodipnts = 3
             ## first component to be merged
@@ -1469,8 +1485,8 @@ def retr_prop(gdat):
                     print 'thisbgal0: ', 3600. * thisbgal0
                     print 'thislgal1: ', 3600. * thislgal1
                     print 'thisbgal1: ', 3600. * thisbgal1 
-                print 'thisspec0: ', thisspec0
-                print 'thisspec1: ', thisspec1
+                print 'thisflux0: ', thisflux0
+                print 'thisflux1: ', thisflux1
 
                 if pixltype == 'heal':
                     print 'nextlgal: ', nextlgal
@@ -1482,7 +1498,7 @@ def retr_prop(gdat):
                     print 'nextbgal: ', 3600. * nextbgal
                     print 'auxipara[0]: ', 3600. * gdat.auxipara[0]
                     print 'auxipara[1]: ', 3600. * gdat.auxipara[1]
-                print 'nextspec: ', nextspec
+                print 'nextflux: ', nextflux
                 print 'auxipara[2:]: ', gdat.auxipara[2:]
                 print
 
@@ -1520,7 +1536,7 @@ def retr_prop(gdat):
         if gdat.thisindxprop == gdat.indxpropflux:
             retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvflux)
         if gdat.thisindxprop == gdat.indxpropsind:
-            retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvpropsind)
+            retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvsind)
 
         thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, modiindxindxpnts]]
         thissind = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][modiindxindxpnts]]
@@ -1569,8 +1585,9 @@ def retr_prop(gdat):
     if gdat.verbtype > 1:
         print 'indxpoplmodi'
         print gdat.indxpoplmodi
-        print 'indxsampmodi'
-        print gdat.indxsampmodi
+        if not gdat.reje:
+            print 'indxsampmodi'
+            print gdat.indxsampmodi
 
     # energy bin in which to evaluate the log-likelihood
     if gdat.indxpropbrth <= gdat.thisindxprop <= gdat.indxpropmerg:

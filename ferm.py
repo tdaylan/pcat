@@ -313,13 +313,13 @@ def writ_fdfm():
 
 def retr_jcbn():
     
-    lgl0, algl, bgl0, abgl, flx0, aflx = sympy.symbols('lgl0 algl bgl0 abgl flx0 aflx')
-    matr = sympy.Matrix([[1, 1 - aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0], \
-                         [1,    -aflx / flx0, 0,               0, algl * aflx / flx0**2, -algl / flx0], \
-                         [0,               0, 1, 1 - aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
-                         [0,               0, 1,    -aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
-                         [0,               0, 0,               0,                     1,            0], \
-                         [0,               0, 0,               0,                    -1,            1]])
+    lgl0, lgla, bgl0, bgla, flx0, flxa, snd0, snda = sympy.symbols('lgl0 lgla bgl0 bgla flx0 flxa snd0 snda')
+    matr = sympy.Matrix([[1, 1 - 1 / (flx0 + flxa), 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [1,    -1 / (flx0 + flxa), 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [0,                     0, 1, 1 - aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,                     0, 1,    -aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,                     0, 0,               0,                     1,            0], \
+                         [0,                     0, 0,               0,                    -1,            1]])
 
     jcbn = matr.det()
     return jcbn
@@ -328,7 +328,7 @@ def retr_jcbn():
 def plot_maps():
     
     global numbpixl
-    lgalheal, bgalheal, numbside, numbpixl, apix = tdpy.util.retr_heal(256)
+    lgalheal, bgalheal, numbside, numbpixl, apix = tdpy.util.retr_healgrid(256)
     
     binsener = array([0.1, 0.3, 1., 3., 10., 100.])
     meanener = sqrt(binsener[1:] * binsener[:-1])

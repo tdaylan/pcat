@@ -68,7 +68,7 @@ def plot_post(pathprobcatl):
     gdat.stdvback = hdun[0].header['stdvback']
     gdat.stdvlbhl = hdun[0].header['stdvlbhl']
     gdat.stdvflux = hdun[0].header['stdvflux']
-    gdat.spmrlbhl = hdun[0].header['spmrlbhl']
+    gdat.radispmrlbhl = hdun[0].header['radispmrlbhl']
     gdat.fracrand = hdun[0].header['fracrand']
 
     if gdat.trueinfo and gdat.datatype == 'mock':

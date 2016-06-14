@@ -189,7 +189,7 @@ def cnfg_ferm_post():
          stdvback=0.3, \
          stdvlbhl=0.01, \
          stdvflux=0.05, \
-         stdvpropsind=0.05, \
+         stdvsind=0.05, \
          datatype='mock', \
          numbsideheal=256, \
          mockfdfnslop=array([1.9]), \
@@ -327,14 +327,14 @@ def cnfg_test():
          maxmgang=20., \
          fdfntype='brok', \
          #fdfntype='powr', \
-         verbtype=3, \
+         #verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
-         maxmnumbpnts=array([3]), \
-         #maxmnumbpnts=array([1000]), \
+         #maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([1000]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
-         probprop=array([0., 1., 0., 0., 0., 0., 0., 0., 0, 0, 0., 0., 0., 0.], dtype=float), \
+         probprop=array([0.1, 0., 0., 0., 0.1, 0.1, 0.5, 0.5, 0., 0., 1., 1., 1., 1.], dtype=float), \
          #probprop=array([0., 1., 0., 0., 0., 0., 0, 0, 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
@@ -348,8 +348,8 @@ def cnfg_test():
          datatype='mock', \
          mockfdfntype='brok', \
          #mockfdfntype='powr', \
-         mocknumbpnts=array([2]), \
-         #mocknumbpnts=array([500]), \
+         #mocknumbpnts=array([2]), \
+         mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
@@ -408,7 +408,7 @@ def cnfg_sdss_mock():
          stdvlbhl=2./3600., \
          lgalcntr=202., \
          bgalcntr=2., \
-         spmrlbhl=5./3600., \
+         radispmrlbhl=5./3600., \
          maxmnormback=array([1e3]), \
          minmnormback=array([1e2]), \
          maxmgang=30./3600., \
@@ -440,7 +440,7 @@ def cnfg_sdss_expr():
          stdvlbhl=2./3600., \
          lgalcntr=202., \
          bgalcntr=2., \
-         spmrlbhl=0.5/3600., \
+         radispmrlbhl=0.5/3600., \
          stdvflux=0.05, \
          maxmnormback=array([1e3]), \
          minmnormback=array([1e2]), \

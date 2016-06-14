@@ -63,14 +63,14 @@ Default: True
          numbsidecart=None, \
          numbsideheal=None, \
          maxmangleval=None, \
-         spmrlbhl=2., \
+         radispmrlbhl=2., \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
          stdvpsfipara=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \
-         stdvpropsind=0.15, \
+         stdvsind=0.15, \
          fracrand=0.05, \
          mocknumbpnts=None, \
          mockfdfnslop=None, \

@@ -111,7 +111,6 @@ def work(gdat, indxprocwork):
                 print fluxunit
                 print
 
-
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
@@ -227,14 +226,14 @@ def init( \
          numbsidecart=None, \
          numbsideheal=None, \
          maxmangleval=None, \
-         spmrlbhl=2., \
+         radispmrlbhl=2., \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
          stdvpsfipara=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \
-         stdvpropsind=0.15, \
+         stdvsind=0.15, \
          fracrand=0.05, \
          mocknumbpnts=None, \
          mockfdfnslop=None, \
@@ -463,13 +462,14 @@ def init( \
     gdat.stdvback = stdvback
     gdat.stdvlbhl = stdvlbhl
     gdat.stdvflux = stdvflux
-    gdat.stdvpropsind = stdvpropsind
+    gdat.stdvsind = stdvsind
 
     ### fraction of heavy-tailed proposals
     gdat.fracrand = fracrand
     
-    ### maximum angle over which splits and merges are proposed
-    gdat.spmrlbhl = spmrlbhl
+    ### radius of the circle in which splits and merges are proposed
+    gdat.stdvspmrsind = stdvspmrsind
+    gdat.radispmrlbhl = radispmrlbhl
     
     ## mock data setup
     if datatype == 'mock':
@@ -825,15 +825,21 @@ def init( \
     head['trueinfo'] = gdat.trueinfo
     head['margsize'] = gdat.margsize
     head['strgtime'] = gdat.strgtime
-    
+   
+    ## proposal scales
+    ### parameter updates
     head['stdvfdfnnorm'] = gdat.stdvfdfnnorm
     head['stdvfdfnslop'] = gdat.stdvfdfnslop
     head['stdvpsfipara'] = gdat.stdvpsfipara
     head['stdvback'] = gdat.stdvback
     head['stdvlbhl'] = gdat.stdvlbhl
     head['stdvflux'] = gdat.stdvflux
-    head['spmrlbhl'] = gdat.spmrlbhl
+    head['stdvsind'] = gdat.stdvsind
+    ### relative size of the tail of the Gaussian proposals
     head['fracrand'] = gdat.fracrand
+    ### split and merge
+    head['radispmrlbhl'] = gdat.radispmrlbhl
+    head['stdvspmrsind'] = gdat.stdvspmrsind
 
     ## index of the energy bin, where the FDF is defined
     head['indxenerfdfn'] = gdat.indxenerfdfn
