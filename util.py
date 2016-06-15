@@ -1184,17 +1184,17 @@ def retr_prop(gdat):
         gdat.auxipara = rand(numbauxipara)
 
         gdat.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = gdat.auxipara[0:2]
-        gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1] = gdat.auxipara[-2]
-        gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1] = gdat.auxipara[-1]
+        gdat.drmcsamp[indxsampbrth+gdat.indxcompflux, -1] = gdat.auxipara[-2]
+        gdat.drmcsamp[indxsampbrth+gdat.indxcompsind, -1] = gdat.auxipara[-1]
 
         # sample indices to be modified
         gdat.indxsampmodi = arange(indxsampbrth, indxsampbrth + gdat.numbcomp, dtype=int)
 
         # modification catalog
         gdat.numbmodipnts = 1
-        gdat.modilgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-        gdat.modibgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth+1, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-        fluxunit = gdat.drmcsamp[indxsampbrth+2+gdat.indxenerfdfn, -1]
+        gdat.modilgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth+gdat.indxcomplgal, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+        gdat.modibgal[0] = icdf_self(gdat.drmcsamp[indxsampbrth+gdat.indxcompbgal, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+        fluxunit = gdat.drmcsamp[indxsampbrth+gdat.indxcompflux, -1]
         if gdat.fdfntype == 'powr':
             fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]]
             modiflux = icdf_flux_powr(gdat, fluxunit, fdfnslop)
@@ -1203,7 +1203,7 @@ def retr_prop(gdat):
             fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
             fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
             modiflux = icdf_flux_brok(gdat, array([fluxunit]), fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-        gdat.modisind[0] = icdf_eerr(gdat.drmcsamp[indxsampbrth+gdat.numbcomp-1, -1], gdat.meansdfn[gdat.indxpoplmodi], \
+        gdat.modisind[0] = icdf_eerr(gdat.drmcsamp[indxsampbrth+gdat.indxcompsind, -1], gdat.meansdfn[gdat.indxpoplmodi], \
                     gdat.stdvsdfn[gdat.indxpoplmodi], gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
         gdat.modispec[:, 0] = retr_spec(gdat, modiflux, gdat.modisind[0]).flatten()
     

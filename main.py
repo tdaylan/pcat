@@ -734,8 +734,8 @@ def init( \
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
                 listspec[l].append(listsampvarb[j, k, indxsampspec[l]])
                 listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
-                listgang[l].append(retr_gang(listlgal[l], listbgal[l]))
-                listaang[l].append(retr_aang(listlgal[l], listbgal[l]))
+                listgang[l].append(retr_gang(array(listlgal[l]), array(listbgal[l])))
+                listaang[l].append(retr_aang(array(listlgal[l]), array(listbgal[l])))
                 listlgalhist[n, l, :] = histogram(listlgal[l][n], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n], gdat.binsbgal)[0]
                 listganghist[n, l, :] = histogram(listgang[l][n], gdat.binsgang)[0]
@@ -1434,18 +1434,35 @@ def rjmc(gdat, indxprocwork):
             thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
     
         # temp
-        gdat.prevdrmcsamp = copy(gdat.drmcsamp)
-        gdat.prevsampvarb = copy(gdat.thissampvarb)
         indxtemp0 = where(gdat.prevsampvarb != gdat.thissampvarb)[0]
         indxtemp1 = where(gdat.prevdrmcsamp[:, 0] != gdat.drmcsamp[:, 0])[0]
-        #if indxtemp0 != indxtemp1:
-        print 'gdat.cntrswep'
-        print gdat.cntrswep
-        print 'gdat.thisindxprop'
-        print gdat.thisindxprop
-        print indxtemp0
-        print indxtemp1
-        print
+        if indxtemp0.size != indxtemp1.size:
+            thisbool = True
+        else:
+            if (indxtemp0 - indxtemp1 != 0).any():
+                thisbool = True
+            else:
+                thisbool = False
+        if gdat.strgprop[gdat.thisindxprop] == 'sind':
+            if indxtemp0.size == 3 and indxtemp1.size == 1:
+                if (indxtemp0 - indxtemp1[0] - array([-3, -1, 0]) == 0).all():
+                    thisbool = False
+        if gdat.strgprop[gdat.thisindxprop] == 'spec':
+            if indxtemp0.size == 3 and indxtemp1.size == 1:
+                if (indxtemp0 - indxtemp1[0] - array([-1, 0, 1]) == 0).all():
+                    thisbool = False
+        if gdat.strgprop[gdat.thisindxprop] == 'deth':
+            if indxtemp0 == array([0]) and indxtemp1 == array([]):
+                thisbool = False
+        if thisbool:
+            print 'gdat.cntrswep'
+            print gdat.cntrswep
+            print gdat.strgprop[gdat.thisindxprop]
+            print indxtemp0
+            print indxtemp1
+            print
+        gdat.prevsampvarb = copy(gdat.thissampvarb)
+        gdat.prevdrmcsamp = copy(gdat.drmcsamp)
 
         # temp
         if False and gdat.diagsamp:
