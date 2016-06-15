@@ -193,9 +193,9 @@ def prep_maps():
                 thisevtt = evtt[m]
             else:
                 if m == 3:
-                    thisevtt = 1
+                    thisevtt = 0
                 elif m == 2:
-                    thisevtt = 2
+                    thisevtt = 1
                 else:
                     continue
 
@@ -356,20 +356,23 @@ def plot_maps():
     maxmlgal = 20.
     minmbgal = -20.
     maxmbgal = 20.
-    
-    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_cmp0_ngal.fits'
-    cmp0 = pf.getdata(path)[2, :, 3]
-    path = '/n/pan/www/tansu/png/pcat/cmp0.png'
-    tdpy.util.plot_heal(cmp0, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-    
-    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_comp_ngal.fits'
-    comp = pf.getdata(path)[2, :, 3]
-    path = '/n/pan/www/tansu/png/pcat/comp.png'
-    tdpy.util.plot_heal(comp, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
+    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_cmp0_ngal.fits'
+    cmp0 = pf.getdata(path)
+    path = os.environ["PCAT_DATA_PATH"] + '/fermflux_comp_ngal.fits'
+    comp = pf.getdata(path)
     diff = cmp0 - comp
-    path = '/n/pan/www/tansu/png/pcat/diff.png'
-    tdpy.util.plot_heal(diff, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+    for i in range(meanener.size):
+        for m in range(4):
+            
+            path = '/n/pan/www/tansu/png/pcat/cmp0_ene%d_evt%d.png' % (i, m)
+            tdpy.util.plot_heal(cmp0[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+            
+            path = '/n/pan/www/tansu/png/pcat/comp_ene%d_evt%d.png' % (i, m)
+            tdpy.util.plot_heal(comp[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+
+            path = '/n/pan/www/tansu/png/pcat/diff_ene%d_evt%d.png' % (i, m)
+            tdpy.util.plot_heal(diff[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
 
 def plot_dust():
@@ -402,6 +405,6 @@ def plot_dust():
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-make_maps()
-prep_maps()
-#plot_maps()
+#make_maps()
+#prep_maps()
+plot_maps()
