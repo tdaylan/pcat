@@ -1350,10 +1350,8 @@ def retr_prop(gdat):
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcomplgal, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompbgal, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompflux, -1] = cdfn_flux_powr(gdat, nextflux0, gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
-            meansdfn = gdat.meansdfn[gdat.indxpoplmodi]
-            stdvsdfn = gdat.stdvsdfn[gdat.indxpoplmodi]
-
-            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompsind, -1] = cdfn_eerr(nextsind0, gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompsind, -1] = cdfn_eerr(nextsind0, gdat.meansdfn[gdat.indxpoplmodi], gdat.stdvsdfn[gdat.indxpoplmodi], \
+                    gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
             nextspec0 = retr_spec(gdat, nextflux0, nextsind0)
 
             ## second new component
