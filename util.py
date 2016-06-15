@@ -1995,7 +1995,7 @@ def setp(gdat):
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
-            gdat.numbproc = 10
+            gdat.numbproc = 20
         else:
             gdat.numbproc = 1
     gdat.indxproc = arange(gdat.numbproc) 
@@ -2446,12 +2446,6 @@ def setp(gdat):
             
         gdat.expo = gdat.expo[gdat.indxcubefilt]
     
-    # temp
-    if gdat.datatype == 'inpt' and gdat.numbener == 3:
-        gdat.expo[0, :, :] *= 0.7
-        gdat.expo[1, :, :] *= 0.8
-        gdat.expo[2, :, :] *= 0.9
-
     # backgrounds
     gdat.backflux = []
     gdat.backfluxmean = []

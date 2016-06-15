@@ -141,7 +141,7 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=5000000, \
+         numbswep=3000000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \
