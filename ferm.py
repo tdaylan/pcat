@@ -118,14 +118,17 @@ def make_maps_sing(indxprocwork):
         os.system(cmnd)
     for m in indxevtt:
 
+
         if reco[indxprocwork] == 7:
             if m == 3:
-                thisevtt = 0
-            elif m == 2:
                 thisevtt = 1
+                thisevttdepr = 0
+            elif m == 2:
+                thisevtt = 2
+                thisevttdepr = 1
             else:
                 continue
-            strgpsfn = 'convtype=%d' % thisevtt
+            strgpsfn = 'convtype=%d' % thisevttdepr
 
         if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
@@ -189,15 +192,7 @@ def prep_maps():
     
         for m in indxevtt:
 
-            if datatype == 'full':
-                thisevtt = evtt[m]
-            else:
-                if m == 3:
-                    thisevtt = 0
-                elif m == 2:
-                    thisevtt = 1
-                else:
-                    continue
+            thisevtt = evtt[m]
 
             path = os.environ["PCAT_DATA_PATH"] + '/expo_evtt%03d_%s.fits' % (thisevtt, datatype)
             expoarry = pf.getdata(path, 1)
@@ -218,15 +213,7 @@ def prep_maps():
                 for i in indxener:
                     for m in indxevtt:
                         
-                        if datatype == 'full':
-                            thisevtt = evtt[m]
-                        else:
-                            if m == 3:
-                                thisevtt = 1
-                            elif m == 2:
-                                thisevtt = 2
-                            else:
-                                continue
+                        thisevtt = evtt[m]
                         
                         almc = hp.map2alm(flux[i, :, m])
                         hp.rotate_alm(almc, 0., 0.5 * pi, 0.)

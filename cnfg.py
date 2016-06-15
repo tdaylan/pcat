@@ -38,8 +38,8 @@ def cnfg_ferm_info():
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
     
-    strgexpo='fermexpo_comp_ngal.fits'
-    strgexpr='fermflux_comp_ngal.fits'
+    strgexpo='fermexpo_cmp0_ngal.fits'
+    strgexpr='fermflux_cmp0_ngal.fits'
 
     indxenerincl = arange(2, 3)
     indxevttincl = arange(3, 4)
@@ -184,7 +184,7 @@ def cnfg_ferm_post():
          strgback=['fermisotflux.fits'], \
          lablback=[r'$\mathcal{I}$'], \
          nameback=['normisot'], \
-         strgexpo='fermexpo_ngal_comp.fits', \
+         strgexpo='fermexpo_ngal_cmp0.fits', \
          stdvback=0.3, \
          stdvlbhl=0.01, \
          stdvflux=0.05, \
@@ -380,7 +380,7 @@ def cnfg_ferm_mock_ngal():
          regitype='ngal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
-         strgexpo='fermexpo_comp_ngal.fits', \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
@@ -481,7 +481,7 @@ if __name__ == '__main__':
         #cnfg_ferm_psfn_expr('gausking')
         #cnfg_ferm_psfn_expr('doubking')
         
-        #cnfg_ferm_expr_igal('fermflux_igal_comp_time0.fits', 'fermexpo_igal_comp_time0.fits')
+        #cnfg_ferm_expr_igal('fermflux_igal_cmp0_time0.fits', 'fermexpo_igal_cmp0_time0.fits')
         #cnfg_ferm_mock_igal()
         
         #cnfg_ferm_expr_ngal('fermflux_cmp0_ngal.fits', 'fermexpo_cmp0_ngal.fits')
