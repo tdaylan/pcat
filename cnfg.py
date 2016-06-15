@@ -28,7 +28,7 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmflux = array([1e-10, 3e-11, 1e-11, 3e-12, 1e-12])
+    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
     maxmnumbpnts = zeros(5, dtype=int) + 500
     numbswep = 200 * array([1, 3, 10, 30, 100], dtype=int) + 10000
     numbburn = numbswep / 2
@@ -137,12 +137,11 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     
     indxenerincl = arange(1, 4)
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=100000, \
-         numbburn=60000, \
+         numbswep=5000000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \
@@ -202,7 +201,7 @@ def cnfg_test_spmr():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9, 1.])
       
@@ -245,7 +244,7 @@ def cnfg_test_popl():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9, 1.])
     mockfdfnsloplowr = array([1.9, 1.1])
@@ -261,8 +260,8 @@ def cnfg_test_popl():
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
-         fdfntype='brok', \
-         #fdfntype='powr', \
+         #fdfntype='brok', \
+         fdfntype='powr', \
          verbtype=3, \
          indxevttincl=arange(3, 4), \
          indxenerincl=indxenerincl, \
@@ -290,8 +289,8 @@ def cnfg_test_popl():
          #datatype='inpt', \
          #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
-         mockfdfntype='brok', \
-         #mockfdfntype='powr', \
+         #mockfdfntype='brok', \
+         mockfdfntype='powr', \
          mocknumbpnts=array([2, 3]), \
          #mocknumbpnts=array([500]), \
          numbsideheal=256, \
@@ -309,7 +308,7 @@ def cnfg_test_brok():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9])
     mockfdfnsloplowr = array([2.9])

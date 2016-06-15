@@ -986,7 +986,10 @@ def retr_strgfluxunit(gdat):
    
 def retr_gang(lgal, bgal):
     
-    gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
+    # temp
+    #gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
+    fact = 180. / pi
+    gang = fact * arccos(cos(lgal / fact) * cos(bgal / fact))
 
     return gang
 
