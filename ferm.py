@@ -365,13 +365,13 @@ def plot_maps():
     for i in range(meanener.size):
         for m in range(4):
             
-            path = '/n/pan/www/tansu/png/pcat/cmp0_ene%d_evt%d.png' % (i, m)
+            path = '/n/pan/www/tansu/imag/pcat/cmp0_ene%d_evt%d.pdf' % (i, m)
             tdpy.util.plot_heal(cmp0[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
             
-            path = '/n/pan/www/tansu/png/pcat/comp_ene%d_evt%d.png' % (i, m)
+            path = '/n/pan/www/tansu/imag/pcat/comp_ene%d_evt%d.pdf' % (i, m)
             tdpy.util.plot_heal(comp[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
-            path = '/n/pan/www/tansu/png/pcat/diff_ene%d_evt%d.png' % (i, m)
+            path = '/n/pan/www/tansu/imag/pcat/diff_ene%d_evt%d.pdf' % (i, m)
             tdpy.util.plot_heal(diff[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
 

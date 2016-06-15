@@ -1869,7 +1869,7 @@ def retr_propmodl(gdat):
     gdat.indxpropbgal = cntr.incr()
     
     # spec
-    gdat.strgprop.append('spec')
+    gdat.strgprop.append('flux')
     gdat.indxpropflux = cntr.incr()
     
     # sind
@@ -2246,11 +2246,11 @@ def setp(gdat):
     # plots
     if gdat.makeplot:
         if (gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu') and getpass.getuser() == 'tansu':
-            plotfold = '/n/pan/www/tansu/png/pcat/'
+            pathplotbase = '/n/pan/www/tansu/imag/pcat/'
         else:
-            plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
-        gdat.plotpath = plotfold + gdat.strgtime + '_' + gdat.rtag + '/'
-        cmnd = 'mkdir -p ' + gdat.plotpath
+            pathplotbase = os.environ["PCAT_DATA_PATH"] + '/imag/'
+        gdat.pathplot = pathplotbase + gdat.strgtime + '_' + gdat.rtag + '/'
+        cmnd = 'mkdir -p ' + gdat.pathplot
         os.system(cmnd)
 
     # number of samples to be saved
@@ -2713,9 +2713,9 @@ def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
     axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
 
     if indxevttplot == None:
-        path = gdat.plotpath + strgplot + '%dA_' % gdat.indxenerincl[indxenerplot] + gdat.rtag + '_%09d.png' % gdat.cntrswep
+        path = gdat.pathplot + strgplot + '%dA_' % gdat.indxenerincl[indxenerplot] + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
     else:
-        path = gdat.plotpath + strgplot + '%d%d_' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot]) + gdat.rtag + '_%09d.png' % gdat.cntrswep
+        path = gdat.pathplot + strgplot + '%d%d_' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot]) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
     
     return figr, axis, path
 

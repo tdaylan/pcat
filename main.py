@@ -1116,7 +1116,7 @@ def init( \
         print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timetotlreal, sum(timeproc))
         print 'The ensemble of catalogs is at ' + pathprobcatl
         if gdat.makeplot:
-            print 'The plots are in ' + gdat.plotpath
+            print 'The plots are in ' + gdat.pathplot
         
     return gridchan
     
@@ -1434,35 +1434,36 @@ def rjmc(gdat, indxprocwork):
             thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
     
         # temp
-        indxtemp0 = where(gdat.prevsampvarb != gdat.thissampvarb)[0]
-        indxtemp1 = where(gdat.prevdrmcsamp[:, 0] != gdat.drmcsamp[:, 0])[0]
-        if indxtemp0.size != indxtemp1.size:
-            thisbool = True
-        else:
-            if (indxtemp0 - indxtemp1 != 0).any():
+        if False:
+            indxtemp0 = where(gdat.prevsampvarb != gdat.thissampvarb)[0]
+            indxtemp1 = where(gdat.prevdrmcsamp[:, 0] != gdat.drmcsamp[:, 0])[0]
+            if indxtemp0.size != indxtemp1.size:
                 thisbool = True
             else:
-                thisbool = False
-        if gdat.strgprop[gdat.thisindxprop] == 'sind':
-            if indxtemp0.size == 3 and indxtemp1.size == 1:
-                if (indxtemp0 - indxtemp1[0] - array([-3, -1, 0]) == 0).all():
+                if (indxtemp0 - indxtemp1 != 0).any():
+                    thisbool = True
+                else:
                     thisbool = False
-        if gdat.strgprop[gdat.thisindxprop] == 'spec':
-            if indxtemp0.size == 3 and indxtemp1.size == 1:
-                if (indxtemp0 - indxtemp1[0] - array([-1, 0, 1]) == 0).all():
+            if gdat.strgprop[gdat.thisindxprop] == 'sind':
+                if indxtemp0.size == 3 and indxtemp1.size == 1:
+                    if (indxtemp0 - indxtemp1[0] - array([-3, -1, 0]) == 0).all():
+                        thisbool = False
+            if gdat.strgprop[gdat.thisindxprop] == 'flux':
+                if indxtemp0.size == 3 and indxtemp1.size == 1:
+                    if (indxtemp0 - indxtemp1[0] - array([-1, 0, 1]) == 0).all():
+                        thisbool = False
+            if gdat.strgprop[gdat.thisindxprop] == 'deth':
+                if indxtemp0 == array([0]) and indxtemp1 == array([]):
                     thisbool = False
-        if gdat.strgprop[gdat.thisindxprop] == 'deth':
-            if indxtemp0 == array([0]) and indxtemp1 == array([]):
-                thisbool = False
-        if thisbool:
-            print 'gdat.cntrswep'
-            print gdat.cntrswep
-            print gdat.strgprop[gdat.thisindxprop]
-            print indxtemp0
-            print indxtemp1
-            print
-        gdat.prevsampvarb = copy(gdat.thissampvarb)
-        gdat.prevdrmcsamp = copy(gdat.drmcsamp)
+            if thisbool:
+                print 'gdat.cntrswep'
+                print gdat.cntrswep
+                print gdat.strgprop[gdat.thisindxprop]
+                print indxtemp0
+                print indxtemp1
+                print
+            gdat.prevsampvarb = copy(gdat.thissampvarb)
+            gdat.prevdrmcsamp = copy(gdat.drmcsamp)
 
         # temp
         if False and gdat.diagsamp:
