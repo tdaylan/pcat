@@ -133,7 +133,13 @@ def make_maps_sing(indxprocwork):
         if reco[indxprocwork] == 8:
             thisevtt = evtt[m]
             strgpsfn = 'evtype=%d' % thisevtt
-                
+         
+        print 'hey'
+        print 'thisevtt'
+        print thisevtt
+        print 'reco[indxprocwork]'
+        print
+
         sele = '$PCAT_DATA_PATH/sele_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
         filt = '$PCAT_DATA_PATH/filt_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
         live = '$PCAT_DATA_PATH/live_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
@@ -145,13 +151,13 @@ def make_maps_sing(indxprocwork):
         print ''
         print cmnd
         print ''
-        os.system(cmnd)
+        #os.system(cmnd)
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
         print ''
         print cmnd
         print ''
-        os.system(cmnd)
+        #os.system(cmnd)
 
         cmnd = 'gtbin evfile=' + filt + ' scfile=NONE outfile=' + cnts + \
             ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
@@ -159,13 +165,13 @@ def make_maps_sing(indxprocwork):
         print ''
         print cmnd
         print ''
-        os.system(cmnd)
+        #os.system(cmnd)
 
         cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
         print ''
         print cmnd
         print ''
-        os.system(cmnd)
+        #os.system(cmnd)
 
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
         print ''
@@ -192,7 +198,15 @@ def prep_maps():
     
         for m in indxevtt:
 
-            thisevtt = evtt[m]
+            if listdatatype != 'full':
+                if m < 2:
+                    continue
+                elif m == 2:
+                    thisevtt = 2
+                elif m == 3:
+                    thisevtt = 1
+            else:
+                thisevtt = evtt[m]
 
             path = os.environ["PCAT_DATA_PATH"] + '/expo_evtt%03d_%s.fits' % (thisevtt, datatype)
             expoarry = pf.getdata(path, 1)
@@ -213,8 +227,16 @@ def prep_maps():
                 for i in indxener:
                     for m in indxevtt:
                         
-                        thisevtt = evtt[m]
-                        
+                        if listdatatype != 'full':
+                            if m < 2:
+                                continue
+                            elif m == 2:
+                                thisevtt = 2
+                            elif m == 3:
+                                thisevtt = 1
+                        else:
+                            thisevtt = evtt[m]
+
                         almc = hp.map2alm(flux[i, :, m])
                         hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
                         flux[i, :, m] = hp.alm2map(almc, nside)
@@ -392,6 +414,6 @@ def plot_dust():
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-#make_maps()
-prep_maps()
-plot_maps()
+make_maps()
+#prep_maps()
+#plot_maps()
