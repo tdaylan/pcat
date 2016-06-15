@@ -1990,7 +1990,8 @@ def setp(gdat):
     
     # number of processes
     if gdat.numbproc == None:
-        if os.uname()[1] == 'fink1.rc.fas.harvard.edu':
+        gdat.strgproc = os.uname()[1]
+        if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strproc == 'fink2.rc.fas.harvard.edu':
             gdat.numbproc = 10
         else:
             gdat.numbproc = 1
@@ -2244,7 +2245,7 @@ def setp(gdat):
     
     # plots
     if gdat.makeplot:
-        if os.uname()[1] == 'fink1.rc.fas.harvard.edu' and getpass.getuser() == 'tansu':
+        if (gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu') and getpass.getuser() == 'tansu':
             plotfold = '/n/pan/www/tansu/png/pcat/'
         else:
             plotfold = os.environ["PCAT_DATA_PATH"] + '/png/'
