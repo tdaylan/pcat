@@ -106,8 +106,8 @@ def cnfg_ferm_mock_igal():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
-    maxmflux = 1e-7
+    minmflux = 5e-11
+    maxmflux = 3e-7
     mockfdfnslop = array([1.9])
       
     init( \
@@ -364,7 +364,7 @@ def cnfg_ferm_mock_ngal():
     indxenerincl = arange(1, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9])
       
