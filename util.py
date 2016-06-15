@@ -986,7 +986,8 @@ def retr_strgfluxunit(gdat):
    
 def retr_gang(lgal, bgal):
     
-    gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
+    fact = 180. / pi
+    gang = fact * arccos(cos(lgal / fact) * cos(bgal / fact))
 
     return gang
 
@@ -1989,8 +1990,8 @@ def retr_expo(gdat):
 def setp(gdat):
     
     # number of processes
+    gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
-        gdat.strgproc = os.uname()[1]
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
             gdat.numbproc = 10
         else:

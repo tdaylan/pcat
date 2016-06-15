@@ -1247,6 +1247,10 @@ def rjmc(gdat, indxprocwork):
     # current sample index
     thiscntr = -1
     
+    # temp
+    gdat.prevdrmcsamp = copy(gdat.drmcsamp)
+    gdat.prevsampvarb = copy(gdat.thissampvarb)
+    
     while gdat.cntrswep < gdat.numbswep:
         
         timeinit = time.time()
@@ -1428,7 +1432,21 @@ def rjmc(gdat, indxprocwork):
         # log the progress
         if gdat.verbtype > 0:
             thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
-            
+    
+        # temp
+        gdat.prevdrmcsamp = copy(gdat.drmcsamp)
+        gdat.prevsampvarb = copy(gdat.thissampvarb)
+        indxtemp0 = where(gdat.prevsampvarb != gdat.thissampvarb)[0]
+        indxtemp1 = where(gdat.prevdrmcsamp[:, 0] != gdat.drmcsamp[:, 0])[0]
+        #if indxtemp0 != indxtemp1:
+        print 'gdat.cntrswep'
+        print gdat.cntrswep
+        print 'gdat.thisindxprop'
+        print gdat.thisindxprop
+        print indxtemp0
+        print indxtemp1
+        print
+
         # temp
         if False and gdat.diagsamp:
             for i in gdat.indxener:
