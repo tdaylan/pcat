@@ -132,7 +132,7 @@ def plot_post(pathprobcatl):
         
     # bins
     gdat.binsener = hdun['binsener'].data
-    gdat.indxenerfdfn = hdun[0].header['indxenerfdfn']
+    gdat.indxenerfdfn = array([hdun[0].header['indxenerfdfn']])
    
     # hyperprior limits
     gdat.minmfdfnnorm = hdun['minmfdfnnorm'].data 
@@ -230,12 +230,12 @@ def plot_post(pathprobcatl):
     print 'Calculating the autocorrelation of the chain...'
     tim0 = time.time()
    
-    listmodlcnts = listmodlcnts.reshape((gdat.numbproc * gdat.numbsamp, gdat.numbpixlsave)) 
     numbsampatcr =  max(min(100, gdat.numbsamp / 2), 1)
-    indxsampatcr = arange(numbsampatcr)
-    atcr = tdpy.mcmc.retr_atcr(listmodlcnts, numbdela=numbsampatcr)
+    atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
+    for b in gdat.indxproc:
+        atcr[:, :, b] = tdpy.mcmc.retr_atcr(listmodlcnts[:, b, :], numbdela=numbsampatcr)
     figr, axis = plt.subplots()
-    axis.plot(indxsampatcr, mean(atcr, axis=1))
+    axis.plot(arange(numbsampatcr), mean(mean(atcr, axis=1), axis=1))
     axis.set_title('Autocorrelation')
     axis.set_xlabel('Sample index')
     axis.set_ylabel(r'$\tilde{\eta}$')
@@ -441,7 +441,7 @@ def plot_post(pathprobcatl):
         # mean number of point sources
         path = gdat.pathplot + 'fdfnnorm_pop%d_' % l + gdat.rtag
         truepara = None
-        tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
+        tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara, scalpara='logt')
 
         # flux distribution
         titl = gdat.binsenerstrg[gdat.indxenerfdfn]
@@ -710,7 +710,9 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
     
     figr, axcl = plt.subplots(1, numbcols, figsize=(7 * numbcols, 7))
     if numbcols == 1:
-        indxenertemp = array([gdat.indxenerfdfn])
+        # temp
+        #indxenertemp = array([gdat.indxenerfdfn])
+        indxenertemp = gdat.indxenerfdfn
         axcltemp = []
         for i in gdat.indxener:
             if i == gdat.indxenerfdfn:

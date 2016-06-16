@@ -20,14 +20,13 @@ def retr_psfnwdth(gdat, psfn, frac):
 
 
 def retr_spec(gdat, flux, sind):
-
-    # temp
+    
     if isscalar(flux):
         flux = array([flux])
 
     if isscalar(sind):
         sind = array([sind])
-        
+
     spec = flux[None, :] * (gdat.meanener[:, None] / gdat.enerfdfn)**(-sind[None, :])
     
     return spec
@@ -140,6 +139,11 @@ def icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     
     if indxfluxunit.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
+        
+        if True:
+            print 'temp'
+            print temp
+        
         flux[indxfluxunit] = ((fluxunit - temp) * (1. - fdfnslopuppr) / norm / gdat.pivtflux**fdfnslopuppr + fdfnbrek**(1. - fdfnslopuppr))**(1. / (1. - fdfnslopuppr))
 
     return flux
@@ -568,7 +572,7 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
             fdfnslopuppr = sampvarb[gdat.indxsampfdfnslopuppr[l]]
             sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
         sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
-        sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[indxsampsind[l]])
+        sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn[0], :]], sampvarb[indxsampsind[l]])
     
     return sampvarb
     
@@ -2070,8 +2074,9 @@ def setp(gdat):
     gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
     gdat.indxener = arange(gdat.numbener, dtype=int)
     
-    #gdat.indxenerfdfn = array([gdat.numbener / 2])
-    gdat.indxenerfdfn = gdat.numbener / 2
+    # temp
+    gdat.indxenerfdfn = array([gdat.numbener / 2])
+    #gdat.indxenerfdfn = gdat.numbener / 2
     gdat.enerfdfn = gdat.meanener[gdat.indxenerfdfn]
         
     factener = (gdat.meanener[gdat.indxenerfdfn] / gdat.meanener)**2
@@ -2239,9 +2244,9 @@ def setp(gdat):
     gdat.indxpara = arange(gdat.numbpara)
 
     if gdat.numbburn == None:
-        gdat.numbburn = 300000
+        gdat.numbburn = min(300000, gdat.numbswep - 1)
     if gdat.factthin == None:
-        gdat.factthin = min(gdat.numbpara, gdat.numbswep / 2)
+        gdat.factthin = min(5 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
     # run tag
     gdat.rtag = retr_rtag(gdat, None)
@@ -2542,7 +2547,7 @@ def setp(gdat):
             if gdat.mockfdfntype == 'brok':
                 mockspec[l][gdat.indxenerfdfn, :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnbrek[l], gdat.mockfdfnsloplowr[l], gdat.mockfdfnslopuppr[l])
             mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
-            mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn, :], mocksind[l])
+            mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn[0], :], mocksind[l])
             indxpixltemp = retr_indxpixl(gdat, mockbgal[l], mocklgal[l])
             mockcnts[l] = mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         mockpntsflux = retr_pntsflux(gdat, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)

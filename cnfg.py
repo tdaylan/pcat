@@ -141,6 +141,8 @@ def cnfg_ferm_expr_ngal_cmp3():
     cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', strgexpo='fermexpo_cmp3_ngal.fits')
 def cnfg_ferm_expr_ngal_full():
     cnfg_ferm_expr_ngal('fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
+def cnfg_ferm_expr_ngal_dust():
+    cnfg_ferm_expr_ngal(listack=['fermexpo_full_ngal.fits'])
 
 
 def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits'):
@@ -157,6 +159,7 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
+         maxmnumbpnts=array([600]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          minmflux=minmflux, \
@@ -260,9 +263,9 @@ def cnfg_test_popl():
     minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9, 1.])
-    mockfdfnsloplowr = array([1.9, 1.1])
-    mockfdfnslopuppr = array([1.9, 1.9])
-    mockfdfnbrek = array([1e-10, 1e-10])
+    #mockfdfnbrek = array([1e-10, 1e-10])
+    #mockfdfnsloplowr = array([1.9, 1.1])
+    #mockfdfnslopuppr = array([1.9, 1.9])
       
     init(psfntype='gausking', \
 		 numbproc=1, \
@@ -282,12 +285,14 @@ def cnfg_test_popl():
          #maxmnumbpnts=array([1000]), \
          minmfdfnnorm=array([1e-5, 1e-5]), \
          maxmfdfnnorm=array([1e2, 1e2]), \
-         minmfdfnsloplowr=array([1., 1.]), \
-         maxmfdfnsloplowr=array([3., 3.]), \
-         minmfdfnslopuppr=array([1., 1.]), \
-         maxmfdfnslopuppr=array([3., 3.]), \
-         minmfdfnbrek=array([minmflux, minmflux]), \
-         maxmfdfnbrek=array([maxmflux, maxmflux]), \
+         minmfdfnslop=array([1., 1.]), \
+         maxmfdfnslop=array([3., 3.]), \
+         #minmfdfnbrek=array([minmflux, minmflux]), \
+         #maxmfdfnbrek=array([maxmflux, maxmflux]), \
+         #minmfdfnsloplowr=array([1., 1.]), \
+         #maxmfdfnsloplowr=array([3., 3.]), \
+         #minmfdfnslopuppr=array([1., 1.]), \
+         #maxmfdfnslopuppr=array([3., 3.]), \
          stdvsdfn=array([.5, .5]), \
          meansdfn=array([2., 2.]), \
          #probprop=array([1., 0., 0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
@@ -308,9 +313,9 @@ def cnfg_test_popl():
          #mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
-         mockfdfnbrek=mockfdfnbrek, \
-         mockfdfnsloplowr=mockfdfnsloplowr, \
-         mockfdfnslopuppr=mockfdfnslopuppr, \
+         #mockfdfnbrek=mockfdfnbrek, \
+         #mockfdfnsloplowr=mockfdfnsloplowr, \
+         #mockfdfnslopuppr=mockfdfnslopuppr, \
          mocknormback=ones((2, numbener)), \
         )
 
@@ -339,11 +344,11 @@ def cnfg_test_brok():
          maxmgang=20., \
          fdfntype='brok', \
          #fdfntype='powr', \
-         verbtype=3, \
+         verbtype=1, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([3]), \
-         #maxmnumbpnts=array([1000]), \
+         #maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([1000]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          probprop=array([0.1, 0., 0., 0., 0.1, 0.1, 0.5, 0.5, 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -360,8 +365,8 @@ def cnfg_test_brok():
          datatype='mock', \
          mockfdfntype='brok', \
          #mockfdfntype='powr', \
-         mocknumbpnts=array([2]), \
-         #mocknumbpnts=array([500]), \
+         #mocknumbpnts=array([2]), \
+         mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
@@ -382,7 +387,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='gausking', \
-         numbswep=1000000, \
+         numbswep=2000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

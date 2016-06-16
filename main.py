@@ -850,7 +850,7 @@ def init( \
     head['stdvspmrsind'] = gdat.stdvspmrsind
 
     ## index of the energy bin, where the FDF is defined
-    head['indxenerfdfn'] = gdat.indxenerfdfn
+    head['indxenerfdfn'] = gdat.indxenerfdfn[0]
 
     if gdat.trueinfo and gdat.datatype == 'mock':
         head['mockfdfntype'] = gdat.mockfdfntype
@@ -1217,8 +1217,8 @@ def rjmc(gdat, indxprocwork):
     indxswepsave = arange(gdat.numbburn, gdat.numbswep, gdat.factthin)
     boolsave[indxswepsave] = True
     
-    sampindx = zeros(gdat.numbswep, dtype=int)
-    sampindx[indxswepsave] = arange(gdat.numbsamp)
+    indxsampsave = zeros(gdat.numbswep, dtype=int)
+    indxsampsave[indxswepsave] = arange(gdat.numbsamp)
 
     listsamp = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
     listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
@@ -1373,7 +1373,7 @@ def rjmc(gdat, indxprocwork):
             print 'cntrswep'
             print gdat.cntrswep
             print 'thisindxprop'
-            print gdat.thisindxprop
+            print gdat.strgprop[gdat.thisindxprop]
             print 'indxsampbadd'
             print indxsampbadd
             print 'drmcsamp'
@@ -1388,12 +1388,12 @@ def rjmc(gdat, indxprocwork):
 
         # save the sample
         if boolsave[gdat.cntrswep]:
-            listsamp[sampindx[gdat.cntrswep], :] = gdat.drmcsamp[:, 0]
-            listsampvarb[sampindx[gdat.cntrswep], :] = gdat.thissampvarb
-            listmodlcnts[sampindx[gdat.cntrswep], :] = gdat.thismodlcnts[0, gdat.indxpixlsave, 0]
-            listpntsfluxmean[sampindx[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
+            listsamp[indxsampsave[gdat.cntrswep], :] = gdat.drmcsamp[:, 0]
+            listsampvarb[indxsampsave[gdat.cntrswep], :] = gdat.thissampvarb
+            listmodlcnts[indxsampsave[gdat.cntrswep], :] = gdat.thismodlcnts[0, gdat.indxpixlsave, 0]
+            listpntsfluxmean[indxsampsave[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
             listindxpntsfull.append(gdat.thisindxpntsfull)
-            listllik[sampindx[gdat.cntrswep]] = sum(gdat.thisllik)
+            listllik[indxsampsave[gdat.cntrswep]] = sum(gdat.thisllik)
             
             lpri = 0.
             for l in gdat.indxpopl:
@@ -1414,7 +1414,7 @@ def rjmc(gdat, indxprocwork):
                     fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
                     fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
                     lpri += sum(log(pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)))
-            listlpri[sampindx[gdat.cntrswep]] = lpri
+            listlpri[indxsampsave[gdat.cntrswep]] = lpri
             
             if gdat.tracsamp:
                 
