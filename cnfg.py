@@ -150,8 +150,8 @@ def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_c
     minmflux = 3e-11
     maxmflux = 1e-7
         
-    init(psfntype='gausking', \
-         numbswep=5000000, \
+    init(psfntype='doubking', \
+         numbswep=2000000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \

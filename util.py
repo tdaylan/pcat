@@ -2239,7 +2239,7 @@ def setp(gdat):
     gdat.indxpara = arange(gdat.numbpara)
 
     if gdat.numbburn == None:
-        gdat.numbburn = 100000
+        gdat.numbburn = 300000
     if gdat.factthin == None:
         gdat.factthin = min(gdat.numbpara, gdat.numbswep / 2)
 

@@ -431,7 +431,7 @@ def plot_post(pathprobcatl):
     for l in range(gdat.numbpopl):
         
         # number of point sources
-        path = gdat.pathplot + 'numbpntsdist_popl%d_' % l + gdat.rtag
+        path = gdat.pathplot + 'numbpntsdist_pop%d_' % l + gdat.rtag
         if gdat.trueinfo and gdat.truenumbpnts != None:
             truepara = gdat.truenumbpnts[l]
         else:
@@ -439,7 +439,7 @@ def plot_post(pathprobcatl):
         tdpy.mcmc.plot_trac(path, gdat.listnumbpnts[:, l], '$N$', truepara=truepara)
 
         # mean number of point sources
-        path = gdat.pathplot + 'fdfnnorm_popl%d_' % l + gdat.rtag
+        path = gdat.pathplot + 'fdfnnorm_pop%d_' % l + gdat.rtag
         truepara = None
         tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
 
