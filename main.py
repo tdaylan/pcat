@@ -734,8 +734,11 @@ def init( \
                 listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
                 listspec[l].append(listsampvarb[j, k, indxsampspec[l]])
                 listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
-                listgang[l].append(retr_gang(array(listlgal[l]), array(listbgal[l])))
-                listaang[l].append(retr_aang(array(listlgal[l]), array(listbgal[l])))
+                # temp
+                #listgang[l].append(retr_gang(array(listlgal[l]), array(listbgal[l])))
+                #listaang[l].append(retr_aang(array(listlgal[l]), array(listbgal[l])))
+                listgang[l].append(zeros(indxsamplgal[l].size))
+                listaang[l].append(zeros(indxsamplgal[l].size))
                 listlgalhist[n, l, :] = histogram(listlgal[l][n], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n], gdat.binsbgal)[0]
                 listganghist[n, l, :] = histogram(listgang[l][n], gdat.binsgang)[0]
