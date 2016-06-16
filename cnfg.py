@@ -132,16 +132,26 @@ def cnfg_ferm_mock_igal():
          datatype='mock', \
         )
 
-    
+
+def cnfg_ferm_expr_ngal():
+    cnfg_ferm_expr_ngal('fermflux_cmp1_ngal.fits', strgexpo='fermexpo_cmp1_ngal.fits')
+def cnfg_ferm_expr_ngal():
+    cnfg_ferm_expr_ngal('fermflux_cmp2_ngal.fits', strgexpo='fermexpo_cmp2_ngal.fits')
+def cnfg_ferm_expr_ngal():
+    cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', strgexpo='fermexpo_cmp3_ngal.fits')
+def cnfg_ferm_expr_ngal():
+    cnfg_ferm_expr_ngal('fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
+
+
 def cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits'):
-    
+   
     indxenerincl = arange(1, 4)
     indxevttincl = arange(2, 4)
     minmflux = 3e-11
     maxmflux = 1e-7
         
     init(psfntype='gausking', \
-         numbswep=3000000, \
+         numbswep=5000000, \
          proppsfn=False, \
          numbswepplot=50000, \
          randinit=False, \
