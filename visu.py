@@ -694,9 +694,9 @@ def plot_histsind(gdat, l, listsindhist=None):
     axis.set_ylim([0.1, None])
     axis.legend()
     if post:
-        path = gdat.pathplot + 'histsind_popl%d' % l + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'histsind_popl%d' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -759,11 +759,11 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
             axis.set_ylabel('$N$')
         if i == numbcols / 2:
             axis.legend()
-    figr.subplots_adjust(wspace=0.3, bottom=0.2, left=0.15)
+    figr.subplots_adjust(bottom=0.2, left=0.2)
     if post:
-        path = gdat.pathplot + 'histspec%d_' % l + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'histspec_pop%d_' % l + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'histspec%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'histspec_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
