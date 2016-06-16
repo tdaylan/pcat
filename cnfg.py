@@ -133,13 +133,13 @@ def cnfg_ferm_mock_igal():
         )
 
 
-def cnfg_ferm_expr_ngal():
+def cnfg_ferm_expr_ngal_cmp1():
     cnfg_ferm_expr_ngal('fermflux_cmp1_ngal.fits', strgexpo='fermexpo_cmp1_ngal.fits')
-def cnfg_ferm_expr_ngal():
+def cnfg_ferm_expr_ngal_cmp2():
     cnfg_ferm_expr_ngal('fermflux_cmp2_ngal.fits', strgexpo='fermexpo_cmp2_ngal.fits')
-def cnfg_ferm_expr_ngal():
+def cnfg_ferm_expr_ngal_cmp3():
     cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', strgexpo='fermexpo_cmp3_ngal.fits')
-def cnfg_ferm_expr_ngal():
+def cnfg_ferm_expr_ngal_full():
     cnfg_ferm_expr_ngal('fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
 
 
