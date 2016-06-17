@@ -75,7 +75,7 @@ def cnfg_ferm_info():
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
 
-def cnfg_ferm_expr_igal(strgexpr, strgexpo):
+def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_cmp0_igal.fits'):
       
     init( \
          psfntype='gausking', \
