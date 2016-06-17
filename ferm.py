@@ -339,6 +339,7 @@ def prep_dust():
 
     path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
     dustigal = pf.getdata(path)['TEMPERATURE']
+    numbside = int(sqrt(dustigal.size / 12))
     dustigal = hp.reorder(dustigal, n2r=True)
 
     path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_igal.fits'

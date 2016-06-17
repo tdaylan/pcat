@@ -733,6 +733,13 @@ def init( \
                 numbpnts = indxsamplgal[l].size
                 listlgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsamplgal[l]]
                 listbgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampbgal[l]]
+                print 'listspec[l]'
+                print listspec[l].shape
+                print 'listsampvarb'
+                print listsampvarb.shape
+                print 'indxsampspec[l]'
+                print indxsampspec[l].shape
+                print
                 listspec[l][n, 0:numbpnts, :] = listsampvarb[j, k, indxsampspec[l]]
                 listsind[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampsind[l]]
                 listgang[l][n, 0:numbpnts] = retr_gang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
