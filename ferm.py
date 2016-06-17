@@ -332,18 +332,18 @@ def writ_fdfm():
 
 def prep_dust():
 
+    minmlgal = -20.
+    maxmlgal = 20.
+    minmbgal = -20.
+    maxmbgal = 20.
+
     path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
     dust = pf.getdata(path)
     head = pf.getheader(path)
-    print 'head'
-    print head
-    print 'dust.shape'
-    print dust.shape
 
+    path = '/n/pan/www/tansu/imag/pcat/dust.pdf'
+    tdpy.util.plot_heal(dust, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
-prep_dust()
-
-    
     
 def retr_jcbn():
     
@@ -422,4 +422,5 @@ def plot_dust():
 #plot_maps()
 #make_maps()
 #prep_maps()
+prep_dust()
 #plot_maps()
