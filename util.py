@@ -1279,8 +1279,8 @@ def retr_prop(gdat):
         
         thislgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi][spltindxindxpnts]]
         thisbgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi][spltindxindxpnts]]
-        thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, spltindxindxpnts]]
-        thissind = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][spltindxindxpnts]]
+        thisflux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn[0], spltindxindxpnts]]
+        thissind = gdat.thissampvarb[gdat.thisindxsampsind[gdat.indxpoplmodi][spltindxindxpnts]]
         
         if gdat.verbtype > 1:
             print 'spltindxindxpnts: ', spltindxindxpnts

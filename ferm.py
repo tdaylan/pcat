@@ -340,6 +340,9 @@ def prep_dust():
     path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
     dust = pf.getdata(path)
     head = pf.getheader(path)
+    numbside = sqrt(dust.size / 12)
+    indxdust = hp.nest2ring(numbside, arange(dust.size))
+    dust = dust[indxdust]
 
     path = '/n/pan/www/tansu/imag/pcat/dust.pdf'
     tdpy.util.plot_heal(dust, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
