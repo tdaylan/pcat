@@ -218,7 +218,8 @@ def init( \
          indxenerincl=arange(5), \
          maxmnumbpnts=array([1000]), \
          initnumbpnts=None, \
-         trueinfo=False, \
+         # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
+         trueinfo=True, \
          pntscntr=False, \
          numbproc=None, \
          liketype='pois', \
@@ -510,7 +511,7 @@ def init( \
     # check inputs
     
     # date and time
-    gdat.strgtime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+    gdat.strgtime = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     if gdat.verbtype > 0:
         print 'PCAT started at ', gdat.strgtime
         print 'Initializing...'
@@ -862,7 +863,7 @@ def init( \
     ## index of the energy bin, where the FDF is defined
     head['indxenerfdfn'] = gdat.indxenerfdfn[0]
 
-    if gdat.trueinfo and gdat.datatype == 'mock':
+    if gdat.datatype == 'mock':
         head['mockfdfntype'] = gdat.mockfdfntype
         head['mockpsfntype'] = gdat.mockpsfntype
 
@@ -1376,7 +1377,7 @@ def rjmc(gdat, indxprocwork):
             listaccp[gdat.cntrswep] = False
              
         # sanity checks
-        indxsampbadd = where((gdat.drmcsamp[1:, 0] > 1.) | (gdat.drmcsamp[1:, 0] < 0.))[0] + 1
+        indxsampbadd = where((gdat.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdat.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
         if indxsampbadd.size > 0:
             print 'Unit sample vector went outside [0,1]!'
             print 'cntrswep'

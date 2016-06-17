@@ -290,7 +290,7 @@ def plot_post(pathprobcatl):
     
     numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
     indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
-    path = gdat.pathplot + 'listsamp_' + gdat.rtag
+    path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
     tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
 
     if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == 3 and gdat.numbpopl == 1:

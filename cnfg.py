@@ -10,7 +10,6 @@ def cnfg_ferm_psfn_expr(psfntype):
     init( \
          numbswep=100000, \
          factthin=1, \
-         numbswepplot=50000, \
          trueinfo=True, \
          datatype='inpt', \
          psfntype=psfntype, \
@@ -52,7 +51,6 @@ def cnfg_ferm_info():
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
                         numbburn=numbburn[k], \
-                        numbswepplot=50000, \
                         probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
@@ -82,7 +80,6 @@ def cnfg_ferm_expr_igal(strgexpr, strgexpo):
     init( \
          psfntype='gausking', \
          numbswep=2000000, \
-         numbswepplot=50000, \
          trueinfo=True, \
          maxmgang=20., \
          indxenerincl=arange(1, 4), \
@@ -160,9 +157,7 @@ def cnfg_ferm_expr_ngal( \
     init(psfntype='doubking', \
          numbswep=2000000, \
          proppsfn=proppsfn, \
-         numbswepplot=50000, \
          randinit=False, \
-         trueinfo=True, \
          maxmgang=20., \
          maxmnumbpnts=array([600]), \
          indxenerincl=indxenerincl, \
@@ -187,7 +182,6 @@ def cnfg_ferm_post():
     numbener = indxenerincl.size
     init(psfntype='gausking', \
 		 numbswep=500000, \
-         numbswepplot=50000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=1.5, \
@@ -230,7 +224,6 @@ def cnfg_test_spmr():
     init(psfntype='gausking', \
 		 numbproc=1, \
 		 numbswep=100, \
-         numbswepplot=5000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
@@ -277,7 +270,6 @@ def cnfg_test_popl():
 		 numbproc=1, \
 		 numbswep=100000, \
          #factthin=1, \
-         numbswepplot=5000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
@@ -342,7 +334,6 @@ def cnfg_test_brok():
     init(psfntype='gausking', \
 		 numbswep=1000, \
          factthin=1, \
-         numbswepplot=500, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
@@ -414,7 +405,6 @@ def cnfg_sdss_mock():
 
     init(psfntype='doubgaus', \
          numbswep=100000, \
-         numbswepplot=20000, \
          minmflux=array([1e3]), \
          maxmflux=array([1e5]), \
          initnumbpnts=array([100]), \
@@ -445,7 +435,6 @@ def cnfg_sdss_expr():
     init(psfntype='doubgaus', \
          trueinfo=False, \
          numbswep=1000000, \
-         numbswepplot=20000, \
          minmflux=ones(3) * 1e3, \
          maxmflux=ones(3) * 1e5, \
          initnumbpnts=array([10]), \

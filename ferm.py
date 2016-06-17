@@ -330,6 +330,21 @@ def writ_fdfm():
     pf.writeto(path, fermfdfmfluxngal, clobber=True)
 
 
+def prep_dust():
+
+    path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
+    dust = pf.getdata(path)
+    head = pf.getheader(path)
+    print 'head'
+    print head
+    print 'dust.shape'
+    print dust.shape
+
+
+prep_dust()
+
+    
+    
 def retr_jcbn():
     
     lgl0, lgla, bgl0, bgla, flx0, flxa, snd0, snda = sympy.symbols('lgl0 lgla bgl0 bgla flx0 flxa snd0 snda')
@@ -406,5 +421,5 @@ def plot_dust():
 #writ_fdfm_doug()
 #plot_maps()
 #make_maps()
-prep_maps()
+#prep_maps()
 #plot_maps()

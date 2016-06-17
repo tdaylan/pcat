@@ -486,6 +486,8 @@ def retr_lpri(gdat, init=False):
         
         # comptue the delta log-prior for the associated update
         if thisbool:
+
+            # normalization of the FDF
             if gdat.thisindxprop == gdat.indxpropfdfnnorm:
                 fdfnnorm = gdat.nextsampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
                 if gdat.fdfntype == 'powr':
@@ -494,6 +496,8 @@ def retr_lpri(gdat, init=False):
                     fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
                     fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
                     fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            
+            # shape of the FDF
             if gdat.fdfntype == 'powr':
                 if  gdat.thisindxprop == gdat.indxpropfdfnslop:
                     fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
@@ -509,10 +513,12 @@ def retr_lpri(gdat, init=False):
                         fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
                         fdfnsloplowr = gdat.nextsampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
                         fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
-                    if  gdat.thisindxprop == gdat.indxpropfdfnbrek:
+                    if  gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
                         fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]]
                         fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
                         fdfnslopuppr = gdat.nextsampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
+            
+            # number of PS
             if gdat.thisindxprop == gdat.indxpropbrth or gdat.thisindxprop == gdat.indxpropdeth or \
                 gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg:
                 fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[gdat.indxpoplmodi]]
@@ -1148,34 +1154,24 @@ def retr_prop(gdat):
             print 'indxpsfiparamodi: ', gdat.indxpsfiparamodi
             print 'indxenermodi: ', gdat.indxenermodi
             print 'indxsampmodi: ', gdat.indxsampmodi
-            print 'gdat.drmcsamp[gdat.indxsampmodi, -1]'
-            print gdat.drmcsamp[gdat.indxsampmodi, -1]
-            print 'icdf_psfipara(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.indxpsfiparamodi)'
-            print icdf_psfipara(gdat, gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.indxpsfiparamodi)
-            print 'thispsfipara: ', gdat.thissampvarb[gdat.indxsamppsfipara]
             print 'thissampvarb[indxsampmodi]: ', gdat.thissampvarb[gdat.indxsampmodi]
-            print 'nextpsfipara: ', gdat.nextsampvarb[gdat.indxsamppsfipara]
             print 'nextpsfipara[indxsampmodi]: ', gdat.nextsampvarb[gdat.indxsampmodi]
             print
 
-        
     # background changes
-    
-    # diffuse model
     if gdat.thisindxprop == gdat.indxpropnormback:
 
-        # determine the sample index to be changed
+        ## determine the sample index to be changed
         gdat.indxenermodi = choice(gdat.indxener)
         gdat.indxbackmodi = choice(gdat.indxback)
         gdat.indxsampmodi = gdat.indxsampnormback[gdat.indxbackmodi, gdat.indxenermodi]
         
-        # propose
+        ## propose
         retr_gaus(gdat, gdat.indxsampmodi, gdat.stdvback)
 
-        # transform back from the unit space
+        ## transform back from the unit space
         gdat.nextsampvarb[gdat.indxsampnormback] = copy(gdat.thissampvarb[gdat.indxsampnormback])
-        gdat.nextsampvarb[gdat.indxsampmodi] = icdf_logt(gdat.drmcsamp[gdat.indxsampmodi, -1], \
-            gdat.minmnormback[gdat.indxbackmodi], gdat.factnormback[gdat.indxbackmodi])
+        gdat.nextsampvarb[gdat.indxsampmodi] = icdf_logt(gdat.drmcsamp[gdat.indxsampmodi, -1], gdat.minmnormback[gdat.indxbackmodi], gdat.factnormback[gdat.indxbackmodi])
 
         if gdat.verbtype > 1:
             print 'indxenermodi: ', gdat.indxenermodi
@@ -1183,8 +1179,6 @@ def retr_prop(gdat):
             print 'indxsampmodi: ', gdat.indxsampmodi
             print 'thissampvarb[gdat.indxsampnormback]: ', gdat.thissampvarb[gdat.indxsampnormback]
             print 'nextsampvarb[gdat.indxsampnormback]: ', gdat.nextsampvarb[gdat.indxsampnormback]
-            print 'gdat.drmcsamp[gdat.indxsampnormback, :]'
-            print gdat.drmcsamp[gdat.indxsampnormback, :]
             print
 
     # birth
@@ -1622,7 +1616,9 @@ def retr_prop(gdat):
         if not gdat.reje:
             print 'indxsampmodi'
             print gdat.indxsampmodi
-
+            print 'gdat.drmcsamp[gdat.indxsampmodi, :]'
+            print gdat.drmcsamp[gdat.indxsampmodi, :]
+        
     # energy bin in which to evaluate the log-likelihood
     if gdat.indxpropbrth <= gdat.thisindxprop <= gdat.indxpropmerg:
         gdat.indxenermodi = gdat.indxener
