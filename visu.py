@@ -506,7 +506,7 @@ def plot_post(pathprobcatl):
                 axis.set_ylabel(r'$N_{samp}$')
                 axis.set_xlabel(r'$\ln P(D|x)$')
         else:
-            if amin(listlpri) != amax(listllik):
+            if amin(listlpri) != amax(listlpri):
                 axis.hist(listlpri.flatten())
                 axis.set_ylabel(r'$N_{samp}$')
                 axis.set_xlabel(r'$\ln P(x)$')

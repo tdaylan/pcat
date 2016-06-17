@@ -509,6 +509,9 @@ def init( \
         print 'PCAT started at ', gdat.strgtime
         print 'Initializing...'
     
+    # check the call stack for the name of the configuring function
+    gdat.strgcnfg = inspect.stack()[1][3]
+
     # setup the sampler
     setp(gdat) 
 
@@ -787,7 +790,7 @@ def init( \
     for n in range(gdat.numbpixlsave):
         gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
-    pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + gdat.strgtime + '_' + gdat.rtag + '.fits'  
+    pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
@@ -832,6 +835,7 @@ def init( \
     
     head['trueinfo'] = gdat.trueinfo
     head['margsize'] = gdat.margsize
+    head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
    
     ## proposal scales
@@ -1226,8 +1230,8 @@ def rjmc(gdat, indxprocwork):
     listchrototl = zeros((gdat.numbswep, gdat.numbchrototl))
     listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
     listllik = zeros(gdat.numbsamp)
-    listlprising = zeros(gdat.numbsamp)
     listlpri = zeros(gdat.numbsamp)
+    listlprinorm = zeros(gdat.numbsamp)
     listaccp = zeros(gdat.numbswep, dtype=bool)
     listaccpspec = []
     listindxparamodi = zeros(gdat.numbswep, dtype=int)
@@ -1394,8 +1398,9 @@ def rjmc(gdat, indxprocwork):
             listpntsfluxmean[indxsampsave[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
             listindxpntsfull.append(gdat.thisindxpntsfull)
             listllik[indxsampsave[gdat.cntrswep]] = sum(gdat.thisllik)
+            listlpri[indxsampsave[gdat.cntrswep]] = sum(gdat.thislpri)
             
-            lpri = 0.
+            lprinorm = 0.
             for l in gdat.indxpopl:
                 # temp
                 ## brok terms are not complete
@@ -1414,7 +1419,7 @@ def rjmc(gdat, indxprocwork):
                     fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
                     fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
                     lpri += sum(log(pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)))
-            listlpri[indxsampsave[gdat.cntrswep]] = lpri
+            listlprinorm[indxsampsave[gdat.cntrswep]] = lprinorm
             
             if gdat.tracsamp:
                 

@@ -386,14 +386,15 @@ def cnfg_ferm_mock_ngal():
     maxmflux = 1e-7
     mockfdfnslop = array([1.9])
       
-    init(psfntype='gausking', \
+    init(psfntype='doubking', \
          numbswep=2000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         mocknumbpnts=array([500]), \
+         mocknumbpnts=array([300]), \
+         maxmnumbpnts=array([600]), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \

@@ -31,7 +31,7 @@ from healpy import ang2pix
 import pyfits as pf
 
 # utilities
-import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle
+import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle, inspect
 import functools
 
 # tdpy

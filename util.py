@@ -537,7 +537,9 @@ def retr_lpri(gdat, init=False):
             lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
             gdat.nextlpri[gdat.indxpoplmodi] = sum(lprbpois)
 
-            gdat.deltlpri = sum(gdat.nextlpri[gdat.indxpoplmodi] - gdat.thislpri[gdat.indxpoplmodi])
+            # temp
+            #gdat.deltlpri = sum(gdat.nextlpri[gdat.indxpoplmodi] - gdat.thislpri[gdat.indxpoplmodi])
+            gdat.deltlpri = gdat.nextlpri[gdat.indxpoplmodi] - gdat.thislpri[gdat.indxpoplmodi]
         else:
             gdat.deltlpri = 0.
         
@@ -909,6 +911,7 @@ def retr_fgl3(gdat):
 
 def retr_rtag(gdat, indxprocwork):
     
+    
     if indxprocwork == None:
         rtag = 'AA_%d_%d_%d_%d_%s_%s_%s' % (gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, \
             gdat.datatype, gdat.regitype, gdat.psfntype)
@@ -1065,7 +1068,7 @@ def retr_prop(gdat):
             gdat.indxsampvarbmodi = gdat.indxsampfdfnslop[gdat.indxpoplmodi]
             retr_gaus(gdat, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
             gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnslop, gdat.factfdfnslop)
-            gdat.indxsampmodi = concatenate((array([gdat.indxsampvarbmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]))
+            gdat.indxsampmodi = concatenate((array([gdat.indxsampvarbmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn[0], :]))
             if gdat.verbtype > 2:
                 print 'gdat.indxsampvarbmodi'
                 print gdat.indxsampvarbmodi
@@ -1963,8 +1966,6 @@ def retr_randunitpsfipara(gdat):
                     thisbool = thisbool and randunitpsfipara[indx+indxpar1] > randunitpsfipara[indx+indxpar0]
             if thisbool:
                 break
-            else:
-                print 'Repeating the PSF parameter seed...'
 
     return randunitpsfipara
 
@@ -2244,7 +2245,7 @@ def setp(gdat):
     gdat.indxpara = arange(gdat.numbpara)
 
     if gdat.numbburn == None:
-        gdat.numbburn = min(300000, gdat.numbswep - 1)
+        gdat.numbburn = min(1000000, gdat.numbswep - 1)
     if gdat.factthin == None:
         gdat.factthin = min(5 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
