@@ -62,8 +62,8 @@ def cnfg_ferm_info():
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
                         indxevttincl=indxevttincl, \
-                        minmflux=array([minmflux[k]]), \
-                        maxmflux=array([1e-7]), \
+                        minmflux=minmflux[k], \
+                        maxmflux=1e-7, \
                         regitype='ngal', \
                         maxmnormback=array([5., 5.]), \
                         minmnormback=array([0.2, 0.2]), \
@@ -335,7 +335,7 @@ def cnfg_test_brok():
       
     init(psfntype='gausking', \
 		 numbproc=1, \
-		 numbswep=10000, \
+		 numbswep=100, \
          #factthin=1, \
          numbswepplot=5000, \
          makeplot=True, \
@@ -344,11 +344,10 @@ def cnfg_test_brok():
          maxmgang=20., \
          fdfntype='brok', \
          #fdfntype='powr', \
-         verbtype=1, \
+         verbtype=3, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         #maxmnumbpnts=array([3]), \
-         maxmnumbpnts=array([1000]), \
+         maxmnumbpnts=array([5]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          probprop=array([0.1, 0., 0., 0., 0.1, 0.1, 0.5, 0.5, 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -365,8 +364,7 @@ def cnfg_test_brok():
          datatype='mock', \
          mockfdfntype='brok', \
          #mockfdfntype='powr', \
-         #mocknumbpnts=array([2]), \
-         mocknumbpnts=array([500]), \
+         mocknumbpnts=array([5]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \

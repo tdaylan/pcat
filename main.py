@@ -93,23 +93,23 @@ def work(gdat, indxprocwork):
             if gdat.fdfntype == 'powr':
                 fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
+
+                print 'hey'
+                print 'l'
+                print l
+                print 'fdfnslop'
+                print fdfnslop
             if gdat.fdfntype == 'brok':
                 flux = gdat.truespec[l][0, gdat.indxenerfdfn, :]
                 fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
-                print 'flux'
-                print flux
-                print 'fdfnbrek'
-                print fdfnbrek
-                print 'fdfnsloplowr'
-                print fdfnsloplowr
-                print 'fdfnslopuppr'
-                print fdfnslopuppr
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-                print 'fluxunit'
-                print fluxunit
-                print
+            
+            print 'hey'
+            print 'fluxunit'
+            print fluxunit
+            print
 
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])

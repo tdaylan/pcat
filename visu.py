@@ -1027,7 +1027,11 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                     else:
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
-                temp = sum(pntsprobcart[:, :, l, gdat.indxenerfdfn, indxlowr:indxuppr], 2)
+                temp = sum(pntsprobcart[:, :, l, gdat.indxenerfdfn[0], indxlowr:indxuppr], 2)
+                print 'hey'
+                print 'pntsprobcart'
+                print pntsprobcart.shape
+                print
                 imag = axis.imshow(temp, origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 

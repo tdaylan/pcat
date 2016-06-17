@@ -1360,6 +1360,20 @@ def retr_prop(gdat):
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcomplgal, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompbgal, -1] = cdfn_self(nextbgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompflux, -1] = cdfn_flux_powr(gdat, nextflux0, gdat.thissampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]])
+            
+            
+            print 'hey'
+            print 'nextsind0'
+            print nextsind0
+            print 'gdat.meansdfn[gdat.indxpoplmodi]'
+            print gdat.meansdfn[gdat.indxpoplmodi]
+            print 'gdat.stdvsdfn[gdat.indxpoplmodi]'
+            print gdat.stdvsdfn[gdat.indxpoplmodi]
+            print 'gdat.sindcdfnnormdiff[gdat.indxpoplmodi]'
+            print gdat.sindcdfnnormdiff[gdat.indxpoplmodi]
+            print 'gdat.sindcdfnnormminm[gdat.indxpoplmodi]'
+            print gdat.sindcdfnnormminm[gdat.indxpoplmodi]
+            print
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcompsind, -1] = cdfn_eerr(nextsind0, gdat.meansdfn[gdat.indxpoplmodi], gdat.stdvsdfn[gdat.indxpoplmodi], \
                     gdat.sindcdfnnormminm[gdat.indxpoplmodi], gdat.sindcdfnnormdiff[gdat.indxpoplmodi])
             nextspec0 = retr_spec(gdat, nextflux0, nextsind0)
