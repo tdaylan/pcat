@@ -206,11 +206,18 @@ def plot_post(pathprobcatl):
     gdat.listbgal = []
     gdat.listspec = []
     gdat.listsind = []
+    gdat.listgang = []
+    gdat.listaang = []
     for l in gdat.indxpopl:
-        gdat.listlgal.append(hdun['lgalpop%d' % l].data)
-        gdat.listbgal.append(hdun['bgalpop%d' % l].data)
-        gdat.listspec.append(hdun['specpop%d' % l].data)
-        gdat.listsind.append(hdun['sindpop%d' % l].data)
+        spec = hdun['specpop%d' % l].data
+        indxpnts = where(spec > 0.)[0]
+        numbpnts = indxpnts.size
+        gdat.listlgal.append(hdun['lgalpop%d' % l].data[:, indxpnts])
+        gdat.listbgal.append(hdun['bgalpop%d' % l].data[:, indxpnts])
+        gdat.listspec.append(hdun['specpop%d' % l].data[:, indxpnts, :])
+        gdat.listsind.append(hdun['sindpop%d' % l].data[:, indxpnts])
+        gdat.listgang.append(hdun['gangpop%d' % l].data[:, indxpnts])
+        gdat.listaang.append(hdun['aangpop%d' % l].data[:, indxpnts])
 
     # Gelman-Rubin test
     if gdat.numbproc > 1:

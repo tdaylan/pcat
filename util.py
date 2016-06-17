@@ -711,8 +711,6 @@ def updt_samp(gdat):
     # update the hyperparameters
     if thisbool:
         
-        print 'hey'
-        
         ## update the sample vector
         flux = gdat.thissampvarb[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn[0], :]]
         if gdat.fdfntype == 'powr':
@@ -735,20 +733,7 @@ def updt_samp(gdat):
                 fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]]
                 fdfnslopuppr = gdat.nextsampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
                 gdat.thissampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]] = gdat.nextsampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]]
-            
-            print 'fdfnbrek'
-            print fdfnbrek
-            print 'fdfnsloplowr'
-            print fdfnsloplowr
-            print 'fdfnslopuppr'
-            print fdfnslopuppr
             fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-       
-        print 'flux'
-        print flux
-        print 'fluxunit'
-        print fluxunit
-        print 
 
         ## update the unit sample vector -- this is unique for hyperparameter updates
         gdat.drmcsamp[gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :], -1] = fluxunit
@@ -1644,20 +1629,19 @@ def retr_prop(gdat):
     if (gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg) and not gdat.reje:
 
         gdat.combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / len(pairlist))
-        
         if gdat.thisindxprop == gdat.indxpropsplt:
-            combfact = gdat.combfact 
-            jcbnfact = gdat.jcbnfact
+            thisjcbnfact = gdat.spltjcbnfact
+            thiscombfact = combfact 
         else:
-            combfact = -gdat.combfact 
-            jcbnfact = -gdat.jcbnfact
+            thisjcbnfact = -gdat.spltjcbnfact
+            thiscombfact = -combfact 
 
         gdat.laccfrac = jcbnfact + combfact
-        gdat.listgdat.numbpair[gdat.thisindxswep] = len(pairlist)
-        gdat.listgdat.jcbnfact[gdat.thisindxswep] = jcbnfact
-        gdat.listgdat.combfact[gdat.thisindxswep] = combfact
-        gdat.listgdat.auxipara[gdat.thisindxswep, :] = gdat.auxipara
-        gdat.listgdat.laccfrac[gdat.thisindxswep] = gdat.laccfrac
+        gdat.listnumbpair[gdat.thisindxswep] = len(pairlist)
+        gdat.listjcbnfact[gdat.thisindxswep] = thisjcbnfact
+        gdat.listcombfact[gdat.thisindxswep] = thiscombfact
+        gdat.listauxipara[gdat.thisindxswep, :] = gdat.auxipara
+        gdat.listlaccfrac[gdat.thisindxswep] = gdat.laccfrac
 
     else:
         gdat.laccfrac = 0.  
@@ -2290,6 +2274,7 @@ def setp(gdat):
 
     # number of samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
     gdat.indxsamp = arange(gdat.numbsamp)
 
     # rescale the positional update scale

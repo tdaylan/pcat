@@ -258,58 +258,35 @@ def cnfg_test_popl():
     minmflux = 3e-11
     maxmflux = 1e-7
     mockfdfnslop = array([1.9, 1.1])
-    #mockfdfnbrek = array([1e-10, 1e-10])
-    #mockfdfnsloplowr = array([1.9, 1.1])
-    #mockfdfnslopuppr = array([1.9, 1.9])
       
     init(psfntype='gausking', \
-		 numbproc=1, \
 		 numbswep=100000, \
-         #factthin=1, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
-         #fdfntype='brok', \
          fdfntype='powr', \
-         verbtype=3, \
+         #verbtype=3, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([3, 4]), \
-         #maxmnumbpnts=array([1000]), \
+         maxmnumbpnts=array([500, 500]), \
          minmfdfnnorm=array([1e-5, 1e-5]), \
          maxmfdfnnorm=array([1e2, 1e2]), \
          minmfdfnslop=array([1., 1.]), \
          maxmfdfnslop=array([3., 3.]), \
-         #minmfdfnbrek=array([minmflux, minmflux]), \
-         #maxmfdfnbrek=array([maxmflux, maxmflux]), \
-         #minmfdfnsloplowr=array([1., 1.]), \
-         #maxmfdfnsloplowr=array([3., 3.]), \
-         #minmfdfnslopuppr=array([1., 1.]), \
-         #maxmfdfnslopuppr=array([3., 3.]), \
          stdvsdfn=array([.5, .5]), \
          meansdfn=array([2., 2.]), \
-         #probprop=array([1., 0., 0., 0., 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
-         #probprop=array([1., 1., 0., 0., 0., 0., 0, 0, 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         #initnumbpnts=array([2]), \
-         #datatype='inpt', \
-         #strgexpr='fermflux_cmp0_ngal.fits', \
          datatype='mock', \
-         #mockfdfntype='brok', \
          mockfdfntype='powr', \
-         mocknumbpnts=array([2, 3]), \
-         #mocknumbpnts=array([500]), \
+         mocknumbpnts=array([300, 200]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
-         #mockfdfnbrek=mockfdfnbrek, \
-         #mockfdfnsloplowr=mockfdfnsloplowr, \
-         #mockfdfnslopuppr=mockfdfnslopuppr, \
          mocknormback=ones((2, numbener)), \
         )
 

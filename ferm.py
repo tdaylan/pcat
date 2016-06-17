@@ -338,12 +338,24 @@ def prep_dust():
     maxmbgal = 20.
 
     path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
-    dust = pf.getdata(path)['TEMPERATURE']
-    head = pf.getheader(path)
-    dust = hp.reorder(dust, n2r=True)
+    dustigal = pf.getdata(path)['TEMPERATURE']
+    dustigal = hp.reorder(dustigal, n2r=True)
 
-    path = '/n/pan/www/tansu/imag/pcat/dust.pdf'
-    tdpy.util.plot_heal(dust, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+    path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_igal.fits'
+    pf.writeto(path, dustigal, clobber=True)
+    
+    almc = hp.map2alm(dustigal)
+    hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
+    dustngal = hp.alm2map(almc, numbside)
+            
+    path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_ngal.fits'
+    pf.writeto(path, dustngal, clobber=True)
+    
+    path = '/n/pan/www/tansu/imag/pcat/dustigal.pdf'
+    tdpy.util.plot_heal(dustigal, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+
+    path = '/n/pan/www/tansu/imag/pcat/dustngal.pdf'
+    tdpy.util.plot_heal(dustngal, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
     
 def retr_jcbn():
@@ -391,30 +403,6 @@ def plot_maps():
             tdpy.util.plot_heal(diff[i, :, m], path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
 
 
-def plot_dust():
-    
-    redd = pf.getdata(os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits')['TEMPERATURE']
-    
-    numbside = 512
-    numbpixl = numbside**2 * 12
-    
-    indxpixl = hp.ring2nest(numbside, arange(numbpixl))
-    
-    redd = redd[indxpixl]
-    
-    almc = hp.map2alm(redd)
-    hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
-    redd = hp.alm2map(almc, numbside)
-    
-    hist = plt.hist(redd, log=True)
-    plt.show()
-    
-    redd[where(redd > 1.)] = 1.
-    figr, axis = plt.subplots(figsize=(7, 7))
-    cart = tdpy.util.retr_cart(redd, minmlgal=-minmgang, maxmlgal=minmgang, minmbgal=-minmgang, maxmbgal=minmgang)
-    imag = axis.imshow(cart, origin='lower', cmap='Reds')
-    plt.colorbar(imag, ax=axis)
-    plt.show()
 
 
 #writ_isot()

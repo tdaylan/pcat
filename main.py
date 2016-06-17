@@ -89,34 +89,15 @@ def work(gdat, indxprocwork):
         else:
             gdat.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
             gdat.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-
-            print 'hey'
-            print 'loading drmcsamp'
-            print 'l'
-            print l
-
             if gdat.fdfntype == 'powr':
                 fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn[0], :], fdfnslop)
-
-                print 'fdfnslop'
-                print fdfnslop
             if gdat.fdfntype == 'brok':
                 flux = gdat.truespec[l][0, gdat.indxenerfdfn[0], :]
                 fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-                print 'fdfnbrek'
-                print fdfnbrek
-                print 'fdfnsloplowr'
-                print fdfnsloplowr
-                print 'fdfnslopuppr'
-                print fdfnslopuppr
-            print 'fluxunit'
-            print fluxunit
-            print
-
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
@@ -721,56 +702,48 @@ def init( \
     listpsfipara = listsampvarb[:, :, gdat.indxsamppsfipara].reshape(gdat.numbsamp * gdat.numbproc, -1)
     ## Background normalization
     listnormback = listsampvarb[:, :, gdat.indxsampnormback].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbback, gdat.numbener)
+    
     ## PS parameters
-    listlgal = [[] for l in gdat.indxpopl]
-    listbgal = [[] for l in gdat.indxpopl]
-    listgang = [[] for l in gdat.indxpopl]
-    listaang = [[] for l in gdat.indxpopl]
-    listspec = [[] for l in gdat.indxpopl]
-    listsind = [[] for l in gdat.indxpopl]
+    listlgal = []
+    listbgal = []
+    listspec = []
+    listsind = []
+    listgang = []
+    listaang = []
+    for l in gdat.indxpopl:
+        listlgal.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
+        listbgal.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
+        listspec.append(zeros((gdat.numbsamptotl, gdat.numbener, gdat.maxmnumbpnts[l])))
+        listsind.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
+        listgang.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
+        listaang.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
+    
     ## binned PS parameters
-    listlgalhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
-    listbgalhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
-    listganghist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
-    listaanghist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
-    listspechist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numbener, gdat.numbflux))
-    listsindhist = empty((gdat.numbsamp * gdat.numbproc, gdat.numbpopl, gdat.numblgal))
+    listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
+    listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
+    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux, gdat.numbener))
+    listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind))
+    listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
+    listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
             indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, listindxpntsfull[k][j])
             for l in gdat.indxpopl:
-                listlgal[l].append(listsampvarb[j, k, indxsamplgal[l]])
-                listbgal[l].append(listsampvarb[j, k, indxsampbgal[l]])
-                listspec[l].append(listsampvarb[j, k, indxsampspec[l]])
-                listsind[l].append(listsampvarb[j, k, indxsampsind[l]])
-                # temp
-                #listgang[l].append(retr_gang(array(listlgal[l]), array(listbgal[l])))
-                #listaang[l].append(retr_aang(array(listlgal[l]), array(listbgal[l])))
-                listgang[l].append(zeros(indxsamplgal[l].size))
-                listaang[l].append(zeros(indxsamplgal[l].size))
-                listlgalhist[n, l, :] = histogram(listlgal[l][n], gdat.binslgal)[0]
-                listbgalhist[n, l, :] = histogram(listbgal[l][n], gdat.binsbgal)[0]
+                numbpnts = indxsamplgal[l].size
+                listlgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsamplgal[l]]
+                listbgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampbgal[l]]
+                listspec[l][n, 0:numbpnts, :] = listsampvarb[j, k, indxsampspec[l]]
+                listsind[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampsind[l]]
+                listgang[l][n, 0:numbpnts] = retr_gang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
+                listaang[l][n, 0:numbpnts] = retr_aang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
+                listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts], gdat.binslgal)[0]
+                listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts], gdat.binsbgal)[0]
+                for i in gdat.indxener:
+                    listspechist[n, l, :, i] = histogram(listspec[l][n][i, :], gdat.binsspec[i, :])[0]
+                listsindhist[n, l, :] = histogram(listsind[l][n], gdat.binssind)[0]
                 listganghist[n, l, :] = histogram(listgang[l][n], gdat.binsgang)[0]
                 listaanghist[n, l, :] = histogram(listaang[l][n], gdat.binsaang)[0]
-                for i in gdat.indxener:
-                    listspechist[n, l, i, :] = histogram(listspec[l][n][i, :], gdat.binsspec[i, :])[0]
-                listsindhist[n, l, :] = histogram(listsind[l][n], gdat.binssind)[0]
-    
-    for l in gdat.indxpopl:
-        listlgaltemp = zeros((gdat.numbsamp, gdat.maxmnumbpnts[l])) - 1.
-        listbgaltemp = zeros((gdat.numbsamp, gdat.maxmnumbpnts[l])) - 1.
-        listspectemp = zeros((gdat.numbsamp, gdat.numbener, gdat.maxmnumbpnts[l])) - 1.
-        listsindtemp = zeros((gdat.numbsamp, gdat.maxmnumbpnts[l])) - 1.
-        for k in range(gdat.numbsamp):
-            listlgaltemp[k, 0:listlgal[l][k].size] = listlgal[l][k]
-            listbgaltemp[k, 0:listbgal[l][k].size] = listbgal[l][k]
-            listspectemp[k, :, 0:listspec[l][k].shape[1]] = listspec[l][k]
-            listsindtemp[k, 0:listsind[l][k].size] = listsind[l][k]
-        listlgal[l] = listlgaltemp
-        listbgal[l] = listbgaltemp 
-        listspec[l] = listspectemp    
-        listsind[l] = listsindtemp
 
     # auxiliary variables
     listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamp * gdat.numbproc, gdat.numbener)
@@ -891,6 +864,10 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'specpop%d' % l
         listhdun.append(pf.ImageHDU(listsind[l]))
         listhdun[-1].header['EXTNAME'] = 'sindpop%d' % l
+        listhdun.append(pf.ImageHDU(listgang[l]))
+        listhdun[-1].header['EXTNAME'] = 'gangpop%d' % l
+        listhdun.append(pf.ImageHDU(listaang[l]))
+        listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
     listhdun.append(pf.ImageHDU(listfdfnnorm))
     listhdun[-1].header['EXTNAME'] = 'fdfnnorm'
