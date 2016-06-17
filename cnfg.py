@@ -138,15 +138,12 @@ def cnfg_ferm_expr_ngal_full():
     cnfg_ferm_expr_ngal(strgexpr='fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
 def cnfg_ferm_expr_ngal_dust():
     cnfg_ferm_expr_ngal(strgback=['fermisotflux.fits', 'fermdustflux_ngal.fits'])
-def cnfg_ferm_expr_ngal_psfn():
-    cnfg_ferm_expr_ngal(proppsfn=True)
 
 
 def cnfg_ferm_expr_ngal( \
                         strgexpr='fermflux_cmp0_ngal.fits', \
                         strgexpo='fermexpo_cmp0_ngal.fits', \
                         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                        proppsfn=False, \
                        ):
    
     indxenerincl = arange(1, 4)
@@ -156,7 +153,6 @@ def cnfg_ferm_expr_ngal( \
         
     init(psfntype='doubking', \
          numbswep=2000000, \
-         proppsfn=proppsfn, \
          randinit=False, \
          maxmgang=20., \
          maxmnumbpnts=array([600]), \
