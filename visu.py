@@ -214,7 +214,7 @@ def plot_post(pathprobcatl):
         numbpnts = indxpnts.size
         gdat.listlgal.append(hdun['lgalpop%d' % l].data[:, indxpnts])
         gdat.listbgal.append(hdun['bgalpop%d' % l].data[:, indxpnts])
-        gdat.listspec.append(hdun['specpop%d' % l].data[:, indxpnts, :])
+        gdat.listspec.append(hdun['specpop%d' % l].data[:, :, indxpnts])
         gdat.listsind.append(hdun['sindpop%d' % l].data[:, indxpnts])
         gdat.listgang.append(hdun['gangpop%d' % l].data[:, indxpnts])
         gdat.listaang.append(hdun['aangpop%d' % l].data[:, indxpnts])
@@ -738,7 +738,7 @@ def plot_histspec(gdat, l, plotspec=False, listspechist=None):
         axis = axcl[i]
         if post:
             xdat = gdat.meanspec[i, :]
-            postspechist = retr_postvarb(listspechist[:, i, :])
+            postspechist = retr_postvarb(listspechist[:, :, i])
             ydat = postspechist[0, :]
             yerr = retr_errrvarb(postspechist)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')

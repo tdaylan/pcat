@@ -252,7 +252,6 @@ def cnfg_test_spmr():
 def cnfg_test_popl():
      
     indxenerincl = arange(1, 4)
-    indxevttincl = arange(2, 4)
     numbener = indxenerincl.size
 
     minmflux = 3e-11
@@ -260,7 +259,7 @@ def cnfg_test_popl():
     mockfdfnslop = array([1.9, 1.1])
       
     init(psfntype='gausking', \
-		 numbswep=100000, \
+		 numbswep=10000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
@@ -268,7 +267,7 @@ def cnfg_test_popl():
          fdfntype='powr', \
          #verbtype=3, \
          indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
+         indxevttincl=arange(2, 4), \
          maxmnumbpnts=array([500, 500]), \
          minmfdfnnorm=array([1e-5, 1e-5]), \
          maxmfdfnnorm=array([1e2, 1e2]), \
@@ -312,13 +311,12 @@ def cnfg_test_brok():
          trueinfo=True, \
          maxmgang=20., \
          fdfntype='brok', \
-         verbtype=3, \
+         #verbtype=3, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          maxmnumbpnts=array([10]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
-         #probprop=array([0.1, 0., 0., 0., 0.1, 0.1, 0.5, 0.5, 0., 0., 1., 1., 1., 1.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \

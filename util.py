@@ -1628,7 +1628,7 @@ def retr_prop(gdat):
     # auxiliary variable density fraction and jacobian
     if (gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg) and not gdat.reje:
 
-        gdat.combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / len(pairlist))
+        combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / len(pairlist))
         if gdat.thisindxprop == gdat.indxpropsplt:
             thisjcbnfact = gdat.spltjcbnfact
             thiscombfact = combfact 
@@ -1636,12 +1636,12 @@ def retr_prop(gdat):
             thisjcbnfact = -gdat.spltjcbnfact
             thiscombfact = -combfact 
 
-        gdat.laccfrac = jcbnfact + combfact
-        gdat.listnumbpair[gdat.thisindxswep] = len(pairlist)
-        gdat.listjcbnfact[gdat.thisindxswep] = thisjcbnfact
-        gdat.listcombfact[gdat.thisindxswep] = thiscombfact
-        gdat.listauxipara[gdat.thisindxswep, :] = gdat.auxipara
-        gdat.listlaccfrac[gdat.thisindxswep] = gdat.laccfrac
+        gdat.laccfrac = thisjcbnfact + thiscombfact
+        gdat.listnumbpair[gdat.cntrswep] = len(pairlist)
+        gdat.listjcbnfact[gdat.cntrswep] = thisjcbnfact
+        gdat.listcombfact[gdat.cntrswep] = thiscombfact
+        gdat.listauxipara[gdat.cntrswep, :] = gdat.auxipara
+        gdat.listlaccfrac[gdat.cntrswep] = gdat.laccfrac
 
     else:
         gdat.laccfrac = 0.  
@@ -2275,6 +2275,7 @@ def setp(gdat):
     # number of samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
+    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
     gdat.indxsamp = arange(gdat.numbsamp)
 
     # rescale the positional update scale

@@ -229,7 +229,7 @@ def init( \
          mockfdfnsloplowr=None, \
          mockfdfnslopuppr=None, \
          mockfdfnbrek=None, \
-         mocknormback=1., \
+         mocknormback=ones((1, 1)), \
          mockfdfntype='powr', \
          mockpsfntype=None, \
          strgexpr=None, \
@@ -584,7 +584,7 @@ def init( \
         pool.close()
         pool.join()
 
-    for k in range(gdat.numbproc):
+    for k in gdat.indxproc:
         timereal[k] = gridchan[k][17]
         timeproc[k] = gridchan[k][18]
 
@@ -605,13 +605,13 @@ def init( \
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbener))
     listindxpntsfull = []
     listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int)
-    gdat.listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcomp))
+    gdat.listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr))
     gdat.listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
     gdat.listnumbpair = empty((gdat.numbswep, gdat.numbproc))
     gdat.listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
     gdat.listcombfact = empty((gdat.numbswep, gdat.numbproc))
 
-    for k in range(gdat.numbproc):
+    for k in gdat.indxproc:
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
         listsamp[:, k, :] = listchan[0]
@@ -633,14 +633,14 @@ def init( \
         listchrollik[:, k, :] = listchan[16]
 
     listindxprop = listindxprop.flatten()
-    gdat.listauxipara = gdat.listauxipara.reshape((gdat.numbswep * gdat.numbproc, gdat.numbcomp))
-    gdat.listlaccfrac = gdat.listlaccfrac.reshape(gdat.numbswep * gdat.numbproc)
-    gdat.listnumbpair = gdat.listnumbpair.reshape(gdat.numbswep * gdat.numbproc)
-    gdat.listjcbnfact = gdat.listjcbnfact.reshape(gdat.numbswep * gdat.numbproc)
-    gdat.listcombfact = gdat.listcombfact.reshape(gdat.numbswep * gdat.numbproc)
+    gdat.listauxipara = gdat.listauxipara.reshape((gdat.numbsweptotl, gdat.numbcompcolr))
+    gdat.listlaccfrac = gdat.listlaccfrac.reshape(gdat.numbsweptotl)
+    gdat.listnumbpair = gdat.listnumbpair.reshape(gdat.numbsweptotl)
+    gdat.listjcbnfact = gdat.listjcbnfact.reshape(gdat.numbsweptotl)
+    gdat.listcombfact = gdat.listcombfact.reshape(gdat.numbsweptotl)
     
-    listchrototl = listchrototl.reshape((gdat.numbproc * gdat.numbswep, gdat.numbchrototl)) 
-    listchrollik = listchrollik.reshape((gdat.numbproc * gdat.numbswep, gdat.numbchrollik)) 
+    listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
+    listchrollik = listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
     listaccp = listaccp.flatten()
     listindxparamodi = listindxparamodi.flatten()
     
@@ -655,7 +655,7 @@ def init( \
         tim0 = time.time()
     minmlistllik = amin(listllik)
     
-    listsamp = listsamp.reshape(gdat.numbsamp * gdat.numbproc, -1)
+    listsamp = listsamp.reshape(gdat.numbsamptotl, -1)
     
     ## get an ellipse 
     gdat.elpscntr = percentile(listsamp, 50., axis=0)
@@ -688,20 +688,20 @@ def init( \
 
     # collect posterior samples from the processes
     ## number of PS
-    listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamp * gdat.numbproc, -1)
+    listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamptotl, -1)
     ## FDF normalization
-    listfdfnnorm = listsampvarb[:, :, gdat.indxsampfdfnnorm].reshape(gdat.numbsamp * gdat.numbproc, -1)
+    listfdfnnorm = listsampvarb[:, :, gdat.indxsampfdfnnorm].reshape(gdat.numbsamptotl, -1)
     ## FDF shape
     if gdat.fdfntype == 'powr':
-        listfdfnslop = listsampvarb[:, :, gdat.indxsampfdfnslop].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
+        listfdfnslop = listsampvarb[:, :, gdat.indxsampfdfnslop].reshape(gdat.numbsamptotl, gdat.numbpopl)
     if gdat.fdfntype == 'brok':
-        listfdfnbrek = listsampvarb[:, :, gdat.indxsampfdfnbrek].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
-        listfdfnsloplowr = listsampvarb[:, :, gdat.indxsampfdfnsloplowr].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
-        listfdfnslopuppr = listsampvarb[:, :, gdat.indxsampfdfnslopuppr].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbpopl)
+        listfdfnbrek = listsampvarb[:, :, gdat.indxsampfdfnbrek].reshape(gdat.numbsamptotl, gdat.numbpopl)
+        listfdfnsloplowr = listsampvarb[:, :, gdat.indxsampfdfnsloplowr].reshape(gdat.numbsamptotl, gdat.numbpopl)
+        listfdfnslopuppr = listsampvarb[:, :, gdat.indxsampfdfnslopuppr].reshape(gdat.numbsamptotl, gdat.numbpopl)
     ## PSF parameters
-    listpsfipara = listsampvarb[:, :, gdat.indxsamppsfipara].reshape(gdat.numbsamp * gdat.numbproc, -1)
+    listpsfipara = listsampvarb[:, :, gdat.indxsamppsfipara].reshape(gdat.numbsamptotl, -1)
     ## Background normalization
-    listnormback = listsampvarb[:, :, gdat.indxsampnormback].reshape(gdat.numbsamp * gdat.numbproc, gdat.numbback, gdat.numbener)
+    listnormback = listsampvarb[:, :, gdat.indxsampnormback].reshape(gdat.numbsamptotl, gdat.numbback, gdat.numbener)
     
     ## PS parameters
     listlgal = []
@@ -733,14 +733,7 @@ def init( \
                 numbpnts = indxsamplgal[l].size
                 listlgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsamplgal[l]]
                 listbgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampbgal[l]]
-                print 'listspec[l]'
-                print listspec[l].shape
-                print 'listsampvarb'
-                print listsampvarb.shape
-                print 'indxsampspec[l]'
-                print indxsampspec[l].shape
-                print
-                listspec[l][n, 0:numbpnts, :] = listsampvarb[j, k, indxsampspec[l]]
+                listspec[l][n, :, 0:numbpnts] = listsampvarb[j, k, indxsampspec[l]]
                 listsind[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampsind[l]]
                 listgang[l][n, 0:numbpnts] = retr_gang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
                 listaang[l][n, 0:numbpnts] = retr_aang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
@@ -753,7 +746,7 @@ def init( \
                 listaanghist[n, l, :] = histogram(listaang[l][n], gdat.binsaang)[0]
 
     # auxiliary variables
-    listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamp * gdat.numbproc, gdat.numbener)
+    listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamptotl, gdat.numbener)
    
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
@@ -1109,7 +1102,7 @@ def init( \
     timetotlproc = time.clock() - timetotlproc
      
     if gdat.verbtype > 0:
-        for k in range(gdat.numbproc):
+        for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, timereal[k], timeproc[k])
         print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timetotlreal, sum(timeproc))
         print 'The ensemble of catalogs is at ' + pathprobcatl
@@ -1229,7 +1222,7 @@ def rjmc(gdat, indxprocwork):
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
     
-    gdat.listauxipara = zeros((gdat.numbswep, gdat.numbcomp))
+    gdat.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
     gdat.listlaccfrac = zeros(gdat.numbswep)
     gdat.listnumbpair = zeros(gdat.numbswep)
     gdat.listjcbnfact = zeros(gdat.numbswep)
