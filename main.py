@@ -90,23 +90,29 @@ def work(gdat, indxprocwork):
             gdat.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
             gdat.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
 
+            print 'hey'
+            print 'loading drmcsamp'
+            print 'l'
+            print l
+
             if gdat.fdfntype == 'powr':
                 fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-                fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn, :], fdfnslop)
+                fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn[0], :], fdfnslop)
 
-                print 'hey'
-                print 'l'
-                print l
                 print 'fdfnslop'
                 print fdfnslop
             if gdat.fdfntype == 'brok':
-                flux = gdat.truespec[l][0, gdat.indxenerfdfn, :]
+                flux = gdat.truespec[l][0, gdat.indxenerfdfn[0], :]
                 fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            
-            print 'hey'
+                print 'fdfnbrek'
+                print fdfnbrek
+                print 'fdfnsloplowr'
+                print fdfnsloplowr
+                print 'fdfnslopuppr'
+                print fdfnslopuppr
             print 'fluxunit'
             print fluxunit
             print
@@ -1137,8 +1143,7 @@ def plot_samp(gdat):
         gdat.thispsfn = gdat.thispsfn.reshape((gdat.numbener, -1, gdat.numbevtt))
     thisfwhm = 2. * retr_psfnwdth(gdat, gdat.thispsfn, 0.5)
 
-    # temp
-    #plot_psfn(gdat)
+    plot_psfn(gdat)
 
     gdat.thisbackcntsmean = empty((gdat.numbener, gdat.numbevtt))
     for c in gdat.indxback:

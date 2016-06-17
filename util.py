@@ -90,6 +90,8 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     if False:
         print 'hey'
         print 'cdfn_flux_brok'
+        print 'fdfnbrek'
+        print fdfnbrek
         print 'flux'
         print flux
         print 'norm'
@@ -101,8 +103,14 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
    
     if indxflux.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
-        fluxunit[indxflux] = temp + norm / (1. - fdfnslopuppr) * gdat.pivtflux**fdfnslopuppr * (flux**(1. - fdfnsloplowr) - fdfnbrek**(1. - fdfnslopuppr))
+        fluxunit[indxflux] = temp + norm / (1. - fdfnslopuppr) * gdat.pivtflux**fdfnslopuppr * (flux[indxflux]**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr))
     
+        if False:
+            print 'temp'
+            print temp
+            print 'fluxunit'
+            print fluxunit
+
     return fluxunit
 
 
@@ -140,11 +148,11 @@ def icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     if indxfluxunit.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
         
-        if True:
+        if False:
             print 'temp'
             print temp
         
-        flux[indxfluxunit] = ((fluxunit - temp) * (1. - fdfnslopuppr) / norm / gdat.pivtflux**fdfnslopuppr + fdfnbrek**(1. - fdfnslopuppr))**(1. / (1. - fdfnslopuppr))
+        flux[indxfluxunit] = ((fluxunit[indxfluxunit] - temp) * (1. - fdfnslopuppr) / norm / gdat.pivtflux**fdfnslopuppr + fdfnbrek**(1. - fdfnslopuppr))**(1. / (1. - fdfnslopuppr))
 
     return flux
 
@@ -1115,7 +1123,7 @@ def retr_prop(gdat):
                 print gdat.nextsampvarb[gdat.indxsampfdfnslopuppr]
    
         if gdat.thisindxprop == gdat.indxpropfdfnbrek or gdat.thisindxprop == gdat.indxpropfdfnsloplowr or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
-            gdat.indxsampmodi = concatenate((array([gdat.indxsampvarbmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn, :]))
+            gdat.indxsampmodi = concatenate((array([gdat.indxsampvarbmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn[0], :]))
 
     # PSF parameter change 
     if gdat.thisindxprop == gdat.indxproppsfipara:
@@ -1294,6 +1302,7 @@ def retr_prop(gdat):
                 print 'thislgal: ', 3600. * thislgal
                 print 'thisbgal: ', 3600. * thisbgal
             print 'thisflux: ', thisflux
+            print 'thissind: ', thissind
             
         # determine the new components
         # temp -- only valid for power-law energy spectrum
@@ -2272,7 +2281,7 @@ def setp(gdat):
             pathplotbase = '/n/pan/www/tansu/imag/pcat/'
         else:
             pathplotbase = os.environ["PCAT_DATA_PATH"] + '/imag/'
-        gdat.pathplot = pathplotbase + gdat.strgtime + '_' + gdat.rtag + '/'
+        gdat.pathplot = pathplotbase + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         cmnd = 'mkdir -p ' + gdat.pathplot
         os.system(cmnd)
 

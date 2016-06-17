@@ -61,6 +61,7 @@ def plot_post(pathprobcatl):
     
     gdat.margsize = hdun[0].header['margsize']
     gdat.strgtime = hdun[0].header['strgtime']
+    gdat.strgcnfg = hdun[0].header['strgcnfg']
 
     gdat.stdvfdfnnorm = hdun[0].header['stdvfdfnnorm']
     gdat.stdvfdfnslop = hdun[0].header['stdvfdfnslop']
@@ -701,17 +702,22 @@ def plot_histsind(gdat, l, listsindhist=None):
     plt.close(figr)
     
 
-def plot_histspec(gdat, l, numbcols=1, listspechist=None):
+def plot_histspec(gdat, l, plotspec=False, listspechist=None):
    
     if listspechist == None:
         post = False
     else:
         post = True
     
+    if plotspec:
+        numbcols = gdat.numbener
+    else:
+        numbcols = 1
+
     figr, axcl = plt.subplots(1, numbcols, figsize=(7 * numbcols, 7))
-    if numbcols == 1:
-        # temp
-        #indxenertemp = array([gdat.indxenerfdfn])
+    if plotspec:
+        indxenertemp = gdat.indxener
+    else:
         indxenertemp = gdat.indxenerfdfn
         axcltemp = []
         for i in gdat.indxener:
@@ -720,8 +726,6 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
             else:
                 axcltemp.append(None)
         axcl = axcltemp
-    else:
-        indxenertemp = gdat.indxener
 
     for i in indxenertemp:
         axis = axcl[i]
@@ -733,7 +737,6 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]][i, :]
-            
             axis.hist(spec, gdat.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if i == gdat.indxenerfdfn:
                 if gdat.fdfntype == 'powr':
@@ -757,15 +760,23 @@ def plot_histspec(gdat, l, numbcols=1, listspechist=None):
         if gdat.trueinfo:
             axis.set_ylim([0.1, 1e3])
         axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
-        if i == 0:
+        if plotspec:
+            if i == 0:
+                axis.set_ylabel('$N$')
+            if i == numbcols / 2:
+                axis.legend()
+        else:
             axis.set_ylabel('$N$')
-        if i == numbcols / 2:
             axis.legend()
     figr.subplots_adjust(bottom=0.2, left=0.2)
-    if post:
-        path = gdat.pathplot + 'histspec_pop%d_' % l + gdat.rtag + '.pdf'
+    if plotspec:
+        strg = 'spec'
     else:
-        path = gdat.pathplot + 'histspec_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        strg = 'flux'
+    if post:
+        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '.pdf'
+    else:
+        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
     plt.savefig(path)
     plt.close(figr)
     
@@ -1028,10 +1039,6 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
                 temp = sum(pntsprobcart[:, :, l, gdat.indxenerfdfn[0], indxlowr:indxuppr], 2)
-                print 'hey'
-                print 'pntsprobcart'
-                print pntsprobcart.shape
-                print
                 imag = axis.imshow(temp, origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
