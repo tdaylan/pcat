@@ -851,7 +851,7 @@ def retr_errrvarb(postvarb):
     return errr
 
 
-def retr_pairlist(gdat, lgal, bgal):
+def retr_listpair(gdat, lgal, bgal):
     
     pairlist = []
     for k in range(lgal.size):
@@ -1364,7 +1364,7 @@ def retr_prop(gdat):
 
             lgal = concatenate((array([nextlgal0, nextlgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]], thislgal)))
             bgal = concatenate((array([nextbgal0, nextbgal1]), setdiff1d(gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]], thisbgal)))
-            pairlist = retr_pairlist(gdat, lgal, bgal)
+            gdat.listpair = retr_listpair(gdat, lgal, bgal)
 
             ## first new component
             gdat.drmcsamp[gdat.indxsampchd0+gdat.indxcomplgal, -1] = cdfn_self(nextlgal0, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
@@ -1408,7 +1408,7 @@ def retr_prop(gdat):
             
         lgal = gdat.thissampvarb[gdat.thisindxsamplgal[gdat.indxpoplmodi]]
         bgal = gdat.thissampvarb[gdat.thisindxsampbgal[gdat.indxpoplmodi]]
-        pairlist = retr_pairlist(gdat, lgal, bgal)
+        gdat.listpair = retr_listpair(gdat, lgal, bgal)
         
         if gdat.verbtype > 1:
             print 'lgal'
@@ -1416,14 +1416,15 @@ def retr_prop(gdat):
             print 'bgal'
             print bgal
             print 'pairlist'
-            print pairlist
-            
-        if len(pairlist) == 0:
+            print gdat.listpair
+           
+        gdat.numbpair = len(gdat.listpair)
+        if gdat.numbpair == 0:
             gdat.reje = True
         else:
-            jpair = choice(arange(len(pairlist)))
-            mergindxindxpnts0 = pairlist[jpair][0]
-            mergindxindxpnts1 = pairlist[jpair][1]
+            indxpairtemp = choice(arange(gdat.numbpair))
+            mergindxindxpnts0 = gdat.listpair[indxpairtemp][0]
+            mergindxindxpnts1 = gdat.listpair[indxpairtemp][1]
   
         if not gdat.reje:
 
@@ -1628,7 +1629,7 @@ def retr_prop(gdat):
     # auxiliary variable density fraction and jacobian
     if (gdat.thisindxprop == gdat.indxpropsplt or gdat.thisindxprop == gdat.indxpropmerg) and not gdat.reje:
 
-        combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / len(pairlist))
+        combfact = log(gdat.thissampvarb[gdat.indxsampnumbpnts[gdat.indxpoplmodi]]**2 / gdat.numbpair)
         if gdat.thisindxprop == gdat.indxpropsplt:
             thisjcbnfact = gdat.spltjcbnfact
             thiscombfact = combfact 
@@ -1637,11 +1638,22 @@ def retr_prop(gdat):
             thiscombfact = -combfact 
 
         gdat.laccfrac = thisjcbnfact + thiscombfact
-        gdat.listnumbpair[gdat.cntrswep] = len(pairlist)
+        gdat.listnumbpair[gdat.cntrswep] = gdat.numbpair
         gdat.listjcbnfact[gdat.cntrswep] = thisjcbnfact
         gdat.listcombfact[gdat.cntrswep] = thiscombfact
         gdat.listauxipara[gdat.cntrswep, :] = gdat.auxipara
         gdat.listlaccfrac[gdat.cntrswep] = gdat.laccfrac
+
+        if gdat.verbtype > 1:
+            print 'thisjcbnfact'
+            print thisjcbnfact
+            print 'thiscombfact'
+            print thiscombfact
+            print 'gdat.laccfrac'
+            print gdat.laccfrac
+            print 'gdat.listpair'
+            print gdat.listpair
+            print
 
     else:
         gdat.laccfrac = 0.  

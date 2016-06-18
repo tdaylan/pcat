@@ -27,9 +27,9 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
+    minmflux = array([1e-9, 3e-10, 1e-10, 3e-11, 1e-11])
     maxmnumbpnts = zeros(5, dtype=int) + 500
-    numbswep = 200 * array([1, 3, 10, 30, 100], dtype=int) + 10000
+    numbswep = 2000 * array([1, 3, 10, 30, 100], dtype=int) + 200000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -51,12 +51,11 @@ def cnfg_ferm_info():
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
                         numbburn=numbburn[k], \
-                        probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
+                        #probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
-                        factthin=1000, \
                         makeplot=True, \
-                        maxmgang=10., \
+                        maxmgang=20., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
                         indxevttincl=indxevttincl, \
@@ -78,7 +77,7 @@ def cnfg_ferm_info():
 def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_cmp0_igal.fits'):
       
     init( \
-         psfntype='gausking', \
+         psfntype='doubking', \
          numbswep=2000000, \
          trueinfo=True, \
          maxmgang=20., \
@@ -106,7 +105,7 @@ def cnfg_ferm_mock_igal():
     mockfdfnslop = array([1.9])
       
     init( \
-         psfntype='gausking', \
+         psfntype='doubking', \
          numbswep=1000000, \
          randinit=False, \
          trueinfo=True, \
@@ -223,7 +222,7 @@ def cnfg_test_spmr():
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
-         maxmgang=20., \
+         maxmgang=2., \
          fdfntype='powr', \
          verbtype=3, \
          indxenerincl=indxenerincl, \
@@ -259,7 +258,7 @@ def cnfg_test_popl():
     mockfdfnslop = array([1.9, 1.1])
       
     init(psfntype='gausking', \
-		 numbswep=10000, \
+		 numbswep=100000, \
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
@@ -304,7 +303,7 @@ def cnfg_test_brok():
     mockfdfnbrek = array([1e-9])
       
     init(psfntype='gausking', \
-		 numbswep=1000, \
+		 numbswep=100000, \
          factthin=1, \
          makeplot=True, \
          randinit=False, \
@@ -314,7 +313,7 @@ def cnfg_test_brok():
          #verbtype=3, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([10]), \
+         maxmnumbpnts=array([500]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          minmflux=minmflux, \
@@ -325,7 +324,7 @@ def cnfg_test_brok():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          mockfdfntype='brok', \
-         mocknumbpnts=array([10]), \
+         mocknumbpnts=array([500]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
