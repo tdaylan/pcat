@@ -78,13 +78,15 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
       
     init( \
          psfntype='doubking', \
-         numbswep=2000000, \
+         numbswep=10000, \
+         randinit=False, \
          trueinfo=True, \
+         verbtype=2, \
          maxmgang=20., \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \
-         minmflux=array([3e-11]), \
-         maxmflux=array([3e-6]), \
+         minmflux=3e-11, \
+         maxmflux=3e-6, \
          regitype='igal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
@@ -224,7 +226,7 @@ def cnfg_test_spmr():
          trueinfo=True, \
          maxmgang=2., \
          fdfntype='powr', \
-         verbtype=3, \
+         verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          maxmnumbpnts=array([3]), \
@@ -264,7 +266,7 @@ def cnfg_test_popl():
          trueinfo=True, \
          maxmgang=20., \
          fdfntype='powr', \
-         #verbtype=3, \
+         #verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=arange(2, 4), \
          maxmnumbpnts=array([500, 500]), \
@@ -310,7 +312,7 @@ def cnfg_test_brok():
          trueinfo=True, \
          maxmgang=20., \
          fdfntype='brok', \
-         #verbtype=3, \
+         #verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          maxmnumbpnts=array([500]), \

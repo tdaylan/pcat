@@ -66,15 +66,14 @@ def work(gdat, indxprocwork):
                 gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
     
     # PSF parameters
-    if gdat.randinit or gdat.truepsfipara == None:
+    if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
+        if gdat.verbtype > 1:
+            'Randomly seeding the PSF parameters from the prior...'
         gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     else:
-        if gdat.psfntype == gdat.truepsfntype:
-            for k in gdat.indxpsfipara:
-                gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
-        else:
-            gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
-    
+        for k in gdat.indxpsfipara:
+            gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
+
     # background normalization
     for c in gdat.indxback:
         if gdat.randinit or gdat.datatype != 'mock':
@@ -105,7 +104,7 @@ def work(gdat, indxprocwork):
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
    
-    if gdat.verbtype > 2:
+    if gdat.verbtype > 1:
         print 'thisindxpntsfull'
         for l in gdat.indxpopl:
             print gdat.thisindxpntsfull[l]
@@ -145,6 +144,8 @@ def work(gdat, indxprocwork):
         print 'drmcsamp'
         for k in gdat.indxpara:
             print gdat.drmcsamp[k, :]
+        print 'thispsfipara'
+        print gdat.thissampvarb[gdat.indxsamppsfipara]
         print 'thissampvarb'
         for k in gdat.indxpara:
             print gdat.thissampvarb[k]
@@ -520,6 +521,8 @@ def init( \
         print 'indxsampcompinit: ', gdat.indxsampcompinit
         print 'maxmangleval'
         print gdat.maxmangleval
+        print
+        print 'Truth information'
         if gdat.trueinfo:
             print 'truelgal'
             for l in gdat.indxpopl:
@@ -531,8 +534,11 @@ def init( \
             for l in gdat.indxpopl:
                 print gdat.truespec[l]
             print 'truenumbpnts: ', gdat.truenumbpnts
+            print 'truepsfipara'
+            print gdat.truepsfipara
             print
             if gdat.datatype == 'mock':
+                print 'Mock data'
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
                 print 'mockfdfnnorm: ', gdat.mockfdfnnorm
                 if gdat.mockfdfntype == 'powr':
@@ -669,7 +675,7 @@ def init( \
     stdvpara = ones(gdat.numbpara) * 1e-6
     limtpara = zeros((2, gdat.numbpara))
     limtpara[1, :] = 1.
-    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=2, optiprop=True)
+    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdat.verbtype, optiprop=True)
     lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
     #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
@@ -1128,17 +1134,12 @@ def plot_samp(gdat):
         gdat.thisbackcntsmean += mean(gdat.thissampvarb[gdat.indxsampnormback[c, :, None, None]] * gdat.backflux[c] * gdat.expo * \
             gdat.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
 
-    # temp
-    gdat.thispntscntsprev = copy(gdat.thispntscnts)
-    gdat.temppntscntsprev = copy(gdat.temppntscnts)
-
-    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
+    # temp -- list may not be the ultimate solution to copy gdat.thisindxpntsfull
+    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, list(gdat.thisindxpntsfull), copy(gdat.thissampvarb))
     gdat.thispntscnts = gdat.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdat.errrpnts = 100. * (gdat.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
-    
 
     thiscnts = []
-    gdat.trueindxpntsbias = []
     gdat.trueindxpntsmiss = []
     for l in gdat.indxpopl:
         indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
@@ -1148,8 +1149,7 @@ def plot_samp(gdat):
             lgal = gdat.thissampvarb[gdat.thisindxsamplgal[l]]
             bgal = gdat.thissampvarb[gdat.thisindxsampbgal[l]]
             spec = gdat.thissampvarb[gdat.thisindxsampspec[l]]
-            indxmodl, trueindxpntsbias, trueindxpntsmiss = pair_catl(gdat, l, lgal, bgal, spec)
-            gdat.trueindxpntsbias.append(trueindxpntsbias)
+            indxmodl, trueindxpntsmiss = pair_catl(gdat, l, lgal, bgal, spec)
             gdat.trueindxpntsmiss.append(trueindxpntsmiss)
             thisspecmtch = copy(spec[:, indxmodl])
             thisspecmtch[:, trueindxpntsmiss] = 0.

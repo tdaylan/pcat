@@ -1046,7 +1046,7 @@ def retr_prop(gdat):
     gdat.thisindxsamplgal, gdat.thisindxsampbgal,  gdat.thisindxsampspec, gdat.thisindxsampsind, \
             gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
     
-    if gdat.verbtype > 2:
+    if gdat.verbtype > 1:
         print 'retr_prop(): '
 
         print 'drmcsamp'
@@ -1087,7 +1087,7 @@ def retr_prop(gdat):
             gdat.nextsampvarb[gdat.indxsampfdfnslop[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnslop[gdat.indxpoplmodi], \
                 gdat.factfdfnslop[gdat.indxpoplmodi])
             gdat.indxsampmodi = concatenate((array([gdat.indxsampvarbmodi]), gdat.thisindxsampspec[gdat.indxpoplmodi][gdat.indxenerfdfn[0], :]))
-            if gdat.verbtype > 2:
+            if gdat.verbtype > 1:
                 print 'gdat.indxsampvarbmodi'
                 print gdat.indxsampvarbmodi
                 print 'thissampvarb[gdat.indxsampfdfnslop]'
@@ -1102,7 +1102,7 @@ def retr_prop(gdat):
             retr_gaus(gdat, gdat.indxsampvarbmodi, gdat.stdvflux)
             gdat.nextsampvarb[gdat.indxsampfdfnbrek[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnbrek[gdat.indxpoplmodi], \
                 gdat.factfdfnbrek[gdat.indxpoplmodi])
-            if gdat.verbtype > 2:
+            if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnbrek]'
                 print gdat.thissampvarb[gdat.indxsampfdfnbrek]
                 print 'nextsampvarb[gdat.indxsampfdfnbrek]'
@@ -1114,7 +1114,7 @@ def retr_prop(gdat):
             retr_gaus(gdat, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
             gdat.nextsampvarb[gdat.indxsampfdfnsloplowr[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnsloplowr[gdat.indxpoplmodi], \
                 gdat.factfdfnsloplowr[gdat.indxpoplmodi])
-            if gdat.verbtype > 2:
+            if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnsloplowr]'
                 print gdat.thissampvarb[gdat.indxsampfdfnsloplowr]
                 print 'nextsampvarb[gdat.indxsampfdfnsloplowr]'
@@ -1126,7 +1126,7 @@ def retr_prop(gdat):
             retr_gaus(gdat, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
             gdat.nextsampvarb[gdat.indxsampfdfnslopuppr[gdat.indxpoplmodi]] = icdf_atan(gdat.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnslopuppr[gdat.indxpoplmodi], \
                 gdat.factfdfnslopuppr[gdat.indxpoplmodi])
-            if gdat.verbtype > 2:
+            if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnslopuppr]'
                 print gdat.thissampvarb[gdat.indxsampfdfnslopuppr]
                 print 'nextsampvarb[gdat.indxsampfdfnslopuppr]'
@@ -2297,11 +2297,6 @@ def setp(gdat):
     gdat.probpropminm = copy(gdat.probprop)
     gdat.probpropmaxm = copy(gdat.probprop)
    
-    # initialize the catalog match
-    # temp
-    #gdat.trueindxpntsmiss = array([0])
-    #gdat.trueindxpntsbias = array([0])
-    
     ## do not allow death or merge when the number of PS is at its minimum or 
     ## births or splits when the number of PS is at its maximum
     gdat.probpropminm[[gdat.indxpropdeth, gdat.indxpropmerg]] = 0.
@@ -2663,7 +2658,7 @@ def setp(gdat):
                     gdat.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
             truebackcnts.append(truebackcntstemp)
             gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
-       
+      
     # sanity checks
     if amax(abs(gdat.datacnts - gdat.datacnts.astype(int)) / gdat.datacnts) > 1e-3:
         print 'Fractional counts!'
@@ -2760,15 +2755,13 @@ def supr_fram(gdat, axis, indxenerplot):
                 lgal *= 3600.
                 bgal *= 3600.
             axis.scatter(lgal[gdat.trueindxpntsmiss[l]], bgal[gdat.trueindxpntsmiss[l]], s=mrkrsize[gdat.trueindxpntsmiss[l]], \
-                alpha=gdat.mrkralph, label=gdat.truelabl + ', missed', marker='x', linewidth=2, color='g')
-            axis.scatter(lgal[gdat.trueindxpntsbias[l]], bgal[gdat.trueindxpntsbias[l]], s=mrkrsize[gdat.trueindxpntsbias[l]], \
-                alpha=gdat.mrkralph, label=gdat.truelabl + ', biased', marker='o', linewidth=2, color='g')
-            indxpnts = setdiff1d(arange(gdat.truenumbpnts[l], dtype=int), concatenate((gdat.trueindxpntsbias[l], gdat.trueindxpntsmiss[l])))
-            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelabl + ', hit', marker='D', linewidth=2, color='g')
+                alpha=gdat.mrkralph, label=gdat.truelabl + ' miss', marker='x', linewidth=2, color='g')
+            indxpnts = setdiff1d(arange(gdat.truenumbpnts[l], dtype=int), gdat.trueindxpntsmiss[l])
+            axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelabl + ' hit', marker='D', linewidth=2, color='g')
             for l in gdat.indxpopl:
                 if gdat.indxtruepntstimevari[l].size > 0:
-                    axis.scatter(lgal[gdat.indxtruepntstimevari[l]], bgal[gdat.indxtruepntstimevari[l]], s=100, \
-                        label=gdat.truelabl + ', variable', marker='*', linewidth=2, color='y')
+                    labl = gdat.truelabl + ' variable'
+                    axis.scatter(lgal[gdat.indxtruepntstimevari[l]], bgal[gdat.indxtruepntstimevari[l]], s=100, label=labl, marker='*', linewidth=2, color='y')
 
         # model catalog
         mrkrsize = retr_mrkrsize(gdat, gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]])

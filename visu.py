@@ -212,6 +212,13 @@ def plot_post(pathprobcatl):
         spec = hdun['specpop%d' % l].data
         indxpnts = where(spec > 0.)[0]
         numbpnts = indxpnts.size
+        print 'hey'
+        print 'numbpnts'
+        print numbpnts
+        print 'indxpnts'
+        print amin(indxpnts), amax(indxpnts)
+        print 'hdun[lgalpop%d].data'
+        print hdun['lgalpop%d' % l].data.shape
         gdat.listlgal.append(hdun['lgalpop%d' % l].data[:, indxpnts])
         gdat.listbgal.append(hdun['bgalpop%d' % l].data[:, indxpnts])
         gdat.listspec.append(hdun['specpop%d' % l].data[:, :, indxpnts])
@@ -333,7 +340,7 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(gdat.truenumbpnts) + gdat.numbsamp
             listindxmodl = []
             for k in range(gdat.numbsamp):
-                indxmodl, indxtruepntsbias, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k, :], gdat.listbgal[l][k, :], gdat.listspec[l][k, :, :])
+                indxmodl, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k, :], gdat.listbgal[l][k, :], gdat.listspec[l][k, :, :])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= gdat.numbsamp
@@ -1109,7 +1116,11 @@ def plot_psfn(gdat):
         for i, axis in enumerate(axrw):
             axis.plot(gdat.angldisptemp, gdat.thispsfn[i, :, m], label='Sample')
             if gdat.trueinfo:
-                axis.plot(gdat.angldisptemp, gdat.truepsfn[i, :, m], label='Mock', color='g', ls='--')
+                if gdat.exprtype == 'ferm':
+                    labl = 'Fermi-LAT'
+                if gdat.exprtype == 'sdss':
+                    labl = 'SDSS'
+                axis.plot(gdat.angldisptemp, gdat.truepsfn[i, :, m], label=labl, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
@@ -1510,38 +1521,6 @@ def plot_resicnts(gdat, indxenerplot, indxevttplot):
     plt.close(figr)
     
     
-def plot_temppntscnts(gdat, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'temppntscnts')
-    axis, cbar = retr_imag(gdat, axis, gdat.temppntscnts, indxenerplot, indxevttplot, logt=True)
-    plt.savefig(path)
-    plt.close(figr)
-    
-    
-def plot_thispntscnts(gdat, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'thispntscnts')
-    axis, cbar = retr_imag(gdat, axis, gdat.thispntscnts, indxenerplot, indxevttplot, logt=True)
-    plt.savefig(path)
-    plt.close(figr)
-
-
-def plot_thispntscntsdiff(gdat, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'thispntscntsdiff')
-    axis, cbar = retr_imag(gdat, axis, gdat.thispntscnts - gdat.thispntscntsprev, indxenerplot, indxevttplot, logt=True)
-    plt.savefig(path)
-    plt.close(figr)
-
-
-def plot_temppntscntsdiff(gdat, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'temppntscntsdiff')
-    axis, cbar = retr_imag(gdat, axis, gdat.temppntscnts - gdat.temppntscntsprev, indxenerplot, indxevttplot, logt=True)
-    plt.savefig(path)
-    plt.close(figr)
-
-
 def plot_errrpnts(gdat, indxenerplot, indxevttplot):
 
     # temp
@@ -1690,10 +1669,8 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
         indxdist = argmin(dist) 
         if dist[indxdist] < deg2rad(0.5):
             indxmodl[k] = indxdist
-
-    indxtruepntsbias = where(amax(abs(modlspec[:, indxmodl] - gdat.truespec[thisindxpopl][0, :, :]) / gdat.truespec[thisindxpopl][0, :, :], axis=0) > 1.2)[0]
     indxtruepntsmiss = where(indxmodl == -1)[0]
     
-    return indxmodl, indxtruepntsbias, indxtruepntsmiss
+    return indxmodl, indxtruepntsmiss
      
 
