@@ -266,7 +266,17 @@ def retr_thisindxprop(gdat, samp):
         gdat.thisindxprop = choice(gdat.indxprop, p=gdat.probpropminm)
     else:
         gdat.thisindxprop = choice(gdat.indxprop, p=gdat.probprop)
-        
+
+    if gdat.verbtype > 1:
+        print inspect.stack()[0][3]
+        print 'indxpoplmodi'
+        print gdat.indxpoplmodi
+        print 'thisnumbpnts'
+        print numbpnts
+        print 'maxmnumbpnts'
+        print gdat.maxmnumbpnts
+        print
+
 
 def retr_indxpixl(gdat, bgal, lgal):
 
@@ -1045,8 +1055,7 @@ def retr_enerstrg(gdat):
 
 def retr_prop(gdat):
  
-    gdat.thisindxsamplgal, gdat.thisindxsampbgal,  gdat.thisindxsampspec, gdat.thisindxsampsind, \
-            gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
+    gdat.thisindxsamplgal, gdat.thisindxsampbgal,  gdat.thisindxsampspec, gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
     
     if gdat.verbtype > 1:
         print 'retr_prop(): '
@@ -2288,9 +2297,10 @@ def setp(gdat):
 
     # number of samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
-    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
-    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
     gdat.indxsamp = arange(gdat.numbsamp)
+    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
+    gdat.indxsamptotl = arange(gdat.numbsamptotl)
+    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
 
     # rescale the positional update scale
     gdat.stdvlbhl /= 2. * gdat.maxmgang

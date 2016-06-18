@@ -215,17 +215,9 @@ def plot_post(pathprobcatl):
         sind = hdun['sindpop%d' % l].data
         gang = hdun['gangpop%d' % l].data
         aang = hdun['aangpop%d' % l].data
-        for j in gdat.indxsamp:
-            indxpnts = where(lgal[j, :] > 0.)[0]
+        for j in gdat.indxsamptotl:
+            indxpnts = where(spec[j, gdat.indxenerfdfn[0], :] > 0.)[0]
             numbpnts = indxpnts.size
-            print 'hey'
-            print 'numbpnts'
-            print numbpnts
-            print 'indxpnts'
-            print amin(indxpnts), amax(indxpnts)
-            print 'lgal.shape'
-            print lgal.shape
-            print
             gdat.listlgal.append(lgal[j, indxpnts])
             gdat.listbgal.append(bgal[j, indxpnts])
             gdat.listspec.append(spec[j, :, indxpnts])
@@ -314,23 +306,24 @@ def plot_post(pathprobcatl):
     path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
     tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
 
-    if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == 3 and gdat.numbpopl == 1:
-        numbpnts = gdat.mocknumbpnts[0]
-        numbpara = numbpnts * gdat.numbcompcolr + gdat.numbener
+    numbpntspost = 3
+    if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1:
+        numbpara = numbpntspost * gdat.numbcompcolr + gdat.numbener
         listpost = zeros((gdat.numbsamp, numbpara))
-        for k in range(numbpnts):
-            listpost[:, 0*numbpnts+k] = gdat.listlgal[0][:, k]
-            listpost[:, 1*numbpnts+k] = gdat.listbgal[0][:, k]
-            listpost[:, 2*numbpnts+k] = gdat.listspec[0][:, gdat.indxenerfdfn, k].flatten()
-            listpost[:, 3*numbpnts+k] = gdat.listsind[0][:, k]
+        for j in gdat.indxsamptotl:
+            for k in range(numbpntspost):
+                listpost[j, 0*numbpntspost+k] = gdat.listlgal[0][j][k]
+                listpost[j, 1*numbpntspost+k] = gdat.listbgal[0][j][k]
+                listpost[j, 2*numbpntspost+k] = gdat.listspec[0][j][gdat.indxenerfdfn[0], k]
+                listpost[j, 3*numbpntspost+k] = gdat.listsind[0][j][k]
         for i in gdat.indxener:
-            listpost[:, 4*numbpnts+i] = gdat.listnormback[:, 0, i]
+            listpost[:, 4*numbpntspost+i] = gdat.listnormback[:, 0, i]
         truepost = zeros(numbpara)
-        truepost[0*numbpnts:1*numbpnts] = gdat.truelgal[0][k]
-        truepost[1*numbpnts:2*numbpnts] = gdat.truebgal[0][k]
-        truepost[2*numbpnts:3*numbpnts] = gdat.truespec[0][0, gdat.indxenerfdfn, k]
-        truepost[3*numbpnts:4*numbpnts] = gdat.truesind[0][k]
-        truepost[4*numbpnts:] = gdat.truenormback[0, :]
+        truepost[0*numbpntspost:1*numbpntspost] = gdat.truelgal[0][k]
+        truepost[1*numbpntspost:2*numbpntspost] = gdat.truebgal[0][k]
+        truepost[2*numbpntspost:3*numbpntspost] = gdat.truespec[0][0, gdat.indxenerfdfn, k]
+        truepost[3*numbpntspost:4*numbpntspost] = gdat.truesind[0][k]
+        truepost[4*numbpntspost:] = gdat.truenormback[0, :]
         path = gdat.pathplot + 'postdist_' + gdat.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
@@ -438,7 +431,7 @@ def plot_post(pathprobcatl):
         numbbins=gdat.numbbins, numbtickbins=3)
     
     for k in range(gdat.numbpsfipara):
-        path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag
+        path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
         tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
     # log-likelihood

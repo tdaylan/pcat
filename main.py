@@ -26,15 +26,14 @@ def work(gdat, indxprocwork):
                 thisnumbpnts[l] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[l] + 1))
     else:
         thisnumbpnts = gdat.truenumbpnts
-        
+       
     gdat.thisindxpntsfull = []
     gdat.thisindxpntsempt = []
     for l in gdat.indxpopl:
         gdat.thisindxpntsfull.append(range(thisnumbpnts[l]))
         gdat.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
-    gdat.thisindxsamplgal, gdat.thisindxsampbgal, gdat.thisindxsampspec, \
-        gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
-   
+    gdat.thisindxsamplgal, gdat.thisindxsampbgal, gdat.thisindxsampspec, gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
+    
     gdat.deltllik = 0.
     gdat.drmcsamp = zeros((gdat.numbpara, 2))
     
@@ -101,8 +100,8 @@ def work(gdat, indxprocwork):
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
     # check the initial unit sample vector for bad entries
-    indxsampbaddlowr = where(gdat.drmcsamp[:, 0] < 0.)[0]
-    indxsampbadduppr = where(gdat.drmcsamp[:, 0] > 1.)[0]
+    indxsampbaddlowr = where(gdat.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
+    indxsampbadduppr = where(gdat.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
@@ -1388,7 +1387,7 @@ def rjmc(gdat, indxprocwork):
             listsampvarb[indxsampsave[gdat.cntrswep], :] = gdat.thissampvarb
             listmodlcnts[indxsampsave[gdat.cntrswep], :] = gdat.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[indxsampsave[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
-            listindxpntsfull.append(gdat.thisindxpntsfull)
+            listindxpntsfull.append(copy(gdat.thisindxpntsfull))
             listllik[indxsampsave[gdat.cntrswep]] = sum(gdat.thisllik)
             listlpri[indxsampsave[gdat.cntrswep]] = sum(gdat.thislpri)
             
@@ -1433,45 +1432,6 @@ def rjmc(gdat, indxprocwork):
         if gdat.verbtype > 0:
             thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
     
-        # temp
-        if False:
-            indxtemp0 = where(gdat.prevsampvarb != gdat.thissampvarb)[0]
-            indxtemp1 = where(gdat.prevdrmcsamp[:, 0] != gdat.drmcsamp[:, 0])[0]
-            if indxtemp0.size != indxtemp1.size:
-                thisbool = True
-            else:
-                if (indxtemp0 - indxtemp1 != 0).any():
-                    thisbool = True
-                else:
-                    thisbool = False
-            if gdat.strgprop[gdat.thisindxprop] == 'sind':
-                if indxtemp0.size == 3 and indxtemp1.size == 1:
-                    if (indxtemp0 - indxtemp1[0] - array([-3, -1, 0]) == 0).all():
-                        thisbool = False
-            if gdat.strgprop[gdat.thisindxprop] == 'flux':
-                if indxtemp0.size == 3 and indxtemp1.size == 1:
-                    if (indxtemp0 - indxtemp1[0] - array([-1, 0, 1]) == 0).all():
-                        thisbool = False
-            if gdat.strgprop[gdat.thisindxprop] == 'deth':
-                if indxtemp0 == array([0]) and indxtemp1 == array([]):
-                    thisbool = False
-            if thisbool:
-                print 'gdat.cntrswep'
-                print gdat.cntrswep
-                print gdat.strgprop[gdat.thisindxprop]
-                print indxtemp0
-                print indxtemp1
-                print
-            gdat.prevsampvarb = copy(gdat.thissampvarb)
-            gdat.prevdrmcsamp = copy(gdat.drmcsamp)
-
-        # temp
-        if False and gdat.diagsamp:
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
-                    plot_diagfram(i, m)
-                    plot_nextfram(i, m)
-        
         if gdat.verbtype > 1:
             print
             print
@@ -1489,14 +1449,12 @@ def rjmc(gdat, indxprocwork):
         # update the sweep counter
         gdat.cntrswep += 1
 
-    
     if gdat.verbtype > 1:
         print 'listsampvarb: '
         print listsampvarb
     
     listchrollik = array(listchrollik)
-
-
+    
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         gdat.listauxipara, gdat.listlaccfrac, gdat.listnumbpair, gdat.listjcbnfact, gdat.listcombfact, \
         listpntsfluxmean, listchrollik]

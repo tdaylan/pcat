@@ -3,6 +3,33 @@
 PCAT is a Bayesian framework to sample from the catalog space. 
 
 ## Usage
+The basic interaction with PCAT is through the `init` function, which writes the resulting probabilistic catalog to the disc. The software ships with convenience functions to post-process the output.
+
+```python
+import pcat
+     
+numbener = 5
+minmspec = array([3e-11])
+maxmspec = array([1e-7])
+mockfdfnslop = array([[1.9]])
+pcat.init(, \
+          psfntype='doubking', \
+          randinit=False, \
+          trueinfo=True, \
+          maxmgang=20., \
+          mocknumbpnts=array([300]), \
+          minmspec=minmspec, \
+          maxmspec=maxmspec, \
+          regitype='ngal', \
+          maxmnormback=array([2., 2.]), \
+          minmnormback=array([0.5, 0.5]), \
+          strgexpo='fermexpo_comp_ngal.fits', \
+          datatype='mock', \
+          numbsideheal=256, \
+          mockfdfnslop=mockfdfnslop, \
+          mocknormback=ones((2, numbener)), \
+         )
+```
 
 ### Options
 ---
