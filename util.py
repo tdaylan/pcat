@@ -902,21 +902,23 @@ def retr_fgl3(gdat):
     
     indxpixlfgl3 = retr_indxpixl(gdat, gdat.fgl3bgal, gdat.fgl3lgal)
     gdat.fgl3cnts = gdat.fgl3spec[0, :, :, None] * gdat.expo[:, indxpixlfgl3, :] * gdat.diffener[:, None, None]
-    gdat.fgl3gang = rad2deg(arccos(cos(deg2rad(gdat.fgl3lgal)) * cos(deg2rad(gdat.fgl3bgal))))
-        
+    
     # adjust 3FGL positions according to the ROI center
     if gdat.regitype == 'ngal':
         rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
         gdat.fgl3bgal, gdat.fgl3lgal = rad2deg(rttr(deg2rad(90. - gdat.fgl3bgal), deg2rad(gdat.fgl3lgal)))
         gdat.fgl3bgal = 90. - gdat.fgl3bgal
 
+    gdat.fgl3gang = retr_gang(gdat.fgl3lgal, gdat.fgl3bgal)
+    gdat.fgl3aang = retr_aang(gdat.fgl3lgal, gdat.fgl3bgal)
+        
     # select the 3FGL point sources in the ROI
-    gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
-    for i in gdat.indxener:
-        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & \
-            (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
-    gdat.indxfgl3rofi = intersect1d(where((abs(gdat.fgl3lgal) < gdat.maxmgangmarg) & \
-            (abs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
+    # temp
+    #gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
+    #for i in gdat.indxener:
+    #    gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
+    #gdat.indxfgl3rofi = intersect1d(where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
+    gdat.indxfgl3rofi = where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0]
     gdat.fgl3numbpntsrofi = gdat.indxfgl3rofi.size
     gdat.indxfgl3timevarirofi = where(gdat.fgl3timevari[gdat.indxfgl3rofi] > 72.44)[0]
 

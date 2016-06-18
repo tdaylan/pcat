@@ -38,17 +38,17 @@ def work(gdat, indxprocwork):
     gdat.deltllik = 0.
     gdat.drmcsamp = zeros((gdat.numbpara, 2))
     
-    # number of PSs
+    ## number of PSs
     gdat.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
     
-    # mean number of PSs
+    ## mean number of PSs
     if gdat.randinit or gdat.datatype != 'mock':
         gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
     else:
         for l in gdat.indxpopl:
             gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
     
-    # FDF shape
+    ## FDF shape
     if gdat.randinit or gdat.datatype != 'mock' or gdat.fdfntype != gdat.mockfdfntype:
         if gdat.fdfntype == 'powr':
             gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
@@ -65,7 +65,7 @@ def work(gdat, indxprocwork):
                 gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
     
-    # PSF parameters
+    ## PSF parameters
     if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
         if gdat.verbtype > 1:
             'Randomly seeding the PSF parameters from the prior...'
@@ -74,14 +74,14 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpsfipara:
             gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
 
-    # background normalization
+    ## background normalization
     for c in gdat.indxback:
         if gdat.randinit or gdat.datatype != 'mock':
             gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
         else:
             gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
     
-    # PS components
+    ## PS components
     for l in gdat.indxpopl:
         if gdat.randinit:
             gdat.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
@@ -100,6 +100,15 @@ def work(gdat, indxprocwork):
             gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
+    # check the initial unit sample vector for bad entries
+    indxsampbaddlowr = where(gdat.drmcsamp[:, 0] < 0.)[0]
+    indxsampbadduppr = where(gdat.drmcsamp[:, 0] > 1.)[0]
+    indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
+    if indxsampbadd.size > 0:
+        print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
+        gdat.drmcsamp[indxsampbaddlowr, 0] = 0.
+        gdat.drmcsamp[indxsampbadduppr, 0] = 1.
+
     gdat.thissampvarb = retr_sampvarb(gdat, gdat.thisindxpntsfull, gdat.drmcsamp[:, 0])
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)

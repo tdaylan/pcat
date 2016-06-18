@@ -209,22 +209,29 @@ def plot_post(pathprobcatl):
     gdat.listgang = []
     gdat.listaang = []
     for l in gdat.indxpopl:
+        lgal = hdun['lgalpop%d' % l].data
+        bgal = hdun['bgalpop%d' % l].data
         spec = hdun['specpop%d' % l].data
-        indxpnts = where(spec > 0.)[0]
-        numbpnts = indxpnts.size
-        print 'hey'
-        print 'numbpnts'
-        print numbpnts
-        print 'indxpnts'
-        print amin(indxpnts), amax(indxpnts)
-        print 'hdun[lgalpop%d].data'
-        print hdun['lgalpop%d' % l].data.shape
-        gdat.listlgal.append(hdun['lgalpop%d' % l].data[:, indxpnts])
-        gdat.listbgal.append(hdun['bgalpop%d' % l].data[:, indxpnts])
-        gdat.listspec.append(hdun['specpop%d' % l].data[:, :, indxpnts])
-        gdat.listsind.append(hdun['sindpop%d' % l].data[:, indxpnts])
-        gdat.listgang.append(hdun['gangpop%d' % l].data[:, indxpnts])
-        gdat.listaang.append(hdun['aangpop%d' % l].data[:, indxpnts])
+        sind = hdun['sindpop%d' % l].data
+        gang = hdun['gangpop%d' % l].data
+        aang = hdun['aangpop%d' % l].data
+        for j in gdat.indxsamp:
+            indxpnts = where(lgal[j, :] > 0.)[0]
+            numbpnts = indxpnts.size
+            print 'hey'
+            print 'numbpnts'
+            print numbpnts
+            print 'indxpnts'
+            print amin(indxpnts), amax(indxpnts)
+            print 'lgal.shape'
+            print lgal.shape
+            print
+            gdat.listlgal.append(lgal[j, indxpnts])
+            gdat.listbgal.append(bgal[j, indxpnts])
+            gdat.listspec.append(spec[j, :, indxpnts])
+            gdat.listsind.append(sind[j, indxpnts])
+            gdat.listgang.append(gang[j, indxpnts])
+            gdat.listaang.append(aang[j, indxpnts])
 
     # Gelman-Rubin test
     if gdat.numbproc > 1:
