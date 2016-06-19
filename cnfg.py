@@ -78,10 +78,9 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
       
     init( \
          psfntype='doubking', \
-         numbswep=100000, \
+         numbswep=2000000, \
          randinit=False, \
          trueinfo=True, \
-         #verbtype=2, \
          maxmgang=20., \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \
@@ -153,10 +152,9 @@ def cnfg_ferm_expr_ngal( \
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=10, \
+         numbswep=2000000, \
          randinit=False, \
          maxmgang=20., \
-         verbtype=1, \
          maxmnumbpnts=array([600]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \

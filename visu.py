@@ -202,12 +202,12 @@ def plot_post(pathprobcatl):
         gdat.truenormback = hdun['mocknormback'].data
         gdat.truepsfipara = hdun['mockpsfipara'].data
         
-    gdat.listlgal = []
-    gdat.listbgal = []
-    gdat.listspec = []
-    gdat.listsind = []
-    gdat.listgang = []
-    gdat.listaang = []
+    gdat.listlgal = [[] for l in gdat.indxpopl]
+    gdat.listbgal = [[] for l in gdat.indxpopl]
+    gdat.listspec = [[] for l in gdat.indxpopl]
+    gdat.listsind = [[] for l in gdat.indxpopl]
+    gdat.listgang = [[] for l in gdat.indxpopl]
+    gdat.listaang = [[] for l in gdat.indxpopl]
     for l in gdat.indxpopl:
         lgal = hdun['lgalpop%d' % l].data
         bgal = hdun['bgalpop%d' % l].data
@@ -218,12 +218,13 @@ def plot_post(pathprobcatl):
         for j in gdat.indxsamptotl:
             indxpnts = where(spec[j, gdat.indxenerfdfn[0], :] > 0.)[0]
             numbpnts = indxpnts.size
-            gdat.listlgal.append(lgal[j, indxpnts])
-            gdat.listbgal.append(bgal[j, indxpnts])
-            gdat.listspec.append(spec[j, :, indxpnts])
-            gdat.listsind.append(sind[j, indxpnts])
-            gdat.listgang.append(gang[j, indxpnts])
-            gdat.listaang.append(aang[j, indxpnts])
+            gdat.listlgal[l].append(lgal[j, indxpnts])
+            gdat.listbgal[l].append(bgal[j, indxpnts])
+            # temp
+            gdat.listspec[l].append(spec[j, :, indxpnts].T)
+            gdat.listsind[l].append(sind[j, indxpnts])
+            gdat.listgang[l].append(gang[j, indxpnts])
+            gdat.listaang[l].append(aang[j, indxpnts])
 
     # Gelman-Rubin test
     if gdat.numbproc > 1:
@@ -349,10 +350,6 @@ def plot_post(pathprobcatl):
                 gdat.listspecmtch = zeros((gdat.numbsamp, gdat.truenumbpnts[l]))
                 for j in gdat.indxsamptotl:
                     indxpntstrue = where(listindxmodl[j] >= 0)[0]
-                    print 'gdat.listspec[l][j]'
-                    print gdat.listspec[l][j]
-                    print gdat.listspec[l][j].shape
-                    print
                     gdat.listspecmtch[j, indxpntstrue] = gdat.listspec[l][j][i, listindxmodl[j][indxpntstrue]]
                 postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
                 postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
@@ -1114,13 +1111,13 @@ def plot_psfn(gdat):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            axis.plot(gdat.angldisptemp, gdat.thispsfn[i, :, m], label='Sample')
+            axis.plot(gdat.angldispplot, gdat.thispsfn[i, :, m], label='Sample')
             if gdat.trueinfo:
                 if gdat.exprtype == 'ferm':
                     labl = 'Fermi-LAT'
                 if gdat.exprtype == 'sdss':
                     labl = 'SDSS'
-                axis.plot(gdat.angldisptemp, gdat.truepsfn[i, :, m], label=labl, color='g', ls='--')
+                axis.plot(gdat.angldispplot, gdat.truepsfn[i, :, m], label=labl, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
@@ -1299,7 +1296,7 @@ def plot_eval(gdat):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(gdat.angldisptemp, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.plot(gdat.angldispplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
         if k > 0:
             axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')

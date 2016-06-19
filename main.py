@@ -576,6 +576,11 @@ def init( \
     if gdat.verbtype > 0:
         print 'Sampling...'
     
+    # temp
+    print 'hey'
+    print [attr for attr in dir(gdat) if not attr.startswith('__')]
+    print 
+
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
     if gdat.numbproc == 1:
@@ -1376,10 +1381,22 @@ def rjmc(gdat, indxprocwork):
             return
             
         for l in gdat.indxpopl:
-            if where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]] < gdat.minmflux)[0].size > 0:
+            indxtemp = where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] < gdat.minmflux)[0]
+            if indxtemp.size > 0:
                 print 'Spectrum of some PS went below the prior range!'
-            if where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]] > gdat.maxmflux)[0].size > 0:
+                print 'indxtemp'
+                print indxtemp
+                print 'flux'
+                print gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
+                print 
+            indxtemp = where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] > gdat.maxmflux)[0]
+            if indxtemp.size > 0:
                 print 'Spectrum of some PS went above the prior range!'          
+                print 'indxtemp'
+                print indxtemp
+                print 'flux'
+                print gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
+                print 
 
         # save the sample
         if boolsave[gdat.cntrswep]:

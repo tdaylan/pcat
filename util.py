@@ -924,11 +924,11 @@ def retr_fgl3(gdat):
         
     # select the 3FGL point sources in the ROI
     # temp
-    #gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
-    #for i in gdat.indxener:
-    #    gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
-    #gdat.indxfgl3rofi = intersect1d(where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
-    gdat.indxfgl3rofi = where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0]
+    gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
+    for i in gdat.indxener:
+        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
+    gdat.indxfgl3rofi = intersect1d(where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
+    #gdat.indxfgl3rofi = where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0]
     gdat.fgl3numbpntsrofi = gdat.indxfgl3rofi.size
     gdat.indxfgl3timevarirofi = where(gdat.fgl3timevari[gdat.indxfgl3rofi] > 72.44)[0]
 
@@ -2135,9 +2135,9 @@ def setp(gdat):
     angl = linspace(0., maxmangl, gdat.numbangl) # [rad]
 
     if gdat.exprtype == 'sdss':
-        gdat.angldisptemp = rad2deg(gdat.angldisp) * 3600.
+        gdat.angldispplot = rad2deg(gdat.angldisp) * 3600.
     if gdat.exprtype == 'ferm':
-        gdat.angldisptemp = rad2deg(gdat.angldisp)
+        gdat.angldispplot = rad2deg(gdat.angldisp)
 
     if gdat.trueinfo:
         if gdat.datatype == 'mock':
