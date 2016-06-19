@@ -339,17 +339,21 @@ def plot_post(pathprobcatl):
         for l in gdat.indxpopl:
             discspecmtch = zeros(gdat.truenumbpnts) + gdat.numbsamp
             listindxmodl = []
-            for k in range(gdat.numbsamp):
-                indxmodl, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k], gdat.listbgal[l][k], gdat.listspec[l][k])
+            for j in gdat.indxsamptotl:
+                indxmodl, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][j], gdat.listbgal[l][j], gdat.listspec[l][j])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= gdat.numbsamp
             postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
             for i in gdat.indxener:
                 gdat.listspecmtch = zeros((gdat.numbsamp, gdat.truenumbpnts[l]))
-                for k in range(gdat.numbsamp):
-                    indxpntstrue = where(listindxmodl[k] >= 0)[0]
-                    gdat.listspecmtch[k, indxpntstrue] = gdat.listspec[l][k][i, listindxmodl[k][indxpntstrue]]
+                for j in gdat.indxsamptotl:
+                    indxpntstrue = where(listindxmodl[j] >= 0)[0]
+                    print 'gdat.listspec[l][j]'
+                    print gdat.listspec[l][j]
+                    print gdat.listspec[l][j].shape
+                    print
+                    gdat.listspecmtch[j, indxpntstrue] = gdat.listspec[l][j][i, listindxmodl[j][indxpntstrue]]
                 postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
                 postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
                 postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
