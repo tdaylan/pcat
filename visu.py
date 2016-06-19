@@ -340,7 +340,7 @@ def plot_post(pathprobcatl):
             discspecmtch = zeros(gdat.truenumbpnts) + gdat.numbsamp
             listindxmodl = []
             for k in range(gdat.numbsamp):
-                indxmodl, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k, :], gdat.listbgal[l][k, :], gdat.listspec[l][k, :, :])
+                indxmodl, indxtruepntsmiss = pair_catl(gdat, l, gdat.listlgal[l][k], gdat.listbgal[l][k], gdat.listspec[l][k])
                 listindxmodl.append(indxmodl)
                 discspecmtch[indxtruepntsmiss] -= 1.
             discspecmtch /= gdat.numbsamp
@@ -354,10 +354,6 @@ def plot_post(pathprobcatl):
                 postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
                 postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
             plot_scatspec(gdat, l, postspecmtch=postspecmtch)
-
-            # store the comparison
-            path = os.environ["PCAT_DATA_PATH"] + '/pcatcomp_popl%d_' % l + gdat.rtag + '.fits'
-            compbund = stack((gdat.truespec[l], postspecmtch))
 
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)

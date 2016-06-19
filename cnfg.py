@@ -153,9 +153,10 @@ def cnfg_ferm_expr_ngal( \
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=100000, \
+         numbswep=10, \
          randinit=False, \
          maxmgang=20., \
+         verbtype=1, \
          maxmnumbpnts=array([600]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
