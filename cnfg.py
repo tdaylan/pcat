@@ -81,7 +81,7 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
          numbswep=2000000, \
          randinit=False, \
          trueinfo=True, \
-         maxmgang=20., \
+         maxmgang=10., \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \
          minmflux=3e-11, \
