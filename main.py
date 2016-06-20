@@ -13,6 +13,12 @@ def work(gdat, indxprocwork):
     # re-seed the random number generator for the process
     seed()
     
+    gdatmodi = gdatstrt()
+    gdatmodi.modilgal = empty(gdat.numbmodipnts)
+    gdatmodi.modibgal = empty(gdat.numbmodipnts)
+    gdatmodi.modisind = empty(gdat.numbmodipnts)
+    gdatmodi.modispec = empty((gdat.numbener, gdat.numbmodipnts))
+
     # construct the run tag
     gdat.rtag = retr_rtag(gdat, indxprocwork)
     
@@ -27,95 +33,95 @@ def work(gdat, indxprocwork):
     else:
         thisnumbpnts = gdat.truenumbpnts
        
-    gdat.thisindxpntsfull = []
+    gdatmodi.thisindxpntsfull = []
     gdat.thisindxpntsempt = []
     for l in gdat.indxpopl:
-        gdat.thisindxpntsfull.append(range(thisnumbpnts[l]))
+        gdatmodi.thisindxpntsfull.append(range(thisnumbpnts[l]))
         gdat.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
-    gdat.thisindxsamplgal, gdat.thisindxsampbgal, gdat.thisindxsampspec, gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdat.thisindxpntsfull)
+    gdat.thisindxsamplgal, gdat.thisindxsampbgal, gdat.thisindxsampspec, gdat.thisindxsampsind, gdat.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
-    gdat.deltllik = 0.
-    gdat.drmcsamp = zeros((gdat.numbpara, 2))
+    gdatmodi.deltllik = 0.
+    gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
     
     ## number of PSs
-    gdat.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
+    gdatmodi.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
     
     ## mean number of PSs
     if gdat.randinit or gdat.datatype != 'mock':
-        gdat.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
+        gdatmodi.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
     else:
         for l in gdat.indxpopl:
-            gdat.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
+            gdatmodi.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
     
     ## FDF shape
     if gdat.randinit or gdat.datatype != 'mock' or gdat.fdfntype != gdat.mockfdfntype:
         if gdat.fdfntype == 'powr':
-            gdat.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
+            gdatmodi.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
         if gdat.fdfntype == 'brok':
-            gdat.drmcsamp[gdat.indxsampfdfnbrek, 0] = rand(gdat.numbpopl)
-            gdat.drmcsamp[gdat.indxsampfdfnsloplowr, 0] = rand(gdat.numbpopl)
-            gdat.drmcsamp[gdat.indxsampfdfnslopuppr, 0] = rand(gdat.numbpopl)
+            gdatmodi.drmcsamp[gdat.indxsampfdfnbrek, 0] = rand(gdat.numbpopl)
+            gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr, 0] = rand(gdat.numbpopl)
+            gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr, 0] = rand(gdat.numbpopl)
     else:
         for l in gdat.indxpopl:
             if gdat.fdfntype == 'powr':
-                gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
             if gdat.fdfntype == 'brok':
-                gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
-                gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+                gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
+                gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
     
     ## PSF parameters
     if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
         if gdat.verbtype > 1:
             'Randomly seeding the PSF parameters from the prior...'
-        gdat.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
+        gdatmodi.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     else:
         for k in gdat.indxpsfipara:
-            gdat.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
+            gdatmodi.drmcsamp[gdat.indxsamppsfipara[k], 0] = cdfn_psfipara(gdat, gdat.truepsfipara[k], k)
 
     ## background normalization
     for c in gdat.indxback:
         if gdat.randinit or gdat.datatype != 'mock':
-            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
+            gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
         else:
-            gdat.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
+            gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
     
     ## PS components
     for l in gdat.indxpopl:
         if gdat.randinit:
-            gdat.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
+            gdatmodi.drmcsamp[gdat.thisindxsampcomp[l], 0] = rand(gdat.thisindxsampcomp[l].size)
         else:
-            gdat.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-            gdat.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
+            gdatmodi.drmcsamp[gdat.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
+            gdatmodi.drmcsamp[gdat.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
             if gdat.fdfntype == 'powr':
-                fdfnslop = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                fdfnslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
                 fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfdfn[0], :], fdfnslop)
             if gdat.fdfntype == 'brok':
                 flux = gdat.truespec[l][0, gdat.indxenerfdfn[0], :]
-                fdfnbrek = icdf_logt(gdat.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                fdfnsloplowr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
-                fdfnslopuppr = icdf_atan(gdat.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+                fdfnbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+                fdfnsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
+                fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            gdat.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
-            gdat.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            gdatmodi.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
+            gdatmodi.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
     
     # check the initial unit sample vector for bad entries
-    indxsampbaddlowr = where(gdat.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
-    indxsampbadduppr = where(gdat.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
+    indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
+    indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
-        gdat.drmcsamp[indxsampbaddlowr, 0] = 0.
-        gdat.drmcsamp[indxsampbadduppr, 0] = 1.
+        gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
+        gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
 
-    gdat.thissampvarb = retr_sampvarb(gdat, gdat.thisindxpntsfull, gdat.drmcsamp[:, 0])
-    gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
-    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdat.thisindxpntsfull, gdat.thissampvarb)
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
+    gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
+    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
    
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
         for l in gdat.indxpopl:
-            print gdat.thisindxpntsfull[l]
+            print gdatmodi.thisindxpntsfull[l]
         
         print 'thisindxpntsempt'
         for l in gdat.indxpopl:
@@ -146,23 +152,25 @@ def work(gdat, indxprocwork):
     gdat.nextmodlcnts = zeros_like(gdat.thispntsflux)
     gdat.nextllik = zeros_like(gdat.thispntsflux)
 
-    gdat.nextsampvarb = copy(gdat.thissampvarb)
+    gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
     
     if gdat.verbtype > 1:
         print 'drmcsamp'
         for k in gdat.indxpara:
-            print gdat.drmcsamp[k, :]
+            print gdatmodi.drmcsamp[k, :]
         print 'thispsfipara'
-        print gdat.thissampvarb[gdat.indxsamppsfipara]
+        print gdatmodi.thissampvarb[gdat.indxsamppsfipara]
         print 'thissampvarb'
         for k in gdat.indxpara:
-            print gdat.thissampvarb[k]
+            print gdatmodi.thissampvarb[k]
         
-    # sampler setup
-    # auxiliary variable standard gdat.deviation for merge/split
-    gdat.maxmdistpnts = 2. # [deg]
+    print 'hey'
+    print 'gdatmodi'
+    print [attr for attr in dir(gdatmodi) if not attr.startswith('__')]
+    print
  
-    listchan = rjmc(gdat, indxprocwork)
+    # run the sampler
+    listchan = rjmc(gdat, gdatmodi, indxprocwork)
     
     timereal = time.time() - timereal
     timeproc = time.clock() - timeproc
@@ -578,8 +586,11 @@ def init( \
     
     # temp
     print 'hey'
+    print 'gdat'
     print [attr for attr in dir(gdat) if not attr.startswith('__')]
-    print 
+    print
+    #print 'sys.getsizeof()'
+    #print sys.getsizeof(gdat.thismodlcnts)
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
@@ -1131,86 +1142,76 @@ def init( \
     return gridchan
     
     
-def plot_samp(gdat):
+def plot_samp(gdat, gdatmodi):
 
     gdat.thisresicnts = gdat.datacnts - gdat.thismodlcnts
 
-    gdat.thispsfn = retr_psfn(gdat, gdat.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.angldisp, gdat.psfntype)
+    gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.angldisp, gdat.psfntype)
     if gdat.pixltype == 'cart':
-        gdat.thispsfn = gdat.thispsfn.reshape((gdat.numbener, -1, gdat.numbevtt))
-    thisfwhm = 2. * retr_psfnwdth(gdat, gdat.thispsfn, 0.5)
+        gdatmodi.thispsfn = gdatmodi.thispsfn.reshape((gdat.numbener, -1, gdat.numbevtt))
+    gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
 
-    plot_psfn(gdat)
+    plot_psfn(gdat, gdatmodi)
 
     gdat.thisbackcntsmean = empty((gdat.numbener, gdat.numbevtt))
     for c in gdat.indxback:
-        gdat.thisbackcntsmean += mean(gdat.thissampvarb[gdat.indxsampnormback[c, :, None, None]] * gdat.backflux[c] * gdat.expo * \
-            gdat.diffener[:, None, None] * pi * thisfwhm[:, None, :]**2 / 4., 1)
+        gdat.thisbackcntsmean += mean(gdatmodi.thissampvarb[gdat.indxsampnormback[c, :, None, None]] * gdat.backflux[c] * gdat.expo * \
+            gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4., 1)
 
-    # temp -- list may not be the ultimate solution to copy gdat.thisindxpntsfull
-    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, list(gdat.thisindxpntsfull), copy(gdat.thissampvarb))
+    # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
+    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
     gdat.thispntscnts = gdat.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-    gdat.errrpnts = 100. * (gdat.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
+    gdatmodi.thiserrrpnts = 100. * (gdat.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
 
-    thiscnts = []
+    gdatmodi.thiscnts = []
     gdat.trueindxpntsmiss = []
     for l in gdat.indxpopl:
-        indxpixltemp = retr_indxpixl(gdat, gdat.thissampvarb[gdat.thisindxsampbgal[l]], gdat.thissampvarb[gdat.thisindxsamplgal[l]])
-        cntstemp = gdat.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
-        thiscnts.append(cntstemp)
+        indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdat.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdat.thisindxsamplgal[l]])
+        cntstemp = gdatmodi.thissampvarb[gdat.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+        gdatmodi.thiscnts.append(cntstemp)
         if gdat.trueinfo:
-            lgal = gdat.thissampvarb[gdat.thisindxsamplgal[l]]
-            bgal = gdat.thissampvarb[gdat.thisindxsampbgal[l]]
-            spec = gdat.thissampvarb[gdat.thisindxsampspec[l]]
+            lgal = gdatmodi.thissampvarb[gdat.thisindxsamplgal[l]]
+            bgal = gdatmodi.thissampvarb[gdat.thisindxsampbgal[l]]
+            spec = gdatmodi.thissampvarb[gdat.thisindxsampspec[l]]
             indxmodl, trueindxpntsmiss = pair_catl(gdat, l, lgal, bgal, spec)
             gdat.trueindxpntsmiss.append(trueindxpntsmiss)
-            thisspecmtch = copy(spec[:, indxmodl])
-            thisspecmtch[:, trueindxpntsmiss] = 0.
-            plot_scatspec(gdat, l, thisspecmtch=thisspecmtch)
+            gdatmodi.thisspecmtch = copy(spec[:, indxmodl])
+            gdatmodi.thisspecmtch[:, trueindxpntsmiss] = 0.
+            plot_scatspec(gdat, l, gdatmodi=gdatmodi)
         
-        plot_scatpixl(gdat, l)
-        
-        plot_histspec(gdat, l)
-        plot_histsind(gdat, l)
-        plot_histcnts(gdat, l, thiscnts)
-        if gdat.numbback == 2:
-            plot_compfrac(gdat)
+        plot_histspec(gdat, l, gdatmodi=gdatmodi)
+        plot_histsind(gdat, l, gdatmodi=gdatmodi)
+        plot_histcnts(gdat, l, gdatmodi=gdatmodi)
+        plot_compfrac(gdat, gdatmodi=gdatmodi)
 
     for i in gdat.indxener:
         
-        plot_datacnts(gdat, i, None)
-        plot_modlcnts(gdat, i, None)
-        plot_resicnts(gdat, i, None)
-        
-        plot_errrpnts(gdat, i, None)
+        plot_datacnts(gdat, l, gdatmodi, i, None)
+        plot_modlcnts(gdat, l, gdatmodi, i, None)
+        plot_resicnts(gdat, l, gdatmodi, i, None)
+        plot_errrpnts(gdat, gdatmodi, i, None)
 
         # temp
-        if gdat.numbswepplot == 1:
-            plot_thispntscnts(gdat, i, None)
-            plot_temppntscnts(gdat, i, None)
-            plot_thispntscntsdiff(gdat, i, None)
-            plot_temppntscntsdiff(gdat, i, None)
-        
-        #plot_catlfram(gdat, i, None, thiscnts)
-
+        #plot_scatpixl(gdat, gdatmodi=gdatmodi)
+        #plot_catlfram(gdat, l, gdatmodi, i, None)
         #for m in gdat.indxevtt:
-        #    plot_datacnts(gdat, i, m)
-        #    plot_catl(gdat, i, m, thiscnts)
-        #    plot_modlcnts(gdat, i, m)
-        #    plot_resicnts(gdat, i, m, gdat.thisresicnts)
+        #    plot_datacnts(gdat, gdatmodi, i, m)
+        #    plot_catl(gdat, gdatmodi, i, m, thiscnts)
+        #    plot_modlcnts(gdat, gdatmodi, i, m)
+        #    plot_resicnts(gdat, gdatmodi, i, m)
         
 
     #if gdat.numbener == 3:
-    #    plot_datacnts(gdat, None, None)
+    #    plot_datacnts(gdat, gdatmodi, None, None)
         
-    #plot_fwhm(gdat, thisfwhm)
-    #plot_backcntsmean(gdat, gdat.thisbackcntsmean)
+    #plot_fwhm(gdat, gdatmodi)
+    #plot_backcntsmean(gdat, gdatmodi)
     
-    if amax(abs(gdat.errrpnts)) > 0.1 and False:
+    if amax(abs(gdatmodi.thiserrrpnts)) > 0.1 and False:
         print 'Approximation error went above the limit!'
     
     
-def rjmc(gdat, indxprocwork):
+def rjmc(gdat, gdatmodi, indxprocwork):
 
     # sweeps to be saved
     boolsave = zeros(gdat.numbswep, dtype=bool)
@@ -1224,7 +1225,7 @@ def rjmc(gdat, indxprocwork):
     listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
     listindxprop = zeros(gdat.numbswep)
     listchrototl = zeros((gdat.numbswep, gdat.numbchrototl))
-    listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
+    gdatmodi.listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
     listllik = zeros(gdat.numbsamp)
     listlpri = zeros(gdat.numbsamp)
     listlprinorm = zeros(gdat.numbsamp)
@@ -1244,15 +1245,15 @@ def rjmc(gdat, indxprocwork):
     gdat.cntrswep = 0
     
     # initialize the chain
-    retr_llik(gdat, listchrollik, init=True)
-    retr_lpri(gdat, init=True)
+    retr_llik(gdat, gdatmodi, init=True)
+    retr_lpri(gdat, gdatmodi, init=True)
 
     # current sample index
     thiscntr = -1
     
     # temp
-    gdat.prevdrmcsamp = copy(gdat.drmcsamp)
-    gdat.prevsampvarb = copy(gdat.thissampvarb)
+    gdat.prevdrmcsamp = copy(gdatmodi.drmcsamp)
+    gdat.prevsampvarb = copy(gdatmodi.thissampvarb)
     
     while gdat.cntrswep < gdat.numbswep:
         
@@ -1264,10 +1265,10 @@ def rjmc(gdat, indxprocwork):
             print 'Sweep %d' % gdat.cntrswep
 
         thismakefram = (gdat.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdat.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
-        gdat.reje = False
+        gdatmodi.boolreje = False
     
         # choose a proposal type
-        retr_thisindxprop(gdat, gdat.drmcsamp[:, 0])
+        retr_thisindxprop(gdat, gdatmodi)
             
         # save the proposal type
         listindxprop[gdat.cntrswep] = gdat.thisindxprop
@@ -1282,7 +1283,7 @@ def rjmc(gdat, indxprocwork):
 
         # propose the next sample
         timebegn = time.time()
-        retr_prop(gdat)
+        retr_prop(gdat, gdatmodi)
         timefinl = time.time()
         listchrototl[gdat.cntrswep, 1] = timefinl - timebegn
 
@@ -1292,7 +1293,7 @@ def rjmc(gdat, indxprocwork):
             if gdat.numbproc > 1:
                 gdat.lock.acquire()
             print 'Process %d started making a frame.' % indxprocwork
-            plot_samp(gdat)
+            plot_samp(gdat, gdatmodi)
             print 'Process %d finished making a frame.' % indxprocwork
             if gdat.numbproc > 1:
                 gdat.lock.release()
@@ -1300,49 +1301,49 @@ def rjmc(gdat, indxprocwork):
         # reject the sample if proposal is outside the prior
         if gdat.fdfntype == 'powr':
             if gdat.thisindxprop == gdat.indxpropfdfnslop:
-                if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
-                    gdat.reje = True
+                if gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                    gdatmodi.boolreje = True
         if gdat.fdfntype == 'brok':
             if gdat.thisindxprop == gdat.indxpropfdfnbrek or gdat.thisindxprop == gdat.indxpropfdfnsloplowr or gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
-                if gdat.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdat.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
-                    gdat.reje = True
+                if gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                    gdatmodi.boolreje = True
         if (gdat.thisindxprop == gdat.indxpropfdfnnorm or \
-                    gdat.thisindxprop >= gdat.indxproppsfipara and gdat.thisindxprop != gdat.indxpropbrth and gdat.thisindxprop != gdat.indxpropdeth) and not gdat.reje:
-            if where((gdat.drmcsamp[gdat.indxsampmodi, 1] < 0.) | (gdat.drmcsamp[gdat.indxsampmodi, 1] > 1.))[0].size > 0:
-                gdat.reje = True
+                    gdat.thisindxprop >= gdat.indxproppsfipara and gdat.thisindxprop != gdat.indxpropbrth and gdat.thisindxprop != gdat.indxpropdeth) and not gdatmodi.boolreje:
+            if where((gdatmodi.drmcsamp[gdat.indxsampmodi, 1] < 0.) | (gdatmodi.drmcsamp[gdat.indxsampmodi, 1] > 1.))[0].size > 0:
+                gdatmodi.boolreje = True
 
         if gdat.thisindxprop == gdat.indxproppsfipara:
             if gdat.psfntype == 'doubking':
-                if gdat.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdat.nextsampvarb[gdat.indxsamppsfipara[3]]:
-                    gdat.reje = True
+                if gdatmodi.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdatmodi.nextsampvarb[gdat.indxsamppsfipara[3]]:
+                    gdatmodi.boolreje = True
             elif gdat.psfntype == 'doubgaus':
-                if gdat.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdat.nextsampvarb[gdat.indxsamppsfipara[2]]:
-                    gdat.reje = True
+                if gdatmodi.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdatmodi.nextsampvarb[gdat.indxsamppsfipara[2]]:
+                    gdatmodi.boolreje = True
             
-        if not gdat.reje:
+        if not gdatmodi.boolreje:
 
             # evaluate the log-prior
             timebegn = time.time()
-            retr_lpri(gdat)
+            retr_lpri(gdat, gdatmodi)
             timefinl = time.time()
             listchrototl[gdat.cntrswep, 2] = timefinl - timebegn
 
             # evaluate the log-likelihood
             timebegn = time.time()
-            retr_llik(gdat, listchrollik) 
+            retr_llik(gdat, gdatmodi) 
             timefinl = time.time()
             listchrototl[gdat.cntrswep, 3] = timefinl - timebegn
             
             # evaluate the acceptance probability
-            accpprob = exp(gdat.deltllik + gdat.deltlpri + gdat.laccfrac)
+            accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfrac)
 
             if gdat.verbtype > 1:
                 print 'deltlpri'
-                print gdat.deltlpri
+                print gdatmodi.deltlpri
                 print 'deltllik'
-                print gdat.deltllik
+                print gdatmodi.deltllik
                 print 'laccfrac'
-                print gdat.laccfrac
+                print gdatmodi.laccfrac
                 print
         else:
             accpprob = 0.
@@ -1354,7 +1355,7 @@ def rjmc(gdat, indxprocwork):
                 print 'Accepted.'
 
             # update the current state
-            updt_samp(gdat)
+            updt_samp(gdat, gdatmodi)
 
             listaccp[gdat.cntrswep] = True
 
@@ -1367,7 +1368,7 @@ def rjmc(gdat, indxprocwork):
             listaccp[gdat.cntrswep] = False
              
         # sanity checks
-        indxsampbadd = where((gdat.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdat.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
+        indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
         if indxsampbadd.size > 0:
             print 'Unit sample vector went outside [0,1]!'
             print 'cntrswep'
@@ -1377,36 +1378,36 @@ def rjmc(gdat, indxprocwork):
             print 'indxsampbadd'
             print indxsampbadd
             print 'drmcsamp'
-            print gdat.drmcsamp[indxsampbadd, :]
+            print gdatmodi.drmcsamp[indxsampbadd, :]
             return
             
         for l in gdat.indxpopl:
-            indxtemp = where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] < gdat.minmflux)[0]
+            indxtemp = where(gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] < gdat.minmflux)[0]
             if indxtemp.size > 0:
                 print 'Spectrum of some PS went below the prior range!'
                 print 'indxtemp'
                 print indxtemp
                 print 'flux'
-                print gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
+                print gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
                 print 
-            indxtemp = where(gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] > gdat.maxmflux)[0]
+            indxtemp = where(gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]] > gdat.maxmflux)[0]
             if indxtemp.size > 0:
                 print 'Spectrum of some PS went above the prior range!'          
                 print 'indxtemp'
                 print indxtemp
                 print 'flux'
-                print gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
+                print gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], indxtemp]]
                 print 
 
         # save the sample
         if boolsave[gdat.cntrswep]:
-            listsamp[indxsampsave[gdat.cntrswep], :] = gdat.drmcsamp[:, 0]
-            listsampvarb[indxsampsave[gdat.cntrswep], :] = gdat.thissampvarb
+            listsamp[indxsampsave[gdat.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
+            listsampvarb[indxsampsave[gdat.cntrswep], :] = gdatmodi.thissampvarb
             listmodlcnts[indxsampsave[gdat.cntrswep], :] = gdat.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[indxsampsave[gdat.cntrswep], :] = mean(sum(gdat.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
-            listindxpntsfull.append(copy(gdat.thisindxpntsfull))
-            listllik[indxsampsave[gdat.cntrswep]] = sum(gdat.thisllik)
-            listlpri[indxsampsave[gdat.cntrswep]] = sum(gdat.thislpri)
+            listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
+            listllik[indxsampsave[gdat.cntrswep]] = sum(gdatmodi.thisllik)
+            listlpri[indxsampsave[gdat.cntrswep]] = sum(gdatmodi.thislpri)
             
             lprinorm = 0.
             for l in gdat.indxpopl:
@@ -1414,24 +1415,24 @@ def rjmc(gdat, indxprocwork):
                 ## brok terms are not complete
                 ## lpri calculation is turned off
                 break
-                numbpnts = gdat.thissampvarb[gdat.indxsampnumbpnts[l]]
-                fdfnnorm = gdat.thissampvarb[gdat.indxsampfdfnnorm[l]]
+                numbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]]
+                fdfnnorm = gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfdfnslop + gdat.priofactfdfnnorm - log(fdfnnorm)
-                flux = gdat.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
+                flux = gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
                 if gdat.fdfntype == 'powr':
-                    fdfnslop = gdat.thissampvarb[gdat.indxsampfdfnslop[l]]
+                    fdfnslop = gdatmodi.thissampvarb[gdat.indxsampfdfnslop[l]]
                     lpri -= log(1. + fdfnslop**2)
                     lpri += sum(log(pdfn_flux_powr(gdat, flux, fdfnslop)))
                 if gdat.fdfntype == 'brok':
-                    fdfnbrek = gdat.thissampvarb[gdat.indxsampfdfnbrek[l]]
-                    fdfnsloplowr = gdat.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
-                    fdfnslopuppr = gdat.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
+                    fdfnbrek = gdatmodi.thissampvarb[gdat.indxsampfdfnbrek[l]]
+                    fdfnsloplowr = gdatmodi.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
+                    fdfnslopuppr = gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
                     lpri += sum(log(pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)))
             listlprinorm[indxsampsave[gdat.cntrswep]] = lprinorm
             
             if gdat.tracsamp:
                 
-                numbpnts = gdat.thissampvarb[gdat.indxsampnumbpnts[0]]
+                numbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[0]]
                 diffllikdiffpara = empty(numbpnts)
                 for k in range(numbpnts):
                     diffllikdiffpara[k]
@@ -1470,11 +1471,11 @@ def rjmc(gdat, indxprocwork):
         print 'listsampvarb: '
         print listsampvarb
     
-    listchrollik = array(listchrollik)
+    gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         gdat.listauxipara, gdat.listlaccfrac, gdat.listnumbpair, gdat.listjcbnfact, gdat.listcombfact, \
-        listpntsfluxmean, listchrollik]
+        listpntsfluxmean, gdatmodi.listchrollik]
     
     return listchan
 

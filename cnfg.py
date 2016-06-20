@@ -152,7 +152,7 @@ def cnfg_ferm_expr_ngal( \
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=2000000, \
+         numbswep=200000, \
          randinit=False, \
          maxmgang=20., \
          maxmnumbpnts=array([600]), \
@@ -501,7 +501,7 @@ if __name__ == '__main__':
         #cnfg_ferm_expr_igal('fermflux_igal_cmp0_time0.fits', 'fermexpo_igal_cmp0_time0.fits')
         #cnfg_ferm_mock_igal()
         
-        #cnfg_ferm_expr_ngal('fermflux_cmp0_ngal.fits', 'fermexpo_cmp0_ngal.fits')
+        cnfg_ferm_expr_ngal('fermflux_cmp0_ngal.fits', 'fermexpo_cmp0_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp1_ngal.fits', 'fermexpo_cmp1_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp2_ngal.fits', 'fermexpo_cmp2_ngal.fits')
         #cnfg_ferm_expr_ngal('fermflux_cmp3_ngal.fits', 'fermexpo_cmp3_ngal.fits')
