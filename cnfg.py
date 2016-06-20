@@ -152,7 +152,9 @@ def cnfg_ferm_expr_ngal( \
     maxmflux = 1e-7
         
     init(psfntype='doubking', \
-         numbswep=200000, \
+         numbswep=5000000, \
+         numbburn=1000, \
+         factthin=100, \
          randinit=False, \
          maxmgang=20., \
          maxmnumbpnts=array([600]), \
@@ -386,7 +388,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=2000000, \
+         numbswep=5000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

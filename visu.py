@@ -327,6 +327,9 @@ def plot_post(pathprobcatl):
     print 'hey'
     print 'numbpararand'
     print numbpararand
+    print 'gdat.listsamp.T'
+    set_printoptions(threshold=nan)
+    print gdat.listsamp.T
     print 
     indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
     path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
@@ -375,7 +378,7 @@ def plot_post(pathprobcatl):
             discspecmtch /= gdat.numbsamp
             postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
             for i in gdat.indxener:
-                gdat.listspecmtch = zeros((gdat.numbsamp, gdat.truenumbpnts[l]))
+                gdat.listspecmtch = zeros((gdat.numbsamptotl, gdat.truenumbpnts[l]))
                 for p in gdat.indxsamptotl:
                     indxpntstrue = where(listindxmodl[p] >= 0)[0]
                     print 'hey'
