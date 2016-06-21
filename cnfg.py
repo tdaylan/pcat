@@ -153,16 +153,48 @@ def cnfg_ferm_expr_ngal( \
         
     init(psfntype='doubking', \
          numbswep=5000000, \
-         numbburn=1000, \
-         factthin=100, \
          randinit=False, \
          maxmgang=20., \
-         maxmnumbpnts=array([600]), \
+         maxmnumbpnts=array([500]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
+         maxmnormback=array([2., 2.]), \
+         minmnormback=array([0.5, 0.5]), \
+         strgback=strgback, \
+         strgexpo=strgexpo, \
+         datatype='inpt', \
+         strgexpr=strgexpr, \
+        )
+
+
+def cnfg_test( \
+              strgexpr='fermflux_cmp0_ngal.fits', \
+              strgexpo='fermexpo_cmp0_ngal.fits', \
+              strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+             ):
+   
+    indxenerincl = arange(1, 4)
+    indxevttincl = arange(2, 4)
+    minmflux = 3e-11
+    maxmflux = 1e-10
+        
+    init(psfntype='doubking', \
+         numbswep=6000, \
+         numbburn=0, \
+         factthin=2000, \
+         numbproc=3, \
+         randinit=False, \
+         maxmgang=20., \
+         maxmnumbpnts=array([9]), \
+         indxenerincl=indxenerincl, \
+         indxevttincl=indxevttincl, \
+         minmflux=minmflux, \
+         maxmflux=maxmflux, \
+         regitype='ngal', \
+         makeplot=True, \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
          strgback=strgback, \
@@ -350,13 +382,13 @@ def cnfg_test_brok():
          factthin=1, \
          randinit=False, \
          trueinfo=True, \
-         makeplot=False, \
+         #makeplot=False, \
          maxmgang=20., \
          fdfntype='brok', \
          verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([100]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          minmflux=minmflux, \
@@ -367,7 +399,7 @@ def cnfg_test_brok():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          mockfdfntype='brok', \
-         mocknumbpnts=array([3]), \
+         mocknumbpnts=array([100]), \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \

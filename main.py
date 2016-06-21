@@ -101,10 +101,6 @@ def work(gdat, indxprocwork):
                 fdfnbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
-                
-                print 'hey'
-                print 'flux'
-                print flux
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             gdatmodi.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
@@ -1140,7 +1136,19 @@ def init( \
 
     timetotlreal = time.time() - timetotlreal
     timetotlproc = time.clock() - timetotlproc
-     
+    
+    # temp
+    if False:
+        print 'hey'
+        set_printoptions(threshold=np.nan)
+        listlgal = pf.getdata(pathprobcatl, 1).T
+        listspec = pf.getdata(pathprobcatl, 3)[:, 1, :].T
+        print 'listspec'
+        print listspec
+        print 'listlgal'
+        print listlgal
+        print listlgal.shape
+
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, timereal[k], timeproc[k])

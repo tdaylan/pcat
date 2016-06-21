@@ -217,9 +217,6 @@ def plot_post(pathprobcatl):
         aang = hdun['aangpop%d' % l].data
         for j in gdat.indxsamptotl:
             indxpnts = where(spec[j, gdat.indxenerfdfn[0], :] > 0.)[0]
-            print 'hey'
-            print 'indxpnts'
-            print indxpnts
             numbpnts = indxpnts.size
             gdat.listlgal[l].append(lgal[j, indxpnts])
             gdat.listbgal[l].append(bgal[j, indxpnts])
@@ -236,12 +233,6 @@ def plot_post(pathprobcatl):
         
         figr, axis = plt.subplots()
         bins = linspace(1., amax(gmrbstat), 40)
-        print 'hey'
-        print 'bins'
-        print bins
-        print 'gmrbstat'
-        print gmrbstat
-        print
         axis.hist(gmrbstat, bins=bins)
         axis.set_title('Gelman-Rubin Convergence Test')
         axis.set_xlabel('PSRF')
@@ -285,9 +276,11 @@ def plot_post(pathprobcatl):
     figr.subplots_adjust(hspace=0.)
     plt.close(figr)
     
-    print 'hey'
-    print 'gdat.listindxprop'
-    print gdat.listindxprop
+    # temp
+    if False:
+        print 'hey'
+        print 'gdat.listindxprop'
+        print gdat.listindxprop
     indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
             
@@ -295,13 +288,15 @@ def plot_post(pathprobcatl):
     listvarb = [gdat.listlaccfrac, gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
     for k in range(4):
         figr, axis = plt.subplots()
-        
-        print 'hey'
-        print 'indxsampsplt'
-        print indxsampsplt
-        print 'indxsampmerg'
-        print indxsampmerg
-        print
+   
+        # temp
+        if False:
+            print 'hey'
+            print 'indxsampsplt'
+            print indxsampsplt
+            print 'indxsampmerg'
+            print indxsampmerg
+            print
 
         axis.hist(listvarb[k][indxsampsplt])
         axis.hist(listvarb[k][indxsampmerg])
@@ -324,13 +319,7 @@ def plot_post(pathprobcatl):
     tim0 = time.time()
     
     numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
-    print 'hey'
-    print 'numbpararand'
-    print numbpararand
-    print 'gdat.listsamp.T'
     set_printoptions(threshold=nan)
-    print gdat.listsamp.T
-    print 
     indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
     path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
     tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
@@ -364,9 +353,6 @@ def plot_post(pathprobcatl):
     tim0 = time.time()
     
     # flux match with the true catalog
-    print 'hey'
-    print 'gdat.indxsamptotl'
-    print gdat.indxsamptotl
     if gdat.trueinfo:
         for l in gdat.indxpopl:
             discspecmtch = zeros(gdat.truenumbpnts) + gdat.numbsamp
@@ -381,16 +367,6 @@ def plot_post(pathprobcatl):
                 gdat.listspecmtch = zeros((gdat.numbsamptotl, gdat.truenumbpnts[l]))
                 for p in gdat.indxsamptotl:
                     indxpntstrue = where(listindxmodl[p] >= 0)[0]
-                    print 'hey'
-                    print 'indxpntstrue'
-                    print indxpntstrue
-                    print 'gdat.listspecmtch'
-                    print gdat.listspecmtch.shape
-                    print 'gdat.listspec[l][j]'
-                    print gdat.listspec[l][j].shape
-                    print 'listindxmodl[j]'
-                    print listindxmodl[j].shape
-                    print
                     gdat.listspecmtch[p, indxpntstrue] = gdat.listspec[l][p][i, listindxmodl[p][indxpntstrue]]
                 postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
                 postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
@@ -1591,7 +1567,7 @@ def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
                 else:
                     cnts = gdat.truecnts[l][indxenerplot, a, indxevttplot]
                     sigm = gdat.truesigm[l][indxenerplot, a, indxevttplot]
-                axis.text(gdat.truelgal[l][a] + 0.7, gdat.truelgal[l][a] - 0.7, '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
+                axis.text(gdat.truelgal[l][a] + 0.7, gdat.truebgal[l][a] - 0.7, '%d/%.2f' % (cnts, sigm), color='g', fontsize=13)
 
     for l in gdat.indxpopl:
         numbpnts = int(gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]])

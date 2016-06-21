@@ -582,6 +582,7 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
             sampvarb[gdat.indxsampfdfnbrek[l]] = icdf_logt(samp[gdat.indxsampfdfnbrek[l]], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
             sampvarb[gdat.indxsampfdfnsloplowr[l]] = icdf_atan(samp[gdat.indxsampfdfnsloplowr[l]], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
             sampvarb[gdat.indxsampfdfnslopuppr[l]] = icdf_atan(samp[gdat.indxsampfdfnslopuppr[l]], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+
     for k in gdat.indxpsfipara:
         sampvarb[gdat.indxsamppsfipara[k]] = icdf_psfipara(gdat, samp[gdat.indxsamppsfipara[k]], k)
     for c in gdat.indxback:
@@ -597,7 +598,22 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
             fdfnbrek = sampvarb[gdat.indxsampfdfnbrek[l]]
             fdfnsloplowr = sampvarb[gdat.indxsampfdfnsloplowr[l]]
             fdfnslopuppr = sampvarb[gdat.indxsampfdfnslopuppr[l]]
+            print 'hey'
+            print 'retr_sampvarb'
+            print 'fdfnbrek'
+            print fdfnbrek
+            print 'fdfnsloplowr'
+            print fdfnsloplowr
+            print 'fdfnslopuppr'
+            print fdfnslopuppr
+            print 'histfluxunit'
+            print histogram(fluxunit, linspace(0., 1., 10))[0]
+            print histogram(fluxunit, linspace(0., 1., 10))[1]
             sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+            print 'flux'
+            print histogram(sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], gdat.binsflux)[0]
+            print histogram(sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], gdat.binsflux)[1]
+            print
         sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
         sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn[0], :]], sampvarb[indxsampsind[l]])
     
@@ -891,6 +907,10 @@ def retr_fgl3(gdat):
     gdat.fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
 
     gdat.fgl3sind = fgl3['Spectral_Index']
+    
+    gdat.fgl3strg = fgl3['Source_Name']
+    gdat.fgl3strgclss = fgl3['CLASS1']
+    gdat.fgl3strgassc = fgl3['ASSOC1']
     
     gdat.fgl3spectype = fgl3['SpectrumType']
     gdat.fgl3scur = fgl3['beta']
@@ -1957,36 +1977,6 @@ def retr_propmodl(gdat):
         gdat.probprop /= sum(gdat.probprop)
        
 
-def retr_strgangl(gdat):
-
-    if gdat.trueinfo:
-        if gdat.datatype == 'mock':
-            gdat.truelabl = 'Mock'
-        if gdat.datatype == 'inpt':
-            if gdat.exprtype == 'ferm':
-                gdat.truelabl = '3FGL'
-            if gdat.exprtype == 'sdss':
-                gdat.truelabl = 'Hubble'
-
-    if gdat.exprtype == 'ferm':
-        gdat.strganglunit = '[deg]'
-    if gdat.exprtype == 'sdss':
-        gdat.strganglunit = '[arcsec]'
-
-    if gdat.regitype == 'igal':
-        gdat.longlabl = '$l$'
-        gdat.latilabl = '$b$'
-    if gdat.regitype == 'ngal':
-        gdat.longlabl = r'$\nu$'
-        gdat.latilabl = r'$\mu$'
-    if gdat.exprtype == 'ferm':
-        gdat.longlabl += r' [$^\circ$]'
-        gdat.latilabl += r' [$^\circ$]'
-    if gdat.exprtype == 'sdss':
-        gdat.longlabl += ' [arcsec]'
-        gdat.latilabl += ' [arcsec]'
-
-    
 def retr_randunitpsfipara(gdat):
 
     while True:
@@ -2066,6 +2056,9 @@ def setp(gdat):
 
     gdat.minmnumbpnts = 1
 
+    # the normalized offset for text annotation of point sources in the frames
+    gdat.offstext = gdat.maxmgang * 0.05
+    
     gdat.numbback = len(gdat.strgback)
     gdat.indxback = arange(gdat.numbback)
     
@@ -2141,6 +2134,7 @@ def setp(gdat):
     maxmangl = deg2rad(3.5 * gdat.maxmgang) # [rad]
     angl = linspace(0., maxmangl, gdat.numbangl) # [rad]
 
+    # plotting text
     if gdat.exprtype == 'sdss':
         gdat.angldispplot = rad2deg(gdat.angldisp) * 3600.
     if gdat.exprtype == 'ferm':
@@ -2150,13 +2144,33 @@ def setp(gdat):
         if gdat.datatype == 'mock':
             gdat.truelabl = 'Mock'
         if gdat.datatype == 'inpt':
-            gdat.truelabl = '3FGL'
-            
+            if gdat.exprtype == 'ferm':
+                gdat.truelabl = '3FGL'
+            if gdat.exprtype == 'sdss':
+                gdat.truelabl = 'Hubble'
+
     if gdat.exprtype == 'ferm':
         gdat.strganglunit = '[deg]'
     if gdat.exprtype == 'sdss':
         gdat.strganglunit = '[arcsec]'
-        
+
+    if gdat.regitype == 'igal':
+        gdat.longlabl = '$l$'
+        gdat.latilabl = '$b$'
+    if gdat.regitype == 'ngal':
+        gdat.longlabl = r'$\nu$'
+        gdat.latilabl = r'$\mu$'
+    if gdat.exprtype == 'ferm':
+        gdat.longlabl += r' [$^\circ$]'
+        gdat.latilabl += r' [$^\circ$]'
+    if gdat.exprtype == 'sdss':
+        gdat.longlabl += ' [arcsec]'
+        gdat.latilabl += ' [arcsec]'
+    
+    gdat.truelablvari = gdat.truelabl + ' variable'
+    gdat.truelablhits = gdat.truelabl + ' hit'
+    gdat.truelablmiss = gdat.truelabl + ' miss'
+
     # energy bin string
     gdat.enerstrg, gdat.binsenerstrg = retr_enerstrg(gdat)
     
@@ -2173,9 +2187,9 @@ def setp(gdat):
     gdat.spltjcbnfact = log(2.**(2 - gdat.numbener))
     
     # number of components
-    gdat.numbcomp = 2 + gdat.numbener
-    gdat.numbcomp += 1
-    gdat.numbcompcolr = 4
+    # temp -- 3->4 4->5
+    gdat.numbcomp = 4 + gdat.numbener
+    gdat.numbcompcolr = 5
     gdat.jcbnsplt = 2.**(2 - gdat.numbener)
     
     # component indices
@@ -2221,20 +2235,6 @@ def setp(gdat):
 
     # maximum number of point sources that can be modified at once
     gdat.numbmodipnts = int(max(3, sum(gdat.maxmnumbpnts)))
-    
-    if gdat.regitype == 'igal':
-        gdat.longlabl = '$l$'
-        gdat.latilabl = '$b$'
-    else:
-        gdat.longlabl = r'$\nu$'
-        gdat.latilabl = r'$\mu$'
-        
-    if gdat.exprtype == 'ferm':
-        gdat.longlabl += r' [$^\circ$]'
-        gdat.latilabl += r' [$^\circ$]'
-    if gdat.exprtype == 'sdss':
-        gdat.longlabl += ' [arcsec]'
-        gdat.latilabl += ' [arcsec]'
     
     # construct the PSF model
     retr_psfimodl(gdat)
@@ -2375,7 +2375,7 @@ def setp(gdat):
    
     # plot settings
     ## marker opacity
-    gdat.mrkralph = 0.8
+    gdat.mrkralph = 0.7
     ## marker size
     gdat.minmmrkrsize = 50
     gdat.maxmmrkrsize = 500
@@ -2607,6 +2607,9 @@ def setp(gdat):
                 gdat.truespec.append(mockspec[l])
                 gdat.truesind.append(mocksind[l])
                     
+            gdat.truestrg = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
+            gdat.truestrgclss = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
+            gdat.truestrgassc = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
             gdat.indxtruepntstimevari = [array([])] * gdat.numbpopl
                     
             gdat.truenumbpnts = gdat.mocknumbpnts
@@ -2644,6 +2647,10 @@ def setp(gdat):
                 gdat.truebgal = [gdat.fgl3bgal[gdat.indxfgl3rofi]]
                 gdat.truespec = [gdat.fgl3spec[:, :, gdat.indxfgl3rofi]]
                 gdat.truesind = [gdat.fgl3sind[gdat.indxfgl3rofi]]
+                gdat.truestrg = [gdat.fgl3strg[gdat.indxfgl3rofi]]
+                gdat.truestrgclss = [gdat.fgl3strgclss[gdat.indxfgl3rofi]]
+                gdat.truestrgassc = [gdat.fgl3strgassc[gdat.indxfgl3rofi]]
+
                 indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[0], gdat.truelgal[0])
                 spec = gdat.fgl3spec[0, :, gdat.indxfgl3rofi]
                 # temp
@@ -2759,21 +2766,49 @@ def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
 
 def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
 
+    # temp
+    if gdat.trueinfo:
+        axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
+        axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablhits, marker='D', linewidth=2, color='g')
+        if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
+            axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablvari, marker='*', linewidth=2, color='y')
+    axis.legend(bbox_to_anchor=[0.5, 1.2], loc='center')
+        
     # true catalog
     if gdat.trueinfo:
+        ## get the true catalog
         mrkrsize = retr_mrkrsize(gdat, gdat.truespec[indxpoplplot][0, gdat.indxenerfdfn, :].flatten())
         lgal = copy(gdat.truelgal[indxpoplplot])
         bgal = copy(gdat.truebgal[indxpoplplot])
         if gdat.exprtype == 'sdss':
             lgal *= 3600.
             bgal *= 3600.
+        numbpnts = int(gdat.truenumbpnts[indxpoplplot])
+        
+        ## misses
         axis.scatter(lgal[gdat.trueindxpntsmiss[indxpoplplot]], bgal[gdat.trueindxpntsmiss[indxpoplplot]], s=mrkrsize[gdat.trueindxpntsmiss[indxpoplplot]], \
-            alpha=gdat.mrkralph, label=gdat.truelabl + ' miss', marker='x', linewidth=2, color='g')
+            alpha=gdat.mrkralph, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
+        
+        ## hits
         indxpnts = setdiff1d(arange(gdat.truenumbpnts[indxpoplplot], dtype=int), gdat.trueindxpntsmiss[indxpoplplot])
-        axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelabl + ' hit', marker='D', linewidth=2, color='g')
+        axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelablhits, marker='D', linewidth=2, color='g')
+       
+        ## time-variability
         if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
-            labl = gdat.truelabl + ' variable'
-            axis.scatter(lgal[gdat.indxtruepntstimevari[indxpoplplot]], bgal[gdat.indxtruepntstimevari[indxpoplplot]], s=100, label=labl, marker='*', linewidth=2, color='y')
+            axis.scatter(lgal[gdat.indxtruepntstimevari[indxpoplplot]], bgal[gdat.indxtruepntstimevari[indxpoplplot]], \
+                                        s=mrkrsize[gdat.indxtruepntstimevari[indxpoplplot]], label=gdat.truelablvari, marker='*', linewidth=2, color='y')
+                
+        ## annotate
+        for a in range(numbpnts):
+            strg = ''
+            if gdat.truestrg[indxpoplplot][a] != None:
+                strg += '%s ' % gdat.truestrg[indxpoplplot][a]
+            if gdat.truestrgassc[indxpoplplot][a] != None:
+                strg += '%s ' % gdat.truestrgassc[indxpoplplot][a]
+            if gdat.truestrgclss[indxpoplplot][a] != None:
+                strg += '%s ' % gdat.truestrgclss[indxpoplplot][a]
+            if strg != '':
+                axis.text(gdat.truelgal[indxpoplplot][a] + gdat.offstext, gdat.truebgal[indxpoplplot][a] - gdat.offstext, strg, color='g', fontsize=13)
 
     # model catalog
     mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdat.thisindxsampspec[indxpoplplot][gdat.indxenerfdfn, :]])
@@ -2783,7 +2818,6 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
         lgal *= 3600.
         bgal *= 3600.
     axis.scatter(lgal, bgal, s=mrkrsize, alpha=gdat.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
-    axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
 
 
 def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, logt=False, cmap='Reds', mean=False, satuuppr=None, satulowr=None, titl=''):
