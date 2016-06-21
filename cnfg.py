@@ -29,7 +29,7 @@ def cnfg_ferm_info():
     
     minmflux = array([1e-9, 3e-10, 1e-10, 3e-11, 1e-11])
     maxmnumbpnts = zeros(5, dtype=int) + 500
-    numbswep = zeros(5, dtype=int) + 1000000
+    numbswep = zeros(5, dtype=int) + 1000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -44,13 +44,14 @@ def cnfg_ferm_info():
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
 
-    numbproc = 1
     for k in range(numbiter):
         
         gridchan = init( \
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
                         numbburn=numbburn[k], \
+                        # temp
+                        numbproc=3, \
                         #probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
@@ -68,8 +69,9 @@ def cnfg_ferm_info():
                         datatype='inpt', \
                         strgexpr=strgexpr, \
                        )
-        listlevi[k] = gridchan[numbproc]
-        listinfo[k] = gridchan[numbproc+1]
+        
+        listlevi[k] = gridchan[-2]
+        listinfo[k] = gridchan[-1]
 
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
