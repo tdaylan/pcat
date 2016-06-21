@@ -227,7 +227,7 @@ def plot_post(pathprobcatl):
             gdat.listaang[l].append(aang[j, indxpnts])
 
     # Gelman-Rubin test
-    if gdat.numbproc > 1 and gdat.numbsamp > 1:
+    if gdat.numbproc > 1 and isfinite(gmrbstat).all():
         print 'Making the Gelman-Rubin TS plot...'
         tim0 = time.time()
         
