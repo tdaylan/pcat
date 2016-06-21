@@ -101,6 +101,10 @@ def work(gdat, indxprocwork):
                 fdfnbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
                 fdfnsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+                
+                print 'hey'
+                print 'flux'
+                print flux
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             gdatmodi.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
@@ -118,6 +122,10 @@ def work(gdat, indxprocwork):
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
    
+    print 'hey'
+    print 'thisflux'
+    print gdatmodi.thissampvarb[gdat.indxsampcompinit:gdat.indxsampcompinit+6*3]
+
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
         for l in gdat.indxpopl:
@@ -164,10 +172,11 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpara:
             print gdatmodi.thissampvarb[k]
         
-    print 'hey'
-    print 'gdatmodi'
-    print [attr for attr in dir(gdatmodi) if not attr.startswith('__')]
-    print
+    if False:
+        print 'hey'
+        print 'gdatmodi'
+        print [attr for attr in dir(gdatmodi) if not attr.startswith('__')]
+        print
  
     # run the sampler
     listchan = rjmc(gdat, gdatmodi, indxprocwork)
@@ -585,12 +594,13 @@ def init( \
         print 'Sampling...'
     
     # temp
-    print 'hey'
-    print 'gdat'
-    print [attr for attr in dir(gdat) if not attr.startswith('__')]
-    print
-    #print 'sys.getsizeof()'
-    #print sys.getsizeof(gdat.thismodlcnts)
+    if False:
+        print 'hey'
+        print 'gdat'
+        print [attr for attr in dir(gdat) if not attr.startswith('__')]
+        print
+        #print 'sys.getsizeof()'
+        #print sys.getsizeof(gdat.thismodlcnts)
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
@@ -1250,10 +1260,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
     # current sample index
     thiscntr = -1
-    
-    # temp
-    gdat.prevdrmcsamp = copy(gdatmodi.drmcsamp)
-    gdat.prevsampvarb = copy(gdatmodi.thissampvarb)
     
     while gdat.cntrswep < gdat.numbswep:
         

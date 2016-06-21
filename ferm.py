@@ -36,7 +36,7 @@ import os, time, sys, datetime, warnings, getpass, glob, inspect
 # tdpy
 import tdpy.util
 
-import sympy
+import sympy, functools
 
 def retr_axes():
 
@@ -63,48 +63,56 @@ def retr_axes():
     return reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
 
 
-def make_maps():
+def make_maps_pcat():
     
-    cmnd = 'mkdir -p $FERMI_DATA/exposure/pcat'
-    os.system(cmnd)
-    
-    global reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix
-    reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
+    #reco, evtc, numbevtt, numbevtt, evtt, numbener, minmener, maxmener, binsener, meanener, diffener, indxener, nside, numbpixl, apix = retr_axes()
 
-    global strgregi
-    strgregi = ' ra=INDEF dec=INDEF rad=INDEF '
+    gdat = tdpy.util.gdatstrt()
     
-    global listtimefrac, numbtime
     numbtime = 4
-    numbproc = numbtime + 1
+    gdat.rtag = ['cmp%d' % (numbtime - t - 1) for t in range(numbtime)] + ['full']
+    gdat.reco = [7 for t in range(numbtime)] + [8]
+    gdat.evtc = [2 for t in range(numbtime)] + [128]
+    gdat.strgtime = ['tmin=239155201 tmax=364953603' for t in range(numbtime)] + ['tmin=INDEF tmax=INDEF']
+    gdat.weekinit = [9 for t in range(numbtime)] + [11]
+    gdat.weekfinl = [218 for t in range(numbtime)] + [411]
+    gdat.listtimefrac = [0.25, 0.50, 0.75, 1.] + [1.]
+    gdat.photpath = ['p7v6c' for t in range(numbtime)] + ['photon']
+    gdat.strgregi = [' ra=INDEF dec=INDEF rad=INDEF ' for n in range(numbtime + 1)]
+    gdat.strgregi = [256 for n in range(numbtime + 1)]
 
-    global rtag, reco, evtc, strgtime, weekinit, weekfinl, listtimefrac, photpath
-    rtag = ['cmp%d' % (numbtime - t - 1) for t in range(numbtime)] + ['full']
-    reco = [7 for t in range(numbtime)] + [8]
-    evtc = [2 for t in range(numbtime)] + [128]
-    strgtime = ['tmin=239155201 tmax=364953603' for t in range(numbtime)] + ['tmin=INDEF tmax=INDEF']
-    weekinit = [9 for t in range(numbtime)] + [11]
-    weekfinl = [218 for t in range(numbtime)] + [411]
-    listtimefrac = [0.25, 0.50, 0.75, 1.] + [1.]
-    photpath = ['p7v6c' for t in range(numbtime)] + ['photon']
+    gdat.evtt = [4, 8, 16, 32]
+    gdat.test = True
 
+    make_maps_main(gdat)
+
+
+def make_maps_main(gdat):
+    
+    numbproc = len(gdat.rtag)
+    indxproc = arange(numbproc)
+    
     # process pool
     pool = mp.Pool(numbproc)
 
     # spawn the processes
-    pool.map(make_maps_sing, range(numbproc))
+    make_maps_part = functools.partial(make_maps_work, gdat)
+    pool.map(make_maps_part, indxproc)
     pool.close()
     pool.join()
 
 
-def make_maps_sing(indxprocwork):
+def make_maps_work(gdat, indxprocwork):
+
+    cmnd = 'mkdir -p $FERMI_DATA/exposure/%s' % gdat.rtag[indxprocwork]
+    os.system(cmnd)
 
     # make file lists
-    infl = '$PCAT_DATA_PATH/phot_%s.txt' % rtag[indxprocwork]
-    spac = '$PCAT_DATA_PATH/spac_%s.txt' % rtag[indxprocwork]
+    infl = '$PCAT_DATA_PATH/phot_%s.txt' % gdat.rtag[indxprocwork]
+    spac = '$PCAT_DATA_PATH/spac_%s.txt' % gdat.rtag[indxprocwork]
         
-    numbweek = (weekfinl[indxprocwork] - weekinit[indxprocwork]) * listtimefrac[indxprocwork]
-    listweek = floor(linspace(weekinit[indxprocwork], weekfinl[indxprocwork] - 1, numbweek)).astype(int)
+    numbweek = (gdat.weekfinl[indxprocwork] - gdat.weekinit[indxprocwork]) * gdat.listtimefrac[indxprocwork]
+    listweek = floor(linspace(gdat.weekinit[indxprocwork], gdat.weekfinl[indxprocwork] - 1, numbweek)).astype(int)
     cmnd = 'rm ' + infl
     os.system(cmnd)
     cmnd = 'rm ' + spac
@@ -112,11 +120,11 @@ def make_maps_sing(indxprocwork):
     for week in listweek:
         cmnd = 'ls -d -1 $FERMI_DATA/weekly/spacecraft/*_w%03d_* >> ' % week + spac
         os.system(cmnd)
-        cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (photpath[indxprocwork], week) + infl
+        cmnd = 'ls -d -1 $FERMI_DATA/weekly/%s/*_w%03d_* >> ' % (gdat.photpath[indxprocwork], week) + infl
         os.system(cmnd)
     for m in indxevtt:
 
-        if reco[indxprocwork] == 7:
+        if gdat.reco[indxprocwork] == 7:
             if m == 3:
                 thisevtt = 1
                 thisevttdepr = 0
@@ -127,48 +135,53 @@ def make_maps_sing(indxprocwork):
                 continue
             strgpsfn = 'convtype=%d' % thisevttdepr
 
-        if reco[indxprocwork] == 8:
-            thisevtt = evtt[m]
+        if gdat.reco[indxprocwork] == 8:
+            thisevtt = gdat.evtt[m]
             strgpsfn = 'evtype=%d' % thisevtt
          
-        sele = '$PCAT_DATA_PATH/sele_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
-        filt = '$PCAT_DATA_PATH/filt_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
-        live = '$PCAT_DATA_PATH/live_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
-        cnts = '$PCAT_DATA_PATH/cnts_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
-        expo = '$PCAT_DATA_PATH/expo_evtt%03d_%s.fits' % (thisevtt, rtag[indxprocwork])
+        sele = '$PCAT_DATA_PATH/sele_evtt%03d_%s.fits' % (thisevtt, gdat.rtag[indxprocwork])
+        filt = '$PCAT_DATA_PATH/filt_evtt%03d_%s.fits' % (thisevtt, gdat.rtag[indxprocwork])
+        live = '$PCAT_DATA_PATH/live_evtt%03d_%s.fits' % (thisevtt, gdat.rtag[indxprocwork])
+        cnts = '$PCAT_DATA_PATH/cnts_evtt%03d_%s.fits' % (thisevtt, gdat.rtag[indxprocwork])
+        expo = '$PCAT_DATA_PATH/expo_evtt%03d_%s.fits' % (thisevtt, gdat.rtag[indxprocwork])
 
-        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + strgregi + \
-            strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d %s' % (evtc[indxprocwork], strgpsfn)
-        print ''
-        print cmnd
-        print ''
-        os.system(cmnd)
+        cmnd = 'gtselect infile=' + infl + ' outfile=' + sele + gdat.strgregi[indxprocwork] + \
+            gdat.strgtime[indxprocwork] + ' emin=100 emax=100000 zmax=90 evclass=%d %s' % (gdat.evtc[indxprocwork], strgpsfn)
+        if gdat.test:
+            print cmnd
+            print ''
+        else:
+            os.system(cmnd)
 
         cmnd = 'gtmktime evfile=' + sele + ' scfile=' + spac + ' filter="DATA_QUAL==1 && LAT_CONFIG==1"' + ' outfile=' + filt + ' roicut=no'
-        print ''
-        print cmnd
-        print ''
-        os.system(cmnd)
+        if gdat.test:
+            print cmnd
+            print ''
+        else:
+            os.system(cmnd)
 
         cmnd = 'gtbin evfile=' + filt + ' scfile=NONE outfile=' + cnts + \
-            ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits algorithm=HEALPIX' + \
-            ' hpx_ordering_scheme=RING coordsys=GAL hpx_order=8 hpx_ebin=yes'
-        print ''
-        print cmnd
-        print ''
-        os.system(cmnd)
+            ' ebinalg=FILE ebinfile=/n/fink1/fermi/exposure/gcps_time/gtbndefn.fits ' + \
+            'algorithm=HEALPIX hpx_ordering_scheme=RING coordsys=GAL hpx_order=%d hpx_ebin=yes' % log2(gdat.numbside[indxprocwork])
+        if gdat.test:
+            print cmnd
+            print ''
+        else:
+            os.system(cmnd)
 
         cmnd = 'gtltcube evfile=' + filt + ' scfile=' + spac + ' outfile=' + live + ' dcostheta=0.025 binsz=1'
-        print ''
-        print cmnd
-        print ''
-        os.system(cmnd)
+        if gdat.test:
+            print cmnd
+            print ''
+        else:
+            os.system(cmnd)
 
         cmnd = 'gtexpcube2 infile=' + live + ' cmap=' + cnts + ' outfile=' + expo + ' irfs=CALDB evtype=%03d bincalc=CENTER' % thisevtt
-        print ''
-        print cmnd
-        print ''
-        os.system(cmnd)
+        if gdat.test:
+            print cmnd
+            print ''
+        else:
+            os.system(cmnd)
 
 
 def prep_maps():
@@ -410,7 +423,7 @@ def plot_maps():
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-#make_maps()
+make_maps_pcat()
 #prep_maps()
-prep_dust()
+#prep_dust()
 #plot_maps()

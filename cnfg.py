@@ -29,7 +29,7 @@ def cnfg_ferm_info():
     
     minmflux = array([1e-9, 3e-10, 1e-10, 3e-11, 1e-11])
     maxmnumbpnts = zeros(5, dtype=int) + 500
-    numbswep = 2000 * array([1, 3, 10, 30, 100], dtype=int) + 200000
+    numbswep = zeros(5) + 1000000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -78,7 +78,7 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
       
     init( \
          psfntype='doubking', \
-         numbswep=2000000, \
+         numbswep=200000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=10., \
@@ -346,11 +346,11 @@ def cnfg_test_brok():
     mockfdfnbrek = array([1e-9])
       
     init(psfntype='gausking', \
-		 numbswep=100, \
+		 numbswep=3, \
          factthin=1, \
-         makeplot=True, \
          randinit=False, \
          trueinfo=True, \
+         makeplot=False, \
          maxmgang=20., \
          fdfntype='brok', \
          verbtype=2, \
