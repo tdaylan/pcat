@@ -2771,10 +2771,9 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
             alpha=gdat.mrkralph, label=gdat.truelabl + ' miss', marker='x', linewidth=2, color='g')
         indxpnts = setdiff1d(arange(gdat.truenumbpnts[indxpoplplot], dtype=int), gdat.trueindxpntsmiss[indxpoplplot])
         axis.scatter(lgal[indxpnts], bgal[indxpnts], s=mrkrsize[indxpnts], alpha=gdat.mrkralph, label=gdat.truelabl + ' hit', marker='D', linewidth=2, color='g')
-        for l in gdat.indxpopl:
-            if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
-                labl = gdat.truelabl + ' variable'
-                axis.scatter(lgal[gdat.indxtruepntstimevari[indxpoplplot]], bgal[gdat.indxtruepntstimevari[indxpoplplot]], s=100, label=labl, marker='*', linewidth=2, color='y')
+        if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
+            labl = gdat.truelabl + ' variable'
+            axis.scatter(lgal[gdat.indxtruepntstimevari[indxpoplplot]], bgal[gdat.indxtruepntstimevari[indxpoplplot]], s=100, label=labl, marker='*', linewidth=2, color='y')
 
     # model catalog
     mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdat.thisindxsampspec[indxpoplplot][gdat.indxenerfdfn, :]])
@@ -2783,8 +2782,7 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
     if gdat.exprtype == 'sdss':
         lgal *= 3600.
         bgal *= 3600.
-            
-        axis.scatter(lgal, bgal, s=mrkrsize, alpha=gdat.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
+    axis.scatter(lgal, bgal, s=mrkrsize, alpha=gdat.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
     axis.legend(bbox_to_anchor=[0.12, 1.1], loc='center', ncol=2)
 
 
