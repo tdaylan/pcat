@@ -311,8 +311,11 @@ def plot_post(pathprobcatl):
     print 'Calculating proposal execution times...'
     tim0 = time.time()
 
-    plot_chro(gdat)
-    
+    try:
+        plot_chro(gdat)
+    except:
+        print 'Time performance plots crashed'
+
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
     print 'Making the grid posterior plot...'
