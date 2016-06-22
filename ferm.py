@@ -350,27 +350,32 @@ def prep_dust():
     minmbgal = -20.
     maxmbgal = 20.
 
+    path = os.environ["PCAT_DATA_PATH"] + '/fermfdfmflux_igal.fits'
+    fdfmflux = pf.getdata(path)
+
     path = os.environ["PCAT_DATA_PATH"] + '/lambda_sfd_ebv.fits'
     dustigal = pf.getdata(path)['TEMPERATURE']
     numbside = int(sqrt(dustigal.size / 12))
     dustigal = hp.reorder(dustigal, n2r=True)
 
+    dustigal = dustigal[None, :, None] * mean(fdfmflux, 1)[:, None, :] / mean(dustigal)
+
+    path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_igal.fits'
+    pf.writeto(path, dustigal, clobber=True)
+
+    dustngal = empty_like(dustigal)
+    numbener = 3
+    for i in range(numbener):
+        almc = hp.map2alm(dustigal[i, :, 0])
+        hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
+        dustngal[i, :, :] = hp.alm2map(almc, numbside)[:, None]
+
     path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_igal.fits'
     pf.writeto(path, dustigal, clobber=True)
     
-    almc = hp.map2alm(dustigal)
-    hp.rotate_alm(almc, 0., 0.5 * pi, 0.)
-    dustngal = hp.alm2map(almc, numbside)
-            
     path = os.environ["PCAT_DATA_PATH"] + '/fermdustflux_ngal.fits'
     pf.writeto(path, dustngal, clobber=True)
     
-    path = '/n/pan/www/tansu/imag/pcat/dustigal.pdf'
-    tdpy.util.plot_heal(dustigal, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-
-    path = '/n/pan/www/tansu/imag/pcat/dustngal.pdf'
-    tdpy.util.plot_heal(dustngal, path=path, minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
-
     
 def retr_jcbn():
     
@@ -423,7 +428,7 @@ def plot_maps():
 #writ_fdfm()
 #writ_fdfm_doug()
 #plot_maps()
-make_maps_pcat()
+#make_maps_pcat()
 #prep_maps()
-#prep_dust()
+prep_dust()
 #plot_maps()

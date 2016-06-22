@@ -1465,7 +1465,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 axis.legend()
         
     figr.subplots_adjust(wspace=0.3)
-    plt.savefig(gdat.pathplot + 'histcnts%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'histcnts_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
     plt.close(figr)
     
 
