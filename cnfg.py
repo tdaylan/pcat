@@ -155,7 +155,7 @@ def intr_ferm_expr_ngal( \
 
 
 def cnfg_ferm_expr_ngal():
-    karg = intr_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits')
+    karg = intr_ferm_expr_ngal()
     init(**karg)
 
 

@@ -1791,7 +1791,7 @@ def retr_psfimodl(gdat):
         #minmanglpsfn = 0.01
         #maxmanglpsfn = 3.
         # temp
-        minmgamm = 4.
+        minmgamm = 2.
         maxmgamm = 20.
     if gdat.exprtype == 'sdss':
         minmanglpsfn = deg2rad(0.01 / 3600.)
