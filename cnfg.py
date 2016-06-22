@@ -135,7 +135,7 @@ def intr_ferm_expr_ngal( \
                        ): 
     karg = {}
     karg['psfntype'] = 'doubking'
-    karg['numbswep'] = 5000000
+    karg['numbswep'] = 2000000
     karg['randinit'] = False
     karg['maxmgang'] = 20.
     karg['maxmnumbpnts'] = array([500])
