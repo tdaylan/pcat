@@ -77,7 +77,7 @@ def cnfg_ferm_info():
 def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_cmp0_igal.fits'):
       
     init( \
-         psfntype='doubking', \
+         psfntype='singking', \
          numbswep=200000, \
          randinit=False, \
          trueinfo=True, \
@@ -128,46 +128,60 @@ def cnfg_ferm_mock_igal():
         )
 
 
-def cnfg_ferm_expr_ngal_cmp1():
-    cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp1_ngal.fits', strgexpo='fermexpo_cmp1_ngal.fits')
-def cnfg_ferm_expr_ngal_cmp2():
-    cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp2_ngal.fits', strgexpo='fermexpo_cmp2_ngal.fits')
-def cnfg_ferm_expr_ngal_cmp3():
-    cnfg_ferm_expr_ngal(strgexpr='fermflux_cmp3_ngal.fits', strgexpo='fermexpo_cmp3_ngal.fits')
-def cnfg_ferm_expr_ngal_full():
-    cnfg_ferm_expr_ngal(strgexpr='fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
-def cnfg_ferm_expr_ngal_dust():
-    cnfg_ferm_expr_ngal(strgback=['fermisotflux.fits', 'fermdustflux_ngal.fits'])
-
-
-def cnfg_ferm_expr_ngal( \
+def intr_ferm_expr_ngal( \
                         strgexpr='fermflux_cmp0_ngal.fits', \
                         strgexpo='fermexpo_cmp0_ngal.fits', \
-                        strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                       ):
-   
-    indxenerincl = arange(1, 4)
-    indxevttincl = arange(2, 4)
-    minmflux = 3e-11
-    maxmflux = 1e-7
-        
-    init(psfntype='singking', \
-         numbswep=5000000, \
-         randinit=False, \
-         maxmgang=20., \
-         maxmnumbpnts=array([500]), \
-         indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
-         minmflux=minmflux, \
-         maxmflux=maxmflux, \
-         regitype='ngal', \
-         maxmnormback=array([2., 2.]), \
-         minmnormback=array([0.5, 0.5]), \
-         strgback=strgback, \
-         strgexpo=strgexpo, \
-         datatype='inpt', \
-         strgexpr=strgexpr, \
-        )
+                        strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'] \
+                       ): 
+    karg = {}
+    karg['psfntype'] = 'doubking'
+    karg['numbswep'] = 5000000
+    karg['randinit'] = False
+    karg['maxmgang'] = 20.
+    karg['maxmnumbpnts'] = array([500])
+    karg['indxenerincl'] = arange(1, 4)
+    karg['indxevttincl'] = arange(2, 4)
+    karg['minmflux'] = 3e-11
+    karg['maxmflux'] = 1e-7
+    karg['regitype'] = 'ngal'
+    karg['maxmnormback'] = array([2., 2.])
+    karg['minmnormback'] = array([0.5, 0.5])
+    karg['strgback'] = strgback
+    karg['strgexpo'] = strgexpo
+    karg['datatype'] = 'inpt'
+    karg['strgexpr'] = strgexpr
+
+    return karg
+
+
+def cnfg_ferm_expr_ngal():
+    karg = intr_ferm_expr_ngal(strgexpr='fermflux_cmp0_ngal.fits', strgexpo='fermexpo_cmp0_ngal.fits')
+    init(**karg)
+
+
+def cnfg_ferm_expr_ngal_cmp1():
+    karg = intr_ferm_expr_ngal(strgexpr='fermflux_cmp1_ngal.fits', strgexpo='fermexpo_cmp1_ngal.fits')
+    init(**karg)
+
+
+def cnfg_ferm_expr_ngal_cmp2():
+    karg = intr_ferm_expr_ngal(strgexpr='fermflux_cmp2_ngal.fits', strgexpo='fermexpo_cmp2_ngal.fits')
+    init(**karg)
+
+
+def cnfg_ferm_expr_ngal_cmp3():
+    karg = intr_ferm_expr_ngal(strgexpr='fermflux_cmp3_ngal.fits', strgexpo='fermexpo_cmp3_ngal.fits')
+    init(**karg)
+
+
+def cnfg_ferm_expr_ngal_full():
+    karg = intr_ferm_expr_ngal(strgexpr='fermflux_full_ngal.fits', strgexpo='fermexpo_full_ngal.fits')
+    init(**karg)
+
+
+def cnfg_ferm_expr_ngal_dust():
+    karg = intr_ferm_expr_ngal(strgback=['fermisotflux.fits', 'fermdustflux_ngal.fits'])
+    init(**karg)
 
 
 def cnfg_test( \
