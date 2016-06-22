@@ -2800,16 +2800,19 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
                                         s=mrkrsize[gdat.indxtruepntstimevari[indxpoplplot]], label=gdat.truelablvari, marker='*', linewidth=2, color='y')
                 
         ## annotate
-        for a in range(numbpnts):
-            strg = ''
-            if gdat.truestrg[indxpoplplot][a] != None:
-                strg += '%s ' % gdat.truestrg[indxpoplplot][a]
-            if gdat.truestrgassc[indxpoplplot][a] != None:
-                strg += '%s ' % gdat.truestrgassc[indxpoplplot][a]
-            if gdat.truestrgclss[indxpoplplot][a] != None:
-                strg += '%s ' % gdat.truestrgclss[indxpoplplot][a]
-            if strg != '':
-                axis.text(gdat.truelgal[indxpoplplot][a] + gdat.offstext, gdat.truebgal[indxpoplplot][a] - gdat.offstext, strg, color='g', fontsize=13)
+        # temp
+        gdat.boolanot = False
+        if gdat.boolanot:
+            for a in range(numbpnts):
+                strg = ''
+                if gdat.truestrg[indxpoplplot][a] != None:
+                    strg += '%s ' % gdat.truestrg[indxpoplplot][a]
+                if gdat.truestrgassc[indxpoplplot][a] != None:
+                    strg += '%s ' % gdat.truestrgassc[indxpoplplot][a]
+                if gdat.truestrgclss[indxpoplplot][a] != None:
+                    strg += '%s ' % gdat.truestrgclss[indxpoplplot][a]
+                if strg != '':
+                    axis.text(gdat.truelgal[indxpoplplot][a], gdat.truebgal[indxpoplplot][a] - gdat.offstext, strg, ha='center', va='center', color='g', fontsize=6)
 
     # model catalog
     mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdat.thisindxsampspec[indxpoplplot][gdat.indxenerfdfn, :]])

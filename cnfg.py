@@ -27,9 +27,9 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmflux = array([1e-9, 3e-10, 1e-10, 3e-11, 1e-11])
-    maxmnumbpnts = zeros(5, dtype=int) + 500
-    numbswep = zeros(5, dtype=int) + 1000000
+    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
+    maxmnumbpnts = zeros(5, dtype=int) + 1500
+    numbswep = zeros(5, dtype=int) + 2000000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -77,7 +77,7 @@ def cnfg_ferm_info():
 def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_cmp0_igal.fits'):
       
     init( \
-         psfntype='singking', \
+         psfntype='doubking', \
          numbswep=200000, \
          randinit=False, \
          trueinfo=True, \
