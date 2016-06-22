@@ -151,7 +151,7 @@ def cnfg_ferm_expr_ngal( \
     minmflux = 3e-11
     maxmflux = 1e-7
         
-    init(psfntype='doubking', \
+    init(psfntype='singking', \
          numbswep=5000000, \
          randinit=False, \
          maxmgang=20., \

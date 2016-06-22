@@ -476,7 +476,7 @@ def plot_post(pathprobcatl):
         tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara, scalpara='logt')
 
         # flux distribution
-        titl = gdat.binsenerstrg[gdat.indxenerfdfn]
+        titl = gdat.binsenerstrg[gdat.indxenerfdfn[0]]
         if gdat.fdfntype == 'powr':
             # power law index
             path = gdat.pathplot + 'fdfnslop_pop%d_' % l + gdat.rtag
