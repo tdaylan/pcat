@@ -29,7 +29,7 @@ def cnfg_ferm_info():
     
     minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
     maxmnumbpnts = zeros(5, dtype=int) + 1000
-    numbswep = zeros(5, dtype=int) + 200000
+    numbswep = zeros(5, dtype=int) + 2000000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
