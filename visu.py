@@ -258,6 +258,7 @@ def plot_post(pathprobcatl):
     print levi
     print retr_info(listllik, levi)
     path = gdat.pathplot + 'llik_' + gdat.rtag
+    print path
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
     return
     
