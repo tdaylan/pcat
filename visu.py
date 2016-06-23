@@ -452,13 +452,13 @@ def plot_post(pathprobcatl):
         tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
     # temp
-    print levi = retr_levi(listllik)
-    print info = retr_info(listllik, levi)
+    print retr_levi(listllik)
+    print retr_info(listllik, levi)
     if True:
         indxproctemp = argsort(mean(listllik, 0) - mean(listllik))[:numbproc-3]
         listllik = listllik[indxproctemp, :]
-    print levi = retr_levi(listllik)
-    print info = retr_info(listllik, levi)
+    print retr_levi(listllik)
+    print retr_info(listllik, levi)
     print
     print
     print
