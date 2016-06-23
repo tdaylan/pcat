@@ -28,8 +28,8 @@ def cnfg_ferm_psfn_expr(psfntype):
 def cnfg_ferm_info():
     
     minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
-    maxmnumbpnts = zeros(5, dtype=int) + 1500
-    numbswep = zeros(5, dtype=int) + 2000000
+    maxmnumbpnts = zeros(5, dtype=int) + 1000
+    numbswep = zeros(5, dtype=int) + 200000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -50,11 +50,11 @@ def cnfg_ferm_info():
                         psfntype='doubking', \
                         numbswep=numbswep[k], \
                         numbburn=numbburn[k], \
-                        #probprop=array([0.1, 0.1, 0., 0.1, 0., 0., 0, 0, 1., 1., 1., 1.], dtype=float), \
+                        probprop=array([0.01, 0.01, 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
                         trueinfo=True, \
                         randinit=False, \
                         makeplot=True, \
-                        maxmgang=20., \
+                        maxmgang=10., \
                         maxmnumbpnts=array([maxmnumbpnts[k]]), \
                         indxenerincl=indxenerincl, \
                         indxevttincl=indxevttincl, \

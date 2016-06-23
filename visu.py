@@ -247,21 +247,33 @@ def plot_post(pathprobcatl):
     tim0 = time.time()
    
     # temp
-    levi = retr_levi(listllik)
-    print levi
-    print retr_info(listllik, levi)
-    if True:
+    if False:
+        print listllik[:, 0:8]
         numbproc = listllik.shape[0]
-        indxproctemp = argsort(mean(listllik, 1) - mean(listllik))[:numbproc-3]
-        listllik = listllik[indxproctemp, :]
-    levi = retr_levi(listllik)
-    print levi
-    print retr_info(listllik, levi)
-    path = gdat.pathplot + 'llik_' + gdat.rtag
-    print path
-    tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
-    return
-    
+        listllik = listllik.flatten()
+        levi = retr_levi(listllik)
+        print levi
+        print retr_info(listllik, levi)
+        hist, bins = histogram(listllik)
+
+        print 'hist'
+        print hist
+        print 'bins'
+        print bins
+        binsmaxm = bins[argmax(hist)]
+        indxsamptemp = where((listllik > binsmaxm - 100) & (listllik < binsmaxm + 100))[0]
+        listllik = listllik[indxsamptemp]
+        levi = retr_levi(listllik)
+        print levi
+        print retr_info(listllik, levi)
+        path = gdat.pathplot + 'llik_' + gdat.rtag
+        print
+        print
+        tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
+        return
+
+
+ 
 
     numbsampatcr =  max(min(100, gdat.numbsamp / 2), 1)
     atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
