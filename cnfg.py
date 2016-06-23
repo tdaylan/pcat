@@ -27,9 +27,10 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_ferm_info():
     
-    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11, 3e-12])
-    maxmnumbpnts = zeros(5, dtype=int) + 1000
-    numbswep = zeros(5, dtype=int) + 2000000
+    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11])
+    numbruns = minmflux.size
+    maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
+    numbswep = zeros(numbruns, dtype=int) + 2000000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -75,8 +76,8 @@ def cnfg_ferm_info():
             listinfo[k] = gridchan[-1]
 
     else:
-        listlevi = array([])
-        listinfo = array([])
+        listlevi = array([-39222.9070569, -39226.1778779, -39300.7982166, -39521.8723332])[::-1]
+        listinfo = array([91.0328924911, 98.1275628394, 98.732104824, 88.3453610331])[::-1]
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
 

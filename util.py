@@ -2768,12 +2768,13 @@ def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
 def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
 
     # temp
-    if gdat.trueinfo:
-        axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
-        axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablhits, marker='D', linewidth=2, color='g')
-        if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
-            axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablvari, marker='*', linewidth=2, color='y')
-    axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center')
+    if False:
+        if gdat.trueinfo:
+            axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
+            axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablhits, marker='D', linewidth=2, color='g')
+            if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
+                axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablvari, marker='*', linewidth=2, color='y')
+        axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center')
         
     # true catalog
     if gdat.trueinfo:
