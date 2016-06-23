@@ -451,6 +451,14 @@ def plot_post(pathprobcatl):
         path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
         tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
+    # temp
+    #levi = retr_levi(listllik)
+    #info = retr_info(listllik, levi)
+    if False:
+        print listllik.shape
+        indxproctemp = argsort(mean(listllik, 0) - mean(listllik))[:numbproc-3]
+        listllik = listllik[:, indxproctemp]
+
     # log-likelihood
     path = gdat.pathplot + 'llik_' + gdat.rtag
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')

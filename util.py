@@ -2824,6 +2824,21 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
     axis.scatter(lgal, bgal, s=mrkrsize, alpha=gdat.mrkralph, label='Sample', marker='+', linewidth=2, color='b')
 
 
+def retr_levi(listllik):
+    
+    minmlistllik = amin(listllik)
+    levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
+    
+    return levi
+
+
+def retr_info(listllik, levi):
+    
+    info = mean(listllik) - levi
+
+    return info
+
+
 def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, logt=False, cmap='Reds', mean=False, satuuppr=None, satulowr=None, titl=''):
 
     if logt:

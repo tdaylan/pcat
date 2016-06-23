@@ -689,7 +689,6 @@ def init( \
     if gdat.verbtype > 0:
         print 'Estimating the Bayesian evidence...'
         tim0 = time.time()
-    minmlistllik = amin(listllik)
     
     listsamp = listsamp.reshape(gdat.numbsamptotl, -1)
     
@@ -708,18 +707,15 @@ def init( \
     elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdat.verbtype, optiprop=True)
     lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
     
-    #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
-    levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
-    print 'hey'
-    print levi
     # temp
-    if not isfinite(levi):
-        levi = 0.
-
+    #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
+    #if not isfinite(levi):
+    #    levi = 0.
+    levi = retr_levi(listllik)
     gridchan.append(levi)
   
     # relative entropy
-    info = mean(listllik) - levi
+    info = retr_info(listllik, levi)
     gridchan.append(info)
 
     # collect posterior samples from the processes
