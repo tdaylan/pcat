@@ -1119,6 +1119,10 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 if gdat.trueinfo:
                     indxpnts = where((gdat.binsspec[gdat.indxenerfdfn[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn[0], :]) & \
                         (gdat.truespec[l][0, gdat.indxenerfdfn[0], :] < gdat.binsspec[gdat.indxenerfdfn[0], indxuppr]))[0]
+                    
+                    print 'indxpnts'
+                    print indxpnts
+                    
                     mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
