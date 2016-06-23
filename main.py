@@ -784,7 +784,7 @@ def init( \
         print 'Binning the probabilistic catalog...'
         tim0 = time.time()
 
-    # posterior maps
+    # binned and stacked posterior
     pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbflux))
     for k in range(gdat.numbsamp):
         for l in gdat.indxpopl:
@@ -794,14 +794,16 @@ def init( \
                     hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
                     pntsprob[l, i, hpixl, h] += 1.
     
+    # Gelman-Rubin test
     if gdat.verbtype > 0:
         print 'Performing Gelman-Rubin convergence test...'
         tim0 = time.time()
-
     gmrbstat = zeros(gdat.numbpixlsave)
     for n in range(gdat.numbpixlsave):
         gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
+    # write the PCAT output to disc
+    pathpcatlite = os.environ["PCAT_DATA_PATH"] + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     pathpcat = os.environ["PCAT_DATA_PATH"] + '/pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
@@ -924,10 +926,6 @@ def init( \
     listhdun.append(pf.ImageHDU(listnormback))
     listhdun[-1].header['EXTNAME'] = 'normback'
    
-    ## unit sample
-    listhdun.append(pf.ImageHDU(listsamp))
-    listhdun[-1].header['EXTNAME'] = 'listsamp'
-    
     ## log-likelihood
     listhdun.append(pf.ImageHDU(listllik))
     listhdun[-1].header['EXTNAME'] = 'llik'
@@ -935,6 +933,13 @@ def init( \
     ## log-prior
     listhdun.append(pf.ImageHDU(listlpri))
     listhdun[-1].header['EXTNAME'] = 'lpri'
+   
+    # store the lite file
+    pf.HDUList(listhdun).writeto(pathpcatlite, clobber=True, output_verify='ignore')
+
+    ## unit sample
+    listhdun.append(pf.ImageHDU(listsamp))
+    listhdun[-1].header['EXTNAME'] = 'listsamp'
     
     ## number of PS
     listhdun.append(pf.ImageHDU(listnumbpnts))
