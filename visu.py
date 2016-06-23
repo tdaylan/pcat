@@ -251,6 +251,7 @@ def plot_post(pathprobcatl):
     print levi
     print retr_info(listllik, levi)
     if True:
+        numbproc = listllik.shape[0]
         indxproctemp = argsort(mean(listllik, 0) - mean(listllik))[:numbproc-3]
         listllik = listllik[indxproctemp, :]
     levi = retr_levi(listllik)
