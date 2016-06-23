@@ -349,12 +349,14 @@ def plot_post(pathprobcatl):
     print 'Done in %.3g seconds.' % (tim1 - tim0)
     print 'Making the grid posterior plot...'
     tim0 = time.time()
-    
-    numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
-    set_printoptions(threshold=nan)
-    indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
-    path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
-    tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
+   
+    # temp
+    if False:
+        numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
+        set_printoptions(threshold=nan)
+        indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
+        path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
+        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
 
     numbpntspost = 3
     if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1:
@@ -1116,7 +1118,8 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 print 
 
                 # superimpose true PS
-                if gdat.trueinfo:
+                # temp
+                if False and gdat.trueinfo:
                     indxpnts = where((gdat.binsspec[gdat.indxenerfdfn[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn[0], :]) & \
                         (gdat.truespec[l][0, gdat.indxenerfdfn[0], :] < gdat.binsspec[gdat.indxenerfdfn[0], indxuppr]))[0]
                     
