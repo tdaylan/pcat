@@ -272,7 +272,7 @@ def plot_post(pathpcat):
         tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
         return
 
-    numbsampatcr =  50
+    numbsampatcr =  40
     atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
     for b in gdat.indxproc:
         atcr[:, :, b] = tdpy.mcmc.retr_atcr(listmodlcnts[:, b, :], numbdela=numbsampatcr)
