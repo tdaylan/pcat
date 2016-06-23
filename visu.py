@@ -246,6 +246,21 @@ def plot_post(pathprobcatl):
     print 'Calculating the autocorrelation of the chain...'
     tim0 = time.time()
    
+    # temp
+    levi = retr_levi(listllik)
+    print levi
+    print retr_info(listllik, levi)
+    if True:
+        indxproctemp = argsort(mean(listllik, 0) - mean(listllik))[:numbproc-3]
+        listllik = listllik[indxproctemp, :]
+    levi = retr_levi(listllik)
+    print levi
+    print retr_info(listllik, levi)
+    path = gdat.pathplot + 'llik_' + gdat.rtag
+    tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
+    return
+    
+
     numbsampatcr =  max(min(100, gdat.numbsamp / 2), 1)
     atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
     for b in gdat.indxproc:
@@ -451,35 +466,6 @@ def plot_post(pathprobcatl):
         path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
         tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
-    # temp
-    print retr_levi(listllik)
-    print retr_info(listllik, levi)
-    if True:
-        indxproctemp = argsort(mean(listllik, 0) - mean(listllik))[:numbproc-3]
-        listllik = listllik[indxproctemp, :]
-    print retr_levi(listllik)
-    print retr_info(listllik, levi)
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-
     # log-likelihood
     path = gdat.pathplot + 'llik_' + gdat.rtag
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
