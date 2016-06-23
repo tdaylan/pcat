@@ -460,6 +460,25 @@ def plot_post(pathprobcatl):
     print levi = retr_levi(listllik)
     print info = retr_info(listllik, levi)
     print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
 
     # log-likelihood
     path = gdat.pathplot + 'llik_' + gdat.rtag
