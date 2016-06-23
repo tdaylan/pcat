@@ -802,7 +802,7 @@ def init( \
     for n in range(gdat.numbpixlsave):
         gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
-    pathprobcatl = os.environ["PCAT_DATA_PATH"] + '/probcatl_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcat = os.environ["PCAT_DATA_PATH"] + '/pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
@@ -1125,10 +1125,10 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.truepsfipara))
         listhdun[-1].header['EXTNAME'] = 'mockpsfipara'
         
-    pf.HDUList(listhdun).writeto(pathprobcatl, clobber=True, output_verify='ignore')
+    pf.HDUList(listhdun).writeto(pathpcat, clobber=True, output_verify='ignore')
 
     if gdat.makeplot:
-        plot_post(pathprobcatl)
+        plot_post(pathpcat)
 
     timetotlreal = time.time() - timetotlreal
     timetotlproc = time.clock() - timetotlproc
@@ -1137,8 +1137,8 @@ def init( \
     if False:
         print 'hey'
         set_printoptions(threshold=np.nan)
-        listlgal = pf.getdata(pathprobcatl, 1).T
-        listspec = pf.getdata(pathprobcatl, 3)[:, 1, :].T
+        listlgal = pf.getdata(pathpcat, 1).T
+        listspec = pf.getdata(pathpcat, 3)[:, 1, :].T
         print 'listspec'
         print listspec
         print 'listlgal'
@@ -1149,7 +1149,7 @@ def init( \
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, timereal[k], timeproc[k])
         print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timetotlreal, sum(timeproc))
-        print 'The ensemble of catalogs is at ' + pathprobcatl
+        print 'The ensemble of catalogs is at ' + pathpcat
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         

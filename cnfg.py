@@ -44,33 +44,39 @@ def cnfg_ferm_info():
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
 
-    for k in range(numbiter):
-        
-        gridchan = init( \
-                        psfntype='doubking', \
-                        numbswep=numbswep[k], \
-                        numbburn=numbburn[k], \
-                        probprop=array([0.01, 0.01, 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
-                        trueinfo=True, \
-                        randinit=False, \
-                        makeplot=True, \
-                        maxmgang=10., \
-                        maxmnumbpnts=array([maxmnumbpnts[k]]), \
-                        indxenerincl=indxenerincl, \
-                        indxevttincl=indxevttincl, \
-                        minmflux=minmflux[k], \
-                        maxmflux=1e-7, \
-                        regitype='ngal', \
-                        maxmnormback=array([5., 5.]), \
-                        minmnormback=array([0.2, 0.2]), \
-                        strgexpo=strgexpo, \
-                        datatype='inpt', \
-                        strgexpr=strgexpr, \
-                       )
-        
-        listlevi[k] = gridchan[-2]
-        listinfo[k] = gridchan[-1]
+    # temp
+    if False:
 
+        for k in range(numbiter):
+            
+            gridchan = init( \
+                            psfntype='doubking', \
+                            numbswep=numbswep[k], \
+                            numbburn=numbburn[k], \
+                            probprop=array([0.01, 0.01, 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
+                            trueinfo=True, \
+                            randinit=False, \
+                            makeplot=True, \
+                            maxmgang=10., \
+                            maxmnumbpnts=array([maxmnumbpnts[k]]), \
+                            indxenerincl=indxenerincl, \
+                            indxevttincl=indxevttincl, \
+                            minmflux=minmflux[k], \
+                            maxmflux=1e-7, \
+                            regitype='ngal', \
+                            maxmnormback=array([5., 5.]), \
+                            minmnormback=array([0.2, 0.2]), \
+                            strgexpo=strgexpo, \
+                            datatype='inpt', \
+                            strgexpr=strgexpr, \
+                           )
+            
+            listlevi[k] = gridchan[-2]
+            listinfo[k] = gridchan[-1]
+
+    else:
+        listlevi = array([])
+        listinfo = array([])
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
 

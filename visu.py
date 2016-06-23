@@ -4,12 +4,12 @@ from __init__ import *
 # internal functions
 from util import *
 
-def plot_post(pathprobcatl):
+def plot_post(pathpcat):
     
-    hdun = pf.open(pathprobcatl)
+    hdun = pf.open(pathpcat)
 
-    print 'Loading PCAT output file %s...' % pathprobcatl
-    print pf.info(pathprobcatl)
+    print 'Loading PCAT output file %s...' % pathpcat
+    print pf.info(pathpcat)
 
     gdat = gdatstrt()
     
@@ -272,10 +272,7 @@ def plot_post(pathprobcatl):
         tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|y)$')
         return
 
-
- 
-
-    numbsampatcr =  max(min(100, gdat.numbsamp / 2), 1)
+    numbsampatcr =  50
     atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
     for b in gdat.indxproc:
         atcr[:, :, b] = tdpy.mcmc.retr_atcr(listmodlcnts[:, b, :], numbdela=numbsampatcr)
