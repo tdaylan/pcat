@@ -502,7 +502,7 @@ def plot_post(pathprobcatl):
         # mean number of point sources
         path = gdat.pathplot + 'fdfnnorm_pop%d_' % l + gdat.rtag
         truepara = None
-        tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara, scalpara='logt')
+        tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
 
         # flux distribution
         titl = gdat.binsenerstrg[gdat.indxenerfdfn[0]]
@@ -1044,7 +1044,7 @@ def plot_evidtest():
     gain = linspace(minmgain, maxmgain, 100)
     devi = linspace(minmdevi, maxmdevi, 100)
 
-    evid = log(sqrt(1. + exp(2. * gain[None, :])) *                exp(-devi[:, None]**2 / 2. / (1. + 1. / exp(2. * gain[None, :]))))
+    evid = log(sqrt(1. + exp(2. * gain[None, :])) * exp(-devi[:, None]**2 / 2. / (1. + 1. / exp(2. * gain[None, :]))))
     
     figr, axis = plt.subplots(figsize=(7, 7))
     figr.suptitle('Log-Bayesian Evidence For Lower-Dimension Model', fontsize=18)
@@ -1106,10 +1106,19 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 imag = axis.imshow(temp, origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
+                print 'hey'
+                print 'h'
+                print h
+                print 'indxlowr'
+                print indxlowr
+                print 'indxuppr'
+                print indxuppr
+                print 
+
                 # superimpose true PS
                 if gdat.trueinfo:
-                    indxpnts = where((gdat.binsspec[gdat.indxenerfdfn, indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn, :]) & \
-                        (gdat.truespec[l][0, gdat.indxenerfdfn, :] < gdat.binsspec[gdat.indxenerfdfn, indxuppr]))[0]
+                    indxpnts = where((gdat.binsspec[gdat.indxenerfdfn[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn[0], :]) & \
+                        (gdat.truespec[l][0, gdat.indxenerfdfn[0], :] < gdat.binsspec[gdat.indxenerfdfn[0], indxuppr]))[0]
                     mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
