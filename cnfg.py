@@ -203,7 +203,7 @@ def cnfg_test( \
     maxmflux = 1e-10
         
     init(psfntype='doubking', \
-         numbswep=6000, \
+         numbswep=600, \
          numbburn=0, \
          factthin=2000, \
          numbproc=3, \

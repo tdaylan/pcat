@@ -902,9 +902,14 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
         ## save the posterior positions as a CSV file
-        path = os.environ["PCAT_DATA_PATH"] + '/pcatlgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = os.environ["PCAT_DATA_PATH"] + '/pcat_lgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        print 'hey'
+        print 'listlgal[l].shape'
+        print listlgal[l].shape
+        print 
+
         savetxt(path, listlgal[l])
-        path = os.environ["PCAT_DATA_PATH"] + '/pcatbgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = os.environ["PCAT_DATA_PATH"] + '/pcat_bgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
         savetxt(path, listbgal[l])
 
 
