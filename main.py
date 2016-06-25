@@ -102,14 +102,6 @@ def work(gdat, indxprocwork):
                 fdfnsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
                 fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            
-            print 'hey'
-            print 'histtrueflux'
-            print histogram(gdat.truespec[l][0, gdat.indxenerfdfn[0], :], gdat.binsflux)[0]
-            print 'histfluxunit'
-            print histogram(fluxunit, linspace(0., 1., 10))[0]
-            print
-            
             gdatmodi.drmcsamp[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdat.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
    
@@ -126,15 +118,8 @@ def work(gdat, indxprocwork):
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
     gdat.thispntsflux, gdat.thispntscnts, gdat.thismodlflux, gdat.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
     gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
-   
-    print 'histthisflux'
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
-    print histogram(gdatmodi.thissampvarb[indxsampspectemp[0][gdat.indxenerfdfn[0], :]], gdat.binsflux)[0]
-    print
     
-    # temp
-    return
-
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
         for l in gdat.indxpopl:

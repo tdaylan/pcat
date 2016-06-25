@@ -87,29 +87,9 @@ def cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     fluxunit = norm / (1. - fdfnsloplowr) * gdat.pivtflux**fdfnsloplowr * (flux**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
     indxflux = where(flux >= fdfnbrek)[0]
     
-    if False:
-        print 'hey'
-        print 'cdfn_flux_brok'
-        print 'fdfnbrek'
-        print fdfnbrek
-        print 'flux'
-        print flux
-        print 'norm'
-        print norm
-        print 'fluxunit'
-        print fluxunit
-        print 'indxflux'
-        print indxflux
-   
     if indxflux.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
         fluxunit[indxflux] = temp + norm / (1. - fdfnslopuppr) * gdat.pivtflux**fdfnslopuppr * (flux[indxflux]**(1. - fdfnslopuppr) - fdfnbrek**(1. - fdfnslopuppr))
-    
-        if False:
-            print 'temp'
-            print temp
-            print 'fluxunit'
-            print fluxunit
 
     return fluxunit
 
@@ -133,25 +113,8 @@ def icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr):
     flux = (fluxunit * (1. - fdfnsloplowr) / norm / gdat.pivtflux**fdfnsloplowr + gdat.minmflux**(1. - fdfnsloplowr))**(1. / (1. - fdfnsloplowr))
     indxfluxunit = where(fluxunit >= fluxunitbrek)[0]
     
-    if False:
-        print 'hey'
-        print 'icdf_flux_brok'
-        print 'fluxunit'
-        print fluxunit
-        print 'norm'
-        print norm
-        print 'flux'
-        print flux
-        print 'indxfluxunit'
-        print indxfluxunit
-    
     if indxfluxunit.size > 0:
         temp = norm * gdat.pivtflux**fdfnsloplowr / (1. - fdfnsloplowr) * (fdfnbrek**(1. - fdfnsloplowr) - gdat.minmflux**(1. - fdfnsloplowr))
-        
-        if False:
-            print 'temp'
-            print temp
-        
         flux[indxfluxunit] = ((fluxunit[indxfluxunit] - temp) * (1. - fdfnslopuppr) / norm / gdat.pivtflux**fdfnslopuppr + fdfnbrek**(1. - fdfnslopuppr))**(1. / (1. - fdfnslopuppr))
 
     return flux
@@ -594,27 +557,11 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
         if gdat.fdfntype == 'powr':
             sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_powr(gdat, samp[indxsampspec[l][gdat.indxenerfdfn, :]], sampvarb[gdat.indxsampfdfnslop[l]])
         if gdat.fdfntype == 'brok':
-            fluxunit = samp[indxsampspec[l][gdat.indxenerfdfn, :]]
+            fluxunit = samp[indxsampspec[l][gdat.indxenerfdfn[0], :]]
             fdfnbrek = sampvarb[gdat.indxsampfdfnbrek[l]]
             fdfnsloplowr = sampvarb[gdat.indxsampfdfnsloplowr[l]]
             fdfnslopuppr = sampvarb[gdat.indxsampfdfnslopuppr[l]]
-            print 'hey'
-            print 'retr_sampvarb'
-            print 'fdfnbrek'
-            print fdfnbrek
-            print 'fdfnsloplowr'
-            print fdfnsloplowr
-            print 'fdfnslopuppr'
-            print fdfnslopuppr
-            print 'histfluxunit'
-            print histogram(fluxunit, linspace(0., 1., 10))[0]
             sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            print 'histflux'
-            print histogram(sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], gdat.binsflux)[0]
-            print
-            print
-            print
-            print
         sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
         sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn[0], :]], sampvarb[indxsampsind[l]])
     
@@ -1141,8 +1088,8 @@ def retr_prop(gdat, gdatmodi):
         if gdat.thisindxprop == gdat.indxpropfdfnbrek:
             gdat.indxsampvarbmodi = gdat.indxsampfdfnbrek[gdatmodi.indxpoplmodi]
             retr_gaus(gdat, gdatmodi, gdat.indxsampvarbmodi, gdat.stdvflux)
-            gdatmodi.nextsampvarb[gdat.indxsampfdfnbrek[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnbrek[gdatmodi.indxpoplmodi], \
-                gdat.factfdfnbrek[gdatmodi.indxpoplmodi])
+            gdatmodi.nextsampvarb[gdat.indxsampfdfnbrek[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], \
+                gdat.minmfdfnbrek[gdatmodi.indxpoplmodi], gdat.factfdfnbrek[gdatmodi.indxpoplmodi])
             if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnbrek]'
                 print gdatmodi.thissampvarb[gdat.indxsampfdfnbrek]
@@ -1153,8 +1100,8 @@ def retr_prop(gdat, gdatmodi):
         if gdat.thisindxprop == gdat.indxpropfdfnsloplowr:
             gdat.indxsampvarbmodi = gdat.indxsampfdfnsloplowr[gdatmodi.indxpoplmodi]
             retr_gaus(gdat, gdatmodi, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
-            gdatmodi.nextsampvarb[gdat.indxsampfdfnsloplowr[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnsloplowr[gdatmodi.indxpoplmodi], \
-                gdat.factfdfnsloplowr[gdatmodi.indxpoplmodi])
+            gdatmodi.nextsampvarb[gdat.indxsampfdfnsloplowr[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], \
+                gdat.minmfdfnsloplowr[gdatmodi.indxpoplmodi], gdat.factfdfnsloplowr[gdatmodi.indxpoplmodi])
             if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnsloplowr]'
                 print gdatmodi.thissampvarb[gdat.indxsampfdfnsloplowr]
@@ -1165,8 +1112,8 @@ def retr_prop(gdat, gdatmodi):
         if gdat.thisindxprop == gdat.indxpropfdfnslopuppr:
             gdat.indxsampvarbmodi = gdat.indxsampfdfnslopuppr[gdatmodi.indxpoplmodi]
             retr_gaus(gdat, gdatmodi, gdat.indxsampvarbmodi, gdat.stdvfdfnslop)
-            gdatmodi.nextsampvarb[gdat.indxsampfdfnslopuppr[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], gdat.minmfdfnslopuppr[gdatmodi.indxpoplmodi], \
-                gdat.factfdfnslopuppr[gdatmodi.indxpoplmodi])
+            gdatmodi.nextsampvarb[gdat.indxsampfdfnslopuppr[gdatmodi.indxpoplmodi]] = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampvarbmodi, -1], \
+                gdat.minmfdfnslopuppr[gdatmodi.indxpoplmodi], gdat.factfdfnslopuppr[gdatmodi.indxpoplmodi])
             if gdat.verbtype > 1:
                 print 'thissampvarb[gdat.indxsampfdfnslopuppr]'
                 print gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr]

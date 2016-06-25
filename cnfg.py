@@ -385,47 +385,44 @@ def cnfg_test_errr():
         )
 
 
-def cnfg_test_brok():
+def cnfg_ferm_mock_ngal_brok():
      
     indxenerincl = arange(1, 4)
     indxevttincl = arange(2, 4)
     numbener = indxenerincl.size
 
-    minmflux = 1e-11
+    minmflux = 3e-11
     maxmflux = 1e-7
-    mockfdfnsloplowr = array([0.])
+
+    listfdfnbrek = array([1e-10, 3e-10, 1e-9])
+    mockfdfnsloplowr = array([0.75])
     mockfdfnslopuppr = array([2.])
-    mockfdfnbrek = array([1e-9])
-      
-    init(psfntype='gausking', \
-		 numbswep=3, \
-         factthin=1, \
-         randinit=False, \
-         trueinfo=True, \
-         #makeplot=False, \
-         maxmgang=20., \
-         fdfntype='brok', \
-         verbtype=2, \
-         indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([10000]), \
-         minmfdfnnorm=array([1e-5]), \
-         maxmfdfnnorm=array([1e2]), \
-         minmflux=minmflux, \
-         maxmflux=maxmflux, \
-         regitype='ngal', \
-         maxmnormback=array([2., 2.]), \
-         minmnormback=array([0.5, 0.5]), \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         datatype='mock', \
-         mockfdfntype='brok', \
-         mocknumbpnts=array([10000]), \
-         numbsideheal=256, \
-         mockfdfnsloplowr=mockfdfnsloplowr, \
-         mockfdfnslopuppr=mockfdfnslopuppr, \
-         mockfdfnbrek=mockfdfnbrek, \
-         mocknormback=ones((2, numbener)), \
-        )
+
+    for fdfnbrek in listfdfnbrek:
+        init(psfntype='gausking', \
+    		 numbswep=100000, \
+             randinit=False, \
+             trueinfo=True, \
+             maxmgang=20., \
+             fdfntype='brok', \
+             indxenerincl=indxenerincl, \
+             indxevttincl=indxevttincl, \
+             maxmnumbpnts=array([600]), \
+             minmflux=minmflux, \
+             maxmflux=maxmflux, \
+             regitype='ngal', \
+             maxmnormback=array([2., 2.]), \
+             minmnormback=array([0.5, 0.5]), \
+             strgexpo='fermexpo_cmp0_ngal.fits', \
+             datatype='mock', \
+             mockfdfntype='brok', \
+             mocknumbpnts=array([300]), \
+             numbsideheal=256, \
+             mockfdfnsloplowr=mockfdfnsloplowr, \
+             mockfdfnslopuppr=mockfdfnslopuppr, \
+             mockfdfnbrek=array([fdfnbrek]), \
+             mocknormback=ones((2, numbener)), \
+            )
 
 
 def cnfg_ferm_mock_ngal():
