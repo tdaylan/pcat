@@ -509,7 +509,7 @@ def plot_post(pathpcat):
             # power law index
             path = gdat.pathplot + 'fdfnslop_pop%d_' % l + gdat.rtag
             # temp
-            if False and gdat.trueinfo and gdat.mockfdfntype == 'powr':
+            if gdat.trueinfo and gdat.mockfdfntype == 'powr':
                 truepara = gdat.mockfdfnslop[l]
             else:
                 truepara = None
@@ -519,7 +519,7 @@ def plot_post(pathpcat):
         if gdat.fdfntype == 'brok':
             # lower power law index
             path = gdat.pathplot + 'fdfnsloplowr_pop%d_' % l + gdat.rtag
-            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
+            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
                 truepara = gdat.mockfdfnsloplowr[l]
             else:
                 truepara = None
@@ -1112,11 +1112,10 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 print indxlowr
                 print 'indxuppr'
                 print indxuppr
-                print 
 
                 # superimpose true PS
                 # temp
-                if False and gdat.trueinfo:
+                if gdat.trueinfo:
                     indxpnts = where((gdat.binsspec[gdat.indxenerfdfn[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn[0], :]) & \
                         (gdat.truespec[l][0, gdat.indxenerfdfn[0], :] < gdat.binsspec[gdat.indxenerfdfn[0], indxuppr]))[0]
                     
@@ -1124,6 +1123,10 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                     print indxpnts
                     
                     mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
+                
+                print
+
+                
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
                 axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])

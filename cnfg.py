@@ -391,11 +391,10 @@ def cnfg_test_brok():
     indxevttincl = arange(2, 4)
     numbener = indxenerincl.size
 
-    minmflux = 3e-11
+    minmflux = 1e-11
     maxmflux = 1e-7
-    mockfdfnslop = array([1.9])
-    mockfdfnsloplowr = array([1.1])
-    mockfdfnslopuppr = array([1.9])
+    mockfdfnsloplowr = array([0.])
+    mockfdfnslopuppr = array([2.])
     mockfdfnbrek = array([1e-9])
       
     init(psfntype='gausking', \
@@ -409,7 +408,7 @@ def cnfg_test_brok():
          verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         maxmnumbpnts=array([100]), \
+         maxmnumbpnts=array([10000]), \
          minmfdfnnorm=array([1e-5]), \
          maxmfdfnnorm=array([1e2]), \
          minmflux=minmflux, \
@@ -420,9 +419,8 @@ def cnfg_test_brok():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          mockfdfntype='brok', \
-         mocknumbpnts=array([100]), \
+         mocknumbpnts=array([10000]), \
          numbsideheal=256, \
-         mockfdfnslop=mockfdfnslop, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
          mockfdfnslopuppr=mockfdfnslopuppr, \
          mockfdfnbrek=mockfdfnbrek, \

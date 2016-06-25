@@ -57,7 +57,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
     # calculate the distance to all pixels from each point source
     dist = empty((gdat.numbpixl, numbpnts))
     for k in range(numbpnts):
-        dist[:, k] = retr_dist(gdat, lgal[k], bgal[k], gdat.lgalgrid, gdat.bgalgrid)
+        dist[:, k] = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
 
     # evaluate the PSF
     pntsflux = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
@@ -384,7 +384,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             for k in range(gdat.numbmodipnts):
                 
                 # calculate the distance to the pixels to be updated
-                dist = retr_dist(gdat, lgal[k], bgal[k], gdat.lgalgrid[thisindxpixlprox[k]], gdat.bgalgrid[thisindxpixlprox[k]])
+                dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
 
                 # evaluate the PSF over the set of data cubes to be updated
                 temppsfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
@@ -608,11 +608,12 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
             print fdfnslopuppr
             print 'histfluxunit'
             print histogram(fluxunit, linspace(0., 1., 10))[0]
-            print histogram(fluxunit, linspace(0., 1., 10))[1]
             sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]] = icdf_flux_brok(gdat, fluxunit, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
-            print 'flux'
+            print 'histflux'
             print histogram(sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], gdat.binsflux)[0]
-            print histogram(sampvarb[indxsampspec[l][gdat.indxenerfdfn, :]], gdat.binsflux)[1]
+            print
+            print
+            print
             print
         sampvarb[indxsampsind[l]] = icdf_eerr(samp[indxsampsind[l]], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
         sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfdfn[0], :]], sampvarb[indxsampsind[l]])
@@ -981,16 +982,26 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv):
         gdatmodi.drmcsamp[indxsamp, 1] = gdatmodi.drmcsamp[indxsamp, 0] + normal(scale=stdv)
 
         
-def retr_dist(gdat, lgal0, bgal0, lgal1, bgal1):
+def retr_angldistunit(gdat, lgal1, bgal1, indxpixltemp):
+    
+    xaxi, yaxi, zaxi = retr_unit(lgal1, bgal1)
+    acostemp = gdat.xaxigrid[indxpixltemp] * xaxi + gdat.yaxigrid[indxpixltemp] * yaxi + gdat.zaxigrid[indxpixltemp] * zaxi
+    
+    angldist = arccos(acostemp)
+
+    return angldist
+
+
+def retr_angldistheal(lgal1, bgal1, indxpixltemp):
     
     if gdat.pixltype == 'heal':
-        dir1 = array([lgal0, bgal0])
-        dir2 = array([lgal1, bgal1])
-        dist = angdist(dir1, dir2, lonlat=True)
+        dir1 = array([lgal1, bgal1])
+        dir2 = array([gdat.lgalgrid[indxpixltemp], gdat.bgal2[indxpixltemp]])
+        angldist = angdist(dir1, dir2, lonlat=True)
     else:
-        dist = deg2rad(sqrt((lgal0 - lgal1)**2 + (bgal0 - bgal1)**2))
+        angldist = deg2rad(sqrt((lgal1 - gdat.lgalgrid[indxpixltemp])**2 + (bgal1 - gdat.bgalgrid[indxpixltemp])**2))
 
-    return dist
+    return angldist
 
 
 def retr_singgaus(scaldevi, sigc):
@@ -1886,6 +1897,18 @@ def retr_psfimodl(gdat):
     gdat.indxpsfipara = arange(gdat.numbpsfipara)
 
 
+def retr_unit(lgal, bgal):
+
+    lgaltemp = deg2rad(lgal)
+    bgaltemp = deg2rad(bgal)
+
+    xaxi = cos(bgaltemp) * cos(lgaltemp)
+    yaxi = cos(bgaltemp) * sin(lgaltemp)
+    zaxi = sin(bgaltemp)
+
+    return xaxi, yaxi, zaxi
+
+
 def retr_propmodl(gdat):
 
     gdat.strgprop = []
@@ -2434,7 +2457,7 @@ def setp(gdat):
         else:
             gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int)
             for k in range(gdat.indxpixlrofimarg.size):
-                dist = retr_dist(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.lgalgrid, gdat.bgalgrid)
+                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.indxpixl)
                 gdat.pixlcnvt[gdat.indxpixlrofimarg[k]] = argmin(dist)
 
             fobj = open(path, 'wb')
@@ -2445,7 +2468,12 @@ def setp(gdat):
         temp = meshgrid(isidecart, isidecart, indexing='ij')
         gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
         gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
-        
+       
+
+    # store pixels as unit vectors
+    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+
+
     gdat.numbpixl = gdat.lgalgrid.size
     gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
@@ -2725,7 +2753,7 @@ def setp(gdat):
         print 'Computing the look-up table...'
         gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
         for j in gdat.indxpixl:
-            dist = retr_dist(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.lgalgrid, gdat.bgalgrid)
+            dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
             for h in range(gdat.numbfluxprox):
                 gdat.indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
                 gdat.indxpixlprox[h].append(gdat.indxpixlproxtemp)
