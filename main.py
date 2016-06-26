@@ -214,7 +214,8 @@ def init( \
          maxmfdfnslopuppr=None, \
          fdfntype='powr', \
          psfntype=None, \
-         proppsfn=True, \
+         boolproppsfn=True, \
+         boolpropfdfn=True, \
          indxevttincl=arange(2, 4), \
          indxenerincl=arange(5), \
          maxmnumbpnts=array([1000]), \
@@ -389,7 +390,8 @@ def init( \
     gdat.psfntype = psfntype
     
     ## flag to turn off PSF parameter updates
-    gdat.proppsfn = proppsfn
+    gdat.boolproppsfn = boolproppsfn
+    gdat.boolpropfdfn = boolpropfdfn
 
     ## input data
     ### measured data

@@ -290,13 +290,13 @@ def plot_post(pathpcat):
     print 'Calculating proposal and acceptance rates...'
     tim0 = time.time()
 
-    mcmctimebins = linspace(0., gdat.numbswep, 100)
-    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(10, 15), sharex='all')
-    for g, axis in enumerate(axgr):
-        axis.hist(where(gdat.listindxprop == g)[0], bins=mcmctimebins)
-        axis.hist(where((gdat.listindxprop == g) & (gdat.listaccp == True))[0], bins=mcmctimebins)
-        axis.set_ylabel('%d' % g)
-        if g == gdat.numbprop - 1:
+    binstimemcmc = linspace(0., gdat.numbswep, 100)
+    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(10, 5 * gdat.numbprop), sharex='all')
+    for n, axis in enumerate(axgr):
+        axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)
+        axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
+        axis.set_ylabel('%s' % gdat.strgprop[n])
+        if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
     figr.savefig(gdat.pathplot + 'propeffi_' + gdat.rtag + '.pdf')
     figr.subplots_adjust(hspace=0.)

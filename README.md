@@ -139,7 +139,9 @@ Maximum spectral index allowed by the model
 #### PSF
 `psfntype`
 
-`proppsfn`
+`boolproppsfn`
+
+`boolpropfdfn`
 
 `maxmangleval`
 

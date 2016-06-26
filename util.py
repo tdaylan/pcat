@@ -1922,8 +1922,24 @@ def retr_propmodl(gdat):
 
     if gdat.probprop == None:
             
-        temp = array([1.])
-        if gdat.proppsfn:
+        if gdat.boolpropfdfn:
+            probfdfnnorm = array([1.])
+            if gdat.fdfntype == 'powr':
+                probfdfnslop = array([1.])
+            if gdat.fdfntype == 'brok':
+                probfdfnbrek = array([1.])
+                probfdfnsloplowr = array([1.])
+                probfdfnslopuppr = array([1.])
+        else:
+            probfdfnnorm = array([0.])
+            if gdat.fdfntype == 'powr':
+                probfdfnslop = array([0.])
+            if gdat.fdfntype == 'brok':
+                probfdfnbrek = array([0.])
+                probfdfnsloplowr = array([0.])
+                probfdfnslopuppr = array([0.])
+
+        if gdat.boolproppsfn:
             probpsfipara = array([1.])
         else:
             probpsfipara = array([0.])
@@ -1940,10 +1956,10 @@ def retr_propmodl(gdat):
         probsind = array([sum(gdat.maxmnumbpnts) / 2.])
            
         if gdat.fdfntype == 'powr':
-            gdat.probprop = concatenate((temp, temp, probpsfipara, probnormback, probbrth, probdeth, \
+            gdat.probprop = concatenate((probfdfnnorm, probfdfnslop, probpsfipara, probnormback, probbrth, probdeth, \
                 probsplt, probmerg, problgal, probbgal, probspec, probsind))
         if gdat.fdfntype == 'brok':
-            gdat.probprop = concatenate((temp, temp, temp, temp, probpsfipara, probnormback, probbrth, probdeth, \
+            gdat.probprop = concatenate((probfdfnnorm, probfdfnbrek, probfdfnsloplowr, probfdfnslopuppr, probpsfipara, probnormback, probbrth, probdeth, \
                 probsplt, probmerg, problgal, probbgal, probspec, probsind))
         gdat.probprop /= sum(gdat.probprop)
        
