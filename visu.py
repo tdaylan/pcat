@@ -291,7 +291,7 @@ def plot_post(pathpcat):
     tim0 = time.time()
 
     binstimemcmc = linspace(0., gdat.numbswep, 100)
-    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(10, 5 * gdat.numbprop), sharex='all')
+    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(10, 2 * gdat.numbprop), sharex='all')
     for n, axis in enumerate(axgr):
         axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)
         axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
@@ -509,18 +509,36 @@ def plot_post(pathpcat):
             # power law index
             path = gdat.pathplot + 'fdfnslop_pop%d_' % l + gdat.rtag
             # temp
-            if gdat.trueinfo and gdat.mockfdfntype == 'powr':
-                truepara = gdat.mockfdfnslop[l]
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                if gdat.mockfdfntype == 'powr':
+                    truepara = gdat.mockfdfnslop[l]
+                else:
+                    truepara = None
             else:
                 truepara = None
             labl =  r'$\alpha$'
             tdpy.mcmc.plot_trac(path, gdat.listfdfnslop[:, l], labl, truepara=truepara, titl=titl)
         
         if gdat.fdfntype == 'brok':
+            # break flux
+            path = gdat.pathplot + 'fdfnbrek_pop%d_' % l + gdat.rtag
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                if gdat.mockfdfntype == 'brok':
+                    truepara = gdat.mockfdfnbrek[l]
+                else:
+                    truepara = None
+            else:
+                truepara = None
+            labl =  r'$f_b$'
+            tdpy.mcmc.plot_trac(path, gdat.listfdfnbrek[:, l], labl, truepara=truepara, titl=titl)
+        
             # lower power law index
             path = gdat.pathplot + 'fdfnsloplowr_pop%d_' % l + gdat.rtag
-            if gdat.trueinfo and gdat.mockfdfntype == 'brok':
-                truepara = gdat.mockfdfnsloplowr[l]
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                if gdat.mockfdfntype == 'brok':
+                    truepara = gdat.mockfdfnsloplowr[l]
+                else:
+                    truepara = None
             else:
                 truepara = None
             labl =  r'$\alpha_1$'
@@ -528,21 +546,15 @@ def plot_post(pathpcat):
         
             # uppr power law index
             path = gdat.pathplot + 'fdfnslopuppr_pop%d_' % l + gdat.rtag
-            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
-                truepara = gdat.mockfdfnslopuppr[l]
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                if gdat.mockfdfntype == 'brok':
+                    truepara = gdat.mockfdfnslopuppr[l]
+                else:
+                    truepara = None
             else:
                 truepara = None
             labl =  r'$\alpha_2$'
             tdpy.mcmc.plot_trac(path, gdat.listfdfnslopuppr[:, l], labl, truepara=truepara, titl=titl)
-        
-            # break flux
-            path = gdat.pathplot + 'fdfnbrek_pop%d_' % l + gdat.rtag
-            if False and gdat.trueinfo and gdat.mockfdfntype == 'brok':
-                truepara = gdat.mockfdfnbrek[l]
-            else:
-                truepara = None
-            labl =  r'$f_b$'
-            tdpy.mcmc.plot_trac(path, gdat.listfdfnbrek[:, l], labl, truepara=truepara, titl=titl)
         
     # background normalization
     for i in gdat.indxener:
@@ -797,16 +809,32 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         else:
             spec = gdatmodi.thissampvarb[gdat.thisindxsampspec[l]][i, :]
             axis.hist(spec, gdat.binsspec[i, :], alpha=0.5, color='b', log=True, label='Sample')
+            # superimpose the current prior flux distribution
             if i == gdat.indxenerfdfn:
+                fdfnnorm = gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 if gdat.fdfntype == 'powr':
                     fdfnslop = gdatmodi.thissampvarb[gdat.indxsampfdfnslop[l]]  
-                    fluxhistmodl = retr_fdfnpowr(gdat, gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnslop)
+                    fluxhistmodl = fdfnnorm * pdfn_flux_powr(gdat, gdat.meanflux, fdfnslop) * gdat.diffflux
                 if gdat.fdfntype == 'brok':
                     fdfnbrek = gdatmodi.thissampvarb[gdat.indxsampfdfnbrek[l]]  
                     fdfnsloplowr = gdatmodi.thissampvarb[gdat.indxsampfdfnsloplowr[l]]  
                     fdfnslopuppr = gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr[l]]  
-                    fluxhistmodl = retr_fdfnbrok(gdat, gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]], fdfnbrek, fdfnsloplowr, fdfnslopuppr)
+                    fluxhistmodl = fdfnnorm * pdfn_flux_brok(gdat, gdat.meanflux, fdfnbrek, fdfnsloplowr, fdfnslopuppr) * gdat.diffflux
+                    
+                    print 'hey'
+                    print 'fdfnbrek'
+                    print fdfnbrek
+                    print 'fdfnsloplowr'
+                    print fdfnsloplowr
+                    print 'fdfnslopuppr'
+                    print fdfnslopuppr
+                    print 'fluxhistmodl'
+                    print fluxhistmodl
+                    print 
+
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
+                
+        # superimpose the true catalog
         if gdat.trueinfo:
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=0.5, color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock':

@@ -394,7 +394,8 @@ def retr_jcbn():
 def plot_maps():
     
     global numbpixl
-    lgalheal, bgalheal, numbside, numbpixl, apix = tdpy.util.retr_healgrid(256)
+    numbside = 256
+    lgalheal, bgalheal, numbpixl, apix = tdpy.util.retr_healgrid(numbside)
     
     binsener = array([0.1, 0.3, 1., 3., 10., 100.])
     meanener = sqrt(binsener[1:] * binsener[:-1])

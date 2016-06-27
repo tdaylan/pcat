@@ -23,13 +23,13 @@ def work(gdat, indxprocwork):
     gdat.rtag = retr_rtag(gdat, indxprocwork)
     
     # initialize the sample vector 
-    if gdat.randinit or not gdat.trueinfo:
+    if gdat.randinit or not gdat.trueinfo or gdat.initnumbpnts != None:
         if gdat.initnumbpnts != None:
-            thisnumbpnts = gdat.initnumbpnts
-        else:
             thisnumbpnts = empty(gdat.numbpopl, dtype=int)
             for l in gdat.indxpopl:
                 thisnumbpnts[l] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[l] + 1))
+        else:
+            thisnumbpnts = gdat.initnumbpnts
     else:
         thisnumbpnts = gdat.truenumbpnts
        
@@ -51,7 +51,7 @@ def work(gdat, indxprocwork):
         gdatmodi.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
     else:
         for l in gdat.indxpopl:
-            gdatmodi.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truefdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
+            gdatmodi.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truenumbpnts[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
     
     ## FDF shape
     if gdat.randinit or gdat.datatype != 'mock' or gdat.fdfntype != gdat.mockfdfntype:
@@ -279,9 +279,9 @@ def init( \
         if stdvsdfn == None:
             stdvsdfn = array([0.3])
         if minmfdfnnorm == None:
-            minmfdfnnorm = array([1e-1])
+            minmfdfnnorm = array([1.])
         if maxmfdfnnorm == None:
-            maxmfdfnnorm = array([1e2])
+            maxmfdfnnorm = array([1e3])
         if minmfdfnslop == None:
             minmfdfnslop = array([0.5])
         if maxmfdfnslop == None:
@@ -319,9 +319,9 @@ def init( \
         if stdvsdfn == None:
             stdvsdfn = array([0.5])
         if minmfdfnnorm == None:
-            minmfdfnnorm = array([1e-1])
+            minmfdfnnorm = array([1.])
         if maxmfdfnnorm == None:
-            maxmfdfnnorm = array([1e2])
+            maxmfdfnnorm = array([1e3])
         if minmfdfnslop == None:
             minmfdfnslop = array([1.5])
         if maxmfdfnslop == None:
@@ -561,7 +561,6 @@ def init( \
             if gdat.datatype == 'mock':
                 print 'Mock data'
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
-                print 'mockfdfnnorm: ', gdat.mockfdfnnorm
                 if gdat.mockfdfntype == 'powr':
                     print 'mockfdfnslop: ', gdat.mockfdfnslop
                 if gdat.mockfdfntype == 'brok':
@@ -905,14 +904,9 @@ def init( \
 
         ## save the posterior positions as a CSV file
         path = os.environ["PCAT_DATA_PATH"] + '/pcat_lgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
-        print 'hey'
-        print 'listlgal[l].shape'
-        print listlgal[l].shape
-        print 
-
-        savetxt(path, listlgal[l])
+        savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
         path = os.environ["PCAT_DATA_PATH"] + '/pcat_bgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
-        savetxt(path, listbgal[l])
+        savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
 
 
     listhdun.append(pf.ImageHDU(listfdfnnorm))
@@ -1445,7 +1439,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 numbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]]
                 fdfnnorm = gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]]
                 lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfdfnslop + gdat.priofactfdfnnorm - log(fdfnnorm)
-                flux = gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn, :]]
+                flux = gdatmodi.thissampvarb[gdat.thisindxsampspec[l][gdat.indxenerfdfn[0], :]]
                 if gdat.fdfntype == 'powr':
                     fdfnslop = gdatmodi.thissampvarb[gdat.indxsampfdfnslop[l]]
                     lpri -= log(1. + fdfnslop**2)
