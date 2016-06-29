@@ -145,6 +145,8 @@ def intr_ferm_expr_ngal( \
     karg['numbswep'] = 2000000
     karg['randinit'] = False
     karg['maxmgang'] = 20.
+    karg['initfdfnslop'] = array([1.9])
+    karg['initfdfnnorm'] = array([300])
     karg['maxmnumbpnts'] = array([500])
     karg['indxenerincl'] = arange(1, 4)
     karg['indxevttincl'] = arange(2, 4)
@@ -197,22 +199,25 @@ def cnfg_test( \
               strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
              ):
    
-    indxenerincl = arange(2, 3)
-    indxevttincl = arange(3, 4)
+    indxenerincl = arange(3, 4)
+    indxevttincl = arange(2, 4)
+    numbener = indxenerincl.size
     minmflux = 3e-11
     maxmflux = 1e-10
+    mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=100, \
+         numbswep=10000, \
+         numbswepplot=3000, \
          verbtype=2, \
-         numbswepplot=1, \
-         initnumbpnts=array([5]), \
-         randinit=True, \
+         randinit=False, \
          maxmgang=20., \
-         maxmnumbpnts=array([10]), \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
@@ -221,8 +226,10 @@ def cnfg_test( \
          minmnormback=array([0.5, 0.5]), \
          strgback=strgback, \
          strgexpo=strgexpo, \
-         datatype='inpt', \
-         strgexpr=strgexpr, \
+         datatype='mock', \
+         numbsideheal=256, \
+         mockfdfnslop=mockfdfnslop, \
+         mocknormback=ones((2, numbener)), \
         )
     
     
@@ -400,7 +407,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=5000000, \
+         numbswep=50000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

@@ -54,16 +54,20 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
     
     numbpnts = lgal.size
     
-    # calculate the distance to all pixels from each point source
-    dist = empty((gdat.numbpixl, numbpnts))
-    for k in range(numbpnts):
-        dist[:, k] = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
-
-    # evaluate the PSF
     pntsflux = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
-        psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist[:, k], psfntype)
-        pntsflux[k, :, :, :] = spec[:, k, None, None] * psfn
+    
+        # calculate the distance to all pixels from each point source
+        dist = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
+        indx = argsort(dist)
+        dist = dist[indx]
+        indxpixltemp = gdat.indxpixl[indx]
+            
+        # evaluate the PSF
+        psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist, psfntype)
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                pntsflux[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
 
     # sum contributions from all PS
     pntsfluxtemp = sum(pntsflux, 0) 
@@ -354,10 +358,12 @@ def retr_llik(gdat, gdatmodi, init=False):
                 dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
 
                 # evaluate the PSF over the set of data cubes to be updated
-                temppsfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
                 if gdatmodi.thisindxprop == gdat.indxproppsfipara:
-                    temppsfipara[gdat.indxpsfiparamodi] = gdatmodi.nextsampvarb[gdat.indxsampmodi]
-                psfn = retr_psfn(gdat, temppsfipara, gdat.indxenermodi, dist, gdat.psfntype)
+                    psfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
+                    psfipara[gdat.indxpsfiparamodi] = gdatmodi.nextsampvarb[gdat.indxsampmodi]
+                else:
+                    psfipara = gdatmodi.thissampvarb[gdat.indxsamppsfipara]
+                psfn = retr_psfn(gdat, psfipara, gdat.indxenermodi, dist, gdat.psfntype)
                 
                 # update the data cubes
                 for i in range(gdat.indxenermodi.size):
@@ -581,58 +587,61 @@ def retr_mrkrsize(gdat, flux):
 
 def retr_fermpsfn(gdat):
    
-    name = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
-    irfn = pf.getdata(name, 1)
+    if False:
+        reco = 8
+    else:
+        reco = 7
+
+    if reco == 8:
+        path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
+    else:
+        path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_back.fits'
+    irfn = pf.getdata(path, 1)
     minmener = irfn['energ_lo'].squeeze() * 1e-3 # [GeV]
     maxmener = irfn['energ_hi'].squeeze() * 1e-3 # [GeV]
     enerirfn = sqrt(minmener * maxmener)
 
+    numbfermscalpara = 3
+    numbfermformpara = 5
+    
+    fermscal = zeros((gdat.numbevtt, numbfermscalpara))
+    fermform = zeros((gdat.numbener, gdat.numbevtt, numbfermformpara))
+    
     parastrg = ['ntail', 'score', 'gcore', 'stail', 'gtail']
-
-    gdat.numbfermscalpara = 3
-    gdat.numbfermformpara = 5
-    
-    fermscal = zeros((gdat.numbevtt, gdat.numbfermscalpara))
-    fermform = zeros((gdat.numbener, gdat.numbevtt, gdat.numbfermformpara))
-    gdat.fermpsfipara = zeros((gdat.numbener * gdat.numbfermformpara * gdat.numbevtt))
-    
     for m in gdat.indxevtt:
-        fermscal[m, :] = pf.getdata(name, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
-        irfn = pf.getdata(name, 1 + 3 * gdat.indxevttincl[m])
-        for k in range(gdat.numbfermformpara):
+        if reco == 8:
+            irfn = pf.getdata(path, 1 + 3 * gdat.indxevttincl[m])
+            fermscal[m, :] = pf.getdata(path, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
+        else:
+            if m == 1:
+                path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_front.fits'
+            elif m == 0:
+                path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_back.fits'
+            else:
+                continue
+            irfn = pf.getdata(path, 1)
+            fermscal[m, :] = pf.getdata(path, 2)['PSFSCALE']
+        for k in range(numbfermformpara):
             fermform[:, m, k] = interp1d(enerirfn, mean(irfn[parastrg[k]].squeeze(), axis=0))(gdat.meanener)
-
-    factener = (10. * gdat.meanener[:, None])**fermscal[None, :, 2]
-    gdat.fermscalfact = sqrt((fermscal[None, :, 0] * factener)**2 + fermscal[None, :, 1]**2)
-    
+        
     # convert N_tail to f_core
     for m in gdat.indxevtt:
         for i in gdat.indxener:
             fermform[i, m, 0] = 1. / (1. + fermform[i, m, 0] * fermform[i, m, 3]**2 / fermform[i, m, 1]**2)
 
-    #temp = sqrt(2. - 2. * cos(gdat.angldisp[None, :, None]))
-    #scalangl = 2. * arcsin(temp / 2.) / gdat.fermscalfact[:, None, :]
-    
-    fermform[:, :, 1] = gdat.fermscalfact * fermform[:, :, 1]
-    fermform[:, :, 3] = gdat.fermscalfact * fermform[:, :, 3]
-
     # store the fermi PSF parameters
+    gdat.fermpsfipara = zeros((gdat.numbener * numbfermformpara * gdat.numbevtt))
     for m in gdat.indxevtt:
-        for k in range(gdat.numbfermformpara):
-            indxfermpsfiparatemp = m * gdat.numbfermformpara * gdat.numbener + gdat.indxener * gdat.numbfermformpara + k
+        for k in range(numbfermformpara):
+            indxfermpsfiparatemp = m * numbfermformpara * gdat.numbener + gdat.indxener * numbfermformpara + k
             gdat.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
-        
-    frac = fermform[:, :, 0]
-    sigc = fermform[:, :, 1]
-    gamc = fermform[:, :, 2]
-    sigt = fermform[:, :, 3]
-    gamt = fermform[:, :, 4]
-   
-    # temp
-    angl = gdat.angldisp[None, :, None]
-    #angl = scalangl
-    gdat.fermpsfn = retr_doubking(angl, frac[:, None, :], sigc[:, None, :], gamc[:, None, :], sigt[:, None, :], gamt[:, None, :])
 
+    # calculate the scale factor
+    factener = (10. * gdat.meanener[:, None])**fermscal[None, :, 2]
+    gdat.fermscalfact = sqrt((fermscal[None, :, 0] * factener)**2 + fermscal[None, :, 1]**2)
+    
+    # evaluate the PSF
+    gdat.fermpsfn = retr_psfn(gdat, gdat.fermpsfipara, gdat.indxener, gdat.angldisp, 'doubking')
 
 
 def retr_sdsspsfn(gdat):
@@ -910,9 +919,8 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv):
 def retr_angldistunit(gdat, lgal1, bgal1, indxpixltemp):
     
     xaxi, yaxi, zaxi = retr_unit(lgal1, bgal1)
-    acostemp = gdat.xaxigrid[indxpixltemp] * xaxi + gdat.yaxigrid[indxpixltemp] * yaxi + gdat.zaxigrid[indxpixltemp] * zaxi
-    
-    angldist = arccos(acostemp)
+    cositemp = gdat.xaxigrid[indxpixltemp] * xaxi + gdat.yaxigrid[indxpixltemp] * yaxi + gdat.zaxigrid[indxpixltemp] * zaxi
+    angldist = arccos(cositemp)
 
     return angldist
 
@@ -1647,8 +1655,8 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         numbformpara = 4
     elif psfntype == 'doubking':
         numbformpara = 5
-  
-    thisangltemp = thisangl[None, :, None]
+ 
+    scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
 
     indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
     
@@ -1695,8 +1703,11 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         gamc = gamc[:, None, :]
         sigt = sigt[:, None, :]
         gamt = gamt[:, None, :]
-        psfn = retr_doubking(thisangltemp, frac, sigc, gamc, sigt, gamt)
-            
+        psfn = retr_doubking(scalangl, frac, sigc, gamc, sigt, gamt)
+    
+    # normalize the PSF
+    psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
+
     return psfn
 
 
@@ -1724,8 +1735,8 @@ def retr_psfimodl(gdat):
     factformpara = zeros(gdat.numbformpara)
     scalformpara = zeros(gdat.numbformpara, dtype=object)
     if gdat.exprtype == 'ferm':
-        minmanglpsfn = deg2rad(0.0001)
-        maxmanglpsfn = deg2rad(5.)
+        minmanglpsfn = 0.1 # deg2rad(0.0001)
+        maxmanglpsfn = 5. # deg2rad(5.)
         #minmanglpsfn = 0.01
         #maxmanglpsfn = 3.
         # temp
@@ -1830,7 +1841,7 @@ def retr_unit(lgal, bgal):
     bgaltemp = deg2rad(bgal)
 
     xaxi = cos(bgaltemp) * cos(lgaltemp)
-    yaxi = cos(bgaltemp) * sin(lgaltemp)
+    yaxi = -cos(bgaltemp) * sin(lgaltemp)
     zaxi = sin(bgaltemp)
 
     return xaxi, yaxi, zaxi
@@ -2421,7 +2432,6 @@ def setp(gdat):
     # store pixels as unit vectors
     gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
 
-
     gdat.numbpixl = gdat.lgalgrid.size
     gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
@@ -2504,7 +2514,9 @@ def setp(gdat):
             gdat.mocknumbpnts = empty(gdat.numbpopl)
             for l in gdat.indxpopl:
                 gdat.mocknumbpnts[l] = random_integers(gdat.minmnumbpnts, gdat.maxmnumbpnts[l])
-
+            
+        gdat.truefdfnnorm = gdat.mocknumbpnts
+        
         # if mock FDF is not specified by the user, randomly seed it from the prior
         if gdat.mockfdfntype == 'powr':
             if gdat.mockfdfnslop == None:
@@ -2525,6 +2537,13 @@ def setp(gdat):
                 for l in gdat.indxpopl:
                     gdat.mockfdfnslopuppr[l] = icdf_atan(rand(), gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
 
+        if gdat.mockfdfntype == 'powr':
+            gdat.truefdfnslop = gdat.mockfdfnslop
+        if gdat.mockfdfntype == 'brok':
+            gdat.truefdfnbrek = gdat.mockfdfnbrek
+            gdat.truefdfnsloplowr = gdat.mockfdfnsloplowr
+            gdat.truefdfnslopuppr = gdat.mockfdfnslopuppr
+    
         if gdat.mockpsfipara == None: 
             gdat.mockpsfntype = psfntpye
             numbmockpsfipara = gdat.numbpsfipara
@@ -2567,12 +2586,10 @@ def setp(gdat):
             
             gdat.truelgal = []
             gdat.truebgal = []
-            gdat.truespec = []
             gdat.truesind = []
             for l in gdat.indxpopl:
                 gdat.truelgal.append(mocklgal[l])
                 gdat.truebgal.append(mockbgal[l])
-                gdat.truespec.append(mockspec[l])
                 gdat.truesind.append(mocksind[l])
                     
             gdat.truestrg = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
@@ -2692,8 +2709,10 @@ def setp(gdat):
         gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
         for j in gdat.indxpixl:
             dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
+            dist[j] = 0.
             for h in range(gdat.numbfluxprox):
                 gdat.indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
+                gdat.indxpixlproxtemp = gdat.indxpixlproxtemp[argsort(dist[gdat.indxpixlproxtemp])]
                 gdat.indxpixlprox[h].append(gdat.indxpixlproxtemp)
         fobj = open(path, 'wb')
         cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -2743,7 +2762,7 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
             # temp
             #if gdat.indxtruepntstimevari[indxpoplplot].size > 0:
             #    axis.scatter(gdat.maxmgang * 5., gdat.maxmgang * 5, s=50, alpha=gdat.mrkralph, label=gdat.truelablvari, marker='*', linewidth=2, color='y')
-        axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=3)
+        axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=2)
         
     # true catalog
     if gdat.trueinfo:
@@ -2872,6 +2891,15 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     indxtruepntsassc.bias = [[] for i in gdat.indxener]
     indxtruepntsassc.hits = [[] for i in gdat.indxener]
     indxtruepntsassc.mult = []
+        
+    # get the flux limit that delineates the biased associations and hits 
+    fluxbias = empty((2, gdat.numbener, gdat.numbflux + 1))
+    for i in gdat.indxener:
+        fluxbias[:, i, :] = retr_fluxbias(gdat, gdat.binsspec, i)
+
+    print 'fluxbias'
+    print fluxbias[0, :, :]
+
     indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
     for k in range(gdat.truenumbpnts[thisindxpopl]):
         dir1 = array([gdat.truelgal[thisindxpopl][k], gdat.truebgal[thisindxpopl][k]])
@@ -2893,8 +2921,15 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
             # check whether the flux of the associated model point source matches well with the flux of the deterministic point source
             for i in gdat.indxener:
-                fluxbias = retr_fluxbias(gdat.truespec[0][0, :, k], i)
-                boolbias = modlspec[i, thisindxmodlpnts[0]] > fluxbias[1, 0] or modlspec[i, thisindxmodlpnts[0]] < fluxbias[0, 0]
+                fluxbiasthis = interp(gdat.binsspec[i, :], fluxbias[1, i, :], gdat.truespec[thisindxpopl][0, i, k])
+                print 'gdat.truespec[thisindxpopl][0, i, k]'
+                print gdat.truespec[thisindxpopl][0, i, k]
+                print 'fluxbias[1, i, :]'
+                print fluxbias[1, i, :]
+                print 'fluxbiasthis'
+                print fluxbiasthis
+                print
+                boolbias = modlspec[i, thisindxmodlpnts[0]] > fluxbiasthis or modlspec[i, thisindxmodlpnts[0]] < gdat.truespec[thisindxpopl][0, i, k]**2 / fluxbiasthis 
                 if boolbias:
                     indxtruepntsassc.bias[i].append(k)
                 else:
@@ -2902,12 +2937,38 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     
     return indxmodlpnts, indxtruepntsassc
 
+'''
+y = ax + b
+log(M) + x0 = a * x0 + b
+log(m) + x1 = a * x1 + b
+log(M) + x0 - log(m) - x1 = a * (x0 - x1)
 
-def retr_fluxbias(spec, indxenerthis):
+a = (log(m) + x1 - log(M) - x0) / (x1 - x0)
+
+log(M) / x0 + 1 = a + b / x0
+log(m) / x1 + 1 = a + b / x1
+log(M) / x0 - log(m) / x1 = b * (1 / x0 - 1 / x1)
+
+b = (x1 * log(M) - x0 * log(m)) / (x1 - x0)
+
+y = ((log(m) + x1 - log(M) - x0) * x + (x1 * log(M) - x0 * log(m))) / (x1 - x0)
+'''
+
+def retr_fluxbias(gdat, spec, indxenerthis):
 
     fluxbias = empty((2, spec.shape[1]))
-    fluxbias[0, :] = spec[i, :] * (10. * (log(gdat.maxmspec[i]) - log(spec[i, :])) + 1.4)
-    fluxbias[1, :] = spec[i, :] / (10. * (log(gdat.maxmspec[i]) - log(spec[i, :])) + 1.4)
+    deno = log10(gdat.maxmspec[indxenerthis]) - log10(gdat.minmspec[indxenerthis])
+    
+    factlowr = 10.
+    factuppr = 1.1
+    
+    offs = (log10(gdat.maxmspec[indxenerthis]) * log10(factlowr) - log10(gdat.minmspec[indxenerthis]) * log10(factuppr)) / deno
+    
+    slop = (log10(factuppr) + log10(gdat.maxmspec[indxenerthis]) - log10(factlowr) - log10(gdat.minmspec[indxenerthis])) / deno
+    fluxbias[0, :] = 10**(slop * log10(spec[indxenerthis, :]) + offs)
+
+    slop = (-log10(factuppr) + log10(gdat.maxmspec[indxenerthis]) + log10(factlowr) - log10(gdat.minmspec[indxenerthis])) / deno
+    fluxbias[1, :] = 10**(slop * log10(spec[indxenerthis, :]) - offs)
 
     return fluxbias
 

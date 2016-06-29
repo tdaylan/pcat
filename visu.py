@@ -889,7 +889,6 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         yerr = zeros((2, xdat.size))
  
         labl = '$f_{samp}$ ' + gdat.strgfluxunit
-        axis.plot(gdat.meanspec[i, :], gdat.meanspec[i, :], ls='--', color='black', alpha=0.2)
         if post:
             yerr[0, :] = postspecmtch[0, i, :]
             ydat = postspecmtch[1, i, :]
@@ -905,13 +904,14 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         # tag multiple associations
         if not post:
             indx = gdatmodi.indxtruepntsassc[l].mult
-            if indx.size > 0:
+            if len(indx) > 0:
                 axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='red')
     
         # superimpose the bias line
-        fluxbias = retr_fluxbias(gdat.meanspec, i)
-        axis.errorbar(gdat.meanspec[i, :], fluxbias[0, :], ls='--', alpha=0.5, color='black')
-        axis.errorbar(gdat.meanspec[i, :], fluxbias[1, :], ls='--', alpha=0.5, color='black')
+        fluxbias = retr_fluxbias(gdat, gdat.binsspec, i)
+        axis.plot(gdat.binsspec[i, :], gdat.binsspec[i, :], ls='--', alpha=0.2, color='black')
+        axis.plot(gdat.binsspec[i, :], fluxbias[0, :], ls='--', alpha=0.2, color='black')
+        axis.plot(gdat.binsspec[i, :], fluxbias[1, :], ls='--', alpha=0.2, color='black')
         
         # temp
         #if gdat.indxtruepntstimevari[l].size > 0:
@@ -1164,7 +1164,6 @@ def plot_king(gdat):
 def plot_psfn(gdat, gdatmodi):
     
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
-    figr.suptitle(r'Point Spread Function, d$P$/d$\Omega$ [1/sr]', fontsize=20)
     if gdat.numbevtt == 1:
         axgr = [axgr]
     for m, axrw in enumerate(axgr):
@@ -1597,7 +1596,7 @@ def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     satuuppr = None
 
     figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'errrpnts')
-    axis, cbar = retr_imag(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', mean=True)
+    axis, cbar = retr_imag(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', mean=True, logt=True)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)

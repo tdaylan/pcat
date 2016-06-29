@@ -22,54 +22,89 @@ def work(gdat, indxprocwork):
     # construct the run tag
     gdat.rtag = retr_rtag(gdat, indxprocwork)
     
-    # initialize the sample vector 
-    if gdat.randinit or not gdat.trueinfo or gdat.initnumbpnts != None:
+    # boolean flag to indicate that the initial state will not be random
+    gdat.detrinit = (not gdat.randinit and gdat.datatype == 'mock')
+    
+    gdatmodi.deltllik = 0.
+    
+    # initialize the sample vector
+    gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
+    
+    ## number of PS
+    if gdat.initnumbpnts != None or not gdat.randinit:
         if gdat.initnumbpnts != None:
-            thisnumbpnts = empty(gdat.numbpopl, dtype=int)
-            for l in gdat.indxpopl:
-                thisnumbpnts[l] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[l] + 1))
-        else:
             thisnumbpnts = gdat.initnumbpnts
+        else:
+            thisnumbpnts = gdat.truenumbpnts
     else:
-        thisnumbpnts = gdat.truenumbpnts
+        thisnumbpnts = empty(gdat.numbpopl, dtype=int)
+        for l in gdat.indxpopl:
+            thisnumbpnts[l] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[l] + 1))
+    gdatmodi.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
        
     gdatmodi.thisindxpntsfull = []
     gdatmodi.thisindxpntsempt = []
     for l in gdat.indxpopl:
         gdatmodi.thisindxpntsfull.append(range(thisnumbpnts[l]))
         gdatmodi.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
-    gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
-    
-    gdatmodi.deltllik = 0.
-    gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
-    
-    ## number of PSs
-    gdatmodi.drmcsamp[gdat.indxsampnumbpnts, 0] = thisnumbpnts
+    gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, \
+        gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
     ## mean number of PSs
-    if gdat.randinit or gdat.datatype != 'mock':
+    if gdat.initfdfnnorm != None or gdat.detrinit:
+        if gdat.initfdfnnorm != None:
+            fdfnnorm = gdat.initfdfnnorm
+        else:
+            fdfnnorm = gdat.truefdfnnorm
+        for l in gdat.indxpopl:
+            gdatmodi.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(fdfnnorm[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
+    else:
         gdatmodi.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
-    else:
-        for l in gdat.indxpopl:
-            gdatmodi.drmcsamp[gdat.indxsampfdfnnorm[l], 0] = cdfn_logt(gdat.truenumbpnts[l], gdat.minmfdfnnorm[l], gdat.factfdfnnorm[l])
-    
+   
     ## FDF shape
-    if gdat.randinit or gdat.datatype != 'mock' or gdat.fdfntype != gdat.mockfdfntype:
-        if gdat.fdfntype == 'powr':
+    ### single power law
+    if gdat.fdfntype == 'powr':
+        if gdat.initfdfnslop != None or gdat.detrinit:
+            if gdat.initfdfnslop != None:
+                fdfnslop = gdat.initfdfnslop
+            else:
+                fdfnslop = gdat.truefdfnslop
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(fdfnslop, gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+        else:
             gdatmodi.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
-        if gdat.fdfntype == 'brok':
+    ### broken power law
+    if gdat.fdfntype == 'brok':
+        if gdat.initfdfnbrek != None or gdat.detrinit:
+            if gdat.initfdfnbrek != None:
+               fdfnbrek = gdat.initfdfnbrek 
+            else:
+               fdfnbrek = gdat.truefdfnbrek 
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(fdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
+        else:
             gdatmodi.drmcsamp[gdat.indxsampfdfnbrek, 0] = rand(gdat.numbpopl)
+            
+        if gdat.initfdfnsloplowr != None or gdat.detrinit:
+            if gdat.initfdfnsloplowr != None:
+                fdfnsloplowr = gdat.initfdfnsloplowr
+            else:
+                fdfnsloplowr = gdat.truefdfnsloplowr
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(fdfnsloplowr, gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
+        else:
             gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr, 0] = rand(gdat.numbpopl)
+
+        if gdat.initfdfnslopuppr != None or gdat.detrinit:
+            if gdat.initfdfnslopuppr != None:
+                fdfnslopuppr = gdat.initfdfnslopuppr
+            else:
+                fdfnslopuppr = gdat.truefdfnslopuppr
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(fdfnslopuppr, gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
+        else:
             gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr, 0] = rand(gdat.numbpopl)
-    else:
-        for l in gdat.indxpopl:
-            if gdat.fdfntype == 'powr':
-                gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(gdat.mockfdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
-            if gdat.fdfntype == 'brok':
-                gdatmodi.drmcsamp[gdat.indxsampfdfnbrek[l], 0] = cdfn_logt(gdat.mockfdfnbrek[l], gdat.minmfdfnbrek[l], gdat.factfdfnbrek[l])
-                gdatmodi.drmcsamp[gdat.indxsampfdfnsloplowr[l], 0] = cdfn_atan(gdat.mockfdfnsloplowr[l], gdat.minmfdfnsloplowr[l], gdat.factfdfnsloplowr[l])
-                gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0] = cdfn_atan(gdat.mockfdfnslopuppr[l], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
-    
+
     ## PSF parameters
     if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
         if gdat.verbtype > 1:
@@ -105,13 +140,14 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
    
-
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
     indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
+        print 'bad index vector'
+        print indxsampbadd
         gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
         gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
 
@@ -220,6 +256,10 @@ def init( \
          indxenerincl=arange(5), \
          maxmnumbpnts=array([1000]), \
          initnumbpnts=None, \
+         initfdfnnorm=None, \
+         initfdfnslop=None, \
+         initfdfnsloplowr=None, \
+         initfdfnslopuppr=None, \
          # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
          trueinfo=True, \
          pntscntr=False, \
@@ -412,6 +452,13 @@ def init( \
     ## initial state setup
     ### number of point sources
     gdat.initnumbpnts = initnumbpnts
+    gdat.initfdfnnorm = initfdfnnorm
+    if gdat.fdfntype == 'powr':
+        gdat.initfdfnslop = initfdfnslop
+    if gdat.fdfntype == 'brok':
+        gdat.initfdfnbrek = initfdfnbrek
+        gdat.initfdfnsloplowr = initfdfnsloplowr
+        gdat.initfdfnslopuppr = initfdfnslopuppr
     ### flag to draw the initial state from the prior
     gdat.randinit = randinit
 
