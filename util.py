@@ -2897,9 +2897,6 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     for i in gdat.indxener:
         fluxbias[:, i, :] = retr_fluxbias(gdat, gdat.binsspec, i)
 
-    print 'fluxbias'
-    print fluxbias[0, :, :]
-
     indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
     for k in range(gdat.truenumbpnts[thisindxpopl]):
         dir1 = array([gdat.truelgal[thisindxpopl][k], gdat.truebgal[thisindxpopl][k]])
