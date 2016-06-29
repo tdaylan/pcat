@@ -2921,14 +2921,7 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
             # check whether the flux of the associated model point source matches well with the flux of the deterministic point source
             for i in gdat.indxener:
-                fluxbiasthis = interp(gdat.binsspec[i, :], fluxbias[1, i, :], gdat.truespec[thisindxpopl][0, i, k])
-                print 'gdat.truespec[thisindxpopl][0, i, k]'
-                print gdat.truespec[thisindxpopl][0, i, k]
-                print 'fluxbias[1, i, :]'
-                print fluxbias[1, i, :]
-                print 'fluxbiasthis'
-                print fluxbiasthis
-                print
+                fluxbiasthis = interp(gdat.truespec[thisindxpopl][0, i, k], gdat.binsspec[i, :], fluxbias[0, i, :])
                 boolbias = modlspec[i, thisindxmodlpnts[0]] > fluxbiasthis or modlspec[i, thisindxmodlpnts[0]] < gdat.truespec[thisindxpopl][0, i, k]**2 / fluxbiasthis 
                 if boolbias:
                     indxtruepntsassc.bias[i].append(k)
