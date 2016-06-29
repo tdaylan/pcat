@@ -10,24 +10,20 @@ def work(gdat, indxprocwork):
     timereal = time.time()
     timeproc = time.clock()
     
-    # re-seed the random number generator for the process
+    # re-seed the random number generator for this chain
     seed()
     
-    gdatmodi = gdatstrt()
-    gdatmodi.modilgal = empty(gdat.numbmodipnts)
-    gdatmodi.modibgal = empty(gdat.numbmodipnts)
-    gdatmodi.modisind = empty(gdat.numbmodipnts)
-    gdatmodi.modispec = empty((gdat.numbener, gdat.numbmodipnts))
-
-    # construct the run tag
+    # construct the run tag for this chain
     gdat.rtag = retr_rtag(gdat, indxprocwork)
     
     # boolean flag to indicate that the initial state will not be random
     gdat.detrinit = (not gdat.randinit and gdat.datatype == 'mock')
     
-    gdatmodi.deltllik = 0.
+    # empty object to hold chain-specific variables that will be modified by the chain
+    gdatmodi = gdatstrt()
     
-    # initialize the sample vector
+    # construct the initial state
+    ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
     
     ## number of PS
@@ -138,8 +134,24 @@ def work(gdat, indxprocwork):
                 fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], \
+                                                                                                        gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
    
+    ## sample vector
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
+    
+    ## PS and total flux and count maps
+    gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
+    
+    # temp
+    #gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
+    
+    ## indices of the PS parameters
+    indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
+    
+    ## PSF
+    gdatmodi.thispsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
+    
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
     indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
@@ -151,11 +163,26 @@ def work(gdat, indxprocwork):
         gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
         gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
 
-    gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
-    gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
-    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
-    indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
+    # allocate memory for variables to hold the proposed state
+    ## sample vector
+    gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
     
+    ## flux and count maps
+    gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.nextmodlflux = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.nextmodlcnts = zeros_like(gdatmodi.thispntsflux)
+    
+    ## likelihood
+    gdatmodi.nextllik = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.deltllik = 0.
+    
+    ## modification catalog
+    gdatmodi.modilgal = empty(gdat.numbmodipnts)
+    gdatmodi.modibgal = empty(gdat.numbmodipnts)
+    gdatmodi.modisind = empty(gdat.numbmodipnts)
+    gdatmodi.modispec = empty((gdat.numbener, gdat.numbmodipnts))
+    
+    # log the initial state
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
         for l in gdat.indxpopl:
@@ -185,13 +212,6 @@ def work(gdat, indxprocwork):
         for l in gdat.indxpopl:
             print gdatmodi.thisindxsampcomp[l]
 
-    gdat.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
-    gdat.nextmodlflux = zeros_like(gdatmodi.thispntsflux)
-    gdat.nextmodlcnts = zeros_like(gdatmodi.thispntsflux)
-    gdat.nextllik = zeros_like(gdatmodi.thispntsflux)
-
-    gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
-    
     if gdat.verbtype > 1:
         print 'drmcsamp'
         for k in gdat.indxpara:
@@ -1206,9 +1226,9 @@ def plot_samp(gdat, gdatmodi):
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     
-    gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.angldisp, gdat.psfntype)
-    if gdat.pixltype == 'cart':
-        gdatmodi.thispsfn = gdatmodi.thispsfn.reshape((gdat.numbener, -1, gdat.numbevtt))
+    # evaluate the current PSF
+    gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
+
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
 
     plot_psfn(gdat, gdatmodi)

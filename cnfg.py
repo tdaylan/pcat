@@ -407,7 +407,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=50000, \
+         numbswep=300000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

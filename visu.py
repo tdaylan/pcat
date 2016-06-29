@@ -301,7 +301,7 @@ def plot_post(pathpcat):
     tim0 = time.time()
 
     binstimemcmc = linspace(0., gdat.numbswep, 100)
-    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 2.), sharex='all')
+    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)
         axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
@@ -1135,7 +1135,7 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
     
 def plot_king(gdat):
 
-    angl = rad2deg(gdat.angldisp)
+    angl = rad2deg(gdat.binsangl)
 
     figr, axgr = plt.subplots(1, 2, figsize=(2 * gdat.plotsize, gdat.plotsize))
     figr.suptitle('King Function', fontsize=20)
@@ -1170,13 +1170,13 @@ def plot_psfn(gdat, gdatmodi):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            axis.plot(gdat.angldispplot, gdatmodi.thispsfn[i, :, m], label='Sample')
+            axis.plot(gdat.binsanglplot, gdatmodi.thispsfn[i, :, m], label='Sample')
             if gdat.trueinfo:
                 if gdat.exprtype == 'ferm':
                     labl = 'Fermi-LAT'
                 if gdat.exprtype == 'sdss':
                     labl = 'SDSS'
-                axis.plot(gdat.angldispplot, gdat.truepsfn[i, :, m], label=labl, color='g', ls='--')
+                axis.plot(gdat.binsanglplot, gdat.truepsfn[i, :, m], label=labl, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
@@ -1354,14 +1354,19 @@ def plot_eval(gdat):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(gdat.angldispplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
-        if k > 0:
-            axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
+        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
+        axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
     axis.axhline(gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
-    axis.legend()
+    legd = axis.legend(fancybox=True)
+    #legd.get_frame().set_alpha(1.)
+    legd.get_frame().set_facecolor('white')
+    legd.get_frame().set_edgecolor('black')
+
+    
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'eval_' + gdat.rtag + '.pdf')
     plt.close(figr)
