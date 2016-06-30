@@ -278,6 +278,7 @@ def init( \
          initnumbpnts=None, \
          initfdfnnorm=None, \
          initfdfnslop=None, \
+         initfdfnbrek=None, \
          initfdfnsloplowr=None, \
          initfdfnslopuppr=None, \
          # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
@@ -850,12 +851,12 @@ def init( \
         print 'Binning the probabilistic catalog...'
         tim0 = time.time()
 
-    # binned and stacked posterior
+    # bin the posterior
     pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbflux))
-    for k in range(gdat.numbsamp):
+    for k in gdat.indxsamp:
         for l in gdat.indxpopl:
             for i in gdat.indxener:
-                for h in range(gdat.numbflux):
+                for h in gdat.indxflux:
                     indxpnts = where((gdat.binsspec[i, h] < listspec[l][k, i, :]) & (listspec[l][k, i, :] < gdat.binsspec[i, h+1]))[0]
                     hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
                     pntsprob[l, i, hpixl, h] += 1.
@@ -867,6 +868,9 @@ def init( \
     gmrbstat = zeros(gdat.numbpixlsave)
     for n in range(gdat.numbpixlsave):
         gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
+
+    # calculate the autocorrelation of the chains
+    atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
 
     # write the PCAT output to disc
     pathpcatlite = os.environ["PCAT_DATA_PATH"] + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
@@ -1156,6 +1160,11 @@ def init( \
     listhdun[-1].header['EXTNAME'] = 'probprop'
     
     # processed output products
+    ## autocorrelation
+    listhdun.append(pf.ImageHDU(timeatcr))
+    listhdun[-1].header['EXTNAME'] = 'timeatcr'
+    listhdun.append(pf.ImageHDU(atcr))
+    listhdun[-1].header['EXTNAME'] = 'atcr'
     ## convergence diagnostic
     listhdun.append(pf.ImageHDU(gmrbstat))
     listhdun[-1].header['EXTNAME'] = 'gmrbstat'

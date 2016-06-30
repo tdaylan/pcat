@@ -365,7 +365,8 @@ def cnfg_ferm_mock_ngal_brok():
 
     for fdfnbrek in listfdfnbrek:
         init(psfntype='doubking', \
-    		 numbswep=300000, \
+    		 numbswep=100000, \
+             # temp
              factthin=1000, \
              numbburn=0, \
              randinit=False, \
@@ -407,7 +408,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=300000, \
+         numbswep=30000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

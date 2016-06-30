@@ -110,7 +110,10 @@ def plot_post(pathpcat):
     listllik = hdun['llik'].data
     listlpri = hdun['lpri'].data
     
+    timeatcr = hdun['timeatcr'].data
+    atcr = hdun['atcr'].data
     gmrbstat = hdun['gmrbstat'].data
+    
     listmodlcnts = hdun['modlcnts'].data
     
     if gdat.trueinfo and gdat.datatype == 'mock':
@@ -226,6 +229,10 @@ def plot_post(pathpcat):
             gdat.listgang[l].append(gang[j, indxpnts])
             gdat.listaang[l].append(aang[j, indxpnts])
 
+    # indices of the parameters to be plotted
+    numbparaplot = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
+    indxparaplot = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))])
+
     # Gelman-Rubin test
     if gdat.numbproc > 1 and isfinite(gmrbstat).all():
         print 'Making the Gelman-Rubin TS plot...'
@@ -272,44 +279,65 @@ def plot_post(pathpcat):
         tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$')
         return
 
-    numbsampatcr =  40
-    atcr = empty((numbsampatcr, gdat.numbpixlsave, gdat.numbproc))
-    for n in gdat.indxproc:
-        atcr[:, :, n] = tdpy.mcmc.retr_atcr(listmodlcnts[:, n, :], numbdela=numbsampatcr)
-        
-        print 'hey'
-        print 'n'
-        print n
-        print 'listmodlcnts[:, n, :]'
-        print listmodlcnts[:, n, :]
-        print 'atcr[:, :, n]'
-        print atcr[:, :, n]
-        print
-
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    axis.plot(arange(numbsampatcr), mean(mean(atcr, axis=1), axis=1))
+    numbsampatcr = atcr.size
+    axis.plot(arange(numbsampatcr), atcr)
     axis.set_xlabel('Sample index')
     axis.set_ylabel(r'$\tilde{\eta}$')
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'atcr_' + gdat.rtag + '.pdf')
     plt.close(figr)
-    
+
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
 
     print 'Calculating proposal and acceptance rates...'
     tim0 = time.time()
 
-    binstimemcmc = linspace(0., gdat.numbswep, 100)
+    # plot proposal efficiency
+    numbtimemcmc = 20
+    binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
+
+    numbtick = 2
+
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
-        axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)
+        hist = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
         axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
+        
+        # define the y-axis
+        maxm = amax(hist)
+        axis.set_ylim([0., maxm])
+        listtick = logspace(maxmpara / 2., maxmpara, numbtick)
+        listlabltick = ['%.3g' % tick for tick in listtick]
+        axis.set_yticks(listtick)
+        axis.set_yticklabels(listlabltick)
+    
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'propeffi_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'propeffiprop_' + gdat.rtag + '.pdf')
+    plt.close(figr)
+    
+    figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
+    for n, axis in enumerate(axgr):
+        hist = axis.hist(where(gdat.listindxparamodi == n)[0], bins=binstimemcmc)[0]
+        axis.hist(where((gdat.listindxparamodi == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
+        axis.set_ylabel('$p_{%d}$' % n)
+        if n == gdat.numbprop - 1:
+            axis.set_xlabel('$i_{samp}$')
+        
+        # define the y-axis
+        maxm = amax(hist)
+        axis.set_ylim([0., maxm])
+        listtick = logspace(maxmpara / 2., maxmpara, numbtick)
+        listlabltick = ['%.3g' % tick for tick in listtick]
+        axis.set_yticks(listtick)
+        axis.set_yticklabels(listlabltick)
+    
+    plt.subplots_adjust(hspace=0)
+    figr.savefig(gdat.pathplot + 'propeffipara_' + gdat.rtag + '.pdf')
     plt.close(figr)
     
     # temp
@@ -317,6 +345,7 @@ def plot_post(pathpcat):
         print 'hey'
         print 'gdat.listindxprop'
         print gdat.listindxprop
+    
     indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
             
@@ -359,11 +388,8 @@ def plot_post(pathpcat):
    
     # temp
     if False:
-        numbpararand = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
-        set_printoptions(threshold=nan)
-        indxparatemp = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbpararand, replace=False))])
         path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
-        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparatemp], ['%d' % k for k in indxparatemp], numbplotside=10)
+        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparaplot], ['%d' % k for k in indxparaplot], numbplotside=10)
 
     numbpntspost = 3
     if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1 and gdat.numbback == 1:
@@ -1356,16 +1382,13 @@ def plot_eval(gdat):
             colr = 'black'
         axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
         axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
-        axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
+        if k > 0:
+            axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
     axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
     axis.axhline(gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
-    legd = axis.legend(fancybox=True)
-    #legd.get_frame().set_alpha(1.)
-    legd.get_frame().set_facecolor('white')
-    legd.get_frame().set_edgecolor('black')
-
+    axis.legend(handlelength=.5, loc=3)
     
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'eval_' + gdat.rtag + '.pdf')

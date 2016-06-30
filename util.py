@@ -363,8 +363,10 @@ def retr_llik(gdat, gdatmodi, init=False):
                     # construct the proposed PSF
                     psfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
                     psfipara[gdat.indxpsfiparamodi] = gdatmodi.nextsampvarb[gdat.indxsampmodi]
-                    gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, psfipara, gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
-                    psfnfunc = gdatmodi.nextpsfnintp
+
+                    gdatmodi.nextpsfn = retr_psfn(gdat, psfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
+                    gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
+                    psfnintp = gdatmodi.nextpsfnintp
                     
                     # temp
                     # evaluate the PSF over the set of data cubes to be updated
@@ -375,9 +377,9 @@ def retr_llik(gdat, gdatmodi, init=False):
                     #    psfipara = gdatmodi.thissampvarb[gdat.indxsamppsfipara]
                     #psfn = retr_psfn(gdat, psfipara, gdat.indxenermodi, dist, gdat.psfntype)
                 else:
-                    psfnfunc = gdatmodi.thispsfnintp
+                    psfnintp = gdatmodi.thispsfnintp
                 
-                psfn = psfnfunc(dist)
+                psfn = psfnintp(dist)
 
                 # add the contribution of the PS to the the proposed flux map
                 for i in range(gdat.indxenermodi.size):
@@ -724,7 +726,7 @@ def updt_samp(gdat, gdatmodi):
     # PSF
     if gdatmodi.thisindxprop == gdat.indxproppsfipara:
         # temp
-        gdatmodi.thispsfnintp = copy(gdatmodi.nextpsfnintp)
+        gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         gdatmodi.thissampvarb[gdat.indxsampmodi] = gdatmodi.nextsampvarb[gdat.indxsampmodi]
      
     # background normalization
@@ -2080,6 +2082,7 @@ def setp(gdat):
 
     ## flux
     gdat.numbflux = 10
+    gdat.indxflux = arange(gdat.numbflux)
     gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
     gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
     gdat.diffflux = gdat.binsflux[1:] - gdat.binsflux[:-1]
