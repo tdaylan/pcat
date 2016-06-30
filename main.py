@@ -865,13 +865,14 @@ def init( \
     if gdat.verbtype > 0:
         print 'Performing Gelman-Rubin convergence test...'
         tim0 = time.time()
+    
     gmrbstat = zeros(gdat.numbpixlsave)
-    for n in range(gdat.numbpixlsave):
-        gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
+    if gdat.numbproc > 1:
+        for n in range(gdat.numbpixlsave):
+            gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
 
     # calculate the autocorrelation of the chains
     atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
-    timeatcr = array([timeatcr])
 
     # write the PCAT output to disc
     pathpcatlite = os.environ["PCAT_DATA_PATH"] + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
@@ -922,6 +923,8 @@ def init( \
     head['margsize'] = gdat.margsize
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
+    
+    head['timeatcr'] = timeatcr
    
     ## proposal scales
     ### parameter updates
@@ -1162,14 +1165,9 @@ def init( \
     
     # processed output products
     ## autocorrelation
-    listhdun.append(pf.BinTableHDU.from_columns([ \
-                                                    pf.Column(name='timeatcr', format='20A', array=timeatcr), \
-                                                    pf.Column(name='atcr', format='20A', array=atcr), \
-                                                    ]))
-    #listhdun.append(pf.ImageHDU(timeatcr))
-    listhdun[-1].header['EXTNAME'] = 'diag'
-    #listhdun.append(pf.ImageHDU(atcr))
-    #listhdun[-1].header['EXTNAME'] = 'atcr'
+    listhdun.append(pf.ImageHDU(atcr))
+    listhdun[-1].header['EXTNAME'] = 'atcr'
+    
     ## convergence diagnostic
     listhdun.append(pf.ImageHDU(gmrbstat))
     listhdun[-1].header['EXTNAME'] = 'gmrbstat'

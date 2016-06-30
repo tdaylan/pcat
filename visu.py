@@ -30,6 +30,8 @@ def plot_post(pathpcat):
     gdat.numbpopl = hdun[0].header['numbpopl']
     gdat.numbproc = hdun[0].header['numbproc']
 
+    timeatcr = hdun[0].header['timeatcr']
+    
     gdat.maxmgang = hdun[0].header['maxmgang']
     gdat.lgalcntr = hdun[0].header['lgalcntr']
     gdat.bgalcntr = hdun[0].header['bgalcntr']
@@ -110,9 +112,8 @@ def plot_post(pathpcat):
     listllik = hdun['llik'].data
     listlpri = hdun['lpri'].data
     
-    atcr = hdun['diag'].data['atcr']
-    timeatcr = hdun['diag'].data['timeatcr']
-    gmrbstat = hdun['diag'].data['gmrbstat']
+    atcr = hdun['atcr'].data
+    gmrbstat = hdun['gmrbstat'].data
     
     listmodlcnts = hdun['modlcnts'].data
     
@@ -281,6 +282,7 @@ def plot_post(pathpcat):
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     numbsampatcr = atcr.size
+    
     axis.plot(arange(numbsampatcr), atcr)
     axis.set_xlabel('Sample index')
     axis.set_ylabel(r'$\tilde{\eta}$')
@@ -311,10 +313,15 @@ def plot_post(pathpcat):
         # define the y-axis
         maxm = amax(hist)
         axis.set_ylim([0., maxm])
-        listtick = logspace(maxmpara / 2., maxmpara, numbtick)
+        listtick = linspace(maxm / 2., maxm, numbtick)
         listlabltick = ['%.3g' % tick for tick in listtick]
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
+        print 'hey'
+        print 'listtick'
+        print listtick
+        print 'listlabltick'
+        print listlabltick
     
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'propeffiprop_' + gdat.rtag + '.pdf')
@@ -331,7 +338,7 @@ def plot_post(pathpcat):
         # define the y-axis
         maxm = amax(hist)
         axis.set_ylim([0., maxm])
-        listtick = logspace(maxmpara / 2., maxmpara, numbtick)
+        listtick = linspace(maxm / 2., maxm, numbtick)
         listlabltick = ['%.3g' % tick for tick in listtick]
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
