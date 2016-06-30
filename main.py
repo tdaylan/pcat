@@ -871,6 +871,7 @@ def init( \
 
     # calculate the autocorrelation of the chains
     atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
+    timeatcr = array([timeatcr])
 
     # write the PCAT output to disc
     pathpcatlite = os.environ["PCAT_DATA_PATH"] + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
@@ -1161,10 +1162,14 @@ def init( \
     
     # processed output products
     ## autocorrelation
-    listhdun.append(pf.ImageHDU(timeatcr))
-    listhdun[-1].header['EXTNAME'] = 'timeatcr'
-    listhdun.append(pf.ImageHDU(atcr))
-    listhdun[-1].header['EXTNAME'] = 'atcr'
+    listhdun.append(pf.BinTableHDU.from_columns([ \
+                                                    pf.Column(name='timeatcr', format='20A', array=timeatcr), \
+                                                    pf.Column(name='atcr', format='20A', array=atcr), \
+                                                    ]))
+    #listhdun.append(pf.ImageHDU(timeatcr))
+    listhdun[-1].header['EXTNAME'] = 'diag'
+    #listhdun.append(pf.ImageHDU(atcr))
+    #listhdun[-1].header['EXTNAME'] = 'atcr'
     ## convergence diagnostic
     listhdun.append(pf.ImageHDU(gmrbstat))
     listhdun[-1].header['EXTNAME'] = 'gmrbstat'

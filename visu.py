@@ -110,9 +110,9 @@ def plot_post(pathpcat):
     listllik = hdun['llik'].data
     listlpri = hdun['lpri'].data
     
-    timeatcr = hdun['timeatcr'].data
-    atcr = hdun['atcr'].data
-    gmrbstat = hdun['gmrbstat'].data
+    atcr = hdun['diag'].data['atcr']
+    timeatcr = hdun['diag'].data['timeatcr']
+    gmrbstat = hdun['diag'].data['gmrbstat']
     
     listmodlcnts = hdun['modlcnts'].data
     
