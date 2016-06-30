@@ -540,7 +540,13 @@ def plot_post(pathpcat):
 
         # mean number of point sources
         path = gdat.pathplot + 'fdfnnorm_pop%d_' % l + gdat.rtag
-        truepara = None
+        if gdat.trueinfo and gdat.datatype == 'mock':
+            if gdat.mockfdfntype == 'powr':
+                truepara = gdat.mocknumbpnts[l]
+            else:
+                truepara = None
+        else:
+            truepara = None
         tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
 
         # flux distribution
