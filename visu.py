@@ -234,13 +234,6 @@ def plot_post(pathpcat):
     numbparaplot = min(gdat.numbpara, 50)
     size = numbparaplot - gdat.indxsampcompinit
     indxparaplot = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=size, replace=False))])
-    print 'hey'
-    print 'gdat.indxsampcompinit'
-    print gdat.indxsampcompinit
-    print 'sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))'
-    print sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))
-    print 'indxparaplot'
-    print indxparaplot
 
     # Gelman-Rubin test
     if gdat.numbproc > 1 and isfinite(gmrbstat).all():
@@ -331,15 +324,7 @@ def plot_post(pathpcat):
     plt.close(figr)
     
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
-    print 'gdat.listindxparamodi'
-    print gdat.listindxparamodi
     for n, axis in enumerate(axgr):
-        print 'n'
-        print n
-        print 'indxparaplot[n]'
-        print indxparaplot[n]
-        print
-
         hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
         axis.hist(where((gdat.listindxparamodi == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
         axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
@@ -497,8 +482,8 @@ def plot_post(pathpcat):
 
     # fraction of emission components
     if gdat.numbback == 2:
-        postpntsfluxmean = retr_postvarb(gdat.listpntsfluxmean)
-        postnormback = retr_postvarb(gdat.listnormback)
+        postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
+        postnormback = tdpy.util.retr_postvarb(gdat.listnormback)
         plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
 
     # PSF parameters
@@ -728,10 +713,10 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
     listydat[0, :] = gdat.datafluxmean
     if post:
         listydat[1, :] = postpntsfluxmean[0, :]
-        listyerr[:, 1, :] = retr_errrvarb(postpntsfluxmean)
+        listyerr[:, 1, :] = tdpy.util.retr_errrvarb(postpntsfluxmean)
         for c in gdat.indxback:
             listydat[c+2, :] = postnormback[0, c, :] * gdat.backfluxmean[c]
-            listyerr[:, c+2, :] = retr_errrvarb(postnormback[:, c, :]) * gdat.backfluxmean[c]
+            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(postnormback[:, c, :]) * gdat.backfluxmean[c]
     else:
         listydat[1, :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
         for c in gdat.indxback:
@@ -814,9 +799,9 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if post:
         xdat = gdat.meansind
-        postsindhist = retr_postvarb(listsindhist)
+        postsindhist = tdpy.util.retr_postvarb(listsindhist)
         ydat = postsindhist[0, :]
-        yerr = retr_errrvarb(postsindhist)
+        yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]], gdat.binssind, alpha=0.5, color='b', log=True, label='Sample')
@@ -868,9 +853,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis = axcl[i]
         if post:
             xdat = gdat.meanspec[i, :]
-            postspechist = retr_postvarb(listspechist[:, :, i])
+            postspechist = tdpy.util.retr_postvarb(listspechist[:, :, i])
             ydat = postspechist[0, :]
-            yerr = retr_errrvarb(postspechist)
+            yerr = tdpy.util.retr_errrvarb(postspechist)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, :]
@@ -935,7 +920,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
     for i, axis in enumerate(axrw):
 
         xdat = gdat.truespec[l][0, i, :]
-        xerr = retr_errrvarb(gdat.truespec[l][:, i, :])
+        xerr = tdpy.util.retr_errrvarb(gdat.truespec[l][:, i, :])
         yerr = zeros((2, xdat.size))
  
         labl = '$f_{samp}$ ' + gdat.strgfluxunit

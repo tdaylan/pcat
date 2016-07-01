@@ -207,12 +207,12 @@ def cnfg_test( \
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=100, \
-         verbtype=1, \
+         numbswep=10000, \
+         verbtype=2, \
          randinit=False, \
          maxmgang=20., \
-         mocknumbpnts=array([10]), \
-         maxmnumbpnts=array([10]), \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
@@ -402,7 +402,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=100000, \
+         numbswep=2000000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \

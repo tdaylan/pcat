@@ -298,7 +298,7 @@ def init( \
          maxmangleval=None, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
-         stdvpsfipara=0.1, \
+         stdvpsfipara=0.01, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \
@@ -707,7 +707,7 @@ def init( \
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbener))
     listindxpntsfull = []
-    listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int)
+    listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int) - 1
     gdat.listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr))
     gdat.listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
     gdat.listnumbpair = empty((gdat.numbswep, gdat.numbproc))
@@ -1458,11 +1458,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         
         if gdatmodi.thisindxprop < gdat.indxpropbrth:
             listindxparamodi[gdat.cntrswep] = gdatmodi.indxsampvarbmodi
-            print 'gdatmodi.indxsampvarbmodi'
-            print gdatmodi.indxsampvarbmodi
-            print 'gdatmodi.thisindxprop'
-            print gdatmodi.thisindxprop
-            print
 
         # sanity checks
         indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
