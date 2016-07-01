@@ -231,8 +231,16 @@ def plot_post(pathpcat):
             gdat.listaang[l].append(aang[j, indxpnts])
 
     # indices of the parameters to be plotted
-    numbparaplot = min(sum(gdat.maxmnumbpnts) * gdat.numbcomp, 50)
-    indxparaplot = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))])
+    numbparaplot = min(gdat.numbpara, 50)
+    size = numbparaplot - gdat.indxsampcompinit
+    indxparaplot = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=size, replace=False))])
+    print 'hey'
+    print 'gdat.indxsampcompinit'
+    print gdat.indxsampcompinit
+    print 'sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))'
+    print sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=numbparaplot, replace=False))
+    print 'indxparaplot'
+    print indxparaplot
 
     # Gelman-Rubin test
     if gdat.numbproc > 1 and isfinite(gmrbstat).all():
@@ -317,21 +325,24 @@ def plot_post(pathpcat):
         listlabltick = ['%.3g' % tick for tick in listtick]
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
-        print 'hey'
-        print 'listtick'
-        print listtick
-        print 'listlabltick'
-        print listlabltick
     
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'propeffiprop_' + gdat.rtag + '.pdf')
     plt.close(figr)
     
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
+    print 'gdat.listindxparamodi'
+    print gdat.listindxparamodi
     for n, axis in enumerate(axgr):
-        hist = axis.hist(where(gdat.listindxparamodi == n)[0], bins=binstimemcmc)[0]
+        print 'n'
+        print n
+        print 'indxparaplot[n]'
+        print indxparaplot[n]
+        print
+
+        hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
         axis.hist(where((gdat.listindxparamodi == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
-        axis.set_ylabel('$p_{%d}$' % n)
+        axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
         

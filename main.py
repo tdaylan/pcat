@@ -1389,15 +1389,16 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         # reject the sample if proposal is outside the prior
         if gdat.fdfntype == 'powr':
             if gdatmodi.thisindxprop == gdat.indxpropfdfnslop:
-                if gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                if gdatmodi.drmcsamp[gdatmodi.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdatmodi.indxsampvarbmodi, 1] > 1.:
                     gdatmodi.boolreje = True
         if gdat.fdfntype == 'brok':
             if gdatmodi.thisindxprop == gdat.indxpropfdfnbrek or gdatmodi.thisindxprop == gdat.indxpropfdfnsloplowr or gdatmodi.thisindxprop == gdat.indxpropfdfnslopuppr:
-                if gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdat.indxsampvarbmodi, 1] > 1.:
+                if gdatmodi.drmcsamp[gdatmodi.indxsampvarbmodi, 1] < 0. or gdatmodi.drmcsamp[gdatmodi.indxsampvarbmodi, 1] > 1.:
                     gdatmodi.boolreje = True
         if (gdatmodi.thisindxprop == gdat.indxpropfdfnnorm or \
-                    gdatmodi.thisindxprop >= gdat.indxproppsfipara and gdatmodi.thisindxprop != gdat.indxpropbrth and gdatmodi.thisindxprop != gdat.indxpropdeth) and not gdatmodi.boolreje:
-            if where((gdatmodi.drmcsamp[gdat.indxsampmodi, 1] < 0.) | (gdatmodi.drmcsamp[gdat.indxsampmodi, 1] > 1.))[0].size > 0:
+                    gdatmodi.thisindxprop >= gdat.indxproppsfipara and gdatmodi.thisindxprop != gdat.indxpropbrth and \
+                    gdatmodi.thisindxprop != gdat.indxpropdeth) and not gdatmodi.boolreje:
+            if where((gdatmodi.drmcsamp[gdatmodi.indxsampmodi, 1] < 0.) | (gdatmodi.drmcsamp[gdatmodi.indxsampmodi, 1] > 1.))[0].size > 0:
                 gdatmodi.boolreje = True
 
         if gdatmodi.thisindxprop == gdat.indxproppsfipara:
@@ -1454,7 +1455,15 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print 'Rejected.'
 
             listaccp[gdat.cntrswep] = False
-             
+        
+        if gdatmodi.thisindxprop < gdat.indxpropbrth:
+            listindxparamodi[gdat.cntrswep] = gdatmodi.indxsampvarbmodi
+            print 'gdatmodi.indxsampvarbmodi'
+            print gdatmodi.indxsampvarbmodi
+            print 'gdatmodi.thisindxprop'
+            print gdatmodi.thisindxprop
+            print
+
         # sanity checks
         indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
         if indxsampbadd.size > 0:
