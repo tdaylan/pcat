@@ -151,7 +151,8 @@ def work(gdat, indxprocwork):
     
     ## PSF
     gdatmodi.thispsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
-    
+    gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
+
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
     indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
@@ -298,7 +299,7 @@ def init( \
          maxmangleval=None, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
-         stdvpsfipara=0.01, \
+         stdvpsfipara=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \

@@ -316,8 +316,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             thisindxpixlprox = []
             for k in range(gdat.numbmodipnts):
                 
-                # temp
-                # this may not work for extreme color PS!
+                # temp -- this may not work for extreme color PS!
                 # take the flux at the pivot energy
                 if gdatmodi.thisindxprop == gdat.indxproppsfipara:
                     fluxtemp = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec, axis=1)[gdat.indxenerfdfn, k]]
@@ -325,7 +324,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                     fluxtemp = gdatmodi.modispec[gdat.indxenerfdfn, k]
 
                 # find the flux index
-                indxfluxproxtemp = amin(where(gdat.binsfluxprox - abs(fluxtemp) > 0.)[0]) - 1
+                indxfluxproxtemp = amin(where(gdat.binsfluxprox - fabs(fluxtemp) > 0.)[0]) - 1
                 indxpixltemp = retr_indxpixl(gdat, bgal[k], lgal[k])
                 thisindxpixlprox.append(gdat.indxpixlprox[indxfluxproxtemp][indxpixltemp])
             gdat.indxpixlmodi = unique(concatenate(thisindxpixlprox))
@@ -360,12 +359,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                 # grab the PSF
                 if gdatmodi.thisindxprop == gdat.indxproppsfipara:
                     
-                    # construct the proposed PSF
-                    psfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
-                    psfipara[gdat.indxpsfiparamodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
-
-                    gdatmodi.nextpsfn = retr_psfn(gdat, psfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
-                    gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
+                    
                     psfnintp = gdatmodi.nextpsfnintp
                     
                     # temp
@@ -1127,6 +1121,14 @@ def retr_prop(gdat, gdatmodi):
             icdf_psfipara(gdat, gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.indxpsfiparamodi)
             
         gdat.numbmodipnts = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
+                    
+        # construct the proposed PSF
+        psfipara = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
+        psfipara[gdat.indxpsfiparamodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
+
+        gdatmodi.nextpsfn = retr_psfn(gdat, psfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
+        
+        gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         
         if gdat.verbtype > 1:
            
@@ -1939,15 +1941,15 @@ def retr_propmodl(gdat):
                 probfdfnslopuppr = array([0.])
 
         if gdat.boolproppsfn:
-            probpsfipara = array([1.])
+            probpsfipara = array([1.]) * gdat.numbpsfipara
         else:
             probpsfipara = array([0.])
         probnormback = array([1.])
         
-        probbrth = array([0.1 * sum(gdat.maxmnumbpnts)])
-        probdeth = array([0.1 * sum(gdat.maxmnumbpnts)])
-        probsplt = array([0. * sum(gdat.maxmnumbpnts)])
-        probmerg = array([0. * sum(gdat.maxmnumbpnts)])
+        probbrth = array([0.2 * sum(gdat.maxmnumbpnts) / 2.])
+        probdeth = array([0.2 * sum(gdat.maxmnumbpnts) / 2.])
+        probsplt = array([0. * sum(gdat.maxmnumbpnts) / 2.])
+        probmerg = array([0. * sum(gdat.maxmnumbpnts) / 2.])
         
         problgal = array([sum(gdat.maxmnumbpnts) / 2.])
         probbgal = array([sum(gdat.maxmnumbpnts) / 2.])

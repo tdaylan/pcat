@@ -200,7 +200,7 @@ def cnfg_test( \
              ):
    
     indxenerincl = arange(3, 4)
-    indxevttincl = arange(2, 4)
+    indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
     minmflux = 3e-11
     maxmflux = 1e-10
@@ -208,7 +208,8 @@ def cnfg_test( \
         
     init(psfntype='doubking', \
          numbswep=10000, \
-         verbtype=2, \
+         numbburn=0, \
+         #verbtype=2, \
          randinit=False, \
          maxmgang=20., \
          mocknumbpnts=array([3]), \
@@ -402,7 +403,7 @@ def cnfg_ferm_mock_ngal():
     mockfdfnslop = array([1.9])
       
     init(psfntype='doubking', \
-         numbswep=2000000, \
+         numbswep=200000, \
          randinit=False, \
          trueinfo=True, \
          maxmgang=20., \
