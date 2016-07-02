@@ -2416,33 +2416,35 @@ def setp(gdat):
         
         gdat.lgalgrid = lgalheal[gdat.indxpixlrofi]
         gdat.bgalgrid = bgalheal[gdat.indxpixlrofi]
+    else:
+        isidecart = arange(gdat.numbsidecart)
+        temp = meshgrid(isidecart, isidecart, indexing='ij')
+        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
+        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
         
+    # store pixels as unit vectors
+    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+
+    gdat.numbpixl = gdat.lgalgrid.size
+    gdat.indxpixl = arange(gdat.numbpixl)
+    
+    if gdat.pixltype == 'heal':
         path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (gdat.maxmgang)
         if os.path.isfile(path):
             fobj = open(path, 'rb')
             gdat.pixlcnvt = cPickle.load(fobj)
             fobj.close()
         else:
+            indxpixltemp = where((fabs(lgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize) & (fabs(bgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize))[0]
             gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int)
-            for k in range(gdat.indxpixlrofimarg.size):
-                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.indxpixl)
-                gdat.pixlcnvt[gdat.indxpixlrofimarg[k]] = argmin(dist)
+            for k in range(indxpixltemp.size):
+                dist = retr_angldistunit(gdat, lgalheal[indxpixltemp[k]], bgalheal[indxpixltemp[k]], gdat.indxpixl)
+                gdat.pixlcnvt[indxpixltemp[k]] = argmin(dist)
 
             fobj = open(path, 'wb')
             cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
-    else:
-        isidecart = arange(gdat.numbsidecart)
-        temp = meshgrid(isidecart, isidecart, indexing='ij')
-        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
-        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
        
-
-    # store pixels as unit vectors
-    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
-
-    gdat.numbpixl = gdat.lgalgrid.size
-    gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
     
     gdat.indxcubefilt = meshgrid(gdat.indxenerincl, gdat.indxpixl, gdat.indxevttincl, indexing='ij')
@@ -2892,9 +2894,8 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, logt=False, cmap='Re
     return axis, cbar
 
 
-def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
+def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
-    dir2 = array([modllgal, modlbgal])
     indxtruepntsassc = gdatstrt()
     indxtruepntsassc.miss = []
     indxtruepntsassc.bias = [[] for i in gdat.indxener]
@@ -2906,52 +2907,120 @@ def pair_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     for i in gdat.indxener:
         fluxbias[:, i, :] = retr_fluxbias(gdat, gdat.binsspec, i)
 
-    indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
-    for k in range(gdat.truenumbpnts[thisindxpopl]):
-        dir1 = array([gdat.truelgal[thisindxpopl][k], gdat.truebgal[thisindxpopl][k]])
-        dist = angdist(dir1, dir2, lonlat=True)
-        
-        thisindxmodlpnts = where(dist < deg2rad(0.5))[0]
-        if thisindxmodlpnts.size == 0:
-            indxmodlpnts[k] = -1
-            indxtruepntsassc.miss.append(k)
-        else:
+    # temp
+    if False:
+        indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
+        dir1 = array([modllgal, modlbgal])
+        for k in range(gdat.truenumbpnts[thisindxpopl]):
+            dir2 = array([gdat.truelgal[thisindxpopl][k], gdat.truebgal[thisindxpopl][k]])
+            dist = angdist(dir1, dir2, lonlat=True)
+            thisindxmodlpnts = where(dist < deg2rad(0.5))[0]
+            if thisindxmodlpnts.size == 0:
+                indxmodlpnts[k] = -1
+                indxtruepntsassc.miss.append(k)
+            else:
 
-            # if there are multiple associated model PS, sort them
-            if thisindxmodlpnts.size != 1:
-                thisindxmodlpnts = thisindxmodlpnts[argsort(dist[thisindxmodlpnts])]
-                indxtruepntsassc.mult.append(k)
+                # if there are multiple associated model PS, sort them
+                if thisindxmodlpnts.size != 1:
+                    thisindxmodlpnts = thisindxmodlpnts[argsort(dist[thisindxmodlpnts])]
+                    indxtruepntsassc.mult.append(k)
+                
+                # index of the associated model PS
+                indxmodlpnts[k] = thisindxmodlpnts[0]
+
+                # check whether the flux of the associated model point source matches well with the flux of the deterministic point source
+                for i in gdat.indxener:
+                    fluxbiasthis = interp(gdat.truespec[thisindxpopl][0, i, k], gdat.binsspec[i, :], fluxbias[0, i, :])
+                    boolbias = modlspec[i, thisindxmodlpnts[0]] > fluxbiasthis or modlspec[i, thisindxmodlpnts[0]] < gdat.truespec[thisindxpopl][0, i, k]**2 / fluxbiasthis 
+                    if boolbias:
+                        indxtruepntsassc.bias[i].append(k)
+                    else:
+                        indxtruepntsassc.hits[i].append(k)
+    else:
+        indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
+        specassc = zeros((gdat.numbener, gdat.truenumbpnts[thisindxpopl]), dtype=float)
+        numbassc = zeros_like(gdat.truelgal[thisindxpopl], dtype=int)
+        distassc = zeros_like(gdat.truelgal[thisindxpopl]) + deg2rad(3 * gdat.maxmgang)
+        dir1 = array([gdat.truelgal[thisindxpopl], gdat.truebgal[thisindxpopl]])
+
+        if True:
+            print 'indxmodlpnts'
+            print indxmodlpnts
+            print 'specassc'
+            print specassc
+            print 'numbassc'
+            print numbassc
+            print 'distassc'
+            print distassc
+        for k in range(modllgal.size):
+            dir2 = array([modllgal[k], modlbgal[k]])
+            dist = angdist(dir1, dir2, lonlat=True)
+            thisindxtruepnts = where(dist < deg2rad(0.5))[0]
             
-            # index of the associated model PS
-            indxmodlpnts[k] = thisindxmodlpnts[0]
+            if True:
+                print 'k'
+                print k
+                print 'dist'
+                print dist
+                print 'thisindxtruepnts'
+                print thisindxtruepnts
+                print 
+            if thisindxtruepnts.size == 0:
+                continue
+            else:
+                
+                # if there are multiple associated true PS, sort them
+                if thisindxtruepnts.size != 1:
+                    indx = argsort(dist[thisindxtruepnts])
+                    dist = dist[thisindxtruepnts][indx]
+                    thisindxtruepnts = thisindxtruepnts[indx]
+               
+                if False:
+                    print 'thisindxtruepnts.size'
+                    print thisindxtruepnts.size
+                    print 'thisindxtruepnts'
+                    print thisindxtruepnts
+                    print 'dist'
+                    print dist
 
-            # check whether the flux of the associated model point source matches well with the flux of the deterministic point source
-            for i in gdat.indxener:
-                fluxbiasthis = interp(gdat.truespec[thisindxpopl][0, i, k], gdat.binsspec[i, :], fluxbias[0, i, :])
-                boolbias = modlspec[i, thisindxmodlpnts[0]] > fluxbiasthis or modlspec[i, thisindxmodlpnts[0]] < gdat.truespec[thisindxpopl][0, i, k]**2 / fluxbiasthis 
-                if boolbias:
-                    indxtruepntsassc.bias[i].append(k)
-                else:
-                    indxtruepntsassc.hits[i].append(k)
+                # store the index of the model PS
+                numbassc[thisindxtruepnts[0]] += 1
+                if dist[0] < distassc[thisindxtruepnts[0]]:
+                    specassc[:, thisindxtruepnts[0]] = modlspec[:, k]
+                    distassc[thisindxtruepnts[0]] = dist[0]
+                    indxmodlpnts[thisindxtruepnts[0]] = k
+
+                print 'numbassc'
+                print numbassc
+                print 'specassc'
+                print specassc
+                print 'distassc'
+                print distassc
+                print 'indxmodlpnts'
+                print indxmodlpnts
+                print
+
+    print 'hey'
+    if unique(indxmodlpnts).size == indxmodlpnts.size:
+        print 'unique!'
+
+        # check whether the flux of the associated model point source matches well with the flux of the deterministic point source
+        for k in range(gdat.truenumbpnts[thisindxpopl]):
+            if numbassc[k] == 0:
+                indxtruepntsassc.miss.append(k)
+            else:
+                if numbassc[k] > 1:
+                    indxtruepntsassc.mult.append(k)
+                for i in gdat.indxener:
+                    fluxbiasthis = interp(gdat.truespec[thisindxpopl][0, i, k], gdat.binsspec[i, :], fluxbias[0, i, :])
+                    boolbias = specassc[i, k] > fluxbiasthis or specassc[i, k] < gdat.truespec[thisindxpopl][0, i, k]**2 / fluxbiasthis 
+                    if boolbias:
+                        indxtruepntsassc.bias[i].append(k)
+                    else:
+                        indxtruepntsassc.hits[i].append(k)
     
     return indxmodlpnts, indxtruepntsassc
 
-'''
-y = ax + b
-log(M) + x0 = a * x0 + b
-log(m) + x1 = a * x1 + b
-log(M) + x0 - log(m) - x1 = a * (x0 - x1)
-
-a = (log(m) + x1 - log(M) - x0) / (x1 - x0)
-
-log(M) / x0 + 1 = a + b / x0
-log(m) / x1 + 1 = a + b / x1
-log(M) / x0 - log(m) / x1 = b * (1 / x0 - 1 / x1)
-
-b = (x1 * log(M) - x0 * log(m)) / (x1 - x0)
-
-y = ((log(m) + x1 - log(M) - x0) * x + (x1 * log(M) - x0 * log(m))) / (x1 - x0)
-'''
 
 def retr_fluxbias(gdat, spec, indxenerthis):
 

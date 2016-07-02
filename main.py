@@ -299,7 +299,7 @@ def init( \
          maxmangleval=None, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
-         stdvpsfipara=0.1, \
+         stdvpsfipara=0.0001, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \
@@ -1266,7 +1266,7 @@ def plot_samp(gdat, gdatmodi):
             lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]
             bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]]
-            indxmodl, indxtruepntsassc = pair_catl(gdat, l, lgal, bgal, spec)
+            indxmodl, indxtruepntsassc = corr_catl(gdat, l, lgal, bgal, spec)
             gdatmodi.indxtruepntsassc.append(indxtruepntsassc)
             gdatmodi.thisspecmtch = copy(spec[:, indxmodl])
             gdatmodi.thisspecmtch[:, indxtruepntsassc.miss] = 0.

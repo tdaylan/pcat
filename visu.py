@@ -427,7 +427,7 @@ def plot_post(pathpcat):
         for l in gdat.indxpopl:
             listindxmodl = []
             for p in gdat.indxsamptotl:
-                indxmodl, indxtruepntsassc = pair_catl(gdat, l, gdat.listlgal[l][p], gdat.listbgal[l][p], gdat.listspec[l][p])
+                indxmodl, indxtruepntsassc = corr_catl(gdat, l, gdat.listlgal[l][p], gdat.listbgal[l][p], gdat.listspec[l][p])
                 listindxmodl.append(indxmodl)
             postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
             for i in gdat.indxener:
@@ -953,7 +953,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         #    axis.errorbar(xdat[gdat.indxtruepntstimevari[l]], ydat[gdat.indxtruepntstimevari[l]], ls='', yerr=yerr[:, gdat.indxtruepntstimevari[l]], \
         #        lw=1, marker='o', markersize=5, color='red')
    
-        if gdat.datatype == 'inpt':
+        if gdat.datatype == 'mock':
             strg = 'true'
         else:
             if gdat.exprtype == 'ferm':

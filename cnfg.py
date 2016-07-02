@@ -144,6 +144,8 @@ def intr_ferm_expr_ngal( \
     karg['psfntype'] = 'doubking'
     karg['numbswep'] = 2000000
     karg['randinit'] = False
+    # temp
+    karg['boolproppsfn'] = False
     karg['maxmgang'] = 20.
     karg['initfdfnslop'] = array([1.9])
     karg['initfdfnnorm'] = array([300])
@@ -199,25 +201,26 @@ def cnfg_test( \
               strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
              ):
    
-    indxenerincl = arange(3, 4)
+    indxenerincl = arange(1, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
-    minmflux = 3e-11
-    maxmflux = 1e-10
+    minmflux = 3e-8
+    maxmflux = 1e-7
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=10000, \
+         numbswep=1000, \
+         numbswepplot=200, \
          numbburn=0, \
          #verbtype=2, \
          randinit=False, \
-         maxmgang=20., \
-         mocknumbpnts=array([3]), \
-         maxmnumbpnts=array([3]), \
+         maxmgang=5., \
+         mocknumbpnts=array([5]), \
+         maxmnumbpnts=array([5]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
-         probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
+         #probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
@@ -368,6 +371,8 @@ def cnfg_ferm_mock_ngal_brok():
     		 numbswep=400000, \
              numbburn=0, \
              randinit=False, \
+             # temp
+             boolproppsfn=False, \
              trueinfo=True, \
              maxmgang=20., \
              fdfntype='brok', \
