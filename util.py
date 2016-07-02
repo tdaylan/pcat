@@ -2894,6 +2894,20 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, logt=False, cmap='Re
     return axis, cbar
 
 
+def retr_jcbn():
+    
+    lgl0, lgla, bgl0, bgla, flx0, flxa, snd0, snda = sympy.symbols('lgl0 lgla bgl0 bgla flx0 flxa snd0 snda')
+    matr = sympy.Matrix([[1, 1 - 1 / (flx0 + flxa), 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [1,    -1 / (flx0 + flxa), 0,               0, algl * aflx / flx0**2, -algl / flx0], \
+                         [0,                     0, 1, 1 - aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,                     0, 1,    -aflx / flx0, abgl * aflx / flx0**2, -abgl / flx0], \
+                         [0,                     0, 0,               0,                     1,            0], \
+                         [0,                     0, 0,               0,                    -1,            1]])
+
+    jcbn = matr.det()
+    return jcbn
+
+
 def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
     indxtruepntsassc = gdatstrt()
