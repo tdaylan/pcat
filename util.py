@@ -2537,13 +2537,6 @@ def setp(gdat):
         gdat.backflux.append(backfluxtemp)
         gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
-    print 'hey'
-    print 'gdat.backflux'
-    print amin(gdat.backflux[1], 1)
-    print amax(gdat.backflux[1], 1)
-    print
-    
-    
     # count axis
     gdat.expotemp = mean(gdat.expo, 1)
     gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmflux * amin(gdat.expotemp, 1) * gdat.diffener

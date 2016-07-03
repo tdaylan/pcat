@@ -136,12 +136,6 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], \
                                                                                                         gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
-            print 'hey'
-            print 'gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0]'
-            print gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0]
-            print 'gdat.truesind[l]'
-            print gdat.truesind[l]
-            print 
    
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
@@ -345,7 +339,7 @@ def init( \
         if maxmgang == None:
             maxmgang = 20.
         if minmsind == None:
-            minmsind = 1.2
+            minmsind = 0.5
         if maxmsind == None:
             maxmsind = 3.2
         if meansdfn == None:
