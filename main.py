@@ -299,9 +299,11 @@ def init( \
          maxmangleval=None, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
-         stdvpsfipara=0.0001, \
+         stdvpsfipara=1e-20, \
          stdvback=0.04, \
-         stdvlbhl=0.1, \
+         # temp
+         stdvlbhl=1e-20, \
+         #stdvlbhl=0.1, \
          stdvflux=0.15, \
          stdvsind=0.15, \
          fracrand=0.05, \

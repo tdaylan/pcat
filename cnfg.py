@@ -93,10 +93,13 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
          indxevttincl=arange(2, 4), \
          minmflux=3e-11, \
          maxmflux=3e-6, \
+         minmsind=array([1.2]), \
+         maxmsind=array([4.2]), \
          regitype='igal', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
          strgexpo=strgexpo, \
+         strgback=['fermisotflux.fits', 'fdfmtemp.fits'] \
          datatype='inpt', \
          strgexpr=strgexpr, \
         )
@@ -209,18 +212,19 @@ def cnfg_test( \
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=1000, \
+         numbswep=1001, \
          numbswepplot=200, \
          numbburn=0, \
-         #verbtype=2, \
+         verbtype=2, \
          randinit=False, \
-         maxmgang=5., \
-         mocknumbpnts=array([5]), \
-         maxmnumbpnts=array([5]), \
+         maxmgang=10., \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
+         #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
          #probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         #probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
