@@ -99,7 +99,7 @@ def cnfg_ferm_expr_igal(strgexpr='fermflux_cmp0_igal.fits', strgexpo='fermexpo_c
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
          strgexpo=strgexpo, \
-         strgback=['fermisotflux.fits', 'fdfmtemp.fits'] \
+         strgback=['fermisotflux.fits', 'fdfmtemp.fits'], \
          datatype='inpt', \
          strgexpr=strgexpr, \
         )
