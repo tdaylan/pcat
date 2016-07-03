@@ -136,6 +136,12 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], \
                                                                                                         gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            print 'hey'
+            print 'gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0]'
+            print gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0]
+            print 'gdat.truesind[l]'
+            print gdat.truesind[l]
+            print 
    
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
@@ -161,6 +167,10 @@ def work(gdat, indxprocwork):
         print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
         print 'bad index vector'
         print indxsampbadd
+        print 'indxsampcompinit'
+        print gdat.indxsampcompinit
+        print (indxsampbadd - gdat.indxsampcompinit ) % gdat.numbcomp
+        print 
         gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
         gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
 
@@ -592,6 +602,8 @@ def init( \
     
     # check the call stack for the name of the configuring function
     gdat.strgcnfg = inspect.stack()[1][3]
+    if gdat.verbtype > 0:
+        print 'Configuration %s' % gdat.strgcnfg
 
     # setup the sampler
     setp(gdat) 

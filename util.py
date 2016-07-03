@@ -376,33 +376,34 @@ def retr_llik(gdat, gdatmodi, init=False):
 
                 # interpolate the PSF
                 psfn = psfnintp(dist)
-
-                print 'hey'
-                print 'thispsfn'
-                print gdatmodi.thispsfnintp(dist)[0, :]
-                print gdatmodi.thispsfnintp(dist)[1, :]
-                print gdatmodi.thispsfnintp(dist)[2, :]
-                print gdatmodi.thispsfnintp(dist).shape
-                print 'psfn'
-                print psfn[0, :]
-                print psfn[1, :]
-                print psfn[2, :]
-                print psfn.shape
-                print
+    
+                if False:
+                    print 'hey'
+                    print 'thispsfn'
+                    print gdatmodi.thispsfnintp(dist)[0, :]
+                    print gdatmodi.thispsfnintp(dist)[1, :]
+                    print gdatmodi.thispsfnintp(dist)[2, :]
+                    print gdatmodi.thispsfnintp(dist).shape
+                    print 'psfn'
+                    print psfn[0, :]
+                    print psfn[1, :]
+                    print psfn[2, :]
+                    print psfn.shape
+                    print
 
                 # add the contribution of the PS to the the proposed flux map
                 for i in range(gdat.indxenermodi.size):
                     gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[gdat.indxenermodi[i], :, :]
            
-        print 'gdatmodi.thispntsflux[gdat.indxcubemodi]'
-        print amin(gdatmodi.thispntsflux[gdat.indxcubemodi]), amax(gdatmodi.thispntsflux[gdat.indxcubemodi])
-        print 'gdatmodi.nextpntsflux[gdat.indxcubemodi]'
-        print amin(gdatmodi.nextpntsflux[gdat.indxcubemodi]), amax(gdatmodi.nextpntsflux[gdat.indxcubemodi])
-        
-        print 'gdat.numbmodipnts'
-        print gdat.numbmodipnts
-        print 'gdatmodi.thissampvarb[gdat.indxsampnumbpnts]'
-        print gdatmodi.thissampvarb[gdat.indxsampnumbpnts]
+        if False:
+            print 'gdatmodi.thispntsflux[gdat.indxcubemodi]'
+            print amin(gdatmodi.thispntsflux[gdat.indxcubemodi]), amax(gdatmodi.thispntsflux[gdat.indxcubemodi])
+            print 'gdatmodi.nextpntsflux[gdat.indxcubemodi]'
+            print amin(gdatmodi.nextpntsflux[gdat.indxcubemodi]), amax(gdatmodi.nextpntsflux[gdat.indxcubemodi])
+            print 'gdat.numbmodipnts'
+            print gdat.numbmodipnts
+            print 'gdatmodi.thissampvarb[gdat.indxsampnumbpnts]'
+            print gdatmodi.thissampvarb[gdat.indxsampnumbpnts]
 
         timefinl = time.time()
         gdatmodi.listchrollik[gdat.cntrswep, 3] = timefinl - timebegn
@@ -885,20 +886,12 @@ def retr_fgl3(gdat):
     
     gdat.fgl3timevari = fgl3['Variability_Index'][indxfgl3sort]
     
-    
     gdat.indxfgl3timevari = where(gdat.fgl3timevari > 72.44)[0]
     
     gdat.fgl3spec = zeros((3, gdat.numbener, gdat.fgl3numbpnts))
     gdat.fgl3spec[0, :, :] = fgl3spectemp
     gdat.fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
     gdat.fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
-    
-    print 'hey'
-    print '1'
-    indxpixlfgl3 = retr_indxpixl(gdat, gdat.fgl3bgal, gdat.fgl3lgal)
-    print 'hey'
-
-    gdat.fgl3cnts = gdat.fgl3spec[0, :, :, None] * gdat.expo[:, indxpixlfgl3, :] * gdat.diffener[:, None, None]
     
     # adjust 3FGL positions according to the ROI center
     if gdat.regitype == 'ngal':
@@ -909,6 +902,9 @@ def retr_fgl3(gdat):
     gdat.fgl3gang = retr_gang(gdat.fgl3lgal, gdat.fgl3bgal)
     gdat.fgl3aang = retr_aang(gdat.fgl3lgal, gdat.fgl3bgal)
         
+    indxpixlfgl3 = retr_indxpixl(gdat, gdat.fgl3bgal, gdat.fgl3lgal)
+    gdat.fgl3cnts = gdat.fgl3spec[0, :, :, None] * gdat.expo[:, indxpixlfgl3, :] * gdat.diffener[:, None, None]
+    
     # select the 3FGL point sources in the ROI
     # temp
     gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
@@ -2531,7 +2527,7 @@ def setp(gdat):
         if gdat.strgback[c] == 'unit':
             backfluxtemp = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         else:
-            path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgback[c]
+            path = gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'heal':
                 backfluxtemp = backfluxtemp[gdat.indxcubeheal]
@@ -2541,6 +2537,13 @@ def setp(gdat):
         gdat.backflux.append(backfluxtemp)
         gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
+    print 'hey'
+    print 'gdat.backflux'
+    print amin(gdat.backflux[1], 1)
+    print amax(gdat.backflux[1], 1)
+    print
+    
+    
     # count axis
     gdat.expotemp = mean(gdat.expo, 1)
     gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmflux * amin(gdat.expotemp, 1) * gdat.diffener
@@ -2621,10 +2624,7 @@ def setp(gdat):
                 mockspec[l][gdat.indxenerfdfn, :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnbrek[l], gdat.mockfdfnsloplowr[l], gdat.mockfdfnslopuppr[l])
             mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.meansdfn[l], gdat.stdvsdfn[l], gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
             mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfdfn[0], :], mocksind[l])
-            print 'hey'
-            print '2'
             indxpixltemp = retr_indxpixl(gdat, mockbgal[l], mocklgal[l])
-            print 'hey'
             mockcnts[l] = mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         mockpntsflux = retr_pntsflux(gdat, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
         mocktotlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcubefull)
@@ -2689,10 +2689,7 @@ def setp(gdat):
                 gdat.truestrgclss = [gdat.fgl3strgclss[gdat.indxfgl3rofi]]
                 gdat.truestrgassc = [gdat.fgl3strgassc[gdat.indxfgl3rofi]]
 
-                print 'hey'
-                print '3'
                 indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[0], gdat.truelgal[0])
-                print 'hey'
                 spec = gdat.fgl3spec[0, :, gdat.indxfgl3rofi]
                 # temp
                 spec = spec.T
@@ -2714,10 +2711,7 @@ def setp(gdat):
         truebackcnts = []
         gdat.truesigm = []
         for l in gdat.indxpopl:
-            print 'hey'
-            print '4'
             indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
-            print 'hey'
             truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
             for c in gdat.indxback:
                 truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * \
