@@ -845,7 +845,7 @@ def retr_expr(gdat):
         fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
         
         # sort the catalog in decreasing flux
-        indxfgl3sort = argsort(fgl3spectemp[1, :])[::-1]
+        indxfgl3sort = argsort(fgl3spectemp[gdat.indxenerfdfn[0], :])[::-1]
 
         fgl3spectemp = fgl3spectemp[:, indxfgl3sort]
 

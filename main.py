@@ -143,9 +143,6 @@ def work(gdat, indxprocwork):
     ## PS and total flux and count maps
     gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
     
-    # temp
-    #gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
-    
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -1273,16 +1270,29 @@ def plot_samp(gdat, gdatmodi):
             gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4., 1)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
-    gdat.temppntsflux, gdat.temppntscnts, gdat.tempmodlflux, gdat.tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
+    temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-    gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
+    gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
 
     print 'hey'
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
-            tdpy.util.plot_heal(path, gdat.temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+            tdpy.util.plot_heal(path, temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
+            path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
+            path = gdat.pathplot + 'diffpntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    
+    
+    
     
     gdatmodi.thiscnts = []
     gdatmodi.indxtruepntsassc = []
