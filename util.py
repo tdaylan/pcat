@@ -339,7 +339,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                 # find the flux index
                 indxfluxproxtemp = amin(where(gdat.binsfluxprox - fabs(fluxtemp) > 0.)[0]) - 1
                 indxpixltemp = retr_indxpixl(gdat, bgal[k], lgal[k])
-                thisindxpixlprox.append(gdat.indxpixlprox[indxfluxproxtemp][indxpixltemp])
+                thisindxpixlprox.append(indxpixlprox[indxfluxproxtemp][indxpixltemp])
             gdat.indxpixlmodi = unique(concatenate(thisindxpixlprox))
         
         timefinl = time.time()
@@ -2748,24 +2748,33 @@ def setp(gdat):
         path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%03d_%s_%.7g_%.7g_%02d_%04d_%04d.p' % (gdat.maxmgang, gdat.pixltype, \
                      gdat.minmflux, gdat.maxmflux, gdat.numbfluxprox, gdat.indxenerincl[gdat.indxmaxmangl[0]], gdat.indxevttincl[gdat.indxmaxmangl[1]])
 
+    global indxpixlprox
     if os.path.isfile(path):
         print 'Retrieving previously computed pixel look-up table...'
         fobj = open(path, 'rb')
-        gdat.indxpixlprox = cPickle.load(fobj)
+        indxpixlprox = cPickle.load(fobj)
         fobj.close()
     else:
         print 'Computing the look-up table...'
-        gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
+        indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
         for j in gdat.indxpixl:
             dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
             dist[j] = 0.
             for h in range(gdat.numbfluxprox):
-                gdat.indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
-                gdat.indxpixlproxtemp = gdat.indxpixlproxtemp[argsort(dist[gdat.indxpixlproxtemp])]
-                gdat.indxpixlprox[h].append(gdat.indxpixlproxtemp)
+                indxpixlproxtemp = where(dist < deg2rad(gdat.maxmangleval[h]))[0]
+                indxpixlproxtemp = indxpixlproxtemp[argsort(dist[indxpixlproxtemp])]
+                indxpixlprox[h].append(indxpixlproxtemp)
         fobj = open(path, 'wb')
-        cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
         fobj.close()
+        
+    if True:
+        print 'indxpixlprox'
+        totl = 0.
+        for h in gdat.indxfluxprox:
+            for n in gdat.indxpixl:
+                totl += sys.getsizeof(indxpixlprox[h][n]) / 2.**20
+        print totl, 'MB'
 
 
 def init_fram(gdat, indxevttplot, indxenerplot, strgplot):

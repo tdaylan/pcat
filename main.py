@@ -672,12 +672,6 @@ def init( \
         print 'hey'
         print 'gdat'
         show_memo(gdat)
-        print 'indxpixlprox'
-        totl = 0.
-        for h in gdat.indxfluxprox:
-            for n in gdat.indxpixl:
-                totl += sys.getsizeof(gdat.indxpixlprox[h][n]) / 2.**20
-        print totl, 'MB'
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)

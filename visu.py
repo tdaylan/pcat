@@ -1000,7 +1000,7 @@ def plot_look(gdat):
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for h in range(gdat.numbfluxprox):
         for j in gdat.indxpixl:
-            indxpixlproxsize[j] = gdat.indxpixlprox[h][j].size
+            indxpixlproxsize[j] = indxpixlprox[h][j].size
         binspixlsize = logspace(log10(amin(indxpixlproxsize)), log10(amax(indxpixlproxsize)), 100)
         axis.hist(indxpixlproxsize, binspixlsize, log=True, label='Flux bin %d' % h)
     axis.set_xlabel('Number of pixels')
