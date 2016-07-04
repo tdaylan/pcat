@@ -25,12 +25,8 @@ def cnfg_ferm_psfn_expr(psfntype):
         )
                 
     
-def cnfg_test( \
-              strgexpr='fermflux_cmp0_ngal.fits', \
-              strgexpo='fermexpo_cmp0_ngal.fits', \
-              strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-             ):
-   
+def cnfg_test():
+      
     indxenerincl = arange(1, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
@@ -39,14 +35,15 @@ def cnfg_test( \
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=100000, \
-         numbswepplot=20000, \
+         numbswep=100, \
+         numbswepplot=1, \
          numbburn=0, \
-         #verbtype=2, \
+         verbtype=2, \
          randinit=False, \
          maxmgang=20., \
-         mocknumbpnts=array([600]), \
-         maxmnumbpnts=array([300]), \
+         specfraceval=0., \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -56,10 +53,12 @@ def cnfg_test( \
          maxmflux=maxmflux, \
          regitype='ngal', \
          makeplot=True, \
+         pathdata=os.environ["PCAT_DATA_PATH"], \
+         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         strgexpr='fermflux_cmp0_ngal.fits', \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnormback=array([2., 2.]), \
          minmnormback=array([0.5, 0.5]), \
-         strgback=strgback, \
-         strgexpo=strgexpo, \
          datatype='mock', \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \

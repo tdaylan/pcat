@@ -301,13 +301,12 @@ def init( \
          numbsidecart=None, \
          numbsideheal=None, \
          maxmangleval=None, \
+         specfraceval=0.01, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
          stdvpsfipara=1e-20, \
          stdvback=0.04, \
-         # temp
-         stdvlbhl=1e-20, \
-         #stdvlbhl=0.1, \
+         stdvlbhl=0.1, \
          stdvflux=0.15, \
          stdvsind=0.15, \
          fracrand=0.05, \
@@ -327,6 +326,7 @@ def init( \
          nameback=None, \
          strgexpo=None, \
          probprop=None, \
+         pathdata='.', \
         ):
     
     # start the timer
@@ -502,6 +502,9 @@ def init( \
     ## maximum angle from the PSs to evaluate the likelihood
     gdat.maxmangleval = maxmangleval
     
+    ## the maximum approximation error tolerated in units of the minimum flux allowed by the model
+    gdat.specfraceval = specfraceval
+
     ## parameter limits
     ### FDF normalization
     gdat.minmfdfnnorm = minmfdfnnorm
@@ -585,6 +588,9 @@ def init( \
     ## proposal frequencies
     gdat.probprop = probprop
 
+    ## the path of the input data
+    gdat.pathdata = pathdata
+    
     # temp
     # check inputs
     
@@ -884,8 +890,8 @@ def init( \
     atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
 
     # write the PCAT output to disc
-    pathpcatlite = os.environ["PCAT_DATA_PATH"] + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
-    pathpcat = os.environ["PCAT_DATA_PATH"] + '/pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcatlite = gdat.pathdata + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcat = gdat.pathdata + '/pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
@@ -950,6 +956,9 @@ def init( \
     head['radispmrlbhl'] = gdat.radispmrlbhl
     head['stdvspmrsind'] = gdat.stdvspmrsind
 
+    ## approximation error in units of the minimum flux
+    head['specfraceval'] = gdat.specfraceval
+
     ## index of the energy bin, where the FDF is defined
     head['indxenerfdfn'] = gdat.indxenerfdfn[0]
 
@@ -963,6 +972,8 @@ def init( \
         head['lablback%04d' % k] = gdat.lablback[k]
         head['nameback%04d' % k] = gdat.nameback[k]
     head['strgexpo'] = gdat.strgexpo
+    
+    head['pathdata'] = gdat.pathdata
     
     head['levi'] = levi
     head['info'] = info
@@ -987,9 +998,9 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
         ## save the posterior positions as a CSV file
-        path = os.environ["PCAT_DATA_PATH"] + '/pcat_lgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathdata + '/pcat_lgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
         savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
-        path = os.environ["PCAT_DATA_PATH"] + '/pcat_bgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathdata + '/pcat_bgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
         savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
 
 
@@ -1251,8 +1262,10 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
 
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
-
-    plot_psfn(gdat, gdatmodi)
+    
+    # temp
+    if gdat.strgcnfg != 'cnfg_test':
+        plot_psfn(gdat, gdatmodi)
 
     gdatmodi.thisbackcntsmean = empty((gdat.numbener, gdat.numbevtt))
     for c in gdat.indxback:
@@ -1264,6 +1277,13 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - gdat.temppntscnts) / gdat.temppntscnts
 
+    print 'hey'
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
+            path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            tdpy.util.plot_heal(path, gdat.temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    
     gdatmodi.thiscnts = []
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
@@ -1278,29 +1298,32 @@ def plot_samp(gdat, gdatmodi):
             gdatmodi.indxtruepntsassc.append(indxtruepntsassc)
             gdatmodi.thisspecmtch = copy(spec[:, indxmodl])
             gdatmodi.thisspecmtch[:, indxtruepntsassc.miss] = 0.
-            plot_scatspec(gdat, l, gdatmodi=gdatmodi)
-        
-        plot_histspec(gdat, l, gdatmodi=gdatmodi)
-        plot_histsind(gdat, l, gdatmodi=gdatmodi)
-        plot_histcnts(gdat, l, gdatmodi=gdatmodi)
-        plot_compfrac(gdat, gdatmodi=gdatmodi)
-
-    for i in gdat.indxener:
-        
-        plot_datacnts(gdat, l, gdatmodi, i, None)
-        plot_modlcnts(gdat, l, gdatmodi, i, None)
-        plot_resicnts(gdat, l, gdatmodi, i, None)
-        plot_errrpnts(gdat, gdatmodi, i, None)
-
+            # temp
+            if gdat.strgcnfg != 'cnfg_test':
+                plot_scatspec(gdat, l, gdatmodi=gdatmodi)
+            
         # temp
-        #plot_scatpixl(gdat, gdatmodi=gdatmodi)
-        #plot_catlfram(gdat, l, gdatmodi, i, None)
-        #for m in gdat.indxevtt:
-        #    plot_datacnts(gdat, gdatmodi, i, m)
-        #    plot_catl(gdat, gdatmodi, i, m, thiscnts)
-        #    plot_modlcnts(gdat, gdatmodi, i, m)
-        #    plot_resicnts(gdat, gdatmodi, i, m)
-        
+        if gdat.strgcnfg != 'cnfg_test':
+            plot_histspec(gdat, l, gdatmodi=gdatmodi)
+            plot_histsind(gdat, l, gdatmodi=gdatmodi)
+            plot_histcnts(gdat, l, gdatmodi=gdatmodi)
+            plot_compfrac(gdat, gdatmodi=gdatmodi)
+
+        for i in gdat.indxener:
+            
+            plot_datacnts(gdat, l, gdatmodi, i, None)
+            plot_modlcnts(gdat, l, gdatmodi, i, None)
+            plot_resicnts(gdat, l, gdatmodi, i, None)
+            plot_errrpnts(gdat, gdatmodi, i, None)
+
+            # temp
+            #plot_scatpixl(gdat, gdatmodi=gdatmodi)
+            #plot_catlfram(gdat, l, gdatmodi, i, None)
+            #for m in gdat.indxevtt:
+            #    plot_datacnts(gdat, gdatmodi, i, m)
+            #    plot_catl(gdat, gdatmodi, i, m, thiscnts)
+            #    plot_modlcnts(gdat, gdatmodi, i, m)
+            #    plot_resicnts(gdat, gdatmodi, i, m)
 
     #if gdat.numbener == 3:
     #    plot_datacnts(gdat, gdatmodi, None, None)

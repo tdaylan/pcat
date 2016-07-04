@@ -73,6 +73,8 @@ def plot_post(pathpcat):
     gdat.stdvflux = hdun[0].header['stdvflux']
     gdat.radispmrlbhl = hdun[0].header['radispmrlbhl']
     gdat.fracrand = hdun[0].header['fracrand']
+    
+    gdat.specfraceval = hdun[0].header['specfraceval']
 
     if gdat.trueinfo and gdat.datatype == 'mock':
         gdat.mockpsfntype = hdun[0].header['mockpsfntype']
@@ -95,6 +97,8 @@ def plot_post(pathpcat):
     gdat.levi = hdun[0].header['levi']
     gdat.info = hdun[0].header['info']
     
+    gdat.pathdata = hdun[0].header['pathdata']
+
     gdat.indxenerincl = hdun['indxenerincl'].data
     gdat.indxevttincl = hdun['indxevttincl'].data
 
@@ -469,9 +473,6 @@ def plot_post(pathpcat):
     plot_pntsprob(gdat, pntsprobcart, ptag='full', full=True)
     plot_pntsprob(gdat, pntsprobcart, ptag='cumu', cumu=True)
   
-    if gdat.exprtype == 'ferm':
-        retr_fgl3(gdat)
-
     # flux distribution
     for l in gdat.indxpopl:
         plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
@@ -728,27 +729,6 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
         yerr = gdat.meanener**2 * listyerr[:, k, :]
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, ls=listlinestyl[k], color=listcolr[k], label=listlabl[k])
 
-    # Fermi-LAT results
-    # temp
-    if False and gdat.trueinfo:
-        if gdat.datatype == 'mock':
-            pass
-        else:
-            if gdat.exprtype == 'ferm':
-                listname = ['data', 'pion', 'invc', 'brem', 'pnts', 'isot']
-                listmrkr = ['o', 's', 'p', '*', 'D', '^']
-                listcolr = ['g', 'g', 'g', 'g', 'g', 'g']
-                listlabl = ['Fermi-LAT Data', r'Fermi-LAT $\pi^0$', 'Fermi-LAT ICS', 'Fermi-LAT Brem', 'Fermi-LAT PS', 'Fermi-LAT Iso']
-                for k, name in enumerate(listname):
-                    path = os.environ["PCAT_DATA_PATH"] + '/fermspec' + name + '.csv'
-                    data = loadtxt(path)
-                    enertemp = data[:, 0] # [GeV]
-                    fluxtemp = data[:, 1] * 1e-3 # [GeV/cm^2/s/sr]
-                    fluxtemp = interp(gdat.meanener, enertemp, fluxtemp)
-                    #fluxtemp = interpolate.interp1d(enertemp, fluxtemp)(gdat.meanener)
-                    axis.plot(gdat.meanener, fluxtemp, marker=listmrkr[k], color=listcolr[k], label=listlabl[k])
-
-
     axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
     axis.set_yscale('log')
     axis.set_xlabel('E [GeV]')
@@ -808,7 +788,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     if gdat.trueinfo:
         axis.hist(gdat.truesind[l], gdat.binssind, alpha=0.5, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock':
-            axis.hist(gdat.fgl3sind[gdat.indxfgl3rofi], gdat.binssind, alpha=0.1, color='red', log=True, label='3FGL')
+            axis.hist(gdat.exprsind, gdat.binssind, alpha=0.1, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
     axis.set_xlabel('$s$')
     axis.set_xlim([gdat.minmsind, gdat.maxmsind])
@@ -878,7 +858,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=0.5, color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock':
                 if gdat.exprtype == 'ferm':
-                    axis.hist(gdat.fgl3spec[0, i, gdat.indxfgl3rofi], gdat.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
+                    axis.hist(gdat.exprspec[0, i, :], gdat.binsspec[i, :], color='red', alpha=0.1, log=True, label='3FGL')
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + gdat.strgfluxunit)
         axis.set_xscale('log')
@@ -1434,61 +1414,6 @@ def plot_3fgl_thrs(gdat):
     plt.savefig(gdat.pathplot + 'thrs_' + gdat.rtag + '.pdf')
     plt.close(figr)
     
-    
-def plot_fgl3(gdat):
-    
-    numbbins = 40
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    bins = logspace(log10(amin(gdat.fgl3timevari[where(gdat.fgl3timevari > 0.)[0]])), log10(amax(gdat.fgl3timevari)), numbbins)
-    axis.hist(gdat.fgl3timevari, bins=bins, label='All', log=True)
-    axis.hist(gdat.fgl3timevari[gdat.indxfgl3rofi], bins=bins, label='ROI', log=True)
-    axis.axvline(72.44, ls='--', alpha=0.5, color='black')
-    axis.set_xlabel('3FGL time variability index')
-    axis.set_xscale('log')
-    axis.legend()
-    axis.set_ylim([0.5, None])
-    plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fgl3timevari.pdf')
-    plt.close(figr)
-    
-
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    indxfgl3scut = where(isfinite(gdat.fgl3scut))[0]
-    bins = linspace(amin(gdat.fgl3scut[indxfgl3scut]), amax(gdat.fgl3scut[indxfgl3scut]), numbbins)
-    axis.hist(gdat.fgl3scut[indxfgl3scut], bins=bins, label='All', log=True)
-    axis.hist(gdat.fgl3scut[intersect1d(indxfgl3scut, gdat.indxfgl3rofi)], bins=bins, label='ROI', log=True)
-    axis.set_xlabel('3FGL spectral cutoff')
-    axis.legend()
-    axis.set_ylim([0.5, None])
-    plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fgl3scut.pdf')
-    plt.close(figr)
-    
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    indxfgl3scur = where(isfinite(gdat.fgl3scur))[0]
-    bins = linspace(amin(gdat.fgl3scur[indxfgl3scur]), amax(gdat.fgl3scur[indxfgl3scur]), numbbins)
-    axis.hist(gdat.fgl3scur[indxfgl3scur], bins=bins, label='All', log=True)
-    axis.hist(gdat.fgl3scur[intersect1d(indxfgl3scur, gdat.indxfgl3rofi)], bins=bins, label='ROI', log=True)
-    axis.set_xlabel('3FGL spectral curvature')
-    axis.legend()
-    axis.set_ylim([0.5, None])
-    plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fgl3scur.pdf')
-    plt.close(figr)
-    
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    indxfgl3sind = where(isfinite(gdat.fgl3sind))[0]
-    bins = linspace(amin(gdat.fgl3sind[indxfgl3sind]), amax(gdat.fgl3sind[indxfgl3sind]), numbbins)
-    axis.hist(gdat.fgl3sind[indxfgl3sind], bins=bins, label='All', log=True)
-    axis.hist(gdat.fgl3sind[intersect1d(indxfgl3sind, gdat.indxfgl3rofi)], bins=bins, label='ROI', log=True)
-    axis.set_xlabel('3FGL spectral index')
-    axis.legend()
-    axis.set_ylim([0.5, None])
-    plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fgl3sind.pdf')
-    plt.close(figr)
-    
-    strgfgl3spectype = ['LogParabola', 'PLExpCutoff', 'PLSuperExpCutoff', 'PowerLaw']
 
 def make_anim():
 
@@ -1525,7 +1450,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=0.5, color='g', log=True, label=gdat.truelabl)
                 if gdat.datatype == 'mock':
                     if gdat.exprtype == 'ferm':
-                        axis.hist(gdat.fgl3cnts[i, gdat.indxfgl3rofi, m], gdat.binscnts[i, :], alpha=0.1, color='red', log=True, label='3FGL')
+                        axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=0.1, color='red', log=True, label='3FGL')
             axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=0.5, color='b', log=True, label='Sample')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')

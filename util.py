@@ -254,18 +254,8 @@ def retr_indxpixl(gdat, bgal, lgal):
     if gdat.pixltype == 'heal':
         indxpixl = gdat.pixlcnvt[ang2pix(gdat.numbsideheal, deg2rad(90. - bgal), deg2rad(lgal))]
         
-        # temp
         if (indxpixl == -1).any():  
-            print 'hey'
-            print 'PIXLCNVT WENT NEGATIVE'
-            print 
-            print 
-            print 
-            print 
-            print 
-            print 
-            print 
-            print 
+            print 'pixlcnvt went negative!'
     else:
         
         indxlgcr = floor(gdat.numbsidecart * (lgal - gdat.minmlgal) / 2. / gdat.maxmgang).astype(int)
@@ -843,82 +833,94 @@ def retr_listpair(gdat, lgal, bgal):
     return pairlist
 
 
-def retr_fgl3(gdat):
+def retr_expr(gdat):
+    
+    if gdat.exprtype == 'ferm':
+
+        path = os.environ["PCAT_DATA_PATH"] + '/gll_psc_v16.fit'
+
+        fgl3 = pf.getdata(path)
         
-    path = os.environ["PCAT_DATA_PATH"] + '/gll_psc_v16.fit'
-
-    fgl3 = pf.getdata(path)
-    
-    fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
-    fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
-    
-
-    indxfgl3sort = argsort(fgl3spectemp[1, :])[::-1]
-
-    fgl3spectemp = fgl3spectemp[:, indxfgl3sort]
-
-    fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], fgl3['Unc_Flux10000_100000']))
-    fgl3specstdvtemp = fgl3specstdvtemp[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None]
-    
-    fgl3specstdvtemp = fgl3specstdvtemp[:, indxfgl3sort, :]
-
-    gdat.fgl3numbpnts = fgl3['glon'].size
-    
-    gdat.fgl3lgal = fgl3['glon'][indxfgl3sort]
-    gdat.fgl3lgal = ((gdat.fgl3lgal - 180.) % 360.) - 180.
-
-    gdat.fgl3bgal = fgl3['glat'][indxfgl3sort]
-
-    fgl3axisstdv = (fgl3['Conf_68_SemiMinor'][indxfgl3sort] + fgl3['Conf_68_SemiMajor'][indxfgl3sort]) * 0.5
-    fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng'][indxfgl3sort]) # [rad]
-    gdat.fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
-    gdat.fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
-
-    gdat.fgl3sind = fgl3['Spectral_Index'][indxfgl3sort]
-    
-    gdat.fgl3strg = fgl3['Source_Name'][indxfgl3sort]
-    gdat.fgl3strgclss = fgl3['CLASS1'][indxfgl3sort]
-    gdat.fgl3strgassc = fgl3['ASSOC1'][indxfgl3sort]
-    
-    gdat.fgl3spectype = fgl3['SpectrumType'][indxfgl3sort]
-    gdat.fgl3scur = fgl3['beta'][indxfgl3sort]
-    gdat.fgl3scut = fgl3['Cutoff'][indxfgl3sort] * 1e-3
-    
-    gdat.fgl3timevari = fgl3['Variability_Index'][indxfgl3sort]
-    
-    gdat.indxfgl3timevari = where(gdat.fgl3timevari > 72.44)[0]
-    
-    gdat.fgl3spec = zeros((3, gdat.numbener, gdat.fgl3numbpnts))
-    gdat.fgl3spec[0, :, :] = fgl3spectemp
-    gdat.fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
-    gdat.fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
-    
-    # adjust 3FGL positions according to the ROI center
-    if gdat.regitype == 'ngal':
-        rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
-        gdat.fgl3bgal, gdat.fgl3lgal = rad2deg(rttr(deg2rad(90. - gdat.fgl3bgal), deg2rad(gdat.fgl3lgal)))
-        gdat.fgl3bgal = 90. - gdat.fgl3bgal
-
-    gdat.fgl3gang = retr_gang(gdat.fgl3lgal, gdat.fgl3bgal)
-    gdat.fgl3aang = retr_aang(gdat.fgl3lgal, gdat.fgl3bgal)
+        fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
+        fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
         
-    indxpixlfgl3 = retr_indxpixl(gdat, gdat.fgl3bgal, gdat.fgl3lgal)
-    gdat.fgl3cnts = gdat.fgl3spec[0, :, :, None] * gdat.expo[:, indxpixlfgl3, :] * gdat.diffener[:, None, None]
-    
-    # select the 3FGL point sources in the ROI
-    # temp
-    gdat.indxfgl3rofi = arange(gdat.fgl3lgal.size, dtype=int)
-    for i in gdat.indxener:
-        gdat.indxfgl3rofi = intersect1d(where((gdat.fgl3spec[0, i, :] > gdat.minmspec[i]) & (gdat.fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], gdat.indxfgl3rofi)
-    gdat.indxfgl3rofi = intersect1d(where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0], gdat.indxfgl3rofi)
-    #gdat.indxfgl3rofi = where((fabs(gdat.fgl3lgal) < gdat.maxmgangmarg) & (fabs(gdat.fgl3bgal) < gdat.maxmgangmarg))[0]
-    gdat.fgl3numbpntsrofi = gdat.indxfgl3rofi.size
-    gdat.indxfgl3timevarirofi = where(gdat.fgl3timevari[gdat.indxfgl3rofi] > 72.44)[0]
+        # sort the catalog in decreasing flux
+        indxfgl3sort = argsort(fgl3spectemp[1, :])[::-1]
 
-    # sanity check
-    for i in gdat.indxener:
-        if (gdat.fgl3spec[0, i, gdat.indxfgl3rofi] > gdat.maxmspec[i]).any():
-            print 'maxmflux %d is bad!' % i
+        fgl3spectemp = fgl3spectemp[:, indxfgl3sort]
+
+        fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], fgl3['Unc_Flux10000_100000']))
+        fgl3specstdvtemp = fgl3specstdvtemp[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None]
+        fgl3specstdvtemp = fgl3specstdvtemp[:, indxfgl3sort, :]
+
+        fgl3numbpntsfull = fgl3['glon'].size
+        
+        fgl3lgal = fgl3['glon'][indxfgl3sort]
+        fgl3lgal = ((fgl3lgal - 180.) % 360.) - 180.
+
+        fgl3bgal = fgl3['glat'][indxfgl3sort]
+                
+        fgl3axisstdv = (fgl3['Conf_68_SemiMinor'][indxfgl3sort] + fgl3['Conf_68_SemiMajor'][indxfgl3sort]) * 0.5
+        fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng'][indxfgl3sort]) # [rad]
+        fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
+        fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
+
+        fgl3sind = fgl3['Spectral_Index'][indxfgl3sort]
+        
+        fgl3strg = fgl3['Source_Name'][indxfgl3sort]
+        fgl3strgclss = fgl3['CLASS1'][indxfgl3sort]
+        fgl3strgassc = fgl3['ASSOC1'][indxfgl3sort]
+        
+        fgl3spectype = fgl3['SpectrumType'][indxfgl3sort]
+        fgl3scur = fgl3['beta'][indxfgl3sort]
+        fgl3scut = fgl3['Cutoff'][indxfgl3sort] * 1e-3
+        
+        fgl3timevari = fgl3['Variability_Index'][indxfgl3sort]
+        
+        fgl3spec = zeros((3, gdat.numbener, fgl3numbpntsfull))
+        fgl3spec[0, :, :] = fgl3spectemp
+        fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
+        fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
+        
+        # adjust 3FGL positions according to the ROI center
+        if gdat.regitype == 'ngal':
+            rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
+            fgl3bgal, fgl3lgal = rad2deg(rttr(deg2rad(90. - fgl3bgal), deg2rad(fgl3lgal)))
+            fgl3bgal = 90. - fgl3bgal
+
+        # select the 3FGL point sources in the ROI
+        indxfgl3rofi = arange(fgl3lgal.size, dtype=int)
+        for i in gdat.indxener:
+            indxfgl3rofi = intersect1d(where((fgl3spec[0, i, :] > gdat.minmspec[i]) & (fgl3spec[0, i, :] < gdat.maxmspec[i]))[0], indxfgl3rofi)
+        indxfgl3rofi = intersect1d(where((fabs(fgl3lgal) < gdat.maxmgangmarg) & (fabs(fgl3bgal) < gdat.maxmgangmarg))[0], indxfgl3rofi)
+
+        # time variability
+        indxfgl3vari = where(fgl3timevari[indxfgl3rofi] > 72.44)[0]
+        
+        # number of 3FGL PS in the ROI
+        fgl3numbpnts = indxfgl3rofi.size
+
+        # compute the 3FGL counts
+        fgl3cnts = empty((gdat.numbener, fgl3numbpnts, gdat.numbevtt))
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                indxpixltemp = retr_indxpixl(gdat, fgl3bgal[indxfgl3rofi], fgl3lgal[indxfgl3rofi])
+                fgl3cnts[i, :, m] = fgl3spec[0, i, indxfgl3rofi] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
+
+        gdat.exprnumbpnts = fgl3numbpnts
+        gdat.exprlgal = fgl3lgal[indxfgl3rofi]
+        gdat.exprbgal = fgl3bgal[indxfgl3rofi]
+        gdat.exprspec = fgl3spec[:, :, indxfgl3rofi]
+        gdat.exprcnts = fgl3cnts
+        gdat.exprsind = fgl3sind[indxfgl3rofi]
+        gdat.exprstrg = fgl3strg[indxfgl3rofi]
+        gdat.exprstrgclss = fgl3strgclss[indxfgl3rofi]
+        gdat.exprstrgassc = fgl3strgassc[indxfgl3rofi]
+        gdat.indxexprvari = indxfgl3vari
+    
+    gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
+    gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
+        
 
 
 def retr_rtag(gdat, indxprocwork):
@@ -2027,7 +2029,7 @@ def retr_expo(gdat):
     if gdat.strgexpo == 'unit':
         gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpo
+        path = gdat.pathdata + '/' + gdat.strgexpo
         gdat.expo = pf.getdata(path)
 
         if gdat.pixltype == 'heal':
@@ -2050,11 +2052,6 @@ def setp(gdat):
     gdat.indxproc = arange(gdat.numbproc) 
 
     if gdat.exprtype == 'ferm':
-        if gdat.strgback == None:
-            if gdat.regitype == 'ngal':
-                gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-            if gdat.regitype == 'igal':
-                gdat.strgback = ['fermisotflux.fits', 'fermfdfmflux_igal.fits']
         if gdat.lablback == None:
             gdat.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if gdat.nameback == None:
@@ -2073,7 +2070,7 @@ def setp(gdat):
     # the normalized offset for text annotation of point sources in the frames
     gdat.offstext = gdat.maxmgang * 0.05
     
-    gdat.numbback = len(gdat.strgback)
+    gdat.numbback = len(gdat.nameback)
     gdat.indxback = arange(gdat.numbback)
     
     gdat.numbevtt = gdat.indxevttincl.size
@@ -2138,15 +2135,19 @@ def setp(gdat):
     # temp
     if gdat.exprtype == 'sdss':
         gdat.diffener = ones(gdat.numbener)
+    
+    # half-size of the ROI including the margins
+    gdat.maxmgangmarg = gdat.maxmgang + gdat.margsize
         
     # angular gdat.deviation
     gdat.numbangl = 100
     if gdat.exprtype == 'sdss':
         gdat.maxmangl = deg2rad(15. / 3600.) # [rad]
     if gdat.exprtype == 'ferm':
-        # temp
-        gdat.maxmangl = deg2rad(70.) # [rad]
-        #gdat.maxmangl = deg2rad(20.) # [rad]
+        if gdat.specfraceval == 0.:
+            gdat.maxmangl = deg2rad(3. * gdat.maxmgangmarg) # [rad]
+        else:
+            gdat.maxmangl = deg2rad(20.) # [rad]
     gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
     
     # plotting
@@ -2313,7 +2314,7 @@ def setp(gdat):
         if (gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu') and getpass.getuser() == 'tansu':
             pathplotbase = '/n/pan/www/tansu/imag/pcat/'
         else:
-            pathplotbase = os.environ["PCAT_DATA_PATH"] + '/imag/'
+            pathplotbase = gdat.pathdata + '/imag/'
         gdat.pathplot = pathplotbase + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         cmnd = 'mkdir -p ' + gdat.pathplot
         os.system(cmnd)
@@ -2340,8 +2341,6 @@ def setp(gdat):
     gdat.probpropmaxm /= sum(gdat.probpropmaxm)
     gdat.probpropminm /= sum(gdat.probpropminm)
     
-    gdat.maxmgangmarg = gdat.maxmgang + gdat.margsize
-    
     gdat.minmlgalmarg = -gdat.maxmgangmarg
     gdat.maxmlgalmarg = gdat.maxmgangmarg
     gdat.minmbgalmarg = -gdat.maxmgangmarg
@@ -2355,7 +2354,7 @@ def setp(gdat):
     # input data
     if gdat.datatype == 'inpt':
         
-        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpr
+        path = gdat.pathdata + '/' + gdat.strgexpr
         exprflux = pf.getdata(path)
 
         gdat.indxenerinclfull = arange(exprflux.shape[0])
@@ -2423,11 +2422,6 @@ def setp(gdat):
     gdat.binsfluxprox = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbfluxprox + 1)
     gdat.meanfluxprox = sqrt(gdat.binsfluxprox[1:] * gdat.binsfluxprox[:-1])
     
-    # temp
-    print 'hey'
-    #gdat.specfraceval = 1e-2
-    gdat.specfraceval = 0.
-
     if gdat.exprtype == 'ferm':
         gdat.maxmangleval = empty(gdat.numbfluxprox)
         for h in gdat.indxfluxprox:
@@ -2510,7 +2504,7 @@ def setp(gdat):
     if gdat.strgexpo == 'unit':
         gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/' + gdat.strgexpo
+        path = gdat.pathdata + '/' + gdat.strgexpo
         gdat.expo = pf.getdata(path)
 
         if gdat.pixltype == 'heal':
@@ -2527,7 +2521,7 @@ def setp(gdat):
         if gdat.strgback[c] == 'unit':
             backfluxtemp = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         else:
-            path = gdat.strgback[c]
+            path = gdat.pathdata + '/' + gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'heal':
                 backfluxtemp = backfluxtemp[gdat.indxcubeheal]
@@ -2545,9 +2539,9 @@ def setp(gdat):
     for i in gdat.indxener:
         gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbflux + 1) # [1]
         
-    # get 3FGL catalog
-    if gdat.exprtype == 'ferm':
-        retr_fgl3(gdat)
+    # get the experimental catalog
+    if gdat.exprtype != None:
+        retr_expr(gdat)
 
     # get count data
     ## input data
@@ -2652,16 +2646,15 @@ def setp(gdat):
             else:
                 gdat.mockfdfnslop = gdat.mockfdfnslop
             gdat.truecnts = mockcnts
-            
+               
             gdat.truespec = []
             for l in gdat.indxpopl:
                 gdat.truespectemp = empty((3, gdat.numbener, gdat.mocknumbpnts[l]))
                 gdat.truespectemp[:] = mockspec[l][None, :, :]
                 gdat.truespec.append(gdat.truespectemp)
-                
+            
             gdat.truepsfipara = gdat.mockpsfipara
             gdat.truepsfntype = gdat.mockpsfntype
-
             gdat.truenormback = gdat.mocknormback
 
     ## Real data
@@ -2673,21 +2666,16 @@ def setp(gdat):
             gdat.truenormback = None
     
             if gdat.exprtype == 'ferm':
-                gdat.truenumbpnts = array([gdat.fgl3numbpntsrofi], dtype=int)
-                gdat.truelgal = [gdat.fgl3lgal[gdat.indxfgl3rofi]]
-                gdat.truebgal = [gdat.fgl3bgal[gdat.indxfgl3rofi]]
-                gdat.truespec = [gdat.fgl3spec[:, :, gdat.indxfgl3rofi]]
-                gdat.truesind = [gdat.fgl3sind[gdat.indxfgl3rofi]]
-                gdat.truestrg = [gdat.fgl3strg[gdat.indxfgl3rofi]]
-                gdat.truestrgclss = [gdat.fgl3strgclss[gdat.indxfgl3rofi]]
-                gdat.truestrgassc = [gdat.fgl3strgassc[gdat.indxfgl3rofi]]
-
-                indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[0], gdat.truelgal[0])
-                spec = gdat.fgl3spec[0, :, gdat.indxfgl3rofi]
-                # temp
-                spec = spec.T
-                gdat.truecnts = [spec[:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]]
-                gdat.indxtruepntstimevari = [gdat.indxfgl3timevarirofi]
+                gdat.truenumbpnts = array([gdat.exprnumbpnts], dtype=int)
+                gdat.truelgal = [gdat.exprlgal]
+                gdat.truebgal = [gdat.exprbgal]
+                gdat.truespec = [gdat.exprspec]
+                gdat.truecnts = [gdat.exprcnts]
+                gdat.truesind = [gdat.exprsind]
+                gdat.truestrg = [gdat.exprstrg]
+                gdat.truestrgclss = [gdat.exprstrgclss]
+                gdat.truestrgassc = [gdat.exprstrgassc]
+                gdat.indxtruevari = [gdat.indxexprvari]
                 gdat.truepsfipara = gdat.fermpsfipara
                 gdat.truepsfntype = 'doubking'
                 
@@ -2707,8 +2695,7 @@ def setp(gdat):
             indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
             truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
             for c in gdat.indxback:
-                truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * \
-                    gdat.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
+                truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None] * pi * truefwhm[:, None, :]**2 / 4.
             truebackcnts.append(truebackcntstemp)
             gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
       
