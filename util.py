@@ -284,6 +284,18 @@ def retr_indxpixl(gdat, bgal, lgal):
     return indxpixl
 
 
+def show_memo(objt):
+
+    if isinstance(objt, list):
+        for k in len(objt):
+            size = sys.getsizeof(objt[k]) / 2.**10
+            print k, size, 'KB'
+    else:
+        for attr, valu in objt.__dict__.iteritems():
+            size = sys.getsizeof(valu) / 2.**10
+            print attr, size, 'KB'
+
+
 def retr_llik(gdat, gdatmodi, init=False):
 
     if init:

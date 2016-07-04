@@ -224,12 +224,11 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpara:
             print gdatmodi.thissampvarb[k]
         
-    if False:
+    if True:
         print 'hey'
         print 'gdatmodi'
-        print [attr for attr in dir(gdatmodi) if not attr.startswith('__')]
-        print
- 
+        show_memo(gdatmodi)
+
     # run the sampler
     listchan = rjmc(gdat, gdatmodi, indxprocwork)
     
@@ -669,13 +668,16 @@ def init( \
         print 'Sampling...'
     
     # temp
-    if False:
+    if True:
         print 'hey'
         print 'gdat'
-        print [attr for attr in dir(gdat) if not attr.startswith('__')]
-        print
-        #print 'sys.getsizeof()'
-        #print sys.getsizeof(gdatmodi.thismodlcnts)
+        show_memo(gdat)
+        print 'indxpixlprox'
+        totl = 0.
+        for h in gdat.indxfluxprox:
+            for n in gdat.indxpixl:
+                totl += sys.getsizeof(gdat.indxpixlprox[h][n]) / 2.**20
+        print totl, 'MB'
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
@@ -1369,7 +1371,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
-    
+   
+    print 'hey'
+    print 'listsamp'
+    print sys.getsizeof(listsamp) / 2.**20, 'MB'
+    print 'listsampvarb'
+    print sys.getsizeof(listsampvarb) / 2.**20, 'MB'
+    print 'listmodlcnts'
+    print sys.getsizeof(listmodlcnts) / 2.**20, 'MB'
+    print 'listchrollik'
+    print sys.getsizeof(gdatmodi.listchrollik) / 2.**20, 'MB'
+
     gdat.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
     gdat.listlaccfrac = zeros(gdat.numbswep)
     gdat.listnumbpair = zeros(gdat.numbswep)
