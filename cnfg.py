@@ -27,7 +27,7 @@ def cnfg_ferm_psfn_expr(psfntype):
     
 def cnfg_test():
       
-    indxenerincl = arange(2, 3)
+    indxenerincl = arange(3, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
     #minmflux = 3e-8
@@ -37,7 +37,7 @@ def cnfg_test():
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=5, \
+         numbswep=10, \
          numbswepplot=1, \
          numbburn=0, \
          verbtype=2, \

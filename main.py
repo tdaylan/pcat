@@ -1284,7 +1284,7 @@ def plot_samp(gdat, gdatmodi):
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             path = gdat.pathplot + 'diffpntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
-            tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+            tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, resi=True, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     
     
