@@ -25,31 +25,72 @@ def cnfg_ferm_psfn_expr(psfntype):
         )
                 
     
+def cnfg_test_prio():
+      
+    indxenerincl = arange(3, 4)
+    indxevttincl = arange(3, 4)
+    numbener = indxenerincl.size
+    minmflux = 3e-31
+    maxmflux = 1e-27
+    mockfdfnbrek = array([1e-29])
+    mockfdfnsloplowr = array([-1.])
+    mockfdfnslopuppr = array([2.])
+        
+    init(psfntype='doubking', \
+         numbswep=500000, \
+         numbburn=0, \
+         randinit=False, \
+         maxmgang=20., \
+         mocknumbpnts=array([300]), \
+         maxmnumbpnts=array([600]), \
+         boolproppsfn=False, \
+         indxenerincl=indxenerincl, \
+         indxevttincl=indxevttincl, \
+         minmflux=minmflux, \
+         maxmflux=maxmflux, \
+         regitype='ngal', \
+         pathdata=os.environ["PCAT_DATA_PATH"], \
+         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         strgexpr='fermflux_cmp0_ngal.fits', \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         maxmnormback=array([1e2, 1e2]), \
+         minmnormback=array([1e-2, 1e-2]), \
+         fdfntype='brok', \
+         mockfdfntype='brok', \
+         mockfdfnbrek=mockfdfnbrek, \
+         mockfdfnsloplowr=mockfdfnsloplowr, \
+         mockfdfnslopuppr=mockfdfnslopuppr, \
+         datatype='mock', \
+         numbsideheal=256, \
+         mocknormback=ones((2, numbener)), \
+        )
+
+    
 def cnfg_test():
       
     indxenerincl = arange(3, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
-    #minmflux = 3e-8
-    #maxmflux = 1e-7
-    minmflux = 1e-11
-    maxmflux = 3e-11
+    minmflux = 3e-8
+    maxmflux = 1e-7
+    #minmflux = 1e-11
+    #maxmflux = 3e-11
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=10, \
-         numbswepplot=1, \
+         numbswep=10000, \
+         #numbswepplot=1, \
          numbburn=0, \
-         verbtype=2, \
+         #verbtype=2, \
          randinit=False, \
          maxmgang=20., \
-         specfraceval=0., \
-         mocknumbpnts=array([3]), \
-         maxmnumbpnts=array([3]), \
+         #specfraceval=0., \
+         mocknumbpnts=array([300]), \
+         maxmnumbpnts=array([300]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
-         #probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
          #probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \

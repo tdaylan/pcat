@@ -284,16 +284,31 @@ def retr_indxpixl(gdat, bgal, lgal):
     return indxpixl
 
 
-def show_memo(objt):
+def show_memo(objt, name):
 
     if isinstance(objt, list):
         for k in len(objt):
-            size = sys.getsizeof(objt[k]) / 2.**10
-            print k, size, 'KB'
+            size = sys.getsizeof(objt[k]) / 2.**20
     else:
+        listsize = []
+        listattr = []
         for attr, valu in objt.__dict__.iteritems():
-            size = sys.getsizeof(valu) / 2.**10
-            print attr, size, 'KB'
+            listsize.append(sys.getsizeof(valu) / 2.**20)
+            listattr.append(attr)
+        size = array(listsize)
+        attr = array(listattr)
+        sizetotl = sum(size) 
+        print 'Memory budget: %s' % name
+        print 'Total size: %d MB' % sizetotl
+        
+        # sort the sizes to get the largest tail
+        indxsizetemp = argsort(size)[::-1]
+        size = size[indxsizetemp]
+        attr = attr[indxsizetemp]
+        print 'Largest 5:'
+        for k in range(5):
+            print '%s: %d MB' % (attr[k], size[k])
+        print 
 
 
 def retr_llik(gdat, gdatmodi, init=False):
@@ -358,44 +373,59 @@ def retr_llik(gdat, gdatmodi, init=False):
         timebegn = time.time()
         
         if gdatmodi.thisindxprop == gdat.indxproppsfipara or gdatmodi.thisindxprop >= gdat.indxpropbrth:
-
-            if gdatmodi.thisindxprop == gdat.indxproppsfipara:
-                gdatmodi.nextpntsflux[gdat.indxcubemodi] = 0.
-            else:
-                gdatmodi.nextpntsflux[gdat.indxcubemodi] = copy(gdatmodi.thispntsflux[gdat.indxcubemodi])
-                
-            # grab the PSF
-            if gdatmodi.thisindxprop == gdat.indxproppsfipara:
-                psfnintp = gdatmodi.nextpsfnintp
-            else:
-                psfnintp = gdatmodi.thispsfnintp
             
-            # evaluate the PSF for each PS over the set of data pixels to be updated
-            for k in range(gdat.numbmodipnts):
+            # temp
+            #if gdatmodi.thisindxprop == gdat.indxproppsfipara:
+            #    gdatmodi.nextpntsflux[gdat.indxcubemodi] = 0.
+            #else:
+            gdatmodi.nextpntsflux[gdat.indxcubemodi] = copy(gdatmodi.thispntsflux[gdat.indxcubemodi])
                 
-                # calculate the distance to the pixels to be updated
-                dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
+            # evaluate the PSF for each PS over the set of data pixels to be updated
+            # temp
+            if gdatmodi.thisindxprop == gdat.indxproppsfipara:
+                numbrept = 2
+            else:
+                numbrept = 1
+            for n in range(numbrept):
 
-                # interpolate the PSF
-                psfn = psfnintp(dist)
+                # grab the PSF
+                if n == 0:
+                    psfnintp = gdatmodi.thispsfnintp
+                else:
+                    psfnintp = gdatmodi.nextpsfnintp
+
+                for k in range(gdat.numbmodipnts):
+                    
+                    # calculate the distance to the pixels to be updated
+                    dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
+
+                    # interpolate the PSF
+                    psfn = psfnintp(dist)
     
-                if False:
-                    print 'hey'
-                    print 'thispsfn'
-                    print gdatmodi.thispsfnintp(dist)[0, :]
-                    print gdatmodi.thispsfnintp(dist)[1, :]
-                    print gdatmodi.thispsfnintp(dist)[2, :]
-                    print gdatmodi.thispsfnintp(dist).shape
-                    print 'psfn'
-                    print psfn[0, :]
-                    print psfn[1, :]
-                    print psfn[2, :]
-                    print psfn.shape
-                    print
+                    if False:
+                        print 'hey'
+                        print 'thispsfn'
+                        print gdatmodi.thispsfnintp(dist)[0, :]
+                        print gdatmodi.thispsfnintp(dist)[1, :]
+                        print gdatmodi.thispsfnintp(dist)[2, :]
+                        print gdatmodi.thispsfnintp(dist).shape
+                        print 'psfn'
+                        print psfn[0, :]
+                        print psfn[1, :]
+                        print psfn[2, :]
+                        print psfn.shape
+                        print
 
-                # add the contribution of the PS to the the proposed flux map
-                for i in range(gdat.indxenermodi.size):
-                    gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[gdat.indxenermodi[i], :, :]
+                    # add the contribution of the PS to the the proposed flux map
+                    for i in range(gdat.indxenermodi.size):
+                        if gdatmodi.thisindxprop == gdat.indxproppsfipara:
+                            if n == 0:
+                                spectemp = -spec[i, k]
+                            else:
+                                spectemp = spec[i, k]
+                        else:
+                            spectemp = spec[i, k]
+                        gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[gdat.indxenermodi[i], :, :]
            
         if False:
             print 'gdatmodi.thispntsflux[gdat.indxcubemodi]'
@@ -2543,10 +2573,8 @@ def setp(gdat):
         gdat.backflux.append(backfluxtemp)
         gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
-    # count axis
-    gdat.expotemp = mean(gdat.expo, 1)
-    gdat.minmcnts = repeat(1e-1, gdat.numbener) # gdat.minmflux * amin(gdat.expotemp, 1) * gdat.diffener
-    gdat.maxmcnts = repeat(1e5, gdat.numbener) # gdat.maxmflux * amax(gdat.expotemp, 1) * gdat.diffener
+    gdat.minmcnts = gdat.minmflux * sum(amin(gdat.expo, 1), 1) * gdat.diffener
+    gdat.maxmcnts = gdat.maxmflux * sum(amax(gdat.expo, 1), 1) * gdat.diffener
     gdat.binscnts = zeros((gdat.numbener, gdat.numbflux + 1))
     for i in gdat.indxener:
         gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbflux + 1) # [1]

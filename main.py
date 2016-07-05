@@ -227,7 +227,7 @@ def work(gdat, indxprocwork):
     if True:
         print 'hey'
         print 'gdatmodi'
-        show_memo(gdatmodi)
+        show_memo(gdatmodi, 'gdatmodi')
 
     # run the sampler
     listchan = rjmc(gdat, gdatmodi, indxprocwork)
@@ -355,13 +355,13 @@ def init( \
         if maxmfdfnbrek == None:
             maxmfdfnbrek = array([maxmflux])
         if minmfdfnsloplowr == None:
-            minmfdfnsloplowr = minmfdfnslop
+            minmfdfnsloplowr = array([-3.])
         if maxmfdfnsloplowr == None:
-            maxmfdfnsloplowr = maxmfdfnslop
+            maxmfdfnsloplowr = array([3.])
         if minmfdfnslopuppr == None:
-            minmfdfnslopuppr = minmfdfnslop
+            minmfdfnslopuppr = array([-3.])
         if maxmfdfnslopuppr == None:
-            maxmfdfnslopuppr = maxmfdfnslop
+            maxmfdfnslopuppr = array([3.])
         if margsize == None:
             margsize = 1.
         if psfntype == None:
@@ -671,7 +671,7 @@ def init( \
     if True:
         print 'hey'
         print 'gdat'
-        show_memo(gdat)
+        show_memo(gdat, 'gdat')
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
@@ -1334,8 +1334,8 @@ def plot_samp(gdat, gdatmodi):
     #if gdat.numbener == 3:
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
-    #plot_fwhm(gdat, gdatmodi)
-    #plot_backcntsmean(gdat, gdatmodi)
+    plot_fwhm(gdat, gdatmodi)
+    plot_backcntsmean(gdat, gdatmodi)
     
     if amax(abs(gdatmodi.thiserrrpnts)) > 0.1 and False:
         print 'Approximation error went above the limit!'
@@ -1366,15 +1366,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
    
-    print 'hey'
-    print 'listsamp'
-    print sys.getsizeof(listsamp) / 2.**20, 'MB'
-    print 'listsampvarb'
-    print sys.getsizeof(listsampvarb) / 2.**20, 'MB'
-    print 'listmodlcnts'
-    print sys.getsizeof(listmodlcnts) / 2.**20, 'MB'
-    print 'listchrollik'
-    print sys.getsizeof(gdatmodi.listchrollik) / 2.**20, 'MB'
+    if gdat.verbtype > 1:
+        'Variables owned by processes'
+        print 'listsamp'
+        print sys.getsizeof(listsamp) / 2.**20, 'MB'
+        print 'listsampvarb'
+        print sys.getsizeof(listsampvarb) / 2.**20, 'MB'
+        print 'listmodlcnts'
+        print sys.getsizeof(listmodlcnts) / 2.**20, 'MB'
+        print 'listchrollik'
+        print sys.getsizeof(gdatmodi.listchrollik) / 2.**20, 'MB'
+        print 
 
     gdat.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
     gdat.listlaccfrac = zeros(gdat.numbswep)

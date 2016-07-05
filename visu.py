@@ -1039,7 +1039,7 @@ def plot_psfn_type():
     
 def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    figr, axis = plt.subplots()
     ax_ = axis.twinx()
     axis.plot(minmfluxarry, listinfo, label='Relative entropy')
     axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
@@ -1239,19 +1239,19 @@ def plot_fwhm(gdat, gdatmodi):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
-    tranfwhm = transpose(thisfwhm)
-    imag = axis.imshow(rad2deg(tranfwhm), origin='lower', extent=[binsener[0], binsener[-1], 0, 4], cmap='BuPu', interpolation='none', alpha=0.4)
+    tranfwhm = transpose(gdatmodi.thisfwhm)
+    imag = axis.imshow(rad2deg(tranfwhm), origin='lower', extent=[gdat.binsener[0], gdat.binsener[-1], 0, 4], cmap='BuPu', interpolation='none', alpha=0.4)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.set_xscale('log')
     axis.set_ylabel('PSF Class')
     axis.set_xlabel(r'$E_\gamma$ [GeV]')
     axis.set_yticks([0.5, 1.5, 2.5, 3.5])
     axis.set_yticklabels(['0', '1', '2', '3'])
-    axis.set_xticks(binsener)
-    axis.set_xticklabels(['%.2g' % binsener[i] for i in gdat.indxener])
+    axis.set_xticks(gdat.binsener)
+    axis.set_xticklabels(['%.2g' % gdat.binsener[i] for i in gdat.indxener])
     for i in gdat.indxener:
-        for m in indxevtt:
-            axis.text(meanener[i], indxevttincl[m]+0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
+        for m in gdat.indxevtt:
+            axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'fwhmcnts_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
@@ -1262,9 +1262,9 @@ def plot_backcntsmean(gdat, gdatmodi):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
-    tragdat.numbbackcntsrofimean = transpose(backcntsmean)
+    backcntsmean = transpose(gdatmodi.thisbackcntsmean)
     
-    imag = axis.imshow(tragdat.numbbackcntsrofimean, origin='lower', extent=[binsener[0], binsener[-1], 0, 4],                      cmap='BuPu', interpolation='none', alpha=0.4)
+    imag = axis.imshow(backcntsmean, origin='lower', extent=[gdat.binsener[0], gdat.binsener[-1], 0, 4], cmap='BuPu', interpolation='none', alpha=0.4)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.set_xscale('log')
     axis.set_ylabel('PSF Class')
@@ -1272,8 +1272,8 @@ def plot_backcntsmean(gdat, gdatmodi):
     axis.set_yticks([0.5, 1.5, 2.5, 3.5])
     axis.set_yticklabels(['0', '1', '2', '3'])
     for i in gdat.indxener:
-        for m in indxevtt:
-            axis.text(meanener[i], indxevttincl[m]+0.5, '%.3g' % tragdat.numbbackcntsrofimean[m, i], ha='center', va='center')
+        for m in gdat.indxevtt:
+            axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, '%.3g' % backcntsmean[m, i], ha='center', va='center')
             
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'backcnts_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
