@@ -342,9 +342,9 @@ def init( \
         
     ## common
     if minmnormback == None:
-        minmnormback = ones((numbback, numbener)) * 1e-1
+        minmnormback = ones(numbback) * 1e-1
     if maxmnormback == None:
-        maxmnormback = ones((numbback, numbener)) * 1e1
+        maxmnormback = ones(numbback) * 1e1
     ## Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
