@@ -299,7 +299,7 @@ def show_memo(objt, name):
         attr = array(listattr)
         sizetotl = sum(size) 
         print 'Memory budget: %s' % name
-        print 'Total size: %d MB' % sizetotl
+        print 'Total size: %.4g MB' % sizetotl
         
         # sort the sizes to get the largest tail
         indxsizetemp = argsort(size)[::-1]
@@ -307,7 +307,7 @@ def show_memo(objt, name):
         attr = attr[indxsizetemp]
         print 'Largest 5:'
         for k in range(5):
-            print '%s: %d MB' % (attr[k], size[k])
+            print '%s: %.4g MB' % (attr[k], size[k])
         print 
 
 
@@ -402,7 +402,8 @@ def retr_llik(gdat, gdatmodi, init=False):
                     # interpolate the PSF
                     psfn = psfnintp(dist)
     
-                    if True:
+                    # temp
+                    if strgcnfg == 'cnfg_test':
                         print 'hey'
                         print n, k
                         print 'thispsfn'

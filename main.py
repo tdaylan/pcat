@@ -227,9 +227,7 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpara:
             print gdatmodi.thissampvarb[k]
         
-    if True:
-        print 'hey'
-        print 'gdatmodi'
+    if gdat.verbtype > 1:
         show_memo(gdatmodi, 'gdatmodi')
 
     # run the sampler
@@ -670,10 +668,7 @@ def init( \
     if gdat.verbtype > 0:
         print 'Sampling...'
     
-    # temp
-    if True:
-        print 'hey'
-        print 'gdat'
+    if gdat.verbtype > 1:
         show_memo(gdat, 'gdat')
 
     timereal = zeros(gdat.numbproc)
