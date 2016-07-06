@@ -867,7 +867,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             
             axiscnts.xaxis.set_ticks_position("bottom")
             axiscnts.xaxis.set_label_position("bottom")
-            axiscnts.spines["bottom"].set_position(("axes", -0.15))
+            axiscnts.spines["bottom"].set_position(("axes", 0.15))
             axiscnts.set_frame_on(True)
             axiscnts.patch.set_visible(False)
             for spin in axiscnts.spines.itervalues():
