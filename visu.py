@@ -865,17 +865,20 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             #    V = 1/(1+X)
             #    return ["%.3f" % z for z in V]
             
-            axiscnts.xaxis.set_ticks_position("bottom")
-            axiscnts.xaxis.set_label_position("bottom")
-            axiscnts.spines["bottom"].set_position(("axes", 0.15))
-            axiscnts.set_frame_on(True)
-            axiscnts.patch.set_visible(False)
-            for spin in axiscnts.spines.itervalues():
-                spin.set_visible(False)
-            axiscnts.spines["bottom"].set_visible(True)
+            #axiscnts.xaxis.set_ticks_position("bottom")
+            #axiscnts.xaxis.set_label_position("bottom")
+            #axiscnts.spines["bottom"].set_position(("axes", 0.15))
+            #axiscnts.set_frame_on(True)
+            #axiscnts.patch.set_visible(False)
+            #for spin in axiscnts.spines.itervalues():
+            #    spin.set_visible(False)
+            #axiscnts.spines["bottom"].set_visible(True)
+            axiscnts.set_xscale('log')
+
+            #axiscnts.set_xlim([])
             axiscnts.set_xticks(gdat.binscnts[i, :])
             #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
-            axiscnts.set_xlabel(r"Modified x-axis: $1/(1+X)$")
+            axiscnts.set_xlabel("$C$")
                 
         # superimpose the true catalog
         if gdat.trueinfo:
