@@ -1249,28 +1249,50 @@ def plot_samp(gdat, gdatmodi):
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     
-    # evaluate the current PSF
+    # PSF radial profile
     gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
 
+    # PSF FWHM
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
-    plot_fwhm(gdat, gdatmodi)
     
-    # temp
-    if gdat.strgcnfg != 'cnfg_test':
-        plot_psfn(gdat, gdatmodi)
-
-    # plot number of background counts per PSF
+    # number of background counts per PSF
     gdatmodi.thisbackfwhmcnts[:] = 0.
     for c in gdat.indxback:
         gdatmodi.thisbackfwhmcnts += gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]][:, None, None] * gdat.backflux[c] * gdat.expo * \
                                                                                               gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4.
+    
+    # spatially averaged number of background counts per PSF
+    gdatmodi.thisbackcntsmean = mean(gdatmodi.thisbackfwhmcnts, 1)
+
+    # number of counts and standard deviation of each PS
+    gdatmodi.thiscnts = []
+    gdatmodi.thissigm = []
+    for l in gdat.indxpopl:
+        indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
+        cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+        sigmtemp = sum(cntstemp, 2) / sum(gdatmodi.thisbackcntsmean, 1)[:, None]
+        gdatmodi.thiscnts.append(cntstemp)
+        gdatmodi.thissigm.append(cntstemp)
+    
+    # standard deviation axis
+    gdatmodi.binssigm = gdat.binscnts / sum(gdatmodi.thisbackcntsmean, 1)[:, None]
+    
+    # plots
+    ## PSF radial profile
+    # temp
+    if gdat.strgcnfg != 'cnfg_test':
+        plot_psfn(gdat, gdatmodi)
+    
+    ## PSF FWHM
+    plot_fwhm(gdat, gdatmodi)
+    
+    # number of background counts per PSF
     for i in gdat.indxener:
         path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdat.cntrswep)
         tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2), indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-    
-    # plot spatially averaged mean number of counts per PSF
-    gdatmodi.thisbackcntsmean = mean(gdatmodi.thisbackfwhmcnts, 1)
+
+    # spatially averaged number of background counts per PSF
     plot_backcntsmean(gdat, gdatmodi)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
@@ -1295,15 +1317,8 @@ def plot_samp(gdat, gdatmodi):
             tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, resi=True, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     
-    
-    
-    
-    gdatmodi.thiscnts = []
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
-        indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
-        cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
-        gdatmodi.thiscnts.append(cntstemp)
         if gdat.trueinfo:
             lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]
             bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]

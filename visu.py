@@ -859,26 +859,32 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
 
             # add other x axes
             axiscnts = axis.twiny()
+            axissigm = axis.twiny()
             #fig.subplots_adjust(bottom=0.2)
             
             #def tick_function(X):
             #    V = 1/(1+X)
             #    return ["%.3f" % z for z in V]
             
-            #axiscnts.xaxis.set_ticks_position("bottom")
-            #axiscnts.xaxis.set_label_position("bottom")
-            #axiscnts.spines["bottom"].set_position(("axes", 0.15))
+            axiscnts.xaxis.set_ticks_position("bottom")
+            axiscnts.xaxis.set_label_position("bottom")
             #axiscnts.set_frame_on(True)
             #axiscnts.patch.set_visible(False)
             #for spin in axiscnts.spines.itervalues():
             #    spin.set_visible(False)
             #axiscnts.spines["bottom"].set_visible(True)
             axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
+            axissigm.set_xlim([gdatmodi.thissigm[i, 0], gdatmodi.thissigm[i, -1]])
+            
             axiscnts.set_xscale('log')
+            axissigm.set_xscale('log')
             
             #axiscnts.set_xticks(gdat.binscnts[i, :])
             #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
-            axiscnts.set_xlabel("$C$")
+            axissigm.set_xlabel(r'$\sigma$')
+            axiscnts.set_xlabel('$C$')
+            
+            axissigm.spines["bottom"].set_position(("axiscnts", 0.15))
                 
         # superimpose the true catalog
         if gdat.trueinfo:
@@ -889,7 +895,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + gdat.strgfluxunit)
         axis.set_xscale('log')
-        axis.text(0.5, 0.85, gdat.enerstrg[i], ha='center', va='center', transform=axis.transAxes)
+        axis.text(0.7, 0.8, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
         #axis.set_title(gdat.enerstrg[i])
         if gdat.trueinfo:
             axis.set_ylim([0.5, None])
@@ -901,7 +907,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                 axis.legend()
         else:
             axis.set_ylabel('$N$')
-            axis.legend()
+            axis.legend(loc=7)
     if plotspec:
         strg = 'spec'
     else:
