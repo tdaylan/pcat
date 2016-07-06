@@ -2564,7 +2564,12 @@ def setp(gdat):
             gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
             
         gdat.expo = gdat.expo[gdat.indxcubefilt]
-    
+   
+    # temp
+    if gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+        tempcorr = array([1., 0.8, 0.8])
+        gdat.expo *= tempcorr[:, None, None]
+
     # backgrounds
     gdat.backflux = []
     gdat.backfluxmean = []
