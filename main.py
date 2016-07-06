@@ -16,9 +16,6 @@ def work(gdat, indxprocwork):
     # construct the run tag for this chain
     gdat.rtag = retr_rtag(gdat, indxprocwork)
     
-    # boolean flag to indicate that the initial state will not be random
-    gdat.detrinit = (not gdat.randinit and gdat.datatype == 'mock')
-    
     # empty object to hold chain-specific variables that will be modified by the chain
     gdatmodi = gdatstrt()
     
@@ -47,7 +44,7 @@ def work(gdat, indxprocwork):
         gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
     ## mean number of PSs
-    if gdat.initfdfnnorm != None or gdat.detrinit:
+    if gdat.initfdfnnorm != None or (not gdat.randinit and gdat.datatype == 'mock'):
         if gdat.initfdfnnorm != None:
             fdfnnorm = gdat.initfdfnnorm
         else:
@@ -58,6 +55,9 @@ def work(gdat, indxprocwork):
         gdatmodi.drmcsamp[gdat.indxsampfdfnnorm, 0] = rand(gdat.numbpopl)
    
     ## FDF shape
+    ### boolean flag to indicate that the initial state will not be random for FDF shape
+    gdat.detrinit = not gdat.randinit and gdat.datatype == 'mock' and gdat.fdfntype == gdat.mockfdfntype
+    
     ### single power law
     if gdat.fdfntype == 'powr':
         if gdat.initfdfnslop != None or gdat.detrinit:
@@ -331,6 +331,20 @@ def init( \
     timetotlproc = time.clock()
    
     # defaults
+    
+    ## convenience variables in order to set the defaults
+    ### number of backgrounds
+    numbback = len(strgback)
+    ### number of energy bins
+    numbener = indxenerincl.size
+    ### number of populations
+    numbpopl = maxmnumbpnts.size
+        
+    ## common
+    if minmnormback == None:
+        minmnormback = ones((numbback, numbener)) * 1e-1
+    if maxmnormback == None:
+        maxmnormback = ones((numbback, numbener)) * 1e1
     ## Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
@@ -399,10 +413,7 @@ def init( \
             mockpsfntype = 'doubgaus'
         if radispmrlbhl == None:
             radispmrlbhl = 2. / 3600.
-    
-    ## number of populations
-    numbpopl = maxmnumbpnts.size
-        
+
     # initialize the global object 
     gdat = gdatstrt()
    
@@ -569,9 +580,9 @@ def init( \
         gdat.mockfdfntype = mockfdfntype
         ### mock number of PS
         gdat.mocknumbpnts = mocknumbpnts
-        if gdat.fdfntype == 'powr':
+        if gdat.mockfdfntype == 'powr':
             gdat.mockfdfnslop = mockfdfnslop
-        if gdat.fdfntype == 'brok':
+        if gdat.mockfdfntype == 'brok':
             gdat.mockfdfnbrek = mockfdfnbrek
             gdat.mockfdfnsloplowr = mockfdfnsloplowr
             gdat.mockfdfnslopuppr = mockfdfnslopuppr

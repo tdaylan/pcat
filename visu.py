@@ -13,6 +13,8 @@ def plot_post(pathpcat):
 
     gdat = gdatstrt()
     
+    gdat.verbtype = 1
+
     gdat.numbener = hdun[0].header['numbener']
     gdat.numbevtt = hdun[0].header['numbevtt']
     gdat.numbpopl = hdun[0].header['numbpopl']
@@ -806,10 +808,6 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
 
 def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
   
-
-
-
-
     if listspechist == None:
         post = False
     else:
@@ -857,38 +855,19 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                     fluxhistmodl = fdfnnorm * pdfn_flux_brok(gdat, gdat.meanflux, fdfnbrek, fdfnsloplowr, fdfnslopuppr) * gdat.diffflux
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
 
-            # add other x axes
+            # add horizontal axes for counts and fluctuation significance
             axiscnts = axis.twiny()
             axissigm = axis.twiny()
-            #fig.subplots_adjust(bottom=0.2)
-            
-            #def tick_function(X):
-            #    V = 1/(1+X)
-            #    return ["%.3f" % z for z in V]
-            
-            axiscnts.xaxis.set_ticks_position("bottom")
-            axiscnts.xaxis.set_label_position("bottom")
-            #axiscnts.set_frame_on(True)
-            #axiscnts.patch.set_visible(False)
-            #for spin in axiscnts.spines.itervalues():
-            #    spin.set_visible(False)
-            #axiscnts.spines["bottom"].set_visible(True)
+            axiscnts.xaxis.set_ticks_position('bottom')
+            axiscnts.xaxis.set_label_position('bottom')
             axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
             axissigm.set_xlim([gdatmodi.binssigm[i, 0], gdatmodi.binssigm[i, -1]])
-            
             axiscnts.set_xscale('log')
             axissigm.set_xscale('log')
-            
-            #axiscnts.set_xticks(gdat.binscnts[i, :])
-            #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
             axissigm.set_xlabel(r'$\sigma$')
             axiscnts.set_xlabel('$C$')
-
-            #axissigm.set_frame_on(True)
-            #axissigm.patch.set_visible(False)
- 
             axiscnts.spines['bottom'].set_position(('axes', 1.))
-            axissigm.spines['top'].set_position(('axes', 1.15))
+            axissigm.spines['top'].set_position(('axes', 1.05))
                 
         # superimpose the true catalog
         if gdat.trueinfo:
@@ -899,8 +878,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis.set_yscale('log')
         axis.set_xlabel('$f$ ' + gdat.strgfluxunit)
         axis.set_xscale('log')
-        axis.text(0.7, 0.8, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
-        #axis.set_title(gdat.enerstrg[i])
+        axis.text(0.75, 0.65, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
         if gdat.trueinfo:
             axis.set_ylim([0.5, None])
         axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
@@ -920,7 +898,8 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '.pdf'
     else:
         path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
-    plt.subplots_adjust(top=0.8)
+    plt.tight_layout()
+    #plt.subplots_adjust(top=0.9)
     plt.savefig(path)
     plt.close(figr)
     

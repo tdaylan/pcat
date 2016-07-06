@@ -19,8 +19,6 @@ def cnfg_ferm_psfn_expr(psfntype):
          regitype='ngal', \
          strgexpr='fermflux_ngal.fits', \
          strgexpo='fermexpo_ngal.fits', \
-         maxmnormback=array([5., 5.]), \
-         minmnormback=array([0.2, 0.2]), \
          probprop=array([0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
         )
                 
@@ -54,8 +52,6 @@ def cnfg_test_prio():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnormback=array([1e2, 1e2]), \
-         minmnormback=array([1e-2, 1e-2]), \
          fdfntype='powr', \
          mockfdfntype='powr', \
          mockfdfnslop=mockfdfnslop, \
@@ -73,7 +69,7 @@ def cnfg_test():
     indxenerincl = arange(3, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
-    minmflux = 3e-8
+    minmflux = 3e-11
     maxmflux = 1e-7
     #minmflux = 1e-11
     #maxmflux = 3e-11
@@ -102,8 +98,6 @@ def cnfg_test():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnormback=array([2., 2.]), \
-         minmnormback=array([0.5, 0.5]), \
          datatype='mock', \
          numbsideheal=256, \
          mockfdfnslop=mockfdfnslop, \
@@ -131,8 +125,6 @@ def cnfg_ferm_post():
          minmflux=array([3e-8]), \
          maxmflux=array([1e-7]), \
          regitype='ngal', \
-         maxmnormback=array([2.]), \
-         minmnormback=array([0.5]), \
          strgback=['fermisotflux.fits'], \
          lablback=[r'$\mathcal{I}$'], \
          nameback=['normisot'], \
@@ -175,8 +167,6 @@ def cnfg_test_spmr():
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
-         maxmnormback=array([2., 2.]), \
-         minmnormback=array([0.5, 0.5]), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          mockfdfntype='powr', \
@@ -215,8 +205,6 @@ def cnfg_test_popl():
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
-         maxmnormback=array([2., 2.]), \
-         minmnormback=array([0.5, 0.5]), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
          mockfdfntype='powr', \
@@ -246,8 +234,6 @@ def cnfg_sdss_mock():
          lgalcntr=202., \
          bgalcntr=2., \
          radispmrlbhl=5./3600., \
-         maxmnormback=array([1e3]), \
-         minmnormback=array([1e2]), \
          maxmgang=30./3600., \
          margsize=2./3600., \
          strgback=['unit'], \
@@ -278,8 +264,6 @@ def cnfg_sdss_expr():
          bgalcntr=2., \
          radispmrlbhl=0.5/3600., \
          stdvflux=0.05, \
-         maxmnormback=array([1e3]), \
-         minmnormback=array([1e2]), \
          margsize=2./3600., \
          maxmgang=30./3600., \
          strgexpr='sdssflux.fits', \
