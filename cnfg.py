@@ -32,9 +32,10 @@ def cnfg_test_prio():
     numbener = indxenerincl.size
     minmflux = 3e-31
     maxmflux = 1e-27
+    mockfdfnslop = array([2.5])
     mockfdfnbrek = array([1e-29])
     mockfdfnsloplowr = array([-1.])
-    mockfdfnslopuppr = array([2.])
+    mockfdfnslopuppr = array([2.5])
         
     init(psfntype='doubking', \
          numbswep=500000, \
@@ -55,8 +56,9 @@ def cnfg_test_prio():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnormback=array([1e2, 1e2]), \
          minmnormback=array([1e-2, 1e-2]), \
-         fdfntype='brok', \
-         mockfdfntype='brok', \
+         fdfntype='powr', \
+         mockfdfntype='powr', \
+         mockfdfnslop=mockfdfnslop, \
          mockfdfnbrek=mockfdfnbrek, \
          mockfdfnsloplowr=mockfdfnsloplowr, \
          mockfdfnslopuppr=mockfdfnslopuppr, \

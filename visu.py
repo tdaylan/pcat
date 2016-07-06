@@ -883,8 +883,12 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
             axissigm.set_xlabel(r'$\sigma$')
             axiscnts.set_xlabel('$C$')
-            
-            axissigm.spines["bottom"].set_position(("axes", 0.15))
+
+            #axissigm.set_frame_on(True)
+            #axissigm.patch.set_visible(False)
+ 
+            axiscnts.spines['bottom'].set_position(('axes', 1.))
+            axissigm.spines['top'].set_position(('axes', 1.15))
                 
         # superimpose the true catalog
         if gdat.trueinfo:
@@ -916,7 +920,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '.pdf'
     else:
         path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
-    plt.tight_layout()
+    plt.subplots_adjust(top=0.8)
     plt.savefig(path)
     plt.close(figr)
     

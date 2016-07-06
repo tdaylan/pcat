@@ -2085,7 +2085,11 @@ def retr_expo(gdat):
     
 
 def setp(gdat):
-    
+   
+    print 'hey'
+    print gdat.verbtype
+    print
+
     # number of processes
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
