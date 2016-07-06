@@ -874,7 +874,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             #    spin.set_visible(False)
             #axiscnts.spines["bottom"].set_visible(True)
             axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
-            axissigm.set_xlim([gdatmodi.thissigm[i, 0], gdatmodi.thissigm[i, -1]])
+            axissigm.set_xlim([gdatmodi.binssigm[i, 0], gdatmodi.binssigm[i, -1]])
             
             axiscnts.set_xscale('log')
             axissigm.set_xscale('log')

@@ -2798,13 +2798,13 @@ def setp(gdat):
         cPickle.dump(indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
         fobj.close()
         
-    if True:
-        print 'indxpixlprox'
+    if gdat.verbtype > 1:
+        print 'Memory budget: indxpixlprox'
         totl = 0.
         for h in gdat.indxfluxprox:
             for n in gdat.indxpixl:
                 totl += sys.getsizeof(indxpixlprox[h][n]) / 2.**20
-        print totl, 'MB'
+        print '%.4g MB' % totl
 
 
 def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
