@@ -766,7 +766,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
         path = gdat.pathplot + 'compfrac_' + gdat.rtag + '.pdf'
     else:
         path = gdat.pathplot + 'compfrac_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
-    plt.tight_layout()
+    plt.subplots_adjust(top=0.2, bottom=0.2, left=0.2, right=0.2)
     plt.savefig(path)
     plt.close(figr)
      

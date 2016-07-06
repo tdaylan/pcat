@@ -1306,7 +1306,7 @@ def plot_samp(gdat, gdatmodi):
     # number of background counts per PSF
     for i in gdat.indxener:
         path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
-        tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2), indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+        tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
 
     # spatially averaged number of background counts per PSF
