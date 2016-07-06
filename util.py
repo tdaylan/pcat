@@ -1194,6 +1194,15 @@ def retr_prop(gdat, gdatmodi):
         # construct the proposed PSF
         gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
         
+        print 'hey'
+        print 'gdatmodi.thispsfn'
+        print mean(gdatmodi.thispsfn, 1)
+        temp = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
+        print 'mean'
+        print mean(temp, 1)
+        print 'gdatmodi.nextpsfn'
+        print mean(gdatmodi.nextpsfn, 1)
+
         gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         
         if gdat.verbtype > 1:
