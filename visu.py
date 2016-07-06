@@ -873,7 +873,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             for spin in axiscnts.spines.itervalues():
                 spin.set_visible(False)
             axiscnts.spines["bottom"].set_visible(True)
-            axiscnts.set_xticks(gdat.binscnts)
+            axiscnts.set_xticks(gdat.binscnts[i, :])
             #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
             axiscnts.set_xlabel(r"Modified x-axis: $1/(1+X)$")
                 

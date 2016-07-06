@@ -407,13 +407,13 @@ def retr_llik(gdat, gdatmodi, init=False):
                         print n, k
                         print 'thispsfn'
                         print gdatmodi.thispsfnintp(dist)[0, :]
-                        print gdatmodi.thispsfnintp(dist)[1, :]
-                        print gdatmodi.thispsfnintp(dist)[2, :]
+                        #print gdatmodi.thispsfnintp(dist)[1, :]
+                        #print gdatmodi.thispsfnintp(dist)[2, :]
                         print gdatmodi.thispsfnintp(dist).shape
                         print 'psfn'
                         print psfn[0, :]
-                        print psfn[1, :]
-                        print psfn[2, :]
+                        #print psfn[1, :]
+                        #print psfn[2, :]
                         print psfn.shape
                         print
 
