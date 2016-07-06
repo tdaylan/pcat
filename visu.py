@@ -855,19 +855,19 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                     fluxhistmodl = fdfnnorm * pdfn_flux_brok(gdat, gdat.meanflux, fdfnbrek, fdfnsloplowr, fdfnslopuppr) * gdat.diffflux
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
 
-            # add horizontal axes for counts and fluctuation significance
-            axiscnts = axis.twiny()
-            axissigm = axis.twiny()
-            axiscnts.xaxis.set_ticks_position('bottom')
-            axiscnts.xaxis.set_label_position('bottom')
-            axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
-            axissigm.set_xlim([gdatmodi.binssigm[i, 0], gdatmodi.binssigm[i, -1]])
-            axiscnts.set_xscale('log')
-            axissigm.set_xscale('log')
-            axissigm.set_xlabel(r'$\sigma$')
-            axiscnts.set_xlabel('$C$')
-            axiscnts.spines['bottom'].set_position(('axes', 1.))
-            axissigm.spines['top'].set_position(('axes', 1.05))
+        # add horizontal axes for counts and fluctuation significance
+        axiscnts = axis.twiny()
+        axissigm = axis.twiny()
+        axiscnts.xaxis.set_ticks_position('bottom')
+        axiscnts.xaxis.set_label_position('bottom')
+        axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
+        axissigm.set_xlim([gdatmodi.binssigm[i, 0], gdatmodi.binssigm[i, -1]])
+        axiscnts.set_xscale('log')
+        axissigm.set_xscale('log')
+        axissigm.set_xlabel(r'$\sigma$')
+        axiscnts.set_xlabel('$C$')
+        axiscnts.spines['bottom'].set_position(('axes', 1.))
+        axissigm.spines['top'].set_position(('axes', 1.05))
                 
         # superimpose the true catalog
         if gdat.trueinfo:
