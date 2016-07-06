@@ -2575,8 +2575,8 @@ def setp(gdat):
         gdat.backflux.append(backfluxtemp)
         gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
-    gdat.minmcnts = gdat.minmflux * sum(amin(gdat.expo, 1), 1) * gdat.diffener
-    gdat.maxmcnts = gdat.maxmflux * sum(amax(gdat.expo, 1), 1) * gdat.diffener
+    gdat.minmcnts = gdat.minmflux * sum(mean(gdat.expo, 1), 1) * gdat.diffener
+    gdat.maxmcnts = gdat.maxmflux * sum(mean(gdat.expo, 1), 1) * gdat.diffener
     gdat.binscnts = zeros((gdat.numbener, gdat.numbflux + 1))
     for i in gdat.indxener:
         gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbflux + 1) # [1]
