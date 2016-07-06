@@ -36,8 +36,10 @@ def cnfg_test_prio():
     mockfdfnslopuppr = array([2.5])
         
     init(psfntype='doubking', \
-         numbswep=500000, \
+         numbswep=100000, \
+         numbswepplot=40000, \
          numbburn=0, \
+         factthin=1, \
          randinit=False, \
          maxmgang=20., \
          mocknumbpnts=array([300]), \
@@ -50,6 +52,7 @@ def cnfg_test_prio():
          regitype='ngal', \
          pathdata=os.environ["PCAT_DATA_PATH"], \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         probprop=array([1., 1., 0., 0., 1., 1., 0., 0., 0., 0., 1., 0.], dtype=float), \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          fdfntype='powr', \

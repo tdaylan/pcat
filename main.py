@@ -149,6 +149,9 @@ def work(gdat, indxprocwork):
     ## PSF
     gdatmodi.thispsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
     gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
+    
+    # log-prior
+    gdatmodi.thislpri = empty((gdat.numbpopl, gdat.numbflux))
 
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
@@ -186,7 +189,10 @@ def work(gdat, indxprocwork):
     
     # plotting variables
     gdatmodi.thisbackfwhmcnts = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-    
+   
+    # log-prior
+    gdatmodi.nextlpri = empty((gdat.numbpopl, gdat.numbflux))
+
     # log the initial state
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
@@ -1299,7 +1305,7 @@ def plot_samp(gdat, gdatmodi):
     
     # number of background counts per PSF
     for i in gdat.indxener:
-        path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdat.cntrswep)
+        path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
         tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2), indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
 
@@ -1314,17 +1320,17 @@ def plot_samp(gdat, gdatmodi):
     print 'hey'
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
             tdpy.util.plot_heal(path, temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
             tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            path = gdat.pathplot + 'diffpntsflux%d%d_%09d.pdf' % (i, m, gdat.cntrswep)
+            path = gdat.pathplot + 'diffpntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
             tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, resi=True, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     
@@ -1415,7 +1421,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdat.listjcbnfact = zeros(gdat.numbswep)
     gdat.listcombfact = zeros(gdat.numbswep)
 
-    gdat.cntrswep = 0
+    gdatmodi.cntrswep = 0
     
     # initialize the chain
     retr_llik(gdat, gdatmodi, init=True)
@@ -1424,23 +1430,23 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     # current sample index
     thiscntr = -1
     
-    while gdat.cntrswep < gdat.numbswep:
+    while gdatmodi.cntrswep < gdat.numbswep:
         
         timeinit = time.time()
         
         if gdat.verbtype > 1:
             print
             print '-' * 10
-            print 'Sweep %d' % gdat.cntrswep
+            print 'Sweep %d' % gdatmodi.cntrswep
 
-        thismakefram = (gdat.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdat.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
+        thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
         gdatmodi.boolreje = False
     
         # choose a proposal type
         retr_thisindxprop(gdat, gdatmodi)
             
         # save the proposal type
-        listindxprop[gdat.cntrswep] = gdatmodi.thisindxprop
+        listindxprop[gdatmodi.cntrswep] = gdatmodi.thisindxprop
         if gdat.verbtype > 1:
             print 'thisindxprop: ', gdat.strgprop[gdatmodi.thisindxprop]
         
@@ -1454,7 +1460,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         timebegn = time.time()
         retr_prop(gdat, gdatmodi)
         timefinl = time.time()
-        listchrototl[gdat.cntrswep, 1] = timefinl - timebegn
+        listchrototl[gdatmodi.cntrswep, 1] = timefinl - timebegn
 
         # plot the current sample
         if thismakefram:
@@ -1496,13 +1502,13 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             timebegn = time.time()
             retr_lpri(gdat, gdatmodi)
             timefinl = time.time()
-            listchrototl[gdat.cntrswep, 2] = timefinl - timebegn
+            listchrototl[gdatmodi.cntrswep, 2] = timefinl - timebegn
 
             # evaluate the log-likelihood
             timebegn = time.time()
             retr_llik(gdat, gdatmodi) 
             timefinl = time.time()
-            listchrototl[gdat.cntrswep, 3] = timefinl - timebegn
+            listchrototl[gdatmodi.cntrswep, 3] = timefinl - timebegn
             
             # evaluate the acceptance probability
             accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfrac)
@@ -1527,7 +1533,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             # update the current state
             updt_samp(gdat, gdatmodi)
 
-            listaccp[gdat.cntrswep] = True
+            listaccp[gdatmodi.cntrswep] = True
 
         # reject the sample
         else:
@@ -1535,17 +1541,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdat.verbtype > 1:
                 print 'Rejected.'
 
-            listaccp[gdat.cntrswep] = False
+            listaccp[gdatmodi.cntrswep] = False
         
         if gdatmodi.thisindxprop < gdat.indxpropbrth:
-            listindxparamodi[gdat.cntrswep] = gdatmodi.indxsampvarbmodi
+            listindxparamodi[gdatmodi.cntrswep] = gdatmodi.indxsampvarbmodi
 
         # sanity checks
         indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
         if indxsampbadd.size > 0:
             print 'Unit sample vector went outside [0,1]!'
             print 'cntrswep'
-            print gdat.cntrswep
+            print gdatmodi.cntrswep
             print 'thisindxprop'
             print gdat.strgprop[gdatmodi.thisindxprop]
             print 'indxsampbadd'
@@ -1573,14 +1579,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print 
 
         # save the sample
-        if boolsave[gdat.cntrswep]:
-            listsamp[indxsampsave[gdat.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
-            listsampvarb[indxsampsave[gdat.cntrswep], :] = gdatmodi.thissampvarb
-            listmodlcnts[indxsampsave[gdat.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
-            listpntsfluxmean[indxsampsave[gdat.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
+        if boolsave[gdatmodi.cntrswep]:
+            listsamp[indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
+            listsampvarb[indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
+            listmodlcnts[indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
+            listpntsfluxmean[indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
             listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
-            listllik[indxsampsave[gdat.cntrswep]] = sum(gdatmodi.thisllik)
-            listlpri[indxsampsave[gdat.cntrswep]] = sum(gdatmodi.thislpri)
+            listllik[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thisllik)
+            listlpri[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
             
             lprinorm = 0.
             for l in gdat.indxpopl:
@@ -1601,7 +1607,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     fdfnsloplowr = gdatmodi.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
                     fdfnslopuppr = gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
                     lpri += sum(log(pdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)))
-            listlprinorm[indxsampsave[gdat.cntrswep]] = lprinorm
+            listlprinorm[indxsampsave[gdatmodi.cntrswep]] = lprinorm
             
             if gdat.tracsamp:
                 
@@ -1611,17 +1617,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     diffllikdiffpara[k]
                 listdiffllikdiffpara.append(diffllikdiffpara)
 
-                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdat.cntrswep-1][None, :]
+                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
                 listtranmatr.append(tranmatr)
 
         # save the execution time for the sweep
         if not thismakefram:
             timefinl = time.time()
-            listchrototl[gdat.cntrswep, 0] = timefinl - timeinit
+            listchrototl[gdatmodi.cntrswep, 0] = timefinl - timeinit
 
         # log the progress
         if gdat.verbtype > 0:
-            thiscntr = tdpy.util.show_prog(gdat.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
+            thiscntr = tdpy.util.show_prog(gdatmodi.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
     
         if gdat.verbtype > 1:
             print
@@ -1638,7 +1644,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print
         
         # update the sweep counter
-        gdat.cntrswep += 1
+        gdatmodi.cntrswep += 1
 
     if gdat.verbtype > 1:
         print 'listsampvarb: '

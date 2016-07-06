@@ -741,7 +741,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
     if post:
         path = gdat.pathplot + 'compfracspec_' + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'compfracspec_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'compfracspec_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -765,7 +765,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
     if post:
         path = gdat.pathplot + 'compfrac_' + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'compfrac_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'compfrac_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -800,7 +800,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     if post:
         path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -897,7 +897,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     if post:
         path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '.pdf'
     else:
-        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     #plt.subplots_adjust(top=0.9)
     plt.savefig(path)
@@ -971,7 +971,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
     if postspecmtch != None:
         path = gdat.pathplot + 'scatspec%d_' % l + gdat.rtag + '.pdf'
     elif gdatmodi.thisspecmtch != None:
-        path = gdat.pathplot + 'scatspec%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + 'scatspec%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
 
     plt.tight_layout()
     plt.savefig(path)
@@ -1007,7 +1007,7 @@ def plot_scatpixl(gdat, gdatmodi, l):
                 axis.set_title(gdat.enerstrg[i])
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'scatpixl%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'scatpixl%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1248,7 +1248,7 @@ def plot_psfn(gdat, gdatmodi):
                 axis.set_ylim([1e4, 1e11])
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'psfnprof_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'psfnprof_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1271,7 +1271,7 @@ def plot_fwhm(gdat, gdatmodi):
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fwhmcnts_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'fwhmcnts_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1293,7 +1293,7 @@ def plot_backcntsmean(gdat, gdatmodi):
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, '%.3g' % backcntsmean[m, i], ha='center', va='center')
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'backcnts_' + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'backcnts_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1482,25 +1482,25 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 axis.legend()
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'histcnts_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdat.cntrswep)
+    plt.savefig(gdat.pathplot + 'histcnts_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
 
 def plot_diagfram(gdat, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'diagthis')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagthis')
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thispntsfluxmodi, indxenerplot, indxevttplot)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'diagnext')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagnext')
     axis, cbar = retr_imag(gdat, axis, gdat.nextpntsfluxmodi, indxenerplot, indxevttplot)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'diagdiff')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagdiff')
     axis, cbar = retr_imag(gdat, axis, gdat.diffpntsfluxmodi, indxenerplot, indxevttplot)
     plt.tight_layout()
     plt.savefig(path)
@@ -1509,7 +1509,7 @@ def plot_diagfram(gdat, gdatmodi, indxenerplot, indxevttplot):
 
 def plot_nextstat(gdat, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'nextstat')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'nextstat')
     axis, cbar = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot)
    
     mrkrsize = retr_mrkrsize(gdat, fabs(gdatmodi.modispec), indxenerplot) * 10
@@ -1537,7 +1537,7 @@ def plot_nextstat(gdat, gdatmodi, indxenerplot, indxevttplot):
 
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'datacnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts')
     axis, cbar = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
@@ -1547,7 +1547,7 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'modlcnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'modlcnts')
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
@@ -1557,7 +1557,7 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'resicnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts')
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, \
         satulowr=-gdat.resicntssatu, satuuppr=gdat.resicntssatu, cmap='RdBu')
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
@@ -1574,7 +1574,7 @@ def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     satulowr = None
     satuuppr = None
 
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'errrpnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'errrpnts')
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', mean=True, logt=True)
     plt.tight_layout()
     plt.savefig(path)
@@ -1583,7 +1583,7 @@ def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
     
-    figr, axis, path = init_fram(gdat, indxevttplot, indxenerplot, 'catlfram')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'catlfram')
 
     if gdat.trueinfo:
         for l in gdat.indxpopl:

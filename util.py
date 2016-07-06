@@ -333,7 +333,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             spec = gdatmodi.modispec[meshgrid(gdat.indxenermodi, arange(gdat.numbmodipnts), indexing='ij')]
         
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 0] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 0] = timefinl - timebegn
         
         # determine pixels over which to evaluate the log-likelihood
         timebegn = time.time()
@@ -358,7 +358,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             gdat.indxpixlmodi = unique(concatenate(thisindxpixlprox))
         
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 1] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 1] = timefinl - timebegn
 
         # construct the mesh grid for likelihood evaluation
         timebegn = time.time()
@@ -367,7 +367,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             gdat.indxcubemodi = meshgrid(gdat.indxenermodi, gdat.indxpixlmodi, gdat.indxevtt, indexing='ij')
 
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 2] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 2] = timefinl - timebegn
 
         # update the model point source flux map, if needed
         timebegn = time.time()
@@ -438,7 +438,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                     print mean(gdatmodi.thispntsflux[0, thisindxpixlprox[k], :], 0)
 
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 3] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 3] = timefinl - timebegn
 
         # update the total model flux map
         timebegn = time.time()
@@ -454,7 +454,7 @@ def retr_llik(gdat, gdatmodi, init=False):
         gdatmodi.nextmodlflux[gdat.indxcubemodi] = retr_rofi_flux(gdat, normback, pntsflux, gdat.indxcubemodi)
 
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 4] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 4] = timefinl - timebegn
 
         # calculate the total model count map
         timebegn = time.time()
@@ -463,7 +463,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             gdat.apix * gdat.diffener[gdat.indxenermodi, None, None] # [1]
         
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 5] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 5] = timefinl - timebegn
 
         # calculate the likelihood
         timebegn = time.time()
@@ -471,7 +471,7 @@ def retr_llik(gdat, gdatmodi, init=False):
         gdatmodi.nextllik[gdat.indxcubemodi] = gdat.datacnts[gdat.indxcubemodi] * log(gdatmodi.nextmodlcnts[gdat.indxcubemodi]) - gdatmodi.nextmodlcnts[gdat.indxcubemodi]
             
         timefinl = time.time()
-        gdatmodi.listchrollik[gdat.cntrswep, 6] = timefinl - timebegn
+        gdatmodi.listchrollik[gdatmodi.cntrswep, 6] = timefinl - timebegn
 
         if not isfinite(gdatmodi.nextllik[gdat.indxcubemodi]).any():
             warnings.warn('Log-likelihood went NAN!')
@@ -484,8 +484,6 @@ def retr_llik(gdat, gdatmodi, init=False):
 def retr_lpri(gdat, gdatmodi, init=False):
         
     if init:
-        gdatmodi.thislpri = zeros(gdat.numbpopl)
-        
         for l in gdat.indxpopl:
             fdfnnorm = gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[l]]
             if gdat.fdfntype == 'powr':
@@ -499,12 +497,22 @@ def retr_lpri(gdat, gdatmodi, init=False):
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :]]
             fluxhist = histogram(spec, gdat.binsflux)[0]
             lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-            gdatmodi.thislpri[l] = sum(lprbpois) 
-      
+            gdatmodi.thislpri[l, :] = lprbpois
+           
+            if gdat.strgcnfg == 'cnfg_test':
+                print 'hey'
+                print 'init'
+                print 'fluxhist'
+                print fluxhist
+                print 'fluxhistmodl'
+                print fluxhistmodl
+                print 'gdatmodi.thislpri'
+                print gdatmodi.thislpri
+                print
+    
         gdatmodi.nextlpri = copy(gdatmodi.thislpri)
                 
     else:
-        gdatmodi.nextlpri = copy(gdatmodi.thislpri)
         
         # determine if either the number of PS or any of the hyperpriors is being updated
         if gdatmodi.thisindxprop == gdat.indxpropfdfnnorm or gdatmodi.thisindxprop >= gdat.indxpropbrth and gdatmodi.thisindxprop <= gdat.indxpropmerg:
@@ -583,11 +591,21 @@ def retr_lpri(gdat, gdatmodi, init=False):
                 fluxhist += histogram(gdatmodi.modispec[gdat.indxenerfdfn, 2], gdat.binsflux)[0]
             
             lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
-            gdatmodi.nextlpri[gdatmodi.indxpoplmodi] = sum(lprbpois)
+            gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :] = lprbpois
 
-            # temp
-            #gdatmodi.deltlpri = sum(gdatmodi.nextlpri[gdatmodi.indxpoplmodi] - gdatmodi.thislpri[gdatmodi.indxpoplmodi])
-            gdatmodi.deltlpri = gdatmodi.nextlpri[gdatmodi.indxpoplmodi] - gdatmodi.thislpri[gdatmodi.indxpoplmodi]
+            if gdatmodi.cntrswep % 1000 == 0:
+                print 'hey'
+                print 'fluxhist'
+                print fluxhist
+                print 'fluxhistmodl'
+                print fluxhistmodl
+                print 'gdatmodi.thislpri'
+                print gdatmodi.thislpri
+                print 'gdatmodi.nextlpri'
+                print gdatmodi.nextlpri
+                print
+
+            gdatmodi.deltlpri = sum(gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, :])
         else:
             gdatmodi.deltlpri = 0.
         
@@ -726,7 +744,7 @@ def updt_samp(gdat, gdatmodi):
     
     if gdatmodi.thisindxprop == gdat.indxpropfdfnnorm:
         gdatmodi.thissampvarb[gdat.indxsampfdfnnorm[gdatmodi.indxpoplmodi]] = gdatmodi.nextsampvarb[gdat.indxsampfdfnnorm[gdatmodi.indxpoplmodi]]
-        gdatmodi.thislpri[gdatmodi.indxpoplmodi] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi]
+        gdatmodi.thislpri[gdatmodi.indxpoplmodi, :] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :]
     
     # determine if a hyperparameter is to be updated
     thisbool = False
@@ -768,7 +786,7 @@ def updt_samp(gdat, gdatmodi):
         gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfdfn, :], -1] = fluxunit
         
         # update the prior register
-        gdatmodi.thislpri[gdatmodi.indxpoplmodi] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi]
+        gdatmodi.thislpri[gdatmodi.indxpoplmodi, :] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :]
 
     # proposals that change the likelihood
     if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
@@ -795,7 +813,7 @@ def updt_samp(gdat, gdatmodi):
     # transdimensinal updates
     if gdatmodi.thisindxprop >= gdat.indxpropbrth and gdatmodi.thisindxprop <= gdat.indxpropmerg:
         gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]
-        gdatmodi.thislpri[gdatmodi.indxpoplmodi] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi]
+        gdatmodi.thislpri[gdatmodi.indxpoplmodi, :] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :]
         
     ## birth
     if gdatmodi.thisindxprop == gdat.indxpropbrth:
@@ -1702,11 +1720,11 @@ def retr_prop(gdat, gdatmodi):
             thiscombfact = -combfact 
 
         gdatmodi.laccfrac = thisjcbnfact + thiscombfact
-        gdatmodi.listnumbpair[gdat.cntrswep] = numbpair
-        gdatmodi.listjcbnfact[gdat.cntrswep] = thisjcbnfact
-        gdatmodi.listcombfact[gdat.cntrswep] = thiscombfact
-        gdatmodi.listauxipara[gdat.cntrswep, :] = gdatmodi.auxipara
-        gdatmodi.listlaccfrac[gdat.cntrswep] = gdatmodi.laccfrac
+        gdatmodi.listnumbpair[gdatmodi.cntrswep] = numbpair
+        gdatmodi.listjcbnfact[gdatmodi.cntrswep] = thisjcbnfact
+        gdatmodi.listcombfact[gdatmodi.cntrswep] = thiscombfact
+        gdatmodi.listauxipara[gdatmodi.cntrswep, :] = gdatmodi.auxipara
+        gdatmodi.listlaccfrac[gdatmodi.cntrswep] = gdatmodi.laccfrac
 
         if gdat.verbtype > 1:
             print 'thisjcbnfact'
@@ -2819,7 +2837,7 @@ def setp(gdat):
         print '%.4g MB' % totl
 
 
-def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
+def init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strgplot):
 
     figr, axis = plt.subplots(figsize=(1.3 * gdat.plotsize, 1.3 * gdat.plotsize))
     axis.set_xlabel(gdat.longlabl)
@@ -2843,9 +2861,9 @@ def init_fram(gdat, indxevttplot, indxenerplot, strgplot):
     axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
 
     if indxevttplot == None:
-        path = gdat.pathplot + strgplot + '%dA_' % gdat.indxenerincl[indxenerplot] + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + strgplot + '%dA_' % gdat.indxenerincl[indxenerplot] + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     else:
-        path = gdat.pathplot + strgplot + '%d%d_' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot]) + gdat.rtag + '_%09d.pdf' % gdat.cntrswep
+        path = gdat.pathplot + strgplot + '%d%d_' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot]) + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
     
     return figr, axis, path
 
