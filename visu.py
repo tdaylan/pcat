@@ -873,10 +873,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             #for spin in axiscnts.spines.itervalues():
             #    spin.set_visible(False)
             #axiscnts.spines["bottom"].set_visible(True)
+            axiscnts.set_xlim([binscnts[i, 0], binscnts[i, -1]])
             axiscnts.set_xscale('log')
-
-            #axiscnts.set_xlim([])
-            axiscnts.set_xticks(gdat.binscnts[i, :])
+            #axiscnts.set_xticks(gdat.binscnts[i, :])
             #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
             axiscnts.set_xlabel("$C$")
                 
