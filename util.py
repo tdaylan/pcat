@@ -405,17 +405,12 @@ def retr_llik(gdat, gdatmodi, init=False):
                     # temp
                     if gdat.strgcnfg == 'cnfg_test':
                         print 'hey'
+                        print 'n, k'
                         print n, k
                         print 'thispsfn'
-                        print gdatmodi.thispsfnintp(dist)[0, :]
-                        #print gdatmodi.thispsfnintp(dist)[1, :]
-                        #print gdatmodi.thispsfnintp(dist)[2, :]
-                        print gdatmodi.thispsfnintp(dist).shape
+                        print mean(gdatmodi.thispsfnintp(dist), 1)
                         print 'psfn'
-                        print psfn[0, :]
-                        #print psfn[1, :]
-                        #print psfn[2, :]
-                        print psfn.shape
+                        print mean(psfn[:, :], 1)
                         print
 
                     # add the contribution of the PS to the the proposed flux map
@@ -427,17 +422,20 @@ def retr_llik(gdat, gdatmodi, init=False):
                                 spectemp = spec[i, k]
                         else:
                             spectemp = spec[i, k]
-                        gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spec[i, k] * psfn[gdat.indxenermodi[i], :, :]
-           
-        if False:
-            print 'gdatmodi.thispntsflux[gdat.indxcubemodi]'
-            print amin(gdatmodi.thispntsflux[gdat.indxcubemodi]), amax(gdatmodi.thispntsflux[gdat.indxcubemodi])
-            print 'gdatmodi.nextpntsflux[gdat.indxcubemodi]'
-            print amin(gdatmodi.nextpntsflux[gdat.indxcubemodi]), amax(gdatmodi.nextpntsflux[gdat.indxcubemodi])
-            print 'gdat.numbmodipnts'
-            print gdat.numbmodipnts
-            print 'gdatmodi.thissampvarb[gdat.indxsampnumbpnts]'
-            print gdatmodi.thissampvarb[gdat.indxsampnumbpnts]
+                        gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdat.indxenermodi[i], :, :]
+
+                        if gdat.strgcnfg == 'cnfg_test':
+                            print 'i: ', i
+                            print 'mean(spectemp)'
+                            print spectemp
+                            print 'mean(psfn[gdat.indxenermodi[i], :, :], 0)'
+                            print mean(psfn[gdat.indxenermodi[i], :, :], 0)
+                
+                if gdat.strgcnfg == 'cnfg_test':
+                    print 'mean(gdatmodi.nextpntsflux[0, thisindxpixlprox[k], :], 0)'
+                    print mean(gdatmodi.nextpntsflux[0, thisindxpixlprox[k], :], 0)
+                    print 'mean(gdatmodi.thispntsflux[0, thisindxpixlprox[k], :], 0)'
+                    print mean(gdatmodi.thispntsflux[0, thisindxpixlprox[k], :], 0)
 
         timefinl = time.time()
         gdatmodi.listchrollik[gdat.cntrswep, 3] = timefinl - timebegn
