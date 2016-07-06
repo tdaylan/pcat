@@ -884,7 +884,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             axissigm.set_xlabel(r'$\sigma$')
             axiscnts.set_xlabel('$C$')
             
-            axissigm.spines["bottom"].set_position(("axiscnts", 0.15))
+            axissigm.spines["bottom"].set_position(("axes", 0.15))
                 
         # superimpose the true catalog
         if gdat.trueinfo:
