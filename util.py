@@ -402,8 +402,9 @@ def retr_llik(gdat, gdatmodi, init=False):
                     # interpolate the PSF
                     psfn = psfnintp(dist)
     
-                    if False:
+                    if True:
                         print 'hey'
+                        print n, k
                         print 'thispsfn'
                         print gdatmodi.thispsfnintp(dist)[0, :]
                         print gdatmodi.thispsfnintp(dist)[1, :]

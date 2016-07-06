@@ -78,15 +78,15 @@ def cnfg_test():
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=10000, \
+         numbswep=100, \
          #numbswepplot=1, \
          numbburn=0, \
-         #verbtype=2, \
+         verbtype=2, \
          randinit=False, \
          maxmgang=20., \
          #specfraceval=0., \
-         mocknumbpnts=array([300]), \
-         maxmnumbpnts=array([300]), \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \

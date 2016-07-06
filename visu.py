@@ -805,7 +805,11 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     
 
 def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
-   
+  
+
+
+
+
     if listspechist == None:
         post = False
     else:
@@ -852,6 +856,26 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                     fdfnslopuppr = gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr[l]]  
                     fluxhistmodl = fdfnnorm * pdfn_flux_brok(gdat, gdat.meanflux, fdfnbrek, fdfnsloplowr, fdfnslopuppr) * gdat.diffflux
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=0.5, color='b')
+
+            # add other x axes
+            axiscnts = axis.twiny()
+            #fig.subplots_adjust(bottom=0.2)
+            
+            #def tick_function(X):
+            #    V = 1/(1+X)
+            #    return ["%.3f" % z for z in V]
+            
+            axiscnts.xaxis.set_ticks_position("bottom")
+            axiscnts.xaxis.set_label_position("bottom")
+            axiscnts.spines["bottom"].set_position(("axes", -0.15))
+            axiscnts.set_frame_on(True)
+            axiscnts.patch.set_visible(False)
+            for spin in axiscnts.spines.itervalues():
+                spin.set_visible(False)
+            axiscnts.spines["bottom"].set_visible(True)
+            axiscnts.set_xticks(gdat.binscnts)
+            #axiscnts.set_xticklabels(tick_function(gdat.binscnts))
+            axiscnts.set_xlabel(r"Modified x-axis: $1/(1+X)$")
                 
         # superimpose the true catalog
         if gdat.trueinfo:

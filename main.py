@@ -184,6 +184,9 @@ def work(gdat, indxprocwork):
     gdatmodi.modisind = empty(gdat.numbmodipnts)
     gdatmodi.modispec = empty((gdat.numbener, gdat.numbmodipnts))
     
+    # plotting variables
+    gdatmodi.thisbackfwhmcnts = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    
     # log the initial state
     if gdat.verbtype > 1:
         print 'thisindxpntsfull'
@@ -1255,15 +1258,25 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
 
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
+    plot_fwhm(gdat, gdatmodi)
     
     # temp
     if gdat.strgcnfg != 'cnfg_test':
         plot_psfn(gdat, gdatmodi)
 
-    gdatmodi.thisbackcntsmean = empty((gdat.numbener, gdat.numbevtt))
+    # plot number of background counts per PSF
+    gdatmodi.thisbackfwhmcnts[:] = 0.
     for c in gdat.indxback:
-        gdatmodi.thisbackcntsmean += mean(gdatmodi.thissampvarb[gdat.indxsampnormback[c, :, None, None]] * gdat.backflux[c] * gdat.expo * \
-            gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4., 1)
+        gdatmodi.thisbackfwhmcnts += gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]][:, None, None] * gdat.backflux[c] * gdat.expo * \
+                                                                                              gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4.
+    for i in gdat.indxener:
+        path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdat.cntrswep)
+        tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2), indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    
+    # plot spatially averaged mean number of counts per PSF
+    gdatmodi.thisbackcntsmean = mean(gdatmodi.thisbackfwhmcnts, 1)
+    plot_backcntsmean(gdat, gdatmodi)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
@@ -1334,9 +1347,6 @@ def plot_samp(gdat, gdatmodi):
     #if gdat.numbener == 3:
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
-    plot_fwhm(gdat, gdatmodi)
-    plot_backcntsmean(gdat, gdatmodi)
-    
     if amax(abs(gdatmodi.thiserrrpnts)) > 0.1 and False:
         print 'Approximation error went above the limit!'
     
