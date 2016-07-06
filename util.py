@@ -403,7 +403,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                     psfn = psfnintp(dist)
     
                     # temp
-                    if strgcnfg == 'cnfg_test':
+                    if gdat.strgcnfg == 'cnfg_test':
                         print 'hey'
                         print n, k
                         print 'thispsfn'
