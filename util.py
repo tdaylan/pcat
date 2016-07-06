@@ -593,7 +593,8 @@ def retr_lpri(gdat, gdatmodi, init=False):
             lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
             gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :] = lprbpois
 
-            if gdatmodi.cntrswep % 1000 == 0:
+            # temp
+            if gdat.strgcnfg == 'cnfg_test' and gdatmodi.cntrswep % 1000 == 0:
                 print 'hey'
                 print 'fluxhist'
                 print fluxhist
