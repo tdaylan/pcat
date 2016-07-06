@@ -2145,7 +2145,7 @@ def setp(gdat):
     gdat.binsaang = linspace(0., 2. * pi, gdat.numbaang + 1)
 
     ## flux
-    gdat.numbflux = 40
+    gdat.numbflux = 10
     gdat.indxflux = arange(gdat.numbflux)
     gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
     gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
