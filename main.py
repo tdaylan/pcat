@@ -307,7 +307,7 @@ def init( \
          specfraceval=0.01, \
          stdvfdfnnorm=0.05, \
          stdvfdfnslop=0.1, \
-         stdvpsfipara=1e-20, \
+         stdvpsfipara=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvflux=0.15, \
@@ -1322,7 +1322,7 @@ def plot_samp(gdat, gdatmodi):
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            path = gdat.pathplot + 'diffpntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+            path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
             tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, resi=True, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     
@@ -1503,10 +1503,28 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listchrototl[gdatmodi.cntrswep, 3] = timefinl - timebegn
    
             # temp
-            if gdat.strgcnfg == 'cnfg_test' and False:
+            if gdat.strgcnfg == 'cnfg_test':
                 temp = zeros(gdat.numbpixl)
                 temp[gdat.indxpixlmodi] = 1.
                 path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
+                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+            
+                temp = zeros(gdat.numbpixl)
+                temp[gdat.indxpixlmodi] = gdatmodi.thispntsflux[gdat.indxcubemodi]
+                path = gdat.pathplot + 'thispntsflux_%09d.pdf' % gdatmodi.cntrswep
+                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+            
+                temp = zeros(gdat.numbpixl)
+                temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi]
+                path = gdat.pathplot + 'nextpntsflux_%09d.pdf' % gdatmodi.cntrswep
+                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+            
+                temp = zeros(gdat.numbpixl)
+                temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi] - gdatmodi.thispntsflux[gdat.indxcubemodi]
+                path = gdat.pathplot + 'diffpntsflux_%09d.pdf' % gdatmodi.cntrswep
                 tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             

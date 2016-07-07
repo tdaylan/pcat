@@ -2634,7 +2634,7 @@ def setp(gdat):
         gdat.datacnts = exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
     
     # temp
-    if gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+    if False and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
         print 'CORRECTING THE EXPOSURE.'
         tempcorr = array([1., 1.2, 1.2])
         gdat.datacnts *= tempcorr[:, None, None]

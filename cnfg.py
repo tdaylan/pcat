@@ -77,10 +77,10 @@ def cnfg_test():
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=30000, \
-         numbswepplot=10000, \
+         numbswep=10, \
+         numbswepplot=1, \
          numbburn=0, \
-         verbtype=1, \
+         verbtype=2, \
          randinit=False, \
          maxmgang=20., \
          mocknumbpnts=array([1]), \
