@@ -403,7 +403,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                     psfn = psfnintp(dist)
     
                     # temp
-                    if gdat.strgcnfg == 'cnfg_test':
+                    if False and gdat.strgcnfg == 'cnfg_test':
                         print 'hey'
                         print 'n, k'
                         print n, k
@@ -424,14 +424,14 @@ def retr_llik(gdat, gdatmodi, init=False):
                             spectemp = spec[i, k]
                         gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdat.indxenermodi[i], :, :]
 
-                        if gdat.strgcnfg == 'cnfg_test':
+                        if False and gdat.strgcnfg == 'cnfg_test':
                             print 'i: ', i
                             print 'mean(spectemp)'
                             print spectemp
                             print 'mean(psfn[gdat.indxenermodi[i], :, :], 0)'
                             print mean(psfn[gdat.indxenermodi[i], :, :], 0)
                 
-                if gdat.strgcnfg == 'cnfg_test':
+                if False and gdat.strgcnfg == 'cnfg_test':
                     print 'mean(gdatmodi.nextpntsflux[0, thisindxpixlprox[k], :], 0)'
                     print mean(gdatmodi.nextpntsflux[0, thisindxpixlprox[k], :], 0)
                     print 'mean(gdatmodi.thispntsflux[0, thisindxpixlprox[k], :], 0)'
@@ -481,6 +481,22 @@ def retr_llik(gdat, gdatmodi, init=False):
         gdatmodi.deltllik = 0.
         
     
+def retr_backfwhmcnts(gdat, normback, fwhm):
+
+    backfwhmcnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    for c in gdat.indxback:
+        backfwhmcnts += normback[c, :, None, None] * gdat.backflux[c] * gdat.expo * gdat.diffener[:, None, None] * pi * fwhm[:, None, :]**2 / 4.
+
+    return backfwhmcnts
+
+
+def retr_sigm(gdat, cnts, backfwhmcnts):
+    
+    sigm = cnts / sum(mean(backfwhmcnts, 1), 1)[:, None]
+
+    return sigm
+
+
 def retr_lpri(gdat, gdatmodi, init=False):
         
     if init:
@@ -494,9 +510,11 @@ def retr_lpri(gdat, gdatmodi, init=False):
                 fdfnsloplowr = gdatmodi.thissampvarb[gdat.indxsampfdfnsloplowr[l]]
                 fdfnslopuppr = gdatmodi.thissampvarb[gdat.indxsampfdfnslopuppr[l]]
                 fluxhistmodl = fdfnnorm * pdfn_flux_brok(gdat, gdat.meanflux, fdfnbrek, fdfnsloplowr, fdfnslopuppr) * gdat.diffflux 
-            spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :]]
+            spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn[0], :]]
+            
             fluxhist = histogram(spec, gdat.binsflux)[0]
             lprbpois = fluxhist * log(fluxhistmodl) - fluxhistmodl - sp.special.gammaln(fluxhist + 1)
+
             gdatmodi.thislpri[l, :] = lprbpois
            
             if gdat.strgcnfg == 'cnfg_test':
@@ -604,6 +622,8 @@ def retr_lpri(gdat, gdatmodi, init=False):
                 print gdatmodi.thislpri
                 print 'gdatmodi.nextlpri'
                 print gdatmodi.nextlpri
+                print
+                print 
                 print
 
             gdatmodi.deltlpri = sum(gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, :])
@@ -797,9 +817,7 @@ def updt_samp(gdat, gdatmodi):
     # PSF
     if gdatmodi.thisindxprop == gdat.indxproppsfipara:
         # temp
-        #gdatmodi.nextpsfn = retr_psfn(gdat, psfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
-        gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
-        #gdatmodi.thispsfnintp = copy(interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1))
+        gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
      
     # background normalization
@@ -1065,10 +1083,7 @@ def retr_strgfluxunit(gdat):
    
 def retr_gang(lgal, bgal):
     
-    # temp
-    #gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
-    fact = 180. / pi
-    gang = fact * arccos(cos(lgal / fact) * cos(bgal / fact))
+    gang = rad2deg(arccos(cos(deg2rad(lgal)) * cos(deg2rad(bgal))))
 
     return gang
 
@@ -1213,14 +1228,19 @@ def retr_prop(gdat, gdatmodi):
         # construct the proposed PSF
         gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
         
-        print 'hey'
-        print 'gdatmodi.thispsfn'
-        print mean(gdatmodi.thispsfn, 1)
         temp = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
-        print 'mean'
-        print mean(temp, 1)
-        print 'gdatmodi.nextpsfn'
-        print mean(gdatmodi.nextpsfn, 1)
+       
+        if False:
+            print 'hey'
+            print 'gdatmodi.thispsfn'
+            print mean(gdatmodi.thispsfn, 1)
+            print 'mean'
+            print mean(temp, 1)
+            print 'gdatmodi.nextpsfn'
+            print mean(gdatmodi.nextpsfn, 1)
+            print
+            print
+
 
         gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         
@@ -1250,7 +1270,8 @@ def retr_prop(gdat, gdatmodi):
 
         ## transform back from the unit space
         gdatmodi.nextsampvarb[gdat.indxsampnormback] = copy(gdatmodi.thissampvarb[gdat.indxsampnormback])
-        gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmnormback[gdat.indxbackmodi], gdat.factnormback[gdat.indxbackmodi])
+        gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], \
+                                                                                    gdat.minmnormback[gdat.indxbackmodi], gdat.factnormback[gdat.indxbackmodi])
 
         if gdat.verbtype > 1:
             print 'indxenermodi: ', gdat.indxenermodi
@@ -1700,10 +1721,6 @@ def retr_prop(gdat, gdatmodi):
     # energy bin in which to evaluate the log-likelihood
     if gdat.indxpropbrth <= gdatmodi.thisindxprop <= gdat.indxpropmerg:
         gdat.indxenermodi = gdat.indxener
-
-    # temp
-    #if type(gdat.indxenermodi) == int64:
-    #    gdat.indxenermodi = array([gdat.indxenermodi])
 
     if gdat.verbtype > 1:
         if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
@@ -2584,11 +2601,6 @@ def setp(gdat):
             
         gdat.expo = gdat.expo[gdat.indxcubefilt]
    
-    # temp
-    if gdat.strgcnfg == 'pcat_ferm_expr_ngal':
-        tempcorr = array([1., 0.8, 0.8])
-        gdat.expo *= tempcorr[:, None, None]
-
     # backgrounds
     gdat.backflux = []
     gdat.backfluxmean = []
@@ -2620,6 +2632,12 @@ def setp(gdat):
     ## input data
     if gdat.datatype == 'inpt':
         gdat.datacnts = exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+    
+    # temp
+    if gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+        print 'CORRECTING THE EXPOSURE.'
+        tempcorr = array([1., 0.8, 0.8])
+        gdat.datacnts *= tempcorr[:, None, None]
 
     ## mock data
     if gdat.datatype == 'mock':

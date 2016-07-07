@@ -1273,26 +1273,20 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
     
     # number of background counts per PSF
-    gdatmodi.thisbackfwhmcnts[:] = 0.
-    for c in gdat.indxback:
-        gdatmodi.thisbackfwhmcnts += gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]][:, None, None] * gdat.backflux[c] * gdat.expo * \
-                                                                                              gdat.diffener[:, None, None] * pi * gdatmodi.thisfwhm[:, None, :]**2 / 4.
+    gdatmodi.thisbackfwhmcnts = retr_backfwhmcnts(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thisfwhm)
     
-    # spatially averaged number of background counts per PSF
-    gdatmodi.thisbackcntsmean = mean(gdatmodi.thisbackfwhmcnts, 1)
-
     # number of counts and standard deviation of each PS
     gdatmodi.thiscnts = []
     gdatmodi.thissigm = []
     for l in gdat.indxpopl:
         indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
         cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
-        sigmtemp = sum(cntstemp, 2) / sum(gdatmodi.thisbackcntsmean, 1)[:, None]
+        retr_sigm(gdat, sum(cntstemp, 2), gdatmodi.thisbackfwhmcnts)
         gdatmodi.thiscnts.append(cntstemp)
         gdatmodi.thissigm.append(cntstemp)
     
     # standard deviation axis
-    gdatmodi.binssigm = gdat.binscnts / sum(gdatmodi.thisbackcntsmean, 1)[:, None]
+    gdatmodi.binssigm = retr_sigm(gdat, gdat.binscnts, gdatmodi.thisbackfwhmcnts)
     
     # plots
     ## PSF radial profile
@@ -1309,24 +1303,22 @@ def plot_samp(gdat, gdatmodi):
         tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
 
-    # spatially averaged number of background counts per PSF
-    plot_backcntsmean(gdat, gdatmodi)
-
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
 
     print 'hey'
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-            tdpy.util.plot_heal(path, temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-            tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+    if False:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                tdpy.util.plot_heal(path, temppntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
     for i in gdat.indxener:
         for m in gdat.indxevtt:
@@ -1509,6 +1501,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             retr_llik(gdat, gdatmodi) 
             timefinl = time.time()
             listchrototl[gdatmodi.cntrswep, 3] = timefinl - timebegn
+   
+            # temp
+            if gdat.strgcnfg == 'cnfg_test' and False:
+                temp = zeros(gdat.numbpixl)
+                temp[gdat.indxpixlmodi] = 1.
+                path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
+                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
             # evaluate the acceptance probability
             accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfrac)

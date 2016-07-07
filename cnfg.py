@@ -72,27 +72,22 @@ def cnfg_test():
     indxenerincl = arange(3, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
-    minmflux = 3e-11
+    minmflux = 3e-8
     maxmflux = 1e-7
-    #minmflux = 1e-11
-    #maxmflux = 3e-11
     mockfdfnslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=100, \
-         #numbswepplot=1, \
+         numbswep=30000, \
+         numbswepplot=10000, \
          numbburn=0, \
          verbtype=1, \
          randinit=False, \
          maxmgang=20., \
-         #specfraceval=0., \
          mocknumbpnts=array([1]), \
          maxmnumbpnts=array([1]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         #probprop=array([0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
          probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
-         #probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \

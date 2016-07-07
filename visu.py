@@ -474,7 +474,21 @@ def plot_post(pathpcat):
     plot_pntsprob(gdat, pntsprobcart, ptag='quad')
     plot_pntsprob(gdat, pntsprobcart, ptag='full', full=True)
     plot_pntsprob(gdat, pntsprobcart, ptag='cumu', cumu=True)
-  
+
+    # compute median and 68% credible intervals of the inferred parameters
+    gdat.postnormback = tdpy.util.retr_postvarb(gdat.listnormback)
+    gdat.postpsfipara = tdpy.util.retr_postvarb(gdat.listpsfipara)
+    
+    # compute the medians of secondary variables
+    gdat.medinormback = gdat.postnormback[0, :, :]
+    gdat.medipsfipara = gdat.postpsfipara[0, :]
+    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
+    gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
+    gdat.medibackfwhmcnts = retr_backfwhmcnts(gdat, gdat.medinormback, gdat.medifwhm)
+    
+    ## standard deviation axis
+    gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medibackfwhmcnts)
+
     # flux distribution
     for l in gdat.indxpopl:
         plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
@@ -486,8 +500,7 @@ def plot_post(pathpcat):
     # fraction of emission components
     if gdat.numbback == 2:
         postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
-        postnormback = tdpy.util.retr_postvarb(gdat.listnormback)
-        plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean, postnormback=postnormback)
+        plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
 
     # PSF parameters
     path = gdat.pathplot + 'psfipara_' + gdat.rtag
@@ -697,7 +710,7 @@ def plot_chro(gdat):
             plt.close(figr)
 
 
-def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None):
+def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     
     if postpntsfluxmean != None:
         post = True
@@ -718,8 +731,8 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
         listydat[1, :] = postpntsfluxmean[0, :]
         listyerr[:, 1, :] = tdpy.util.retr_errrvarb(postpntsfluxmean)
         for c in gdat.indxback:
-            listydat[c+2, :] = postnormback[0, c, :] * gdat.backfluxmean[c]
-            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(postnormback[:, c, :]) * gdat.backfluxmean[c]
+            listydat[c+2, :] = gdat.postnormback[0, c, :] * gdat.backfluxmean[c]
+            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(gdat.postnormback[:, c, :]) * gdat.backfluxmean[c]
     else:
         listydat[1, :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
         for c in gdat.indxback:
@@ -766,7 +779,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None, postnormback=None)
         path = gdat.pathplot + 'compfrac_' + gdat.rtag + '.pdf'
     else:
         path = gdat.pathplot + 'compfrac_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
-    plt.subplots_adjust(top=0.2, bottom=0.2, left=0.2, right=0.2)
+    plt.subplots_adjust(top=0.8, bottom=0.2, left=0.2, right=0.8)
     plt.savefig(path)
     plt.close(figr)
      
@@ -813,6 +826,11 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     else:
         post = True
     
+    if post:
+        binssigm = gdat.medibinssigm
+    else:
+        binssigm = gdatmodi.binssigm
+
     if plotspec:
         numbcols = gdat.numbener
     else:
@@ -861,7 +879,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axiscnts.xaxis.set_ticks_position('bottom')
         axiscnts.xaxis.set_label_position('bottom')
         axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
-        axissigm.set_xlim([gdatmodi.binssigm[i, 0], gdatmodi.binssigm[i, -1]])
+        axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
         axiscnts.set_xscale('log')
         axissigm.set_xscale('log')
         axissigm.set_xlabel(r'$\sigma$')
@@ -1272,28 +1290,6 @@ def plot_fwhm(gdat, gdatmodi):
 
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'fwhmcnts_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
-    plt.close(figr)
-    
-    
-def plot_backcntsmean(gdat, gdatmodi):
-    
-    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-
-    backcntsmean = transpose(gdatmodi.thisbackcntsmean)
-    
-    imag = axis.imshow(backcntsmean, origin='lower', extent=[gdat.binsener[0], gdat.binsener[-1], 0, 4], cmap='BuPu', interpolation='none', alpha=0.4)
-    plt.colorbar(imag, ax=axis, fraction=0.05)
-    axis.set_xscale('log')
-    axis.set_ylabel('PSF Class')
-    axis.set_xlabel(r'$E_\gamma$ [GeV]')
-    axis.set_yticks([0.5, 1.5, 2.5, 3.5])
-    axis.set_yticklabels(['0', '1', '2', '3'])
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, '%.3g' % backcntsmean[m, i], ha='center', va='center')
-            
-    plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'backcnts_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
