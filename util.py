@@ -1849,7 +1849,7 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
     psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
     
     # temp
-    if True and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+    if False and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
         print 'CORRECTING THE PSF.'
         tempcorr = array([1., 0.8, 0.8])
         psfn *= tempcorr[:, None, None]
