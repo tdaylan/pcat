@@ -52,11 +52,14 @@ def retr_indx(gdat, indxpntsfull):
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
     
+    print 'hey'
+    print 'retr_pntsflux'
+
     numbpnts = lgal.size
     
-    pntsflux = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    pntsfluxsing = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
-    
+        print 'k: ', k
         # calculate the distance to all pixels from each point source
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
         indx = argsort(dist)
@@ -67,12 +70,23 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
         psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist, psfntype)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                pntsflux[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
-
+                pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
+                print 'i, m: ', i, m
+                print 'spec[i, k]'
+                print spec[i, k]
+                print 'psfn[i, :, m]'
+                print amin(psfn[i, :, m]), amax(psfn[i, :, m])
+                print 'pntsflux[k, i, indxpixltemp, m]'
+                print amin(pntsflux[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
+            
     # sum contributions from all PS
-    pntsfluxtemp = sum(pntsflux, 0) 
+    pntsflux = sum(pntsfluxsing, 0) 
 
-    return pntsfluxtemp
+    print 'pntsflux'
+    print amin(pntsflux), amax(pntsflux)
+    print
+
+    return pntsflux
 
 
 def retr_rofi_flux(gdat, normback, pntsflux, tempindx):
@@ -403,8 +417,9 @@ def retr_llik(gdat, gdatmodi, init=False):
                     psfn = psfnintp(dist)
     
                     # temp
-                    if False and gdat.strgcnfg == 'cnfg_test':
+                    if gdat.strgcnfg == 'cnfg_test':
                         print 'hey'
+                        print 'retr_llik'
                         print 'n, k'
                         print n, k
                         print 'thispsfn'
