@@ -2412,7 +2412,7 @@ def setp(gdat):
     if gdat.numbburn == None:
         gdat.numbburn = min(1000000, gdat.numbswep - 1)
     if gdat.factthin == None:
-        gdat.factthin = min(5 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
+        gdat.factthin = min(2 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
     # run tag
     gdat.rtag = retr_rtag(gdat, None)
