@@ -1832,6 +1832,12 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
     
     # normalize the PSF
     psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
+    
+    # temp
+    if True and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+        print 'CORRECTING THE PSF.'
+        tempcorr = array([1., 0.8, 0.8])
+        psfn *= tempcorr[:, None, None]
 
     return psfn
 
@@ -2633,12 +2639,6 @@ def setp(gdat):
     if gdat.datatype == 'inpt':
         gdat.datacnts = exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
     
-    # temp
-    if False and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
-        print 'CORRECTING THE EXPOSURE.'
-        tempcorr = array([1., 1.2, 1.2])
-        gdat.datacnts *= tempcorr[:, None, None]
-
     ## mock data
     if gdat.datatype == 'mock':
 
