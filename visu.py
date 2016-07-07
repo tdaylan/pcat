@@ -458,10 +458,6 @@ def plot_post(pathpcat):
         for l in gdat.indxpopl:
             for i in gdat.indxener:
                 for h in range(gdat.numbflux):
-                    print 'hey'
-                    print l, i, h
-                    print amin(pntsprob[l, i, :, h]), amax(pntsprob[l, i, :, h])
-                    print
                     pntsprobcart[:, :, l, i, h] = tdpy.util.retr_cart(pntsprob[l, i, :, h], 
                                                                       indxpixlrofi=gdat.indxpixlrofi, \
                                                                       numbsideinpt=gdat.numbsideheal, \
