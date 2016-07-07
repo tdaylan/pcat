@@ -52,14 +52,18 @@ def retr_indx(gdat, indxpntsfull):
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
     
-    print 'hey'
-    print 'retr_pntsflux'
+    if gdat.strgcnfg == 'cnfg_test':
+        print 'hey'
+        print 'retr_pntsflux'
 
     numbpnts = lgal.size
     
     pntsfluxsing = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
-        print 'k: ', k
+        
+        if gdat.strgcnfg == 'cnfg_test':
+            print 'k: ', k
+        
         # calculate the distance to all pixels from each point source
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
         indx = argsort(dist)
@@ -71,20 +75,23 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
-                print 'i, m: ', i, m
-                print 'spec[i, k]'
-                print spec[i, k]
-                print 'psfn[i, :, m]'
-                print amin(psfn[i, :, m]), amax(psfn[i, :, m])
-                print 'pntsflux[k, i, indxpixltemp, m]'
-                print amin(pntsflux[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
+                
+                if gdat.strgcnfg == 'cnfg_test':
+                    print 'i, m: ', i, m
+                    print 'spec[i, k]'
+                    print spec[i, k]
+                    print 'psfn[i, :, m]'
+                    print amin(psfn[i, :, m]), amax(psfn[i, :, m])
+                    print 'pntsflux[k, i, indxpixltemp, m]'
+                    print amin(pntsflux[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
             
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
 
-    print 'pntsflux'
-    print amin(pntsflux), amax(pntsflux)
-    print
+    if gdat.strgcnfg == 'cnfg_test':
+        print 'pntsflux'
+        print amin(pntsflux), amax(pntsflux)
+        print
 
     return pntsflux
 
@@ -1849,7 +1856,8 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
     psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
     
     # temp
-    if False and gdat.strgcnfg == 'pcat_ferm_expr_ngal':
+    if True and (gdat.strgcnfg == 'pcat_ferm_expr_ngal' or gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp1' or \
+                                                            gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp2' or gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp3'):
         print 'CORRECTING THE PSF.'
         tempcorr = array([1., 0.8, 0.8])
         psfn *= tempcorr[:, None, None]
