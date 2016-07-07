@@ -458,6 +458,10 @@ def plot_post(pathpcat):
         for l in gdat.indxpopl:
             for i in gdat.indxener:
                 for h in range(gdat.numbflux):
+                    print 'hey'
+                    print l, i. h
+                    print amin(pntsprob[l, i, :, h]), amax(pntsprob[l, i, :, h])
+                    print
                     pntsprobcart[:, :, l, i, h] = tdpy.util.retr_cart(pntsprob[l, i, :, h], 
                                                                       indxpixlrofi=gdat.indxpixlrofi, \
                                                                       numbsideinpt=gdat.numbsideheal, \
@@ -1159,7 +1163,7 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
                 temp = sum(pntsprobcart[:, :, l, gdat.indxenerfdfn[0], indxlowr:indxuppr], 2)
-                imag = axis.imshow(temp, origin='lower', cmap='Reds', norm=mpl.colors.LogNorm(vmin=0.01, vmax=1), extent=gdat.exttrofi)
+                imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi)#, norm=mpl.colors.LogNorm(vmin=0.01, vmax=1))
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
                 # superimpose true PS
@@ -1167,7 +1171,7 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 if gdat.trueinfo:
                     indxpnts = where((gdat.binsspec[gdat.indxenerfdfn[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfdfn[0], :]) & \
                         (gdat.truespec[l][0, gdat.indxenerfdfn[0], :] < gdat.binsspec[gdat.indxenerfdfn[0], indxuppr]))[0]
-                    mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='x', lw=2, color='g')
+                    mar1 = axis.scatter(gdat.truelgal[l][indxpnts], gdat.truebgal[l][indxpnts], s=100, alpha=0.5, marker='*', lw=2, color='g')
                 axis.set_xlabel(gdat.longlabl)
                 axis.set_ylabel(gdat.latilabl)
                 axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
