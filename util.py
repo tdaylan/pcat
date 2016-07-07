@@ -2636,7 +2636,7 @@ def setp(gdat):
     # temp
     if gdat.strgcnfg == 'pcat_ferm_expr_ngal':
         print 'CORRECTING THE EXPOSURE.'
-        tempcorr = array([1., 0.8, 0.8])
+        tempcorr = array([1., 1.2, 1.2])
         gdat.datacnts *= tempcorr[:, None, None]
 
     ## mock data
