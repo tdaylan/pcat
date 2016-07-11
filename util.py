@@ -82,8 +82,8 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
                     print spec[i, k]
                     print 'psfn[i, :, m]'
                     print amin(psfn[i, :, m]), amax(psfn[i, :, m])
-                    print 'pntsflux[k, i, indxpixltemp, m]'
-                    print amin(pntsflux[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
+                    print 'pntsfluxsing[k, i, indxpixltemp, m]'
+                    print amin(pntsfluxsing[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
             
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
@@ -2716,8 +2716,14 @@ def setp(gdat):
         mockspec = [[] for l in gdat.indxpopl]
         mocksind = [[] for l in gdat.indxpopl]
         for l in gdat.indxpopl:
-            mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+            if gdat.mockspatdist[l] == 'unif':
+                mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+                mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+            if gdat.mockspatdist[l] == 'gang':
+                mockgang[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.maxmgangmarg)
+                mockaang[l] = icdf_self(rand(gdat.mocknumbpnts[l]), 0., 2. * pi)
+                mocklgal[l], mockbgal[l] = retr_(mockgang[l], mockaang[l])
+
             mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
             if gdat.mockfdfntype == 'powr':
                 mockspec[l][gdat.indxenerfdfn, :] = icdf_flux_powr(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfdfnslop[l])

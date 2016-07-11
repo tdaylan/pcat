@@ -124,6 +124,9 @@ def plot_post(pathpcat):
     listmodlcnts = hdun['modlcnts'].data
     
     if gdat.trueinfo and gdat.datatype == 'mock':
+        gdat.mockspatdist = []
+        for l in gdat.indxpopl:
+            gdat.mockspatdist.append(hdun[0].header['mockspatdistpop%d' % l])
         gdat.mockfdfntype = hdun[0].header['mockfdfntype']
         if gdat.mockfdfntype == 'powr':
             gdat.mockfdfnslop = hdun['mockfdfnslop'].data

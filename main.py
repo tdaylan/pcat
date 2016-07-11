@@ -321,6 +321,7 @@ def init( \
          mockfdfnslopuppr=None, \
          mockfdfnbrek=None, \
          mocknormback=ones((1, 1)), \
+         mockspatdist='unif', \
          mockfdfntype='powr', \
          mockpsfntype=None, \
          strgexpr=None, \
@@ -584,6 +585,7 @@ def init( \
         gdat.mockpsfntype = mockpsfntype
         ### mock FDF model type
         gdat.mockfdfntype = mockfdfntype
+        gdat.mockspatdist = mockspatdist
         ### mock number of PS
         gdat.mocknumbpnts = mocknumbpnts
         if gdat.mockfdfntype == 'powr':
@@ -658,6 +660,8 @@ def init( \
             if gdat.datatype == 'mock':
                 print 'Mock data'
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
+                print 'mockspatdist'
+                print mockspatdist
                 if gdat.mockfdfntype == 'powr':
                     print 'mockfdfnslop: ', gdat.mockfdfnslop
                 if gdat.mockfdfntype == 'brok':
@@ -971,6 +975,8 @@ def init( \
     head['indxenerfdfn'] = gdat.indxenerfdfn[0]
 
     if gdat.datatype == 'mock':
+        for l in gdat.indxpopl:
+            head['mockspatdistpop%d' % l] = gdat.mockspatdist[l]
         head['mockfdfntype'] = gdat.mockfdfntype
         head['mockpsfntype'] = gdat.mockpsfntype
 
