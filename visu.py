@@ -574,8 +574,8 @@ def plot_post(pathpcat):
         gdat.listfdfnsloplowr += gdat.mockfdfnsloplowr
         
         gdat.listfdfnslopuppr = randn(gdat.numbsamp)
-        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr > 0.), 1] *= 0.03
-        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr < 0.), 1] *= 0.05
+        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr > 0.)] *= 0.03
+        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr < 0.)] *= 0.05
         gdat.listfdfnslopuppr += gdat.mockfdfnslopuppr
 
         gdat.mockfdfnsloplowr -= 0.1 * rand() + gdat.mockfdfnsloplowr

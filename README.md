@@ -10,7 +10,6 @@ python setup.py install
 ```
 
 ### Usage
-## Usage
 The basic interaction with PCAT is through the `init` function, which writes the resulting probabilistic catalog to the disc. The software ships with convenience functions to post-process the output.
 
 ```python
@@ -263,6 +262,8 @@ File name of the backgrounds in the data path
 ---
 #### User-provided aata
 `strgexpr`
+File name of the expsoure in the data path
+
 `indxevttincl`
 Indices of the PSF classes to be included in the fit
 
@@ -273,7 +274,9 @@ Indices of the energy bins to be included in the fit
 #### Background modeling
 `strgback`
 File name of the backgrounds in the data path
+
 `lablback`
 Mathematical label of the backgrounds
+
 `nameback`
 Descriptive name of the backgrounds
