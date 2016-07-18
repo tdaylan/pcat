@@ -1,6 +1,6 @@
 # PCAT (Probabilistic Cataloger)
 
-PCAT is a Bayesian framework to sample from the catalog space. It's theoretical framework is introduced in [Daylan, Portillo & Finkbeiner (2016)](), submitted to ApJ. Refer to its [webpage](http://www.tansudaylan.com/pcat) for an introduction.
+PCAT is a Bayesian framework to sample from the catalog space. It's theoretical framework is introduced in [Daylan, Portillo & Finkbeiner (2016)](https://arxiv.org/abs/1607.04637), submitted to ApJ. Refer to its [webpage](http://www.tansudaylan.com/pcat) for an introduction.
 
 ### Installation
 
