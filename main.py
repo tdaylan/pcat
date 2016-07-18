@@ -66,7 +66,7 @@ def work(gdat, indxprocwork):
             else:
                 fdfnslop = gdat.truefdfnslop
             for l in gdat.indxpopl:
-                gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(fdfnslop, gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
+                gdatmodi.drmcsamp[gdat.indxsampfdfnslop[l], 0] = cdfn_atan(fdfnslop[l], gdat.minmfdfnslop[l], gdat.factfdfnslop[l])
         else:
             gdatmodi.drmcsamp[gdat.indxsampfdfnslop, 0] = rand(gdat.numbpopl)
     ### broken power law
@@ -134,7 +134,7 @@ def work(gdat, indxprocwork):
                 fdfnslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfdfnslopuppr[l], 0], gdat.minmfdfnslopuppr[l], gdat.factfdfnslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fdfnbrek, fdfnsloplowr, fdfnslopuppr)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfdfn, :], 0] = copy(fluxunit)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.meansdfn[l], gdat.stdvsdfn[l], \
+            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sdfnmean[l], gdat.sdfnstdv[l], \
                                                                                                         gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
    
     ## sample vector
@@ -264,8 +264,8 @@ def init( \
          maxmflux=None, \
          minmsind=None, \
          maxmsind=None, \
-         meansdfn=None, \
-         stdvsdfn=None, \
+         sdfnmean=None, \
+         sdfnstdv=None, \
          minmfdfnnorm=None, \
          maxmfdfnnorm=None, \
          minmfdfnslop=None, \
@@ -315,15 +315,18 @@ def init( \
          fracrand=0.05, \
          radispmrlbhl=None, \
          stdvspmrsind=0.2, \
+         mockpsfntype=None, \
+         mocknormback=ones((1, 1)), \
          mocknumbpnts=None, \
+         mockspatdisttype='unif', \
+         mockfdfntype='powr', \
          mockfdfnslop=None, \
          mockfdfnsloplowr=None, \
          mockfdfnslopuppr=None, \
          mockfdfnbrek=None, \
-         mocknormback=ones((1, 1)), \
-         mockspatdist='unif', \
-         mockfdfntype='powr', \
-         mockpsfntype=None, \
+         mocksdfntype='gaus', \
+         mocksdfnmean=None, \
+         mocksdfnstdv=None, \
          strgexpr=None, \
          strgback=None, \
          lablback=None, \
@@ -360,18 +363,10 @@ def init( \
             minmsind = 0.5
         if maxmsind == None:
             maxmsind = 3.2
-        if meansdfn == None:
-            meansdfn = array([2.2])
-        if stdvsdfn == None:
-            stdvsdfn = array([0.3])
-        if minmfdfnnorm == None:
-            minmfdfnnorm = array([1.])
-        if maxmfdfnnorm == None:
-            maxmfdfnnorm = array([1e3])
-        if minmfdfnslop == None:
-            minmfdfnslop = array([0.5])
-        if maxmfdfnslop == None:
-            maxmfdfnslop = array([3.5])
+        if sdfnmean == None:
+            sdfnmean = array([2.2])
+        if sdfnstdv == None:
+            sdfnstdv = array([0.3])
         if minmfdfnbrek == None:
             minmfdfnbrek = array([minmflux])
         if maxmfdfnbrek == None:
@@ -400,10 +395,10 @@ def init( \
             minmsind = array([1.])
         if maxmsind == None:
             maxmsind = array([3.])
-        if meansdfn == None:
-            meansdfn = array([2.2])
-        if stdvsdfn == None:
-            stdvsdfn = array([0.5])
+        if sdfnmean == None:
+            sdfnmean = array([2.2])
+        if sdfnstdv == None:
+            sdfnstdv = array([0.5])
         if minmfdfnnorm == None:
             minmfdfnnorm = array([1.])
         if maxmfdfnnorm == None:
@@ -421,6 +416,16 @@ def init( \
         if radispmrlbhl == None:
             radispmrlbhl = 2. / 3600.
 
+    if minmfdfnnorm == None:
+        minmfdfnnorm = zeros(numbpopl) + 1.
+    if maxmfdfnnorm == None:
+        maxmfdfnnorm = zeros(numbpopl) + 1e3
+        
+    if minmfdfnslop == None:
+        minmfdfnslop = zeros(numbpopl) + 0.5
+    if maxmfdfnslop == None:
+        maxmfdfnslop = zeros(numbpopl) + 3.5
+    
     # initialize the global object 
     gdat = gdatstrt()
    
@@ -544,8 +549,8 @@ def init( \
     ### spectral power-law index
     gdat.minmsind = minmsind
     gdat.maxmsind = maxmsind
-    gdat.meansdfn = meansdfn
-    gdat.stdvsdfn = stdvsdfn
+    gdat.sdfnmean = sdfnmean
+    gdat.sdfnstdv = sdfnstdv
     ### background normalizations
     gdat.minmnormback = minmnormback
     gdat.maxmnormback = maxmnormback
@@ -581,20 +586,33 @@ def init( \
     
     ## mock data setup
     if datatype == 'mock':
+        
         ### mock PSF model type
         gdat.mockpsfntype = mockpsfntype
-        ### mock FDF model type
-        gdat.mockfdfntype = mockfdfntype
-        gdat.mockspatdist = mockspatdist
-        ### mock number of PS
+        
+        ### background normalization
+        gdat.mocknormback = mocknormback
+        
+        ### number of PS
         gdat.mocknumbpnts = mocknumbpnts
+        
+        ### spatial distribution
+        gdat.mockspatdisttype = mockspatdisttype
+
+        ### flux distribution
+        gdat.mockfdfntype = mockfdfntype
         if gdat.mockfdfntype == 'powr':
             gdat.mockfdfnslop = mockfdfnslop
         if gdat.mockfdfntype == 'brok':
             gdat.mockfdfnbrek = mockfdfnbrek
             gdat.mockfdfnsloplowr = mockfdfnsloplowr
             gdat.mockfdfnslopuppr = mockfdfnslopuppr
-        gdat.mocknormback = mocknormback
+        
+        ### color distribution
+        gdat.mocksdfntype = mocksdfntype
+        gdat.mocksdfnmean = mocksdfnmean
+        gdat.mocksdfnstdv = mocksdfnstdv
+
         ### flag to position mock point sources at the image center
         gdat.pntscntr = pntscntr
         ### mock image resolution
@@ -660,8 +678,8 @@ def init( \
             if gdat.datatype == 'mock':
                 print 'Mock data'
                 print 'mocknumbpnts: ', gdat.mocknumbpnts
-                print 'mockspatdist'
-                print mockspatdist
+                print 'mockspatdisttype'
+                print mockspatdisttype
                 if gdat.mockfdfntype == 'powr':
                     print 'mockfdfnslop: ', gdat.mockfdfnslop
                 if gdat.mockfdfntype == 'brok':
@@ -976,7 +994,7 @@ def init( \
 
     if gdat.datatype == 'mock':
         for l in gdat.indxpopl:
-            head['mockspatdistpop%d' % l] = gdat.mockspatdist[l]
+            head['mockspatdisttypepop%d' % l] = gdat.mockspatdisttype[l]
         head['mockfdfntype'] = gdat.mockfdfntype
         head['mockpsfntype'] = gdat.mockpsfntype
 
@@ -1171,11 +1189,11 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.maxmfdfnslopuppr))
         listhdun[-1].header['EXTNAME'] = 'maxmfdfnslopuppr'
     
-    listhdun.append(pf.ImageHDU(gdat.meansdfn))
-    listhdun[-1].header['EXTNAME'] = 'meansdfn'
+    listhdun.append(pf.ImageHDU(gdat.sdfnmean))
+    listhdun[-1].header['EXTNAME'] = 'sdfnmean'
     
-    listhdun.append(pf.ImageHDU(gdat.stdvsdfn))
-    listhdun[-1].header['EXTNAME'] = 'stdvsdfn'
+    listhdun.append(pf.ImageHDU(gdat.sdfnstdv))
+    listhdun[-1].header['EXTNAME'] = 'sdfnstdv'
     
     listhdun.append(pf.ImageHDU(gdat.binsener))
     listhdun[-1].header['EXTNAME'] = 'binsener'
@@ -1242,6 +1260,12 @@ def init( \
 
             listhdun.append(pf.ImageHDU(gdat.mockfdfnslopuppr))
             listhdun[-1].header['EXTNAME'] = 'mockfdfnslopuppr'
+
+        listhdun.append(pf.ImageHDU(gdat.mocksdfnmean))
+        listhdun[-1].header['EXTNAME'] = 'mocksdfnmean'
+
+        listhdun.append(pf.ImageHDU(gdat.mocksdfnstdv))
+        listhdun[-1].header['EXTNAME'] = 'mocksdfnstdv'
 
         listhdun.append(pf.ImageHDU(gdat.truenormback))
         listhdun[-1].header['EXTNAME'] = 'mocknormback'
@@ -1314,7 +1338,7 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
 
-    print 'hey'
+    # temp
     if False:
         for i in gdat.indxener:
             for m in gdat.indxevtt:

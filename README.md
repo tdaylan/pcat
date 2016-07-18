@@ -1,6 +1,6 @@
 # PCAT (Probabilistic Cataloger)
 
-PCAT is a Bayesian framework to sample from the catalog space. It's theoretical framework is introduced in [Daylan, Portillo & Finkbeiner (2016)](). Refer to its webpage [](http://www.tansudaylan.com/pcat) for an introduction.
+PCAT is a Bayesian framework to sample from the catalog space. It's theoretical framework is introduced in [Daylan, Portillo & Finkbeiner (2016)](), submitted to ApJ. Refer to its [webpage](http://www.tansudaylan.com/pcat) for an introduction.
 
 ### Installation
 
@@ -39,13 +39,6 @@ pcat.init(, \
          )
 ```
 
-### Abbreviations
-Here are the abbreviation used in what follows.
-
-PS: Point Source
-FDF: Flux Distribution Function
-SDF: Spectral index Distribution Function
-
 
 ### Options
 ---
@@ -57,9 +50,6 @@ Boolean flag to run the sampler in diagnostic mode
 #### User interaction
 `verbtype`
 Verbosity level
-- `0`: no standard output
-- `1`: print only critical statements along with periodic progress
-- `2`: full log of internal variables, to be used only for diagnostic purposes
 
 ---
 #### Plotting
@@ -91,19 +81,14 @@ Array indicating the probability of proposing the associated proposal types
 
 `datatype`
 Type of data
-- `'inpt'`: provided by the user
-- `'mock'`: generated (mock) data
 
 `regitype`
 Type of region
-- `'igal'`: ROI centered at the galactic center
-- `'ngal'`: ROI centered at the North Galactic Pole
-
 
 ---
 #### Initial state
 `initnumbpnts`
-Initial number of PS
+Initial number of Point Sources (PSs)
 
 `randinit`
 Boolean flag to start the MCMC state randomly from the prior
@@ -138,7 +123,7 @@ Minimum mean number of PS
 Maximum mean number of PS
 
 `fdfntype`
-FDF shape
+Flux Distribution Function (FDF) shape
 
 `minmfdfnslop`
 Minimum FDF slope
@@ -164,10 +149,10 @@ Minimum FDF upper slope
 `maxmfdfnslopuppr`
 Maximum FDF upper slope
 
-`meansdfn`
-Mean SDF
+`sdfnmean`
+Mean Spectral index Distribution Function (SDF)
 
-`stdvsdfn`
+`sdfnstdv`
 Standard deviation of the SDF
 
 ---

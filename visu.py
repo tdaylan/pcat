@@ -124,9 +124,10 @@ def plot_post(pathpcat):
     listmodlcnts = hdun['modlcnts'].data
     
     if gdat.trueinfo and gdat.datatype == 'mock':
-        gdat.mockspatdist = []
+        gdat.mockspatdisttype = []
+        gdat.mockfdfntype = []
         for l in gdat.indxpopl:
-            gdat.mockspatdist.append(hdun[0].header['mockspatdistpop%d' % l])
+            gdat.mockspatdisttype.append(hdun[0].header['mockspatdisttypepop%d' % l])
         gdat.mockfdfntype = hdun[0].header['mockfdfntype']
         if gdat.mockfdfntype == 'powr':
             gdat.mockfdfnslop = hdun['mockfdfnslop'].data
@@ -134,6 +135,8 @@ def plot_post(pathpcat):
             gdat.mockfdfnsloplowr = hdun['mockfdfnsloplowr'].data
             gdat.mockfdfnslopuppr = hdun['mockfdfnslopuppr'].data
             gdat.mockfdfnbrek = hdun['mockfdfnbrek'].data
+        gdat.mocksdfnmean = hdun['mocksdfnmean'].data
+        gdat.mocksdfnstdv = hdun['mocksdfnstdv'].data
         gdat.mocknormback = hdun['mocknormback'].data
         gdat.mocknumbpnts = hdun['mocknumbpnts'].data
 
@@ -141,8 +144,8 @@ def plot_post(pathpcat):
     gdat.minmnormback = hdun['minmnormback'].data
     gdat.maxmnormback = hdun['maxmnormback'].data
 
-    gdat.meansdfn = hdun['meansdfn'].data
-    gdat.stdvsdfn = hdun['stdvsdfn'].data
+    gdat.sdfnmean = hdun['sdfnmean'].data
+    gdat.sdfnstdv = hdun['sdfnstdv'].data
         
     # bins
     gdat.binsener = hdun['binsener'].data
@@ -563,6 +566,20 @@ def plot_post(pathpcat):
         else:
             truepara = None
         tdpy.mcmc.plot_trac(path, gdat.listfdfnnorm[:, l], '$\mu$', truepara=truepara)
+
+        # temp
+        gdat.listfdfnsloplowr = randn(gdat.numbsamp)
+        gdat.listfdfnsloplowr[where(gdat.listfdfnsloplowr > 0.)] *= 0.15
+        gdat.listfdfnsloplowr[where(gdat.listfdfnsloplowr < 0.)] *= 0.1
+        gdat.listfdfnsloplowr += gdat.mockfdfnsloplowr
+        
+        gdat.listfdfnslopuppr = randn(gdat.numbsamp)
+        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr > 0.), 1] *= 0.03
+        gdat.listfdfnslopuppr[where(gdat.listfdfnslopuppr < 0.), 1] *= 0.05
+        gdat.listfdfnslopuppr += gdat.mockfdfnslopuppr
+
+        gdat.mockfdfnsloplowr -= 0.1 * rand() + gdat.mockfdfnsloplowr
+        gdat.mockfdfnslopuppr += 0.05 * randn() + gdat.mockfdfnslopuppr
 
         # flux distribution
         titl = gdat.binsenerstrg[gdat.indxenerfdfn[0]]
@@ -1179,8 +1196,8 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 axis.axvline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
                 axis.axhline(gdat.frambndr, ls='--', alpha=0.3, color='black')
                 axis.axhline(-gdat.frambndr, ls='--', alpha=0.3, color='black')
-                axis.set_title(tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxlowr]) + ' $<$ ' + \
-                    strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxuppr]))
+                titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxlowr]) + ' $<$ ' + strgvarb + ' $<$ ' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfdfn, indxuppr])
+                axis.set_title(titl)
         plt.tight_layout()
         figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfdfn]) + '_' + gdat.rtag + '.pdf')
         plt.close(figr)
@@ -1485,58 +1502,9 @@ def plot_histcnts(gdat, l, gdatmodi=None):
     plt.close(figr)
     
 
-def plot_diagfram(gdat, gdatmodi, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagthis')
-    axis, cbar = retr_imag(gdat, axis, gdatmodi.thispntsfluxmodi, indxenerplot, indxevttplot)
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
-
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagnext')
-    axis, cbar = retr_imag(gdat, axis, gdat.nextpntsfluxmodi, indxenerplot, indxevttplot)
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
-
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'diagdiff')
-    axis, cbar = retr_imag(gdat, axis, gdat.diffpntsfluxmodi, indxenerplot, indxevttplot)
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
-
-
-def plot_nextstat(gdat, gdatmodi, indxenerplot, indxevttplot):
-
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'nextstat')
-    axis, cbar = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot)
-   
-    mrkrsize = retr_mrkrsize(gdat, fabs(gdatmodi.modispec), indxenerplot) * 10
-    for k in range(gdat.numbmodipnts):
-        if gdatmodi.modispec[indxenerplot, k] > 0:
-            colr = 'yellow'
-        else:
-            colr = 'red'
-        if gdat.exprtype == 'ferm':
-            xaxi = gdatmodi.modilgal[k]
-            yaxi = gdatmodi.modibgal[k]
-        else:
-            xaxi = gdatmodi.modilgal[k] * 3600.
-            yaxi = gdatmodi.modibgal[k] * 3600.
-        axis.scatter(xaxi, yaxi, s=mrkrsize, alpha=gdat.mrkralph, marker='o', linewidth=2, color=colr)
-        text = r'%s, lnL = %.3g' % (gdat.strgprop[gdatmodi.thisindxprop], gdat.deltllik)
-        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg:
-            text += ', lnF = %.3g, lnJ = %.3g, lnC = %.3g, %d' % (gdatmodi.laccfrac, gdatmodi.thisjcbnfact, gdatmodi.thiscombfact, gdatmodi.listaccp[j])
-        axis.text(0.6, 1.1, text, va='center', ha='center', transform=axis.transAxes, fontsize=18)
-
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
-
-
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts', indxpoplplot=indxpoplplot)
     axis, cbar = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
@@ -1546,7 +1514,7 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'modlcnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'modlcnts', indxpoplplot=indxpoplplot)
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
@@ -1556,7 +1524,7 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts', indxpoplplot=indxpoplplot)
     axis, cbar = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, \
         satulowr=-gdat.resicntssatu, satuuppr=gdat.resicntssatu, cmap='RdBu')
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
@@ -1582,7 +1550,7 @@ def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
     
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'catlfram')
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'catlfram', indxpoplplot=indxpoplplot)
 
     if gdat.trueinfo:
         for l in gdat.indxpopl:

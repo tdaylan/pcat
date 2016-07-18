@@ -198,8 +198,8 @@ def cnfg_test_popl():
          maxmnumbpnts=array([500, 500]), \
          minmfdfnslop=array([1., 1.]), \
          maxmfdfnslop=array([3., 3.]), \
-         stdvsdfn=array([.5, .5]), \
-         meansdfn=array([2., 2.]), \
+         sdfnstdv=array([.5, .5]), \
+         sdfnmean=array([2., 2.]), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
