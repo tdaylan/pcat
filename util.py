@@ -2265,6 +2265,131 @@ def setp(gdat):
     gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
     gdat.binsanglcosi = sort(cos(gdat.binsangl))
     
+    # input data
+    if gdat.datatype == 'inpt':
+        
+        path = gdat.pathdata + '/' + gdat.strgexpr
+        exprflux = pf.getdata(path)
+
+        gdat.indxenerinclfull = arange(exprflux.shape[0])
+        gdat.indxevttinclfull = arange(exprflux.shape[2])
+        
+        if exprflux.ndim == 3:
+            gdat.pixltype = 'heal' 
+            gdat.numbpixlheal = exprflux.shape[1]
+            gdat.numbsideheal = int(sqrt(gdat.numbpixlheal / 12))
+        elif exprflux.ndim == 4:
+            gdat.pixltype = 'cart' 
+            gdat.numbsidecart = exprflux.shape[1]
+            exprflux = exprflux.reshape((exprflux.shape[0], gdat.numbsidecart**2, exprflux.shape[3]))
+            gdat.numbpixlheal = None
+            gdat.indxpixlrofi = None
+        else:
+            print 'Input count map needs to be three (HealPix) or four (Cartesian) dimensional.'
+            print 'Quitting...'
+            return
+
+    else:
+        gdat.pixltype = gdat.mockpixltype
+
+        if gdat.pixltype == 'heal':
+            gdat.numbsideheal = gdat.mocknumbsideheal
+        if gdat.pixltype == 'cart':
+            gdat.numbsidecart = gdat.mocknumbsidecart
+        
+        if gdat.exprtype == 'ferm':
+            gdat.indxenerinclfull = arange(5)
+            gdat.indxevttinclfull = arange(4)
+         
+    # pizelization
+    if gdat.pixltype == 'heal':
+        
+        lgalheal, bgalheal, gdat.numbpixlheal, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
+
+        gdat.indxpixlrofi = where((abs(lgalheal) < gdat.maxmgang) & (abs(bgalheal) < gdat.maxmgang))[0]
+        gdat.indxpixlrofimarg = where((abs(lgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal) & \
+                (abs(bgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal))[0]
+        
+        gdat.lgalgrid = lgalheal[gdat.indxpixlrofi]
+        gdat.bgalgrid = bgalheal[gdat.indxpixlrofi]
+    else:
+        isidecart = arange(gdat.numbsidecart)
+        temp = meshgrid(isidecart, isidecart, indexing='ij')
+        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
+        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
+    gdat.numbpixl = gdat.lgalgrid.size
+    gdat.indxpixl = arange(gdat.numbpixl)
+        
+    # data cube indices
+    gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+    gdat.indxcubefilt = meshgrid(gdat.indxenerincl, gdat.indxpixl, gdat.indxevttincl, indexing='ij')
+    if gdat.pixltype == 'heal':
+        gdat.indxcubeheal = meshgrid(gdat.indxenerinclfull, gdat.indxpixlrofi, gdat.indxevttinclfull, indexing='ij')
+    
+    # store pixels as unit vectors
+    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+    
+    # construct a lookup table for converting HealPix pixels to ROI pixels
+    if gdat.pixltype == 'heal':
+        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (gdat.maxmgang)
+        if os.path.isfile(path):
+            fobj = open(path, 'rb')
+            gdat.pixlcnvt = cPickle.load(fobj)
+            fobj.close()
+        else:
+            indxpixltemp = where((fabs(lgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize) & (fabs(bgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize))[0]
+            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
+            for k in range(indxpixltemp.size):
+                dist = retr_angldistunit(gdat, lgalheal[indxpixltemp[k]], bgalheal[indxpixltemp[k]], gdat.indxpixl)
+                gdat.pixlcnvt[indxpixltemp[k]] = argmin(dist)
+
+            fobj = open(path, 'wb')
+            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+            fobj.close()
+       
+    if gdat.pixltype == 'heal':
+        gdat.numbpixlheal = gdat.numbsideheal**2 * 12
+        gdat.apix = 4. * pi / gdat.numbpixlheal
+    if gdat.pixltype == 'cart':
+        gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
+        gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
+        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
+        gdat.apix = deg2rad(2. * gdat.maxmgang / gdat.numbsidecart)**2
+        
+    # exposure
+    if gdat.strgexpo == 'unit':
+        gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    else:
+        path = gdat.pathdata + '/' + gdat.strgexpo
+        gdat.expo = pf.getdata(path)
+        if amin(gdat.expo) == amax(gdat.expo):
+            print 'Bad input exposure map.'
+            return
+        if gdat.pixltype == 'heal':
+            gdat.expo = gdat.expo[gdat.indxcubeheal]
+        else:
+            gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
+            
+        gdat.expo = gdat.expo[gdat.indxcubefilt]
+   
+    # backgrounds
+    gdat.backflux = []
+    gdat.backfluxmean = []
+    for c in gdat.indxback:
+        if gdat.strgback[c] == 'unit':
+            backfluxtemp = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        else:
+            path = gdat.pathdata + '/' + gdat.strgback[c]
+            backfluxtemp = pf.getdata(path)
+            if gdat.pixltype == 'heal':
+                backfluxtemp = backfluxtemp[gdat.indxcubeheal]
+            else:
+                backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
+            backfluxtemp = backfluxtemp[gdat.indxcubefilt]
+        gdat.backflux.append(backfluxtemp)
+        gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
+
     # get the experimental catalog
     if gdat.exprtype != None:
         retr_expr(gdat)
@@ -2484,53 +2609,6 @@ def setp(gdat):
     gdat.minmbgal = -gdat.maxmgang
     gdat.maxmbgal = gdat.maxmgang
 
-    # input data
-    if gdat.datatype == 'inpt':
-        
-        path = gdat.pathdata + '/' + gdat.strgexpr
-        exprflux = pf.getdata(path)
-
-        gdat.indxenerinclfull = arange(exprflux.shape[0])
-        gdat.indxevttinclfull = arange(exprflux.shape[2])
-        
-        if exprflux.ndim == 3:
-            gdat.pixltype = 'heal' 
-            gdat.numbpixlheal = exprflux.shape[1]
-            gdat.numbsideheal = int(sqrt(gdat.numbpixlheal / 12))
-        elif exprflux.ndim == 4:
-            gdat.pixltype = 'cart' 
-            gdat.numbsidecart = exprflux.shape[1]
-            exprflux = exprflux.reshape((exprflux.shape[0], gdat.numbsidecart**2, exprflux.shape[3]))
-            gdat.numbpixlheal = None
-            gdat.indxpixlrofi = None
-        else:
-            print 'Input count map needs to be three (HealPix) or four (Cartesian) dimensional.'
-            print 'Quitting...'
-            return
-
-    else:
-        gdat.numbside = gdat.mocknumbside
-        gdat.pixltype = gdat.mockpixltype
-
-        if gdat.pixltype == 'heal':
-            gdat.numbsideheal = gdat.mocknumbsideheal
-        if gdat.pixltype == 'cart':
-            gdat.numbsidecart = gdat.mocknumbsidecart
-        
-        if gdat.exprtype == 'ferm':
-            gdat.indxenerinclfull = arange(5)
-            gdat.indxevttinclfull = arange(4)
-         
-    if gdat.pixltype == 'heal':
-        gdat.numbpixlheal = gdat.numbsideheal**2 * 12
-        gdat.apix = 4. * pi / gdat.numbpixlheal
-    if gdat.pixltype == 'cart':
-        gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
-        gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
-        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
-        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
-        gdat.apix = deg2rad(2. * gdat.maxmgang / gdat.numbsidecart)**2
-        
     # temp
     gdat.tracsamp = False
     
@@ -2582,61 +2660,12 @@ def setp(gdat):
             if gdat.exprtype == 'chan':
                 gdat.maxmangleval[h] = array([10. / 3600.])
 
-    # pizelization
-    if gdat.pixltype == 'heal':
-        
-        lgalheal, bgalheal, gdat.numbpixlheal, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
-
-        gdat.indxpixlrofi = where((abs(lgalheal) < gdat.maxmgang) & (abs(bgalheal) < gdat.maxmgang))[0]
-        gdat.indxpixlrofimarg = where((abs(lgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal) & \
-                (abs(bgalheal) < gdat.maxmgangmarg + 300. / gdat.numbsideheal))[0]
-        
-        gdat.lgalgrid = lgalheal[gdat.indxpixlrofi]
-        gdat.bgalgrid = bgalheal[gdat.indxpixlrofi]
-    else:
-        isidecart = arange(gdat.numbsidecart)
-        temp = meshgrid(isidecart, isidecart, indexing='ij')
-        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
-        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
-        
-    # store pixels as unit vectors
-    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
-
-    gdat.numbpixl = gdat.lgalgrid.size
-    gdat.indxpixl = arange(gdat.numbpixl)
-    
-    if gdat.pixltype == 'heal':
-        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%03d.p' % (gdat.maxmgang)
-        if os.path.isfile(path):
-            fobj = open(path, 'rb')
-            gdat.pixlcnvt = cPickle.load(fobj)
-            fobj.close()
-        else:
-            indxpixltemp = where((fabs(lgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize) & (fabs(bgalheal) < gdat.maxmgangmarg + 2 * gdat.margsize))[0]
-            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
-            for k in range(indxpixltemp.size):
-                dist = retr_angldistunit(gdat, lgalheal[indxpixltemp[k]], bgalheal[indxpixltemp[k]], gdat.indxpixl)
-                gdat.pixlcnvt[indxpixltemp[k]] = argmin(dist)
-
-            fobj = open(path, 'wb')
-            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
-            fobj.close()
-       
-    gdat.indxcubefull = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
-    
-    gdat.indxcubefilt = meshgrid(gdat.indxenerincl, gdat.indxpixl, gdat.indxevttincl, indexing='ij')
-    
+    # pixels whose posterior predicted emission will be saved
     gdat.numbpixlsave = min(1000, gdat.numbpixl)
     gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
 
-
-    if gdat.pixltype == 'heal':
-        gdat.indxcubeheal = meshgrid(gdat.indxenerinclfull, gdat.indxpixlrofi, gdat.indxevttinclfull, indexing='ij')
-        
-
     if gdat.datatype == 'inpt' and gdat.pixltype == 'heal':
         exprflux = exprflux[gdat.indxcubeheal]
-
 
     if gdat.datatype == 'inpt':
         exprflux = exprflux[gdat.indxcubefilt]
@@ -2646,39 +2675,6 @@ def setp(gdat):
             gdat.mockpsfipara = gdat.fermpsfipara
         if gdat.exprtype == 'sdss':
             gdat.mockpsfipara = gdat.sdsspsfipara
-
-    # exposure
-    if gdat.strgexpo == 'unit':
-        gdat.expo = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-    else:
-        path = gdat.pathdata + '/' + gdat.strgexpo
-        gdat.expo = pf.getdata(path)
-        if amin(gdat.expo) == amax(gdat.expo):
-            print 'Bad input exposure map.'
-            return
-        if gdat.pixltype == 'heal':
-            gdat.expo = gdat.expo[gdat.indxcubeheal]
-        else:
-            gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
-            
-        gdat.expo = gdat.expo[gdat.indxcubefilt]
-   
-    # backgrounds
-    gdat.backflux = []
-    gdat.backfluxmean = []
-    for c in gdat.indxback:
-        if gdat.strgback[c] == 'unit':
-            backfluxtemp = ones((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-        else:
-            path = gdat.pathdata + '/' + gdat.strgback[c]
-            backfluxtemp = pf.getdata(path)
-            if gdat.pixltype == 'heal':
-                backfluxtemp = backfluxtemp[gdat.indxcubeheal]
-            else:
-                backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
-            backfluxtemp = backfluxtemp[gdat.indxcubefilt]
-        gdat.backflux.append(backfluxtemp)
-        gdat.backfluxmean.append(mean(sum(gdat.backflux[c] * gdat.expo, 2) / sum(gdat.expo, 2), 1))
 
     factener = (gdat.meanener / gdat.meanener[gdat.indxenerfluxdist[0]])**(-2.)
     

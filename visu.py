@@ -770,7 +770,11 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         listydat[1, :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
         for c in gdat.indxback:
             listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c]
-    
+   
+    print 'listydat'
+    print listydat
+    print 
+
     xdat = gdat.meanener
     for k in range(gdat.numbback + 2):
         ydat = gdat.meanener**2 * listydat[k, :]
@@ -779,9 +783,9 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
 
     axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
     axis.set_yscale('log')
-    axis.set_xlabel('E [GeV]')
+    axis.set_xlabel('E [%s]' % gdat.strgenerunit)
     axis.set_xscale('log')
-    axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [GeV/cm$^2$/s/sr]')
+    axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
     axis.legend()
 
     if post:
@@ -805,15 +809,17 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
+    labltemp = ['PS']
+    labltemp.extend(gdat.lablback)
+    print 'hey'
     print 'listsize'
     print listsize
     print 'listexpl'
     print listexpl
-    print 'gdat.lablback'
-    print gdat.lablback
-    print 
-
-    axis.pie(listsize, explode=listexpl, labels=gdat.lablback, autopct='%1.1f%%')
+    print 'labltemp'
+    print labltemp
+    
+    axis.pie(listsize, explode=listexpl, labels=labltemp, autopct='%1.1f%%')
     axis.axis('equal')
 
     if post:
@@ -1376,7 +1382,7 @@ def plot_fwhm(gdat, gdatmodi):
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.set_xscale('log')
     axis.set_ylabel('PSF Class')
-    axis.set_xlabel(r'$E_\gamma$ [GeV]')
+    axis.set_xlabel(r'$E$ [%s]' % gdat.strgenerunit)
     axis.set_yticks(gdat.indxevtt + 0.5)
     axis.set_yticklabels(['%d' % m for m in gdat.evttfull[gdat.indxevttincl]])
     axis.set_xticks(gdat.binsener)
@@ -1485,7 +1491,7 @@ def plot_eval(gdat):
             axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
-    axis.set_ylabel('$f$ [1/cm$^2$/s/sr/GeV]')
+    axis.set_ylabel('$f$ ' + gdat.strgfluxunit)
     axis.axhline(gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
     axis.legend(handlelength=.5, loc=3)
     

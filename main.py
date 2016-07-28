@@ -278,6 +278,7 @@ def init( \
          pathdata='.', \
     
          strgfluxunit=None, \
+         strgenerunit=None, \
     
          binsenerfull=None, \
          evttfull=None, \
@@ -354,8 +355,8 @@ def init( \
          mocksinddiststdv=None, \
          mocknormback=None, \
          mocknumbpnts=None, \
-         numbsidecart=None, \
-         numbsideheal=None, \
+         mocknumbsidecart=None, \
+         mocknumbsideheal=None, \
          
         ):
     
@@ -474,6 +475,8 @@ def init( \
             nameback = ['normisot', 'normfdfm']
         if maxmangl == None:
             maxmangl = deg2rad(20.) # [rad]
+        if strgenerunit == None:
+            strgenerunit = r'GeV'
         if strgfluxunit == None:
             strgfluxunit = r'[1/cm$^2$/s/GeV]'
         if evttfull == None:
@@ -501,6 +504,8 @@ def init( \
             margsize = 0.4
         if psfntype == None:
             psfntype = 'singgaus'
+        if strgenerunit == None:
+            strgenerunit = r'KeV'
         if strgfluxunit == None:
             strgfluxunit = r'[1/cm$^2$/s/KeV]'
     
@@ -622,6 +627,7 @@ def init( \
     #### flux units
     gdat.maxmgangmarg = maxmgangmarg
     gdat.maxmangl = maxmangl
+    gdat.strgenerunit = strgenerunit
     gdat.strgfluxunit = strgfluxunit
 
     ## PS parameter distribution models
@@ -760,8 +766,8 @@ def init( \
         ### flag to position mock point sources at the image center
         gdat.pntscntr = pntscntr
         ### mock image resolution
-        gdat.numbsidecart = numbsidecart
-        gdat.numbsideheal = numbsideheal
+        gdat.mocknumbsidecart = mocknumbsidecart
+        gdat.mocknumbsideheal = mocknumbsideheal
 
     ## proposal frequencies
     gdat.probprop = probprop
