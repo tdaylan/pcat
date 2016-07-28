@@ -18,7 +18,7 @@ import pcat
 numbener = 5
 minmspec = array([3e-11])
 maxmspec = array([1e-7])
-mockfdfnslop = array([[1.9]])
+mockfluxdistslop = array([[1.9]])
 pcat.init(, \
           psfntype='doubking', \
           randinit=False, \
@@ -33,7 +33,7 @@ pcat.init(, \
           strgexpo='fermexpo_comp_ngal.fits', \
           datatype='mock', \
           numbsideheal=256, \
-          mockfdfnslop=mockfdfnslop, \
+          mockfluxdistslop=mockfluxdistslop, \
           mocknormback=ones((2, numbener)), \
          )
 ```
@@ -115,43 +115,43 @@ Maximum background normalizations
 
 ---
 #### Hyperpriors
-`minmfdfnnorm`
+`minmmeanpnts`
 Minimum mean number of PS
 
-`maxmfdfnnorm`
+`maxmmeanpnts`
 Maximum mean number of PS
 
-`fdfntype`
+`fluxdisttype`
 Flux Distribution Function (FDF) shape
 
-`minmfdfnslop`
+`minmfluxdistslop`
 Minimum FDF slope
 
-`maxmfdfnslop`
+`maxmfluxdistslop`
 Maximum FDF slope
 
-`minmfdfnbrek`
+`minmfluxdistbrek`
 Minimum FDF break flux
 
-`maxmfdfnbrek`
+`maxmfluxdistbrek`
 Maximum FDF break flux
 
-`minmfdfnsloplowr`
+`minmfluxdistsloplowr`
 Minimum FDF lower slope
 
-`maxmfdfnsloplowr`
+`maxmfluxdistsloplowr`
 Maximum FDF lower slope
 
-`minmfdfnslopuppr`
+`minmfluxdistslopuppr`
 Minimum FDF upper slope
 
-`maxmfdfnslopuppr`
+`maxmfluxdistslopuppr`
 Maximum FDF upper slope
 
-`sdfnmean`
+`sinddistmean`
 Mean Spectral index Distribution Function (SDF)
 
-`sdfnstdv`
+`sinddiststdv`
 Standard deviation of the SDF
 
 ---
@@ -162,7 +162,7 @@ Functional form of the PSF
 `boolproppsfn`
 Boolean flag to propose PSF updates
 
-`boolpropfdfn`
+`boolpropfluxdist`
 Boolean flag to propose FDF updates
 
 `maxmangleval`
@@ -195,10 +195,10 @@ Size of the margin around the ROI, where model point sources can exist
 
 ---
 #### Proposal scales
-`stdvfdfnnorm`
+`stdvmeanpnts`
 Proposal scale for the mean number of point sources
 
-`stdvfdfnslop`
+`stdvfluxdistslop`
 Proposal scale for the slope of the FDF
 
 `stdvpsfipara`
@@ -227,22 +227,22 @@ Radius of the circle in which splits and merges will be proposed
 `mocknumbpnts`
 Mock number of point sources
 
-`mockfdfnslop`
+`mockfluxdistslop`
 Mock FDF slope
 
-`mockfdfnsloplowr`
+`mockfluxdistsloplowr`
 Mock FDFlower slope
 
-`mockfdfnslopuppr`
+`mockfluxdistslopuppr`
 Mock FDF upper slope
 
-`mockfdfnbrek`
+`mockfluxdistbrek`
 Mock FDF break flux
 
 `mocknormback`
 Mock background normalization
 
-`mockfdfntype`
+`mockfluxdisttype`
 Mock FDF shape
 
 `mockpsfntype`
