@@ -318,10 +318,11 @@ def init( \
          exprtype='ferm', \
          lgalcntr=0., \
          bgalcntr=0., \
-         margsize=None, \
+         margfact=None, \
          maxmangl=None, \
          maxmangleval=None, \
-         specfraceval=None, \
+         specfraceval=0.01, \
+         anglassc=None, \
          
          stdvmeanpnts=0.05, \
          stdvfluxdistslop=0.1, \
@@ -431,38 +432,18 @@ def init( \
     if initfluxdistslopuppr == None:
         initfluxdistslopuppr = array([None for n in range(numbpopl)])
         
-    if maxmgangmarg == None:
-        maxmgangmarg = 0.1 * maxmgang
-    if specfraceval == None:
-        specfraceval = deg2rad(3. * maxmgangmarg)
-    
-    if minmfluxdistslop == None:
-        minmfluxdistslop = array([-3.])
-    if maxmfluxdistslop == None:
-        maxmfluxdistslop = array([3.])
-    if minmfluxdistbrek == None:
-        minmfluxdistbrek = array([minmflux])
-    if maxmfluxdistbrek == None:
-        maxmfluxdistbrek = array([maxmflux])
-    if minmfluxdistsloplowr == None:
-        minmfluxdistsloplowr = array([-3.])
-    if maxmfluxdistsloplowr == None:
-        maxmfluxdistsloplowr = array([3.])
-    if minmfluxdistslopuppr == None:
-        minmfluxdistslopuppr = array([-3.])
-    if maxmfluxdistslopuppr == None:
-        maxmfluxdistslopuppr = array([3.])
     if sinddistmean == None:
         sinddistmean = array([2.2])
     if sinddiststdv == None:
         sinddiststdv = array([0.3])
 
+    if margfact == None:
+        margfact = 1.1
+
     ## Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
-            maxmgang = 20.
-        if margsize == None:
-            margsize = 1.
+            maxmgang = deg2rad(20.)
         if psfntype == None:
             psfntype = 'singking'
         if mockpsfntype == None:
@@ -473,8 +454,6 @@ def init( \
             lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if nameback == None:
             nameback = ['normisot', 'normfdfm']
-        if maxmangl == None:
-            maxmangl = deg2rad(20.) # [rad]
         if strgenerunit == None:
             strgenerunit = r'GeV'
         if strgfluxunit == None:
@@ -486,22 +465,24 @@ def init( \
             lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if nameback == None:
             nameback = ['normisot', 'normfdfm']
+        if anglassc == None:
+            anglassc = deg2rad(0.5)
 
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
         if evttfull == None:
             evttfull = arange(4)
-        if maxmangl == None:
-            maxmangl = deg2rad(10. / 3600.) # [rad]
         if lablback == None:
             lablback = [r'$\mathcal{I}$']
         if nameback == None:
             nameback = ['normisot']
+        if maxmgang == None:
+            maxmgang = deg2rad(100. / 3600.)
+        if anglassc == None:
+            anglassc = deg2rad(0.5 / 3600.)
     
     ## Chandra
     if exprtype == 'chan':
-        if margsize == None:
-            margsize = 0.4
         if psfntype == None:
             psfntype = 'singgaus'
         if strgenerunit == None:
@@ -511,8 +492,6 @@ def init( \
     
     ## SDSS
     if exprtype == 'sdss':
-        if maxmgang == None:
-            maxmgang = 20. / 3600.
         if minmsind == None:
             minmsind = array([1.])
         if maxmsind == None:
@@ -525,12 +504,6 @@ def init( \
             minmmeanpnts = array([1.])
         if maxmmeanpnts == None:
             maxmmeanpnts = array([1e3])
-        if minmfluxdistslop == None:
-            minmfluxdistslop = array([1.5])
-        if maxmfluxdistslop == None:
-            maxmfluxdistslop = array([2.5])
-        if margsize == None:
-            margsize = 1.
         if psfntype == None:
             psfntype = 'doubgaus'
         if mockpsfntype == None:
@@ -542,6 +515,12 @@ def init( \
         if strgfluxunit == None:
             strgfluxunit = r'[mMag]'
 
+    if maxmgangmarg == None:
+        maxmgangmarg = margfact * maxmgang
+        
+    if maxmangl == None:
+        maxmangl = 3. * maxmgangmarg
+    
     if minmmeanpnts == None:
         minmmeanpnts = zeros(numbpopl) + 1.
     if maxmmeanpnts == None:
@@ -551,6 +530,18 @@ def init( \
         minmfluxdistslop = zeros(numbpopl) + 0.5
     if maxmfluxdistslop == None:
         maxmfluxdistslop = zeros(numbpopl) + 3.5
+    if minmfluxdistbrek == None:
+        minmfluxdistbrek = minmflux
+    if maxmfluxdistbrek == None:
+        maxmfluxdistbrek = maxmflux
+    if minmfluxdistsloplowr == None:
+        minmfluxdistsloplowr = minmfluxdistslop
+    if maxmfluxdistsloplowr == None:
+        maxmfluxdistsloplowr = maxmfluxdistslop
+    if minmfluxdistslopuppr == None:
+        minmfluxdistslopuppr = minmfluxdistslop
+    if maxmfluxdistslopuppr == None:
+        maxmfluxdistslopuppr = maxmfluxdistslop
     
     # initialize the global object 
     gdat = gdatstrt()
@@ -709,8 +700,11 @@ def init( \
     gdat.bgalcntr = bgalcntr
     ### half of the image size
     gdat.maxmgang = maxmgang
-    ### image margin size
-    gdat.margsize = margsize
+    ### the factor by which the model image is larger than the data image
+    gdat.margfact = margfact
+    
+    ## angular radius in which associations can be made
+    gdat.anglassc = anglassc
 
     ## proposals
     ### proposal scales
@@ -816,8 +810,8 @@ def init( \
         print 'maxmangleval'
         print gdat.maxmangleval
         print
-        print 'Truth information'
         if gdat.trueinfo:
+            print 'Truth information'
             print 'truelgal'
             for l in gdat.indxpopl:
                 print gdat.truelgal[l]
@@ -1130,7 +1124,8 @@ def init( \
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
     
-    head['margsize'] = gdat.margsize
+    head['maxmangl'] = gdat.maxmangl
+    head['margfact'] = gdat.margfact
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
     

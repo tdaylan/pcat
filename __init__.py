@@ -1,8 +1,8 @@
 # plotting
 import matplotlib as mpl
 mpl.use('Agg')
-import matplotlib.pyplot as plt
 mpl.rc('image', interpolation='none', origin='lower')
+import matplotlib.pyplot as plt
 
 import seaborn as sns
 sns.set(context='poster', style='ticks', color_codes=True)

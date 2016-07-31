@@ -71,9 +71,8 @@ def plot_post(pathpcat):
     else:
         gdat.numbsidecart = hdun[0].header['numbsidecart']
 
-    gdat.trueinfo = hdun[0].header['trueinfo']
-    
-    gdat.margsize = hdun[0].header['margsize']
+    gdat.maxmangl = hdun[0].header['maxmangl']
+    gdat.margfact = hdun[0].header['margfact']
     gdat.strgtime = hdun[0].header['strgtime']
     gdat.strgcnfg = hdun[0].header['strgcnfg']
 
@@ -88,7 +87,7 @@ def plot_post(pathpcat):
     
     gdat.specfraceval = hdun[0].header['specfraceval']
 
-    if gdat.trueinfo and gdat.datatype == 'mock':
+    if gdat.datatype == 'mock':
         gdat.mocknumbpopl = hdun[0].header['mocknumbpopl']
         gdat.mockpsfntype = hdun[0].header['mockpsfntype']
 
@@ -134,7 +133,7 @@ def plot_post(pathpcat):
     
     listmodlcnts = hdun['modlcnts'].data
     
-    if gdat.trueinfo and gdat.datatype == 'mock':
+    if gdat.datatype == 'mock':
         gdat.mockspatdisttype = []
         gdat.mockfluxdisttype = []
         gdat.mocksinddisttype = []
@@ -415,7 +414,7 @@ def plot_post(pathpcat):
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparaplot], ['%d' % k for k in indxparaplot], numbplotside=10)
 
     numbpntspost = 3
-    if gdat.trueinfo and gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1 and gdat.numbback == 1:
+    if gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1 and gdat.numbback == 1:
         numbpara = numbpntspost * gdat.numbcompcolr + gdat.numbener
         listpost = zeros((gdat.numbsamp, numbpara))
         for j in gdat.indxsamptotl:
@@ -771,10 +770,6 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         for c in gdat.indxback:
             listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c]
    
-    print 'listydat'
-    print listydat
-    print 
-
     xdat = gdat.meanener
     for k in range(gdat.numbback + 2):
         ydat = gdat.meanener**2 * listydat[k, :]
@@ -811,6 +806,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
 
     labltemp = ['PS']
     labltemp.extend(gdat.lablback)
+    
     print 'hey'
     print 'listsize'
     print listsize
@@ -818,7 +814,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     print listexpl
     print 'labltemp'
     print labltemp
-    
+
     axis.pie(listsize, explode=listexpl, labels=labltemp, autopct='%1.1f%%')
     axis.axis('equal')
 
@@ -1003,8 +999,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis.set_xlabel('$f$ ' + gdat.strgfluxunit)
         axis.set_xscale('log')
         axis.text(0.75, 0.65, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
-        if gdat.trueinfo:
-            axis.set_ylim([0.5, None])
+        axis.set_ylim([0.5, None])
         axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
         if plotspec:
             if i == 0:
@@ -1326,13 +1321,17 @@ def plot_psfn(gdat, gdatmodi):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            axis.plot(gdat.binsanglplot, gdatmodi.thispsfn[i, :, m], label='Sample')
+            
+            # angular range to be plotted
+            indxangltemp = where(gdatmodi.thispsfn[i, :, m] > 1e-6 * amax(gdatmodi.thispsfn[i, :, m]))[0]
+            
+            axis.plot(gdat.binsanglplot[indxangltemp], gdatmodi.thispsfn[i, indxangltemp, m], label='Sample')
             
             if gdat.truepsfn != None:
-                axis.plot(gdat.binsanglplot, gdat.truepsfn[i, :, m], label=gdat.nameexpr, color='g', ls='--')
+                axis.plot(gdat.binsanglplot[indxangltemp], gdat.truepsfn[i, indxangltemp, m], label=gdat.nameexpr, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
-                axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
+                axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
             if i == 0 and gdat.exprtype == 'ferm':
                 axis.set_ylabel(gdat.evttstrg[m])
             if m == 0:
@@ -1340,34 +1339,29 @@ def plot_psfn(gdat, gdatmodi):
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
             indxsamp = gdat.indxsamppsfipara[i*gdat.numbformpara+m*gdat.numbener*gdat.numbformpara]
-    
+   
             if gdat.psfntype == 'singgaus':
-                strg = r'$\sigma = %.3g$ ' % gdatmodi.thissampvarb[indxsamp]
+                strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit
             elif gdat.psfntype == 'singking':
-                strg = r'$\sigma = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit + '\n'
+                strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamp+1]
             elif gdat.psfntype == 'doubgaus':
                 strg = r'$f = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
-                strg += r'$\sigma = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
-                strg += r'$\sigma = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit
+                strg += r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
+                strg += r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit
             elif gdat.psfntype == 'gausking':
                 strg = r'$f_G = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
-                strg += r'$\sigma_G = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
-                strg += r'$\sigma_K = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit + '\n'
+                strg += r'$\sigma_G = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
+                strg += r'$\sigma_K = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamp+3]
             elif gdat.psfntype == 'doubking':
                 strg = r'$f_c = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
-                strg += r'$\sigma_c = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
+                strg += r'$\sigma_c = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma_c = %.3g$' % gdatmodi.thissampvarb[indxsamp+2] + '\n'
-                strg += r'$\sigma_t = %.3g$ ' % rad2deg(gdatmodi.thissampvarb[indxsamp+3]) + gdat.strganglunit + '\n'
+                strg += r'$\sigma_t = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+3]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma_t = %.3g$' % gdatmodi.thissampvarb[indxsamp+4]
-            axis.text(0.75, 0.55, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
+            axis.text(0.2, 0.2, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
             
-            if gdat.exprtype == 'ferm':
-                axis.set_ylim([1e-3, 1e6])
-            if gdat.exprtype == 'sdss':
-                axis.set_ylim([1e4, 1e11])
-
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'psfnprof_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
@@ -1385,8 +1379,8 @@ def plot_fwhm(gdat, gdatmodi):
     axis.set_xlabel(r'$E$ [%s]' % gdat.strgenerunit)
     axis.set_yticks(gdat.indxevtt + 0.5)
     axis.set_yticklabels(['%d' % m for m in gdat.evttfull[gdat.indxevttincl]])
-    axis.set_xticks(gdat.binsener)
-    axis.set_xticklabels(['%.2g' % gdat.binsener[i] for i in arange(gdat.numbener + 1)])
+    axis.set_xticks(gdat.binsener * gdat.enerfact)
+    axis.set_xticklabels(['%.2g' % (gdat.binsener[i] * gdat.enerfact) for i in arange(gdat.numbener + 1)])
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
@@ -1490,9 +1484,11 @@ def plot_eval(gdat):
         if k > 0:
             axis.axvline(gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
-    axis.set_xlabel(r'$\theta$ ' + gdat.strganglunit)
+    axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
     axis.set_ylabel('$f$ ' + gdat.strgfluxunit)
-    axis.axhline(gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0]), color='red', ls=':', label='Flux floor')
+    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
+    axis.axhline(limt, color='red', ls=':', label='Flux floor')
+    axis.set_ylim([limt, None])
     axis.legend(handlelength=.5, loc=3)
     
     plt.tight_layout()
@@ -1568,6 +1564,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                     if gdat.exprtype == 'ferm':
                         axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
             axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
