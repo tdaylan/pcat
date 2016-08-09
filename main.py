@@ -292,7 +292,6 @@ def init( \
          maxmnormback=None, \
          minmnormback=None, \
          maxmgang=None, \
-         maxmgangmarg=None, \
          sinddistmean=None, \
          sinddiststdv=None, \
          minmmeanpnts=None, \
@@ -318,7 +317,7 @@ def init( \
          exprtype='ferm', \
          lgalcntr=0., \
          bgalcntr=0., \
-         margfact=None, \
+         margfact=1.1, \
          maxmangl=None, \
          maxmangleval=None, \
          specfraceval=0.01, \
@@ -342,7 +341,7 @@ def init( \
          initfluxdistsloplowr=None, \
          initfluxdistslopuppr=None, \
          
-         mockpixltype='heal', \
+         pixltype=None, \
          mockspatdisttype=None, \
          mockfluxdisttype=None, \
          mocksinddisttype=None, \
@@ -356,8 +355,8 @@ def init( \
          mocksinddiststdv=None, \
          mocknormback=None, \
          mocknumbpnts=None, \
-         mocknumbsidecart=None, \
-         mocknumbsideheal=None, \
+         numbsidecart=None, \
+         numbsideheal=None, \
          
         ):
     
@@ -437,9 +436,6 @@ def init( \
     if sinddiststdv == None:
         sinddiststdv = array([0.3])
 
-    if margfact == None:
-        margfact = 1.1
-
     ## Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
@@ -467,6 +463,10 @@ def init( \
             nameback = ['normisot', 'normfdfm']
         if anglassc == None:
             anglassc = deg2rad(0.5)
+        if pixltype == None:
+            pixltype = 'heal'
+        if numbsideheal == None:
+            numbsideheal = 256
 
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
@@ -480,6 +480,10 @@ def init( \
             maxmgang = deg2rad(100. / 3600.)
         if anglassc == None:
             anglassc = deg2rad(0.5 / 3600.)
+        if pixltype == None:
+            pixltype = 'cart'
+        if numbsidecart == None:
+            numbsidecart = 100
     
     ## Chandra
     if exprtype == 'chan':
@@ -515,11 +519,8 @@ def init( \
         if strgfluxunit == None:
             strgfluxunit = r'[mMag]'
 
-    if maxmgangmarg == None:
-        maxmgangmarg = margfact * maxmgang
-        
     if maxmangl == None:
-        maxmangl = 3. * maxmgangmarg
+        maxmangl = 3. * maxmgang * margfact
     
     if minmmeanpnts == None:
         minmmeanpnts = zeros(numbpopl) + 1.
@@ -531,9 +532,9 @@ def init( \
     if maxmfluxdistslop == None:
         maxmfluxdistslop = zeros(numbpopl) + 3.5
     if minmfluxdistbrek == None:
-        minmfluxdistbrek = minmflux
+        minmfluxdistbrek = zeros(numbpopl) + minmflux
     if maxmfluxdistbrek == None:
-        maxmfluxdistbrek = maxmflux
+        maxmfluxdistbrek = zeros(numbpopl) + maxmflux
     if minmfluxdistsloplowr == None:
         minmfluxdistsloplowr = minmfluxdistslop
     if maxmfluxdistsloplowr == None:
@@ -613,10 +614,9 @@ def init( \
     gdat.nameback = nameback
     ### exposure
     gdat.strgexpo = strgexpo
-
+    
     ### plotting strings
     #### flux units
-    gdat.maxmgangmarg = maxmgangmarg
     gdat.maxmangl = maxmangl
     gdat.strgenerunit = strgenerunit
     gdat.strgfluxunit = strgfluxunit
@@ -723,12 +723,12 @@ def init( \
     gdat.stdvspmrsind = stdvspmrsind
     gdat.radispmrlbhl = radispmrlbhl
     
+    ## pixelization type
+    gdat.pixltype = pixltype
+    
     ## mock data setup
     if datatype == 'mock':
         
-        ## pixelization type for mock data
-        gdat.mockpixltype = mockpixltype
-    
         gdat.mocknumbpopl = mocknumbpopl
         
         ### mock PSF model type
@@ -760,8 +760,8 @@ def init( \
         ### flag to position mock point sources at the image center
         gdat.pntscntr = pntscntr
         ### mock image resolution
-        gdat.mocknumbsidecart = mocknumbsidecart
-        gdat.mocknumbsideheal = mocknumbsideheal
+        gdat.numbsidecart = numbsidecart
+        gdat.numbsideheal = numbsideheal
 
     ## proposal frequencies
     gdat.probprop = probprop
@@ -973,6 +973,11 @@ def init( \
     #if not isfinite(levi):
     #    levi = 0.
     levi = retr_levi(listllik)
+
+    print 'hey'
+    print 'listllik'
+    print listllik
+
     gridchan.append(levi)
   
     # relative entropy
@@ -1107,6 +1112,9 @@ def init( \
     if gdat.pixltype == 'cart':
         head['numbsidecart'] = gdat.numbsidecart
     
+    print 'gdat.numbsidecart'
+    print gdat.numbsidecart
+
     ## axes
     head['minmlgal'] = gdat.minmlgal
     head['maxmlgal'] = gdat.maxmlgal
@@ -1123,13 +1131,25 @@ def init( \
     head['psfntype'] = gdat.psfntype
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
-    
+   
+    head['strgenerunit'] = gdat.strgenerunit
+    head['strgfluxunit'] = gdat.strgfluxunit
     head['maxmangl'] = gdat.maxmangl
+    head['anglassc'] = gdat.anglassc
     head['margfact'] = gdat.margfact
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
     
     head['timeatcr'] = timeatcr
+    
+    print 'gdat.anglassc'
+    print gdat.anglassc
+    print 'gdat.strgenerunit'
+    print gdat.strgenerunit
+    print 'gdat.strgfluxunit'
+    print gdat.strgfluxunit
+    print
+
    
     ## proposal scales
     ### parameter updates
@@ -1480,8 +1500,9 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thiscnts = []
     gdatmodi.thissigm = []
     for l in gdat.indxpopl:
+        # temp -- zero exposure pixels will give zero counts
         indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
-        cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+        cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expofull[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         retr_sigm(gdat, sum(cntstemp, 2), gdatmodi.thisbackfwhmcnts)
         gdatmodi.thiscnts.append(cntstemp)
         gdatmodi.thissigm.append(cntstemp)
@@ -1502,7 +1523,8 @@ def plot_samp(gdat, gdatmodi):
     for i in gdat.indxener:
         path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
         tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+                                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
@@ -1515,17 +1537,20 @@ def plot_samp(gdat, gdatmodi):
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
                 tdpy.util.plot_heal(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+                                                                                  minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                  minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
                 tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                              minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-            tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
-                    numbpixl=gdat.numbpixlheal, resi=True, minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, 
+                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
+                        numbpixl=gdat.numbpixlheal, resi=True, minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
     
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
@@ -1545,7 +1570,8 @@ def plot_samp(gdat, gdatmodi):
         if gdat.strgcnfg != 'cnfg_test':
             plot_histspec(gdat, l, gdatmodi=gdatmodi)
             plot_histsind(gdat, l, gdatmodi=gdatmodi)
-            plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
+            if gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]] > 2:
+                plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
             plot_histcnts(gdat, l, gdatmodi=gdatmodi)
             plot_compfrac(gdat, gdatmodi=gdatmodi)
 

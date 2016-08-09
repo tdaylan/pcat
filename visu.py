@@ -34,6 +34,7 @@ def plot_post(pathpcat):
 
     timeatcr = hdun[0].header['timeatcr']
     
+    gdat.anglassc = hdun[0].header['anglassc']
     gdat.maxmgang = hdun[0].header['maxmgang']
     gdat.lgalcntr = hdun[0].header['lgalcntr']
     gdat.bgalcntr = hdun[0].header['bgalcntr']
@@ -55,7 +56,6 @@ def plot_post(pathpcat):
     gdat.exprtype = hdun[0].header['exprtype']
     gdat.pixltype = hdun[0].header['pixltype']
 
-
     gdat.spatdisttype = []
     gdat.fluxdisttype = []
     gdat.sinddisttype = []
@@ -71,6 +71,8 @@ def plot_post(pathpcat):
     else:
         gdat.numbsidecart = hdun[0].header['numbsidecart']
 
+    gdat.strgenerunit = hdun[0].header['strgenerunit']
+    gdat.strgfluxunit = hdun[0].header['strgfluxunit']
     gdat.maxmangl = hdun[0].header['maxmangl']
     gdat.margfact = hdun[0].header['margfact']
     gdat.strgtime = hdun[0].header['strgtime']
@@ -464,9 +466,6 @@ def plot_post(pathpcat):
     print 'Making posterior distribution plots...'
 
     if gdat.pixltype == 'heal':
-        reso = 60. / gdat.numbsideheal
-        numbbinslgcr = int((gdat.maxmlgal - gdat.minmlgal) / reso)
-        numbbinsbgcr = int((gdat.maxmbgal - gdat.minmbgal) / reso)
         pntsprobcart = zeros((numbbinslgcr, numbbinsbgcr, gdat.numbpopl, gdat.numbener, gdat.numbflux))
         for l in gdat.indxpopl:
             for i in gdat.indxener:
@@ -474,11 +473,11 @@ def plot_post(pathpcat):
                     pntsprobcart[:, :, l, i, h] = tdpy.util.retr_cart(pntsprob[l, i, :, h], 
                                                                       indxpixlrofi=gdat.indxpixlrofi, \
                                                                       numbsideinpt=gdat.numbsideheal, \
-                                                                      minmlgal=gdat.minmlgal, \
-                                                                      maxmlgal=gdat.maxmlgal, \
-                                                                      minmbgal=gdat.minmbgal, \
-                                                                      maxmbgal=gdat.maxmbgal, \
-                                                                      reso=reso)
+                                                                      minmlgal=gdat.anglfact*gdat.minmlgal, \
+                                                                      maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                      minmbgal=gdat.anglfact*gdat.minmbgal, \
+                                                                      maxmbgal=gdat.anglfact*gdat.maxmbgal, \
+                                                                     )
     else:
         pntsprobcart = pntsprob.reshape((gdat.numbpopl, gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbflux))
         pntsprobcart = swapaxes(swapaxes(pntsprobcart, 0, 2), 1, 3)
@@ -763,12 +762,12 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         listydat[1, :] = postpntsfluxmean[0, :]
         listyerr[:, 1, :] = tdpy.util.retr_errrvarb(postpntsfluxmean)
         for c in gdat.indxback:
-            listydat[c+2, :] = gdat.postnormback[0, c, :] * gdat.backfluxmean[c]
-            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(gdat.postnormback[:, c, :]) * gdat.backfluxmean[c]
+            listydat[c+2, :] = gdat.postnormback[0, c, :] * gdat.backfluxmean[c, :]
+            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(gdat.postnormback[:, c, :]) * gdat.backfluxmean[c, :]
     else:
-        listydat[1, :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
+        listydat[1, :] = sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
         for c in gdat.indxback:
-            listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c]
+            listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c, :]
    
     xdat = gdat.meanener
     for k in range(gdat.numbback + 2):
@@ -806,14 +805,6 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
 
     labltemp = ['PS']
     labltemp.extend(gdat.lablback)
-    
-    print 'hey'
-    print 'listsize'
-    print listsize
-    print 'listexpl'
-    print listexpl
-    print 'labltemp'
-    print labltemp
 
     axis.pie(listsize, explode=listexpl, labels=labltemp, autopct='%1.1f%%')
     axis.axis('equal')
@@ -1339,7 +1330,7 @@ def plot_psfn(gdat, gdatmodi):
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
             indxsamp = gdat.indxsamppsfipara[i*gdat.numbformpara+m*gdat.numbener*gdat.numbformpara]
-   
+  
             if gdat.psfntype == 'singgaus':
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit
             elif gdat.psfntype == 'singking':
@@ -1372,7 +1363,7 @@ def plot_fwhm(gdat, gdatmodi):
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
     tranfwhm = transpose(gdatmodi.thisfwhm)
-    imag = plt.pcolor(gdat.meanener, gdat.indxevtt, rad2deg(tranfwhm), cmap='BuPu')
+    imag = plt.pcolor(gdat.enerfact * gdat.meanener, gdat.indxevtt, rad2deg(tranfwhm), cmap='BuPu')
     plt.colorbar(imag, ax=axis, fraction=0.05)
     axis.set_xscale('log')
     axis.set_ylabel('PSF Class')
@@ -1381,6 +1372,7 @@ def plot_fwhm(gdat, gdatmodi):
     axis.set_yticklabels(['%d' % m for m in gdat.evttfull[gdat.indxevttincl]])
     axis.set_xticks(gdat.binsener * gdat.enerfact)
     axis.set_xticklabels(['%.2g' % (gdat.binsener[i] * gdat.enerfact) for i in arange(gdat.numbener + 1)])
+    axis.set_xlim([gdat.binsener[0] * gdat.enerfact, gdat.binsener[-1] * gdat.enerfact])
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
@@ -1486,9 +1478,13 @@ def plot_eval(gdat):
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
     axis.set_ylabel('$f$ ' + gdat.strgfluxunit)
+
     limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
+    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0][::-1], gdat.binsanglplot[::-1])
+    
     axis.axhline(limt, color='red', ls=':', label='Flux floor')
-    axis.set_ylim([limt, None])
+    axis.set_xlim([None, maxmangltemp])
+    axis.set_ylim([1e-3 * limt, None])
     axis.legend(handlelength=.5, loc=3)
     
     plt.tight_layout()
@@ -1585,6 +1581,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts', indxpoplplot=indxpoplplot)
+    
     axis, cbar = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
@@ -1708,8 +1705,10 @@ def plot_pntsdiff():
         hist1[k, :] *= 1. / sum(hist1[k, :]) / diffcnts
         
     
-    totlcntscart0 = tdpy.util.retr_cart(totlcntsheal0[0, :], minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-    totlcntscart1 = tdpy.util.retr_cart(totlcntsheal1[0, :], minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
+    totlcntscart0 = tdpy.util.retr_cart(totlcntsheal0[0, :], minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+    totlcntscart1 = tdpy.util.retr_cart(totlcntsheal1[0, :], minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
     
     fig = plt.figure(figsize=(2 * gdat.plotsize, 2 * gdat.plotsize))
     axis = figr.add_subplot(221)

@@ -111,22 +111,22 @@ def cnfg_test():
     indxenerincl = arange(3, 4)
     indxevttincl = arange(3, 4)
     numbener = indxenerincl.size
-    minmflux = 3e-8
-    maxmflux = 1e-7
+    minmflux = 3e-11
+    maxmflux = 3e-7
     mockfluxdistslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=10, \
-         numbswepplot=1, \
+         numbswep=10000, \
+         #numbswepplot=1, \
          numbburn=0, \
-         verbtype=2, \
+         #verbtype=2, \
          randinit=False, \
-         maxmgang=20., \
-         mocknumbpnts=array([1]), \
-         maxmnumbpnts=array([1]), \
+         maxmgang=deg2rad(20), \
+         mocknumbpnts=array([3]), \
+         maxmnumbpnts=array([3]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         #probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \
@@ -138,7 +138,6 @@ def cnfg_test():
          datatype='mock', \
          numbsideheal=256, \
          mockfluxdistslop=mockfluxdistslop, \
-         mocknormback=ones((2, numbener)), \
         )
     
     
