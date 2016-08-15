@@ -116,17 +116,20 @@ def cnfg_test():
     mockfluxdistslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=10000, \
+         numbswep=1000000, \
+         factthin=100, \
          #numbswepplot=1, \
+         #boolpropfluxdist=False, \
+         #bindprio=True, \
          numbburn=0, \
          #verbtype=2, \
          randinit=False, \
          maxmgang=deg2rad(20), \
-         mocknumbpnts=array([3]), \
-         maxmnumbpnts=array([3]), \
+         mocknumbpnts=array([200]), \
+         maxmnumbpnts=array([200]), \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
-         #probprop=array([0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
+         probprop=array([1., 1., 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
          minmflux=minmflux, \
          maxmflux=maxmflux, \
          regitype='ngal', \

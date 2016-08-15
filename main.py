@@ -143,7 +143,22 @@ def work(gdat, indxprocwork):
     
     ## PS and total flux and count maps
     gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
-    
+   
+
+    # temp
+    if False:
+        for i in gdat.indxener:
+            tdpy.util.plot_maps('/Users/tansu/Desktop/test/thispnts.pdf', gdatmodi.thispntsflux[i, :, 0], indxpixlrofi=gdat.indxpixlrofi, \
+                                                                                numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            tdpy.util.plot_maps('/Users/tansu/Desktop/test/thismodl.pdf', gdatmodi.thismodlflux[i, :, 0], indxpixlrofi=gdat.indxpixlrofi, \
+                                                                                numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            
+
+ 
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -453,7 +468,7 @@ def init( \
         if strgenerunit == None:
             strgenerunit = r'GeV'
         if strgfluxunit == None:
-            strgfluxunit = r'[1/cm$^2$/s/GeV]'
+            strgfluxunit = r'1/cm$^2$/s/GeV'
         if evttfull == None:
             evttfull = arange(4)
         binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
@@ -1112,9 +1127,6 @@ def init( \
     if gdat.pixltype == 'cart':
         head['numbsidecart'] = gdat.numbsidecart
     
-    print 'gdat.numbsidecart'
-    print gdat.numbsidecart
-
     ## axes
     head['minmlgal'] = gdat.minmlgal
     head['maxmlgal'] = gdat.maxmlgal
@@ -1142,15 +1154,6 @@ def init( \
     
     head['timeatcr'] = timeatcr
     
-    print 'gdat.anglassc'
-    print gdat.anglassc
-    print 'gdat.strgenerunit'
-    print gdat.strgenerunit
-    print 'gdat.strgfluxunit'
-    print gdat.strgfluxunit
-    print
-
-   
     ## proposal scales
     ### parameter updates
     head['stdvmeanpnts'] = gdat.stdvmeanpnts
@@ -1513,8 +1516,7 @@ def plot_samp(gdat, gdatmodi):
     # plots
     ## PSF radial profile
     # temp
-    if gdat.strgcnfg != 'cnfg_test':
-        plot_psfn(gdat, gdatmodi)
+    plot_psfn(gdat, gdatmodi)
     
     ## PSF FWHM
     plot_fwhm(gdat, gdatmodi)
@@ -1522,7 +1524,7 @@ def plot_samp(gdat, gdatmodi):
     # number of background counts per PSF
     for i in gdat.indxener:
         path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
-        tdpy.util.plot_heal(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+        tdpy.util.plot_maps(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
                                                                                             minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                             minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
 
@@ -1536,19 +1538,19 @@ def plot_samp(gdat, gdatmodi):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_heal(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                tdpy.util.plot_maps(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                                   minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                   minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_heal(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
+                tdpy.util.plot_maps(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, 
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_heal(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
+                tdpy.util.plot_maps(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
                         numbpixl=gdat.numbpixlheal, resi=True, minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
     
@@ -1562,18 +1564,14 @@ def plot_samp(gdat, gdatmodi):
             gdatmodi.indxtruepntsassc.append(indxtruepntsassc)
             gdatmodi.thisspecmtch = copy(spec[:, indxmodl])
             gdatmodi.thisspecmtch[:, indxtruepntsassc.miss] = 0.
-            # temp
-            if gdat.strgcnfg != 'cnfg_test':
-                plot_scatspec(gdat, l, gdatmodi=gdatmodi)
+            plot_scatspec(gdat, l, gdatmodi=gdatmodi)
             
-        # temp
-        if gdat.strgcnfg != 'cnfg_test':
-            plot_histspec(gdat, l, gdatmodi=gdatmodi)
-            plot_histsind(gdat, l, gdatmodi=gdatmodi)
-            if gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]] > 2:
-                plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
-            plot_histcnts(gdat, l, gdatmodi=gdatmodi)
-            plot_compfrac(gdat, gdatmodi=gdatmodi)
+        plot_histspec(gdat, l, gdatmodi=gdatmodi)
+        plot_histsind(gdat, l, gdatmodi=gdatmodi)
+        if gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]] > 2:
+            plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
+        plot_histcnts(gdat, l, gdatmodi=gdatmodi)
+        plot_compfrac(gdat, gdatmodi=gdatmodi)
 
         for i in gdat.indxener:
             
@@ -1726,29 +1724,29 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listchrototl[gdatmodi.cntrswep, 3] = timefinl - timebegn
    
             # temp
-            if gdat.strgcnfg == 'cnfg_test':
+            if False:
                 temp = zeros(gdat.numbpixl)
                 temp[gdat.indxpixlmodi] = 1.
                 path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
+                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
                 temp = zeros(gdat.numbpixl)
                 temp[gdat.indxpixlmodi] = gdatmodi.thispntsflux[gdat.indxcubemodi]
                 path = gdat.pathplot + 'thispntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
+                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
                 temp = zeros(gdat.numbpixl)
                 temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi]
                 path = gdat.pathplot + 'nextpntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
+                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
                 temp = zeros(gdat.numbpixl)
                 temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi] - gdatmodi.thispntsflux[gdat.indxcubemodi]
                 path = gdat.pathplot + 'diffpntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_heal(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
+                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
             # evaluate the acceptance probability

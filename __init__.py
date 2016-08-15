@@ -1,7 +1,7 @@
 # plotting
 import matplotlib as mpl
 mpl.use('Agg')
-mpl.rc('image', interpolation='none', origin='lower')
+mpl.rc('image', interpolation='nearest', origin='lower')
 import matplotlib.pyplot as plt
 
 import seaborn as sns
