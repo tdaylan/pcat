@@ -542,7 +542,7 @@ def retr_lpri(gdat, gdatmodi, init=False):
             thisflux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :]]
             if gdat.bindprio:
         
-                thismeanpnts = gdatmodi.thissampvarb[gdat.indxsampmeanpnts[l]]
+                meanpnts = gdatmodi.thissampvarb[gdat.indxsampmeanpnts[l]]
                 if gdat.fluxdisttype[l] == 'powr':
                     fluxdistslop = gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[l]]
                     fluxhistmodl = meanpnts * pdfn_flux_powr(gdat, gdat.meanflux, fluxdistslop) * gdat.diffflux

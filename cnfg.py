@@ -116,11 +116,11 @@ def cnfg_test():
     mockfluxdistslop = array([1.9])
         
     init(psfntype='doubking', \
-         numbswep=1000000, \
-         factthin=100, \
+         numbswep=5000000, \
+         #factthin=100, \
          #numbswepplot=1, \
          #boolpropfluxdist=False, \
-         #bindprio=True, \
+         bindprio=True, \
          numbburn=0, \
          #verbtype=2, \
          randinit=False, \
