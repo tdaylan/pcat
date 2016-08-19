@@ -23,49 +23,51 @@ def cnfg_ferm_psfn_expr(psfntype):
         )
                 
     
-def cnfg_test_prio():
+def cnfg_test_uppr():
       
-    indxenerincl = arange(3, 4)
-    indxevttincl = arange(3, 4)
-    numbener = indxenerincl.size
-
     init(psfntype='doubking', \
-         verbtype=1, \
-         numbswepplot=100000, \
-         numbswep=1000000, \
-         numbburn=0, \
-         factthin=10000, \
+         numbswep=300, \
+         verbtype=2, \
          randinit=False, \
          boolproppsfn=False, \
-         indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
          regitype='ngal', \
          pathdata=os.environ["PCAT_DATA_PATH"], \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         
-         #fluxdisttype=['powr'], \
-         maxmnumbpnts=array([400]), \
+         maxmnumbpnts=array([100]), \
          maxmgang=20., \
-         minmflux=3e-31, \
-         maxmflux=1e-27, \
-         sinddistmean=array([2.2]), \
-         sinddiststdv=array([0.3]), \
-         
+         minmflux=1e30, \
+         maxmflux=1e34, \
          datatype='mock', \
          numbsideheal=256, \
-         mocknumbpnts=array([200]), \
-         #mockspatdisttype=['unif'], \
-         #mockfluxdisttype=['powr'], \
-         #mocksinddisttype=['gaus'], \
-         #mockspectype=['powr'], \
-         #mockfluxdistbrek=array([1e-29]), \
-         #mockfluxdistsloplowr=array([-1.]), \
-         #mockfluxdistslopuppr=array([2.5]), \
-         mocksinddistmean=array([2.2]), \
-         mocksinddiststdv=array([0.3]), \
+         mocknumbpnts=array([100]), \
+        )
+
+
+def cnfg_test_lowr():
+      
+    init(psfntype='doubking', \
+         numbswep=300, \
+         verbtype=2, \
+         randinit=False, \
+         boolproppsfn=False, \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
+         regitype='ngal', \
+         pathdata=os.environ["PCAT_DATA_PATH"], \
+         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         strgexpr='fermflux_cmp0_ngal.fits', \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         maxmnumbpnts=array([100]), \
+         maxmgang=20., \
+         minmflux=1e-30, \
+         maxmflux=1e-34, \
+         datatype='mock', \
+         numbsideheal=256, \
+         mocknumbpnts=array([100]), \
         )
 
 
