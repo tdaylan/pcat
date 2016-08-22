@@ -277,6 +277,7 @@ def init( \
          numbburn=None, \
          factthin=None, \
          regitype='ngal', \
+         priotype='logt', \
          datatype='inpt', \
          randinit=True, \
          boolproppsfn=True, \
@@ -337,7 +338,7 @@ def init( \
          maxmangleval=None, \
          specfraceval=0.01, \
          anglassc=None, \
-         
+         exprinfo=True, \
          stdvmeanpnts=0.05, \
          stdvfluxdistslop=0.1, \
          stdvpsfipara=0.1, \
@@ -371,7 +372,7 @@ def init( \
          mocknormback=None, \
          mocknumbpnts=None, \
          numbsidecart=None, \
-         numbsideheal=None, \
+         numbsideheal=256, \
          
         ):
     
@@ -384,6 +385,7 @@ def init( \
     ## convenience variables in order to set the defaults
     ### number of backgrounds
     numbback = len(strgback)
+    
     ### number of energy bins
     numbener = indxenerincl.size
     ### number of populations
@@ -480,8 +482,6 @@ def init( \
             anglassc = deg2rad(0.5)
         if pixltype == None:
             pixltype = 'heal'
-        if numbsideheal == None:
-            numbsideheal = 256
 
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
@@ -602,6 +602,9 @@ def init( \
     ## boolean flag to evaluate a binned flux prior 
     gdat.bindprio = bindprio
 
+    ## type of the prior on the submodels
+    gdat.priotype = priotype
+    
     ## data type
     ###- mock - mock data
     ###- inpt - input data
@@ -644,6 +647,9 @@ def init( \
     ### color
     gdat.sinddisttype = sinddisttype
     
+    # number of backgrounds
+    gdat.numbback = numbback
+    
     ## PS spectral model
     gdat.spectype = spectype
     
@@ -671,6 +677,9 @@ def init( \
     gdat.maxmangl = maxmangl
     gdat.maxmangleval = maxmangleval
     
+    ## Boolean flag to allow experimental data to be superimposed on the plots
+    gdat.exprinfo = exprinfo
+
     ## the maximum approximation error tolerated in units of the minimum flux allowed by the model
     gdat.specfraceval = specfraceval
 
@@ -1151,6 +1160,10 @@ def init( \
     head['margfact'] = gdat.margfact
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
+    head['numbback'] = gdat.numbback
+    
+    head['exprinfo'] = gdat.exprinfo
+    head['priotype'] = gdat.priotype
     
     head['timeatcr'] = timeatcr
     
@@ -1488,6 +1501,13 @@ def init( \
     
 def plot_samp(gdat, gdatmodi):
 
+    if gdat.trueinfo:
+        gdat.indxmodlpntsfudi = []
+        for l in gdat.indxpopl:
+            indxmodlpntstemp = where((fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]) < gdat.maxmgangfudi) & \
+                                                                    (fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]) < gdat.maxmgangfudi))[0]
+            gdat.indxmodlpntsfudi.append(indxmodlpntstemp)
+
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     
     # PSF radial profile
@@ -1633,11 +1653,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         print sys.getsizeof(gdatmodi.listchrollik) / 2.**20, 'MB'
         print 
 
-    gdat.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
-    gdat.listlaccfrac = zeros(gdat.numbswep)
-    gdat.listnumbpair = zeros(gdat.numbswep)
-    gdat.listjcbnfact = zeros(gdat.numbswep)
-    gdat.listcombfact = zeros(gdat.numbswep)
+    gdatmodi.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
+    gdatmodi.listlaccfrac = zeros(gdat.numbswep)
+    gdatmodi.listnumbpair = zeros(gdat.numbswep)
+    gdatmodi.listjcbnfact = zeros(gdat.numbswep)
+    gdatmodi.listcombfact = zeros(gdat.numbswep)
 
     gdatmodi.cntrswep = 0
     

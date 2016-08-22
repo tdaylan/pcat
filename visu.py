@@ -55,6 +55,9 @@ def plot_post(pathpcat):
     gdat.psfntype = hdun[0].header['psfntype']
     gdat.exprtype = hdun[0].header['exprtype']
     gdat.pixltype = hdun[0].header['pixltype']
+    
+    gdat.exprinfo = hdun[0].header['exprinfo']
+    gdat.priotype = hdun[0].header['priotype']
 
     gdat.spatdisttype = []
     gdat.fluxdisttype = []
@@ -77,6 +80,7 @@ def plot_post(pathpcat):
     gdat.margfact = hdun[0].header['margfact']
     gdat.strgtime = hdun[0].header['strgtime']
     gdat.strgcnfg = hdun[0].header['strgcnfg']
+    gdat.numbback = hdun[0].header['numbback']
 
     gdat.stdvmeanpnts = hdun[0].header['stdvmeanpnts']
     gdat.stdvfluxdistslop = hdun[0].header['stdvfluxdistslop']
@@ -840,7 +844,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
         axis.hist(gdat.truesind[l], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
-        if gdat.datatype == 'mock':
+        if gdat.datatype == 'mock' and gdat.exprinfo:
             axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
     axis.set_xlabel('$s$')
@@ -890,7 +894,7 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
             sns.kdeplot(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], ax=axis, cmap="Greens")
         else:
             axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], alpha=gdat.mrkralph, color='g', label=gdat.truelabl)
-        if gdat.datatype == 'mock':
+        if gdat.datatype == 'mock' and gdat.exprinfo:
             if strgtype == 'hist':
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsflux, gdat.binssind])[0]
                 #axis.pcolor(gdat.binsflux, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.mrkralph)
@@ -987,7 +991,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         # superimpose the true catalog
         if gdat.trueinfo:
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
-            if gdat.datatype == 'mock':
+            if gdat.datatype == 'mock' and gdat.exprinfo:
                 if gdat.exprtype == 'ferm':
                     axis.hist(gdat.exprspec[0, i, :], gdat.binsspec[i, :], color='red', alpha=gdat.mrkralph, log=True, label='3FGL')
         axis.set_yscale('log')
@@ -1029,11 +1033,10 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axrw = [axrw]
     for i, axis in enumerate(axrw):
 
+        # prepare data to be plotted
         xdat = gdat.truespec[l][0, i, :]
         xerr = tdpy.util.retr_errrvarb(gdat.truespec[l][:, i, :])
         yerr = zeros((2, xdat.size))
- 
-        labl = '$f_{samp}$ [%s]' % gdat.strgfluxunit
         if post:
             yerr[0, :] = postspecmtch[0, i, :]
             ydat = postspecmtch[1, i, :]
@@ -1042,13 +1045,32 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
+        print 'hey'
+        print 'post'
+        print post
+        print 'xdat'
+        print xdat
+        print 'xerr'
+        print xerr
+        print 'ydat'
+        print ydat
+        print 'yerr'
+        print yerr
+        print
+
+        # plot all associations
         indx = where(ydat > 0.)[0]
+        if indx.size > 0:
+            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black', alpha=0.1)
+       
+        # plot associations
+        indx = intersect1d(where(ydat > 0.)[0], gdat.indxtruepntsfudi[l])
         if indx.size > 0:
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
-        # tag multiple associations
+        # plot associations to multiple model point sources
         if not post:
-            indx = gdatmodi.indxtruepntsassc[l].mult
+            indx = intersect1d(gdatmodi.indxtruepntsassc[l].mult, gdat.indxtruepntsfudi[l])
             if len(indx) > 0:
                 axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='red')
     
@@ -1058,11 +1080,6 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axis.plot(gdat.binsspec[i, :], fluxbias[0, :], ls='--', alpha=gdat.mrkralph, color='black')
         axis.plot(gdat.binsspec[i, :], fluxbias[1, :], ls='--', alpha=gdat.mrkralph, color='black')
         
-        # temp
-        #if gdat.indxtruepntstimevari[l].size > 0:
-        #    axis.errorbar(xdat[gdat.indxtruepntstimevari[l]], ydat[gdat.indxtruepntstimevari[l]], ls='', yerr=yerr[:, gdat.indxtruepntstimevari[l]], \
-        #        lw=1, marker='o', markersize=5, color='red')
-   
         if gdat.datatype == 'mock':
             strg = 'true'
         else:
@@ -1070,14 +1087,11 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
                 strg = '3FGL'
         axis.set_xlabel('$f_{%s}$ [%s]' % (strg, gdat.strgfluxunit))
         if i == 0:
-            axis.set_ylabel(labl)
+            axis.set_ylabel('$f_{samp}$ [%s]' % gdat.strgfluxunit)
         axis.set_xscale('log')
         axis.set_yscale('log')
         axis.set_title(gdat.enerstrg[i])
-
-        ylim = [gdat.minmspec[i], gdat.maxmspec[i]]
-        
-        axis.set_ylim(ylim)
+        axis.set_ylim([gdat.minmspec[i], gdat.maxmspec[i]])
         axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
         axis.set_title(gdat.binsenerstrg[i])
 
@@ -1245,7 +1259,9 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
                 temp = sum(pntsprobcart[:, :, l, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
-                imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi)#, norm=mpl.colors.LogNorm(vmin=0.01, vmax=1))
+                print 'temp'
+                print temp
+                imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
                 # superimpose true PS
@@ -1554,7 +1570,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
         for i, axis in enumerate(axrw):
             if gdat.trueinfo:
                 truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
-                if gdat.datatype == 'mock':
+                if gdat.datatype == 'mock' and gdat.exprinfo:
                     if gdat.exprtype == 'ferm':
                         axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
             axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')

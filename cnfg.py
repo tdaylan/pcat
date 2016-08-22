@@ -26,9 +26,11 @@ def cnfg_ferm_psfn_expr(psfntype):
 def cnfg_test_uppr():
       
     init(psfntype='doubking', \
-         numbswep=300, \
-         verbtype=2, \
+         numbswep=100000, \
+         numbswepplot=20000, \
+         verbtype=1, \
          randinit=False, \
+         exprinfo=False, \
          boolproppsfn=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -38,21 +40,21 @@ def cnfg_test_uppr():
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([100]), \
-         maxmgang=20., \
-         minmflux=1e30, \
-         maxmflux=1e34, \
+         maxmgang=deg2rad(20.), \
+         minmflux=1e0, \
+         maxmflux=1e4, \
          datatype='mock', \
-         numbsideheal=256, \
-         mocknumbpnts=array([100]), \
+         mocknumbpnts=array([10]), \
         )
 
 
 def cnfg_test_lowr():
       
     init(psfntype='doubking', \
-         numbswep=300, \
-         verbtype=2, \
+         numbswep=300000, \
+         verbtype=1, \
          randinit=False, \
+         exprinfo=False, \
          boolproppsfn=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -61,12 +63,11 @@ def cnfg_test_lowr():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnumbpnts=array([100]), \
-         maxmgang=20., \
-         minmflux=1e-30, \
-         maxmflux=1e-34, \
+         maxmnumbpnts=array([500]), \
+         maxmgang=deg2rad(20.), \
+         minmflux=1e-24, \
+         maxmflux=1e-20, \
          datatype='mock', \
-         numbsideheal=256, \
          mocknumbpnts=array([100]), \
         )
 
@@ -96,14 +97,13 @@ def cnfg_test_prob():
          
          #fluxdisttype=['powr'], \
          maxmnumbpnts=array([400]), \
-         maxmgang=20., \
+         maxmgang=deg2rad(20.), \
          minmflux=3e-31, \
          maxmflux=1e-27, \
          sinddistmean=array([2.2]), \
          sinddiststdv=array([0.3]), \
          
          datatype='mock', \
-         numbsideheal=256, \
          mocknumbpnts=array([200]), \
         )
 
@@ -126,7 +126,7 @@ def cnfg_test():
          numbburn=0, \
          #verbtype=2, \
          randinit=False, \
-         maxmgang=deg2rad(20), \
+         maxmgang=deg2rad(20.), \
          mocknumbpnts=array([200]), \
          maxmnumbpnts=array([200]), \
          indxenerincl=indxenerincl, \
@@ -141,7 +141,6 @@ def cnfg_test():
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          datatype='mock', \
-         numbsideheal=256, \
          mockfluxdistslop=mockfluxdistslop, \
         )
     
@@ -175,7 +174,6 @@ def cnfg_ferm_post():
          stdvflux=0.05, \
          stdvsind=0.05, \
          datatype='mock', \
-         numbsideheal=256, \
          mockfluxdistslop=array([1.9]), \
          mocknormback=ones((1, numbener)), \
         )
@@ -183,41 +181,29 @@ def cnfg_ferm_post():
 
 def cnfg_test_spmr():
      
-    indxenerincl = arange(1, 4)
-    indxevttincl = arange(2, 4)
-    numbener = indxenerincl.size
-
-    minmflux = 3e-11
-    maxmflux = 1e-7
-    mockfluxdistslop = array([1.9, 1.])
-      
-    init(psfntype='gausking', \
+    init( \
+         pathdata=os.environ["PCAT_DATA_PATH"], \
 		 numbproc=1, \
 		 numbswep=100, \
-         makeplot=True, \
-         randinit=False, \
-         trueinfo=True, \
-         maxmgang=2., \
-         fluxdisttype='powr', \
          verbtype=2, \
-         indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
+         randinit=False, \
+         exprinfo=False, \
+         indxenerincl=arange(1, 4), \
+         indxevttincl=arange(2, 4), \
+         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         regitype='ngal', \
+         probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
+         maxmgang=deg2rad(10.), \
          maxmnumbpnts=array([3]), \
          #maxmnumbpnts=array([1000]), \
-         probprop=array([0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
-         minmflux=minmflux, \
-         maxmflux=maxmflux, \
-         regitype='ngal', \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
+         minmflux=3e-11, \
+         maxmflux=3e-7, \
          datatype='mock', \
-         mockfluxdisttype='powr', \
          mocknumbpnts=array([2]), \
          #mocknumbpnts=array([500]), \
-         numbsideheal=256, \
-         mockfluxdistslop=mockfluxdistslop, \
-         mocknormback=ones((2, numbener)), \
         )
-
+    
 
 def cnfg_test_popl():
      
@@ -233,7 +219,7 @@ def cnfg_test_popl():
          makeplot=True, \
          randinit=False, \
          trueinfo=True, \
-         maxmgang=20., \
+         maxmgang=deg2rad(20.), \
          fluxdisttype='powr', \
          #verbtype=2, \
          indxenerincl=indxenerincl, \
@@ -250,7 +236,6 @@ def cnfg_test_popl():
          datatype='mock', \
          mockfluxdisttype='powr', \
          mocknumbpnts=array([300, 200]), \
-         numbsideheal=256, \
          mockfluxdistslop=mockfluxdistslop, \
          mocknormback=ones((2, numbener)), \
         )

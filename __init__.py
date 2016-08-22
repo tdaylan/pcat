@@ -34,6 +34,9 @@ import pyfits as pf
 import os, time, sys, datetime, warnings, getpass, glob, fnmatch, cPickle, inspect
 import functools
 
+# Symbolic Jacobian calculation
+import sympy
+
 # tdpy
 import tdpy.util
 from tdpy.util import show, summ
