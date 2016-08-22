@@ -1912,7 +1912,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
-        gdat.listauxipara, gdat.listlaccfrac, gdat.listnumbpair, gdat.listjcbnfact, gdat.listcombfact, \
+        gdatmodi.listauxipara, gdatmodi.listlaccfrac, gdatmodi.listnumbpair, gdatmodi.listjcbnfact, gdatmodi.listcombfact, \
         listpntsfluxmean, gdatmodi.listchrollik]
     
     return listchan

@@ -1261,7 +1261,11 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                 temp = sum(pntsprobcart[:, :, l, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
                 print 'temp'
                 print temp
-                imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
+                if where(temp > 0.)[0].size > 0:
+                    imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
+                else:
+                    imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi)
+                    
                 plt.colorbar(imag, fraction=0.05, ax=axis)
 
                 # superimpose true PS
