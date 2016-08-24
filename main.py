@@ -376,12 +376,7 @@ def init( \
          
         ):
     
-    # start the timer
-    timetotlreal = time.time()
-    timetotlproc = time.clock()
-   
     # defaults
-    
     ## convenience variables in order to set the defaults
     ### number of backgrounds
     numbback = len(strgback)
@@ -462,7 +457,7 @@ def init( \
         if mockpsfntype == None:
             mockpsfntype = 'doubking'
         if radispmrlbhl == None:
-            radispmrlbhl = 2.
+            radispmrlbhl = deg2rad(2.)
         if lablback == None:
             lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if nameback == None:
@@ -558,7 +553,7 @@ def init( \
         minmfluxdistslopuppr = minmfluxdistslop
     if maxmfluxdistslopuppr == None:
         maxmfluxdistslopuppr = maxmfluxdistslop
-    
+   
     # initialize the global object 
     gdat = gdatstrt()
    
@@ -810,6 +805,23 @@ def init( \
     # setup the sampler
     setp(gdat) 
 
+    # temp
+    if False:
+        print array(locals().items())
+        temp = array(locals().items())
+        savetxt(gdat.pathdata + '/' + gdat.rtag + '.log', temp)
+
+        thisfile = open(gdat.pathdata + '/' + gdat.rtag + '.log', 'w')
+        for name, valu in locals().items():
+            if name == 'gdat':
+                continue
+            thisfile.write('%s: %.3g \n\n' % (name, valu))
+        thisfile.close() 
+
+    # start the timer
+    timetotlreal = time.time()
+    timetotlproc = time.clock()
+   
     if gdat.verbtype > 1:
         print 'minmflux'
         print gdat.minmflux

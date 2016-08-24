@@ -381,16 +381,6 @@ def plot_post(pathpcat):
     listvarb = [gdat.listlaccfrac, gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
     for k in range(4):
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-   
-        # temp
-        if False:
-            print 'hey'
-            print 'indxsampsplt'
-            print indxsampsplt
-            print 'indxsampmerg'
-            print indxsampmerg
-            print
-
         axis.hist(listvarb[k][indxsampsplt])
         axis.hist(listvarb[k][indxsampmerg])
         axis.set_ylabel('$N_{samp}$')
@@ -1045,18 +1035,19 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
-        print 'hey'
-        print 'post'
-        print post
-        print 'xdat'
-        print xdat
-        print 'xerr'
-        print xerr
-        print 'ydat'
-        print ydat
-        print 'yerr'
-        print yerr
-        print
+        if False:
+            print 'hey'
+            print 'post'
+            print post
+            print 'xdat'
+            print xdat
+            print 'xerr'
+            print xerr
+            print 'ydat'
+            print ydat
+            print 'yerr'
+            print yerr
+            print
 
         # plot all associations
         indx = where(ydat > 0.)[0]
@@ -1259,8 +1250,6 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
                 temp = sum(pntsprobcart[:, :, l, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
-                print 'temp'
-                print temp
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 else:
