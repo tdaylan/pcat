@@ -1551,14 +1551,16 @@ def plot_samp(gdat, gdatmodi):
     plot_psfn(gdat, gdatmodi)
     
     ## PSF FWHM
-    plot_fwhm(gdat, gdatmodi)
+    if False:
+        plot_fwhm(gdat, gdatmodi)
     
     # number of background counts per PSF
-    for i in gdat.indxener:
-        path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
-        tdpy.util.plot_maps(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+    if False:
+        for i in gdat.indxener:
+            path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
+            tdpy.util.plot_maps(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))

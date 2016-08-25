@@ -376,17 +376,21 @@ def plot_post(pathpcat):
     
     indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-            
+    indxsampspmr = union1d((indxsampsplt, indxsampmerg))
+
     listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfact']
     listvarb = [gdat.listlaccfrac, gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
-    for k in range(4):
+    os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
+    for k in range(listname.size):
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        axis.hist(listvarb[k][indxsampsplt])
-        axis.hist(listvarb[k][indxsampmerg])
+        bins = linspace(amin(listvarb[k][indxsampspmr]), amax(listvarb[k][indxsampspmr]), 50)
+        axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
+        axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
         axis.set_ylabel('$N_{samp}$')
         axis.set_xlabel(listname[k])
+        axis.legend()
         plt.tight_layout()
-        figr.savefig(gdat.pathplot + listname[k] + gdat.rtag + '.pdf')
+        figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
         plt.close(figr)
     
     tim1 = time.time()

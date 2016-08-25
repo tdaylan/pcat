@@ -9,7 +9,8 @@ def cnfg_test_psfn():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-         numbswep=100000, \
+         verbtype=2, \
+         numbswep=100, \
          factthin=100, \
          exprinfo=False, \
          regitype='ngal', \
@@ -17,11 +18,12 @@ def cnfg_test_psfn():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
          psfntype='doubking', \
+         maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(10.), \
          minmflux=3e-11, \
          maxmflux=1e-7, \
          datatype='mock', \
-         mocknumbpnts=array([10]), \
+         mocknumbpnts=array([3]), \
         )
                 
     
