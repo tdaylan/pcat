@@ -376,12 +376,12 @@ def plot_post(pathpcat):
     
     indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-    indxsampspmr = union1d((indxsampsplt, indxsampmerg))
+    indxsampspmr = union1d(indxsampsplt, indxsampmerg)
 
     listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfact']
     listvarb = [gdat.listlaccfrac, gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
     os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
-    for k in range(listname.size):
+    for k in range(len(listname)):
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         bins = linspace(amin(listvarb[k][indxsampspmr]), amax(listvarb[k][indxsampspmr]), 50)
         axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')

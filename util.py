@@ -2829,7 +2829,7 @@ def setp(gdat):
             pathplotbase = '/n/pan/www/tansu/imag/pcat/'
         else:
             pathplotbase = gdat.pathdata + '/imag/'
-        gdat.pathplot = pathplotbase + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+        gdat.pathplot = pathplotbase + 'pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         cmnd = 'mkdir -p ' + gdat.pathplot
         os.system(cmnd)
 

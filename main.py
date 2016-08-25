@@ -792,7 +792,7 @@ def init( \
     # check inputs
     
     # date and time
-    gdat.strgtime = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    gdat.strgtime = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     if gdat.verbtype > 0:
         print 'PCAT started at ', gdat.strgtime
         print 'Initializing...'

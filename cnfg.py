@@ -5,7 +5,61 @@ from __init__ import *
 from main import init
 from visu import *
 
-def cnfg_test_psfn():
+def test_info():
+    
+    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11])
+    numbruns = minmflux.size
+    maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
+    numbswep = zeros(numbruns, dtype=int) + 2000000
+    numbburn = numbswep / 2
+    
+    numbiter = minmflux.size
+
+    listlevi = zeros(numbiter)
+    listinfo = zeros(numbiter)
+    
+    strgexpo='fermexpo_cmp0_ngal.fits'
+    strgexpr='fermflux_cmp0_ngal.fits'
+
+    indxenerincl = arange(2, 3)
+    indxevttincl = arange(3, 4)
+    numbener = indxenerincl.size
+
+    # temp
+    if False:
+        for k in range(numbiter):
+            gridchan = pcat.main.init( \
+                                  psfntype='doubking', \
+                                  numbswep=numbswep[k], \
+                                  numbburn=numbburn[k], \
+                                  probprop=array([0.01, 0.01, 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
+                                  randinit=False, \
+                                  makeplot=True, \
+                                  maxmgang=10., \
+                                  maxmnumbpnts=array([maxmnumbpnts[k]]), \
+                                  indxenerincl=indxenerincl, \
+                                  indxevttincl=indxevttincl, \
+                                  minmflux=minmflux[k], \
+                                  maxmflux=1e-7, \
+                                  regitype='ngal', \
+                                  pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
+                                  strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                                  strgexpo=strgexpo, \
+                                  datatype='inpt', \
+                                  strgexpr=strgexpr, \
+                                 )
+        
+        listlevi[k] = gridchan[-2]
+        listinfo[k] = gridchan[-1]
+
+    else:
+        listlevi = array([-39222.9070569, -39226.1778779, -39300.7982166, -39521.8723332])[::-1]
+        listinfo = array([91.0328924911, 98.1275628394, 98.732104824, 88.3453610331])[::-1]
+
+    pcat.visu.plot_minmfluxinfo(minmflux, listinfo, listlevi)
+
+
+def test_psfn():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
@@ -27,11 +81,11 @@ def cnfg_test_psfn():
         )
                 
     
-def cnfg_test_uppr():
+def test_uppr():
       
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-         numbswep=1000000, \
+         numbswep=2000000, \
          verbtype=1, \
          randinit=False, \
          exprinfo=False, \
@@ -51,7 +105,7 @@ def cnfg_test_uppr():
         )
 
 
-def cnfg_test_lowr():
+def test_lowr():
       
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
@@ -76,7 +130,7 @@ def cnfg_test_lowr():
         )
 
 
-def cnfg_ferm_post():
+def test_post():
      
     indxenerincl = arange(1, 3)
     indxevttincl = arange(2, 4)
@@ -109,7 +163,7 @@ def cnfg_ferm_post():
         )
 
 
-def cnfg_test_spmr():
+def test_spmr():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
@@ -134,7 +188,7 @@ def cnfg_test_spmr():
         )
     
 
-def cnfg_test_popl():
+def test_popl():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
