@@ -542,11 +542,9 @@ def retr_lpri(gdat, gdatmodi, init=False):
             thisnumbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]]
             thisflux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :]]
             if gdat.bindprio:
-        
                 meanpnts = gdatmodi.thissampvarb[gdat.indxsampmeanpnts[l]]
                 if gdat.fluxdisttype[l] == 'powr':
-                    fluxdistslop = gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[l]]
-                    fluxhistmodl = meanpnts * pdfn_flux_powr(gdat, gdat.meanflux, fluxdistslop) * gdat.diffflux
+                    fluxhistmodl = meanpnts * pdfn_flux_powr(gdat, gdat.meanflux, gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[l]]) * gdat.diffflux
                 if gdat.fluxdisttype[l] == 'brok':
                     fluxdistbrek = gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[l]]
                     fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[l]]
@@ -1584,6 +1582,7 @@ def retr_prop(gdat, gdatmodi):
             
             listpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.numbpair = len(listpair)
+
         
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
@@ -1823,11 +1822,23 @@ def retr_prop(gdat, gdatmodi):
             thiscombfact = gdatmodi.numbpair / gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]**2
 
         gdatmodi.laccfrac = log(thisjcbnfact * thiscombfact)
+
+        if gdatmodi.numbpair == 0:
+            print 'gdatmodi.numbpair'
+            print gdatmodi.numbpair
+
         gdatmodi.listnumbpair[gdatmodi.cntrswep] = gdatmodi.numbpair
         gdatmodi.listcombfact[gdatmodi.cntrswep] = thiscombfact
         gdatmodi.listauxipara[gdatmodi.cntrswep, :] = gdatmodi.auxipara
         gdatmodi.listjcbnfact[gdatmodi.cntrswep] = thisjcbnfact
         gdatmodi.listlaccfrac[gdatmodi.cntrswep] = gdatmodi.laccfrac
+
+        if thiscombfact == 0. or thisjcbnfact == 0.:
+            print 'thiscombfact'
+            print thiscombfact
+            print 'thisjcbnfact'
+            print thisjcbnfact
+            raise
 
         if gdat.verbtype > 1:
             print 'thisjcbnfact'

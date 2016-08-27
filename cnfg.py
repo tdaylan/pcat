@@ -10,7 +10,7 @@ def test_info():
     minmflux = array([3e-10, 1e-10, 3e-11, 1e-11])
     numbruns = minmflux.size
     maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 2000000
+    numbswep = zeros(numbruns, dtype=int) + 200000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -18,43 +18,30 @@ def test_info():
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
     
-    strgexpo='fermexpo_cmp0_ngal.fits'
-    strgexpr='fermflux_cmp0_ngal.fits'
-
-    indxenerincl = arange(2, 3)
-    indxevttincl = arange(3, 4)
-    numbener = indxenerincl.size
-
-    # temp
-    if False:
-        for k in range(numbiter):
-            gridchan = pcat.main.init( \
-                                  psfntype='doubking', \
-                                  numbswep=numbswep[k], \
-                                  numbburn=numbburn[k], \
-                                  probprop=array([0.01, 0.01, 0., 0., 1., 1., 0, 0, 1., 1., 1., 1.], dtype=float), \
-                                  randinit=False, \
-                                  makeplot=True, \
-                                  maxmgang=10., \
-                                  maxmnumbpnts=array([maxmnumbpnts[k]]), \
-                                  indxenerincl=indxenerincl, \
-                                  indxevttincl=indxevttincl, \
-                                  minmflux=minmflux[k], \
-                                  maxmflux=1e-7, \
-                                  regitype='ngal', \
-                                  pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
-                                  strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                                  strgexpo=strgexpo, \
-                                  datatype='inpt', \
-                                  strgexpr=strgexpr, \
-                                 )
-        
-        listlevi[k] = gridchan[-2]
-        listinfo[k] = gridchan[-1]
-
-    else:
-        listlevi = array([-39222.9070569, -39226.1778779, -39300.7982166, -39521.8723332])[::-1]
-        listinfo = array([91.0328924911, 98.1275628394, 98.732104824, 88.3453610331])[::-1]
+    for k in range(numbiter):
+        gridchan = init( \
+                        psfntype='doubking', \
+                        numbswep=numbswep[k], \
+                        numbburn=numbburn[k], \
+                        probprop=array([0.01, 0.01, 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
+                        exprinfo=False, \
+                        randinit=True, \
+                        indxenerincl=arange(2, 3), \
+                        indxevttincl=arange(3, 4), \
+                        regitype='ngal', \
+                        maxmnumbpnts=array([maxmnumbpnts[k]]), \
+                        maxmgang=deg2rad(10.), \
+                        minmflux=minmflux[k], \
+                        maxmflux=1e-7, \
+                        pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
+                        strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                        strgexpo='fermexpo_cmp0_ngal.fits', \
+                        datatype='inpt', \
+                        strgexpr='fermflux_cmp0_ngal.fits', \
+                       )
+    
+    listlevi[k] = gridchan[-2]
+    listinfo[k] = gridchan[-1]
 
     pcat.visu.plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
@@ -64,8 +51,8 @@ def test_psfn():
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
          verbtype=2, \
-         numbswep=100, \
-         factthin=100, \
+         numbswep=10, \
+         factthin=1, \
          exprinfo=False, \
          regitype='ngal', \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -167,9 +154,7 @@ def test_spmr():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=10000, \
-		 numbswepplot=6000, \
-         verbtype=1, \
+		 numbswep=1000, \
          randinit=False, \
          exprinfo=False, \
          indxenerincl=arange(1, 4), \

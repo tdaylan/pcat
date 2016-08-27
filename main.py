@@ -278,6 +278,7 @@ def init( \
          factthin=None, \
          regitype='ngal', \
          priotype='logt', \
+         priofactdoff=1., \
          datatype='inpt', \
          randinit=True, \
          boolproppsfn=True, \
@@ -486,6 +487,8 @@ def init( \
             lablback = [r'$\mathcal{I}$']
         if nameback == None:
             nameback = ['normisot']
+        if radispmrlbhl == None:
+            radispmrlbhl = deg2rad(2. / 3600.)
         if maxmgang == None:
             maxmgang = deg2rad(100. / 3600.)
         if anglassc == None:
@@ -522,9 +525,7 @@ def init( \
             psfntype = 'doubgaus'
         if mockpsfntype == None:
             mockpsfntype = 'doubgaus'
-        if radispmrlbhl == None:
-            radispmrlbhl = 2. / 3600.
-        if exprtype == 'sdss':
+        if strgfluxunit == None:
             strgfluxunit = '[nMgy]'
         if strgfluxunit == None:
             strgfluxunit = r'[mMag]'

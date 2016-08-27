@@ -373,25 +373,41 @@ def plot_post(pathpcat):
     plt.subplots_adjust(hspace=0)
     figr.savefig(gdat.pathplot + 'propeffipara_' + gdat.rtag + '.pdf')
     plt.close(figr)
-    
+   
+    # plot split and merge diagnostics
     indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
     indxsampspmr = union1d(indxsampsplt, indxsampmerg)
+    if indxsampspmr.size > 0:
+        listlabl = [r'$\log \alpha_c + \log \alpha_j$', '$N_{pair}$', r'$\log \alpha_c$', r'$\log \alpha_j$']
+        listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfct']
+   
+        
+        listvarb = [gdat.listlaccfrac, gdat.listnumbpair, log(gdat.listcombfact), log(gdat.listjcbnfact)]
+        os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
+        for k in range(len(listlabl)):
+            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            indxvarb = where(isfinite(listvarb[k][indxsampspmr]) == True)
+            bins = linspace(amin(listvarb[k][indxsampspmr][indxvarb]), amax(listvarb[k][indxsampspmr][indxvarb]), 40)
+            indxvarb = where(isfinite(listvarb[k][indxsampsplt]) == True)
+            
+            if k == 1:
+                print 'listvarb[k][indxsampsplt][indxvarb]'
+                print listvarb[k][indxsampsplt][indxvarb]
+                print 'listvarb[k][indxsampmerg][indxvarb]'
+                print listvarb[k][indxsampmerg][indxvarb]
+                print
 
-    listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfact']
-    listvarb = [gdat.listlaccfrac, gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
-    os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
-    for k in range(len(listname)):
-        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        bins = linspace(amin(listvarb[k][indxsampspmr]), amax(listvarb[k][indxsampspmr]), 50)
-        axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
-        axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
-        axis.set_ylabel('$N_{samp}$')
-        axis.set_xlabel(listname[k])
-        axis.legend()
-        plt.tight_layout()
-        figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
-        plt.close(figr)
+            axis.hist(listvarb[k][indxsampsplt][indxvarb], bins=bins, label='Split')
+            indxvarb = where(isfinite(listvarb[k][indxsampmerg]) == True)
+            axis.hist(listvarb[k][indxsampmerg][indxvarb], bins=bins, label='Merge')
+            axis.set_ylabel('$N_{samp}$')
+            axis.set_xlabel(listlabl[k])
+            axis.set_yscale('log')
+            axis.legend()
+            plt.tight_layout()
+            figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
+            plt.close(figr)
     
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
