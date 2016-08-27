@@ -10,7 +10,7 @@ def test_info():
     minmflux = array([3e-10, 1e-10, 3e-11, 1e-11])
     numbruns = minmflux.size
     maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 200000
+    numbswep = zeros(numbruns, dtype=int) + 20000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -43,7 +43,7 @@ def test_info():
     listlevi[k] = gridchan[-2]
     listinfo[k] = gridchan[-1]
 
-    pcat.visu.plot_minmfluxinfo(minmflux, listinfo, listlevi)
+    plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
 
 def test_psfn():

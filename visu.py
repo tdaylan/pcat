@@ -1194,6 +1194,13 @@ def plot_psfn_type():
     
 def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     
+    print 'minmfluxarry'
+    print minmfluxarry
+    print 'listinfo'
+    print listinfo
+    print 'listlevi'
+    print listlevi
+
     figr, axis = plt.subplots()
     ax_ = axis.twinx()
     axis.plot(minmfluxarry, listinfo, label='Relative entropy')
@@ -1207,7 +1214,8 @@ def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
     axis.set_xscale('log')
     plt.tight_layout()
-    figr.savefig(os.environ["PCAT_DATA_PATH"] + '/imag/minmfluxinfo.pdf')
+    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/info/'
+    figr.savefig(pathfold + 'minmfluxinfo.pdf')
     plt.close(figr)
     
     

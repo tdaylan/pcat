@@ -972,16 +972,16 @@ def updt_samp(gdat, gdatmodi):
         gdatmodi.thissampvarb[gdat.indxsampfrst+1] = gdatmodi.modibgal[1]
         gdatmodi.thissampvarb[gdat.indxsampfrst+2:gdat.indxsampfrst+2+gdat.numbener] = gdatmodi.modispec[:, 1]
         #### second component
-        gdatmodi.thissampvarb[gdat.indxsampseco] = gdatmodi.modilgal[2]
-        gdatmodi.thissampvarb[gdat.indxsampseco+1] = gdatmodi.modibgal[2]
-        gdatmodi.thissampvarb[gdat.indxsampseco+2:gdat.indxsampseco+2+gdat.numbener] = gdatmodi.modispec[:, 2]
+        gdatmodi.thissampvarb[gdatmodi.indxsampseco] = gdatmodi.modilgal[2]
+        gdatmodi.thissampvarb[gdatmodi.indxsampseco+1] = gdatmodi.modibgal[2]
+        gdatmodi.thissampvarb[gdatmodi.indxsampseco+2:gdatmodi.indxsampseco+2+gdat.numbener] = gdatmodi.modispec[:, 2]
         
     ## merge
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
         ### update the PS index lists
-        gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi].remove(gdat.mergindxseco)
-        gdatmodi.thisindxpntsempt[gdatmodi.indxpoplmodi].append(gdat.mergindxseco)
+        gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi].remove(gdatmodi.mergindxseco)
+        gdatmodi.thisindxpntsempt[gdatmodi.indxpoplmodi].append(gdatmodi.mergindxseco)
 
         ### update the component
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcomplgal]] = gdatmodi.modilgal[2]
@@ -1462,11 +1462,11 @@ def retr_prop(gdat, gdatmodi):
         gdat.indxsampfrst = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdatmodi.indxpoplmodi + \
                                                             gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts] * gdat.numbcomp
         indxfinlfrst = gdat.indxsampfrst + gdat.numbcomp
-        gdat.indxsampseco = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdatmodi.indxpoplmodi + gdatmodi.thisindxpntsempt[gdatmodi.indxpoplmodi][0] * gdat.numbcomp
-        indxfinlseco = gdat.indxsampseco + gdat.numbcomp
+        gdatmodi.indxsampseco = gdat.indxsampcompinit + gdat.maxmnumbcomp * gdatmodi.indxpoplmodi + gdatmodi.thisindxpntsempt[gdatmodi.indxpoplmodi][0] * gdat.numbcomp
+        indxfinlseco = gdatmodi.indxsampseco + gdat.numbcomp
         
         # determine the modified sample vector indices
-        gdatmodi.indxsampmodi = concatenate((arange(gdat.indxsampfrst, indxfinlfrst, dtype=int), arange(gdat.indxsampseco, indxfinlseco, dtype=int)))
+        gdatmodi.indxsampmodi = concatenate((arange(gdat.indxsampfrst, indxfinlfrst, dtype=int), arange(gdatmodi.indxsampseco, indxfinlseco, dtype=int)))
         
         thislgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts]]
         thisbgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts]]
@@ -1478,7 +1478,7 @@ def retr_prop(gdat, gdatmodi):
             print 'spltindxindxpnts: ', gdatmodi.spltindxindxpnts
             print 'indxsampfrst: ', gdat.indxsampfrst
             print 'indxfinlfrst: ', indxfinlfrst
-            print 'indxsampseco: ', gdat.indxsampseco
+            print 'indxsampseco: ', gdatmodi.indxsampseco
             print 'indxfinlseco: ', indxfinlseco
             print 'thislgal: ', gdat.anglfact * thislgal
             print 'thisbgal: ', gdat.anglfact * thisbgal
@@ -1527,8 +1527,9 @@ def retr_prop(gdat, gdatmodi):
             print 'minmflux'
             print gdat.minmflux
 
-        if fabs(gdatmodi.spltlgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltlgalseco) > gdat.maxmgangmarg or fabs(gdatmodi.spltbgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltbgalseco) > gdat.maxmgangmarg or \
-                                    gdatmodi.spltfluxfrst < gdat.minmflux or gdatmodi.spltfluxseco < gdat.minmflux:
+        if fabs(gdatmodi.spltlgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltlgalseco) > gdat.maxmgangmarg or \
+                                            fabs(gdatmodi.spltbgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltbgalseco) > gdat.maxmgangmarg or \
+                                            gdatmodi.spltfluxfrst < gdat.minmflux or gdatmodi.spltfluxseco < gdat.minmflux:
             gdatmodi.boolreje = True
 
         if gdat.verbtype > 1:
@@ -1551,11 +1552,11 @@ def retr_prop(gdat, gdatmodi):
             nextspecfrst = retr_spec(gdat, gdatmodi.spltfluxfrst, gdatmodi.spltsindfrst)
 
             ## second new component
-            gdatmodi.drmcsamp[gdat.indxsampseco+gdat.indxcomplgal, -1] = cdfn_self(gdatmodi.spltlgalseco, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            gdatmodi.drmcsamp[gdat.indxsampseco+gdat.indxcompbgal, -1] = cdfn_self(gdatmodi.spltbgalseco, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-            gdatmodi.drmcsamp[gdat.indxsampseco+gdat.indxcompflux, -1] = cdfn_flux_powr(gdat, gdatmodi.spltfluxseco, \
+            gdatmodi.drmcsamp[gdatmodi.indxsampseco+gdat.indxcomplgal, -1] = cdfn_self(gdatmodi.spltlgalseco, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdatmodi.drmcsamp[gdatmodi.indxsampseco+gdat.indxcompbgal, -1] = cdfn_self(gdatmodi.spltbgalseco, -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
+            gdatmodi.drmcsamp[gdatmodi.indxsampseco+gdat.indxcompflux, -1] = cdfn_flux_powr(gdat, gdatmodi.spltfluxseco, \
                                                                                     gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[gdatmodi.indxpoplmodi]])
-            gdatmodi.drmcsamp[gdat.indxsampseco+gdat.indxcompsind, -1] = cdfn_eerr(gdatmodi.spltsindseco, gdat.sinddistmean[gdatmodi.indxpoplmodi], \
+            gdatmodi.drmcsamp[gdatmodi.indxsampseco+gdat.indxcompsind, -1] = cdfn_eerr(gdatmodi.spltsindseco, gdat.sinddistmean[gdatmodi.indxpoplmodi], \
                                 gdat.sinddiststdv[gdatmodi.indxpoplmodi], gdat.sindcdfnnormminm[gdatmodi.indxpoplmodi], gdat.sindcdfnnormdiff[gdatmodi.indxpoplmodi])
             nextspecseco = retr_spec(gdat, gdatmodi.spltfluxseco, gdatmodi.spltsindseco)
 
@@ -1586,60 +1587,63 @@ def retr_prop(gdat, gdatmodi):
         
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
+        # number of point sources to be modified
         gdat.numbmodipnts = 3
         
+        # proposed number of point sources
         gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] - 1
 
-        # determine the first PS to merge
-        #dir2 = array([gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]]])
-            
-        lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]]
-        bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]]
-        listpair = retr_listpair(gdat, lgal, bgal)
+        # list of point source pairs available for merge proposal
+        listpair = retr_listpair(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
+                                                                                        gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]])
         gdatmodi.numbpair = len(listpair)
         
         if gdat.verbtype > 1:
-            print 'lgal'
-            print gdat.anglfact * lgal
-            print 'bgal'
-            print gdat.anglfact * bgal
             print 'pairlist'
             print listpair
            
+        # check if merge will be proposed
         if gdatmodi.numbpair == 0:
             gdatmodi.boolreje = True
         else:
+
+            # sample a pair
             indxpairtemp = choice(arange(gdatmodi.numbpair))
+
+            # determine PS indices to be merged
             mergindxindxpntsfrst = listpair[indxpairtemp][0]
             mergindxindxpntsseco = listpair[indxpairtemp][1]
   
-        if not gdatmodi.boolreje:
+            ## first PS index to be merged
+            gdatmodi.mergindxfrst = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]
 
-            # fisrt PS index to be merged
-            mergindxfrst = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]
-            mergindxsampinit0 = gdat.indxsampcompinit + mergindxfrst * gdat.numbcomp
+            ## second PS index to be merged
+            gdatmodi.mergindxseco = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsseco]
 
-            # second PS index to be merged
-            gdat.mergindxseco = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsseco]
-            mergindxsampinit1 = gdat.indxsampcompinit + gdat.mergindxseco * gdat.numbcomp
-
-            # determine the modified sample vector indices
-            gdat.indxsampfrst = gdat.indxsampcompinit + gdat.numbcomp * mergindxfrst
+            # determine indices of the modified elements in the sample vector
+            ## first PS
+            gdat.indxsampfrst = gdat.indxsampcompinit + gdat.numbcomp * gdatmodi.mergindxfrst
             indxfinlfrst = gdat.indxsampfrst + gdat.numbcomp
-            gdat.indxsampseco = gdat.indxsampcompinit + gdat.numbcomp * gdat.mergindxseco
-            indxfinlseco = gdat.indxsampseco + gdat.numbcomp
+            
+            ## second PS
+            gdatmodi.indxsampseco = gdat.indxsampcompinit + gdat.numbcomp * gdatmodi.mergindxseco
+            indxfinlseco = gdatmodi.indxsampseco + gdat.numbcomp
 
+            # indices of the sample vector elements to be modified
             gdatmodi.indxsampmodi = arange(gdat.indxsampfrst, indxfinlfrst)
 
             # indices of the PS to be merged
-            mergindxpnts = sort(array([mergindxfrst, gdat.mergindxseco], dtype=int))
+            mergindxpnts = sort(array([gdatmodi.mergindxfrst, gdatmodi.mergindxseco], dtype=int))
 
+            # PS parameters to be merged
+            ## first PS
             gdatmodi.merglgalfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
             gdatmodi.mergbgalfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
             gdatmodi.mergspecfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, mergindxindxpntsfrst]]
             gdatmodi.mergsindfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
             gdatmodi.mergfluxfrst = gdatmodi.mergspecfrst[gdat.indxenerfluxdist[0]]
 
+            ## second PS
             gdatmodi.merglgalseco = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][mergindxindxpntsseco]]
             gdatmodi.mergbgalseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][mergindxindxpntsseco]]
             gdatmodi.mergspecseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, mergindxindxpntsseco]]
@@ -1672,30 +1676,30 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.drmcsamp[gdat.indxsampfrst+2, -1] = cdfn_flux_powr(gdat, gdatmodi.mergfluxpare, gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[gdatmodi.indxpoplmodi]])
             gdatmodi.drmcsamp[gdat.indxsampfrst+3, -1] = gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[gdatmodi.indxpoplmodi][mergindxindxpntsfrst], -2]
 
-            gdat.numbmodipnts = 3
-            ## first component to be merged
+            # PSs to be added to the PS flux map
+            ## first PS
             gdatmodi.modilgal[0] = gdatmodi.merglgalfrst
             gdatmodi.modibgal[0] = gdatmodi.mergbgalfrst
             gdatmodi.modispec[:, 0] = -gdatmodi.mergspecfrst.flatten()
 
-            ## first component to be merged
+            ## second PS
             gdatmodi.modilgal[1] = gdatmodi.merglgalseco
             gdatmodi.modibgal[1] = gdatmodi.mergbgalseco
             gdatmodi.modispec[:, 1] = -gdatmodi.mergspecseco.flatten()
 
-            ## component to be added
+            ## parent PS
             gdatmodi.modilgal[2] = gdatmodi.merglgalpare
             gdatmodi.modibgal[2] = gdatmodi.mergbgalpare
             gdatmodi.modispec[:, 2] = gdatmodi.mergspecpare.flatten()
 
             if gdat.verbtype > 1:
-                print 'mergindxfrst: ', mergindxfrst
+                print 'mergindxfrst: ', gdatmodi.mergindxfrst
                 print 'mergindxindxpntsfrst: ', mergindxindxpntsfrst
-                print 'mergindxseco: ', gdat.mergindxseco
+                print 'mergindxseco: ', gdatmodi.mergindxseco
                 print 'mergindxindxpntsseco: ', mergindxindxpntsseco
                 print 'indxsampfrst: ', gdat.indxsampfrst
                 print 'indxfinlfrst: ', indxfinlfrst
-                print 'indxsampseco: ', gdat.indxsampseco
+                print 'indxsampseco: ', gdatmodi.indxsampseco
                 print 'indxfinlseco: ', indxfinlseco
                 print 'merglgalfrst: ', gdat.anglfact * gdatmodi.merglgalfrst
                 print 'mergbgalfrst: ', gdat.anglfact * gdatmodi.mergbgalfrst
