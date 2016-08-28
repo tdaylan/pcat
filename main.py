@@ -939,12 +939,12 @@ def init( \
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbener))
     listindxpntsfull = []
     listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int) - 1
-    gdat.listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr))
-    gdat.listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
-    gdat.listnumbpair = empty((gdat.numbswep, gdat.numbproc))
-    gdat.listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
-    gdat.listcombfact = empty((gdat.numbswep, gdat.numbproc))
-
+    listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr))
+    listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
+    listnumbpair = empty((gdat.numbswep, gdat.numbproc))
+    listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
+    listcombfact = empty((gdat.numbswep, gdat.numbproc))
+    listboolreje = empty((gdat.numbswep, gdat.numbproc))
     for k in gdat.indxproc:
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
@@ -958,25 +958,26 @@ def init( \
         listmodlcnts[:, k, :] = listchan[7]    
         listindxpntsfull.append(listchan[8])
         listindxparamodi[:, k] = listchan[9]
-        gdat.listauxipara[:, k, :] = listchan[10]
-        gdat.listlaccfrac[:, k] = listchan[11]
-        gdat.listnumbpair[:, k] = listchan[12]
-        gdat.listjcbnfact[:, k] = listchan[13]
-        gdat.listcombfact[:, k] = listchan[14]
+        listauxipara[:, k, :] = listchan[10]
+        listlaccfrac[:, k] = listchan[11]
+        listnumbpair[:, k] = listchan[12]
+        listjcbnfact[:, k] = listchan[13]
+        listcombfact[:, k] = listchan[14]
         listpntsfluxmean[:, k, :] = listchan[15]
         listchrollik[:, k, :] = listchan[16]
+        listboolreje[:, k] = listchan[17]
 
     listindxprop = listindxprop.flatten()
-    gdat.listauxipara = gdat.listauxipara.reshape((gdat.numbsweptotl, gdat.numbcompcolr))
-    gdat.listlaccfrac = gdat.listlaccfrac.reshape(gdat.numbsweptotl)
-    gdat.listnumbpair = gdat.listnumbpair.reshape(gdat.numbsweptotl)
-    gdat.listjcbnfact = gdat.listjcbnfact.reshape(gdat.numbsweptotl)
-    gdat.listcombfact = gdat.listcombfact.reshape(gdat.numbsweptotl)
-    
     listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
-    listchrollik = listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
     listaccp = listaccp.flatten()
     listindxparamodi = listindxparamodi.flatten()
+    listauxipara = listauxipara.reshape((gdat.numbsweptotl, gdat.numbcompcolr))
+    listlaccfrac = listlaccfrac.reshape(gdat.numbsweptotl)
+    listnumbpair = listnumbpair.reshape(gdat.numbsweptotl)
+    listjcbnfact = listjcbnfact.reshape(gdat.numbsweptotl)
+    listcombfact = listcombfact.reshape(gdat.numbsweptotl)
+    listchrollik = listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
+    listboolreje = listboolreje.reshape(gdat.numbsweptotl)
     
     gdat.rtag = retr_rtag(gdat, None)
 
@@ -1347,20 +1348,23 @@ def init( \
     listhdun[-1].header['EXTNAME'] = 'indxparamodi'
     
     ## split and merge diagnostics
-    listhdun.append(pf.ImageHDU(gdat.listauxipara))
+    listhdun.append(pf.ImageHDU(listauxipara))
     listhdun[-1].header['EXTNAME'] = 'auxipara'
    
-    listhdun.append(pf.ImageHDU(gdat.listlaccfrac))
+    listhdun.append(pf.ImageHDU(listlaccfrac))
     listhdun[-1].header['EXTNAME'] = 'laccfrac'
     
-    listhdun.append(pf.ImageHDU(gdat.listnumbpair))
+    listhdun.append(pf.ImageHDU(listnumbpair))
     listhdun[-1].header['EXTNAME'] = 'numbpair'
     
-    listhdun.append(pf.ImageHDU(gdat.listjcbnfact))
+    listhdun.append(pf.ImageHDU(listjcbnfact))
     listhdun[-1].header['EXTNAME'] = 'jcbnfact'
     
-    listhdun.append(pf.ImageHDU(gdat.listcombfact))
+    listhdun.append(pf.ImageHDU(listcombfact))
     listhdun[-1].header['EXTNAME'] = 'combfact'
+    
+    listhdun.append(pf.ImageHDU(listboolreje))
+    listhdun[-1].header['EXTNAME'] = 'boolreje'
     
     # priors
     ## prior limits
@@ -1655,7 +1659,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
-   
+    listboolreje = []
     if gdat.verbtype > 1:
         'Variables owned by processes'
         print 'listsamp'
@@ -1832,7 +1836,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print indxsampbadd
             print 'drmcsamp'
             print gdatmodi.drmcsamp[indxsampbadd, :]
-            return
+            raise
             
         for l in gdat.indxpopl:
             indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] < gdat.minmflux)[0]
@@ -1842,7 +1846,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print indxtemp
                 print 'flux'
                 print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                print 
+                raise 
             indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] > gdat.maxmflux)[0]
             if indxtemp.size > 0:
                 print 'Spectrum of some PS went above the prior range!'          
@@ -1850,7 +1854,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print indxtemp
                 print 'flux'
                 print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                print 
+                raise 
 
         # save the sample
         if boolsave[gdatmodi.cntrswep]:
@@ -1861,7 +1865,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
             listllik[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thisllik)
             listlpri[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
-            
             lprinorm = 0.
             for l in gdat.indxpopl:
                 # temp
@@ -1894,6 +1897,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
                 listtranmatr.append(tranmatr)
 
+        # save other variables
+        listboolreje[gdatmodi.cntrswep] = gdatmodi.boolreje
+        
         # save the execution time for the sweep
         if not thismakefram:
             timefinl = time.time()
@@ -1928,7 +1934,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         gdatmodi.listauxipara, gdatmodi.listlaccfrac, gdatmodi.listnumbpair, gdatmodi.listjcbnfact, gdatmodi.listcombfact, \
-        listpntsfluxmean, gdatmodi.listchrollik]
+        listpntsfluxmean, gdatmodi.listchrollik, listboolreje]
     
     return listchan
 

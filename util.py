@@ -1583,7 +1583,9 @@ def retr_prop(gdat, gdatmodi):
             
             listpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.numbpair = len(listpair)
-
+            if gdatmodi.numbpair == 0:
+                print 'hey'
+                raise
         
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
@@ -1665,6 +1667,8 @@ def retr_prop(gdat, gdatmodi):
             
             # merged PS
             gdatmodi.mergfluxpare = gdatmodi.mergfluxfrst + gdatmodi.mergfluxseco
+            if gdatmodi.mergfluxpare > gdat.maxmflux:
+                gdatmodi.boolreje = True
             gdatmodi.merglgalpare = gdatmodi.merglgalfrst + (1. - auxifrac) * (gdatmodi.merglgalseco - gdatmodi.merglgalfrst)
             gdatmodi.mergbgalpare = gdatmodi.mergbgalfrst + (1. - auxifrac) * (gdatmodi.mergbgalseco - gdatmodi.mergbgalfrst)
             gdatmodi.mergsindpare = gdatmodi.mergsindfrst

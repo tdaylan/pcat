@@ -195,6 +195,7 @@ def plot_post(pathpcat):
     gdat.listnumbpair = hdun['numbpair'].data
     gdat.listjcbnfact = hdun['jcbnfact'].data
     gdat.listcombfact = hdun['combfact'].data
+    gdat.listboolreje = hdun['boolreje'].data
     gdat.listpntsfluxmean = hdun['listpntsfluxmean'].data
 
     # posterior distributions
@@ -375,27 +376,37 @@ def plot_post(pathpcat):
     plt.close(figr)
    
     # plot split and merge diagnostics
-    indxsampsplt = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-    indxsampmerg = where(gdat.listindxprop == gdat.indxpropmerg)[0]
+    indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
+    indxsampsplt = where((gdat.listindxprop == gdat.indxpropsplt) & (gdat.listboolreje == False))[0]
+    indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
+    indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
     indxsampspmr = union1d(indxsampsplt, indxsampmerg)
+    indxsampreje = where(gdat.listboolreje == False)
     if indxsampspmr.size > 0:
-        listlabl = [r'$\log \alpha_c + \log \alpha_j$', '$N_{pair}$', r'$\log \alpha_c$', r'$\log \alpha_j$']
-        listname = ['laccfrac', 'numbpair', 'combfact', 'jcbnfct']
-   
-        
-        listvarb = [gdat.listlaccfrac, gdat.listnumbpair, log(gdat.listcombfact), log(gdat.listjcbnfact)]
+
+        ## create plot subfolder
         os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
+
+        ## labels and names
+        listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', r'$\log \alpha_c + \log \alpha_j$', '$N_{pair}$', r'$\log \alpha_c$', r'$\log \alpha_j$']
+        listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'laccfrac', 'numbpair', 'combfact', 'jcbnfct']
+        
+        ## variables
+        listvarb = [gdat.auxipara[:, 0], gdat.auxipara[:, 1], gdat.auxipara[:, 2], gdat.auxipara[:, 3], \
+                                                    gdat.listlaccfrac, gdat.listnumbpair, log(gdat.listcombfact), log(gdat.listjcbnfact)]
+        
         for k in range(len(listlabl)):
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            indxvarb = where(isfinite(listvarb[k][indxsampspmr]) == True)
-            bins = linspace(amin(listvarb[k][indxsampspmr][indxvarb]), amax(listvarb[k][indxsampspmr][indxvarb]), 40)
-            indxvarb = where(isfinite(listvarb[k][indxsampsplt]) == True)
+            #indxvarb = where(isfinite(listvarb[k][indxsampspmr]) == True)
+            #bins = linspace(amin(listvarb[k][indxsampspmr][indxvarb]), amax(listvarb[k][indxsampspmr][indxvarb]), 40)
+            bins = linspace(amin(listvarb[k][indxsampspmrtotl]), amax(listvarb[k][indxsampspmrtotl]), 40)
+            #indxvarb = where(isfinite(listvarb[k][indxsampsplt]) == True)
             
             if k == 1:
-                print 'listvarb[k][indxsampsplt][indxvarb]'
-                print listvarb[k][indxsampsplt][indxvarb]
-                print 'listvarb[k][indxsampmerg][indxvarb]'
-                print listvarb[k][indxsampmerg][indxvarb]
+                #print 'listvarb[k][indxsampsplt][indxvarb]'
+                #print listvarb[k][indxsampsplt][indxvarb]
+                #print 'listvarb[k][indxsampmerg][indxvarb]'
+                #print listvarb[k][indxsampmerg][indxvarb]
                 print
 
             axis.hist(listvarb[k][indxsampsplt][indxvarb], bins=bins, label='Split')
@@ -1215,6 +1226,7 @@ def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     axis.set_xscale('log')
     plt.tight_layout()
     pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/info/'
+    os.system('mkdir -p ' + pathfold)
     figr.savefig(pathfold + 'minmfluxinfo.pdf')
     plt.close(figr)
     
