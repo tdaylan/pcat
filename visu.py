@@ -380,9 +380,9 @@ def plot_post(pathpcat):
     indxsampsplt = where((gdat.listindxprop == gdat.indxpropsplt) & (gdat.listboolreje == False))[0]
     indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
     indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
-    indxsampspmr = union1d(indxsampsplt, indxsampmerg)
+    indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
     indxsampreje = where(gdat.listboolreje == False)
-    if indxsampspmr.size > 0:
+    if indxsampspmrtotl.size > 0:
 
         ## create plot subfolder
         os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
@@ -392,7 +392,7 @@ def plot_post(pathpcat):
         listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'laccfrac', 'numbpair', 'combfact', 'jcbnfct']
         
         ## variables
-        listvarb = [gdat.auxipara[:, 0], gdat.auxipara[:, 1], gdat.auxipara[:, 2], gdat.auxipara[:, 3], \
+        listvarb = [gdat.listauxipara[:, 0], gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], \
                                                     gdat.listlaccfrac, gdat.listnumbpair, log(gdat.listcombfact), log(gdat.listjcbnfact)]
         
         for k in range(len(listlabl)):
@@ -401,6 +401,7 @@ def plot_post(pathpcat):
             #bins = linspace(amin(listvarb[k][indxsampspmr][indxvarb]), amax(listvarb[k][indxsampspmr][indxvarb]), 40)
             bins = linspace(amin(listvarb[k][indxsampspmrtotl]), amax(listvarb[k][indxsampspmrtotl]), 40)
             #indxvarb = where(isfinite(listvarb[k][indxsampsplt]) == True)
+            #indxvarb = where(isfinite(listvarb[k][indxsampmerg]) == True)
             
             if k == 1:
                 #print 'listvarb[k][indxsampsplt][indxvarb]'
@@ -409,9 +410,21 @@ def plot_post(pathpcat):
                 #print listvarb[k][indxsampmerg][indxvarb]
                 print
 
-            axis.hist(listvarb[k][indxsampsplt][indxvarb], bins=bins, label='Split')
-            indxvarb = where(isfinite(listvarb[k][indxsampmerg]) == True)
-            axis.hist(listvarb[k][indxsampmerg][indxvarb], bins=bins, label='Merge')
+            if k >= 4:
+                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
+                print 'listvarb[k][indxsampsplt]'
+                print listvarb[k][indxsampsplt]
+            else:
+                axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split')
+                print 'listvarb[k][indxsampsplttotl]'
+                print listvarb[k][indxsampsplttotl]
+
+            axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
+            print 'listvarb[k][indxsampmerg]'
+            print listvarb[k][indxsampmerg]
+
+            #axis.hist(listvarb[k][indxsampsplt][indxvarb], bins=bins, label='Split')
+            #axis.hist(listvarb[k][indxsampmerg][indxvarb], bins=bins, label='Merge')
             axis.set_ylabel('$N_{samp}$')
             axis.set_xlabel(listlabl[k])
             axis.set_yscale('log')

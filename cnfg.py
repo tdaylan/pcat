@@ -40,8 +40,8 @@ def test_info():
                         strgexpr='fermflux_cmp0_ngal.fits', \
                        )
     
-    listlevi[k] = gridchan[-2]
-    listinfo[k] = gridchan[-1]
+        listlevi[k] = gridchan[-2]
+        listinfo[k] = gridchan[-1]
 
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
@@ -163,8 +163,9 @@ def test_spmr():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          regitype='ngal', \
          probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
-         maxmgang=deg2rad(10.), \
+         psfntype='doubking', \
          maxmnumbpnts=array([300]), \
+         maxmgang=deg2rad(10.), \
          minmflux=3e-15, \
          maxmflux=3e-12, \
          datatype='mock', \

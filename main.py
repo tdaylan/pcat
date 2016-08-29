@@ -919,8 +919,8 @@ def init( \
         pool.join()
 
     for k in gdat.indxproc:
-        timereal[k] = gridchan[k][17]
-        timeproc[k] = gridchan[k][18]
+        timereal[k] = gridchan[k][18]
+        timeproc[k] = gridchan[k][19]
 
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
@@ -1659,7 +1659,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
-    listboolreje = []
+    listboolreje = empty(gdat.numbswep, dtype=bool)
     if gdat.verbtype > 1:
         'Variables owned by processes'
         print 'listsamp'
