@@ -397,37 +397,25 @@ def plot_post(pathpcat):
         
         for k in range(len(listlabl)):
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            #indxvarb = where(isfinite(listvarb[k][indxsampspmr]) == True)
-            #bins = linspace(amin(listvarb[k][indxsampspmr][indxvarb]), amax(listvarb[k][indxsampspmr][indxvarb]), 40)
-            bins = linspace(amin(listvarb[k][indxsampspmrtotl]), amax(listvarb[k][indxsampspmrtotl]), 40)
-            #indxvarb = where(isfinite(listvarb[k][indxsampsplt]) == True)
-            #indxvarb = where(isfinite(listvarb[k][indxsampmerg]) == True)
-            
-            if k == 1:
-                #print 'listvarb[k][indxsampsplt][indxvarb]'
-                #print listvarb[k][indxsampsplt][indxvarb]
-                #print 'listvarb[k][indxsampmerg][indxvarb]'
-                #print listvarb[k][indxsampmerg][indxvarb]
-                print
+            minm = amin(listvarb[k][indxsampspmrtotl])
+            maxm = amax(listvarb[k][indxsampspmrtotl])
+            if k == 4 or k == 6 or k == 7:
+                axis.set_yscale('log')
+                minm = amin(listvarb[k][indxsampspmrtotl][where(listvarb[k][indxsampspmrtotl] > 0.)])
+            bins = linspace(minm, maxm, 40)
+            print 'k'
+            print k
+            print 'bins'
+            print bins
+            print
 
             if k >= 4:
                 axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
-                print 'listvarb[k][indxsampsplt]'
-                print listvarb[k][indxsampsplt]
             else:
                 axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split')
-                print 'listvarb[k][indxsampsplttotl]'
-                print listvarb[k][indxsampsplttotl]
-
             axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
-            print 'listvarb[k][indxsampmerg]'
-            print listvarb[k][indxsampmerg]
-
-            #axis.hist(listvarb[k][indxsampsplt][indxvarb], bins=bins, label='Split')
-            #axis.hist(listvarb[k][indxsampmerg][indxvarb], bins=bins, label='Merge')
             axis.set_ylabel('$N_{samp}$')
             axis.set_xlabel(listlabl[k])
-            axis.set_yscale('log')
             axis.legend()
             plt.tight_layout()
             figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
