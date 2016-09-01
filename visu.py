@@ -393,7 +393,7 @@ def plot_post(pathpcat):
         
         ## variables
         listvarb = [gdat.listauxipara[:, 0], gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], \
-                                                    gdat.listlaccfrac, gdat.listnumbpair, log(gdat.listcombfact), log(gdat.listjcbnfact)]
+                                                    exp(gdat.listlaccfrac), gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
         
         for k in range(len(listlabl)):
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -408,11 +408,16 @@ def plot_post(pathpcat):
             print 'bins'
             print bins
             print
-
             if k >= 4:
+                print 'listvarb[k][indxsampsplt]'
+                print listvarb[k][indxsampsplt]
                 axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
             else:
+                print listvarb[k][indxsampsplttotl]
+                print 'listvarb[k][indxsampsplttotl]'
                 axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split')
+            print 'listvarb[k][indxsampmerg]'
+            print listvarb[k][indxsampmerg]
             axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
             axis.set_ylabel('$N_{samp}$')
             axis.set_xlabel(listlabl[k])
