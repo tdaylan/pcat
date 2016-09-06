@@ -88,7 +88,7 @@ def plot_post(pathpcat):
     gdat.stdvback = hdun[0].header['stdvback']
     gdat.stdvlbhl = hdun[0].header['stdvlbhl']
     gdat.stdvflux = hdun[0].header['stdvflux']
-    gdat.radispmrlbhl = hdun[0].header['radispmrlbhl']
+    gdat.radispmr = hdun[0].header['radispmrlbhl']
     gdat.fracrand = hdun[0].header['fracrand']
     
     gdat.specfraceval = hdun[0].header['specfraceval']
@@ -191,12 +191,14 @@ def plot_post(pathpcat):
     gdat.listaccp = hdun['accp'].data
     gdat.listindxparamodi = hdun['indxparamodi'].data
     gdat.listauxipara = hdun['auxipara'].data
-    gdat.listlaccfrac = hdun['laccfrac'].data
+    gdat.listlaccfact = hdun['laccfact'].data
     gdat.listnumbpair = hdun['numbpair'].data
     gdat.listjcbnfact = hdun['jcbnfact'].data
     gdat.listcombfact = hdun['combfact'].data
     gdat.listboolreje = hdun['boolreje'].data
     gdat.listpntsfluxmean = hdun['listpntsfluxmean'].data
+    gdat.listdeltllik = hdun['listdeltllik'].data
+    gdat.listdeltlpri = hdun['listdeltlpri'].data
 
     # posterior distributions
     gdat.listnumbpnts = hdun['numbpnts'].data
@@ -325,6 +327,7 @@ def plot_post(pathpcat):
 
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
+    print
 
     print 'Calculating proposal and acceptance rates...'
     tim0 = time.time()
@@ -380,6 +383,7 @@ def plot_post(pathpcat):
     indxsampsplt = where((gdat.listindxprop == gdat.indxpropsplt) & (gdat.listboolreje == False))[0]
     indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
     indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
+    indxsampspmr = union1d(indxsampsplt, indxsampmerg)
     indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
     indxsampreje = where(gdat.listboolreje == False)
     if indxsampspmrtotl.size > 0:
@@ -388,37 +392,45 @@ def plot_post(pathpcat):
         os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
 
         ## labels and names
-        listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', r'$\log \alpha_c + \log \alpha_j$', '$N_{pair}$', r'$\log \alpha_c$', r'$\log \alpha_j$']
-        listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'laccfrac', 'numbpair', 'combfact', 'jcbnfct']
+        listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
+                                        r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
+        listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
         
         ## variables
-        listvarb = [gdat.listauxipara[:, 0], gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], \
-                                                    exp(gdat.listlaccfrac), gdat.listnumbpair, gdat.listcombfact, gdat.listjcbnfact]
-        
+        listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
+                       exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
+       
         for k in range(len(listlabl)):
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            minm = amin(listvarb[k][indxsampspmrtotl])
             maxm = amax(listvarb[k][indxsampspmrtotl])
-            if k == 4 or k == 6 or k == 7:
-                axis.set_yscale('log')
-                minm = amin(listvarb[k][indxsampspmrtotl][where(listvarb[k][indxsampspmrtotl] > 0.)])
-            bins = linspace(minm, maxm, 40)
+            
+            if k <= 4:
+                indxsampspmrtemp = indxsampspmrtotl
+                indxsampsplttemp = indxsampsplttotl
+            else:
+                indxsampspmrtemp = indxsampspmr
+                indxsampsplttemp = indxsampsplt
+            
+            if k >= 5:
+                axis.set_xscale('log')
+                minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
+                bins = logspace(log10(minm), log10(maxm), 40)
+            else:
+                minm = amin(listvarb[k][indxsampspmrtemp])
+                bins = linspace(minm, maxm, 40)
+           
             print 'k'
             print k
-            print 'bins'
-            print bins
-            print
-            if k >= 4:
-                print 'listvarb[k][indxsampsplt]'
-                print listvarb[k][indxsampsplt]
-                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split')
-            else:
-                print listvarb[k][indxsampsplttotl]
-                print 'listvarb[k][indxsampsplttotl]'
-                axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split')
-            print 'listvarb[k][indxsampmerg]'
-            print listvarb[k][indxsampmerg]
-            axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge')
+            print 'listname[k]'
+            print listname[k]
+            print 'listvarb[k][indxsampsplttemp]'
+            print listvarb[k][indxsampsplttemp]
+            print amin(listvarb[k][indxsampsplttemp])
+            print amax(listvarb[k][indxsampsplttemp])
+            print 
+
+            axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
+            axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
             axis.set_ylabel('$N_{samp}$')
             axis.set_xlabel(listlabl[k])
             axis.legend()
@@ -428,16 +440,18 @@ def plot_post(pathpcat):
     
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
+    print
+
     print 'Calculating proposal execution times...'
     tim0 = time.time()
 
-    try:
-        plot_chro(gdat)
-    except:
-        print 'Time performance plots crashed'
+    # temp
+    plot_chro(gdat)
 
     tim1 = time.time()
     print 'Done in %.3g seconds.' % (tim1 - tim0)
+    print
+
     print 'Making the grid posterior plot...'
     tim0 = time.time()
    
@@ -1072,20 +1086,6 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
-        if False:
-            print 'hey'
-            print 'post'
-            print post
-            print 'xdat'
-            print xdat
-            print 'xerr'
-            print xerr
-            print 'ydat'
-            print ydat
-            print 'yerr'
-            print yerr
-            print
-
         # plot all associations
         indx = where(ydat > 0.)[0]
         if indx.size > 0:
@@ -1103,7 +1103,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
                 axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='red')
     
         # superimpose the bias line
-        fluxbias = retr_fluxbias(gdat, gdat.binsspec, i)
+        fluxbias = retr_fluxbias(gdat, gdat.binsspec[i, :], i)
         axis.plot(gdat.binsspec[i, :], gdat.binsspec[i, :], ls='--', alpha=gdat.mrkralph, color='black')
         axis.plot(gdat.binsspec[i, :], fluxbias[0, :], ls='--', alpha=gdat.mrkralph, color='black')
         axis.plot(gdat.binsspec[i, :], fluxbias[1, :], ls='--', alpha=gdat.mrkralph, color='black')
@@ -1209,6 +1209,42 @@ def plot_psfn_type():
     axis.set_ylim([1e-3, None])
     plt.show()
     
+
+def plot_numbpntsmodi(numbpntsmodi, timeatcr, timereal, timeproc):
+    
+    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/numbpntsmodi/'
+    os.system('mkdir -p ' + pathfold)
+    
+    tick = linspace(1, amax(numbpntsmodi), min(10, amax(numbpntsmodi))).astype(int)
+    
+    figr, axis = plt.subplots()
+    axis.plot(numbpntsmodi, timeatcr)
+    axis.set_ylabel(r'$t$ [$\tau_{MCMC}$]')
+    axis.set_xlabel(r'$\Delta N_{PS}$')
+    axis.set_xticks(tick)
+    plt.tight_layout()
+    figr.savefig(pathfold + 'timeatcr.pdf')
+    plt.close(figr)
+    
+    figr, axis = plt.subplots()
+    axis.plot(numbpntsmodi, timereal)
+    axis.set_ylabel(r'$t$ [s]')
+    axis.set_xlabel(r'$\Delta N_{PS}$')
+    axis.set_xticks(tick)
+    plt.tight_layout()
+    figr.savefig(pathfold + 'timereal.pdf')
+    plt.close(figr)
+    
+    figr, axis = plt.subplots()
+    axis.plot(numbpntsmodi, timeproc)
+    axis.set_ylabel(r'$t$ [s$_{CPU}$]')
+    axis.set_xlabel(r'$\Delta N_{PS}$')
+    axis.set_xticks(tick)
+    plt.tight_layout()
+    figr.savefig(pathfold + 'timeproc.pdf')
+    plt.close(figr)
+    
+    
 def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     
     print 'minmfluxarry'
@@ -1219,15 +1255,15 @@ def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     print listlevi
 
     figr, axis = plt.subplots()
-    ax_ = axis.twinx()
+    axistwin = axis.twinx()
     axis.plot(minmfluxarry, listinfo, label='Relative entropy')
     axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
     
-    ax_.plot(minmfluxarry, listlevi, label='Log-evidence', color='g')
-    ax_.legend(bbox_to_anchor=[0.8, 1.08])
+    axistwin.plot(minmfluxarry, listlevi, label='Log-evidence', color='g')
+    axistwin.legend(bbox_to_anchor=[0.8, 1.08])
 
     axis.set_ylabel('$D_{KL}$ [nats]')
-    ax_.set_ylabel(r'$\log P(D)$ [nats]')
+    axistwin.set_ylabel(r'$\log P(D)$ [nats]')
     axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
     axis.set_xscale('log')
     plt.tight_layout()
@@ -1665,14 +1701,16 @@ def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
 
-    # temp
-    #satulowr = -1.
-    #satuuppr = 1.
-    satulowr = None
-    satuuppr = None
+    minm = amin(gdatmodi.thiserrrpnts)
+    maxm = amax(gdatmodi.thiserrrpnts)
+    satu = max(fabs(minm), fabs(maxm))
+    #satulowr = -satu
+    #satuuppr = satu
+    minmcbar = -satu
+    maxmcbar = satu
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'errrpnts')
-    axis, cbar = retr_imag(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, satulowr=satulowr, satuuppr=satuuppr, cmap='RdBu', mean=True, logt=True)
+    axis, cbar = retr_imag(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, minmcbar=minmcbar, maxmcbar=maxmcbar, cmap='RdBu', mean=True)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)

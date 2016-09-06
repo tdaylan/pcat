@@ -19,29 +19,29 @@ def test_info():
     listinfo = zeros(numbiter)
     
     for k in range(numbiter):
-        gridchan = init( \
-                        psfntype='doubking', \
-                        numbswep=numbswep[k], \
-                        numbburn=numbburn[k], \
-                        probprop=array([0.01, 0.01, 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
-                        exprinfo=False, \
-                        randinit=True, \
-                        indxenerincl=arange(2, 3), \
-                        indxevttincl=arange(3, 4), \
-                        regitype='ngal', \
-                        maxmnumbpnts=array([maxmnumbpnts[k]]), \
-                        maxmgang=deg2rad(10.), \
-                        minmflux=minmflux[k], \
-                        maxmflux=1e-7, \
-                        pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
-                        strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                        strgexpo='fermexpo_cmp0_ngal.fits', \
-                        datatype='inpt', \
-                        strgexpr='fermflux_cmp0_ngal.fits', \
-                       )
+        gridchan, dictpcat = init( \
+                                  psfntype='doubking', \
+                                  numbswep=numbswep[k], \
+                                  numbburn=numbburn[k], \
+                                  probprop=array([0.01, 0.01, 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
+                                  exprinfo=False, \
+                                  randinit=True, \
+                                  indxenerincl=arange(2, 3), \
+                                  indxevttincl=arange(3, 4), \
+                                  regitype='ngal', \
+                                  maxmnumbpnts=array([maxmnumbpnts[k]]), \
+                                  maxmgang=deg2rad(10.), \
+                                  minmflux=minmflux[k], \
+                                  maxmflux=1e-7, \
+                                  pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
+                                  strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  datatype='inpt', \
+                                  strgexpr='fermflux_cmp0_ngal.fits', \
+                                 )
     
-        listlevi[k] = gridchan[-2]
-        listinfo[k] = gridchan[-1]
+        listlevi[k] = dictpcat['levi']
+        listinfo[k] = dictpcat['info']
 
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
@@ -150,27 +150,68 @@ def test_post():
         )
 
 
+def test_numbpntsmodi():
+    
+    numbiter = 5
+    timeatcr = empty(numbiter)
+    timereal = empty(numbiter)
+    timeproc = empty(numbiter)
+    numbpntsmodi = arange(numbiter)
+    for k in range(numbpntsmodi.size):
+        gridchan, dictpcat = init( \
+                                  pathdata=os.environ["PCAT_DATA_PATH"], \
+	                              numbswep=1000, \
+                                  numbburn=0, \
+                                  factthin=1, \
+                                  makeplot=False, \
+	                              numbswepplot=1000, \
+                                  verbtype=1, \
+                                  numbpntsmodi=numbpntsmodi[k], \
+                                  randinit=False, \
+                                  exprinfo=False, \
+                                  indxenerincl=arange(1, 3), \
+                                  indxevttincl=arange(3, 4), \
+                                  strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  regitype='ngal', \
+                                  psfntype='doubking', \
+                                  maxmnumbpnts=array([200]), \
+                                  maxmgang=deg2rad(10.), \
+                                  minmflux=3e-11, \
+                                  maxmflux=3e-7, \
+                                  datatype='mock', \
+                                  mocknumbpnts=array([100]), \
+                                 )
+        timeatcr[k] = dictpcat['timeatcr']
+        timereal[k] = dictpcat['timerealtotl']
+        timeproc[k] = dictpcat['timeproctotl']
+
+    plot_numbpntsmodi(numbpntsmodi, timeatcr, timereal, timeproc)
+        
+
 def test_spmr():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=1000, \
+		 numbswep=10, \
+		 numbswepplot=1000, \
+         verbtype=2, \
          randinit=False, \
          exprinfo=False, \
-         indxenerincl=arange(1, 4), \
+         indxenerincl=arange(2, 3), \
          indxevttincl=arange(2, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          regitype='ngal', \
          probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
          psfntype='doubking', \
-         maxmnumbpnts=array([300]), \
+         maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(10.), \
          minmflux=3e-15, \
          maxmflux=3e-12, \
          datatype='mock', \
-         mocknumbpnts=array([100]), \
-         mockfluxdistslop=array([0.]), \
+         mocknumbpnts=array([2]), \
+         mockfluxdistslop=array([-1.]), \
         )
     
 

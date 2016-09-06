@@ -138,6 +138,11 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l], \
                                                                                                         gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
 
+    if gdat.verbtype > 1:
+        print 'drmcsamp'
+        for k in gdat.indxpara:
+            print gdatmodi.drmcsamp[k, :]
+    
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
     
@@ -244,11 +249,6 @@ def work(gdat, indxprocwork):
             print gdatmodi.thisindxsampcomp[l]
 
     if gdat.verbtype > 1:
-        print 'drmcsamp'
-        for k in gdat.indxpara:
-            print gdatmodi.drmcsamp[k, :]
-        print 'thispsfipara'
-        print gdatmodi.thissampvarb[gdat.indxsamppsfipara]
         print 'thissampvarb'
         for k in gdat.indxpara:
             print gdatmodi.thissampvarb[k]
@@ -281,8 +281,10 @@ def init( \
          priofactdoff=1., \
          datatype='inpt', \
          randinit=True, \
+         regulevi=False, \
          boolproppsfn=True, \
          boolpropfluxdist=True, \
+         numbpntsmodi=1, \
          indxevttincl=arange(2, 4), \
          indxenerincl=arange(5), \
          strgexpr=None, \
@@ -293,7 +295,7 @@ def init( \
          bindprio=False, \
          probprop=None, \
          pathdata='.', \
-    
+   
          strgfluxunit=None, \
          strgenerunit=None, \
     
@@ -628,6 +630,12 @@ def init( \
     gdat.nameback = nameback
     ### exposure
     gdat.strgexpo = strgexpo
+   
+    # Boolean flag to regularize the harmonic mean estimator for Bayesian evidence
+    gdat.regulevi = regulevi
+
+    # number of PS to modify per proposal
+    gdat.numbpntsmodi = numbpntsmodi
     
     ### plotting strings
     #### flux units
@@ -741,7 +749,7 @@ def init( \
     
     ### radius of the circle in which splits and merges are proposed
     gdat.stdvspmrsind = stdvspmrsind
-    gdat.radispmrlbhl = radispmrlbhl
+    gdat.radispmr = radispmrlbhl
     
     ## pixelization type
     gdat.pixltype = pixltype
@@ -791,6 +799,12 @@ def init( \
     
     # temp
     # check inputs
+    if numbburn != None:
+        if numbburn > numbswep:
+            raise Exception('Bad number of burn-in sweeps.')
+        if factthin != None:
+            if factthin > numbswep - numbburn:
+                raise Exception('Bad thinning factor.')
     
     # date and time
     gdat.strgtime = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -820,8 +834,8 @@ def init( \
         thisfile.close() 
 
     # start the timer
-    timetotlreal = time.time()
-    timetotlproc = time.clock()
+    timerealtotl = time.time()
+    timeproctotl = time.clock()
    
     if gdat.verbtype > 1:
         print 'minmflux'
@@ -832,7 +846,23 @@ def init( \
         print gdat.minmcnts
         print 'maxmcnts'
         print gdat.maxmcnts
-        print 'probprop: '
+        print 'minmfluxdistslop'
+        print gdat.minmfluxdistslop
+        print 'maxmfluxdistslop'
+        print gdat.maxmfluxdistslop
+        print 'minmfluxdistbrek'
+        print gdat.minmfluxdistbrek
+        print 'maxmfluxdistbrek'
+        print gdat.maxmfluxdistbrek
+        print 'minmfluxdistsloplowr'
+        print gdat.minmfluxdistsloplowr
+        print 'maxmfluxdistsloplowr'
+        print gdat.maxmfluxdistsloplowr
+        print 'minmfluxdistslopuppr'
+        print gdat.minmfluxdistslopuppr
+        print 'maxmfluxdistslopuppr'
+        print gdat.maxmfluxdistslopuppr
+        print 'probprop'
         print vstack((arange(gdat.numbprop), gdat.strgprop, gdat.probprop)).T
         print 'indxsampnumbpnts: ', gdat.indxsampnumbpnts
         print 'indxsampmeanpnts: ', gdat.indxsampmeanpnts
@@ -845,7 +875,7 @@ def init( \
         print gdat.indxsampnormback
         print 'indxsampcompinit: ', gdat.indxsampcompinit
         print 'maxmangleval'
-        print gdat.maxmangleval
+        print gdat.anglfact * gdat.maxmangleval, ' ', gdat.strganglunit
         print
         if gdat.trueinfo:
             print 'Truth information'
@@ -879,9 +909,10 @@ def init( \
     # make initial plots
     if gdat.makeplot:
         #plot_3fgl_thrs(gdat)
-        #plot_datacntshist()
+        plot_datacntshist(gdat)
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
+        # temp
         #plot_intr()
         #plot_king(gdat)
         #plot_look(gdat)
@@ -918,13 +949,12 @@ def init( \
         pool.close()
         pool.join()
 
-    for k in gdat.indxproc:
-        timereal[k] = gridchan[k][18]
-        timeproc[k] = gridchan[k][19]
-
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
         tim0 = time.time()
+
+    # output dictionary
+    dictpcat = dict()
 
     # parse the sample bundle
     listsamp = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpara))
@@ -940,11 +970,13 @@ def init( \
     listindxpntsfull = []
     listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int) - 1
     listauxipara = empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr))
-    listlaccfrac = empty((gdat.numbswep, gdat.numbproc))
+    listlaccfact = empty((gdat.numbswep, gdat.numbproc))
     listnumbpair = empty((gdat.numbswep, gdat.numbproc))
     listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
     listcombfact = empty((gdat.numbswep, gdat.numbproc))
     listboolreje = empty((gdat.numbswep, gdat.numbproc))
+    listdeltllik = empty((gdat.numbswep, gdat.numbproc))
+    listdeltlpri = empty((gdat.numbswep, gdat.numbproc))
     for k in gdat.indxproc:
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
@@ -959,20 +991,24 @@ def init( \
         listindxpntsfull.append(listchan[8])
         listindxparamodi[:, k] = listchan[9]
         listauxipara[:, k, :] = listchan[10]
-        listlaccfrac[:, k] = listchan[11]
+        listlaccfact[:, k] = listchan[11]
         listnumbpair[:, k] = listchan[12]
         listjcbnfact[:, k] = listchan[13]
         listcombfact[:, k] = listchan[14]
         listpntsfluxmean[:, k, :] = listchan[15]
         listchrollik[:, k, :] = listchan[16]
         listboolreje[:, k] = listchan[17]
+        listdeltllik[:, k] = listchan[18]
+        listdeltlpri[:, k] = listchan[19]
+        timereal[k] = gridchan[k][20]
+        timeproc[k] = gridchan[k][21]
 
     listindxprop = listindxprop.flatten()
     listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
     listaccp = listaccp.flatten()
     listindxparamodi = listindxparamodi.flatten()
     listauxipara = listauxipara.reshape((gdat.numbsweptotl, gdat.numbcompcolr))
-    listlaccfrac = listlaccfrac.reshape(gdat.numbsweptotl)
+    listlaccfact = listlaccfact.reshape(gdat.numbsweptotl)
     listnumbpair = listnumbpair.reshape(gdat.numbsweptotl)
     listjcbnfact = listjcbnfact.reshape(gdat.numbsweptotl)
     listcombfact = listcombfact.reshape(gdat.numbsweptotl)
@@ -990,37 +1026,27 @@ def init( \
         tim0 = time.time()
     
     listsamp = listsamp.reshape(gdat.numbsamptotl, -1)
-    
-    ## get an ellipse 
-    gdat.elpscntr = percentile(listsamp, 50., axis=0)
-    def retr_elpsfrac(elpsaxis):
-        distnorm = sum(((listsamp - gdat.elpscntr[None, :]) / elpsaxis[None, :])**2, axis=1)
-        indxsampregu = where(distnorm < 1.)[0]
-        thissampfrac = indxsampregu.size / gdat.numbsamp
-        vari = (thissampfrac / 0.05 - 1.)**2
-        return vari
-    thissamp = rand(gdat.numbpara) * 1e-6
-    stdvpara = ones(gdat.numbpara) * 1e-6
-    limtpara = zeros((2, gdat.numbpara))
-    limtpara[1, :] = 1.
-    elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdat.verbtype, optiprop=True)
-    lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
-    
-    # temp
-    #levi = lnorregu - log(mean(1. / exp(listllik[indxsampregu] - minmlistllik))) + minmlistllik
-    #if not isfinite(levi):
-    #    levi = 0.
-    levi = retr_levi(listllik)
+    if gdat.regulevi:
+        # regularize the harmonic mean estimator
+        ## get an ellipse around the median posterior 
+        gdat.elpscntr = percentile(listsamp, 50., axis=0)
+        thissamp = rand(gdat.numbpara) * 1e-6
+        stdvpara = ones(gdat.numbpara) * 1e-6
+        limtpara = zeros((2, gdat.numbpara))
+        limtpara[1, :] = 1.
+        ## find the samples that lie inside the ellipse
+        elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdat.verbtype, optiprop=True)
+        lnorregu = -0.5 * gdat.numbpara * log(pi) + sp.special.gammaln(0.5 * gdat.numbpara + 1.) - sum(elpsaxis)
+        indxsampregu = 0
+        listlliktemp = listllik[indxsampregu]
+    else:
+        listlliktemp = listllik
+    levi = retr_levi(listlliktemp)
+    dictpcat['levi'] = levi
 
-    print 'hey'
-    print 'listllik'
-    print listllik
-
-    gridchan.append(levi)
-  
     # relative entropy
     info = retr_info(listllik, levi)
-    gridchan.append(info)
+    dictpcat['info'] = info
 
     # collect posterior samples from the processes
     ## PSF parameters
@@ -1118,6 +1144,9 @@ def init( \
         tim0 = time.time()
    
     atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
+    if timeatcr == 0.:
+        print 'Autocorrelation time estimation failed.'
+    dictpcat['timeatcr'] = timeatcr
 
     if gdat.verbtype > 0:
         tim1 = time.time()
@@ -1193,7 +1222,7 @@ def init( \
     ### relative size of the tail of the Gaussian proposals
     head['fracrand'] = gdat.fracrand
     ### split and merge
-    head['radispmrlbhl'] = gdat.radispmrlbhl
+    head['radispmrlbhl'] = gdat.radispmr
     head['stdvspmrsind'] = gdat.stdvspmrsind
 
     ## approximation error in units of the minimum flux
@@ -1339,6 +1368,14 @@ def init( \
     listhdun.append(pf.ImageHDU(listchrollik))
     listhdun[-1].header['EXTNAME'] = 'listchrollik'
     
+    ## delta log likelihood
+    listhdun.append(pf.ImageHDU(listdeltllik))
+    listhdun[-1].header['EXTNAME'] = 'listdeltllik'
+    
+    ## delta log prior
+    listhdun.append(pf.ImageHDU(listdeltlpri))
+    listhdun[-1].header['EXTNAME'] = 'listdeltlpri'
+    
     ## acceptance
     listhdun.append(pf.ImageHDU(listaccp))
     listhdun[-1].header['EXTNAME'] = 'accp'
@@ -1351,8 +1388,8 @@ def init( \
     listhdun.append(pf.ImageHDU(listauxipara))
     listhdun[-1].header['EXTNAME'] = 'auxipara'
    
-    listhdun.append(pf.ImageHDU(listlaccfrac))
-    listhdun[-1].header['EXTNAME'] = 'laccfrac'
+    listhdun.append(pf.ImageHDU(listlaccfact))
+    listhdun[-1].header['EXTNAME'] = 'laccfact'
     
     listhdun.append(pf.ImageHDU(listnumbpair))
     listhdun[-1].header['EXTNAME'] = 'numbpair'
@@ -1502,18 +1539,24 @@ def init( \
     if gdat.makeplot:
         plot_post(pathpcat)
 
-    timetotlreal = time.time() - timetotlreal
-    timetotlproc = time.clock() - timetotlproc
+    timerealtotl = time.time() - timerealtotl
+    timeproctotl = time.clock() - timeproctotl
     
+    dictpcat['timereal'] = timereal
+    dictpcat['timeproc'] = timeproc
+    
+    dictpcat['timerealtotl'] = timerealtotl
+    dictpcat['timeproctotl'] = timeproctotl
+
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, timereal[k], timeproc[k])
-        print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timetotlreal, sum(timeproc))
+        print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timerealtotl, sum(timeproc))
         print 'The ensemble of catalogs is at ' + pathpcat
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         
-    return gridchan
+    return gridchan, dictpcat
     
     
 def plot_samp(gdat, gdatmodi):
@@ -1570,7 +1613,7 @@ def plot_samp(gdat, gdatmodi):
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-    gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
+    gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
 
     # temp
     if False:
@@ -1631,10 +1674,10 @@ def plot_samp(gdat, gdatmodi):
     #if gdat.numbener == 3:
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
-    if amax(abs(gdatmodi.thiserrrpnts)) > 0.1 and False:
-        print 'Approximation error went above the limit!'
+    if amax(fabs(gdatmodi.thiserrrpnts)) > 0.1 and False:
+        raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
     
-    
+
 def rjmc(gdat, gdatmodi, indxprocwork):
 
     # sweeps to be saved
@@ -1660,8 +1703,10 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
     listboolreje = empty(gdat.numbswep, dtype=bool)
+    listdeltllik = zeros(gdat.numbswep)
+    listdeltlpri = zeros(gdat.numbswep)
     if gdat.verbtype > 1:
-        'Variables owned by processes'
+        print 'Variables owned by processes'
         print 'listsamp'
         print sys.getsizeof(listsamp) / 2.**20, 'MB'
         print 'listsampvarb'
@@ -1672,11 +1717,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         print sys.getsizeof(gdatmodi.listchrollik) / 2.**20, 'MB'
         print 
 
-    gdatmodi.listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
-    gdatmodi.listlaccfrac = zeros(gdat.numbswep)
-    gdatmodi.listnumbpair = zeros(gdat.numbswep)
-    gdatmodi.listjcbnfact = zeros(gdat.numbswep)
-    gdatmodi.listcombfact = zeros(gdat.numbswep)
+    listauxipara = zeros((gdat.numbswep, gdat.numbcompcolr))
+    listlaccfact = zeros(gdat.numbswep)
+    listnumbpair = zeros(gdat.numbswep)
+    listjcbnfact = zeros(gdat.numbswep)
+    listcombfact = zeros(gdat.numbswep)
 
     gdatmodi.cntrswep = 0
     
@@ -1789,18 +1834,25 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                                                                                   minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
             
             # evaluate the acceptance probability
-            accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfrac)
+            # temp
+            try:
+                accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfact)
+            except:
+                print 'accpprob'
+                print accpprob
 
             if gdat.verbtype > 1:
                 print 'deltlpri'
                 print gdatmodi.deltlpri
                 print 'deltllik'
                 print gdatmodi.deltllik
-                print 'laccfrac'
-                print gdatmodi.laccfrac
+                print 'laccfact'
+                print gdatmodi.laccfact
                 print
         else:
             accpprob = 0.
+            gdatmodi.deltllik = 0.
+            gdatmodi.deltlpri = 0.
     
         # accept the sample
         if accpprob >= rand():
@@ -1827,7 +1879,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         # sanity checks
         indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
         if indxsampbadd.size > 0:
-            print 'Unit sample vector went outside [0,1]!'
             print 'cntrswep'
             print gdatmodi.cntrswep
             print 'thisindxprop'
@@ -1836,25 +1887,23 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print indxsampbadd
             print 'drmcsamp'
             print gdatmodi.drmcsamp[indxsampbadd, :]
-            raise
+            raise Exception('Unit sample vector went outside [0,1].')
             
         for l in gdat.indxpopl:
             indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] < gdat.minmflux)[0]
             if indxtemp.size > 0:
-                print 'Spectrum of some PS went below the prior range!'
                 print 'indxtemp'
                 print indxtemp
                 print 'flux'
                 print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                raise 
+                raise Exception('Spectrum of a PS went below the prior range.') 
             indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] > gdat.maxmflux)[0]
             if indxtemp.size > 0:
-                print 'Spectrum of some PS went above the prior range!'          
                 print 'indxtemp'
                 print indxtemp
                 print 'flux'
                 print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                raise 
+                raise Exception('Spectrum of a PS went above the prior range.') 
 
         # save the sample
         if boolsave[gdatmodi.cntrswep]:
@@ -1899,6 +1948,16 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
         # save other variables
         listboolreje[gdatmodi.cntrswep] = gdatmodi.boolreje
+        if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
+            listdeltllik[gdatmodi.cntrswep] = gdatmodi.deltllik
+            listdeltlpri[gdatmodi.cntrswep] = gdatmodi.deltlpri
+        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg:
+            listnumbpair[gdatmodi.cntrswep] = gdatmodi.numbpair
+            listcombfact[gdatmodi.cntrswep] = gdatmodi.combfact
+            listauxipara[gdatmodi.cntrswep, :] = gdatmodi.auxipara
+            listjcbnfact[gdatmodi.cntrswep] = gdatmodi.jcbnfact
+            listlaccfact[gdatmodi.cntrswep] = gdatmodi.laccfact
+
         
         # save the execution time for the sweep
         if not thismakefram:
@@ -1933,8 +1992,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
-        gdatmodi.listauxipara, gdatmodi.listlaccfrac, gdatmodi.listnumbpair, gdatmodi.listjcbnfact, gdatmodi.listcombfact, \
-        listpntsfluxmean, gdatmodi.listchrollik, listboolreje]
+        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, listdeltllik]
     
     return listchan
 
