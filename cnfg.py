@@ -92,6 +92,34 @@ def test_uppr():
         )
 
 
+def test_prio():
+     
+    priofactdoff = array([0., 1., 10., 1000.])
+    for k in range(priofactdoff.size):
+        init( \
+             pathdata=os.environ["PCAT_DATA_PATH"], \
+             numbswep=500000, \
+             verbtype=1, \
+             randinit=False, \
+             exprinfo=False, \
+             boolproppsfn=False, \
+             indxenerincl=arange(1, 4), \
+             indxevttincl=arange(3, 4), \
+             priofactdoff=priofactdoff[k], \
+             regitype='ngal', \
+             strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+             strgexpr='fermflux_cmp0_ngal.fits', \
+             strgexpo='fermexpo_cmp0_ngal.fits', \
+             psfntype='doubking', \
+             maxmnumbpnts=array([600]), \
+             maxmgang=deg2rad(10.), \
+             minmflux=1e-11, \
+             maxmflux=1e-7, \
+             datatype='mock', \
+             mocknumbpnts=array([100]), \
+            )
+    
+
 def test_lowr():
       
     init( \

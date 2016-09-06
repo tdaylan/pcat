@@ -58,6 +58,7 @@ def plot_post(pathpcat):
     
     gdat.exprinfo = hdun[0].header['exprinfo']
     gdat.priotype = hdun[0].header['priotype']
+    gdat.priofactdoff = hdun[0].header['priofactdoff']
 
     gdat.spatdisttype = []
     gdat.fluxdisttype = []

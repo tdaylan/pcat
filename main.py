@@ -602,6 +602,9 @@ def init( \
 
     ## type of the prior on the submodels
     gdat.priotype = priotype
+         
+    ## prefactor of the number of degrees of freedom in the prior
+    gdat.priofactdoff = priofactdoff
     
     ## data type
     ###- mock - mock data
@@ -1207,6 +1210,7 @@ def init( \
     
     head['exprinfo'] = gdat.exprinfo
     head['priotype'] = gdat.priotype
+    head['priofactdoff'] = gdat.priofactdoff
     
     head['timeatcr'] = timeatcr
     
