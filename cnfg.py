@@ -94,11 +94,12 @@ def test_uppr():
 
 def test_prio():
      
-    priofactdoff = array([0., 1., 10., 100000.])
+    priofactdoff = array([0., 1., 2., 10.])
     for k in range(priofactdoff.size):
         init( \
              pathdata=os.environ["PCAT_DATA_PATH"], \
-             numbswep=300000, \
+             numbswep=500000, \
+             numbburn=0, \
              verbtype=1, \
              randinit=False, \
              #exprinfo=False, \
@@ -117,7 +118,7 @@ def test_prio():
              minmflux=3e-11, \
              maxmflux=1e-7, \
              datatype='mock', \
-             mocknumbpnts=array([400]), \
+             mocknumbpnts=array([300]), \
             )
     
 
