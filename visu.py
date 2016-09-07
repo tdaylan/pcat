@@ -281,6 +281,11 @@ def plot_post(pathpcat):
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'gmrbheal_%d%d.pdf' % (i, m)
                 maps = zeros(gdat.numbpixl)
+                
+                print 'hey'
+                print 'gmrbstat'
+                print gmrbstat.shape
+
                 indxtemp = where((i == gmrbstat[0, :]) & (m == gmrbstat[2, :]))[0]
                 indxpixltemp = gmrbstat[1, indxtemp]
                 maps[indxpixltemp] = gmrbstat[3, indxtemp]
@@ -1096,7 +1101,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         if indx.size > 0:
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black', alpha=0.1)
        
-        # plot associations
+        # plot associations inside the comparison area
         indx = intersect1d(where(ydat > 0.)[0], gdat.indxtruepntscomp[l])
         if indx.size > 0:
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
