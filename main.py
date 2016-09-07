@@ -336,7 +336,8 @@ def init( \
          exprtype='ferm', \
          lgalcntr=0., \
          bgalcntr=0., \
-         margfact=1.1, \
+         margfactmodl=1.1, \
+         margfactcomp=0.9, \
          maxmangl=None, \
          maxmangleval=None, \
          specfraceval=0.01, \
@@ -533,7 +534,7 @@ def init( \
             strgfluxunit = r'[mMag]'
 
     if maxmangl == None:
-        maxmangl = 3. * maxmgang * margfact
+        maxmangl = 3. * maxmgang * margfactmodl
     
     if minmmeanpnts == None:
         minmmeanpnts = zeros(numbpopl) + 1.
@@ -731,8 +732,10 @@ def init( \
     gdat.bgalcntr = bgalcntr
     ### half of the image size
     gdat.maxmgang = maxmgang
-    ### the factor by which the model image is larger than the data image
-    gdat.margfact = margfact
+    ### the ratio of the side of the model image to that of the data image
+    gdat.margfactmodl = margfactmodl
+    ### the ratio of the side of the fudicial comparison area to the side of the data image
+    gdat.margfactcomp = margfactcomp
     
     ## angular radius in which associations can be made
     gdat.anglassc = anglassc
@@ -1203,7 +1206,8 @@ def init( \
     head['strgfluxunit'] = gdat.strgfluxunit
     head['maxmangl'] = gdat.maxmangl
     head['anglassc'] = gdat.anglassc
-    head['margfact'] = gdat.margfact
+    head['margfactmodl'] = gdat.margfactmodl
+    head['margfactcomp'] = gdat.margfactcomp
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtime'] = gdat.strgtime
     head['numbback'] = gdat.numbback
@@ -1566,11 +1570,11 @@ def init( \
 def plot_samp(gdat, gdatmodi):
 
     if gdat.trueinfo:
-        gdat.indxmodlpntsfudi = []
+        gdat.indxmodlpntscomp = []
         for l in gdat.indxpopl:
-            indxmodlpntstemp = where((fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]) < gdat.maxmgangfudi) & \
-                                                                    (fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]) < gdat.maxmgangfudi))[0]
-            gdat.indxmodlpntsfudi.append(indxmodlpntstemp)
+            indxmodlpntstemp = where((fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]) < gdat.maxmgangcomp) & \
+                                                                    (fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]) < gdat.maxmgangcomp))[0]
+            gdat.indxmodlpntscomp.append(indxmodlpntstemp)
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     

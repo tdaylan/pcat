@@ -576,9 +576,6 @@ def retr_fluxlpri(gdatmodi, gdat, l):
         fluxlpri = sum(log(pdfn_flux_powr(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :]], \
                                                 gdatmodi.thissampvarb[gdat.indxsampfluxdistslop[l]])))
     if gdat.fluxdisttype[l] == 'brok':
-        thisfluxdistbrek = gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[l]]
-        thisfluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[l]]
-        thisfluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxsampfluxdistslopuppr[l]]
         fluxlpri = sum(log(pdfn_flux_brok(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :]], \
                                                 gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[l]], \
                                                 gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[l]], \
@@ -606,6 +603,10 @@ def retr_lpri(gdat, gdatmodi, init=False):
                 gdatmodi.thislpri[l, 1] = retr_fluxlpri(gdatmodi, gdat, l)
             gdatmodi.nextlpri = copy(gdatmodi.thislpri)
     else:
+        
+        # initialize the delta log-prior
+        gdatmodi.deltlpri = 0.
+
         # determine which type of delta log-prior is to be calculated
         boolupdtmeanpnts = gdatmodi.thisindxprop == gdat.indxpropmeanpnts
         boolupdtfluxdist = gdatmodi.thisindxprop == gdat.indxpropfluxdistslop or gdatmodi.thisindxprop == gdat.indxpropfluxdistbrek or \
@@ -613,10 +614,8 @@ def retr_lpri(gdat, gdatmodi, init=False):
                                                                                  gdatmodi.thisindxprop == gdat.indxpropfluxdistslopuppr
         boolupdtnumbpnts = gdatmodi.thisindxprop >= gdat.indxpropbrth and gdatmodi.thisindxprop <= gdat.indxpropmerg
 
-        # calculate the delta log-prior
+        # calculate contributions to the delta log-prior
         if boolupdtmeanpnts or boolupdtfluxdist or boolupdtnumbpnts:
-
-            gdatmodi.deltlpri = 0.
 
             # penalty term due to the number of degrees of freedom
             if boolupdtnumbpnts:
@@ -624,7 +623,7 @@ def retr_lpri(gdat, gdatmodi, init=False):
                     deltdoff = -gdat.numbcompcolr
                 else:
                     deltdoff = gdat.numbcompcolr
-                gdatmodi.deltlpri = gdat.priofactdoff * deltdoff
+                gdatmodi.deltlpri += gdat.priofactdoff * deltdoff
 
             # binned flux prior
             # temp -- binned prior currently does not work with splits and merges!
@@ -688,20 +687,27 @@ def retr_lpri(gdat, gdatmodi, init=False):
                     else:
                         gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 0] = retr_probpois(gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]], \
                                                                                         gdatmodi.nextsampvarb[gdat.indxsampmeanpnts[gdatmodi.indxpoplmodi]])
-                    gdatmodi.deltlpri = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 0] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, 0]
+                    gdatmodi.deltlpri += gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 0] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, 0]
                     
                 if boolupdtfluxdist:
                     if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'powr':
-                        nextfluxdistslop = gdatmodi.nextsampvarb[gdat.indxsampfluxdistslop[gdatmodi.indxpoplmodi]]
                         gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 1] = sum(log(pdfn_flux_powr(gdat, \
                                                                     gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist[0], :]], \
                                                                     gdatmodi.nextsampvarb[gdat.indxsampfluxdistslop[gdatmodi.indxpoplmodi]])))
                     if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'brok':
-                        nextfluxdistbrek = gdatmodi.nextsampvarb[gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]]
-                        nextfluxdistsloplowr = gdatmodi.nextsampvarb[gdat.indxsampfluxdistsloplowr[gdatmodi.indxpoplmodi]]
-                        nextfluxdistslopuppr = gdatmodi.nextsampvarb[gdat.indxsampfluxdistslopuppr[gdatmodi.indxpoplmodi]]
-                        gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 1] = sum(log(pdfn_flux_brok(gdat, thisflux, nextfluxdistbrek, nextfluxdistsloplowr, nextfluxdistslopuppr)))
-                    gdatmodi.deltlpri = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 1] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, 1]
+                        fluxdistbrek = gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]]
+                        fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[gdatmodi.indxpoplmodi]]
+                        fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxsampfluxdistslopuppr[gdatmodi.indxpoplmodi]]
+                        if gdatmodi.thisindxprop == gdat.indxpropfluxdistbrek:
+                            fluxdistbrek = gdatmodi.nextsampvarb[gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]]
+                        if gdatmodi.thisindxprop == gdat.indxpropfluxdistsloplowr:
+                            fluxdistsloplowr = gdatmodi.nextsampvarb[gdat.indxsampfluxdistsloplowr[gdatmodi.indxpoplmodi]]
+                        if gdatmodi.thisindxprop == gdat.indxpropfluxdistslopuppr:
+                            fluxdistslopuppr = gdatmodi.nextsampvarb[gdat.indxsampfluxdistslopuppr[gdatmodi.indxpoplmodi]]
+                        gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 1] = sum(log(pdfn_flux_brok(gdat, \
+                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist[0], :]], \
+                                                    fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)))
+                    gdatmodi.deltlpri += gdatmodi.nextlpri[gdatmodi.indxpoplmodi, 1] - gdatmodi.thislpri[gdatmodi.indxpoplmodi, 1]
        
             if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg:
                 
@@ -742,9 +748,6 @@ def retr_lpri(gdat, gdatmodi, init=False):
                     # P(f1)P(f2)P(l2)P(b2) / P(f0)P(uf)P(ur)P(up)
                     # P(f1)P(f2) / P(f0)
 
-        else:
-            gdatmodi.deltlpri = 0.
-       
         
 def retr_sampvarb(gdat, indxpntsfull, samp):
     
@@ -2249,8 +2252,8 @@ def setp(gdat):
     gdat.numbchrollik = 7
 
     # half size of the spatial prior
-    gdat.maxmgangfudi = gdat.maxmgang * (2. - gdat.margfact)
-    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfact
+    gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
+    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
 
     # temp
     gdat.boolintpanglcosi = False
@@ -2805,10 +2808,10 @@ def setp(gdat):
             gdat.truenormback = gdat.mocknormback
         
     if gdat.trueinfo:
-        gdat.indxtruepntsfudi = []
+        gdat.indxtruepntscomp = []
         for l in gdat.indxpopl:
-            indxtruepntstemp = where((fabs(gdat.truelgal[l]) < gdat.maxmgangfudi) & (fabs(gdat.truebgal[l]) < gdat.maxmgangfudi))[0]
-            gdat.indxtruepntsfudi.append(indxtruepntstemp)
+            indxtruepntstemp = where((fabs(gdat.truelgal[l]) < gdat.maxmgangcomp) & (fabs(gdat.truebgal[l]) < gdat.maxmgangcomp))[0]
+            gdat.indxtruepntscomp.append(indxtruepntstemp)
 
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
@@ -2958,12 +2961,9 @@ def setp(gdat):
 
     factener = (gdat.meanener / gdat.meanener[gdat.indxenerfluxdist[0]])**(-2.)
     
-    gdat.minmcnts = 1e-1 * factener
-    gdat.maxmcnts = 1e4 * factener
-    # temp 
-    gdat.minmcnts = gdat.minmflux * 1e-2 * mean(mean(gdat.expo, 1), 1) * gdat.diffener * factener
-    gdat.maxmcnts = gdat.maxmflux * 1e2 * mean(mean(gdat.expo, 1), 1) * gdat.diffener * factener
-
+    # limits on counts, which are used to bin or overplot PS counts 
+    gdat.minmcnts = gdat.minmflux * mean(mean(gdat.expo, 1), 1) * gdat.diffener * factener
+    gdat.maxmcnts = gdat.maxmflux * mean(mean(gdat.expo, 1), 1) * gdat.diffener * factener
     gdat.binscnts = zeros((gdat.numbener, gdat.numbflux + 1))
     for i in gdat.indxener:
         gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbflux + 1) # [1]
@@ -3307,7 +3307,6 @@ def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     # get the flux limit that delineates the biased associations and hits 
     fluxbias = empty((2, gdat.numbener, gdat.truenumbpnts[thisindxpopl]))
     for i in gdat.indxener:
-        #fluxbias[:, i, :] = retr_fluxbias(gdat, specassc[i, :], i)
         fluxbias[:, i, :] = retr_fluxbias(gdat, gdat.truespec[thisindxpopl][0, i, :], i)
 
     # divide associations into subgroups

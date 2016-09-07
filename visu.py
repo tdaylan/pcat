@@ -78,7 +78,8 @@ def plot_post(pathpcat):
     gdat.strgenerunit = hdun[0].header['strgenerunit']
     gdat.strgfluxunit = hdun[0].header['strgfluxunit']
     gdat.maxmangl = hdun[0].header['maxmangl']
-    gdat.margfact = hdun[0].header['margfact']
+    gdat.margfactmodl = hdun[0].header['margfactmodl']
+    gdat.margfactcomp = hdun[0].header['margfactcomp']
     gdat.strgtime = hdun[0].header['strgtime']
     gdat.strgcnfg = hdun[0].header['strgcnfg']
     gdat.numbback = hdun[0].header['numbback']
@@ -1026,10 +1027,13 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axiscnts.spines['bottom'].set_position(('axes', 1.))
         axissigm.spines['top'].set_position(('axes', 1.05))
     
-        cntstemp = array([1., 2., 3., 5., 10., 100., 10000.])
-        cntstemp = cntstemp[where((cntstemp > gdat.binscnts[i, 0]) & (cntstemp < gdat.binscnts[i, -1]))]
-        axissigm.set_xticks(cntstemp)
-
+        #ticksigm = array([1., 2., 3., 5.])
+        #lablsigm = ['%d' % ticksigm[k] for k in range(ticksigm.size)]
+        #ticksigm = ticksigm[where((ticksigm > binssigm[i, 0]) & (ticksigm < binssigm[i, -1]))]
+        #axissigm.set_xticks(ticksigm)
+        #axissigm.minorticks_off()
+        axissigm.axvline(1., ls='--', alpha=0.1)
+        axissigm.axvline(5., ls='--', alpha=0.1)
         # superimpose the true catalog
         if gdat.trueinfo:
             truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
@@ -1093,13 +1097,13 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black', alpha=0.1)
        
         # plot associations
-        indx = intersect1d(where(ydat > 0.)[0], gdat.indxtruepntsfudi[l])
+        indx = intersect1d(where(ydat > 0.)[0], gdat.indxtruepntscomp[l])
         if indx.size > 0:
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
         # plot associations to multiple model point sources
         if not post:
-            indx = intersect1d(gdatmodi.indxtruepntsassc[l].mult, gdat.indxtruepntsfudi[l])
+            indx = intersect1d(gdatmodi.indxtruepntsassc[l].mult, gdat.indxtruepntscomp[l])
             if len(indx) > 0:
                 axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='red')
     
