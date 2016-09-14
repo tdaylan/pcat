@@ -1103,13 +1103,20 @@ def init( \
                 listsind[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampsind[l]]
                 listgang[l][n, 0:numbpnts] = retr_gang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
                 listaang[l][n, 0:numbpnts] = retr_aang(listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
-                listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts], gdat.binslgal)[0]
-                listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts], gdat.binsbgal)[0]
+                
+                # find the indices of the model PSs that are in the comparison area
+                indxmodlpntscomp = retr_indxpntscomp(gdat, listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
+
+                # histograms of PS parameters
+                # temp -- gdat.indxmodlpntscomp[l]
+                print 
+                listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
+                listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
-                    listspechist[n, l, :, i] = histogram(listspec[l][n][i, :], gdat.binsspec[i, :])[0]
-                listsindhist[n, l, :] = histogram(listsind[l][n], gdat.binssind)[0]
-                listganghist[n, l, :] = histogram(listgang[l][n], gdat.binsgang)[0]
-                listaanghist[n, l, :] = histogram(listaang[l][n], gdat.binsaang)[0]
+                    listspechist[n, l, :, i] = histogram(listspec[l][n, i, 0:numbpnts][indxmodlpntscomp], gdat.binsspec[i, :])[0]
+                listsindhist[n, l, :] = histogram(listsind[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binssind)[0]
+                listganghist[n, l, :] = histogram(listgang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsgang)[0]
+                listaanghist[n, l, :] = histogram(listaang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsaang)[0]
 
     # auxiliary variables
     listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamptotl, gdat.numbener)
@@ -1570,11 +1577,9 @@ def init( \
 def plot_samp(gdat, gdatmodi):
 
     if gdat.trueinfo:
-        gdat.indxmodlpntscomp = []
+        gdatmodi.indxmodlpntscomp = []
         for l in gdat.indxpopl:
-            indxmodlpntstemp = where((fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]) < gdat.maxmgangcomp) & \
-                                                                    (fabs(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]) < gdat.maxmgangcomp))[0]
-            gdat.indxmodlpntscomp.append(indxmodlpntstemp)
+            gdatmodi.indxmodlpntscomp.append(retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]))
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     

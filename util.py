@@ -2812,6 +2812,17 @@ def setp(gdat):
         for l in gdat.indxpopl:
             indxtruepntstemp = where((fabs(gdat.truelgal[l]) < gdat.maxmgangcomp) & (fabs(gdat.truebgal[l]) < gdat.maxmgangcomp))[0]
             gdat.indxtruepntscomp.append(indxtruepntstemp)
+            print 'gdat.truelgal[l]'
+            print gdat.truelgal[l]
+            print 'gdat.truebgal[l]'
+            print gdat.truebgal[l]
+            print 'gdat.maxmgangcomp'
+            print gdat.maxmgangcomp
+            print 'gdat.margfactcomp'
+            print gdat.margfactcomp
+            print 'indxtruepntstemp'
+            print indxtruepntstemp
+            print
 
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
@@ -3340,6 +3351,13 @@ def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
         print 
 
     return indxmodlpnts, indxtruepntsassc
+
+
+def retr_indxpntscomp(gdat, lgal, bgal):
+
+    indxpntscomp = where((fabs(lgal) < gdat.maxmgangcomp) & (fabs(bgal) < gdat.maxmgangcomp))[0]
+
+    return indxpntscomp
 
 
 def retr_fluxbias(gdat, spec, indxenerthis):

@@ -46,6 +46,45 @@ def test_info():
     plot_minmfluxinfo(minmflux, listinfo, listlevi)
 
 
+def test_time():
+    
+    numbpnts = array([500, 50, 5000])
+    maxmgang = deg2rad(array([20., 10., 40.]))
+    pixltype =  ['heal', 'cart']
+    tupl = [ \
+            [100, 10., 'heal'], \
+            
+            [10 , 10., 'heal'], \
+            [1000, 10., 'heal'], \
+
+            [100, 20., 'heal'], \
+            [100, 40., 'heal'], \
+
+            [100, 10., 'cart'], \
+           ]
+    numbtupl = len(tupl)
+    timereal = empty(numbtupl)
+    for k in arange(numbtupl):
+        numbpnts, maxmgang, pixltype = tupl[k]
+        gridchan, dictpcat = init( \
+                                  pathdata=os.environ["PCAT_DATA_PATH"], \
+                                  verbtype=2, \
+                                  numbswep=1000, \
+                                  makeplot=False, \
+                                  regitype='ngal', \
+                                  strgback=['fermisotflux.fits'], \
+                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  psfntype='doubking', \
+                                  maxmnumbpnts=array([3]), \
+                                  maxmgang=deg2rad(10.), \
+                                  minmflux=3e-11, \
+                                  maxmflux=1e-7, \
+                                  datatype='mock', \
+                                  mocknumbpnts=array([3]), \
+                                 )
+        timereal[k] = dictpcat['timerealtotl']
+                
+    
 def test_psfn():
      
     init( \
@@ -98,7 +137,8 @@ def test_prio():
     for k in range(priofactdoff.size):
         init( \
              pathdata=os.environ["PCAT_DATA_PATH"], \
-             numbswep=500000, \
+             numbswep=2000, \
+             numbswepplot=10000, \
              numbburn=0, \
              verbtype=1, \
              randinit=False, \
@@ -113,12 +153,12 @@ def test_prio():
              strgexpr='fermflux_cmp0_ngal.fits', \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              psfntype='doubking', \
-             maxmnumbpnts=array([1000]), \
+             maxmnumbpnts=array([30]), \
              maxmgang=deg2rad(10.), \
-             minmflux=3e-11, \
+             minmflux=5e-11, \
              maxmflux=1e-7, \
              datatype='mock', \
-             mocknumbpnts=array([300]), \
+             mocknumbpnts=array([30]), \
             )
     
 

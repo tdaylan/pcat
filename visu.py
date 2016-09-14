@@ -596,8 +596,9 @@ def plot_post(pathpcat):
         numbbins=gdat.numbbins, numbtickbins=3)
     
     for k in range(gdat.numbpsfipara):
-        path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
-        tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
+        if std(gdat.listpsfipara[:, k]) != 0:
+            path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
+            tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
     # log-likelihood
     path = gdat.pathplot + 'llik_' + gdat.rtag
@@ -1003,8 +1004,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             yerr = tdpy.util.retr_errrvarb(postspechist)
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
-            spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, :]
+            spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, gdatmodi.indxmodlpntscomp[l]]
             axis.hist(spec, gdat.binsspec[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+            
             # superimpose the current prior flux distribution
             if i == gdat.indxenerfluxdist[0]:
                 meanpnts = gdatmodi.thissampvarb[gdat.indxsampmeanpnts[l]]
@@ -1018,33 +1020,39 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                     fluxhistmodl = meanpnts * pdfn_flux_brok(gdat, gdat.meanflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr) * gdat.diffflux
                 axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=gdat.mrkralph, color='b')
 
-        # add horizontal axes for counts and fluctuation significance
+        # add another horizontal axis for counts
         axiscnts = axis.twiny()
-        axissigm = axis.twiny()
-        axiscnts.xaxis.set_ticks_position('bottom')
-        axiscnts.xaxis.set_label_position('bottom')
-        axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
-        axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
         axiscnts.set_xscale('log')
-        axissigm.set_xscale('log')
-        axissigm.set_xlabel(r'$\sigma$')
         axiscnts.set_xlabel('$C$')
         axiscnts.spines['bottom'].set_position(('axes', 1.))
+        axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
+        axiscnts.xaxis.set_ticks_position('bottom')
+        axiscnts.xaxis.set_label_position('bottom')
+        
+        # add yet another horizontal axis for fluctuation significance
+        axissigm = axis.twiny()
+        axissigm.set_xscale('log')
+        axissigm.set_xlabel(r'$\sigma$')
         axissigm.spines['top'].set_position(('axes', 1.05))
-    
-        #ticksigm = array([1., 2., 3., 5.])
-        #lablsigm = ['%d' % ticksigm[k] for k in range(ticksigm.size)]
-        #ticksigm = ticksigm[where((ticksigm > binssigm[i, 0]) & (ticksigm < binssigm[i, -1]))]
-        #axissigm.set_xticks(ticksigm)
-        #axissigm.minorticks_off()
+        axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
         axissigm.axvline(1., ls='--', alpha=0.1)
         axissigm.axvline(5., ls='--', alpha=0.1)
+
         # superimpose the true catalog
         if gdat.trueinfo:
-            truehist = axis.hist(gdat.truespec[l][0, i, :], gdat.binsspec[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
+            print 'hey'
+            print 'histspec'
+            print 'gdat.indxtruepntscomp[l]'
+            print gdat.indxtruepntscomp[l]
+            print 'gdat.truespec'
+            print gdat.truespec[l][0, i, :]
+            print gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]]
+            print
+            truehist = axis.hist(gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.binsspec[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock' and gdat.exprinfo:
                 if gdat.exprtype == 'ferm':
                     axis.hist(gdat.exprspec[0, i, :], gdat.binsspec[i, :], color='red', alpha=gdat.mrkralph, log=True, label='3FGL')
+        
         axis.set_yscale('log')
         axis.set_xlabel('$f$ [%s]' % gdat.strgfluxunit)
         axis.set_xscale('log')
