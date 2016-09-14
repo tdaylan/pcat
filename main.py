@@ -812,8 +812,9 @@ def init( \
             if factthin > numbswep - numbburn:
                 raise Exception('Bad thinning factor.')
     
-    # date and time
-    gdat.strgtime = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    # get the time stamp
+    gdat.strgtime = retr_strgtimestmp()
+    
     if gdat.verbtype > 0:
         print 'PCAT started at ', gdat.strgtime
         print 'Initializing...'
