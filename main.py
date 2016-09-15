@@ -254,7 +254,7 @@ def work(gdat, indxprocwork):
             print gdatmodi.thissampvarb[k]
         
     if gdat.verbtype > 1:
-        show_memo(gdatmodi, 'gdatmodi')
+        tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
     # run the sampler
     listchan = rjmc(gdat, gdatmodi, indxprocwork)
@@ -932,7 +932,7 @@ def init( \
         print 'Sampling...'
     
     if gdat.verbtype > 1:
-        show_memo(gdat, 'gdat')
+        tdpy.util.show_memo(gdat, 'gdat')
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
