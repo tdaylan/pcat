@@ -813,7 +813,7 @@ def init( \
                 raise Exception('Bad thinning factor.')
     
     # get the time stamp
-    gdat.strgtime = retr_strgtimestmp()
+    gdat.strgtime = tdpy.util.retr_strgtimestmp()
     
     if gdat.verbtype > 0:
         print 'PCAT started at ', gdat.strgtime

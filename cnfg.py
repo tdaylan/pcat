@@ -196,15 +196,16 @@ def test_post():
          pathdata=os.environ["PCAT_DATA_PATH"], \
 		 numbswep=500000, \
          randinit=False, \
-         margsize=0., \
+         #verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
          regitype='ngal', \
+         exprinfo=False, \
          strgback=['fermisotflux.fits'], \
          lablback=[r'$\mathcal{I}$'], \
          nameback=['normisot'], \
-         strgexpo='fermexpo_ngal_cmp0.fits', \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
          stdvback=0.3, \
          stdvlbhl=0.01, \
          stdvflux=0.05, \
@@ -212,8 +213,8 @@ def test_post():
          psfntype='gausking', \
          maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(1.5), \
-         minmflux=array([3e-8]), \
-         maxmflux=array([1e-7]), \
+         minmflux=3e-8, \
+         maxmflux=1e-7, \
          datatype='mock', \
          mocknumbpnts=array([3]), \
          mockfluxdistslop=array([1.9]), \

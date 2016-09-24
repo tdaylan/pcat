@@ -792,9 +792,9 @@ def retr_fermpsfn(gdat):
         reco = 7
 
     if reco == 8:
-        path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
+        path = gdat.pathdata + 'expr/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_back.fits'
+        path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_back.fits'
     irfn = pf.getdata(path, 1)
     minmener = irfn['energ_lo'].squeeze() * 1e-3 # [GeV]
     maxmener = irfn['energ_hi'].squeeze() * 1e-3 # [GeV]
@@ -813,9 +813,9 @@ def retr_fermpsfn(gdat):
             fermscal[m, :] = pf.getdata(path, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
         else:
             if m == 1:
-                path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_front.fits'
+                path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_front.fits'
             elif m == 0:
-                path = os.environ["PCAT_DATA_PATH"] + '/irfn/psf_P7REP_SOURCE_V15_back.fits'
+                path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_back.fits'
             else:
                 continue
             irfn = pf.getdata(path, 1)
@@ -1011,13 +1011,18 @@ def retr_listpair(gdat, lgal, bgal):
 
 def retr_fermdata(gdat):
     
-    path = os.environ["PCAT_DATA_PATH"] + '/gll_psc_v16.fit'
+    path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
 
     fgl3 = pf.getdata(path)
     
     fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
     fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
     
+    print 'fgl3spectemp'
+    print fgl3spectemp
+    print isfinite(fgl3spectemp)
+    print 
+
     # sort the catalog in decreasing flux
     indxfgl3sort = argsort(fgl3spectemp[gdat.indxenerfluxdist[0], :])[::-1]
 
@@ -1027,6 +1032,7 @@ def retr_fermdata(gdat):
     fgl3specstdvtemp = fgl3specstdvtemp[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None]
     fgl3specstdvtemp = fgl3specstdvtemp[:, indxfgl3sort, :]
 
+    
     fgl3numbpntsfull = fgl3['glon'].size
     
     fgl3lgal = fgl3['glon'][indxfgl3sort]
@@ -1055,6 +1061,12 @@ def retr_fermdata(gdat):
     fgl3spec[0, :, :] = fgl3spectemp
     fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
     fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
+    
+    print 'hey'
+    print 'fgl3spec[0, :, :]'
+    print fgl3spec[0, :, :]
+    print fgl3spec[1, :, :]
+    print fgl3spec[2, :, :]
     
     # adjust 3FGL positions according to the ROI center
     if gdat.regitype == 'ngal':
@@ -1093,7 +1105,6 @@ def retr_fermdata(gdat):
     gdat.exprstrgassc = fgl3strgassc[indxfgl3rofi]
     gdat.indxexprvari = indxfgl3vari
     
-        
 
 def retr_rtag(gdat, indxprocwork):
     
@@ -2206,7 +2217,10 @@ def retr_randunitpsfipara(gdat):
 
 
 def setp(gdat):
-   
+  
+    # paths
+    gdat.pathimag, gdat.pathdata = tdpy.util.retr_path('pcat')
+
     # number of processes
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
@@ -2325,7 +2339,7 @@ def setp(gdat):
     # input data
     if gdat.datatype == 'inpt':
         
-        path = gdat.pathdata + '/' + gdat.strgexpr
+        path = gdat.pathdata + 'inpt/' + gdat.strgexpr
         gdat.exprflux = pf.getdata(path)
         
         if gdat.pixltype == 'heal':
@@ -2548,7 +2562,7 @@ def setp(gdat):
         if gdat.datatype == 'inpt':
             gdat.expo = ones_like(gdat.exprflux)
     else:
-        path = gdat.pathdata + '/' + gdat.strgexpo
+        path = gdat.pathdata + 'inpt/' + gdat.strgexpo
         gdat.expo = pf.getdata(path)
         if amin(gdat.expo) == amax(gdat.expo):
             print 'Bad input exposure map.'
@@ -2568,7 +2582,7 @@ def setp(gdat):
             if gdat.datatype == 'inpt':
                 backfluxtemp = ones_like(gdat.exprflux)
         else:
-            path = gdat.pathdata + '/' + gdat.strgback[c]
+            path = gdat.pathdata + 'inpt/' + gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'cart':
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
@@ -2599,7 +2613,9 @@ def setp(gdat):
    
     # construct a lookup table for converting HealPix pixels to ROI pixels
     if gdat.pixltype == 'heal':
-        path = os.environ["PCAT_DATA_PATH"] + '/pixlcnvt_%09g.p' % (gdat.maxmgang)
+        path = gdat.pathdata + 'pixlcnvt/'
+        os.system('mkdir -p %s' % path)
+        path += 'pixlcnvt_%09g.p' % gdat.maxmgang
 
         if os.path.isfile(path):
             fobj = open(path, 'rb')
@@ -2780,23 +2796,6 @@ def setp(gdat):
             gdat.truepsfntype = gdat.mockpsfntype
             gdat.truenormback = gdat.mocknormback
         
-    if gdat.trueinfo:
-        gdat.indxtruepntscomp = []
-        for l in gdat.indxpopl:
-            indxtruepntstemp = where((fabs(gdat.truelgal[l]) < gdat.maxmgangcomp) & (fabs(gdat.truebgal[l]) < gdat.maxmgangcomp))[0]
-            gdat.indxtruepntscomp.append(indxtruepntstemp)
-            print 'gdat.truelgal[l]'
-            print gdat.truelgal[l]
-            print 'gdat.truebgal[l]'
-            print gdat.truebgal[l]
-            print 'gdat.maxmgangcomp'
-            print gdat.maxmgangcomp
-            print 'gdat.margfactcomp'
-            print gdat.margfactcomp
-            print 'indxtruepntstemp'
-            print indxtruepntstemp
-            print
-
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
     for c in gdat.indxback:
@@ -2862,7 +2861,7 @@ def setp(gdat):
         if (gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu') and getpass.getuser() == 'tansu':
             pathplotbase = '/n/pan/www/tansu/imag/pcat/'
         else:
-            pathplotbase = gdat.pathdata + '/imag/'
+            pathplotbase = gdat.pathimag
         gdat.pathplot = pathplotbase + 'pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         cmnd = 'mkdir -p ' + gdat.pathplot
         os.system(cmnd)
@@ -2973,32 +2972,44 @@ def setp(gdat):
                 gdat.indxtruevari = [gdat.indxexprvari]
                 gdat.truepsfipara = gdat.fermpsfipara
                 gdat.truepsfntype = 'doubking'
-                
-        if gdat.datatype == 'mock':
-            gdat.truepsfn = retr_psfn(gdat, gdat.truepsfipara, gdat.indxener, gdat.binsangl, gdat.mockpsfntype)
-        else:
-            if gdat.exprtype == 'ferm':
                 gdat.truepsfn = gdat.fermpsfn
             elif gdat.exprtype == 'sdss':
                 gdat.truepsfn = gdat.sdsspsfn
+
+        if gdat.datatype == 'mock':
+            gdat.truepsfn = retr_psfn(gdat, gdat.truepsfipara, gdat.indxener, gdat.binsangl, gdat.mockpsfntype)
             
         if gdat.truepsfn != None:
             gdat.truefwhm = 2. * retr_psfnwdth(gdat, gdat.truepsfn, 0.5)
         
-        if gdat.trueinfo:
-            truebackcnts = []
-            gdat.truesigm = []
-            for l in gdat.indxpopl:
-                indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
-                truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
-                for c in gdat.indxback:
-                    truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None] * pi * \
-                                                                                                                                gdat.truefwhm[:, None, :]**2 / 4.
-                truebackcnts.append(truebackcntstemp)
-                gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
+        truebackcnts = []
+        gdat.truesigm = []
+        for l in gdat.indxpopl:
+            indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
+            truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
+            for c in gdat.indxback:
+                truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None] * pi * \
+                                                                                                                            gdat.truefwhm[:, None, :]**2 / 4.
+            truebackcnts.append(truebackcntstemp)
+            gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
+    
+        if not (isfinite(gdat.truespec) & isfinite(gdat.truesind)).all():
+            print 'gdat.truespec'
+            print gdat.truespec
+            print 'gdat.truesind'
+            print gdat.truesind
+            raise Exception('True PS parameters are not finite.')
+
     else:
         gdat.truepsfn = None
-      
+    
+    # determine the indices of true point sources, which will be compared againts the model sources
+    if gdat.trueinfo:
+        gdat.indxtruepntscomp = []
+        for l in gdat.indxpopl:
+            indxtruepntstemp = where((fabs(gdat.truelgal[l]) < gdat.maxmgangcomp) & (fabs(gdat.truebgal[l]) < gdat.maxmgangcomp))[0]
+            gdat.indxtruepntscomp.append(indxtruepntstemp)
+
     # sanity checks
     # temp
     if (fabs(gdat.datacnts - rint(gdat.datacnts)) > 1e-3).any():
@@ -3034,10 +3045,12 @@ def setp(gdat):
         gdat.datacntscart[indxdatacntscartsatu[0], indxdatacntscartsatu[1], i, indxdatacntscartsatu[2]] = gdat.datacntssatu[i]
 
     # make a look-up table of nearby pixels for each pixel
+    path = gdat.pathdata + 'indxpixlprox/'
+    os.system('mkdir -p %s' % path)
     if gdat.specfraceval == 0:
-        path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%06d_%s.p' % (gdat.numbpixl, gdat.pixltype)
+        path += 'indxpixlprox_%06d_%s.p' % (gdat.numbpixl, gdat.pixltype)
     else:
-        path = os.environ["PCAT_DATA_PATH"] + '/indxpixlprox_%06d_%s_%.7g_%.7g_%02d.p' % (gdat.numbpixl, gdat.pixltype, gdat.minmflux, gdat.maxmflux, gdat.numbfluxprox)
+        path += 'indxpixlprox_%06d_%s_%.7g_%.7g_%02d.p' % (gdat.numbpixl, gdat.pixltype, gdat.minmflux, gdat.maxmflux, gdat.numbfluxprox)
 
     global indxpixlprox
     if os.path.isfile(path):
@@ -3053,7 +3066,8 @@ def setp(gdat):
             dist[j] = 0.
             for h in range(gdat.numbfluxprox):
                 indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
-                indxpixlproxtemp = indxpixlproxtemp[argsort(dist[indxpixlproxtemp])]
+                # temp
+                #indxpixlproxtemp = indxpixlproxtemp[argsort(dist[indxpixlproxtemp])]
                 indxpixlprox[h].append(indxpixlproxtemp)
         fobj = open(path, 'wb')
         cPickle.dump(indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -3361,4 +3375,65 @@ def retr_fluxbias(gdat, spec, indxenerthis):
 
     return fluxbias
 
+
+def plot_pdfntotlflux():
+
+    minm = 1e-9
+    maxm = 10e-9
+    numbvarb = 90
+    numbsamp = 100000
+    numbbins = 40
+    alph = 0.5
+    
+    binssing = linspace(minm, maxm, numbvarb + 1)
+    meansing = (binssing[:-1] + binssing[1:]) / 2.
+    deltsing = binssing[1:] - binssing[:-1]
+    
+    binsdoub = linspace(2. * minm, 2. * maxm, 2 * numbvarb)
+    meandoub = (binsdoub[:-1] + binsdoub[1:]) / 2.
+    deltdoub = binsdoub[1:] - binsdoub[:-1]
+    
+    bins = linspace(minm, 2. * maxm, 2 * numbvarb + 1)
+    
+    arry = empty((2, numbsamp))
+    
+    minmslop = 1.5
+    maxmslop = 3.
+    numbslop = 4
+    sloparry = linspace(minmslop, maxmslop, numbslop)
+    for n in range(numbslop):
+        slop = sloparry[n]
+        for k in range(2):
+            arry[k, :] = (rand(numbsamp) * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
+        
+        totl = sum(arry, 0)
+        
+        powrprob = (1. - slop) / (maxm**(1. - slop) - minm**(1. - slop)) * meansing**(-slop)
+        
+        convprob = convolve(powrprob, powrprob) * deltdoub[0]
+        
+        indxdoub = where(meandoub <= maxm)[0]
+        convprobpoly = polyval(polyfit(meandoub[indxdoub], convprob[indxdoub], 8), meandoub[indxdoub])
+        
+        figr, axis = plt.subplots()
+        axis.hist(arry[k, :], bins=bins, alpha=alph, label='$f_1$ (Sampled)', color='b')
+        axis.hist(totl, bins=bins, alpha=alph, label='$f_0$ (Sampled)', color='g')
+        axis.plot(meansing, powrprob * numbsamp * deltsing, label='$f_1$ (Analytic)', color='b')
+        axis.plot(meandoub, convprob * numbsamp * deltdoub[0], label='$f_0$ (Numerically convolved)', color='g')
+        
+        axis.plot(meandoub[indxdoub], convprobpoly * numbsamp * deltdoub[indxdoub], label='$f_0$ (Fit)', color='r')
+    
+        axis.set_ylim([0.5, numbsamp])
+        axis.set_xlabel('$f$')
+        axis.set_xlim([amin(bins), amax(bins)])
+        axis.set_xscale('log')
+        axis.set_yscale('log')
+        axis.set_ylabel('$N_{samp}$')
+        axis.legend()
+        plt.tight_layout()
+        pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
+        os.system('mkdir -p ' + pathfold)
+        figr.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
+        plt.close(figr)
+        
 

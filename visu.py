@@ -484,6 +484,13 @@ def plot_post(pathpcat):
         truepost[1*numbpntspost:2*numbpntspost] = gdat.truebgal[0][k]
         truepost[2*numbpntspost:3*numbpntspost] = gdat.truespec[0][0, gdat.indxenerfluxdist[0], k]
         truepost[3*numbpntspost:4*numbpntspost] = gdat.truesind[0][k]
+        print 'hey'
+        print 'numbpntspost'
+        print numbpntspost
+        print 'truepost'
+        print truepost.shape
+        print 'gdat.truenormback'
+        print gdat.truenormback.shape
         truepost[4*numbpntspost:] = gdat.truenormback[0, :]
         path = gdat.pathplot + 'postdist_' + gdat.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
@@ -947,6 +954,10 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
             if strgtype == 'hist':
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsflux, gdat.binssind])[0]
                 #axis.pcolor(gdat.binsflux, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.mrkralph)
+                print 'gdat.exprspec'
+                print gdat.exprspec
+                print 'gdat.exprsind'
+                print gdat.exprsind
                 sns.kdeplot(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, ax=axis, cmap="Reds")
             else:
                 axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=gdat.mrkralph, color='r', label=gdat.nameexpr)
