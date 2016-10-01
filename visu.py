@@ -36,8 +36,6 @@ def plot_post(pathpcat):
     
     gdat.anglassc = hdun[0].header['anglassc']
     gdat.maxmgang = hdun[0].header['maxmgang']
-    gdat.lgalcntr = hdun[0].header['lgalcntr']
-    gdat.bgalcntr = hdun[0].header['bgalcntr']
     gdat.numbflux = hdun[0].header['numbflux']
 
     gdat.minmlgal = hdun[0].header['minmlgal']
@@ -51,10 +49,14 @@ def plot_post(pathpcat):
     gdat.maxmsind = hdun[0].header['maxmsind']
 
     gdat.datatype = hdun[0].header['datatype']
-    gdat.regitype = hdun[0].header['regitype']
     gdat.psfntype = hdun[0].header['psfntype']
     gdat.exprtype = hdun[0].header['exprtype']
     gdat.pixltype = hdun[0].header['pixltype']
+    
+    gdat.lgalcntr = hdun[0].header['lgalcntr']
+    gdat.bgalcntr = hdun[0].header['bgalcntr']
+    
+    gdat.probpsfipara = hdun[0].header['probpsfipara']
     
     gdat.exprinfo = hdun[0].header['exprinfo']
     gdat.priotype = hdun[0].header['priotype']
@@ -80,7 +82,7 @@ def plot_post(pathpcat):
     gdat.maxmangl = hdun[0].header['maxmangl']
     gdat.margfactmodl = hdun[0].header['margfactmodl']
     gdat.margfactcomp = hdun[0].header['margfactcomp']
-    gdat.strgtime = hdun[0].header['strgtime']
+    gdat.strgtimestmp = hdun[0].header['strgtimestmp']
     gdat.strgcnfg = hdun[0].header['strgcnfg']
     gdat.numbback = hdun[0].header['numbback']
 
@@ -88,7 +90,8 @@ def plot_post(pathpcat):
     gdat.stdvfluxdistslop = hdun[0].header['stdvfluxdistslop']
     gdat.stdvpsfipara = hdun[0].header['stdvpsfipara']
     gdat.stdvback = hdun[0].header['stdvback']
-    gdat.stdvlbhl = hdun[0].header['stdvlbhl']
+    gdat.stdvlbhlminm = hdun[0].header['stdvlbhlminm']
+    gdat.stdvlbhlmaxm = hdun[0].header['stdvlbhlmaxm']
     gdat.stdvflux = hdun[0].header['stdvflux']
     gdat.radispmr = hdun[0].header['radispmrlbhl']
     gdat.fracrand = hdun[0].header['fracrand']
@@ -169,6 +172,7 @@ def plot_post(pathpcat):
     gdat.sinddiststdv = hdun['sinddiststdv'].data
         
     # bins
+    gdat.indxevttfull = hdun['indxevttfull'].data
     gdat.binsenerfull = hdun['binsenerfull'].data
     gdat.indxenerfluxdist = array([hdun[0].header['indxenerfluxdist']])
    
@@ -281,11 +285,6 @@ def plot_post(pathpcat):
             for m in gdat.indxevtt:
                 path = gdat.pathplot + 'gmrbheal_%d%d.pdf' % (i, m)
                 maps = zeros(gdat.numbpixl)
-                
-                print 'hey'
-                print 'gmrbstat'
-                print gmrbstat.shape
-
                 indxtemp = where((i == gmrbstat[0, :]) & (m == gmrbstat[2, :]))[0]
                 indxpixltemp = gmrbstat[1, indxtemp]
                 maps[indxpixltemp] = gmrbstat[3, indxtemp]
@@ -347,15 +346,19 @@ def plot_post(pathpcat):
 
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
-        hist = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
-        axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
+        histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
+        histaccp = axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
         
         # define the y-axis
-        maxm = amax(hist)
+        maxm = amax(histtotl)
         axis.set_ylim([0., maxm])
+        try:
+            axis.set_title('%03d' % int(sum(histaccp) / sum(histtotl) * 100.))
+        except:
+            pass
         listtick = linspace(maxm / 2., maxm, numbtick)
         listlabltick = ['%.3g' % tick for tick in listtick]
         axis.set_yticks(listtick)
@@ -407,6 +410,14 @@ def plot_post(pathpcat):
         listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
                        exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
        
+        # rescale the Jacobian and the prior fraction to make them dimensionless
+        listvarb[5][indxsampsplttotl] /= gdat.minmflux
+        listvarb[5][indxsampmergtotl] *= gdat.minmflux
+        listvarb[8][indxsampsplttotl] /= gdat.minmflux
+        listvarb[8][indxsampmergtotl] *= gdat.minmflux
+        listvarb[10][indxsampsplttotl] *= gdat.minmflux
+        listvarb[10][indxsampmergtotl] /= gdat.minmflux
+
         for k in range(len(listlabl)):
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             maxm = amax(listvarb[k][indxsampspmrtotl])
@@ -468,6 +479,7 @@ def plot_post(pathpcat):
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparaplot], ['%d' % k for k in indxparaplot], numbplotside=10)
 
     numbpntspost = 3
+    # temp -- posterior plots only work for numbcompcolr == 4
     if gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1 and gdat.numbback == 1:
         numbpara = numbpntspost * gdat.numbcompcolr + gdat.numbener
         listpost = zeros((gdat.numbsamp, numbpara))
@@ -484,13 +496,6 @@ def plot_post(pathpcat):
         truepost[1*numbpntspost:2*numbpntspost] = gdat.truebgal[0][k]
         truepost[2*numbpntspost:3*numbpntspost] = gdat.truespec[0][0, gdat.indxenerfluxdist[0], k]
         truepost[3*numbpntspost:4*numbpntspost] = gdat.truesind[0][k]
-        print 'hey'
-        print 'numbpntspost'
-        print numbpntspost
-        print 'truepost'
-        print truepost.shape
-        print 'gdat.truenormback'
-        print gdat.truenormback.shape
         truepost[4*numbpntspost:] = gdat.truenormback[0, :]
         path = gdat.pathplot + 'postdist_' + gdat.rtag
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
@@ -595,17 +600,18 @@ def plot_post(pathpcat):
         if gdat.trueinfo:
             gdat.truepsfipara[gdat.indxpsfiparainit+1] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+1])
             gdat.truepsfipara[gdat.indxpsfiparainit+3] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+3])
-    if gdat.trueinfo and gdat.psfntype == 'doubking':
-        truepara = gdat.truepsfipara
-    else:
-        truepara = array([None] * gdat.numbpsfipara)
-    tdpy.mcmc.plot_grid(path, gdat.listpsfipara, gdat.strgpsfipara, truepara=truepara, numbplotside=gdat.numbformpara, \
-        numbbins=gdat.numbbins, numbtickbins=3)
-    
-    for k in range(gdat.numbpsfipara):
-        if std(gdat.listpsfipara[:, k]) != 0:
-            path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
-            tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
+
+    if gdat.probpsfipara != 0.:
+        if gdat.trueinfo and gdat.psfntype == 'doubking':
+            truepara = gdat.truepsfipara
+        else:
+            truepara = array([None] * gdat.numbpsfipara)
+        tdpy.mcmc.plot_grid(path, gdat.listpsfipara, gdat.strgpsfipara, truepara=truepara, numbplotside=gdat.numbformpara, numbbins=gdat.numbbins, numbtickbins=3)
+        
+        for k in range(gdat.numbpsfipara):
+            if std(gdat.listpsfipara[:, k]) != 0:
+                path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
+                tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
     # log-likelihood
     path = gdat.pathplot + 'llik_' + gdat.rtag
@@ -752,6 +758,10 @@ def plot_chro(gdat):
     for k in range(gdat.numbprop):
         indxswepchro = where((gdat.listindxprop == k) & (gdat.listchrototl[:, 0] > 0))[0]
         if indxswepchro.size > 0:
+            print 'gdat.listchrototl[indxswepchro, 0] * 1e3'
+            print gdat.listchrototl[indxswepchro, 0] * 1e3
+            print 'binstime'
+            print binstime
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0] * 1e3, binstime, log=True, label=gdat.strgprop[k])
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
@@ -867,10 +877,9 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
-    labltemp = ['PS']
-    labltemp.extend(gdat.lablback)
-
-    axis.pie(listsize, explode=listexpl, labels=labltemp, autopct='%1.1f%%')
+    labl = ['PS'] + gdat.lablback
+    
+    axis.pie(listsize, explode=listexpl, labels=labl, autopct='%1.1f%%')
     axis.axis('equal')
 
     if post:
@@ -938,6 +947,12 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
         if strgtype == 'hist':
             #hist = histogram2d(flux, sind, bins=[gdat.binsflux, gdat.binssind])[0]
             #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Blues', label='Sample',  alpha=gdat.mrkralph)
+            print 'hey'
+            print 'flux'
+            print flux
+            print 'sind'
+            print sind
+            print
             sns.kdeplot(flux, sind, ax=axis, cmap="Blues")
         else:
             axis.scatter(flux, sind, alpha=gdat.mrkralph, color='b', label='Sample')
@@ -954,10 +969,6 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
             if strgtype == 'hist':
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsflux, gdat.binssind])[0]
                 #axis.pcolor(gdat.binsflux, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.mrkralph)
-                print 'gdat.exprspec'
-                print gdat.exprspec
-                print 'gdat.exprsind'
-                print gdat.exprsind
                 sns.kdeplot(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, ax=axis, cmap="Reds")
             else:
                 axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=gdat.mrkralph, color='r', label=gdat.nameexpr)
@@ -1016,7 +1027,11 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, gdatmodi.indxmodlpntscomp[l]]
-            axis.hist(spec, gdat.binsspec[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+            # temp -- gdat.binsspec may be too narrow if there are many energy bins or PS colors are extreme
+            try:
+                axis.hist(spec, gdat.binsspec[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+            except:
+                print 'Spectral bins are inappropriate. Skipping the spectral histogram...'
             
             # superimpose the current prior flux distribution
             if i == gdat.indxenerfluxdist[0]:
@@ -1051,14 +1066,6 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
 
         # superimpose the true catalog
         if gdat.trueinfo:
-            print 'hey'
-            print 'histspec'
-            print 'gdat.indxtruepntscomp[l]'
-            print gdat.indxtruepntscomp[l]
-            print 'gdat.truespec'
-            print gdat.truespec[l][0, i, :]
-            print gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]]
-            print
             truehist = axis.hist(gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.binsspec[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock' and gdat.exprinfo:
                 if gdat.exprtype == 'ferm':

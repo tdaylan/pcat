@@ -272,17 +272,16 @@ def init( \
          verbtype=1, \
          numbswepplot=50000, \
          makeplot=True, \
-         diagsamp=False, \
+         diagmode=True, \
          numbswep=2000000, \
          numbburn=None, \
          factthin=None, \
-         regitype='ngal', \
          priotype='logt', \
          priofactdoff=1., \
          datatype='inpt', \
          randinit=True, \
          regulevi=False, \
-         boolproppsfn=True, \
+         boolproppsfn=False, \
          boolpropfluxdist=True, \
          numbpntsmodi=1, \
          indxevttincl=arange(2, 4), \
@@ -300,14 +299,15 @@ def init( \
          strgenerunit=None, \
     
          binsenerfull=None, \
-         evttfull=None, \
+         indxevttfull=None, \
 
          spatdisttype=None, \
          fluxdisttype=None, \
          sinddisttype=None, \
          spectype=None, \
          psfntype=None, \
-         
+
+         asymfluxprop=False, \
          maxmnormback=None, \
          minmnormback=None, \
          maxmgang=None, \
@@ -347,7 +347,8 @@ def init( \
          stdvfluxdistslop=0.1, \
          stdvpsfipara=0.1, \
          stdvback=0.04, \
-         stdvlbhl=0.1, \
+         stdvlbhlminm=0.001, \
+         stdvlbhlmaxm=0.1, \
          stdvflux=0.15, \
          stdvsind=0.15, \
          fracrand=0.05, \
@@ -434,7 +435,7 @@ def init( \
         maxmnormback = ones(numbback) * 2.
         
     if minmsind == None:
-        minmsind = 1.
+        minmsind = 0.5
     if maxmsind == None:
         maxmsind = 3.5
     
@@ -463,16 +464,20 @@ def init( \
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2.)
         if lablback == None:
-            lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+            if numbback == 1:
+                lablback = [r'$\mathcal{I}$']
+            else:
+                lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if nameback == None:
             nameback = ['normisot', 'normfdfm']
         if strgenerunit == None:
             strgenerunit = r'GeV'
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/GeV'
-        if evttfull == None:
-            evttfull = arange(4)
-        binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
+        if indxevttfull == None:
+            indxevttfull = arange(4)
+        if binsenerfull == None:
+            binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
         if lablback == None:
             lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
         if nameback == None:
@@ -484,8 +489,8 @@ def init( \
 
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
-        if evttfull == None:
-            evttfull = arange(4)
+        if indxevttfull == None:
+            indxevttfull = arange(1)
         if lablback == None:
             lablback = [r'$\mathcal{I}$']
         if nameback == None:
@@ -557,6 +562,9 @@ def init( \
         minmfluxdistslopuppr = minmfluxdistslop
     if maxmfluxdistslopuppr == None:
         maxmfluxdistslopuppr = maxmfluxdistslop
+    
+    if probprop != None:
+        probprop /= sum(probprop)
    
     # initialize the global object 
     gdat = gdatstrt()
@@ -575,7 +583,7 @@ def init( \
     gdat.makeplot = makeplot
 
     ## flag to diagnose the sampler
-    gdat.diagsamp = diagsamp
+    gdat.diagmode = diagmode
     
     ## MCMC setup
     ### number of sweeps, i.e., number of samples before thinning and including burn-in
@@ -587,16 +595,11 @@ def init( \
     ### the factor by which to thin the chain
     gdat.factthin = factthin
     
-    ## region type
-    ###- ngal - NGPR (North Galactic Polar Region)
-    ###- igal - IG (inner Galaxy)
-    gdat.regitype = regitype
-
     ## axes
     ### energy
     gdat.binsenerfull = binsenerfull
     ### event class
-    gdat.evttfull = evttfull
+    gdat.indxevttfull = indxevttfull
 
     ## boolean flag to evaluate a binned flux prior 
     gdat.bindprio = bindprio
@@ -746,7 +749,8 @@ def init( \
     gdat.stdvfluxdistslop = stdvfluxdistslop
     gdat.stdvpsfipara = stdvpsfipara
     gdat.stdvback = stdvback
-    gdat.stdvlbhl = stdvlbhl
+    gdat.stdvlbhlminm = stdvlbhlminm
+    gdat.stdvlbhlmaxm = stdvlbhlmaxm
     gdat.stdvflux = stdvflux
     gdat.stdvsind = stdvsind
 
@@ -813,10 +817,10 @@ def init( \
                 raise Exception('Bad thinning factor.')
     
     # get the time stamp
-    gdat.strgtime = tdpy.util.retr_strgtimestmp()
+    gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
     if gdat.verbtype > 0:
-        print 'PCAT started at ', gdat.strgtime
+        print 'PCAT started at %s' % gdat.strgtimestmp
         print 'Initializing...'
     
     # check the call stack for the name of the configuring function
@@ -1110,7 +1114,6 @@ def init( \
 
                 # histograms of PS parameters
                 # temp -- gdat.indxmodlpntscomp[l]
-                print 
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
@@ -1167,8 +1170,8 @@ def init( \
         print 'Done in %.3g seconds.' % (tim1 - tim0)
 
     # write the PCAT output to disc
-    pathpcatlite = gdat.pathdata + '/pcatlite_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
-    pathpcat = gdat.pathdata + '/pcat_' + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcatlite = gdat.pathdata + '/outp/pcatlite_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcat = gdat.pathdata + '/outp/pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
     
     head = pf.Header()
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
@@ -1205,11 +1208,10 @@ def init( \
     head['maxmsind'] = gdat.maxmsind
     
     head['datatype'] = gdat.datatype
-    head['regitype'] = gdat.regitype
     head['psfntype'] = gdat.psfntype
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
-   
+    
     head['strgenerunit'] = gdat.strgenerunit
     head['strgfluxunit'] = gdat.strgfluxunit
     head['maxmangl'] = gdat.maxmangl
@@ -1217,8 +1219,11 @@ def init( \
     head['margfactmodl'] = gdat.margfactmodl
     head['margfactcomp'] = gdat.margfactcomp
     head['strgcnfg'] = gdat.strgcnfg
-    head['strgtime'] = gdat.strgtime
+    head['strgtimestmp'] = gdat.strgtimestmp
     head['numbback'] = gdat.numbback
+    
+    # proposal probabilities
+    head['probpsfipara'] = gdat.probpsfipara
     
     head['exprinfo'] = gdat.exprinfo
     head['priotype'] = gdat.priotype
@@ -1232,7 +1237,8 @@ def init( \
     head['stdvfluxdistslop'] = gdat.stdvfluxdistslop
     head['stdvpsfipara'] = gdat.stdvpsfipara
     head['stdvback'] = gdat.stdvback
-    head['stdvlbhl'] = gdat.stdvlbhl
+    head['stdvlbhlminm'] = gdat.stdvlbhlminm
+    head['stdvlbhlmaxm'] = gdat.stdvlbhlmaxm
     head['stdvflux'] = gdat.stdvflux
     head['stdvsind'] = gdat.stdvsind
     ### relative size of the tail of the Gaussian proposals
@@ -1324,9 +1330,9 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
         #### save the posterior positions as a CSV file
-        path = gdat.pathdata + '/pcat_lgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathdata + '/outp/pcat_lgalpop%d_' % l + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
         savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
-        path = gdat.pathdata + '/pcat_bgalpop%d_' % l + gdat.strgtime + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathdata + '/outp/pcat_bgalpop%d_' % l + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
         savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
 
 
@@ -1471,6 +1477,9 @@ def init( \
     listhdun.append(pf.ImageHDU(gdat.sinddiststdv))
     listhdun[-1].header['EXTNAME'] = 'sinddiststdv'
     
+    listhdun.append(pf.ImageHDU(gdat.indxevttfull))
+    listhdun[-1].header['EXTNAME'] = 'indxevttfull'
+
     listhdun.append(pf.ImageHDU(gdat.binsenerfull))
     listhdun[-1].header['EXTNAME'] = 'binsenerfull'
 
@@ -1577,10 +1586,9 @@ def init( \
     
 def plot_samp(gdat, gdatmodi):
 
-    if gdat.trueinfo:
-        gdatmodi.indxmodlpntscomp = []
-        for l in gdat.indxpopl:
-            gdatmodi.indxmodlpntscomp.append(retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]))
+    gdatmodi.indxmodlpntscomp = []
+    for l in gdat.indxpopl:
+        gdatmodi.indxmodlpntscomp.append(retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]))
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
     
@@ -1890,34 +1898,38 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         if gdatmodi.thisindxprop < gdat.indxpropbrth:
             listindxparamodi[gdatmodi.cntrswep] = gdatmodi.indxsampvarbmodi
 
-        # sanity checks
-        indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
-        if indxsampbadd.size > 0:
-            print 'cntrswep'
-            print gdatmodi.cntrswep
-            print 'thisindxprop'
-            print gdat.strgprop[gdatmodi.thisindxprop]
-            print 'indxsampbadd'
-            print indxsampbadd
-            print 'drmcsamp'
-            print gdatmodi.drmcsamp[indxsampbadd, :]
-            raise Exception('Unit sample vector went outside [0,1].')
-            
-        for l in gdat.indxpopl:
-            indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] < gdat.minmflux)[0]
-            if indxtemp.size > 0:
-                print 'indxtemp'
-                print indxtemp
-                print 'flux'
-                print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                raise Exception('Spectrum of a PS went below the prior range.') 
-            indxtemp = where(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]] > gdat.maxmflux)[0]
-            if indxtemp.size > 0:
-                print 'indxtemp'
-                print indxtemp
-                print 'flux'
-                print gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]]
-                raise Exception('Spectrum of a PS went above the prior range.') 
+        if gdat.diagmode:
+            # sanity checks
+            indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
+            if indxsampbadd.size > 0:
+                print 'cntrswep'
+                print gdatmodi.cntrswep
+                print 'thisindxprop'
+                print gdat.strgprop[gdatmodi.thisindxprop]
+                print 'indxsampbadd'
+                print indxsampbadd
+                print 'drmcsamp'
+                print gdatmodi.drmcsamp[indxsampbadd, :]
+                raise Exception('Unit sample vector went outside [0,1].')
+                
+            for l in gdat.indxpopl:
+                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
+                indxtemp = where((flux < gdat.minmflux) | (flux > gdat.maxmflux))[0]
+                if indxtemp.size > 0:
+                    print 'indxtemp'
+                    print indxtemp
+                    print 'flux'
+                    print flux
+                    raise Exception('Spectrum of a PS went outside the prior range.') 
+
+                sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]
+                indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]
+                if indxtemp.size > 0:
+                    print 'indxtemp'
+                    print indxtemp
+                    print 'sind'
+                    print sind
+                    raise Exception('Color of a PS went outside the prior range.') 
 
         # save the sample
         if boolsave[gdatmodi.cntrswep]:

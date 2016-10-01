@@ -27,7 +27,6 @@ pcat.init(, \
           mocknumbpnts=array([300]), \
           minmspec=minmspec, \
           maxmspec=maxmspec, \
-          regitype='ngal', \
           maxmnormback=array([2., 2.]), \
           minmnormback=array([0.5, 0.5]), \
           strgexpo='fermexpo_comp_ngal.fits', \
@@ -42,7 +41,7 @@ pcat.init(, \
 ### Options
 ---
 #### Diagnostics
-`diagsamp`
+`diagmode`
 Boolean flag to run the sampler in diagnostic mode
 
 ---
@@ -80,9 +79,6 @@ Array indicating the probability of proposing the associated proposal types
 
 `datatype`
 Type of data
-
-`regitype`
-Type of region
 
 ---
 #### Initial state
@@ -207,8 +203,11 @@ Proposal scale for the PSF parameters
 `stdvback`
 Proposal scale for the mean number of point sources
 
-`stdvlbhl`
-Proposal scale for spatial coordinates
+`stdvlbhlminm`
+Minimum proposal scale for spatial coordinates
+
+`stdvlbhlmaxm`
+Maximum proposal scale for spatial coordinates
 
 `stdvflux`
 Proposal scale for fluxes

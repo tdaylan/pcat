@@ -28,7 +28,6 @@ def test_info():
                                   randinit=True, \
                                   indxenerincl=arange(2, 3), \
                                   indxevttincl=arange(3, 4), \
-                                  regitype='ngal', \
                                   maxmnumbpnts=array([maxmnumbpnts[k]]), \
                                   maxmgang=deg2rad(10.), \
                                   minmflux=minmflux[k], \
@@ -47,43 +46,85 @@ def test_info():
 
 
 def test_time():
-    
-    numbpnts = array([500, 50, 5000])
-    maxmgang = deg2rad(array([20., 10., 40.]))
-    pixltype =  ['heal', 'cart']
+   
+    print 'Time-test suite for PCAT'
+
+    numbswep = 200000
+
     tupl = [ \
-            [100, 10., 'heal'], \
+            # reference
+            [100, 400, 11.44, 'heal', 1, 'Reference'], \
             
-            [10 , 10., 'heal'], \
-            [1000, 10., 'heal'], \
+            # cart
+            [100, 400, 100, 'cart', 1, 'Cartesian'], \
 
-            [100, 20., 'heal'], \
-            [100, 40., 'heal'], \
+            # maxmnumbpnts
+            [100, 800, 10., 'heal', 1, '2X Max PS'], \
+            
+            # mocknumbpnts
+            [200, 400, 10., 'heal', 1, '2X Mock PS'], \
 
-            [100, 10., 'cart'], \
+            # numbpixl
+            [100, 400, 20., 'heal', 1, '2X pixels'], \
+            
+            # numbener
+            [100, 400, 10., 'heal', 3, '3 energy bins'], \
            ]
     numbtupl = len(tupl)
     timereal = empty(numbtupl)
-    for k in arange(numbtupl):
-        numbpnts, maxmgang, pixltype = tupl[k]
+    strgtupl = []
+    for k in range(numbtupl):
+        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, strg = tupl[k]
+        strgtupl.append(strg)
+        #strgtupl.append(['%d, %d, %d, %s, %d' % (tupl[k][0], tupl[k][1], tupl[k][2], tupl[k][3], tupl[k][4])])
+        if tupl[k][3] == 'heal':
+            maxmgang = deg2rad(temp)
+            numbsidecart = None
+        else:
+            maxmgang = None
+            numbsidecart = temp
+
+        if k == 0:
+            continue
+    
+        binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         gridchan, dictpcat = init( \
                                   pathdata=os.environ["PCAT_DATA_PATH"], \
-                                  verbtype=2, \
-                                  numbswep=1000, \
-                                  makeplot=False, \
-                                  regitype='ngal', \
-                                  strgback=['fermisotflux.fits'], \
-                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  numbswep=numbswep, \
+                                  #makeplot=False, \
+                                  strgback=['unit'], \
+                                  strgexpo='unit', \
+                                  exprinfo=False, \
+                                  binsenerfull=binsenerfull, \
+                                  indxenerincl=arange(numbener), \
+                                  pixltype=pixltype, \
+                                  indxevttincl=arange(3, 4), \
                                   psfntype='doubking', \
-                                  maxmnumbpnts=array([3]), \
-                                  maxmgang=deg2rad(10.), \
-                                  minmflux=3e-11, \
-                                  maxmflux=1e-7, \
+                                  maxmnumbpnts=array([maxmnumbpnts]), \
+                                  maxmgang=maxmgang, \
+                                  minmflux=3e-1, \
+                                  maxmflux=1e3, \
                                   datatype='mock', \
-                                  mocknumbpnts=array([3]), \
+                                  numbsidecart=numbsidecart, \
+                                  mocknumbpnts=array([mocknumbpnts]), \
                                  )
         timereal[k] = dictpcat['timerealtotl']
                 
+    indxtupl = np.arange(numbtupl)
+    size = 0.5
+    figr, axis = plt.subplots()
+    axis.bar(indxtupl, timereal, 2. * size)
+    axis.set_ylabel('$t$ [s]')
+    axis.set_xticks(indxtupl + size)
+    axis.set_xticklabels(strgtupl, rotation=45)
+    plt.tight_layout()
+    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'timereal/'
+    os.system('mkdir -p %s' % path)
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
+    figr.savefig(path + 'timereal%04d_%s.pdf' % (log10(numbswep), strgtimestmp))
+    plt.close(figr)
+
+
     
 def test_psfn():
      
@@ -93,7 +134,6 @@ def test_psfn():
          numbswep=10, \
          factthin=1, \
          exprinfo=False, \
-         regitype='ngal', \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
@@ -118,7 +158,6 @@ def test_uppr():
          boolproppsfn=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
-         regitype='ngal', \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          psfntype='doubking', \
@@ -147,7 +186,6 @@ def test_prio():
              indxenerincl=arange(1, 4), \
              indxevttincl=arange(2, 4), \
              priofactdoff=priofactdoff[k], \
-             regitype='ngal', \
              #probprop=array([1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
              strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
              strgexpr='fermflux_cmp0_ngal.fits', \
@@ -173,7 +211,6 @@ def test_lowr():
          boolproppsfn=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
-         regitype='ngal', \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -189,28 +226,30 @@ def test_lowr():
 
 def test_post():
      
-    indxenerincl = arange(1, 3)
+    indxenerincl = arange(1, 4)
     indxevttincl = arange(2, 4)
     
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=500000, \
+		 numbswep=5000, \
+		 numbburn=0, \
+		 factthin=1, \
          randinit=False, \
          #verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
-         regitype='ngal', \
          exprinfo=False, \
          strgback=['fermisotflux.fits'], \
          lablback=[r'$\mathcal{I}$'], \
          nameback=['normisot'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         stdvback=0.3, \
-         stdvlbhl=0.01, \
+         stdvback=0.01, \
+         stdvlbhlminm=0.01, \
+         stdvlbhlmaxm=0.01, \
          stdvflux=0.05, \
          stdvsind=0.05, \
-         psfntype='gausking', \
+         psfntype='doubking', \
          maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(1.5), \
          minmflux=3e-8, \
@@ -244,7 +283,6 @@ def test_numbpntsmodi():
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  regitype='ngal', \
                                   psfntype='doubking', \
                                   maxmnumbpnts=array([200]), \
                                   maxmgang=deg2rad(10.), \
@@ -264,24 +302,23 @@ def test_spmr():
      
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=10, \
+		 numbswep=100000, \
 		 numbswepplot=1000, \
-         verbtype=2, \
+         #verbtype=2, \
          randinit=False, \
          exprinfo=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(2, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         regitype='ngal', \
          probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
          psfntype='doubking', \
-         maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([100]), \
          maxmgang=deg2rad(10.), \
          minmflux=3e-15, \
          maxmflux=3e-12, \
          datatype='mock', \
-         mocknumbpnts=array([2]), \
+         mocknumbpnts=array([100]), \
          mockfluxdistslop=array([-1.]), \
         )
     
@@ -294,7 +331,6 @@ def test_popl():
          randinit=False, \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \
-         regitype='ngal', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([500, 500]), \
          maxmgang=deg2rad(20.), \
