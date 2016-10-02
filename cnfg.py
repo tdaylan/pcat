@@ -10,7 +10,7 @@ def test_info():
     minmflux = logspace(-11., -9., 5)
     numbruns = minmflux.size
     maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 100000
+    numbswep = zeros(numbruns, dtype=int) + 200000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -31,7 +31,6 @@ def test_info():
                                   maxmgang=deg2rad(10.), \
                                   minmflux=minmflux[k], \
                                   maxmflux=1e-7, \
-                                  pathdata=os.environ["FERM_NGAL_DATA_PATH"], \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
                                   datatype='inpt', \
@@ -47,7 +46,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswep = 10000
+    numbswep = 200000
 
     tupl = [ \
             # reference
@@ -89,7 +88,6 @@ def test_time():
 
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         gridchan, dictpcat = init( \
-                                  pathdata=os.environ["PCAT_DATA_PATH"], \
                                   numbswep=numbswep, \
                                   numbproc=numbproc, \
                                   numbburn=0, \
@@ -139,9 +137,7 @@ def test_time():
 def test_psfn():
      
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
-         verbtype=2, \
-         numbswep=10, \
+         numbswep=200000, \
          factthin=1, \
          exprinfo=False, \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -160,9 +156,7 @@ def test_psfn():
 def test_uppr():
       
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
-         numbswep=2000000, \
-         verbtype=1, \
+         numbswep=200000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -172,11 +166,11 @@ def test_uppr():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          psfntype='doubking', \
          maxmnumbpnts=array([300]), \
-         maxmgang=deg2rad(10.), \
+         maxmgang=deg2rad(5.), \
          minmflux=1e0, \
          maxmflux=1e4, \
          datatype='mock', \
-         mocknumbpnts=array([100]), \
+         mocknumbpnts=array([400]), \
         )
 
 
@@ -189,12 +183,10 @@ def test_prio():
     medimeanpnts = empty(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  pathdata=os.environ["PCAT_DATA_PATH"], \
 		                          numbproc=1, \
-                                  numbswep=100000, \
+                                  numbswep=200000, \
                                   numbswepplot=30000, \
                                   numbburn=0, \
-                                  verbtype=1, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -231,9 +223,7 @@ def test_prio():
 def test_lowr():
       
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
-         numbswep=1000000, \
-         verbtype=1, \
+         numbswep=200000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -258,7 +248,6 @@ def test_post():
     indxevttincl = arange(2, 4)
     
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
 		 numbswep=200000, \
 		 numbproc=1, \
          numbburn=0, \
@@ -297,13 +286,10 @@ def test_atcr():
     numbiter = numbpntsmodi.size
     for k in range(numbpntsmodi.size):
         gridchan, dictpcat = init( \
-                                  pathdata=os.environ["PCAT_DATA_PATH"], \
-	                              numbswep=1000, \
+	                              numbswep=200000, \
                                   numbburn=0, \
                                   factthin=1, \
                                   makeplot=False, \
-	                              numbswepplot=1000, \
-                                  verbtype=1, \
                                   numbpntsmodi=numbpntsmodi[k], \
                                   randinit=False, \
                                   exprinfo=False, \
@@ -329,10 +315,7 @@ def test_atcr():
 def test_spmr():
      
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=100000, \
-		 numbswepplot=50000, \
-         #verbtype=2, \
+		 numbswep=200000, \
          randinit=False, \
          exprinfo=False, \
          indxenerincl=arange(2, 3), \
@@ -355,8 +338,7 @@ def test_spmr():
 def test_popl():
      
     init( \
-         pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=100000, \
+		 numbswep=200000, \
          randinit=False, \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \

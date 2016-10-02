@@ -457,7 +457,7 @@ def plot_post(pathpcat, verbtype=1):
         truepost[2*numbpntspost:3*numbpntspost] = gdat.truespec[0][0, gdat.indxenerfluxdist[0], k]
         truepost[3*numbpntspost:4*numbpntspost] = gdat.truesind[0][k]
         truepost[4*numbpntspost:] = gdat.truenormback[0, :]
-        path = gdat.pathplot + 'postdist_' + gdat.rtag
+        path = gdat.pathplot + 'postdist'
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
@@ -555,7 +555,7 @@ def plot_post(pathpcat, verbtype=1):
         plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
 
     # PSF parameters
-    path = gdat.pathplot + 'psfipara_' + gdat.rtag
+    path = gdat.pathplot + 'psfipara'
     if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
         gdat.listpsfipara[:, gdat.indxpsfiparainit] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit])
         if gdat.trueinfo:
@@ -582,22 +582,22 @@ def plot_post(pathpcat, verbtype=1):
         
         for k in range(gdat.numbpsfipara):
             if std(gdat.listpsfipara[:, k]) != 0:
-                path = gdat.pathplot + 'psfipara%d_' % k + gdat.rtag + '_'
+                path = gdat.pathplot + 'psfipara%d_' % k
                 tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
     
     # log-likelihood
-    path = gdat.pathplot + 'llik_' + gdat.rtag
+    path = gdat.pathplot + 'llik'
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$')
 
     # log-prior
-    path = gdat.pathplot + 'lpri_' + gdat.rtag
+    path = gdat.pathplot + 'lpri'
     tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(x)$')
 
     # number, expected number of PS and flux conditional prior power law index 
     for l in range(gdat.numbpopl):
         
         # number of point sources
-        path = gdat.pathplot + 'numbpntsdist_pop%d_' % l + gdat.rtag
+        path = gdat.pathplot + 'numbpntsdist_pop%d' % l
         if gdat.trueinfo and gdat.truenumbpnts != None:
             truepara = gdat.truenumbpnts[l]
         else:
@@ -614,7 +614,7 @@ def plot_post(pathpcat, verbtype=1):
             gdat.listmeanpnts += gdat.mocknumbpnts
 
         # mean number of point sources
-        path = gdat.pathplot + 'meanpnts_pop%d_' % l + gdat.rtag
+        path = gdat.pathplot + 'meanpnts_pop%d' % l
         if gdat.trueinfo and gdat.datatype == 'mock':
             truepara = gdat.mocknumbpnts[l]
         else:
@@ -638,7 +638,7 @@ def plot_post(pathpcat, verbtype=1):
         titl = gdat.binsenerstrg[gdat.indxenerfluxdist[0]]
         if gdat.fluxdisttype[l] == 'powr':
             # power law index
-            path = gdat.pathplot + 'fluxdistslop_pop%d_' % l + gdat.rtag
+            path = gdat.pathplot + 'fluxdistslop_pop%d' % l
             # temp
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'powr':
@@ -652,7 +652,7 @@ def plot_post(pathpcat, verbtype=1):
         
         if gdat.fluxdisttype[l] == 'brok':
             # break flux
-            path = gdat.pathplot + 'fluxdistbrek_pop%d_' % l + gdat.rtag
+            path = gdat.pathplot + 'fluxdistbrek_pop%d' % l
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'brok':
                     truepara = gdat.mockfluxdistbrek[l]
@@ -664,7 +664,7 @@ def plot_post(pathpcat, verbtype=1):
             tdpy.mcmc.plot_trac(path, gdat.listfluxdistbrek[:, l], labl, truepara=truepara, scalpara='logt')
         
             # lower power law index
-            path = gdat.pathplot + 'fluxdistsloplowr_pop%d_' % l + gdat.rtag
+            path = gdat.pathplot + 'fluxdistsloplowr_pop%d' % l
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'brok':
                     truepara = gdat.mockfluxdistsloplowr[l]
@@ -676,7 +676,7 @@ def plot_post(pathpcat, verbtype=1):
             tdpy.mcmc.plot_trac(path, gdat.listfluxdistsloplowr[:, l], labl, truepara=truepara)
         
             # uppr power law index
-            path = gdat.pathplot + 'fluxdistslopuppr_pop%d_' % l + gdat.rtag
+            path = gdat.pathplot + 'fluxdistslopuppr_pop%d' % l
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'brok':
                     truepara = gdat.mockfluxdistslopuppr[l]
@@ -690,7 +690,7 @@ def plot_post(pathpcat, verbtype=1):
     # background normalization
     for i in gdat.indxener:
         for c in gdat.indxback:
-            path = gdat.pathplot + gdat.nameback[c] + '%d_' % i + gdat.rtag
+            path = gdat.pathplot + gdat.nameback[c] + '%d' % i
             if gdat.trueinfo and gdat.datatype == 'mock':
                 truepara = gdat.truenormback[c, i]
             else:

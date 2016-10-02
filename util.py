@@ -2701,11 +2701,7 @@ def setp(gdat):
     gdat.rtag = retr_rtag(gdat, None)
     
     # plot paths
-    if (gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu') and getpass.getuser() == 'tansu':
-        pathplotbase = '/n/pan/www/tansu/imag/pcat/'
-    else:
-        pathplotbase = gdat.pathimag
-    gdat.pathplot = pathplotbase + 'pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+    gdat.pathplot = gdat.pathimag + 'pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
     cmnd = 'mkdir -p ' + gdat.pathplot
     os.system(cmnd)
 

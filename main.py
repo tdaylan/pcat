@@ -293,7 +293,7 @@ def init( \
          strgexpo=None, \
          bindprio=False, \
          probprop=None, \
-         pathdata='.', \
+         pathbase=os.environ["PCAT_DATA_PATH"], \
          
          scalmaps='linr', \
    
@@ -815,9 +815,15 @@ def init( \
     ## proposal frequencies
     gdat.probprop = probprop
 
-    ## the path of the input data
-    gdat.pathdata = pathdata
+    ## the paths of the input data and images
+    gdat.pathbase = pathbase
+
+    if gdat.pathbase[-1] != '/':
+        gdat.pathbase += '/'
     
+    gdat.pathdata = gdat.pathbase + 'data/'
+    gdat.pathimag = gdat.pathbase + 'imag/'
+
     # temp
     # check inputs
     if numbburn != None:
@@ -839,21 +845,21 @@ def init( \
     if gdat.verbtype > 0:
         print 'Configuration %s' % gdat.strgcnfg
 
+    # make the relevant folders
+    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
+    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
+    
     # setup the sampler
     setp(gdat) 
 
-    # temp
-    if False:
-        print array(locals().items())
-        temp = array(locals().items())
-        savetxt(gdat.pathdata + '/' + gdat.rtag + '.log', temp)
-
-        thisfile = open(gdat.pathdata + '/' + gdat.rtag + '.log', 'w')
-        for name, valu in locals().items():
-            if name == 'gdat':
-                continue
-            thisfile.write('%s: %.3g \n\n' % (name, valu))
-        thisfile.close() 
+    # write the list of arguments to file
+    fram = inspect.currentframe()
+    listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
+    fileargs = open(gdat.pathoutp + 'args.txt', 'w')
+    fileargs.write('PCAT call arguments')
+    for args in listargs:
+        fileargs.write('%s = %s\n' % (args, listargsvals[args]))
+    fileargs.close()
 
     # start the timer
     timerealtotl = time.time()
@@ -1182,8 +1188,8 @@ def init( \
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # write the PCAT output to disc
-    pathpcatlite = gdat.pathdata + '/outp/pcatlite_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
-    pathpcat = gdat.pathdata + '/outp/pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
+    pathpcatlite = gdat.pathoutp + 'catllite.fits'  
+    pathpcat = gdat.pathoutp + 'catl.fits'  
     
     head = pf.Header()
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
@@ -1344,11 +1350,10 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
         #### save the posterior positions as a CSV file
-        path = gdat.pathdata + '/outp/pcat_lgalpop%d_' % l + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathoutp + 'listlgalpop%d' % l + '.txt'  
         savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
-        path = gdat.pathdata + '/outp/pcat_bgalpop%d_' % l + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.csv'  
+        path = gdat.pathoutp + 'listbgalpop%d' % l + '.txt'  
         savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
-
 
     ### log-likelihood
     listhdun.append(pf.ImageHDU(listllik))
