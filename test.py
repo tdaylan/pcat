@@ -11,7 +11,6 @@ fgl3bgal = pi / 2. - fgl3bgal
 fgl3bgal *= 180. / pi
 fgl3lgal *= 180. / pi
 
-
 print 'fgl3lgal'
 print fgl3lgal
 print 'fgl3bgal'

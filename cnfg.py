@@ -7,10 +7,10 @@ from visu import *
 
 def test_info():
     
-    minmflux = array([3e-10, 1e-10, 3e-11, 1e-11])
+    minmflux = logspace(-11., -9., 5)
     numbruns = minmflux.size
     maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 20000
+    numbswep = zeros(numbruns, dtype=int) + 100000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -23,10 +23,9 @@ def test_info():
                                   psfntype='doubking', \
                                   numbswep=numbswep[k], \
                                   numbburn=numbburn[k], \
-                                  probprop=array([0.01, 0.01, 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.], dtype=float), \
                                   exprinfo=False, \
                                   randinit=True, \
-                                  indxenerincl=arange(2, 3), \
+                                  indxenerincl=arange(1, 4), \
                                   indxevttincl=arange(3, 4), \
                                   maxmnumbpnts=array([maxmnumbpnts[k]]), \
                                   maxmgang=deg2rad(10.), \
@@ -38,7 +37,6 @@ def test_info():
                                   datatype='inpt', \
                                   strgexpr='fermflux_cmp0_ngal.fits', \
                                  )
-    
         listlevi[k] = dictpcat['levi']
         listinfo[k] = dictpcat['info']
 
@@ -192,6 +190,7 @@ def test_prio():
     for k in range(numbiter):
         gridchan, dictpcat = init( \
                                   pathdata=os.environ["PCAT_DATA_PATH"], \
+		                          numbproc=1, \
                                   numbswep=100000, \
                                   numbswepplot=30000, \
                                   numbburn=0, \
@@ -261,7 +260,8 @@ def test_post():
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
 		 numbswep=200000, \
-		 numbburn=0, \
+		 numbproc=1, \
+         numbburn=0, \
 		 factthin=1, \
          randinit=False, \
          indxenerincl=indxenerincl, \

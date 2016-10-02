@@ -2243,7 +2243,8 @@ def setp(gdat):
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
-            gdat.numbproc = 20
+            # temp
+            gdat.numbproc = 4
         else:
             gdat.numbproc = 1
     gdat.indxproc = arange(gdat.numbproc) 
