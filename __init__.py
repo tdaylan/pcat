@@ -33,7 +33,7 @@ from healpy import ang2pix
 import pyfits as pf
 
 # utilities
-import os, time, sys, warnings, getpass, glob, fnmatch, cPickle, inspect
+import os, time, sys, getpass, glob, fnmatch, cPickle, inspect
 import functools
 
 # Symbolic Jacobian calculation
@@ -44,8 +44,11 @@ import tdpy.util
 from tdpy.util import show, summ
 import tdpy.mcmc
 
-import warnings
-warnings.simplefilter(action = "ignore", category = FutureWarning)
-
 np.set_printoptions(linewidth=180)
+
+import warnings
+#warnings.simplefilter('error')
+#warnings.simplefilter('ignore', FutureWarning)
+warnings.simplefilter('ignore')
+
 

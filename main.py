@@ -294,6 +294,8 @@ def init( \
          bindprio=False, \
          probprop=None, \
          pathdata='.', \
+         
+         scalmaps='linr', \
    
          strgfluxunit=None, \
          strgenerunit=None, \
@@ -328,6 +330,8 @@ def init( \
          maxmflux=None, \
          minmsind=None, \
          maxmsind=None, \
+   
+         strgfunctime='clck', \
          
          # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
          pntscntr=False, \
@@ -582,8 +586,11 @@ def init( \
     ### flag to control generation of plots
     gdat.makeplot = makeplot
 
-    ## flag to diagnose the sampler
+    # diagnostics
+    ## flag to run the sampler in diagnostic mode
     gdat.diagmode = diagmode
+    ## the function to measure execution time 
+    gdat.strgfunctime = strgfunctime
     
     ## MCMC setup
     ### number of sweeps, i.e., number of samples before thinning and including burn-in
@@ -617,7 +624,7 @@ def init( \
     
     ## likelihood function type
     gdat.liketype = liketype
-    
+   
     ## experiment type
     gdat.exprtype = exprtype
     
@@ -688,7 +695,11 @@ def init( \
     gdat.maxmangl = maxmangl
     gdat.maxmangleval = maxmangleval
     
-    ## Boolean flag to allow experimental data to be superimposed on the plots
+    ## plotting
+    ### color scaling of the count maps
+    gdat.scalmaps = scalmaps
+         
+    ### Boolean flag to allow experimental data to be superimposed on the plots
     gdat.exprinfo = exprinfo
 
     ## the maximum approximation error tolerated in units of the minimum flux allowed by the model
@@ -962,7 +973,7 @@ def init( \
 
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
-        tim0 = time.time()
+        timeinit = gdat.functime()
 
     # output dictionary
     dictpcat = dict()
@@ -1031,11 +1042,10 @@ def init( \
     # correct the likelihoods for the constant data dependent factorial
     listllik -= sum(sp.special.gammaln(gdat.datacnts + 1))
     
-    # calculate the log-evidence and relative entropy using the harmonic mean estimator
+    # calculate log-evidence using the harmonic mean estimator
     if gdat.verbtype > 0:
         print 'Estimating the Bayesian evidence...'
-        tim0 = time.time()
-    
+        timeinit = gdat.functime()
     listsamp = listsamp.reshape(gdat.numbsamptotl, -1)
     if gdat.regulevi:
         # regularize the harmonic mean estimator
@@ -1054,8 +1064,11 @@ def init( \
         listlliktemp = listllik
     levi = retr_levi(listlliktemp)
     dictpcat['levi'] = levi
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-    # relative entropy
+    # calculate relative entropy
     info = retr_info(listllik, levi)
     dictpcat['info'] = info
 
@@ -1066,6 +1079,7 @@ def init( \
     listnormback = listsampvarb[:, :, gdat.indxsampnormback].reshape(gdat.numbsamptotl, gdat.numbback, gdat.numbener)
     ## mean number of PS
     listmeanpnts = listsampvarb[:, :, gdat.indxsampmeanpnts].reshape(gdat.numbsamptotl, -1)
+    dictpcat['medimeanpnts'] = median(listmeanpnts)
     ## flux distribution
     listfluxdistslop = listsampvarb[:, :, gdat.indxsampfluxdistslop].reshape(gdat.numbsamptotl, gdat.numbpopl)
     listfluxdistbrek = listsampvarb[:, :, gdat.indxsampfluxdistbrek].reshape(gdat.numbsamptotl, gdat.numbpopl)
@@ -1073,6 +1087,7 @@ def init( \
     listfluxdistslopuppr = listsampvarb[:, :, gdat.indxsampfluxdistslopuppr].reshape(gdat.numbsamptotl, gdat.numbpopl)
     ## number of PS
     listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamptotl, -1)
+    dictpcat['medinumbpnts'] = median(listnumbpnts)
 
     ## PS parameters
     listlgal = []
@@ -1125,11 +1140,10 @@ def init( \
     # auxiliary variables
     listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamptotl, gdat.numbener)
    
+    # bin the posterior
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
-        tim0 = time.time()
-
-    # bin the posterior
+        timeinit = gdat.functime()
     pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbflux))
     for k in gdat.indxsamp:
         for l in gdat.indxpopl:
@@ -1138,36 +1152,34 @@ def init( \
                     indxpnts = where((gdat.binsspec[i, h] < listspec[l][k, i, :]) & (listspec[l][k, i, :] < gdat.binsspec[i, h+1]))[0]
                     hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
                     pntsprob[l, i, hpixl, h] += 1.
-    
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
     # Gelman-Rubin test
     gmrbstat = zeros(gdat.numbpixlsave)
     if gdat.numbproc > 1:
-        
         if gdat.verbtype > 0:
             print 'Computing the Gelman-Rubin TS...'
-            tim0 = time.time()
-    
+            timeinit = gdat.functime()
         for n in range(gdat.numbpixlsave):
             gmrbstat[n] = tdpy.mcmc.gmrb_test(listmodlcnts[:, :, n])
-        
         if gdat.verbtype > 0:
-            tim1 = time.time()
-            print 'Done in %.3g seconds.' % (tim1 - tim0)
-
+            timefinl = gdat.functime()
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # calculate the autocorrelation of the chains
     if gdat.verbtype > 0:
         print 'Computing the autocorrelation of the chains...'
-        tim0 = time.time()
-   
-    atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts)
+        timeinit = gdat.functime()
+    atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts, verbtype=gdat.verbtype)
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
     dictpcat['timeatcr'] = timeatcr
 
     if gdat.verbtype > 0:
-        tim1 = time.time()
-        print 'Done in %.3g seconds.' % (tim1 - tim0)
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # write the PCAT output to disc
     pathpcatlite = gdat.pathdata + '/outp/pcatlite_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '.fits'  
@@ -1230,6 +1242,8 @@ def init( \
     head['priofactdoff'] = gdat.priofactdoff
     
     head['timeatcr'] = timeatcr
+    
+    head['strgfunctime'] = gdat.strgfunctime
     
     ## proposal scales
     ### parameter updates
@@ -1500,15 +1514,18 @@ def init( \
     listhdun.append(pf.ImageHDU(gdat.probprop))
     listhdun[-1].header['EXTNAME'] = 'probprop'
     
-    # processed output products
-    ## autocorrelation
-    listhdun.append(pf.ImageHDU(atcr))
-    listhdun[-1].header['EXTNAME'] = 'atcr'
+    ## indices of pixels where the model image is saved
+    listhdun.append(pf.ImageHDU(gdat.indxpixlsave))
+    listhdun[-1].header['EXTNAME'] = 'indxpixlsave'
     
-    ## convergence diagnostic
+    # processed output products
+    ## diagnostics
+    ### Gelman-Rubin TS
     listhdun.append(pf.ImageHDU(gmrbstat))
     listhdun[-1].header['EXTNAME'] = 'gmrbstat'
-    
+    ### autocorrelation
+    listhdun.append(pf.ImageHDU(atcr))
+    listhdun[-1].header['EXTNAME'] = 'atcr'
     ## PDF of PS positions
     listhdun.append(pf.ImageHDU(pntsprob))
     listhdun[-1].header['EXTNAME'] = 'pntsprob'
@@ -1562,7 +1579,7 @@ def init( \
     pf.HDUList(listhdun).writeto(pathpcat, clobber=True, output_verify='ignore')
 
     if gdat.makeplot:
-        plot_post(pathpcat)
+        plot_post(pathpcat, verbtype=gdat.verbtype)
 
     timerealtotl = time.time() - timerealtotl
     timeproctotl = time.clock() - timeproctotl
@@ -1576,7 +1593,7 @@ def init( \
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, timereal[k], timeproc[k])
-        print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timerealtotl, sum(timeproc))
+        print 'PCAT has run in %d real seconds, %d CPU seconds.' % (timerealtotl, timeproctotl)
         print 'The ensemble of catalogs is at ' + pathpcat
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
@@ -1756,7 +1773,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     while gdatmodi.cntrswep < gdat.numbswep:
         
-        timeinit = time.time()
+        timetotlinit = gdat.functime()
         
         if gdat.verbtype > 1:
             print
@@ -1781,19 +1798,22 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print
 
         # propose the next sample
-        timebegn = time.time()
+        timeinit = gdat.functime()
         retr_prop(gdat, gdatmodi)
-        timefinl = time.time()
-        listchrototl[gdatmodi.cntrswep, 1] = timefinl - timebegn
+        timefinl = gdat.functime()
+        listchrototl[gdatmodi.cntrswep, 1] = timefinl - timeinit
 
         # plot the current sample
         if thismakefram:
-            print 'Process %d is in queue for making a frame.' % indxprocwork
+            if gdat.verbtype > 0:
+                print 'Process %d is in queue for making a frame.' % indxprocwork
             if gdat.numbproc > 1:
                 gdat.lock.acquire()
-            print 'Process %d started making a frame.' % indxprocwork
+            if gdat.verbtype > 0:
+                print 'Process %d started making a frame.' % indxprocwork
             plot_samp(gdat, gdatmodi)
-            print 'Process %d finished making a frame.' % indxprocwork
+            if gdat.verbtype > 0:
+                print 'Process %d finished making a frame.' % indxprocwork
             if gdat.numbproc > 1:
                 gdat.lock.release()
             
@@ -1818,16 +1838,16 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         if not gdatmodi.boolreje:
 
             # evaluate the log-prior
-            timebegn = time.time()
+            timeinit = gdat.functime()
             retr_lpri(gdat, gdatmodi)
-            timefinl = time.time()
-            listchrototl[gdatmodi.cntrswep, 2] = timefinl - timebegn
+            timefinl = gdat.functime()
+            listchrototl[gdatmodi.cntrswep, 2] = timefinl - timeinit
 
             # evaluate the log-likelihood
-            timebegn = time.time()
+            timeinit = gdat.functime()
             retr_llik(gdat, gdatmodi) 
-            timefinl = time.time()
-            listchrototl[gdatmodi.cntrswep, 3] = timefinl - timebegn
+            timefinl = gdat.functime()
+            listchrototl[gdatmodi.cntrswep, 3] = timefinl - timeinit
    
             # temp
             if False:
@@ -1922,7 +1942,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     print flux
                     raise Exception('Spectrum of a PS went outside the prior range.') 
 
-                sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]
+                sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]]
                 indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]
                 if indxtemp.size > 0:
                     print 'indxtemp'
@@ -1987,8 +2007,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         
         # save the execution time for the sweep
         if not thismakefram:
-            timefinl = time.time()
-            listchrototl[gdatmodi.cntrswep, 0] = timefinl - timeinit
+            timetotlfinl = gdat.functime()
+            listchrototl[gdatmodi.cntrswep, 0] = timetotlfinl - timetotlinit
 
         # log the progress
         if gdat.verbtype > 0:

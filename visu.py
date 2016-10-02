@@ -4,16 +4,18 @@ from __init__ import *
 # internal functions
 from util import *
 
-def plot_post(pathpcat):
+def plot_post(pathpcat, verbtype=1):
     
-    hdun = pf.open(pathpcat)
-
-    print 'Loading PCAT output file %s...' % pathpcat
-    print pf.info(pathpcat)
-
     gdat = gdatstrt()
-    
-    gdat.verbtype = 1
+    gdat.verbtype = verbtype
+
+    if gdat.verbtype > 0:
+        print 'Producing plots for the PCAT output...'
+
+    # read PCAT output file
+    if gdat.verbtype > 0:
+        print 'Reading %s...' % pathpcat
+    hdun = pf.open(pathpcat)
 
     gdat.numbener = hdun[0].header['numbener']
     gdat.numbevtt = hdun[0].header['numbevtt']
@@ -31,6 +33,8 @@ def plot_post(pathpcat):
     gdat.factthin = hdun[0].header['factthin']
     gdat.numbpopl = hdun[0].header['numbpopl']
     gdat.numbproc = hdun[0].header['numbproc']
+    
+    gdat.strgfunctime = hdun[0].header['strgfunctime']
 
     timeatcr = hdun[0].header['timeatcr']
     
@@ -141,7 +145,7 @@ def plot_post(pathpcat):
     
     atcr = hdun['atcr'].data
     gmrbstat = hdun['gmrbstat'].data
-    
+    indxpixlsave = hdun['indxpixlsave'].data
     listmodlcnts = hdun['modlcnts'].data
     
     if gdat.datatype == 'mock':
@@ -217,10 +221,11 @@ def plot_post(pathpcat):
     gdat.listnormback = hdun['normback'].data
 
     gdat.makeplot = True
-
+    gdat.diagmode = False
+    
     # setup the sampler
     setp(gdat) 
-
+    
     # truth gdat.information
     if gdat.datatype == 'mock':
         gdat.truenumbpnts = hdun['mocknumbpnts'].data
@@ -264,66 +269,37 @@ def plot_post(pathpcat):
             gdat.listgang[l].append(gang[j, indxpnts])
             gdat.listaang[l].append(aang[j, indxpnts])
 
+    timetotlinit = gdat.functime()
+    
     # indices of the parameters to be plotted
     numbparaplot = min(gdat.numbpara, 50)
     size = numbparaplot - gdat.indxsampcompinit
     indxparaplot = concatenate([arange(gdat.indxsampcompinit), sort(choice(arange(gdat.indxsampcompinit, gdat.numbpara), size=size, replace=False))])
 
     # Gelman-Rubin test
-    if gdat.numbproc > 1 and isfinite(gmrbstat).all():
-        
-        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        bins = linspace(1., amax(gmrbstat), 40)
-        axis.hist(gmrbstat, bins=bins)
-        axis.set_xlabel('PSRF')
-        axis.set_ylabel('$N_{pix}$')
-        plt.tight_layout()
-        figr.savefig(gdat.pathplot + 'gmrbhist_' + gdat.rtag + '.pdf')
-        plt.close(figr)
-        
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                path = gdat.pathplot + 'gmrbheal_%d%d.pdf' % (i, m)
-                maps = zeros(gdat.numbpixl)
-                indxtemp = where((i == gmrbstat[0, :]) & (m == gmrbstat[2, :]))[0]
-                indxpixltemp = gmrbstat[1, indxtemp]
-                maps[indxpixltemp] = gmrbstat[3, indxtemp]
-                tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                minmlgal=minmlgal, maxmlgal=maxmlgal, minmbgal=minmbgal, maxmbgal=maxmbgal)
+    if gdat.numbproc > 1:
+        if isfinite(gmrbstat).all():
+            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            bins = linspace(1., amax(gmrbstat), 40)
+            axis.hist(gmrbstat, bins=bins)
+            axis.set_xlabel('PSRF')
+            axis.set_ylabel('$N_{pix}$')
+            plt.tight_layout()
+            figr.savefig(gdat.pathplot + 'gmrbhist_' + gdat.rtag + '.pdf')
+            plt.close(figr)
             
+            path = gdat.pathplot + 'gmrbheal.pdf'
+            maps = zeros(gdat.numbpixl)
+            maps[indxpixlsave] = gmrbstat
+            tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                    minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                    minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+        else:
+            print 'Inappropriate Gelman-Rubin test statistics encountered.'
 
-    print 'Calculating the autocorrelation of the chain...'
-    tim0 = time.time()
-   
-    # temp
-    if False:
-        print listllik[:, 0:8]
-        numbproc = listllik.shape[0]
-        listllik = listllik.flatten()
-        levi = retr_levi(listllik)
-        print levi
-        print retr_info(listllik, levi)
-        hist, bins = histogram(listllik)
-
-        print 'hist'
-        print hist
-        print 'bins'
-        print bins
-        binsmaxm = bins[argmax(hist)]
-        indxsamptemp = where((listllik > binsmaxm - 100) & (listllik < binsmaxm + 100))[0]
-        listllik = listllik[indxsamptemp]
-        levi = retr_levi(listllik)
-        print levi
-        print retr_info(listllik, levi)
-        path = gdat.pathplot + 'llik_' + gdat.rtag
-        print
-        print
-        tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$')
-        return
-
+    # plot autocorrelation
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     numbsampatcr = atcr.size
-    
     axis.plot(arange(numbsampatcr), atcr)
     axis.set_xlabel('Sample index')
     axis.set_ylabel(r'$\tilde{\eta}$')
@@ -331,19 +307,10 @@ def plot_post(pathpcat):
     figr.savefig(gdat.pathplot + 'atcr_' + gdat.rtag + '.pdf')
     plt.close(figr)
 
-    tim1 = time.time()
-    print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print
-
-    print 'Calculating proposal and acceptance rates...'
-    tim0 = time.time()
-
     # plot proposal efficiency
     numbtimemcmc = 20
     binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
-
     numbtick = 2
-
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
@@ -351,7 +318,6 @@ def plot_post(pathpcat):
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
-        
         # define the y-axis
         maxm = amax(histtotl)
         axis.set_ylim([0., maxm])
@@ -363,7 +329,6 @@ def plot_post(pathpcat):
         listlabltick = ['%.3g' % tick for tick in listtick]
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
-    
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'propeffiprop_' + gdat.rtag + '.pdf')
     plt.close(figr)
@@ -456,23 +421,14 @@ def plot_post(pathpcat):
             figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
             plt.close(figr)
     
-    tim1 = time.time()
-    print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print
-
-    print 'Calculating proposal execution times...'
-    tim0 = time.time()
-
-    # temp
+    if gdat.verbtype > 0:
+        print 'Calculating proposal execution times...'
+    timeinit = gdat.functime()
     plot_chro(gdat)
+    timefinl = gdat.functime()
+    if gdat.verbtype > 0:
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-    tim1 = time.time()
-    print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print
-
-    print 'Making the grid posterior plot...'
-    tim0 = time.time()
-   
     # temp
     if False:
         path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
@@ -481,6 +437,10 @@ def plot_post(pathpcat):
     numbpntspost = 3
     # temp -- posterior plots only work for numbcompcolr == 4
     if gdat.datatype == 'mock' and gdat.mocknumbpnts[0] == numbpntspost and gdat.numbpopl == 1 and gdat.numbback == 1:
+        if gdat.verbtype > 0:
+            print 'Making the grid posterior plot...'
+        timeinit = gdat.functime()
+   
         numbpara = numbpntspost * gdat.numbcompcolr + gdat.numbener
         listpost = zeros((gdat.numbsamp, numbpara))
         for j in gdat.indxsamptotl:
@@ -501,13 +461,26 @@ def plot_post(pathpcat):
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
         tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
-           
-    tim1 = time.time()
-    print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print 'Parsing the sample bundle and making frames...'
-    tim0 = time.time()
-    
-    # flux match with the true catalog
+
+        # find the matrix of partial derivatives
+        ## evaluate the likelihood at the sample
+        # temp
+        #gdatmodi = gdatstrt()
+        #retr_llik(gdat, gdatmodi, init=True)
+
+        ## evaluate the likelihood at the vicinity of the sample
+        #for a in range():
+        #    for b in range():
+        #        retr_llik(gdat, gdatmodi)
+
+        timefinl = gdat.functime()
+        if gdat.verbtype > 0:
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
+    # cross correlation with the reference catalog
+    if gdat.verbtype > 0:
+        print 'Cross-correlating the sample catalogs with the reference catalog...'
+    timeinit = gdat.functime()
     if gdat.trueinfo:
         for l in gdat.indxpopl:
             listindxmodl = []
@@ -524,11 +497,10 @@ def plot_post(pathpcat):
                 postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
                 postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
             plot_scatspec(gdat, l, postspecmtch=postspecmtch)
-
-    tim1 = time.time()
-    print 'Done in %.3g seconds.' % (tim1 - tim0)
-    print 'Making posterior distribution plots...'
-
+    timefinl = gdat.functime()
+    if gdat.verbtype > 0:
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+    
     if gdat.pixltype == 'heal':
         numbsidelgal = 100
         numbsidebgal = 100
@@ -747,70 +719,78 @@ def plot_post(pathpcat):
 
     #make_anim()
 
-    tim1 = time.time()
-    print 'Plots are produced in %.3g seconds.' % (tim1 - tim0)
+    timetotlfinl = gdat.functime()
+    if gdat.verbtype > 0:
+        print 'Plots are produced in %.3g seconds.' % (timetotlfinl - timetotlinit)
 
 
 def plot_chro(gdat):
 
-    binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)] * 1e3)), log10(amax(gdat.listchrototl * 1e3)), 50)
-    figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 2.))
+    if amin(gdat.listchrototl <= 0.) or amin(gdat.listchrollik <= 0.):
+        print 'Invalid chronometer...'
+
+    gdat.listchrototl *= 1e3
+    binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
+    figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 3.))
     for k in range(gdat.numbprop):
         indxswepchro = where((gdat.listindxprop == k) & (gdat.listchrototl[:, 0] > 0))[0]
         if indxswepchro.size > 0:
-            print 'gdat.listchrototl[indxswepchro, 0] * 1e3'
-            print gdat.listchrototl[indxswepchro, 0] * 1e3
-            print 'binstime'
-            print binstime
-            axcl[k].hist(gdat.listchrototl[indxswepchro, 0] * 1e3, binstime, log=True, label=gdat.strgprop[k])
+            axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
         axcl[k].set_ylabel(gdat.strgprop[k])
         axcl[k].set_xscale('log')
+        if k != gdat.numbprop - 1:
+            axcl[k].set_xticklabels([])
     axcl[-1].set_xlabel('$t$ [ms]')
-    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.05)
     figr.savefig(gdat.pathplot + 'chroprop_' + gdat.rtag + '.pdf')
     plt.close(figr)
 
-    labl = ['Total', 'Proposal', 'Prior', 'Likelihood']
+    labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Other']
     numblabl = len(labl)
-    figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, numblabl * gdat.plotsize / 2.))
-    for k in range(1, 4):
-        axcl[0].hist(gdat.listchrototl[where(gdat.listchrototl[:, k] > 0)[0], k] * 1e3, binstime, log=True, label=labl[k])
-
-    indxswepchro = where(gdat.listchrototl[:, 0])[0]
-    if indxswepchro.size > 0:
-        axcl[1].hist(gdat.listchrototl[indxswepchro, 0] * 1e3, binstime, log=True, label=labl[0], color='black')
-    axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0] * 1e3))
+    figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, gdat.plotsize))
+    for k in range(1, numblabl):
+        if k == numblabl - 1:
+            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl, 1)
+        else:
+            varb = gdat.listchrototl[:, k]
+        axcl[0].hist(varb, binstime, log=True, label=labl[k], alpha=0.5)
+    axcl[1].hist(gdat.listchrototl[:, 0], binstime, log=True, label=labl[0], color='black')
+    axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axcl[0].set_xlim([amin(binstime), amax(binstime)])
     axcl[1].set_xlabel('$t$ [ms]')
     axcl[0].set_xscale('log')
     axcl[1].set_xscale('log')
     axcl[0].set_ylim([0.5, None])
     axcl[1].set_ylim([0.5, None])
-    axcl[0].legend(loc=1)
+    axcl[0].legend(loc=1, ncol=numblabl-1)
     axcl[1].legend(loc=2)
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'chrototl_' + gdat.rtag + '.pdf')
     plt.close(figr)
 
+    gdat.listchrollik *= 1e3
     listlabl = ['Setup', 'Pixel', 'Mesh', 'PS Flux', 'Total Flux', 'Counts', 'Likelihood']
     numblabl = len(listlabl)
-    figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 2.))
-    
-    maxmchrollik = amax(gdat.listchrollik * 1e3)
+    figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
+    maxmchrollik = amax(gdat.listchrollik)
     if maxmchrollik > 0.:
-        minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)] * 1e3)
+        minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
         if maxmchrollik != minmchrollik:
             binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
             for k in range(gdat.numbchrollik):
-                axcl[k].hist(gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k] * 1e3, binstime, log=True, label=listlabl[k])
+                chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
+                axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
                 axcl[k].set_xlim([amin(binstime), amax(binstime)])
                 axcl[k].set_ylim([0.5, None])
                 axcl[k].set_ylabel(listlabl[k])
                 axcl[k].set_xscale('log')
+                if k != gdat.numbchrollik - 1:
+                    axcl[k].set_xticklabels([])
+                axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
             axcl[-1].set_xlabel('$t$ [ms]')
-            plt.tight_layout()
+            plt.subplots_adjust(hspace=0.05)
             figr.savefig(gdat.pathplot + 'chrollik_' + gdat.rtag + '.pdf')
             plt.close(figr)
 
@@ -926,7 +906,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     plt.close(figr)
     
 
-def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, listsindhist=None):
+def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, listsindhist=None):
     
     if listsindhist == None:
         post = False
@@ -947,13 +927,10 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
         if strgtype == 'hist':
             #hist = histogram2d(flux, sind, bins=[gdat.binsflux, gdat.binssind])[0]
             #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Blues', label='Sample',  alpha=gdat.mrkralph)
-            print 'hey'
-            print 'flux'
-            print flux
-            print 'sind'
-            print sind
-            print
-            sns.kdeplot(flux, sind, ax=axis, cmap="Blues")
+            try:
+                sns.kdeplot(flux, sind, ax=axis, cmap='Blues', label='Sample', legend=True)
+            except:
+                print 'Skipping flux-color scatter plot...'
         else:
             axis.scatter(flux, sind, alpha=gdat.mrkralph, color='b', label='Sample')
     
@@ -962,14 +939,14 @@ def plot_fluxsind(gdat, l, strgtype='hist', gdatmodi=None, listspechist=None, li
         if strgtype == 'hist':
             #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], bins=[gdat.binsflux, gdat.binssind], )[0]
             #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.mrkralph)
-            sns.kdeplot(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], ax=axis, cmap="Greens")
+            sns.kdeplot(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], ax=axis, cmap='Greens', label=gdat.truelabl)
         else:
             axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], alpha=gdat.mrkralph, color='g', label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
             if strgtype == 'hist':
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsflux, gdat.binssind])[0]
                 #axis.pcolor(gdat.binsflux, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.mrkralph)
-                sns.kdeplot(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, ax=axis, cmap="Reds")
+                sns.kdeplot(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, ax=axis, cmap='Reds', label=gdat.nameexpr)
             else:
                 axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=gdat.mrkralph, color='r', label=gdat.nameexpr)
     axis.set_xscale('log')
@@ -1246,41 +1223,6 @@ def plot_psfn_type():
     plt.show()
     
 
-def plot_numbpntsmodi(numbpntsmodi, timeatcr, timereal, timeproc):
-    
-    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/numbpntsmodi/'
-    os.system('mkdir -p ' + pathfold)
-    
-    tick = linspace(1, amax(numbpntsmodi), min(10, amax(numbpntsmodi))).astype(int)
-    
-    figr, axis = plt.subplots()
-    axis.plot(numbpntsmodi, timeatcr)
-    axis.set_ylabel(r'$t$ [$\tau_{MCMC}$]')
-    axis.set_xlabel(r'$\Delta N_{PS}$')
-    axis.set_xticks(tick)
-    plt.tight_layout()
-    figr.savefig(pathfold + 'timeatcr.pdf')
-    plt.close(figr)
-    
-    figr, axis = plt.subplots()
-    axis.plot(numbpntsmodi, timereal)
-    axis.set_ylabel(r'$t$ [s]')
-    axis.set_xlabel(r'$\Delta N_{PS}$')
-    axis.set_xticks(tick)
-    plt.tight_layout()
-    figr.savefig(pathfold + 'timereal.pdf')
-    plt.close(figr)
-    
-    figr, axis = plt.subplots()
-    axis.plot(numbpntsmodi, timeproc)
-    axis.set_ylabel(r'$t$ [s$_{CPU}$]')
-    axis.set_xlabel(r'$\Delta N_{PS}$')
-    axis.set_xticks(tick)
-    plt.tight_layout()
-    figr.savefig(pathfold + 'timeproc.pdf')
-    plt.close(figr)
-    
-    
 def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
     
     print 'minmfluxarry'
@@ -1679,13 +1621,20 @@ def plot_histcnts(gdat, l, gdatmodi=None):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
+            try:
+                axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+            except:
+                if gdat.verbtype > 0:
+                    print 'Skipping PS count histogram plot...'
             if gdat.trueinfo:
-                truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
+                try:
+                    truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
+                except:
+                    if gdat.verbtype > 0:
+                        print 'Skipping PS count histogram plot...'
                 if gdat.datatype == 'mock' and gdat.exprinfo:
                     if gdat.exprtype == 'ferm':
                         axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
-            axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.mrkralph, color='b', log=True, label='Sample')
-
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
@@ -1727,8 +1676,7 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts', indxpoplplot=indxpoplplot)
-    axis, cbar = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, \
-        satulowr=-gdat.resicntssatu, satuuppr=gdat.resicntssatu, cmap='RdBu')
+    axis, cbar = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, satulowr=-gdat.resicntssatu, satuuppr=gdat.resicntssatu, cmap='RdBu')
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
     plt.savefig(path)

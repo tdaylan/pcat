@@ -49,34 +49,39 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswep = 200000
+    numbswep = 10000
 
     tupl = [ \
             # reference
-            [100, 400, 11.44, 'heal', 1, 'Reference'], \
+            [100, 400, 11.44, 'heal', 1, 1, 'Reference'], \
             
+            # numbproc
+            [100, 400, 100, 'cart', 1, 3, 'Cartesian'], \
+
             # cart
-            [100, 400, 100, 'cart', 1, 'Cartesian'], \
+            [100, 400, 100, 'cart', 1, 1, 'Cartesian'], \
 
             # maxmnumbpnts
-            [100, 800, 10., 'heal', 1, '2X Max PS'], \
+            [100, 800, 10., 'heal', 1, 1, '2X Max PS'], \
             
             # mocknumbpnts
-            [200, 400, 10., 'heal', 1, '2X Mock PS'], \
+            [200, 400, 10., 'heal', 1, 1, '2X Mock PS'], \
 
             # numbpixl
-            [100, 400, 20., 'heal', 1, '2X pixels'], \
+            [100, 400, 20., 'heal', 1, 1, '2X pixels'], \
             
             # numbener
-            [100, 400, 10., 'heal', 3, '3 energy bins'], \
+            [100, 400, 10., 'heal', 3, 1, '3 energy bins'], \
            ]
     numbtupl = len(tupl)
+    indxtupl = np.arange(numbtupl)
     timereal = empty(numbtupl)
+    timeproc = empty(numbtupl)
+    timeatcr = empty(numbtupl)
     strgtupl = []
     for k in range(numbtupl):
-        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, strg = tupl[k]
+        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, numbproc, strg = tupl[k]
         strgtupl.append(strg)
-        #strgtupl.append(['%d, %d, %d, %s, %d' % (tupl[k][0], tupl[k][1], tupl[k][2], tupl[k][3], tupl[k][4])])
         if tupl[k][3] == 'heal':
             maxmgang = deg2rad(temp)
             numbsidecart = None
@@ -84,16 +89,17 @@ def test_time():
             maxmgang = None
             numbsidecart = temp
 
-        if k == 0:
-            continue
-    
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         gridchan, dictpcat = init( \
                                   pathdata=os.environ["PCAT_DATA_PATH"], \
                                   numbswep=numbswep, \
+                                  numbproc=numbproc, \
+                                  numbburn=0, \
+                                  factthin=1, \
                                   #makeplot=False, \
                                   strgback=['unit'], \
                                   strgexpo='unit', \
+                                  randinit=False, \
                                   exprinfo=False, \
                                   binsenerfull=binsenerfull, \
                                   indxenerincl=arange(numbener), \
@@ -109,20 +115,26 @@ def test_time():
                                   mocknumbpnts=array([mocknumbpnts]), \
                                  )
         timereal[k] = dictpcat['timerealtotl']
-                
-    indxtupl = np.arange(numbtupl)
+        timeproc[k] = dictpcat['timeproctotl']
+        timeatcr[k] = dictpcat['timeatcr']
+    
     size = 0.5
-    figr, axis = plt.subplots()
-    axis.bar(indxtupl, timereal, 2. * size)
-    axis.set_ylabel('$t$ [s]')
-    axis.set_xticks(indxtupl + size)
-    axis.set_xticklabels(strgtupl, rotation=45)
-    plt.tight_layout()
-    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'timereal/'
+    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    figr.savefig(path + 'timereal%04d_%s.pdf' % (log10(numbswep), strgtimestmp))
-    plt.close(figr)
+    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeprocnorm']
+    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{CPU}^{\prime\prime}$ [s]']
+    listvarb = [timereal, timeproc, timeproc / numbswep, timeatcr, timeproc / numbswep / timeatcr]
+    numbplot = len(liststrg)
+    for k in range(numbplot):
+        figr, axis = plt.subplots()
+        axis.bar(indxtupl, listvarb[k], 2 * size)
+        axis.set_ylabel(listlabl[k])
+        axis.set_xticks(indxtupl + size)
+        axis.set_xticklabels(strgtupl, rotation=45)
+        plt.tight_layout()
+        figr.savefig(path + '%s_%04d_%s.pdf' % (liststrg[k], log10(numbswep), strgtimestmp))
+        plt.close(figr)
 
 
     
@@ -172,33 +184,50 @@ def test_uppr():
 
 def test_prio():
      
-    priofactdoff = array([0., 1., 2., 10.])
-    for k in range(priofactdoff.size):
-        init( \
-             pathdata=os.environ["PCAT_DATA_PATH"], \
-             numbswep=2000, \
-             numbswepplot=10000, \
-             numbburn=0, \
-             verbtype=1, \
-             randinit=False, \
-             #exprinfo=False, \
-             boolproppsfn=False, \
-             indxenerincl=arange(1, 4), \
-             indxevttincl=arange(2, 4), \
-             priofactdoff=priofactdoff[k], \
-             #probprop=array([1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
-             strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-             strgexpr='fermflux_cmp0_ngal.fits', \
-             strgexpo='fermexpo_cmp0_ngal.fits', \
-             psfntype='doubking', \
-             maxmnumbpnts=array([30]), \
-             maxmgang=deg2rad(10.), \
-             minmflux=5e-11, \
-             maxmflux=1e-7, \
-             datatype='mock', \
-             mocknumbpnts=array([30]), \
-            )
-    
+    mocknumbpnts = array([30])
+    priofactdoff = array([-2., 0., 1., 2., 5.])
+    numbiter = priofactdoff.size
+    medinumbpnts = empty(numbiter)
+    medimeanpnts = empty(numbiter)
+    for k in range(numbiter):
+        gridchan, dictpcat = init( \
+                                  pathdata=os.environ["PCAT_DATA_PATH"], \
+                                  numbswep=100000, \
+                                  numbswepplot=30000, \
+                                  numbburn=0, \
+                                  verbtype=1, \
+                                  randinit=False, \
+                                  exprinfo=False, \
+                                  boolproppsfn=False, \
+                                  indxenerincl=arange(1, 4), \
+                                  indxevttincl=arange(2, 4), \
+                                  priofactdoff=priofactdoff[k], \
+                                  strgback=['fermisotflux.fits'], \
+                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  psfntype='doubking', \
+                                  maxmnumbpnts=array([1000]), \
+                                  maxmgang=deg2rad(10.), \
+                                  minmflux=5e-11, \
+                                  maxmflux=1e-7, \
+                                  datatype='mock', \
+                                  mocknumbpnts=array([200]), \
+                                 )
+        medinumbpnts[k] = dictpcat['medinumbpnts']
+        medimeanpnts[k] = dictpcat['medimeanpnts']
+    figr, axis = plt.subplots()
+    axis.plot(priofactdoff, 100. * medinumbpnts / mocknumbpnts[0] - 100., 'o', label='$N$')
+    axis.plot(priofactdoff, 100. * medimeanpnts / mocknumbpnts[0] - 100., 'o', label='$\mu$')
+    axis.set_xlabel('IC Factor')
+    axis.set_ylabel('$\Delta N$ [%]')
+    axis.set_xlim([amin(priofactdoff) - 1., amax(priofactdoff) + 1.])
+    axis.legend()
+    plt.tight_layout()
+    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_prio/'
+    os.system('mkdir -p %s' % path)
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
+    figr.savefig(path + 'percbias_%s.pdf' % strgtimestmp)
+    plt.close(figr)
+
 
 def test_lowr():
       
@@ -231,11 +260,10 @@ def test_post():
     
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
-		 numbswep=5000, \
+		 numbswep=200000, \
 		 numbburn=0, \
 		 factthin=1, \
          randinit=False, \
-         #verbtype=2, \
          indxenerincl=indxenerincl, \
          indxevttincl=indxevttincl, \
          probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -260,13 +288,13 @@ def test_post():
         )
 
 
-def test_numbpntsmodi():
+def test_atcr():
     
-    numbiter = 5
     timeatcr = empty(numbiter)
     timereal = empty(numbiter)
     timeproc = empty(numbiter)
-    numbpntsmodi = arange(numbiter)
+    numbpntsmodi = array([1, 2, 3, 5, 10])
+    numbiter = numbpntsmodi.size
     for k in range(numbpntsmodi.size):
         gridchan, dictpcat = init( \
                                   pathdata=os.environ["PCAT_DATA_PATH"], \
@@ -303,7 +331,7 @@ def test_spmr():
     init( \
          pathdata=os.environ["PCAT_DATA_PATH"], \
 		 numbswep=100000, \
-		 numbswepplot=1000, \
+		 numbswepplot=50000, \
          #verbtype=2, \
          randinit=False, \
          exprinfo=False, \
@@ -319,6 +347,7 @@ def test_spmr():
          maxmflux=3e-12, \
          datatype='mock', \
          mocknumbpnts=array([100]), \
+         minmfluxdistslop=array([-1.5]), \
          mockfluxdistslop=array([-1.]), \
         )
     
