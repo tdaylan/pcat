@@ -46,29 +46,29 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswep = 200000
+    numbswepcomm = 20000
 
     tupl = [ \
             # reference
-            [100, 400, 11.44, 'heal', 1, 1, 'Reference'], \
+            [100, 400, 11.44, 'heal', 1,          numbswepcomm, 1, 'Reference'], \
             
             # numbproc
-            [100, 400, 100, 'cart', 1, 3, 'Cartesian'], \
+            [100, 400,   100, 'cart', 1, int(numbswepcomm / 3), 3, '3 Processes'], \
 
             # cart
-            [100, 400, 100, 'cart', 1, 1, 'Cartesian'], \
+            [100, 400,   100, 'cart', 1,          numbswepcomm, 1, 'Cartesian'], \
 
             # maxmnumbpnts
-            [100, 800, 10., 'heal', 1, 1, '2X Max PS'], \
+            [100, 800, 11.44, 'heal', 1,          numbswepcomm, 1, '2X Max PS'], \
             
             # mocknumbpnts
-            [200, 400, 10., 'heal', 1, 1, '2X Mock PS'], \
+            [200, 400, 11.44, 'heal', 1,          numbswepcomm, 1, '2X Mock PS'], \
 
             # numbpixl
-            [100, 400, 20., 'heal', 1, 1, '2X pixels'], \
+            [100, 400, 22.88, 'heal', 1,          numbswepcomm, 1, '2X pixels'], \
             
             # numbener
-            [100, 400, 10., 'heal', 3, 1, '3 energy bins'], \
+            [100, 400, 11.44, 'heal', 3,          numbswepcomm, 1, '3 energy bins'], \
            ]
     numbtupl = len(tupl)
     indxtupl = np.arange(numbtupl)
@@ -77,7 +77,7 @@ def test_time():
     timeatcr = empty(numbtupl)
     strgtupl = []
     for k in range(numbtupl):
-        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, numbproc, strg = tupl[k]
+        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, numbswep, numbproc, strg = tupl[k]
         strgtupl.append(strg)
         if tupl[k][3] == 'heal':
             maxmgang = deg2rad(temp)
@@ -118,8 +118,8 @@ def test_time():
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeprocnorm']
-    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{CPU}^{\prime\prime}$ [s]']
+    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeatcr', 'timeprocnorm']
+    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]']
     listvarb = [timereal, timeproc, timeproc / numbswep, timeatcr, timeproc / numbswep / timeatcr]
     numbplot = len(liststrg)
     for k in range(numbplot):

@@ -2017,8 +2017,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
         # log the progress
         if gdat.verbtype > 0:
-            thiscntr = tdpy.util.show_prog(gdatmodi.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork)
-    
+            thiscntr = tdpy.util.show_prog(gdatmodi.cntrswep, gdat.numbswep, thiscntr, indxprocwork=indxprocwork, showmemo=True)
+
         if gdat.verbtype > 1:
             print
             print
