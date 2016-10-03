@@ -1005,6 +1005,7 @@ def init( \
     listboolreje = empty((gdat.numbswep, gdat.numbproc))
     listdeltllik = empty((gdat.numbswep, gdat.numbproc))
     listdeltlpri = empty((gdat.numbswep, gdat.numbproc))
+    listmemoresi = empty((gdat.numbsamp, gdat.numbproc))
     for k in gdat.indxproc:
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
@@ -1028,8 +1029,9 @@ def init( \
         listboolreje[:, k] = listchan[17]
         listdeltllik[:, k] = listchan[18]
         listdeltlpri[:, k] = listchan[19]
-        timereal[k] = gridchan[k][20]
-        timeproc[k] = gridchan[k][21]
+        listmemoresi[:, k] = listchan[20]
+        timereal[k] = gridchan[k][21]
+        timeproc[k] = gridchan[k][22]
 
     listindxprop = listindxprop.flatten()
     listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
@@ -1417,6 +1419,10 @@ def init( \
     listhdun.append(pf.ImageHDU(listdeltlpri))
     listhdun[-1].header['EXTNAME'] = 'listdeltlpri'
     
+    ## resident memory usage during the execution
+    listhdun.append(pf.ImageHDU(listmemoresi))
+    listhdun[-1].header['EXTNAME'] = 'listmemoresi'
+    
     ## acceptance
     listhdun.append(pf.ImageHDU(listaccp))
     listhdun[-1].header['EXTNAME'] = 'accp'
@@ -1749,6 +1755,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listboolreje = empty(gdat.numbswep, dtype=bool)
     listdeltllik = zeros(gdat.numbswep)
     listdeltlpri = zeros(gdat.numbswep)
+    listmemoresi = empty(gdat.numbsamp)
     if gdat.verbtype > 1:
         print 'Variables owned by processes'
         print 'listsamp'
@@ -1997,6 +2004,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
                 listtranmatr.append(tranmatr)
 
+            listmemoresi[indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()
+
         # save other variables
         listboolreje[gdatmodi.cntrswep] = gdatmodi.boolreje
         if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
@@ -2043,7 +2052,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
-        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, listdeltllik]
+        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, listdeltllik, listmemoresi]
     
     return listchan
 

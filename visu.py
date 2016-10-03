@@ -209,6 +209,7 @@ def plot_post(pathpcat, verbtype=1):
     gdat.listpntsfluxmean = hdun['listpntsfluxmean'].data
     gdat.listdeltllik = hdun['listdeltllik'].data
     gdat.listdeltlpri = hdun['listdeltlpri'].data
+    gdat.listmemoresi = hdun['listmemoresi'].data
 
     # posterior distributions
     gdat.listnumbpnts = hdun['numbpnts'].data
@@ -285,9 +286,8 @@ def plot_post(pathpcat, verbtype=1):
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{pix}$')
             plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'gmrbhist_' + gdat.rtag + '.pdf')
+            figr.savefig(gdat.pathplot + 'gmrbhist.pdf')
             plt.close(figr)
-            
             path = gdat.pathplot + 'gmrbheal.pdf'
             maps = zeros(gdat.numbpixl)
             maps[indxpixlsave] = gmrbstat
@@ -304,7 +304,7 @@ def plot_post(pathpcat, verbtype=1):
     axis.set_xlabel('Sample index')
     axis.set_ylabel(r'$\tilde{\eta}$')
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'atcr_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'atcr.pdf')
     plt.close(figr)
 
     # plot proposal efficiency
@@ -330,7 +330,7 @@ def plot_post(pathpcat, verbtype=1):
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'propeffiprop_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'propeffiprop.pdf')
     plt.close(figr)
     
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
@@ -350,7 +350,7 @@ def plot_post(pathpcat, verbtype=1):
         axis.set_yticklabels(listlabltick)
     
     plt.subplots_adjust(hspace=0)
-    figr.savefig(gdat.pathplot + 'propeffipara_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'propeffipara.pdf')
     plt.close(figr)
    
     # plot split and merge diagnostics
@@ -418,7 +418,7 @@ def plot_post(pathpcat, verbtype=1):
             axis.set_xlabel(listlabl[k])
             axis.legend()
             plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + gdat.rtag + '.pdf')
+            figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
             plt.close(figr)
     
     if gdat.verbtype > 0:
@@ -431,7 +431,7 @@ def plot_post(pathpcat, verbtype=1):
 
     # temp
     if False:
-        path = gdat.pathplot + 'listsamp_' + gdat.rtag + '_'
+        path = gdat.pathplot + 'listsamp_'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparaplot], ['%d' % k for k in indxparaplot], numbplotside=10)
 
     numbpntspost = 3
@@ -714,10 +714,19 @@ def plot_post(pathpcat, verbtype=1):
                 axis.set_ylabel(r'$N_{samp}$')
                 axis.set_xlabel(r'$\ln P(x)$')
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'leviinfo_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'leviinfo.pdf')
     plt.close(figr)
 
     #make_anim()
+
+    # plot resident memory
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    axis.plot(gdat.indxsamp, mean(gdat.listmemoresi, 1) / float(2**30))
+    axis.set_ylabel(r'$M$ [GB]')
+    axis.set_xlabel(r'$i_{samp}$')
+    plt.tight_layout()
+    figr.savefig(gdat.pathplot + 'memoresi.pdf')
+    plt.close(figr)
 
     timetotlfinl = gdat.functime()
     if gdat.verbtype > 0:
@@ -744,7 +753,7 @@ def plot_chro(gdat):
             axcl[k].set_xticklabels([])
     axcl[-1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(hspace=0.05)
-    figr.savefig(gdat.pathplot + 'chroprop_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'chroprop.pdf')
     plt.close(figr)
 
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Other']
@@ -767,7 +776,7 @@ def plot_chro(gdat):
     axcl[0].legend(loc=1, ncol=numblabl-1)
     axcl[1].legend(loc=2)
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'chrototl_' + gdat.rtag + '.pdf')
+    figr.savefig(gdat.pathplot + 'chrototl.pdf')
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
@@ -791,7 +800,7 @@ def plot_chro(gdat):
                 axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
             axcl[-1].set_xlabel('$t$ [ms]')
             plt.subplots_adjust(hspace=0.05)
-            figr.savefig(gdat.pathplot + 'chrollik_' + gdat.rtag + '.pdf')
+            figr.savefig(gdat.pathplot + 'chrollik.pdf')
             plt.close(figr)
 
 
@@ -837,9 +846,9 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     axis.legend()
 
     if post:
-        path = gdat.pathplot + 'compfracspec_' + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'compfracspec.pdf'
     else:
-        path = gdat.pathplot + 'compfracspec_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'compfracspec_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -863,9 +872,9 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     axis.axis('equal')
 
     if post:
-        path = gdat.pathplot + 'compfrac_' + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'compfrac.pdf'
     else:
-        path = gdat.pathplot + 'compfrac_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'compfrac_%09d.pdf' % gdatmodi.cntrswep
     plt.subplots_adjust(top=0.8, bottom=0.2, left=0.2, right=0.8)
     plt.savefig(path)
     plt.close(figr)
@@ -898,9 +907,9 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     axis.set_ylim([0.5, None])
     axis.legend(loc=2)
     if post:
-        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'histsind_pop%d.pdf' % l
     else:
-        path = gdat.pathplot + 'histsind_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'histsind_pop%d_%09d.pdf' % (l, gdatmodi.cntrswep)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -956,9 +965,9 @@ def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, li
     axis.set_ylim([gdat.minmsind, gdat.maxmsind])
     axis.legend(loc=2)
     if post:
-        path = gdat.pathplot + 'fluxsind%s_pop%d_' % (strgtype, l) + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'fluxsind%s_pop%d' % (strgtype, l) + '.pdf'
     else:
-        path = gdat.pathplot + 'fluxsind%s_pop%d_' % (strgtype, l) + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'fluxsind%s_pop%d' % (strgtype, l) + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1067,9 +1076,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     else:
         strg = 'flux'
     if post:
-        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '.pdf'
     else:
-        path = gdat.pathplot + 'hist%s_pop%d_' % (strg, l) + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '_%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1137,9 +1146,9 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axis.set_title(gdat.binsenerstrg[i])
 
     if postspecmtch != None:
-        path = gdat.pathplot + 'scatspec%d_' % l + gdat.rtag + '.pdf'
+        path = gdat.pathplot + 'scatspec%d' % l + '.pdf'
     elif gdatmodi.thisspecmtch != None:
-        path = gdat.pathplot + 'scatspec%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'scatspec%d' % l + '_%09d.pdf' % gdatmodi.cntrswep
 
     plt.tight_layout()
     plt.savefig(path)
@@ -1175,7 +1184,7 @@ def plot_scatpixl(gdat, gdatmodi, l):
                 axis.set_title(gdat.enerstrg[i])
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'scatpixl%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'scatpixl%d_' % l + '%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1271,7 +1280,7 @@ def plot_evidtest():
     plt.colorbar(imag, ax=axis, fraction=0.03)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'evidtest_' + gdat.rtag + '.pdf')
+    plt.savefig(gdat.pathplot + 'evidtest.pdf')
     plt.close(figr)
     
     
@@ -1338,7 +1347,7 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                                                                                    tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr]) + ' %s' % gdat.strgfluxunit
                 axis.set_title(titl)
         plt.tight_layout()
-        figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '_' + gdat.rtag + '.pdf')
+        figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
         plt.close(figr)
        
     
@@ -1421,7 +1430,7 @@ def plot_psfn(gdat, gdatmodi):
             axis.text(0.2, 0.2, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'psfnprof_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'psfnprof_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1445,7 +1454,7 @@ def plot_fwhm(gdat, gdatmodi):
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fwhmcnts_' + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'fwhmcnts_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1481,7 +1490,7 @@ def plot_datacntshist(gdat):
                 axis.set_ylabel(gdat.evttstrg[m])
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'datacntshist' + gdat.rtag + '.pdf')
+    plt.savefig(gdat.pathplot + 'datacntshist.pdf')
     plt.close(figr)
     
     
@@ -1555,7 +1564,7 @@ def plot_eval(gdat):
     axis.legend(handlelength=.5, loc=3)
     
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'eval_' + gdat.rtag + '.pdf')
+    plt.savefig(gdat.pathplot + 'eval.pdf')
     plt.close(figr)
 
 
@@ -1586,7 +1595,7 @@ def plot_3fgl_thrs(gdat):
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'thrs_' + gdat.rtag + '.pdf')
+    plt.savefig(gdat.pathplot + 'thrs.pdf')
     plt.close(figr)
     
 
@@ -1648,7 +1657,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 axis.legend()
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'histcnts_pop%d_' % l + gdat.rtag + '_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'histcnts_pop%d' % l + '_%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
 
