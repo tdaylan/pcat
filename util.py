@@ -1035,7 +1035,7 @@ def retr_fermdata(gdat):
     # adjust 3FGL positions according to the ROI center
     
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-        rttr = hp.rotator.Rotator(rot=[0., 90., 0.], deg=True)
+        rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True)
         fgl3bgal, fgl3lgal = rttr(pi / 2. - fgl3bgal, fgl3lgal)
         fgl3bgal = pi / 2. - fgl3bgal
 
