@@ -836,6 +836,11 @@ def init( \
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
+    # check the call stack for the name of the configuring function
+    gdat.strgcnfg = inspect.stack()[1][3]
+    if gdat.verbtype > 0:
+        print 'Configuration %s' % gdat.strgcnfg
+
     # make the relevant folders
     gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
     os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
@@ -849,11 +854,6 @@ def init( \
         print 'PCAT started at %s' % gdat.strgtimestmp
         print 'Initializing...'
     
-    # check the call stack for the name of the configuring function
-    gdat.strgcnfg = inspect.stack()[1][3]
-    if gdat.verbtype > 0:
-        print 'Configuration %s' % gdat.strgcnfg
-
     # setup the sampler
     setp(gdat) 
 
