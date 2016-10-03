@@ -46,7 +46,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 20000
+    numbswepcomm = 500000
 
     tupl = [ \
             # reference
@@ -184,8 +184,7 @@ def test_prio():
     for k in range(numbiter):
         gridchan, dictpcat = init( \
 		                          numbproc=1, \
-                                  numbswep=200000, \
-                                  numbswepplot=30000, \
+                                  numbswep=500000, \
                                   numbburn=0, \
                                   randinit=False, \
                                   exprinfo=False, \
@@ -223,7 +222,7 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=200000, \
+         numbswep=500000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -286,7 +285,7 @@ def test_atcr():
     numbiter = numbpntsmodi.size
     for k in range(numbpntsmodi.size):
         gridchan, dictpcat = init( \
-	                              numbswep=200000, \
+	                              numbswep=500000, \
                                   numbburn=0, \
                                   factthin=1, \
                                   makeplot=False, \
@@ -315,7 +314,7 @@ def test_atcr():
 def test_spmr():
      
     init( \
-		 numbswep=200000, \
+		 numbswep=500000, \
          randinit=False, \
          exprinfo=False, \
          indxenerincl=arange(2, 3), \
@@ -338,7 +337,7 @@ def test_spmr():
 def test_popl():
      
     init( \
-		 numbswep=200000, \
+		 numbswep=500000, \
          randinit=False, \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \

@@ -741,7 +741,17 @@ def retr_maps(gdat, indxpntsfull, sampvarb):
 def retr_mrkrsize(gdat, flux):
 
     mrkrsize = (log(flux) - log(gdat.minmflux)) / (log(gdat.maxmflux) - log(gdat.minmflux)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
-        
+    
+    if False:
+        print 'flux'
+        print flux
+        print 'gdat.maxmflux'
+        print gdat.maxmflux
+        print 'gdat.minmflux'
+        print gdat.minmflux
+        print 'mrkrsize'
+        print mrkrsize
+
     return mrkrsize
 
 
@@ -1035,7 +1045,8 @@ def retr_fermdata(gdat):
     # adjust 3FGL positions according to the ROI center
     
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-        rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True)
+        #rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
+        rttr = hp.rotator.Rotator(rot=[0., rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
         fgl3bgal, fgl3lgal = rttr(pi / 2. - fgl3bgal, fgl3lgal)
         fgl3bgal = pi / 2. - fgl3bgal
 
@@ -2899,7 +2910,7 @@ def setp(gdat):
     gdat.mrkralph = 0.5
     ## marker size
     gdat.minmmrkrsize = 50
-    gdat.maxmmrkrsize = 250
+    gdat.maxmmrkrsize = 500
     ## ROI
     gdat.exttrofi = array([gdat.minmlgal, gdat.maxmlgal, gdat.minmbgal, gdat.maxmbgal])
     gdat.exttrofi *= gdat.anglfact 
