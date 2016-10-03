@@ -836,6 +836,15 @@ def init( \
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
+    # make the relevant folders
+    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
+    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
+    
+    # redirect standard output to a file if in a Screen session
+    if os.environ["TERM"] == 'screen':
+        path = gdat.pathoutp + 'rlog.txt'
+        sys.stdout = open(path, 'w')
+
     if gdat.verbtype > 0:
         print 'PCAT started at %s' % gdat.strgtimestmp
         print 'Initializing...'
@@ -845,10 +854,6 @@ def init( \
     if gdat.verbtype > 0:
         print 'Configuration %s' % gdat.strgcnfg
 
-    # make the relevant folders
-    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
-    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
-    
     # setup the sampler
     setp(gdat) 
 
@@ -1609,6 +1614,9 @@ def init( \
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         
+    if os.environ["TERM"] == 'screen':
+        sys.stdout.close()
+    
     return gridchan, dictpcat
     
     
