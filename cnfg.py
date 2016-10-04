@@ -133,26 +133,34 @@ def test_time():
 
     
 def test_psfn():
-     
-    init( \
-         numbswep=100000, \
-         numbburn=0, \
-         factthin=1, \
-         randinit=False, \
-         exprinfo=False, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         strgback=['fermisotflux.fits', ], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
-         psfntype='doubking', \
-         maxmnumbpnts=array([100]), \
-         maxmgang=deg2rad(10.), \
-         minmflux=3e-11, \
-         maxmflux=1e-7, \
-         datatype='mock', \
-         mocknumbpnts=array([100]), \
-        )
+    
+    tupl = [['doubking', 'mock'], \
+            ['gausking', 'mock'], \
+            ['doubking', 'inpt'], \
+            ['gausking', 'inpt']]
+    numbtupl = len(tupl)
+    for k in range(numbtupl):
+        psfntype = tupl[k][0]
+        datatype = tupl[k][1]
+        init( \
+             numbswep=100000, \
+             numbburn=0, \
+             factthin=1, \
+             randinit=False, \
+             exprinfo=False, \
+             indxenerincl=arange(2, 3), \
+             indxevttincl=arange(3, 4), \
+             strgback=['fermisotflux.fits', ], \
+             strgexpo='fermexpo_cmp0_ngal.fits', \
+             probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
+             psfntype=psfntype, \
+             maxmnumbpnts=array([100]), \
+             maxmgang=deg2rad(10.), \
+             minmflux=3e-11, \
+             maxmflux=1e-7, \
+             datatype=datatype, \
+             mocknumbpnts=array([100]), \
+            )
                 
     
 def test_uppr():
@@ -317,7 +325,7 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=100000, \
+	    	 numbswep=1000, \
              factthin=1, \
              randinit=False, \
              exprinfo=False, \
@@ -358,6 +366,30 @@ def test_popl():
          mockfluxdisttype='powr', \
          mocknumbpnts=array([300, 200]), \
          mockfluxdistslop=array([1.9, 1.1]), \
+        )
+
+
+def test():
+    
+    init( \
+         numbswep=100, \
+         verbtype=2, \
+         numbburn=0, \
+         factthin=1, \
+         randinit=False, \
+         exprinfo=False, \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
+         strgback=['fermisotflux.fits', ], \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.]), \
+         psfntype='doubking', \
+         maxmnumbpnts=array([4]), \
+         maxmgang=deg2rad(10.), \
+         minmflux=3e-11, \
+         maxmflux=1e-7, \
+         datatype='mock', \
+         mocknumbpnts=array([3]), \
         )
 
 

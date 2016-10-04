@@ -324,9 +324,9 @@ def retr_llik(gdat, gdatmodi, init=False):
             bgal = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampbgal)]
             spec = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec, axis=1)[gdat.indxenermodi, :]]
         if gdatmodi.thisindxprop >= gdat.indxpropbrth:
-            lgal = gdatmodi.modilgal[:gdat.numbmodipnts]
-            bgal = gdatmodi.modibgal[:gdat.numbmodipnts]
-            spec = gdatmodi.modispec[meshgrid(gdat.indxenermodi, arange(gdat.numbmodipnts), indexing='ij')]
+            lgal = gdatmodi.modilgal[:gdatmodi.numbmodipnts]
+            bgal = gdatmodi.modibgal[:gdatmodi.numbmodipnts]
+            spec = gdatmodi.modispec[meshgrid(gdat.indxenermodi, arange(gdatmodi.numbmodipnts), indexing='ij')]
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 0] = timefinl - timeinit
         
@@ -336,7 +336,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             gdat.indxpixlmodi = gdat.indxpixl
         if gdatmodi.thisindxprop >= gdat.indxpropbrth or gdatmodi.thisindxprop == gdat.indxproppsfipara:
             thisindxpixlprox = []
-            for k in range(gdat.numbmodipnts):
+            for k in range(gdatmodi.numbmodipnts):
                 # temp -- this may not work for extreme color PS!
                 # take the flux at the pivot energy
                 if gdatmodi.thisindxprop == gdat.indxproppsfipara:
@@ -379,7 +379,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                     psfnintp = gdatmodi.thispsfnintp
                 else:
                     psfnintp = gdatmodi.nextpsfnintp
-                for k in range(gdat.numbmodipnts):
+                for k in range(gdatmodi.numbmodipnts):
                     # calculate the distance to the pixels to be updated
                     dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
                     # interpolate the PSF
@@ -1327,7 +1327,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.nextsampvarb[gdat.indxsamppsfipara[gdat.indxpsfiparamodi]] = \
             icdf_psfipara(gdat, gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.indxpsfiparamodi)
             
-        gdat.numbmodipnts = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
+        gdatmodi.numbmodipnts = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
                     
         # construct the proposed PSF
         gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
@@ -1375,15 +1375,19 @@ def retr_prop(gdat, gdatmodi):
     # birth
     if gdatmodi.thisindxprop == gdat.indxpropbrth:
 
+        # temp -- modi
+        #thisnumbpntsmodi = gdat.maxmnumbpnts[gdatmodi.indxpoplmodi] - int(gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]])
+        #gdatmodi.numbmodipnts = choice(gdat.listnumbpntsmodi[thisnumbpntsmodi], p=gdat.probnumbpntsmodi[thisnumbpntsmodi])
+        gdatmodi.numbmodipnts = 1
+
         # change the number of PS
-        gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] + 1
+        gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] + gdatmodi.numbmodipnts
     
         # initial sample index to add the new PS
         indxsampbrth = int(gdat.indxsampcompinit + sum(gdat.maxmnumbcomp[:gdatmodi.indxpoplmodi]) + gdatmodi.thisindxpntsempt[gdatmodi.indxpoplmodi][0] * gdat.numbcomp)
         
         # sample auxiliary variables
-        numbauxipara = gdat.numbcompcolr
-        gdatmodi.auxipara = rand(numbauxipara)
+        gdatmodi.auxipara = rand(gdat.numbcompcolr)
 
         gdatmodi.drmcsamp[indxsampbrth:indxsampbrth+2, -1] = gdatmodi.auxipara[0:2]
         gdatmodi.drmcsamp[indxsampbrth+gdat.indxcompflux, -1] = gdatmodi.auxipara[-2]
@@ -1393,7 +1397,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampmodi = arange(indxsampbrth, indxsampbrth + gdat.numbcomp, dtype=int)
 
         # modification catalog
-        gdat.numbmodipnts = 1
+        gdatmodi.numbmodipnts = 1
         gdatmodi.modilgal[0] = icdf_self(gdatmodi.drmcsamp[indxsampbrth+gdat.indxcomplgal, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
         gdatmodi.modibgal[0] = icdf_self(gdatmodi.drmcsamp[indxsampbrth+gdat.indxcompbgal, -1], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
         fluxunit = gdatmodi.drmcsamp[indxsampbrth+gdat.indxcompflux, -1]
@@ -1410,6 +1414,8 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.modispec[:, 0] = retr_spec(gdat, modiflux, gdatmodi.modisind[0]).flatten()
     
         if gdat.verbtype > 1:
+            print 'numbmodipnts'
+            print gdatmodi.numbmodipnts
             print 'auxipara: ', gdatmodi.auxipara
             print 'modilgal: ', gdatmodi.modilgal
             print 'modibgal: ', gdatmodi.modibgal
@@ -1433,7 +1439,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampmodi = array([])
             
         # modification catalog
-        gdat.numbmodipnts = 1
+        gdatmodi.numbmodipnts = 1
         gdatmodi.modilgal[0] = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][killindxindxpnts]]
         gdatmodi.modibgal[0] = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][killindxindxpnts]]
         gdatmodi.modispec[:, 0] = -gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, killindxindxpnts]]
@@ -1451,7 +1457,7 @@ def retr_prop(gdat, gdatmodi):
     # split
     if gdatmodi.thisindxprop == gdat.indxpropsplt:
         
-        gdat.numbmodipnts = 3
+        gdatmodi.numbmodipnts = 3
         
         gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] + 1
         
@@ -1523,11 +1529,6 @@ def retr_prop(gdat, gdatmodi):
             print 'spltsindfrst: ', gdatmodi.spltsindfrst
             print 'spltsindseco: ', gdatmodi.spltsindseco
 
-            print 'maxmgangmarg'
-            print gdat.anglfact * gdat.maxmgangmarg
-            print 'minmflux'
-            print gdat.minmflux
-
         if fabs(gdatmodi.spltlgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltlgalseco) > gdat.maxmgangmarg or \
                                             fabs(gdatmodi.spltbgalfrst) > gdat.maxmgangmarg or fabs(gdatmodi.spltbgalseco) > gdat.maxmgangmarg or \
                                             gdatmodi.fluxfrst < gdat.minmflux or gdatmodi.fluxseco < gdat.minmflux:
@@ -1544,19 +1545,6 @@ def retr_prop(gdat, gdatmodi):
             
             listpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.numbpair = len(listpair)
-
-            if False:
-                print 'hey'
-                print 'splt'
-                print 'lgal'
-                print lgal
-                print 'bgal'
-                print bgal
-                print 'listpair'
-                print listpair
-                print 'gdatmodi.numbpair'
-                print gdatmodi.numbpair
-                print
 
             if gdatmodi.numbpair == 0:
                 print 'Number of pairs should not be zero in the reverse proposal of a split'
@@ -1601,7 +1589,7 @@ def retr_prop(gdat, gdatmodi):
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
         # number of point sources to be modified
-        gdat.numbmodipnts = 3
+        gdatmodi.numbmodipnts = 3
         
         # proposed number of point sources
         gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] - 1
@@ -1611,19 +1599,6 @@ def retr_prop(gdat, gdatmodi):
                                                                                         gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]])
         gdatmodi.numbpair = len(listpair)
         
-        if False:
-            print 'hey'
-            print 'merg'
-            print 'lgal'
-            print gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]]
-            print 'bgal'
-            print gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]]
-            print 'listpair'
-            print listpair
-            print 'gdatmodi.numbpair'
-            print gdatmodi.numbpair
-            print
-
         if gdat.verbtype > 1:
             print 'listpair'
             print listpair
@@ -1796,7 +1771,7 @@ def retr_prop(gdat, gdatmodi):
         if gdatmodi.thisindxprop == gdat.indxpropsind:
             retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvsind)
 
-        gdat.numbmodipnts = 2
+        gdatmodi.numbmodipnts = 2
         gdatmodi.modispec[:, 0] = -thisspec.flatten()
         if gdatmodi.thisindxprop == gdat.indxproplgal or gdatmodi.thisindxprop == gdat.indxpropbgal:
             if gdat.indxcompmodi == 0:
@@ -2185,8 +2160,6 @@ def retr_propmodl(gdat):
             gdat.probpsfipara = 0.
         probnormback = array([1.])
        
-        gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
-
         probbrth = 0.2 * gdat.maxmnumbpntstotl
         probdeth = 0.2 * gdat.maxmnumbpntstotl
         probsplt = 0.  * gdat.maxmnumbpntstotl
@@ -2297,6 +2270,8 @@ def setp(gdat):
     gdat.numbevtt = gdat.indxevttincl.size
     gdat.indxevtt = arange(gdat.numbevtt)
     
+    gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
+
     # axes
     ## longitude
     gdat.numblgal = 10
@@ -2868,9 +2843,6 @@ def setp(gdat):
         for i in gdat.indxener:
             gdat.backfluxmean[c, i] += sum(gdat.backflux[c][i, :, :] * gdat.expo[i, :, :]) / sum(gdat.expo[i, :, :])
 
-    # maximum number of point sources that can be modified at once
-    gdat.numbmodipnts = int(max(3, sum(gdat.maxmnumbpnts)))
-    
     # proposals
     retr_propmodl(gdat)
     
@@ -2904,6 +2876,21 @@ def setp(gdat):
     gdat.maxmlgalmarg = gdat.maxmgangmarg
     gdat.minmbgalmarg = -gdat.maxmgangmarg
     gdat.maxmbgalmarg = gdat.maxmgangmarg
+
+    # construct lists of possible changes to the number of PS for each PS model and the associated probabilities
+    gdat.listnumbpntsmodi = []
+    gdat.probnumbpntsmodi = []
+    for k in range(sum(gdat.maxmnumbpnts)):
+        gdat.listnumbpntsmodi.append(arange(1, k + 1))
+        gdat.probnumbpntsmodi.append(1. / gdat.listnumbpntsmodi[k])
+        gdat.probnumbpntsmodi[k] /= sum(gdat.probnumbpntsmodi[k])
+   
+    if gdat.verbtype > 1:
+        print 'listnumbpntsmodi'
+        print gdat.listnumbpntsmodi
+        print 'probnumbpntsmodi'
+        print gdat.probnumbpntsmodi
+        print
 
     # temp
     gdat.tracsamp = False

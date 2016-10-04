@@ -165,8 +165,6 @@ def work(gdat, indxprocwork):
                                                                                 minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                 minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
             
-
- 
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -210,10 +208,10 @@ def work(gdat, indxprocwork):
     gdatmodi.deltllik = 0.
     
     ## modification catalog
-    gdatmodi.modilgal = empty(gdat.numbmodipnts)
-    gdatmodi.modibgal = empty(gdat.numbmodipnts)
-    gdatmodi.modisind = empty(gdat.numbmodipnts)
-    gdatmodi.modispec = empty((gdat.numbener, gdat.numbmodipnts))
+    gdatmodi.modilgal = empty(gdat.maxmnumbpntstotl)
+    gdatmodi.modibgal = empty(gdat.maxmnumbpntstotl)
+    gdatmodi.modisind = empty(gdat.maxmnumbpntstotl)
+    gdatmodi.modispec = empty((gdat.numbener, gdat.maxmnumbpntstotl))
     
     # plotting variables
     gdatmodi.thisbackfwhmcnts = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
@@ -1194,6 +1192,19 @@ def init( \
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
     atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype)
+    print 'listmodlcnts'
+    print listmodlcnts
+    print listmodlcnts.shape
+    print 'atcr'
+    print atcr
+    print atcr.shape
+    print 'timeatcr'
+    print timeatcr
+    print timeatcr.shape
+    print 
+
+    atcr = mean(atcr, 0)
+    timeatcr = mean(timeatcr)
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
     dictpcat['timeatcr'] = timeatcr
