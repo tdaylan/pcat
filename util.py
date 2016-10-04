@@ -2689,10 +2689,20 @@ def setp(gdat):
             minmnumbburn = 200000
         gdat.numbburn = min(minmnumbburn, gdat.numbswep - 1)
 
-    # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = min(2 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
+        # temp
+        # gdat.factthin = min(2 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
+        gdat.factthin = int(min(0.1 * gdat.numbpara, gdat.numbswep - gdat.numbburn))
+
+    print 'hey'
+    print 'gdat.numbburn'
+    print gdat.numbburn
+    print 'gdat.factthin'
+    print gdat.factthin
+    print 
+
+    # factor by which to thin the sweeps to get samples
     # run tag
     gdat.rtag = retr_rtag(gdat, None)
     

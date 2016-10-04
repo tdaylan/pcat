@@ -1100,7 +1100,7 @@ def init( \
     listnormback = listsampvarb[:, :, gdat.indxsampnormback].reshape(gdat.numbsamptotl, gdat.numbback, gdat.numbener)
     ## mean number of PS
     listmeanpnts = listsampvarb[:, :, gdat.indxsampmeanpnts].reshape(gdat.numbsamptotl, -1)
-    dictpcat['medimeanpnts'] = median(listmeanpnts)
+    dictpcat['postmeanpnts'] = tdpy.util.retr_postvarb(listmeanpnts).flatten()
     ## flux distribution
     listfluxdistslop = listsampvarb[:, :, gdat.indxsampfluxdistslop].reshape(gdat.numbsamptotl, gdat.numbpopl)
     listfluxdistbrek = listsampvarb[:, :, gdat.indxsampfluxdistbrek].reshape(gdat.numbsamptotl, gdat.numbpopl)
@@ -1108,7 +1108,7 @@ def init( \
     listfluxdistslopuppr = listsampvarb[:, :, gdat.indxsampfluxdistslopuppr].reshape(gdat.numbsamptotl, gdat.numbpopl)
     ## number of PS
     listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamptotl, -1)
-    dictpcat['medinumbpnts'] = median(listnumbpnts)
+    dictpcat['postnumbpnts'] = tdpy.util.retr_postvarb(listnumbpnts).flatten()
 
     ## PS parameters
     listlgal = []
@@ -1148,6 +1148,13 @@ def init( \
                 # find the indices of the model PSs that are in the comparison area
                 indxmodlpntscomp = retr_indxpntscomp(gdat, listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
 
+                print 'hey'
+                print 'indxmodlpntscomp'
+                print indxmodlpntscomp.size
+                print 'numbpnts'
+                print numbpnts
+                print
+
                 # histograms of PS parameters
                 # temp -- gdat.indxmodlpntscomp[l]
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
@@ -1158,6 +1165,8 @@ def init( \
                 listganghist[n, l, :] = histogram(listgang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsgang)[0]
                 listaanghist[n, l, :] = histogram(listaang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsaang)[0]
 
+                
+    
     # auxiliary variables
     listpntsfluxmean = listpntsfluxmean.reshape(gdat.numbsamptotl, gdat.numbener)
    

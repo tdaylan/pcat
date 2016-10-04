@@ -7,17 +7,13 @@ from visu import *
 
 def test_info():
     
-    minmflux = logspace(-11., -9., 5)
-    numbruns = minmflux.size
-    maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 500000
+    listminmflux = logspace(-12., -9., 10)
+    numbiter = listminmflux.size
+    maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
+    numbswep = zeros(numbiter, dtype=int) + 500000
     numbburn = numbswep / 2
-    
-    numbiter = minmflux.size
-
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
-    
     for k in range(numbiter):
         gridchan, dictpcat = init( \
                                   psfntype='doubking', \
@@ -32,7 +28,7 @@ def test_info():
                                   indxevttincl=arange(3, 4), \
                                   maxmnumbpnts=array([maxmnumbpnts[k]]), \
                                   maxmgang=deg2rad(10.), \
-                                  minmflux=minmflux[k], \
+                                  minmflux=listminmflux[k], \
                                   maxmflux=1e-7, \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -42,36 +38,53 @@ def test_info():
         listlevi[k] = dictpcat['levi']
         listinfo[k] = dictpcat['info']
 
-    plot_minmfluxinfo(minmflux, listinfo, listlevi)
+    figr, axis = plt.subplots()
+    axistwin = axis.twinx()
+    axis.plot(listminmflux, listinfo, label='Relative entropy')
+    axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
+    axistwin.plot(listminmflux, listlevi, label='Log-evidence', color='g')
+    axistwin.legend(bbox_to_anchor=[0.8, 1.08])
+    axis.set_ylabel('$D_{KL}$ [nats]')
+    axistwin.set_ylabel(r'$\log P(D)$ [nats]')
+    axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
+    axis.set_xscale('log')
+    plt.tight_layout()
+    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/test_info/'
+    os.system('mkdir -p ' + pathfold)
+    figr.savefig(pathfold + 'infolevi.pdf')
+    plt.close(figr)
 
 
 def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 500000
+    numbswepcomm = 50000
 
     tupl = [ \
             # reference
-            [100, 400, 11.44, 'heal', 1,          numbswepcomm, 1, 'Reference'], \
+            [100, 400, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
             
             # numbproc
-            [100, 400,   100, 'cart', 1, int(numbswepcomm / 3), 3, '3 Processes'], \
+            [100, 400,   100, 'cart', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
 
             # cart
-            [100, 400,   100, 'cart', 1,          numbswepcomm, 1, 'Cartesian'], \
+            [100, 400,   100, 'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
 
             # maxmnumbpnts
-            [100, 800, 11.44, 'heal', 1,          numbswepcomm, 1, '2X Max PS'], \
+            [100, 800, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Max PS'], \
+            
+            # minmflux
+            [100, 800, 11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
             
             # mocknumbpnts
-            [200, 400, 11.44, 'heal', 1,          numbswepcomm, 1, '2X Mock PS'], \
+            [200, 400, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Mock PS'], \
 
             # numbpixl
-            [100, 400, 22.88, 'heal', 1,          numbswepcomm, 1, '2X pixels'], \
+            [100, 400, 22.88, 'heal', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
             
             # numbener
-            [100, 400, 11.44, 'heal', 3,          numbswepcomm, 1, '3 energy bins'], \
+            [100, 400, 11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
            ]
     numbtupl = len(tupl)
     indxtupl = np.arange(numbtupl)
@@ -80,9 +93,9 @@ def test_time():
     timeatcr = empty(numbtupl)
     strgtupl = []
     for k in range(numbtupl):
-        mocknumbpnts, maxmnumbpnts, temp, pixltype, numbener, numbswep, numbproc, strg = tupl[k]
+        mocknumbpnts, maxmnumbpnts, temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
         strgtupl.append(strg)
-        if tupl[k][3] == 'heal':
+        if pixltype == 'heal':
             maxmgang = deg2rad(temp)
             numbsidecart = None
         else:
@@ -105,8 +118,8 @@ def test_time():
                                   psfntype='doubking', \
                                   maxmnumbpnts=array([maxmnumbpnts]), \
                                   maxmgang=maxmgang, \
-                                  minmflux=3e-1, \
-                                  maxmflux=1e3, \
+                                  minmflux=minmflux, \
+                                  maxmflux=1e6, \
                                   datatype='mock', \
                                   numbsidecart=numbsidecart, \
                                   mocknumbpnts=array([mocknumbpnts]), \
@@ -114,7 +127,10 @@ def test_time():
         timereal[k] = dictpcat['timerealtotl']
         timeproc[k] = dictpcat['timeproctotl']
         timeatcr[k] = dictpcat['timeatcr']
-    
+        print 'timeatcr'
+        print timeatcr[k]
+        print
+
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
     os.system('mkdir -p %s' % path)
@@ -187,14 +203,17 @@ def test_uppr():
 
 
 def test_prio():
-     
-    priofactdoff = array([-2., 0., 1., 2., 5.])
+    
+    mocknumbpnts = array([200])
+    priofactdoff = array([-5., -2., 0., 1., 2., 5.])
     numbiter = priofactdoff.size
-    medinumbpnts = empty(numbiter)
-    medimeanpnts = empty(numbiter)
+    postnumbpnts = empty((3, numbiter))
+    postmeanpnts = empty((3, numbiter))
+
+    arry = array([1., 0.8, 1.2])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  numbswep=500000, \
+                                  numbswep=5000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -209,13 +228,17 @@ def test_prio():
                                   minmflux=5e-11, \
                                   maxmflux=1e-7, \
                                   datatype='mock', \
-                                  mocknumbpnts=array([200]), \
+                                  mocknumbpnts=mocknumbpnts, \
                                  )
-        medinumbpnts[k] = dictpcat['medinumbpnts']
-        medimeanpnts[k] = dictpcat['medimeanpnts']
+        postnumbpnts[:, k] = dictpcat['postnumbpnts']
+        postmeanpnts[:, k] = dictpcat['postmeanpnts']
+    postnumbpnts = 100. * postnumbpnts / mocknumbpnts[0] - 100.
+    postmeanpnts = 100. * postmeanpnts / mocknumbpnts[0] - 100.
+    errrnumbpnts = tdpy.util.retr_errrvarb(postnumbpnts)
+    errrmeanpnts = tdpy.util.retr_errrvarb(postmeanpnts)
     figr, axis = plt.subplots()
-    axis.plot(priofactdoff, 100. * medinumbpnts / mocknumbpnts[0] - 100., 'o', label='$N$')
-    axis.plot(priofactdoff, 100. * medimeanpnts / mocknumbpnts[0] - 100., 'o', label='$\mu$')
+    axis.errorbar(priofactdoff, postnumbpnts[0, :], ls='', yerr=errrnumbpnts, lw=1, marker='o', label='$N$')
+    axis.errorbar(priofactdoff, postmeanpnts[0, :], ls='', yerr=errrmeanpnts, lw=1, marker='o', label='$\mu$')
     axis.set_xlabel('IC Factor')
     axis.set_ylabel('$\Delta N$ [%]')
     axis.set_xlim([amin(priofactdoff) - 1., amax(priofactdoff) + 1.])

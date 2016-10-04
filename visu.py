@@ -894,6 +894,12 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     else:
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
+        
+        print 'hey'
+        print 'gdat.indxtruepntscomp'
+        print gdat.indxtruepntscomp.size
+        print
+
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
             axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
@@ -1227,34 +1233,6 @@ def plot_psfn_type():
     axis.set_yscale('log')
     axis.set_ylim([1e-3, None])
     plt.show()
-    
-
-def plot_minmfluxinfo(minmfluxarry, listinfo, listlevi):
-    
-    print 'minmfluxarry'
-    print minmfluxarry
-    print 'listinfo'
-    print listinfo
-    print 'listlevi'
-    print listlevi
-
-    figr, axis = plt.subplots()
-    axistwin = axis.twinx()
-    axis.plot(minmfluxarry, listinfo, label='Relative entropy')
-    axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
-    
-    axistwin.plot(minmfluxarry, listlevi, label='Log-evidence', color='g')
-    axistwin.legend(bbox_to_anchor=[0.8, 1.08])
-
-    axis.set_ylabel('$D_{KL}$ [nats]')
-    axistwin.set_ylabel(r'$\log P(D)$ [nats]')
-    axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
-    axis.set_xscale('log')
-    plt.tight_layout()
-    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/info/'
-    os.system('mkdir -p ' + pathfold)
-    figr.savefig(pathfold + 'minmfluxinfo.pdf')
-    plt.close(figr)
     
     
 def plot_evidtest():
