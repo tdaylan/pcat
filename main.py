@@ -1192,18 +1192,7 @@ def init( \
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
     atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype)
-    print 'listmodlcnts'
-    print listmodlcnts
-    print listmodlcnts.shape
-    print 'atcr'
-    print atcr
-    print atcr.shape
-    print 'timeatcr'
-    print timeatcr
-    print timeatcr.shape
-    print 
-
-    atcr = mean(atcr, 0)
+    atcr = mean(mean(atcr, 1), 1)
     timeatcr = mean(timeatcr)
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'

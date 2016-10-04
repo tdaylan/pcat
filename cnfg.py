@@ -326,6 +326,7 @@ def test_spmr():
     for k in range(numbiter):
         init( \
 	    	 numbswep=1000, \
+	    	 numbburn=0, \
              factthin=1, \
              randinit=False, \
              exprinfo=False, \

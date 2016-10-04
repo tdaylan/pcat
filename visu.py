@@ -407,8 +407,15 @@ def plot_post(pathpcat, verbtype=1):
             print k
             print 'listvarb[k][indxsampsplttemp]'
             print listvarb[k][indxsampsplttemp]
-            axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
-            axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
+            print amin(listvarb[k][indxsampsplttemp]), amax(listvarb[k][indxsampsplttemp])
+            print 'bins'
+            print bins
+            try:
+                axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
+                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
+            except:
+                if gdat.verbtype > 0:
+                    print 'Skipping split merge diagnostic plot...'
             axis.set_ylabel('$N_{samp}$')
             axis.set_xlabel(listlabl[k])
             axis.legend()
