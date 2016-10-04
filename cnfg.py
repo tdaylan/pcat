@@ -10,7 +10,7 @@ def test_info():
     minmflux = logspace(-11., -9., 5)
     numbruns = minmflux.size
     maxmnumbpnts = zeros(numbruns, dtype=int) + 1000
-    numbswep = zeros(numbruns, dtype=int) + 10000
+    numbswep = zeros(numbruns, dtype=int) + 500000
     numbburn = numbswep / 2
     
     numbiter = minmflux.size
@@ -23,10 +23,12 @@ def test_info():
                                   psfntype='doubking', \
                                   numbswep=numbswep[k], \
                                   numbburn=numbburn[k], \
-                                  exprinfo=False, \
-                                  randinit=True, \
-                                  indxenerincl=arange(1, 4), \
+                                  indxenerincl=arange(2, 3), \
+                                  randinit=False, \
+                                  boolproppsfn=False, \
                                   boolpropsind=False, \
+                                  lgalcntr=deg2rad(0.), \
+                                  bgalcntr=deg2rad(90.), \
                                   indxevttincl=arange(3, 4), \
                                   maxmnumbpnts=array([maxmnumbpnts[k]]), \
                                   maxmgang=deg2rad(10.), \
@@ -47,7 +49,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 100000
+    numbswepcomm = 500000
 
     tupl = [ \
             # reference
@@ -143,7 +145,7 @@ def test_psfn():
         psfntype = tupl[k][0]
         datatype = tupl[k][1]
         init( \
-             numbswep=100000, \
+             numbswep=50000, \
              numbburn=0, \
              factthin=1, \
              randinit=False, \
@@ -166,7 +168,7 @@ def test_psfn():
 def test_uppr():
       
     init( \
-         numbswep=100000, \
+         numbswep=500000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -192,7 +194,7 @@ def test_prio():
     medimeanpnts = empty(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  numbswep=100000, \
+                                  numbswep=500000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -229,7 +231,7 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=100000, \
+         numbswep=500000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -254,7 +256,7 @@ def test_post():
     indxevttincl = arange(2, 4)
     
     init( \
-		 numbswep=10000, \
+		 numbswep=500000, \
 		 numbproc=1, \
          numbburn=0, \
 		 factthin=1, \
@@ -292,7 +294,7 @@ def test_atcr():
     numbiter = numbpntsmodi.size
     for k in range(numbpntsmodi.size):
         gridchan, dictpcat = init( \
-	                              numbswep=100000, \
+	                              numbswep=500000, \
                                   numbburn=0, \
                                   factthin=1, \
                                   makeplot=False, \
@@ -325,7 +327,7 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=1000, \
+	    	 numbswep=500000, \
 	    	 numbburn=0, \
              factthin=1, \
              randinit=False, \
@@ -348,7 +350,7 @@ def test_spmr():
 def test_popl():
      
     init( \
-		 numbswep=100000, \
+		 numbswep=500000, \
          randinit=False, \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \

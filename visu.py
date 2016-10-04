@@ -403,13 +403,6 @@ def plot_post(pathpcat, verbtype=1):
                 minm = amin(listvarb[k][indxsampspmrtemp])
                 bins = linspace(minm, maxm, 40)
           
-            print 'k'
-            print k
-            print 'listvarb[k][indxsampsplttemp]'
-            print listvarb[k][indxsampsplttemp]
-            print amin(listvarb[k][indxsampsplttemp]), amax(listvarb[k][indxsampsplttemp])
-            print 'bins'
-            print bins
             try:
                 axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
                 axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
@@ -777,9 +770,9 @@ def plot_chro(gdat):
     axcl[1].set_ylim([0.5, None])
     axcl[0].legend(loc=1, ncol=numblabl-1)
     axcl[1].legend(loc=2)
-    axcl[1].set_xticklabels([])
+    axcl[0].set_xticklabels([])
     axcl[1].set_xlabel('$t$ [ms]')
-    plt.subplots_adjust(hspace=0.1)
+    plt.subplots_adjust(hspace=0.15)
     figr.savefig(gdat.pathplot + 'chrototl.pdf')
     plt.close(figr)
 

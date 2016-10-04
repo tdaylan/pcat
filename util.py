@@ -2680,7 +2680,11 @@ def setp(gdat):
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = min(200000, gdat.numbswep - 1)
+        if gdat.datatype == 'mock' and not gdat.randinit:
+            minmnumbburn = 0
+        else:
+            minmnumbburn = 200000
+        gdat.numbburn = min(minmnumbburn, gdat.numbswep - 1)
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
