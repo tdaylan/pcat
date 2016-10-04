@@ -2141,16 +2141,19 @@ def retr_propmodl(gdat):
 
     if gdat.probprop == None:
             
+        if gdat.boolpropfluxdistbrek:
+            probfluxdistbrek = array([1.])
+        else:
+            probfluxdistbrek = array([0.])
+            
         if gdat.boolpropfluxdist:
             probmeanpnts = array([1.])
             probfluxdistslop = array([1.])
-            probfluxdistbrek = array([1.])
             probfluxdistsloplowr = array([1.])
             probfluxdistslopuppr = array([1.])
         else:
             probmeanpnts = array([0.])
             probfluxdistslop = array([0.])
-            probfluxdistbrek = array([0.])
             probfluxdistsloplowr = array([0.])
             probfluxdistslopuppr = array([0.])
 

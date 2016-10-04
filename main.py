@@ -282,6 +282,7 @@ def init( \
          datatype='inpt', \
          randinit=True, \
          regulevi=False, \
+         boolpropfluxdistbrek=True, \
          boolpropsind=True, \
          boolproppsfn=False, \
          boolpropfluxdist=True, \
@@ -634,6 +635,7 @@ def init( \
     gdat.psfntype = psfntype
     
     ## flag to turn off PSF parameter updates
+    gdat.boolpropfluxdistbrek = boolpropfluxdistbrek
     gdat.boolpropsind = boolpropsind
     gdat.boolproppsfn = boolproppsfn
     gdat.boolpropfluxdist = boolpropfluxdist
@@ -1586,6 +1588,8 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.mockfluxdistslopuppr))
         listhdun[-1].header['EXTNAME'] = 'mockfluxdistslopuppr'
 
+        print 'hey'
+        print 'Writing...'
         listhdun.append(pf.ImageHDU(gdat.mocksinddistmean))
         listhdun[-1].header['EXTNAME'] = 'mocksinddistmean'
 
