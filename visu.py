@@ -403,6 +403,10 @@ def plot_post(pathpcat, verbtype=1):
                 minm = amin(listvarb[k][indxsampspmrtemp])
                 bins = linspace(minm, maxm, 40)
           
+            print 'k'
+            print k
+            print 'listvarb[k][indxsampsplttemp]'
+            print listvarb[k][indxsampsplttemp]
             axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
             axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
             axis.set_ylabel('$N_{samp}$')
@@ -888,9 +892,9 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
-        axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
+        axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
-        axis.hist(gdat.truesind[l], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
+        axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
             axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.mrkralph, color='red', log=True, label='3FGL')
     axis.set_yscale('log')

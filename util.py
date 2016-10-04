@@ -3054,7 +3054,7 @@ def setp(gdat):
     # make a look-up table of nearby pixels for each pixel
     path = gdat.pathdata + 'indxpixlprox/'
     os.system('mkdir -p %s' % path)
-    path += 'indxpixlprox_%08d_%s_%4.g_%4.g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e4 * amin(gdat.maxmangleval), 1e4 * amax(gdat.maxmangleval), gdat.numbfluxprox)
+    path += 'indxpixlprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), 1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
     global indxpixlprox
     if gdat.verbtype > 0:
         print 'PSF evaluation will be performed up to %4.f %s for the largest flux.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.strganglunit)

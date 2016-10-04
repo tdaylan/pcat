@@ -105,7 +105,7 @@ def work(gdat, indxprocwork):
     ## PSF parameters
     if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
         if gdat.verbtype > 1:
-            'Randomly seeding the PSF parameters from the prior...'
+            print 'Randomly seeding the PSF parameters from the prior...'
         gdatmodi.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
     else:
         for k in gdat.indxpsfipara:
@@ -686,7 +686,7 @@ def init( \
     gdat.initfluxdistslopuppr = initfluxdistslopuppr
     ### flag to draw the initial state from the prior
     gdat.randinit = randinit
-
+    
     ## energy bins to be included
     gdat.indxenerincl = indxenerincl
     

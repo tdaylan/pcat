@@ -47,7 +47,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 500000
+    numbswepcomm = 100000
 
     tupl = [ \
             # reference
@@ -91,8 +91,6 @@ def test_time():
         gridchan, dictpcat = init( \
                                   numbswep=numbswep, \
                                   numbproc=numbproc, \
-                                  numbburn=0, \
-                                  factthin=1, \
                                   #makeplot=False, \
                                   strgback=['unit'], \
                                   strgexpo='unit', \
@@ -133,24 +131,27 @@ def test_time():
         figr.savefig(path + '%s_%04d_%s.pdf' % (liststrg[k], log10(numbswep), strgtimestmp))
         plt.close(figr)
 
-
     
 def test_psfn():
      
     init( \
-         numbswep=200000, \
+         numbswep=100000, \
+         numbburn=0, \
          factthin=1, \
+         randinit=False, \
          exprinfo=False, \
-         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
+         strgback=['fermisotflux.fits', ], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
          psfntype='doubking', \
-         maxmnumbpnts=array([3]), \
+         maxmnumbpnts=array([100]), \
          maxmgang=deg2rad(10.), \
          minmflux=3e-11, \
          maxmflux=1e-7, \
          datatype='mock', \
-         mocknumbpnts=array([3]), \
+         mocknumbpnts=array([100]), \
         )
                 
     
@@ -171,22 +172,19 @@ def test_uppr():
          minmflux=1e0, \
          maxmflux=1e4, \
          datatype='mock', \
-         mocknumbpnts=array([400]), \
+         mocknumbpnts=array([300]), \
         )
 
 
 def test_prio():
      
-    mocknumbpnts = array([30])
     priofactdoff = array([-2., 0., 1., 2., 5.])
     numbiter = priofactdoff.size
     medinumbpnts = empty(numbiter)
     medimeanpnts = empty(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-		                          numbproc=1, \
-                                  numbswep=500000, \
-                                  numbburn=0, \
+                                  numbswep=100000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -223,7 +221,7 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=500000, \
+         numbswep=100000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -248,7 +246,7 @@ def test_post():
     indxevttincl = arange(2, 4)
     
     init( \
-		 numbswep=200000, \
+		 numbswep=10000, \
 		 numbproc=1, \
          numbburn=0, \
 		 factthin=1, \
@@ -286,7 +284,7 @@ def test_atcr():
     numbiter = numbpntsmodi.size
     for k in range(numbpntsmodi.size):
         gridchan, dictpcat = init( \
-	                              numbswep=500000, \
+	                              numbswep=100000, \
                                   numbburn=0, \
                                   factthin=1, \
                                   makeplot=False, \
@@ -320,11 +318,12 @@ def test_spmr():
     for k in range(numbiter):
         init( \
 	    	 numbswep=100000, \
+             factthin=1, \
              randinit=False, \
              exprinfo=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(2, 4), \
-             strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+             strgback=['fermisotflux.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
              psfntype='doubking', \
@@ -340,7 +339,7 @@ def test_spmr():
 def test_popl():
      
     init( \
-		 numbswep=500000, \
+		 numbswep=100000, \
          randinit=False, \
          indxenerincl=arange(1, 4), \
          indxevttincl=arange(2, 4), \
