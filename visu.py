@@ -224,28 +224,34 @@ def plot_post(pathpcat, verbtype=1):
     gdat.makeplot = True
     gdat.diagmode = False
     
-    # setup the sampler
-    setp(gdat) 
+    # initial setup
+    setpinit(gdat) 
     
-    # truth gdat.information
+    # mock catalog
     if gdat.datatype == 'mock':
-        gdat.truenumbpnts = hdun['mocknumbpnts'].data
-        gdat.truelgal = []
-        gdat.truebgal = []
-        gdat.truespec = []
-        gdat.truesind = []
+        gdat.mockdatacnts = hdun['mockdatacnts'].data
+        gdat.mocknumbpnts = hdun['mocknumbpnts'].data
+        gdat.mocklgal = []
+        gdat.mockbgal = []
+        gdat.mockspec = []
+        gdat.mocksind = []
+        gdat.mockcnts = []
         for l in gdat.indxpopl:
-            gdat.truelgal.append(hdun['mocklgalpop%d' % l].data)
-            gdat.truebgal.append(hdun['mockbgalpop%d' % l].data)
-            gdat.truespec.append(hdun['mockspecpop%d' % l].data)
-            gdat.truesind.append(hdun['mocksindpop%d' % l].data)
+            gdat.mocklgal.append(hdun['mocklgalpop%d' % l].data)
+            gdat.mockbgal.append(hdun['mockbgalpop%d' % l].data)
+            gdat.mockspec.append(hdun['mockspecpop%d' % l].data)
+            gdat.mocksind.append(hdun['mocksindpop%d' % l].data)
+            gdat.mockcnts.append(hdun['mockcntspop%d' % l].data)
         gdat.mockfluxdistslop = hdun['mockfluxdistslop'].data
         gdat.mockfluxdistbrek = hdun['mockfluxdistbrek'].data
         gdat.mockfluxdistsloplowr = hdun['mockfluxdistsloplowr'].data
         gdat.mockfluxdistslopuppr = hdun['mockfluxdistslopuppr'].data
-        gdat.truenormback = hdun['mocknormback'].data
-        gdat.truepsfipara = hdun['mockpsfipara'].data
+        gdat.mocknormback = hdun['mocknormback'].data
+        gdat.mockpsfipara = hdun['mockpsfipara'].data
         
+    # final setup
+    setpfinl(gdat) 
+    
     gdat.listlgal = [[] for l in gdat.indxpopl]
     gdat.listbgal = [[] for l in gdat.indxpopl]
     gdat.listspec = [[] for l in gdat.indxpopl]
@@ -777,7 +783,7 @@ def plot_chro(gdat):
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
-    listlabl = ['Setup', 'Pixel', 'Mesh', 'PS Flux', 'Total Flux', 'Counts', 'Likelihood']
+    listlabl = ['Reading sample vector', 'Gathering pixels', 'Meshing pixels', 'PS flux map', 'Total Flux map', 'Counts', 'Likelihood']
     numblabl = len(listlabl)
     figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
     maxmchrollik = amax(gdat.listchrollik)
@@ -894,12 +900,6 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     else:
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
-        
-        print 'hey'
-        print 'gdat.indxtruepntscomp'
-        print gdat.indxtruepntscomp[l].size
-        print
-
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
             axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.mrkralph, color='red', log=True, label='3FGL')

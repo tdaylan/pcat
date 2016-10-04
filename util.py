@@ -396,7 +396,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                         gdatmodi.nextpntsflux[gdat.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdat.indxenermodi[i], :, :]
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 3] = timefinl - timeinit
-
+        
         # update the total model flux map
         timeinit = gdat.functime()
         indxtemp = meshgrid(gdat.indxback, gdat.indxenermodi, indexing='ij')
@@ -2223,8 +2223,104 @@ def retr_randunitpsfipara(gdat):
     return randunitpsfipara
 
 
-def setp(gdat):
+def setpinit(gdat):
   
+    ## energy
+    gdat.numbener = gdat.indxenerincl.size
+    gdat.numbenerfull = gdat.binsenerfull.size - 1
+    gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
+    gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
+    gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
+    gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
+    gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
+    gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
+    gdat.indxener = arange(gdat.numbener, dtype=int)
+    gdat.indxenerfluxdist = array([gdat.numbener / 2])
+    gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
+    factener = (gdat.meanener[gdat.indxenerfluxdist] / gdat.meanener)**2
+
+    ## PSF class
+    gdat.numbevttfull = gdat.indxevttfull.size
+    gdat.numbevtt = gdat.indxevttincl.size
+    gdat.indxevtt = arange(gdat.numbevtt)
+    
+    # angular gdat.deviation
+    # temp -- check that gdat.numbangl does not degrade the performance
+    gdat.numbangl = 1000
+    gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
+    gdat.binsanglcosi = sort(cos(gdat.binsangl))
+    
+    # half size of the spatial prior
+    gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
+    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
+
+    # population index vector
+    gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
+    if gdat.datatype == 'mock':
+        gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
+
+    if gdat.datatype == 'mock':
+        gdat.mocksindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
+        gdat.mocksindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
+        gdat.mocksindcdfnnormdiff = gdat.mocksindcdfnnormmaxm - gdat.mocksindcdfnnormminm
+    
+    # construct the mock PSF
+    if gdat.exprtype == 'ferm':
+        retr_fermpsfn(gdat)
+    if gdat.exprtype == 'sdss':
+        retr_sdsspsfn(gdat)
+
+    if gdat.datatype == 'mock':
+
+        # mock PSF parameters
+        if gdat.mockpsfntype == 'singgaus':
+            gdat.numbmockformpara = 1
+        elif gdat.mockpsfntype == 'singking':
+            gdat.numbmockformpara = 2 
+        elif gdat.mockpsfntype == 'doubgaus':
+            gdat.numbmockformpara = 3
+        elif gdat.mockpsfntype == 'gausking':
+            gdat.numbmockformpara = 4
+        elif gdat.mockpsfntype == 'doubking':
+            gdat.numbmockformpara = 5
+
+        gdat.numbmockpsfiparaevtt = gdat.numbener * gdat.numbmockformpara
+        gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
+        gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
+
+        if gdat.exprtype == 'ferm':
+            gdat.mockpsfipara = gdat.fermpsfipara
+        if gdat.exprtype == 'sdss':
+            gdat.mockpsfipara = gdat.sdsspsfipara
+    
+        if gdat.pixltype == 'heal':
+            gdat.numbpixlfull = 12 * gdat.numbsideheal**2
+        if gdat.pixltype == 'cart':
+            gdat.numbpixlfull = gdat.numbsidecart**2
+
+    # construct a lookup table for converting HealPix pixels to ROI pixels
+    if gdat.pixltype == 'heal':
+        path = gdat.pathdata + 'pixlcnvt/'
+        os.system('mkdir -p %s' % path)
+        path += 'pixlcnvt_%09g.p' % gdat.maxmgang
+
+        if os.path.isfile(path):
+            if gdat.verbtype > 0:
+                print 'Reading %s...' % path
+            fobj = open(path, 'rb')
+            gdat.pixlcnvt = cPickle.load(fobj)
+            fobj.close()
+        else:
+            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
+
+            numbpixlmarg = gdat.indxpixlrofimargextd.size
+            for k in range(numbpixlmarg):
+                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimargextd[k]], bgalheal[gdat.indxpixlrofimargextd[k]], gdat.indxpixl)
+                gdat.pixlcnvt[gdat.indxpixlrofimargextd[k]] = argmin(dist)
+            fobj = open(path, 'wb')
+            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+            fobj.close()
+   
     # create the PCAT folders
     cmnd = 'mkdir -p %s/data/outp' % gdat.pathdata
     os.system(cmnd)
@@ -2247,10 +2343,6 @@ def setp(gdat):
     gdat.numbchrototl = 4
     gdat.numbchrollik = 7
 
-    # half size of the spatial prior
-    gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
-    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
-
     # temp
     gdat.boolintpanglcosi = False
 
@@ -2269,9 +2361,6 @@ def setp(gdat):
     gdat.offstext = gdat.maxmgang * 0.05
     
     gdat.indxback = arange(gdat.numbback)
-    
-    gdat.numbevtt = gdat.indxevttincl.size
-    gdat.indxevtt = arange(gdat.numbevtt)
     
     gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
 
@@ -2314,25 +2403,6 @@ def setp(gdat):
     gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
     gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
-    ## energy
-    gdat.numbener = gdat.indxenerincl.size
-    gdat.numbenerfull = gdat.binsenerfull.size - 1
-    gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
-    gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
-    gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
-    gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
-    gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
-
-    ## PSF class
-    gdat.numbevttfull = gdat.indxevttfull.size
-    gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
-    gdat.indxener = arange(gdat.numbener, dtype=int)
-    
-    gdat.indxenerfluxdist = array([gdat.numbener / 2])
-    gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
-        
-    factener = (gdat.meanener[gdat.indxenerfluxdist] / gdat.meanener)**2
-
     # paths
     gdat.pathimag, gdat.pathdata = tdpy.util.retr_path('pcat')
     
@@ -2346,12 +2416,6 @@ def setp(gdat):
     # temp
     if gdat.exprtype == 'sdss':
         gdat.diffener = ones(gdat.numbener)
-    
-    # angular gdat.deviation
-    # temp -- check that gdat.numbangl does not degrade the performance
-    gdat.numbangl = 1000
-    gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
-    gdat.binsanglcosi = sort(cos(gdat.binsangl))
     
     # spatial priors
     gdat.minmlgal = -gdat.maxmgang
@@ -2381,6 +2445,7 @@ def setp(gdat):
             gdat.numbpixlheal = None
 
         gdat.numbenerfull = gdat.exprflux.shape[0]
+        gdat.numbpixlfull = gdat.exprflux.shape[1]
         gdat.numbevttfull = gdat.exprflux.shape[2]
         gdat.indxenerfull = arange(gdat.numbenerfull)
         gdat.indxevttfull = arange(gdat.numbevttfull)
@@ -2491,11 +2556,6 @@ def setp(gdat):
     for m in gdat.indxevtt:
         gdat.evttstrg.append('PSF%d' % gdat.indxevttincl[m])
         
-    if gdat.exprtype == 'ferm':
-        retr_fermpsfn(gdat)
-    if gdat.exprtype == 'sdss':
-        retr_sdsspsfn(gdat)
-
     # number of components
     # temp -- 3->4 4->5
     gdat.numbcomp = 4 + gdat.numbener
@@ -2509,11 +2569,6 @@ def setp(gdat):
     gdat.indxcompflux = 2 + gdat.indxenerfluxdist
     gdat.indxcompsind = 2 + gdat.numbener
     
-    # population index vector
-    gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
-    if gdat.datatype == 'mock':
-        gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
-
     # convenience factors for CDF and ICDF transforms
     ## mean number of PS
     gdat.factmeanpnts = log(gdat.maxmmeanpnts / gdat.minmmeanpnts)
@@ -2530,46 +2585,10 @@ def setp(gdat):
     gdat.factfluxdistslopuppr = arctan(gdat.maxmfluxdistslopuppr) - arctan(gdat.minmfluxdistslopuppr)
     gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
     
-    if gdat.datatype == 'mock':
-        gdat.mocksindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
-        gdat.mocksindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
-        gdat.mocksindcdfnnormdiff = gdat.mocksindcdfnnormmaxm - gdat.mocksindcdfnnormminm
-    
     # temp -- these must be updated when updating hyperparameters on the color distribution
     gdat.sindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.sinddistmean) / gdat.sinddiststdv / sqrt(2.)) + 1.)
     gdat.sindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.sinddistmean) / gdat.sinddiststdv / sqrt(2.)) + 1.)
     gdat.sindcdfnnormdiff = gdat.sindcdfnnormmaxm - gdat.sindcdfnnormminm
-
-    # construct the mock PSF
-    if gdat.datatype == 'mock':
-
-        # mock PSF parameters
-        if gdat.mockpsfntype == 'singgaus':
-            gdat.numbmockformpara = 1
-        elif gdat.mockpsfntype == 'singking':
-            gdat.numbmockformpara = 2 
-        elif gdat.mockpsfntype == 'doubgaus':
-            gdat.numbmockformpara = 3
-        elif gdat.mockpsfntype == 'gausking':
-            gdat.numbmockformpara = 4
-        elif gdat.mockpsfntype == 'doubking':
-            gdat.numbmockformpara = 5
-
-        gdat.numbmockpsfiparaevtt = gdat.numbener * gdat.numbmockformpara
-        gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
-        gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
-
-        if gdat.exprtype == 'ferm':
-            gdat.mockpsfipara = gdat.fermpsfipara
-        if gdat.exprtype == 'sdss':
-            gdat.mockpsfipara = gdat.sdsspsfipara
-    
-        if gdat.pixltype == 'heal':
-            gdat.numbpixlfull = 12 * gdat.numbsideheal**2
-        if gdat.pixltype == 'cart':
-            gdat.numbpixlfull = gdat.numbsidecart**2
-    if gdat.datatype == 'inpt':
-        gdat.numbpixlfull = gdat.exprflux.shape[1]
 
     # exposure
     if gdat.strgexpo == 'unit':
@@ -2630,29 +2649,6 @@ def setp(gdat):
     # store pixels as unit vectors
     gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
    
-    # construct a lookup table for converting HealPix pixels to ROI pixels
-    if gdat.pixltype == 'heal':
-        path = gdat.pathdata + 'pixlcnvt/'
-        os.system('mkdir -p %s' % path)
-        path += 'pixlcnvt_%09g.p' % gdat.maxmgang
-
-        if os.path.isfile(path):
-            if gdat.verbtype > 0:
-                print 'Reading %s...' % path
-            fobj = open(path, 'rb')
-            gdat.pixlcnvt = cPickle.load(fobj)
-            fobj.close()
-        else:
-            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
-
-            numbpixlmarg = gdat.indxpixlrofimargextd.size
-            for k in range(numbpixlmarg):
-                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimargextd[k]], bgalheal[gdat.indxpixlrofimargextd[k]], gdat.indxpixl)
-                gdat.pixlcnvt[gdat.indxpixlrofimargextd[k]] = argmin(dist)
-            fobj = open(path, 'wb')
-            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
-            fobj.close()
-   
     if gdat.datatype == 'inpt':
         # temp
         #gdat.datacnts = gdat.datacnts[gdat.indxcuberofi]
@@ -2665,6 +2661,9 @@ def setp(gdat):
 
     # construct the PSF model
     retr_psfimodl(gdat)
+
+
+def setpfinl(gdat):
 
     # set sample vector indices
     cntr = tdpy.util.cntr()
@@ -2695,13 +2694,6 @@ def setp(gdat):
         # gdat.factthin = min(2 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
         gdat.factthin = int(min(0.1 * gdat.numbpara, gdat.numbswep - gdat.numbburn))
 
-    print 'hey'
-    print 'gdat.numbburn'
-    print gdat.numbburn
-    print 'gdat.factthin'
-    print gdat.factthin
-    print 
-
     # factor by which to thin the sweeps to get samples
     # run tag
     gdat.rtag = retr_rtag(gdat, None)
@@ -2726,110 +2718,18 @@ def setp(gdat):
     if gdat.datatype == 'inpt':
         gdat.datacnts = gdat.exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
     
-    ## mock data
+    # load mock catalog into the reference catalog data structure
     if gdat.datatype == 'mock':
-
-        if gdat.mocknumbpnts == None:
-            gdat.mocknumbpnts = empty(gdat.numbpopl)
-            for l in gdat.indxpopl:
-                gdat.mocknumbpnts[l] = random_integers(gdat.minmnumbpnts, gdat.maxmnumbpnts[l])
-            
-        gdat.truemeanpnts = gdat.mocknumbpnts
-        
-        # if mock FDF is not specified by the user, randomly seed it from the prior
-        # temp -- make this section compatible with mock variables being None
-        for l in gdat.indxpopl:
-            if gdat.mockfluxdisttype[l] == 'powr':
-                if gdat.mockfluxdistslop[l] == None:
-                    gdat.mockfluxdistslop[l] = icdf_atan(rand(), gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
-            if gdat.mockfluxdisttype[l] == 'brok':
-                if gdat.mockfluxdistbrek[l] == None:
-                    gdat.mockfluxdistbrek[l] = icdf_atan(rand(), gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
-                if gdat.mockfluxdistsloplowr[l] == None:
-                    gdat.mockfluxdistsloplowr[l] = icdf_atan(rand(), gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
-                if gdat.mockfluxdistslopuppr[l] == None:
-                    gdat.mockfluxdistslopuppr[l] = icdf_atan(rand(), gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
-
-        gdat.truefluxdistslop = gdat.mockfluxdistslop
-        gdat.truefluxdistbrek = gdat.mockfluxdistbrek
-        gdat.truefluxdistsloplowr = gdat.mockfluxdistsloplowr
-        gdat.truefluxdistslopuppr = gdat.mockfluxdistslopuppr
-    
-        if gdat.mockpsfipara == None: 
-            gdat.mockpsfntype = psfntpye
-            numbmockpsfipara = gdat.numbpsfipara
-            gdat.mockpsfipara = empty(numbmockpsfipara)
-            for k in arange(numbmockpsfipara):
-                gdat.mockpsfipara[k] = icdf_psfipara(gdat, rand(), k)
-   
-        if gdat.mocknormback == None:
-            for c in gdat.indxback:
-                gdat.mocknormback[c, :] = icdf_logt(rand(gdat.numbener), gdat.minmnormback[c], gdat.factnormback[c])
-
-        mockcnts = [[] for l in gdat.indxpopl]
-        mocklgal = [[] for l in gdat.indxpopl]
-        mockbgal = [[] for l in gdat.indxpopl]
-        mockgang = [[] for l in gdat.indxpopl]
-        mockaang = [[] for l in gdat.indxpopl]
-        mockspec = [[] for l in gdat.indxpopl]
-        mocksind = [[] for l in gdat.indxpopl]
-        for l in gdat.mockindxpopl:
-            if gdat.mockspatdisttype[l] == 'unif':
-                mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-                mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
-            if gdat.mockspatdisttype[l] == 'disc':
-                mockbgal[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang) * choice(array([1., -1.]), size=gdat.mocknumbpnts[l])
-                mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
-            if gdat.mockspatdisttype[l] == 'gang':
-                mockgang[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang)
-                mockaang[l] = icdf_self(rand(gdat.mocknumbpnts[l]), 0., 2. * pi)
-                mocklgal[l], mockbgal[l] = retr_lgalbgal(mockgang[l], mockaang[l])
-
-            mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
-            if gdat.mockfluxdisttype[l] == 'powr':
-                mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfluxdistslop[l])
-            if gdat.mockfluxdisttype[l] == 'brok':
-                mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfluxdistbrek[l], \
-                                                                                                gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
-            mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l], gdat.mocksindcdfnnormminm[l], gdat.mocksindcdfnnormdiff[l])
-        
-            if gdat.verbtype > 1:
-                print 'mocksind[l]'
-                print mocksind[l]
-                print 'mockspec[l]'
-                print mockspec[l]
-                print
-
-            if gdat.mockspectype[l] == 'powr':
-                mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfluxdist[0], :], mocksind[l])
-            if gdat.mockspectype[l] == 'curv':
-                mockspec[l] = retr_speccurv(gdat, mockspec[l][gdat.indxenerfluxdist[0], :], mocksind[l], mockcurv[l])
-            if gdat.mockspectype[l] == 'expo':
-                mockspec[l] = retr_spec(gdat, mockspec[l][gdat.indxenerfluxdist[0], :], mocksind[l], mockbrek)[l]
-            
-            indxpixltemp = retr_indxpixl(gdat, mockbgal[l], mocklgal[l])
-            
-            mockcnts[l] = mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
-        
-        mockpntsflux = retr_pntsflux(gdat, concatenate(mocklgal), concatenate(mockbgal), concatenate(mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
-        mocktotlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
-        mocktotlcnts = mocktotlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
-
-        gdat.datacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-        for i in gdat.indxener:
-            for k in range(gdat.numbpixl):
-                for m in gdat.indxevtt:
-                    gdat.datacnts[i, k, m] = poisson(mocktotlcnts[i, k, m])
-                    
         if gdat.trueinfo:
-            
+            gdat.truemeanpnts = gdat.mocknumbpnts
+        
             gdat.truelgal = []
             gdat.truebgal = []
             gdat.truesind = []
             for l in gdat.indxpopl:
-                gdat.truelgal.append(mocklgal[l])
-                gdat.truebgal.append(mockbgal[l])
-                gdat.truesind.append(mocksind[l])
+                gdat.truelgal.append(gdat.mocklgal[l])
+                gdat.truebgal.append(gdat.mockbgal[l])
+                gdat.truesind.append(gdat.mocksind[l])
                     
             gdat.truestrg = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
             gdat.truestrgclss = [array([None for n in range(gdat.mocknumbpnts[l])], dtype=object) for l in gdat.indxpopl]
@@ -2842,17 +2742,18 @@ def setp(gdat):
                 gdat.truefluxdistbrek = gdat.mockfluxdistbrek
                 gdat.truefluxdistsloplowr = gdat.mockfluxdistsloplowr
                 gdat.truefluxdistslopuppr = gdat.mockfluxdistslopuppr
-            gdat.truecnts = mockcnts
+            gdat.truecnts = gdat.mockcnts
                
             gdat.truespec = []
             for l in gdat.indxpopl:
                 gdat.truespectemp = empty((3, gdat.numbener, gdat.mocknumbpnts[l]))
-                gdat.truespectemp[:] = mockspec[l][None, :, :]
+                gdat.truespectemp[:] = gdat.mockspec[l][None, :, :]
                 gdat.truespec.append(gdat.truespectemp)
             
             gdat.truepsfipara = gdat.mockpsfipara
             gdat.truepsfntype = gdat.mockpsfntype
             gdat.truenormback = gdat.mocknormback
+            gdat.datacnts = gdat.mockdatacnts
         
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))

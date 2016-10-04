@@ -91,6 +91,8 @@ def test_time():
     timereal = empty(numbtupl)
     timeproc = empty(numbtupl)
     timeatcr = empty(numbtupl)
+    meanmemoresi = empty(numbtupl)
+    derimemoresi = empty(numbtupl)
     strgtupl = []
     for k in range(numbtupl):
         mocknumbpnts, maxmnumbpnts, temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
@@ -102,6 +104,12 @@ def test_time():
             maxmgang = None
             numbsidecart = temp
 
+        if numbener == 1:
+            indxenerincl = arange(2, 3)
+            boolpropsind = False
+        if numbener == 3:
+            indxenerincl = arange(1, 4)
+            boolpropsind = False
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         gridchan, dictpcat = init( \
                                   numbswep=numbswep, \
@@ -110,10 +118,11 @@ def test_time():
                                   #makeplot=False, \
                                   strgback=['unit'], \
                                   strgexpo='unit', \
+                                  boolpropsind=False, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   binsenerfull=binsenerfull, \
-                                  indxenerincl=arange(numbener), \
+                                  indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
                                   indxevttincl=arange(3, 4), \
                                   psfntype='doubking', \
@@ -128,6 +137,9 @@ def test_time():
         timereal[k] = dictpcat['timerealtotl']
         timeproc[k] = dictpcat['timeproctotl']
         timeatcr[k] = dictpcat['timeatcr']
+        listmemoresi = dictpcat['memoresi']
+        meanmemoresi[k] = mean(memoresitemp)
+        derimemoresi[k] = (listmemoresi[k][-1] / listmemoresi[k][0]) / numbswep
         print 'timeatcr'
         print timeatcr[k]
         print
@@ -136,9 +148,9 @@ def test_time():
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeatcr', 'timeprocnorm']
-    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]']
-    listvarb = [timereal, timeproc, timeproc / numbswep, timeatcr, timeproc / numbswep / timeatcr]
+    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
+    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
+    listvarb = [timereal, timeproc, timeproc / numbswep, timeatcr, timeproc / (numbswep / timeatcr), meanmemoresi, derimemoresi]
     numbplot = len(liststrg)
     for k in range(numbplot):
         figr, axis = plt.subplots()
@@ -167,6 +179,7 @@ def test_psfn():
              factthin=1, \
              randinit=False, \
              exprinfo=False, \
+             boolpropsind=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(3, 4), \
              strgback=['fermisotflux.fits', ], \
@@ -185,10 +198,11 @@ def test_psfn():
 def test_uppr():
       
     init( \
-         numbswep=500000, \
+         numbswep=100000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
+         boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -218,8 +232,9 @@ def test_prio():
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
-                                  indxenerincl=arange(1, 4), \
-                                  indxevttincl=arange(2, 4), \
+                                  boolpropsind=False, \
+                                  indxenerincl=arange(2, 3), \
+                                  indxevttincl=arange(3, 4), \
                                   priofactdoff=priofactdoff[k], \
                                   strgback=['fermisotflux.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -259,6 +274,7 @@ def test_lowr():
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
+         boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -276,11 +292,11 @@ def test_lowr():
 
 def test_post():
      
-    indxenerincl = arange(1, 4)
-    indxevttincl = arange(2, 4)
+    indxenerincl = arange(2, 4)
+    indxevttincl = arange(3, 4)
     
     init( \
-		 numbswep=500000, \
+		 numbswep=100000, \
 		 numbproc=1, \
          numbburn=0, \
 		 factthin=1, \
@@ -311,21 +327,25 @@ def test_post():
 
 def test_atcr():
     
+    listnumbpntsmodi = array([1, 2, 3, 5, 10])
+    numbiter = listnumbpntsmodi.size
     timeatcr = empty(numbiter)
-    timereal = empty(numbiter)
     timeproc = empty(numbiter)
-    numbpntsmodi = array([1, 2, 3, 5, 10])
-    numbiter = numbpntsmodi.size
-    for k in range(numbpntsmodi.size):
+    numbswep = 100000
+    # temp
+    timeatcr = array([5670., 3420., 3042., 1023., 403.])
+    timeproc = array([103., 114., 105., 134., 140.])
+    for k in range(numbiter):
+        continue
         gridchan, dictpcat = init( \
-	                              numbswep=500000, \
-                                  numbburn=0, \
+	                              numbswep=numbswep, \
                                   factthin=1, \
                                   makeplot=False, \
-                                  numbpntsmodi=numbpntsmodi[k], \
+                                  numbpntsmodi=listnumbpntsmodi[k], \
                                   randinit=False, \
                                   exprinfo=False, \
-                                  indxenerincl=arange(1, 3), \
+                                  indxenerincl=arange(2, 3), \
+                                  boolpropsind=False, \
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -341,7 +361,27 @@ def test_atcr():
         timereal[k] = dictpcat['timerealtotl']
         timeproc[k] = dictpcat['timeproctotl']
 
-    plot_numbpntsmodi(numbpntsmodi, timeatcr, timereal, timeproc)
+    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_atcr/'
+    os.system('mkdir -p %s' % path)
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
+    
+    figr, axis = plt.subplots()
+    axis.plot(listnumbpntsmodi, timeatcr, ls='', lw=1, marker='o')
+    axis.set_xlabel('$\delta N$')
+    axis.set_ylabel(r'$\tau$')
+    axis.set_xlim([0, amax(listnumbpntsmodi) + 1])
+    plt.tight_layout()
+    figr.savefig(path + 'timeatcr_%s.pdf' % strgtimestmp)
+    plt.close(figr)
+
+    figr, axis = plt.subplots()
+    axis.plot(listnumbpntsmodi, numbswep / timeatcr / timeproc, ls='', lw=1, marker='o')
+    axis.set_xlabel('$\delta N$')
+    axis.set_ylabel(r'$\mathcal{P}$')
+    axis.set_xlim([0, amax(listnumbpntsmodi) + 1])
+    plt.tight_layout()
+    figr.savefig(path + 'perfmetr_%s.pdf' % strgtimestmp)
+    plt.close(figr)
         
 
 def test_spmr():
@@ -357,7 +397,7 @@ def test_spmr():
              randinit=False, \
              exprinfo=False, \
              indxenerincl=arange(2, 3), \
-             indxevttincl=arange(2, 4), \
+             indxevttincl=arange(3, 4), \
              strgback=['fermisotflux.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
@@ -376,8 +416,8 @@ def test_popl():
     init( \
 		 numbswep=500000, \
          randinit=False, \
-         indxenerincl=arange(1, 4), \
-         indxevttincl=arange(2, 4), \
+         indxenerincl=arange(2, 4), \
+         indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([500, 500]), \
          maxmgang=deg2rad(20.), \
