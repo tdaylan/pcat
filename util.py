@@ -1043,10 +1043,10 @@ def retr_fermdata(gdat):
         raise Exception('fgl3spec')
 
     # adjust 3FGL positions according to the ROI center
-    
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-        #rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
-        rttr = hp.rotator.Rotator(rot=[0., rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
+        rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
+        # temp
+        #rttr = hp.rotator.Rotator(rot=[0., rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
         fgl3bgal, fgl3lgal = rttr(pi / 2. - fgl3bgal, fgl3lgal)
         fgl3bgal = pi / 2. - fgl3bgal
 
@@ -2195,7 +2195,10 @@ def retr_propmodl(gdat):
         problgal = gdat.maxmnumbpntstotl
         probbgal = gdat.maxmnumbpntstotl
         probspec = gdat.maxmnumbpntstotl
-        probsind = gdat.maxmnumbpntstotl
+        if gdat.boolpropsind:
+            probsind = gdat.maxmnumbpntstotl
+        else:
+            probsind = 0.
            
         gdat.probprop = empty(gdat.numbprop)
         gdat.probprop[0] = probmeanpnts
@@ -3051,9 +3054,10 @@ def setp(gdat):
     # make a look-up table of nearby pixels for each pixel
     path = gdat.pathdata + 'indxpixlprox/'
     os.system('mkdir -p %s' % path)
-    path += 'indxpixlprox_%08d_%s_%04f_%04f_%04d.p' % (gdat.numbpixl, gdat.pixltype, amin(gdat.maxmangleval), amax(gdat.maxmangleval), gdat.numbfluxprox)
-
+    path += 'indxpixlprox_%08d_%s_%4.g_%4.g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e4 * amin(gdat.maxmangleval), 1e4 * amax(gdat.maxmangleval), gdat.numbfluxprox)
     global indxpixlprox
+    if gdat.verbtype > 0:
+        print 'PSF evaluation will be performed up to %4.f %s for the largest flux.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.strganglunit)
     if os.path.isfile(path):
         if gdat.verbtype > 0:
             print 'Previously computed nearby pixel look-up table will be used.'
@@ -3076,7 +3080,7 @@ def setp(gdat):
         fobj = open(path, 'wb')
         cPickle.dump(indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
         fobj.close()
-        
+
     if gdat.verbtype > 1:
         print 'Memory budget: indxpixlprox'
         totl = 0.

@@ -375,6 +375,7 @@ def plot_post(pathpcat, verbtype=1):
         listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
                        exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
        
+        
         # rescale the Jacobian and the prior fraction to make them dimensionless
         listvarb[5][indxsampsplttotl] /= gdat.minmflux
         listvarb[5][indxsampmergtotl] *= gdat.minmflux
@@ -401,17 +402,7 @@ def plot_post(pathpcat, verbtype=1):
             else:
                 minm = amin(listvarb[k][indxsampspmrtemp])
                 bins = linspace(minm, maxm, 40)
-           
-            print 'k'
-            print k
-            print 'listname[k]'
-            print listname[k]
-            print 'listvarb[k][indxsampsplttemp]'
-            print listvarb[k][indxsampsplttemp]
-            print amin(listvarb[k][indxsampsplttemp])
-            print amax(listvarb[k][indxsampsplttemp])
-            print 
-
+          
             axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.mrkralph)
             axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.mrkralph)
             axis.set_ylabel('$N_{samp}$')
@@ -759,23 +750,25 @@ def plot_chro(gdat):
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Other']
     numblabl = len(labl)
     figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, gdat.plotsize))
-    for k in range(1, numblabl):
-        if k == numblabl - 1:
+    for k in range(numblabl - 1):
+        if k == numblabl - 2:
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl, 1)
         else:
-            varb = gdat.listchrototl[:, k]
-        axcl[0].hist(varb, binstime, log=True, label=labl[k], alpha=0.5)
-    axcl[1].hist(gdat.listchrototl[:, 0], binstime, log=True, label=labl[0], color='black')
+            varb = gdat.listchrototl[:, k+1]
+        axcl[0].hist(varb, binstime, log=True, label=labl[k+1], alpha=0.5)
+    axcl[1].hist(gdat.listchrototl[:, 0], binstime, log=True, label=labl[0], color='black', alpha=0.5)
     axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axcl[0].set_xlim([amin(binstime), amax(binstime)])
-    axcl[1].set_xlabel('$t$ [ms]')
+    axcl[1].set_xlim([amin(binstime), amax(binstime)])
     axcl[0].set_xscale('log')
     axcl[1].set_xscale('log')
     axcl[0].set_ylim([0.5, None])
     axcl[1].set_ylim([0.5, None])
     axcl[0].legend(loc=1, ncol=numblabl-1)
     axcl[1].legend(loc=2)
-    plt.tight_layout()
+    axcl[1].set_xticklabels([])
+    axcl[1].set_xlabel('$t$ [ms]')
+    plt.subplots_adjust(hspace=0.1)
     figr.savefig(gdat.pathplot + 'chrototl.pdf')
     plt.close(figr)
 

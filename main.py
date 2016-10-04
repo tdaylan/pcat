@@ -123,20 +123,23 @@ def work(gdat, indxprocwork):
         if gdat.randinit:
             gdatmodi.drmcsamp[gdatmodi.thisindxsampcomp[l], 0] = rand(gdatmodi.thisindxsampcomp[l].size)
         else:
-            gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-            if gdat.fluxdisttype[l] == 'powr':
-                fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
-                fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], fluxdistslop)
-            if gdat.fluxdisttype[l] == 'brok':
-                flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
-                fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
-                fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
-                fluxunit = cdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :], 0] = copy(fluxunit)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l], \
-                                                                                                        gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            try:
+                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
+                if gdat.fluxdisttype[l] == 'powr':
+                    fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
+                    fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], fluxdistslop)
+                if gdat.fluxdisttype[l] == 'brok':
+                    flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+                    fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
+                    fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
+                    fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
+                    fluxunit = cdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :], 0] = copy(fluxunit)
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l], \
+                                                                                                            gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            except:
+                raise Exception('Provided reference catalog is larger than the sample vector size.')
 
     if gdat.verbtype > 1:
         print 'drmcsamp'
@@ -281,6 +284,7 @@ def init( \
          datatype='inpt', \
          randinit=True, \
          regulevi=False, \
+         boolpropsind=True, \
          boolproppsfn=False, \
          boolpropfluxdist=True, \
          numbpntsmodi=1, \
@@ -344,7 +348,7 @@ def init( \
          margfactcomp=0.9, \
          maxmangl=None, \
          maxmangleval=None, \
-         specfraceval=0.01, \
+         specfraceval=0.1, \
          anglassc=None, \
          exprinfo=True, \
          stdvmeanpnts=0.05, \
@@ -632,6 +636,7 @@ def init( \
     gdat.psfntype = psfntype
     
     ## flag to turn off PSF parameter updates
+    gdat.boolpropsind = boolpropsind
     gdat.boolproppsfn = boolproppsfn
     gdat.boolpropfluxdist = boolpropfluxdist
 
@@ -838,9 +843,7 @@ def init( \
     
     # check the call stack for the name of the configuring function
     gdat.strgcnfg = inspect.stack()[1][3]
-    if gdat.verbtype > 0:
-        print 'Configuration %s' % gdat.strgcnfg
-
+    
     # make the relevant folders
     gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
     os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
@@ -849,6 +852,9 @@ def init( \
     if os.environ["TERM"] == 'screen':
         path = gdat.pathoutp + 'rlog.txt'
         sys.stdout = open(path, 'w')
+
+    if gdat.verbtype > 0:
+        print 'Configuration %s' % gdat.strgcnfg
 
     if gdat.verbtype > 0:
         print 'PCAT started at %s' % gdat.strgtimestmp
@@ -1049,6 +1055,8 @@ def init( \
     listcombfact = listcombfact.reshape(gdat.numbsweptotl)
     listchrollik = listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
     listboolreje = listboolreje.reshape(gdat.numbsweptotl)
+    listdeltllik = listdeltllik.reshape(gdat.numbsweptotl)
+    listdeltlpri = listdeltlpri.reshape(gdat.numbsweptotl)
     
     gdat.rtag = retr_rtag(gdat, None)
 
@@ -1185,7 +1193,7 @@ def init( \
     if gdat.verbtype > 0:
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
-    atcr, timeatcr = tdpy.mcmc.retr_atcr(listmodlcnts, verbtype=gdat.verbtype)
+    atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype)
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
     dictpcat['timeatcr'] = timeatcr
@@ -1969,6 +1977,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     print indxtemp
                     print 'sind'
                     print sind
+                    print 'gdat.minmsind'
+                    print gdat.minmsind
+                    print 'gdat.maxmsind'
+                    print gdat.maxmsind
+                    print 'sind[indxtemp]'
+                    print sind[indxtemp]
                     raise Exception('Color of a PS went outside the prior range.') 
 
         # save the sample
