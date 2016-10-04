@@ -105,6 +105,7 @@ def test_time():
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         gridchan, dictpcat = init( \
                                   numbswep=numbswep, \
+                                  factthin=1, \
                                   numbproc=numbproc, \
                                   #makeplot=False, \
                                   strgback=['unit'], \
@@ -213,7 +214,7 @@ def test_prio():
     arry = array([1., 0.8, 1.2])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  numbswep=5000, \
+                                  numbswep=100000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \

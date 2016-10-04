@@ -897,7 +897,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         
         print 'hey'
         print 'gdat.indxtruepntscomp'
-        print gdat.indxtruepntscomp.size
+        print gdat.indxtruepntscomp[l].size
         print
 
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
