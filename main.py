@@ -930,9 +930,9 @@ def init( \
         
             if gdat.verbtype > 1:
                 print 'mocksind[l]'
-                print mocksind[l]
+                print gdat.mocksind[l]
                 print 'mockspec[l]'
-                print mockspec[l]
+                print gdat.mockspec[l]
                 print
 
             if gdat.mockspectype[l] == 'powr':
@@ -2141,13 +2141,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
             listdeltllik[gdatmodi.cntrswep] = gdatmodi.deltllik
             listdeltlpri[gdatmodi.cntrswep] = gdatmodi.deltlpri
-        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg:
-            listnumbpair[gdatmodi.cntrswep] = gdatmodi.numbpair
-            listcombfact[gdatmodi.cntrswep] = gdatmodi.combfact
+        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg and gdatmodi.numbpair != 0:
             listauxipara[gdatmodi.cntrswep, :] = gdatmodi.auxipara
+        if gdatmodi.thisindxprop == gdat.indxpropsplt and not gdatmodi.boolreje or gdatmodi.thisindxprop == gdat.indxpropmerg:
+            listnumbpair[gdatmodi.cntrswep] = gdatmodi.numbpair
+        if (gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg) and not gdatmodi.boolreje:
+            listcombfact[gdatmodi.cntrswep] = gdatmodi.combfact
             listjcbnfact[gdatmodi.cntrswep] = gdatmodi.jcbnfact
             listlaccfact[gdatmodi.cntrswep] = gdatmodi.laccfact
-
         
         # save the execution time for the sweep
         if not thismakefram:

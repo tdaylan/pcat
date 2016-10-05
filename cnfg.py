@@ -7,10 +7,10 @@ from visu import *
 
 def test_info():
     
-    listminmflux = logspace(-12., -9., 10)
+    listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 500000
+    numbswep = zeros(numbiter, dtype=int) + 100000
     numbburn = numbswep / 2
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
@@ -38,6 +38,7 @@ def test_info():
         listlevi[k] = dictpcat['levi']
         listinfo[k] = dictpcat['info']
 
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
     figr, axis = plt.subplots()
     axistwin = axis.twinx()
     axis.plot(listminmflux, listinfo, label='Relative entropy')
@@ -51,7 +52,7 @@ def test_info():
     plt.tight_layout()
     pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/test_info/'
     os.system('mkdir -p ' + pathfold)
-    figr.savefig(pathfold + 'infolevi.pdf')
+    figr.savefig(pathfold + 'infolevi_%s.pdf' % strgtimestmp)
     plt.close(figr)
 
 
@@ -59,32 +60,32 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 50000
+    numbswepcomm = 500
 
     tupl = [ \
             # reference
-            [100, 400, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
+            [50, 100, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
             
             # numbproc
-            [100, 400,   100, 'cart', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
+            [50, 100,   100, 'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
 
             # cart
-            [100, 400,   100, 'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
+            [50, 100,   100, 'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
 
             # maxmnumbpnts
-            [100, 800, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Max PS'], \
+            [50, 200, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Max PS'], \
             
             # minmflux
-            [100, 800, 11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
+            [50, 400, 11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
             
             # mocknumbpnts
-            [200, 400, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Mock PS'], \
+            [100, 100, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Mock PS'], \
 
             # numbpixl
-            [100, 400, 22.88, 'heal', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
+            [50, 100, 22.88, 'heal', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
             
             # numbener
-            [100, 400, 11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
+            [50, 100, 11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
            ]
     numbtupl = len(tupl)
     indxtupl = np.arange(numbtupl)
@@ -121,7 +122,6 @@ def test_time():
                                   boolpropsind=False, \
                                   randinit=False, \
                                   exprinfo=False, \
-                                  binsenerfull=binsenerfull, \
                                   indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
                                   indxevttincl=arange(3, 4), \
@@ -137,8 +137,8 @@ def test_time():
         timereal[k] = dictpcat['timerealtotl']
         timeproc[k] = dictpcat['timeproctotl']
         timeatcr[k] = dictpcat['timeatcr']
-        listmemoresi = dictpcat['memoresi']
-        meanmemoresi[k] = mean(memoresitemp)
+        listmemoresi = dictpcat['listmemoresi']
+        meanmemoresi[k] = mean(listmemoresi)
         derimemoresi[k] = (listmemoresi[k][-1] / listmemoresi[k][0]) / numbswep
         print 'timeatcr'
         print timeatcr[k]
@@ -195,10 +195,32 @@ def test_psfn():
             )
                 
     
-def test_uppr():
+def test_nomi():
       
     init( \
          numbswep=100000, \
+         randinit=False, \
+         exprinfo=False, \
+         boolproppsfn=False, \
+         boolpropsind=False, \
+         indxenerincl=arange(1, 3), \
+         indxevttincl=arange(3, 4), \
+         strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         psfntype='doubking', \
+         maxmnumbpnts=array([600]), \
+         maxmgang=deg2rad(20.), \
+         minmflux=5e-11, \
+         maxmflux=1e-7, \
+         datatype='mock', \
+         mocknumbpnts=array([300]), \
+        )
+
+
+def test_uppr():
+      
+    init( \
+         numbswep=300002, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -210,8 +232,8 @@ def test_uppr():
          psfntype='doubking', \
          maxmnumbpnts=array([600]), \
          maxmgang=deg2rad(5.), \
-         minmflux=1e0, \
-         maxmflux=1e4, \
+         minmflux=1e-9, \
+         maxmflux=1e-5, \
          datatype='mock', \
          mocknumbpnts=array([300]), \
         )
@@ -296,35 +318,41 @@ def test_post():
      
     indxenerincl = arange(2, 4)
     indxevttincl = arange(3, 4)
-    
-    init( \
-		 numbswep=100000, \
-		 numbproc=1, \
-         numbburn=0, \
-		 factthin=1, \
-         randinit=False, \
-         indxenerincl=indxenerincl, \
-         indxevttincl=indxevttincl, \
-         probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
-         exprinfo=False, \
-         strgback=['fermisotflux.fits'], \
-         lablback=[r'$\mathcal{I}$'], \
-         nameback=['normisot'], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         stdvback=0.01, \
-         stdvlbhlminm=0.01, \
-         stdvlbhlmaxm=0.01, \
-         stdvflux=0.05, \
-         stdvsind=0.05, \
-         psfntype='doubking', \
-         maxmnumbpnts=array([3]), \
-         maxmgang=deg2rad(1.5), \
-         minmflux=3e-8, \
-         maxmflux=1e-7, \
-         datatype='mock', \
-         mocknumbpnts=array([3]), \
-         mockfluxdistslop=array([1.9]), \
-        )
+    #tupl = [[0.3, 0.001, 0.001, 0.01, 0.01, 3e-8, 1e-7], \
+    #        [0.3, 0.01, 0.01, 0.1, 0.1, 3e-9, 1e-8]]
+    tupl = [[0.3, 0.001, 0.001, 0.01, 0.01, 3e-10, 1e-9], \
+            [0.3, 0.01, 0.01, 0.1, 0.1, 3e-11, 1e-10]]
+    numbiter = len(tupl)
+    for k in range(numbiter):
+        stdvback, stdvlbhlminm, stdvlbhlmaxm, stdvflux, stdvsind, minmflux, maxmflux = tupl[k]
+        init( \
+    		 numbswep=200000, \
+    		 numbproc=1, \
+             numbburn=0, \
+    		 factthin=1, \
+             randinit=False, \
+             indxenerincl=indxenerincl, \
+             indxevttincl=indxevttincl, \
+             probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
+             exprinfo=False, \
+             strgback=['fermisotflux.fits'], \
+             lablback=[r'$\mathcal{I}$'], \
+             nameback=['normisot'], \
+             strgexpo='fermexpo_cmp0_ngal.fits', \
+             stdvback=stdvback, \
+             stdvlbhlminm=stdvlbhlminm, \
+             stdvlbhlmaxm=stdvlbhlmaxm, \
+             stdvflux=stdvflux, \
+             stdvsind=stdvsind, \
+             psfntype='doubking', \
+             maxmnumbpnts=array([3]), \
+             maxmgang=deg2rad(1.), \
+             minmflux=minmflux, \
+             maxmflux=maxmflux, \
+             datatype='mock', \
+             mocknumbpnts=array([3]), \
+             mockfluxdistslop=array([1.9]), \
+            )
 
 
 def test_atcr():
@@ -393,8 +421,9 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=500000, \
+	    	 numbswep=100, \
 	    	 numbburn=0, \
+             verbtype=2, \
              factthin=1, \
              randinit=False, \
              exprinfo=False, \
@@ -404,12 +433,14 @@ def test_spmr():
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
              psfntype='doubking', \
-             maxmnumbpnts=array([100]), \
-             maxmgang=deg2rad(10.), \
+             maxmgang=deg2rad(1.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
              datatype='mock', \
-             mocknumbpnts=array([100]), \
+             #maxmnumbpnts=array([100]), \
+             #mocknumbpnts=array([100]), \
+             maxmnumbpnts=array([3]), \
+             mocknumbpnts=array([2]), \
             )
         
 

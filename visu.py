@@ -308,7 +308,7 @@ def plot_post(pathpcat, verbtype=1):
     numbsampatcr = atcr.size
     axis.plot(arange(numbsampatcr), atcr)
     axis.set_xlabel('Sample index')
-    axis.set_ylabel(r'$\tilde{\eta}$')
+    axis.set_ylabel(r'$\tau$')
     plt.tight_layout()
     figr.savefig(gdat.pathplot + 'atcr.pdf')
     plt.close(figr)
@@ -382,6 +382,24 @@ def plot_post(pathpcat, verbtype=1):
                        exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
        
         
+        print 'gdat.listauxipara'
+        print gdat.listauxipara
+        print 'gdat.listnumbpair'
+        print gdat.listnumbpair
+        print 'gdat.listlaccfact'
+        print gdat.listlaccfact
+        print 'gdat.listdeltlpri'
+        print gdat.listdeltlpri
+        print 'gdat.listcombfact'
+        print gdat.listcombfact
+        print 'gdat.listdeltllik'
+        print gdat.listdeltllik[indxsampsplttotl]
+        print gdat.listdeltllik[indxsampmergtotl]
+        print 'gdat.listdeltlpri'
+        print gdat.listdeltlpri[indxsampsplttotl]
+        print gdat.listdeltlpri[indxsampmergtotl]
+        print
+
         # rescale the Jacobian and the prior fraction to make them dimensionless
         listvarb[5][indxsampsplttotl] /= gdat.minmflux
         listvarb[5][indxsampmergtotl] *= gdat.minmflux
@@ -461,7 +479,10 @@ def plot_post(pathpcat, verbtype=1):
         path = gdat.pathplot + 'postdist'
         strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
         strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
-        tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
+        
+        # temp
+        #tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
+        tdpy.mcmc.plot_grid(path, listpost, strgpost, numbtickbins=3)
 
         # find the matrix of partial derivatives
         ## evaluate the likelihood at the sample
@@ -783,7 +804,7 @@ def plot_chro(gdat):
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
-    listlabl = ['Reading sample vector', 'Gathering pixels', 'Meshing pixels', 'PS flux map', 'Total Flux map', 'Counts', 'Likelihood']
+    listlabl = ['Reading sample', 'Gathering pixels', 'Meshing pixels', 'PS flux map', 'Total Flux map', 'Counts', 'Likelihood']
     numblabl = len(listlabl)
     figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
     maxmchrollik = amax(gdat.listchrollik)
@@ -898,6 +919,11 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
+        print 'gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]'
+        print gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]
+        print 'gdat.binssind'
+        print gdat.binssind
+        print
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)

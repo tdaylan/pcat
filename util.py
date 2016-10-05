@@ -666,7 +666,6 @@ def retr_lpri(gdat, gdatmodi, init=False):
                                        gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]], \
                                        gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[gdatmodi.indxpoplmodi]], \
                                        gdatmodi.thissampvarb[gdat.indxsampfluxdistslopuppr[gdatmodi.indxpoplmodi]]))
-                gdatmodi.deltlpri += lprbpare
                 if gdatmodi.thisindxprop == gdat.indxpropsplt:
                     gdatmodi.deltlpri += lprbfrst
                     gdatmodi.deltlpri += lprbseco
@@ -1828,7 +1827,7 @@ def retr_prop(gdat, gdatmodi):
             print 'indxenermodi: ', gdat.indxenermodi
 
     # calculate the factor, i.e., Jacobian and combinatorial, to multiply the acceptance rate
-    if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg and not gdatmodi.boolreje:
+    if (gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg) and not gdatmodi.boolreje:
         
         ## Jacobian
         jcbnfacttemp = gdatmodi.fluxpare * fabs(gdatmodi.auxipara[1] * (sin(gdatmodi.auxipara[2]) * cos(gdatmodi.auxipara[2]) + cos(gdatmodi.auxipara[2])**2))
@@ -2300,29 +2299,6 @@ def setpinit(gdat):
         if gdat.pixltype == 'cart':
             gdat.numbpixlfull = gdat.numbsidecart**2
 
-    # construct a lookup table for converting HealPix pixels to ROI pixels
-    if gdat.pixltype == 'heal':
-        path = gdat.pathdata + 'pixlcnvt/'
-        os.system('mkdir -p %s' % path)
-        path += 'pixlcnvt_%09g.p' % gdat.maxmgang
-
-        if os.path.isfile(path):
-            if gdat.verbtype > 0:
-                print 'Reading %s...' % path
-            fobj = open(path, 'rb')
-            gdat.pixlcnvt = cPickle.load(fobj)
-            fobj.close()
-        else:
-            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
-
-            numbpixlmarg = gdat.indxpixlrofimargextd.size
-            for k in range(numbpixlmarg):
-                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimargextd[k]], bgalheal[gdat.indxpixlrofimargextd[k]], gdat.indxpixl)
-                gdat.pixlcnvt[gdat.indxpixlrofimargextd[k]] = argmin(dist)
-            fobj = open(path, 'wb')
-            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
-            fobj.close()
-   
     # create the PCAT folders
     cmnd = 'mkdir -p %s/data/outp' % gdat.pathdata
     os.system(cmnd)
@@ -2472,6 +2448,7 @@ def setpinit(gdat):
     if gdat.pixltype == 'heal':
         gdat.numbpixlheal = gdat.numbsideheal**2 * 12
         gdat.apix = 4. * pi / gdat.numbpixlheal
+    
     if gdat.pixltype == 'cart':
         gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
         gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
@@ -2559,8 +2536,7 @@ def setpinit(gdat):
         gdat.evttstrg.append('PSF%d' % gdat.indxevttincl[m])
         
     # number of components
-    # temp -- 3->4 4->5
-    gdat.numbcomp = 4 + gdat.numbener
+    gdat.numbcomp = 3 + gdat.numbener
     gdat.numbcompcolr = 4
     gdat.jcbnsplt = 2.**(2 - gdat.numbener)
     
@@ -2650,6 +2626,29 @@ def setpinit(gdat):
     
     # store pixels as unit vectors
     gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+   
+    # construct a lookup table for converting HealPix pixels to ROI pixels
+    if gdat.pixltype == 'heal':
+        path = gdat.pathdata + 'pixlcnvt/'
+        os.system('mkdir -p %s' % path)
+        path += 'pixlcnvt_%09g.p' % gdat.maxmgang
+
+        if os.path.isfile(path):
+            if gdat.verbtype > 0:
+                print 'Reading %s...' % path
+            fobj = open(path, 'rb')
+            gdat.pixlcnvt = cPickle.load(fobj)
+            fobj.close()
+        else:
+            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
+
+            numbpixlmarg = gdat.indxpixlrofimargextd.size
+            for k in range(numbpixlmarg):
+                dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimargextd[k]], bgalheal[gdat.indxpixlrofimargextd[k]], gdat.indxpixl)
+                gdat.pixlcnvt[gdat.indxpixlrofimargextd[k]] = argmin(dist)
+            fobj = open(path, 'wb')
+            cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
+            fobj.close()
    
     if gdat.datatype == 'inpt':
         # temp
