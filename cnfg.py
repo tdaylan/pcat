@@ -10,8 +10,8 @@ def test_info():
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 100000
-    numbburn = numbswep / 2
+    numbswep = zeros(numbiter, dtype=int) + 5000000
+    numbburn = 4 * numbswep / 5
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
     for k in range(numbiter):
@@ -198,7 +198,7 @@ def test_psfn():
 def test_nomi():
       
     init( \
-         numbswep=100000, \
+         numbswep=2000000, \
          randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
