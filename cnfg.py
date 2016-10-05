@@ -220,7 +220,9 @@ def test_uppr():
 def test_prio():
     
     mocknumbpnts = array([200])
-    priofactdoff = array([-5., -2., 0., 1., 2., 5.])
+    #priofactdoff = array([-5., -2., -1. 0., 1., 2., 5.])
+    priofactdoff = arange(-2., 3., 0.5)
+    priofactdoff = array([-2., -1.5, -1., -0.5, 0., 0.5, 1., 1.5, 2.])
     numbiter = priofactdoff.size
     postnumbpnts = empty((3, numbiter))
     postmeanpnts = empty((3, numbiter))

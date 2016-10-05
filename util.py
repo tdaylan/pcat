@@ -807,8 +807,7 @@ def retr_fermpsfn(gdat):
             gdat.fermpsfipara[indxfermpsfiparatemp] = fermform[:, m, k]
 
     # calculate the scale factor
-    factener = (10. * gdat.meanener[:, None])**fermscal[None, :, 2]
-    gdat.fermscalfact = sqrt((fermscal[None, :, 0] * factener)**2 + fermscal[None, :, 1]**2)
+    gdat.fermscalfact = sqrt((fermscal[None, :, 0] * (10. * gdat.meanener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
     
     # evaluate the PSF
     gdat.fermpsfn = retr_psfn(gdat, gdat.fermpsfipara, gdat.indxener, gdat.binsangl, 'doubking')
@@ -2266,6 +2265,9 @@ def setpinit(gdat):
     
     # construct the mock PSF
     if gdat.exprtype == 'ferm':
+        retr_fermpsfn(gdat)
+    if gdat.exprtype == 'chan':
+        # temp
         retr_fermpsfn(gdat)
     if gdat.exprtype == 'sdss':
         retr_sdsspsfn(gdat)
