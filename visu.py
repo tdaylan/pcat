@@ -381,7 +381,6 @@ def plot_post(pathpcat, verbtype=1):
         listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
                        exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
        
-        
         print 'gdat.listauxipara'
         print gdat.listauxipara
         print 'gdat.listnumbpair'
@@ -765,8 +764,10 @@ def plot_chro(gdat):
     figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 3.))
     for k in range(gdat.numbprop):
         indxswepchro = where((gdat.listindxprop == k) & (gdat.listchrototl[:, 0] > 0))[0]
-        if indxswepchro.size > 0:
+        try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
+        except:
+            print 'Skipping choronometer histogram...'
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
         axcl[k].set_ylabel(gdat.strgprop[k])

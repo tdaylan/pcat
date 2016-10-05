@@ -854,16 +854,14 @@ def init( \
         sys.stdout = open(path, 'w')
 
     if gdat.verbtype > 0:
-        print 'Configuration %s' % gdat.strgcnfg
-
-    if gdat.verbtype > 0:
         print 'PCAT started at %s' % gdat.strgtimestmp
+        print 'Configuration %s' % gdat.strgcnfg
         print 'Initializing...'
     
     # initial setup
     setpinit(gdat) 
     
-    ## generate mock data
+    # generate mock data
     if gdat.datatype == 'mock':
 
         if gdat.mocknumbpnts == None:
