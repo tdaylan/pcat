@@ -4,7 +4,7 @@ from __init__ import *
 # internal functions
 from util import *
 
-def plot_post(pathpcat, verbtype=1):
+def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     gdat = gdatstrt()
     gdat.verbtype = verbtype
@@ -30,6 +30,7 @@ def plot_post(pathpcat, verbtype=1):
     gdat.numbsamp = hdun[0].header['numbsamp']
     gdat.numbburn = hdun[0].header['numbburn']
     gdat.numbswep = hdun[0].header['numbswep']
+    gdat.numbswepplot = hdun[0].header['numbswepplot']
     gdat.factthin = hdun[0].header['factthin']
     gdat.numbpopl = hdun[0].header['numbpopl']
     gdat.numbproc = hdun[0].header['numbproc']
@@ -53,7 +54,8 @@ def plot_post(pathpcat, verbtype=1):
     gdat.maxmsind = hdun[0].header['maxmsind']
 
     gdat.datatype = hdun[0].header['datatype']
-    gdat.psfntype = hdun[0].header['psfntype']
+    gdat.exprpsfntype = hdun[0].header['exprpsfntype']
+    gdat.modlpsfntype = hdun[0].header['modlpsfntype']
     gdat.exprtype = hdun[0].header['exprtype']
     gdat.pixltype = hdun[0].header['pixltype']
     
@@ -555,7 +557,7 @@ def plot_post(pathpcat, verbtype=1):
     # compute the medians of secondary variables
     gdat.medinormback = gdat.postnormback[0, :, :]
     gdat.medipsfipara = gdat.postpsfipara[0, :]
-    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfipara, gdat.indxener, gdat.binsangl, gdat.psfntype)
+    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfipara, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
     gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
     gdat.medibackfwhmcnts = retr_backfwhmcnts(gdat, gdat.medinormback, gdat.medifwhm)
     
@@ -577,17 +579,17 @@ def plot_post(pathpcat, verbtype=1):
 
     # PSF parameters
     path = gdat.pathplot + 'psfipara'
-    if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
+    if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
         gdat.listpsfipara[:, gdat.indxpsfiparainit] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit])
         if gdat.trueinfo:
             gdat.truepsfipara[gdat.indxpsfiparainit] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit])
-    elif gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
+    elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
         gdat.listpsfipara[:, gdat.indxpsfiparainit+1] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+1])
         gdat.listpsfipara[:, gdat.indxpsfiparainit+2] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+2])
         if gdat.trueinfo:
             gdat.truepsfipara[gdat.indxpsfiparainit+1] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+1])
             gdat.truepsfipara[gdat.indxpsfiparainit+2] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+2])
-    elif gdat.psfntype == 'doubking':
+    elif gdat.modlpsfntype == 'doubking':
         gdat.listpsfipara[:, gdat.indxpsfiparainit+1] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+1])
         gdat.listpsfipara[:, gdat.indxpsfiparainit+3] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+3])
         if gdat.trueinfo:
@@ -595,7 +597,7 @@ def plot_post(pathpcat, verbtype=1):
             gdat.truepsfipara[gdat.indxpsfiparainit+3] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+3])
 
     if gdat.probpsfipara != 0.:
-        if gdat.trueinfo and gdat.psfntype == 'doubking':
+        if gdat.trueinfo and gdat.modlpsfntype == 'doubking':
             truepara = gdat.truepsfipara
         else:
             truepara = array([None] * gdat.numbpsfipara)
@@ -738,7 +740,8 @@ def plot_post(pathpcat, verbtype=1):
     figr.savefig(gdat.pathplot + 'leviinfo.pdf')
     plt.close(figr)
 
-    #make_anim()
+    if makeanim:
+        make_anim(gdat)
 
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -873,7 +876,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     if post:
         path = gdat.pathplot + 'compfracspec.pdf'
     else:
-        path = gdat.pathplot + 'compfracspec_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'compfracspec_swep%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -899,7 +902,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     if post:
         path = gdat.pathplot + 'compfrac.pdf'
     else:
-        path = gdat.pathplot + 'compfrac_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'compfrac_swep%09d.pdf' % gdatmodi.cntrswep
     plt.subplots_adjust(top=0.8, bottom=0.2, left=0.2, right=0.8)
     plt.savefig(path)
     plt.close(figr)
@@ -920,11 +923,6 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
-        print 'gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]'
-        print gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]
-        print 'gdat.binssind'
-        print gdat.binssind
-        print
         axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.mrkralph, color='b', log=True, label='Sample')
     if gdat.trueinfo:
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.mrkralph, color='g', log=True, label=gdat.truelabl)
@@ -939,7 +937,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     if post:
         path = gdat.pathplot + 'histsind_pop%d.pdf' % l
     else:
-        path = gdat.pathplot + 'histsind_pop%d_%09d.pdf' % (l, gdatmodi.cntrswep)
+        path = gdat.pathplot + 'histsind_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -997,7 +995,7 @@ def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, li
     if post:
         path = gdat.pathplot + 'fluxsind%s_pop%d' % (strgtype, l) + '.pdf'
     else:
-        path = gdat.pathplot + 'fluxsind%s_pop%d' % (strgtype, l) + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'fluxsind%s_pop%d' % (strgtype, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1108,7 +1106,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     if post:
         path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '.pdf'
     else:
-        path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1178,7 +1176,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
     if postspecmtch != None:
         path = gdat.pathplot + 'scatspec%d' % l + '.pdf'
     elif gdatmodi.thisspecmtch != None:
-        path = gdat.pathplot + 'scatspec%d' % l + '_%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplot + 'scatspec_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep
 
     plt.tight_layout()
     plt.savefig(path)
@@ -1214,7 +1212,7 @@ def plot_scatpixl(gdat, gdatmodi, l):
                 axis.set_title(gdat.enerstrg[i])
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'scatpixl%d_' % l + '%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'scatpixl_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1409,21 +1407,21 @@ def plot_psfn(gdat, gdatmodi):
                 axis.legend()
             indxsamp = gdat.indxsamppsfipara[i*gdat.numbformpara+m*gdat.numbener*gdat.numbformpara]
   
-            if gdat.psfntype == 'singgaus':
+            if gdat.modlpsfntype == 'singgaus':
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit
-            elif gdat.psfntype == 'singking':
+            elif gdat.modlpsfntype == 'singking':
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamp+1]
-            elif gdat.psfntype == 'doubgaus':
+            elif gdat.modlpsfntype == 'doubgaus':
                 strg = r'$f = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
                 strg += r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
                 strg += r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit
-            elif gdat.psfntype == 'gausking':
+            elif gdat.modlpsfntype == 'gausking':
                 strg = r'$f_G = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
                 strg += r'$\sigma_G = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
                 strg += r'$\sigma_K = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+2]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamp+3]
-            elif gdat.psfntype == 'doubking':
+            elif gdat.modlpsfntype == 'doubking':
                 strg = r'$f_c = %.3g$' % gdatmodi.thissampvarb[indxsamp] + '\n'
                 strg += r'$\sigma_c = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamp+1]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma_c = %.3g$' % gdatmodi.thissampvarb[indxsamp+2] + '\n'
@@ -1432,7 +1430,7 @@ def plot_psfn(gdat, gdatmodi):
             axis.text(0.2, 0.2, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'psfnprof_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'psfnprof_swep%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1456,7 +1454,7 @@ def plot_fwhm(gdat, gdatmodi):
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fwhmcnts_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'fwhmcnts_swep%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
     
@@ -1601,25 +1599,36 @@ def plot_3fgl_thrs(gdat):
     plt.close(figr)
     
 
-def make_anim():
+def make_anim(gdat):
 
     listname = ['errrpnts0A', 'datacnts0A', 'resicnts0A', 'modlcnts0A', 'histspec', 'scatspec', 'psfnprof', 'compfrac0', 'compfracspec', 'scatpixl']
     
+    if gdat.verbtype > 0:
+        print 'Making animations...'
     for name in listname:
     
-        strg = '%s*0.pdf' % name
-        listfile = fnmatch.filter(os.listdir(gdat.pathplot), strg)[int(numbburn/numbswepplot):]
+        strg = '%s_swep*.pdf' % name
+        listfile = fnmatch.filter(os.listdir(gdat.pathplot), strg)[int(gdat.numbburn / gdat.numbswepplot):]
         
-        print fnmatch.filter(os.listdir(gdat.pathplot), strg)
-        print listfile
-
-        nfile = len(listfile)
-        jfile = choice(arange(nfile), replace=False, size=nfile)
+        numbfile = len(listfile)
+        if numbfile == 0:
+            if gdat.verbtype > 0:
+                print 'Skipping animation for %s...' % name
+            continue
+        indxfileanim = choice(arange(numbfile), replace=False, size=numbfile)
 
         cmnd = 'convert -delay 20 '
-        for k in range(nfile):
-            cmnd += '%s ' % listfile[jfile[k]]
-        cmnd += ' %s.gif' % name
+        for k in range(numbfile):
+            cmnd += '%s%s ' % (gdat.pathplot, listfile[indxfileanim[k]])
+        cmnd += ' %s%s.gif' % (gdat.pathplot, name)
+        
+        if gdat.verbtype > 0:
+            print 'fnmatch.filter(os.listdir(gdat.pathplot), strg)'
+            print fnmatch.filter(os.listdir(gdat.pathplot), strg)
+            print 'listfile'
+            print listfile
+            print 'cmnd'
+            print cmnd
         os.system(cmnd)
 
         
@@ -1659,7 +1668,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 axis.legend()
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'histcnts_pop%d' % l + '_%09d.pdf' % gdatmodi.cntrswep)
+    plt.savefig(gdat.pathplot + 'histcnts_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep)
     plt.close(figr)
     
 

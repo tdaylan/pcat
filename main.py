@@ -103,7 +103,7 @@ def work(gdat, indxprocwork):
                 gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr, 0] = rand()
 
     ## PSF parameters
-    if gdat.randinit or gdat.truepsfipara == None or gdat.psfntype != gdat.truepsfntype:
+    if gdat.randinit or gdat.truepsfipara == None or gdat.modlpsfntype != gdat.truepsfntype:
         if gdat.verbtype > 1:
             print 'Randomly seeding the PSF parameters from the prior...'
         gdatmodi.drmcsamp[gdat.indxsamppsfipara, 0] = retr_randunitpsfipara(gdat)
@@ -139,7 +139,7 @@ def work(gdat, indxprocwork):
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l], \
                                                                                                             gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
             except:
-                raise Exception('Provided reference catalog is larger than the sample vector size.')
+                raise Exception('Mock or provided reference catalog is larger than the sample vector size.')
 
     if gdat.verbtype > 1:
         print 'drmcsamp'
@@ -170,9 +170,9 @@ def work(gdat, indxprocwork):
     
     ## PSF
     if gdat.boolintpanglcosi:
-        gdatmodi.thispsfnintp = interp1d(gdat.binsanglcosi, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
+        gdatmodi.thispsfnintp = interp1d(gdat.binsanglcosi, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype), axis=1)
     else:
-        gdatmodi.thispsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype), axis=1)
+        gdatmodi.thispsfnintp = interp1d(gdat.binsangl, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype), axis=1)
     gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
     
     # log-prior
@@ -299,6 +299,7 @@ def init( \
          pathbase=os.environ["PCAT_DATA_PATH"], \
          
          scalmaps='linr', \
+         makeanim=False, \
    
          strgfluxunit=None, \
          strgenerunit=None, \
@@ -310,7 +311,7 @@ def init( \
          fluxdisttype=None, \
          sinddisttype=None, \
          spectype=None, \
-         psfntype=None, \
+         modlpsfntype=None, \
 
          asymfluxprop=False, \
          maxmnormback=None, \
@@ -387,6 +388,10 @@ def init( \
          numbsideheal=256, \
          
         ):
+
+    # ignore warnings if not in diagnostic mode
+    if not diagmode:
+        warnings.simplefilter('ignore')
     
     # defaults
     ## convenience variables in order to set the defaults
@@ -464,10 +469,11 @@ def init( \
     if exprtype == 'ferm':
         if maxmgang == None:
             maxmgang = deg2rad(20.)
-        if psfntype == None:
-            psfntype = 'singking'
+        if modlpsfntype == None:
+            modlpsfntype = 'singking'
         if mockpsfntype == None:
             mockpsfntype = 'doubking'
+        exprpsfntype = 'doubking'
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2.)
         if lablback == None:
@@ -512,16 +518,19 @@ def init( \
             pixltype = 'cart'
         if numbsidecart == None:
             numbsidecart = 100
+        if modlpsfntype == None:
+            modlpsfntype = 'singgaus'
+        if mockpsfntype == None:
+            mockpsfntype = 'singgaus'
+        exprpsfntype = 'singgaus'
     
     ## Chandra
     if exprtype == 'chan':
-        if psfntype == None:
-            psfntype = 'singgaus'
         if strgenerunit == None:
             strgenerunit = r'KeV'
         if strgfluxunit == None:
             strgfluxunit = r'[1/cm$^2$/s/KeV]'
-    
+
     ## SDSS
     if exprtype == 'sdss':
         if minmsind == None:
@@ -536,10 +545,6 @@ def init( \
             minmmeanpnts = array([1.])
         if maxmmeanpnts == None:
             maxmmeanpnts = array([1e3])
-        if psfntype == None:
-            psfntype = 'doubgaus'
-        if mockpsfntype == None:
-            mockpsfntype = 'doubgaus'
         if strgfluxunit == None:
             strgfluxunit = '[nMgy]'
         if strgfluxunit == None:
@@ -632,7 +637,10 @@ def init( \
     gdat.exprtype = exprtype
     
     ## PSF model type
-    gdat.psfntype = psfntype
+    gdat.modlpsfntype = modlpsfntype
+    
+    ## experimental PSF type
+    gdat.exprpsfntype = exprpsfntype
     
     ## flag to turn off PSF parameter updates
     gdat.boolpropfluxdistbrek = boolpropfluxdistbrek
@@ -703,6 +711,9 @@ def init( \
     ## plotting
     ### color scaling of the count maps
     gdat.scalmaps = scalmaps
+    
+    ### Boolean flag to make gif animations of the per-sample plots
+    gdat.makeanim = makeanim
          
     ### Boolean flag to allow experimental data to be superimposed on the plots
     gdat.exprinfo = exprinfo
@@ -888,13 +899,6 @@ def init( \
         gdat.truefluxdistsloplowr = gdat.mockfluxdistsloplowr
         gdat.truefluxdistslopuppr = gdat.mockfluxdistslopuppr
     
-        if gdat.mockpsfipara == None: 
-            gdat.mockpsfntype = psfntpye
-            numbmockpsfipara = gdat.numbpsfipara
-            gdat.mockpsfipara = empty(numbmockpsfipara)
-            for k in arange(numbmockpsfipara):
-                gdat.mockpsfipara[k] = icdf_psfipara(gdat, rand(), k)
-   
         if gdat.mocknormback == None:
             for c in gdat.indxback:
                 gdat.mocknormback[c, :] = icdf_logt(rand(gdat.numbener), gdat.minmnormback[c], gdat.factnormback[c])
@@ -1111,6 +1115,10 @@ def init( \
     listdeltllik = empty((gdat.numbswep, gdat.numbproc))
     listdeltlpri = empty((gdat.numbswep, gdat.numbproc))
     listmemoresi = empty((gdat.numbsamp, gdat.numbproc))
+    maxmllikswep = empty(gdat.numbproc)
+    indxswepmaxmllik = empty(gdat.numbproc, dtype=int)
+    maxmlposswep = empty(gdat.numbproc)
+    indxswepmaxmlpos = empty(gdat.numbproc, dtype=int)
     for k in gdat.indxproc:
         gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
@@ -1135,8 +1143,21 @@ def init( \
         listdeltllik[:, k] = listchan[18]
         listdeltlpri[:, k] = listchan[19]
         listmemoresi[:, k] = listchan[20]
-        timereal[k] = gridchan[k][21]
-        timeproc[k] = gridchan[k][22]
+        maxmllikswep[k] = listchan[21]
+        indxswepmaxmllik[k] = listchan[22]
+        maxmllikswep[k] = listchan[23]
+        indxswepmaxmlpos[k] = listchan[24]
+        timereal[k] = gridchan[k][25]
+        timeproc[k] = gridchan[k][26]
+
+    print 'maxmllikswep'
+    print maxmllikswep
+    print 'indxswepmaxmllik'
+    print indxswepmaxmllik
+    print 'maxmlposswep'
+    print maxmlposswep
+    print 'indxswepmaxmlpos'
+    print indxswepmaxmlpos
 
     listindxprop = listindxprop.flatten()
     listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
@@ -1289,6 +1310,7 @@ def init( \
     if gdat.verbtype > 0:
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
+    
     atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype)
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
@@ -1312,6 +1334,7 @@ def init( \
     head['numbsamp'] = gdat.numbsamp
     head['numbburn'] = gdat.numbburn
     head['numbswep'] = gdat.numbswep
+    head['numbswepplot'] = gdat.numbswepplot
     head['factthin'] = gdat.factthin
     head['numbpopl'] = gdat.numbpopl
     head['numbproc'] = gdat.numbproc
@@ -1337,7 +1360,8 @@ def init( \
     head['maxmsind'] = gdat.maxmsind
     
     head['datatype'] = gdat.datatype
-    head['psfntype'] = gdat.psfntype
+    head['modlpsfntype'] = gdat.modlpsfntype
+    head['exprpsfntype'] = gdat.exprpsfntype
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
     
@@ -1709,7 +1733,7 @@ def init( \
     pf.HDUList(listhdun).writeto(pathpcat, clobber=True, output_verify='ignore')
 
     if gdat.makeplot:
-        plot_post(pathpcat, verbtype=gdat.verbtype)
+        plot_post(pathpcat, verbtype=gdat.verbtype, makeanim=gdat.makeanim)
 
     timerealtotl = time.time() - timerealtotl
     timeproctotl = time.clock() - timeproctotl
@@ -1904,7 +1928,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
     # current sample index
     thiscntr = -1
-    
+   
+    maxmllikswep = gdatmodi.thislliktotl
+    maxmlposswep = gdatmodi.thislliktotl + gdatmodi.thislpritotl
+    indxswepmaxmllik = -1 
+    indxswepmaxmlpos = -1 
     while gdatmodi.cntrswep < gdat.numbswep:
         
         timetotlinit = gdat.functime()
@@ -1962,10 +1990,10 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 gdatmodi.boolreje = True
 
         if gdatmodi.thisindxprop == gdat.indxproppsfipara:
-            if gdat.psfntype == 'doubking':
+            if gdat.modlpsfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdatmodi.nextsampvarb[gdat.indxsamppsfipara[3]]:
                     gdatmodi.boolreje = True
-            elif gdat.psfntype == 'doubgaus':
+            elif gdat.modlpsfntype == 'doubgaus':
                 if gdatmodi.nextsampvarb[gdat.indxsamppsfipara[1]] >= gdatmodi.nextsampvarb[gdat.indxsamppsfipara[2]]:
                     gdatmodi.boolreje = True
             
@@ -2039,6 +2067,19 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             # update the current state
             updt_samp(gdat, gdatmodi)
 
+            # check if the accepted sample has
+            ## maximal likelihood
+            llikswep = gdatmodi.deltllik + gdatmodi.thislliktotl
+            if llikswep > maxmllikswep:
+                maxmllikswep = llikswep
+                indxswepmaxmllik = gdatmodi.cntrswep
+            ## maximal posterior
+            lposswep = llikswep + gdatmodi.deltlpri + gdatmodi.thislpritotl
+            if llikswep > maxmlposswep:
+                maxmlposswep = lposswep
+                indxswepmaxmlpos = gdatmodi.cntrswep
+            
+            # register the sample as accepted
             listaccp[gdatmodi.cntrswep] = True
 
         # reject the sample
@@ -2098,7 +2139,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listmodlcnts[indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
             listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
-            listllik[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thisllik)
+            listllik[indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
             listlpri[indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
             lprinorm = 0.
             for l in gdat.indxpopl:
@@ -2181,7 +2222,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
-        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, listdeltllik, listmemoresi]
+        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
+        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, maxmlposswep, indxswepmaxmlpos]
     
     return listchan
 

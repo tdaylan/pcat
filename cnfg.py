@@ -16,7 +16,7 @@ def test_info():
     listinfo = zeros(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  psfntype='doubking', \
+                                  modlpsfntype='doubking', \
                                   numbswep=numbswep[k], \
                                   numbburn=numbburn[k], \
                                   indxenerincl=arange(2, 3), \
@@ -125,7 +125,7 @@ def test_time():
                                   indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
                                   indxevttincl=arange(3, 4), \
-                                  psfntype='doubking', \
+                                  modlpsfntype='doubking', \
                                   maxmnumbpnts=array([maxmnumbpnts]), \
                                   maxmgang=maxmgang, \
                                   minmflux=minmflux, \
@@ -165,16 +165,21 @@ def test_time():
     
 def test_psfn():
     
-    tupl = [['doubking', 'mock'], \
-            ['gausking', 'mock'], \
-            ['doubking', 'inpt'], \
-            ['gausking', 'inpt']]
+    tupl = [['mock', 'doubking', 'doubking'], \
+            ['mock', 'gausking', 'gausking'], \
+            ['mock', 'gausking', 'doubking'], \
+            ['mock', 'doubking', 'gausking'], \
+            ['inpt', 'gausking', None], \
+            ['inpt', 'doubking', None]]
     numbtupl = len(tupl)
     for k in range(numbtupl):
-        psfntype = tupl[k][0]
-        datatype = tupl[k][1]
+        
+        datatype = tupl[k][0]
+        modlpsfntype = tupl[k][1]
+        mockpsfntype = tupl[k][2]
+
         init( \
-             numbswep=50000, \
+             numbswep=500, \
              numbburn=0, \
              factthin=1, \
              randinit=False, \
@@ -185,7 +190,8 @@ def test_psfn():
              strgback=['fermisotflux.fits', ], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
-             psfntype=psfntype, \
+             modlpsfntype=modlpsfntype, \
+             mockpsfntype=mockpsfntype, \
              maxmnumbpnts=array([100]), \
              maxmgang=deg2rad(10.), \
              minmflux=3e-11, \
@@ -207,7 +213,7 @@ def test_nomi():
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         psfntype='doubking', \
+         modlpsfntype='doubking', \
          maxmnumbpnts=array([600]), \
          maxmgang=deg2rad(20.), \
          minmflux=5e-11, \
@@ -220,16 +226,17 @@ def test_nomi():
 def test_uppr():
       
     init( \
-         numbswep=300002, \
+         numbswep=3000, \
          randinit=False, \
          exprinfo=False, \
+         makeanim=True, \
          boolproppsfn=False, \
          boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         psfntype='doubking', \
+         modlpsfntype='doubking', \
          maxmnumbpnts=array([600]), \
          maxmgang=deg2rad(5.), \
          minmflux=1e-9, \
@@ -262,7 +269,7 @@ def test_prio():
                                   priofactdoff=priofactdoff[k], \
                                   strgback=['fermisotflux.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  psfntype='doubking', \
+                                  modlpsfntype='doubking', \
                                   maxmnumbpnts=array([1000]), \
                                   maxmgang=deg2rad(10.), \
                                   minmflux=5e-11, \
@@ -304,7 +311,7 @@ def test_lowr():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         psfntype='doubking', \
+         modlpsfntype='doubking', \
          maxmnumbpnts=array([300]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-24, \
@@ -344,7 +351,7 @@ def test_post():
              stdvlbhlmaxm=stdvlbhlmaxm, \
              stdvflux=stdvflux, \
              stdvsind=stdvsind, \
-             psfntype='doubking', \
+             modlpsfntype='doubking', \
              maxmnumbpnts=array([3]), \
              maxmgang=deg2rad(1.), \
              minmflux=minmflux, \
@@ -379,7 +386,7 @@ def test_atcr():
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  psfntype='doubking', \
+                                  modlpsfntype='doubking', \
                                   maxmnumbpnts=array([200]), \
                                   maxmgang=deg2rad(10.), \
                                   minmflux=3e-11, \
@@ -431,7 +438,7 @@ def test_spmr():
              strgback=['fermisotflux.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
-             psfntype='doubking', \
+             modlpsfntype='doubking', \
              maxmgang=deg2rad(10.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
@@ -457,7 +464,7 @@ def test_popl():
          maxmfluxdistslop=array([3., 3.]), \
          sinddiststdv=array([.5, .5]), \
          sinddistmean=array([2., 2.]), \
-         psfntype='gausking', \
+         modlpsfntype='gausking', \
          fluxdisttype='powr', \
          minmflux=3e-11, \
          maxmflux=3e-7, \
@@ -482,7 +489,7 @@ def test():
          strgback=['fermisotflux.fits', ], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.]), \
-         psfntype='doubking', \
+         modlpsfntype='doubking', \
          maxmnumbpnts=array([4]), \
          maxmgang=deg2rad(10.), \
          minmflux=3e-11, \

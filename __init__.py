@@ -49,6 +49,5 @@ np.set_printoptions(linewidth=180)
 import warnings
 #warnings.simplefilter('error')
 #warnings.simplefilter('ignore', FutureWarning)
-warnings.simplefilter('ignore')
 
 

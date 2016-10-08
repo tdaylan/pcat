@@ -314,6 +314,7 @@ def retr_llik(gdat, gdatmodi, init=False):
 
     if init:
         gdatmodi.thisllik = gdat.datacnts * log(gdatmodi.thismodlcnts) - gdatmodi.thismodlcnts
+        gdatmodi.thislliktotl = sum(gdatmodi.thisllik)
         
     elif gdatmodi.thisindxprop >= gdat.indxproppsfipara:
 
@@ -537,7 +538,8 @@ def retr_lpri(gdat, gdatmodi, init=False):
             else:
                 gdatmodi.thislpri[l, 0] = retr_probpois(gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]], gdatmodi.thissampvarb[gdat.indxsampmeanpnts[l]])
                 gdatmodi.thislpri[l, 1] = retr_fluxlpri(gdatmodi, gdat, l)
-            gdatmodi.nextlpri = copy(gdatmodi.thislpri)
+        gdatmodi.thislpritotl = sum(gdatmodi.thislpri)
+        gdatmodi.nextlpri = copy(gdatmodi.thislpri)
     else:
         
         # initialize the delta log-prior
@@ -727,7 +729,7 @@ def retr_maps(gdat, indxpntsfull, sampvarb):
         listspectemp.append(sampvarb[indxsampspec[l]])
 
     pntsflux = retr_pntsflux(gdat, sampvarb[concatenate(indxsamplgal)], sampvarb[concatenate(indxsampbgal)], \
-        concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfipara], gdat.psfntype)
+        concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfipara], gdat.modlpsfntype)
     
     totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxsampnormback], pntsflux, gdat.indxcube)
     
@@ -752,6 +754,21 @@ def retr_mrkrsize(gdat, flux):
         print mrkrsize
 
     return mrkrsize
+
+
+def test_intp():
+
+    pass 
+
+    return 
+
+
+def retr_chanpsfn(gdat):
+
+    numbformpara = 1
+    gdat.chanpsfipara = array([1e-5, 1e-5])
+    psfn = retr_psfn(gdat, gdat.chanpsfipara, gdat.indxener, gdat.binsangl, psfntype='singgaus')
+    return psfn
 
 
 def retr_fermpsfn(gdat):
@@ -864,12 +881,14 @@ def updt_samp(gdat, gdatmodi):
         ## update the unit sample vector -- this is unique for hyperparameter updates
         gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, :], -1] = fluxunit
         
-        # update the prior register
+        ## update the prior register
         gdatmodi.thislpri[gdatmodi.indxpoplmodi, :] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :]
+        gdatmodi.thislpritotl = sum(gdatmodi.thislpri)
 
     # proposals that change the likelihood
     if gdatmodi.thisindxprop >= gdat.indxproppsfipara:
         gdatmodi.thisllik[gdat.indxcubemodi] = gdatmodi.nextllik[gdat.indxcubemodi]
+        gdatmodi.thislliktotl = sum(gdatmodi.thisllik)
         gdatmodi.thismodlcnts[gdat.indxcubemodi] = gdatmodi.nextmodlcnts[gdat.indxcubemodi]
         
     # PSF
@@ -1107,9 +1126,9 @@ def retr_fermdata(gdat):
 def retr_rtag(gdat, indxprocwork):
     
     if indxprocwork == None:
-        rtag = 'AA_%d_%d_%d_%d_%s_%s' % (gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, gdat.datatype, gdat.psfntype)
+        rtag = 'AA_%d_%d_%d_%d_%s_%s' % (gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, gdat.datatype, gdat.modlpsfntype)
     else:
-        rtag = '%02d_%d_%d_%d_%d_%s_%s' % (indxprocwork, gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, gdat.datatype, gdat.psfntype)
+        rtag = '%02d_%d_%d_%d_%d_%s_%s' % (indxprocwork, gdat.numbproc, gdat.numbswep, gdat.numbburn, gdat.factthin, gdat.datatype, gdat.modlpsfntype)
         
     return rtag
 
@@ -1328,9 +1347,9 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.numbmodipnts = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
                     
         # construct the proposed PSF
-        gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
+        gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
         
-        temp = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.psfntype)
+        temp = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
         gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         
         if gdat.verbtype > 1:
@@ -1931,7 +1950,8 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         psfn = retr_doubking(scalangl, frac, sigc, gamc, sigt, gamt)
     
     # normalize the PSF
-    psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
+    if gdat.exprtype == 'ferm':
+        psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
     
     # temp
     if True and (gdat.strgcnfg == 'pcat_ferm_expr_ngal' or gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp1' or \
@@ -1946,15 +1966,15 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
 def retr_psfimodl(gdat):
     
     # PSF parameters
-    if gdat.psfntype == 'singgaus':
+    if gdat.modlpsfntype == 'singgaus':
         gdat.numbformpara = 1
-    elif gdat.psfntype == 'singking':
+    elif gdat.modlpsfntype == 'singking':
         gdat.numbformpara = 2 
-    elif gdat.psfntype == 'doubgaus':
+    elif gdat.modlpsfntype == 'doubgaus':
         gdat.numbformpara = 3
-    elif gdat.psfntype == 'gausking':
+    elif gdat.modlpsfntype == 'gausking':
         gdat.numbformpara = 4
-    elif gdat.psfntype == 'doubking':
+    elif gdat.modlpsfntype == 'doubking':
         gdat.numbformpara = 5
        
     gdat.indxformpara = arange(gdat.numbformpara) 
@@ -1981,12 +2001,12 @@ def retr_psfimodl(gdat):
     minmpsfnfrac = 0.
     maxmpsfnfrac = 1.
     
-    if gdat.psfntype == 'singgaus':
+    if gdat.modlpsfntype == 'singgaus':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         scalformpara[0] = 'logt'
         strgformpara = [r'$\sigma']
-    elif gdat.psfntype == 'singking':
+    elif gdat.modlpsfntype == 'singking':
         minmformpara[0] = minmanglpsfn
         maxmformpara[0] = maxmanglpsfn
         minmformpara[1] = minmgamm
@@ -1994,7 +2014,7 @@ def retr_psfimodl(gdat):
         scalformpara[0] = 'logt'
         scalformpara[1] = 'atan'
         strgformpara = [r'$\sigma', r'$\gamma']
-    elif gdat.psfntype == 'doubgaus':
+    elif gdat.modlpsfntype == 'doubgaus':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -2005,7 +2025,7 @@ def retr_psfimodl(gdat):
         scalformpara[1] = 'logt'
         scalformpara[2] = 'logt'
         strgformpara = ['$f_c', r'$\sigma_c', r'$\sigma_t']
-    elif gdat.psfntype == 'gausking':
+    elif gdat.modlpsfntype == 'gausking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -2019,7 +2039,7 @@ def retr_psfimodl(gdat):
         scalformpara[2] = 'logt'
         scalformpara[3] = 'atan'
         strgformpara = ['$f_g', r'$\sigma_g', r'$\sigma_k', r'$\gamma']
-    elif gdat.psfntype == 'doubking':
+    elif gdat.modlpsfntype == 'doubking':
         minmformpara[0] = minmpsfnfrac
         maxmformpara[0] = maxmpsfnfrac
         minmformpara[1] = minmanglpsfn
@@ -2055,12 +2075,12 @@ def retr_psfimodl(gdat):
         for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxformpara]
     gdat.indxpsfiparainit = (gdat.indxevtt[:, None] * gdat.numbpsfiparaevtt + gdat.indxener[None, :] * gdat.numbformpara).flatten()
     for k in arange(gdat.indxpsfiparainit.size):
-        if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
+        if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
             gdat.strgpsfipara[gdat.indxpsfiparainit[k]] += ' ' + gdat.strganglunit
-        elif gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
+        elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
             gdat.strgpsfipara[gdat.indxpsfiparainit[k]+1] += ' ' + gdat.strganglunit
             gdat.strgpsfipara[gdat.indxpsfiparainit[k]+2] += ' ' + gdat.strganglunit
-        elif gdat.psfntype == 'doubking':
+        elif gdat.modlpsfntype == 'doubking':
             gdat.strgpsfipara[gdat.indxpsfiparainit[k]+1] += ' ' + gdat.strganglunit
             gdat.strgpsfipara[gdat.indxpsfiparainit[k]+3] += ' ' + gdat.strganglunit
     gdat.indxpsfipara = arange(gdat.numbpsfipara)
@@ -2202,13 +2222,13 @@ def retr_randunitpsfipara(gdat):
 
     while True:
         randunitpsfipara = rand(gdat.numbpsfipara)
-        if gdat.psfntype == 'singgaus' or gdat.psfntype == 'singking':
+        if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
             break
         else:
             indxpar0 = 1
-            if gdat.psfntype == 'doubgaus' or gdat.psfntype == 'gausking':
+            if gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
                 indxpar1 = 2
-            if gdat.psfntype == 'doubking':
+            if gdat.modlpsfntype == 'doubking':
                 indxpar1 = 3
             thisbool = True
             for i in gdat.indxener:
@@ -2222,7 +2242,15 @@ def retr_randunitpsfipara(gdat):
 
 
 def setpinit(gdat):
-  
+ 
+    # create the PCAT folders
+    cmnd = 'mkdir -p %s/data/outp' % gdat.pathdata
+    os.system(cmnd)
+
+    # paths
+    gdat.pathimag, gdat.pathdata = tdpy.util.retr_path('pcat')
+    
+    # axes
     ## energy
     gdat.numbener = gdat.indxenerincl.size
     gdat.numbenerfull = gdat.binsenerfull.size - 1
@@ -2242,14 +2270,15 @@ def setpinit(gdat):
     gdat.numbevtt = gdat.indxevttincl.size
     gdat.indxevtt = arange(gdat.numbevtt)
     
-    # angular gdat.deviation
+    # angular deviation
     # temp -- check that gdat.numbangl does not degrade the performance
     gdat.numbangl = 1000
     gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
     gdat.binsanglcosi = sort(cos(gdat.binsangl))
     
-    # half size of the spatial prior
+    # half size of the image where the sample catalog is compared against the reference
     gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
+    # half size of the spatial prior
     gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
 
     # population index vector
@@ -2262,12 +2291,11 @@ def setpinit(gdat):
         gdat.mocksindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
         gdat.mocksindcdfnnormdiff = gdat.mocksindcdfnnormmaxm - gdat.mocksindcdfnnormminm
     
-    # construct the mock PSF
+    # construct the PSF
     if gdat.exprtype == 'ferm':
         retr_fermpsfn(gdat)
     if gdat.exprtype == 'chan':
-        # temp
-        retr_fermpsfn(gdat)
+        retr_chanpsfn(gdat)
     if gdat.exprtype == 'sdss':
         retr_sdsspsfn(gdat)
 
@@ -2285,23 +2313,24 @@ def setpinit(gdat):
         elif gdat.mockpsfntype == 'doubking':
             gdat.numbmockformpara = 5
 
-        gdat.numbmockpsfiparaevtt = gdat.numbener * gdat.numbmockformpara
-        gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
-        gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
+        # temp
+        #gdat.numbmockpsfiparaevtt = gdat.numbener * gdat.numbmockformpara
+        #gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
+        #gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
 
         if gdat.exprtype == 'ferm':
             gdat.mockpsfipara = gdat.fermpsfipara
         if gdat.exprtype == 'sdss':
             gdat.mockpsfipara = gdat.sdsspsfipara
-    
+        if gdat.exprtype == 'chan':
+            gdat.mockpsfipara = gdat.chanpsfipara
+  
+    # pixelization
+    if gdat.datatype == 'mock':
         if gdat.pixltype == 'heal':
             gdat.numbpixlfull = 12 * gdat.numbsideheal**2
         if gdat.pixltype == 'cart':
             gdat.numbpixlfull = gdat.numbsidecart**2
-
-    # create the PCAT folders
-    cmnd = 'mkdir -p %s/data/outp' % gdat.pathdata
-    os.system(cmnd)
 
     # number of processes
     gdat.strgproc = os.uname()[1]
@@ -2317,6 +2346,8 @@ def setpinit(gdat):
         gdat.nameexpr = 'Fermi-LAT'
     if gdat.exprtype == 'sdss':
         gdat.nameexpr = 'SDSS'
+    if gdat.exprtype == 'chan':
+        gdat.nameexpr = 'Chandra'
     
     gdat.numbchrototl = 4
     gdat.numbchrollik = 7
@@ -2335,9 +2366,6 @@ def setpinit(gdat):
     if gdat.strgfunctime == 'time':
         gdat.functime = time.time
 
-    # the normalized offset for text annotation of point sources in the frames
-    gdat.offstext = gdat.maxmgang * 0.05
-    
     gdat.indxback = arange(gdat.numbback)
     
     gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
@@ -2381,9 +2409,6 @@ def setpinit(gdat):
     gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
     gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
 
-    # paths
-    gdat.pathimag, gdat.pathdata = tdpy.util.retr_path('pcat')
-    
     gdat.minmspec = gdat.minmflux * factener
     gdat.maxmspec = gdat.maxmflux * factener
     gdat.binsspec = gdat.binsflux[None, :] * factener[:, None]
@@ -2391,10 +2416,6 @@ def setpinit(gdat):
     for i in gdat.indxener:
         gdat.meanspec[i, :] = sqrt(gdat.binsspec[i, 1:] * gdat.binsspec[i, :-1])
 
-    # temp
-    if gdat.exprtype == 'sdss':
-        gdat.diffener = ones(gdat.numbener)
-    
     # spatial priors
     gdat.minmlgal = -gdat.maxmgang
     gdat.maxmlgal = gdat.maxmgang
@@ -2414,13 +2435,9 @@ def setpinit(gdat):
             if gdat.exprflux.ndim != 4:
                 Exception('exprflux should be a 4D numpy array if pixelization is Cartesian.')
         
-        if gdat.pixltype == 'heal':
-            gdat.numbpixlheal = gdat.exprflux.shape[1]
-            gdat.numbsideheal = int(sqrt(gdat.numbpixlheal / 12))
         if gdat.pixltype == 'cart':
             gdat.numbsidecart = gdat.exprflux.shape[1]
             gdat.exprflux = gdat.exprflux.reshape((gdat.exprflux.shape[0], gdat.numbsidecart**2, gdat.exprflux.shape[3]))
-            gdat.numbpixlheal = None
 
         gdat.numbenerfull = gdat.exprflux.shape[0]
         gdat.numbpixlfull = gdat.exprflux.shape[1]
@@ -2429,26 +2446,21 @@ def setpinit(gdat):
         gdat.indxevttfull = arange(gdat.numbevttfull)
         
         if gdat.pixltype == 'heal':
-            gdat.numbsideheal = gdat.numbsideheal
-        if gdat.pixltype == 'cart':
-            gdat.numbsidecart = gdat.numbsidecart
-        
+            gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
+    
     if gdat.datatype == 'mock':
         if gdat.exprtype == 'ferm':
             gdat.indxenerfull = arange(5)
             gdat.indxevttfull = arange(4)
         if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan':
             gdat.indxevttfull = arange(1)
-            if dat.exprtype == 'sdss':
+            if gdat.exprtype == 'sdss':
                 gdat.indxenerfull = arange(3)
             else:
                 gdat.indxenerfull = arange(2)
 
-    # pizelization
-    if gdat.pixltype == 'heal':
-        gdat.numbpixlheal = gdat.numbsideheal**2 * 12
-        gdat.apix = 4. * pi / gdat.numbpixlheal
-    
+    gdat.indxpixlfull = arange(gdat.numbpixlfull)
+
     if gdat.pixltype == 'cart':
         gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
         gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
@@ -2458,7 +2470,7 @@ def setpinit(gdat):
         
     if gdat.pixltype == 'heal':
         
-        lgalheal, bgalheal, gdat.numbpixlheal, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
+        lgalheal, bgalheal, gdat.numbpixlfull, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
         lgalheal = deg2rad(lgalheal)
         bgalheal = deg2rad(bgalheal)
    
@@ -2478,6 +2490,8 @@ def setpinit(gdat):
         gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
     
     # plotting
+    ## the normalized offset for text annotation of point sources in the frames
+    gdat.offstext = gdat.maxmgang * 0.05
     ## figure size
     gdat.plotsize = 7
     ## text
@@ -2605,7 +2619,7 @@ def setpinit(gdat):
         gdat.backflux.append(backfluxtemp)
     
     # only include desired energy and PSF class bins 
-    gdat.indxcubeincl = meshgrid(gdat.indxenerincl, arange(gdat.expo.shape[1]), gdat.indxevttincl, indexing='ij')
+    gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     if gdat.datatype == 'inpt':
         gdat.exprflux = gdat.exprflux[gdat.indxcubeincl]
     gdat.expo = gdat.expo[gdat.indxcubeincl]
@@ -2640,7 +2654,7 @@ def setpinit(gdat):
             gdat.pixlcnvt = cPickle.load(fobj)
             fobj.close()
         else:
-            gdat.pixlcnvt = zeros(gdat.numbpixlheal, dtype=int) - 1
+            gdat.pixlcnvt = zeros(gdat.numbpixlfull, dtype=int) - 1
 
             numbpixlmarg = gdat.indxpixlrofimargextd.size
             for k in range(numbpixlmarg):
