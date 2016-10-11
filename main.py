@@ -13,11 +13,8 @@ def work(gdat, indxprocwork):
     # re-seed the random number generator for this chain
     seed()
     
-    # construct the run tag for this chain
-    gdat.rtag = retr_rtag(gdat, indxprocwork)
-    
     # empty object to hold chain-specific variables that will be modified by the chain
-    gdatmodi = gdatstrt()
+    gdatmodi = tdpy.util.gdatstrt()
     
     # construct the initial state
     ## unit sample vector
@@ -152,19 +149,6 @@ def work(gdat, indxprocwork):
     ## PS and total flux and count maps
     gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
    
-
-    # temp
-    if False:
-        for i in gdat.indxener:
-            tdpy.util.plot_maps('/Users/tansu/Desktop/test/thispnts.pdf', gdatmodi.thispntsflux[i, :, 0], indxpixlrofi=gdat.indxpixlrofi, \
-                                                                                numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            tdpy.util.plot_maps('/Users/tansu/Desktop/test/thismodl.pdf', gdatmodi.thismodlflux[i, :, 0], indxpixlrofi=gdat.indxpixlrofi, \
-                                                                                numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -278,9 +262,10 @@ def init( \
          numbburn=None, \
          factthin=None, \
          priotype='logt', \
-         priofactdoff=1., \
+         priofactdoff=0., \
          datatype='inpt', \
          randinit=True, \
+         optiprop=True, \
          regulevi=False, \
          boolpropfluxdistbrek=True, \
          boolpropsind=True, \
@@ -298,8 +283,9 @@ def init( \
          probprop=None, \
          pathbase=os.environ["PCAT_DATA_PATH"], \
          
-         scalmaps='linr', \
+         scalmaps='asnh', \
          makeanim=False, \
+         anotcatl=False, \
    
          strgfluxunit=None, \
          strgenerunit=None, \
@@ -355,8 +341,8 @@ def init( \
          stdvfluxdistslop=0.1, \
          stdvpsfipara=0.1, \
          stdvback=0.04, \
-         stdvlbhlminm=0.001, \
-         stdvlbhlmaxm=0.1, \
+         stdvlbhl=0.1, \
+         stdvlbhlvari=True, \
          stdvflux=0.15, \
          stdvsind=0.15, \
          fracrand=0.05, \
@@ -389,10 +375,6 @@ def init( \
          
         ):
 
-    # ignore warnings if not in diagnostic mode
-    if not diagmode:
-        warnings.simplefilter('ignore')
-    
     # defaults
     ## convenience variables in order to set the defaults
     ### number of backgrounds
@@ -499,6 +481,9 @@ def init( \
             anglassc = deg2rad(0.5)
         if pixltype == None:
             pixltype = 'heal'
+        if datatype == 'mock':
+            indxenerfull = arange(5)
+            indxevttfull = arange(4)
 
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
@@ -523,6 +508,12 @@ def init( \
         if mockpsfntype == None:
             mockpsfntype = 'singgaus'
         exprpsfntype = 'singgaus'
+        if datatype == 'mock':
+            indxevttfull = arange(1)
+            if exprtype == 'sdss':
+                indxenerfull = arange(3)
+            else:
+                indxenerfull = arange(2)
     
     ## Chandra
     if exprtype == 'chan':
@@ -578,8 +569,20 @@ def init( \
     if probprop != None:
         probprop /= sum(probprop)
    
+    if pathbase[-1] != '/':
+        pathbase += '/'
+    
+    # number of processes
+    if numbproc == None:
+        strgproc = os.uname()[1]
+        if strgproc == 'fink1.rc.fas.harvard.edu' or strgproc == 'fink2.rc.fas.harvard.edu':
+            # temp
+            numbproc = 4
+        else:
+            numbproc = 1
+
     # initialize the global object 
-    gdat = gdatstrt()
+    gdat = tdpy.util.gdatstrt()
    
     # load the global object
     ## verbosity level
@@ -593,6 +596,8 @@ def init( \
     gdat.numbswepplot = numbswepplot
     ### flag to control generation of plots
     gdat.makeplot = makeplot
+    ### Boolean flag to annotate catalogs
+    gdat.anotcatl = anotcatl
 
     # diagnostics
     ## flag to run the sampler in diagnostic mode
@@ -647,6 +652,9 @@ def init( \
     gdat.boolpropsind = boolpropsind
     gdat.boolproppsfn = boolproppsfn
     gdat.boolpropfluxdist = boolpropfluxdist
+
+    ## optimize the proposal frequencies and scales
+    gdat.optiprop = optiprop
 
     ## input data
     ### measured data
@@ -705,7 +713,6 @@ def init( \
     gdat.numbpopl = numbpopl
     
     ## maximum angle from the PSs to evaluate the likelihood
-    gdat.maxmangl = maxmangl
     gdat.maxmangleval = maxmangleval
     
     ## plotting
@@ -776,8 +783,8 @@ def init( \
     gdat.stdvfluxdistslop = stdvfluxdistslop
     gdat.stdvpsfipara = stdvpsfipara
     gdat.stdvback = stdvback
-    gdat.stdvlbhlminm = stdvlbhlminm
-    gdat.stdvlbhlmaxm = stdvlbhlmaxm
+    gdat.stdvlbhl = stdvlbhl
+    gdat.stdvlbhlvari = stdvlbhlvari
     gdat.stdvflux = stdvflux
     gdat.stdvsind = stdvsind
 
@@ -833,10 +840,6 @@ def init( \
 
     ## the paths of the input data and images
     gdat.pathbase = pathbase
-
-    if gdat.pathbase[-1] != '/':
-        gdat.pathbase += '/'
-    
     gdat.pathdata = gdat.pathbase + 'data/'
     gdat.pathimag = gdat.pathbase + 'imag/'
 
@@ -1052,7 +1055,7 @@ def init( \
         # temp
         #plot_intr()
         #plot_king(gdat)
-        #plot_look(gdat)
+        plot_indxprox(gdat)
         if gdat.truepsfn != None:
             plot_eval(gdat)
         #if gdat.datatype == 'mock':
@@ -1063,6 +1066,9 @@ def init( \
     
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdat, 'gdat')
+
+    # lock the global object againts any future modifications
+    gdat.lockmodi()
 
     timereal = zeros(gdat.numbproc)
     timeproc = zeros(gdat.numbproc)
@@ -1117,10 +1123,11 @@ def init( \
     listmemoresi = empty((gdat.numbsamp, gdat.numbproc))
     maxmllikswep = empty(gdat.numbproc)
     indxswepmaxmllik = empty(gdat.numbproc, dtype=int)
+    sampvarbmaxmllik = empty((gdat.numbproc, gdat.numbpara))
     maxmlposswep = empty(gdat.numbproc)
     indxswepmaxmlpos = empty(gdat.numbproc, dtype=int)
+    sampvarbmaxmlpos = empty((gdat.numbproc, gdat.numbpara))
     for k in gdat.indxproc:
-        gdat.rtag = retr_rtag(gdat, k)
         listchan = gridchan[k]
         listsamp[:, k, :] = listchan[0]
         listsampvarb[:, k, :] = listchan[1]
@@ -1145,10 +1152,12 @@ def init( \
         listmemoresi[:, k] = listchan[20]
         maxmllikswep[k] = listchan[21]
         indxswepmaxmllik[k] = listchan[22]
-        maxmllikswep[k] = listchan[23]
-        indxswepmaxmlpos[k] = listchan[24]
-        timereal[k] = gridchan[k][25]
-        timeproc[k] = gridchan[k][26]
+        sampvarbmaxmllik[k, :] = listchan[23]
+        maxmllikswep[k] = listchan[24]
+        indxswepmaxmlpos[k] = listchan[25]
+        sampvarbmaxmlpos[k, :] = listchan[26]
+        timereal[k] = gridchan[k][27]
+        timeproc[k] = gridchan[k][28]
 
     print 'maxmllikswep'
     print maxmllikswep
@@ -1173,10 +1182,19 @@ def init( \
     listdeltllik = listdeltllik.reshape(gdat.numbsweptotl)
     listdeltlpri = listdeltlpri.reshape(gdat.numbsweptotl)
     
-    gdat.rtag = retr_rtag(gdat, None)
-
     # correct the likelihoods for the constant data dependent factorial
-    listllik -= sum(sp.special.gammaln(gdat.datacnts + 1))
+    llikoffs = sum(sp.special.gammaln(gdat.datacnts + 1))
+    listllik -= llikoffs
+    maxmllikswep -= llikoffs
+    maxmlposswep -= llikoffs
+    
+    # find the maximum likelihood and posterior over the chains
+    indxprocmaxmllik = argmax(maxmllikswep)
+    maxmllikswep = maxmllikswep[indxprocmaxmllik]
+    indxswepmaxmllik = indxswepmaxmllik[indxprocmaxmllik]
+    indxprocmaxmlpos = argmax(maxmlposswep)
+    maxmlposswep = maxmlposswep[indxprocmaxmlpos]
+    indxswepmaxmlpos = indxswepmaxmlpos[indxprocmaxmlpos]
     
     # calculate log-evidence using the harmonic mean estimator
     if gdat.verbtype > 0:
@@ -1266,7 +1284,6 @@ def init( \
                 indxmodlpntscomp = retr_indxpntscomp(gdat, listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
 
                 # histograms of PS parameters
-                # temp -- gdat.indxmodlpntscomp[l]
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
@@ -1328,6 +1345,9 @@ def init( \
     head['numbener'] = (gdat.numbener, 'Number of energy bins')
     head['numbevtt'] = (gdat.numbevtt, 'Number of PSF class bins')
     head['numbpopl'] = (gdat.numbpopl, 'Number of PS population')
+    
+    head['numbproc'] = gdat.numbproc
+    
     head['numbpsfipara'] = gdat.numbpsfipara
     head['numbformpara'] = gdat.numbformpara
     
@@ -1392,8 +1412,8 @@ def init( \
     head['stdvfluxdistslop'] = gdat.stdvfluxdistslop
     head['stdvpsfipara'] = gdat.stdvpsfipara
     head['stdvback'] = gdat.stdvback
-    head['stdvlbhlminm'] = gdat.stdvlbhlminm
-    head['stdvlbhlmaxm'] = gdat.stdvlbhlmaxm
+    head['stdvlbhl'] = gdat.stdvlbhl
+    head['stdvlbhlvari'] = gdat.stdvlbhlvari
     head['stdvflux'] = gdat.stdvflux
     head['stdvsind'] = gdat.stdvsind
     ### relative size of the tail of the Gaussian proposals
@@ -1436,6 +1456,12 @@ def init( \
     
     head['levi'] = levi
     head['info'] = info
+    
+    # best-fit sample
+    head['indxswepmaxmllik'] = indxswepmaxmllik
+    head['maxmllikswep'] = maxmllikswep
+    head['indxswepmaxmlpos'] = indxswepmaxmlpos
+    head['maxmlposswep'] = maxmlposswep
     
     listhdun = []
     listhdun.append(pf.PrimaryHDU(header=head))
@@ -1564,6 +1590,15 @@ def init( \
     listhdun.append(pf.ImageHDU(listindxparamodi))
     listhdun[-1].header['EXTNAME'] = 'indxparamodi'
     
+    ## best-fit sample
+    ### maximum likelihood
+    listhdun.append(pf.ImageHDU(sampvarbmaxmllik))
+    listhdun[-1].header['EXTNAME'] = 'sampvarbmaxmllik'
+    
+    ### maximum likelihood
+    listhdun.append(pf.ImageHDU(sampvarbmaxmlpos))
+    listhdun[-1].header['EXTNAME'] = 'sampvarbmaxmlpos'
+
     ## split and merge diagnostics
     listhdun.append(pf.ImageHDU(listauxipara))
     listhdun[-1].header['EXTNAME'] = 'auxipara'
@@ -1811,27 +1846,6 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
     gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
 
-    # temp
-    if False:
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_maps(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                                  minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                  minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_maps(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, 
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                tdpy.util.plot_maps(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
-                        numbpixl=gdat.numbpixlheal, resi=True, minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-    
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
         if gdat.trueinfo:
@@ -1870,7 +1884,8 @@ def plot_samp(gdat, gdatmodi):
     #if gdat.numbener == 3:
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
-    if amax(fabs(gdatmodi.thiserrrpnts)) > 0.1 and False:
+    # temp
+    if False and amax(fabs(gdatmodi.thiserrrpnts)) > 0.1:
         raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
     
 
@@ -1929,10 +1944,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     # current sample index
     thiscntr = -1
    
+    # store the initial sample as the best fit sample
     maxmllikswep = gdatmodi.thislliktotl
     maxmlposswep = gdatmodi.thislliktotl + gdatmodi.thislpritotl
     indxswepmaxmllik = -1 
     indxswepmaxmlpos = -1 
+    sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
+    sampvarbmaxmlpos = copy(gdatmodi.thissampvarb)
+    
     while gdatmodi.cntrswep < gdat.numbswep:
         
         timetotlinit = gdat.functime()
@@ -1964,6 +1983,35 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         retr_prop(gdat, gdatmodi)
         timefinl = gdat.functime()
         listchrototl[gdatmodi.cntrswep, 1] = timefinl - timeinit
+
+        # temp
+        if True and gdat.strgcnfg == 'test_uppr':
+            temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
+            gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+            gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
+            if True:
+                for i in gdat.indxener:
+                    for m in gdat.indxevtt:
+                        path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                        tdpy.util.plot_maps(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                          minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                          minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                for i in gdat.indxener:
+                    for m in gdat.indxevtt:
+                        path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                        tdpy.util.plot_maps(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                      minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, 
+                                                                                      minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                for i in gdat.indxener:
+                    for m in gdat.indxevtt:
+                        path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
+                        tdpy.util.plot_maps(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
+                                numbpixl=gdat.numbpixlfull, resi=True, minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                       minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.:
+                print 
+                raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
+
 
         # plot the current sample
         if thismakefram:
@@ -2011,32 +2059,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             timefinl = gdat.functime()
             listchrototl[gdatmodi.cntrswep, 3] = timefinl - timeinit
    
-            # temp
-            if False:
-                temp = zeros(gdat.numbpixl)
-                temp[gdat.indxpixlmodi] = 1.
-                path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
-                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-            
-                temp = zeros(gdat.numbpixl)
-                temp[gdat.indxpixlmodi] = gdatmodi.thispntsflux[gdat.indxcubemodi]
-                path = gdat.pathplot + 'thispntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
-                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-            
-                temp = zeros(gdat.numbpixl)
-                temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi]
-                path = gdat.pathplot + 'nextpntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
-                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-            
-                temp = zeros(gdat.numbpixl)
-                temp[gdat.indxpixlmodi] = gdatmodi.nextpntsflux[gdat.indxcubemodi] - gdatmodi.thispntsflux[gdat.indxcubemodi]
-                path = gdat.pathplot + 'diffpntsflux_%09d.pdf' % gdatmodi.cntrswep
-                tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlheal, pixltype=gdat.pixltype, \
-                                                                                  minmlgal=gdat.minmlgal, maxmlgal=gdat.maxmlgal, minmbgal=gdat.minmbgal, maxmbgal=gdat.maxmbgal)
-            
             # evaluate the acceptance probability
             # temp
             try:
@@ -2073,11 +2095,13 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if llikswep > maxmllikswep:
                 maxmllikswep = llikswep
                 indxswepmaxmllik = gdatmodi.cntrswep
+                sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
             ## maximal posterior
             lposswep = llikswep + gdatmodi.deltlpri + gdatmodi.thislpritotl
             if llikswep > maxmlposswep:
                 maxmlposswep = lposswep
                 indxswepmaxmlpos = gdatmodi.cntrswep
+                sampvarbmaxmlpos = copy(gdatmodi.thissampvarb)
             
             # register the sample as accepted
             listaccp[gdatmodi.cntrswep] = True
@@ -2173,7 +2197,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
                 listtranmatr.append(tranmatr)
 
-            listmemoresi[indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()
+            listmemoresi[indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()[0]
 
         # save other variables
         listboolreje[gdatmodi.cntrswep] = gdatmodi.boolreje
@@ -2223,7 +2247,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
-        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, maxmlposswep, indxswepmaxmlpos]
+        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos]
     
     return listchan
 

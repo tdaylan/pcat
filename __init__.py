@@ -44,10 +44,12 @@ import tdpy.util
 from tdpy.util import show, summ
 import tdpy.mcmc
 
+import networkx as nx
+
 np.set_printoptions(linewidth=180)
 
+# ignore warnings if not in diagnostic mode
 import warnings
-#warnings.simplefilter('error')
-#warnings.simplefilter('ignore', FutureWarning)
-
+warnings.simplefilter('ignore')
+    
 

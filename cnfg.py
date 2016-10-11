@@ -226,7 +226,9 @@ def test_nomi():
 def test_uppr():
       
     init( \
-         numbswep=3000, \
+         numbswep=100000, \
+         numbswepplot=19000, \
+         verbtype=2, \
          randinit=False, \
          exprinfo=False, \
          makeanim=True, \
@@ -234,24 +236,24 @@ def test_uppr():
          boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
+         probprop=array([0., 0., 0., 0., 0., 1., 1., 1., 1., 0., 0., 1., 1., 1., 1.]), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          modlpsfntype='doubking', \
-         maxmnumbpnts=array([600]), \
+         maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(5.), \
+         specfraceval=0., \
          minmflux=1e-9, \
          maxmflux=1e-5, \
          datatype='mock', \
-         mocknumbpnts=array([300]), \
+         mocknumbpnts=array([2]), \
         )
 
 
 def test_prio():
     
     mocknumbpnts = array([200])
-    #priofactdoff = array([-5., -2., -1. 0., 1., 2., 5.])
-    priofactdoff = arange(-2., 3., 0.5)
-    priofactdoff = array([-2., -1.5, -1., -0.5, 0., 0.5, 1., 1.5, 2.])
+    priofactdoff = array([-1., -0.5, 0., 0.5, 1., 1.5, 2.])
     numbiter = priofactdoff.size
     postnumbpnts = empty((3, numbiter))
     postmeanpnts = empty((3, numbiter))
@@ -259,7 +261,9 @@ def test_prio():
     arry = array([1., 0.8, 1.2])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  numbswep=100000, \
+                                  # temp
+                                  numbproc=1, \
+                                  numbswep=1000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -271,7 +275,7 @@ def test_prio():
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
                                   modlpsfntype='doubking', \
                                   maxmnumbpnts=array([1000]), \
-                                  maxmgang=deg2rad(10.), \
+                                  maxmgang=deg2rad(30.), \
                                   minmflux=5e-11, \
                                   maxmflux=1e-7, \
                                   datatype='mock', \
@@ -364,20 +368,23 @@ def test_post():
 
 def test_atcr():
     
-    listnumbpntsmodi = array([1, 2, 3, 5, 10])
+    #listnumbpntsmodi = array([1, 2, 3, 5, 10])
+    listnumbpntsmodi = array([3, 5, 10])
     numbiter = listnumbpntsmodi.size
+    timereal = empty(numbiter)
     timeatcr = empty(numbiter)
     timeproc = empty(numbiter)
-    numbswep = 100000
+    numbswep = 100
     # temp
-    timeatcr = array([5670., 3420., 3042., 1023., 403.])
-    timeproc = array([103., 114., 105., 134., 140.])
+    #timeatcr = array([5670., 3420., 3042., 1023., 403.])
+    #timeproc = array([103., 114., 105., 134., 140.])
     for k in range(numbiter):
-        continue
         gridchan, dictpcat = init( \
 	                              numbswep=numbswep, \
                                   factthin=1, \
+                                  verbtype=2, \
                                   makeplot=False, \
+                                  probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
                                   numbpntsmodi=listnumbpntsmodi[k], \
                                   randinit=False, \
                                   exprinfo=False, \
@@ -387,16 +394,17 @@ def test_atcr():
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
                                   modlpsfntype='doubking', \
-                                  maxmnumbpnts=array([200]), \
+                                  maxmnumbpnts=array([5]), \
                                   maxmgang=deg2rad(10.), \
                                   minmflux=3e-11, \
                                   maxmflux=3e-7, \
                                   datatype='mock', \
-                                  mocknumbpnts=array([100]), \
+                                  mocknumbpnts=array([2]), \
                                  )
         timeatcr[k] = dictpcat['timeatcr']
         timereal[k] = dictpcat['timerealtotl']
         timeproc[k] = dictpcat['timeproctotl']
+        break
 
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_atcr/'
     os.system('mkdir -p %s' % path)
