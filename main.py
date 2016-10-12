@@ -452,7 +452,7 @@ def init( \
         if maxmgang == None:
             maxmgang = deg2rad(20.)
         if modlpsfntype == None:
-            modlpsfntype = 'singking'
+            modlpsfntype = 'doubking'
         if mockpsfntype == None:
             mockpsfntype = 'doubking'
         exprpsfntype = 'doubking'
@@ -840,8 +840,6 @@ def init( \
 
     ## the paths of the input data and images
     gdat.pathbase = pathbase
-    gdat.pathdata = gdat.pathbase + 'data/'
-    gdat.pathimag = gdat.pathbase + 'imag/'
 
     # temp
     # check inputs
@@ -855,12 +853,8 @@ def init( \
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-    # check the call stack for the name of the configuring function
+    # check the call stack for the name of the configuration function
     gdat.strgcnfg = inspect.stack()[1][3]
-    
-    # make the relevant folders
-    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
-    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
     
     # redirect standard output to a file if in a Screen session
     if os.environ["TERM"] == 'screen':
@@ -874,6 +868,10 @@ def init( \
     
     # initial setup
     setpinit(gdat) 
+    
+    # create the PCAT folders
+    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
+    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
     
     # generate mock data
     if gdat.datatype == 'mock':
@@ -1086,7 +1084,6 @@ def init( \
         
         # spawn the processes
         workpart = functools.partial(work, gdat)
-        indxproc = arange(gdat.numbproc)
         gridchan = pool.map(workpart, indxproc)
 
         pool.close()
@@ -1328,7 +1325,8 @@ def init( \
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
     
-    atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype)
+    atcr, timeatcr = tdpy.mcmc.retr_timeatcr(listmodlcnts, verbtype=gdat.verbtype, maxmatcr=True)
+
     if timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
     dictpcat['timeatcr'] = timeatcr
@@ -1347,6 +1345,7 @@ def init( \
     head['numbpopl'] = (gdat.numbpopl, 'Number of PS population')
     
     head['numbproc'] = gdat.numbproc
+    head['pathbase'] = gdat.pathbase
     
     head['numbpsfipara'] = gdat.numbpsfipara
     head['numbformpara'] = gdat.numbformpara

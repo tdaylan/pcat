@@ -407,20 +407,22 @@ def retr_llik(gdat, gdatmodi, init=False):
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = 1.
 
+            facttemp = gdat.expo[gdatmodi.indxcubemodi] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
+
             path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
-            temp[gdatmodi.indxpixlmodi] = gdatmodi.thispntsflux[gdatmodi.indxcubemodi]
+            temp[gdatmodi.indxpixlmodi] = gdatmodi.thispntsflux[gdatmodi.indxcubemodi] * facttemp
             path = gdat.pathplot + 'thispntsflux_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
-            temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi]
+            temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] * facttemp
             path = gdat.pathplot + 'nextpntsflux_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
@@ -428,6 +430,7 @@ def retr_llik(gdat, gdatmodi, init=False):
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] - gdatmodi.thispntsflux[gdatmodi.indxcubemodi]
+            temp[gdatmodi.indxpixlmodi] *= gdat.expo[gdatmodi.indxenermodi, gdatmodi.indxpixlmodi, :] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
             path = gdat.pathplot + 'diffpntsflux_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
@@ -445,7 +448,8 @@ def retr_llik(gdat, gdatmodi, init=False):
 
         # calculate the likelihood
         timeinit = gdat.functime()
-        gdatmodi.nextllik[gdatmodi.indxcubemodi] = gdat.datacnts[gdatmodi.indxcubemodi] * log(gdatmodi.nextmodlcnts[gdatmodi.indxcubemodi]) - gdatmodi.nextmodlcnts[gdatmodi.indxcubemodi]
+        gdatmodi.nextllik[gdatmodi.indxcubemodi] = gdat.datacnts[gdatmodi.indxcubemodi] * log(gdatmodi.nextmodlcnts[gdatmodi.indxcubemodi]) \
+                                                                                                                - gdatmodi.nextmodlcnts[gdatmodi.indxcubemodi]
         gdatmodi.deltllik = sum(gdatmodi.nextllik[gdatmodi.indxcubemodi] - gdatmodi.thisllik[gdatmodi.indxcubemodi])
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 6] = timefinl - timeinit
@@ -2234,15 +2238,14 @@ def retr_randunitpsfipara(gdat):
 
 
 def setpinit(gdat):
- 
-    # create the PCAT folders
-    cmnd = 'mkdir -p %s/data/outp' % gdat.pathdata
-    os.system(cmnd)
 
     # paths
-    # temp
-    #gdat.pathimag, gdat.pathdata = tdpy.util.retr_path('pcat')
+    gdat.pathdata = gdat.pathbase + 'data/'
+    gdat.pathimag = gdat.pathbase + 'imag/'
     
+    # process index
+    gdat.indxproc = arange(gdat.numbproc)
+
     # axes
     ## energy
     gdat.numbener = gdat.indxenerincl.size

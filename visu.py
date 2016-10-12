@@ -22,6 +22,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.numbpopl = hdun[0].header['numbpopl']
     
     gdat.numbproc = hdun[0].header['numbproc']
+    gdat.pathbase = hdun[0].header['pathbase']
     
     gdat.numbpsfipara = hdun[0].header['numbpsfipara']
     gdat.numbformpara = hdun[0].header['numbformpara']
@@ -1582,6 +1583,48 @@ def plot_eval(gdat):
     plt.close(figr)
 
 
+def plot_mosa(gdat):
+
+    numbrows = 3
+    numbcols = 2
+    figr, axis = plt.subplots(numbrows, numbcols, figsize=(gdat.plotsize, gdat.plotsize))
+    for k in range(gdat.numbfluxprox + 1):
+        if k == 0 or k == gdat.numbfluxprox:
+            alph = 1.
+            if k == 0:
+                labl = 'Dimmest PS'
+                colr = 'b'
+            else:
+                labl = 'Brightest PS'
+                colr = 'g'
+        else:
+            alph = 0.2
+            labl = None
+            colr = 'black'
+        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
+        if k > 0:
+            axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
+    axis.set_yscale('log')
+    axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
+    axis.set_ylabel('$f$ [%s]' % gdat.strgfluxunit)
+
+    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
+    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0][::-1], gdat.binsanglplot[::-1])
+    
+    if limt > 0:
+        axis.axhline(limt, color='red', ls=':', label='Flux floor')
+    axis.set_xlim([None, maxmangltemp])
+    plt.tight_layout()
+    plt.savefig(gdat.pathplot + 'eval.pdf')
+    plt.close(figr)
+
+
+
+
+
+
+
 def plot_grap(redu=False):
         
     figr, axis = plt.subplots(figsize=(3.5, 3.5))
@@ -1632,8 +1675,6 @@ def plot_grap(redu=False):
     plt.savefig(pathplot + 'grap%s.pdf' % strg)
     plt.close(figr)
 
-plot_grap()
-plot_grap(True)
 
 def plot_3fgl_thrs(gdat):
 

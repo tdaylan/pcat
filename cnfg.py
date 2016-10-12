@@ -263,7 +263,7 @@ def test_prio():
         gridchan, dictpcat = init( \
                                   # temp
                                   numbproc=1, \
-                                  numbswep=1000, \
+                                  numbswep=100000, \
                                   randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
