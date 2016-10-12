@@ -1582,13 +1582,18 @@ def plot_eval(gdat):
     plt.close(figr)
 
 
-def plot_grap():
+def plot_grap(redu=False):
         
     figr, axis = plt.subplots(figsize=(3.5, 3.5))
 
     G = nx.DiGraph()
     
-    G.add_edges_from([('fluxdistslop', 'flux'), ('meanpnts', 'numbpnts'), ('numbpnts','lgal'), ('numbpnts','bgal'), \
+    if redu:
+        G.add_edges_from([('fluxdistslop', 'flux'), ('meanpnts', 'numbpnts'), ('numbpnts','lgal'), ('numbpnts','bgal'), \
+                                            ('psfipara', 'data'), ('normback', 'data'), ('numbpnts','flux'), ('numbpnts','sind'), \
+                                            ('lgal','data'), ('bgal','data'), ('flux','data'), ('sind','data')])
+    else:
+        G.add_edges_from([('fluxdistslop', 'flux'), ('meanpnts', 'numbpnts'), ('numbpnts','lgal'), ('numbpnts','bgal'), \
                                             ('psfipara', 'modl'), ('normback', 'modl'), ('numbpnts','flux'), ('numbpnts','sind'), \
                                             ('lgal','modl'), ('bgal','modl'), ('flux','modl'), ('sind','modl'), ('modl','data')])
 
@@ -1602,24 +1607,33 @@ def plot_grap():
     labl['bgal'] = '$b$'
     labl['flux'] = '$f$'
     labl['sind'] = '$s$'
-    labl['modl'] = '$M$'
+    if not redu:
+        labl['modl'] = '$M$'
     labl['data'] = '$D$'
 
     pos = nx.circular_layout(G)
     
     size = 700
     nx.draw(G, pos, labels=labl, ax=axis, node_size=size, node_color='grey')
-    nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=1.5*size)
+    if redu:
+        nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['data'], node_color='grey', node_size=1.5*size)
+    else:
+        nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=1.5*size)
     nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['meanpnts', 'fluxdistslop'], node_color='r', node_size=size)
     nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
     nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
     nx.draw_networkx_nodes(G, pos, labels=labl, nodelist=['psfipara', 'normback'], node_color='y', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
-    plt.savefig(pathplot + 'grap.pdf')
+    if redu:
+        strg = 'redu'
+    else:
+        strg = ''
+    plt.savefig(pathplot + 'grap%s.pdf' % strg)
     plt.close(figr)
 
 plot_grap()
+plot_grap(True)
 
 def plot_3fgl_thrs(gdat):
 
