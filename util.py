@@ -1343,17 +1343,17 @@ def retr_prop(gdat, gdatmodi):
     if gdatmodi.thisindxprop == gdat.indxproppsfipara:
         
         # index of the PSF parameter to change
-        gdat.indxpsfiparamodi = choice(gdat.indxpsfipara)
+        gdatmodi.indxpsfiparamodi = choice(gdat.indxpsfipara)
 
         # the energy bin of the PS flux map to be modified
-        gdatmodi.indxenermodi = array([(gdat.indxpsfiparamodi % gdat.numbpsfiparaevtt) // gdat.numbformpara])
+        gdatmodi.indxenermodi = array([(gdatmodi.indxpsfiparamodi % gdat.numbpsfiparaevtt) // gdat.numbformpara])
         
         # sample index to be modified
-        gdatmodi.indxsampmodi = gdat.indxsamppsfipara[gdat.indxpsfiparamodi]
+        gdatmodi.indxsampmodi = gdat.indxsamppsfipara[gdatmodi.indxpsfiparamodi]
         retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvpsfipara)
         gdatmodi.nextsampvarb[gdat.indxsamppsfipara] = copy(gdatmodi.thissampvarb[gdat.indxsamppsfipara])
-        gdatmodi.nextsampvarb[gdat.indxsamppsfipara[gdat.indxpsfiparamodi]] = \
-            icdf_psfipara(gdat, gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.indxpsfiparamodi)
+        gdatmodi.nextsampvarb[gdat.indxsamppsfipara[gdatmodi.indxpsfiparamodi]] = \
+            icdf_psfipara(gdat, gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdatmodi.indxpsfiparamodi)
             
         gdatmodi.numbmodipnts = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
                     
@@ -1365,7 +1365,7 @@ def retr_prop(gdat, gdatmodi):
         
         if gdat.verbtype > 1:
            
-            print 'indxpsfiparamodi: ', gdat.indxpsfiparamodi
+            print 'indxpsfiparamodi: ', gdatmodi.indxpsfiparamodi
             print 'indxenermodi: ', gdatmodi.indxenermodi
             print 'indxsampmodi: ', gdatmodi.indxsampmodi
             print 'thispsfipara'
