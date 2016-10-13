@@ -865,11 +865,6 @@ def init( \
     # check the call stack for the name of the configuration function
     gdat.strgcnfg = inspect.stack()[1][3]
     
-    # redirect standard output to a file if in a Screen session
-    if os.environ["TERM"] == 'screen':
-        path = gdat.pathoutp + 'rlog.txt'
-        sys.stdout = open(path, 'w')
-
     if gdat.verbtype > 0:
         print 'PCAT started at %s' % gdat.strgtimestmp
         print 'Configuration %s' % gdat.strgcnfg
@@ -880,8 +875,13 @@ def init( \
     
     # create the PCAT folders
     gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
-    os.system('mkdir -p %s %s %s' % (gdat.pathdata, gdat.pathimag, gdat.pathoutp))
+    os.system('mkdir -p %s' % gdat.pathoutp)
     
+    # redirect standard output to a file if in a Screen session
+    if os.environ["TERM"] == 'screen':
+        path = gdat.pathoutp + 'rlog.txt'
+        sys.stdout = open(path, 'w')
+
     # generate mock data
     if gdat.datatype == 'mock':
 

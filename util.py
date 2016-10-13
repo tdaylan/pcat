@@ -2279,6 +2279,9 @@ def setpinit(gdat):
     gdat.pathdata = gdat.pathbase + 'data/'
     gdat.pathimag = gdat.pathbase + 'imag/'
     
+
+def setpfinl(gdat):
+
     # process index
     gdat.indxproc = arange(gdat.numbproc)
 
@@ -2688,8 +2691,6 @@ def setpinit(gdat):
     # construct the PSF model
     retr_psfimodl(gdat)
 
-
-def setpfinl(gdat):
 
     # set sample vector indices
     cntr = tdpy.util.cntr()
