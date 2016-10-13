@@ -2282,8 +2282,15 @@ def setpinit(gdat):
     # process index
     gdat.indxproc = arange(gdat.numbproc)
 
+    # population index vector
+    gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
+    if gdat.datatype == 'mock':
+        gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
 
-def setpfinl(gdat):
+    # half size of the image where the sample catalog is compared against the reference
+    gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
+    # half size of the spatial prior
+    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
 
     # axes
     ## energy
@@ -2311,21 +2318,12 @@ def setpfinl(gdat):
     gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
     gdat.binsanglcosi = sort(cos(gdat.binsangl))
     
-    # half size of the image where the sample catalog is compared against the reference
-    gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
-    # half size of the spatial prior
-    gdat.maxmgangmarg = gdat.maxmgang * gdat.margfactmodl
-
-    # population index vector
-    gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
-    if gdat.datatype == 'mock':
-        gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
-
     if gdat.datatype == 'mock':
         gdat.mocksindcdfnnormminm = 0.5 * (sp.special.erf((gdat.minmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
         gdat.mocksindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
         gdat.mocksindcdfnnormdiff = gdat.mocksindcdfnnormmaxm - gdat.mocksindcdfnnormminm
     
+
     # construct the PSF
     if gdat.exprtype == 'ferm':
         retr_fermpsfn(gdat)
@@ -2691,6 +2689,8 @@ def setpfinl(gdat):
     # construct the PSF model
     retr_psfimodl(gdat)
 
+
+def setpfinl(gdat):
 
     # set sample vector indices
     cntr = tdpy.util.cntr()
