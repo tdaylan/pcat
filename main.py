@@ -1093,7 +1093,7 @@ def init( \
         
         # spawn the processes
         workpart = functools.partial(work, gdat)
-        gridchan = pool.map(workpart, indxproc)
+        gridchan = pool.map(workpart, gdat.indxproc)
 
         pool.close()
         pool.join()

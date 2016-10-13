@@ -2279,11 +2279,11 @@ def setpinit(gdat):
     gdat.pathdata = gdat.pathbase + 'data/'
     gdat.pathimag = gdat.pathbase + 'imag/'
     
-
-def setpfinl(gdat):
-
     # process index
     gdat.indxproc = arange(gdat.numbproc)
+
+
+def setpfinl(gdat):
 
     # axes
     ## energy
