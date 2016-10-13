@@ -404,37 +404,67 @@ def retr_llik(gdat, gdatmodi, init=False):
         
         # temp
         if True and gdat.strgcnfg == 'test_uppr':
+            
+            temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
+            gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+            gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
+            
+            facttemp = gdat.expo[gdatmodi.indxcubemodi].flatten() * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
+
+            print 'facttemp'
+            print facttemp.shape
+            print amin(facttemp)
+            print amax(facttemp)
+
             temp = zeros(gdat.numbpixl)
-            temp[gdatmodi.indxpixlmodi] = 1.
-
-            facttemp = gdat.expo[gdatmodi.indxcubemodi] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
-
-            path = gdat.pathplot + 'indxpixlmodi_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+            temp[gdatmodi.indxpixlmodi] = temppntsflux[gdatmodi.indxcubemodi] * facttemp
+            path = gdat.pathdiag + 'temppntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-        
+            print 'temppntsflux[gdatmodi.indxcubemodi]'
+            print temppntsflux[gdatmodi.indxcubemodi].shape
+            print amin(temppntsflux[gdatmodi.indxcubemodi])
+            print amax(temppntsflux[gdatmodi.indxcubemodi])
+
+            print 'temp[gdatmodi.indxpixlmodi]'
+            print temp[gdatmodi.indxpixlmodi].shape
+            print amin(temp[gdatmodi.indxpixlmodi])
+            print amax(temp[gdatmodi.indxpixlmodi])
+
+            
+            temp = zeros(gdat.numbpixl)
+            temp[gdatmodi.indxpixlmodi] = (gdatmodi.thispntscnts[gdatmodi.indxcubemodi] - temppntscnts[gdatmodi.indxcubemodi]) * facttemp
+            path = gdat.pathdiag + 'errrpntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, resi=True, \
+                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.thispntsflux[gdatmodi.indxcubemodi] * facttemp
-            path = gdat.pathplot + 'thispntsflux_%09d.pdf' % gdatmodi.cntrswep
+            path = gdat.pathdiag + 'thispntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] * facttemp
-            path = gdat.pathplot + 'nextpntsflux_%09d.pdf' % gdatmodi.cntrswep
+            path = gdat.pathdiag + 'nextpntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
-            temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] - gdatmodi.thispntsflux[gdatmodi.indxcubemodi]
-            temp[gdatmodi.indxpixlmodi] *= gdat.expo[gdatmodi.indxenermodi, gdatmodi.indxpixlmodi, :] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
-            path = gdat.pathplot + 'diffpntsflux_%09d.pdf' % gdatmodi.cntrswep
+            temp[gdatmodi.indxpixlmodi] = (gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] - gdatmodi.thispntsflux[gdatmodi.indxcubemodi]) * facttemp
+            path = gdat.pathdiag + 'diffpntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                               minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            
+            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.:
+                print 
+                raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
+
             
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 4] = timefinl - timeinit
@@ -2162,9 +2192,15 @@ def retr_propmodl(gdat):
             
         if gdat.boolpropfluxdist:
             probmeanpnts = array([1.])
-            probfluxdistslop = array([1.])
-            probfluxdistsloplowr = array([1.])
-            probfluxdistslopuppr = array([1.])
+            # temp
+            if gdat.fluxdisttype[0] == 'powr':
+                probfluxdistslop = array([1.])
+                probfluxdistsloplowr = array([0.])
+                probfluxdistslopuppr = array([0.])
+            if gdat.fluxdisttype[0] == 'brok':
+                probfluxdistslop = array([0.])
+                probfluxdistsloplowr = array([1.])
+                probfluxdistslopuppr = array([1.])
         else:
             probmeanpnts = array([0.])
             probfluxdistslop = array([0.])
@@ -2356,12 +2392,12 @@ def setpinit(gdat):
 
     # axes
     ## longitude
-    gdat.numblgal = 10
-    gdat.binslgal = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numblgal + 1)
+    gdat.numblgalpntsbind = 400
+    gdat.binslgalpntsbind = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
+    gdat.binsbgalpntsbind = gdat.binslgalpntsbind
 
-    ## latitude
-    gdat.numbbgal = 10
-    gdat.binsbgal = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbbgal + 1)
+    gdat.binslgal, gdat.meanlgal, gdat.difflgal, gdat.numblgal, gdat.indxlgal = tdpy.util.retr_axis(gdat.minmlgal, gdat.maxmlgal, 10)
+    gdat.binsbgal, gdat.meanbgal, gdat.diffbgal, gdat.numbbgal, gdat.indxbgal = tdpy.util.retr_axis(gdat.minmbgal, gdat.maxmbgal, 10)
 
     ## radial
     gdat.numbgang = 10
@@ -2372,15 +2408,9 @@ def setpinit(gdat):
     gdat.binsaang = linspace(0., 2. * pi, gdat.numbaang + 1)
 
     ## flux
-    gdat.numbflux = 10
+    gdat.numbflux = 20
     gdat.indxflux = arange(gdat.numbflux)
-    # temp
-    gdat.fluxbinstype = 'logt'
-    if gdat.fluxbinstype == 'logt':
-        gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
-    if gdat.fluxbinstype == 'log2':
-        gdat.binsflux = 1e-100 * 10.**(10.**(linspace(log10(log10(1e100 * gdat.minmflux)), log10(log10(1e100 * gdat.maxmflux)), gdat.numbflux + 1)))
-
+    gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
     gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
     gdat.diffflux = gdat.binsflux[1:] - gdat.binsflux[:-1]
     ### pivot flux bin
@@ -2388,7 +2418,7 @@ def setpinit(gdat):
     gdat.pivtflux = gdat.meanflux[gdat.indxfluxpivt]
 
     ## color
-    gdat.numbsind = 10
+    gdat.numbsind = 20
     gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbsind + 1)
     gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
     gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
@@ -2694,10 +2724,11 @@ def setpfinl(gdat):
     
     # plot paths
     gdat.pathplot = gdat.pathimag + 'pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
-    cmnd = 'mkdir -p ' + gdat.pathplot
-    os.system(cmnd)
+    gdat.pathdiag = gdat.pathplot + 'diag/'
     gdat.pathfram = gdat.pathplot + 'fram/'
     if gdat.makeplot:
+        os.system('mkdir -p %s' % gdat.pathdiag)
+        os.system('mkdir -p %s' % gdat.pathplot)
         os.system('mkdir -p %s' % gdat.pathfram)
 
     # get the experimental catalog

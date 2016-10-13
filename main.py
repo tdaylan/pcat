@@ -21,7 +21,11 @@ def work(gdat, indxprocwork):
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
     
     ## number of PS
-    if gdat.initnumbpnts != None or not gdat.randinit:
+    randinittemp = False
+    if gdat.datatype == 'mock':
+        if gdat.numbpopl == gdat.mocknumbpopl:
+            randinitemp = True
+    if gdat.initnumbpnts != None or not gdat.randinit or not randinittemp:
         if gdat.initnumbpnts != None:
             thisnumbpnts = gdat.initnumbpnts
         else:
@@ -284,8 +288,10 @@ def init( \
          pathbase=os.environ["PCAT_DATA_PATH"], \
          
          scalmaps='asnh', \
-         makeanim=False, \
+         makeanim=True, \
          anotcatl=False, \
+         
+         numbsidepntsprob=400, \
    
          strgfluxunit=None, \
          strgenerunit=None, \
@@ -629,7 +635,10 @@ def init( \
          
     ## prefactor of the number of degrees of freedom in the prior
     gdat.priofactdoff = priofactdoff
-    
+   
+    ## number of pixels on a side used to bin the catalog samples
+    gdat.numbsidepntsprob = numbsidepntsprob
+
     ## data type
     ###- mock - mock data
     ###- inpt - input data
@@ -904,13 +913,13 @@ def init( \
             for c in gdat.indxback:
                 gdat.mocknormback[c, :] = icdf_logt(rand(gdat.numbener), gdat.minmnormback[c], gdat.factnormback[c])
 
-        gdat.mockcnts = [[] for l in gdat.indxpopl]
-        gdat.mocklgal = [[] for l in gdat.indxpopl]
-        gdat.mockbgal = [[] for l in gdat.indxpopl]
-        gdat.mockgang = [[] for l in gdat.indxpopl]
-        gdat.mockaang = [[] for l in gdat.indxpopl]
-        gdat.mockspec = [[] for l in gdat.indxpopl]
-        gdat.mocksind = [[] for l in gdat.indxpopl]
+        gdat.mockcnts = [[] for l in gdat.mockindxpopl]
+        gdat.mocklgal = [[] for l in gdat.mockindxpopl]
+        gdat.mockbgal = [[] for l in gdat.mockindxpopl]
+        gdat.mockgang = [[] for l in gdat.mockindxpopl]
+        gdat.mockaang = [[] for l in gdat.mockindxpopl]
+        gdat.mockspec = [[] for l in gdat.mockindxpopl]
+        gdat.mocksind = [[] for l in gdat.mockindxpopl]
         for l in gdat.mockindxpopl:
             if gdat.mockspatdisttype[l] == 'unif':
                 gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
@@ -1258,12 +1267,12 @@ def init( \
         listaang.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
     
     ## binned PS parameters
-    listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
-    listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
-    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux, gdat.numbener))
-    listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind))
-    listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
-    listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
+    listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal + 1))
+    listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal + 1))
+    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux + 1, gdat.numbener))
+    listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind + 1))
+    listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang + 1))
+    listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang + 1))
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
@@ -1296,14 +1305,15 @@ def init( \
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
-    pntsprob = zeros((gdat.numbpopl, gdat.numbener, gdat.numbpixl, gdat.numbflux))
+    
+    pntsprob = zeros((gdat.numbpopl, gdat.numbsidepntsprob, gdat.numbsidepntsprob, gdat.numbflux))
     for k in gdat.indxsamp:
         for l in gdat.indxpopl:
-            for i in gdat.indxener:
-                for h in gdat.indxflux:
-                    indxpnts = where((gdat.binsspec[i, h] < listspec[l][k, i, :]) & (listspec[l][k, i, :] < gdat.binsspec[i, h+1]))[0]
-                    hpixl = retr_indxpixl(gdat, listbgal[l][k, indxpnts], listlgal[l][k, indxpnts])
-                    pntsprob[l, i, hpixl, h] += 1.
+            for h in gdat.indxflux:
+                indxpnts = where((gdat.binsflux[h] < listspec[l][k, gdat.indxenerfluxdist[0], :]) & (listspec[l][k, gdat.indxenerfluxdist[0], :] < gdat.binsspec[i, h+1]) & \
+                                 (gdat.binslgalpntsprob[i, h] < listlgal[l][k, :]) & (listlgal[l][k, :] < gdat.binslgalpntsprob[h+1]) & \
+                                 (gdat.binsbgalpntsprob[i, h] < listbgal[l][k, :]) & (listbgal[l][k, :] < gdat.binsbgalpntsprob[h+1]))[0]
+
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
@@ -1750,6 +1760,10 @@ def init( \
 
         print 'hey'
         print 'Writing...'
+        print 'mockfluxdistslopuppr'
+        print gdat.mockfluxdistslopuppr
+        print
+
         listhdun.append(pf.ImageHDU(gdat.mocksinddistmean))
         listhdun[-1].header['EXTNAME'] = 'mocksinddistmean'
 
@@ -1982,35 +1996,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         retr_prop(gdat, gdatmodi)
         timefinl = gdat.functime()
         listchrototl[gdatmodi.cntrswep, 1] = timefinl - timeinit
-
-        # temp
-        if True and gdat.strgcnfg == 'test_uppr':
-            temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
-            gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-            gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
-            if True:
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        path = gdat.pathplot + 'temppntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                        tdpy.util.plot_maps(path, temppntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                          minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                          minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        path = gdat.pathplot + 'thispntsflux%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                        tdpy.util.plot_maps(path, gdatmodi.thispntsflux[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                      minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, 
-                                                                                      minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        path = gdat.pathplot + 'errrpntsabsl%d%d_%09d.pdf' % (i, m, gdatmodi.cntrswep)
-                        tdpy.util.plot_maps(path, gdatmodi.thispntscnts[i, :, m] - temppntscnts[i, :, m], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, \
-                                numbpixl=gdat.numbpixlfull, resi=True, minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                       minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.:
-                print 
-                raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
-
 
         # plot the current sample
         if thismakefram:

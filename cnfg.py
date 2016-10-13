@@ -236,7 +236,7 @@ def test_uppr():
          boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
-         probprop=array([0., 0., 0., 0., 0., 1., 1., 1., 1., 0., 0., 1., 1., 1., 1.]), \
+         probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.]), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          modlpsfntype='doubking', \

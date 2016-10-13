@@ -17,6 +17,9 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         print 'Reading %s...' % pathpcat
     hdun = pf.open(pathpcat)
 
+    print 'hey'
+    print pf.info(pathpcat)
+
     gdat.numbener = hdun[0].header['numbener']
     gdat.numbevtt = hdun[0].header['numbevtt']
     gdat.numbpopl = hdun[0].header['numbpopl']
@@ -143,7 +146,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.listspechist = hdun['spechist'].data
     gdat.listsindhist = hdun['sindhist'].data
     
-    pntsprob = hdun['pntsprob'].data
+    gdat.pntsprob = hdun['pntsprob'].data
     
     listllik = hdun['llik'].data
     listlpri = hdun['lpri'].data
@@ -528,31 +531,10 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     if gdat.verbtype > 0:
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
     
-    if gdat.pixltype == 'heal':
-        numbsidelgal = 100
-        numbsidebgal = 100
-        pntsprobcart = zeros((numbsidelgal, numbsidebgal, gdat.numbpopl, gdat.numbener, gdat.numbflux))
-        for l in gdat.indxpopl:
-            for i in gdat.indxener:
-                for h in range(gdat.numbflux):
-                    pntsprobcart[:, :, l, i, h] = tdpy.util.retr_cart(pntsprob[l, i, :, h], 
-                                                                      indxpixlrofi=gdat.indxpixlrofi, \
-                                                                      numbsideinpt=gdat.numbsideheal, \
-                                                                      minmlgal=gdat.anglfact*gdat.minmlgal, \
-                                                                      maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                      minmbgal=gdat.anglfact*gdat.minmbgal, \
-                                                                      maxmbgal=gdat.anglfact*gdat.maxmbgal, \
-                                                                      numbsidelgal=numbsidelgal, \
-                                                                      numbsidebgal=numbsidebgal, \
-                                                                     )
-    else:
-        pntsprobcart = pntsprob.reshape((gdat.numbpopl, gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbflux))
-        pntsprobcart = swapaxes(swapaxes(pntsprobcart, 0, 2), 1, 3)
-        
     # stacked posteiors binned in position and flux
-    plot_pntsprob(gdat, pntsprobcart, ptag='quad')
-    plot_pntsprob(gdat, pntsprobcart, ptag='full', full=True)
-    plot_pntsprob(gdat, pntsprobcart, ptag='cumu', cumu=True)
+    plot_pntsprob(gdat, ptag='quad')
+    plot_pntsprob(gdat, ptag='full', full=True)
+    plot_pntsprob(gdat, ptag='cumu', cumu=True)
 
     # compute median and 68% credible intervals of the inferred parameters
     gdat.postnormback = tdpy.util.retr_postvarb(gdat.listnormback)
@@ -933,7 +915,14 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
-        axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
+        try:
+            axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
+        except:
+            print 'Skipping the plot of color histogram...'
+            print 'gdat.binssind'
+            print gdat.binssind
+            print 'thissind'
+            print gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]
     if gdat.trueinfo:
         axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
@@ -1160,7 +1149,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         if not post:
             indx = intersect1d(gdatmodi.indxtruepntsassc[l].mult, gdat.indxtruepntscomp[l])
             if len(indx) > 0:
-                axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='red')
+                axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='r')
     
         # superimpose the bias line
         fluxbias = retr_fluxbias(gdat, gdat.binsspec[i, :], i)
@@ -1176,6 +1165,11 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axis.set_xlabel('$f_{%s}$ [%s]' % (strg, gdat.strgfluxunit))
         if i == 0:
             axis.set_ylabel('$f_{samp}$ [%s]' % gdat.strgfluxunit)
+        if i == gdat.numbener / 2:
+            axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black', alpha=0.1)
+            axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black')
+            axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='r')
+            axis.legend(loc=2)
         axis.set_xscale('log')
         axis.set_yscale('log')
         axis.set_title(gdat.enerstrg[i])
@@ -1297,7 +1291,7 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
+def plot_pntsprob(gdat, ptag, full=False, cumu=False):
     
     if cumu:
         numbrows = 1
@@ -1331,7 +1325,7 @@ def plot_pntsprob(gdat, pntsprobcart, ptag, full=False, cumu=False):
                     else:
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
-                temp = sum(pntsprobcart[:, :, l, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
+                temp = sum(gdat.pntsprob[l, :, :, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 else:
