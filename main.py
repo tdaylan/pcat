@@ -1290,6 +1290,11 @@ def init( \
                 indxmodlpntscomp = retr_indxpntscomp(gdat, listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
 
                 # histograms of PS parameters
+                print 'listlgalhist[n, l, :]'
+                print listlgalhist[n, l, :].shape
+                print 'gdat.binslgal'
+                print gdat.binslgal.shape
+                print 
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:

@@ -2390,6 +2390,12 @@ def setpinit(gdat):
     
     gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
 
+    # spatial priors
+    gdat.minmlgal = -gdat.maxmgang
+    gdat.maxmlgal = gdat.maxmgang
+    gdat.minmbgal = -gdat.maxmgang
+    gdat.maxmbgal = gdat.maxmgang
+   
     # axes
     ## longitude
     gdat.numblgalpntsbind = 400
@@ -2430,12 +2436,6 @@ def setpinit(gdat):
     for i in gdat.indxener:
         gdat.meanspec[i, :] = sqrt(gdat.binsspec[i, 1:] * gdat.binsspec[i, :-1])
 
-    # spatial priors
-    gdat.minmlgal = -gdat.maxmgang
-    gdat.maxmlgal = gdat.maxmgang
-    gdat.minmbgal = -gdat.maxmgang
-    gdat.maxmbgal = gdat.maxmgang
-   
     # input data
     if gdat.datatype == 'inpt':
         
