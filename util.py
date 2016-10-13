@@ -420,8 +420,8 @@ def retr_llik(gdat, gdatmodi, init=False):
             temp[gdatmodi.indxpixlmodi] = temppntsflux[gdatmodi.indxcubemodi] * facttemp
             path = gdat.pathdiag + 'temppntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                                                                              minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
             print 'temppntsflux[gdatmodi.indxcubemodi]'
             print temppntsflux[gdatmodi.indxcubemodi].shape
             print amin(temppntsflux[gdatmodi.indxcubemodi])
@@ -437,29 +437,29 @@ def retr_llik(gdat, gdatmodi, init=False):
             temp[gdatmodi.indxpixlmodi] = (gdatmodi.thispntscnts[gdatmodi.indxcubemodi] - temppntscnts[gdatmodi.indxcubemodi]) * facttemp
             path = gdat.pathdiag + 'errrpntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, resi=True, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                                                                              minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
 
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.thispntsflux[gdatmodi.indxcubemodi] * facttemp
             path = gdat.pathdiag + 'thispntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                                                                              minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] * facttemp
             path = gdat.pathdiag + 'nextpntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                                                                              minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = (gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] - gdatmodi.thispntsflux[gdatmodi.indxcubemodi]) * facttemp
             path = gdat.pathdiag + 'diffpntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                              minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                              minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                                                                              minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
+                                                                              minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
             
             if amax(fabs(gdatmodi.thiserrrpnts)) > 0.:
                 print 
@@ -2398,10 +2398,14 @@ def setpinit(gdat):
    
     # axes
     ## longitude
-    gdat.numblgalpntsbind = 400
-    gdat.binslgalpntsbind = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
-    gdat.binsbgalpntsbind = gdat.binslgalpntsbind
+    gdat.numblgalpntsprob = 400
+    gdat.numbbgalpntsprob = 400
+    gdat.binslgalpntsprob = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
+    gdat.binsbgalpntsprob = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
+    gdat.indxlgalpntsprob = arange(gdat.numblgalpntsprob)
+    gdat.indxbgalpntsprob = arange(gdat.numbbgalpntsprob)
 
+    gdat.binslgal, gdat.meanlgal, gdat.difflgal, gdat.numblgal, gdat.indxlgal = tdpy.util.retr_axis(gdat.minmlgal, gdat.maxmlgal, 10)
     gdat.binslgal, gdat.meanlgal, gdat.difflgal, gdat.numblgal, gdat.indxlgal = tdpy.util.retr_axis(gdat.minmlgal, gdat.maxmlgal, 10)
     gdat.binsbgal, gdat.meanbgal, gdat.diffbgal, gdat.numbbgal, gdat.indxbgal = tdpy.util.retr_axis(gdat.minmbgal, gdat.maxmbgal, 10)
 

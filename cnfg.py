@@ -436,7 +436,7 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=100000, \
+	    	 numbswep=10000, \
              #verbtype=2, \
              factthin=1, \
              randinit=False, \

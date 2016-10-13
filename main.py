@@ -1267,12 +1267,12 @@ def init( \
         listaang.append(zeros((gdat.numbsamptotl, gdat.maxmnumbpnts[l])))
     
     ## binned PS parameters
-    listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal + 1))
-    listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal + 1))
-    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux + 1, gdat.numbener))
-    listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind + 1))
-    listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang + 1))
-    listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang + 1))
+    listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
+    listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
+    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux, gdat.numbener))
+    listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind))
+    listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
+    listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
@@ -1290,11 +1290,6 @@ def init( \
                 indxmodlpntscomp = retr_indxpntscomp(gdat, listlgal[l][n, 0:numbpnts], listbgal[l][n, 0:numbpnts])
 
                 # histograms of PS parameters
-                print 'listlgalhist[n, l, :]'
-                print listlgalhist[n, l, :].shape
-                print 'gdat.binslgal'
-                print gdat.binslgal.shape
-                print 
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
@@ -1310,14 +1305,13 @@ def init( \
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
-    
-    pntsprob = zeros((gdat.numbpopl, gdat.numbsidepntsprob, gdat.numbsidepntsprob, gdat.numbflux))
-    for k in gdat.indxsamp:
-        for l in gdat.indxpopl:
-            for h in gdat.indxflux:
-                indxpnts = where((gdat.binsflux[h] < listspec[l][k, gdat.indxenerfluxdist[0], :]) & (listspec[l][k, gdat.indxenerfluxdist[0], :] < gdat.binsspec[i, h+1]) & \
-                                 (gdat.binslgalpntsprob[i, h] < listlgal[l][k, :]) & (listlgal[l][k, :] < gdat.binslgalpntsprob[h+1]) & \
-                                 (gdat.binsbgalpntsprob[i, h] < listbgal[l][k, :]) & (listbgal[l][k, :] < gdat.binsbgalpntsprob[h+1]))[0]
+    pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbflux))
+    for l in gdat.indxpopl:
+        temp = empty((listbgal[l].size, 3))
+        temp[:, 0] = listbgal[l].flatten()
+        temp[:, 1] = listlgal[l].flatten()
+        temp[:, 2] = listspec[l][:, gdat.indxenerfluxdist[0], :].flatten()
+        pntsprob[l, :, :, :] = histogramdd(temp, bins=(gdat.binsbgalpntsprob, gdat.binslgalpntsprob, gdat.binsflux))[0]
 
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
@@ -1372,6 +1366,8 @@ def init( \
     head['factthin'] = gdat.factthin
     head['numbpopl'] = gdat.numbpopl
     head['numbproc'] = gdat.numbproc
+                            
+    head['numbsidepntsprob'] = gdat.numbsidepntsprob 
     
     head['maxmgang'] = gdat.maxmgang
     head['lgalcntr'] = gdat.lgalcntr

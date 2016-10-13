@@ -54,7 +54,9 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.maxmlgal = hdun[0].header['maxmlgal']
     gdat.minmbgal = hdun[0].header['minmbgal']
     gdat.maxmbgal = hdun[0].header['maxmbgal']
-    
+   
+    gdat.numbsidepntsprob = hdun[0].header['numbsidepntsprob']
+
     gdat.minmflux = hdun[0].header['minmflux']
     gdat.maxmflux = hdun[0].header['maxmflux']
     gdat.minmsind = hdun[0].header['minmsind']
@@ -923,8 +925,8 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
             print gdat.binssind
             print 'thissind'
             print gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]]
-    if gdat.trueinfo:
-        axis.hist(gdat.truesind[l][gdat.indxtruepntscomp], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
+    if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
+        axis.hist(gdat.truesind[l][gdat.indxtruepntscomp[l]], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
             axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.alphmrkr, color='red', log=True, label='3FGL')
     axis.set_yscale('log')
@@ -1078,7 +1080,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axissigm.axvline(5., ls='--', alpha=0.1)
 
         # superimpose the true catalog
-        if gdat.trueinfo:
+        if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
             truehist = axis.hist(gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.binsspec[i, :], alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock' and gdat.exprinfo:
                 if gdat.exprtype == 'ferm':
@@ -1325,7 +1327,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                     else:
                         indxlowr = 2 * h
                         indxuppr = gdat.numbflux
-                temp = sum(gdat.pntsprob[l, :, :, gdat.indxenerfluxdist[0], indxlowr:indxuppr], 2)
+                temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr], 2)
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 else:
@@ -1582,23 +1584,9 @@ def plot_mosa(gdat):
     numbrows = 3
     numbcols = 2
     figr, axis = plt.subplots(numbrows, numbcols, figsize=(gdat.plotsize, gdat.plotsize))
-    for k in range(gdat.numbfluxprox + 1):
-        if k == 0 or k == gdat.numbfluxprox:
-            alph = 1.
-            if k == 0:
-                labl = 'Dimmest PS'
-                colr = 'b'
-            else:
-                labl = 'Brightest PS'
-                colr = 'g'
-        else:
-            alph = 0.2
-            labl = None
-            colr = 'black'
-        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
-        axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
-        if k > 0:
-            axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
+    for a in range(numbrows):
+        for b in range(numbcols):
+            axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
     axis.set_ylabel('$f$ [%s]' % gdat.strgfluxunit)
@@ -1610,13 +1598,8 @@ def plot_mosa(gdat):
         axis.axhline(limt, color='red', ls=':', label='Flux floor')
     axis.set_xlim([None, maxmangltemp])
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'eval.pdf')
+    plt.savefig(gdat.pathplot + 'mosa.pdf')
     plt.close(figr)
-
-
-
-
-
 
 
 def plot_grap(redu=False):
