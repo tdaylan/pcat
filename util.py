@@ -1581,11 +1581,16 @@ def retr_prop(gdat, gdatmodi):
 
         if not gdatmodi.boolreje:
 
+            # calculate the list of pairs
+            ## current
+            gdatmodi.thislistpair = retr_listpair(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
+                                                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]])
+            gdatmodi.thisnumbpair = len(gdatmodi.thislistpair)
+            ## proposed
             lgal = concatenate((array([gdatmodi.spltlgalfrst, gdatmodi.spltlgalseco]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], thislgal)))
             bgal = concatenate((array([gdatmodi.spltbgalfrst, gdatmodi.spltbgalseco]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]], thisbgal)))
-            
-            listpair = retr_listpair(gdat, lgal, bgal)
-            gdatmodi.numbpair = len(listpair)
+            gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
+            gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
 
             if gdatmodi.numbpair == 0:
                 print 'Number of pairs should not be zero in the reverse proposal of a split'
@@ -1635,17 +1640,16 @@ def retr_prop(gdat, gdatmodi):
         # proposed number of point sources
         gdatmodi.nextsampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]] - 1
 
-        # list of point source pairs available for merge proposal
-        listpair = retr_listpair(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
+        # calculate the current list of pairs
+        gdatmodi.thislistpair = retr_listpair(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
                                                                                         gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]])
-        gdatmodi.numbpair = len(listpair)
-        
+        gdatmodi.thisnumbpair = len(gdatmodi.thislistpair)
         if gdat.verbtype > 1:
-            print 'listpair'
-            print listpair
+            print 'thislistpair'
+            print gdatmodi.thislistpair
            
         # check if merge will be proposed
-        if gdatmodi.numbpair == 0:
+        if gdatmodi.thisnumbpair == 0:
             gdatmodi.boolreje = True
         else:
 
@@ -1653,8 +1657,8 @@ def retr_prop(gdat, gdatmodi):
             indxpairtemp = choice(arange(gdatmodi.numbpair))
 
             # determine PS indices to be merged
-            mergindxindxpntsfrst = listpair[indxpairtemp][0]
-            mergindxindxpntsseco = listpair[indxpairtemp][1]
+            mergindxindxpntsfrst = gdatmodi.thislistpair[indxpairtemp][0]
+            mergindxindxpntsseco = gdatmodi.thislistpair[indxpairtemp][1]
   
             ## first PS index to be merged
             gdatmodi.mergindxfrst = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]
@@ -1739,6 +1743,14 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.modispec[:, 2] = gdatmodi.specpare.flatten()
             gdatmodi.modisind[2] = gdatmodi.sindpare
 
+            # calculate the proposed list of pairs
+            lgal = concatenate((array([gdatmodi.lgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
+                                                                                                        concatenate((gdatmodi.lgalfrst, gdatmodi.lgalseco)))))
+            bgal = concatenate((array([gdatmodi.bgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]], \
+                                                                                                        concatenate((gdatmodi.bgalfrst, gdatmodi.bgalseco)))))
+            gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
+            gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
+        
             if gdat.verbtype > 1:
                 print 'mergindxfrst: ', gdatmodi.mergindxfrst
                 print 'mergindxindxpntsfrst: ', mergindxindxpntsfrst
@@ -1765,6 +1777,8 @@ def retr_prop(gdat, gdatmodi):
                 print 'auxipara[1]: ', gdat.anglfact * gdatmodi.auxipara[1]
                 print 'auxipara[2]: ', gdatmodi.auxipara[2]
                 print 'auxipara[3]: ', gdatmodi.auxipara[3]
+                print 'nextlistpair'
+                print gdatmodi.nextlistpair
                 print
 
             if auxiradi > gdat.radispmr:
@@ -1882,6 +1896,7 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.jcbnfact = 1. / jcbnfacttemp
         
         ## combinatorial factor
+        thisnumbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]
         combfacttemp = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]**2 / gdatmodi.numbpair
         if gdatmodi.thisindxprop == gdat.indxpropsplt:
             gdatmodi.combfact = combfacttemp
