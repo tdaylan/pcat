@@ -436,8 +436,8 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=10000, \
-             #verbtype=2, \
+	    	 numbswep=100, \
+             verbtype=2, \
              factthin=1, \
              randinit=False, \
              exprinfo=False, \
@@ -447,12 +447,12 @@ def test_spmr():
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
              modlpsfntype='doubking', \
-             maxmgang=deg2rad(10.), \
+             maxmgang=deg2rad(1.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
              datatype='mock', \
-             maxmnumbpnts=array([100]), \
-             mocknumbpnts=array([100]), \
+             maxmnumbpnts=array([3]), \
+             mocknumbpnts=array([2]), \
              #maxmnumbpnts=array([3]), \
              #mocknumbpnts=array([2]), \
             )

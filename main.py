@@ -279,7 +279,7 @@ def init( \
          indxevttincl=arange(2, 4), \
          indxenerincl=arange(5), \
          strgexpr=None, \
-         strgback=None, \
+         strgback=['unit'], \
          lablback=None, \
          nameback=None, \
          strgexpo=None, \

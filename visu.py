@@ -17,9 +17,6 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         print 'Reading %s...' % pathpcat
     hdun = pf.open(pathpcat)
 
-    print 'hey'
-    print pf.info(pathpcat)
-
     gdat.numbener = hdun[0].header['numbener']
     gdat.numbevtt = hdun[0].header['numbevtt']
     gdat.numbpopl = hdun[0].header['numbpopl']
