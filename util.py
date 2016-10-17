@@ -45,7 +45,10 @@ def retr_indx(gdat, indxpntsfull):
 
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
-    
+   
+    if False:
+        print 'hey'
+        print 'retr_pntsflux'
     numbpnts = lgal.size
     pntsfluxsing = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
@@ -56,12 +59,20 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
         indx = argsort(dist)
         dist = dist[indx]
         indxpixltemp = gdat.indxpixl[indx]
-        
+    
+        if False:
+            print 'spec[:, k]'
+            print spec[:, k]
         # evaluate the PSF
         psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist, psfntype)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
+                if False:
+                    print 'psfn[i, :, m]'
+                    print psfn[i, :, m]
+                    print amin(psfn[i, :, m]), amax(psfn[i, :, m])
+                    print 
 
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
@@ -368,10 +379,13 @@ def retr_llik(gdat, gdatmodi, init=False):
                 numbrept = 1
             for n in range(numbrept):
                 # grab the PSF
-                if n == 0:
-                    psfnintp = gdatmodi.thispsfnintp
+                if gdatmodi.thisindxprop == gdat.indxproppsfipara:
+                    if n == 0:
+                        psfnintp = gdatmodi.thispsfnintp
+                    else:
+                        psfnintp = gdatmodi.nextpsfnintp
                 else:
-                    psfnintp = gdatmodi.nextpsfnintp
+                    psfnintp = gdatmodi.thispsfnintp
                 for k in range(gdatmodi.numbmodipnts):
                     # calculate the distance to the pixels to be updated
                     dist = retr_angldistunit(gdat, lgal[k], bgal[k], thisindxpixlprox[k])
@@ -387,6 +401,21 @@ def retr_llik(gdat, gdatmodi, init=False):
                         else:
                             spectemp = spec[i, k]
                         gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
+                   
+                        if False:
+                            print 'hey'
+                            print 'retr_llik'
+                            print 'gdatmodi.numbmodipnts'
+                            print gdatmodi.numbmodipnts
+                            print 'numbrept'
+                            print numbrept
+                            print 'spectemp'
+                            print spectemp
+                            for m in gdat.indxevtt:
+                                print 'psfn[i, :, m]'
+                                print amin(psfn[i, :, m]), amax(psfn[i, :, m])
+                            print
+        
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 3] = timefinl - timeinit
         
@@ -403,68 +432,55 @@ def retr_llik(gdat, gdatmodi, init=False):
         
         
         # temp
-        if True and gdat.strgcnfg == 'test_uppr':
+        if False and gdat.strgcnfg == 'test_uppr':
             
             temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
             gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
             gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
             
-            facttemp = gdat.expo[gdatmodi.indxcubemodi].flatten() * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
-
-            print 'facttemp'
-            print facttemp.shape
-            print amin(facttemp)
-            print amax(facttemp)
+            facttemp = gdat.expo[gdatmodi.indxcubemodi] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
 
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = temppntsflux[gdatmodi.indxcubemodi] * facttemp
-            path = gdat.pathdiag + 'temppntscnts_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+            path = gdat.pathdiag + '0temppntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, titl=gdat.strgprop[gdatmodi.thisindxprop], \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
-            print 'temppntsflux[gdatmodi.indxcubemodi]'
-            print temppntsflux[gdatmodi.indxcubemodi].shape
-            print amin(temppntsflux[gdatmodi.indxcubemodi])
-            print amax(temppntsflux[gdatmodi.indxcubemodi])
-
-            print 'temp[gdatmodi.indxpixlmodi]'
-            print temp[gdatmodi.indxpixlmodi].shape
-            print amin(temp[gdatmodi.indxpixlmodi])
-            print amax(temp[gdatmodi.indxpixlmodi])
-
             
             temp = zeros(gdat.numbpixl)
-            temp[gdatmodi.indxpixlmodi] = (gdatmodi.thispntscnts[gdatmodi.indxcubemodi] - temppntscnts[gdatmodi.indxcubemodi]) * facttemp
-            path = gdat.pathdiag + 'errrpntscnts_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, resi=True, \
+            temp[gdatmodi.indxpixlmodi] = (gdatmodi.thispntscnts[gdatmodi.indxcubemodi] - temppntscnts[gdatmodi.indxcubemodi])
+            path = gdat.pathdiag + '1errrpntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, titl=gdat.strgprop[gdatmodi.thisindxprop], \
+                                                                              resi=True, \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
 
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.thispntsflux[gdatmodi.indxcubemodi] * facttemp
-            path = gdat.pathdiag + 'thispntscnts_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+            path = gdat.pathdiag + '2thispntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, titl=gdat.strgprop[gdatmodi.thisindxprop], \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] * facttemp
-            path = gdat.pathdiag + 'nextpntscnts_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+            path = gdat.pathdiag + '3nextpntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, titl=gdat.strgprop[gdatmodi.thisindxprop], \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
         
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = (gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] - gdatmodi.thispntsflux[gdatmodi.indxcubemodi]) * facttemp
-            path = gdat.pathdiag + 'diffpntscnts_%09d.pdf' % gdatmodi.cntrswep
-            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+            path = gdat.pathdiag + '4diffpntscnts_%09d.pdf' % gdatmodi.cntrswep
+            tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, titl=gdat.strgprop[gdatmodi.thisindxprop], \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
             
-            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.:
+            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.1:
                 print 
                 raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
-
+            if gdatmodi.cntrswep > 50:
+                raise Exception('')
             
         timefinl = gdat.functime()
         gdatmodi.listchrollik[gdatmodi.cntrswep, 4] = timefinl - timeinit
@@ -1592,7 +1608,7 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
 
-            if gdatmodi.numbpair == 0:
+            if gdatmodi.nextnumbpair == 0:
                 print 'Number of pairs should not be zero in the reverse proposal of a split'
                 raise
 
@@ -1941,6 +1957,7 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
     
     if gdat.exprtype == 'ferm':
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
+        scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
     else:
         scalangl = thisangl[None, :, None]
 
@@ -1950,12 +1967,17 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         sigc = psfipara[indxpsfiparatemp]
         sigc = sigc[:, None, :]
         psfn = retr_singgaus(scalangl, sigc)
+        if gdat.exprtype == 'ferm':
+            psfnnorm = retr_singgaus(scalanglnorm, sigc)
+    
     elif psfntype == 'singking':
         sigc = psfipara[indxpsfiparatemp]
         gamc = psfipara[indxpsfiparatemp+1]
         sigc = sigc[:, None, :]
         gamc = gamc[:, None, :]
         psfn = retr_singking(scalangl, sigc, gamc)
+        if gdat.exprtype == 'ferm':
+            psfnnorm = retr_singking(scalanglnorm, sigc, gamc)
         
     elif psfntype == 'doubgaus':
         frac = psfipara[indxpsfiparatemp]
@@ -1965,6 +1987,8 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         sigc = sigc[:, None, :]
         sigt = sigt[:, None, :]
         psfn = retr_doubgaus(scalangl, frac, sigc, sigt)
+        if gdat.exprtype == 'ferm':
+            psfnnorm = retr_doubgaus(scalanglnorm, frac, sigc, sigt)
 
     elif psfntype == 'gausking':
         frac = psfipara[indxpsfiparatemp]
@@ -1976,6 +2000,8 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         sigt = sigt[:, None, :]
         gamt = gamt[:, None, :]
         psfn = retr_gausking(scalangl, frac, sigc, sigt, gamt)
+        if gdat.exprtype == 'ferm':
+            psfnnorm = retr_gausking(scalanglnorm, frac, sigc, sigt, gamt)
         
     elif psfntype == 'doubking':
         frac = psfipara[indxpsfiparatemp]
@@ -1989,11 +2015,21 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         sigt = sigt[:, None, :]
         gamt = gamt[:, None, :]
         psfn = retr_doubking(scalangl, frac, sigc, gamc, sigt, gamt)
+        if gdat.exprtype == 'ferm':
+            psfnnorm = retr_doubking(scalanglnorm, frac, sigc, gamc, sigt, gamt)
     
     # normalize the PSF
     if gdat.exprtype == 'ferm':
-        psfn /= 2. * pi * trapz(psfn * sin(thisangl[None, :, None]), thisangl, axis=1)[:, None, :]
-    
+        fact = 2. * pi * trapz(psfnnorm * sin(gdat.binsangl[None, :, None]), gdat.binsangl, axis=1)[:, None, :]
+        
+        if False:
+            print 'retr_psfn'
+            print 'fact'
+            print fact
+            print 'PSF maximum/minimum'
+            print amax(psfn, 1) / amin(psfn, 1)
+        psfn /= fact
+
     # temp
     if True and (gdat.strgcnfg == 'pcat_ferm_expr_ngal' or gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp1' or \
                                                             gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp2' or gdat.strgcnfg == 'pcat_ferm_expr_ngal_cmp3'):
@@ -2327,9 +2363,20 @@ def setpinit(gdat):
     gdat.numbevtt = gdat.indxevttincl.size
     gdat.indxevtt = arange(gdat.numbevtt)
     
+    # PS indices in each population
+    gdat.indxpntspopl = []
+    for l in gdat.indxpopl:
+        gdat.indxpntspopl.append(arange(sum(gdat.maxmnumbpnts[:l]), sum(gdat.maxmnumbpnts[:l+1])))
+    
+    ## PSF class indices for which images will be plotted
+    if gdat.numbevtt == 1:
+        gdat.indxevttplot = gdat.indxevtt
+    else:
+        gdat.indxevttplot = concatenate((array([None]), gdat.indxevtt))
+    
     # angular deviation
     # temp -- check that gdat.numbangl does not degrade the performance
-    gdat.numbangl = 1000
+    gdat.numbangl = 10000
     gdat.binsangl = linspace(0., gdat.maxmangl, gdat.numbangl) # [rad]
     gdat.binsanglcosi = sort(cos(gdat.binsangl))
     
@@ -2517,6 +2564,8 @@ def setpinit(gdat):
     gdat.offstext = gdat.maxmgang * 0.05
     ## figure size
     gdat.plotsize = 7
+    ## size of the images
+    gdat.sizeimag = 1.3 * gdat.plotsize
     ## text
     if gdat.datatype == 'mock':
         gdat.truelabl = 'Mock'
@@ -2739,6 +2788,13 @@ def setpfinl(gdat):
         # gdat.factthin = min(2 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
         gdat.factthin = int(min(0.1 * gdat.numbpara, gdat.numbswep - gdat.numbburn))
 
+    # number of samples to be saved
+    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    gdat.indxsamp = arange(gdat.numbsamp)
+    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
+    gdat.indxsamptotl = arange(gdat.numbsamptotl)
+    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
+
     # run tag
     gdat.rtag = retr_rtag(gdat)
     
@@ -2746,10 +2802,9 @@ def setpfinl(gdat):
     gdat.pathplot = gdat.pathimag + 'pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
     gdat.pathdiag = gdat.pathplot + 'diag/'
     gdat.pathfram = gdat.pathplot + 'fram/'
+    gdat.pathpost = gdat.pathplot + 'post/'
     if gdat.makeplot:
-        os.system('mkdir -p %s' % gdat.pathdiag)
-        os.system('mkdir -p %s' % gdat.pathplot)
-        os.system('mkdir -p %s' % gdat.pathfram)
+        os.system('mkdir -p %s %s %s %s' % (gdat.pathdiag, gdat.pathplot, gdat.pathfram, gdat.pathpost))
 
     # get the experimental catalog
     if gdat.exprinfo:
@@ -2759,6 +2814,7 @@ def setpfinl(gdat):
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
 
     # flag to indicate whether information from a deterministic catalog will be used or not
+    # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
     gdat.trueinfo = gdat.datatype == 'mock' or gdat.exprinfo
     
     # get count data
@@ -2818,13 +2874,6 @@ def setpfinl(gdat):
     gdat.priofactfluxdistslop = gdat.numbener * log(1. / (arctan(gdat.maxmfluxdistslop) - arctan(gdat.minmfluxdistslop)))
     gdat.priofactsplt = -2. * log(2. * gdat.maxmgangmarg) + log(gdat.radispmr) + log(2. * pi)
     # temp -- brok terms are missing
-
-    # number of samples to be saved
-    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
-    gdat.indxsamp = arange(gdat.numbsamp)
-    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
-    gdat.indxsamptotl = arange(gdat.numbsamptotl)
-    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
 
     # determine proposal probabilities
     gdat.probpropminm = copy(gdat.probprop)
@@ -3045,27 +3094,8 @@ def setpfinl(gdat):
 
 def init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strgplot, indxpoplplot=None):
 
-    figr, axis = plt.subplots(figsize=(1.3 * gdat.plotsize, 1.3 * gdat.plotsize))
-    axis.set_xlabel(gdat.longlabl)
-    axis.set_ylabel(gdat.latilabl)
-    axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
-    axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
-    if indxevttplot == None:
-        if indxenerplot == None:
-            axis.set_title('')
-        else:
-            axis.set_title(gdat.binsenerstrg[indxenerplot])
-    else:
-        titl = gdat.binsenerstrg[indxenerplot]
-        if gdat.exprtype == 'ferm':
-            titl += ', ' + gdat.evttstrg[indxevttplot]
-        axis.set_title(titl)
-
-    axis.axvline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-    axis.axvline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-    axis.axhline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-    axis.axhline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-
+    figr, axis = plt.subplots(figsize=(gdat.sizeimag, gdat.sizeimag))
+    
     if indxpoplplot == None:
         strg = ''
     else:
@@ -3077,6 +3107,85 @@ def init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strgplot, indxpoplplot
         path = gdat.pathplot + 'fram/' + strgplot + strg + '_%d%d_swep%09d.pdf' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot], gdatmodi.cntrswep)
     
     return figr, axis, path
+
+
+def make_framlabl(gdat, axis, indxenerplot, indxevttplot):
+
+    axis.set_xlabel(gdat.longlabl)
+    axis.set_ylabel(gdat.latilabl)
+    if indxevttplot == None:
+        if indxenerplot == None:
+            axis.set_title('')
+        else:
+            axis.set_title(gdat.binsenerstrg[indxenerplot])
+    else:
+        titl = gdat.binsenerstrg[indxenerplot]
+        if gdat.exprtype == 'ferm':
+            titl += ', ' + gdat.evttstrg[indxevttplot]
+        axis.set_title(titl)
+
+
+def retr_fram(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=False, satuuppr=None, satulowr=None, resi=False):
+
+    axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
+    axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
+    axis.axvline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
+    axis.axvline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
+    axis.axhline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
+    axis.axhline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
+
+    # filter the map
+    if thisindxevtt == None:
+        if thisindxener == None:
+            if mean:
+                maps = sum(maps * gdat.expo, axis=2) / sum(gdat.expo, axis=2)
+            else:
+                maps = sum(maps, axis=2)
+        else:
+            if mean:
+                maps = sum(maps[thisindxener, :, :] * gdat.expo[thisindxener, :, :], axis=1) / sum(gdat.expo[thisindxener, :, :], axis=1)
+            else:
+                maps = sum(maps[thisindxener, :, :], axis=1)
+    else:
+        maps = maps[thisindxener, :, thisindxevtt]
+    
+    # temp
+    maps = maps.squeeze()
+    
+    # project the map to 2D
+    if gdat.pixltype == 'heal':
+        maps = tdpy.util.retr_cart(maps, indxpixlrofi=gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
+                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+    
+    if gdat.pixltype == 'cart':
+        mapstemp = empty(gdat.numbsidecart**2)
+        mapstemp[gdat.indxpixlrofi] = maps
+        maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
+    
+    # saturate the map
+    if gdat.scalmaps == 'linrsatu':
+        if satulowr != None:
+            maps[where(maps < satulowr[thisindxener])] = satulowr[thisindxener]
+        if satuuppr != None:
+            maps[where(maps > satuuppr[thisindxener])] = satuuppr[thisindxener]
+    if gdat.scalmaps == 'asnh':
+        maps = arcsinh(maps)
+   
+    if resi:
+        valu = max(fabs(amin(maps)), fabs(amax(maps)))
+        vmin = -valu
+        vmax = valu
+    else:
+        vmin = None
+        vmax = None
+    imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
+
+    # make a color bar
+    if thisindxevtt != None or thisindxener != None:
+        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
+
+    return cbar
 
 
 def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
@@ -3150,62 +3259,6 @@ def retr_info(listllik, levi):
     info = mean(listllik) - levi
 
     return info
-
-
-def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=False, satuuppr=None, satulowr=None, titl='', minmcbar=None, maxmcbar=None):
-
-    # filter the map
-    if thisindxevtt == None:
-        if thisindxener == None:
-            if mean:
-                maps = sum(maps * gdat.expo, axis=2) / sum(gdat.expo, axis=2)
-            else:
-                maps = sum(maps, axis=2)
-        else:
-            if mean:
-                maps = sum(maps[thisindxener, :, :] * gdat.expo[thisindxener, :, :], axis=1) / sum(gdat.expo[thisindxener, :, :], axis=1)
-            else:
-                maps = sum(maps[thisindxener, :, :], axis=1)
-    else:
-        maps = maps[thisindxener, :, thisindxevtt]
-    
-    # temp
-    maps = maps.squeeze()
-    
-    # project the map to 2D
-    if gdat.pixltype == 'heal':
-        maps = tdpy.util.retr_cart(maps, indxpixlrofi=gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
-                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-    
-    if gdat.pixltype == 'cart':
-        mapstemp = empty(gdat.numbsidecart**2)
-        mapstemp[gdat.indxpixlrofi] = maps
-        maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
-    
-    # saturate the map
-    if gdat.scalmaps == 'linrsatu':
-        if satulowr != None:
-            maps[where(maps < satulowr[thisindxener])] = satulowr[thisindxener]
-        if satuuppr != None:
-            maps[where(maps > satuuppr[thisindxener])] = satuuppr[thisindxener]
-    if gdat.scalmaps == 'asnh':
-        maps = arcsinh(maps)
-   
-    # temp
-    #imag = axis.imshow(maps)
-    if minmcbar != None and maxmcbar != None:
-        clim = [minmcbar, maxmcbar]
-    else:
-        clim = None
-    imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', clim=clim, alpha=gdat.alphmaps)
-    axis.set_title(titl)
-
-    # make a color bar
-    if thisindxevtt != None or thisindxener != None:
-        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-
-    return axis, cbar
 
 
 def retr_jcbn():

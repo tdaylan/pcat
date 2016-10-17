@@ -120,7 +120,6 @@ def test_time():
                                   strgback=['unit'], \
                                   strgexpo='unit', \
                                   boolpropsind=False, \
-                                  randinit=False, \
                                   exprinfo=False, \
                                   indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
@@ -165,38 +164,41 @@ def test_time():
     
 def test_psfn():
     
-    tupl = [['mock', 'doubking', 'doubking'], \
-            ['mock', 'gausking', 'gausking'], \
-            ['mock', 'gausking', 'doubking'], \
-            ['mock', 'doubking', 'gausking'], \
-            ['inpt', 'gausking', None], \
-            ['inpt', 'doubking', None]]
+    tupl = [['mock', None, 'doubking', 'doubking'], \
+            ['mock', None, 'gausking', 'gausking'], \
+            ['mock', None, 'gausking', 'doubking'], \
+            ['mock', None, 'doubking', 'gausking'], \
+            ['inpt', 'fermflux_cmp0_ngal.fits', 'gausking', None], \
+            ['inpt', 'fermflux_cmp0_ngal.fits', 'doubking', None]]
     numbtupl = len(tupl)
     for k in range(numbtupl):
         
         datatype = tupl[k][0]
-        modlpsfntype = tupl[k][1]
-        mockpsfntype = tupl[k][2]
+        strgexpr = tupl[k][1]
+        modlpsfntype = tupl[k][2]
+        mockpsfntype = tupl[k][3]
 
         init( \
              numbswep=500, \
              numbburn=0, \
              factthin=1, \
-             randinit=False, \
-             exprinfo=False, \
+             #exprinfo=False, \
              boolpropsind=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(3, 4), \
-             strgback=['fermisotflux.fits', ], \
+             strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
              modlpsfntype=modlpsfntype, \
+             lgalcntr=deg2rad(0.), \
+             bgalcntr=deg2rad(90.), \
              mockpsfntype=mockpsfntype, \
              maxmnumbpnts=array([100]), \
              maxmgang=deg2rad(10.), \
              minmflux=3e-11, \
              maxmflux=1e-7, \
              datatype=datatype, \
+             strgexpr=strgexpr, \
              mocknumbpnts=array([100]), \
             )
                 
@@ -205,7 +207,6 @@ def test_nomi():
       
     init( \
          numbswep=2000000, \
-         randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -223,30 +224,93 @@ def test_nomi():
         )
 
 
+def test_errr():
+      
+    tupl = [ \
+            [0.1, 'logt', 100], \
+            [0.1, 'linr', 100], \
+            [0.1, 'logt', 200, '0.1, log, 200'], \
+             
+           ]
+    numbtupl = len(tupl)
+    indxtupl = arange(numbtupl)
+    posterrrfracpixl = empty(numbtupl)
+    posterrrfracpnts = empty(numbtupl)
+    strgtupl = empty(numbtupl, dtype=object)
+    for k in range(numbtupl):
+        
+        specfraceval = tupl[k][0]
+        binsangltype = tupl[k][1]
+        numbangl = tupl[k][2]
+        strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
+        if True:
+            gridchan, dictpcat = init( \
+                                      numbswep=10000, \
+                                      numbswepplot=19000, \
+                                      diagmode=True, \
+                                      exprinfo=False, \
+                                      makeanim=True, \
+                                      boolproppsfn=False, \
+                                      boolpropsind=False, \
+                                      numbangl=numbangl, \
+                                      binsangltype=binsangltype, \
+                                      indxenerincl=arange(2, 3), \
+                                      indxevttincl=arange(3, 4), \
+                                      strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                                      strgexpo='fermexpo_cmp0_ngal.fits', \
+                                      modlpsfntype='doubking', \
+                                      maxmnumbpnts=array([100]), \
+                                      maxmgang=deg2rad(10.), \
+                                      specfraceval=specfraceval, \
+                                      minmflux=1e-9, \
+                                      maxmflux=1e-5, \
+                                      datatype='mock', \
+                                      mocknumbpnts=array([50]), \
+                                     )
+            posterrrfracpixl[k] = dictpcat['posterrrfracpixl']
+            posterrrfracpnts[k] = dictpcat['posterrrfracpnts']
+        else:
+            posterrrfracpixl[k] = rand()
+            posterrrfracpnts[k] = rand()
+
+    size = 0.5
+    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_errr/'
+    os.system('mkdir -p %s' % path)
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
+    liststrg = ['posterrrfracpixl', 'posterrrfracpnts']
+    listlabl = [r'$\epsilon_m$ [%]', r'$\epsilon_d$ [%]']
+    listvarb = [posterrrfracpixl, posterrrfracpnts]
+    numbplot = len(liststrg)
+    for k in range(numbplot):
+        figr, axis = plt.subplots()
+        axis.bar(indxtupl, listvarb[k], 2 * size)
+        axis.set_ylabel(listlabl[k])
+        axis.set_xticks(indxtupl + size)
+        axis.set_xticklabels(strgtupl, rotation=45)
+        plt.tight_layout()
+        figr.savefig(path + '%s_%s.pdf' % (liststrg[k], strgtimestmp))
+        plt.close(figr)
+
+
 def test_uppr():
       
     init( \
-         numbswep=100000, \
-         numbswepplot=19000, \
-         verbtype=2, \
-         randinit=False, \
+         numbswep=1000, \
+         factthin=100, \
          exprinfo=False, \
-         makeanim=True, \
          boolproppsfn=False, \
          boolpropsind=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
-         probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 1., 1., 1., 1.]), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          modlpsfntype='doubking', \
-         maxmnumbpnts=array([3]), \
-         maxmgang=deg2rad(5.), \
-         specfraceval=0., \
+         maxmnumbpnts=array([800]), \
+         maxmgang=deg2rad(10.), \
          minmflux=1e-9, \
          maxmflux=1e-5, \
          datatype='mock', \
-         mocknumbpnts=array([2]), \
+         mocknumbpnts=array([400]), \
         )
 
 
@@ -264,7 +328,6 @@ def test_prio():
                                   # temp
                                   numbproc=1, \
                                   numbswep=100000, \
-                                  randinit=False, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
                                   boolpropsind=False, \
@@ -306,7 +369,6 @@ def test_lowr():
       
     init( \
          numbswep=500000, \
-         randinit=False, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -341,7 +403,6 @@ def test_post():
     		 numbproc=1, \
              numbburn=0, \
     		 factthin=1, \
-             randinit=False, \
              indxenerincl=indxenerincl, \
              indxevttincl=indxevttincl, \
              probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
@@ -386,7 +447,6 @@ def test_atcr():
                                   makeplot=False, \
                                   probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
                                   numbpntsmodi=listnumbpntsmodi[k], \
-                                  randinit=False, \
                                   exprinfo=False, \
                                   indxenerincl=arange(2, 3), \
                                   boolpropsind=False, \
@@ -439,7 +499,6 @@ def test_spmr():
 	    	 numbswep=100, \
              verbtype=2, \
              factthin=1, \
-             randinit=False, \
              exprinfo=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(3, 4), \
@@ -462,7 +521,6 @@ def test_popl():
      
     init( \
 		 numbswep=500000, \
-         randinit=False, \
          indxenerincl=arange(2, 4), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -490,7 +548,6 @@ def test():
          verbtype=2, \
          numbburn=0, \
          factthin=1, \
-         randinit=False, \
          exprinfo=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
