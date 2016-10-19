@@ -71,6 +71,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.lgalcntr = hdun[0].header['lgalcntr']
     gdat.bgalcntr = hdun[0].header['bgalcntr']
     gdat.scalmaps = hdun[0].header['scalmaps']
+    gdat.satumaps = hdun[0].header['satumaps']
     
     gdat.probpsfipara = hdun[0].header['probpsfipara']
     
@@ -93,6 +94,13 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     else:
         gdat.numbsidecart = hdun[0].header['numbsidecart']
 
+    # best-fit sample
+    ## maximum likelihood
+    gdat.indxswepmaxmllik = hdun[0].header['indxswepmaxmllik']
+    gdat.maxmllikswep = hdun[0].header['maxmllikswep']
+    gdat.indxswepmaxmlpos = hdun[0].header['indxswepmaxmlpos']
+    gdat.maxmlposswep = hdun[0].header['maxmlposswep']
+    
     gdat.strgenerunit = hdun[0].header['strgenerunit']
     gdat.strgfluxunit = hdun[0].header['strgfluxunit']
     gdat.maxmangl = hdun[0].header['maxmangl']
@@ -233,6 +241,11 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.listfluxdistbrek = hdun['fluxdistbrek'].data
     gdat.listpsfipara = hdun['psfipara'].data
     gdat.listnormback = hdun['normback'].data
+    
+    # best-fit sample
+    ## maximum likelihood
+    gdat.sampvarbmaxmllik = hdun['sampvarbmaxmllik'].data
+    gdat.sampvarbmaxmlpos = hdun['sampvarbmaxmlpos'].data
 
     gdat.makeplot = True
     gdat.diagmode = False
@@ -325,7 +338,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 
     # plot autocorrelation
-    tdpy.mcmc.plot_atcr(gdat.pathplot + 'atcr.pdf', atcr, timeatcr)
+    tdpy.mcmc.plot_atcr(gdat.pathplot, atcr, timeatcr)
     
     # plot proposal efficiency
     numbtimemcmc = 20
@@ -491,12 +504,9 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         truepost[3*numbpntspost:4*numbpntspost] = gdat.truesind[0][k]
         truepost[4*numbpntspost:] = gdat.truenormback[0, :]
         path = gdat.pathplot + 'postdist'
-        strgpost = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
-        strgpost += ['$A_{%d}$' % i for i in gdat.indxener]
-        
-        # temp
-        #tdpy.mcmc.plot_grid(path, listpost, strgpost, truepara=truepost, numbtickbins=3)
-        tdpy.mcmc.plot_grid(path, listpost, strgpost, numbtickbins=3)
+        strgpara = ['$%s_%d$' % (strg, indxpnts + 1) for strg in ['l', 'b', 'f', 's'] for indxpnts in arange(numbpnts)]
+        strgpara += ['$A_{%d}$' % i for i in gdat.indxener]
+        tdpy.mcmc.plot_grid(path, listpost, strgpara, truepara=truepost, numbtickbins=3)
 
         # find the matrix of partial derivatives
         ## evaluate the likelihood at the sample
@@ -605,14 +615,18 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     # log-likelihood
     path = gdat.pathplot + 'llik'
-    tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$')
+    print 'listllik.flatten()'
+    print mean(listllik)
+    print 'gdat.maxmllikswep'
+    print gdat.maxmllikswep
+    tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$', varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
     # log-prior
     path = gdat.pathplot + 'lpri'
     tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(x)$')
 
     # number, expected number of PS and flux conditional prior power law index 
-    for l in range(gdat.numbpopl):
+    for l in gdat.indxpopl:
         
         # number of point sources
         path = gdat.pathplot + 'numbpntsdist_pop%d' % l
@@ -718,7 +732,17 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl)
 
     ## joint distribution of background component pairs
-    tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxparaplot], ['%d' % k for k in indxparaplot], numbplotside=10)
+    for i in gdat.indxener:
+        for c in gdat.indxback:
+            for k in arange(c):
+                path = gdat.pathplot + gdat.nameback[c] + gdat.nameback[k] + '%d' % i
+                if gdat.trueinfo and gdat.datatype == 'mock':
+                    truepara = array([gdat.truenormback[c, i], gdat.truenormback[k, i]])
+                else:
+                    truepara = None
+                indxbackpair = array([c, k])
+                strgpara = ['%s$_{%d}$' % (gdat.lablback[a], i) for a in indxbackpair]
+                tdpy.mcmc.plot_grid(path, gdat.listnormback[:, indxbackpair, i], strgpara, truepara=truepara, join=True)
     
     # plot log-likelihood
     figr, axrw = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -774,7 +798,8 @@ def plot_chro(gdat):
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:
-            print 'Skipping choronometer histogram...'
+            if gdat.verbtype > 0:
+                print 'Skipping choronometer histogram...'
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
         axcl[k].set_ylabel(gdat.strgprop[k])
@@ -1348,8 +1373,6 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 else:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi)
                     
-                plt.colorbar(imag, fraction=0.05, ax=axis)
-
                 # superimpose true PS
                 # temp
                 if gdat.trueinfo:
@@ -1358,8 +1381,15 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                     mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], indxpnts])
                     axis.scatter(gdat.anglfact * gdat.truelgal[l][indxpnts], gdat.anglfact * gdat.truebgal[l][indxpnts], \
                                                                                             s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
-                axis.set_xlabel(gdat.longlabl)
-                axis.set_ylabel(gdat.latilabl)
+                
+                if a == numbrows - 1:
+                    axis.set_xlabel(gdat.longlabl)
+                else:
+                    axis.set_xticklabels([])
+                if b == 0:
+                    axis.set_ylabel(gdat.latilabl)
+                else:
+                    axis.set_yticklabels([])
                 axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
                 axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
                 axis.axvline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
@@ -1367,10 +1397,15 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 axis.axhline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
                 axis.axhline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
                 
-                titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxlowr]) + ' %s $< f <$' % gdat.strgfluxunit + \
-                                                                                   tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr]) + ' %s' % gdat.strgfluxunit
+                titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxlowr]) + ' $< f <$' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr])
                 axis.set_title(titl)
-        plt.tight_layout()
+        
+        plt.figtext(0.5, 0.97, '$f$ [%s]' % gdat.strgfluxunit, ha='center', va='center')
+        axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
+        cbar = figr.colorbar(imag, cax=axiscomm)
+        #cbar.set_ticks(gdat.tickdatacnts[i, :])
+        #cbar.set_ticklabels(gdat.labldatacnts[i, :])
+        plt.subplots_adjust(left=0.1, top=.9, hspace=0.01, wspace=0.03, bottom=0.1)
         figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
         plt.close(figr)
        
@@ -1610,7 +1645,7 @@ def plot_mosa(gdat):
         for l in gdat.indxpopl:
             for i in gdat.indxener:
                 for m in gdat.indxevttplot:
-                    figr, axgr = plt.subplots(numbrows, numbcols, figsize=(gdat.plotsize, gdat.plotsize))
+                    figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize))
                     for a, axrw in enumerate(axgr):
                         for b, axis in enumerate(axrw):
                             gdatmodi.thissampvarb = gdat.listsampvarb[indxsampmosa[numbcols*a+b], :].flatten()
@@ -1626,10 +1661,24 @@ def plot_mosa(gdat):
                                                                                                                     gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
                                 gdatmodi.indxtruepntsassc.append(indxtruepntsassc)
          
-                            make_framlabl(gdat, axis, i, m)
-                            cbar = retr_fram(gdat, axis, gdat.datacnts, i, m, satuuppr=gdat.datacntssatu)
+                            if a == numbrows - 1:
+                                axis.set_xlabel(gdat.longlabl)
+                            else:
+                                axis.set_xticklabels([])
+                            if b == 0:
+                                axis.set_ylabel(gdat.latilabl)
+                            else:
+                                axis.set_yticklabels([])
+                            
+                            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                             supr_fram(gdat, gdatmodi, axis, i, m)
-                    plt.tight_layout()
+                   
+                    plt.figtext(0.5, 0.93, gdat.binsenerstrg[i], ha='center', va='center')
+                    axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
+                    cbar = figr.colorbar(imag, cax=axiscomm)
+                    cbar.set_ticks(gdat.tickdatacnts[i, :])
+                    cbar.set_ticklabels(gdat.labldatacnts[i, :])
+                    plt.subplots_adjust(left=0.1, top=.91, hspace=0.01, wspace=0.03, bottom=0.09)
                     if l == 1:
                         strg = ''
                     else:
@@ -1751,7 +1800,7 @@ def plot_3fgl_thrs(gdat):
 
 def make_anim(gdat):
 
-    listname = ['errrpnts_2A', 'datacnts_pop0_2A', 'resicnts_pop0_2A', 'modlcnts_pop0_2A', 'histspec_pop0', 'histflux_pop0', \
+    listname = ['errrcnts_2A', 'datacnts_pop0_2A', 'resicnts_pop0_2A', 'modlcnts_pop0_2A', 'histspec_pop0', 'histflux_pop0', \
                     'scatfluxsind_pop0', 'histfluxsind_pop0', 'histcnts_pop0', 'histsind_pop0', \
                     'scatspec_pop0', 'psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
     pathanim = gdat.pathplot + 'anim/'
@@ -1825,9 +1874,11 @@ def plot_histcnts(gdat, l, gdatmodi=None):
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts', indxpoplplot=indxpoplplot)
-    make_framlabl(gdat, axis, indxenerplot, indxevttplot)
-    cbar = retr_fram(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
+    imag = retr_fram(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
+    make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+
+    make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1836,8 +1887,10 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'modlcnts', indxpoplplot=indxpoplplot)
-    cbar = retr_fram(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, satuuppr=gdat.datacntssatu)
+    imag = retr_fram(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
+    make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+    make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1846,17 +1899,21 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts', indxpoplplot=indxpoplplot)
-    cbar = retr_fram(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, satulowr=-gdat.resicntssatu, satuuppr=gdat.resicntssatu, cmap='RdBu')
+    imag = retr_fram(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu')
+    make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+    make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickresicnts[indxenerplot, :], labl=gdat.lablresicnts[indxenerplot, :])
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
     
     
-def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
+def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'errrpnts')
-    cbar = retr_fram(gdat, axis, gdatmodi.thiserrrpnts, indxenerplot, indxevttplot, cmap='RdBu', mean=True, resi=True)
+    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'errrcnts')
+    imag = retr_fram(gdat, axis, gdatmodi.thiserrrcnts, indxenerplot, indxevttplot, vmax=gdat.maxmerrrcnts[indxenerplot], cmap='RdBu', mean=True)
+    make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickerrrcnts[indxenerplot, :], labl=gdat.lablerrrcnts[indxenerplot, :])
+
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1865,6 +1922,7 @@ def plot_errrpnts(gdat, gdatmodi, indxenerplot, indxevttplot):
 def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
     
     figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'catlfram', indxpoplplot=indxpoplplot)
+    make_framlabl(gdat, axis)
 
     if gdat.trueinfo:
         for l in gdat.indxpopl:

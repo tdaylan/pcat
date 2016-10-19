@@ -67,7 +67,8 @@ def test_time():
             [50, 100, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
             
             # numbproc
-            [50, 100,   100, 'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
+            # temp
+            #[50, 100,   100, 'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
 
             # cart
             [50, 100,   100, 'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
@@ -112,9 +113,14 @@ def test_time():
             indxenerincl = arange(1, 4)
             boolpropsind = False
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
+        
+        print 'k'
+        print k
+        
         gridchan, dictpcat = init( \
+                                  # temp
+                                  verbtype=0, \
                                   numbswep=numbswep, \
-                                  factthin=1, \
                                   numbproc=numbproc, \
                                   #makeplot=False, \
                                   strgback=['unit'], \
@@ -138,7 +144,7 @@ def test_time():
         timeatcr[k] = dictpcat['timeatcr']
         listmemoresi = dictpcat['listmemoresi']
         meanmemoresi[k] = mean(listmemoresi)
-        derimemoresi[k] = (listmemoresi[k][-1] / listmemoresi[k][0]) / numbswep
+        derimemoresi[k] = (listmemoresi[-1] - listmemoresi[0]) / numbswep
         print 'timeatcr'
         print timeatcr[k]
         print
@@ -295,8 +301,8 @@ def test_errr():
 def test_uppr():
       
     init( \
-         numbswep=1000, \
-         factthin=100, \
+         numbswep=10000, \
+         #factthin=100, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \

@@ -316,6 +316,7 @@ def retr_elpsfrac(elpsaxis):
 def retr_llik(gdat, gdatmodi, init=False):
 
     if init:
+
         gdatmodi.thisllik = gdat.datacnts * log(gdatmodi.thismodlcnts) - gdatmodi.thismodlcnts
         gdatmodi.thislliktotl = sum(gdatmodi.thisllik)
         
@@ -436,7 +437,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             
             temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
             gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-            gdatmodi.thiserrrpnts = gdatmodi.thispntscnts - temppntscnts
+            gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
             
             facttemp = gdat.expo[gdatmodi.indxcubemodi] * gdat.diffener[gdatmodi.indxenermodi] * gdat.apix
 
@@ -449,7 +450,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             
             temp = zeros(gdat.numbpixl)
             temp[gdatmodi.indxpixlmodi] = (gdatmodi.thispntscnts[gdatmodi.indxcubemodi] - temppntscnts[gdatmodi.indxcubemodi])
-            path = gdat.pathdiag + '1errrpntscnts_%09d.pdf' % gdatmodi.cntrswep
+            path = gdat.pathdiag + '1errrcntscnts_%09d.pdf' % gdatmodi.cntrswep
             tdpy.util.plot_maps(path, temp, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, titl=gdat.strgprop[gdatmodi.thisindxprop], \
                                                                               resi=True, \
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
@@ -476,7 +477,7 @@ def retr_llik(gdat, gdatmodi, init=False):
                                                                               minmlgal=0.95*gdat.anglfact*gdat.minmlgal, maxmlgal=0.95*gdat.anglfact*gdat.maxmlgal, \
                                                                               minmbgal=0.95*gdat.anglfact*gdat.minmbgal, maxmbgal=0.95*gdat.anglfact*gdat.maxmbgal)
             
-            if amax(fabs(gdatmodi.thiserrrpnts)) > 0.1:
+            if amax(fabs(gdatmodi.thiserrrcnts)) > 0.1:
                 print 
                 raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
             if gdatmodi.cntrswep > 50:
@@ -2461,8 +2462,8 @@ def setpinit(gdat):
    
     # axes
     ## longitude
-    gdat.numblgalpntsprob = 400
-    gdat.numbbgalpntsprob = 400
+    gdat.numblgalpntsprob = gdat.numbsidepntsprob
+    gdat.numbbgalpntsprob = gdat.numbsidepntsprob
     gdat.binslgalpntsprob = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
     gdat.binsbgalpntsprob = linspace(-gdat.maxmgang, gdat.maxmgang, gdat.numbsidepntsprob + 1)
     gdat.indxlgalpntsprob = arange(gdat.numblgalpntsprob)
@@ -3030,11 +3031,47 @@ def setpfinl(gdat):
     if amin(gdat.datacnts) < 0.:
         print 'Negative counts!'
 
+    # plotting
     gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix / gdat.diffener
     gdat.datacntsmean = mean(sum(gdat.datacnts, 2), 1)
-    gdat.datacntssatu = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
-    gdat.resicntssatu = ceil(gdat.datacntssatu * 0.2)
+    if gdat.satumaps:
+        gdat.maxmdatacnts = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
+    else:
+        gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2), 1)
+    gdat.minmdatacnts = amin(amin(gdat.datacnts, 1), 1)
     
+    ## correct the limits for pretty-printing
+    for i in gdat.indxener:
+        if gdat.maxmdatacnts[i] > 10.:
+            gdat.maxmdatacnts[i] = around(gdat.maxmdatacnts[i], decimals=-1)
+        elif gdat.maxmdatacnts[i] > 100:
+            gdat.maxmdatacnts[i] = around(gdat.maxmdatacnts[i], decimals=-2)
+    gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
+    gdat.maxmerrrcnts = ceil(gdat.maxmdatacnts * 0.02)
+    
+    numbtickcbar = 10
+    gdat.tickdatacnts = empty((gdat.numbener, numbtickcbar))
+    gdat.labldatacnts = empty((gdat.numbener, numbtickcbar), dtype=object)
+    gdat.tickresicnts = empty((gdat.numbener, numbtickcbar + 1))
+    gdat.lablresicnts = empty((gdat.numbener, numbtickcbar + 1), dtype=object)
+    gdat.tickerrrcnts = empty((gdat.numbener, numbtickcbar + 1))
+    gdat.lablerrrcnts = empty((gdat.numbener, numbtickcbar + 1), dtype=object)
+    for i in gdat.indxener:
+        
+        if gdat.scalmaps == 'asnh':
+            gdat.minmdatacnts[i] = arcsinh(gdat.minmdatacnts[i])
+            gdat.maxmdatacnts[i] = arcsinh(gdat.maxmdatacnts[i])
+            gdat.maxmresicnts[i] = arcsinh(gdat.maxmresicnts[i])
+        
+        gdat.tickdatacnts[i, :] = linspace(gdat.minmdatacnts[i], gdat.maxmdatacnts[i], numbtickcbar)
+        gdat.tickresicnts[i, :] = linspace(-gdat.maxmresicnts[i], gdat.maxmresicnts[i], numbtickcbar + 1)
+        gdat.tickerrrcnts[i, :] = linspace(-gdat.maxmerrrcnts[i], gdat.maxmerrrcnts[i], numbtickcbar + 1)
+        for k in range(numbtickcbar +1):
+            gdat.lablresicnts[i, k] = '%d' % sinh(gdat.tickresicnts[i, k])
+            gdat.lablerrrcnts[i, k] = '%d' % sinh(gdat.tickerrrcnts[i, k])
+            if k != numbtickcbar:
+                gdat.labldatacnts[i, k] = '%d' % sinh(gdat.tickdatacnts[i, k])
+   
     # auxiliary variables for plots
     # temp
     if False:
@@ -3106,11 +3143,6 @@ def init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strgplot, indxpoplplot
     else:
         path = gdat.pathplot + 'fram/' + strgplot + strg + '_%d%d_swep%09d.pdf' % (gdat.indxenerincl[indxenerplot], gdat.indxevttincl[indxevttplot], gdatmodi.cntrswep)
     
-    return figr, axis, path
-
-
-def make_framlabl(gdat, axis, indxenerplot, indxevttplot):
-
     axis.set_xlabel(gdat.longlabl)
     axis.set_ylabel(gdat.latilabl)
     if indxevttplot == None:
@@ -3124,9 +3156,14 @@ def make_framlabl(gdat, axis, indxenerplot, indxevttplot):
             titl += ', ' + gdat.evttstrg[indxevttplot]
         axis.set_title(titl)
 
+    return figr, axis, path
 
-def retr_fram(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=False, satuuppr=None, satulowr=None, resi=False):
 
+def retr_fram(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=False, vmin=None, vmax=None):
+
+    if vmin == None and vmax != None:
+        vmin = -vmax
+    
     axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
     axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
     axis.axvline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
@@ -3157,52 +3194,47 @@ def retr_fram(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
         maps = tdpy.util.retr_cart(maps, indxpixlrofi=gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
                                                                             minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                             minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-    
     if gdat.pixltype == 'cart':
         mapstemp = empty(gdat.numbsidecart**2)
         mapstemp[gdat.indxpixlrofi] = maps
         maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
     
-    # saturate the map
-    if gdat.scalmaps == 'linrsatu':
-        if satulowr != None:
-            maps[where(maps < satulowr[thisindxener])] = satulowr[thisindxener]
-        if satuuppr != None:
-            maps[where(maps > satuuppr[thisindxener])] = satuuppr[thisindxener]
+    # rescale the map
     if gdat.scalmaps == 'asnh':
         maps = arcsinh(maps)
    
-    if resi:
-        valu = max(fabs(amin(maps)), fabs(amax(maps)))
-        vmin = -valu
-        vmax = valu
-    else:
-        vmin = None
-        vmax = None
     imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
 
-    # make a color bar
-    if thisindxevtt != None or thisindxener != None:
-        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
+    return imag
 
+
+def make_cbar(gdat, axis, imag, indxenerplot, tick, labl):
+
+    # make a color bar
+    # temp
+    if indxenerplot != None:
+        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
+        cbar.set_ticks(tick)
+        cbar.set_ticklabels(labl)
     return cbar
 
 
+def make_catllabl(gdat, axis):
+
+    axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
+                                                                                label='Sample', marker='+', linewidth=2, color='b')
+    if gdat.trueinfo:
+        axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
+                                                                                    label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
+        axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
+                                                                                    label=gdat.truelablbias, marker='o', linewidth=2, color='g', facecolor='none')
+        axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
+                                                                                    label=gdat.truelablhits, marker='*', linewidth=2, color='g')
+    axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=2)
+        
+
 def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
 
-    # temp
-    if True:
-        if gdat.trueinfo:
-            axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                        label='Sample', marker='+', linewidth=2, color='b')
-            axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                        label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
-            axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                        label=gdat.truelablbias, marker='o', linewidth=2, color='g', facecolor='none')
-            axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                        label=gdat.truelablhits, marker='*', linewidth=2, color='g')
-        axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=2)
-        
     # true catalog
     if gdat.trueinfo:
         ## get the true catalog

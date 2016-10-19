@@ -300,7 +300,8 @@ def init( \
          # user interaction
          verbtype=1, \
          pathbase=os.environ["PCAT_DATA_PATH"], \
-         
+         writoutp=True, \
+
          # diagnostics
          # temp
          diagmode=True, \
@@ -318,6 +319,8 @@ def init( \
          # comparison with the reference catalog
          anglassc=None, \
          margfactcomp=0.9, \
+         
+         numbspatdims=2, \
 
          randinit=None, \
          optiprop=True, \
@@ -341,6 +344,7 @@ def init( \
          numbswepplot=50000, \
          makeplot=True, \
          scalmaps='asnh', \
+         satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
          
@@ -457,6 +461,13 @@ def init( \
             randinit = False
         else:
             randinit = True
+
+    # if the images are arcsinh scaled, do not saturate them
+    if satumaps == None:
+        if scalmaps == 'asnh':
+            satumaps = False
+        else:
+            satumaps = True
 
     # PS parameter distribution models
     if spatdisttype == None:
@@ -653,16 +664,14 @@ def init( \
             numbproc = 4
         else:
             numbproc = 1
-
+    
     # initialize the global object 
     gdat = tdpy.util.gdatstrt()
    
     # load the global object
     ## verbosity level
-    ### 0 - no output
-    ### 1 - progress
-    ### 2 - sampler diagnostics
     gdat.verbtype = verbtype
+    gdat.writoutp = writoutp
     
     ## plot settings
     ### MCMC time period over which a frame is produced
@@ -678,6 +687,9 @@ def init( \
     ## the function to measure execution time 
     gdat.strgfunctime = strgfunctime
     
+    # number of spatial dimensions
+    gdat.numbspatdims = numbspatdims
+
     ## MCMC setup
     ### number of sweeps, i.e., number of samples before thinning and including burn-in
     gdat.numbswep = numbswep
@@ -798,6 +810,9 @@ def init( \
     ## plotting
     ### color scaling of the count maps
     gdat.scalmaps = scalmaps
+    
+    ### Boolean flag to saturate the maps
+    gdat.satumaps = satumaps
     
     ### Boolean flag to make gif animations of the per-sample plots
     gdat.makeanim = makeanim
@@ -933,6 +948,9 @@ def init( \
     if not randinit and not exprinfo and datatype == 'inpt':
         raise Exception('If the data is provided by the user and no experimental information is given, initial state must be random.')
         
+    if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
+        raise Exception('More than 2 spatial dimensions require Cartesian binning.')
+
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -1201,6 +1219,8 @@ def init( \
     listdeltllik = empty((gdat.numbswep, gdat.numbproc))
     listdeltlpri = empty((gdat.numbswep, gdat.numbproc))
     listmemoresi = empty((gdat.numbsamp, gdat.numbproc))
+    listerrr = empty((gdat.numbsamp, gdat.numbproc, gdat.numbener, gdat.numbevtt))
+    listerrrfrac = empty((gdat.numbsamp, gdat.numbproc, gdat.numbener, gdat.numbevtt))
     maxmllikswep = empty(gdat.numbproc)
     indxswepmaxmllik = empty(gdat.numbproc, dtype=int)
     sampvarbmaxmllik = empty((gdat.numbproc, gdat.numbpara))
@@ -1236,8 +1256,10 @@ def init( \
         maxmllikswep[k] = listchan[24]
         indxswepmaxmlpos[k] = listchan[25]
         sampvarbmaxmlpos[k, :] = listchan[26]
-        timereal[k] = gridchan[k][27]
-        timeproc[k] = gridchan[k][28]
+        listerrr[:, k, :, :] = listchan[27]
+        listerrrfrac[:, k, :, :] = listchan[28]
+        timereal[k] = gridchan[k][29]
+        timeproc[k] = gridchan[k][30]
 
     print 'maxmllikswep'
     print maxmllikswep
@@ -1277,7 +1299,7 @@ def init( \
     # find the maximum likelihood and posterior over the chains
     indxprocmaxmllik = argmax(maxmllikswep)
     maxmllikswep = maxmllikswep[indxprocmaxmllik]
-    indxswepmaxmllik = indxswepmaxmllik[indxprocmaxmllik]
+    indxswepmaxmllik = indxprocmaxmllik * gdat.numbsamp + indxswepmaxmllik[indxprocmaxmllik]
     indxprocmaxmlpos = argmax(maxmlposswep)
     maxmlposswep = maxmlposswep[indxprocmaxmlpos]
     indxswepmaxmlpos = indxswepmaxmlpos[indxprocmaxmlpos]
@@ -1488,7 +1510,6 @@ def init( \
     head['strgcnfg'] = gdat.strgcnfg
     head['strgtimestmp'] = gdat.strgtimestmp
     head['numbback'] = gdat.numbback
-    head['scalmaps'] = gdat.scalmaps
     
     # proposal probabilities
     head['probpsfipara'] = gdat.probpsfipara
@@ -1499,9 +1520,10 @@ def init( \
     
     # plotting
     head['anotcatl'] = gdat.anotcatl
+    head['scalmaps'] = gdat.scalmaps
+    head['satumaps'] = gdat.satumaps
 
     head['timeatcr'] = timeatcr
-    
     head['strgfunctime'] = gdat.strgfunctime
     
     ## proposal scales
@@ -1609,10 +1631,11 @@ def init( \
         listhdun[-1].header['EXTNAME'] = 'aangpop%d' % l
 
         #### save the posterior positions as a CSV file
-        path = gdat.pathoutp + 'listlgalpop%d' % l + '.txt'  
-        savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
-        path = gdat.pathoutp + 'listbgalpop%d' % l + '.txt'  
-        savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
+        if gdat.writoutp:
+            path = gdat.pathoutp + 'listlgalpop%d' % l + '.txt'  
+            savetxt(path, listlgal[l], fmt='%7.5g', delimiter=',')
+            path = gdat.pathoutp + 'listbgalpop%d' % l + '.txt'  
+            savetxt(path, listbgal[l], fmt='%7.5g', delimiter=',')
 
     ### log-likelihood
     listhdun.append(pf.ImageHDU(listllik))
@@ -1623,7 +1646,8 @@ def init( \
     listhdun[-1].header['EXTNAME'] = 'lpri'
    
     ## store the lite file
-    pf.HDUList(listhdun).writeto(pathpcatlite, clobber=True, output_verify='ignore')
+    if gdat.writoutp:
+        pf.HDUList(listhdun).writeto(pathpcatlite, clobber=True, output_verify='ignore')
 
     ## unit sample vector
     listhdun.append(pf.ImageHDU(listsamp))
@@ -1882,9 +1906,10 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.truenormback))
         listhdun[-1].header['EXTNAME'] = 'mocknormback'
 
-    pf.HDUList(listhdun).writeto(pathpcat, clobber=True, output_verify='ignore')
-    if gdat.verbtype > 0:
-        print 'Writing the PCAT output of size %s to %s...' % (tdpy.util.retr_strgmemo(os.path.getsize(pathpcat)), pathpcat)
+    if gdat.writoutp:
+        pf.HDUList(listhdun).writeto(pathpcat, clobber=True, output_verify='ignore')
+        if gdat.verbtype > 0:
+            print 'Writing the PCAT output of size %s to %s...' % (tdpy.util.retr_strgmemo(os.path.getsize(pathpcat)), pathpcat)
 
     if gdat.makeplot:
         plot_post(pathpcat, verbtype=gdat.verbtype, makeanim=gdat.makeanim)
@@ -1962,7 +1987,7 @@ def plot_samp(gdat, gdatmodi):
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
     gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-    gdatmodi.thiserrrpnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
+    gdatmodi.thiserrrcnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
 
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
@@ -1989,7 +2014,7 @@ def plot_samp(gdat, gdatmodi):
             plot_datacnts(gdat, l, gdatmodi, i, None)
             plot_modlcnts(gdat, l, gdatmodi, i, None)
             plot_resicnts(gdat, l, gdatmodi, i, None)
-            plot_errrpnts(gdat, gdatmodi, i, None)
+            plot_errrcnts(gdat, gdatmodi, i, None)
 
             # temp
             #plot_scatpixl(gdat, gdatmodi=gdatmodi)
@@ -2004,7 +2029,7 @@ def plot_samp(gdat, gdatmodi):
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
     # temp
-    if False and amax(fabs(gdatmodi.thiserrrpnts)) > 0.1:
+    if False and amax(fabs(gdatmodi.thiserrrcnts)) > 0.1:
         raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
     
 
@@ -2024,6 +2049,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
     listindxpntsfull = []
+    listerrr = empty((gdat.numbsamp, gdat.numbener, gdat.numbevtt))
+    listerrrfrac = empty((gdat.numbsamp, gdat.numbener, gdat.numbevtt))
     listboolreje = empty(gdat.numbswep, dtype=bool)
     listdeltllik = zeros(gdat.numbswep)
     listdeltlpri = zeros(gdat.numbswep)
@@ -2234,6 +2261,16 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[gdat.indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
             
+
+             
+            temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
+            gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+            gdatmodi.thiserrrcnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
+            gdatmodi.thiserrr = gdatmodi.thispntscnts - temppntscnts
+            
+            listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
+            listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 
+            
             listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
             listlpri[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
             lprinorm = 0.
@@ -2320,7 +2357,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
         listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
-        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos]
+        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos, \
+        listerrr, listerrrfrac]
     
     return listchan
 
