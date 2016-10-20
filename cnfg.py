@@ -185,10 +185,10 @@ def test_psfn():
         mockpsfntype = tupl[k][3]
 
         init( \
-             numbswep=500, \
+             numbswep=10000, \
              numbburn=0, \
-             factthin=1, \
-             #exprinfo=False, \
+             factthin=10, \
+             randinit=False, \
              boolpropsind=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(3, 4), \
@@ -240,8 +240,8 @@ def test_errr():
            ]
     numbtupl = len(tupl)
     indxtupl = arange(numbtupl)
-    posterrrfracpixl = empty(numbtupl)
-    posterrrfracpnts = empty(numbtupl)
+    posterrrfracdimm = empty((3, numbtupl))
+    posterrrfrac = empty((3, numbtupl))
     strgtupl = empty(numbtupl, dtype=object)
     for k in range(numbtupl):
         
@@ -273,23 +273,23 @@ def test_errr():
                                       datatype='mock', \
                                       mocknumbpnts=array([50]), \
                                      )
-            posterrrfracpixl[k] = dictpcat['posterrrfracpixl']
-            posterrrfracpnts[k] = dictpcat['posterrrfracpnts']
+            posterrrfracdimm[:, k] = dictpcat['posterrrfracdimm'].flatten()
+            posterrrfrac[:, k] = dictpcat['posterrrfrac'].flatten()
         else:
-            posterrrfracpixl[k] = rand()
-            posterrrfracpnts[k] = rand()
+            posterrrfracdimm[:, k] = rand()
+            posterrrfrac[:, k] = rand()
 
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_errr/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    liststrg = ['posterrrfracpixl', 'posterrrfracpnts']
+    liststrg = ['posterrrfracdimm', 'posterrrfrac']
     listlabl = [r'$\epsilon_m$ [%]', r'$\epsilon_d$ [%]']
-    listvarb = [posterrrfracpixl, posterrrfracpnts]
+    listvarb = [posterrrfracdimm, posterrrfrac]
     numbplot = len(liststrg)
     for k in range(numbplot):
         figr, axis = plt.subplots()
-        axis.bar(indxtupl, listvarb[k], 2 * size)
+        axis.errorbar(indxtupl, listvarb[k], yerr=listvarb[k], marker='o')
         axis.set_ylabel(listlabl[k])
         axis.set_xticks(indxtupl + size)
         axis.set_xticklabels(strgtupl, rotation=45)

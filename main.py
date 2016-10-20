@@ -128,8 +128,8 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampcomp[l], 0] = rand(gdatmodi.thisindxsampcomp[l].size)
         else:
             try:
-                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
-                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg))
+                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
                 if gdat.fluxdisttype[l] == 'powr':
                     fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
                     fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], fluxdistslop)
@@ -371,7 +371,7 @@ def init( \
          # prior
          priotype='logt', \
          priofactdoff=0., \
-         margfactmodl=1.1, \
+         margfactmodl=0.9, \
          bindprio=False, \
          maxmnormback=None, \
          minmnormback=None, \
@@ -581,6 +581,8 @@ def init( \
             radispmrlbhl = deg2rad(2. / 3600.)
         if maxmgang == None:
             maxmgang = deg2rad(100. / 3600.)
+        if binsenerfull == None:
+            binsenerfull = array([0.5e-3, 2e-3, 7e-3])
         if anglassc == None:
             anglassc = deg2rad(0.5 / 3600.)
         if pixltype == None:
@@ -604,7 +606,7 @@ def init( \
         if strgenerunit == None:
             strgenerunit = r'KeV'
         if strgfluxunit == None:
-            strgfluxunit = r'[1/cm$^2$/s/KeV]'
+            strgfluxunit = r'1/cm$^2$/s/KeV'
 
     ## SDSS
     if exprtype == 'sdss':
@@ -1014,11 +1016,11 @@ def init( \
         gdat.mocksind = [[] for l in gdat.mockindxpopl]
         for l in gdat.mockindxpopl:
             if gdat.mockspatdisttype[l] == 'unif':
-                gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg)
-                gdat.mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+                gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl)
+                gdat.mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
             if gdat.mockspatdisttype[l] == 'disc':
                 gdat.mockbgal[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang) * choice(array([1., -1.]), size=gdat.mocknumbpnts[l])
-                gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmarg, 2. * gdat.maxmgangmarg) 
+                gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
             if gdat.mockspatdisttype[l] == 'gang':
                 gdat.mockgang[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang)
                 gdat.mockaang[l] = icdf_self(rand(gdat.mocknumbpnts[l]), 0., 2. * pi)
@@ -1284,11 +1286,16 @@ def init( \
     listboolreje = listboolreje.reshape(gdat.numbsweptotl)
     listdeltllik = listdeltllik.reshape(gdat.numbsweptotl)
     listdeltlpri = listdeltlpri.reshape(gdat.numbsweptotl)
+    listerrr = listerrr.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
+    listerrrfrac = listerrrfrac.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
     listindxpntsfulltemp = []
     for k in gdat.indxproc:
         for j in gdat.indxsamp:      
             listindxpntsfulltemp.append(listindxpntsfull[k][j])
     listindxpntsfull = listindxpntsfulltemp
+   
+    # compute the approximation error as a fraction of the counts expected from the dimmest PS for the mean exposure
+    listerrrfracdimm = listerrr / (gdat.minmflux * mean(gdat.expo, 1)[None, :, :] * gdat.diffener[None, :, None]) 
 
     # correct the likelihoods for the constant data dependent factorial
     llikoffs = sum(sp.special.gammaln(gdat.datacnts + 1))
@@ -1351,10 +1358,19 @@ def init( \
     listnumbpnts = sum(listnumbpntspopl, 1)[:, None]
     
     dictpcat['info'] = info
-    dictpcat['postmeanpnts'] = tdpy.util.retr_postvarb(listmeanpnts).flatten()
-
-    dictpcat['postnumbpnts'] = tdpy.util.retr_postvarb(listnumbpnts).flatten()
+    dictpcat['stdvmeanpnts'] = tdpy.util.retr_errrvarb(listmeanpnts, samp=True)
+    dictpcat['stdvnumbpnts'] = tdpy.util.retr_errrvarb(listnumbpnts, samp=True)
     dictpcat['listmemoresi'] = listmemoresi
+   
+    print 'hey'
+    print 'listerrrfracdimm'
+    print listerrrfracdimm.shape
+    print 'tdpy.util.retr_postvarb(listerrrfracdimm)'
+    print tdpy.util.retr_postvarb(listerrrfracdimm).shape
+    print
+
+    dictpcat['stdverrrfracdimm'] = tdpy.util.retr_errrvarb(listerrrfracdimm, samp=True)
+    dictpcat['stdverrrfrac'] = tdpy.util.retr_errrvarb(listerrrfrac, samp=True)
 
     ## PS parameters
     listlgal = []
@@ -2066,6 +2082,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     ## log-likelihood
     retr_llik(gdat, gdatmodi, init=True)
+    gdatmodi.thislliktotl = sum(gdatmodi.thisllik)
     ## log-prior
     retr_lpri(gdat, gdatmodi, init=True)
 
@@ -2326,7 +2343,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         # save the execution time for the sweep
         if not thismakefram:
             timetotlfinl = gdat.functime()
-            listchrototl[gdat.indxsampsave[gdatmodi.cntrswep], 0] = timetotlfinl - timetotlinit
+            listchrototl[gdatmodi.cntrswep, 0] = timetotlfinl - timetotlinit
 
         # log the progress
         if gdat.verbtype > 0:

@@ -729,7 +729,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                 truepara = None
             titl = gdat.binsenerstrg[i]
             labl = gdat.lablback[c] + '$_{%d}$' % i
-            tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl)
+            tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl, scalpara='logt')
 
     ## joint distribution of background component pairs
     for i in gdat.indxener:
@@ -741,7 +741,15 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                 else:
                     truepara = None
                 indxbackpair = array([c, k])
+                print 'hey'
+                print 'gdat.lablback'
+                print gdat.lablback
                 strgpara = ['%s$_{%d}$' % (gdat.lablback[a], i) for a in indxbackpair]
+                print 'indxbackpair'
+                print indxbackpair
+                print 'strgpara'
+                print strgpara
+                print 
                 tdpy.mcmc.plot_grid(path, gdat.listnormback[:, indxbackpair, i], strgpara, truepara=truepara, join=True)
     
     # plot log-likelihood
@@ -1390,12 +1398,8 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                     axis.set_ylabel(gdat.latilabl)
                 else:
                     axis.set_yticklabels([])
-                axis.set_xlim([gdat.frambndrmarg, -gdat.frambndrmarg])
-                axis.set_ylim([-gdat.frambndrmarg, gdat.frambndrmarg])
-                axis.axvline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-                axis.axvline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-                axis.axhline(gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
-                axis.axhline(-gdat.frambndr, ls='--', alpha=gdat.alphmrkr, color='black')
+
+                draw_frambndr(gdat, axis)
                 
                 titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxlowr]) + ' $< f <$' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr])
                 axis.set_title(titl)
@@ -1670,7 +1674,7 @@ def plot_mosa(gdat):
                             else:
                                 axis.set_yticklabels([])
                             
-                            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i])
                             supr_fram(gdat, gdatmodi, axis, i, m)
                    
                     plt.figtext(0.5, 0.93, gdat.binsenerstrg[i], ha='center', va='center')
