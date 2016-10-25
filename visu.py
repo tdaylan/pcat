@@ -24,6 +24,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.numbproc = hdun[0].header['numbproc']
     gdat.pathbase = hdun[0].header['pathbase']
     
+    gdat.pntstype = hdun[0].header['pntstype']
+    
     gdat.numbpsfipara = hdun[0].header['numbpsfipara']
     gdat.numbformpara = hdun[0].header['numbformpara']
     
@@ -41,6 +43,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     gdat.strgfunctime = hdun[0].header['strgfunctime']
 
+    gdat.numbfluxprox = hdun[0].header['numbfluxprox']
     timeatcr = hdun[0].header['timeatcr']
     
     gdat.anglassc = hdun[0].header['anglassc']
@@ -102,6 +105,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.maxmlposswep = hdun[0].header['maxmlposswep']
     
     gdat.strgenerunit = hdun[0].header['strgenerunit']
+    gdat.strgflux = hdun[0].header['strgflux']
     gdat.strgfluxunit = hdun[0].header['strgfluxunit']
     gdat.maxmangl = hdun[0].header['maxmangl']
     gdat.margfactmodl = hdun[0].header['margfactmodl']
@@ -571,8 +575,9 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
 
     # color distribution
-    for l in gdat.indxpopl:
-        plot_histsind(gdat, l, listsindhist=gdat.listsindhist[:, l, :])
+    if gdat.pntstype == 'lght' and gdat.numbener > 1:
+        for l in gdat.indxpopl:
+            plot_histsind(gdat, l, listsindhist=gdat.listsindhist[:, l, :])
 
     # fraction of emission components
     if gdat.numbback == 2:
@@ -692,7 +697,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                     truepara = None
             else:
                 truepara = None
-            labl =  r'$f_b$'
+            labl =  r'$%s_b$' % gdat.strgflux
             tdpy.mcmc.plot_trac(path, gdat.listfluxdistbrek[:, l], labl, truepara=truepara, scalpara='logt')
         
             # lower power law index
@@ -807,7 +812,7 @@ def plot_chro(gdat):
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:
             if gdat.verbtype > 0:
-                print 'Skipping choronometer histogram...'
+                print 'Skipping proposal timing plot...'
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
         axcl[k].set_ylabel(gdat.strgprop[k])
@@ -845,28 +850,32 @@ def plot_chro(gdat):
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
-    listlabl = ['Reading sample', 'Gathering pixels', 'Meshing pixels', 'PS flux map', 'Total Flux map', 'Counts', 'Likelihood']
+    if gdat.pntstype == 'lght':
+        listlabl = ['Reading sample', 'Gathering pixels', 'Meshing pixels', 'PS flux map', 'Total Flux map', 'Counts', 'Likelihood']
+    if gdat.pntstype == 'lens':
+        listlabl = ['Solving LE', 'Counts', 'Likelihood']
     numblabl = len(listlabl)
     figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
     maxmchrollik = amax(gdat.listchrollik)
-    if maxmchrollik > 0.:
-        minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
-        if maxmchrollik != minmchrollik:
-            binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
-            for k in range(gdat.numbchrollik):
-                chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
-                axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
-                axcl[k].set_xlim([amin(binstime), amax(binstime)])
-                axcl[k].set_ylim([0.5, None])
-                axcl[k].set_ylabel(listlabl[k])
-                axcl[k].set_xscale('log')
-                if k != gdat.numbchrollik - 1:
-                    axcl[k].set_xticklabels([])
-                axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
-            axcl[-1].set_xlabel('$t$ [ms]')
-            plt.subplots_adjust(hspace=0.05)
-            figr.savefig(gdat.pathplot + 'chrollik.pdf')
-            plt.close(figr)
+    minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
+    binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
+    for k in range(gdat.numbchrollik):
+        chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
+        try:
+            axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
+        except:
+            print 'Skipping likelihood timing plot...'
+        axcl[k].set_xlim([amin(binstime), amax(binstime)])
+        axcl[k].set_ylim([0.5, None])
+        axcl[k].set_ylabel(listlabl[k])
+        axcl[k].set_xscale('log')
+        if k != gdat.numbchrollik - 1:
+            axcl[k].set_xticklabels([])
+        axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
+    axcl[-1].set_xlabel('$t$ [ms]')
+    plt.subplots_adjust(hspace=0.05)
+    figr.savefig(gdat.pathplot + 'chrollik.pdf')
+    plt.close(figr)
 
 
 def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
@@ -1031,7 +1040,7 @@ def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, li
             else:
                 axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=gdat.alphmrkr, color='r', label=gdat.nameexpr)
     axis.set_xscale('log')
-    axis.set_xlabel('$f$ [%s]' % gdat.strgfluxunit)
+    axis.set_xlabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
     axis.set_ylabel('$s$')
     axis.set_xlim([gdat.minmflux, gdat.maxmflux])
     axis.set_ylim([gdat.minmsind, gdat.maxmsind])
@@ -1078,7 +1087,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     for i in indxenertemp:
         axis = axcl[i]
         if post:
-            xdat = gdat.meanspec[i, :]
+            xdat = gdat.factfluxconv * gdat.meanspec[i, :]
             postspechist = tdpy.util.retr_postvarb(listspechist[:, :, i])
             ydat = postspechist[0, :]
             yerr = tdpy.util.retr_errrvarb(postspechist)
@@ -1087,7 +1096,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, gdatmodi.indxmodlpntscomp[l]]
             # temp -- gdat.binsspec may be too narrow if there are many energy bins or PS colors are extreme
             try:
-                axis.hist(spec, gdat.binsspec[i, :], alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
+                axis.hist(gdat.factfluxconv * spec, gdat.factfluxconv * gdat.binsspec[i, :], alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
             except:
                 print 'Spectral bins are inappropriate. Skipping the spectral histogram...'
             
@@ -1102,39 +1111,41 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                     fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[l]]  
                     fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxsampfluxdistslopuppr[l]]  
                     fluxhistmodl = meanpnts * pdfn_flux_brok(gdat, gdat.meanflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr) * gdat.diffflux
-                axis.plot(gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=gdat.alphmrkr, color='b')
+                axis.plot(gdat.factfluxconv * gdat.meanspec[i, :], fluxhistmodl, ls='--', alpha=gdat.alphmrkr, color='b')
 
-        # add another horizontal axis for counts
-        axiscnts = axis.twiny()
-        axiscnts.set_xscale('log')
-        axiscnts.set_xlabel('$C$')
-        axiscnts.spines['bottom'].set_position(('axes', 1.))
-        axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
-        axiscnts.xaxis.set_ticks_position('bottom')
-        axiscnts.xaxis.set_label_position('bottom')
-        
-        # add yet another horizontal axis for fluctuation significance
-        axissigm = axis.twiny()
-        axissigm.set_xscale('log')
-        axissigm.set_xlabel(r'$\sigma$')
-        axissigm.spines['top'].set_position(('axes', 1.05))
-        axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
-        axissigm.axvline(1., ls='--', alpha=0.1)
-        axissigm.axvline(5., ls='--', alpha=0.1)
-
+        if gdat.pntstype == 'lght':
+            # add another horizontal axis for counts
+            axiscnts = axis.twiny()
+            axiscnts.set_xscale('log')
+            axiscnts.set_xlabel('$C$')
+            axiscnts.spines['bottom'].set_position(('axes', 1.))
+            axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
+            axiscnts.xaxis.set_ticks_position('bottom')
+            axiscnts.xaxis.set_label_position('bottom')
+            
+            # add yet another horizontal axis for fluctuation significance
+            axissigm = axis.twiny()
+            axissigm.set_xscale('log')
+            axissigm.set_xlabel(r'$\sigma$')
+            axissigm.spines['top'].set_position(('axes', 1.05))
+            axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
+            axissigm.axvline(1., ls='--', alpha=0.1)
+            axissigm.axvline(5., ls='--', alpha=0.1)
+    
         # superimpose the true catalog
         if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
-            truehist = axis.hist(gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.binsspec[i, :], alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
+            truehist = axis.hist(gdat.factfluxconv * gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.factfluxconv * gdat.binsspec[i, :], alpha=gdat.alphmrkr, \
+                                                                                                                            color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock' and gdat.exprinfo:
                 if gdat.exprtype == 'ferm':
-                    axis.hist(gdat.exprspec[0, i, :], gdat.binsspec[i, :], color='red', alpha=gdat.alphmrkr, log=True, label='3FGL')
+                    axis.hist(gdat.factfluxconv * gdat.exprspec[0, i, :], gdat.factfluxconv * gdat.binsspec[i, :], color='red', alpha=gdat.alphmrkr, log=True, label='3FGL')
         
         axis.set_yscale('log')
-        axis.set_xlabel('$f$ [%s]' % gdat.strgfluxunit)
+        axis.set_xlabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         axis.set_xscale('log')
         axis.text(0.75, 0.65, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
         axis.set_ylim([0.5, None])
-        axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
+        axis.set_xlim([gdat.factfluxconv * gdat.minmspec[i], gdat.factfluxconv * gdat.maxmspec[i]])
         if plotspec:
             if i == 0:
                 axis.set_ylabel('$N$')
@@ -1183,33 +1194,36 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         # plot all associations
         indx = where(ydat > 0.)[0]
         if indx.size > 0:
-            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black', alpha=0.1)
+            axis.errorbar(gdat.factfluxconv * xdat[indx], gdat.factfluxconv * ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
+                                                                                                    lw=1, marker='o', markersize=5, color='black', alpha=0.1)
        
         # plot associations inside the comparison area
         indx = intersect1d(where(ydat > 0.)[0], gdat.indxtruepntscomp[l])
         if indx.size > 0:
-            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
+            axis.errorbar(gdat.factfluxconv * xdat[indx], gdat.factfluxconv * ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
+                                                                                                    lw=1, marker='o', markersize=5, color='black')
         
         # plot associations to multiple model point sources
         if not post:
             indx = intersect1d(gdatmodi.indxtruepntsassc[l].mult, gdat.indxtruepntscomp[l])
             if len(indx) > 0:
-                axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='r')
+                axis.errorbar(gdat.factfluxconv * xdat[indx], gdat.factfluxconv * ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
+                                                                                                                        lw=1, marker='o', markersize=5, color='r')
     
         # superimpose the bias line
         fluxbias = retr_fluxbias(gdat, gdat.binsspec[i, :], i)
-        axis.plot(gdat.binsspec[i, :], gdat.binsspec[i, :], ls='--', alpha=gdat.alphmrkr, color='black')
-        axis.plot(gdat.binsspec[i, :], fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
-        axis.plot(gdat.binsspec[i, :], fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
+        axis.plot(gdat.factfluxconv * gdat.binsspec[i, :], gdat.factfluxconv * gdat.binsspec[i, :], ls='--', alpha=gdat.alphmrkr, color='black')
+        axis.plot(gdat.factfluxconv * gdat.binsspec[i, :], gdat.factfluxconv * fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
+        axis.plot(gdat.factfluxconv * gdat.binsspec[i, :], gdat.factfluxconv * fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
         
         if gdat.datatype == 'mock':
             strg = 'true'
         else:
             if gdat.exprtype == 'ferm':
                 strg = '3FGL'
-        axis.set_xlabel('$f_{%s}$ [%s]' % (strg, gdat.strgfluxunit))
+        axis.set_xlabel('$%s_{%s}$ [%s]' % (gdat.strgflux, strg, gdat.strgfluxunit))
         if i == 0:
-            axis.set_ylabel('$f_{samp}$ [%s]' % gdat.strgfluxunit)
+            axis.set_ylabel('$%s_{samp}$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         if i == gdat.numbener / 2:
             axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black', alpha=0.1)
             axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black')
@@ -1218,8 +1232,8 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axis.set_xscale('log')
         axis.set_yscale('log')
         axis.set_title(gdat.enerstrg[i])
-        axis.set_ylim([gdat.minmspec[i], gdat.maxmspec[i]])
-        axis.set_xlim([gdat.minmspec[i], gdat.maxmspec[i]])
+        axis.set_ylim([gdat.factfluxconv * gdat.minmspec[i], gdat.factfluxconv * gdat.maxmspec[i]])
+        axis.set_xlim([gdat.factfluxconv * gdat.minmspec[i], gdat.factfluxconv * gdat.maxmspec[i]])
         axis.set_title(gdat.binsenerstrg[i])
 
     if postspecmtch != None:
@@ -1401,10 +1415,10 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
 
                 draw_frambndr(gdat, axis)
                 
-                titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxlowr]) + ' $< f <$' + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr])
+                titl = tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxlowr]) + ' $< %s <$' % gdat.strgflux + tdpy.util.mexp(gdat.binsspec[gdat.indxenerfluxdist, indxuppr])
                 axis.set_title(titl)
         
-        plt.figtext(0.5, 0.97, '$f$ [%s]' % gdat.strgfluxunit, ha='center', va='center')
+        plt.figtext(0.5, 0.97, '$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit), ha='center', va='center')
         axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
         cbar = figr.colorbar(imag, cax=axiscomm)
         #cbar.set_ticks(gdat.tickdatacnts[i, :])
@@ -1616,7 +1630,7 @@ def plot_eval(gdat):
             axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
     axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
-    axis.set_ylabel('$f$ [%s]' % gdat.strgfluxunit)
+    axis.set_ylabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
 
     limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
     maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0][::-1], gdat.binsanglplot[::-1])
@@ -1914,13 +1928,21 @@ def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'errrcnts')
-    imag = retr_fram(gdat, axis, gdatmodi.thiserrrcnts, indxenerplot, indxevttplot, vmax=gdat.maxmerrrcnts[indxenerplot], cmap='RdBu', mean=True)
-    make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickerrrcnts[indxenerplot, :], labl=gdat.lablerrrcnts[indxenerplot, :])
-
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
+    listtupl = [ \
+                #['errrcnts', False, gdatmodi.thiserrrcnts, gdat.maxmerrrcnts[indxenerplot], gdat.tickerrrcnts[indxenerplot, :], gdat.lablerrrcnts[indxenerplot, :]], \
+                #[    'errr',  True,     gdatmodi.thiserrr,     gdat.maxmerrr[indxenerplot],     gdat.tickerrr[indxenerplot, :],     gdat.lablerrr[indxenerplot, :]], \
+                ['errrcnts', False, gdatmodi.thiserrrcnts, None, None, None], \
+                [    'errr',  True,     gdatmodi.thiserrr, None, None, None], \
+               ]
+    numbiter = len(listtupl)
+    for k in range(numbiter):
+        strg, boolmean, varb, vmax, tick, labl = listtupl[k] 
+        figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strg)
+        imag = retr_fram(gdat, axis, varb, indxenerplot, indxevttplot, vmax=vmax, cmap='RdBu', mean=boolmean)
+        make_cbar(gdat, axis, imag, indxenerplot, tick=tick, labl=labl)
+        plt.tight_layout()
+        plt.savefig(path)
+        plt.close(figr)
     
     
 def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):

@@ -121,7 +121,7 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
         else:
             gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
-    
+
     ## PS components
     for l in gdat.indxpopl:
         if gdat.randinit:
@@ -152,10 +152,37 @@ def work(gdat, indxprocwork):
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
-    
-    ## PS and total flux and count maps
-    gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
    
+    if gdat.pntstype == 'lens':
+        # create the lens object
+        gdatmodi.lens = tdpy.util.gdatstrt()
+    
+    ## initial predicted count maps
+    if gdat.pntstype == 'lght':
+        gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = retr_maps(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissampvarb)
+    if gdat.pntstype == 'lens':
+        gdatmodi.thispntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        for l in gdat.indxpopl:
+            for k in range(gdatmodi.thissampvarb[gdat.indxsampnumbpnts[l]].astype(int)):
+                
+                # create the initial lens model object
+                gdatmodi.lens.lensmodl = franlens.LensModel(gdat.lens.mocklenstype, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][k]], \
+                                                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][k]], \
+                                                                                    gdat.lens.mockellplens, gdat.lens.mockangllens, gdat.lens.mocksherlens, \
+                                                                                           gdat.lens.mocksanglens, gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][0, k]])
+        
+                # calculate the initial predicted flux map
+                gdatmodi.thispntsflux[0, :, 0] += franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdatmodi.lens.lensmodl, gdat.lens.mockpsfnscal).flatten()
+
+        gdatmodi.thismodlflux = gdatmodi.thispntsflux
+        gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+        gdatmodi.thismodlcnts = gdatmodi.thispntscnts
+    
+    # temp
+    if gdat.pntstype == 'lens':
+        if gdatmodi.thismodlcnts.shape[1] != gdat.numbpixl:
+            raise Exception('Number of pixels in the lensing map mismatches with that of PCAT')
+
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -167,29 +194,6 @@ def work(gdat, indxprocwork):
         gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
         gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.thispsfn, axis=1)
         gdatmodi.thispsfnneww = gdatmodi.thispsfnintp(gdat.binsangl)
-        
-        if False:
-            print 'hey'
-            print 'gdatmodi.thispsfn'
-            print gdatmodi.thispsfn[0, :10, 0]
-            print 'gdatmodi.thispsfnneww'
-            print gdatmodi.thispsfnneww[0, :10, 0]
-            print 'gdatmodi.thispsfnneww - gdatmodi.thispsfn'
-            print 100. * (gdatmodi.thispsfnneww.flatten() - gdatmodi.thispsfn.flatten()) / gdatmodi.thispsfn.flatten()
-            angltest = linspace(0., deg2rad(1.), 100)
-            psfntestexac = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, angltest, gdat.modlpsfntype).flatten()
-            psfntestintp = gdatmodi.thispsfnintp(angltest).flatten()
-            print 'psfntestintp'
-            print psfntestintp[:10]
-            print 'psfntestexac'
-            print psfntestexac[:10]
-            print 'errr'
-            print 100. * (psfntestintp - psfntestexac) / psfntestexac
-            print 'gdat.binsangl[:10]'
-            print rad2deg(gdat.binsangl[:10])
-            print 'angltest[:10]'
-            print rad2deg(angltest[:10])
-            return
         
     # log-prior
     if gdat.bindprio:
@@ -203,9 +207,8 @@ def work(gdat, indxprocwork):
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
-        print 'bad index vector'
+        print 'indxsampbadd'
         print indxsampbadd
-        print (indxsampbadd - gdat.indxsampcompinit ) % gdat.numbcomp
         print 
         gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
         gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
@@ -213,22 +216,22 @@ def work(gdat, indxprocwork):
     # allocate memory for variables to hold the proposed state
     ## sample vector
     gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
-    
-    ## flux and count maps
-    gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
-    gdatmodi.nextmodlflux = zeros_like(gdatmodi.thispntsflux)
-    gdatmodi.nextmodlcnts = zeros_like(gdatmodi.thispntsflux)
-    
+        
     ## likelihood
-    gdatmodi.nextllik = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.nextllik = zeros_like(gdatmodi.thismodlcnts)
     gdatmodi.deltllik = 0.
-    
+        
     ## modification catalog
     gdatmodi.modilgal = empty(gdat.maxmnumbpntstotl)
     gdatmodi.modibgal = empty(gdat.maxmnumbpntstotl)
     gdatmodi.modisind = empty(gdat.maxmnumbpntstotl)
     gdatmodi.modispec = empty((gdat.numbener, gdat.maxmnumbpntstotl))
     
+    ## flux and count maps
+    gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.nextmodlflux = zeros_like(gdatmodi.thispntsflux)
+    gdatmodi.nextmodlcnts = zeros_like(gdatmodi.thispntsflux)
+        
     # plotting variables
     gdatmodi.thisbackfwhmcnts = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
    
@@ -319,8 +322,12 @@ def init( \
          # comparison with the reference catalog
          anglassc=None, \
          margfactcomp=0.9, \
-         
+        
+         indxenerfull=None, \
+
          numbspatdims=2, \
+
+         pntstype='lght', \
 
          randinit=None, \
          optiprop=True, \
@@ -343,7 +350,7 @@ def init( \
          # plotting
          numbswepplot=50000, \
          makeplot=True, \
-         scalmaps='asnh', \
+         scalmaps='linr', \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
@@ -357,6 +364,7 @@ def init( \
          binsangltype='logt', \
          numbsidepntsprob=400, \
          strgfluxunit=None, \
+         strgflux=None, \
          strgenerunit=None, \
          binsenerfull=None, \
          indxevttfull=None, \
@@ -406,10 +414,11 @@ def init( \
          stdvsind=0.15, \
          stdvspmrsind=0.2, \
          fracrand=0.05, \
-         boolpropfluxdistbrek=True, \
-         boolpropsind=True, \
-         boolproppsfn=False, \
          boolpropfluxdist=True, \
+         boolpropfluxdistbrek=True, \
+         boolproppsfn=False, \
+         boolpropnormback=False, \
+         boolpropsind=True, \
          radispmrlbhl=None, \
 
          # initial state 
@@ -434,7 +443,7 @@ def init( \
          mocksinddiststdv=None, \
          mocknormback=None, \
          mocknumbpnts=None, \
-         numbsidecart=None, \
+         numbsidecart=200, \
          numbsideheal=256, \
         ):
 
@@ -569,6 +578,56 @@ def init( \
             indxenerfull = arange(5)
             indxevttfull = arange(4)
 
+    if pntstype == 'lens':
+        if strgflux == None:
+            strgflux = 'R'
+            strgfluxunit = r'arcsec'
+    else:
+        if strgflux == None:
+            strgflux = 'f'
+
+    if exprtype == 'ferm':
+        numbfluxprox = 3
+    if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
+        numbfluxprox = 1
+    
+    ## Lensing
+    if exprtype == 'hubb':
+        exprpsfntype = None
+        if modlpsfntype == None:
+            modlpsfntype = 'singgaus'
+        if mockpsfntype == None:
+            mockpsfntype = 'singgaus'
+        if maxmgang == None:
+            maxmgang = deg2rad(2. / 3600.)
+        if anglassc == None:
+            anglassc = deg2rad(0.15 / 3600.)
+        if radispmrlbhl == None:
+            radispmrlbhl = deg2rad(2. / 3600.)
+        if lablback == None:
+            if numbback == 1:
+                lablback = [r'$\mathcal{I}$']
+            else:
+                lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+        if nameback == None:
+            nameback = ['normisot', 'normfdfm']
+        if strgenerunit == None:
+            strgenerunit = r'r-band'
+        if strgfluxunit == None:
+            strgfluxunit = r'mag'
+        if binsenerfull == None:
+            binsenerfull = array([1e-9, 2e-9])
+        if indxevttfull == None:
+            indxevttfull = arange(1)
+        if indxenerfull == None:
+            indxenerfull = arange(1)
+        if lablback == None:
+            lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+        if nameback == None:
+            nameback = ['normisot', 'normfdfm']
+        if pixltype == None:
+            pixltype = 'heal'
+
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
         if indxevttfull == None:
@@ -587,8 +646,6 @@ def init( \
             anglassc = deg2rad(0.5 / 3600.)
         if pixltype == None:
             pixltype = 'cart'
-        if numbsidecart == None:
-            numbsidecart = 100
         if modlpsfntype == None:
             modlpsfntype = 'singgaus'
         if mockpsfntype == None:
@@ -692,6 +749,9 @@ def init( \
     # number of spatial dimensions
     gdat.numbspatdims = numbspatdims
 
+    # type of point sources
+    gdat.pntstype = pntstype
+
     ## MCMC setup
     ### number of sweeps, i.e., number of samples before thinning and including burn-in
     gdat.numbswep = numbswep
@@ -702,6 +762,8 @@ def init( \
     ### the factor by which to thin the chain
     gdat.factthin = factthin
     
+    gdat.numbfluxprox = numbfluxprox
+
     ## axes
     ### energy
     gdat.binsenerfull = binsenerfull
@@ -742,10 +804,11 @@ def init( \
     gdat.exprpsfntype = exprpsfntype
     
     ## flag to turn off PSF parameter updates
-    gdat.boolpropfluxdistbrek = boolpropfluxdistbrek
-    gdat.boolpropsind = boolpropsind
-    gdat.boolproppsfn = boolproppsfn
     gdat.boolpropfluxdist = boolpropfluxdist
+    gdat.boolpropfluxdistbrek = boolpropfluxdistbrek
+    gdat.boolproppsfn = boolproppsfn
+    gdat.boolpropnormback = boolpropnormback
+    gdat.boolpropsind = boolpropsind
 
     ## optimize the proposal frequencies and scales
     gdat.optiprop = optiprop
@@ -771,6 +834,7 @@ def init( \
     gdat.maxmangl = maxmangl
     gdat.strgenerunit = strgenerunit
     gdat.strgfluxunit = strgfluxunit
+    gdat.strgflux = strgflux
 
     ## PS parameter distribution models
     ### spatial
@@ -938,6 +1002,16 @@ def init( \
     ## the paths of the input data and images
     gdat.pathbase = pathbase
 
+    # name of the experiment
+    if gdat.exprtype == 'ferm':
+        gdat.nameexpr = 'Fermi-LAT'
+    if gdat.exprtype == 'sdss':
+        gdat.nameexpr = 'SDSS'
+    if gdat.exprtype == 'chan':
+        gdat.nameexpr = 'Chandra'
+    if gdat.exprtype == 'hubb':
+        gdat.nameexpr = 'Hubble'
+    
     # temp
     # check inputs
     if numbburn != None:
@@ -952,6 +1026,13 @@ def init( \
         
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
+
+    if gdat.pntstype == 'lens':
+        import franlens
+        gdat.pixltype = 'cart'
+        gdat.boolproppsfn = False
+        gdat.boolpropsind = False
+        gdat.boolpropnormback = False
 
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -1052,19 +1133,81 @@ def init( \
             
             gdat.mockcnts[l] = gdat.mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         
-        mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
-        mocktotlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
-        mocktotlcnts = mocktotlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+        # mock mean count map
+        if gdat.pntstype == 'lght':
+            mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
+            gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
+            gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+        if gdat.pntstype == 'lens':
+            gdat.lens.mockpsfnscal = 0.1
+            # create the source object
+            gdat.lens.mocksourtype = 'Gaussian'
+            gdat.lens.mocklgalsour = 0.
+            gdat.lens.mockbgalsour = 0.
+            gdat.lens.mockfluxsour = 1.
+            gdat.lens.mocksizesour = 1e-6 # gdat.maxmgang / 2.
+            gdat.lens.mockratisour = 1.
+            gdat.lens.mockanglsour = 0.
+            gdat.lens.mocksourmodl = franlens.Source(gdat.lens.mocksourtype, gdat.lens.mocklgalsour, gdat.lens.mockbgalsour, gdat.lens.mockfluxsour, \
+                                                                                                    gdat.lens.mocksizesour, gdat.lens.mockratisour, gdat.lens.mockanglsour)
+            # create the lens object
+            gdat.lens.mocklenstype = 'SIE'
+            gdat.lens.mockellplens = 0.
+            gdat.lens.mockangllens = 0.
+            gdat.lens.mocksherlens = 0.15
+            gdat.lens.mocksanglens = -18.435
 
+            lensmodltemp = franlens.LensModel(gdat.lens.mocklenstype, 0., 0., gdat.lens.mockellplens, gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, 0.)
+            gdat.mockmodlfluxraww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, lensmodltemp, gdat.lens.mockpsfnscal).flatten()[None, :, None]
+            gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+
+            gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+            for l in gdat.mockindxpopl:
+                for k in range(gdat.mocknumbpnts[0]):
+                    gdat.lens.mocklensmodl = franlens.LensModel(gdat.lens.mocklenstype, gdat.mocklgal[l][k], gdat.mockbgal[l][k], gdat.lens.mockellplens, \
+                                                                        gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, gdat.mockspec[l][0, k])
+                    gdat.mockmodlflux[0, :, 0] += franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
+                                                                                                                        gdat.lens.mockpsfnscal).flatten()
+                    if False:
+                        print 'k'
+                        print k
+                        print 'gdat.mocklgal[l][k]'
+                        print gdat.mocklgal[l][k]
+                        print 'gdat.mockbgal[l][k]'
+                        print gdat.mockbgal[l][k]
+                        print 'gdat.mockspec[l][0, k]'
+                        print gdat.mockspec[l][0, k]
+                        neww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
+                                                                                                                        gdat.lens.mockpsfnscal).flatten()
+                        print 'neww'
+                        print amin(neww), amax(neww)
+                        print 
+                    
+        gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
         gdat.mockdatacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for i in gdat.indxener:
-            for k in gdat.indxpixl:
+            for j in gdat.indxpixl:
                 for m in gdat.indxevtt:
-                    gdat.mockdatacnts[i, k, m] = poisson(mocktotlcnts[i, k, m])
+                    gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
 
     # final setup
     setpfinl(gdat) 
 
+    # temp
+    if True:
+        path = gdat.pathplot + 'mockmodlflux.pdf'
+        tdpy.util.plot_maps(path, gdat.mockmodlflux[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+        path = gdat.pathplot + 'mockmodlcntsraww.pdf'
+        tdpy.util.plot_maps(path, gdat.mockmodlcntsraww[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+        path = gdat.pathplot + 'mockmodlcnts.pdf'
+        tdpy.util.plot_maps(path, gdat.mockmodlcnts[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+    
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -1156,7 +1299,8 @@ def init( \
         # temp
         #plot_intr()
         #plot_king(gdat)
-        plot_indxprox(gdat)
+        if gdat.pntstype == 'lght':
+            plot_indxprox(gdat)
         if gdat.truepsfn != None:
             plot_eval(gdat)
         #if gdat.datatype == 'mock':
@@ -1478,6 +1622,8 @@ def init( \
     head['numbproc'] = gdat.numbproc
     head['pathbase'] = gdat.pathbase
     
+    head['pntstype'] = gdat.pntstype
+    
     head['numbpsfipara'] = gdat.numbpsfipara
     head['numbformpara'] = gdat.numbformpara
     
@@ -1488,6 +1634,7 @@ def init( \
     head['factthin'] = gdat.factthin
     head['numbpopl'] = gdat.numbpopl
     head['numbproc'] = gdat.numbproc
+    head['numbfluxprox'] = gdat.numbfluxprox
                             
     head['numbsidepntsprob'] = gdat.numbsidepntsprob 
     
@@ -1518,6 +1665,7 @@ def init( \
     head['pixltype'] = gdat.pixltype
     
     head['strgenerunit'] = gdat.strgenerunit
+    head['strgflux'] = gdat.strgflux
     head['strgfluxunit'] = gdat.strgfluxunit
     head['maxmangl'] = gdat.maxmangl
     head['anglassc'] = gdat.anglassc
@@ -2001,9 +2149,12 @@ def plot_samp(gdat, gdatmodi):
                                                                                                 minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
 
     # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
-    temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
-    gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-    gdatmodi.thiserrrcnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
+    if gdat.pntstype == 'lght':
+        temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
+        gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
+        gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
+        indxcubegood = where(temppntscnts > 0.)
+        gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
 
     gdatmodi.indxtruepntsassc = []
     for l in gdat.indxpopl:
@@ -2019,18 +2170,21 @@ def plot_samp(gdat, gdatmodi):
            
         if gdatmodi.indxmodlpntscomp[l].size > 0:
             plot_histspec(gdat, l, gdatmodi=gdatmodi)
-            plot_histsind(gdat, l, gdatmodi=gdatmodi)
-            plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
+            if gdat.pntstype == 'lght':
+                plot_histsind(gdat, l, gdatmodi=gdatmodi)
+                plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
         # temp -- restrict compfrac and other plots to indxmodlpntscomp
-        plot_histcnts(gdat, l, gdatmodi=gdatmodi)
-        plot_compfrac(gdat, gdatmodi=gdatmodi)
+        if gdat.pntstype == 'lght':
+            plot_histcnts(gdat, l, gdatmodi=gdatmodi)
+            plot_compfrac(gdat, gdatmodi=gdatmodi)
 
         for i in gdat.indxener:
             
             plot_datacnts(gdat, l, gdatmodi, i, None)
             plot_modlcnts(gdat, l, gdatmodi, i, None)
             plot_resicnts(gdat, l, gdatmodi, i, None)
-            plot_errrcnts(gdat, gdatmodi, i, None)
+            if gdat.pntstype == 'lght':
+                plot_errrcnts(gdat, gdatmodi, i, None)
 
             # temp
             #plot_scatpixl(gdat, gdatmodi=gdatmodi)
@@ -2045,8 +2199,9 @@ def plot_samp(gdat, gdatmodi):
     #    plot_datacnts(gdat, gdatmodi, None, None)
         
     # temp
-    if False and amax(fabs(gdatmodi.thiserrrcnts)) > 0.1:
-        raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
+    if gdat.pntstype == 'lght':
+        if False and amax(fabs(gdatmodi.thiserrr)) > 0.1:
+            raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
     
 
 def rjmc(gdat, gdatmodi, indxprocwork):
@@ -2277,13 +2432,13 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
             listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[gdat.indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
-            
-
              
             temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
             gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-            gdatmodi.thiserrrcnts = 100. * (gdatmodi.thispntscnts - temppntscnts) / temppntscnts
-            gdatmodi.thiserrr = gdatmodi.thispntscnts - temppntscnts
+            gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
+            gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
+            indxcubegood = where(temppntscnts > 0.)
+            gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
             
             listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
             listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 

@@ -52,4 +52,5 @@ np.set_printoptions(linewidth=180)
 import warnings
 warnings.simplefilter('ignore')
     
+import franlens
 

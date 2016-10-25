@@ -240,8 +240,8 @@ def test_errr():
            ]
     numbtupl = len(tupl)
     indxtupl = arange(numbtupl)
-    posterrrfracdimm = empty((3, numbtupl))
-    posterrrfrac = empty((3, numbtupl))
+    stdverrrfracdimm = empty((2, numbtupl))
+    stdverrrfrac = empty((2, numbtupl))
     strgtupl = empty(numbtupl, dtype=object)
     for k in range(numbtupl):
         
@@ -249,46 +249,46 @@ def test_errr():
         binsangltype = tupl[k][1]
         numbangl = tupl[k][2]
         strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
-        if True:
-            gridchan, dictpcat = init( \
-                                      numbswep=10000, \
-                                      numbswepplot=19000, \
-                                      diagmode=True, \
-                                      exprinfo=False, \
-                                      makeanim=True, \
-                                      boolproppsfn=False, \
-                                      boolpropsind=False, \
-                                      numbangl=numbangl, \
-                                      binsangltype=binsangltype, \
-                                      indxenerincl=arange(2, 3), \
-                                      indxevttincl=arange(3, 4), \
-                                      strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                                      strgexpo='fermexpo_cmp0_ngal.fits', \
-                                      modlpsfntype='doubking', \
-                                      maxmnumbpnts=array([100]), \
-                                      maxmgang=deg2rad(10.), \
-                                      specfraceval=specfraceval, \
-                                      minmflux=1e-9, \
-                                      maxmflux=1e-5, \
-                                      datatype='mock', \
-                                      mocknumbpnts=array([50]), \
-                                     )
-            posterrrfracdimm[:, k] = dictpcat['posterrrfracdimm'].flatten()
-            posterrrfrac[:, k] = dictpcat['posterrrfrac'].flatten()
-        else:
-            posterrrfracdimm[:, k] = rand()
-            posterrrfrac[:, k] = rand()
+        gridchan, dictpcat = init( \
+                                  numbswep=10000, \
+                                  diagmode=True, \
+                                  exprinfo=False, \
+                                  makeanim=True, \
+                                  boolproppsfn=False, \
+                                  boolpropsind=False, \
+                                  numbangl=numbangl, \
+                                  binsangltype=binsangltype, \
+                                  indxenerincl=arange(2, 3), \
+                                  indxevttincl=arange(3, 4), \
+                                  strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                                  strgexpo='fermexpo_cmp0_ngal.fits', \
+                                  modlpsfntype='doubking', \
+                                  maxmnumbpnts=array([100]), \
+                                  maxmgang=deg2rad(10.), \
+                                  specfraceval=specfraceval, \
+                                  minmflux=1e-9, \
+                                  maxmflux=1e-5, \
+                                  datatype='mock', \
+                                  mocknumbpnts=array([50]), \
+                                 )
+        stdverrrfracdimm[:, k] = dictpcat['stdverrrfracdimm'].flatten()
+        stdverrrfrac[:, k] = dictpcat['stdverrrfrac'].flatten()
 
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_errr/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    liststrg = ['posterrrfracdimm', 'posterrrfrac']
+    liststrg = ['stdverrrfracdimm', 'stdverrrfrac']
     listlabl = [r'$\epsilon_m$ [%]', r'$\epsilon_d$ [%]']
-    listvarb = [posterrrfracdimm, posterrrfrac]
+    listvarb = [stdverrrfracdimm, stdverrrfrac]
     numbplot = len(liststrg)
     for k in range(numbplot):
         figr, axis = plt.subplots()
+        print 'listvarb[k]'
+        print listvarb[k]
+        print 'listvarb[k]'
+        print listvarb[k]
+
         axis.errorbar(indxtupl, listvarb[k], yerr=listvarb[k], marker='o')
         axis.set_ylabel(listlabl[k])
         axis.set_xticks(indxtupl + size)
