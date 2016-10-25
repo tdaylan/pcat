@@ -3,13 +3,16 @@ from __init__ import *
 
 def retr_psfnwdth(gdat, psfn, frac):
     
-    wdth = zeros((gdat.numbener, gdat.numbevtt))
+    shap = psfn.shape
+    wdth = zeros((shap[0], shap[2], shap[3]))
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            indxanglgood = argsort(psfn[i, :, m])
-            intpwdth = max(frac * amax(psfn[i, :, m]), amin(psfn[i, :, m]))
-            if intpwdth > amin(psfn[i, indxanglgood, m]) and intpwdth < amax(psfn[i, indxanglgood, m]):
-                wdth[i, m] = interp1d(psfn[i, indxanglgood, m], gdat.binsangl[indxanglgood])(intpwdth)
+            for p in arange(shap[3]):
+                psfntemp = psfn[i, :, m, p]
+                indxanglgood = argsort(psfntemp)
+                intpwdth = max(frac * amax(psfntemp), amin(psfntemp))
+                if intpwdth > amin(psfntemp[indxanglgood]) and intpwdth < amax(psfntemp[indxanglgood]):
+                    wdth[i, m, p] = interp1d(psfntemp[indxanglgood], gdat.binsangl[indxanglgood])(intpwdth)
     return wdth
 
 
@@ -44,7 +47,7 @@ def retr_indx(gdat, indxpntsfull):
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp
 
 
-def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
+def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype, varioaxi):
    
     if False:
         print 'hey'
@@ -64,10 +67,14 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfipara, psfntype):
             print 'spec[:, k]'
             print spec[:, k]
         # evaluate the PSF
-        psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist, psfntype)
+        if varioaxi:
+            oaxi = array([sqrt(lgal[k]**2 + bgal[k]**2)])
+        else:
+            oaxi = None
+        psfn = retr_psfn(gdat, psfipara, gdat.indxener, dist, psfntype, oaxi, varioaxi)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m]
+                pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfn[i, :, m, 0]
                 if False:
                     print 'psfn[i, :, m]'
                     print psfn[i, :, m]
@@ -571,9 +578,10 @@ def retr_llik(gdat, gdatmodi, init=False):
     
 def retr_backfwhmcnts(gdat, normback, fwhm):
 
-    backfwhmcnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    backfwhmcnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt, fwhm.shape[2]))
     for c in gdat.indxback:
-        backfwhmcnts += normback[c, :, None, None] * gdat.backflux[c] * gdat.expo * gdat.diffener[:, None, None] * pi * fwhm[:, None, :]**2 / 4.
+        backfwhmcnts += normback[c, :, None, None, None] * gdat.backflux[c][:, :, :, None] * gdat.expo[:, :, :, None] * \
+                                                                                    gdat.diffener[:, None, None, None] * pi * fwhm[:, None, :, :]**2 / 4.
 
     return backfwhmcnts
 
@@ -823,7 +831,7 @@ def retr_maps(gdat, indxpntsfull, sampvarb):
         listspectemp.append(sampvarb[indxsampspec[l]])
 
     pntsflux = retr_pntsflux(gdat, sampvarb[concatenate(indxsamplgal)], sampvarb[concatenate(indxsampbgal)], \
-        concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfipara], gdat.modlpsfntype)
+                                                        concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfipara], gdat.modlpsfntype, gdat.modloaxivari)
     
     totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxsampnormback], pntsflux, gdat.indxcube)
     
@@ -861,26 +869,25 @@ def retr_hubbpsfn(gdat):
 
     numbformpara = 1
     gdat.hubbpsfipara = array([0.05, 0.05]) / gdat.anglfact
-    psfn = retr_psfn(gdat, gdat.hubbpsfipara, gdat.indxener, gdat.binsangl, psfntype='singgaus')
+    gdat.hubbpsfn = retr_psfn(gdat, gdat.hubbpsfipara, gdat.indxener, gdat.binsangl, 'singgaus')
 
-    return psfn
-    
+
+def retr_sdsspsfn(gdat):
+   
+    numbpsfiparaevtt = gdat.numbener * 3
+    frac = array([[0.5, 0.5, 0.5]]).T
+    sigc = array([[0.5, 1., 3.]]).T
+    sigt = array([[0.5, 1., 3.]]).T
+    gdat.sdsspsfipara = empty(numbpsfiparaevtt)
+    gdat.sdsspsfn = retr_doubgaus(gdat.binsangl[None, :, None], frac[:, None, :], sigc[:, None, :], sigt[:, None, :])
+
 
 def retr_chanpsfn(gdat):
 
     numbformpara = 1
     gdat.chanpsfipara = array([0.3, 0.3]) / gdat.anglfact
-    psfn = retr_psfn(gdat, gdat.chanpsfipara, gdat.indxener, gdat.binsangl, psfntype='singgaus')
-
-    minmangloaxi = 0.
-    maxmangloaxi = 1.1 * sqrt(2.) * gdat.maxmgangmodl
-    numbangloaxi = 100
-
-    angloaxifact = linspace(minmangloaxi, maxmangloaxi, numbangloaxi)
-    psfn = psfn[:, :, :, None] * angloaxifact[None, None, None, :]
+    gdat.chanpsfn = retr_psfn(gdat, gdat.chanpsfipara, gdat.indxener, gdat.binsangl, 'singgaus', gdat.binsoaxi, True)
     
-    return psfn
-
 
 def retr_fermpsfn(gdat):
    
@@ -938,16 +945,6 @@ def retr_fermpsfn(gdat):
     
     # evaluate the PSF
     gdat.fermpsfn = retr_psfn(gdat, gdat.fermpsfipara, gdat.indxener, gdat.binsangl, 'doubking')
-
-
-def retr_sdsspsfn(gdat):
-   
-    numbpsfiparaevtt = gdat.numbener * 3
-    frac = array([[0.5, 0.5, 0.5]]).T
-    sigc = array([[0.5, 1., 3.]]).T
-    sigt = array([[0.5, 1., 3.]]).T
-    gdat.sdsspsfipara = empty(numbpsfiparaevtt)
-    gdat.sdsspsfn = retr_doubgaus(gdat.binsangl[None, :, None], frac[:, None, :], sigc[:, None, :], sigt[:, None, :])
 
 
 def updt_samp(gdat, gdatmodi):
@@ -1452,9 +1449,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.numbpntsmodi = int(sum(gdatmodi.thissampvarb[gdat.indxsampnumbpnts]))
                     
         # construct the proposed PSF
-        gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
-        
-        temp = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
+        gdatmodi.nextpsfn = retr_psfn(gdat, gdatmodi.nextsampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, gdat.binsoaxi, gdat.modlvarioaxi)
         gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         
         if gdat.verbtype > 1:
@@ -2020,7 +2015,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampvarbmodi = gdatmodi.indxsampmodi
 
         
-def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
+def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype, binsoaxi=None, varioaxi=False):
 
     if psfntype == 'singgaus':
         numbformpara = 1
@@ -2037,13 +2032,18 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
         scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
     else:
-        scalangl = thisangl[None, :, None]
+        scalangl = thisangl[None, :, None, None]
 
     indxpsfiparatemp = numbformpara * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
     
     if psfntype == 'singgaus':
         sigc = psfipara[indxpsfiparatemp]
-        sigc = sigc[:, None, :]
+        if varioaxi:
+            # temp
+            factoaxi = 1. + (binsoaxi / gdat.chanoaxipivt)**gdat.chanoaxiindx
+        else:
+            factoaxi = array([1.])
+        sigc = sigc[:, None, :, None] * factoaxi[None, None, None, :]
         psfn = retr_singgaus(scalangl, sigc)
         if gdat.exprtype == 'ferm':
             psfnnorm = retr_singgaus(scalanglnorm, sigc)
@@ -2099,13 +2099,6 @@ def retr_psfn(gdat, psfipara, indxenertemp, thisangl, psfntype):
     # normalize the PSF
     if gdat.exprtype == 'ferm':
         fact = 2. * pi * trapz(psfnnorm * sin(gdat.binsangl[None, :, None]), gdat.binsangl, axis=1)[:, None, :]
-        
-        if False:
-            print 'retr_psfn'
-            print 'fact'
-            print fact
-            print 'PSF maximum/minimum'
-            print amax(psfn, 1) / amin(psfn, 1)
         psfn /= fact
 
     # temp
@@ -2528,6 +2521,18 @@ def setpinit(gdat):
         gdat.mocksindcdfnnormmaxm = 0.5 * (sp.special.erf((gdat.maxmsind - gdat.mocksinddistmean) / gdat.mocksinddiststdv / sqrt(2.)) + 1.)
         gdat.mocksindcdfnnormdiff = gdat.mocksindcdfnnormmaxm - gdat.mocksindcdfnnormminm
 
+    # off-axis angle
+    if gdat.exprtype == 'chan':
+        gdat.numbangloaxi = 100
+        gdat.minmangloaxi = 0.
+        gdat.maxmangloaxi = 1.1 * sqrt(2.) * gdat.maxmgangmodl
+        gdat.binsoaxi = linspace(gdat.minmangloaxi, gdat.maxmangloaxi, gdat.numbangloaxi)
+        gdat.chanoaxipivt = deg2rad(1. / 3600.)
+        gdat.chanoaxiindx = 2.
+    else:
+        gdat.numbangloaxi = 1
+    gdat.indxangloaxi = arange(gdat.numbangloaxi)
+
     # construct the PSF
     if gdat.exprtype == 'ferm':
         retr_fermpsfn(gdat)
@@ -2557,15 +2562,18 @@ def setpinit(gdat):
         #gdat.numbmockpsfipara = gdat.numbmockpsfiparaevtt * gdat.numbevtt
         #gdat.indxmockpsfipara = arange(gdat.numbmockpsfipara)   
 
-        if gdat.exprtype == 'ferm':
-            gdat.mockpsfipara = gdat.fermpsfipara
-        if gdat.exprtype == 'sdss':
-            gdat.mockpsfipara = gdat.sdsspsfipara
         if gdat.exprtype == 'chan':
             gdat.mockpsfipara = gdat.chanpsfipara
-        if gdat.exprtype == 'hubb':
-            gdat.mockpsfipara = gdat.hubbpsfipara
-  
+            gdat.mockvarioaxi = True
+        else:
+            if gdat.exprtype == 'ferm':
+                gdat.mockpsfipara = gdat.fermpsfipara
+            if gdat.exprtype == 'sdss':
+                gdat.mockpsfipara = gdat.sdsspsfipara
+            if gdat.exprtype == 'hubb':
+                gdat.mockpsfipara = gdat.hubbpsfipara
+            gdat.mockfactoaxi = None
+        
     # pixelization
     if gdat.datatype == 'mock':
         if gdat.pixltype == 'cart':
@@ -2711,7 +2719,7 @@ def setpinit(gdat):
     gdat.evttstrg = []
     for m in gdat.indxevtt:
         gdat.evttstrg.append('PSF%d' % gdat.indxevttincl[m])
-        
+    
     # number of components
     gdat.numbcomp = 3 + gdat.numbener
     gdat.indxcomp = arange(gdat.numbcomp)
@@ -2902,13 +2910,16 @@ def setpfinl(gdat):
     
     # plot paths
     if gdat.makeplot:
-        gdat.pathplot = gdat.pathimag + 'pcat_' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+        gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         gdat.pathfram = gdat.pathplot + 'fram/'
         gdat.pathpost = gdat.pathplot + 'post/'
         os.system('mkdir -p %s %s %s' % (gdat.pathplot, gdat.pathfram, gdat.pathpost))
         if gdat.diagmode:
             gdat.pathdiag = gdat.pathplot + 'diag/'
             os.system('mkdir -p %s' % gdat.pathdiag)
+        if gdat.optiprop:
+            gdat.pathopti = gdat.pathplot + 'opti/'
+            os.system('mkdir -p %s' % gdat.pathopti)
  
     # get the experimental catalog
     if gdat.exprinfo:
@@ -2962,7 +2973,7 @@ def setpfinl(gdat):
             gdat.truepsfntype = gdat.mockpsfntype
             gdat.truenormback = gdat.mocknormback
             gdat.datacnts = gdat.mockdatacnts
-        
+    
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
     for c in gdat.indxback:
@@ -3070,6 +3081,11 @@ def setpfinl(gdat):
             gdat.truenumbpnts = None
             gdat.truemeanpnts = None
             gdat.truenormback = None
+            
+            if gdat.exprtype == 'chan':
+                gdat.truefactoaxi = gdat.chanfactoaxi
+            else:
+                gdat.truefactoaxi = None
     
             if gdat.exprtype == 'ferm':
                 gdat.truenumbpnts = array([gdat.exprnumbpnts], dtype=int)
@@ -3084,24 +3100,42 @@ def setpfinl(gdat):
                 gdat.indxtruevari = [gdat.indxexprvari]
                 gdat.truepsfipara = gdat.fermpsfipara
                 gdat.truepsfntype = 'doubking'
+        
+        if gdat.exprtype == 'chan':
+            gdat.truevarioaxi = True
+            gdat.truepsfn = gdat.chanpsfn
+        else:
+            gdat.truevarioaxi = False
+            if gdat.exprtype == 'ferm':
                 gdat.truepsfn = gdat.fermpsfn
             elif gdat.exprtype == 'sdss':
                 gdat.truepsfn = gdat.sdsspsfn
+            elif gdat.exprtype == 'hubb':
+                gdat.truepsfn = gdat.hubbpsfn
 
-        if gdat.datatype == 'mock':
-            gdat.truepsfn = retr_psfn(gdat, gdat.truepsfipara, gdat.indxener, gdat.binsangl, gdat.mockpsfntype)
+        if gdat.exprtype == None:
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                gdat.truepsfn = retr_psfn(gdat, gdat.truepsfipara, gdat.indxener, gdat.binsangl, gdat.mockpsfntype, gdat.binsoaxi, gdat.mockvarioaxi)
+            else:
+                gdat.truepsfn = None
             
         if gdat.truepsfn != None:
             gdat.truefwhm = 2. * retr_psfnwdth(gdat, gdat.truepsfn, 0.5)
-        
+       
         truebackcnts = []
         gdat.truesigm = []
         for l in gdat.indxpopl:
             indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
             truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
-            for c in gdat.indxback:
-                truebackcntstemp += gdat.backflux[c][:, indxpixltemp, :] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None] * pi * \
-                                                                                                                            gdat.truefwhm[:, None, :]**2 / 4.
+            for k in range(gdat.truebgal[l].size):
+                if gdat.truevarioaxi:
+                    dir1 = array([gdat.truelgal[l][k], gdat.truebgal[l][k]])[:, None]
+                    oaxi = retr_angldist(gdat, dir1, array([0., 0.]))
+                    fwhmtemp = interp1d(gdat.binsoaxi, gdat.truefwhm, axis=2)(oaxi)
+                else:
+                    fwhmtemp = gdat.truefwhm[:, :, 0]
+                for c in gdat.indxback:
+                    truebackcntstemp[:, k, :] += gdat.backflux[c][:, indxpixltemp[k], :] * gdat.expo[:, indxpixltemp[k], :] * gdat.diffener[:, None] * pi * fwhmtemp**2 / 4.
             truebackcnts.append(truebackcntstemp)
             gdat.truesigm.append(gdat.truecnts[l] / sqrt(truebackcntstemp))
     
@@ -3186,7 +3220,7 @@ def setpfinl(gdat):
         os.system('mkdir -p %s' % path)
         path += 'indxpixlprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), 1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
         if gdat.verbtype > 0:
-            print 'PSF evaluation will be performed up to %3g %s for the largest flux.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.strganglunittext)
+            print 'PSF evaluation will be performed up to %.3g %s for the largest flux.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.strganglunittext)
         if os.path.isfile(path):
             if gdat.verbtype > 0:
                 print 'Previously computed nearby pixel look-up table will be used.'
@@ -3410,6 +3444,16 @@ def retr_jcbn():
     return jcbn
 
 
+def retr_angldist(gdat, dir1, dir2):
+    
+    if gdat.pixltype == 'cart':
+        angldist = sqrt((dir1[0, :] - dir2[0])**2 + (dir1[1, :] - dir2[1])**2)
+    else:
+        angldist = angdist(dir1, dir2)
+
+    return angldist
+
+
 def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
     indxtruepntsassc = tdpy.util.gdatstrt()
@@ -3426,8 +3470,8 @@ def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
 
     for k in range(modllgal.size):
         dir2 = array([modllgal[k], modlbgal[k]])
-        dist = angdist(dir1, dir2, lonlat=True)
-        thisindxtruepnts = where(dist < gdat.anglassc)[0]
+        angldist = retr_angldist(gdat, dir1, dir2)
+        thisindxtruepnts = where(angldist < gdat.anglassc)[0]
         
         if thisindxtruepnts.size > 0:
             

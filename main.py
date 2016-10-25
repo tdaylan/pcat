@@ -187,13 +187,11 @@ def work(gdat, indxprocwork):
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampsindtemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
     ## PSF
+    gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
     if gdat.boolintpanglcosi:
-        gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
-        gdatmodi.thispsfnintp = interp1d(gdat.binsanglcosi, retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype), axis=1)
+        gdatmodi.thispsfnintp = interp1d(gdat.binsanglcosi, gdatmodi.thispsfn, axis=1)
     else:
-        gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
         gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.thispsfn, axis=1)
-        gdatmodi.thispsfnneww = gdatmodi.thispsfnintp(gdat.binsangl)
         
     # log-prior
     if gdat.bindprio:
@@ -330,7 +328,8 @@ def init( \
          pntstype='lght', \
 
          randinit=None, \
-         optiprop=True, \
+         loadvaripara=False, \
+         optiprop=False, \
          regulevi=False, \
          strgexpr=None, \
          strgback=['unit'], \
@@ -354,7 +353,10 @@ def init( \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
-         
+    
+         modloaxivari=False, \
+         mockoaxivari=False, \
+
          # misc
          strgfunctime='clck', \
          
@@ -810,7 +812,11 @@ def init( \
     gdat.boolpropnormback = boolpropnormback
     gdat.boolpropsind = boolpropsind
 
+    gdat.modloaxivari = modloaxivari
+    gdat.mockoaxivari = mockoaxivari
+
     ## optimize the proposal frequencies and scales
+    gdat.loadvaripara = loadvaripara
     gdat.optiprop = optiprop
 
     ## input data
@@ -1027,6 +1033,13 @@ def init( \
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
 
+    # conditional imports
+    ## import healpy if the spatial grid is HealPix
+    if gdat.pixltype == 'heal':
+        import healpy as hp
+        from healpy.rotator import angdist
+        from healpy import ang2pix
+    ## import the lensing solver by Francis-Yan if the PSs are lenses
     if gdat.pntstype == 'lens':
         import franlens
         gdat.pixltype = 'cart'
@@ -1135,7 +1148,8 @@ def init( \
         
         # mock mean count map
         if gdat.pntstype == 'lght':
-            mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), gdat.mockpsfipara, gdat.mockpsfntype)
+            mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
+                                                                                                            gdat.mockpsfipara, gdat.mockpsfntype, gdat.mockoaxivari)
             gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
         if gdat.pntstype == 'lens':
@@ -1193,18 +1207,9 @@ def init( \
     # final setup
     setpfinl(gdat) 
 
-    # temp
-    if True:
-        path = gdat.pathplot + 'mockmodlflux.pdf'
-        tdpy.util.plot_maps(path, gdat.mockmodlflux[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+    if gdat.pntstype == 'lens':
         path = gdat.pathplot + 'mockmodlcntsraww.pdf'
         tdpy.util.plot_maps(path, gdat.mockmodlcntsraww[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-        path = gdat.pathplot + 'mockmodlcnts.pdf'
-        tdpy.util.plot_maps(path, gdat.mockmodlcnts[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
                                                                                          minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                          minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
     
@@ -1506,15 +1511,8 @@ def init( \
     dictpcat['stdvnumbpnts'] = tdpy.util.retr_errrvarb(listnumbpnts, samp=True)
     dictpcat['listmemoresi'] = listmemoresi
    
-    print 'hey'
-    print 'listerrrfracdimm'
-    print listerrrfracdimm.shape
-    print 'tdpy.util.retr_postvarb(listerrrfracdimm)'
-    print tdpy.util.retr_postvarb(listerrrfracdimm).shape
-    print
-
-    dictpcat['stdverrrfracdimm'] = tdpy.util.retr_errrvarb(listerrrfracdimm, samp=True)
-    dictpcat['stdverrrfrac'] = tdpy.util.retr_errrvarb(listerrrfrac, samp=True)
+    dictpcat['errrerrrfracdimm'] = tdpy.util.retr_errrvarb(listerrrfracdimm, samp=True)
+    dictpcat['errrerrrfrac'] = tdpy.util.retr_errrvarb(listerrrfrac, samp=True)
 
     ## PS parameters
     listlgal = []
@@ -2251,7 +2249,32 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     indxswepmaxmlpos = -1 
     sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
     sampvarbmaxmlpos = copy(gdatmodi.thissampvarb)
-    
+   
+    # proposal scale optimization
+    if gdat.optiprop:
+        pathvaripara = gdat.pathopti + '%s.fits' % gdat.rtag
+        if os.path.isfile(pathvaripara) and gdat.loadvaripara:
+            if gdat.verbtype > 0 and indxprocwork == 0:
+                print 'Reading the previously computed proposal scale from %s...' % pathvaripara
+            gdat.optidone = True
+            varipara = pf.getdata(pathvaripara)
+        else:
+            if gdat.verbtype > 0 and indxprocwork == 0:
+                print 'Optimizing proposal scale...'
+            targpropeffi = 0.25
+            gdat.factpropeffi = 1.2
+            minmpropeffi = targpropeffi / gdat.factpropeffi
+            maxmpropeffi = targpropeffi * gdat.factpropeffi
+            perdpropeffi = 4000 * gdat.numbpara
+            cntrprop = zeros(gdat.numbprop)
+            cntrproptotl = zeros(gdat.numbprop)
+            gdat.optidone = False
+            cntroptisamp = 0
+            cntroptimean = 0
+    else:
+        if gdat.verbtype > 0 and indxprocwork == 0:
+            print 'Skipping proposal scale optimization...'
+
     while gdatmodi.cntrswep < gdat.numbswep:
         
         timetotlinit = gdat.functime()
@@ -2519,12 +2542,44 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print
         
         # update the sweep counter
-        gdatmodi.cntrswep += 1
+        if gdat.optidone:
+            gdat.cntrswep += 1
+        else:
 
-    if gdat.verbtype > 1:
-        print 'listsampvarb: '
-        print listsampvarb
-    
+            cntrproptotl[gdatmodi.thisindxprop] += 1.
+            if listaccp[gdatmodi.cntrswep]:
+                cntrprop[gdatmodi.thisindxprop] += 1.
+            
+            if cntroptisamp % perdpropeffi == 0 and (cntrproptotl > 0).all():
+                
+                thispropeffi = cntrprop / cntrproptotl
+                if gdat.verbtype > 0:
+                    print 'Proposal scale optimization step %d' % cntroptimean
+                    print 'Current proposal efficiency'
+                    print thispropeffi
+                    print '%.3g +- %.3g' % (mean(thispropeffi), std(thispropeffi)) 
+                if (thispropeffi[gdat.indxpropactv] > minmpropeffi).all() and (thispropeffi[gdat.indxpropactv] < maxmpropeffi).all():
+                    if gdat.verbtype > 0:
+                        print 'Optimized variance: '
+                        print varipara
+                        print 'Writing the optimized variance to %s...' % pathvaripara
+                    gdat.optidone = True
+                    pf.writeto(pathvaripara, varipara, clobber=True)
+                else:
+                    factcorr = 2**(thispropeffi / targpropeffi - 1.)
+                    varipara *= factcorr
+                    cntrprop[:] = 0.
+                    cntrproptotl[:] = 0.
+                    if gdat.verbtype > 0:
+                        print 'Current sample'
+                        print thissampvarb
+                        print 'Correction factor'
+                        print factcorr
+                        print 'Current variance: '
+                        print varipara
+                        print
+                cntroptimean += 1
+
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \

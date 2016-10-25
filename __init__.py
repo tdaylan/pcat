@@ -24,11 +24,6 @@ from scipy.stats import poisson as pss
 # multiprocessing
 import multiprocessing as mp
 
-# healpy
-import healpy as hp
-from healpy.rotator import angdist
-from healpy import ang2pix
-
 # pyfits
 import pyfits as pf
 

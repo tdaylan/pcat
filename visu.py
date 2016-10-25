@@ -1633,7 +1633,7 @@ def plot_eval(gdat):
     axis.set_ylabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
 
     limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
-    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0][::-1], gdat.binsanglplot[::-1])
+    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0, 0][::-1], gdat.binsanglplot[::-1])
     
     if limt > 0:
         axis.axhline(limt, color='red', ls=':', label='Flux floor')
