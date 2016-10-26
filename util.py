@@ -393,15 +393,15 @@ def retr_llik(gdat, gdatmodi, init=False):
                         # interpolate the PSF
                         if gdat.modlvarioaxi:
                             # temp
-                            psfn = psfnintp(dist, retr_angldist(array([lgal[k], bgal[k]])[:, None], array([0., 0.])))
+                            psfn = psfnintp(dist, retr_angldist(gdat, array([lgal[k], bgal[k]])[:, None], array([0., 0.])))
                         else:
                             psfn = psfnintp(dist)
                         
                         print 'hey'
+                        print 'dist'
+                        print dist.shape
                         print 'gdat.modlvarioaxi'
                         print gdat.modlvarioaxi
-                        print 'retr_angldist(array([lgal[k], bgal[k]])[:, None], array([0., 0.]))'
-                        print retr_angldist(array([lgal[k], bgal[k]])[:, None], array([0., 0.]))
                         print 'psfn'
                         print psfn.shape
                         print
