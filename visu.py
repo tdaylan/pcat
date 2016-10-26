@@ -29,6 +29,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.numbpsfipara = hdun[0].header['numbpsfipara']
     gdat.numbformpara = hdun[0].header['numbformpara']
     
+    gdat.optiprop = hdun[0].header['optiprop']
+    
     gdat.indxener = arange(gdat.numbener)
     gdat.indxevtt = arange(gdat.numbevtt)
     gdat.indxpopl = arange(gdat.numbpopl)
@@ -565,10 +567,10 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.medipsfipara = gdat.postpsfipara[0, :]
     gdat.medipsfn = retr_psfn(gdat, gdat.medipsfipara, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
     gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
-    gdat.medibackfwhmcnts = retr_backfwhmcnts(gdat, gdat.medinormback, gdat.medifwhm)
+    gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medinormback, gdat.medifwhm)
     
     ## standard deviation axis
-    gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medibackfwhmcnts)
+    gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
 
     # flux distribution
     for l in gdat.indxpopl:
@@ -1423,7 +1425,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
         cbar = figr.colorbar(imag, cax=axiscomm)
         #cbar.set_ticks(gdat.tickdatacnts[i, :])
         #cbar.set_ticklabels(gdat.labldatacnts[i, :])
-        plt.subplots_adjust(left=0.1, top=.9, hspace=0.01, wspace=0.03, bottom=0.1)
+        plt.subplots_adjust(left=0.1, top=.92, hspace=0.05, wspace=0.03, bottom=0.08)
         figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
         plt.close(figr)
        
@@ -1467,12 +1469,12 @@ def plot_psfn(gdat, gdatmodi):
         for i, axis in enumerate(axrw):
             
             # angular range to be plotted
-            indxangltemp = where(gdatmodi.thispsfn[i, :, m] > 1e-6 * amax(gdatmodi.thispsfn[i, :, m]))[0]
+            indxangltemp = where(gdatmodi.thispsfn[i, :, m, 0] > 1e-6 * amax(gdatmodi.thispsfn[i, :, m, 0]))[0]
             
-            axis.plot(gdat.binsanglplot[indxangltemp], gdatmodi.thispsfn[i, indxangltemp, m], label='Sample')
+            axis.plot(gdat.binsanglplot[indxangltemp], gdatmodi.thispsfn[i, indxangltemp, m, 0], label='Sample')
             
             if gdat.truepsfn != None:
-                axis.plot(gdat.binsanglplot[indxangltemp], gdat.truepsfn[i, indxangltemp, m], label=gdat.nameexpr, color='g', ls='--')
+                axis.plot(gdat.binsanglplot[indxangltemp], gdat.truepsfn[i, indxangltemp, m, 0], label=gdat.nameexpr, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
@@ -1818,9 +1820,21 @@ def plot_3fgl_thrs(gdat):
 
 def make_anim(gdat):
 
-    listname = ['errrcnts_2A', 'datacnts_pop0_2A', 'resicnts_pop0_2A', 'modlcnts_pop0_2A', 'histspec_pop0', 'histflux_pop0', \
-                    'scatfluxsind_pop0', 'histfluxsind_pop0', 'histcnts_pop0', 'histsind_pop0', \
-                    'scatspec_pop0', 'psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
+    listname = ['psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
+    listnamepopl = ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
+    listnamepoplenerevtt = ['errrcnts', 'datacnts', 'resicnts', 'modlcnts']
+    for l in gdat.indxpopl:
+        for k in range(len(listnamepopl)):
+            listname.append('%s_pop%d' % (listnamepopl[k], l))
+        for i in gdat.indxener:
+            for m in gdat.indxevttplot:
+                if m == None:
+                    strg = 'A'
+                else:
+                    strg = '%d' % m
+                for k in range(len(listnamepoplenerevtt)):
+                    listname.append('%s_pop%d' % (listnamepoplenerevtt[k], l))
+                    listname.append('%s_pop%d_%d%s' % (listnamepoplenerevtt[k], l, i, strg))
     pathanim = gdat.pathplot + 'anim/'
 
     os.system('mkdir -p %s' % pathanim)

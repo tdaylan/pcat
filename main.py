@@ -189,9 +189,10 @@ def work(gdat, indxprocwork):
     ## PSF
     gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfipara], gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
     if gdat.boolintpanglcosi:
-        gdatmodi.thispsfnintp = interp1d(gdat.binsanglcosi, gdatmodi.thispsfn, axis=1)
+        binsangltemp = gdat.binsanglcosi
     else:
-        gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.thispsfn, axis=1)
+        binsangltemp = gdat.binsangl
+        gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
         
     # log-prior
     if gdat.bindprio:
@@ -231,7 +232,7 @@ def work(gdat, indxprocwork):
     gdatmodi.nextmodlcnts = zeros_like(gdatmodi.thispntsflux)
         
     # plotting variables
-    gdatmodi.thisbackfwhmcnts = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    gdatmodi.thiscntsbackfwhm = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
    
     # log-prior
     gdatmodi.nextlpri = empty((gdat.numbpopl, gdat.numbflux))
@@ -354,8 +355,7 @@ def init( \
          makeanim=True, \
          anotcatl=False, \
     
-         modloaxivari=False, \
-         mockoaxivari=False, \
+         modlvarioaxi=False, \
 
          # misc
          strgfunctime='clck', \
@@ -812,8 +812,7 @@ def init( \
     gdat.boolpropnormback = boolpropnormback
     gdat.boolpropsind = boolpropsind
 
-    gdat.modloaxivari = modloaxivari
-    gdat.mockoaxivari = mockoaxivari
+    gdat.modlvarioaxi = modlvarioaxi
 
     ## optimize the proposal frequencies and scales
     gdat.loadvaripara = loadvaripara
@@ -1034,14 +1033,8 @@ def init( \
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
 
     # conditional imports
-    ## import healpy if the spatial grid is HealPix
-    if gdat.pixltype == 'heal':
-        import healpy as hp
-        from healpy.rotator import angdist
-        from healpy import ang2pix
     ## import the lensing solver by Francis-Yan if the PSs are lenses
     if gdat.pntstype == 'lens':
-        import franlens
         gdat.pixltype = 'cart'
         gdat.boolproppsfn = False
         gdat.boolpropsind = False
@@ -1149,7 +1142,7 @@ def init( \
         # mock mean count map
         if gdat.pntstype == 'lght':
             mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
-                                                                                                            gdat.mockpsfipara, gdat.mockpsfntype, gdat.mockoaxivari)
+                                                                                                            gdat.mockpsfipara, gdat.mockpsfntype, gdat.mockvarioaxi)
             gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
         if gdat.pntstype == 'lens':
@@ -1633,6 +1626,8 @@ def init( \
     head['numbpopl'] = gdat.numbpopl
     head['numbproc'] = gdat.numbproc
     head['numbfluxprox'] = gdat.numbfluxprox
+    
+    head['optiprop'] = gdat.optiprop
                             
     head['numbsidepntsprob'] = gdat.numbsidepntsprob 
     
@@ -2112,8 +2107,15 @@ def plot_samp(gdat, gdatmodi):
     # PSF FWHM
     gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
     
+    if gdat.modlvarioaxi:
+        dir1 = array([gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]])[:, None]
+        oaxi = retr_angldist(gdat, dir1, array([0., 0.]))
+        fwhmtemp = interp1d(gdat.binsoaxi, gdatmodi.thisfwhm, axis=2)(oaxi[0])
+    else:
+        fwhmtemp = gdatmodi.thisfwhm[:, :, 0]
+    
     # number of background counts per PSF
-    gdatmodi.thisbackfwhmcnts = retr_backfwhmcnts(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thisfwhm)
+    gdatmodi.thiscntsbackfwhm = retr_cntsbackfwhm(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thisfwhm)
 
     # number of counts and standard deviation of each PS
     gdatmodi.thiscnts = []
@@ -2122,12 +2124,12 @@ def plot_samp(gdat, gdatmodi):
         # temp -- zero exposure pixels will give zero counts
         indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
         cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expofull[:, indxpixltemp, :] * gdat.diffener[:, None, None]
-        retr_sigm(gdat, sum(cntstemp, 2), gdatmodi.thisbackfwhmcnts)
         gdatmodi.thiscnts.append(cntstemp)
-        gdatmodi.thissigm.append(cntstemp)
+        sigmtemp = retr_sigm(gdat, sum(cntstemp, 2), gdatmodi.thiscntsbackfwhm)
+        gdatmodi.thissigm.append(sigmtemp)
     
     # standard deviation axis
-    gdatmodi.binssigm = retr_sigm(gdat, gdat.binscnts, gdatmodi.thisbackfwhmcnts)
+    gdatmodi.binssigm = retr_sigm(gdat, gdat.binscnts, gdatmodi.thiscntsbackfwhm)
     
     # plots
     ## PSF radial profile
@@ -2141,8 +2143,8 @@ def plot_samp(gdat, gdatmodi):
     # number of background counts per PSF
     if False:
         for i in gdat.indxener:
-            path = gdat.pathplot + 'backfwhmcntsflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
-            tdpy.util.plot_maps(path, sum(gdatmodi.thisbackfwhmcnts, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+            path = gdat.pathplot + 'cntsbackfwhmflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
+            tdpy.util.plot_maps(path, sum(gdatmodi.thiscntsbackfwhm, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
                                                                                                 minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                                 minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
 
@@ -2177,12 +2179,12 @@ def plot_samp(gdat, gdatmodi):
             plot_compfrac(gdat, gdatmodi=gdatmodi)
 
         for i in gdat.indxener:
-            
-            plot_datacnts(gdat, l, gdatmodi, i, None)
-            plot_modlcnts(gdat, l, gdatmodi, i, None)
-            plot_resicnts(gdat, l, gdatmodi, i, None)
-            if gdat.pntstype == 'lght':
-                plot_errrcnts(gdat, gdatmodi, i, None)
+            for m in gdat.indxevttplot:
+                plot_datacnts(gdat, l, gdatmodi, i, m)
+                plot_modlcnts(gdat, l, gdatmodi, i, m)
+                plot_resicnts(gdat, l, gdatmodi, i, m)
+                if gdat.pntstype == 'lght':
+                    plot_errrcnts(gdat, gdatmodi, i, m)
 
             # temp
             #plot_scatpixl(gdat, gdatmodi=gdatmodi)
@@ -2265,13 +2267,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             gdat.factpropeffi = 1.2
             minmpropeffi = targpropeffi / gdat.factpropeffi
             maxmpropeffi = targpropeffi * gdat.factpropeffi
-            perdpropeffi = 4000 * gdat.numbpara
+            # temp
+            perdpropeffi = 100 * gdat.numbprop
             cntrprop = zeros(gdat.numbprop)
             cntrproptotl = zeros(gdat.numbprop)
             gdat.optidone = False
-            cntroptisamp = 0
             cntroptimean = 0
     else:
+        gdat.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
 
@@ -2284,7 +2287,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print '-' * 10
             print 'Sweep %d' % gdatmodi.cntrswep
 
-        thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) and gdat.makeplot
+        thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
+                                                                                                                                        and gdat.makeplot and gdat.optidone
         gdatmodi.boolreje = False
     
         # choose a proposal type
@@ -2543,14 +2547,21 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         
         # update the sweep counter
         if gdat.optidone:
-            gdat.cntrswep += 1
+            gdatmodi.cntrswep += 1
         else:
-
+        
+            print 'gdatmodi.cntrswep'
+            print gdatmodi.cntrswep
+            print 'cntrproptotl'
+            print cntrproptotl
+            print 'perdpropeffi'
+            print perdpropeffi
+            print 
             cntrproptotl[gdatmodi.thisindxprop] += 1.
             if listaccp[gdatmodi.cntrswep]:
                 cntrprop[gdatmodi.thisindxprop] += 1.
             
-            if cntroptisamp % perdpropeffi == 0 and (cntrproptotl > 0).all():
+            if gdatmodi.cntrswep % perdpropeffi == 0 and (cntrproptotl > 0).all():
                 
                 thispropeffi = cntrprop / cntrproptotl
                 if gdat.verbtype > 0:

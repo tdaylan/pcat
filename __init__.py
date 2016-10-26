@@ -43,6 +43,11 @@ import networkx as nx
 
 np.set_printoptions(linewidth=180)
 
+# healpy
+import healpy as hp
+from healpy.rotator import angdist
+from healpy import ang2pix
+
 # ignore warnings if not in diagnostic mode
 import warnings
 warnings.simplefilter('ignore')
