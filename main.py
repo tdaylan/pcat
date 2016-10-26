@@ -192,6 +192,10 @@ def work(gdat, indxprocwork):
         binsangltemp = gdat.binsanglcosi
     else:
         binsangltemp = gdat.binsangl
+    if gdat.modlvarioaxi:
+        # temp
+        gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
+    else:
         gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
         
     # log-prior
@@ -1201,10 +1205,12 @@ def init( \
     setpfinl(gdat) 
 
     if gdat.pntstype == 'lens':
-        path = gdat.pathplot + 'mockmodlcntsraww.pdf'
-        tdpy.util.plot_maps(path, gdat.mockmodlcntsraww[0, :, 0], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                         minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                         minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+        figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'mockmodlcntsraww', indxpoplplot=indxpoplplot)
+        imag = retr_fram(gdat, axis, gdat.mockmodlcntsraww, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
+        make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
+        plt.tight_layout()
+        plt.savefig(path)
+        plt.close(figr)
     
     # write the list of arguments to file
     fram = inspect.currentframe()

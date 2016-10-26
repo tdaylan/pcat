@@ -1909,7 +1909,6 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     imag = retr_fram(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
     make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
-
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
     plt.tight_layout()
     plt.savefig(path)

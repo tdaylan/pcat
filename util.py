@@ -395,17 +395,8 @@ def retr_llik(gdat, gdatmodi, init=False):
                             # temp
                             psfn = psfnintp(dist, retr_angldist(gdat, array([lgal[k], bgal[k]])[:, None], array([0., 0.])))
                         else:
-                            psfn = psfnintp(dist)
+                            psfn = psfnintp(dist)[:, :, :, 0]
                         
-                        print 'hey'
-                        print 'dist'
-                        print dist.shape
-                        print 'gdat.modlvarioaxi'
-                        print gdat.modlvarioaxi
-                        print 'psfn'
-                        print psfn.shape
-                        print
-
                         # add the contribution of the PS to the the proposed flux map
                         for i in range(gdatmodi.indxenermodi.size):
                             if gdatmodi.thisindxprop == gdat.indxproppsfipara:
@@ -3318,7 +3309,7 @@ def retr_fram(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
     if gdat.pixltype == 'cart':
         mapstemp = empty(gdat.numbsidecart**2)
         mapstemp[gdat.indxpixlrofi] = maps
-        maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart))
+        maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
     
     # rescale the map
     if gdat.scalmaps == 'asnh':
