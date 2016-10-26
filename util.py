@@ -3193,7 +3193,18 @@ def setpfinl(gdat):
                     gdat.labldatacnts[i, k] = '%.3g' % sinh(gdat.tickdatacnts[i, k])
                 else:
                     gdat.labldatacnts[i, k] = '%.3g' % gdat.tickdatacnts[i, k]
-  
+
+    print 'hey'
+    print 'gdat.lablresicnts'
+    print gdat.lablresicnts
+    print 'gdat.tickresicnts'
+    print gdat.tickresicnts
+    print 'gdat.lablerrrcnts'
+    print gdat.lablerrrcnts
+    print 'gdat.tickerrrcnts'
+    print gdat.tickerrrcnts
+    
+    
     # make a look-up table of nearby pixels for each pixel
     if gdat.pntstype == 'lght':
         path = gdat.pathdata + 'indxpixlprox/'

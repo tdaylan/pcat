@@ -1626,7 +1626,7 @@ def plot_eval(gdat):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0], label=labl, color=colr, alpha=alph)
+        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0, 0], label=labl, color=colr, alpha=alph)
         axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
         if k > 0:
             axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
@@ -1634,7 +1634,7 @@ def plot_eval(gdat):
     axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
     axis.set_ylabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
 
-    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0])
+    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0, 0])
     maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0, 0][::-1], gdat.binsanglplot[::-1])
     
     if limt > 0:
@@ -1940,6 +1940,13 @@ def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
     
 def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
+   
+    print 'hey'
+    print 'gdatmodi.thiserrrcnts'
+    print amin(gdatmodi.thiserrrcnts), amax(gdatmodi.thiserrrcnts)
+    print 'gdatmodi.thiserrr'
+    print amin(gdatmodi.thiserrr), amax(gdatmodi.thiserrr)
+    print
 
     listtupl = [ \
                 #['errrcnts', False, gdatmodi.thiserrrcnts, gdat.maxmerrrcnts[indxenerplot], gdat.tickerrrcnts[indxenerplot, :], gdat.lablerrrcnts[indxenerplot, :]], \

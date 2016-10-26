@@ -2159,7 +2159,7 @@ def plot_samp(gdat, gdatmodi):
         temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb))
         gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
         gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
-        indxcubegood = where(temppntscnts > 0.)
+        indxcubegood = where(temppntscnts > 1e-10)
         gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
 
     gdatmodi.indxtruepntsassc = []
@@ -2470,7 +2470,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
             gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
             gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
-            indxcubegood = where(temppntscnts > 0.)
+            indxcubegood = where(temppntscnts > 1e-10)
             gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
             
             listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
