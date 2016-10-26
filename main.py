@@ -1046,11 +1046,6 @@ def init( \
     # check the call stack for the name of the configuration function
     gdat.strgcnfg = inspect.stack()[1][3]
     
-    if gdat.verbtype > 0:
-        print 'PCAT started at %s' % gdat.strgtimestmp
-        print 'Configuration %s' % gdat.strgcnfg
-        print 'Initializing...'
-    
     # initial setup
     setpinit(gdat) 
     
@@ -1063,6 +1058,11 @@ def init( \
         path = gdat.pathoutp + 'rlog.txt'
         sys.stdout = open(path, 'w')
 
+    if gdat.verbtype > 0:
+        print 'PCAT started at %s' % gdat.strgtimestmp
+        print 'Configuration %s' % gdat.strgcnfg
+        print 'Initializing...'
+    
     # generate mock data
     if gdat.datatype == 'mock':
 
