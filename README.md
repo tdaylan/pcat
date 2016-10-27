@@ -197,7 +197,7 @@ Proposal scale for the mean number of point sources
 `stdvfluxdistslop`
 Proposal scale for the slope of the FDF
 
-`stdvpsfipara`
+`stdvpsfp`
 Proposal scale for the PSF parameters
 
 `stdvback`

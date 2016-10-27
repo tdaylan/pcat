@@ -26,8 +26,10 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     gdat.pntstype = hdun[0].header['pntstype']
     
-    gdat.numbpsfipara = hdun[0].header['numbpsfipara']
-    gdat.numbformpara = hdun[0].header['numbformpara']
+    gdat.modlvarioaxi = hdun[0].header['modlvarioaxi']
+    
+    #gdat.numbpsfp = hdun[0].header['numbpsfp']
+    #gdat.numbpsfpform = hdun[0].header['numbformpara']
     
     gdat.optiprop = hdun[0].header['optiprop']
     
@@ -78,7 +80,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.scalmaps = hdun[0].header['scalmaps']
     gdat.satumaps = hdun[0].header['satumaps']
     
-    gdat.probpsfipara = hdun[0].header['probpsfipara']
+    gdat.probpsfp = hdun[0].header['probpsfp']
     
     gdat.exprinfo = hdun[0].header['exprinfo']
     gdat.priotype = hdun[0].header['priotype']
@@ -118,7 +120,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
 
     gdat.stdvmeanpnts = hdun[0].header['stdvmeanpnts']
     gdat.stdvfluxdistslop = hdun[0].header['stdvfluxdistslop']
-    gdat.stdvpsfipara = hdun[0].header['stdvpsfipara']
+    gdat.stdvpsfp = hdun[0].header['stdvpsfp']
     gdat.stdvback = hdun[0].header['stdvback']
     gdat.stdvlbhl = hdun[0].header['stdvlbhl']
     gdat.stdvflux = hdun[0].header['stdvflux']
@@ -184,6 +186,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             gdat.mocksinddisttype.append(hdun[0].header['mocksinddisttypepop%d' % l])
             gdat.mockspectype.append(hdun[0].header['mockspectypepop%d' % l])
         
+        gdat.mockvarioaxi = hdun[0].header['mockvarioaxi']
         gdat.mockfluxdistslop = hdun['mockfluxdistslop'].data
         gdat.mockfluxdistsloplowr = hdun['mockfluxdistsloplowr'].data
         gdat.mockfluxdistslopuppr = hdun['mockfluxdistslopuppr'].data
@@ -245,7 +248,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.listfluxdistsloplowr = hdun['fluxdistsloplowr'].data
     gdat.listfluxdistslopuppr = hdun['fluxdistslopuppr'].data
     gdat.listfluxdistbrek = hdun['fluxdistbrek'].data
-    gdat.listpsfipara = hdun['psfipara'].data
+    gdat.listpsfp = hdun['psfp'].data
     gdat.listnormback = hdun['normback'].data
     
     # best-fit sample
@@ -279,7 +282,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         gdat.mockfluxdistsloplowr = hdun['mockfluxdistsloplowr'].data
         gdat.mockfluxdistslopuppr = hdun['mockfluxdistslopuppr'].data
         gdat.mocknormback = hdun['mocknormback'].data
-        gdat.mockpsfipara = hdun['mockpsfipara'].data
+        gdat.mockpsfp = hdun['mockpsfp'].data
         
     # final setup
     setpfinl(gdat) 
@@ -560,12 +563,12 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
 
     # compute median and 68% credible intervals of the inferred parameters
     gdat.postnormback = tdpy.util.retr_postvarb(gdat.listnormback)
-    gdat.postpsfipara = tdpy.util.retr_postvarb(gdat.listpsfipara)
+    gdat.postpsfp = tdpy.util.retr_postvarb(gdat.listpsfp)
     
     # compute the medians of secondary variables
     gdat.medinormback = gdat.postnormback[0, :, :]
-    gdat.medipsfipara = gdat.postpsfipara[0, :]
-    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfipara, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
+    gdat.medipsfp = gdat.postpsfp[0, :]
+    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfp, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
     gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
     gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medinormback, gdat.medifwhm)
     
@@ -590,35 +593,35 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     plot_mosa(gdat)
     
     # PSF parameters
-    path = gdat.pathplot + 'psfipara'
+    path = gdat.pathplot + 'psfp'
     if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
-        gdat.listpsfipara[:, gdat.indxpsfiparainit] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit])
+        gdat.listpsfp[:, gdat.indxpsfpinit] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit])
         if gdat.trueinfo:
-            gdat.truepsfipara[gdat.indxpsfiparainit] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit])
+            gdat.truepsfp[gdat.indxpsfpinit] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit])
     elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
-        gdat.listpsfipara[:, gdat.indxpsfiparainit+1] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+1])
-        gdat.listpsfipara[:, gdat.indxpsfiparainit+2] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+2])
+        gdat.listpsfp[:, gdat.indxpsfpinit+1] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+1])
+        gdat.listpsfp[:, gdat.indxpsfpinit+2] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+2])
         if gdat.trueinfo:
-            gdat.truepsfipara[gdat.indxpsfiparainit+1] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+1])
-            gdat.truepsfipara[gdat.indxpsfiparainit+2] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+2])
+            gdat.truepsfp[gdat.indxpsfpinit+1] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+1])
+            gdat.truepsfp[gdat.indxpsfpinit+2] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+2])
     elif gdat.modlpsfntype == 'doubking':
-        gdat.listpsfipara[:, gdat.indxpsfiparainit+1] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+1])
-        gdat.listpsfipara[:, gdat.indxpsfiparainit+3] = rad2deg(gdat.listpsfipara[:, gdat.indxpsfiparainit+3])
+        gdat.listpsfp[:, gdat.indxpsfpinit+1] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+1])
+        gdat.listpsfp[:, gdat.indxpsfpinit+3] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+3])
         if gdat.trueinfo:
-            gdat.truepsfipara[gdat.indxpsfiparainit+1] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+1])
-            gdat.truepsfipara[gdat.indxpsfiparainit+3] = rad2deg(gdat.truepsfipara[gdat.indxpsfiparainit+3])
+            gdat.truepsfp[gdat.indxpsfpinit+1] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+1])
+            gdat.truepsfp[gdat.indxpsfpinit+3] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+3])
 
-    if gdat.probpsfipara != 0.:
+    if gdat.probpsfp != 0.:
         if gdat.trueinfo and gdat.modlpsfntype == 'doubking':
-            truepara = gdat.truepsfipara
+            truepara = gdat.truepsfp
         else:
-            truepara = array([None] * gdat.numbpsfipara)
-        tdpy.mcmc.plot_grid(path, gdat.listpsfipara, gdat.strgpsfipara, truepara=truepara, numbplotside=gdat.numbformpara, numbbins=gdat.numbbins, numbtickbins=3)
+            truepara = array([None] * gdat.numbpsfp)
+        tdpy.mcmc.plot_grid(path, gdat.listpsfp, gdat.strgpsfp, truepara=truepara, numbplotside=gdat.numbpsfpform, numbbins=gdat.numbbins, numbtickbins=3)
         
-        for k in range(gdat.numbpsfipara):
-            if std(gdat.listpsfipara[:, k]) != 0:
-                path = gdat.pathplot + 'psfipara%d_' % k
-                tdpy.mcmc.plot_trac(path, gdat.listpsfipara[:, k], gdat.strgpsfipara[k])
+        for k in range(gdat.numbpsfp):
+            if std(gdat.listpsfp[:, k]) != 0:
+                path = gdat.pathplot + 'psfp%d_' % k
+                tdpy.mcmc.plot_trac(path, gdat.listpsfp[:, k], gdat.strgpsfp[k])
     
     # log-likelihood
     path = gdat.pathplot + 'llik'
@@ -1463,18 +1466,27 @@ def plot_psfn(gdat, gdatmodi):
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
     if gdat.numbevtt == 1:
         axgr = [axgr]
+    if gdat.modlvarioaxi:
+        psfntemp = gdatmodi.thispsfn[:, :, :, 0]
+    else:
+        psfntemp = gdatmodi.thispsfn
+
     for m, axrw in enumerate(axgr):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
             
             # angular range to be plotted
-            indxangltemp = where(gdatmodi.thispsfn[i, :, m, 0] > 1e-6 * amax(gdatmodi.thispsfn[i, :, m, 0]))[0]
+            indxangltemp = where(psfntemp[i, :, m] > 1e-6 * amax(psfntemp[i, :, m]))[0]
             
-            axis.plot(gdat.binsanglplot[indxangltemp], gdatmodi.thispsfn[i, indxangltemp, m, 0], label='Sample')
+            axis.plot(gdat.binsanglplot[indxangltemp], psfntemp[i, indxangltemp, m], label='Sample')
             
             if gdat.truepsfn != None:
-                axis.plot(gdat.binsanglplot[indxangltemp], gdat.truepsfn[i, indxangltemp, m, 0], label=gdat.nameexpr, color='g', ls='--')
+                if gdat.truevarioaxi:
+                    truepsfntemp = gdat.truepsfn[i, indxangltemp, m, 0]
+                else:
+                    truepsfntemp = gdat.truepsfn[i, indxangltemp, m]
+                axis.plot(gdat.binsanglplot[indxangltemp], truepsfntemp, label=gdat.nameexpr, color='g', ls='--')
             axis.set_yscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
@@ -1484,7 +1496,7 @@ def plot_psfn(gdat, gdatmodi):
                 axis.set_title(gdat.binsenerstrg[i])  
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
-            indxsamptemp = gdat.indxsamppsfipara[i*gdat.numbformpara+m*gdat.numbener*gdat.numbformpara]
+            indxsamptemp = gdat.indxsamppsfp[i*gdat.numbpsfpform+m*gdat.numbener*gdat.numbpsfpform]
   
             if gdat.modlpsfntype == 'singgaus':
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp]) + gdat.strganglunit
@@ -1612,6 +1624,10 @@ def plot_intr():
         
 def plot_eval(gdat):
 
+    if gdat.truevarioaxi:
+        psfntemp = gdat.truepsfn[0, :, 0, 0]
+    else:
+        psfntemp = gdat.truepsfn[0, :, 0]
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for k in range(gdat.numbfluxprox + 1):
         if k == 0 or k == gdat.numbfluxprox:
@@ -1626,7 +1642,7 @@ def plot_eval(gdat):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0, 0], label=labl, color=colr, alpha=alph)
+        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * psfntemp, label=labl, color=colr, alpha=alph)
         axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
         if k > 0:
             axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
@@ -1634,8 +1650,8 @@ def plot_eval(gdat):
     axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
     axis.set_ylabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
 
-    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * gdat.truepsfn[0, :, 0, 0])
-    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * gdat.truepsfn[0, :, 0, 0][::-1], gdat.binsanglplot[::-1])
+    limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * psfntemp)
+    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * psfntemp[::-1], gdat.binsanglplot[::-1])
     
     if limt > 0:
         axis.axhline(limt, color='red', ls=':', label='Flux floor')
@@ -1728,7 +1744,7 @@ def plot_grap(redu=False):
                           ('numbpnts', 'bgal'), \
                           ('numbpnts', 'flux'), \
                           ('numbpnts', 'sind'), \
-                          ('psfipara', 'data'), \
+                          ('psfp', 'data'), \
                           ('normback', 'data'), \
                           ('lgal', 'data'), \
                           ('bgal', 'data'), \
@@ -1740,7 +1756,7 @@ def plot_grap(redu=False):
                           ('meanpnts', 'numbpnts'), \
                           ('numbpnts','lgal'), \
                           ('numbpnts','bgal'), \
-                          ('psfipara', 'modl'), \
+                          ('psfp', 'modl'), \
                           ('normback', 'modl'), \
                           ('numbpnts','flux'), \
                           ('numbpnts','sind'), \
@@ -1755,7 +1771,7 @@ def plot_grap(redu=False):
     labl['fluxdistslop'] = r'$\alpha$'
     labl['numbpnts'] = '$N$'
     labl['lgal'] = '$l$'
-    labl['psfipara'] = '$\eta$'
+    labl['psfp'] = '$\eta$'
     labl['normback'] = '$A$'
     labl['bgal'] = '$b$'
     labl['flux'] = '$f$'
@@ -1776,7 +1792,7 @@ def plot_grap(redu=False):
     nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop'], node_color='r', node_size=size)
     nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
     nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
-    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['psfipara', 'normback'], node_color='y', node_size=size)
+    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['psfp', 'normback'], node_color='y', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
     if redu:
@@ -1852,7 +1868,7 @@ def make_anim(gdat):
             continue
         else:
             if gdat.verbtype > 0:
-                print 'Producing animation of %s frames...' % name
+                print 'Producing animation for %s...' % name
             
         indxfileanim = choice(arange(numbfile), replace=False, size=numbfile)
 
@@ -1862,7 +1878,32 @@ def make_anim(gdat):
         cmnd += ' %s%s.gif' % (pathanim, name)
         os.system(cmnd)
 
-        
+       
+def plot_factoaxi(gdat, oaxipara=None, gdatmodi=None):
+
+    figr, axgr = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    if oaxipara != None:
+        if gdatmodi == None:
+            factoaxi = retr_factoaxi(gdat.binsangl, oaxipara)
+        else:
+            factoaxi = gdat.postoaxi
+        axis.plot(gdat.binsoaxi, factoaxi, log=True, label='Sample', color='b')
+    if gdat.trueinfo:
+        axis.plot(gdat.binsoaxi, gdat.truefactoaxi, log=True, label=gdat.truelabl, color='g')
+        if gdat.datatype == 'mock' and gdat.exprinfo:
+            axis.plot(gdat.binsoaxi, gdat.mockfactoaxi, log=True, label=gdat.strgexpr, color='r')
+    axis.set_xlabel(r'$\rho$')
+    axis.set_ylabel(r'f($\rho$')
+    axis.legend()
+    plt.tight_layout()
+    if gdatmodi == None:
+        strg = 'post/factoaxi.pdf'
+    else:
+        strg = 'fram/factoaxi_swep%09d.pdf' % gdatmodi.cntrswep
+    plt.savefig(gdat.pathplot + strg)
+    plt.close(figr)
+    
+
 def plot_histcnts(gdat, l, gdatmodi=None):
 
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
@@ -2011,7 +2052,7 @@ def plot_pntsdiff():
     tempsamp[gdat.indxsampnumbpnts] = array([tempnumbpnts])
     tempsamp[gdat.indxsampmeanpnts] = cdfn_logt(array([tempnumbpnts]), minmmeanpnts, factmeanpnts)
     tempsamp[gdat.indxsampfluxdistslop] = cdfn_atan(array([1.5]), minmfluxdistslop, factfluxdistslop)
-    tempsamp[gdat.indxsamppsfipara] = 0.5
+    tempsamp[gdat.indxsamppsfp] = 0.5
     for c in gdat.indxback:
         tempsamp[gdat.indxsampnormback[c, 0]] = cdfn_logt(array([1.]), minmnormback[c], factnormback[c])
     
