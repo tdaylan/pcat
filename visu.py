@@ -1483,6 +1483,10 @@ def plot_psfn(gdat, gdatmodi):
             
             if gdat.truepsfn != None:
                 if gdat.truevarioaxi:
+                    print 'hey'
+                    print 'gdat.truepsfn[i, indxangltemp, m, 0]'
+                    print gdat.truepsfn[i, indxangltemp, m, 0]
+                    print
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m, 0]
                 else:
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m]
@@ -1625,9 +1629,10 @@ def plot_intr():
 def plot_eval(gdat):
 
     if gdat.truevarioaxi:
-        psfntemp = gdat.truepsfn[0, :, 0, 0]
+        psfntemp = copy(gdat.truepsfn[0, :, 0, 0])
     else:
-        psfntemp = gdat.truepsfn[0, :, 0]
+        psfntemp = copy(gdat.truepsfn[0, :, 0])
+    psfntemp /= amax(psfntemp)
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for k in range(gdat.numbfluxprox + 1):
         if k == 0 or k == gdat.numbfluxprox:
@@ -1706,7 +1711,7 @@ def plot_mosa(gdat):
                             else:
                                 axis.set_yticklabels([])
                             
-                            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i])
+                            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
                             supr_fram(gdat, gdatmodi, axis, i, m)
                    
                     plt.figtext(0.5, 0.93, gdat.binsenerstrg[i], ha='center', va='center')
@@ -1946,8 +1951,8 @@ def plot_histcnts(gdat, l, gdatmodi=None):
 
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'datacnts', indxpoplplot=indxpoplplot)
-    imag = retr_fram(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
+    figr, axis, path = init_fram(gdat, indxenerplot, indxevttplot, 'datacnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
+    imag = retr_fram(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
     make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
@@ -1958,8 +1963,8 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'modlcnts', indxpoplplot=indxpoplplot)
-    imag = retr_fram(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
+    figr, axis, path = init_fram(gdat, indxenerplot, indxevttplot, 'modlcnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
+    imag = retr_fram(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
     make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
@@ -1970,8 +1975,8 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'resicnts', indxpoplplot=indxpoplplot)
-    imag = retr_fram(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu')
+    figr, axis, path = init_fram(gdat, indxenerplot, indxevttplot, 'resicnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
+    imag = retr_fram(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu', scal=gdat.scalmaps)
     make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickresicnts[indxenerplot, :], labl=gdat.lablresicnts[indxenerplot, :])
@@ -1998,7 +2003,7 @@ def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     numbiter = len(listtupl)
     for k in range(numbiter):
         strg, boolmean, varb, vmax, tick, labl = listtupl[k] 
-        figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, strg)
+        figr, axis, path = init_fram(gdat, indxenerplot, indxevttplot, strg, gdatmodi=gdatmodi)
         imag = retr_fram(gdat, axis, varb, indxenerplot, indxevttplot, vmax=vmax, cmap='RdBu', mean=boolmean)
         make_cbar(gdat, axis, imag, indxenerplot, tick=tick, labl=labl)
         plt.tight_layout()
@@ -2008,7 +2013,7 @@ def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
     
-    figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'catlfram', indxpoplplot=indxpoplplot)
+    figr, axis, path = init_fram(gdat, indxenerplot, indxevttplot, 'catlfram', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
     make_framlabl(gdat, axis)
 
     if gdat.trueinfo:

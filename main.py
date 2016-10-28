@@ -373,6 +373,7 @@ def init( \
          makeanim=True, \
          anotcatl=False, \
     
+         mockvarioaxi=None, \
          modlvarioaxi=None, \
 
          # misc
@@ -522,10 +523,8 @@ def init( \
             mocksinddisttype = array(['gaus' for l in range(mocknumbpopl)])
         if mockspectype == None:
             mockspectype = array(['powr' for l in range(mocknumbpopl)])
-        if mocksinddistmean == None:
-            mocksinddistmean = zeros(mocknumbpopl) + 2.2
         if mocksinddiststdv == None:
-            mocksinddiststdv = zeros(mocknumbpopl) + 0.3
+            mocksinddiststdv = zeros(mocknumbpopl) + 0.5
         if mockfluxdistslop == None:
             mockfluxdistslop = array([2.])
         if mockfluxdistbrek == None:
@@ -555,8 +554,6 @@ def init( \
     if initfluxdistslopuppr == None:
         initfluxdistslopuppr = array([None for n in range(numbpopl)])
         
-    if sinddistmean == None:
-        sinddistmean = array([2.2 for l in range(numbpopl)])
     if sinddiststdv == None:
         sinddiststdv = array([0.3 for l in range(numbpopl)])
 
@@ -571,13 +568,6 @@ def init( \
         exprpsfntype = 'doubking'
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2.)
-        if lablback == None:
-            if numbback == 1:
-                lablback = [r'$\mathcal{I}$']
-            else:
-                lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
-        if nameback == None:
-            nameback = ['normisot', 'normfdfm']
         if strgenerunit == None:
             strgenerunit = r'GeV'
         if strgfluxunit == None:
@@ -586,10 +576,6 @@ def init( \
             indxevttfull = arange(4)
         if binsenerfull == None:
             binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
-        if lablback == None:
-            lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
-        if nameback == None:
-            nameback = ['normisot', 'normfdfm']
         if anglassc == None:
             anglassc = deg2rad(0.5)
         if pixltype == None:
@@ -624,13 +610,6 @@ def init( \
             anglassc = deg2rad(0.15 / 3600.)
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2. / 3600.)
-        if lablback == None:
-            if numbback == 1:
-                lablback = [r'$\mathcal{I}$']
-            else:
-                lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
-        if nameback == None:
-            nameback = ['normisot', 'normfdfm']
         if strgenerunit == None:
             strgenerunit = r'r-band'
         if strgfluxunit == None:
@@ -641,27 +620,32 @@ def init( \
             indxevttfull = arange(1)
         if indxenerfull == None:
             indxenerfull = arange(1)
-        if lablback == None:
-            lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
-        if nameback == None:
-            nameback = ['normisot', 'normfdfm']
         if pixltype == None:
             pixltype = 'heal'
 
+    if exprtype == 'chan':
+        if sinddistmean == None:
+            sinddistmean = array([1.2 for l in range(numbpopl)])
+        if datatype == 'mock':
+            if mocksinddistmean == None:
+                mocksinddistmean = zeros(mocknumbpopl) + 1.2
+    else:
+        if sinddistmean == None:
+            sinddistmean = array([2.2 for l in range(numbpopl)])
+        if datatype == 'mock':
+            if mocksinddistmean == None:
+                mocksinddistmean = zeros(mocknumbpopl) + 2.2
+        
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
         if indxevttfull == None:
             indxevttfull = arange(1)
-        if lablback == None:
-            lablback = [r'$\mathcal{I}$']
-        if nameback == None:
-            nameback = ['normisot']
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2. / 3600.)
         if maxmgang == None:
             maxmgang = deg2rad(100. / 3600.)
         if binsenerfull == None:
-            binsenerfull = array([0.5e-3, 2e-3, 7e-3])
+            binsenerfull = array([0.5e-3, 2e-3, 8e-3])
         if anglassc == None:
             anglassc = deg2rad(0.5 / 3600.)
         if pixltype == None:
@@ -678,15 +662,30 @@ def init( \
             else:
                 indxenerfull = arange(2)
     
+    if lablback == None:
+        if numbback == 1:
+            lablback = [r'$\mathcal{I}$']
+        else:
+            lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+    if nameback == None:
+        if numbback == 1:
+            nameback = ['normisot']
+        else:
+            nameback = ['normisot', 'normdiff']
+    
     ## Chandra
     if exprtype == 'chan':
         if strgenerunit == None:
             strgenerunit = r'KeV'
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/KeV'
+        if mockvarioaxi == None:
+            mockvarioaxi = True
         if modlvarioaxi == None:
             modlvarioaxi = True
     else:
+        if mockvarioaxi == None:
+            mockvarioaxi = False
         if modlvarioaxi == None:
             modlvarioaxi = False
 
@@ -696,8 +695,6 @@ def init( \
             minmsind = array([1.])
         if maxmsind == None:
             maxmsind = array([3.])
-        if sinddistmean == None:
-            sinddistmean = array([2.2])
         if sinddiststdv == None:
             sinddiststdv = array([0.5])
         if minmmeanpnts == None:
@@ -835,6 +832,7 @@ def init( \
     gdat.boolpropnormback = boolpropnormback
     gdat.boolpropsind = boolpropsind
 
+    gdat.mockvarioaxi = mockvarioaxi
     gdat.modlvarioaxi = modlvarioaxi
 
     ## optimize the proposal frequencies and scales
@@ -1223,10 +1221,27 @@ def init( \
     # final setup
     setpfinl(gdat) 
 
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
+            figr, axis, path = init_fram(gdat, i, m, 'expo')
+            imag = retr_fram(gdat, axis, gdat.expo, i, m)
+            make_cbar(gdat, axis, imag, i)
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+        
+            for c in gdat.indxback:
+                figr, axis, path = init_fram(gdat, i, m, 'backcnts')
+                imag = retr_fram(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+
     if gdat.pntstype == 'lens':
-        figr, axis, path = init_fram(gdat, gdatmodi, indxevttplot, indxenerplot, 'mockmodlcntsraww', indxpoplplot=indxpoplplot)
-        imag = retr_fram(gdat, axis, gdat.mockmodlcntsraww, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot])
-        make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
+        figr, axis, path = init_fram(gdat, 0, 0, 'mockmodlcntsraww')
+        imag = retr_fram(gdat, axis, gdat.mockmodlcntsraww, 0, 0, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
+        make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
         plt.tight_layout()
         plt.savefig(path)
         plt.close(figr)
