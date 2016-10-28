@@ -335,9 +335,9 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{pix}$')
             plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'gmrbhist.pdf')
+            figr.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
             plt.close(figr)
-            path = gdat.pathplot + 'gmrbheal.pdf'
+            path = gdat.pathplot + 'diag/gmrbheal.pdf'
             maps = zeros(gdat.numbpixl)
             maps[indxpixlsave] = gmrbstat
             tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
@@ -347,7 +347,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 
     # plot autocorrelation
-    tdpy.mcmc.plot_atcr(gdat.pathplot, atcr, timeatcr)
+    tdpy.mcmc.plot_atcr(gdat.pathdiag, atcr, timeatcr)
     
     # plot proposal efficiency
     numbtimemcmc = 20
@@ -372,7 +372,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'propeffiprop.pdf')
+    figr.savefig(gdat.pathdiag + 'propeffiprop.pdf')
     plt.close(figr)
     
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
@@ -392,7 +392,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.set_yticklabels(listlabltick)
     
     plt.subplots_adjust(hspace=0)
-    figr.savefig(gdat.pathplot + 'propeffipara.pdf')
+    figr.savefig(gdat.pathdiag + 'propeffipara.pdf')
     plt.close(figr)
    
     # plot split and merge diagnostics
@@ -593,38 +593,39 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     plot_mosa(gdat)
     
     # PSF parameters
-    path = gdat.pathplot + 'psfp'
+    path = gdat.pathpost + 'psfp'
     if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
-        gdat.listpsfp[:, gdat.indxpsfpinit] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit])
+        gdat.listpsfp[:, gdat.indxpsfpinit] = gdat.listpsfp[:, gdat.indxpsfpinit] * gdat.anglfact
         if gdat.trueinfo:
-            gdat.truepsfp[gdat.indxpsfpinit] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit])
+            gdat.truepsfp[gdat.indxpsfpinit] = gdat.truepsfp[gdat.indxpsfpinit] * gdat.anglfact
     elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
-        gdat.listpsfp[:, gdat.indxpsfpinit+1] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+1])
-        gdat.listpsfp[:, gdat.indxpsfpinit+2] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+2])
+        gdat.listpsfp[:, gdat.indxpsfpinit+1] = gdat.listpsfp[:, gdat.indxpsfpinit+1] * gdat.anglfact
+        gdat.listpsfp[:, gdat.indxpsfpinit+2] = gdat.listpsfp[:, gdat.indxpsfpinit+2] * gdat.anglfact
         if gdat.trueinfo:
-            gdat.truepsfp[gdat.indxpsfpinit+1] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+1])
-            gdat.truepsfp[gdat.indxpsfpinit+2] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+2])
+            gdat.truepsfp[gdat.indxpsfpinit+1] = gdat.truepsfp[gdat.indxpsfpinit+1] * gdat.anglfact
+            gdat.truepsfp[gdat.indxpsfpinit+2] = gdat.truepsfp[gdat.indxpsfpinit+2] * gdat.anglfact
     elif gdat.modlpsfntype == 'doubking':
-        gdat.listpsfp[:, gdat.indxpsfpinit+1] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+1])
-        gdat.listpsfp[:, gdat.indxpsfpinit+3] = rad2deg(gdat.listpsfp[:, gdat.indxpsfpinit+3])
+        gdat.listpsfp[:, gdat.indxpsfpinit+1] = gdat.listpsfp[:, gdat.indxpsfpinit+1] * gdat.anglfact
+        gdat.listpsfp[:, gdat.indxpsfpinit+3] = gdat.listpsfp[:, gdat.indxpsfpinit+3] * gdat.anglfact
         if gdat.trueinfo:
-            gdat.truepsfp[gdat.indxpsfpinit+1] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+1])
-            gdat.truepsfp[gdat.indxpsfpinit+3] = rad2deg(gdat.truepsfp[gdat.indxpsfpinit+3])
+            gdat.truepsfp[gdat.indxpsfpinit+1] = gdat.truepsfp[gdat.indxpsfpinit+1] * gdat.anglfact
+            gdat.truepsfp[gdat.indxpsfpinit+3] = gdat.truepsfp[gdat.indxpsfpinit+3] * gdat.anglfact
 
     if gdat.probpsfp != 0.:
         if gdat.trueinfo and gdat.modlpsfntype == 'doubking':
             truepara = gdat.truepsfp
         else:
             truepara = array([None] * gdat.numbpsfp)
-        tdpy.mcmc.plot_grid(path, gdat.listpsfp, gdat.strgpsfp, truepara=truepara, numbplotside=gdat.numbpsfpform, numbbins=gdat.numbbins, numbtickbins=3)
+        
+        tdpy.mcmc.plot_grid(path, gdat.listpsfp, gdat.strgpsfp, truepara=truepara, numbplotside=gdat.numbpsfptotl, numbbins=gdat.numbbins, numbtickbins=3)
         
         for k in range(gdat.numbpsfp):
             if std(gdat.listpsfp[:, k]) != 0:
-                path = gdat.pathplot + 'psfp%d_' % k
+                path = gdat.pathpost + 'psfp_%d' % k
                 tdpy.mcmc.plot_trac(path, gdat.listpsfp[:, k], gdat.strgpsfp[k])
     
     # log-likelihood
-    path = gdat.pathplot + 'llik'
+    path = gdat.pathpost + 'llik'
     print 'listllik.flatten()'
     print mean(listllik)
     print 'gdat.maxmllikswep'
@@ -632,14 +633,14 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$', varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
     # log-prior
-    path = gdat.pathplot + 'lpri'
+    path = gdat.pathpost + 'lpri'
     tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(x)$')
 
     # number, expected number of PS and flux conditional prior power law index 
     for l in gdat.indxpopl:
         
         # number of point sources
-        path = gdat.pathplot + 'numbpntsdist_pop%d' % l
+        path = gdat.pathpost + 'numbpntsdist_pop%d' % l
         if gdat.trueinfo and gdat.truenumbpnts != None:
             truepara = gdat.truenumbpnts[l]
         else:
@@ -656,7 +657,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             gdat.listmeanpnts += gdat.mocknumbpnts
 
         # mean number of point sources
-        path = gdat.pathplot + 'meanpnts_pop%d' % l
+        path = gdat.pathpost + 'meanpnts_pop%d' % l
         if gdat.trueinfo and gdat.datatype == 'mock':
             truepara = gdat.mocknumbpnts[l]
         else:
@@ -680,7 +681,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         titl = gdat.binsenerstrg[gdat.indxenerfluxdist[0]]
         if gdat.fluxdisttype[l] == 'powr':
             # power law index
-            path = gdat.pathplot + 'fluxdistslop_pop%d' % l
+            path = gdat.pathpost + 'fluxdistslop_pop%d' % l
             # temp
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'powr':
@@ -694,7 +695,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         
         if gdat.fluxdisttype[l] == 'brok':
             # break flux
-            path = gdat.pathplot + 'fluxdistbrek_pop%d' % l
+            path = gdat.pathpost + 'fluxdistbrek_pop%d' % l
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'brok':
                     truepara = gdat.mockfluxdistbrek[l]
@@ -718,7 +719,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             tdpy.mcmc.plot_trac(path, gdat.listfluxdistsloplowr[:, l], labl, truepara=truepara)
         
             # uppr power law index
-            path = gdat.pathplot + 'fluxdistslopuppr_pop%d' % l
+            path = gdat.pathpost + 'fluxdistslopuppr_pop%d' % l
             if gdat.trueinfo and gdat.datatype == 'mock':
                 if gdat.mockfluxdisttype[l] == 'brok':
                     truepara = gdat.mockfluxdistslopuppr[l]
@@ -732,7 +733,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     # background normalization
     for i in gdat.indxener:
         for c in gdat.indxback:
-            path = gdat.pathplot + gdat.nameback[c] + '%d' % i
+            path = gdat.pathpost + gdat.nameback[c] + '%d' % i
             if gdat.trueinfo and gdat.datatype == 'mock':
                 truepara = gdat.truenormback[c, i]
             else:
@@ -770,8 +771,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     axis.set_xlabel(r'$\ln P(D|x)$')
     axis.axvline(amax(listllik), label='Maximum saved log-likelihood')
     axis.axvline(amax(listllik), label='Overall maximum log-likelihood')
-    plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'histllik.pdf')
+    plt.subplots_adjust(top=0.87)
+    figr.savefig(gdat.pathpost + 'histllik.pdf')
     plt.close(figr)
 
     # plot log-prior
@@ -781,8 +782,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.hist(listlpri.flatten())
         axis.set_ylabel(r'$N_{samp}$')
         axis.set_xlabel(r'$\ln P(x)$')
-    plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'leviinfo.pdf')
+    plt.subplots_adjust(top=0.87)
+    figr.savefig(gdat.pathpost + 'histlpri.pdf')
     plt.close(figr)
 
     # animate the frame plots
@@ -795,7 +796,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     axis.set_ylabel(r'$M$ [GB]')
     axis.set_xlabel(r'$i_{samp}$')
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'memoresi.pdf')
+    figr.savefig(gdat.pathdiag + 'memoresi.pdf')
     plt.close(figr)
 
     timetotlfinl = gdat.functime()
@@ -826,7 +827,7 @@ def plot_chro(gdat):
             axcl[k].set_xticklabels([])
     axcl[-1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(hspace=0.05)
-    figr.savefig(gdat.pathplot + 'chroprop.pdf')
+    figr.savefig(gdat.pathdiag + 'chroprop.pdf')
     plt.close(figr)
 
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Other']
@@ -834,7 +835,7 @@ def plot_chro(gdat):
     figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, gdat.plotsize))
     for k in range(numblabl - 1):
         if k == numblabl - 2:
-            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl, 1)
+            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
             varb = gdat.listchrototl[:, k+1]
         axcl[0].hist(varb, binstime, log=True, label=labl[k+1], alpha=0.5)
@@ -846,12 +847,12 @@ def plot_chro(gdat):
     axcl[1].set_xscale('log')
     axcl[0].set_ylim([0.5, None])
     axcl[1].set_ylim([0.5, None])
-    axcl[0].legend(loc=1)
+    axcl[0].legend(loc=9, ncol=4)
     axcl[1].legend(loc=2)
     axcl[0].set_xticklabels([])
     axcl[1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(bottom=0.15, hspace=0.18)
-    figr.savefig(gdat.pathplot + 'chrototl.pdf')
+    figr.savefig(gdat.pathdiag + 'chrototl.pdf')
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
@@ -879,7 +880,7 @@ def plot_chro(gdat):
         axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
     axcl[-1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(hspace=0.05)
-    figr.savefig(gdat.pathplot + 'chrollik.pdf')
+    figr.savefig(gdat.pathdiag + 'chrollik.pdf')
     plt.close(figr)
 
 
@@ -990,12 +991,12 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     axis.set_xlabel('$s$')
     axis.set_xlim([gdat.minmsind, gdat.maxmsind])
     axis.set_ylabel('$N$')
-    axis.set_ylim([0.5, None])
+    axis.set_ylim(gdat.limshist)
     axis.legend(loc=2)
     if post:
-        path = gdat.pathplot + 'histsind_pop%d.pdf' % l
+        path = gdat.pathpost + 'histsind_pop%d.pdf' % l
     else:
-        path = gdat.pathplot + 'fram/histsind_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
+        path = gdat.pathfram + 'histsind_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1151,7 +1152,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis.set_xlabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         axis.set_xscale('log')
         axis.text(0.75, 0.65, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
-        axis.set_ylim([0.5, None])
+        axis.set_ylim(gdat.limshist)
         axis.set_xlim([gdat.factfluxconv * gdat.minmspec[i], gdat.factfluxconv * gdat.maxmspec[i]])
         if plotspec:
             if i == 0:
@@ -1166,9 +1167,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     else:
         strg = 'flux'
     if post:
-        path = gdat.pathplot + 'hist%s_pop%d' % (strg, l) + '.pdf'
+        path = gdat.pathpost + 'hist%s_pop%d' % (strg, l) + '.pdf'
     else:
-        path = gdat.pathplot + 'fram/hist%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathfram + 'hist%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1244,9 +1245,9 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None):
         axis.set_title(gdat.binsenerstrg[i])
 
     if postspecmtch != None:
-        path = gdat.pathplot + 'scatspec%d' % l + '.pdf'
+        path = gdat.pathpost + 'scatspec_pop%d' % l + '.pdf'
     elif gdatmodi.thisspecmtch != None:
-        path = gdat.pathplot + 'fram/scatspec_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathfram + 'scatspec_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep
 
     plt.tight_layout()
     plt.savefig(path)
@@ -1306,7 +1307,7 @@ def plot_indxprox(gdat):
     axis.set_ylabel("Number of tables")
     axis.legend(loc=2)
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'indxprox.pdf')
+    plt.savefig(gdat.pathplot + 'init/indxprox.pdf')
     plt.close()
     
     
@@ -1431,7 +1432,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
         #cbar.set_ticks(gdat.tickdatacnts[i, :])
         #cbar.set_ticklabels(gdat.labldatacnts[i, :])
         plt.subplots_adjust(left=0.1, top=.92, hspace=0.05, wspace=0.03, bottom=0.08)
-        figr.savefig(gdat.pathplot + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
+        figr.savefig(gdat.pathpost + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
         plt.close(figr)
        
     
@@ -1485,10 +1486,6 @@ def plot_psfn(gdat, gdatmodi):
             
             if gdat.truepsfn != None:
                 if gdat.truevarioaxi:
-                    print 'hey'
-                    print 'gdat.truepsfn[i, indxangltemp, m, 0]'
-                    print gdat.truepsfn[i, indxangltemp, m, 0]
-                    print
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m, 0]
                 else:
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m]
@@ -1587,7 +1584,7 @@ def plot_datacntshist(gdat):
                 axis.set_ylabel(gdat.evttstrg[m])
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'datacntshist.pdf')
+    plt.savefig(gdat.pathinit + 'datacntshist.pdf')
     plt.close(figr)
     
     
@@ -1668,7 +1665,7 @@ def plot_eval(gdat):
     legd.get_frame().set_facecolor('white')
     
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'eval.pdf')
+    plt.savefig(gdat.pathinit + 'eval.pdf')
     plt.close(figr)
 
 
@@ -1845,7 +1842,8 @@ def make_anim(gdat):
 
     listname = ['psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
     listnamepopl = ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
-    listnamepoplenerevtt = ['errrcnts', 'datacnts', 'resicnts', 'modlcnts']
+    listnamepoplenerevtt = ['datacnts', 'resicnts', 'modlcnts']
+    listnameenerevtt = ['factoaxi', 'errr', 'errrcnts']
     for l in gdat.indxpopl:
         for k in range(len(listnamepopl)):
             listname.append('%s_pop%d' % (listnamepopl[k], l))
@@ -1856,8 +1854,10 @@ def make_anim(gdat):
                 else:
                     strg = '%d' % m
                 for k in range(len(listnamepoplenerevtt)):
-                    listname.append('%s_pop%d' % (listnamepoplenerevtt[k], l))
                     listname.append('%s_pop%d_%d%s' % (listnamepoplenerevtt[k], l, i, strg))
+                for k in range(len(listnameenerevtt)):
+                    listname.append('%s_%d%s' % (listnameenerevtt[k], i, strg))
+
     pathanim = gdat.pathplot + 'anim/'
 
     os.system('mkdir -p %s' % pathanim)
@@ -1886,27 +1886,30 @@ def make_anim(gdat):
         os.system(cmnd)
 
        
-def plot_factoaxi(gdat, oaxipara=None, gdatmodi=None):
+def plot_factoaxi(gdat, i, m, gdatmodi=None):
 
-    figr, axgr = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    if oaxipara != None:
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    if gdat.modlvarioaxi:
         if gdatmodi == None:
-            factoaxi = retr_factoaxi(gdat.binsangl, oaxipara)
+            psfpoaxinorm = gdat.postpsfpoaxinorm
+            psfpoaxiindx = gdat.postpsfpoaxiindx
         else:
-            factoaxi = gdat.postoaxi
-        axis.plot(gdat.binsoaxi, factoaxi, log=True, label='Sample', color='b')
+            psfpoaxinorm = gdatmodi.thissampvarb[gdat.indxsamppsfpoaxinorm]
+            psfpoaxiindx = gdatmodi.thissampvarb[gdat.indxsamppsfpoaxiindx]
+        factoaxi = retr_factoaxi(gdat.binsoaxi, psfpoaxinorm, psfpoaxiindx)
+        axis.plot(gdat.binsoaxi * gdat.anglfact, factoaxi[i, :], label='Sample', color='b')
     if gdat.trueinfo:
-        axis.plot(gdat.binsoaxi, gdat.truefactoaxi, log=True, label=gdat.truelabl, color='g')
+        axis.plot(gdat.binsoaxi * gdat.anglfact, gdat.truefactoaxi[i, :], label=gdat.truelabl, color='g')
         if gdat.datatype == 'mock' and gdat.exprinfo:
-            axis.plot(gdat.binsoaxi, gdat.mockfactoaxi, log=True, label=gdat.strgexpr, color='r')
-    axis.set_xlabel(r'$\rho$')
-    axis.set_ylabel(r'f($\rho$')
-    axis.legend()
+            axis.plot(gdat.binsoaxi, gdat.mockfactoaxi, label=gdat.strgexpr, color='r')
+    axis.set_xlabel(r'$\phi$')
+    axis.set_ylabel(r'f($\phi$)')
+    axis.legend(loc=2)
     plt.tight_layout()
     if gdatmodi == None:
-        strg = 'post/factoaxi.pdf'
+        strg = 'post/factoaxi_%d%d.pdf' % (i, m)
     else:
-        strg = 'fram/factoaxi_swep%09d.pdf' % gdatmodi.cntrswep
+        strg = 'fram/factoaxi_%d%d_swep%09d.pdf' % (i, m, gdatmodi.cntrswep)
     plt.savefig(gdat.pathplot + strg)
     plt.close(figr)
     
@@ -1937,8 +1940,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
-            if gdat.trueinfo:
-                axis.set_ylim([0.5, 1e3])
+            axis.set_ylim(gdat.limshist)
             if m == 0:
                 axis.set_title(gdat.binsenerstrg[i])
             if i == 0 and gdat.exprtype == 'ferm':
@@ -1989,13 +1991,6 @@ def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     
 def plot_errrcnts(gdat, gdatmodi, indxenerplot, indxevttplot):
    
-    print 'hey'
-    print 'gdatmodi.thiserrrcnts'
-    print amin(gdatmodi.thiserrrcnts), amax(gdatmodi.thiserrrcnts)
-    print 'gdatmodi.thiserrr'
-    print amin(gdatmodi.thiserrr), amax(gdatmodi.thiserrr)
-    print
-
     listtupl = [ \
                 #['errrcnts', False, gdatmodi.thiserrrcnts, gdat.maxmerrrcnts[indxenerplot], gdat.tickerrrcnts[indxenerplot, :], gdat.lablerrrcnts[indxenerplot, :]], \
                 #[    'errr',  True,     gdatmodi.thiserrr,     gdat.maxmerrr[indxenerplot],     gdat.tickerrr[indxenerplot, :],     gdat.lablerrr[indxenerplot, :]], \

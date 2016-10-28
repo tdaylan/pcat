@@ -405,8 +405,6 @@ def init( \
          maxmnormback=None, \
          minmnormback=None, \
          maxmgang=None, \
-         sinddistmean=None, \
-         sinddiststdv=None, \
          minmmeanpnts=None, \
          maxmmeanpnts=None, \
          minmfluxdistslop=None, \
@@ -417,11 +415,16 @@ def init( \
          maxmfluxdistsloplowr=None, \
          minmfluxdistslopuppr=None, \
          maxmfluxdistslopuppr=None, \
+         sinddistmean=None, \
+         sinddiststdv=None, \
          minmflux=None, \
          maxmflux=None, \
          minmsind=None, \
          maxmsind=None, \
-         
+        
+         modlpsfp=None, \
+         mockpsfp=None, \
+
          # proposals
          probprop=None, \
          numbpntsmodi=1, \
@@ -437,8 +440,8 @@ def init( \
          fracrand=0.05, \
          boolpropfluxdist=True, \
          boolpropfluxdistbrek=True, \
-         boolproppsfn=False, \
-         boolpropnormback=False, \
+         boolproppsfn=True, \
+         boolpropnormback=True, \
          boolpropsind=True, \
          radispmrlbhl=None, \
 
@@ -540,11 +543,6 @@ def init( \
     if maxmnormback == None:
         maxmnormback = ones(numbback) * 2.
         
-    if minmsind == None:
-        minmsind = 0.5
-    if maxmsind == None:
-        maxmsind = 3.5
-    
     if initfluxdistslop == None:
         initfluxdistslop = array([None for n in range(numbpopl)])
     if initfluxdistbrek == None:
@@ -624,17 +622,22 @@ def init( \
             pixltype = 'heal'
 
     if exprtype == 'chan':
-        if sinddistmean == None:
-            sinddistmean = array([1.2 for l in range(numbpopl)])
-        if datatype == 'mock':
-            if mocksinddistmean == None:
-                mocksinddistmean = zeros(mocknumbpopl) + 1.2
+        minmsindfudi = 0.5
+        maxmsindfudi = 2.
+        sinddistmeanfudi = 1.25
     else:
-        if sinddistmean == None:
-            sinddistmean = array([2.2 for l in range(numbpopl)])
-        if datatype == 'mock':
-            if mocksinddistmean == None:
-                mocksinddistmean = zeros(mocknumbpopl) + 2.2
+        minmsindfudi = 0.5
+        maxmsindfudi = 3.5
+        sinddistmeanfudi = 2.25
+    if minmsind == None:
+        minmsind = minmsindfudi
+    if maxmsind == None:
+        maxmsind = maxmsindfudi
+    if sinddistmean == None:
+        sinddistmean = array([sinddistmeanfudi for l in range(numbpopl)])
+    if datatype == 'mock':
+        if mocksinddistmean == None:
+            mocksinddistmean = zeros(mocknumbpopl) + sinddistmeanfudi
         
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
@@ -691,10 +694,6 @@ def init( \
 
     ## SDSS
     if exprtype == 'sdss':
-        if minmsind == None:
-            minmsind = array([1.])
-        if maxmsind == None:
-            maxmsind = array([3.])
         if sinddiststdv == None:
             sinddiststdv = array([0.5])
         if minmmeanpnts == None:
@@ -1223,15 +1222,36 @@ def init( \
 
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            figr, axis, path = init_fram(gdat, i, m, 'expo')
+            figr, axis, path = init_fram(gdat, i, m, 'expo', pathfold=gdat.pathinit)
             imag = retr_fram(gdat, axis, gdat.expo, i, m)
             make_cbar(gdat, axis, imag, i)
             plt.tight_layout()
             plt.savefig(path)
             plt.close(figr)
         
+            figr, axis, path = init_fram(gdat, i, m, 'datacnts', pathfold=gdat.pathinit)
+            imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+            
+            figr, axis, path = init_fram(gdat, i, m, 'backcntstotl', pathfold=gdat.pathinit)
+            imag = retr_fram(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+
+            figr, axis, path = init_fram(gdat, i, m, 'diffcntstotl', pathfold=gdat.pathinit)
+            imag = retr_fram(gdat, axis, gdat.datacnts - gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+
             for c in gdat.indxback:
-                figr, axis, path = init_fram(gdat, i, m, 'backcnts')
+                figr, axis, path = init_fram(gdat, i, m, 'backcnts', pathfold=gdat.pathinit)
                 imag = retr_fram(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
                 plt.tight_layout()
@@ -1239,7 +1259,7 @@ def init( \
                 plt.close(figr)
 
     if gdat.pntstype == 'lens':
-        figr, axis, path = init_fram(gdat, 0, 0, 'mockmodlcntsraww')
+        figr, axis, path = init_fram(gdat, 0, 0, 'mockmodlcntsraww', pathfold=gdat.pathinit)
         imag = retr_fram(gdat, axis, gdat.mockmodlcntsraww, 0, 0, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
         make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
         plt.tight_layout()
@@ -2188,8 +2208,10 @@ def plot_samp(gdat, gdatmodi):
     ## PSF radial profile
     plot_psfn(gdat, gdatmodi)
     # temp
-    if False and (gdat.modlvarioaxi or gdat.truevarioaxi):
-        plot_factoaxi(gdat, oaxipara, gdatmodi)
+    if gdat.modlvarioaxi or gdat.truevarioaxi:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                plot_factoaxi(gdat, i, m, gdatmodi)
     
     ## PSF FWHM
     if False:

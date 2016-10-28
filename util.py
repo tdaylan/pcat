@@ -59,7 +59,7 @@ def retr_indx(gdat, indxpntsfull):
         indxsampspec.append(repeat((indxsamplgaltemp + 2)[None, :], gdat.numbener, 0) + repeat(gdat.indxener, len(indxpntsfull[l])).reshape(gdat.numbener, -1))
         indxsampsind.append(indxsamplgaltemp + 2 + gdat.numbener)
         indxsampcomp.append(repeat(indxsamplgaltemp, gdat.numbcomp) + tile(arange(gdat.numbcomp, dtype=int), len(indxpntsfull[l])))
-
+    
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp
 
 
@@ -896,10 +896,9 @@ def retr_sdsspsfn(gdat):
 
 def retr_chanpsfn(gdat):
 
-    #gdat.chanpsfp = array([0.25, 1.7e6, 1.9, 0.25, 2.1e6, 2.]) / gdat.anglfact
-    #gdat.chanpsfn = retr_psfn(gdat, gdat.chanpsfp, gdat.indxener, gdat.binsangl, 'singgaus', gdat.binsoaxi, True)
-    gdat.chanpsfp = array([0.25, 0.25]) / gdat.anglfact
-    gdat.chanpsfn = retr_psfn(gdat, gdat.chanpsfp, gdat.indxener, gdat.binsangl, 'singgaus', gdat.binsoaxi, varioaxi=False)
+    gdat.chanpsfp = array([0.25 / gdat.anglfact, 1.7e6, 1.9, 0.25 / gdat.anglfact, 2.1e6, 2.])
+    gdat.chanpsfn = retr_psfn(gdat, gdat.chanpsfp, gdat.indxener, gdat.binsangl, 'singgaus', gdat.binsoaxi, True)
+    gdat.chanfactoaxi = retr_factoaxi(gdat.binsoaxi, gdat.chanpsfp[gdat.indxpsfpoaxinorm], gdat.chanpsfp[gdat.indxpsfpoaxiindx])
    
 
 def retr_fermpsfn(gdat):
@@ -1455,7 +1454,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxpsfpmodi = choice(gdat.indxpsfp)
 
         # the energy bin of the PS flux map to be modified
-        gdatmodi.indxenermodi = array([(gdatmodi.indxpsfpmodi % gdat.numbpsfpevtt) // gdat.numbpsfpform])
+        gdatmodi.indxenermodi = array([(gdatmodi.indxpsfpmodi % gdat.numbpsfpevtt) // gdat.numbpsfptotl])
         
         # sample index to be modified
         gdatmodi.indxsampmodi = gdat.indxsamppsfp[gdatmodi.indxpsfpmodi]
@@ -2039,6 +2038,13 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampvarbmodi = gdatmodi.indxsampmodi
 
         
+def retr_factoaxi(bins, norm, indx):
+
+    factoaxi = 1. + norm[:, None] * bins[None, :]**indx[:, None]
+     
+    return factoaxi
+
+
 def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, varioaxi=None):
 
     if psfntype == 'singgaus':
@@ -2073,36 +2079,47 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         # temp -- only works for single event class
         indxpsfpoaxinorm = numbpsfptotl * gdat.indxener + gdat.numbpsfpform
         indxpsfpoaxiindx = numbpsfptotl * gdat.indxener + gdat.numbpsfpform + 1
-        print 'binsoaxi[None, :]'
-        print binsoaxi[None, :]
-        print 'psfp[indxpsfpoaxinorm]'
-        print psfp[indxpsfpoaxinorm]
-        print 'psfp[indxpsfpoaxinorm][:, None]'
-        print psfp[indxpsfpoaxinorm][:, None]
-        print
-        factoaxi = 1. + (binsoaxi[None, :] / psfp[indxpsfpoaxinorm][:, None])**psfp[indxpsfpoaxiindx][:, None]
-    else:
-        factoaxi = array([1.])
-    
+        
+        if False:
+            print 'hey'
+            print 'binsoaxi[None, :]'
+            print binsoaxi[None, :]
+            print binsoaxi[None, :].shape
+            print 'indxpsfpoaxinorm'
+            print indxpsfpoaxinorm
+            print 'indxpsfpoaxiindx'
+            print indxpsfpoaxiindx
+            print 'psfp[indxpsfpoaxinorm]'
+            print psfp[indxpsfpoaxinorm]
+            print psfp[indxpsfpoaxinorm].shape
+            print 'psfp[indxpsfpoaxinorm][:, None]'
+            print psfp[indxpsfpoaxinorm][:, None]
+            print psfp[indxpsfpoaxinorm][:, None].shape
+            print 'psfp'
+            print psfp
+            print psfp.shape
+            print 
+        factoaxi = retr_factoaxi(binsoaxi, psfp[indxpsfpoaxinorm], psfp[indxpsfpoaxiindx])
     if psfntype == 'singgaus':
         sigc = psfp[indxpsfptemp]
         if varioaxi:
-            print 'hey'
-            print 'gdat.indxpsfp'
-            print gdat.indxpsfp
-            print 'indxpsfptemp'
-            print indxpsfptemp
-            print 'psfp'
-            print psfp
-            print 'sigc'
-            print sigc
-            print 'psfp[gdat.indxpsfpoaxinorm]'
-            print psfp[indxpsfpoaxinorm]
-            print 'psfp[gdat.indxpsfpoaxiindx]'
-            print psfp[indxpsfpoaxiindx]
-            print 'factoaxi'
-            print factoaxi
-            print 
+            if False:
+                print 'hey'
+                print 'gdat.indxpsfp'
+                print gdat.indxpsfp
+                print 'indxpsfptemp'
+                print indxpsfptemp
+                print 'psfp'
+                print psfp
+                print 'sigc'
+                print sigc
+                print 'psfp[gdat.indxpsfpoaxinorm]'
+                print psfp[indxpsfpoaxinorm]
+                print 'psfp[gdat.indxpsfpoaxiindx]'
+                print psfp[indxpsfpoaxiindx]
+                print 'factoaxi'
+                print factoaxi
+                print 
             sigc = sigc[:, None, :, None] * factoaxi[:, None, None, :]
         else:
             sigc = sigc[:, None, :]
@@ -2328,11 +2345,14 @@ def retr_psfimodl(gdat):
     gdat.maxmpsfp = tile(tile(maxmpsfp, gdat.numbener), gdat.numbevtt)
     gdat.scalpsfp = tile(tile(scalpsfp, gdat.numbener), gdat.numbevtt)
     gdat.factpsfp = tile(tile(factpsfp, gdat.numbener), gdat.numbevtt)
+    
+    #gdat.indxpsfpinit = (gdat.indxevtt[:, None] * gdat.numbpsfpevtt + gdat.indxener[None, :] * gdat.numbpsfpform).flatten()
+    gdat.indxpsfpinit = gdat.numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
+    gdat.indxpsfpoaxinorm = gdat.numbpsfpform + gdat.numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
+    gdat.indxpsfpoaxiindx = gdat.numbpsfpform + gdat.numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
    
     # PSF parameter strings
-    gdat.strgpsfp = [strgpsfp[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) \
-        for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxpsfpform]
-    gdat.indxpsfpinit = (gdat.indxevtt[:, None] * gdat.numbpsfpevtt + gdat.indxener[None, :] * gdat.numbpsfpform).flatten()
+    gdat.strgpsfp = [strgpsfp[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxpsfptotl]
     for k in arange(gdat.indxpsfpinit.size):
         if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
             gdat.strgpsfp[gdat.indxpsfpinit[k]] += ' ' + gdat.strganglunit
@@ -2342,7 +2362,7 @@ def retr_psfimodl(gdat):
         elif gdat.modlpsfntype == 'doubking':
             gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' ' + gdat.strganglunit
             gdat.strgpsfp[gdat.indxpsfpinit[k]+3] += ' ' + gdat.strganglunit
-
+    
 
 def retr_unit(lgal, bgal):
 
@@ -2544,6 +2564,13 @@ def setpinit(gdat):
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
     gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
     gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
+    
+    print 'hey'
+    print 'gdat.binsenerfull'
+    print gdat.binsenerfull
+    print 'gdat.indxenerinclbins'
+    print gdat.indxenerinclbins
+
     gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
     gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
     gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
@@ -2886,6 +2913,7 @@ def setpinit(gdat):
     # backgrounds
     gdat.backflux = []
     gdat.backcnts = []
+    gdat.backcntstotl = zeros_like(gdat.expo)
     for c in gdat.indxback:
         if gdat.strgback[c] == 'unit' or gdat.strgback[c] == 'zero':
             if gdat.strgback[c] == 'unit':
@@ -2904,9 +2932,15 @@ def setpinit(gdat):
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'cart':
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
+        print 'hey'
+        print 'gdat.diffener'
+        print gdat.diffener.shape
+        print 'gdat.expo'
+        print gdat.expo.shape
         backcntstemp = backfluxtemp * gdat.expo * gdat.diffener[:, None, None] * gdat.apix
         gdat.backflux.append(backfluxtemp)
         gdat.backcnts.append(backcntstemp)
+        gdat.backcntstotl[:] += backcntstemp 
     
     # only include desired energy and PSF class bins 
     gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
@@ -2993,6 +3027,12 @@ def setpfinl(gdat):
     gdat.indxsampcompinit = amax(gdat.indxsampnormback) + 1
     gdat.numbpara = int(gdat.indxsampcompinit + sum(gdat.maxmnumbcomp))
     gdat.indxpara = arange(gdat.numbpara)
+    
+    #gdat.indxsamppsfpoaxi = gdat.indxsamppsfp[0] + gdat.numbpsfpform + tile(arange(gdat.numbpsfpoaxi), gdat.numbener * gdat.numbevtt) + \
+    #                                                                                repeat(gdat.numbpsfptotl * arange(gdat.numbener * gdat.numbevtt), gdat.numbpsfpoaxi)
+    gdat.indxsamppsfpoaxinorm = gdat.indxsamppsfp[0] + gdat.indxpsfpoaxinorm
+    gdat.indxsamppsfpoaxiindx = gdat.indxsamppsfp[0] + gdat.indxpsfpoaxiindx
+    gdat.indxsamppsfpoaxi = sort(concatenate((gdat.indxsamppsfpoaxinorm, gdat.indxsamppsfpoaxiindx)))
 
     # number of burned sweeps
     if gdat.numbburn == None:
@@ -3023,10 +3063,10 @@ def setpfinl(gdat):
         gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         gdat.pathfram = gdat.pathplot + 'fram/'
         gdat.pathpost = gdat.pathplot + 'post/'
-        os.system('mkdir -p %s %s %s' % (gdat.pathplot, gdat.pathfram, gdat.pathpost))
-        if gdat.diagmode:
-            gdat.pathdiag = gdat.pathplot + 'diag/'
-            os.system('mkdir -p %s' % gdat.pathdiag)
+        gdat.pathinit = gdat.pathplot + 'init/'
+        os.system('mkdir -p %s %s %s %s' % (gdat.pathplot, gdat.pathfram, gdat.pathpost, gdat.pathinit))
+        gdat.pathdiag = gdat.pathplot + 'diag/'
+        os.system('mkdir -p %s' % gdat.pathdiag)
         if gdat.optiprop:
             gdat.pathopti = gdat.pathplot + 'opti/'
             os.system('mkdir -p %s' % gdat.pathopti)
@@ -3138,8 +3178,11 @@ def setpfinl(gdat):
     # plot settings
     ## marker opacity
     gdat.alphmrkr = 0.5
-    gdat.alphpnts = 0.7
+    gdat.alphpnts = 0.4
     gdat.alphmaps = 1.
+    
+    ## upper limit of histograms
+    gdat.limshist = [0.5, 10**ceil(log10(gdat.maxmnumbpntstotl))]
 
     ## marker size
     gdat.minmmrkrsize = 50
@@ -3212,9 +3255,9 @@ def setpfinl(gdat):
                 gdat.truepsfntype = 'doubking'
         
         if gdat.exprtype == 'chan':
-            # temp
-            gdat.truevarioaxi = False
+            gdat.truevarioaxi = True
             gdat.truepsfn = gdat.chanpsfn
+            gdat.truefactoaxi = gdat.chanfactoaxi
         else:
             gdat.truevarioaxi = False
             if gdat.exprtype == 'ferm':
@@ -3300,6 +3343,7 @@ def setpfinl(gdat):
     if gdat.scalmaps == 'asnh':
         gdat.minmdatacnts = arcsinh(gdat.minmdatacnts)
         gdat.maxmdatacnts = arcsinh(gdat.maxmdatacnts)
+        gdat.maxmresicnts = arcsinh(gdat.maxmresicnts)
     for i in gdat.indxener:
         gdat.tickresicnts[i, :] = linspace(-gdat.maxmresicnts[i], gdat.maxmresicnts[i], numbtickcbar + 1)
         gdat.tickerrrcnts[i, :] = linspace(-gdat.maxmerrrcnts[i], gdat.maxmerrrcnts[i], numbtickcbar + 1)
@@ -3367,7 +3411,10 @@ def retr_indxoaxipnts(gdat, lgal, bgal):
     return indxoaxipnts
 
 
-def init_fram(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpoplplot=None):
+def init_fram(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpoplplot=None, pathfold=None):
+
+    if pathfold == None:
+        pathfold = gdat.pathfram
 
     figr, axis = plt.subplots(figsize=(gdat.sizeimag, gdat.sizeimag))
     
@@ -3383,11 +3430,9 @@ def init_fram(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpop
     
     if gdatmodi == None:
         strgswep = ''
-        strgfram = ''
     else:
         strgswep = '_swep%09d' % gdatmodi.cntrswep
-        strgfram = 'fram/'
-    path = gdat.pathplot + '%s%s%s_%d%s%s.pdf' % (strgfram, strgplot, strgpopl, gdat.indxenerincl[indxenerplot], strgevtt, strgswep)
+    path = '%s%s%s_%d%s%s.pdf' % (pathfold, strgplot, strgpopl, gdat.indxenerincl[indxenerplot], strgevtt, strgswep)
     
     axis.set_xlabel(gdat.longlabl)
     axis.set_ylabel(gdat.latilabl)
