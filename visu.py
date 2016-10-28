@@ -1127,15 +1127,17 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             axiscnts.set_xlim([gdat.binscnts[i, 0], gdat.binscnts[i, -1]])
             axiscnts.xaxis.set_ticks_position('bottom')
             axiscnts.xaxis.set_label_position('bottom')
-            
-            # add yet another horizontal axis for fluctuation significance
-            axissigm = axis.twiny()
-            axissigm.set_xscale('log')
-            axissigm.set_xlabel(r'$\sigma$')
-            axissigm.spines['top'].set_position(('axes', 1.05))
-            axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
-            axissigm.axvline(1., ls='--', alpha=0.1)
-            axissigm.axvline(5., ls='--', alpha=0.1)
+           
+            # temp
+            if False:
+                # add yet another horizontal axis for fluctuation significance
+                axissigm = axis.twiny()
+                axissigm.set_xscale('log')
+                axissigm.set_xlabel(r'$\sigma$')
+                axissigm.spines['top'].set_position(('axes', 1.05))
+                axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
+                axissigm.axvline(1., ls='--', alpha=0.1)
+                axissigm.axvline(5., ls='--', alpha=0.1)
     
         # superimpose the true catalog
         if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
