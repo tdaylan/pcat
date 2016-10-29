@@ -143,17 +143,7 @@ def work(gdat, indxprocwork):
                 fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
                 fluxunit = cdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :], 0] = copy(fluxunit)
-            print 'gdat.sinddistmean'
-            print gdat.sinddistmean.shape
-            print 'gdat.sinddiststdv'
-            print gdat.sinddiststdv.shape
-            print 'gdat.sindcdfnnormminm'
-            print gdat.sindcdfnnormminm.shape
-            print 'gdat.sindcdfnnormdiff'
-            print gdat.sindcdfnnormdiff.shape
-            print
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_eerr(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l], \
-                                                                                                            gdat.sindcdfnnormminm[l], gdat.sindcdfnnormdiff[l])
+            gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_gaus(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l])
 
     if gdat.verbtype > 1:
         print 'drmcsamp'
@@ -1039,7 +1029,7 @@ def init( \
     
     # temp
     # check inputs
-    if numbburn != None:
+    if numbburn != None and numbswep != None:
         if numbburn > numbswep:
             raise Exception('Bad number of burn-in sweeps.')
         if factthin != None:
@@ -1139,7 +1129,7 @@ def init( \
             if gdat.mockfluxdisttype[l] == 'brok':
                 gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfluxdistbrek[l], \
                                                                                                 gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
-            gdat.mocksind[l] = icdf_eerr(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l], gdat.mocksindcdfnnormminm[l], gdat.mocksindcdfnnormdiff[l])
+            gdat.mocksind[l] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
         
             if gdat.verbtype > 1:
                 print 'mocksind[l]'
@@ -1475,11 +1465,15 @@ def init( \
     print indxswepmaxmlpos
 
     # merge samples from processes
-    listindxprop = listindxprop.flatten()
+    listindxprop = listindxprop.reshape((gdat.numbsweptotl, -1))
     listchrototl = listchrototl.reshape((gdat.numbsweptotl, gdat.numbchrototl)) 
     listaccp = listaccp.flatten()
     listindxparamodi = listindxparamodi.flatten()
+    # temp
     listauxipara = listauxipara.reshape((gdat.numbsweptotl, gdat.numbcompcolr))
+    #shap = listauxipara.shape
+    #shap = [shap[0] * shap[1], shap[2:]]
+    #listauxipara = listauxipara.reshape(shap)
     listlaccfact = listlaccfact.reshape(gdat.numbsweptotl)
     listnumbpair = listnumbpair.reshape(gdat.numbsweptotl)
     listjcbnfact = listjcbnfact.reshape(gdat.numbsweptotl)
@@ -1495,7 +1489,7 @@ def init( \
         for j in gdat.indxsamp:      
             listindxpntsfulltemp.append(listindxpntsfull[k][j])
     listindxpntsfull = listindxpntsfulltemp
-   
+
     # compute the approximation error as a fraction of the counts expected from the dimmest PS for the mean exposure
     listerrrfracdimm = listerrr / (gdat.minmflux * mean(gdat.expo, 1)[None, :, :] * gdat.diffener[None, :, None]) 
 
@@ -1509,10 +1503,13 @@ def init( \
     indxprocmaxmllik = argmax(maxmllikswep)
     maxmllikswep = maxmllikswep[indxprocmaxmllik]
     indxswepmaxmllik = indxprocmaxmllik * gdat.numbsamp + indxswepmaxmllik[indxprocmaxmllik]
+    sampvarbmaxmllik = sampvarbmaxmllik[indxprocmaxmllik, :]
+    
     indxprocmaxmlpos = argmax(maxmlposswep)
     maxmlposswep = maxmlposswep[indxprocmaxmlpos]
     indxswepmaxmlpos = indxswepmaxmlpos[indxprocmaxmlpos]
-    
+    sampvarbmaxmlpos = sampvarbmaxmlpos[indxprocmaxmlpos, :]
+
     # calculate log-evidence using the harmonic mean estimator
     if gdat.verbtype > 0:
         print 'Estimating the Bayesian evidence...'
@@ -1590,12 +1587,23 @@ def init( \
     listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
     listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     
+    print 'listnumbpntspopl'
+    print listnumbpntspopl
+    print 'listindxpntsfull'
+    print listindxpntsfull
+
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
             for l in gdat.indxpopl:
                 numbpnts = listnumbpntspopl[n, l]
                 indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, listindxpntsfull[n])
+                print 'hey'
+                print 'numbpnts'
+                print numbpnts
+                print 'listsampvarb[j, k, indxsamplgal[l]]'
+                print listsampvarb[j, k, indxsamplgal[l]].shape
+                print
                 listlgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsamplgal[l]]
                 listbgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampbgal[l]]
                 listspec[l][n, :, 0:numbpnts] = listsampvarb[j, k, indxsampspec[l]]
@@ -1905,9 +1913,6 @@ def init( \
     listhdun[-1].header['EXTNAME'] = 'modlcnts'
    
     ## proposal type
-    print 'listindxprop'
-    print listindxprop
-
     listhdun.append(pf.ImageHDU(listindxprop))
     listhdun[-1].header['EXTNAME'] = 'indxprop'
    
@@ -2513,6 +2518,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     print 'flux'
                     print flux
                     raise Exception('Spectrum of a PS went outside the prior range.') 
+
+                # temp
+                continue
 
                 sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l]]
                 indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]

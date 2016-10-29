@@ -256,6 +256,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.sampvarbmaxmllik = hdun['sampvarbmaxmllik'].data
     gdat.sampvarbmaxmlpos = hdun['sampvarbmaxmlpos'].data
 
+    strgbest = 'ML'
+    
     gdat.makeplot = True
     gdat.diagmode = False
     
@@ -662,7 +664,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             truepara = gdat.mocknumbpnts[l]
         else:
             truepara = None
-        tdpy.mcmc.plot_trac(path, gdat.listmeanpnts[:, l], '$\mu$', truepara=truepara)
+   
+        tdpy.mcmc.plot_trac(path, gdat.listmeanpnts[:, l], '$\mu$', truepara=truepara, )
 
         # temp
         if False:
@@ -740,7 +743,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                 truepara = None
             titl = gdat.binsenerstrg[i]
             labl = gdat.lablback[c] + '$_{%d}$' % i
-            tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl, scalpara='logt')
+            varbdraw=[gdat.sampvarbmaxmllik[gdat.indxsampnormback[c, i]]]
+            tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl, scalpara='logt', varbdraw=varbdraw, labldraw=[strgbest])
 
     ## joint distribution of background component pairs
     for i in gdat.indxener:
