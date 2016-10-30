@@ -10,7 +10,7 @@ def test_info():
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 5000000
+    numbswep = zeros(numbiter, dtype=int) + 200000
     numbburn = 4 * numbswep / 5
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
@@ -60,7 +60,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 500
+    numbswepcomm = 200000
 
     tupl = [ \
             # reference
@@ -124,7 +124,7 @@ def test_time():
                                   numbproc=numbproc, \
                                   #makeplot=False, \
                                   strgback=['unit'], \
-                                  strgexpo='unit', \
+                                  strgexpo=1., \
                                   boolpropsind=False, \
                                   exprinfo=False, \
                                   indxenerincl=indxenerincl, \
@@ -185,7 +185,7 @@ def test_psfn():
         mockpsfntype = tupl[k][3]
 
         init( \
-             numbswep=10000, \
+             numbswep=200000, \
              numbburn=0, \
              factthin=10, \
              randinit=False, \
@@ -212,7 +212,7 @@ def test_psfn():
 def test_nomi():
       
     init( \
-         numbswep=2000000, \
+         numbswep=200000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -250,7 +250,7 @@ def test_errr():
         numbangl = tupl[k][2]
         strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
         gridchan, dictpcat = init( \
-                                  numbswep=10000, \
+                                  numbswep=200000, \
                                   diagmode=True, \
                                   exprinfo=False, \
                                   makeanim=True, \
@@ -301,7 +301,7 @@ def test_errr():
 def test_uppr():
       
     init( \
-         numbswep=10000, \
+         numbswep=200000, \
          #factthin=100, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -333,7 +333,7 @@ def test_prio():
         gridchan, dictpcat = init( \
                                   # temp
                                   numbproc=1, \
-                                  numbswep=100000, \
+                                  numbswep=200000, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
                                   boolpropsind=False, \
@@ -374,7 +374,7 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=500000, \
+         numbswep=200000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -441,7 +441,7 @@ def test_atcr():
     timereal = empty(numbiter)
     timeatcr = empty(numbiter)
     timeproc = empty(numbiter)
-    numbswep = 100
+    numbswep = 200000
     # temp
     #timeatcr = array([5670., 3420., 3042., 1023., 403.])
     #timeproc = array([103., 114., 105., 134., 140.])
@@ -502,7 +502,7 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=100, \
+	    	 numbswep=200000, \
              verbtype=2, \
              factthin=1, \
              exprinfo=False, \
@@ -526,7 +526,7 @@ def test_spmr():
 def test_popl():
      
     init( \
-		 numbswep=500000, \
+		 numbswep=200000, \
          indxenerincl=arange(2, 4), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -550,7 +550,7 @@ def test_popl():
 def test():
     
     init( \
-         numbswep=100, \
+         numbswep=200000, \
          verbtype=2, \
          numbburn=0, \
          factthin=1, \

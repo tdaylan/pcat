@@ -191,9 +191,9 @@ def cdfn_self(para, minmpara, factpara):
 
 
 def cdfn_gaus(para, meanpara, stdvpara):
-    
+   
     paraunit = 0.5  * (1. + sp.special.erf((para - meanpara) / sqrt(2) / stdvpara))
-
+    
     return paraunit
 
 
@@ -2732,7 +2732,7 @@ def setpinit(gdat):
         if gdat.pixltype == 'cart':
             gdat.numbpixlfull = gdat.numbsidecart**2
 
-    gdat.numbchrototl = 4
+    gdat.numbchrototl = 5
     if gdat.pntstype == 'lght':
         gdat.numbchrollik = 7
     if gdat.pntstype == 'lens':
@@ -2907,7 +2907,7 @@ def setpinit(gdat):
     if isinstance(gdat.strgexpo, float):
         if gdat.datatype == 'mock':
             if gdat.pixltype == 'heal':
-                gdat.expo= gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
             if gdat.pixltype == 'cart':
                 gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
         if gdat.datatype == 'inpt':

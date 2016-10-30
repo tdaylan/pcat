@@ -374,7 +374,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'propeffiprop.pdf')
+    figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
     plt.close(figr)
     
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
@@ -394,7 +394,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.set_yticklabels(listlabltick)
     
     plt.subplots_adjust(hspace=0)
-    figr.savefig(gdat.pathdiag + 'propeffipara.pdf')
+    figr.savefig(gdat.pathdiag + 'accpratipara.pdf')
     plt.close(figr)
    
     # plot split and merge diagnostics
@@ -834,7 +834,8 @@ def plot_chro(gdat):
     figr.savefig(gdat.pathdiag + 'chroprop.pdf')
     plt.close(figr)
 
-    labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Other']
+    labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Save', 'Rest']
+    listcolr = ['black', 'b', 'g', 'r', 'y', 'm']
     numblabl = len(labl)
     figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, gdat.plotsize))
     for k in range(numblabl - 1):
@@ -842,8 +843,11 @@ def plot_chro(gdat):
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
             varb = gdat.listchrototl[:, k+1]
-        axcl[0].hist(varb, binstime, log=True, label=labl[k+1], alpha=0.5)
-    axcl[1].hist(gdat.listchrototl[:, 0], binstime, log=True, label=labl[0], color='black', alpha=0.5)
+        try:
+            axcl[0].hist(varb, binstime, log=True, label=labl[k+1], alpha=0.5, color=listcolr[k+1])
+        except:
+            pass
+    axcl[1].hist(gdat.listchrototl[:, 0], binstime, log=True, label=labl[0], color=listcolr[0], alpha=0.5)
     axcl[1].set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axcl[0].set_xlim([amin(binstime), amax(binstime)])
     axcl[1].set_xlim([amin(binstime), amax(binstime)])

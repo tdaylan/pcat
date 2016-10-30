@@ -504,6 +504,9 @@ def init( \
     if spectype == None:
         spectype = array(['powr' for l in range(numbpopl)])
     
+    if sinddiststdv == None:
+        sinddiststdv = array([0.6 for l in range(numbpopl)])
+
     # PS parameter distributions
     if datatype == 'mock':
         mocknumbpopl = mocknumbpnts.size
@@ -517,7 +520,7 @@ def init( \
         if mockspectype == None:
             mockspectype = array(['powr' for l in range(mocknumbpopl)])
         if mocksinddiststdv == None:
-            mocksinddiststdv = zeros(mocknumbpopl) + 0.5
+            mocksinddiststdv = zeros(mocknumbpopl) + 0.6
         if mockfluxdistslop == None:
             mockfluxdistslop = array([2.])
         if mockfluxdistbrek == None:
@@ -542,9 +545,6 @@ def init( \
     if initfluxdistslopuppr == None:
         initfluxdistslopuppr = array([None for n in range(numbpopl)])
         
-    if sinddiststdv == None:
-        sinddiststdv = array([0.3 for l in range(numbpopl)])
-
     ## Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
@@ -1029,6 +1029,8 @@ def init( \
     
     # temp
     # check inputs
+    if sum(maxmnumbpnts) < 3:
+        raise Exception('Minimum allowed number of point sources is 3.') 
     if numbburn != None and numbswep != None:
         if numbburn > numbswep:
             raise Exception('Bad number of burn-in sweeps.')
@@ -1587,10 +1589,15 @@ def init( \
     listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
     listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     
-    print 'listnumbpntspopl'
-    print listnumbpntspopl
-    print 'listindxpntsfull'
-    print listindxpntsfull
+    for n in range(gdat.numbsamptotl):
+        print 'n'
+        print n
+        for l in gdat.indxpopl:
+            print 'l'
+            print l
+            print 'list'
+            print listnumbpntspopl[n, l], listindxpntsfull[n][l]
+        print
 
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
@@ -2114,12 +2121,6 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.mockfluxdistslopuppr))
         listhdun[-1].header['EXTNAME'] = 'mockfluxdistslopuppr'
 
-        print 'hey'
-        print 'Writing...'
-        print 'mockfluxdistslopuppr'
-        print gdat.mockfluxdistslopuppr
-        print
-
         listhdun.append(pf.ImageHDU(gdat.mocksinddistmean))
         listhdun[-1].header['EXTNAME'] = 'mocksinddistmean'
 
@@ -2539,6 +2540,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
+            timeinit = gdat.functime()
             listsamp[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
             listsampvarb[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
             listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
@@ -2590,6 +2592,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 listtranmatr.append(tranmatr)
 
             listmemoresi[gdat.indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()[0]
+            timefinl = gdat.functime()
+            listchrototl[gdatmodi.cntrswep, 4] = timefinl - timeinit
 
         ## proposal type
         listindxprop[gdatmodi.cntrswep] = gdatmodi.thisindxprop
