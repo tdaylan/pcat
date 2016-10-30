@@ -730,8 +730,7 @@ def init( \
     if numbproc == None:
         strgproc = os.uname()[1]
         if strgproc == 'fink1.rc.fas.harvard.edu' or strgproc == 'fink2.rc.fas.harvard.edu':
-            # temp
-            numbproc = 4
+            numbproc = 20
         else:
             numbproc = 1
     

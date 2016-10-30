@@ -21,7 +21,7 @@ listcmnd = [ \
             'python $TDGU_PATH/ferm_igal.py pcat_ferm_inpt_igal', \
             'python $TDGU_PATH/ferm_igal.py pcat_ferm_inpt_ptch', \
              ]
-for k in ranhe(len(listcmnd)):
+for k in range(len(listcmnd)):
     try:
         os.system(listcmnd[k])
     except:

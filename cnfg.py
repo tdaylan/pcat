@@ -331,8 +331,6 @@ def test_prio():
     arry = array([1., 0.8, 1.2])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  # temp
-                                  numbproc=1, \
                                   numbswep=200000, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
@@ -406,7 +404,6 @@ def test_post():
         stdvback, stdvlbhlminm, stdvlbhlmaxm, stdvflux, stdvsind, minmflux, maxmflux = tupl[k]
         init( \
     		 numbswep=200000, \
-    		 numbproc=1, \
              numbburn=0, \
     		 factthin=1, \
              indxenerincl=indxenerincl, \
