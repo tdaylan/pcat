@@ -1083,9 +1083,10 @@ def init( \
     os.system('mkdir -p %s' % gdat.pathoutp)
     
     # redirect standard output to a file if in a Screen session
-    if os.environ["TERM"] == 'screen':
-        path = gdat.pathoutp + 'rlog.txt'
-        sys.stdout = open(path, 'w')
+    # temp
+    # if os.environ["TERM"] == 'screen':
+    #    path = gdat.pathoutp + 'rlog.txt'
+    #    sys.stdout = open(path, 'w')
 
     if gdat.verbtype > 0:
         print 'PCAT started at %s' % gdat.strgtimestmp

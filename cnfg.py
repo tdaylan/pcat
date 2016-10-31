@@ -182,7 +182,6 @@ def test_psfn():
         mockpsfntype = tupl[k][3]
 
         init( \
-             numbswep=200000, \
              numbburn=0, \
              factthin=10, \
              randinit=False, \
@@ -209,7 +208,6 @@ def test_psfn():
 def test_nomi():
       
     init( \
-         numbswep=200000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -247,7 +245,6 @@ def test_errr():
         numbangl = tupl[k][2]
         strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
         gridchan, dictpcat = init( \
-                                  numbswep=200000, \
                                   diagmode=True, \
                                   exprinfo=False, \
                                   makeanim=True, \
@@ -298,7 +295,6 @@ def test_errr():
 def test_uppr():
       
     init( \
-         numbswep=200000, \
          #factthin=100, \
          exprinfo=False, \
          boolproppsfn=False, \
@@ -328,7 +324,6 @@ def test_prio():
     arry = array([1., 0.8, 1.2])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  numbswep=200000, \
                                   exprinfo=False, \
                                   boolproppsfn=False, \
                                   boolpropsind=False, \
@@ -369,7 +364,6 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=200000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -400,7 +394,6 @@ def test_post():
     for k in range(numbiter):
         stdvback, stdvlbhlminm, stdvlbhlmaxm, stdvflux, stdvsind, minmflux, maxmflux = tupl[k]
         init( \
-    		 numbswep=200000, \
              numbburn=0, \
     		 factthin=1, \
              indxenerincl=indxenerincl, \
@@ -435,13 +428,11 @@ def test_atcr():
     timereal = empty(numbiter)
     timeatcr = empty(numbiter)
     timeproc = empty(numbiter)
-    numbswep = 200000
     # temp
     #timeatcr = array([5670., 3420., 3042., 1023., 403.])
     #timeproc = array([103., 114., 105., 134., 140.])
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-	                              numbswep=numbswep, \
                                   factthin=1, \
                                   verbtype=2, \
                                   makeplot=False, \
@@ -496,7 +487,6 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-	    	 numbswep=200000, \
              verbtype=2, \
              factthin=1, \
              exprinfo=False, \
@@ -535,7 +525,6 @@ def test_leak():
 def test_popl():
      
     init( \
-		 numbswep=10, \
          factthin=2, \
          #verbtype=2, \
          indxenerincl=arange(2, 4), \
@@ -558,7 +547,6 @@ def test_popl():
 def test():
     
     init( \
-         numbswep=200000, \
          verbtype=2, \
          numbburn=0, \
          factthin=1, \
