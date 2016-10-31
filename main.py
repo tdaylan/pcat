@@ -325,7 +325,7 @@ def init( \
          pntscntr=False, \
 
          # sampler
-         numbswep=2000000, \
+         numbswep=None, \
          numbburn=None, \
          factthin=None, \
          

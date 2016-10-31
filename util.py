@@ -3038,9 +3038,8 @@ def setpfinl(gdat):
 
     # number of total sweeps
     if gdat.numbswep == None:
-        gdat.numbswep = 1000 * gdat.numbpara
-        if gdat.verbtype > 0:
-            print '%d samples will be taken.' % gdat.numbswep
+        numbsweptemp = 200 * gdat.numbpara
+        gdat.numbswep = around(numbsweptemp, 2 - int(log10(numbsweptemp)))
 
     # number of burned sweeps
     if gdat.numbburn == None:
@@ -3053,6 +3052,9 @@ def setpfinl(gdat):
     if gdat.factthin == None:
         gdat.factthin = min(gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
+    if gdat.verbtype > 0:
+        print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
+    
     # number of samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     gdat.indxsamp = arange(gdat.numbsamp)
