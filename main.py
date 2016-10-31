@@ -46,12 +46,6 @@ def work(gdat, indxprocwork):
         gdatmodi.thisindxpntsfull.append(range(thisnumbpnts[l]))
         gdatmodi.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
     
-    print 'gdatmodi.thisindxpntsfull'
-    print gdatmodi.thisindxpntsfull
-    print 'gdatmodi.thisindxpntsempt'
-    print gdatmodi.thisindxpntsempt
-    print 
-
     gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, \
         gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -157,6 +151,15 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpara:
             print gdatmodi.drmcsamp[k, :]
     
+    # check the initial unit sample vector for bad entries
+    indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
+    indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
+    indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
+    if indxsampbadd.size > 0:
+        print 'Initial unit sample vector went outside the unit interval...'
+        gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
+        gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
+
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
    
@@ -214,18 +217,6 @@ def work(gdat, indxprocwork):
         gdatmodi.thislpri = empty((gdat.numbpopl, gdat.numbflux))
     else:
         gdatmodi.thislpri = empty((gdat.numbpopl, 2))
-
-    # check the initial unit sample vector for bad entries
-    indxsampbaddlowr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.)[0] + gdat.numbpopl
-    indxsampbadduppr = where(gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.)[0] + gdat.numbpopl
-    indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
-    if indxsampbadd.size > 0:
-        print 'Initial unit sample vector went outside [0, 1]. Correcting it...'
-        print 'indxsampbadd'
-        print indxsampbadd
-        print 
-        gdatmodi.drmcsamp[indxsampbaddlowr, 0] = 0.
-        gdatmodi.drmcsamp[indxsampbadduppr, 0] = 1.
 
     # allocate memory for variables to hold the proposed state
     ## sample vector
@@ -1077,7 +1068,7 @@ def init( \
     gdat.strgcnfg = inspect.stack()[1][3]
     
     # initial setup
-    setpinit(gdat) 
+    setpinit(gdat, True) 
     
     # create the PCAT folders
     gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
@@ -1229,7 +1220,7 @@ def init( \
                     gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
 
     # final setup
-    setpfinl(gdat) 
+    setpfinl(gdat, True) 
 
     for i in gdat.indxener:
         for m in gdat.indxevtt:
@@ -1608,32 +1599,12 @@ def init( \
     listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
     listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     
-    print 'hey'
-    for n in range(gdat.numbsamptotl):
-        print 'n'
-        print n
-        for l in gdat.indxpopl:
-            print 'l'
-            print l
-            print 'listnumbpnts[n, l]'
-            print listnumbpnts[n, l]
-            print 'listindxpntsfull[n][l]'
-            print listindxpntsfull[n][l]
-        print
-
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
             for l in gdat.indxpopl:
                 numbpnts = listnumbpnts[n, l]
                 indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, listindxpntsfull[n])
-                print 'n'
-                print n
-                print 'numbpnts'
-                print numbpnts
-                print 'listsampvarb[j, k, indxsamplgal[l]]'
-                print listsampvarb[j, k, indxsamplgal[l]].shape
-                print
                 listlgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsamplgal[l]]
                 listbgal[l][n, 0:numbpnts] = listsampvarb[j, k, indxsampbgal[l]]
                 listspec[l][n, :, 0:numbpnts] = listsampvarb[j, k, indxsampspec[l]]

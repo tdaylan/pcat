@@ -2557,7 +2557,7 @@ def retr_eerrnorm(minm, maxm, mean, stdv):
     return normdiff, normminm
 
 
-def setpinit(gdat):
+def setpinit(gdat, boolinitsetp=False):
 
     # paths
     gdat.pathdata = gdat.pathbase + 'data/'
@@ -2808,10 +2808,10 @@ def setpinit(gdat):
         
         if gdat.pixltype == 'heal':
             if gdat.exprflux.ndim != 3:
-                Exception('exprflux should be a 3D numpy array if pixelization is HealPix.')
+                raise Exception('exprflux should be a 3D numpy array if pixelization is HealPix.')
         else:
             if gdat.exprflux.ndim != 4:
-                Exception('exprflux should be a 4D numpy array if pixelization is Cartesian.')
+                raise Exception('exprflux should be a 4D numpy array if pixelization is Cartesian.')
         
         if gdat.pixltype == 'cart':
             gdat.numbsidecart = gdat.exprflux.shape[1]
@@ -2910,7 +2910,7 @@ def setpinit(gdat):
         path = gdat.pathdata + 'inpt/' + gdat.strgexpo
         gdat.expo = pf.getdata(path)
         if amin(gdat.expo) == amax(gdat.expo):
-            print 'Bad input exposure map.'
+            raise Exception('Bad input exposure map.')
             return
         if gdat.pixltype == 'cart':
             gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
@@ -2967,7 +2967,7 @@ def setpinit(gdat):
         path += 'pixlcnvt_%09g.p' % gdat.maxmgang
 
         if os.path.isfile(path):
-            if gdat.verbtype > 0:
+            if gdat.verbtype > 0 and boolinitsetp:
                 print 'Reading %s...' % path
             fobj = open(path, 'rb')
             gdat.pixlcnvt = cPickle.load(fobj)
@@ -3010,7 +3010,7 @@ def setpinit(gdat):
         gdat.lens.grid = franlens.PixelMap(gdat.maxmgang - 1.2 * gdat.maxmgang / gdat.numbsidecart, 2. * gdat.maxmgang / gdat.numbsidecart)
     
 
-def setpfinl(gdat):
+def setpfinl(gdat, boolinitsetp=False):
 
     # set sample vector indices
     cntr = tdpy.util.cntr()
@@ -3052,7 +3052,7 @@ def setpfinl(gdat):
     if gdat.factthin == None:
         gdat.factthin = min(10 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
-    if gdat.verbtype > 0:
+    if gdat.verbtype > 0 and boolinitsetp:
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
     
     # number of samples to be saved
@@ -3172,7 +3172,7 @@ def setpfinl(gdat):
         gdat.probnumbpntsmodi.append(1. / gdat.listnumbpntsmodi[k])
         gdat.probnumbpntsmodi[k] /= sum(gdat.probnumbpntsmodi[k])
    
-    if gdat.verbtype > 1:
+    if gdat.verbtype > 1 and boolinitsetp:
         print 'listnumbpntsmodi'
         print gdat.listnumbpntsmodi
         print 'probnumbpntsmodi'
@@ -3320,10 +3320,10 @@ def setpfinl(gdat):
 
     # sanity checks
     # temp
-    if (fabs(gdat.datacnts - rint(gdat.datacnts)) > 1e-3).any():
+    if (fabs(gdat.datacnts - rint(gdat.datacnts)) > 1e-3).any() and boolinitsetp:
         print 'Fractional counts!'
 
-    if amin(gdat.datacnts) < 0.:
+    if amin(gdat.datacnts) < 0. and boolinitsetp:
         print 'Negative counts!'
 
     # plotting
@@ -3375,17 +3375,17 @@ def setpfinl(gdat):
         path = gdat.pathdata + 'indxpixlprox/'
         os.system('mkdir -p %s' % path)
         path += 'indxpixlprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), 1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
-        if gdat.verbtype > 0:
+        if gdat.verbtype > 0 and boolinitsetp:
             print 'PSF evaluation will be performed up to %.3g %s for the largest flux.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.strganglunittext)
         if os.path.isfile(path):
-            if gdat.verbtype > 0:
+            if gdat.verbtype > 0 and boolinitsetp:
                 print 'Previously computed nearby pixel look-up table will be used.'
                 print 'Reading %s...' % path
             fobj = open(path, 'rb')
             gdat.indxpixlprox = cPickle.load(fobj)
             fobj.close()
         else:
-            if gdat.verbtype > 0:
+            if gdat.verbtype > 0 and boolinitsetp:
                 print 'Computing the look-up table...'
             gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
             for j in gdat.indxpixl:
@@ -3398,7 +3398,7 @@ def setpfinl(gdat):
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
 
-    if gdat.verbtype > 1:
+    if gdat.verbtype > 1 and boolinitsetp:
         if gdat.pntstype == 'lght':
             print 'Memory budget: indxpixlprox'
             totl = 0.

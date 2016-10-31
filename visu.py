@@ -822,7 +822,10 @@ def plot_chro(gdat):
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
     figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 3.))
     for k in range(gdat.numbprop):
-        indxswepchro = where((gdat.listindxprop == k) & (gdat.listchrototl[:, 0] > 0))[0]
+        print 'hey'
+        indxswepchro = intersect1d(where(gdat.listindxprop == k)[0], where(gdat.listchrototl[:, 0] > 0)[0])
+        print 'indxswepchro'
+        print indxswepchro.shape
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:

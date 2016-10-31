@@ -510,18 +510,16 @@ def test_spmr():
 def test_leak():
      
     init( \
-         verbtype=2, \
-         numbswep=100, \
+         numbswep=10000, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          exprtype='ferm', \
-         minmflux=3e-10, \
+         minmflux=3e-8, \
          maxmflux=3e-7, \
          datatype='mock', \
          mockminmflux=3e-11, \
-         maxmnumbpnts=array([3]), \
-         mocknumbpnts=array([3]), \
+         mocknumbpnts=array([100]), \
         )
 
 
