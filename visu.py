@@ -319,8 +319,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     listindxpntsfulltemp = [[[] for l in gdat.indxpopl] for n in gdat.indxsamptotl]
     for n in gdat.indxsamptotl:
         for l in gdat.indxpopl:
-            numbpnts = gdat.listnumbpnts[n][l]
-            listindxpntsfulltemp[n][l] = gdat.listindxpntsfull[n, gdat.indxpntspopl[l][:numbpnts]]
+            numbpnts = gdat.listnumbpnts[n, l]
+            listindxpntsfulltemp[n][l] = gdat.listindxpntsfull[n, l, :numbpnts]
     gdat.listindxpntsfull = listindxpntsfulltemp
     
     # indices of the parameters to be plotted

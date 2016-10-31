@@ -53,4 +53,6 @@ import warnings
 warnings.simplefilter('ignore')
     
 import franlens
-    
+
+from copy import deepcopy
+

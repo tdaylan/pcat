@@ -45,6 +45,13 @@ def work(gdat, indxprocwork):
     for l in gdat.indxpopl:
         gdatmodi.thisindxpntsfull.append(range(thisnumbpnts[l]))
         gdatmodi.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
+    
+    print 'gdatmodi.thisindxpntsfull'
+    print gdatmodi.thisindxpntsfull
+    print 'gdatmodi.thisindxpntsempt'
+    print gdatmodi.thisindxpntsempt
+    print 
+
     gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, \
         gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
@@ -135,13 +142,13 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
             if gdat.fluxdisttype[l] == 'powr':
                 fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
-                fluxunit = cdfn_flux_powr(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], fluxdistslop)
+                fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
             if gdat.fluxdisttype[l] == 'brok':
                 flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
                 fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxsampfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
                 fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
                 fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
-                fluxunit = cdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :], 0] = copy(fluxunit)
             gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_gaus(gdat.truesind[l], gdat.sinddistmean[l], gdat.sinddiststdv[l])
 
@@ -456,6 +463,8 @@ def init( \
          mocksinddistmean=None, \
          mocksinddiststdv=None, \
          mocknormback=None, \
+         mockminmflux=None, \
+         mockmaxmflux=None, \
          mocknumbpnts=None, \
          numbsidecart=200, \
          numbsideheal=256, \
@@ -654,6 +663,12 @@ def init( \
                 indxenerfull = arange(3)
             else:
                 indxenerfull = arange(2)
+   
+    if datatype == 'mock':
+        if mockminmflux == None:
+            mockminmflux = minmflux
+        if mockmaxmflux == None:
+            mockmaxmflux = maxmflux
     
     if lablback == None:
         if numbback == 1:
@@ -1003,6 +1018,9 @@ def init( \
         gdat.mocksinddiststdv = mocksinddiststdv
 
         gdat.mockspectype = mockspectype
+        
+        gdat.mockminmflux = mockminmflux
+        gdat.mockmaxmflux = mockmaxmflux
 
         ### flag to position mock point sources at the image center
         gdat.pntscntr = pntscntr
@@ -1126,10 +1144,10 @@ def init( \
 
             gdat.mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
             if gdat.mockfluxdisttype[l] == 'powr':
-                gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfluxdistslop[l])
+                gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockmaxmflux, gdat.mockfluxdistslop[l])
             if gdat.mockfluxdisttype[l] == 'brok':
-                gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(gdat, rand(gdat.mocknumbpnts[l]), gdat.mockfluxdistbrek[l], \
-                                                                                                gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
+                gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockmaxmflux, gdat.mockfluxdistbrek[l], \
+                                                                                                                     gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
             gdat.mocksind[l] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
         
             if gdat.verbtype > 1:
@@ -1553,9 +1571,9 @@ def init( \
     listfluxdistsloplowr = listsampvarb[:, :, gdat.indxsampfluxdistsloplowr].reshape(gdat.numbsamptotl, gdat.numbpopl)
     listfluxdistslopuppr = listsampvarb[:, :, gdat.indxsampfluxdistslopuppr].reshape(gdat.numbsamptotl, gdat.numbpopl)
     ## number of PS
-    listnumbpntspopl = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamptotl, -1)
+    listnumbpnts = listsampvarb[:, :, gdat.indxsampnumbpnts].astype(int).reshape(gdat.numbsamptotl, -1)
 
-    listnumbpnts = sum(listnumbpntspopl, 1)[:, None]
+    listnumbpntstotl = sum(listnumbpnts, 1)[:, None]
     
     dictpcat['info'] = info
     dictpcat['stdvmeanpnts'] = tdpy.util.retr_errrvarb(listmeanpnts, samp=True)
@@ -1588,23 +1606,27 @@ def init( \
     listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
     listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
     
+    print 'hey'
     for n in range(gdat.numbsamptotl):
         print 'n'
         print n
         for l in gdat.indxpopl:
             print 'l'
             print l
-            print 'list'
-            print listnumbpntspopl[n, l], listindxpntsfull[n][l]
+            print 'listnumbpnts[n, l]'
+            print listnumbpnts[n, l]
+            print 'listindxpntsfull[n][l]'
+            print listindxpntsfull[n][l]
         print
 
     for k in gdat.indxproc:
         for j in gdat.indxsamp:            
             n = k * gdat.numbsamp + j
             for l in gdat.indxpopl:
-                numbpnts = listnumbpntspopl[n, l]
+                numbpnts = listnumbpnts[n, l]
                 indxsamplgal, indxsampbgal, indxsampspec, indxsampsind, indxsampcomp = retr_indx(gdat, listindxpntsfull[n])
-                print 'hey'
+                print 'n'
+                print n
                 print 'numbpnts'
                 print numbpnts
                 print 'listsampvarb[j, k, indxsamplgal[l]]'
@@ -1924,11 +1946,11 @@ def init( \
    
     ## indices of filled PS slots in the sample vector
     ### convert the list of lists into a table
-    listindxpntsfulltemp = empty((gdat.numbsamptotl, gdat.maxmnumbpnts))
+    listindxpntsfulltemp = zeros((gdat.numbsamptotl, gdat.numbpopl, amax(gdat.maxmnumbpnts))) - 1
     for n in gdat.indxsamptotl:
         for l in gdat.indxpopl:
             numbpnts = len(listindxpntsfull[n][l])
-            listindxpntsfulltemp[n, gdat.indxpntspopl[l][:numbpnts]] = listindxpntsfull[n][l]
+            listindxpntsfulltemp[n, l, :numbpnts] = listindxpntsfull[n][l]
     listindxpntsfull = listindxpntsfulltemp
     listhdun.append(pf.ImageHDU(listindxpntsfull))
     listhdun[-1].header['EXTNAME'] = 'listindxpntsfull'
@@ -2301,7 +2323,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listindxparamodi = zeros(gdat.numbswep, dtype=int)
     listmodlcnts = zeros((gdat.numbsamp, gdat.numbpixlsave))
     listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbener))
-    listindxpntsfull = []
+    gdatmodi.listindxpntsfull = []
     listerrr = empty((gdat.numbsamp, gdat.numbener, gdat.numbevtt))
     listerrrfrac = empty((gdat.numbsamp, gdat.numbener, gdat.numbevtt))
     listboolreje = empty(gdat.numbswep, dtype=bool)
@@ -2542,7 +2564,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             timeinit = gdat.functime()
             listsamp[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
             listsampvarb[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
-            listindxpntsfull.append(copy(gdatmodi.thisindxpntsfull))
+            gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
             listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
             listpntsfluxmean[gdat.indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
              
@@ -2679,9 +2701,15 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                         print
                 cntroptimean += 1
 
+    if gdat.verbtype > 1:
+        print 'hey'
+        print 'listsampvarb'
+        print listsampvarb
+        print
+
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
-    listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, listindxpntsfull, listindxparamodi, \
+    listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, gdatmodi.listindxpntsfull, listindxparamodi, \
         listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
         listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos, \
         listerrr, listerrrfrac]

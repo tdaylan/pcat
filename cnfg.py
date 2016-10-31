@@ -118,11 +118,8 @@ def test_time():
         print k
         
         gridchan, dictpcat = init( \
-                                  # temp
-                                  verbtype=0, \
                                   numbswep=numbswep, \
                                   numbproc=numbproc, \
-                                  #makeplot=False, \
                                   strgback=['unit'], \
                                   strgexpo=1., \
                                   boolpropsind=False, \
@@ -520,26 +517,40 @@ def test_spmr():
             )
         
 
+def test_leak():
+     
+    init( \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         exprtype='ferm', \
+         minmflux=3e-10, \
+         maxmflux=3e-7, \
+         datatype='mock', \
+         mockminmflux=3e-11, \
+         mocknumbpnts=array([100]), \
+        )
+
+
 def test_popl():
      
     init( \
-		 numbswep=200000, \
+		 numbswep=10, \
+         factthin=2, \
+         #verbtype=2, \
          indxenerincl=arange(2, 4), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnumbpnts=array([500, 500]), \
+         maxmnumbpnts=array([3, 3]), \
          maxmgang=deg2rad(20.), \
-         minmfluxdistslop=array([1., 1.]), \
-         maxmfluxdistslop=array([3., 3.]), \
-         sinddiststdv=array([.5, .5]), \
-         sinddistmean=array([2., 2.]), \
          modlpsfntype='gausking', \
-         fluxdisttype='powr', \
          minmflux=3e-11, \
          maxmflux=3e-7, \
+         sinddiststdv=array([.5, .5]), \
+         sinddistmean=array([2., 2.]), \
          datatype='mock', \
-         mockfluxdisttype='powr', \
-         mocknumbpnts=array([300, 200]), \
+         mockfluxdisttype=['powr', 'powr'], \
+         mocknumbpnts=array([2, 3]), \
          mockfluxdistslop=array([1.9, 1.1]), \
         )
 
