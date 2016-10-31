@@ -2234,6 +2234,9 @@ def plot_samp(gdat, gdatmodi):
     gdatmodi.binssigm = retr_sigm(gdat, gdat.binscnts, gdatmodi.thiscntsbackfwhm)
     
     # plots
+    ## brightest PS
+    #plot_brgt(gdat, gdatmodi)
+
     ## PSF radial profile
     plot_psfn(gdat, gdatmodi)
     # temp

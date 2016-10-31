@@ -3408,6 +3408,41 @@ def setpfinl(gdat):
             print '%.4g MB' % totl
 
 
+def retr_fluxbrgt(lgal, bgal, flux):
+
+    indxpoplbrgt, indxpntsbrgt, indxpoplbrgtassc, indxpntsbrgtassc = retr_indxpntsbrgt(gdat, lgal, bgal, flux)
+  
+    fluxbrgt = flux[indxpoplbrgt][indxpntsbrgt]
+
+    fluxbrgtassc = 0.
+    for k in range(indxpntsbrgtassc.size):
+        fluxbrgtassc += flux[indxpoplbrgtassc[k]][indxpntsbrgtassc[k]]
+
+    return fluxbrgt, fluxbrgtassc
+
+
+def retr_indxpntsbrgt(gdat, lgal, bgal, spec):
+
+    indxpopl = arange(len(lgal))
+    fluxtemp = 0.
+    for l in indxpopl:
+        indxtemp = argmax(spec[i][gdat.indxenerfluxdist[0], :])
+        if gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]] > fluxtemp:
+            fluxtemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntsbrgtassctemp]]
+            indxpoplbrgt = l
+            indxpntsbrgt = indxpntsbrgtassctemp
+
+    indxpnts = []
+    for l in indxpopl:
+        dir2 = array([lgal[l], bgal[l]])
+        dir2 = array([lgal[indxpoplbrgt][indxpntsbrgt], bgal[indxpntsbrgt][indxpntsbrgt]])[:, None]
+        dist = retr_angldist(gdat, dir1, dir2)
+        dist = retr_angldist(lgal[l], bgal[l], lgal[indxpoplbrgt][indxpntsbrgt], bgal[indxpoplbrgt][indxpntsbrgt])
+        indxpnts.append(where(dist < gdat.anglassc)[0])
+
+    return indxpoplbrgt, indxpntsbrgt, indxpoplbrgtassc, indxpntsbrgtassc
+
+
 def retr_indxoaxipnts(gdat, lgal, bgal):
 
     dir1 = array([lgal, bgal])[:, None]

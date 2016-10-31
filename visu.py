@@ -1016,7 +1016,7 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     plt.close(figr)
     
 
-def plot_brgt(gdat, l, gdatmodi=None, listsindhist=None):
+def plot_brgt(gdat, gdatmodi=None, listsindhist=None):
     
     if listsindhist == None:
         post = False
@@ -1030,9 +1030,11 @@ def plot_brgt(gdat, l, gdatmodi=None, listsindhist=None):
         ydat = postsindhist[0, :]
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
-    else:
-        xaxi = sum(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgtassc]])
-        yaxi = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgt]] - \
+    else:   
+        fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal], gdatmodi.thissampvarb[gdatmodi.thisindxsampspec], gdatmodi.thisindxsampspec)
+
+        xaxi = sum(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplbrgtassc][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgtassc]])
+        yaxi = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplbrgtassc][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgt]] - \
                                                                                     gdat.truespec[0, gdat.indxenerfluxdist[0], gdat.trueindxpntsbrgt]
         axis.scatter(xaxi, yaxi, alpha=gdat.alphmrkr, color='b', label='Sample')
     if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
