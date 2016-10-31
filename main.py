@@ -519,7 +519,6 @@ def init( \
     # PS parameter distributions
     if datatype == 'mock':
         mocknumbpopl = mocknumbpnts.size
-        mocknormback = ones((numbback, numbener))
         if mockspatdisttype == None:
             mockspatdisttype = array(['unif' for l in range(mocknumbpopl)])
         if mockfluxdisttype == None:
@@ -538,6 +537,8 @@ def init( \
             mockfluxdistsloplowr = array([1.5])
         if mockfluxdistslopuppr == None:
             mockfluxdistslopuppr = array([2.5])
+        if mocknormback == None:
+            mocknormback = ones((numbback, numbener))
 
     ## common
     if minmnormback == None:

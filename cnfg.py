@@ -364,6 +364,7 @@ def test_prio():
 def test_lowr():
       
     init( \
+         numbswep=10000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -373,7 +374,7 @@ def test_lowr():
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          modlpsfntype='doubking', \
-         maxmnumbpnts=array([300]), \
+         maxmnumbpnts=array([100]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-24, \
          maxmflux=1e-20, \
@@ -510,6 +511,8 @@ def test_spmr():
 def test_leak():
      
     init( \
+         verbtype=2, \
+         numbswep=100, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -518,7 +521,8 @@ def test_leak():
          maxmflux=3e-7, \
          datatype='mock', \
          mockminmflux=3e-11, \
-         mocknumbpnts=array([100]), \
+         maxmnumbpnts=array([3]), \
+         mocknumbpnts=array([3]), \
         )
 
 

@@ -3050,7 +3050,7 @@ def setpfinl(gdat):
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = min(gdat.numbpara, gdat.numbswep - gdat.numbburn)
+        gdat.factthin = min(10 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
 
     if gdat.verbtype > 0:
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d' % (gdat.numbswep, gdat.numbburn, gdat.factthin)

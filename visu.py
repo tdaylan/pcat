@@ -637,6 +637,11 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     # log-prior
     path = gdat.pathpost + 'lpri'
     tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(x)$')
+    print 'hey'
+    print 'listlpri'
+    print listlpri
+    print listlpri.shape
+    print
 
     # number, expected number of PS and flux conditional prior power law index 
     for l in gdat.indxpopl:
@@ -984,7 +989,8 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         try:
-            axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
+            axis.hist(gdatmodi.thissampvarb[gdatmodi.thisindxsampsind[l][gdatmodi.indxmodlpntscomp[l]]], gdat.binssind, alpha=gdat.alphmrkr, color='b', \
+                                                                                                                                                log=True, label='Sample')
         except:
             print 'Skipping the plot of color histogram...'
             print 'gdat.binssind'
@@ -1005,6 +1011,44 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
         path = gdat.pathpost + 'histsind_pop%d.pdf' % l
     else:
         path = gdat.pathfram + 'histsind_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
+    plt.tight_layout()
+    plt.savefig(path)
+    plt.close(figr)
+    
+
+def plot_brgt(gdat, l, gdatmodi=None, listsindhist=None):
+    
+    if listsindhist == None:
+        post = False
+    else:
+        post = True
+        
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    if post:
+        xdat = gdat.meansind
+        postsindhist = tdpy.util.retr_postvarb(listsindhist)
+        ydat = postsindhist[0, :]
+        yerr = tdpy.util.retr_errrvarb(postsindhist)
+        axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
+    else:
+        xaxi = sum(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgtassc]])
+        yaxi = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgt]] - \
+                                                                                    gdat.truespec[0, gdat.indxenerfluxdist[0], gdat.trueindxpntsbrgt]
+        axis.scatter(xaxi, yaxi, alpha=gdat.alphmrkr, color='b', label='Sample')
+    if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
+        axis.hist(gdat.truesind[l][gdat.indxtruepntscomp[l]], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
+        if gdat.datatype == 'mock' and gdat.exprinfo:
+            axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.alphmrkr, color='red', log=True, label='3FGL')
+    axis.set_xscale('log')
+    axis.set_xlabel('$f_{assc,total}$')
+    axis.set_xlim([gdat.minmsind, gdat.maxmsind])
+    axis.set_ylabel(r'$\Delta %s$' % gdat.strgflux)
+    axis.set_ylim(gdat.limshist)
+    axis.legend(loc=2)
+    if post:
+        path = gdat.pathpost + 'scatbrgt_pop%d.pdf' % l
+    else:
+        path = gdat.pathfram + 'scatbrgt_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
