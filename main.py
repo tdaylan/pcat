@@ -1506,8 +1506,8 @@ def init( \
     listerrr = listerrr.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
     listerrrfrac = listerrrfrac.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
     listindxpntsfulltemp = []
-    for k in gdat.indxproc:
-        for j in gdat.indxsamp:      
+    for j in gdat.indxsamp:      
+        for k in gdat.indxproc:
             listindxpntsfulltemp.append(listindxpntsfull[k][j])
     listindxpntsfull = listindxpntsfulltemp
 

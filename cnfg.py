@@ -364,7 +364,6 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=10000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
