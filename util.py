@@ -2571,12 +2571,18 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock':
         gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
 
+    # flag to indicate whether information from a deterministic catalog will be used or not
+    # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
+    gdat.trueinfo = gdat.datatype == 'mock' or gdat.exprinfo
+    
     # half size of the image where the sample catalog is compared against the reference
     gdat.maxmgangcomp = gdat.maxmgang * gdat.margfactcomp
     # half size of the spatial prior
     gdat.maxmgangmodl = gdat.maxmgang * gdat.margfactmodl
 
     # axes
+    gdat.numbflux = 20
+    
     ## energy
     gdat.numbener = gdat.indxenerincl.size
     gdat.numbenerfull = gdat.binsenerfull.size - 1
@@ -2776,29 +2782,6 @@ def setpinit(gdat, boolinitsetp=False):
     ## azimuthal
     gdat.numbaang = 10
     gdat.binsaang = linspace(0., 2. * pi, gdat.numbaang + 1)
-
-    ## flux
-    gdat.numbflux = 20
-    gdat.indxflux = arange(gdat.numbflux)
-    gdat.binsflux = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbflux + 1)
-    gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
-    gdat.diffflux = gdat.binsflux[1:] - gdat.binsflux[:-1]
-    ### pivot flux bin
-    gdat.indxfluxpivt = gdat.numbflux / 2
-    gdat.pivtflux = gdat.meanflux[gdat.indxfluxpivt]
-
-    ## color
-    gdat.numbsind = 20
-    gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbsind + 1)
-    gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
-    gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
-
-    gdat.minmspec = gdat.minmflux * factener
-    gdat.maxmspec = gdat.maxmflux * factener
-    gdat.binsspec = gdat.binsflux[None, :] * factener[:, None]
-    gdat.meanspec = empty((gdat.numbener, gdat.numbflux))
-    for i in gdat.indxener:
-        gdat.meanspec[i, :] = sqrt(gdat.binsspec[i, 1:] * gdat.binsspec[i, :-1])
 
     # input data
     if gdat.datatype == 'inpt':
@@ -3085,18 +3068,14 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
 
-    # flag to indicate whether information from a deterministic catalog will be used or not
-    # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
-    gdat.trueinfo = gdat.datatype == 'mock' or gdat.exprinfo
-    
     # get count data
     ## input data
     if gdat.datatype == 'inpt':
         gdat.datacnts = gdat.exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
     
     # load mock catalog into the reference catalog data structure
-    if gdat.datatype == 'mock':
-        if gdat.trueinfo:
+    if gdat.trueinfo:
+        if gdat.datatype == 'mock':
             gdat.truemeanpnts = gdat.mocknumbpnts
         
             gdat.truelgal = []
@@ -3125,7 +3104,7 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.truespectemp = empty((3, gdat.numbener, gdat.mocknumbpnts[l]))
                 gdat.truespectemp[:] = gdat.mockspec[l][None, :, :]
                 gdat.truespec.append(gdat.truespectemp)
-            
+           
             gdat.truepsfp = gdat.mockpsfp
             gdat.truepsfntype = gdat.mockpsfntype
             gdat.truenormback = gdat.mocknormback
@@ -3201,8 +3180,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.frambndrmodl = gdat.maxmgangmodl * gdat.anglfact
     
     # convenience variables
-    gdat.fluxhistmodl = empty(gdat.numbflux)
-    
     gdat.indxfluxprox = arange(gdat.numbfluxprox)
     gdat.binsfluxprox = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbfluxprox + 1)
     gdat.meanfluxprox = sqrt(gdat.binsfluxprox[1:] * gdat.binsfluxprox[:-1])
@@ -3260,6 +3237,8 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.indxtruevari = [gdat.indxexprvari]
                 gdat.truepsfp = gdat.fermpsfp
                 gdat.truepsfntype = 'doubking'
+            gdat.trueminmflux = amin(gdat.truespec[0, gdat.indxenerfluxdist[0], :])
+            gdat.truemaxmflux = amax(gdat.truespec[0, gdat.indxenerfluxdist[0], :])
         
         if gdat.exprtype == 'chan':
             gdat.truevarioaxi = True
@@ -3307,10 +3286,45 @@ def setpfinl(gdat, boolinitsetp=False):
                 print gdat.truesind
                 raise Exception('True PS parameters are not finite.')
 
-    else:
-        gdat.truepsfn = None
-        gdat.truevarioaxi = False
+    # temp
+    #else:
+    #    gdat.truepsfn = None
+    #    gdat.truevarioaxi = False
     
+    ## flux
+    gdat.indxflux = arange(gdat.numbflux)
+    minmfluxtemp = gdat.minmflux
+    maxmfluxtemp = gdat.maxmflux
+    if gdat.trueinfo:
+        if gdat.datatype == 'mock':
+            gdat.trueminmflux = gdat.mockminmflux
+            gdat.truemaxmflux = gdat.mockmaxmflux
+    if gdat.trueinfo:
+        minmfluxtemp = min(minmfluxtemp, gdat.trueminmflux)
+        maxmfluxtemp = max(maxmfluxtemp, gdat.truemaxmflux)
+    gdat.binsflux = logspace(log10(minmfluxtemp), log10(maxmfluxtemp), gdat.numbflux + 1)
+    gdat.meanflux = sqrt(gdat.binsflux[1:] * gdat.binsflux[:-1])
+    gdat.diffflux = gdat.binsflux[1:] - gdat.binsflux[:-1]
+    ### pivot flux bin
+    gdat.indxfluxpivt = gdat.numbflux / 2
+    gdat.pivtflux = gdat.meanflux[gdat.indxfluxpivt]
+
+    ## color
+    gdat.numbsind = 20
+    # temp
+    gdat.minmsind = gdat.sinddistmean - 4. * gdat.sinddiststdv
+    gdat.maxmsind = gdat.sinddistmean + 4. * gdat.sinddiststdv
+    gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbsind + 1)
+    gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
+    gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]
+
+    gdat.minmspec = gdat.minmflux * factener
+    gdat.maxmspec = gdat.maxmflux * factener
+    gdat.binsspec = gdat.binsflux[None, :] * factener[:, None]
+    gdat.meanspec = empty((gdat.numbener, gdat.numbflux))
+    for i in gdat.indxener:
+        gdat.meanspec[i, :] = sqrt(gdat.binsspec[i, 1:] * gdat.binsspec[i, :-1])
+
     # determine the indices of true point sources, which will be compared againts the model sources
     if gdat.trueinfo:
         gdat.indxtruepntscomp = []

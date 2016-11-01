@@ -504,9 +504,6 @@ def init( \
     if spectype == None:
         spectype = array(['powr' for l in range(numbpopl)])
     
-    if sinddiststdv == None:
-        sinddiststdv = array([0.6 for l in range(numbpopl)])
-
     # PS parameter distributions
     if datatype == 'mock':
         mocknumbpopl = mocknumbpnts.size
@@ -518,8 +515,6 @@ def init( \
             mocksinddisttype = array(['gaus' for l in range(mocknumbpopl)])
         if mockspectype == None:
             mockspectype = array(['powr' for l in range(mocknumbpopl)])
-        if mocksinddiststdv == None:
-            mocksinddiststdv = zeros(mocknumbpopl) + 0.6
         if mockfluxdistslop == None:
             mockfluxdistslop = array([2.])
         if mockfluxdistbrek == None:
@@ -613,22 +608,19 @@ def init( \
             pixltype = 'heal'
 
     if exprtype == 'chan':
-        minmsindfudi = 0.5
-        maxmsindfudi = 2.
         sinddistmeanfudi = 1.25
     else:
-        minmsindfudi = 0.5
-        maxmsindfudi = 3.5
         sinddistmeanfudi = 2.25
-    if minmsind == None:
-        minmsind = minmsindfudi
-    if maxmsind == None:
-        maxmsind = maxmsindfudi
+    sinddiststdvfudi = 0.5
     if sinddistmean == None:
-        sinddistmean = array([sinddistmeanfudi for l in range(numbpopl)])
+        sinddistmean = zeros(numbpopl) + sinddistmeanfudi
+    if sinddiststdv == None:
+        sinddiststdv = zeros(numbpopl) + sinddiststdvfudi
     if datatype == 'mock':
         if mocksinddistmean == None:
             mocksinddistmean = zeros(mocknumbpopl) + sinddistmeanfudi
+        if mocksinddiststdv == None:
+            mocksinddiststdv = zeros(mocknumbpopl) + sinddiststdvfudi
         
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
@@ -691,12 +683,6 @@ def init( \
 
     ## SDSS
     if exprtype == 'sdss':
-        if sinddiststdv == None:
-            sinddiststdv = array([0.5])
-        if minmmeanpnts == None:
-            minmmeanpnts = array([1.])
-        if maxmmeanpnts == None:
-            maxmmeanpnts = array([1e3])
         if strgfluxunit == None:
             strgfluxunit = '[nMgy]'
         if strgfluxunit == None:
@@ -1785,6 +1771,8 @@ def init( \
     
     ## mock data
     if gdat.datatype == 'mock':
+        head['mockminmflux'] = gdat.mockminmflux
+        head['mockmaxmflux'] = gdat.mockmaxmflux
         head['mockvarioaxi'] = gdat.mockvarioaxi
         head['mocknumbpopl'] = gdat.mocknumbpopl
         head['mockpsfntype'] = gdat.mockpsfntype

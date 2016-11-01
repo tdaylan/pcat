@@ -132,6 +132,8 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     if gdat.datatype == 'mock':
         gdat.mocknumbpopl = hdun[0].header['mocknumbpopl']
         gdat.mockpsfntype = hdun[0].header['mockpsfntype']
+        gdat.mockminmflux = hdun[0].header['mockminmflux']
+        gdat.mockmaxmflux = hdun[0].header['mockmaxmflux']
 
     gdat.strgexpr = hdun[0].header['strgexpr']
     gdat.strgback = []
@@ -352,13 +354,15 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     tdpy.mcmc.plot_atcr(gdat.pathdiag, atcr, timeatcr)
     
     # plot proposal efficiency
+    if gdat.verbtype > 0:
+        print 'Making proposal efficiency plots...'
     numbtimemcmc = 20
     binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
     numbtick = 2
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
-        histaccp = axis.hist(where((gdat.listindxprop == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)[0]
+        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]))[0], bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
@@ -380,13 +384,13 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
-        axis.hist(where((gdat.listindxparamodi == n) & (gdat.listaccp == True))[0], bins=binstimemcmc)
+               axis.hist(intersect(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
         axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
         
         # define the y-axis
-        maxm = amax(hist)
+        maxm = amax(hist[0])
         axis.set_ylim([0., maxm])
         listtick = linspace(maxm / 2., maxm, numbtick)
         listlabltick = ['%.3g' % tick for tick in listtick]
@@ -399,7 +403,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
    
     # plot split and merge diagnostics
     indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-    indxsampsplt = where((gdat.listindxprop == gdat.indxpropsplt) & (gdat.listboolreje == False))[0]
+    indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(not gdat.listboolreje)[0])
     indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
     indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
     indxsampspmr = union1d(indxsampsplt, indxsampmerg)
@@ -822,10 +826,7 @@ def plot_chro(gdat):
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
     figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 3.))
     for k in range(gdat.numbprop):
-        print 'hey'
         indxswepchro = intersect1d(where(gdat.listindxprop == k)[0], where(gdat.listchrototl[:, 0] > 0)[0])
-        print 'indxswepchro'
-        print indxswepchro.shape
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:

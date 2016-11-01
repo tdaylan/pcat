@@ -182,8 +182,6 @@ def test_psfn():
         mockpsfntype = tupl[k][3]
 
         init( \
-             numbburn=0, \
-             factthin=10, \
              randinit=False, \
              boolpropsind=False, \
              indxenerincl=arange(2, 3), \
@@ -195,13 +193,13 @@ def test_psfn():
              lgalcntr=deg2rad(0.), \
              bgalcntr=deg2rad(90.), \
              mockpsfntype=mockpsfntype, \
-             maxmnumbpnts=array([100]), \
+             maxmnumbpnts=array([10]), \
              maxmgang=deg2rad(10.), \
              minmflux=3e-11, \
              maxmflux=1e-7, \
              datatype=datatype, \
              strgexpr=strgexpr, \
-             mocknumbpnts=array([100]), \
+             mocknumbpnts=array([10]), \
             )
                 
     
@@ -364,6 +362,7 @@ def test_prio():
 def test_lowr():
       
     init( \
+         numbswep=100000, \
          exprinfo=False, \
          boolproppsfn=False, \
          boolpropsind=False, \
@@ -510,7 +509,8 @@ def test_spmr():
 def test_leak():
      
     init( \
-         numbswep=10000, \
+         numbswep=100000, \
+         exprinfo=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
