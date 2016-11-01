@@ -362,7 +362,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
-        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]))[0], bins=binstimemcmc)[0]
+        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
@@ -384,7 +384,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
     for n, axis in enumerate(axgr):
         hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
-               axis.hist(intersect(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
+        axis.hist(intersect(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
         axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')

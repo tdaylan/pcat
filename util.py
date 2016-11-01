@@ -2878,7 +2878,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.factfluxdistbrek = log(gdat.maxmfluxdistbrek / gdat.minmfluxdistbrek)
     gdat.factfluxdistsloplowr = arctan(gdat.maxmfluxdistsloplowr) - arctan(gdat.minmfluxdistsloplowr)
     gdat.factfluxdistslopuppr = arctan(gdat.maxmfluxdistslopuppr) - arctan(gdat.minmfluxdistslopuppr)
-    gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
     
     # exposure
     if isinstance(gdat.strgexpo, float):
@@ -3314,6 +3313,7 @@ def setpfinl(gdat, boolinitsetp=False):
     # temp
     gdat.minmsind = gdat.sinddistmean - 4. * gdat.sinddiststdv
     gdat.maxmsind = gdat.sinddistmean + 4. * gdat.sinddiststdv
+    gdat.factsind = arctan(gdat.maxmsind) - arctan(gdat.minmsind)
     gdat.binssind = linspace(gdat.minmsind, gdat.maxmsind, gdat.numbsind + 1)
     gdat.meansind = (gdat.binssind[1:] + gdat.binssind[:-1]) / 2.
     gdat.diffsind = gdat.binssind[1:] - gdat.binssind[:-1]

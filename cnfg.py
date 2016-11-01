@@ -548,23 +548,23 @@ def test_popl():
 def test():
     
     init( \
-         verbtype=2, \
-         numbburn=0, \
-         factthin=1, \
-         exprinfo=False, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         strgback=['fermisotflux.fits', ], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.]), \
-         modlpsfntype='doubking', \
-         maxmnumbpnts=array([4]), \
-         maxmgang=deg2rad(10.), \
-         minmflux=3e-11, \
-         maxmflux=1e-7, \
-         datatype='mock', \
-         mocknumbpnts=array([3]), \
         )
+            #verbtype=2, \
+            #numbburn=0, \
+            #factthin=1, \
+            #exprinfo=False, \
+            #indxenerincl=arange(2, 3), \
+            #indxevttincl=arange(3, 4), \
+            #strgback=['fermisotflux.fits', ], \
+            #strgexpo='fermexpo_cmp0_ngal.fits', \
+            #probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.]), \
+            #modlpsfntype='doubking', \
+            #maxmnumbpnts=array([4]), \
+            #maxmgang=deg2rad(10.), \
+            #minmflux=3e-11, \
+            #maxmflux=1e-7, \
+            #datatype='mock', \
+            #mocknumbpnts=array([3]), \
 
 
 if len(sys.argv) > 1:
