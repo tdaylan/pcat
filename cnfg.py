@@ -167,39 +167,63 @@ def test_time():
     
 def test_psfn():
     
-    tupl = [['mock', None, 'doubking', 'doubking'], \
-            ['mock', None, 'gausking', 'gausking'], \
-            ['mock', None, 'gausking', 'doubking'], \
-            ['mock', None, 'doubking', 'gausking'], \
-            ['inpt', 'fermflux_cmp0_ngal.fits', 'gausking', None], \
-            ['inpt', 'fermflux_cmp0_ngal.fits', 'doubking', None]]
+    tupl = [ \
+            ['mock',                          None, 'singgaus',  True, 'chan'], \
+            ['mock',                          None, 'singgaus', False, 'chan'], \
+            ['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
+            ['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
+            #['mock',                          None, 'doubking', False, 'ferm'], \
+            #['mock',                          None, 'gausking', False, 'ferm'], \
+            #['mock',                          None, 'doubgaus', False, 'ferm'], \
+            #['mock',                          None, 'singking', False, 'ferm'], \
+            #['mock',                          None, 'singgaus', False, 'ferm'], \
+            #['inpt',     'fermflux_cmp0_ngal.fits', 'doubking', False, 'ferm'] \
+           ]
     numbtupl = len(tupl)
     for k in range(numbtupl):
         
         datatype = tupl[k][0]
         strgexpr = tupl[k][1]
         modlpsfntype = tupl[k][2]
-        mockpsfntype = tupl[k][3]
+        modlvarioaxi = tupl[k][3]
+        exprtype = tupl[k][4]
+    
+        if exprtype == 'ferm':
+            indxenerincl = arange(2, 3)
+            indxevttincl = arange(3, 4)
+            strgback = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            strgexpo = 'fermexpo_cmp0_ngal.fits'
+            bgalcntr = deg2rad(90.)
+            minmflux = 1e-7
+            maxmflux = 2e-7
+        else:
+            indxenerincl = arange(2)
+            indxevttincl = arange(1)
+            strgback = ['unit']
+            strgexpo = 'chanexpo_0200_4msc.fits'
+            bgalcntr = 0.
+            minmflux = 1e-4
+            maxmflux = 2e-4
 
         init( \
+             numbswepplot=1000, \
              randinit=False, \
-             boolpropsind=False, \
-             indxenerincl=arange(2, 3), \
-             indxevttincl=arange(3, 4), \
-             strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-             strgexpo='fermexpo_cmp0_ngal.fits', \
+             exprinfo=False, \
+             indxenerincl=indxenerincl, \
+             indxevttincl=indxevttincl, \
+             exprtype=exprtype, \
+             strgback=strgback, \
+             strgexpo=strgexpo, \
              probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
              modlpsfntype=modlpsfntype, \
-             lgalcntr=deg2rad(0.), \
-             bgalcntr=deg2rad(90.), \
-             mockpsfntype=mockpsfntype, \
-             maxmnumbpnts=array([10]), \
-             maxmgang=deg2rad(10.), \
-             minmflux=3e-11, \
-             maxmflux=1e-7, \
+             modlvarioaxi=modlvarioaxi, \
+             bgalcntr=bgalcntr, \
+             maxmnumbpnts=array([3]), \
+             minmflux=minmflux, \
+             maxmflux=maxmflux, \
              datatype=datatype, \
              strgexpr=strgexpr, \
-             mocknumbpnts=array([10]), \
+             mocknumbpnts=array([3]), \
             )
                 
     
@@ -371,7 +395,6 @@ def test_lowr():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         modlpsfntype='doubking', \
          maxmnumbpnts=array([100]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-24, \

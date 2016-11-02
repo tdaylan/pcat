@@ -244,9 +244,6 @@ Mock background normalization
 `mockfluxdisttype`
 Mock FDF shape
 
-`mockpsfntype`
-Functional form of the mock PSF
-
 `numbsidecart`
 Number of pixels along the side of the ROI for the generated data map, if the pixelization is Cartesian.
 

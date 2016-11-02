@@ -109,14 +109,14 @@ def work(gdat, indxprocwork):
                 gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr, 0] = rand()
 
     ## PSF parameters
-    if gdat.randinit or gdat.truepsfp == None or gdat.modlpsfntype != gdat.truepsfntype:
+    if gdat.randinit or gdat.modlpsfntype != gdat.truepsfntype or gdat.modlvarioaxi != gdat.truevarioaxi:
         if gdat.verbtype > 1:
             print 'Randomly seeding the PSF parameters from the prior...'
         gdatmodi.drmcsamp[gdat.indxsamppsfp, 0] = retr_randunitpsfp(gdat)
     else:
         for k in gdat.indxpsfp:
             gdatmodi.drmcsamp[gdat.indxsamppsfp[k], 0] = cdfn_psfp(gdat, gdat.truepsfp[k], k)
-
+    
     ## background normalization
     for c in gdat.indxback:
         if gdat.randinit or gdat.datatype != 'mock':
@@ -162,7 +162,7 @@ def work(gdat, indxprocwork):
 
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.drmcsamp[:, 0])
-   
+
     if gdat.pntstype == 'lens':
         # create the lens object
         gdatmodi.lens = tdpy.util.gdatstrt()
@@ -214,7 +214,7 @@ def work(gdat, indxprocwork):
         
     # log-prior
     if gdat.bindprio:
-        gdatmodi.thislpri = empty((gdat.numbpopl, gdat.numbflux))
+        gdatmodi.thislpri = empty((gdat.numbpopl, gdat.numbfluxplot))
     else:
         gdatmodi.thislpri = empty((gdat.numbpopl, 2))
 
@@ -241,7 +241,7 @@ def work(gdat, indxprocwork):
     gdatmodi.thiscntsbackfwhm = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
    
     # log-prior
-    gdatmodi.nextlpri = empty((gdat.numbpopl, gdat.numbflux))
+    gdatmodi.nextlpri = empty((gdat.numbpopl, gdat.numbfluxplot))
 
     # log the initial state
     if gdat.verbtype > 1:
@@ -384,7 +384,8 @@ def init( \
          maxmnumbpnts=array([1000]), \
          modlpsfntype=None, \
          asymfluxprop=False, \
-         
+         psfninfoprio=True, \
+
          # prior
          priotype='logt', \
          priofactdoff=0., \
@@ -410,15 +411,12 @@ def init( \
          minmsind=None, \
          maxmsind=None, \
         
-         modlpsfp=None, \
-         mockpsfp=None, \
-
          # proposals
          probprop=None, \
          numbpntsmodi=1, \
          stdvmeanpnts=0.05, \
          stdvfluxdistslop=0.1, \
-         stdvpsfp=0.1, \
+         stdvproppsfp=0.1, \
          stdvback=0.04, \
          stdvlbhl=0.1, \
          stdvlbhlvari=True, \
@@ -446,7 +444,6 @@ def init( \
          mockfluxdisttype=None, \
          mocksinddisttype=None, \
          mockspectype=None, \
-         mockpsfntype=None, \
          mockfluxdistslop=None, \
          mockfluxdistbrek=None, \
          mockfluxdistsloplowr=None, \
@@ -545,11 +542,6 @@ def init( \
     if exprtype == 'ferm':
         if maxmgang == None:
             maxmgang = deg2rad(20.)
-        if modlpsfntype == None:
-            modlpsfntype = 'doubking'
-        if mockpsfntype == None:
-            mockpsfntype = 'doubking'
-        exprpsfntype = 'doubking'
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2.)
         if strgenerunit == None:
@@ -564,6 +556,10 @@ def init( \
             anglassc = deg2rad(0.5)
         if pixltype == None:
             pixltype = 'heal'
+        if minmflux == None:
+            minmflux = 3e-11
+        if maxmflux == None:
+            maxmflux = 1e-7
         if datatype == 'mock':
             indxenerfull = arange(5)
             indxevttfull = arange(4)
@@ -576,6 +572,12 @@ def init( \
         if strgflux == None:
             strgflux = 'f'
 
+    if exprtype == 'chan':
+        if minmflux == None:
+            minmflux = 1e-7
+        if maxmflux == None:
+            maxmflux = 1e-4
+
     if exprtype == 'ferm':
         numbfluxprox = 3
     if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
@@ -583,11 +585,6 @@ def init( \
     
     ## Lensing
     if exprtype == 'hubb':
-        exprpsfntype = None
-        if modlpsfntype == None:
-            modlpsfntype = 'singgaus'
-        if mockpsfntype == None:
-            mockpsfntype = 'singgaus'
         if maxmgang == None:
             maxmgang = deg2rad(2. / 3600.)
         if anglassc == None:
@@ -612,6 +609,12 @@ def init( \
     else:
         sinddistmeanfudi = 2.25
     sinddiststdvfudi = 0.5
+    minmsindfudi = sinddistmeanfudi - 3. * sinddiststdvfudi
+    maxmsindfudi = sinddistmeanfudi + 3. * sinddiststdvfudi
+    if minmsind == None:
+        minmsind = amin(minmsindfudi)
+    if maxmsind == None:
+        maxmsind = amin(maxmsindfudi)
     if sinddistmean == None:
         sinddistmean = zeros(numbpopl) + sinddistmeanfudi
     if sinddiststdv == None:
@@ -636,11 +639,6 @@ def init( \
             anglassc = deg2rad(0.5 / 3600.)
         if pixltype == None:
             pixltype = 'cart'
-        if modlpsfntype == None:
-            modlpsfntype = 'singgaus'
-        if mockpsfntype == None:
-            mockpsfntype = 'singgaus'
-        exprpsfntype = 'singgaus'
         if datatype == 'mock':
             indxevttfull = arange(1)
             if exprtype == 'sdss':
@@ -712,7 +710,7 @@ def init( \
         minmfluxdistslopuppr = minmfluxdistslop
     if maxmfluxdistslopuppr == None:
         maxmfluxdistslopuppr = maxmfluxdistslop
-    
+        
     if probprop != None:
         probprop /= sum(probprop)
    
@@ -767,6 +765,8 @@ def init( \
     
     gdat.numbfluxprox = numbfluxprox
 
+    gdat.psfninfoprio = psfninfoprio
+
     ## axes
     ### energy
     gdat.binsenerfull = binsenerfull
@@ -802,9 +802,6 @@ def init( \
     gdat.numbangl = numbangl
     ## type of angular binning
     gdat.binsangltype = binsangltype
-    
-    ## experimental PSF type
-    gdat.exprpsfntype = exprpsfntype
     
     ## flag to turn off PSF parameter updates
     gdat.boolpropfluxdist = boolpropfluxdist
@@ -949,7 +946,7 @@ def init( \
     ### proposal scales
     gdat.stdvmeanpnts = stdvmeanpnts
     gdat.stdvfluxdistslop = stdvfluxdistslop
-    gdat.stdvpsfp = stdvpsfp
+    gdat.stdvproppsfp = stdvproppsfp
     gdat.stdvback = stdvback
     gdat.stdvlbhl = stdvlbhl
     gdat.stdvlbhlvari = stdvlbhlvari
@@ -970,9 +967,6 @@ def init( \
     if datatype == 'mock':
         
         gdat.mocknumbpopl = mocknumbpopl
-        
-        ### mock PSF model type
-        gdat.mockpsfntype = mockpsfntype
         
         ### background normalization
         gdat.mocknormback = mocknormback
@@ -1150,7 +1144,7 @@ def init( \
         # mock mean count map
         if gdat.pntstype == 'lght':
             mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
-                                                                                                            gdat.mockpsfp, gdat.mockpsfntype, gdat.mockvarioaxi)
+                                                                                                            gdat.truepsfp, gdat.truepsfntype, gdat.mockvarioaxi)
             gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
         if gdat.pntstype == 'lens':
@@ -1331,8 +1325,6 @@ def init( \
                 print 'mockfluxdistbrek: ', gdat.mockfluxdistbrek
                 print 'mockfluxdistsloplowr: ', gdat.mockfluxdistsloplowr
                 print 'mockfluxdistslopuppr: ', gdat.mockfluxdistslopuppr
-                print 'mockpsfp: '
-                print gdat.mockpsfp
                 print 'mocknormback: '
                 print gdat.mocknormback
 
@@ -1580,7 +1572,7 @@ def init( \
     ## binned PS parameters
     listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
     listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
-    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbflux, gdat.numbener))
+    listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbfluxplot, gdat.numbener))
     listsindhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbsind))
     listganghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbgang))
     listaanghist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbaang))
@@ -1605,7 +1597,7 @@ def init( \
                 listlgalhist[n, l, :] = histogram(listlgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binslgal)[0]
                 listbgalhist[n, l, :] = histogram(listbgal[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
-                    listspechist[n, l, :, i] = histogram(listspec[l][n, i, 0:numbpnts][indxmodlpntscomp], gdat.binsspec[i, :])[0]
+                    listspechist[n, l, :, i] = histogram(listspec[l][n, i, 0:numbpnts][indxmodlpntscomp], gdat.binsspecplot[i, :])[0]
                 listsindhist[n, l, :] = histogram(listsind[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binssind)[0]
                 listganghist[n, l, :] = histogram(listgang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsgang)[0]
                 listaanghist[n, l, :] = histogram(listaang[l][n, 0:numbpnts][indxmodlpntscomp], gdat.binsaang)[0]
@@ -1617,13 +1609,13 @@ def init( \
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
-    pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbflux))
+    pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbfluxplot))
     for l in gdat.indxpopl:
         temp = empty((listbgal[l].size, 3))
         temp[:, 0] = listbgal[l].flatten()
         temp[:, 1] = listlgal[l].flatten()
         temp[:, 2] = listspec[l][:, gdat.indxenerfluxdist[0], :].flatten()
-        pntsprob[l, :, :, :] = histogramdd(temp, bins=(gdat.binsbgalpntsprob, gdat.binslgalpntsprob, gdat.binsflux))[0]
+        pntsprob[l, :, :, :] = histogramdd(temp, bins=(gdat.binsbgalpntsprob, gdat.binslgalpntsprob, gdat.binsfluxplot))[0]
 
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
@@ -1691,7 +1683,7 @@ def init( \
     head['maxmgang'] = gdat.maxmgang
     head['lgalcntr'] = gdat.lgalcntr
     head['bgalcntr'] = gdat.bgalcntr
-    head['numbflux'] = gdat.numbflux
+    head['numbfluxplot'] = gdat.numbfluxplot
     if gdat.pixltype == 'heal':
         head['numbsideheal'] = gdat.numbsideheal
     if gdat.pixltype == 'cart':
@@ -1705,12 +1697,17 @@ def init( \
     
     head['minmflux'] = gdat.minmflux
     head['maxmflux'] = gdat.maxmflux
+    print 'gdat.minmsind'
+    print gdat.minmsind
+    print 'gdat.maxmsind'
+    print gdat.maxmsind
     head['minmsind'] = gdat.minmsind
     head['maxmsind'] = gdat.maxmsind
     
+    head['psfninfoprio'] = gdat.psfninfoprio
+    
     head['datatype'] = gdat.datatype
     head['modlpsfntype'] = gdat.modlpsfntype
-    head['exprpsfntype'] = gdat.exprpsfntype
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
     
@@ -1744,7 +1741,7 @@ def init( \
     ### parameter updates
     head['stdvmeanpnts'] = gdat.stdvmeanpnts
     head['stdvfluxdistslop'] = gdat.stdvfluxdistslop
-    head['stdvpsfp'] = gdat.stdvpsfp
+    head['stdvproppsfp'] = gdat.stdvproppsfp
     head['stdvback'] = gdat.stdvback
     head['stdvlbhl'] = gdat.stdvlbhl
     head['stdvlbhlvari'] = gdat.stdvlbhlvari
@@ -1775,7 +1772,6 @@ def init( \
         head['mockmaxmflux'] = gdat.mockmaxmflux
         head['mockvarioaxi'] = gdat.mockvarioaxi
         head['mocknumbpopl'] = gdat.mocknumbpopl
-        head['mockpsfntype'] = gdat.mockpsfntype
         for l in gdat.indxpopl:
             head['mockspatdisttypepop%d' % l] = gdat.mockspatdisttype[l]
             head['mockfluxdisttypepop%d' % l] = gdat.mockfluxdisttype[l]
@@ -2109,10 +2105,6 @@ def init( \
         listhdun.append(pf.ImageHDU(gdat.mocksinddiststdv))
         listhdun[-1].header['EXTNAME'] = 'mocksinddiststdv'
 
-        ## PSF parameters
-        listhdun.append(pf.ImageHDU(gdat.truepsfp))
-        listhdun[-1].header['EXTNAME'] = 'mockpsfp'
-        
         ## Background normalizations
         listhdun.append(pf.ImageHDU(gdat.truenormback))
         listhdun[-1].header['EXTNAME'] = 'mocknormback'
@@ -2154,7 +2146,7 @@ def plot_samp(gdat, gdatmodi):
         gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
 
     gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
-    
+   
     # PSF radial profile
     if gdat.modlvarioaxi:
         for p in gdat.indxoaxi:
@@ -2235,6 +2227,7 @@ def plot_samp(gdat, gdatmodi):
             gdatmodi.thisspecmtch[:, indxtruepntsassc.miss] = 0.
             
             plot_scatspec(gdat, l, gdatmodi=gdatmodi)
+            plot_scatspec(gdat, l, gdatmodi=gdatmodi, plotdiff=True)
            
         if gdatmodi.indxmodlpntscomp[l].size > 0:
             plot_histspec(gdat, l, gdatmodi=gdatmodi)
