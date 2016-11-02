@@ -966,7 +966,7 @@ def retr_chanpsfn(gdat):
     gdat.truevarioaxi = True
     gdat.truepsfntype = 'singgaus'
     #gdat.truepsfp = array([0.4 / gdat.anglfact, 1.7e6, 1.9, 0.6 / gdat.anglfact, 2.1e6, 2.])
-    gdat.truepsfp = array([0.4 / gdat.anglfact, 1.1, 1.9, 0.6 / gdat.anglfact, 1.3, 2.])
+    gdat.truepsfp = array([0.4 / gdat.anglfact, 2.5e-4, 1.9, 0.6 / gdat.anglfact, 3.6e-4, 2.])
    
 
 def retr_fermpsfn(gdat):
