@@ -355,131 +355,133 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     # plot proposal efficiency
     if gdat.verbtype > 0:
         print 'Making proposal efficiency plots...'
-    numbtimemcmc = 20
-    binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
-    numbtick = 2
-    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
-    for n, axis in enumerate(axgr):
-        histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
-        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
-        axis.set_ylabel('%s' % gdat.strgprop[n])
-        if n == gdat.numbprop - 1:
-            axis.set_xlabel('$i_{samp}$')
-        # define the y-axis
-        maxm = amax(histtotl)
-        axis.set_ylim([0., maxm])
-        try:
-            axis.set_title('%03d' % int(sum(histaccp) / sum(histtotl) * 100.))
-        except:
-            pass
-        listtick = linspace(maxm / 2., maxm, numbtick)
-        listlabltick = ['%.3g' % tick for tick in listtick]
-        axis.set_yticks(listtick)
-        axis.set_yticklabels(listlabltick)
-    plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
-    plt.close(figr)
-    
-    figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
-    for n, axis in enumerate(axgr):
-        hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
-        axis.hist(intersect1d(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
-        axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
-        if n == gdat.numbprop - 1:
-            axis.set_xlabel('$i_{samp}$')
-        
-        # define the y-axis
-        maxm = amax(hist[0])
-        axis.set_ylim([0., maxm])
-        listtick = linspace(maxm / 2., maxm, numbtick)
-        listlabltick = ['%.3g' % tick for tick in listtick]
-        axis.set_yticks(listtick)
-        axis.set_yticklabels(listlabltick)
-    
-    plt.subplots_adjust(hspace=0)
-    figr.savefig(gdat.pathdiag + 'accpratipara.pdf')
-    plt.close(figr)
-   
-    # plot split and merge diagnostics
-    indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-    indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
-    indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-    indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
-    indxsampspmr = union1d(indxsampsplt, indxsampmerg)
-    indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
-    indxsampreje = where(gdat.listboolreje == False)
-    if indxsampspmrtotl.size > 0:
-
-        ## create plot subfolder
-        os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
-
-        ## labels and names
-        listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
-                                        r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
-        listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
-        
-        ## variables
-        listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
-                                         exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
-                                         gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
-       
-        print 'gdat.listauxipara'
-        print gdat.listauxipara
-        print 'gdat.listnumbpair'
-        print gdat.listnumbpair
-        print 'gdat.listlaccfact'
-        print gdat.listlaccfact
-        print 'gdat.listdeltlpri'
-        print gdat.listdeltlpri
-        print 'gdat.listcombfact'
-        print gdat.listcombfact
-        print 'gdat.listdeltllik'
-        print gdat.listdeltllik[indxsampsplttotl]
-        print gdat.listdeltllik[indxsampmergtotl]
-        print 'gdat.listdeltlpri'
-        print gdat.listdeltlpri[indxsampsplttotl]
-        print gdat.listdeltlpri[indxsampmergtotl]
-        print
-
-        # rescale the Jacobian and the prior fraction to make them dimensionless
-        listvarb[5][indxsampsplttotl] /= gdat.minmflux
-        listvarb[5][indxsampmergtotl] *= gdat.minmflux
-        listvarb[8][indxsampsplttotl] /= gdat.minmflux
-        listvarb[8][indxsampmergtotl] *= gdat.minmflux
-        listvarb[10][indxsampsplttotl] *= gdat.minmflux
-        listvarb[10][indxsampmergtotl] /= gdat.minmflux
-
-        for k in range(len(listlabl)):
-            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            maxm = amax(listvarb[k][indxsampspmrtotl])
-            
-            if k <= 4:
-                indxsampspmrtemp = indxsampspmrtotl
-                indxsampsplttemp = indxsampsplttotl
-            else:
-                indxsampspmrtemp = indxsampspmr
-                indxsampsplttemp = indxsampsplt
-            
-            if k >= 5:
-                axis.set_xscale('log')
-                minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
-                bins = logspace(log10(minm), log10(maxm), 40)
-            else:
-                minm = amin(listvarb[k][indxsampspmrtemp])
-                bins = linspace(minm, maxm, 40)
-          
+    # temp
+    if False:
+        numbtimemcmc = 20
+        binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
+        numbtick = 2
+        figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
+        for n, axis in enumerate(axgr):
+            histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
+            histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
+            axis.set_ylabel('%s' % gdat.strgprop[n])
+            if n == gdat.numbprop - 1:
+                axis.set_xlabel('$i_{samp}$')
+            # define the y-axis
+            maxm = amax(histtotl)
+            axis.set_ylim([0., maxm])
             try:
-                axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.alphmrkr)
-                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.alphmrkr)
+                axis.set_title('%03d' % int(sum(histaccp) / sum(histtotl) * 100.))
             except:
-                if gdat.verbtype > 0:
-                    print 'Skipping split merge diagnostic plot...'
-            axis.set_ylabel('$N_{samp}$')
-            axis.set_xlabel(listlabl[k])
-            axis.legend()
-            plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
-            plt.close(figr)
+                pass
+            listtick = linspace(maxm / 2., maxm, numbtick)
+            listlabltick = ['%.3g' % tick for tick in listtick]
+            axis.set_yticks(listtick)
+            axis.set_yticklabels(listlabltick)
+        plt.tight_layout()
+        figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
+        plt.close(figr)
+        
+        figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
+        for n, axis in enumerate(axgr):
+            hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
+            axis.hist(intersect1d(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
+            axis.set_ylabel('$p_{%d}$' % indxparaplot[n])
+            if n == gdat.numbprop - 1:
+                axis.set_xlabel('$i_{samp}$')
+            
+            # define the y-axis
+            maxm = amax(hist[0])
+            axis.set_ylim([0., maxm])
+            listtick = linspace(maxm / 2., maxm, numbtick)
+            listlabltick = ['%.3g' % tick for tick in listtick]
+            axis.set_yticks(listtick)
+            axis.set_yticklabels(listlabltick)
+        
+        plt.subplots_adjust(hspace=0)
+        figr.savefig(gdat.pathdiag + 'accpratipara.pdf')
+        plt.close(figr)
+   
+        # plot split and merge diagnostics
+        indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
+        indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
+        indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
+        indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
+        indxsampspmr = union1d(indxsampsplt, indxsampmerg)
+        indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
+        indxsampreje = where(gdat.listboolreje == False)
+        if indxsampspmrtotl.size > 0:
+
+            ## create plot subfolder
+            os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
+
+            ## labels and names
+            listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
+                                            r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
+            listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
+            
+            ## variables
+            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
+                                             exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
+                                             gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
+           
+            print 'gdat.listauxipara'
+            print gdat.listauxipara
+            print 'gdat.listnumbpair'
+            print gdat.listnumbpair
+            print 'gdat.listlaccfact'
+            print gdat.listlaccfact
+            print 'gdat.listdeltlpri'
+            print gdat.listdeltlpri
+            print 'gdat.listcombfact'
+            print gdat.listcombfact
+            print 'gdat.listdeltllik'
+            print gdat.listdeltllik[indxsampsplttotl]
+            print gdat.listdeltllik[indxsampmergtotl]
+            print 'gdat.listdeltlpri'
+            print gdat.listdeltlpri[indxsampsplttotl]
+            print gdat.listdeltlpri[indxsampmergtotl]
+            print
+
+            # rescale the Jacobian and the prior fraction to make them dimensionless
+            listvarb[5][indxsampsplttotl] /= gdat.minmflux
+            listvarb[5][indxsampmergtotl] *= gdat.minmflux
+            listvarb[8][indxsampsplttotl] /= gdat.minmflux
+            listvarb[8][indxsampmergtotl] *= gdat.minmflux
+            listvarb[10][indxsampsplttotl] *= gdat.minmflux
+            listvarb[10][indxsampmergtotl] /= gdat.minmflux
+
+            for k in range(len(listlabl)):
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                maxm = amax(listvarb[k][indxsampspmrtotl])
+                
+                if k <= 4:
+                    indxsampspmrtemp = indxsampspmrtotl
+                    indxsampsplttemp = indxsampsplttotl
+                else:
+                    indxsampspmrtemp = indxsampspmr
+                    indxsampsplttemp = indxsampsplt
+                
+                if k >= 5:
+                    axis.set_xscale('log')
+                    minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
+                    bins = logspace(log10(minm), log10(maxm), 40)
+                else:
+                    minm = amin(listvarb[k][indxsampspmrtemp])
+                    bins = linspace(minm, maxm, 40)
+              
+                try:
+                    axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.alphmrkr)
+                    axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.alphmrkr)
+                except:
+                    if gdat.verbtype > 0:
+                        print 'Skipping split merge diagnostic plot...'
+                axis.set_ylabel('$N_{samp}$')
+                axis.set_xlabel(listlabl[k])
+                axis.legend()
+                plt.tight_layout()
+                figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
+                plt.close(figr)
     
     if gdat.verbtype > 0:
         print 'Calculating proposal execution times...'
@@ -1578,10 +1580,11 @@ def plot_psfn(gdat, gdatmodi):
                 axis.set_title(gdat.binsenerstrg[i])  
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
-            indxsamptemp = gdat.indxsamppsfp[i*gdat.numbpsfpform+m*gdat.numbener*gdat.numbpsfpform]
   
             if gdat.modlpsfntype == 'singgaus':
+                indxsamptemp = i * gdat.numbpsfptotl + m * gdat.numbener*gdat.numbpsfptotl
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp]) + gdat.strganglunit
+                # temp
             elif gdat.modlpsfntype == 'singking':
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp]) + gdat.strganglunit + '\n'
                 strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+1]
@@ -1975,12 +1978,12 @@ def plot_factoaxi(gdat, i, m, gdatmodi=None):
         else:
             psfpoaxinorm = gdatmodi.thissampvarb[gdat.indxsamppsfpoaxinorm]
             psfpoaxiindx = gdatmodi.thissampvarb[gdat.indxsamppsfpoaxiindx]
-        factoaxi = retr_factoaxi(gdat.binsoaxi, psfpoaxinorm, psfpoaxiindx)
+        factoaxi = retr_factoaxi(gdat, gdat.binsoaxi, psfpoaxinorm, psfpoaxiindx)
         axis.plot(gdat.binsoaxi * gdat.anglfact, factoaxi[i, :], label='Sample', color='b')
     
     if gdat.truefactoaxi != None:
         axis.plot(gdat.binsoaxi * gdat.anglfact, gdat.truefactoaxi[i, :], label=gdat.truelabl, color='g', ls='--')
-    axis.set_xlabel(r'$\phi$')
+    axis.set_xlabel(r'$\phi$ [%s]' % gdat.strganglunit)
     axis.set_ylabel(r'f($\phi$)')
     axis.legend(loc=2)
     plt.tight_layout()

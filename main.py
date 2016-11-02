@@ -695,7 +695,7 @@ def init( \
         maxmmeanpnts = zeros(numbpopl) + 1e3
         
     if minmfluxdistslop == None:
-        minmfluxdistslop = zeros(numbpopl) + 0.5
+        minmfluxdistslop = zeros(numbpopl) + 1.5
     if maxmfluxdistslop == None:
         maxmfluxdistslop = zeros(numbpopl) + 3.5
     if minmfluxdistbrek == None:

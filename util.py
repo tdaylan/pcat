@@ -965,7 +965,8 @@ def retr_chanpsfn(gdat):
 
     gdat.truevarioaxi = True
     gdat.truepsfntype = 'singgaus'
-    gdat.truepsfp = array([0.4 / gdat.anglfact, 1.7e6, 1.9, 0.6 / gdat.anglfact, 2.1e6, 2.])
+    #gdat.truepsfp = array([0.4 / gdat.anglfact, 1.7e6, 1.9, 0.6 / gdat.anglfact, 2.1e6, 2.])
+    gdat.truepsfp = array([0.4 / gdat.anglfact, 1.1, 1.9, 0.6 / gdat.anglfact, 1.3, 2.])
    
 
 def retr_fermpsfn(gdat):
@@ -2109,9 +2110,9 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampvarbmodi = gdatmodi.indxsampmodi
 
         
-def retr_factoaxi(bins, norm, indx):
+def retr_factoaxi(gdat, bins, norm, indx):
 
-    factoaxi = 1. + norm[:, None] * bins[None, :]**indx[:, None]
+    factoaxi = 1. + norm[:, None] * (bins[None, :] / gdat.oaxipivt)**indx[:, None]
      
     return factoaxi
 
@@ -2135,7 +2136,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
             scalangl = thisangl[None, :, None]
     
     if varioaxi:
-        factoaxi = retr_factoaxi(binsoaxi, psfp[indxpsfpoaxinorm], psfp[indxpsfpoaxiindx])
+        factoaxi = retr_factoaxi(gdat, binsoaxi, psfp[indxpsfpoaxinorm], psfp[indxpsfpoaxiindx])
     
     if psfntype == 'singgaus':
         sigc = psfp[indxpsfptemp]
@@ -2710,7 +2711,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.scalpsfp = zeros(gdat.numbpsfp, dtype=object)
         gdat.scalpsfp[:] = 'eerr'
         gdat.meanpsfp = gdat.truepsfp
-        gdat.stdvpsfp = gdat.meanpsfp * 0.01
+        gdat.stdvpsfp = gdat.meanpsfp * 0.1
         gdat.minmpsfp = gdat.meanpsfp - 3. * gdat.stdvpsfp
         gdat.maxmpsfp = gdat.meanpsfp + 3. * gdat.stdvpsfp
         
@@ -2740,13 +2741,13 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.strgpsfp = [strgpsfp[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxpsfptotl]
     for k in arange(gdat.indxpsfpinit.size):
         if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]] += ' ' + gdat.strganglunit
+            gdat.strgpsfp[gdat.indxpsfpinit[k]] += ' [%s]' % gdat.strganglunit
         elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' ' + gdat.strganglunit
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+2] += ' ' + gdat.strganglunit
+            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
+            gdat.strgpsfp[gdat.indxpsfpinit[k]+2] += ' [%s]' % gdat.strganglunit
         elif gdat.modlpsfntype == 'doubking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' ' + gdat.strganglunit
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+3] += ' ' + gdat.strganglunit
+            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
+            gdat.strgpsfp[gdat.indxpsfpinit[k]+3] += ' [%s]' % gdat.strganglunit
     
     # pixelization
     if gdat.datatype == 'mock':
@@ -2758,6 +2759,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.numbchrollik = 7
     if gdat.pntstype == 'lens':
         gdat.numbchrollik = 3
+
+    gdat.oaxipivt = 1. / gdat.anglfact
 
     # temp
     gdat.boolintpanglcosi = False
@@ -3202,9 +3205,9 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfluxprox = arange(gdat.numbfluxprox)
     gdat.binsfluxprox = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbfluxprox + 1)
     gdat.meanfluxprox = sqrt(gdat.binsfluxprox[1:] * gdat.binsfluxprox[:-1])
-   
+    
     if gdat.truevarioaxi:
-        gdat.truefactoaxi = retr_factoaxi(gdat.binsoaxi, gdat.truepsfp[gdat.indxtruepsfpoaxinorm], gdat.truepsfp[gdat.indxtruepsfpoaxiindx])
+        gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdat.truepsfp[gdat.indxtruepsfpoaxinorm], gdat.truepsfp[gdat.indxtruepsfpoaxiindx])
     gdat.truepsfn = retr_psfn(gdat, gdat.truepsfp, gdat.indxener, gdat.binsangl, gdat.truepsfntype, gdat.binsoaxi, gdat.truevarioaxi)
 
     if gdat.truepsfn != None:

@@ -170,8 +170,8 @@ def test_psfn():
     tupl = [ \
             ['mock',                          None, 'singgaus',  True, 'chan'], \
             ['mock',                          None, 'singgaus', False, 'chan'], \
-            ['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
-            ['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
+            #['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
+            #['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
             #['mock',                          None, 'doubking', False, 'ferm'], \
             #['mock',                          None, 'gausking', False, 'ferm'], \
             #['mock',                          None, 'doubgaus', False, 'ferm'], \
@@ -207,8 +207,8 @@ def test_psfn():
 
         init( \
              numbswep=1000, \
+             factthin=1, \
              numbswepplot=2000, \
-             randinit=False, \
              exprinfo=False, \
              indxenerincl=indxenerincl, \
              indxevttincl=indxevttincl, \
