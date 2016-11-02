@@ -356,7 +356,7 @@ def init( \
          # plotting
          numbswepplot=50000, \
          makeplot=True, \
-         scalmaps='linr', \
+         scalmaps='asnh', \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \

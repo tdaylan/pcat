@@ -206,7 +206,8 @@ def test_psfn():
             maxmflux = 2e-4
 
         init( \
-             numbswepplot=1000, \
+             numbswep=1000, \
+             numbswepplot=2000, \
              randinit=False, \
              exprinfo=False, \
              indxenerincl=indxenerincl, \
