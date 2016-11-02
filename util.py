@@ -966,7 +966,7 @@ def retr_chanpsfn(gdat):
     gdat.truevarioaxi = True
     gdat.truepsfntype = 'singgaus'
     #gdat.truepsfp = array([0.4 / gdat.anglfact, 1.7e6, 1.9, 0.6 / gdat.anglfact, 2.1e6, 2.])
-    gdat.truepsfp = array([0.4 / gdat.anglfact, 2.5e-4, 1.9, 0.6 / gdat.anglfact, 3.6e-4, 2.])
+    gdat.truepsfp = array([0.4 / gdat.anglfact, 2.e-4, 1.9, 0.6 / gdat.anglfact, 1.6e-4, 2.])
    
 
 def retr_fermpsfn(gdat):
@@ -2470,7 +2470,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
     gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
     gdat.indxener = arange(gdat.numbener, dtype=int)
-    gdat.indxenerfluxdist = array([gdat.numbener / 2])
+    gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
     gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
     factener = (gdat.meanener[gdat.indxenerfluxdist] / gdat.meanener)**2
 

@@ -605,7 +605,7 @@ def init( \
             pixltype = 'heal'
 
     if exprtype == 'chan':
-        sinddistmeanfudi = 1.25
+        sinddistmeanfudi = 2.
     else:
         sinddistmeanfudi = 2.25
     sinddiststdvfudi = 0.5

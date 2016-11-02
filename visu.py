@@ -634,20 +634,11 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     # log-likelihood
     path = gdat.pathpost + 'llik'
-    print 'listllik.flatten()'
-    print mean(listllik)
-    print 'gdat.maxmllikswep'
-    print gdat.maxmllikswep
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$', varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
     # log-prior
     path = gdat.pathpost + 'lpri'
     tdpy.mcmc.plot_trac(path, listlpri.flatten(), '$P(x)$')
-    print 'hey'
-    print 'listlpri'
-    print listlpri
-    print listlpri.shape
-    print
 
     # number, expected number of PS and flux conditional prior power law index 
     for l in gdat.indxpopl:
@@ -786,7 +777,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     axis.set_xlabel(r'$\ln P(D|x)$')
     axis.axvline(amax(listllik), label='Maximum saved log-likelihood')
     axis.axvline(amax(listllik), label='Overall maximum log-likelihood')
-    plt.subplots_adjust(top=0.87)
+    plt.subplots_adjust(top=0.87, bottom=0.1, left=0.1)
     figr.savefig(gdat.pathpost + 'histllik.pdf')
     plt.close(figr)
 
@@ -797,7 +788,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
         axis.hist(listlpri.flatten())
         axis.set_ylabel(r'$N_{samp}$')
         axis.set_xlabel(r'$\ln P(x)$')
-    plt.subplots_adjust(top=0.87)
+    plt.subplots_adjust(top=0.87, bottom=0.1, left=0.1)
     figr.savefig(gdat.pathpost + 'histlpri.pdf')
     plt.close(figr)
 
@@ -1568,10 +1559,14 @@ def plot_psfn(gdat, gdatmodi):
             if gdat.truepsfn != None:
                 if gdat.truevarioaxi:
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m, 0]
+                    truepsfntotltemp = gdat.truepsfn[i, :, m, 0]
                 else:
                     truepsfntemp = gdat.truepsfn[i, indxangltemp, m]
+                    truepsfntotltemp = gdat.truepsfn[i, :, m]
                 axis.plot(gdat.binsanglplot[indxangltemp], truepsfntemp, label=gdat.nameexpr, color='g', ls='--')
+                axis.set_xlim([0., gdat.binsanglplot[amax(where(truepsfntotltemp > 1e-6 * amax(truepsfntotltemp))[0])]])
             axis.set_yscale('log')
+                
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$\theta$ [%s]' % gdat.strganglunit)
             if i == 0 and gdat.exprtype == 'ferm':
@@ -1582,7 +1577,7 @@ def plot_psfn(gdat, gdatmodi):
                 axis.legend()
   
             if gdat.modlpsfntype == 'singgaus':
-                indxsamptemp = i * gdat.numbpsfptotl + m * gdat.numbener*gdat.numbpsfptotl
+                indxsamptemp = gdat.indxsamppsfp[0] + i * gdat.numbpsfptotl + m * gdat.numbener * gdat.numbpsfptotl
                 strg = r'$\sigma = %.3g$ ' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp]) + gdat.strganglunit
                 # temp
             elif gdat.modlpsfntype == 'singking':
