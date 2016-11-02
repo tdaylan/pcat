@@ -574,7 +574,7 @@ def init( \
 
     if exprtype == 'chan':
         if minmflux == None:
-            minmflux = 1e-7
+            minmflux = 5e-7
         if maxmflux == None:
             maxmflux = 1e-4
 
