@@ -779,7 +779,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                 tdpy.mcmc.plot_grid(path, gdat.listnormback[:, indxbackpair, i], strgpara, truepara=truepara, join=True)
     
     # plot log-likelihood
-    figr, axrw = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     figr.suptitle(r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi))
     axis.hist(listllik.flatten())
     axis.set_ylabel(r'$N_{samp}$')
@@ -791,7 +791,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     plt.close(figr)
 
     # plot log-prior
-    figr, axrw = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     figr.suptitle(r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi))
     if amin(listlpri) != amax(listlpri):
         axis.hist(listlpri.flatten())
