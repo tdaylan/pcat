@@ -940,13 +940,6 @@ def retr_mrkrsize(gdat, flux):
     return mrkrsize
 
 
-def test_intp():
-
-    pass 
-
-    return 
-
-
 def retr_hubbpsfn(gdat):
 
     gdat.truevarioaxi = False
@@ -965,8 +958,7 @@ def retr_chanpsfn(gdat):
 
     gdat.truevarioaxi = True
     gdat.truepsfntype = 'singgaus'
-    #gdat.truepsfp = array([0.4 / gdat.anglfact, 1.7e6, 1.9, 0.6 / gdat.anglfact, 2.1e6, 2.])
-    gdat.truepsfp = array([0.4 / gdat.anglfact, 2.e-4, 1.9, 0.6 / gdat.anglfact, 1.6e-4, 2.])
+    gdat.truepsfp = array([0.3 / gdat.anglfact, 2.e-4, 1.9, 0.5 / gdat.anglfact, 1.6e-4, 2.])
    
 
 def retr_fermpsfn(gdat):
@@ -1326,14 +1318,28 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv):
         gdatmodi.drmcsamp[indxsamp, 1] = gdatmodi.drmcsamp[indxsamp, 0] + normal(scale=stdv)
 
         
-def retr_angldistunit(gdat, lgal1, bgal1, indxpixltemp, retranglcosi=False):
+def retr_angldistunit(gdat, lgal, bgal, indxpixltemp, retranglcosi=False):
+   
+    if gdat.pixltype == 'heal':
+        xaxi, yaxi, zaxi = retr_unit(lgal, bgal)
+        anglcosi = gdat.xaxigrid[indxpixltemp] * xaxi + gdat.yaxigrid[indxpixltemp] * yaxi + gdat.zaxigrid[indxpixltemp] * zaxi
+        
+        if retranglcosi:
+            return anglcosi
+        else:
+            angldist = arccos(anglcosi)
+            return angldist
     
-    xaxi, yaxi, zaxi = retr_unit(lgal1, bgal1)
-    anglcosi = gdat.xaxigrid[indxpixltemp] * xaxi + gdat.yaxigrid[indxpixltemp] * yaxi + gdat.zaxigrid[indxpixltemp] * zaxi
-    if retranglcosi:
-        return anglcosi
-    else:
-        angldist = arccos(anglcosi)
+    if gdat.pixltype == 'heal':
+        
+        angldist = sqrt((lgal - gdat.lgalgrid)**2 + (bgal - gdat.bgalgrid)**2)
+        
+        return angldist
+    
+    if gdat.pixltype == 'unbd':
+        
+        angldist = sqrt((lgal - gdat.datacnts[0, :, 0])**2 + (bgal - gdat.datacnts[1, :, 0])**2)
+
         return angldist
 
 
@@ -1393,28 +1399,6 @@ def retr_aang(lgal, bgal):
     aang = arctan2(bgal, lgal)
 
     return aang
-
-
-def retr_enerstrg(gdat):
-    
-    binsenerstrg = []
-    if gdat.exprtype == 'ferm':
-        enerstrg = []
-        for i in gdat.indxener:
-            binsenerstrg.append('%.3g GeV - %.3g GeV' % (gdat.binsener[i], gdat.binsener[i+1]))
-            enerstrg.append('%.3g GeV' % gdat.meanener[i])
-            
-    if gdat.exprtype == 'sdss' or gdat.exprtype == 'hubb':
-        binsenerstrg = ['i-band', 'r-band', 'g-band']
-        enerstrg = ['i-band', 'r-band', 'g-band']
-    
-    if gdat.exprtype == 'chan':
-        enerstrg = []
-        for i in gdat.indxener:
-            binsenerstrg.append('%.3g KeV - %.3g KeV' % (gdat.binsener[i] * 1e3, gdat.binsener[i+1] * 1e3))
-            enerstrg.append('%.3g KeV' % (gdat.meanener[i] * 1e3))
-    
-    return enerstrg, binsenerstrg
 
 
 def retr_prop(gdat, gdatmodi):
@@ -2461,24 +2445,31 @@ def setpinit(gdat, boolinitsetp=False):
     
     ## energy
     gdat.numbener = gdat.indxenerincl.size
-    gdat.numbenerfull = gdat.binsenerfull.size - 1
+    gdat.indxener = arange(gdat.numbener, dtype=int)
+    gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
+    gdat.numbevtt = gdat.indxevttincl.size
+    if gdat.pixltype == 'unbd':
+        gdat.numbenerfull = 1
+    else:
+        gdat.numbenerfull = gdat.binsenerfull.size - 1
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
     gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
     gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
     
-    gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
-    gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
-    gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
-    gdat.indxener = arange(gdat.numbener, dtype=int)
-    gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
-    gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
-    factener = (gdat.meanener[gdat.indxenerfluxdist] / gdat.meanener)**2
+    if not gdat.pixltype == 'unbd':
+        gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
+        gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
+        gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
+        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
+        factener = (gdat.meanener[gdat.indxenerfluxdist] / gdat.meanener)**2
 
     ## PSF class
-    gdat.numbevttfull = gdat.indxevttfull.size
-    gdat.numbevtt = gdat.indxevttincl.size
+    if gdat.pixltype == 'unbd':
+        gdat.numbevttfull = 1
+    else:
+        gdat.numbevttfull = gdat.indxevttfull.size
     gdat.indxevtt = arange(gdat.numbevtt)
-    
+            
     # angular deviation
     # temp -- check that gdat.numbangl does not degrade the performance
     gdat.numbangl = 10000
@@ -2496,47 +2487,23 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock':
         gdat.truelabl = 'Mock'
     if gdat.datatype == 'inpt':
-        if gdat.exprtype == 'ferm':
-            gdat.truelabl = '3FGL'
-        if gdat.exprtype == 'sdss':
-            gdat.truelabl = 'Hubble'
-        if gdat.exprtype == 'chan':
-            gdat.truelabl = 'Chandra'
-
-    if gdat.exprtype == 'ferm':
-        gdat.strganglunit = '$^o$'
-        gdat.strganglunittext = 'degree'
-    if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
-        gdat.strganglunit = '$^{\prime\prime}$'
-        gdat.strganglunittext = 'arcsec'
-            
-    if gdat.strganglunit == '$^o$':
-        gdat.anglfact = 180. / pi
-    if gdat.strganglunit == '$^{\prime\prime}$':
-        gdat.anglfact = 3600 * 180. / pi
-
-    if gdat.exprtype == 'ferm':
-        gdat.enerfact = 1.
-    if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan':
-        gdat.enerfact = 1e3
-    
-    gdat.binsanglplot = gdat.anglfact * gdat.binsangl
-
+        gdat.truelabl = gdat.strgcatl
     if gdat.lgalcntr == 0. and gdat.bgalcntr == 0.:
         gdat.longlabl = '$l$'
         gdat.latilabl = '$b$'
     else:
         gdat.longlabl = r'$\nu$'
         gdat.latilabl = r'$\mu$'
-    
     gdat.longlabl += ' [%s]' % gdat.strganglunit
     gdat.latilabl += ' [%s]' % gdat.strganglunit
-    
     gdat.truelablvari = gdat.truelabl + ' variable'
     gdat.truelablmiss = gdat.truelabl + ' miss'
     gdat.truelablbias = gdat.truelabl + ' off'
     gdat.truelablhits = gdat.truelabl + ' hit'
     gdat.truelablmult = gdat.truelabl + ' mult'
+    
+    ## scaled angle axis to be plotted
+    gdat.binsanglplot = gdat.anglfact * gdat.binsangl
 
     if gdat.pntstype == 'lght':
         gdat.factfluxconv = 1.
@@ -2555,7 +2522,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.indxevttplot = concatenate((array([None]), gdat.indxevtt))
     
     # off-axis angle
-    if gdat.exprtype == 'chan':
+    if gdat.modlvarioaxi or gdat.truevarioaxi:
         gdat.numboaxi = 100
         gdat.minmoaxi = 0.
         gdat.maxmoaxi = 1.1 * sqrt(2.) * gdat.maxmgangmodl
@@ -2575,6 +2542,10 @@ def setpinit(gdat, boolinitsetp=False):
         retr_sdsspsfn(gdat)
     if gdat.exprtype == 'hubb':
         retr_hubbpsfn(gdat)
+    if gdat.exprtype == 'chem':
+        gdat.truevarioaxi = False
+        gdat.truepsfntype = 'singgaus'
+        gdat.truepsfp = array([0.1 / gdat.anglfact])
     
     # set the PSF model to the true PSF model if a model is not specified by the user
     if gdat.modlpsfntype == None:
@@ -2760,7 +2731,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.pntstype == 'lens':
         gdat.numbchrollik = 3
 
-    gdat.oaxipivt = 1. / gdat.anglfact
+    gdat.oaxipivt = gdat.maxmgang
 
     # temp
     gdat.boolintpanglcosi = False
@@ -2811,64 +2782,71 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         
         path = gdat.pathdata + 'inpt/' + gdat.strgexpr
-        gdat.exprflux = pf.getdata(path)
+        gdat.exprdataflux = pf.getdata(path)
         
         if gdat.pixltype == 'heal':
-            if gdat.exprflux.ndim != 3:
-                raise Exception('exprflux should be a 3D numpy array if pixelization is HealPix.')
+            if gdat.exprdataflux.ndim != 3:
+                raise Exception('exprdataflux should be a 3D numpy array if pixelization is HealPix.')
         else:
-            if gdat.exprflux.ndim != 4:
-                raise Exception('exprflux should be a 4D numpy array if pixelization is Cartesian.')
+            if gdat.exprdataflux.ndim != 4:
+                raise Exception('exprdataflux should be a 4D numpy array if pixelization is Cartesian.')
         
         if gdat.pixltype == 'cart':
-            gdat.numbsidecart = gdat.exprflux.shape[1]
-            gdat.exprflux = gdat.exprflux.reshape((gdat.exprflux.shape[0], gdat.numbsidecart**2, gdat.exprflux.shape[3]))
+            gdat.numbsidecart = gdat.exprdataflux.shape[1]
+            gdat.exprdataflux = gdat.exprdataflux.reshape((gdat.exprdataflux.shape[0], gdat.numbsidecart**2, gdat.exprdataflux.shape[3]))
 
-        gdat.numbenerfull = gdat.exprflux.shape[0]
-        gdat.numbpixlfull = gdat.exprflux.shape[1]
-        gdat.numbevttfull = gdat.exprflux.shape[2]
+        gdat.numbenerfull = gdat.exprdataflux.shape[0]
+        gdat.numbpixlfull = gdat.exprdataflux.shape[1]
+        gdat.numbevttfull = gdat.exprdataflux.shape[2]
         gdat.indxenerfull = arange(gdat.numbenerfull)
         gdat.indxevttfull = arange(gdat.numbevttfull)
         
         if gdat.pixltype == 'heal':
             gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
     
-    if gdat.pixltype == 'cart':
-        gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
-        gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
-        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
-        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
-        gdat.apix = (2. * gdat.maxmgang / gdat.numbsidecart)**2
-
-    if gdat.pixltype == 'heal':
-        
-        lgalheal, bgalheal, gdat.numbpixlfull, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
-        lgalheal = deg2rad(lgalheal)
-        bgalheal = deg2rad(bgalheal)
-   
-        gdat.indxpixlrofi = where((fabs(lgalheal) < gdat.maxmgang) & (fabs(bgalheal) < gdat.maxmgang))[0]
-        
-        gdat.indxpixlrofimargextd = where((fabs(lgalheal) < 1.2 * gdat.maxmgangmodl) & (fabs(bgalheal) < 1.2 * gdat.maxmgangmodl))[0]
-        gdat.indxpixlrofimarg = where((fabs(lgalheal) < gdat.maxmgangmodl) & (fabs(bgalheal) < gdat.maxmgangmodl))[0]
-
-        gdat.lgalgrid = lgalheal
-        gdat.bgalgrid = bgalheal
-
+    if gdat.pixltype == 'unbd':
+        gdat.indxpixlfull = arange(gdat.numbdatasamp)
+        gdat.indxpixlrofi = arange(gdat.numbdatasamp)
     else:
-        gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
-        indxsidecart = arange(gdat.numbsidecart)
-        temp = meshgrid(indxsidecart, indxsidecart, indexing='ij')
-        gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
-        gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
-    
-    gdat.indxpixlfull = arange(gdat.numbpixlfull)
+        if gdat.pixltype == 'cart':
+            gdat.binslgalcart = linspace(gdat.minmlgal, gdat.maxmlgal, gdat.numbsidecart + 1)
+            gdat.binsbgalcart = linspace(gdat.minmbgal, gdat.maxmbgal, gdat.numbsidecart + 1)
+            gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+            gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
+            gdat.apix = (2. * gdat.maxmgang / gdat.numbsidecart)**2
+            gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
+            indxsidecart = arange(gdat.numbsidecart)
+            temp = meshgrid(indxsidecart, indxsidecart, indexing='ij')
+            gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
+            gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
+
+        if gdat.pixltype == 'heal':
+            lgalheal, bgalheal, gdat.numbpixlfull, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
+            lgalheal = deg2rad(lgalheal)
+            bgalheal = deg2rad(bgalheal)
+   
+            gdat.indxpixlrofi = where((fabs(lgalheal) < gdat.maxmgang) & (fabs(bgalheal) < gdat.maxmgang))[0]
+            
+            gdat.indxpixlrofimargextd = where((fabs(lgalheal) < 1.2 * gdat.maxmgangmodl) & (fabs(bgalheal) < 1.2 * gdat.maxmgangmodl))[0]
+            gdat.indxpixlrofimarg = where((fabs(lgalheal) < gdat.maxmgangmodl) & (fabs(bgalheal) < gdat.maxmgangmodl))[0]
+
+            gdat.lgalgrid = lgalheal
+            gdat.bgalgrid = bgalheal
+
+        gdat.indxpixlfull = arange(gdat.numbpixlfull)
 
     # minimum angular distance from the center of the ROI
     gdat.minmgang = 1e-3
-
-    # energy bin string
-    gdat.enerstrg, gdat.binsenerstrg = retr_enerstrg(gdat)
     
+    # construct the energy band string
+    if gdat.pixltype != 'unbd':
+        if gdat.strgbinsener == None:
+            gdat.strgbinsener = []
+            for i in gdat.indxener:
+                gdat.strgbinsener.append('%.3g %s - %.3g %s' % (gdat.binsener[i], strgenerunit, gdat.binsener[i+1], strgenerunit))
+    else:
+        gdat.strgbinsener = ['']
+
     # PSF class string
     gdat.evttstrg = []
     for m in gdat.indxevtt:
@@ -2904,38 +2882,37 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.factfluxdistslopuppr = arctan(gdat.maxmfluxdistslopuppr) - arctan(gdat.minmfluxdistslopuppr)
     
     # exposure
-    if isinstance(gdat.strgexpo, float):
-        if gdat.datatype == 'mock':
-            if gdat.pixltype == 'heal':
-                gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+    if not gdat.pixltype == 'unbd':
+        if isinstance(gdat.strgexpo, float):
+            if gdat.datatype == 'mock':
+                if gdat.pixltype == 'heal':
+                    gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                if gdat.pixltype == 'cart':
+                    gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
+            if gdat.datatype == 'inpt':
+                gdat.expo = gdat.strgexpo * ones_like(gdat.exprdataflux)
+        else:
+            path = gdat.pathdata + 'inpt/' + gdat.strgexpo
+            gdat.expo = pf.getdata(path)
+            if amin(gdat.expo) == amax(gdat.expo):
+                raise Exception('Bad input exposure map.')
+                return
             if gdat.pixltype == 'cart':
-                gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
-        if gdat.datatype == 'inpt':
-            gdat.expo = gdat.strgexpo * ones_like(gdat.exprflux)
-    else:
-        path = gdat.pathdata + 'inpt/' + gdat.strgexpo
-        gdat.expo = pf.getdata(path)
-        if amin(gdat.expo) == amax(gdat.expo):
-            raise Exception('Bad input exposure map.')
-            return
-        if gdat.pixltype == 'cart':
-            gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
+                gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
 
     # backgrounds
     gdat.backflux = []
     for c in gdat.indxback:
-        if gdat.strgback[c] == 'unit' or gdat.strgback[c] == 'zero':
-            if gdat.strgback[c] == 'unit':
-                offs = 1.
-            else:
-                offs = 0.
+        if isinstance(gdat.strgback[c], float):
             if gdat.datatype == 'mock':
                 if gdat.pixltype == 'heal':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + offs
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.strgback[c]
                 if gdat.pixltype == 'cart':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + offs
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.strgback[c]
+                if gdat.pixltype == 'unbd':
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbdatasamp, gdat.numbevttfull)) + gdat.strgback[c]
             if gdat.datatype == 'inpt':
-                backfluxtemp = zeros_like(gdat.exprflux) + offs
+                backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.strgback[c]
         else:
             path = gdat.pathdata + 'inpt/' + gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
@@ -2946,25 +2923,28 @@ def setpinit(gdat, boolinitsetp=False):
     # only include desired energy and PSF class bins 
     gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     if gdat.datatype == 'inpt':
-        gdat.exprflux = gdat.exprflux[gdat.indxcubeincl]
-    gdat.expo = gdat.expo[gdat.indxcubeincl]
+        gdat.exprdataflux = gdat.exprdataflux[gdat.indxcubeincl]
+    if gdat.pixltype != 'unbd':
+        gdat.expo = gdat.expo[gdat.indxcubeincl]
     for c in gdat.indxback:
         gdat.backflux[c] = gdat.backflux[c][gdat.indxcubeincl]
     
     # exclude voxels with vanishing exposure
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[i, :, m] > 0.)[0])
+    if gdat.pixltype != 'unbd':
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[i, :, m] > 0.)[0])
     gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
     gdat.numbpixl = gdat.indxpixlrofi.size
     gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
-       
-    gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
-    gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
+     
+    if gdat.pixltype != 'unbd':
+        gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
+        gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
     
-    # store pixels as unit vectors
-    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+        # store pixels as unit vectors
+        gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
    
     # construct a lookup table for converting HealPix pixels to ROI pixels
     if gdat.pixltype == 'heal':
@@ -2990,21 +2970,22 @@ def setpinit(gdat, boolinitsetp=False):
             fobj.close()
    
     if gdat.datatype == 'inpt':
-        # temp
-        #gdat.datacnts = gdat.datacnts[gdat.indxcuberofi]
-        gdat.exprflux = gdat.exprflux[gdat.indxcuberofi]
+        gdat.exprdataflux = gdat.exprdataflux[gdat.indxcuberofi]
+   
+    if gdat.pixltype != 'unbd':
+        gdat.expofull = copy(gdat.expo)
+        gdat.expo = gdat.expo[gdat.indxcuberofi]
     
-    gdat.expofull = copy(gdat.expo)
-    gdat.expo = gdat.expo[gdat.indxcuberofi]
     for c in gdat.indxback:
         gdat.backflux[c] = gdat.backflux[c][gdat.indxcuberofi]
 
-    gdat.backcnts = []
-    gdat.backcntstotl = zeros_like(gdat.expo)
-    for c in gdat.indxback:
-        backcntstemp = gdat.backflux[c] * gdat.expo * gdat.diffener[:, None, None] * gdat.apix
-        gdat.backcnts.append(backcntstemp)
-        gdat.backcntstotl[:] += backcntstemp 
+    if gdat.pixltype != 'unbd':
+        gdat.backcnts = []
+        gdat.backcntstotl = zeros_like(gdat.expo)
+        for c in gdat.indxback:
+            backcntstemp = gdat.backflux[c] * gdat.expo * gdat.diffener[:, None, None] * gdat.apix
+            gdat.backcnts.append(backcntstemp)
+            gdat.backcntstotl[:] += backcntstemp 
 
     # setup for lensing
     if gdat.pntstype == 'lens':
@@ -3095,7 +3076,7 @@ def setpfinl(gdat, boolinitsetp=False):
     # get count data
     ## input data
     if gdat.datatype == 'inpt':
-        gdat.datacnts = gdat.exprflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+        gdat.datacnts = gdat.exprdataflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
     
     # load mock catalog into the reference catalog data structure
     if gdat.trueinfo:
@@ -3128,7 +3109,11 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.truespectemp = empty((3, gdat.numbener, gdat.mocknumbpnts[l]))
                 gdat.truespectemp[:] = gdat.mockspec[l][None, :, :]
                 gdat.truespec.append(gdat.truespectemp)
-           
+          
+            print 'hey'
+            print 'gdat.datacnts'
+            print gdat.datacnts
+
             gdat.truenormback = gdat.mocknormback
             gdat.datacnts = gdat.mockdatacnts
     
@@ -3496,9 +3481,9 @@ def init_fram(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpop
         if indxenerplot == None:
             axis.set_title('')
         else:
-            axis.set_title(gdat.binsenerstrg[indxenerplot])
+            axis.set_title(gdat.strgbinsener[indxenerplot])
     else:
-        titl = gdat.binsenerstrg[indxenerplot]
+        titl = gdat.strgbinsener[indxenerplot]
         if gdat.exprtype == 'ferm':
             titl += ', ' + gdat.evttstrg[indxevttplot]
         axis.set_title(titl)

@@ -683,7 +683,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             gdat.mockfluxdistslopuppr = 0.05 * randn() + gdat.mockfluxdistslopuppr
 
         # flux distribution
-        titl = gdat.binsenerstrg[gdat.indxenerfluxdist[0]]
+        titl = gdat.strgbinsener[gdat.indxenerfluxdist[0]]
         if gdat.fluxdisttype[l] == 'powr':
             # power law index
             path = gdat.pathpost + 'fluxdistslop_pop%d' % l
@@ -743,7 +743,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                 truepara = gdat.truenormback[c, i]
             else:
                 truepara = None
-            titl = gdat.binsenerstrg[i]
+            titl = gdat.strgbinsener[i]
             labl = gdat.lablback[c] + '$_{%d}$' % i
             varbdraw=[gdat.sampvarbmaxmllik[gdat.indxsampnormback[c, i]]]
             tdpy.mcmc.plot_trac(path, gdat.listnormback[:, c, i], labl, truepara=truepara, titl=titl, scalpara='logt', varbdraw=varbdraw, labldraw=[strgbest])
@@ -1202,7 +1202,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         axis.set_yscale('log')
         axis.set_xlabel('$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         axis.set_xscale('log')
-        axis.text(0.75, 0.65, gdat.binsenerstrg[i], ha='center', va='center', transform=axis.transAxes)
+        axis.text(0.75, 0.65, gdat.strgbinsener[i], ha='center', va='center', transform=axis.transAxes)
         axis.set_ylim(gdat.limshist)
         axis.set_xlim([gdat.factfluxconv * gdat.minmspecplot[i], gdat.factfluxconv * gdat.maxmspecplot[i]])
         if plotspec:
@@ -1302,14 +1302,14 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         if not plotdiff:
             axis.set_yscale('log')
         axis.set_xscale('log')
-        axis.set_title(gdat.enerstrg[i])
+        axis.set_title(gdat.strgbinsener[i])
         if plotdiff:
             limsyaxi = gdat.factfluxconv * array([-1., 1.]) * 0.1 * gdat.maxmspecplot[i]
         else:
             limsyaxi = gdat.factfluxconv * array([gdat.minmspecplot[i], gdat.maxmspecplot[i]])
         axis.set_ylim(limsyaxi)
         axis.set_xlim([gdat.factfluxconv * gdat.minmspecplot[i], gdat.factfluxconv * gdat.maxmspecplot[i]])
-        axis.set_title(gdat.binsenerstrg[i])
+        axis.set_title(gdat.strgbinsener[i])
    
     if plotdiff:
         strg = 'diff'
@@ -1351,7 +1351,7 @@ def plot_scatpixl(gdat, gdatmodi, l):
                     labl += ', ' + gdat.evttstrg[m]
                 axis.set_ylabel(labl)
             if m == 0:
-                axis.set_title(gdat.enerstrg[i])
+                axis.set_title(gdat.strgbinsener[i])
             
     plt.tight_layout()
     plt.savefig(gdat.pathplot + 'fram/scatpixl_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep)
@@ -1572,7 +1572,7 @@ def plot_psfn(gdat, gdatmodi):
             if i == 0 and gdat.exprtype == 'ferm':
                 axis.set_ylabel(gdat.evttstrg[m])
             if m == 0:
-                axis.set_title(gdat.binsenerstrg[i])  
+                axis.set_title(gdat.strgbinsener[i])  
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
   
@@ -1656,7 +1656,7 @@ def plot_datacntshist(gdat):
                 axis.set_xlabel(r'$k$')
             #axis.set_xscale('log')
             if m == 0:
-                axis.set_title(gdat.binsenerstrg[i])
+                axis.set_title(gdat.strgbinsener[i])
             if i == 0 and gdat.exprtype == 'ferm':
                 axis.set_ylabel(gdat.evttstrg[m])
         
@@ -1790,7 +1790,7 @@ def plot_mosa(gdat):
                             imag = retr_fram(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
                             supr_fram(gdat, gdatmodi, axis, i, m)
                    
-                    plt.figtext(0.5, 0.93, gdat.binsenerstrg[i], ha='center', va='center')
+                    plt.figtext(0.5, 0.93, gdat.strgbinsener[i], ha='center', va='center')
                     axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
                     cbar = figr.colorbar(imag, cax=axiscomm)
                     cbar.set_ticks(gdat.tickdatacnts[i, :])
@@ -1811,79 +1811,101 @@ def plot_mosa(gdat):
             print 'Skipping the mosaic image plot...'
 
 
-def plot_grap(redu=False):
+def plot_grap(igal=False):
         
     figr, axis = plt.subplots(figsize=(6, 6))
 
-    G = nx.DiGraph()
-    
-    if redu:
-        listcolr = ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'magenta', 'magenta', 'magenta', 'magenta']
-        G.add_edges_from([('fluxdistslop', 'flux'), \
-                          ('meanpnts', 'numbpnts'), \
-                          ('numbpnts', 'lgal'), \
-                          ('numbpnts', 'bgal'), \
-                          ('numbpnts', 'flux'), \
-                          ('numbpnts', 'sind'), \
-                          ('psfp', 'data'), \
-                          ('normback', 'data'), \
-                          ('lgal', 'data'), \
-                          ('bgal', 'data'), \
-                          ('flux', 'data'), \
-                          ('sind', 'data')])
+    grap = nx.DiGraph()
+    if igal:
+        listcolr = ['black', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'black', 'black']
     else:
-        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
-        G.add_edges_from([('fluxdistslop', 'flux'), \
-                          ('meanpnts', 'numbpnts'), \
-                          ('numbpnts','lgal'), \
-                          ('numbpnts','bgal'), \
-                          ('psfp', 'modl'), \
-                          ('normback', 'modl'), \
-                          ('numbpnts','flux'), \
-                          ('numbpnts','sind'), \
-                          ('lgal','modl'), \
-                          ('bgal','modl'), \
-                          ('flux','modl'), \
-                          ('sind','modl'), \
-                          ('modl','data')])
+        listcolr = ['black', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'olive', 'magenta']
+    grap.add_edges_from([ \
+                         ('fluxdistslop', 'flux'), \
+                         ('meanpnts', 'numbpnts'), \
+                         ('modl','data'), \
+                         ('psfp', 'modl'), \
+                         ('normback', 'modl'), \
+                         ('lgal','modl'), \
+                         ('bgal','modl'), \
+                         ('flux','modl'), \
+                         ('numbpnts','lgal'), \
+                         ('numbpnts','bgal'), \
+                         ('numbpnts','flux') \
+                        ])
+    if igal:
+        grap.add_edges_from([ \
+                             ('spatdistslop', 'lgal'), \
+                             ('spatdistslop', 'bgal') \
+                            ])
+    else:
+        grap.add_edges_from([ \
+                             ('sind', 'modl'), \
+                             ('numbpnts', 'sind') \
+                            ])
 
+        
     labl = {}
-    labl['meanpnts'] = r'$\mu$'
     labl['fluxdistslop'] = r'$\alpha$'
+    labl['meanpnts'] = r'$\mu$'
+    labl['data'] = r'$\mathcal{D}$'
     labl['numbpnts'] = '$N$'
-    labl['lgal'] = '$l$'
-    labl['psfp'] = '$\eta$'
-    labl['normback'] = '$A$'
-    labl['bgal'] = '$b$'
-    labl['flux'] = '$f$'
-    labl['sind'] = '$\{s\}_{a=1}^{N}$'
-    if not redu:
-        labl['modl'] = '$C_{model}$'
-    labl['data'] = '$C_{data}$'
-
-    pos = nx.circular_layout(G)
-   
-    size = 700
-    nx.draw(G, pos, labels=labl, ax=axis, edgelist=[], nodelist=[])
-    nx.draw_networkx_edges(G, pos, ax=axis, labels=labl, edge_color=listcolr)
-    if redu:
-        nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['data'], node_color='grey', node_size=1.5*size)
+    labl['psfp'] = r'$\vec{\eta}$'
+    labl['normback'] = r'$\vec{A}$'
+    labl['lgal'] = r'$\vec{l}$'
+    labl['bgal'] = r'$\vec{b}$'
+    if igal:
+        labl['spatdistslop'] = r'$\beta$'
+        labl['flux'] = r'$\vec{f_i}$'
     else:
-        nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=1.5*size)
-    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop'], node_color='r', node_size=size)
-    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
-    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
-    nx.draw_networkx_nodes(G, pos, ax=axis, labels=labl, nodelist=['psfp', 'normback'], node_color='y', node_size=size)
+        labl['flux'] = r'$\vec{f}$'
+        labl['sind'] = r'$\vec{s}$'
+    labl['modl'] = r'$\mathcal{M}$'
+    
+        
+    
+    posi = nx.circular_layout(grap)
+    posi['meanpnts'] = array([0., 0.3])
+    posi['numbpnts'] = array([0., 0.1])
+    posi['normback'] = array([0.5, -0.1])
+    posi['psfp'] = array([0.7, -0.1])
+    posi['fluxdistslop'] = array([0.3, 0.1])
+    posi['lgal'] = array([-0.3, -0.1])
+    posi['bgal'] = array([-0.1, -0.1])
+    posi['flux'] = array([0.1, -0.1])
+    if igal:
+        posi['spatdistslop'] = array([-0.2, 0.1])
+    else:
+        posi['sind'] = array([0.3, -0.1])
+    posi['modl'] = array([0., -0.3])
+    posi['data'] = array([0., -0.5])
+    
+    size = 400
+    nx.draw(grap, posi, labels=labl, ax=axis, edgelist=[], nodelist=[])
+    nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
+    nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
+    nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
+    if igal:
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop', 'spatdistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux'], node_color='g', node_size=size)
+    else:
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
+    nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'normback'], node_color='y', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
-    if redu:
-        strg = 'redu'
+    #plt.subplots_adjust(top)
+    plt.tight_layout()
+    if igal:
+        strg = 'igal'
     else:
         strg = ''
     plt.savefig(pathplot + 'grap%s.pdf' % strg)
     plt.close(figr)
 
 
+plot_grap(True)
+plot_grap()
 def plot_3fgl_thrs(gdat):
 
     path = os.environ["PCAT_DATA_PATH"] + '/detthresh_P7v15source_4years_PL22.fits'
@@ -1978,6 +2000,7 @@ def plot_factoaxi(gdat, i, m, gdatmodi=None):
     
     if gdat.truefactoaxi != None:
         axis.plot(gdat.binsoaxi * gdat.anglfact, gdat.truefactoaxi[i, :], label=gdat.truelabl, color='g', ls='--')
+        axis.set_ylim([0., 2. * amax(gdat.truefactoaxi[i, :])])
     axis.set_xlabel(r'$\phi$ [%s]' % gdat.strganglunit)
     axis.set_ylabel(r'f($\phi$)')
     axis.legend(loc=2)
@@ -2018,7 +2041,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
             axis.set_xscale('log')
             axis.set_ylim(gdat.limshist)
             if m == 0:
-                axis.set_title(gdat.binsenerstrg[i])
+                axis.set_title(gdat.strgbinsener[i])
             if i == 0 and gdat.exprtype == 'ferm':
                 axis.set_ylabel(gdat.evttstrg[m])
             if m == gdat.numbevtt / 2 and i == gdat.numbener / 2:

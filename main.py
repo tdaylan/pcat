@@ -320,9 +320,9 @@ def init( \
          numbburn=None, \
          factthin=None, \
          
-         datatype='inpt', \
-         indxevttincl=arange(2, 4), \
-         indxenerincl=arange(5), \
+         datatype='mock', \
+         indxevttincl=None, \
+         indxenerincl=None, \
          
          # comparison with the reference catalog
          anglassc=None, \
@@ -339,10 +339,11 @@ def init( \
          optiprop=False, \
          regulevi=False, \
          strgexpr=None, \
-         strgback=['unit'], \
+         strgcatl=None, \
+         strgback=[1.], \
          lablback=None, \
          nameback=None, \
-         strgexpo=None, \
+         strgexpo=1., \
          numbproc=None, \
          liketype='pois', \
          exprtype='ferm', \
@@ -360,10 +361,14 @@ def init( \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
-    
+         strgbinsener=None, \
+         strgexprname=None, \
          mockvarioaxi=None, \
          modlvarioaxi=None, \
-
+         strganglunit=None, \
+         strganglunittext=None, \
+         anglfact=None, \
+         
          # misc
          strgfunctime='clck', \
          
@@ -453,9 +458,10 @@ def init( \
          mocknormback=None, \
          mockminmflux=None, \
          mockmaxmflux=None, \
-         mocknumbpnts=None, \
+         mocknumbpnts=array([100]), \
          numbsidecart=200, \
          numbsideheal=256, \
+         numbdatasamp=100, \
         ):
 
     # defaults
@@ -463,10 +469,27 @@ def init( \
     ### number of backgrounds
     numbback = len(strgback)
     
-    ### number of energy bins
-    numbener = indxenerincl.size
     ### number of populations
     numbpopl = maxmnumbpnts.size
+    
+    if exprtype == 'ferm':
+        if indxevttincl == None:
+            indxevttincl = arange(2, 4)
+        if indxenerincl == None:
+            indxenerincl = arange(1, 3)
+    if exprtype == 'chan':
+        if indxevttincl == None:
+            indxevttincl = arange(1)
+        if indxenerincl == None:
+            indxenerincl = arange(2)
+    if exprtype == 'chem':
+        if indxevttincl == None:
+            indxevttincl = arange(1)
+        if indxenerincl == None:
+            indxenerincl = arange(1)
+    
+    ### number of energy bins
+    numbener = indxenerincl.size
     
     # if there is only one energy bin, turn off color proposals
     if numbener == 1:
@@ -538,14 +561,23 @@ def init( \
     if initfluxdistslopuppr == None:
         initfluxdistslopuppr = array([None for n in range(numbpopl)])
         
-    ## Fermi-LAT
+    if pntstype == 'lens':
+        if strgflux == None:
+            strgflux = 'R'
+            strgfluxunit = r'arcsec'
+    else:
+        if strgflux == None:
+            strgflux = 'f'
+
+    ## experiment defaults
+    ### Fermi-LAT
     if exprtype == 'ferm':
         if maxmgang == None:
             maxmgang = deg2rad(20.)
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2.)
         if strgenerunit == None:
-            strgenerunit = r'GeV'
+            strgenerunit = 'GeV'
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/GeV'
         if indxevttfull == None:
@@ -560,28 +592,62 @@ def init( \
             minmflux = 3e-11
         if maxmflux == None:
             maxmflux = 1e-7
+        if strgexprname == None:
+            strgcatl = 'Fermi-LAT'
         if datatype == 'mock':
             indxenerfull = arange(5)
             indxevttfull = arange(4)
 
-    if pntstype == 'lens':
-        if strgflux == None:
-            strgflux = 'R'
-            strgfluxunit = r'arcsec'
-    else:
-        if strgflux == None:
-            strgflux = 'f'
+    if strganglunit == None:
+        if exprtype == 'ferm':
+            strganglunit = '$^o$'
+        if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
+            strganglunit = '$^{\prime\prime}$'
+        if exprtype == 'chem':
+            strganglunit = ''
+
+    if strganglunittext == None:
+        if exprtype == 'ferm':
+            strganglunittext = 'degree'
+        if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
+            strganglunittext = 'arcsec'
+        if exprtype == 'chem':
+            strganglunittext = ''
+    
+    if anglfact == None:
+        if exprtype == 'ferm':
+            anglfact = 180. / pi
+        if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
+            anglfact = 3600 * 180. / pi
+        if exprtype == 'chem':
+            anglfact = 1.
 
     if exprtype == 'chan':
         if minmflux == None:
-            minmflux = 5e-7
+            minmflux = 1e-6
         if maxmflux == None:
             maxmflux = 1e-4
+        if strgexprname == None:
+            strgcatl = 'Chandra'
 
+    if exprtype == 'chem':
+        if minmflux == None:
+            minmflux = 1e0
+        if maxmflux == None:
+            maxmflux = 1e4
+        if maxmgang == None:
+            maxmgang = 1.
+        if strgexprname == None:
+            strgcatl = 'Chem'
+    
     if exprtype == 'ferm':
         numbfluxprox = 3
-    if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
+    else:
         numbfluxprox = 1
+    
+    # energy band string
+    if exprtype == 'sdss' or exprtype == 'hubb':
+        strgbinsener = ['i-band', 'r-band', 'g-band']
     
     ## Lensing
     if exprtype == 'hubb':
@@ -591,8 +657,6 @@ def init( \
             anglassc = deg2rad(0.15 / 3600.)
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2. / 3600.)
-        if strgenerunit == None:
-            strgenerunit = r'r-band'
         if strgfluxunit == None:
             strgfluxunit = r'mag'
         if binsenerfull == None:
@@ -631,10 +695,8 @@ def init( \
             indxevttfull = arange(1)
         if radispmrlbhl == None:
             radispmrlbhl = deg2rad(2. / 3600.)
-        if maxmgang == None:
-            maxmgang = deg2rad(100. / 3600.)
         if binsenerfull == None:
-            binsenerfull = array([0.5e-3, 2e-3, 8e-3])
+            binsenerfull = array([0.5, 2., 8.])
         if anglassc == None:
             anglassc = deg2rad(0.5 / 3600.)
         if pixltype == None:
@@ -665,8 +727,10 @@ def init( \
     
     ## Chandra
     if exprtype == 'chan':
+        if maxmgang == None:
+            maxmgang = deg2rad(0.492 / 3600.) * numbsidecart
         if strgenerunit == None:
-            strgenerunit = r'KeV'
+            strgenerunit = 'KeV'
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/KeV'
         if mockvarioaxi == None:
@@ -711,6 +775,12 @@ def init( \
     if maxmfluxdistslopuppr == None:
         maxmfluxdistslopuppr = maxmfluxdistslop
         
+    if strgcatl == None:
+        if exprtype == 'ferm':
+            strgcatl = '3FGL'
+        else:
+            strgcatl = strgexprname
+
     if probprop != None:
         probprop /= sum(probprop)
    
@@ -734,12 +804,18 @@ def init( \
     gdat.writoutp = writoutp
     
     ## plot settings
+    ### energy band strings
+    gdat.strgbinsener = strgbinsener
     ### MCMC time period over which a frame is produced
     gdat.numbswepplot = numbswepplot
     ### flag to control generation of plots
     gdat.makeplot = makeplot
     ### Boolean flag to annotate catalogs
     gdat.anotcatl = anotcatl
+    ### text
+    gdat.strganglunit = strganglunit
+    gdat.strganglunittext = strganglunittext
+    gdat.anglfact = anglfact
 
     # diagnostics
     ## flag to run the sampler in diagnostic mode
@@ -999,6 +1075,7 @@ def init( \
         ### mock image resolution
         gdat.numbsidecart = numbsidecart
         gdat.numbsideheal = numbsideheal
+        gdat.numbdatasamp = numbdatasamp
 
     ## proposal frequencies
     gdat.probprop = probprop
@@ -1136,68 +1213,69 @@ def init( \
                 gdat.mockspec[l] = retr_speccurv(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], gdat.mocksind[l], gdat.mockcurv[l])
             if gdat.mockspectype[l] == 'expo':
                 gdat.mockspec[l] = retr_spec(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], gdat.mocksind[l], gdat.mockbrek)[l]
-            
-            indxpixltemp = retr_indxpixl(gdat, gdat.mockbgal[l], gdat.mocklgal[l])
-            
-            gdat.mockcnts[l] = gdat.mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+           
+            if gdat.pixltype != 'unbd':
+                indxpixltemp = retr_indxpixl(gdat, gdat.mockbgal[l], gdat.mocklgal[l])
+                gdat.mockcnts[l] = gdat.mockspec[l][:, :, None] * gdat.expo[:, indxpixltemp, :] * gdat.diffener[:, None, None]
         
         # mock mean count map
-        if gdat.pntstype == 'lght':
-            mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
+        if gdat.pixltype != 'unbd':
+            if gdat.pntstype == 'lght':
+                mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
                                                                                                             gdat.truepsfp, gdat.truepsfntype, gdat.mockvarioaxi)
-            gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
-            gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
-        if gdat.pntstype == 'lens':
-            gdat.lens.mockpsfnscal = 0.1
-            # create the source object
-            gdat.lens.mocksourtype = 'Gaussian'
-            gdat.lens.mocklgalsour = 0.
-            gdat.lens.mockbgalsour = 0.
-            gdat.lens.mockfluxsour = 1.
-            gdat.lens.mocksizesour = 1e-6 # gdat.maxmgang / 2.
-            gdat.lens.mockratisour = 1.
-            gdat.lens.mockanglsour = 0.
-            gdat.lens.mocksourmodl = franlens.Source(gdat.lens.mocksourtype, gdat.lens.mocklgalsour, gdat.lens.mockbgalsour, gdat.lens.mockfluxsour, \
-                                                                                                    gdat.lens.mocksizesour, gdat.lens.mockratisour, gdat.lens.mockanglsour)
-            # create the lens object
-            gdat.lens.mocklenstype = 'SIE'
-            gdat.lens.mockellplens = 0.
-            gdat.lens.mockangllens = 0.
-            gdat.lens.mocksherlens = 0.15
-            gdat.lens.mocksanglens = -18.435
+                gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mocknormback, mockpntsflux, gdat.indxcube)
+                gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+            if gdat.pntstype == 'lens':
+                gdat.lens.mockpsfnscal = 0.1
+                # create the source object
+                gdat.lens.mocksourtype = 'Gaussian'
+                gdat.lens.mocklgalsour = 0.
+                gdat.lens.mockbgalsour = 0.
+                gdat.lens.mockfluxsour = 1.
+                gdat.lens.mocksizesour = 1e-6 # gdat.maxmgang / 2.
+                gdat.lens.mockratisour = 1.
+                gdat.lens.mockanglsour = 0.
+                gdat.lens.mocksourmodl = franlens.Source(gdat.lens.mocksourtype, gdat.lens.mocklgalsour, gdat.lens.mockbgalsour, gdat.lens.mockfluxsour, \
+                                                                                                        gdat.lens.mocksizesour, gdat.lens.mockratisour, gdat.lens.mockanglsour)
+                # create the lens object
+                gdat.lens.mocklenstype = 'SIE'
+                gdat.lens.mockellplens = 0.
+                gdat.lens.mockangllens = 0.
+                gdat.lens.mocksherlens = 0.15
+                gdat.lens.mocksanglens = -18.435
 
-            lensmodltemp = franlens.LensModel(gdat.lens.mocklenstype, 0., 0., gdat.lens.mockellplens, gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, 0.)
-            gdat.mockmodlfluxraww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, lensmodltemp, gdat.lens.mockpsfnscal).flatten()[None, :, None]
-            gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+                lensmodltemp = franlens.LensModel(gdat.lens.mocklenstype, 0., 0., gdat.lens.mockellplens, gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, 0.)
+                gdat.mockmodlfluxraww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, lensmodltemp, gdat.lens.mockpsfnscal).flatten()[None, :, None]
+                gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
 
-            gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-            for l in gdat.mockindxpopl:
-                for k in range(gdat.mocknumbpnts[0]):
-                    gdat.lens.mocklensmodl = franlens.LensModel(gdat.lens.mocklenstype, gdat.mocklgal[l][k], gdat.mockbgal[l][k], gdat.lens.mockellplens, \
-                                                                        gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, gdat.mockspec[l][0, k])
-                    gdat.mockmodlflux[0, :, 0] += franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
-                                                                                                                        gdat.lens.mockpsfnscal).flatten()
-                    if False:
-                        print 'k'
-                        print k
-                        print 'gdat.mocklgal[l][k]'
-                        print gdat.mocklgal[l][k]
-                        print 'gdat.mockbgal[l][k]'
-                        print gdat.mockbgal[l][k]
-                        print 'gdat.mockspec[l][0, k]'
-                        print gdat.mockspec[l][0, k]
-                        neww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
-                                                                                                                        gdat.lens.mockpsfnscal).flatten()
-                        print 'neww'
-                        print amin(neww), amax(neww)
-                        print 
-                    
-        gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
-        gdat.mockdatacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-        for i in gdat.indxener:
-            for j in gdat.indxpixl:
-                for m in gdat.indxevtt:
-                    gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
+                gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                for l in gdat.mockindxpopl:
+                    for k in range(gdat.mocknumbpnts[0]):
+                        gdat.lens.mocklensmodl = franlens.LensModel(gdat.lens.mocklenstype, gdat.mocklgal[l][k], gdat.mockbgal[l][k], gdat.lens.mockellplens, \
+                                                                            gdat.lens.mockangllens, gdat.lens.mocksherlens, gdat.lens.mocksanglens, gdat.mockspec[l][0, k])
+                        gdat.mockmodlflux[0, :, 0] += franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
+                                                                                                                            gdat.lens.mockpsfnscal).flatten()
+                        if False:
+                            print 'k'
+                            print k
+                            print 'gdat.mocklgal[l][k]'
+                            print gdat.mocklgal[l][k]
+                            print 'gdat.mockbgal[l][k]'
+                            print gdat.mockbgal[l][k]
+                            print 'gdat.mockspec[l][0, k]'
+                            print gdat.mockspec[l][0, k]
+                            neww = franlens.macro_only_image(gdat.lens.grid, gdat.lens.mocksourmodl, gdat.lens.mocklensmodl, \
+                                                                                                                            gdat.lens.mockpsfnscal).flatten()
+                            print 'neww'
+                            print amin(neww), amax(neww)
+                            print 
+            
+            gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None]
+            gdat.mockdatacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+            for i in gdat.indxener:
+                for j in gdat.indxpixl:
+                    for m in gdat.indxevtt:
+                        gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
 
     # final setup
     setpfinl(gdat, True) 
@@ -1697,10 +1775,6 @@ def init( \
     
     head['minmflux'] = gdat.minmflux
     head['maxmflux'] = gdat.maxmflux
-    print 'gdat.minmsind'
-    print gdat.minmsind
-    print 'gdat.maxmsind'
-    print gdat.maxmsind
     head['minmsind'] = gdat.minmsind
     head['maxmsind'] = gdat.maxmsind
     
@@ -1711,6 +1785,7 @@ def init( \
     head['exprtype'] = gdat.exprtype
     head['pixltype'] = gdat.pixltype
     
+    head['strgbinsener'] = gdat.strgbinsener
     head['strgenerunit'] = gdat.strgenerunit
     head['strgflux'] = gdat.strgflux
     head['strgfluxunit'] = gdat.strgfluxunit

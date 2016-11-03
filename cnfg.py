@@ -572,6 +572,8 @@ def test_popl():
 def test():
     
     init( \
+         pixltype='unbd', \
+         exprtype='chem', \
         )
             #verbtype=2, \
             #numbburn=0, \
