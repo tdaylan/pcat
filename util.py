@@ -3613,6 +3613,7 @@ def setpfinl(gdat, boolinitsetp=False):
         print 'Negative counts!'
 
     # plotting
+    numbtickcbar = 10
     gdat.tickdatacnts = empty((gdat.numbener, numbtickcbar))
     gdat.labldatacnts = empty((gdat.numbener, numbtickcbar), dtype=object)
     if gdat.pixltype != 'unbd':
@@ -3622,12 +3623,10 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.maxmdatacnts = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
         else:
             gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2), 1)
-        
     
     if gdat.pixltype != 'unbd':
         gdat.minmdatacnts = amin(amin(gdat.datacnts, 1), 1)
     
-        numbtickcbar = 10
         gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
         gdat.tickresicnts = empty((gdat.numbener, numbtickcbar + 1))
         gdat.lablresicnts = empty((gdat.numbener, numbtickcbar + 1), dtype=object)

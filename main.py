@@ -145,13 +145,7 @@ def work(gdat, indxprocwork):
                 fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
                 fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
 
-            print 'hey'
-            print 'gdatmodi.drmcsamp'
-            print gdatmodi.drmcsamp
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
-            print 'gdatmodi.drmcsamp'
-            print gdatmodi.drmcsamp
-            return
 
             if gdat.numbener > 1:
 
