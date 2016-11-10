@@ -119,10 +119,11 @@ def work(gdat, indxprocwork):
     
     ## background normalization
     for c in gdat.indxback:
-        if gdat.randinit or gdat.datatype != 'mock':
-            gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = rand(gdat.numbener)
-        else:
-            gdatmodi.drmcsamp[gdat.indxsampnormback[c, :], 0] = cdfn_logt(gdat.truenormback[c, :], gdat.minmnormback[c], gdat.factnormback[c])
+        for i in gdat.indxener:
+            if gdat.randinit or gdat.datatype != 'mock' or gdat.truenormback[c, i] == 0.:
+                gdatmodi.drmcsamp[gdat.indxsampnormback[c, i], 0] = rand()
+            else:
+                gdatmodi.drmcsamp[gdat.indxsampnormback[c, i], 0] = cdfn_logt(gdat.truenormback[c, i], gdat.minmnormback[c], gdat.factnormback[c])
 
     ## PS components
     for l in gdat.indxpopl:
@@ -143,7 +144,14 @@ def work(gdat, indxprocwork):
                 fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
                 fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
                 fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist, :], 0] = copy(fluxunit)
+
+            print 'hey'
+            print 'gdatmodi.drmcsamp'
+            print gdatmodi.drmcsamp
+            gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
+            print 'gdatmodi.drmcsamp'
+            print gdatmodi.drmcsamp
+            return
 
             if gdat.numbener > 1:
 
@@ -601,10 +609,6 @@ def init( \
             anglassc = deg2rad(0.5)
         if pixltype == None:
             pixltype = 'heal'
-        if minmflux == None:
-            minmflux = 3e-11
-        if maxmflux == None:
-            maxmflux = 1e-7
         if datatype == 'mock':
             indxenerfull = arange(5)
 
@@ -667,17 +671,23 @@ def init( \
         if exprtype == 'chan':
             enerfact = 1e3
 
-    if exprtype == 'chan':
-        if minmflux == None:
-            minmflux = 5e-7
-        if maxmflux == None:
+    if minmflux == None:
+        if exprtype == 'ferm':
+            minmflux = 3e-11
+        if exprtype == 'chan':
+            minmflux = 5e-6
+        if exprtype == 'chem':
+            minmflux = 1e0
+    
+    if maxmflux == None:
+        if exprtype == 'ferm':
+            maxmflux = 1e-7
+        if exprtype == 'chan':
             maxmflux = 1e-4
+        if exprtype == 'chem':
+            maxmflux = 1e4
     
     if exprtype == 'chem':
-        if minmflux == None:
-            minmflux = 1e0
-        if maxmflux == None:
-            maxmflux = 1e4
         if maxmgang == None:
             maxmgang = 1.
     
@@ -1549,7 +1559,7 @@ def init( \
         #plot_intr()
         #plot_plot()
         #plot_king(gdat)
-        if gdat.pntstype == 'lght':
+        if gdat.evalcirc:
             plot_eval(gdat)
         #if gdat.datatype == 'mock':
         #    plot_pntsdiff()
@@ -2394,8 +2404,8 @@ def plot_samp(gdat, gdatmodi):
     for l in gdat.indxpopl:
         gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
 
+    gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thispntsflux, gdat.indxcube)
     if gdat.pixltype != 'unbd':
-        gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thispntsflux, gdat.indxcube)
         gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.diffener[:, None, None] * gdat.apix
         gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
    
@@ -2747,7 +2757,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print gdatmodi.drmcsamp[indxsampbadd, :]
                 raise Exception('Unit sample vector went outside [0,1].')
              
-            if (gdatmodi.drmcsamp[gdat.indxsampunsd, :] != 0.).any():
+            if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
                 raise Exception('Unused vector elements are nonzero.')
 
             for l in gdat.indxpopl:

@@ -647,13 +647,6 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     # log-likelihood
     path = gdat.pathpost + 'llik'
-    print 'hey'
-    print 'gdat.maxmllikswep'
-    print gdat.maxmllikswep
-    print 'listllik'
-    print listllik
-    print 
-
     tdpy.mcmc.plot_trac(path, listllik.flatten(), '$P(D|x)$', varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
     # log-prior
@@ -1005,22 +998,8 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     if post:
         xdat = gdat.meansind
         postsindhist = tdpy.util.retr_postvarb(listsindhist)
-        
-        print 'postsindhist'
-        print postsindhist.shape
-        print
-
         ydat = postsindhist[0, :]
         yerr = tdpy.util.retr_errrvarb(postsindhist)
-        print 'xdat'
-        print xdat
-        print 'gdat.meansind'
-        print gdat.meansind
-        print 'ydat'
-        print ydat
-        print 'yerr'
-        print yerr
-        print 
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         try:
@@ -2095,13 +2074,13 @@ def plot_histcnts(gdat, l, gdatmodi=None):
 def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, indxenerplot, indxevttplot, 'datacnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
+    make_catllabl(gdat, axis)
     if gdat.correxpo:
         imag = retr_imag(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
         make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
     else:
         imag = retr_scat(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
-    make_catllabl(gdat, axis)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -2110,10 +2089,14 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, indxenerplot, indxevttplot, 'modlcnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
-    imag = retr_imag(gdat, axis, gdatmodi.thismodlcnts, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], \
+    make_catllabl(gdat, axis)
+    if gdat.pixltype == 'unbd':
+        modltemp = gdatmodi.thismodlflux
+    else:
+        modltemp = gdatmodi.thismodlcnts
+    imag = retr_imag(gdat, axis, modltemp, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], \
                                                                                                                 vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
-    make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
     plt.savefig(path)
@@ -2123,8 +2106,8 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, indxenerplot, indxevttplot, 'resicnts', indxpoplplot=indxpoplplot, gdatmodi=gdatmodi)
-    imag = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu', scal=gdat.scalmaps)
     make_catllabl(gdat, axis)
+    imag = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu', scal=gdat.scalmaps)
     supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickresicnts[indxenerplot, :], labl=gdat.lablresicnts[indxenerplot, :])
     plt.tight_layout()

@@ -3613,6 +3613,8 @@ def setpfinl(gdat, boolinitsetp=False):
         print 'Negative counts!'
 
     # plotting
+    gdat.tickdatacnts = empty((gdat.numbener, numbtickcbar))
+    gdat.labldatacnts = empty((gdat.numbener, numbtickcbar), dtype=object)
     if gdat.pixltype != 'unbd':
         gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix / gdat.diffener
         gdat.datacntsmean = mean(sum(gdat.datacnts, 2), 1)
@@ -3620,6 +3622,9 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.maxmdatacnts = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
         else:
             gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2), 1)
+        
+    
+    if gdat.pixltype != 'unbd':
         gdat.minmdatacnts = amin(amin(gdat.datacnts, 1), 1)
     
         numbtickcbar = 10
@@ -3633,8 +3638,6 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.lablerrrcnts = empty((gdat.numbener, numbtickcbar + 1), dtype=object)
             gdat.tickerrr = empty((gdat.numbener, numbtickcbar + 1))
             gdat.lablerrr = empty((gdat.numbener, numbtickcbar + 1), dtype=object)
-        gdat.tickdatacnts = empty((gdat.numbener, numbtickcbar))
-        gdat.labldatacnts = empty((gdat.numbener, numbtickcbar), dtype=object)
         if gdat.scalmaps == 'asnh':
             gdat.minmdatacnts = arcsinh(gdat.minmdatacnts)
             gdat.maxmdatacnts = arcsinh(gdat.maxmdatacnts)
@@ -3661,14 +3664,10 @@ def setpfinl(gdat, boolinitsetp=False):
                         gdat.labldatacnts[i, k] = '%.3g' % sinh(gdat.tickdatacnts[i, k])
                     else:
                         gdat.labldatacnts[i, k] = '%.3g' % gdat.tickdatacnts[i, k]
-    else:   
-        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
+    else:
         
-    if gdat.strgcnfg == 'pcat_chan_mock':
-        print 'hey'
-        print 'gdat.minmdatacnts'
-        print gdat.minmdatacnts
-
+        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
+         
     if gdat.verbtype > 1 and boolinitsetp:
         if gdat.pntstype == 'lght' and gdat.pixltype != 'unbd':
             print 'Memory budget: indxpixlprox'
