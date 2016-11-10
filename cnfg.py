@@ -120,7 +120,7 @@ def test_time():
         gridchan, dictpcat = init( \
                                   numbswep=numbswep, \
                                   numbproc=numbproc, \
-                                  strgback=['unit'], \
+                                  strgback=[1.], \
                                   strgexpo=1., \
                                   boolpropsind=False, \
                                   exprinfo=False, \
@@ -199,7 +199,7 @@ def test_psfn():
         else:
             indxenerincl = arange(2)
             indxevttincl = arange(1)
-            strgback = ['unit']
+            strgback = [1.]
             strgexpo = 'chanexpo_0200_4msc.fits'
             bgalcntr = 0.
             minmflux = 1e-4
@@ -574,8 +574,9 @@ def test():
     init( \
          pixltype='unbd', \
          exprtype='chem', \
+         verbtype=2, \
+         maxmnumbpnts=array([10]), \
         )
-            #verbtype=2, \
             #numbburn=0, \
             #factthin=1, \
             #exprinfo=False, \

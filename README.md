@@ -2,6 +2,7 @@
 
 PCAT is a Bayesian framework to sample from the catalog space. It's theoretical framework is introduced in [Daylan, Portillo & Finkbeiner (2016)](https://arxiv.org/abs/1607.04637), submitted to ApJ. Refer to its [webpage](http://www.tansudaylan.com/pcat) for an introduction.
 
+
 ### Installation
 
 You can install `tdpy` by running the `setup.py` script.
@@ -218,7 +219,7 @@ Proposal scale for spectral indices
 `fracrand`
 Probability of proposing the next state randomly from the prior
 
-`radispmrlbhl`
+`radispmr`
 Radius of the circle in which splits and merges will be proposed
 
 ---
