@@ -589,12 +589,13 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     
     # compute the medians of secondary variables
     gdat.medinormback = gdat.postnormback[0, :, :]
-    gdat.medipsfp = gdat.postpsfp[0, :]
-    gdat.medipsfn = retr_psfn(gdat, gdat.medipsfp, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
-    gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
-    if gdat.correxpo:
-        gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medinormback, gdat.medifwhm)
-        gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
+    if gdat.pntstype == 'lght':
+        gdat.medipsfp = gdat.postpsfp[0, :]
+        gdat.medipsfn = retr_psfn(gdat, gdat.medipsfp, gdat.indxener, gdat.binsangl, gdat.modlpsfntype)
+        gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
+        if gdat.correxpo:
+            gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medinormback, gdat.medifwhm)
+            gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
 
     # flux distribution
     for l in gdat.indxpopl:
@@ -1045,26 +1046,30 @@ def plot_brgt(gdat, gdatmodi=None, listspecbrgthist=None):
         yerr = tdpy.util.retr_errrvarb(postsindhist)
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:   
-        fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal], gdatmodi.thissampvarb[gdatmodi.thisindxsampspec], gdatmodi.thisindxsampspec)
-
-        xaxi = sum(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplbrgtassc][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgtassc]])
-        yaxi = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplbrgtassc][gdat.indxenerfluxdist[0], gdatmodi.indxpntsbrgt]] - \
-                                                                                    gdat.truespec[0, gdat.indxenerfluxdist[0], gdat.trueindxpntsbrgt]
-        axis.scatter(xaxi, yaxi, alpha=gdat.alphmrkr, color='b', label='Sample')
-    if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
-        axis.hist(gdat.truespep[l][gdat.indxtruepntscomp[l], 0], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
+        fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsamplgal)], \
+                                                                         gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampbgal)], \
+                                                                         gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec)[gdat.indxenerfluxdist[0], :]])
+        print 'hey'
+        print 'fluxbrgt'
+        print fluxbrgt
+        print 'fluxbrgtassc'
+        print fluxbrgtassc
+        axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label='Sample')
+        axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
+    if gdat.trueinfo:
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo:
-            axis.hist(gdat.exprsind, gdat.binssind, alpha=gdat.alphmrkr, color='red', log=True, label='3FGL')
+            axis.scatter(gdat.exprfluxbrgt, gdat.exprfluxbrgtassc, alpha=gdat.alphmrkr, color='red', label=gdat.strgcatl)
     axis.set_xscale('log')
-    axis.set_xlabel('$f_{assc,total}$')
-    axis.set_xlim([gdat.minmsind, gdat.maxmsind])
-    axis.set_ylabel(r'$\Delta %s$' % gdat.strgflux)
-    axis.set_ylim(gdat.limshist)
+    axis.set_xlabel(r'$%s_{assc}$' % gdat.strgflux)
+    axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
+    axis.set_ylim([gdat.minmfluxplot, gdat.maxmfluxplot])
+    axis.set_ylabel(r'$%s_{max}$' % gdat.strgflux)
     axis.legend(loc=2)
     if post:
-        path = gdat.pathpost + 'scatbrgt_pop%d.pdf' % l
+        path = gdat.pathpost + 'scatbrgt.pdf'
     else:
-        path = gdat.pathfram + 'scatbrgt_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
+        path = gdat.pathfram + 'scatbrgt_swep%09d.pdf' % (gdatmodi.cntrswep)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1135,7 +1140,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     else:
         post = True
     
-    if gdat.pixltype != 'unbd':
+    if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
         if post:
             binssigm = gdat.medibinssigm
         else:
@@ -1275,7 +1280,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         yerr *= gdat.factfluxconv
         
         if plotdiff:
-            ydat -= xdat
+            ydat = 100. * (ydat - xdat) / xdat
        
         # plot all associations
         indx = where(ydat > 0.)[0]
@@ -1323,7 +1328,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         axis.set_xscale('log')
         axis.set_title(gdat.strgbinsener[i])
         if plotdiff:
-            limsyaxi = gdat.factfluxconv * array([-1., 1.]) * 0.1 * gdat.maxmspecplot[i]
+            limsyaxi = array([-100., 100.])
         else:
             limsyaxi = gdat.factfluxconv * array([gdat.minmspecplot[i], gdat.maxmspecplot[i]])
         axis.set_ylim(limsyaxi)

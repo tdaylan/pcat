@@ -216,18 +216,18 @@ def work(gdat, indxprocwork):
         ## PSF
         gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfp], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, \
                                                                                                                     binsoaxi=gdat.binsoaxi, varioaxi=gdat.modlvarioaxi)
-    if gdat.boolintpanglcosi:
-        binsangltemp = gdat.binsanglcosi
-    else:
-        binsangltemp = gdat.binsangl
-    
-    if gdat.modlvarioaxi:
-        gdatmodi.thispsfnintp = [[] for k in gdat.indxoaxi]
-        for k in gdat.indxoaxi:
-            gdatmodi.thispsfnintp[k] = interp1d(binsangltemp, gdatmodi.thispsfn[:, :, :, k], axis=1)
-        gdatmodi.nextpsfnintp = [[] for k in gdat.indxoaxi]
-    else:
-        gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
+        if gdat.boolintpanglcosi:
+            binsangltemp = gdat.binsanglcosi
+        else:
+            binsangltemp = gdat.binsangl
+        
+        if gdat.modlvarioaxi:
+            gdatmodi.thispsfnintp = [[] for k in gdat.indxoaxi]
+            for k in gdat.indxoaxi:
+                gdatmodi.thispsfnintp[k] = interp1d(binsangltemp, gdatmodi.thispsfn[:, :, :, k], axis=1)
+            gdatmodi.nextpsfnintp = [[] for k in gdat.indxoaxi]
+        else:
+            gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
         
     # log-prior
     if gdat.bindprio:
@@ -2404,23 +2404,24 @@ def plot_samp(gdat, gdatmodi):
         gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.diffener[:, None, None] * gdat.apix
         gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
    
-    # PSF radial profile
-    if gdat.modlvarioaxi:
-        for p in gdat.indxoaxi:
-            gdatmodi.thispsfn[:, :, :, p] = gdatmodi.thispsfnintp[p](gdat.binsangl)
-    else:
-        gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
+    if gdat.pntstype == 'lght':
+        # PSF radial profile
+        if gdat.modlvarioaxi:
+            for p in gdat.indxoaxi:
+                gdatmodi.thispsfn[:, :, :, p] = gdatmodi.thispsfnintp[p](gdat.binsangl)
+        else:
+            gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
 
-    # PSF FWHM
-    gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
-    
-    if gdat.modlvarioaxi:
-        indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-        fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
-    else:
-        fwhmtemp = gdatmodi.thisfwhm
+        # PSF FWHM
+        gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
+        
+        if gdat.modlvarioaxi:
+            indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+            fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
+        else:
+            fwhmtemp = gdatmodi.thisfwhm
    
-    if gdat.pixltype != 'unbd':
+    if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
         # number of background counts per PSF
         gdatmodi.thiscntsbackfwhm = retr_cntsbackfwhm(gdat, gdatmodi.thissampvarb[gdat.indxsampnormback], gdatmodi.thisfwhm)
     
@@ -2444,19 +2445,20 @@ def plot_samp(gdat, gdatmodi):
     
     # plots
     ## brightest PS
-    #plot_brgt(gdat, gdatmodi)
+    plot_brgt(gdat, gdatmodi)
 
     ## PSF radial profile
-    plot_psfn(gdat, gdatmodi)
+    if gdat.pntstype == 'lght':
+        plot_psfn(gdat, gdatmodi)
 
-    if gdat.modlvarioaxi or gdat.truevarioaxi:
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                plot_factoaxi(gdat, i, m, gdatmodi)
+        if gdat.modlvarioaxi or gdat.truevarioaxi:
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    plot_factoaxi(gdat, i, m, gdatmodi)
     
-    ## PSF FWHM
-    if False:
-        plot_fwhm(gdat, gdatmodi)
+        ## PSF FWHM
+        if False:
+            plot_fwhm(gdat, gdatmodi)
     
     # number of background counts per PSF
     if False:

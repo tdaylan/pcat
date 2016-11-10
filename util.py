@@ -1279,7 +1279,7 @@ def retr_listpair(gdat, lgal, bgal):
 
 def retr_chandata(gdat):
 
-    with open(gdat.pathdata + '4Ms_multiband_type.txt', 'r') as thisfile:
+    with open(gdat.pathdata + 'inpt/chancatl.txt', 'r') as thisfile:
         G_long = [] #deg
         G_lat = [] #deg
         id_number = []
@@ -1320,26 +1320,38 @@ def retr_chandata(gdat):
             Otype.append(line[17])
         lgalchan = (asarray(G_long)).astype(float)
         bgalchan = (asarray(G_lat)).astype(float)
-        oaxichan = (asarray(off_angle)).astype(float)
-        cntstotlchan = (asarray(flux_cnts)).astype(float)
-        cntschan = (asarray(soft_cnts)).astype(float)
-        cntschan = (asarray(hard_cnts)).astype(float)
-        offschan = (asarray(c_offset)).astype(float)
-        cmagchan = (asarray(C_mag)).astype(float)
-        wmagchan = (asarray(W_mag)).astype(float)
-        dmagchan = (asarray(GD_mag)).astype(float)
-        gmagchan = (asarray(G_mag)).astype(float)
-        mmagchan = (asarray(M_mag)).astype(float)
-        smagchan = (asarray(S_mag)).astype(float)
-        fluxchanfull = (asarray(flux_erg_full)).astype(float)
+        #oaxichan = (asarray(off_angle)).astype(float)
+        cntschan = (asarray(flux_cnts)).astype(float)
+        cntschansoft = (asarray(soft_cnts)).astype(float)
+        cntschanhard = (asarray(hard_cnts)).astype(float)
+        #offschan = (asarray(c_offset)).astype(float)
+        #cmagchan = (asarray(C_mag)).astype(float)
+        #wmagchan = (asarray(W_mag)).astype(float)
+        #dmagchan = (asarray(GD_mag)).astype(float)
+        #gmagchan = (asarray(G_mag)).astype(float)
+        #mmagchan = (asarray(M_mag)).astype(float)
+        #smagchan = (asarray(S_mag)).astype(float)
+        #fluxchanfull = (asarray(flux_erg_full)).astype(float)
         fluxchansoft = (asarray(flux_erg_soft)).astype(float)
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
-        objttypechan = (asarray(Otype))
+        #objttypechan = (asarray(Otype))
+
+    indxrofi = where((fabs(lgalchan) < gdat.maxmgangmodl) & (fabs(bgalchan) < gdat.maxmgangmodl))[0]
+    gdat.exprlgal = lgalchan[indxrofi]
+    gdat.exprbgal = bgalchan[indxrofi]
+    gdat.exprspec = empty((3, gdat.numbener, gdat.exprlgal.size))
+    gdat.exprspec[0, 0, :] = fluxchansoft[indxrofi]
+    gdat.exprspec[0, 1, :] = fluxchanhard[indxrofi]
+    gdat.exprcnts = empty((gdat.numbener, gdat.exprlgal.size))
+    gdat.exprcnts[0, :] = cntschansoft[indxrofi]
+    gdat.exprcnts[1, :] = cntschanhard[indxrofi]
+    #gdat.exprspep = lgalspep[indxrofi]
+    #gdat.exprstrg = lgalstrg[indxrofi]
+    #gdat.exprstrgclss = lgalchanclss[indxrofi]
+    #gdat.exprstrgassc = lgalchanassc[indxrofi]
 
     print 'lgalchan'
     print lgalchan
-    print 'objttypechan'
-    print objttypechan
 
 
 def retr_fermdata(gdat):
@@ -1383,8 +1395,8 @@ def retr_fermdata(gdat):
     fgl3strgassc = fgl3['ASSOC1'][indxfgl3sort]
     
     fgl3spectype = fgl3['SpectrumType'][indxfgl3sort]
-    fgl3scur = fgl3['beta'][indxfgl3sort]
-    fgl3scut = fgl3['Cutoff'][indxfgl3sort] * 1e-3
+    fgl3curv = fgl3['beta'][indxfgl3sort]
+    fgl3expo = fgl3['Cutoff'][indxfgl3sort] * 1e-3
     
     fgl3timevari = fgl3['Variability_Index'][indxfgl3sort]
     
@@ -2964,10 +2976,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbstdvspepdist = 2.
     ### minima and maxima for spectral parameters
     if gdat.datatype == 'mock':
-        gdat.minmsind = min(gdat.sinddistmean, gdat.mocksinddistmean) - gdat.numbstdvspepdist * max(gdat.sinddiststdv, gdat.mocksinddistmean)
-        gdat.maxmsind = max(gdat.sinddistmean, gdat.mocksinddistmean) + gdat.numbstdvspepdist * max(gdat.sinddiststdv, gdat.mocksinddistmean)
-        gdat.minmcurv = min(gdat.curvdistmean, gdat.mockcurvdistmean) - gdat.numbstdvspepdist * max(gdat.curvdiststdv, gdat.mockcurvdistmean)
-        gdat.maxmcurv = max(gdat.curvdistmean, gdat.mockcurvdistmean) + gdat.numbstdvspepdist * max(gdat.curvdiststdv, gdat.mockcurvdistmean)
+        gdat.minmsind = min(amin(gdat.sinddistmean), amin(gdat.mocksinddistmean)) - gdat.numbstdvspepdist * max(amax(gdat.sinddiststdv), amax(gdat.mocksinddiststdv))
+        gdat.maxmsind = max(amax(gdat.sinddistmean), amax(gdat.mocksinddistmean)) + gdat.numbstdvspepdist * max(amax(gdat.sinddiststdv), amax(gdat.mocksinddiststdv))
+        gdat.minmcurv = min(amin(gdat.curvdistmean), amin(gdat.mockcurvdistmean)) - gdat.numbstdvspepdist * max(amax(gdat.curvdiststdv), amax(gdat.mockcurvdiststdv))
+        gdat.maxmcurv = max(amax(gdat.curvdistmean), amax(gdat.mockcurvdistmean)) + gdat.numbstdvspepdist * max(amax(gdat.curvdiststdv), amax(gdat.mockcurvdiststdv))
     else:
         gdat.minmsind = gdat.sinddistmean - gdat.numbstdvspepdist * gdat.sinddiststdv
         gdat.maxmsind = gdat.sinddistmean + gdat.numbstdvspepdist * gdat.sinddiststdv
@@ -3374,6 +3386,14 @@ def setpfinl(gdat, boolinitsetp=False):
             retr_chandata(gdat)
         gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
+        print 'gdat.exprlgal'
+        print gdat.exprlgal
+        print 'gdat.exprbgal'
+        print gdat.exprbgal
+        print 'gdat.exprspec'
+        print gdat.exprspec
+
+        gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
 
     # get count data
     ## input data
@@ -3421,6 +3441,9 @@ def setpfinl(gdat, boolinitsetp=False):
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
+    
+    gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
+                                                                                                        concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
     
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
@@ -3618,15 +3641,23 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.labldatacnts = empty((gdat.numbener, numbtickcbar), dtype=object)
     if gdat.pixltype != 'unbd':
         gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix / gdat.diffener
+    else:
+        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
+        
+    if gdat.pixltype != 'unbd':
         gdat.datacntsmean = mean(sum(gdat.datacnts, 2), 1)
+    
+    if gdat.pixltype != 'unbd':
+        gdat.minmdatacnts = amin(amin(gdat.datacnts, 1), 1)
         if gdat.satumaps:
             gdat.maxmdatacnts = ceil((amax(sum(gdat.datacnts, 2), 1) - gdat.datacntsmean) * 0.05 + gdat.datacntsmean)
         else:
             gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2), 1)
+    else:
+        gdat.minmdatacnts = array([gdat.numbdatasamp / gdat.apix]) * 1e-1
+        gdat.maxmdatacnts = array([gdat.numbdatasamp / gdat.apix]) * 1e1
     
     if gdat.pixltype != 'unbd':
-        gdat.minmdatacnts = amin(amin(gdat.datacnts, 1), 1)
-    
         gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
         gdat.tickresicnts = empty((gdat.numbener, numbtickcbar + 1))
         gdat.lablresicnts = empty((gdat.numbener, numbtickcbar + 1), dtype=object)
@@ -3663,9 +3694,6 @@ def setpfinl(gdat, boolinitsetp=False):
                         gdat.labldatacnts[i, k] = '%.3g' % sinh(gdat.tickdatacnts[i, k])
                     else:
                         gdat.labldatacnts[i, k] = '%.3g' % gdat.tickdatacnts[i, k]
-    else:
-        
-        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
          
     if gdat.verbtype > 1 and boolinitsetp:
         if gdat.pntstype == 'lght' and gdat.pixltype != 'unbd':
@@ -3677,39 +3705,33 @@ def setpfinl(gdat, boolinitsetp=False):
             print '%.4g MB' % totl
 
 
-def retr_fluxbrgt(lgal, bgal, flux):
+def retr_fluxbrgt(gdat, lgal, bgal, flux):
 
-    indxpoplbrgt, indxpntsbrgt, indxpoplbrgtassc, indxpntsbrgtassc = retr_indxpntsbrgt(gdat, lgal, bgal, flux)
-  
-    fluxbrgt = flux[indxpoplbrgt][indxpntsbrgt]
+    print 'flux'
+    print flux
+    indxbrgt = argmax(flux)
+    print 'indxbrgt'
+    print indxbrgt
+    print 
+    fluxbrgt = flux[indxbrgt]
+    dir1 = array([lgal, bgal])#[:, None]
+    dir2 = array([lgal[indxbrgt], bgal[indxbrgt]])
 
-    fluxbrgtassc = 0.
-    for k in range(indxpntsbrgtassc.size):
-        fluxbrgtassc += flux[indxpoplbrgtassc[k]][indxpntsbrgtassc[k]]
+    dist = retr_angldist(gdat, dir1, dir2)
+    indxbrgtassc = where(dist < gdat.anglassc)[0]
+    print 'indxbrgtassc'
+    print indxbrgtassc
+    print 
+    fluxbrgtassc = flux[indxbrgtassc]
+
+    fluxbrgt = repeat(fluxbrgt, fluxbrgtassc.size)
+
+    print 'fluxbrgt'
+    print fluxbrgt.shape
+    print 'fluxbrgtassc'
+    print fluxbrgtassc.shape
 
     return fluxbrgt, fluxbrgtassc
-
-
-def retr_indxpntsbrgt(gdat, lgal, bgal, spec):
-
-    indxpopl = arange(len(lgal))
-    fluxtemp = 0.
-    for l in indxpopl:
-        indxtemp = argmax(spec[i][gdat.indxenerfluxdist[0], :])
-        if gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxtemp]] > fluxtemp:
-            fluxtemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntsbrgtassctemp]]
-            indxpoplbrgt = l
-            indxpntsbrgt = indxpntsbrgtassctemp
-
-    indxpnts = []
-    for l in indxpopl:
-        dir2 = array([lgal[l], bgal[l]])
-        dir2 = array([lgal[indxpoplbrgt][indxpntsbrgt], bgal[indxpntsbrgt][indxpntsbrgt]])[:, None]
-        dist = retr_angldist(gdat, dir1, dir2)
-        dist = retr_angldist(lgal[l], bgal[l], lgal[indxpoplbrgt][indxpntsbrgt], bgal[indxpoplbrgt][indxpntsbrgt])
-        indxpnts.append(where(dist < gdat.anglassc)[0])
-
-    return indxpoplbrgt, indxpntsbrgt, indxpoplbrgtassc, indxpntsbrgtassc
 
 
 def retr_indxoaxipnts(gdat, lgal, bgal):
@@ -3784,7 +3806,12 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
         vmin = -vmax
     
     draw_frambndr(gdat, axis)
-    
+   
+    print 'hey'
+    print 'maps'
+    print maps.shape
+    print
+
     # filter the map
     if thisindxevtt == None:
         if thisindxener == None:
@@ -3799,6 +3826,10 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
                 maps = sum(maps[thisindxener, :, :], axis=1)
     else:
         maps = maps[thisindxener, :, thisindxevtt]
+    
+    print 'maps'
+    print maps.shape
+    print
     
     # temp
     maps = maps.squeeze()
