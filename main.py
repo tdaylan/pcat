@@ -212,8 +212,9 @@ def work(gdat, indxprocwork):
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampspeptemp, indxsampcomptemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
-    ## PSF
-    gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfp], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, \
+    if gdat.pntstype == 'lght':
+        ## PSF
+        gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxsamppsfp], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, \
                                                                                                                     binsoaxi=gdat.binsoaxi, varioaxi=gdat.modlvarioaxi)
     if gdat.boolintpanglcosi:
         binsangltemp = gdat.binsanglcosi
