@@ -384,6 +384,7 @@ def init( \
          strganglunit=None, \
          strganglunittext=None, \
          anglfact=None, \
+         factfluxconv=None, \
          enerfact=None, \
          
          # misc
@@ -462,7 +463,6 @@ def init( \
          boolpropfluxdistbrek=True, \
          boolproppsfn=True, \
          boolpropnormback=True, \
-         boolpropsind=True, \
          radispmr=None, \
 
          # initial state 
@@ -508,33 +508,24 @@ def init( \
     numbpopl = maxmnumbpnts.size
     indxpopl = arange(numbpopl, dtype=int)
     
-    if exprtype == 'ferm':
-        if indxevttincl == None:
+    if indxevttincl == None:
+        if exprtype == 'ferm':
             indxevttincl = arange(2, 4)
-        if indxenerincl == None:
+        if exprtype == 'chan':
+            indxevttincl = arange(1)
+    
+    if indxenerincl == None:
+        if exprtype == 'ferm':
             indxenerincl = arange(1, 3)
-    if exprtype == 'chan':
-        if indxevttincl == None:
-            indxevttincl = arange(1)
-        if indxenerincl == None:
+        if exprtype == 'chan':
             indxenerincl = arange(2)
-    if exprtype == 'chem':
-        if indxevttincl == None:
-            indxevttincl = arange(1)
-        if indxenerincl == None:
-            indxenerincl = arange(1)
     
     ### number of energy bins
-    numbener = indxenerincl.size
-    
-    # if there is only one energy bin, turn off color proposals
-    if numbener == 1:
-        if probprop != None:
-            # temp
-            probprop[-1] = 0.
-        else:
-            boolpropsind = False
-    
+    if indxenerincl != None:
+        numbener = indxenerincl.size
+    else:
+        numbener = 1
+
     if randinit == None:
         if datatype == 'mock':
             randinit = False
@@ -573,13 +564,24 @@ def init( \
     if initfluxdistslopuppr == None:
         initfluxdistslopuppr = array([None for n in indxpopl])
         
-    if pntstype == 'lens':
-        if strgflux == None:
+    if strgflux == None:
+        if pntstype == 'lens':
             strgflux = 'R'
-            strgfluxunit = r'arcsec'
-    else:
-        if strgflux == None:
-            strgflux = 'f'
+        else:
+            if exprtype == 'ferm' or exprtype == 'chan':
+                strgflux = 'f'
+            if exprtype == 'chem':
+                strgflux = 'p'
+    
+    if strgfluxunit == None:
+        if pntstype == 'lens':
+            strgfluxunit = 'arcsec'
+        else:
+            if exprtype == 'ferm':
+                strgfluxunit = '1/cm$^2$/s/GeV'
+            if exprtype == 'chan':
+                strgfluxunit = '1/cm$^2$/s/KeV'
+
 
     if indxevttfull == None:
         if exprtype == 'ferm':
@@ -596,8 +598,6 @@ def init( \
             strgenerunit = ''
 
     if exprtype == 'ferm':
-        if maxmgang == None:
-            maxmgang = deg2rad(20.)
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/GeV'
         if anglassc == None:
@@ -623,8 +623,6 @@ def init( \
             strganglunit = '$^o$'
         if exprtype == 'sdss' or exprtype == 'chan' or exprtype == 'hubb':
             strganglunit = '$^{\prime\prime}$'
-        if exprtype == 'chem':
-            strganglunit = ''
 
     if strganglunittext == None:
         if exprtype == 'ferm':
@@ -640,9 +638,15 @@ def init( \
         if exprtype == 'chem':
             anglfact = 1.
 
+    if factfluxconv == None:
+        if pntstype == 'lens':
+            factfluxconv = anglfact
+        else:
+            factfluxconv = 1.
+
     if strgxaxi == None:
         if exprtype == 'chem':
-            strgxaxi = '$E_k$'
+            strgxaxi = r'$E_k^{\prime}$'
         else:
             if lgalcntr != 0. or bgalcntr != 0.:
                 strgxaxi = '$x$'
@@ -651,7 +655,7 @@ def init( \
 
     if strgyaxi == None:
         if exprtype == 'chem':
-            strgyaxi = '$L_z$'
+            strgyaxi = r'$L_z^{\prime}$'
         else:
             if lgalcntr != 0. or bgalcntr != 0.:
                 strgyaxi = '$y$'
@@ -670,7 +674,7 @@ def init( \
         if exprtype == 'ferm':
             minmflux = 3e-11
         if exprtype == 'chan':
-            minmflux = 5e-6
+            minmflux = 1e-5
         if exprtype == 'chem':
             minmflux = 1e0
     
@@ -678,13 +682,19 @@ def init( \
         if exprtype == 'ferm':
             maxmflux = 1e-7
         if exprtype == 'chan':
-            maxmflux = 1e-4
+            maxmflux = 1e-3
         if exprtype == 'chem':
             maxmflux = 1e4
     
-    if exprtype == 'chem':
-        if maxmgang == None:
+    if maxmgang == None:
+        if exprtype == 'chan':
+            maxmgang = 0.492 / anglfact * numbsidecart / 2.
+        if exprtype == 'ferm':
+            maxmgang = 20. / anglfact
+        if exprtype == 'chem':
             maxmgang = 1.
+        if exprtype == 'hubb':
+            maxmgang = 2. / anglfact
     
     if maxmangl == None:
         if exprtype == 'ferm' or exprtype == 'chan':
@@ -693,17 +703,18 @@ def init( \
             else:
                 maxmangl = 10. / anglfact
         else:
-            maxmangl = maxmgang
+            maxmangl = 3. * maxmgang
 
     ## experiment defaults
     if binsenerfull == None:
-        if exprtype == 'ferm':
-            binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
-        if exprtype == 'chan':
-            binsenerfull = array([5e-4, 2e-3, 8e-3])
-        if exprtype == 'chem' or exprtype == 'hubb':
-            binsenerfull = array([1., 2.])
-    indxenerfull = binsenerfull.size - 1
+        if exprtype == 'ferm' or exprtype == 'chan' or exprtype == 'hubb':
+            if exprtype == 'ferm':
+                binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
+            if exprtype == 'chan':
+                binsenerfull = array([5e-4, 2e-3, 8e-3])
+            if exprtype == 'hubb':
+                binsenerfull = array([1e-9, 1e-8])
+            indxenerfull = binsenerfull.size - 1
 
     if exprtype == 'ferm':
         numbfluxprox = 3
@@ -711,12 +722,12 @@ def init( \
         numbfluxprox = 1
     
     # energy band string
-    if strgbinsener == None:
+    if strgbinsener == None and binsenerfull != None:
         if exprtype == 'sdss' or exprtype == 'hubb':
             if exprtype == 'sdss':
                 strgbinsener = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
             if exprtype == 'hubb':
-                strgbinsener = ['F606']
+                strgbinsener = ['F606W']
         else: 
             strgbinsener = []
             for i in arange(indxenerfull):
@@ -724,8 +735,6 @@ def init( \
     
     ## Lensing
     if exprtype == 'hubb':
-        if maxmgang == None:
-            maxmgang = deg2rad(2. / 3600.)
         if anglassc == None:
             anglassc = deg2rad(0.15 / 3600.)
         if strgfluxunit == None:
@@ -779,8 +788,6 @@ def init( \
     
     ## Chandra
     if exprtype == 'chan':
-        if maxmgang == None:
-            maxmgang = deg2rad(0.492 / 3600.) * numbsidecart
         if strgfluxunit == None:
             strgfluxunit = r'1/cm$^2$/s/KeV'
         if mockvarioaxi == None:
@@ -810,7 +817,7 @@ def init( \
             nameexpr = 'HST'
         # temp
         if exprtype == 'chem':
-            nameexpr = '?'
+            nameexpr = 'Gaia'
     
     if truepsfntype == None:
         if exprtype == 'ferm':
@@ -884,7 +891,25 @@ def init( \
         if mockfluxdistslopuppr == None:
             mockfluxdistslopuppr = array([2.5 for l in range(mocknumbpopl)])
         if mocknormback == None:
-            mocknormback = ones((numbback, numbener))
+            if pntstype == 'lens':
+                mocknormback = zeros((numbback, numbener))
+            else:
+                mocknormback = ones((numbback, numbener))
+
+    # number of total sweeps
+    if numbswep == None:
+        numbswep = 100000
+
+    # number of burned sweeps
+    if numbburn == None:
+        if datatype == 'mock' and not randinit:
+            numbburn = 0
+        else:
+            numbburn = numbswep / 10
+
+    # factor by which to thin the sweeps to get samples
+    if factthin == None:
+        factthin = int(ceil(1e-3 * (numbswep - numbburn)))
 
     if strgcatl == None:
         if exprtype == 'ferm':
@@ -927,6 +952,7 @@ def init( \
     gdat.strganglunit = strganglunit
     gdat.strganglunittext = strganglunittext
     gdat.enerfact = enerfact
+    gdat.factfluxconv = factfluxconv
     gdat.anglfact = anglfact
     gdat.strgcatl = strgcatl
     
@@ -1007,7 +1033,6 @@ def init( \
     gdat.boolpropfluxdistbrek = boolpropfluxdistbrek
     gdat.boolproppsfn = boolproppsfn
     gdat.boolpropnormback = boolpropnormback
-    gdat.boolpropsind = boolpropsind
 
     gdat.mockvarioaxi = mockvarioaxi
     gdat.modlvarioaxi = modlvarioaxi
@@ -1227,7 +1252,6 @@ def init( \
     if gdat.pntstype == 'lens':
         gdat.pixltype = 'cart'
         gdat.boolproppsfn = False
-        gdat.boolpropsind = False
         gdat.boolpropnormback = False
 
     # get the time stamp
@@ -1310,12 +1334,15 @@ def init( \
             if gdat.mockfluxdisttype[l] == 'brok':
                 gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockmaxmflux, gdat.mockfluxdistbrek[l], \
                                                                                                                      gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
-            if gdat.numbener > 1:
-                gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
-                if gdat.mockspectype[l] == 'curv':
-                    gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
-                if gdat.mockspectype[l] == 'expo':
-                    gdat.mockexpo[l][:, 1] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux[l], gdat.mockfactflux[l])
+            print 'gdat.mockspec'
+            print gdat.mockspec
+            print 'gdat.mockspep'
+            print gdat.mockspep
+            gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
+            if gdat.mockspectype[l] == 'curv':
+                gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
+            if gdat.mockspectype[l] == 'expo':
+                gdat.mockspep[l][:, 1] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockfactflux)
         
             if gdat.mockspectype[l] == 'powr':
                 gdat.mockspec[l] = retr_spec(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], spep=gdat.mockspep[l], spectype=gdat.mockspectype[l])
@@ -1323,10 +1350,11 @@ def init( \
             if gdat.verbtype > 1:
                 print 'gdat.mockspectype'
                 print gdat.mockspectype
-                print 'mockspep[l]'
-                print gdat.mockspep[l]
                 print 'mockspec[l]'
                 print gdat.mockspec[l]
+                if gdat.numbener > 1:
+                    print 'mockspep[l]'
+                    print gdat.mockspep[l]
                 print
             
             if gdat.pixltype != 'unbd':
@@ -1396,8 +1424,17 @@ def init( \
             probpntsflux = mockfluxtemp / sum(mockfluxtemp)
             for k in gdat.indxdatasamp:
                 indxpntsthis = choice(gdat.mockindxpntstotl, p=probpntsflux) 
-                gdat.mockdatacnts[0, k, 0, 0] = mocklgaltemp[indxpntsthis] + gdat.truepsfnicdfintp(rand())
-                gdat.mockdatacnts[0, k, 0, 1] = mockbgaltemp[indxpntsthis] + gdat.truepsfnicdfintp(rand())
+                print 'indxpntsthis'
+                print indxpntsthis
+                print 'mocklgaltemp[indxpntsthis]'
+                print mocklgaltemp[indxpntsthis]
+                print 'mockbgaltemp[indxpntsthis]'
+                print mockbgaltemp[indxpntsthis]
+                print 
+                radi = gdat.truepsfnicdfintp(rand())
+                aang = rand() * 2. * pi
+                gdat.mockdatacnts[0, k, 0, 0] = mocklgaltemp[indxpntsthis] + radi * sin(aang)
+                gdat.mockdatacnts[0, k, 0, 1] = mockbgaltemp[indxpntsthis] + radi * cos(aang)
         else:
             gdat.mockdatacnts = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
             for i in gdat.indxener:
@@ -1931,6 +1968,8 @@ def init( \
     head['minmflux'] = gdat.minmflux
     head['maxmflux'] = gdat.maxmflux
     
+    head['factfluxconv'] = gdat.factfluxconv
+    
     head['truepsfntype'] = gdat.truepsfntype
     head['truevarioaxi'] = gdat.truevarioaxi
     
@@ -2002,7 +2041,10 @@ def init( \
     
     ### energy bin strings
     for i in gdat.indxener:
-        head['strgbinsener%04d' % i] = gdat.strgbinsener[i]
+        if gdat.strgbinsener == None:
+            head['strgbinsener%04d' % i] = None
+        else:
+            head['strgbinsener%04d' % i] = gdat.strgbinsener[i]
    
     ## mock data
     if gdat.datatype == 'mock':
@@ -2505,14 +2547,16 @@ def plot_samp(gdat, gdatmodi):
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
                 plot_datacnts(gdat, l, gdatmodi, i, m)
-                plot_modlcnts(gdat, l, gdatmodi, i, m)
-                plot_resicnts(gdat, l, gdatmodi, i, m)
+                if gdat.pixltype == 'unbd':
+                    plot_catlfram(gdat, gdatmodi, l, i, m)
+                else:
+                    plot_modlcnts(gdat, l, gdatmodi, i, m)
+                    plot_resicnts(gdat, l, gdatmodi, i, m)
                 if gdat.calcerrr:
                     plot_errrcnts(gdat, gdatmodi, i, m)
 
             # temp
             #plot_scatpixl(gdat, gdatmodi=gdatmodi)
-            #plot_catlfram(gdat, l, gdatmodi, i, None)
             #for m in gdat.indxevtt:
             #    plot_datacnts(gdat, gdatmodi, i, m)
             #    plot_catl(gdat, gdatmodi, i, m, thiscnts)

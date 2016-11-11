@@ -1027,16 +1027,6 @@ def retr_mrkrsize(gdat, flux):
 
     mrkrsize = (log(flux) - log(gdat.minmflux)) / (log(gdat.maxmflux) - log(gdat.minmflux)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
     
-    if False:
-        print 'flux'
-        print flux
-        print 'maxmflux'
-        print gdat.maxmflux
-        print 'minmflux'
-        print gdat.minmflux
-        print 'mrkrsize'
-        print mrkrsize
-
     return mrkrsize
 
 
@@ -1336,123 +1326,65 @@ def retr_chandata(gdat):
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
 
-    indxrofi = where((fabs(lgalchan) < gdat.maxmgangmodl) & (fabs(bgalchan) < gdat.maxmgangmodl))[0]
-    gdat.exprlgal = lgalchan[indxrofi]
-    gdat.exprbgal = bgalchan[indxrofi]
-    gdat.exprspec = empty((3, gdat.numbener, gdat.exprlgal.size))
-    gdat.exprspec[0, 0, :] = fluxchansoft[indxrofi]
-    gdat.exprspec[0, 1, :] = fluxchanhard[indxrofi]
-    gdat.exprcnts = empty((gdat.numbener, gdat.exprlgal.size))
-    gdat.exprcnts[0, :] = cntschansoft[indxrofi]
-    gdat.exprcnts[1, :] = cntschanhard[indxrofi]
-    #gdat.exprspep = lgalspep[indxrofi]
-    #gdat.exprstrg = lgalstrg[indxrofi]
-    #gdat.exprstrgclss = lgalchanclss[indxrofi]
-    #gdat.exprstrgassc = lgalchanassc[indxrofi]
+    gdat.exprlgal = deg2rad(lgalchan)
+    gdat.exprbgal = deg2rad(bgalchan)
+    
+    gdat.exprspec = zeros((3, gdat.numbener, gdat.exprlgal.size))
+    gdat.exprcnts = zeros((gdat.numbener, gdat.exprlgal.size, gdat.numbevtt))
+    gdat.exprspep = None
 
-    print 'lgalchan'
-    print lgalchan
+    gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e12
+    gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e12 / 16.
+    
+    # temp
+    gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
+
+    gdat.exprcnts[0, :, 0] = cntschansoft
+    gdat.exprcnts[1, :, 0] = cntschanhard
+    
+    #gdat.exprstrg = lgalstrg
+    #gdat.exprstrgclss = lgalchanclss
+    #gdat.exprstrgassc = lgalchanassc
 
 
 def retr_fermdata(gdat):
     
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
-
     fgl3 = pf.getdata(path)
-    
-    fgl3spectemp = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], fgl3['Flux10000_100000']))
-    fgl3spectemp = fgl3spectemp[gdat.indxenerincl, :] / gdat.diffener[:, None]
-    
-    # sort the catalog in decreasing flux
-    indxfgl3sort = argsort(fgl3spectemp[gdat.indxenerfluxdist[0], :])[::-1]
-
-    fgl3spectemp = fgl3spectemp[:, indxfgl3sort]
-
-    fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], fgl3['Unc_Flux10000_100000']))
-    
-    # temp
-    fgl3specstdvtemp[where(isfinite(fgl3specstdvtemp) == False)] = 0.
-
-    fgl3specstdvtemp = fgl3specstdvtemp[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None]
-    fgl3specstdvtemp = fgl3specstdvtemp[:, indxfgl3sort, :]
    
-    fgl3numbpntsfull = fgl3['glon'].size
+    gdat.exprlgal = deg2rad(fgl3['glon'])
+    gdat.exprlgal = ((gdat.exprlgal - pi) % (2. * pi)) - pi
+    gdat.exprbgal = deg2rad(fgl3['glat'])
     
-    fgl3lgal = deg2rad(fgl3['glon'][indxfgl3sort])
-    fgl3lgal = ((fgl3lgal - pi) % (2. * pi)) - pi
+    gdat.exprspec = empty((3, gdat.numbener, gdat.exprlgal.size))
+    gdat.exprspec[0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
+                                                                                            fgl3['Flux10000_100000']))[gdat.indxenerincl, :] / gdat.diffener[:, None]
+    
+    fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], \
+                                                        fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.diffener[:, None, None] 
+    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :] - fgl3specstdvtemp[:, :, 0]
+    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :] + fgl3specstdvtemp[:, :, 1]
+    gdat.exprspec[where(isfinite(gdat.exprspec) == False)] = 0.
 
-    fgl3bgal = deg2rad(fgl3['glat'][indxfgl3sort])
-            
-    fgl3axisstdv = (fgl3['Conf_68_SemiMinor'][indxfgl3sort] + fgl3['Conf_68_SemiMajor'][indxfgl3sort]) * 0.5
-    fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng'][indxfgl3sort]) # [rad]
+    fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
+    fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng']) # [rad]
     fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
     fgl3bgalstdv = fgl3axisstdv * abs(sin(fgl3anglstdv))
 
-    fgl3sind = fgl3['Spectral_Index'][indxfgl3sort]
+    fgl3strg = fgl3['Source_Name']
+    fgl3strgclss = fgl3['CLASS1']
+    fgl3strgassc = fgl3['ASSOC1']
     
-    fgl3strg = fgl3['Source_Name'][indxfgl3sort]
-    fgl3strgclss = fgl3['CLASS1'][indxfgl3sort]
-    fgl3strgassc = fgl3['ASSOC1'][indxfgl3sort]
-    
-    fgl3spectype = fgl3['SpectrumType'][indxfgl3sort]
-    fgl3curv = fgl3['beta'][indxfgl3sort]
-    fgl3expo = fgl3['Cutoff'][indxfgl3sort] * 1e-3
-    
-    fgl3timevari = fgl3['Variability_Index'][indxfgl3sort]
-    
-    fgl3spec = zeros((3, gdat.numbener, fgl3numbpntsfull))
-    fgl3spec[0, :, :] = fgl3spectemp
-    fgl3spec[1, :, :] = fgl3spectemp - fgl3specstdvtemp[:, :, 0]
-    fgl3spec[2, :, :] = fgl3spectemp + fgl3specstdvtemp[:, :, 1]
-    
-    if not isfinite(fgl3specstdvtemp).all():
-        raise Exception('fgl3specstdvtemp')
-
-    if not isfinite(fgl3spec).all():
-        raise Exception('fgl3spec')
-
-    # adjust 3FGL positions according to the ROI center
-    if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-        rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
-        # temp
-        #rttr = hp.rotator.Rotator(rot=[0., rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
-        fgl3bgal, fgl3lgal = rttr(pi / 2. - fgl3bgal, fgl3lgal)
-        fgl3bgal = pi / 2. - fgl3bgal
-
-    # select the 3FGL point sources in the ROI
-    indxfgl3rofi = arange(fgl3lgal.size, dtype=int)
-    indxfgl3rofi = intersect1d(where((fabs(fgl3lgal) < gdat.maxmgangmodl) & (fabs(fgl3bgal) < gdat.maxmgangmodl))[0], indxfgl3rofi)
-
-    # time variability
-    indxfgl3vari = where(fgl3timevari[indxfgl3rofi] > 72.44)[0]
-    
-    # number of 3FGL PS in the ROI
-    fgl3numbpnts = indxfgl3rofi.size
-
-    # compute the 3FGL counts
-    fgl3cnts = empty((gdat.numbener, fgl3numbpnts, gdat.numbevtt))
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            # temp -- zero exposure pixels will give zero counts
-            indxpixltemp = retr_indxpixl(gdat, fgl3bgal[indxfgl3rofi], fgl3lgal[indxfgl3rofi])
-            fgl3cnts[i, :, m] = fgl3spec[0, i, indxfgl3rofi] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
-
-    gdat.exprnumbpnts = fgl3numbpnts
-    gdat.exprlgal = fgl3lgal[indxfgl3rofi]
-    gdat.exprbgal = fgl3bgal[indxfgl3rofi]
-    gdat.exprspec = fgl3spec[:, :, indxfgl3rofi]
-    gdat.exprcnts = fgl3cnts
-    gdat.exprspep = fgl3sind[indxfgl3rofi]
-    gdat.exprstrg = fgl3strg[indxfgl3rofi]
-    gdat.exprstrgclss = fgl3strgclss[indxfgl3rofi]
-    gdat.exprstrgassc = fgl3strgassc[indxfgl3rofi]
-    gdat.indxexprvari = indxfgl3vari
+    gdat.exprspep = zeros((gdat.exprlgal.size, gdat.numbspeptotl))
+    fgl3spectype = fgl3['SpectrumType']
+    gdat.exprspep[:, 0] = fgl3['Spectral_Index']
+    gdat.exprspep[:, 1] = fgl3['beta']
+    gdat.exprspep[:, 2] = fgl3['Cutoff'] * 1e-3
     
     path = gdat.pathimag + '3fgl/'
     os.system('mkdir -p %s' % path)
     path += '3fglspecaxisstdv.pdf' 
     if not os.path.isfile(path):
-
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         axis.scatter(fgl3spec[0, gdat.indxenerfluxdist[0], :], fgl3axisstdv)
         #axis.set_xlim([amin(fgl3spec[0, gdat.indxenerfluxdist[0], :]), amax(fgl3spec[0, gdat.indxenerfluxdist[0], :])])
@@ -2507,13 +2439,15 @@ def retr_propmodl(gdat):
         problgal = gdat.maxmnumbpntstotl
         probbgal = gdat.maxmnumbpntstotl
         probspec = gdat.maxmnumbpntstotl
-        if gdat.boolpropsind:
+        if gdat.numbener > 1:
             probsind = gdat.maxmnumbpntstotl
+            probcurv = gdat.maxmnumbpntstotl
+            probexpo = gdat.maxmnumbpntstotl
         else:
             probsind = 0.
-        probcurv = gdat.maxmnumbpntstotl
-        probexpo = gdat.maxmnumbpntstotl
-           
+            probcurv = 0.
+            probexpo = 0.
+
         gdat.probprop = empty(gdat.numbprop)
         gdat.probprop[0] = probmeanpnts
         gdat.probprop[1] = probfluxdistslop
@@ -2633,30 +2567,58 @@ def setpinit(gdat, boolinitsetp=False):
     # axes
     gdat.numbfluxplot = 20
     
+    if gdat.strgfluxunit == None:
+        gdat.strgfluxunitextn = ''
+    else:
+        gdat.strgfluxunitextn = ' [%s]' % gdat.strgfluxunit
+
     ## energy
-    gdat.numbener = gdat.indxenerincl.size
+    if gdat.binsenerfull != None:
+        gdat.enerbins = True
+    else:
+        gdat.enerbins = False
+    
+    if gdat.indxevttincl != None:
+        gdat.evttbins = True
+    else:
+        gdat.evttbins = False
+
+    if gdat.enerbins:
+        gdat.numbener = gdat.indxenerincl.size
+        gdat.numbenerfull = gdat.binsenerfull.size - 1
+        gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
+        gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
+        gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
+        gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
+        gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
+        gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
+    else:
+        gdat.numbener = 1
+        gdat.numbenerfull = 1
+        gdat.indxenerincl = array([0])
+        gdat.indxenerfluxdist = array([0])
+        gdat.factspecener = array([1.])
     gdat.indxener = arange(gdat.numbener, dtype=int)
     gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
-    gdat.numbevtt = gdat.indxevttincl.size
-    gdat.numbenerfull = gdat.binsenerfull.size - 1
-    gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
-    gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
-    gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
-    
-    gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
-    gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
-    gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
-    gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
-    if gdat.enerfluxdist == 0.:
-        raise Exception('Pivot energy cannot be zero.')
-    gdat.enernorm = gdat.meanener / gdat.enerfluxdist
-    gdat.factlogtenerpivt = log(gdat.enernorm)
-    gdat.factspecener = gdat.enernorm**(-gdat.sinddistmean)
+       
+    if gdat.enerbins:
+        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
+        if gdat.enerfluxdist == 0.:
+            raise Exception('Pivot energy cannot be zero.')
+        gdat.enernorm = gdat.meanener / gdat.enerfluxdist
+        gdat.factlogtenerpivt = log(gdat.enernorm)
+        gdat.factspecener = gdat.enernorm**(-gdat.sinddistmean)
 
     ## PSF class
-    gdat.numbevttfull = gdat.indxevttfull.size
+    if gdat.evttbins:
+        gdat.numbevtt = gdat.indxevttincl.size
+        gdat.numbevttfull = gdat.indxevttfull.size
+    else:
+        gdat.numbevtt = 1
+        gdat.numbevttfull = 1
+        gdat.indxevttincl = array([0])
     gdat.indxevtt = arange(gdat.numbevtt)
-            
+
     # angular deviation
     # temp -- check that gdat.numbangl does not degrade the performance
     if gdat.pntstype == 'lght':
@@ -2688,11 +2650,6 @@ def setpinit(gdat, boolinitsetp=False):
     ## scaled angle axis to be plotted
     if gdat.pntstype == 'lght':
         gdat.binsanglplot = gdat.anglfact * gdat.binsangl
-
-    if gdat.pntstype == 'lght':
-        gdat.factfluxconv = 1.
-    if gdat.pntstype == 'lens':
-        gdat.factfluxconv = gdat.anglfact
 
     # PS indices in each population
     gdat.indxpntspopl = []
@@ -2897,16 +2854,20 @@ def setpinit(gdat, boolinitsetp=False):
 
     
     # PSF parameter strings
-    gdat.strgpsfp = [strgpsfp[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxpsfptotl]
-    for k in arange(gdat.indxpsfpinit.size):
-        if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]] += ' [%s]' % gdat.strganglunit
-        elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+2] += ' [%s]' % gdat.strganglunit
-        elif gdat.modlpsfntype == 'doubking':
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
-            gdat.strgpsfp[gdat.indxpsfpinit[k]+3] += ' [%s]' % gdat.strganglunit
+    if gdat.enerbins:
+        gdat.strgpsfp = [strgpsfp[k] + '^{%d%d}$' % (gdat.indxenerincl[i], gdat.indxevttincl[m]) for m in gdat.indxevtt for i in gdat.indxener for k in gdat.indxpsfptotl]
+    else:
+        gdat.strgpsfp = [strgpsfp[k] + '$' for k in gdat.indxpsfptotl]
+    if gdat.strganglunit != None:
+        for k in arange(gdat.indxpsfpinit.size):
+            if gdat.modlpsfntype == 'singgaus' or gdat.modlpsfntype == 'singking':
+                gdat.strgpsfp[gdat.indxpsfpinit[k]] += ' [%s]' % gdat.strganglunit
+            elif gdat.modlpsfntype == 'doubgaus' or gdat.modlpsfntype == 'gausking':
+                gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
+                gdat.strgpsfp[gdat.indxpsfpinit[k]+2] += ' [%s]' % gdat.strganglunit
+            elif gdat.modlpsfntype == 'doubking':
+                gdat.strgpsfp[gdat.indxpsfpinit[k]+1] += ' [%s]' % gdat.strganglunit
+                gdat.strgpsfp[gdat.indxpsfpinit[k]+3] += ' [%s]' % gdat.strganglunit
     
     # pixelization
     if gdat.datatype == 'mock':
@@ -3069,10 +3030,11 @@ def setpinit(gdat, boolinitsetp=False):
     # minimum angular distance from the center of the ROI
     gdat.minmgang = 1e-3
     
-    # PSF class string
-    gdat.evttstrg = []
-    for m in gdat.indxevtt:
-        gdat.evttstrg.append('PSF%d' % gdat.indxevttincl[m])
+    if gdat.evttbins:
+        # PSF class string
+        gdat.strgevtt = []
+        for m in gdat.indxevtt:
+            gdat.strgevtt.append('PSF%d' % gdat.indxevttincl[m])
     
     # number of components
     gdat.numbcomp = 2 + gdat.numbener + gdat.numbspep
@@ -3332,24 +3294,8 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxsamppsfpoaxiindx = gdat.indxsamppsfp[0] + gdat.indxpsfpoaxiindx
         gdat.indxsamppsfpoaxi = sort(concatenate((gdat.indxsamppsfpoaxinorm, gdat.indxsamppsfpoaxiindx)))
 
-    # number of total sweeps
-    if gdat.numbswep == None:
-        numbsweptemp = 200 * gdat.numbpara
-        gdat.numbswep = around(numbsweptemp, 2 - int(log10(numbsweptemp)))
-
-    # number of burned sweeps
-    if gdat.numbburn == None:
-        if gdat.datatype == 'mock' and not gdat.randinit:
-            gdat.numbburn = 0
-        else:
-            gdat.numbburn = gdat.numbswep / 10
-
-    # factor by which to thin the sweeps to get samples
-    if gdat.factthin == None:
-        gdat.factthin = min(10 * gdat.numbpara, gdat.numbswep - gdat.numbburn)
-
     if gdat.verbtype > 0 and boolinitsetp:
-        print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
+        print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
     
     if gdat.verbtype > 0:
         if not gdat.calcerrr:
@@ -3380,10 +3326,55 @@ def setpfinl(gdat, boolinitsetp=False):
  
     # get the experimental catalog
     if gdat.exprinfo:
+        
+        gdat.exprcnts = None
         if gdat.exprtype == 'ferm':
             retr_fermdata(gdat)
         if gdat.exprtype == 'chan':
             retr_chandata(gdat)
+    
+        # rotate PS coordinates to the ROI center
+        if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
+            rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
+            gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
+            gdat.exprbgal = pi / 2. - gdat.exprbgal
+        
+        print 'gdat.exprspec'
+        print gdat.exprspec[0, :, :].T
+        # select PSs in the ROI
+        gdat.indxpntsrofi = arange(gdat.exprlgal.size, dtype=int)
+        # temp
+        #gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
+        #                                                    (fabs(gdat.exprbgal) < gdat.maxmgangmodl) & (amin(gdat.exprspec[0, :, :], 0) > 0.))[0], gdat.indxpntsrofi)
+        gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
+                                                            (fabs(gdat.exprbgal) < gdat.maxmgangmodl))[0], gdat.indxpntsrofi)
+
+        gdat.exprlgal = gdat.exprlgal[gdat.indxpntsrofi]
+        gdat.exprbgal = gdat.exprbgal[gdat.indxpntsrofi]
+        gdat.exprspec = gdat.exprspec[:, :, gdat.indxpntsrofi]
+        if gdat.exprspep != None:
+            gdat.exprspep = gdat.exprspep[gdat.indxpntsrofi, :]
+        if gdat.exprcnts != None:
+            gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
+        gdat.exprnumbpnts = gdat.exprlgal.size
+
+        # compute the catalog counts based on the exposure
+        gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                indxpixltemp = retr_indxpixl(gdat, gdat.exprbgal, gdat.exprlgal)
+                gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
+       
+        print 'gdat.exprcnts'
+        print gdat.exprcnts
+        print 'gdat.exprcntscalc'
+        print gdat.exprcntscalc
+        if gdat.exprcnts != None:
+            if amax(fabs((gdat.exprcnts - gdat.exprcntscalc) / gdat.exprcnts)) > 0.01:
+                print 'Experimental information on PS counts is inconsistent.'
+        
+        gdat.exprcnts = gdat.exprcntscalc
+
         gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
         print 'gdat.exprlgal'
@@ -3392,6 +3383,9 @@ def setpfinl(gdat, boolinitsetp=False):
         print gdat.exprbgal
         print 'gdat.exprspec'
         print gdat.exprspec
+
+        if not isfinite(gdat.exprspec).all():
+            raise Exception('exprspec is not finite.')
 
         gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
 
@@ -3437,13 +3431,10 @@ def setpfinl(gdat, boolinitsetp=False):
           
             gdat.truenormback = gdat.mocknormback
             gdat.datacnts = gdat.mockdatacnts
-    
+   
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
-    
-    gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
-                                                                                                        concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
     
     # spatially averaged background flux 
     gdat.backfluxmean = zeros((gdat.numbback, gdat.numbener))
@@ -3537,19 +3528,16 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.truemeanpnts = None
             gdat.truenormback = None
             
-            if gdat.exprtype == 'ferm':
-                gdat.truenumbpnts = array([gdat.exprnumbpnts], dtype=int)
-                gdat.truelgal = [gdat.exprlgal]
-                gdat.truebgal = [gdat.exprbgal]
-                gdat.truespec = [gdat.exprspec]
-                gdat.truecnts = [gdat.exprcnts]
-                gdat.truespep = [gdat.exprspep]
-                gdat.truestrg = [gdat.exprstrg]
-                gdat.truestrgclss = [gdat.exprstrgclss]
-                gdat.truestrgassc = [gdat.exprstrgassc]
-                gdat.indxtruevari = [gdat.indxexprvari]
+            gdat.truenumbpnts = array([gdat.exprnumbpnts], dtype=int)
+            gdat.truelgal = [gdat.exprlgal]
+            gdat.truebgal = [gdat.exprbgal]
+            gdat.truespec = [gdat.exprspec]
+            gdat.truecnts = [gdat.exprcnts]
+            gdat.truespep = [gdat.exprspep]
+            #gdat.truestrg = [gdat.exprstrg]
+            #gdat.truestrgclss = [gdat.exprstrgclss]
+            #gdat.truestrgassc = [gdat.exprstrgassc]
 
-            
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             for l in gdat.indxpopl: 
@@ -3578,16 +3566,9 @@ def setpfinl(gdat, boolinitsetp=False):
                 print 'truespec'
                 print gdat.truespec
                 raise Exception('True PS parameters are not finite.')
-            if gdat.numbener > 1:
-                if not isfinite(gdat.truespep[l]).all():
-                    print 'truespep'
-                    print gdat.truespep
-                    raise Exception('True PS parameters are not finite.')
 
-    # temp
-    #else:
-    #    gdat.truepsfn = None
-    #    gdat.truevarioaxi = False
+    gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
+                                                                                                        concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
     
     if gdat.trueinfo:
         if gdat.datatype == 'mock':
@@ -3707,29 +3688,14 @@ def setpfinl(gdat, boolinitsetp=False):
 
 def retr_fluxbrgt(gdat, lgal, bgal, flux):
 
-    print 'flux'
-    print flux
     indxbrgt = argmax(flux)
-    print 'indxbrgt'
-    print indxbrgt
-    print 
     fluxbrgt = flux[indxbrgt]
     dir1 = array([lgal, bgal])#[:, None]
     dir2 = array([lgal[indxbrgt], bgal[indxbrgt]])
-
     dist = retr_angldist(gdat, dir1, dir2)
     indxbrgtassc = where(dist < gdat.anglassc)[0]
-    print 'indxbrgtassc'
-    print indxbrgtassc
-    print 
     fluxbrgtassc = flux[indxbrgtassc]
-
     fluxbrgt = repeat(fluxbrgt, fluxbrgtassc.size)
-
-    print 'fluxbrgt'
-    print fluxbrgt.shape
-    print 'fluxbrgtassc'
-    print fluxbrgtassc.shape
 
     return fluxbrgt, fluxbrgtassc
 
@@ -3773,7 +3739,7 @@ def init_figr(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpop
         if indxenerplot != None and gdat.numbener > 1:
             titl = gdat.strgbinsener[indxenerplot]
         else:
-            titl += ', ' + gdat.evttstrg[indxevttplot]
+            titl += ', ' + gdat.strgevtt[indxevttplot]
         axis.set_title(titl)
 
     return figr, axis, path
@@ -3807,11 +3773,6 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
     
     draw_frambndr(gdat, axis)
    
-    print 'hey'
-    print 'maps'
-    print maps.shape
-    print
-
     # filter the map
     if thisindxevtt == None:
         if thisindxener == None:
@@ -3826,10 +3787,6 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
                 maps = sum(maps[thisindxener, :, :], axis=1)
     else:
         maps = maps[thisindxener, :, thisindxevtt]
-    
-    print 'maps'
-    print maps.shape
-    print
     
     # temp
     maps = maps.squeeze()

@@ -215,7 +215,7 @@ def test_psfn():
              exprtype=exprtype, \
              strgback=strgback, \
              strgexpo=strgexpo, \
-             probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
+             probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
              modlpsfntype=modlpsfntype, \
              modlvarioaxi=modlvarioaxi, \
              bgalcntr=bgalcntr, \
@@ -421,7 +421,7 @@ def test_post():
     		 factthin=1, \
              indxenerincl=indxenerincl, \
              indxevttincl=indxevttincl, \
-             probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1.], dtype=float), \
+             probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1., 0., 0.], dtype=float), \
              exprinfo=False, \
              strgback=['fermisotflux.fits'], \
              lablback=[r'$\mathcal{I}$'], \
@@ -517,7 +517,7 @@ def test_spmr():
              indxevttincl=arange(3, 4), \
              strgback=['fermisotflux.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
-             probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0.], dtype=float), \
+             probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
              modlpsfntype='doubking', \
              maxmgang=deg2rad(1.), \
              minmflux=listminmflux[k], \
@@ -574,7 +574,10 @@ def test():
     init( \
          pixltype='unbd', \
          exprtype='chem', \
-         verbtype=2, \
+         #verbtype=2, \
+         numbswep=10000, \
+         factthin=10, \
+         numbburn=0, \
          maxmnumbpnts=array([10]), \
         )
             #numbburn=0, \
@@ -584,7 +587,6 @@ def test():
             #indxevttincl=arange(3, 4), \
             #strgback=['fermisotflux.fits', ], \
             #strgexpo='fermexpo_cmp0_ngal.fits', \
-            #probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.]), \
             #modlpsfntype='doubking', \
             #maxmnumbpnts=array([4]), \
             #maxmgang=deg2rad(10.), \
