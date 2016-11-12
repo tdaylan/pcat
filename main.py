@@ -2655,11 +2655,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
     while gdatmodi.cntrswep < gdat.numbswep:
     
-        # temp
-        gdatmodi.cntrswep += 1
-        continue
-
-
         timetotlinit = gdat.functime()
         
         if gdat.verbtype > 1:
