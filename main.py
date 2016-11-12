@@ -2654,7 +2654,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print 'Skipping proposal scale optimization...'
 
     while gdatmodi.cntrswep < gdat.numbswep:
-        
+    
+        # temp
+        gdatmodi.cntrswep += 1
+        continue
+
+
         timetotlinit = gdat.functime()
         
         if gdat.verbtype > 1:

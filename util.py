@@ -3409,9 +3409,11 @@ def setpfinl(gdat, boolinitsetp=False):
         print 'after rotation'
         print 'gdat.exprlgal'
         print gdat.exprlgal
+        print gdat.exprlgal * gdat.anglfact
         print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
         print 'gdat.exprbgal'
         print gdat.exprbgal
+        print gdat.exprbgal * gdat.anglfact
         print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
         
         # select PSs in the ROI
@@ -3434,9 +3436,11 @@ def setpfinl(gdat, boolinitsetp=False):
 
         print 'after spatial filtering'
         print 'gdat.exprlgal'
+        print gdat.exprlgal
         print gdat.exprlgal * gdat.anglfact
         print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
         print 'gdat.exprbgal'
+        print gdat.exprbgal
         print gdat.exprbgal * gdat.anglfact
         print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
         print
@@ -3615,11 +3619,6 @@ def setpfinl(gdat, boolinitsetp=False):
             #gdat.truestrgclss = [gdat.exprstrgclss]
             #gdat.truestrgassc = [gdat.exprstrgassc]
 
-            print 'hey'
-            print 'gdat.truelgal'
-            print gdat.truelgal
-            print 'gdat.truebgal'
-            print gdat.truebgal
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             for l in gdat.indxpopl: 
@@ -3945,12 +3944,6 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot, trueonly=False):
             
         else:
             axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label=gdat.truelablhits, marker='*', linewidth=2, color='g')
-
-            print 'hey'
-            print 'gdat.anglfact * lgal'
-            print gdat.anglfact * lgal
-            print 'gdat.anglfact * bgal'
-            print gdat.anglfact * bgal
 
         ## annotate
         if gdat.anotcatl:

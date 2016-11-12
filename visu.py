@@ -425,7 +425,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
     indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
     indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-    indxsampmerg = where((gdat.listindxprop == gdat.indxpropmerg) & (gdat.listboolreje == False))[0]
+    indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listboolreje == False)[0])
     indxsampspmr = union1d(indxsampsplt, indxsampmerg)
     indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
     indxsampreje = where(gdat.listboolreje == False)
