@@ -1326,6 +1326,10 @@ def retr_chandata(gdat):
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
 
+    print 'lgalchan'
+    print amin(lgalchan), amax(lgalchan)
+    print 'bgalchan'
+    print amin(bgalchan), amax(bgalchan)
     gdat.exprlgal = deg2rad(lgalchan)
     gdat.exprbgal = deg2rad(bgalchan)
     
@@ -1345,6 +1349,40 @@ def retr_chandata(gdat):
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
+
+    print 'gdat.exprlgal'
+    print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
+    print 'gdat.exprbgal'
+    print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
+    print 'gdat.exprspec'
+    for k in range(3):
+        for l in range(2):
+            print amin(gdat.exprspec[k, l, :]), amax(gdat.exprspec[k, l, :])
+    
+    
+    indxsort = argsort(fluxchansoft)[::-1]
+    
+    print 'fluxchansoft'
+    print fluxchansoft[:20]
+    print fluxchansoft[indxsort][:20]
+    print gdat.exprspec[0, 0, :20]
+    print gdat.exprspec[0, 0, indxsort][:20]
+    print
+
+    gdat.exprlgal = gdat.exprlgal[indxsort][:10]
+    gdat.exprbgal = gdat.exprbgal[indxsort][:10]
+    gdat.exprspec = gdat.exprspec[:, :, indxsort][:10]
+    gdat.exprcnts = gdat.exprcnts[:, indxsort][:10]
+
+    print 'after flux filtering'
+    print 'gdat.exprlgal'
+    print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
+    print 'gdat.exprbgal'
+    print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
+    print 'gdat.exprspec'
+    for k in range(3):
+        for l in range(2):
+            print amin(gdat.exprspec[k, l, :]), amax(gdat.exprspec[k, l, :])
 
 
 def retr_fermdata(gdat):
@@ -3209,6 +3247,18 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.truepsfn = retr_psfn(gdat, gdat.truepsfp, gdat.indxener, gdat.binsangl, gdat.truepsfntype, gdat.binsoaxi, gdat.truevarioaxi)
         gdat.truefwhm = 2. * retr_psfnwdth(gdat, gdat.truepsfn, 0.5)
         
+        gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
+        gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                if gdat.truevarioaxi:
+                    psfn = gdat.truepsfn[i, :, m, 0]
+                else:
+                    psfn = gdat.truepsfn[i, :, m]
+                maxmpsfn = amax(psfn)
+                gdat.limsangl[i][m] = [0., gdat.binsangl[amax(where(psfn > 1e-6 * maxmpsfn)[0])] * gdat.anglfact]
+                gdat.limspsfn[i][m] = [maxmpsfn * 1e-6, maxmpsfn]
+            
     if gdat.pixltype == 'unbd':
         gdat.truepsfncdfn = roll(cumsum(gdat.truepsfn, axis=1), 1)[0, :, 0]
         gdat.truepsfncdfn[0] = 0.
@@ -3249,12 +3299,19 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.verbtype > 0 and boolinitsetp:
                 print 'Computing the look-up table...'
             gdat.indxpixlprox = [[] for h in range(gdat.numbfluxprox)]
+            cntrsave = -1.
+            # temp
             for j in gdat.indxpixl:
-                dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
-                dist[j] = 0.
-                for h in range(gdat.numbfluxprox):
-                    indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
-                    gdat.indxpixlprox[h].append(indxpixlproxtemp)
+                if gdat.indxpixl.size == 1500**2:
+                    for h in range(gdat.numbfluxprox):
+                        gdat.indxpixlprox[h].append(array([0]))
+                else: 
+                    dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
+                    dist[j] = 0.
+                    for h in range(gdat.numbfluxprox):
+                        indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
+                        gdat.indxpixlprox[h].append(indxpixlproxtemp)
+                cntrsave = tdpy.util.show_prog(j, gdat.indxpixl.size, cntrsave)
             fobj = open(path, 'wb')
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
@@ -3333,19 +3390,36 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.exprtype == 'chan':
             retr_chandata(gdat)
     
+        print 'hey'
+        print 'gdat.maxmgangmodl'
+        print gdat.maxmgangmodl * gdat.anglfact
+        print 'gdat.exprlgal'
+        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
+        print 'gdat.exprbgal'
+        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
+        print 'gdat.exprspec'
+        print amin(gdat.exprspec[0, :, :], 1), amax(gdat.exprspec[0, :, :], 1)
+        
         # rotate PS coordinates to the ROI center
         if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
             rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
             gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
             gdat.exprbgal = pi / 2. - gdat.exprbgal
         
-        print 'gdat.exprspec'
-        print gdat.exprspec[0, :, :].T
+        print 'after rotation'
+        print 'gdat.exprlgal'
+        print gdat.exprlgal
+        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
+        print 'gdat.exprbgal'
+        print gdat.exprbgal
+        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
+        
         # select PSs in the ROI
         gdat.indxpntsrofi = arange(gdat.exprlgal.size, dtype=int)
         # temp
         #gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
         #                                                    (fabs(gdat.exprbgal) < gdat.maxmgangmodl) & (amin(gdat.exprspec[0, :, :], 0) > 0.))[0], gdat.indxpntsrofi)
+        
         gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
                                                             (fabs(gdat.exprbgal) < gdat.maxmgangmodl))[0], gdat.indxpntsrofi)
 
@@ -3358,6 +3432,14 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
         gdat.exprnumbpnts = gdat.exprlgal.size
 
+        print 'after spatial filtering'
+        print 'gdat.exprlgal'
+        print gdat.exprlgal * gdat.anglfact
+        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
+        print 'gdat.exprbgal'
+        print gdat.exprbgal * gdat.anglfact
+        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
+        print
         # compute the catalog counts based on the exposure
         gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))
         for i in gdat.indxener:
@@ -3366,9 +3448,10 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
        
         print 'gdat.exprcnts'
-        print gdat.exprcnts
+        print amin(gdat.exprcnts, 1), amax(gdat.exprcnts, 1)
         print 'gdat.exprcntscalc'
-        print gdat.exprcntscalc
+        print amin(gdat.exprcntscalc, 1), amax(gdat.exprcntscalc, 1)
+        
         if gdat.exprcnts != None:
             if amax(fabs((gdat.exprcnts - gdat.exprcntscalc) / gdat.exprcnts)) > 0.01:
                 print 'Experimental information on PS counts is inconsistent.'
@@ -3377,13 +3460,7 @@ def setpfinl(gdat, boolinitsetp=False):
 
         gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
-        print 'gdat.exprlgal'
-        print gdat.exprlgal
-        print 'gdat.exprbgal'
-        print gdat.exprbgal
-        print 'gdat.exprspec'
-        print gdat.exprspec
-
+        
         if not isfinite(gdat.exprspec).all():
             raise Exception('exprspec is not finite.')
 
@@ -3538,6 +3615,11 @@ def setpfinl(gdat, boolinitsetp=False):
             #gdat.truestrgclss = [gdat.exprstrgclss]
             #gdat.truestrgassc = [gdat.exprstrgassc]
 
+            print 'hey'
+            print 'gdat.truelgal'
+            print gdat.truelgal
+            print 'gdat.truebgal'
+            print gdat.truebgal
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             for l in gdat.indxpopl: 
@@ -3835,30 +3917,41 @@ def make_catllabl(gdat, axis):
     axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=2)
         
 
-def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
+def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot, trueonly=False):
 
     # true catalog
     if gdat.trueinfo:
+        
         ## get the true catalog
         mrkrsize = retr_mrkrsize(gdat, gdat.truespec[indxpoplplot][0, gdat.indxenerfluxdist, :].flatten())
         lgal = copy(gdat.truelgal[indxpoplplot])
         bgal = copy(gdat.truebgal[indxpoplplot])
         numbpnts = int(gdat.truenumbpnts[indxpoplplot])
-        
-        ## associations
-        ### missed
-        indx = gdatmodi.indxtruepntsassc[indxpoplplot].miss
-        axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
-        
-        ### biased
-        indx = gdatmodi.indxtruepntsassc[indxpoplplot].bias[indxenerplot]
-        axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
-                                                                                    label=gdat.truelablbias, marker='o', linewidth=2, color='g', facecolor='none')
-        
-        ### hit
-        indx = gdatmodi.indxtruepntsassc[indxpoplplot].hits[indxenerplot]
-        axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablhits, marker='*', linewidth=2, color='g')
-        
+        if not trueonly:
+            
+            ## associations
+            ### missed
+            indx = gdatmodi.indxtruepntsassc[indxpoplplot].miss
+            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablmiss, marker='x', linewidth=2, color='g')
+            
+            ### biased
+            indx = gdatmodi.indxtruepntsassc[indxpoplplot].bias[indxenerplot]
+            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
+                                                                                        label=gdat.truelablbias, marker='o', linewidth=2, color='g', facecolor='none')
+            
+            ### hit
+            indx = gdatmodi.indxtruepntsassc[indxpoplplot].hits[indxenerplot]
+            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablhits, marker='*', linewidth=2, color='g')
+            
+        else:
+            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label=gdat.truelablhits, marker='*', linewidth=2, color='g')
+
+            print 'hey'
+            print 'gdat.anglfact * lgal'
+            print gdat.anglfact * lgal
+            print 'gdat.anglfact * bgal'
+            print gdat.anglfact * bgal
+
         ## annotate
         if gdat.anotcatl:
             for a in range(numbpnts):
@@ -3874,10 +3967,11 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot):
                                                                                                                         ha='center', va='center', color='g', fontsize=6)
 
     # model catalog
-    mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[indxpoplplot][gdat.indxenerfluxdist, :]])
-    lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[indxpoplplot]]
-    bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[indxpoplplot]]
-    axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b')
+    if not trueonly:
+        mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[indxpoplplot][gdat.indxenerfluxdist, :]])
+        lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[indxpoplplot]]
+        bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[indxpoplplot]]
+        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b')
 
 
 def retr_levi(listllik):

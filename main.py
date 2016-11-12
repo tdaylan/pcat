@@ -688,7 +688,11 @@ def init( \
     
     if maxmgang == None:
         if exprtype == 'chan':
-            maxmgang = 0.492 / anglfact * numbsidecart / 2.
+            if datatype == 'mock':
+                maxmgang = 0.492 / anglfact * numbsidecart / 2.
+            else:
+                maxmgang = 0.492 / anglfact * numbsidecart / 2.
+                
         if exprtype == 'ferm':
             maxmgang = 20. / anglfact
         if exprtype == 'chem':
@@ -1461,6 +1465,7 @@ def init( \
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
             else:
                 imag = retr_scat(gdat, axis, gdat.datacnts, i, m)
+            supr_fram(gdat, None, axis, i, l, True)
             plt.tight_layout()
             plt.savefig(path)
             plt.close(figr)
@@ -2805,6 +2810,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
                 indxtemp = where((flux < gdat.minmflux) | (flux > gdat.maxmflux))[0]
                 if indxtemp.size > 0:
+                    
                     print 'indxtemp'
                     print indxtemp
                     print 'flux'

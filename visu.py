@@ -1029,10 +1029,10 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
             print gdat.binssind
             print 'thissind'
             print gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[l][gdatmodi.indxmodlpntscomp[l]]]
-    if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0:
+    if gdat.trueinfo and gdat.indxtruepntscomp[l].size > 0 and gdat.truespep[l] != None:
         axis.hist(gdat.truespep[l][gdat.indxtruepntscomp[l], 0], gdat.binssind, alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprspep != None:
-            axis.hist(gdat.exprspep[:, 0], gdat.binssind, alpha=gdat.alphmrkr, color='red', log=True, label='3FGL')
+            axis.hist(gdat.exprspep[:, 0], gdat.binssind, alpha=gdat.alphmrkr, color='red', log=True, label=gdat.strgcatl)
     axis.set_yscale('log')
     axis.set_xlabel('$s$')
     axis.set_xlim([gdat.minmsind, gdat.maxmsind])
@@ -1117,7 +1117,7 @@ def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, li
         else:
             axis.scatter(flux, sind, alpha=gdat.alphmrkr, color='b', label='Sample')
     
-    if gdat.trueinfo:
+    if gdat.trueinfo and gdat.truespep[l] != None:
         if strgtype == 'hist':
             #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], bins=[gdat.binsflux, gdat.binssind], )[0]
             #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
@@ -1232,8 +1232,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
             truehist = axis.hist(gdat.factfluxconv * gdat.truespec[l][0, i, gdat.indxtruepntscomp[l]], gdat.factfluxconv * gdat.binsspecplot[i, :], alpha=gdat.alphmrkr, \
                                                                                                                             color='g', log=True, label=gdat.truelabl)
             if gdat.datatype == 'mock' and gdat.exprinfo:
-                if gdat.exprtype == 'ferm':
-                    axis.hist(gdat.factfluxconv * gdat.exprspec[0, i, :], gdat.factfluxconv * gdat.binsspecplot[i, :], color='red', alpha=gdat.alphmrkr, log=True, label='3FGL')
+                axis.hist(gdat.factfluxconv * gdat.exprspec[0, i, :], gdat.factfluxconv * gdat.binsspecplot[i, :], color='red', alpha=gdat.alphmrkr, log=True, label=gdat.strgcatl)
         
         axis.set_yscale('log')
         axis.set_xlabel('$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn))
@@ -1380,7 +1379,7 @@ def plot_scatpixl(gdat, gdatmodi, l):
                 axis.set_xlabel('Data Counts')
             if i == 0:
                 labl = 'Model Counts'
-                if gdat.exprtype == 'ferm':
+                if gdat.evttbins:
                     labl += ', ' + gdat.strgevtt[m]
                 axis.set_ylabel(labl)
             if m == 0:
@@ -1584,7 +1583,6 @@ def plot_psfn(gdat, gdatmodi):
             
             axis.plot(gdat.binsanglplot, psfntemp[i, :, m], label='Sample')
            
-            gdat.
             if gdat.truevarioaxi:
                 truepsfntemp = gdat.truepsfn[i, :, m, 0]
                 truepsfntotltemp = gdat.truepsfn[i, :, m, 0]
@@ -1592,7 +1590,8 @@ def plot_psfn(gdat, gdatmodi):
                 truepsfntemp = gdat.truepsfn[i, :, m]
                 truepsfntotltemp = gdat.truepsfn[i, :, m]
             axis.plot(gdat.binsanglplot, truepsfntemp, label=gdat.nameexpr, color='g', ls='--')
-            axis.set_xlim([0., gdat.binsanglplot[amax(where(truepsfntotltemp > 1e-6 * amax(truepsfntotltemp))[0])]])
+            axis.set_xlim(gdat.limsangl[i][m])
+            axis.set_ylim(gdat.limspsfn[i][m])
             axis.set_yscale('log')
                 
             if m == gdat.numbevtt - 1:
@@ -1690,9 +1689,9 @@ def plot_datacntshist(gdat):
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             #axis.set_xscale('log')
-            if m == 0:
+            if m == 0 and gdat.enerbins:
                 axis.set_title(gdat.strgbinsener[i])
-            if i == 0 and gdat.exprtype == 'ferm':
+            if i == 0 and gdat.evttbins:
                 axis.set_ylabel(gdat.strgevtt[m])
         
     plt.tight_layout()
@@ -2069,8 +2068,7 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                     if gdat.verbtype > 0:
                         print 'Skipping PS count histogram plot...'
                 if gdat.datatype == 'mock' and gdat.exprinfo:
-                    if gdat.exprtype == 'ferm':
-                        axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='red', log=True, label='3FGL')
+                    axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='red', log=True, label=gdat.strgcatl)
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
