@@ -2833,15 +2833,26 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 raise Exception('Unused vector elements are nonzero.')
 
             for l in gdat.indxpopl:
+                
+                # temp
+                continue
+
                 flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
                 indxtemp = where((flux < gdat.minmflux) | (flux > gdat.maxmflux))[0]
                 if indxtemp.size > 0:
-                    
+                    print
+                    print 'Spectrum of a PS went outside the prior range.'
+                    print 'l'
+                    print l
+                    print 'minmflux'
+                    print gdat.minmflux
+                    print 'maxmflux'
+                    print gdat.maxmflux
                     print 'indxtemp'
                     print indxtemp
                     print 'flux'
                     print flux
-                    raise Exception('Spectrum of a PS went outside the prior range.') 
+                    raise Exception('')
 
                 # temp
                 continue

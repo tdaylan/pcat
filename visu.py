@@ -946,7 +946,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         print sum(sum(gdat.datacnts, 1), 1)
         print 'sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)'
         print sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
-        for c in indxback:
+        for c in gdat.indxback:
             print 'gdat.backflux[c]'
             print gdat.backflux[c]
             if gdat.correxpo:
