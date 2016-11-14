@@ -31,6 +31,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.truepsfntype = hdun[0].header['truepsfntype']
     
     gdat.anglfact = hdun[0].header['anglfact']
+    gdat.enerfact = hdun[0].header['enerfact']
     gdat.strganglunit = hdun[0].header['strganglunit']
     gdat.modlvarioaxi = hdun[0].header['modlvarioaxi']
     
@@ -79,6 +80,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     gdat.exprtype = hdun[0].header['exprtype']
     gdat.pixltype = hdun[0].header['pixltype']
     
+    gdat.anglcatlrttr = hdun[0].header['anglcatlrttr']
     gdat.lgalcntr = hdun[0].header['lgalcntr']
     gdat.bgalcntr = hdun[0].header['bgalcntr']
     gdat.scalmaps = hdun[0].header['scalmaps']
@@ -944,8 +946,9 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         print gdat.backfluxmean
         print 'gdat.datacnts'
         print sum(sum(gdat.datacnts, 1), 1)
-        print 'gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener'
-        print gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener
+        if gdat.correxpo:
+            print 'gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener'
+            print gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener
 
         for c in gdat.indxback:
             listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c, :]
@@ -1516,7 +1519,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                                                                                             s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
                 
                 if a == numbrows - 1:
-                    axis.set_xlabel(gdat.strgxaxi)
+                    axis.set_xlabel(gdat.strgxaxitotl)
                 else:
                     axis.set_xticklabels([])
                 if b == 0:
@@ -1813,7 +1816,7 @@ def plot_mosa(gdat):
                                 gdatmodi.indxtruepntsassc.append(indxtruepntsassc)
          
                             if a == numbrows - 1:
-                                axis.set_xlabel(gdat.strgxaxi)
+                                axis.set_xlabel(gdat.strgxaxitotl)
                             else:
                                 axis.set_xticklabels([])
                             if b == 0:
@@ -1961,8 +1964,8 @@ def plot_3fgl_thrs(gdat):
     extent = [-10, 10, -10, 10]
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    axis.set_xlabel(gdat.strgxaxi)
-    axis.set_ylabel(gdat.strgyaxi)
+    axis.set_xlabel(gdat.strgxaxitotl)
+    axis.set_ylabel(gdat.strgyaxitotl)
 
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, fraction=0.05)
@@ -2241,8 +2244,8 @@ def plot_pntsdiff():
     imag = axis.imshow(totlcntscart0, origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, ax=axis, fraction=0.05)
     
-    axis.set_xlabel(gdat.strgxaxi)
-    axis.set_ylabel(gdat.strgyaxi)
+    axis.set_xlabel(gdat.strgxaxitotl)
+    axis.set_ylabel(gdat.strgyaxitotl)
     if gdat.exprtype == 'ferm':
         axis.set_xlim([gdat.maxmlgal, gdat.minmlgal])
         axis.set_ylim([gdat.minmbgal, gdat.maxmbgal])

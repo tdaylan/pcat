@@ -20,6 +20,8 @@ import scipy as sp
 from scipy.interpolate import *
 from scipy.special import erfinv, erf
 from scipy.stats import poisson as pss
+import scipy.ndimage
+import scipy.ndimage.filters
 
 # multiprocessing
 import multiprocessing as mp

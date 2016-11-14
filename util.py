@@ -1006,8 +1006,13 @@ def retr_maps(gdat, indxpntsfull, sampvarb, evalcirc):
 
     pntsflux = retr_pntsflux(gdat, sampvarb[concatenate(indxsamplgal)], sampvarb[concatenate(indxsampbgal)], \
                                                             concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfp], gdat.modlpsfntype, gdat.modlvarioaxi, evalcirc)
-    
+   
+    print 'hey'
+    print 'pntsflux'
+    print amin(pntsflux), amax(pntsflux)
     totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxsampnormback], pntsflux, gdat.indxcube)
+    print 'totlflux'
+    print amin(totlflux), amax(totlflux)
     
     if gdat.pixltype == 'unbd':
         
@@ -1326,10 +1331,6 @@ def retr_chandata(gdat):
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
 
-    print 'lgalchan'
-    print amin(lgalchan), amax(lgalchan)
-    print 'bgalchan'
-    print amin(bgalchan), amax(bgalchan)
     gdat.exprlgal = deg2rad(lgalchan)
     gdat.exprbgal = deg2rad(bgalchan)
     
@@ -1350,39 +1351,12 @@ def retr_chandata(gdat):
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
 
-    print 'gdat.exprlgal'
-    print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
-    print 'gdat.exprbgal'
-    print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
-    print 'gdat.exprspec'
-    for k in range(3):
-        for l in range(2):
-            print amin(gdat.exprspec[k, l, :]), amax(gdat.exprspec[k, l, :])
-    
-    
     indxsort = argsort(fluxchansoft)[::-1]
     
-    print 'fluxchansoft'
-    print fluxchansoft[:20]
-    print fluxchansoft[indxsort][:20]
-    print gdat.exprspec[0, 0, :20]
-    print gdat.exprspec[0, 0, indxsort][:20]
-    print
-
-    gdat.exprlgal = gdat.exprlgal[indxsort][:10]
-    gdat.exprbgal = gdat.exprbgal[indxsort][:10]
-    gdat.exprspec = gdat.exprspec[:, :, indxsort][:10]
-    gdat.exprcnts = gdat.exprcnts[:, indxsort][:10]
-
-    print 'after flux filtering'
-    print 'gdat.exprlgal'
-    print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
-    print 'gdat.exprbgal'
-    print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
-    print 'gdat.exprspec'
-    for k in range(3):
-        for l in range(2):
-            print amin(gdat.exprspec[k, l, :]), amax(gdat.exprspec[k, l, :])
+    gdat.exprlgal = gdat.exprlgal[indxsort][:150]
+    gdat.exprbgal = gdat.exprbgal[indxsort][:150]
+    gdat.exprspec = gdat.exprspec[:, :, indxsort][:150]
+    gdat.exprcnts = gdat.exprcnts[:, indxsort][:150]
 
 
 def retr_fermdata(gdat):
@@ -2677,8 +2651,12 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         gdat.truelabl = gdat.strgcatl
     if gdat.strganglunit != None:
-        gdat.strgxaxi += ' [%s]' % gdat.strganglunit
-        gdat.strgyaxi += ' [%s]' % gdat.strganglunit
+        gdat.strgxaxitotl = gdat.strgxaxi + ' [%s]' % gdat.strganglunit
+        gdat.strgyaxitotl = gdat.strgyaxi + ' [%s]' % gdat.strganglunit
+    else:
+        gdat.strgxaxitotl = gdat.strgxaxi
+        gdat.strgyaxitotl = gdat.strgyaxi
+
     gdat.truelablvari = gdat.truelabl + ' variable'
     gdat.truelablmiss = gdat.truelabl + ' miss'
     gdat.truelablbias = gdat.truelabl + ' off'
@@ -3390,32 +3368,12 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.exprtype == 'chan':
             retr_chandata(gdat)
     
-        print 'hey'
-        print 'gdat.maxmgangmodl'
-        print gdat.maxmgangmodl * gdat.anglfact
-        print 'gdat.exprlgal'
-        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
-        print 'gdat.exprbgal'
-        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
-        print 'gdat.exprspec'
-        print amin(gdat.exprspec[0, :, :], 1), amax(gdat.exprspec[0, :, :], 1)
-        
         # rotate PS coordinates to the ROI center
         if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-            rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='Y')
+            rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), gdat.anglcatlrttr], deg=True, eulertype='ZYX')
             gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
             gdat.exprbgal = pi / 2. - gdat.exprbgal
-        
-        print 'after rotation'
-        print 'gdat.exprlgal'
-        print gdat.exprlgal
-        print gdat.exprlgal * gdat.anglfact
-        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
-        print 'gdat.exprbgal'
-        print gdat.exprbgal
-        print gdat.exprbgal * gdat.anglfact
-        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
-        
+     
         # select PSs in the ROI
         gdat.indxpntsrofi = arange(gdat.exprlgal.size, dtype=int)
         # temp
@@ -3434,16 +3392,6 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
         gdat.exprnumbpnts = gdat.exprlgal.size
 
-        print 'after spatial filtering'
-        print 'gdat.exprlgal'
-        print gdat.exprlgal
-        print gdat.exprlgal * gdat.anglfact
-        print amin(gdat.exprlgal) * gdat.anglfact, amax(gdat.exprlgal) * gdat.anglfact
-        print 'gdat.exprbgal'
-        print gdat.exprbgal
-        print gdat.exprbgal * gdat.anglfact
-        print amin(gdat.exprbgal) * gdat.anglfact, amax(gdat.exprbgal) * gdat.anglfact
-        print
         # compute the catalog counts based on the exposure
         gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))
         for i in gdat.indxener:
@@ -3451,12 +3399,7 @@ def setpfinl(gdat, boolinitsetp=False):
                 indxpixltemp = retr_indxpixl(gdat, gdat.exprbgal, gdat.exprlgal)
                 gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
        
-        print 'gdat.exprcnts'
-        print amin(gdat.exprcnts, 1), amax(gdat.exprcnts, 1)
-        print 'gdat.exprcntscalc'
-        print amin(gdat.exprcntscalc, 1), amax(gdat.exprcntscalc, 1)
-        
-        if gdat.exprcnts != None:
+        if gdat.exprcnts != None and gdat.exprlgal.size > 0 and gdat.verbtype > 0:
             if amax(fabs((gdat.exprcnts - gdat.exprcntscalc) / gdat.exprcnts)) > 0.01:
                 print 'Experimental information on PS counts is inconsistent.'
         
@@ -3512,7 +3455,22 @@ def setpfinl(gdat, boolinitsetp=False):
           
             gdat.truenormback = gdat.mocknormback
             gdat.datacnts = gdat.mockdatacnts
-   
+ 
+    if gdat.pixltype == 'cart':
+        # temp
+        gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
+
+        if gdat.makeplot:
+            figr, axis, path = init_figr(gdat, i, m, 'datacntspeak', pathfold=gdat.pathinit)
+            imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+            supr_fram(gdat, None, axis, i, l, True)
+            axis.text(0.2, 0.95, '%0.7g %0.7g %0.7g' % (gdat.anglcatlrttr, rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr)), ha='center', va='center', transform=axis.transAxes)
+            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.3, s=20, edgecolor='none')
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+    
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
@@ -3647,6 +3605,15 @@ def setpfinl(gdat, boolinitsetp=False):
                 print 'truespec'
                 print gdat.truespec
                 raise Exception('True PS parameters are not finite.')
+
+    print 'hey'
+    print 'gdat.truelgal'
+    print gdat.truelgal
+    print 'gdat.truebgal'
+    print gdat.truebgal
+    print 'gdat.truespec'
+    print gdat.truespec
+    print
 
     gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
                                                                                                         concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
@@ -3813,9 +3780,13 @@ def init_figr(gdat, indxenerplot, indxevttplot, strgplot, gdatmodi=None, indxpop
     else:
         strgswep = '_swep%09d' % gdatmodi.cntrswep
     path = '%s%s%s_%d%s%s.pdf' % (pathfold, strgplot, strgpopl, gdat.indxenerincl[indxenerplot], strgevtt, strgswep)
-    
-    axis.set_xlabel(gdat.strgxaxi)
-    axis.set_ylabel(gdat.strgyaxi)
+   
+    # temp
+    if gdat.strgcnfg == 'pcat_chan_catl':   
+        path = '/Users/tansu/Desktop/%s.pdf' % gdat.strgtimestmp
+
+    axis.set_xlabel(gdat.strgxaxitotl)
+    axis.set_ylabel(gdat.strgyaxitotl)
     if indxenerplot != None and gdat.numbener > 1 or indxevttplot != None and gdat.numbevtt > 1:
         if indxenerplot != None and gdat.numbener > 1:
             titl = gdat.strgbinsener[indxenerplot]
@@ -3887,7 +3858,7 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
         maps = arcsinh(maps)
     
     imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
-
+    
     return imag
 
 

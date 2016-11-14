@@ -185,7 +185,14 @@ def work(gdat, indxprocwork):
             gdatmodi.thispntsflux, gdatmodi.thispntscnts, gdatmodi.thismodlflux, gdatmodi.thismodlcnts = temp
         else:
             gdatmodi.thispntsflux, gdatmodi.thismodlflux, gdatmodi.thismodlfluxtotl = temp 
-    
+   
+    print 'hey'
+    print 'gdatmodi.thispntsflux'
+    print amin(gdatmodi.thispntsflux), amax(gdatmodi.thispntsflux)
+
+    if gdat.strgcnfg == 'pcat_ferm_mock_igal':
+        return
+
     if gdat.pntstype == 'lens':
         gdatmodi.thispntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for l in gdat.indxpopl:
@@ -203,7 +210,7 @@ def work(gdat, indxprocwork):
         gdatmodi.thismodlflux = gdatmodi.thispntsflux
         gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
         gdatmodi.thismodlcnts = gdatmodi.thispntscnts
-    
+   
     # temp
     if gdat.pntstype == 'lens':
         if gdatmodi.thismodlcnts.shape[1] != gdat.numbpixl:
@@ -350,6 +357,8 @@ def init( \
          numbspatdims=2, \
 
          pntstype='lght', \
+
+         anglcatlrttr=180., \
 
          randinit=None, \
          loadvaripara=False, \
@@ -740,7 +749,7 @@ def init( \
     ## Lensing
     if exprtype == 'hubb':
         if anglassc == None:
-            anglassc = deg2rad(0.15 / 3600.)
+            anglassc = 0.15 / anglfact
         if strgfluxunit == None:
             strgfluxunit = r'mag'
         if pixltype == None:
@@ -761,7 +770,7 @@ def init( \
     ## Chandra and SDSS
     if exprtype == 'chan' or exprtype == 'sdss':
         if anglassc == None:
-            anglassc = deg2rad(0.5 / 3600.)
+            anglassc = 0.5 / anglfact
         if pixltype == None:
             pixltype = 'cart'
         if datatype == 'mock':
@@ -1121,6 +1130,8 @@ def init( \
     gdat.minmnormback = minmnormback
     gdat.maxmnormback = maxmnormback
 
+    gdat.anglcatlrttr = anglcatlrttr
+
     ### hyperparameters
     #### mean number of PS
     gdat.minmmeanpnts = minmmeanpnts
@@ -1449,58 +1460,68 @@ def init( \
     # final setup
     setpfinl(gdat, True) 
 
-    for i in gdat.indxener:
-        for m in gdat.indxevtt:
-            if gdat.pixltype != 'unbd':
-                figr, axis, path = init_figr(gdat, i, m, 'expo', pathfold=gdat.pathinit)
-                imag = retr_imag(gdat, axis, gdat.expo, i, m)
-                make_cbar(gdat, axis, imag, i)
-                plt.tight_layout()
-                plt.savefig(path)
-                plt.close(figr)
-        
-            figr, axis, path = init_figr(gdat, i, m, 'datacnts', pathfold=gdat.pathinit)
-            if gdat.pixltype != 'unbd':
-                imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-            else:
-                imag = retr_scat(gdat, axis, gdat.datacnts, i, m)
-            supr_fram(gdat, None, axis, i, l, True)
-            plt.tight_layout()
-            plt.savefig(path)
-            plt.close(figr)
-            
-            if gdat.pixltype != 'unbd':
-                figr, axis, path = init_figr(gdat, i, m, 'backcntstotl', pathfold=gdat.pathinit)
-                imag = retr_imag(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-                plt.tight_layout()
-                plt.savefig(path)
-                plt.close(figr)
+    if gdat.makeplot:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
     
-                for c in gdat.indxback:
-                    figr, axis, path = init_figr(gdat, i, m, 'backcnts', pathfold=gdat.pathinit)
-                    imag = retr_imag(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                figr, axis, path = init_figr(gdat, i, m, 'datacnts', pathfold=gdat.pathinit)
+                if gdat.pixltype != 'unbd':
+                    imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                else:
+                    imag = retr_scat(gdat, axis, gdat.datacnts, i, m)
+                supr_fram(gdat, None, axis, i, l, True)
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+            
+                # temp
+                continue
+    
+                if gdat.pixltype != 'unbd':
+                    figr, axis, path = init_figr(gdat, i, m, 'expo', pathfold=gdat.pathinit)
+                    imag = retr_imag(gdat, axis, gdat.expo, i, m)
+                    make_cbar(gdat, axis, imag, i)
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
+            
+                    figr, axis, path = init_figr(gdat, i, m, 'backcntstotl', pathfold=gdat.pathinit)
+                    imag = retr_imag(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
+        
+                    for c in gdat.indxback:
+                        figr, axis, path = init_figr(gdat, i, m, 'backcnts', pathfold=gdat.pathinit)
+                        imag = retr_imag(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                        make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                        plt.tight_layout()
+                        plt.savefig(path)
+                        plt.close(figr)
+        
+                    figr, axis, path = init_figr(gdat, i, m, 'diffcntstotl', pathfold=gdat.pathinit)
+                    imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
                     plt.tight_layout()
                     plt.savefig(path)
                     plt.close(figr)
     
-                figr, axis, path = init_figr(gdat, i, m, 'diffcntstotl', pathfold=gdat.pathinit)
-                imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-                plt.tight_layout()
-                plt.savefig(path)
-                plt.close(figr)
-
-            if gdat.pntstype == 'lens':
-                figr, axis, path = init_figr(gdat, i, m, 'mockmodlcntsraww', pathfold=gdat.pathinit)
-                imag = retr_imag(gdat, axis, gdat.mockmodlcntsraww, 0, 0, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-                plt.tight_layout()
-                plt.savefig(path)
-                plt.close(figr)
+                if gdat.pntstype == 'lens':
+                    figr, axis, path = init_figr(gdat, i, m, 'mockmodlcntsraww', pathfold=gdat.pathinit)
+                    imag = retr_imag(gdat, axis, gdat.mockmodlcntsraww, 0, 0, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                    make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
     
+    if gdat.strgcnfg == 'pcat_chan_catl':
+        # temp
+        indx = tdpy.util.corr_catl(gdat.lgalcart[gdat.indxxaximaxm], gdat.bgalcart[gdat.indxyaximaxm], gdat.exprlgal, gdat.exprbgal, anglassc=pi)
+        dist = mean(sqrt((gdat.lgalcart[gdat.indxxaximaxm][indx] - gdat.exprlgal)**2 + (gdat.bgalcart[gdat.indxyaximaxm][indx] - gdat.exprbgal)**2)) * gdat.anglfact
+        return dist
+   
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -1954,6 +1975,7 @@ def init( \
     head['numbsidepntsprob'] = gdat.numbsidepntsprob 
     
     head['maxmgang'] = gdat.maxmgang
+    head['anglcatlrttr'] = gdat.anglcatlrttr
     head['lgalcntr'] = gdat.lgalcntr
     head['bgalcntr'] = gdat.bgalcntr
     head['numbfluxplot'] = gdat.numbfluxplot
@@ -1999,6 +2021,7 @@ def init( \
     head['numbback'] = gdat.numbback
     
     head['anglfact'] = gdat.anglfact
+    head['enerfact'] = gdat.enerfact
     head['strganglunit'] = gdat.strganglunit
 
     # proposal probabilities
