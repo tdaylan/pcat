@@ -186,13 +186,6 @@ def work(gdat, indxprocwork):
         else:
             gdatmodi.thispntsflux, gdatmodi.thismodlflux, gdatmodi.thismodlfluxtotl = temp 
    
-    print 'hey'
-    print 'gdatmodi.thispntsflux'
-    print amin(gdatmodi.thispntsflux), amax(gdatmodi.thispntsflux)
-
-    if gdat.strgcnfg == 'pcat_ferm_mock_igal':
-        return
-
     if gdat.pntstype == 'lens':
         gdatmodi.thispntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for l in gdat.indxpopl:
@@ -1349,28 +1342,27 @@ def init( \
             if gdat.mockfluxdisttype[l] == 'brok':
                 gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockmaxmflux, gdat.mockfluxdistbrek[l], \
                                                                                                                      gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
-            print 'gdat.mockspec'
-            print gdat.mockspec
-            print 'gdat.mockspep'
-            print gdat.mockspep
-            gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
-            if gdat.mockspectype[l] == 'curv':
-                gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
-            if gdat.mockspectype[l] == 'expo':
-                gdat.mockspep[l][:, 1] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.mockfactflux)
-        
-            if gdat.mockspectype[l] == 'powr':
-                gdat.mockspec[l] = retr_spec(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], spep=gdat.mockspep[l], spectype=gdat.mockspectype[l])
-           
+            if gdat.numbener > 1:
+                # spectral parameters
+                gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
+                if gdat.mockspectype[l] == 'curv':
+                    gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
+                
+                if gdat.mockspectype[l] == 'expo':
+                    gdat.mockspep[l][:, 1] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmener, gdat.factener)
+            
+            # spectra
+            gdat.mockspec[l] = retr_spec(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], spep=gdat.mockspep[l], spectype=gdat.mockspectype[l])
+               
             if gdat.verbtype > 1:
-                print 'gdat.mockspectype'
-                print gdat.mockspectype
+                print 'mockspep[l]'
+                print gdat.mockspep[l]
                 print 'mockspec[l]'
                 print gdat.mockspec[l]
-                if gdat.numbener > 1:
-                    print 'mockspep[l]'
-                    print gdat.mockspep[l]
-                print
+           
+            if gdat.numbener > 1 and gdat.verbtype > 1:
+                print 'gdat.mockspectype[l]'
+                print gdat.mockspectype[l]
             
             if gdat.pixltype != 'unbd':
                 indxpixltemp = retr_indxpixl(gdat, gdat.mockbgal[l], gdat.mocklgal[l])

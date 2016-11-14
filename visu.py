@@ -942,13 +942,22 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         print 'listydat'
         print listydat[0, :]
         print listydat[1, :]
-        print 'gdat.backfluxmean'
-        print gdat.backfluxmean
         print 'gdat.datacnts'
         print sum(sum(gdat.datacnts, 1), 1)
+        print 'sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)'
+        print sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
+        for c in indxback:
+            print 'gdat.backflux[c]'
+            print gdat.backflux[c]
+            if gdat.correxpo:
+                print 'sum(sum(gdat.backflux[c] * gdat.expo, 1), 1) * gdat.apix * gdat.diffener / sum(sum(gdat.expo, 1), 1)'
+                print sum(sum(gdat.backflux[c] * gdat.expo, 1), 1) * gdat.apix * gdat.diffener / sum(sum(gdat.expo, 1), 1)
+        print 'gdat.backfluxmean'
+        print gdat.backfluxmean
         if gdat.correxpo:
             print 'gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener'
             print gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener
+        print
 
         for c in gdat.indxback:
             listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxsampnormback[c, :]] * gdat.backfluxmean[c, :]
@@ -1075,7 +1084,7 @@ def plot_brgt(gdat, gdatmodi=None, listspecbrgthist=None):
     if gdat.trueinfo:
         if gdat.truefluxbrgt.size > 0:
             axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
-        if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprfluxbrgt.size > 0:
+        if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprlgal.size > 0:
             axis.scatter(gdat.exprfluxbrgt, gdat.exprfluxbrgtassc, alpha=gdat.alphmrkr, color='red', label=gdat.strgcatl)
     axis.set_xscale('log')
     axis.set_xlabel(r'$%s_{assc}$' % gdat.strgflux)
@@ -1825,8 +1834,8 @@ def plot_mosa(gdat):
                                 axis.set_yticklabels([])
                             
                             imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                            supr_fram(gdat, gdatmodi, axis, i, m)
-                   
+                            supr_fram(gdat, gdatmodi, axis, i, l)
+
                     plt.figtext(0.5, 0.93, gdat.strgbinsener[i], ha='center', va='center')
                     axiscomm = figr.add_axes([0.92, 0.06, 0.02, 0.8])
                     cbar = figr.colorbar(imag, cax=axiscomm)

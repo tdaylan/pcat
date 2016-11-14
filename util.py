@@ -1011,12 +1011,7 @@ def retr_maps(gdat, indxpntsfull, sampvarb, evalcirc):
     pntsflux = retr_pntsflux(gdat, sampvarb[concatenate(indxsamplgal)], sampvarb[concatenate(indxsampbgal)], \
                                                             concatenate(listspectemp, axis=1), sampvarb[gdat.indxsamppsfp], gdat.modlpsfntype, gdat.modlvarioaxi, evalcirc)
    
-    print 'hey'
-    print 'pntsflux'
-    print amin(pntsflux), amax(pntsflux)
     totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxsampnormback], pntsflux, gdat.indxcube)
-    print 'totlflux'
-    print amin(totlflux), amax(totlflux)
     
     if gdat.pixltype == 'unbd':
         
@@ -2608,6 +2603,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
         gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
         gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
+        gdat.minmener = gdat.binsener[0]
+        gdat.maxmener = gdat.binsener[-1]
     else:
         gdat.numbener = 1
         gdat.numbenerfull = 1
@@ -3098,6 +3095,7 @@ def setpinit(gdat, boolinitsetp=False):
     ## PS parameters
     gdat.factgang = log(gdat.maxmgangmodl / gdat.minmgang)
     gdat.factflux = log(gdat.maxmflux / gdat.minmflux)
+    gdat.factener = log(gdat.maxmener / gdat.minmener)
 
     gdat.factfluxdistslop = arctan(gdat.maxmfluxdistslop) - arctan(gdat.minmfluxdistslop)
     gdat.factfluxdistbrek = log(gdat.maxmfluxdistbrek / gdat.minmfluxdistbrek)
@@ -3476,7 +3474,7 @@ def setpfinl(gdat, boolinitsetp=False):
             if gdat.correxpo:
                 gdat.backfluxmean[c, i] += sum(gdat.backflux[c][i, :, :] * gdat.expo[i, :, :]) / sum(gdat.expo[i, :, :])
             else:
-                gdat.backfluxmean[c, i] += mean(gdat.backflux[c][i, :, :] * gdat.apix)
+                gdat.backfluxmean[c, i] += sum(gdat.backflux[c][i, :, 0])
     
     # proposals
     retr_propmodl(gdat)
