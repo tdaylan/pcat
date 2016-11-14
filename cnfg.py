@@ -10,7 +10,7 @@ def test_info():
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 200000
+    numbswep = zeros(numbiter, dtype=int) + 100000
     numbburn = 4 * numbswep / 5
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
@@ -60,7 +60,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 200000
+    numbswepcomm = 100000
 
     tupl = [ \
             # reference
@@ -206,7 +206,7 @@ def test_psfn():
             maxmflux = 2e-4
 
         init( \
-             numbswep=1000, \
+             numbswep=10000, \
              factthin=1, \
              numbswepplot=2000, \
              exprinfo=False, \
@@ -575,7 +575,7 @@ def test():
          pixltype='unbd', \
          exprtype='chem', \
          #verbtype=2, \
-         numbswep=10000, \
+         numbswep=100000, \
          factthin=10, \
          numbburn=0, \
          maxmnumbpnts=array([10]), \

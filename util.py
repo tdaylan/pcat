@@ -77,7 +77,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
         print
         print 'retr_pntsflux'
     numbpnts = lgal.size
-    pntsfluxsing = empty((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
         
         if evalcirc:
@@ -129,6 +129,10 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
 
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
+    
+    print 'pntsflux'
+    print amin(pntsflux), amax(pntsflux)
+    print 
 
     return pntsflux
 
@@ -3391,7 +3395,7 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.exprcnts != None:
             gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
         gdat.exprnumbpnts = gdat.exprlgal.size
-
+    
         # compute the catalog counts based on the exposure
         gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))
         for i in gdat.indxener:
@@ -3410,8 +3414,9 @@ def setpfinl(gdat, boolinitsetp=False):
         
         if not isfinite(gdat.exprspec).all():
             raise Exception('exprspec is not finite.')
-
-        gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
+        
+        if gdat.exprnumbpnts > 0:
+            gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
 
     # get count data
     ## input data
@@ -3460,17 +3465,6 @@ def setpfinl(gdat, boolinitsetp=False):
         # temp
         gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
 
-        if gdat.makeplot:
-            figr, axis, path = init_figr(gdat, i, m, 'datacntspeak', pathfold=gdat.pathinit)
-            imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-            supr_fram(gdat, None, axis, i, l, True)
-            axis.text(0.2, 0.95, '%0.7g %0.7g %0.7g' % (gdat.anglcatlrttr, rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr)), ha='center', va='center', transform=axis.transAxes)
-            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.3, s=20, edgecolor='none')
-            plt.tight_layout()
-            plt.savefig(path)
-            plt.close(figr)
-    
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]

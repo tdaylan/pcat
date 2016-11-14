@@ -1461,6 +1461,17 @@ def init( \
     setpfinl(gdat, True) 
 
     if gdat.makeplot:
+        if gdat.pixltype == 'cart':
+            figr, axis, path = init_figr(gdat, i, m, 'datacntspeak', pathfold=gdat.pathinit)
+            imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+            supr_fram(gdat, None, axis, i, l, True)
+            axis.text(0.2, 0.95, '%0.7g %0.7g %0.7g' % (gdat.anglcatlrttr, rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr)), ha='center', va='center', transform=axis.transAxes)
+            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.3, s=20, edgecolor='none')
+            plt.tight_layout()
+            plt.savefig(path)
+            plt.close(figr)
+    
         for i in gdat.indxener:
             for m in gdat.indxevtt:
     
