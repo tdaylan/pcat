@@ -135,6 +135,7 @@ def work(gdat, indxprocwork):
             except:
                 raise Exception('Mock or provided reference catalog is larger than the sample vector size.')
             gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+            
             if gdat.fluxdisttype[l] == 'powr':
                 fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
                 fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
@@ -144,18 +145,14 @@ def work(gdat, indxprocwork):
                 fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
                 fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxsampfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
                 fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-
             gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
-
             if gdat.numbener > 1:
-
                 # color parameters
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.sinddistmean[l], gdat.sinddiststdv[l])
                 if gdat.spectype[l] == 'curv':
                     gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
                 if gdat.spectype[l] == 'expo':
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmflux[l], gdat.factflux[l])
-        
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
 
     if gdat.verbtype > 1:
         print 'drmcsamp'
@@ -544,13 +541,20 @@ def init( \
     # PS parameter distribution models
     if spatdisttype == None:
         spatdisttype = array(['unif' for l in indxpopl])
+    
     if fluxdisttype == None:
-        fluxdisttype = array(['powr' for l in indxpopl])
+        if mockfluxdisttype != None:
+            fluxdisttype = mockfluxdisttype
+        else:
+            fluxdisttype = array(['powr' for l in indxpopl])
     
     # PS spectral model
     if spectype == None:
-        spectype = array(['powr' for l in indxpopl])
-    
+        if mockspectype != None:
+            spectype = mockspectype
+        else:
+            spectype = array(['powr' for l in indxpopl])
+
     ## common
     if minmnormback == None:
         minmnormback = ones(numbback) * 0.5
@@ -1677,7 +1681,7 @@ def init( \
     listindxparamodi = zeros((gdat.numbswep, gdat.numbproc), dtype=int) - 1
     listauxipara = [empty((gdat.numbswep, gdat.numbproc, gdat.numbcompcolr[l])) for l in gdat.indxpopl]
     listlaccfact = empty((gdat.numbswep, gdat.numbproc))
-    listnumbpair = empty((gdat.numbswep, gdat.numbproc))
+    listnumbpair = empty((gdat.numbswep, gdat.numbproc, 2))
     listjcbnfact = empty((gdat.numbswep, gdat.numbproc))
     listcombfact = empty((gdat.numbswep, gdat.numbproc))
     listboolreje = empty((gdat.numbswep, gdat.numbproc))
@@ -1707,7 +1711,7 @@ def init( \
         for l in gdat.indxpopl:
             listauxipara[l][:, k, :] = listchan[10][l]
         listlaccfact[:, k] = listchan[11]
-        listnumbpair[:, k] = listchan[12]
+        listnumbpair[:, k, :] = listchan[12]
         listjcbnfact[:, k] = listchan[13]
         listcombfact[:, k] = listchan[14]
         listpntsfluxmean[:, k, :] = listchan[15]
@@ -1748,7 +1752,7 @@ def init( \
     #shap = [shap[0] * shap[1], shap[2:]]
     #listauxipara = listauxipara.reshape(shap)
     listlaccfact = listlaccfact.reshape(gdat.numbsweptotl)
-    listnumbpair = listnumbpair.reshape(gdat.numbsweptotl)
+    listnumbpair = listnumbpair.reshape((gdat.numbsweptotl, 2))
     listjcbnfact = listjcbnfact.reshape(gdat.numbsweptotl)
     listcombfact = listcombfact.reshape(gdat.numbsweptotl)
     listchrollik = listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
@@ -2203,9 +2207,10 @@ def init( \
     
     listhdun.append(pf.ImageHDU(listspechist))
     listhdun[-1].header['EXTNAME'] = 'spechist'
-    
-    listhdun.append(pf.ImageHDU(listspephist))
-    listhdun[-1].header['EXTNAME'] = 'spephist'
+     
+    for l in gdat.indxpopl:
+        listhdun.append(pf.ImageHDU(listspephist[l]))
+        listhdun[-1].header['EXTNAME'] = 'spephistpop%d' % l
     
     ## stored model counts in random pixels
     listhdun.append(pf.ImageHDU(listmodlcnts))
@@ -2629,7 +2634,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     for l in gdat.indxpopl:
         listauxipara.append(zeros((gdat.numbswep, gdat.numbcompcolr[l])))
     listlaccfact = zeros(gdat.numbswep)
-    listnumbpair = zeros(gdat.numbswep)
+    listnumbpair = zeros((gdat.numbswep, 2))
     listjcbnfact = zeros(gdat.numbswep)
     listcombfact = zeros(gdat.numbswep)
 
@@ -2830,6 +2835,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 raise Exception('Unit sample vector went outside [0,1].')
              
             if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
+                show_samp(gdat, gdatmodi)
+                print 'gdatmodi.drmcsamp[gdat.indxsampunsd, 1]'
+                print gdatmodi.drmcsamp[gdat.indxsampunsd, 1]
                 raise Exception('Unused vector elements are nonzero.')
 
             for l in gdat.indxpopl:
@@ -2938,10 +2946,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         if gdatmodi.thisindxprop >= gdat.indxproppsfp:
             listdeltllik[gdatmodi.cntrswep] = gdatmodi.deltllik
             listdeltlpri[gdatmodi.cntrswep] = gdatmodi.deltlpri
-        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg and gdatmodi.numbpair != 0:
+        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg and gdatmodi.thisnumbpair != 0:
             listauxipara[gdatmodi.indxpoplmodi][gdatmodi.cntrswep, :] = gdatmodi.auxipara
-        if gdatmodi.thisindxprop == gdat.indxpropsplt and not gdatmodi.boolreje or gdatmodi.thisindxprop == gdat.indxpropmerg:
-            listnumbpair[gdatmodi.cntrswep] = gdatmodi.numbpair
+        if gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg:
+            listnumbpair[gdatmodi.cntrswep, 0] = gdatmodi.thisnumbpair
+            listnumbpair[gdatmodi.cntrswep, 1] = gdatmodi.nextnumbpair
         if (gdatmodi.thisindxprop == gdat.indxpropsplt or gdatmodi.thisindxprop == gdat.indxpropmerg) and not gdatmodi.boolreje:
             listcombfact[gdatmodi.cntrswep] = gdatmodi.combfact
             listjcbnfact[gdatmodi.cntrswep] = gdatmodi.jcbnfact

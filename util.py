@@ -48,7 +48,7 @@ def retr_spec(gdat, flux, spep=None, spectype=None):
         if spectype == 'curv':
             spec = flux[None, :] * gdat.enernorm[:, None]**(-spep[None, :, 0] - gdat.factlogtenerpivt[:, None] * spep[None, :, 1])
         if spectype == 'expo':
-            spec = flux[None, :] * gdat.enernorm[:, None]**(-spep[None, :, 0]) * exp(-gdat.meanener[:, None] / spep[None, :, 1])
+            spec = flux[None, :] * gdat.enernorm[:, None]**(-spep[None, :, 0]) * exp(gdat.enerexpofact[:, None] / spep[None, :, 1])
 
     return spec
 
@@ -73,9 +73,6 @@ def retr_indx(gdat, indxpntsfull):
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
    
-    if gdat.verbtype > 1:
-        print
-        print 'retr_pntsflux'
     numbpnts = lgal.size
     pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
@@ -89,15 +86,6 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
         
         # calculate the distance to all pixels from each point source
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], indxpixltemp)
-
-        if gdat.verbtype > 1:
-            print 'dist'
-            print amin(dist) * gdat.anglfact, amax(dist) * gdat.anglfact
-        
-        # temp
-        #indx = argsort(dist)
-        #dist = dist[indx]
-        #indxpixltemp = indxpixltemp[indx]
 
         # evaluate the PSF
         psfn = retr_psfn(gdat, psfp, gdat.indxener, dist, psfntype, gdat.binsoaxi, varioaxi)
@@ -116,24 +104,9 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
                 
                 pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfntemp
                 
-                if gdat.verbtype > 1:
-                    print 'i, m'
-                    print i, m
-                    print 'spec[i, k]'
-                    print spec[i, k]
-                    print 'psfn[i, :, m]'
-                    print amin(psfn[i, :, m]), amax(psfn[i, :, m])
-                    print 'pntsfluxsing[k, i, indxpixltemp, m]'
-                    print amin(pntsfluxsing[k, i, indxpixltemp, m]), amax(pntsfluxsing[k, i, indxpixltemp, m])
-                    print
-
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
     
-    print 'pntsflux'
-    print amin(pntsflux), amax(pntsflux)
-    print 
-
     return pntsflux
 
 
@@ -575,18 +548,6 @@ def retr_llik(gdat, gdatmodi, init=False):
                             else:
                                 gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], :, :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
                                 
-                            if gdat.verbtype > 1:
-                                print 'hey'
-                                print 'gdatmodi.indxenermodi[i]'
-                                print gdatmodi.indxenermodi[i]
-                                print 'spectemp'
-                                print spectemp
-                                print 'psfn[gdatmodi.indxenermodi[i], :, :]'
-                                print amin(psfn[gdatmodi.indxenermodi[i], :, :]), amax(psfn[gdatmodi.indxenermodi[i], :, :])
-                                print 'spectemp * psfn[gdatmodi.indxenermodi[i], :, :]'
-                                print amin(spectemp * psfn[gdatmodi.indxenermodi[i], :, :]), amax(spectemp * psfn[gdatmodi.indxenermodi[i], :, :])
-                                print
-
             timefinl = gdat.functime()
             gdatmodi.listchrollik[gdatmodi.cntrswep, 3] = timefinl - timeinit
             
@@ -991,12 +952,12 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
         
         if gdat.numbener > 1:
             sampvarb[indxsampspep[l][:, 0]] = icdf_gaus(samp[indxsampspep[l][:, 0]], gdat.sinddistmean[l], gdat.sinddiststdv[l])
-            if gdat.modlspectype == 'curv':
+            if gdat.spectype[l] == 'curv':
                 sampvarb[indxsampspep[l][:, 1]] = icdf_gaus(samp[indxsampspep[l][:, 1]], gdat.curvddistmean[l], gdat.curvdiststdv[l])
-            if gdat.modlspectype == 'expo':
-                sampvarb[indxsampspep[l][:, 1]] = icdf_logt(samp[indxsampspep[l][:, 1]], gdat.maxmflux, gdat.factflux)
+            if gdat.spectype[l] == 'expo':
+                sampvarb[indxsampspep[l][:, 1]] = icdf_logt(samp[indxsampspep[l][:, 1]], gdat.minmener, gdat.factener)
+                
         sampvarb[indxsampspec[l]] = retr_spec(gdat, sampvarb[indxsampspec[l][gdat.indxenerfluxdist[0], :]], spep=sampvarb[indxsampspep[l]], spectype=gdat.spectype[l])
-    
     return sampvarb
     
 
@@ -1212,12 +1173,12 @@ def updt_samp(gdat, gdatmodi):
         gdatmodi.thissampvarb[gdatmodi.indxsampfrst] = gdatmodi.modilgal[1]
         gdatmodi.thissampvarb[gdatmodi.indxsampfrst+1] = gdatmodi.modibgal[1]
         gdatmodi.thissampvarb[gdatmodi.indxsampfrst+2:gdatmodi.indxsampfrst+2+gdat.numbener] = gdatmodi.modispec[:, 1]
-        gdatmodi.thissampvarb[gdatmodi.indxsampfrst+2+gdat.numbener] = gdatmodi.modispep[1, 0]
+        gdatmodi.thissampvarb[gdatmodi.indxsampfrst+2+gdat.numbener] = gdatmodi.modispep[1, gdat.indxspep[gdatmodi.indxpoplmodi]]
         #### second component
         gdatmodi.thissampvarb[gdatmodi.indxsampseco] = gdatmodi.modilgal[2]
         gdatmodi.thissampvarb[gdatmodi.indxsampseco+1] = gdatmodi.modibgal[2]
         gdatmodi.thissampvarb[gdatmodi.indxsampseco+2:gdatmodi.indxsampseco+2+gdat.numbener] = gdatmodi.modispec[:, 2]
-        gdatmodi.thissampvarb[gdatmodi.indxsampseco+2+gdat.numbener] = gdatmodi.modispep[2, 0]
+        gdatmodi.thissampvarb[gdatmodi.indxsampseco+2+gdat.numbener] = gdatmodi.modispep[2, gdat.indxspep[gdatmodi.indxpoplmodi]]
         
     ## merge
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
@@ -1230,7 +1191,7 @@ def updt_samp(gdat, gdatmodi):
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcomplgal]] = gdatmodi.modilgal[2]
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcompbgal]] = gdatmodi.modibgal[2]
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcompspec]] = gdatmodi.modispec[:, 2]
-        gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcompspep[gdatmodi.indxpoplmodi]]] = gdatmodi.modispep[2, :]
+        gdatmodi.thissampvarb[gdatmodi.indxsampmodi[gdat.indxcompspep[gdatmodi.indxpoplmodi]]] = gdatmodi.modispep[2, gdat.indxspep[gdatmodi.indxpoplmodi]]
         
     ## PS parameter proposals
     if gdatmodi.thisindxprop >= gdat.indxproplgal:  
@@ -1242,6 +1203,8 @@ def updt_samp(gdat, gdatmodi):
             gdatmodi.thissampvarb[gdatmodi.indxsampmodispec] = gdatmodi.modispec[:, 1]
             if gdatmodi.thisindxprop == gdat.indxpropsind:
                 gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 0]
+            if gdatmodi.thisindxprop == gdat.indxpropcurv or gdatmodi.thisindxprop == gdat.indxpropexpo:
+                gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 1]
 
     # update the unit sample vector
     if gdatmodi.indxsampmodi.size > 0:
@@ -1504,17 +1467,22 @@ def retr_aang(lgal, bgal):
     return aang
 
 
+def show_samp(gdat, gdatmodi):
+    print 'drmcsamp, thissampvarb'
+    for k in range(gdatmodi.thissampvarb.size):
+        if k == gdat.indxsampcompinit:
+            print
+        print '%14.4g %14.4g %14.4g' % (gdatmodi.drmcsamp[k, 0], gdatmodi.drmcsamp[k, 1], gdatmodi.thissampvarb[k])
+    print
+
+
 def retr_prop(gdat, gdatmodi):
  
     if gdat.verbtype > 1:
         print 'retr_prop(): '
 
-        print 'drmcsamp, thissampvarb'
-        for k in range(gdatmodi.thissampvarb.size):
-            if k == gdat.indxsampcompinit:
-                print
-            print '%14.4g %14.4g %14.4g' % (gdatmodi.drmcsamp[k, 0], gdatmodi.drmcsamp[k, 1], gdatmodi.thissampvarb[k])
-        print
+        show_samp(gdat, gdatmodi)
+
         print 'listindxpntsfull: ', gdatmodi.listindxpntsfull
         print 'thisindxpntsfull: ', gdatmodi.thisindxpntsfull
         print 'thisindxpntsempt: ', gdatmodi.thisindxpntsempt  
@@ -1532,7 +1500,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampmodi = gdat.indxsampmeanpnts[gdatmodi.indxpoplmodi]
         retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvmeanpnts)
         gdatmodi.nextsampvarb[gdat.indxsampmeanpnts] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], \
-            gdat.minmmeanpnts[gdatmodi.indxpoplmodi], gdat.factmeanpnts[gdatmodi.indxpoplmodi])
+                                                                                    gdat.minmmeanpnts[gdatmodi.indxpoplmodi], gdat.factmeanpnts[gdatmodi.indxpoplmodi])
         
     # flux distribution function shape
     ## flux distribution power law slope
@@ -1555,7 +1523,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.indxsampvarbmodi = gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]
         retr_gaus(gdat, gdatmodi, gdatmodi.indxsampvarbmodi, gdat.stdvflux)
         gdatmodi.nextsampvarb[gdat.indxsampfluxdistbrek[gdatmodi.indxpoplmodi]] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampvarbmodi, -1], \
-            gdat.minmfluxdistbrek[gdatmodi.indxpoplmodi], gdat.factfluxdistbrek[gdatmodi.indxpoplmodi])
+                                                                                    gdat.minmfluxdistbrek[gdatmodi.indxpoplmodi], gdat.factfluxdistbrek[gdatmodi.indxpoplmodi])
         if gdat.verbtype > 1:
             print 'thissampvarb[gdat.indxsampfluxdistbrek]'
             print gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek]
@@ -1705,9 +1673,10 @@ def retr_prop(gdat, gdatmodi):
             fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxsampfluxdistslopuppr[gdatmodi.indxpoplmodi]]
             fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxsampfluxdistsloplowr[gdatmodi.indxpoplmodi]]
             modiflux = icdf_flux_brok(array([fluxunit]), gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-        gdatmodi.modispep[0, 0] = icdf_gaus(gdatmodi.drmcsamp[indxsampbrth+gdat.indxcompsind, -1], gdat.sinddistmean[gdatmodi.indxpoplmodi], \
-                                                                                                                                 gdat.sinddiststdv[gdatmodi.indxpoplmodi])
-        gdatmodi.modispec[:, 0] = retr_spec(gdat, modiflux, spep=gdatmodi.modispep[0, :], spectype=gdat.spectype[gdatmodi.indxpoplmodi]).flatten()
+        gdatmodi.modispep[0, gdat.indxspep[gdatmodi.indxpoplmodi]] = icdf_gaus(gdatmodi.drmcsamp[indxsampbrth+gdat.indxcompsind, -1], \
+                                                                                gdat.sinddistmean[gdatmodi.indxpoplmodi], gdat.sinddiststdv[gdatmodi.indxpoplmodi])
+        gdatmodi.modispec[:, 0] = retr_spec(gdat, modiflux, spep=gdatmodi.modispep[0, gdat.indxspep[gdatmodi.indxpoplmodi]], \
+                                                                                                            spectype=gdat.spectype[gdatmodi.indxpoplmodi]).flatten()
     
         if gdat.verbtype > 1:
             print 'numbpntsmodi'
@@ -1781,7 +1750,7 @@ def retr_prop(gdat, gdatmodi):
         thisbgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts]]
         thisspec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, gdatmodi.spltindxindxpnts]]
         gdatmodi.fluxpare = thisspec[gdat.indxenerfluxdist[0]]
-        thissind = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts, :]]
+        thisspep = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][gdatmodi.spltindxindxpnts, :]]
         
         if gdat.verbtype > 1:
             print 'spltindxindxpnts: ', gdatmodi.spltindxindxpnts
@@ -1793,7 +1762,7 @@ def retr_prop(gdat, gdatmodi):
             print 'thisbgal: ', gdat.anglfact * thisbgal
             print 'thisspec: ', thisspec
             print 'thisflux: ', gdatmodi.fluxpare
-            print 'thissind: ', thissind
+            print 'thisspep: ', thisspep
             
         # determine the new components
         # temp -- only valid for power-law energy spectrum
@@ -1813,7 +1782,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.fluxfrst = gdatmodi.auxipara[0] * gdatmodi.fluxpare
         gdatmodi.spltlgalfrst = thislgal + (1. - gdatmodi.auxipara[0]) * gdatmodi.auxipara[1] * cos(gdatmodi.auxipara[2])
         gdatmodi.spltbgalfrst = thisbgal + (1. - gdatmodi.auxipara[0]) * gdatmodi.auxipara[1] * sin(gdatmodi.auxipara[2])
-        gdatmodi.spltsindfrst = thissind
+        gdatmodi.spltsindfrst = thisspep
         
         gdatmodi.fluxseco = (1. - gdatmodi.auxipara[0]) * gdatmodi.fluxpare
         gdatmodi.spltlgalseco = thislgal - gdatmodi.auxipara[0] * gdatmodi.auxipara[1] * cos(gdatmodi.auxipara[2])
@@ -1880,19 +1849,19 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.modilgal[0] = thislgal
             gdatmodi.modibgal[0] = thisbgal
             gdatmodi.modispec[:, 0] = -thisspec.flatten()
-            gdatmodi.modispep[0, 0] = thissind
+            gdatmodi.modispep[0, gdat.indxspep[gdatmodi.indxpoplmodi]] = thisspep
             
             ## first component to be added
             gdatmodi.modilgal[1] = gdatmodi.spltlgalfrst
             gdatmodi.modibgal[1] = gdatmodi.spltbgalfrst
             gdatmodi.modispec[:, 1] = nextspecfrst.flatten()
-            gdatmodi.modispep[1, 0] = gdatmodi.spltsindfrst
+            gdatmodi.modispep[1, gdat.indxspep[gdatmodi.indxpoplmodi]] = gdatmodi.spltsindfrst
 
             # second component to be added
             gdatmodi.modilgal[2] = gdatmodi.spltlgalseco
             gdatmodi.modibgal[2] = gdatmodi.spltbgalseco
             gdatmodi.modispec[:, 2] = nextspecseco.flatten()
-            gdatmodi.modispep[2, 0] = gdatmodi.spltsindseco
+            gdatmodi.modispep[2, gdat.indxspep[gdatmodi.indxpoplmodi]] = gdatmodi.spltsindseco
 
     if gdatmodi.thisindxprop == gdat.indxpropmerg:
         
@@ -1916,7 +1885,7 @@ def retr_prop(gdat, gdatmodi):
         else:
 
             # sample a pair
-            indxpairtemp = choice(arange(gdatmodi.numbpair))
+            indxpairtemp = choice(arange(gdatmodi.thisnumbpair))
 
             # determine PS indices to be merged
             mergindxindxpntsfrst = gdatmodi.thislistpair[indxpairtemp][0]
@@ -1949,28 +1918,28 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.lgalfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
             gdatmodi.bgalfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
             gdatmodi.specfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, mergindxindxpntsfrst]]
-            gdatmodi.sindfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][mergindxindxpntsfrst, :]]
+            gdatmodi.spepfrst = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][mergindxindxpntsfrst, :]]
             gdatmodi.fluxfrst = gdatmodi.specfrst[gdat.indxenerfluxdist[0]]
 
             ## second PS
             gdatmodi.lgalseco = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][mergindxindxpntsseco]]
             gdatmodi.bgalseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi][mergindxindxpntsseco]]
             gdatmodi.specseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][:, mergindxindxpntsseco]]
-            gdatmodi.sindseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][mergindxindxpntsseco, :]]
+            gdatmodi.spepseco = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][mergindxindxpntsseco, :]]
             gdatmodi.fluxseco = gdatmodi.specseco[gdat.indxenerfluxdist[0]]
 
             # auxiliary parameters
             auxifrac = gdatmodi.fluxfrst / (gdatmodi.fluxfrst + gdatmodi.fluxseco) 
             auxiradi = sqrt((gdatmodi.lgalseco - gdatmodi.lgalfrst)**2 + (gdatmodi.bgalseco - gdatmodi.bgalfrst)**2)
             auxiangl = pi + arctan2(gdatmodi.bgalseco - gdatmodi.bgalfrst, gdatmodi.lgalseco - gdatmodi.lgalfrst)
-            auxisind = gdatmodi.sindseco
+            auxispep = gdatmodi.spepseco
 
             # temp
             gdatmodi.auxipara = zeros(gdat.numbcompcolr[gdatmodi.indxpoplmodi])
             gdatmodi.auxipara[0] = auxifrac
             gdatmodi.auxipara[1] = auxiradi
             gdatmodi.auxipara[2] = auxiangl
-            gdatmodi.auxipara[3] = gdatmodi.sindseco
+            gdatmodi.auxipara[3:] = gdatmodi.spepseco
             
             # merged PS
             gdatmodi.fluxpare = gdatmodi.fluxfrst + gdatmodi.fluxseco
@@ -1978,8 +1947,8 @@ def retr_prop(gdat, gdatmodi):
                 gdatmodi.boolreje = True
             gdatmodi.lgalpare = gdatmodi.lgalfrst + (1. - auxifrac) * (gdatmodi.lgalseco - gdatmodi.lgalfrst)
             gdatmodi.bgalpare = gdatmodi.bgalfrst + (1. - auxifrac) * (gdatmodi.bgalseco - gdatmodi.bgalfrst)
-            gdatmodi.sindpare = gdatmodi.sindfrst
-            gdatmodi.specpare = retr_spec(gdat, gdatmodi.fluxpare, spep=gdatmodi.sindpare, spectype=gdat.spectype[gdatmodi.indxpoplmodi])
+            gdatmodi.speppare = gdatmodi.spepfrst
+            gdatmodi.specpare = retr_spec(gdat, gdatmodi.fluxpare, spep=gdatmodi.speppare, spectype=gdat.spectype[gdatmodi.indxpoplmodi])
 
             # determine the unit variables for the merged PS
             gdatmodi.drmcsamp[gdatmodi.indxsampfrst, -1] = cdfn_self(gdatmodi.lgalpare, -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl)
@@ -1993,28 +1962,21 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.modilgal[0] = gdatmodi.lgalfrst
             gdatmodi.modibgal[0] = gdatmodi.bgalfrst
             gdatmodi.modispec[:, 0] = -gdatmodi.specfrst.flatten()
-            gdatmodi.modispep[0, 0] = gdatmodi.sindfrst
+            gdatmodi.modispep[0, gdat.indxspep[gdatmodi.indxpoplmodi]] = gdatmodi.spepfrst
 
             ## second PS
             gdatmodi.modilgal[1] = gdatmodi.lgalseco
             gdatmodi.modibgal[1] = gdatmodi.bgalseco
             gdatmodi.modispec[:, 1] = -gdatmodi.specseco.flatten()
-            gdatmodi.modispep[1, 0] = gdatmodi.sindseco
+            gdatmodi.modispep[1, gdat.indxspep[gdatmodi.indxpoplmodi]] = gdatmodi.spepseco
 
             ## parent PS
             gdatmodi.modilgal[2] = gdatmodi.lgalpare
             gdatmodi.modibgal[2] = gdatmodi.bgalpare
             gdatmodi.modispec[:, 2] = gdatmodi.specpare.flatten()
-            gdatmodi.modispep[2, 0] = gdatmodi.sindpare
+            gdatmodi.modispep[2, gdat.indxspep[gdatmodi.indxpoplmodi]] = gdatmodi.speppare
 
             # calculate the proposed list of pairs
-            lgal = concatenate((array([gdatmodi.lgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
-                                                                                                        concatenate((gdatmodi.lgalfrst, gdatmodi.lgalseco)))))
-            bgal = concatenate((array([gdatmodi.bgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]], \
-                                                                                                        concatenate((gdatmodi.bgalfrst, gdatmodi.bgalseco)))))
-            gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
-            gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
-        
             if gdat.verbtype > 1:
                 print 'mergindxfrst: ', gdatmodi.mergindxfrst
                 print 'mergindxindxpntsfrst: ', mergindxindxpntsfrst
@@ -2027,22 +1989,33 @@ def retr_prop(gdat, gdatmodi):
                 print 'merglgalfrst: ', gdat.anglfact * gdatmodi.lgalfrst
                 print 'mergbgalfrst: ', gdat.anglfact * gdatmodi.bgalfrst
                 print 'mergfluxfrst: ', gdatmodi.fluxfrst
-                print 'mergsindfrst: ', gdatmodi.sindfrst
+                print 'mergspepfrst: ', gdatmodi.spepfrst
                 print 'merglgalseco: ', gdat.anglfact * gdatmodi.lgalseco
                 print 'mergbgalseco: ', gdat.anglfact * gdatmodi.bgalseco
                 print 'mergfluxseco: ', gdatmodi.fluxseco
-                print 'mergsindseco: ', gdatmodi.sindseco
+                print 'mergspepseco: ', gdatmodi.spepseco
                 print 'merglgalpare: ', gdat.anglfact * gdatmodi.lgalpare
                 print 'mergbgalpare: ', gdat.anglfact * gdatmodi.bgalpare
                 print 'mergspecpare: ', gdatmodi.specpare
                 print 'mergfluxpare: ', gdatmodi.fluxpare
-                print 'mergsindpare: ', gdatmodi.sindpare
+                print 'mergspeppare: ', gdatmodi.speppare
                 print 'auxipara[0]: ', gdatmodi.auxipara[0]
                 print 'auxipara[1]: ', gdat.anglfact * gdatmodi.auxipara[1]
                 print 'auxipara[2]: ', gdatmodi.auxipara[2]
                 print 'auxipara[3]: ', gdatmodi.auxipara[3]
-                print 'nextlistpair'
-                print gdatmodi.nextlistpair
+            
+            lgal = concatenate((array([gdatmodi.lgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi]], \
+                                                                                                        concatenate((gdatmodi.lgalfrst, gdatmodi.lgalseco)))))
+            bgal = concatenate((array([gdatmodi.bgalpare]), setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]], \
+                                                                                                        concatenate((gdatmodi.bgalfrst, gdatmodi.bgalseco)))))
+            gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
+            gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
+        
+            if gdat.verbtype > 1:
+                # temp
+                if False:
+                    print 'nextlistpair'
+                    print gdatmodi.nextlistpair
                 print
 
             if auxiradi > gdat.radispmr:
@@ -2124,27 +2097,27 @@ def retr_prop(gdat, gdatmodi):
                 if gdat.spectype[gdatmodi.indxpoplmodi] == 'curv':
                     gdatmodi.modispep[1, 1] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 1]]
                 if gdat.spectype[gdatmodi.indxpoplmodi] == 'expo':
-                    gdatmodi.modispep[1, 0] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 1]]
+                    gdatmodi.modispep[1, 1] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 1]]
             else:
                 modiflux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, modiindxindxpnts]]
                 if gdatmodi.thisindxprop == gdat.indxpropsind:
+                    gdatmodi.modispep[1, 0] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.sinddistmean[gdatmodi.indxpoplmodi], \
+                                                                                                                            gdat.sinddiststdv[gdatmodi.indxpoplmodi])
                     if gdat.spectype[gdatmodi.indxpoplmodi] == 'curv':
                         gdatmodi.modicurv[1, 1] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 1]]
                     if gdat.spectype[gdatmodi.indxpoplmodi] == 'expo':
                         gdatmodi.modispep[1, 1] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 1]]
-                    gdatmodi.modispep[1, 0] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.sinddistmean[gdatmodi.indxpoplmodi], \
-                                                                                                                            gdat.sinddiststdv[gdatmodi.indxpoplmodi])
            
                 else:
                     gdatmodi.modispep[1, 0] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][modiindxindxpnts, 0]]
                     if gdatmodi.thisindxprop == gdat.indxpropcurv:
                         gdatmodi.modispep[1, 1] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.sinddistmean[gdatmodi.indxpoplmodi], \
                                                                                                                             gdat.sinddiststdv[gdatmodi.indxpoplmodi])
-            
                     if gdatmodi.thisindxprop == gdat.indxpropexpo:
-                        gdatmodi.modispep[1, 1] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmflux, gdat.factflux)
+                        gdatmodi.modispep[1, 1] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmener, gdat.factener)
             
-            gdatmodi.modispec[:, 1] = retr_spec(gdat, array([modiflux]), spep=gdatmodi.modispep[1, :][None, :], spectype=gdat.spectype[gdatmodi.indxpoplmodi]).flatten()
+            gdatmodi.modispec[:, 1] = retr_spec(gdat, array([modiflux]), spep=gdatmodi.modispep[1, gdat.indxspep[gdatmodi.indxpoplmodi]], \
+                                                                                                            spectype=gdat.spectype[gdatmodi.indxpoplmodi]).flatten()
 
         if gdat.verbtype > 1:
             print 'modilgal: ', gdatmodi.modilgal
@@ -2184,11 +2157,10 @@ def retr_prop(gdat, gdatmodi):
         
         ## combinatorial factor
         thisnumbpnts = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]
-        combfacttemp = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]**2 / gdatmodi.numbpair
         if gdatmodi.thisindxprop == gdat.indxpropsplt:
-            gdatmodi.combfact = combfacttemp
+            gdatmodi.combfact = gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]**2 / gdatmodi.nextnumbpair
         else:
-            gdatmodi.combfact = 1. / combfacttemp
+            gdatmodi.combfact = gdatmodi.thisnumbpair / gdatmodi.thissampvarb[gdat.indxsampnumbpnts[gdatmodi.indxpoplmodi]]**2
         
         gdatmodi.laccfact = log(gdatmodi.jcbnfact * gdatmodi.combfact)
 
@@ -2621,6 +2593,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.enernorm = gdat.meanener / gdat.enerfluxdist
         gdat.factlogtenerpivt = log(gdat.enernorm)
         gdat.factspecener = gdat.enernorm**(-gdat.sinddistmean)
+        gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
 
     ## PSF class
     if gdat.evttbins:
@@ -3069,6 +3042,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxcompspec = 2 + gdat.indxener
     gdat.indxcompflux = 2 + gdat.indxenerfluxdist
     gdat.indxcompsind = 2 + gdat.numbener
+    gdat.indxcompcurv = 2 + gdat.numbener + 1
+    gdat.indxcompexpo = 2 + gdat.numbener + 1
     gdat.indxcompspep = []
     gdat.indxcompcolr = []
     gdat.indxcompunsd = []
@@ -3080,7 +3055,6 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.indxcomp.append(arange(gdat.numbcomp[l]))
         gdat.indxcompunsd.append(setdiff1d(gdat.indxcomp[l], gdat.indxcompcolr[l]))
         gdat.indxauxipara.append(arange(gdat.numbcompcolr[l]))
-    
     gdat.indxpnts = []
     for l in gdat.indxpopl:
         gdat.indxpnts.append(arange(gdat.maxmnumbpnts[l]))
@@ -3318,12 +3292,14 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxpara = arange(gdat.numbpara)
     
     listindxsampunsd = []
+    numbsampcumu = 0
     for l in gdat.indxpopl:
         for k in gdat.indxpnts[l]:
-            listindxsampunsd.append(gdat.indxsampcompinit + l * gdat.maxmnumbpnts[l] + k * gdat.numbcomp[l] + gdat.indxcompunsd[l])
+            listindxsampunsd.append(gdat.indxsampcompinit + numbsampcumu + k * gdat.numbcomp[l] + gdat.indxcompunsd[l])
+        numbsampcumu += gdat.maxmnumbpnts[l] * gdat.numbcomp[l]
     
     gdat.indxsampunsd = concatenate(listindxsampunsd)
-
+    
     #gdat.indxsamppsfpoaxi = gdat.indxsamppsfp[0] + gdat.numbpsfpform + tile(arange(gdat.numbpsfpoaxi), gdat.numbener * gdat.numbevtt) + \
     #                                                                                repeat(gdat.numbpsfptotl * arange(gdat.numbener * gdat.numbevtt), gdat.numbpsfpoaxi)
     if gdat.modlvarioaxi:
