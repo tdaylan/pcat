@@ -140,6 +140,7 @@ def work(gdat, indxprocwork):
     ## indices of the PS parameters
     indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampspeptemp, indxsampcompcolrtemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
+
     if gdat.evalpsfnpnts:
         ## PSF
         gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, \
