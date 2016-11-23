@@ -23,6 +23,10 @@ from scipy.stats import poisson as pss
 import scipy.ndimage
 import scipy.ndimage.filters
 
+import astropy as ap
+    
+import shelve
+
 # multiprocessing
 import multiprocessing as mp
 

@@ -574,11 +574,12 @@ def test():
     init( \
          pixltype='unbd', \
          exprtype='chem', \
-         #verbtype=2, \
-         numbswep=100000, \
-         factthin=10, \
+         #makeplot=False, \
+         verbtype=2, \
+         numbswep=100, \
+         factthin=1, \
          numbburn=0, \
-         maxmnumbpnts=array([10]), \
+         maxmnumbpnts=array([3]), \
         )
             #numbburn=0, \
             #factthin=1, \

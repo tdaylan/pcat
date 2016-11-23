@@ -65,7 +65,7 @@ class LensModel(object):
         self.lensparams.append(Params('ellipticity_angle',ellipt_angle,[0.0,180.0],False)) #Note that this angle is measured counterclockwise from the y-axis
         self.lensparams.append(Params('shear',shear,[0.0,0.3],False))
         self.lensparams.append(Params('shear_angle',shear_angle,[0.0,180],False)) #This angle is measured c.c. from x-axis
-        self.s = 1e-20
+        self.s = 0.000
         
         if self.massmodel == 'SIE':
             self.lensparams.append(Params('b_ein',args[0],[0.2,2.0],False))
@@ -127,7 +127,7 @@ class LensModel(object):
         #Translate to the center of the potential
         xxt = xx - self.lensparams[0].value
         yyt = yy - self.lensparams[1].value
-
+        
         #Define rotation angle
         rot_angle = self.lensparams[3].value*np.pi/180.0
         
@@ -137,7 +137,7 @@ class LensModel(object):
         
         #Define q
         q = 1.0 - self.lensparams[2].value
-       
+        
         if self.massmodel == 'SIE':
             if self.lensparams[2].value > 1.0e-4:
                 psi = np.sqrt(q**2*(self.s**2+x**2)+y**2)
@@ -146,7 +146,6 @@ class LensModel(object):
                 alphayt = (self.lensparams[6].value*q/np.sqrt(1.0-q**2)*
                             np.arctanh(np.sqrt(1.0-q**2)*y/(psi+q**2*self.s)))
             else:
-                    
                 rint = np.sqrt(x**2 + y**2 + self.s**2)
                 alphaxt = self.lensparams[6].value*(x/(rint+self.s)) 
                 alphayt = self.lensparams[6].value*(y/(rint+self.s))
@@ -165,9 +164,8 @@ class LensModel(object):
         alphay += (-self.lensparams[4].value*np.cos(2.0*self.lensparams[5].value*np.pi/180.0)*yy 
                 + self.lensparams[4].value*np.sin(2.0*self.lensparams[5].value*np.pi/180.0)*xx)
         
-        return vstack((alphax, alphay)).T
-   
-
+        return np.array([alphax,alphay])
+    
 def gauss_mat(size,axis_ratio,angle):
     """
     Compute the covariance matrix of a Gaussian, given a typical size,
@@ -202,13 +200,15 @@ class Source(object):
         self.numsrcparams = len(self.srcparams)
                  
     def brightness(self,u,v):
+        """The source brightness profile"""
         
         if self.model == 'Gaussian':
-            
             src_pos = np.array([u-self.srcparams[0].value,v-self.srcparams[1].value])
-            S = self.srcparams[2].value * np.exp(-0.5 * np.sum(src_pos * np.tensordot(self.cov_src, src_pos,(1,0)),0))
+            S = self.srcparams[2].value*np.exp(-0.5*np.sum(src_pos*np.tensordot(self.cov_src,src_pos,(1,0)),0))
+        else:
+            S = 0.0
             
-        return S.flatten()
+        return S
         
     def gradient(self,u,v):
         """The gradient of the source in the source plane"""
@@ -226,27 +226,26 @@ class Source(object):
         return np.array([dSdu,dSdv])
     
     
-def macro_only_image(xx, yy, src,smoothlens,psf_scale):
+class PixelMap(object):
+    """A general instance of a pixelization of an image"""
     
-    #Set the PSF kernel
-    PSF_kernel = AiryDisk2DKernel(psf_scale)
+    def __init__(self,newxmax,newdx):
+        self.xmax = newxmax
+        self.dx = newdx
+        self.xmap = np.arange(-self.xmax,self.xmax+self.dx,self.dx)
+        self.ymap = np.arange(-self.xmax,self.xmax+self.dx,self.dx)
+        
     
-    if not isinstance(smoothlens,list):
-        smoothlens = [smoothlens]
+    gdat.lgalmesh, gdat.bgalmesh = np.meshgrid(gdat.binslgal, gdat.binsbgalp)
+    gdat.kernpsfn = AiryDisk2DKernel(gdat.lens.psfnscal)
 
-    #Generate lensed image
-    numblens = len(smoothlens)
-    defl = zeros((xx.size, 2))
-    for k in range(numblens):
-        defl += smoothlens[k].deflection(xx, yy)
+def retr_lensimag(src, smoothlens, psfnscal):
+    
+    defxmap, defymap = smoothlens.deflection(gdat.lgalmesh, gdat.bgalmesh)
 
-    size = sqrt(xx.shape[0])
-    shap = (size, size)
-    # calculate the lensed image
-    imaglens = src.brightness((xx-defl[:, 0]).reshape(shap), (yy - defl[:, 1]).reshape(shap))
+    maps = source[kk].brightness(xx-defxmap, yy-defymap)
 
-    #Convolve with the PSF
-    imagconv = convolve(imaglens.reshape(shap), PSF_kernel).flatten()
+    maps = convolve(maps, gdat.lens.psfnscal)
 
-    return imagconv, defl
+    return maps
 
