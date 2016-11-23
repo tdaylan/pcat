@@ -291,6 +291,7 @@ def cdfn_fixp(gdat, fixp, thisindxfixp):
 def icdf_fixp(gdat, fixpunit, thisindxfixp):
 
     scalfixp = gdat.scalfixp[thisindxfixp]
+    
     if scalfixp == 'self' or scalfixp == 'logt' or scalfixp == 'atan':
         minmfixp = gdat.minmfixp[thisindxfixp]
         factfixp = gdat.factfixp[thisindxfixp]
@@ -309,6 +310,7 @@ def icdf_fixp(gdat, fixpunit, thisindxfixp):
             fixp = icdf_eerr(fixpunit, meanfixp, stdvfixp, cdfnminmfixp, cdfndifffixp)
         else:
             fixp = icdf_gaus(fixpunit, meanfixp, stdvfixp)
+
     elif scalfixp == 'pois':
         fixp = fixpunit
     else:
@@ -2159,18 +2161,12 @@ def retr_factoaxi(gdat, bins, norm, indx):
 def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, varioaxi=None):
 
     numbpsfpform, numbpsfpoaxi = retr_numbpsfp(psfntype, varioaxi)
-    print 'numbpsfpform'
-    print numbpsfpform
-    print 'numbpsfpoaxi'
-    print numbpsfpoaxi
     numbpsfptotl = numbpsfpform + numbpsfpoaxi
     indxpsfptemp = numbpsfptotl * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
-    print 'indxpsfptemp'
-    print indxpsfptemp
     if varioaxi:
         indxpsfpoaxinorm = numbpsfptotl * gdat.indxener[indxenertemp] + gdat.numbpsfpform
         indxpsfpoaxiindx = numbpsfptotl * gdat.indxener[indxenertemp] + gdat.numbpsfpform + 1
-    
+
     if gdat.exprtype == 'ferm':
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
         scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
@@ -2183,24 +2179,20 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
     if varioaxi:
         factoaxi = retr_factoaxi(gdat, binsoaxi, psfp[indxpsfpoaxinorm], psfp[indxpsfpoaxiindx])
    
-        print 'factoaxi'
-        print factoaxi
-        print 
-
     if psfntype == 'singgaus':
         sigc = psfp[indxpsfptemp]
         if varioaxi:
+            
+            print 'hey'
+            print 'indxpsfptemp'
+            print indxpsfptemp
+            print 'sigc'
+            print sigc
+            print
+
             sigc = sigc[:, None, :, None] * factoaxi[:, None, None, :]
         else:
             sigc = sigc[:, None, :]
-
-        print 'sigc'
-        print sigc[0, :, 0, 0]
-        print sigc[1, :, 0, 0]
-        print 'scalangl'
-        print scalangl[0, :, 0, 0]
-        print 
-
         psfn = retr_singgaus(scalangl, sigc)
         
     elif psfntype == 'singking':
@@ -3309,7 +3301,7 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfixpsigm = gdat.indxfixpsigc + gdat.indxfixpsigt
     gdat.indxfixpgamm = gdat.indxfixpgamc + gdat.indxfixpgamt
     gdat.indxfixppsfp = gdat.indxfixpsigc + gdat.indxfixpsigt + gdat.indxfixpgamc + gdat.indxfixpgamt + gdat.indxfixppsff + gdat.indxfixpoaxinorm + gdat.indxfixpoaxiindx
-    
+    gdat.indxfixppsfp = sort(array(gdat.indxfixppsfp))
     gdat.indxfixpbacp = []
     if gdat.pntstype == 'lght':
         gdat.indxfixpbacp = arange(gdat.numbbacp).reshape((gdat.numbback, gdat.numbener)) + cntr.incr(gdat.numbbacp)

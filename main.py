@@ -28,8 +28,14 @@ def work(gdat, indxprocwork):
    
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
+        print 'k'
+        print k
+        print 'gdat.strgfixp[k]'
+        print gdat.strgfixp[k]
+        print 'gdat.truefixp[k]'
+        print gdat.truefixp[k]
+        print
         if gdat.randinit or gdat.truefixp[k] == None:
-
             if k in gdat.indxfixpnumbpnts:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[k] + 1))
             else:
@@ -145,13 +151,6 @@ def work(gdat, indxprocwork):
         ## PSF
         gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.modlpsfntype, \
                                                                                                                     binsoaxi=gdat.binsoaxi, varioaxi=gdat.modlvarioaxi)
-        
-        print 'hey'
-        print 'gdatmodi.thispsfn'
-        print gdatmodi.thispsfn[0, :, 0, 0]
-        print gdatmodi.thispsfn[1, :, 0, 0]
-        print 
-        return
         
         if gdat.boolintpanglcosi:
             binsangltemp = gdat.binsanglcosi
