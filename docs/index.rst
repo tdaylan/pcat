@@ -6,11 +6,12 @@
 Welcome to PCAT's documentation!
 ================================
 
+PCAT is a hierarchical, transdimensional Bayesian sampler. It can be used to sample from the **catalog space**. Alternatively, it can be used as a general purpose Poisson mixture sampler to infer clusters in a dataset.
+
 .. toctree::
    :maxdepth: 2
+   :caption: Installation:
    :caption: Contents:
-
-
 
 Indices and tables
 ==================
