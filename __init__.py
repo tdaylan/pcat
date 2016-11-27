@@ -60,5 +60,7 @@ warnings.simplefilter('ignore')
     
 import franlens
 
+from astropy.convolution import convolve, AiryDisk2DKernel
+
 from copy import deepcopy
 

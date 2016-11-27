@@ -165,7 +165,7 @@ class LensModel(object):
         alphay += (-self.lensparams[4].value*np.cos(2.0*self.lensparams[5].value*np.pi/180.0)*yy 
                 + self.lensparams[4].value*np.sin(2.0*self.lensparams[5].value*np.pi/180.0)*xx)
         
-        return vstack((alphax, alphay)).T
+        return dstack((alphax, alphay))
    
 
 def gauss_mat(size,axis_ratio,angle):
@@ -208,7 +208,7 @@ class Source(object):
             src_pos = np.array([u-self.srcparams[0].value,v-self.srcparams[1].value])
             S = self.srcparams[2].value * np.exp(-0.5 * np.sum(src_pos * np.tensordot(self.cov_src, src_pos,(1,0)),0))
             
-        return S.flatten()
+        return S
         
     def gradient(self,u,v):
         """The gradient of the source in the source plane"""
@@ -225,28 +225,74 @@ class Source(object):
             
         return np.array([dSdu,dSdv])
     
-    
-def macro_only_image(xx, yy, src,smoothlens,psf_scale):
-    
-    #Set the PSF kernel
-    PSF_kernel = AiryDisk2DKernel(psf_scale)
-    
-    if not isinstance(smoothlens,list):
-        smoothlens = [smoothlens]
 
-    #Generate lensed image
-    numblens = len(smoothlens)
-    defl = zeros((xx.size, 2))
-    for k in range(numblens):
-        defl += smoothlens[k].deflection(xx, yy)
+def retr_imaglens(gdat, gdatmodi=None, raww=False):
+    
+    if gdatmodi != None:
+        gdattemp = gdat
+        strg = ''
+        sampvarb = getattr(gdatmodi, 'thissampvarb')
+        psfnkern = gdatmodi.thispsfnkern
+    else:
+        gdattemp = gdatmodi
+        sampvarb = getattr(gdat, 'mockfixp')
+        strg = 'mock'
+        psfnkern = gdat.truepsfnkern
 
-    size = sqrt(xx.shape[0])
-    shap = (size, size)
+    sourobjt = franlens.Source(gdat.truesourtype, sampvarb[getattr(gdat, strg + 'indxfixplgalsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpbgalsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpfluxsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpsizesour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpratisour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpanglsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixplgalsour')])
+
+    defl = zeros((gdat.numbsidecart, gdat.numbsidecart, 2))
+
+    if raww:
+        beinhost = 0.
+        sherhost = 0.
+    else:
+        sherhost = sampvarb[getattr(gdat, strg + 'indxfixpsherhost')]
+        beinhost = sampvarb[getattr(gdat, strg + 'indxfixpbeinhost')]
+    listlensobjt = []
+    listlensobjt.append(franlens.LensModel(gdat.truelenstype, sampvarb[getattr(gdat, strg + 'indxfixplgalhost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpbgalhost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpellphost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpanglhost')], \
+                                                              sherhost, \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpsanghost')], \
+                                                              beinhost))
+
+    ## PS
+    if getattr(gdat, strg + 'numbtrap') > 0 and not raww:
+        for l in getattr(gdat, strg + 'indxpopl'):
+            numbpnts = sampvarb[getattr(gdat, strg + 'indxfixpnumbpnts')[l]].astype(int)
+            for k in range(numbpnts):
+                # create lens model object for the PS 
+                if gdatmodi == None:
+                    listlensobjt.append(franlens.LensModel(gdat.truelenstype, gdat.mocklgal[l][k], gdat.mockbgal[l][k], 0., 0., 0., 0., gdat.mockspec[l][0, k]))
+                else:
+                    listlensobjt.append(franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][k]], \
+                                                                              gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][k]], \
+                                                                              0., 0., 0., 0., \
+                                                                              # beta
+                                                                              gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][0, k]]))
+    numblensobjt = len(listlensobjt)
+    for k in range(numblensobjt):
+        defl += listlensobjt[k].deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+
     # calculate the lensed image
-    imaglens = src.brightness((xx-defl[:, 0]).reshape(shap), (yy - defl[:, 1]).reshape(shap))
+    imaglens = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1])
 
     #Convolve with the PSF
-    imagconv = convolve(imaglens.reshape(shap), PSF_kernel).flatten()
+    
+    # temp
+    if False:
+        imag = convolve(imaglens, psfnkern).flatten()
+    else:
+        imag = imaglens.flatten()
 
-    return imagconv, defl
+    return imag, imaglens, defl
 
+    

@@ -4,40 +4,30 @@ from __init__ import *
 # internal functions
 from util import *
 
-def plot_post(pathpcat, verbtype=1, makeanim=False):
+def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     
-    gdat = tdpy.util.gdatstrt()
-    gdat.verbtype = verbtype
+    if writ:
+        gdat = tdpy.util.gdatstrt()
+        gdat.verbtype = verbtype
+        gdat.makeanim = makeanim
 
+        if gdat.verbtype > 0:
+            print 'Reading %s...' % pathpcat
+
+        # read PCAT output file
+        shel = shelve.open(pathpcat)
+        for keyy in shel:
+            if keyy == 'gdat':
+                gdat = shel[keyy]
+        shel.close()
+    
     if gdat.verbtype > 0:
         print 'Producing plots for the PCAT output...'
 
-    # read PCAT output file
-    if gdat.verbtype > 0:
-        print 'Reading %s...' % pathpcat
-
-    shel = shelve.open(pathpcat)
-    for keyy in shel:
-        if keyy == 'gdat':
-            gdat = shel[keyy]
-    shel.close()
-    
     timetotlinit = gdat.functime()
     
     gdat.strgbest = 'ML'
     
-    # indices of the parameters to be plotted
-    numbtrapplot = min(10, gdat.numbtrap)
-    print 'gdat.numbtrap'
-    print gdat.numbtrap
-    print 'gdat.indxsamptrap'
-    print gdat.indxsamptrap
-    print 'numbtrapplot'
-    print numbtrapplot
-    indxtrapplot = choice(gdat.indxsamptrap, size=numbtrapplot, replace=False)
-    indxparaplot = concatenate((gdat.indxfixpused, indxtrapplot))
-    numbparaplot = indxparaplot.size
-
     # Gelman-Rubin test
     if gdat.numbproc > 1:
         if isfinite(gmrbstat).all():
@@ -68,10 +58,13 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     numbtimemcmc = 20
     binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
     numbtick = 2
+    
     figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
+    if gdat.numbprop == 1:
+        axgr = [axgr]
     for n, axis in enumerate(axgr):
-        histtotl = axis.hist(where(gdat.listindxprop == n)[0], bins=binstimemcmc)[0]
-        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == n)[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
+        histtotl = axis.hist(where(gdat.listindxprop == gdat.indxprop[n])[0], bins=binstimemcmc)[0]
+        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
@@ -90,112 +83,87 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
     plt.close(figr)
    
-    figr, axgr = plt.subplots(numbparaplot, 1, figsize=(gdat.plotsize, numbparaplot * gdat.plotsize / 4.), sharex='all')
-    for n, axis in enumerate(axgr):
-        hist = axis.hist(where(gdat.listindxparamodi == indxparaplot[n])[0], bins=binstimemcmc)[0]
-        axis.hist(intersect1d(where(gdat.listindxparamodi == n)[0], where(gdat.listaccp)[0]), bins=binstimemcmc)
-        
-        if n >= gdat.indxsampcomp[0]:
-            strg = '$p_{%d}$' % n
-        else:
-            strg = '%s' % gdat.strgfixp[n]
-        axis.set_ylabel(strg)
-
-        if n == gdat.numbprop - 1:
-            axis.set_xlabel('$i_{samp}$')
-        
-        # define the y-axis
-        maxm = amax(hist[0])
-        axis.set_ylim([0., maxm])
-        listtick = linspace(maxm / 2., maxm, numbtick)
-        listlabltick = ['%.3g' % tick for tick in listtick]
-        axis.set_yticks(listtick)
-        axis.set_yticklabels(listlabltick)
-    
-    plt.subplots_adjust(hspace=0, left=0.15)
-    figr.savefig(gdat.pathdiag + 'accpratipara.pdf')
-    plt.close(figr)
-   
     # plot split and merge diagnostics
-    indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-    indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
-    indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-    indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listboolreje == False)[0])
-    indxsampspmr = union1d(indxsampsplt, indxsampmerg)
-    indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
-    indxsampreje = where(gdat.listboolreje == False)
-    if indxsampspmrtotl.size > 0:
-
-        ## create plot subfolder
-        os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
-
-        ## labels and names
-        listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
-                                        r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
-        listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
-        
-        ## variables
-        listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
-                                         exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
-                                         gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
-       
-        print 'gdat.listauxipara'
-        print gdat.listauxipara
-        print 'gdat.listnumbpair'
-        print gdat.listnumbpair
-        print 'gdat.listlaccfact'
-        print gdat.listlaccfact
-        print 'gdat.listdeltlpri'
-        print gdat.listdeltlpri
-        print 'gdat.listcombfact'
-        print gdat.listcombfact
-        print 'gdat.listdeltllik'
-        print gdat.listdeltllik[indxsampsplttotl]
-        print gdat.listdeltllik[indxsampmergtotl]
-        print 'gdat.listdeltlpri'
-        print gdat.listdeltlpri[indxsampsplttotl]
-        print gdat.listdeltlpri[indxsampmergtotl]
-        print
-
-        # rescale the Jacobian and the prior fraction to make them dimensionless
-        listvarb[5][indxsampsplttotl] /= gdat.minmflux
-        listvarb[5][indxsampmergtotl] *= gdat.minmflux
-        listvarb[8][indxsampsplttotl] /= gdat.minmflux
-        listvarb[8][indxsampmergtotl] *= gdat.minmflux
-        listvarb[10][indxsampsplttotl] *= gdat.minmflux
-        listvarb[10][indxsampmergtotl] /= gdat.minmflux
-
-        for k in range(len(listlabl)):
-            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            maxm = amax(listvarb[k][indxsampspmrtotl])
+    if gdat.numbtrap > 0:
+        indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
+        indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
+        indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
+        indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listboolreje == False)[0])
+        indxsampspmr = union1d(indxsampsplt, indxsampmerg)
+        indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
+        indxsampreje = where(gdat.listboolreje == False)
+        if indxsampspmrtotl.size > 0:
+    
+            ## create plot subfolder
+            os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
+    
+            ## labels and names
+            listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
+                                            r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
+            listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
             
-            if k <= 4:
-                indxsampspmrtemp = indxsampspmrtotl
-                indxsampsplttemp = indxsampsplttotl
-            else:
-                indxsampspmrtemp = indxsampspmr
-                indxsampsplttemp = indxsampsplt
-            
-            if k >= 5:
-                axis.set_xscale('log')
-                minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
-                bins = logspace(log10(minm), log10(maxm), 40)
-            else:
-                minm = amin(listvarb[k][indxsampspmrtemp])
-                bins = linspace(minm, maxm, 40)
-          
-            try:
-                axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.alphmrkr)
-                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.alphmrkr)
-            except:
-                if gdat.verbtype > 0:
-                    print 'Skipping split merge diagnostic plot...'
-            axis.set_ylabel('$N_{samp}$')
-            axis.set_xlabel(listlabl[k])
-            axis.legend()
-            plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
-            plt.close(figr)
+            ## variables
+            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
+                                             exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
+                                             gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
+           
+            print 'gdat.listauxipara'
+            print gdat.listauxipara
+            print 'gdat.listnumbpair'
+            print gdat.listnumbpair
+            print 'gdat.listlaccfact'
+            print gdat.listlaccfact
+            print 'gdat.listdeltlpri'
+            print gdat.listdeltlpri
+            print 'gdat.listcombfact'
+            print gdat.listcombfact
+            print 'gdat.listdeltllik'
+            print gdat.listdeltllik[indxsampsplttotl]
+            print gdat.listdeltllik[indxsampmergtotl]
+            print 'gdat.listdeltlpri'
+            print gdat.listdeltlpri[indxsampsplttotl]
+            print gdat.listdeltlpri[indxsampmergtotl]
+            print
+    
+            # rescale the Jacobian and the prior fraction to make them dimensionless
+            listvarb[5][indxsampsplttotl] /= gdat.minmflux
+            listvarb[5][indxsampmergtotl] *= gdat.minmflux
+            listvarb[8][indxsampsplttotl] /= gdat.minmflux
+            listvarb[8][indxsampmergtotl] *= gdat.minmflux
+            listvarb[10][indxsampsplttotl] *= gdat.minmflux
+            listvarb[10][indxsampmergtotl] /= gdat.minmflux
+    
+            for k in range(len(listlabl)):
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                maxm = amax(listvarb[k][indxsampspmrtotl])
+                
+                if k <= 4:
+                    indxsampspmrtemp = indxsampspmrtotl
+                    indxsampsplttemp = indxsampsplttotl
+                else:
+                    indxsampspmrtemp = indxsampspmr
+                    indxsampsplttemp = indxsampsplt
+                
+                if k >= 5:
+                    axis.set_xscale('log')
+                    minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
+                    bins = logspace(log10(minm), log10(maxm), 40)
+                else:
+                    minm = amin(listvarb[k][indxsampspmrtemp])
+                    bins = linspace(minm, maxm, 40)
+              
+                try:
+                    axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.alphmrkr)
+                    axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.alphmrkr)
+                except:
+                    if gdat.verbtype > 0:
+                        print 'Skipping split merge diagnostic plot...'
+                axis.set_ylabel('$N_{samp}$')
+                axis.set_xlabel(listlabl[k])
+                axis.legend()
+                plt.tight_layout()
+                figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
+                plt.close(figr)
     
     if gdat.verbtype > 0:
         print 'Calculating proposal execution times...'
@@ -250,33 +218,35 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # cross correlation with the reference catalog
-    if gdat.verbtype > 0:
-        print 'Cross-correlating the sample catalogs with the reference catalog...'
-    timeinit = gdat.functime()
-    if gdat.trueinfo:
-        for l in gdat.indxpopl:
-            listindxmodl = []
-            for n in gdat.indxsamptotl:
-                indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n])
-                listindxmodl.append(indxmodl)
-            postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
-            for i in gdat.indxener:
-                gdat.listspecmtch = zeros((gdat.numbsamptotl, gdat.truenumbpnts[l]))
-                for p in gdat.indxsamptotl:
-                    indxpntstrue = where(listindxmodl[p] >= 0)[0]
-                    gdat.listspecmtch[p, indxpntstrue] = gdat.listspec[l][p][i, listindxmodl[p][indxpntstrue]]
-                postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
-                postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
-                postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
-            plot_scatspec(gdat, l, postspecmtch=postspecmtch)
-    timefinl = gdat.functime()
-    if gdat.verbtype > 0:
-        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+    if gdat.numbtrap > 0:
+        if gdat.verbtype > 0:
+            print 'Cross-correlating the sample catalogs with the reference catalog...'
+        timeinit = gdat.functime()
+        if gdat.trueinfo:
+            for l in gdat.indxpopl:
+                listindxmodl = []
+                for n in gdat.indxsamptotl:
+                    indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n])
+                    listindxmodl.append(indxmodl)
+                postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
+                for i in gdat.indxener:
+                    gdat.listspecmtch = zeros((gdat.numbsamptotl, gdat.truenumbpnts[l]))
+                    for p in gdat.indxsamptotl:
+                        indxpntstrue = where(listindxmodl[p] >= 0)[0]
+                        gdat.listspecmtch[p, indxpntstrue] = gdat.listspec[l][p][i, listindxmodl[p][indxpntstrue]]
+                    postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
+                    postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
+                    postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
+                plot_scatspec(gdat, l, postspecmtch=postspecmtch)
+        timefinl = gdat.functime()
+        if gdat.verbtype > 0:
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
     
     # stacked posteiors binned in position and flux
-    plot_pntsprob(gdat, ptag='quad')
-    plot_pntsprob(gdat, ptag='full', full=True)
-    plot_pntsprob(gdat, ptag='cumu', cumu=True)
+    if gdat.numbtrap > 0:
+        plot_pntsprob(gdat, ptag='quad')
+        plot_pntsprob(gdat, ptag='full', full=True)
+        plot_pntsprob(gdat, ptag='cumu', cumu=True)
 
     # compute credible intervals
     gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
@@ -288,19 +258,20 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
             gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medifixp[gdat.indxfixpbacp], gdat.medifwhm)
             gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
 
-    ## flux distribution
-    for l in gdat.indxpopl:
-        plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
-
-    ## color distribution
-    if gdat.pntstype == 'lght' and gdat.numbener > 1:
+    if gdat.numbtrap > 0:
+        ## flux distribution
         for l in gdat.indxpopl:
-            plot_histsind(gdat, l, listsindhist=gdat.listspephist[l][:, 0, :])
-
-    ## emission components
-    if gdat.numbback == 2:
-        postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
-        plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
+            plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
+    
+        ## color distribution
+        if gdat.pntstype == 'lght' and gdat.numbener > 1:
+            for l in gdat.indxpopl:
+                plot_histsind(gdat, l, listsindhist=gdat.listspephist[l][:, 0, :])
+    
+        ## emission components
+        if gdat.numbback == 2:
+            postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
+            plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
 
     ## mosaic of images of posterior catalogs 
     plot_mosa(gdat)
@@ -308,22 +279,31 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     ## fixed-dimensional parameters
     ### trace plot for each parameter
     for k in gdat.indxfixp:
-        path = gdat.pathpost + gdat.namefixp[k]
-        tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k])
+        if k in gdat.indxfixpactv:
+            path = gdat.pathpost + gdat.namefixp[k]
+            tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k])
     ### full covariance plot
-    print 'gdat.listfixp'
-    print gdat.listfixp
-    print mean(gdat.listfixp, 0)
-    print std(gdat.listfixp, 0)
-    tdpy.mcmc.plot_grid(path, gdat.listfixp, gdat.strgfixp, truepara=gdat.truefixp)
+    path = gdat.pathpost + 'fixp'
+    print 'gdat.listfixp[:, gdat.indxfixpactv]'
+    print gdat.listfixp[:, gdat.indxfixpactv]
+    print 'gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv]'
+    print gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv]
+    print
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv], gdat.strgfixp[gdat.indxfixpactv], \
+                                                                                      truepara=gdat.truefixp[gdat.indxfixpactv] * gdat.factfixpplot[gdat.indxfixpactv])
     ### grouped covariance plots
     #### hyperparameters
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.strgfixp[gdat.indxfixphypr], truepara=[gdat.truefixp[k] for k in gdat.indxfixphypr])
+    if len(gdat.indxfixphypr) > 0:
+        path = gdat.pathpost + 'hypr'
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.strgfixp[gdat.indxfixphypr], truepara=[gdat.truefixp[k] for k in gdat.indxfixphypr])
     #### PSF
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.truefixp[k] for k in gdat.indxfixppsfp], \
+    if gdat.proppsfp:
+        path = gdat.pathpost + 'psfp'
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.truefixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     #### backgrounds
     if gdat.backemis:
+        path = gdat.pathpost + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp.flatten()], gdat.strgfixp[gdat.indxfixpbacp.flatten()], \
                                                                                                         truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()])
         if gdat.indxfixpbacp.size == 2:
@@ -331,14 +311,17 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
                                                                             truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()], join=True)
     
     ## randomly selected trandimensional parameters
-    path = gdat.pathplot + 'listsamp_'
-    tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
+    if gdat.numbtrap > 0:
+        numbtrapplot = min(10, gdat.numbtrap)
+        indxtrapplot = choice(gdat.indxsampcomp, size=numbtrapplot, replace=False)
+        path = gdat.pathplot + 'listsamp_'
+        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     strgllik = r'$\ln P(D|x)$'
     strglpri = r'$\ln P(x)$'
 
     ## log-likelihood
-    path = gdat.pathpost + 'lpri'
+    path = gdat.pathpost + 'llik'
     titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
     tdpy.mcmc.plot_hist(path, gdat.listllik, strgllik, titl)
     tdpy.mcmc.plot_trac(path, gdat.listllik, strgllik, varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
@@ -358,7 +341,7 @@ def plot_post(pathpcat, verbtype=1, makeanim=False):
     plt.close(figr)
 
     # animate the frame plots
-    if makeanim:
+    if gdat.makeanim:
         make_anim(gdat)
 
     timetotlfinl = gdat.functime()
@@ -374,7 +357,9 @@ def plot_chro(gdat):
     gdat.listchrototl *= 1e3
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
     figr, axcl = plt.subplots(gdat.numbprop, 1, figsize=(2 * gdat.plotsize, gdat.numbprop * gdat.plotsize / 3.))
-    for k in range(gdat.numbprop):
+    if gdat.numbprop == 1:
+        axcl = [axcl]
+    for k in gdat.indxprop:
         indxswepchro = intersect1d(where(gdat.listindxprop == k)[0], where(gdat.listchrototl[:, 0] > 0)[0])
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
@@ -860,21 +845,18 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         # plot all associations
         indx = where(ydat > 0.)[0]
         if indx.size > 0:
-            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
-                                                                                                    lw=1, marker='o', markersize=5, color='black', alpha=0.1)
+            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black', alpha=0.1)
        
         # plot associations inside the comparison area
         indx = intersect1d(where(ydat > 0.)[0], gdat.trueindxpntscomp[l])
         if indx.size > 0:
-            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
-                                                                                                    lw=1, marker='o', markersize=5, color='black')
+            axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
         # plot associations to multiple model point sources
         if not post:
             indx = intersect1d(gdatmodi.trueindxpntsassc[l].mult, gdat.trueindxpntscomp[l])
             if len(indx) > 0:
-                axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], \
-                                                                                                                        lw=1, marker='o', markersize=5, color='r')
+                axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='r')
     
         if plotdiff:
             axis.axhline(0., ls='--', alpha=gdat.alphmrkr, color='black')
@@ -885,7 +867,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
             axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
             axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
         
-        axis.set_xlabel('$%s_{%s}$ [%s]' % (gdat.strgflux, gdat.strgcatl, gdat.strgfluxunit))
+        axis.set_xlabel('$%s_{%s}$%s' % (gdat.strgflux, gdat.strgcatl, gdat.strgfluxunitextn))
         if i == 0:
             axis.set_ylabel('$%s_{samp}$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         if i == gdat.numbener / 2:
@@ -1094,7 +1076,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                                                                                             tdpy.util.mexp(gdat.fluxfactplot * gdat.binsspecplot[gdat.indxenerfluxdist, indxuppr])
                 axis.set_title(titl)
         
-        plt.figtext(0.5, 0.97, '$%s$ [%s]' % (gdat.strgflux, gdat.strgfluxunit), ha='center', va='center')
+        plt.figtext(0.5, 0.97, '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn), ha='center', va='center')
         axiscomm = figr.add_axes([0.92, 0.06, 0.02, 0.8])
         cbar = figr.colorbar(imag, cax=axiscomm)
         plt.subplots_adjust(left=0.1, top=.92, hspace=0.05, wspace=0.03, bottom=0.08)
@@ -1361,18 +1343,20 @@ def plot_mosa(gdat):
                     figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize))
                     for a, axrw in enumerate(axgr):
                         for b, axis in enumerate(axrw):
+                            
                             gdatmodi.thissampvarb = gdat.listsampvarb[indxsampmosa[numbcols*a+b], :].flatten()
-                            gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, \
-                                                            gdatmodi.thisindxsampspep, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[l])
-                            gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
-                                                                                                            gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-                            # cross-correlate with the reference catalog
-                            if gdat.trueinfo:
-                                gdatmodi.trueindxpntsassc = []
-                                indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
-                                                                                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
-                                                                                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
-                                gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
+                            if gdat.numbtrap > 0:
+                                gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, \
+                                                                gdatmodi.thisindxsampspep, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[l])
+                                gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
+                                                                                                                gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+                                # cross-correlate with the reference catalog
+                                if gdat.trueinfo:
+                                    gdatmodi.trueindxpntsassc = []
+                                    indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
+                                                                                                                        gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
+                                                                                                                        gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
+                                    gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
          
                             if a == numbrows - 1:
                                 axis.set_xlabel(gdat.strgxaxitotl)
@@ -1567,13 +1551,13 @@ def make_anim(gdat):
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
                 if m == None:
-                    strg = 'A'
+                    strgevtt = 'A'
                 else:
-                    strg = '%d' % m
+                    strgevtt = '%d' % m
                 for k in range(len(listnamepoplenerevtt)):
-                    listname.append('%s_pop%d_%d%s' % (listnamepoplenerevtt[k], l, i, strg))
+                    listname.append('%s%d%s%d' % (listnamepoplenerevtt[k], i, strgevtt, l))
                 for k in range(len(listnameenerevtt)):
-                    listname.append('%s_%d%s' % (listnameenerevtt[k], i, strg))
+                    listname.append('%s_%d%s' % (listnameenerevtt[k], i, strgevtt))
 
     pathanim = gdat.pathplot + 'anim/'
 
@@ -1583,9 +1567,16 @@ def make_anim(gdat):
     for name in listname:
     
         strg = '%s_swep*.pdf' % name
-        listfile = fnmatch.filter(os.listdir(gdat.pathfram), strg)[int(gdat.numbburn / gdat.numbswepplot):]
+        listfile = fnmatch.filter(os.listdir(gdat.pathfram), strg)
         
         numbfile = len(listfile)
+        indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
+        if indxfilelowr < numbfile:
+            indxfileanim = arange(indxfilelowr, numbfile)
+        else:
+            indxfileanim = array([])
+        
+        numbfile = indxfileanim.size
         if numbfile == 0:
             if gdat.verbtype > 0:
                 print 'Skipping animation for %s...' % name
@@ -1669,25 +1660,32 @@ def plot_histcnts(gdat, l, gdatmodi=None):
     plt.close(figr)
     
 
-def plot_defl(gdat, defl):
+def plot_defl(gdat, gdatmodi=None):
 
-    figr, axis, path = init_figr(gdat, 'mockdefl', gdatmodi=None, indxpoplplot=0)
+    if gdatmodi == None:
+        defl = gdat.mockdefl
+        strg = 'mockdefl'
+        pathfold = gdat.pathinit
+    else:
+        defl = gdatmodi.thisdefl
+        strg = 'defl'
+        pathfold = gdat.pathfram
+
+    figr, axis, path = init_figr(gdat, strg, gdatmodi, indxpoplplot=0, pathfold=pathfold)
     make_catllabl(gdat, axis)
-   
-    shap = (gdat.numbsidecart, gdat.numbsidecart)
-    meshlgal = gdat.lgalgrid.reshape(shap)
-    meshbgal = gdat.bgalgrid.reshape(shap)
-    defllgal = defl[:, 0].reshape(shap)
-    deflbgal = defl[:, 1].reshape(shap)
+    draw_frambndr(gdat, axis)
+  
+    defllgal = defl[:, :, 0]
+    deflbgal = defl[:, :, 1]
     fact = 5
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
-    axis.quiver(gdat.anglfact * meshlgal[::fact, ::fact], gdat.anglfact * meshbgal[::fact, ::fact], defllgal[::fact, ::fact], \
-                                                                                                                      deflbgal[::fact, ::fact], deflmagn[::fact, ::fact])
+    ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], defllgal[::fact, ::fact], \
+                                                                            deflbgal[::fact, ::fact], gdat.fluxfactplot * deflmagn[::fact, ::fact], \
+                                                                            clim=[0., gdat.fluxfactplot * gdat.maxmbeinhost], cmap='magma')
     
-    axis.set_xlim([gdat.anglfact * gdat.minmlgal, gdat.anglfact * gdat.maxmlgal])
-    axis.set_ylim([gdat.anglfact * gdat.minmbgal, gdat.anglfact * gdat.maxmbgal])
+    plt.colorbar(ptch)
     supr_fram(gdat, None, axis, 0, 0, trueonly=True)
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75)
     plt.savefig(path)
     plt.close(figr)
     
