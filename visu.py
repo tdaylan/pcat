@@ -32,8 +32,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            bins = linspace(1., amax(gmrbstat), 40)
-            axis.hist(gmrbstat, bins=bins)
+            bins = linspace(1., amax(gdat.gmrbstat), 40)
+            axis.hist(gdat.gmrbstat, bins=bins)
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{pix}$')
             plt.tight_layout()
@@ -41,7 +41,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             plt.close(figr)
             path = gdat.pathplot + 'diag/gmrbheal.pdf'
             maps = zeros(gdat.numbpixl)
-            maps[indxpixlsave] = gmrbstat
+            maps[indxpixlsave] = gdat.gmrbstat
             tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                                     minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                     minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
