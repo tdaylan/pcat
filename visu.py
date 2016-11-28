@@ -1042,7 +1042,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                     else:
                         indxlowr = 2 * h
                         indxuppr = gdat.numbfluxplot
-                temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr], 2)
+                temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr].T, 2)
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 else:
