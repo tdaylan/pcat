@@ -26,6 +26,10 @@ def work(gdat, indxprocwork):
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
    
+    print 'gdat.truefixp'
+    print gdat.truefixp
+    print 
+
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
         if gdat.randinit or gdat.truefixp[k] == None:
@@ -473,11 +477,10 @@ def init( \
             gdat.mocknumbpopl = gdat.mocknumbpnts.size
         if gdat.mockstrgback == None:
             gdat.mockstrgback = gdat.strgback
-        
         gdat.mocknumbback = len(gdat.mockstrgback)
+        gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
     gdat.numbback = len(gdat.strgback)
     gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
-    gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
     
     if gdat.indxevttincl == None:
         if gdat.exprtype == 'ferm':
@@ -1038,10 +1041,10 @@ def init( \
       
         # temp
         if gdat.pntstype == 'lens':
-            gdat.mockfixp[gdat.mockindxfixplgalsour] = 0.
-            gdat.mockfixp[gdat.mockindxfixpbgalsour] = 0.
-            gdat.mockfixp[gdat.mockindxfixplgalhost] = 0.
-            gdat.mockfixp[gdat.mockindxfixpbgalhost] = 0.
+            gdat.mockfixp[gdat.mockindxfixplgalsour] = 0.2 * gdat.maxmgang * randn()
+            gdat.mockfixp[gdat.mockindxfixpbgalsour] = 0.2 * gdat.maxmgang * randn()
+            gdat.mockfixp[gdat.mockindxfixplgalhost] = 0.2 * gdat.maxmgang * randn()
+            gdat.mockfixp[gdat.mockindxfixpbgalhost] = 0.2 * gdat.maxmgang * randn()
         
         if not gdat.evalpsfnpnts:
             gdat.truepsfnkern = AiryDisk2DKernel(gdat.truepsfp[0] / gdat.sizepixl)
@@ -1111,8 +1114,11 @@ def init( \
         # mock mean count map
         if gdat.pixltype != 'unbd':
             if gdat.pntstype == 'lght':
-                mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
+                if gdat.mocknumbtrap > 0:
+                    mockpntsflux = retr_pntsflux(gdat, concatenate(gdat.mocklgal), concatenate(gdat.mockbgal), concatenate(gdat.mockspec, axis=1), \
                                                                                                             gdat.truepsfp, gdat.truepsfntype, gdat.mockvarioaxi, evalcirc=True)
+                else:
+                    mockpntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
                 if gdat.backemis:
                     gdat.mockmodlflux = retr_rofi_flux(gdat, gdat.mockfixp[gdat.mockindxfixpbacp], mockpntsflux, gdat.indxcube)
                 else:
@@ -1598,6 +1604,16 @@ def init( \
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
+    # compute credible intervals
+    gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
+    gdat.medifixp = gdat.postfixp[0, :]
+    if gdat.pntstype == 'lght':
+        gdat.medipsfn = retr_psfn(gdat, gdat.medifixp[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.psfntype)
+        gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
+        if gdat.correxpo and gdat.backemis:
+            gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medifixp[gdat.indxfixpbacp], gdat.medifwhm)
+            gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
+
     # temp
     if False:
         # write the PCAT output to disc
@@ -1693,7 +1709,7 @@ def plot_samp(gdat, gdatmodi):
     
     # plots
     ## brightest PS
-    if sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
+    if gdat.pntstype == 'lght' and sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
         plot_brgt(gdat, gdatmodi)
 
     ## PSF radial profile
@@ -1751,7 +1767,7 @@ def plot_samp(gdat, gdatmodi):
                     plot_histsind(gdat, l, gdatmodi=gdatmodi)
                     plot_fluxsind(gdat, l, gdatmodi=gdatmodi)
             # temp -- restrict compfrac and other plots to indxmodlpntscomp
-            if gdat.correxpo:
+            if gdat.correxpo and gdat.pntstype == 'lght':
                 plot_histcnts(gdat, l, gdatmodi=gdatmodi)
             if gdat.backemis:
                 plot_compfrac(gdat, gdatmodi=gdatmodi)
@@ -1891,6 +1907,150 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         timefinl = gdat.functime()
         listchrototl[gdatmodi.cntrswep, 1] = timefinl - timeinit
 
+        # diagnostics
+        if gdat.diagmode:
+            # sanity checks
+            indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
+            if indxsampbadd.size > 0:
+                print 'cntrswep'
+                print gdatmodi.cntrswep
+                print 'thisindxprop'
+                print gdat.strgprop[gdatmodi.thisindxprop]
+                print 'indxsampbadd'
+                print indxsampbadd
+                print 'drmcsamp'
+                print gdatmodi.drmcsamp[indxsampbadd, :]
+                raise Exception('Unit sample vector went outside [0,1].')
+            
+            if gdatmodi.propllik:
+                if not isfinite(gdatmodi.nextmodlflux).all():
+                    raise Exception('Proposed flux model is not finite.')
+
+            if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
+                show_samp(gdat, gdatmodi)
+                print 'gdatmodi.drmcsamp[gdat.indxsampunsd, 1]'
+                print gdatmodi.drmcsamp[gdat.indxsampunsd, 1]
+                raise Exception('Unused vector elements are nonzero.')
+
+            for l in gdat.indxpopl:
+                if gdatmodi.proppnts:
+                    if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]] != gdatmodi.thisindxsamplgal[l].size:
+                        raise Exception('Number of PS is inconsistent with the PS index list.')
+
+                if gdat.numbtrap > 0:
+                    if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]] != len(gdatmodi.thisindxpntsfull[l]):
+                        raise Exception('Number of PS is inconsistent across data structures.')
+                
+                # temp
+                continue
+
+                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
+                indxtemp = where((flux < gdat.minmflux) | (flux > gdat.maxmflux))[0]
+                if indxtemp.size > 0:
+                    print
+                    print 'Spectrum of a PS went outside the prior range.'
+                    print 'l'
+                    print l
+                    print 'minmflux'
+                    print gdat.minmflux
+                    print 'maxmflux'
+                    print gdat.maxmflux
+                    print 'indxtemp'
+                    print indxtemp
+                    print 'flux'
+                    print flux
+                    raise Exception('')
+
+                # temp
+                continue
+
+                sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[l]]
+                indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]
+                if indxtemp.size > 0:
+                    print 'indxtemp'
+                    print indxtemp
+                    print 'sind'
+                    print sind
+                    print 'minmsind'
+                    print gdat.minmsind
+                    print 'maxmsind'
+                    print gdat.maxmsind
+                    print 'sind[indxtemp]'
+                    print sind[indxtemp]
+                    raise Exception('Color of a PS went outside the prior range.') 
+
+
+        # save the sample
+        if gdat.boolsave[gdatmodi.cntrswep]:
+            timeinit = gdat.functime()
+            listsamp[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
+            listsampvarb[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
+            gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
+            if gdat.correxpo:
+
+                # get the model flux map
+                retr_thismodlflux(gdat, gdatmodi)
+                
+                gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
+                if gdat.enerbins:
+                    gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
+
+                listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
+                if gdat.pntstype == 'lght':
+                    listpntsfluxmean[gdat.indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
+                if gdat.calcerrr:
+                    temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb), evalcirc=False)
+                    
+                    if gdat.pntstype == 'lght':
+                        gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix
+                        if gdat.enerbins:
+                            gdatmodi.thispntscnts *= gdat.diffener[:, None, None]
+                        gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
+                        gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
+                        indxcubegood = where(temppntscnts > 1e-10)
+                        gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
+                        listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
+                        listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 
+            
+            listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
+            listlpri[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
+            lprinorm = 0.
+            for l in gdat.indxpopl:
+                # temp
+                ## brok terms are not complete
+                ## lpri calculation is turned off
+                break
+                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]]
+                meanpnts = gdatmodi.thissampvarb[gdat.indxfixpmeanpnts[l]]
+                lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfluxdistslop + gdat.priofactmeanpnts - log(meanpnts)
+                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
+                if gdat.fluxdisttype[l] == 'powr':
+                    fluxdistslop = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]]
+                    lpri -= log(1. + fluxdistslop**2)
+                    lpri += sum(log(pdfn_flux_powr(gdat, flux, fluxdistslop)))
+                if gdat.fluxdisttype[l] == 'brok':
+                    fluxdistbrek = gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[l]]
+                    fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[l]]
+                    fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[l]]
+                    lpri += sum(log(pdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)))
+            listlprinorm[gdat.indxsampsave[gdatmodi.cntrswep]] = lprinorm
+            
+            if gdat.tracsamp:
+                
+                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[0]]
+                diffllikdiffpara = empty(numbpnts)
+                for k in range(numbpnts):
+                    diffllikdiffpara[k]
+                listdiffllikdiffpara.append(diffllikdiffpara)
+
+                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
+                listtranmatr.append(tranmatr)
+
+            listmemoresi[gdat.indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()[0]
+            timefinl = gdat.functime()
+            listchrototl[gdatmodi.cntrswep, 4] = timefinl - timeinit
+
+
         # plot the current sample
         if thismakefram:
             if gdat.verbtype > 0:
@@ -1991,143 +2151,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         # temp
         #listindxfixpmodi[gdatmodi.cntrswep] = gdatmodi.indxsampmodi
 
-        if gdat.diagmode:
-            # sanity checks
-            indxsampbadd = where((gdatmodi.drmcsamp[gdat.numbpopl:, 0] > 1.) | (gdatmodi.drmcsamp[gdat.numbpopl:, 0] < 0.))[0] + 1
-            if indxsampbadd.size > 0:
-                print 'cntrswep'
-                print gdatmodi.cntrswep
-                print 'thisindxprop'
-                print gdat.strgprop[gdatmodi.thisindxprop]
-                print 'indxsampbadd'
-                print indxsampbadd
-                print 'drmcsamp'
-                print gdatmodi.drmcsamp[indxsampbadd, :]
-                raise Exception('Unit sample vector went outside [0,1].')
-            
-            if gdatmodi.propllik:
-                if not isfinite(gdatmodi.nextmodlflux).all():
-                    raise Exception('Proposed flux model is not finite.')
-
-            if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
-                show_samp(gdat, gdatmodi)
-                print 'gdatmodi.drmcsamp[gdat.indxsampunsd, 1]'
-                print gdatmodi.drmcsamp[gdat.indxsampunsd, 1]
-                raise Exception('Unused vector elements are nonzero.')
-
-            for l in gdat.indxpopl:
-                
-                if gdat.numbtrap > 0:
-                    if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]] != len(gdatmodi.thisindxpntsfull[l]):
-                        raise Exception('Number of PS is inconsistent across data structures.')
-                
-                # temp
-                continue
-
-                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
-                indxtemp = where((flux < gdat.minmflux) | (flux > gdat.maxmflux))[0]
-                if indxtemp.size > 0:
-                    print
-                    print 'Spectrum of a PS went outside the prior range.'
-                    print 'l'
-                    print l
-                    print 'minmflux'
-                    print gdat.minmflux
-                    print 'maxmflux'
-                    print gdat.maxmflux
-                    print 'indxtemp'
-                    print indxtemp
-                    print 'flux'
-                    print flux
-                    raise Exception('')
-
-                # temp
-                continue
-
-                sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[l]]
-                indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]
-                if indxtemp.size > 0:
-                    print 'indxtemp'
-                    print indxtemp
-                    print 'sind'
-                    print sind
-                    print 'minmsind'
-                    print gdat.minmsind
-                    print 'maxmsind'
-                    print gdat.maxmsind
-                    print 'sind[indxtemp]'
-                    print sind[indxtemp]
-                    raise Exception('Color of a PS went outside the prior range.') 
-
-        # save the sample
-        if gdat.boolsave[gdatmodi.cntrswep]:
-            timeinit = gdat.functime()
-            listsamp[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
-            listsampvarb[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
-            gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
-            if gdat.correxpo:
-
-                # get the model flux map
-                retr_thismodlflux(gdat, gdatmodi)
-                
-                gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
-                if gdat.enerbins:
-                    gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
-
-                listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[0, gdat.indxpixlsave, 0]
-                if gdat.pntstype == 'lght':
-                    listpntsfluxmean[gdat.indxsampsave[gdatmodi.cntrswep], :] = mean(sum(gdatmodi.thispntsflux * gdat.expo, 2) / sum(gdat.expo, 2), 1)
-                if gdat.calcerrr:
-                    temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb), evalcirc=False)
-                    
-                    if gdat.pntstype == 'lght':
-                        gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix
-                        if gdat.enerbins:
-                            gdatmodi.thispntscnts *= gdat.diffener[:, None, None]
-                        gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
-                        gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
-                        indxcubegood = where(temppntscnts > 1e-10)
-                        gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
-                        listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
-                        listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 
-            
-            listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
-            listlpri[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
-            lprinorm = 0.
-            for l in gdat.indxpopl:
-                # temp
-                ## brok terms are not complete
-                ## lpri calculation is turned off
-                break
-                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]]
-                meanpnts = gdatmodi.thissampvarb[gdat.indxfixpmeanpnts[l]]
-                lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfluxdistslop + gdat.priofactmeanpnts - log(meanpnts)
-                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
-                if gdat.fluxdisttype[l] == 'powr':
-                    fluxdistslop = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]]
-                    lpri -= log(1. + fluxdistslop**2)
-                    lpri += sum(log(pdfn_flux_powr(gdat, flux, fluxdistslop)))
-                if gdat.fluxdisttype[l] == 'brok':
-                    fluxdistbrek = gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[l]]
-                    fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[l]]
-                    fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[l]]
-                    lpri += sum(log(pdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)))
-            listlprinorm[gdat.indxsampsave[gdatmodi.cntrswep]] = lprinorm
-            
-            if gdat.tracsamp:
-                
-                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[0]]
-                diffllikdiffpara = empty(numbpnts)
-                for k in range(numbpnts):
-                    diffllikdiffpara[k]
-                listdiffllikdiffpara.append(diffllikdiffpara)
-
-                tranmatr = diffllikdiffpara[:, None] * listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
-                listtranmatr.append(tranmatr)
-
-            listmemoresi[gdat.indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()[0]
-            timefinl = gdat.functime()
-            listchrototl[gdatmodi.cntrswep, 4] = timefinl - timeinit
 
         ## proposal type
         listindxprop[gdatmodi.cntrswep] = gdatmodi.thisindxprop

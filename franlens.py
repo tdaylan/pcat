@@ -244,8 +244,7 @@ def retr_imaglens(gdat, gdatmodi=None, raww=False):
                                                   sampvarb[getattr(gdat, strg + 'indxfixpfluxsour')], \
                                                   sampvarb[getattr(gdat, strg + 'indxfixpsizesour')], \
                                                   sampvarb[getattr(gdat, strg + 'indxfixpratisour')], \
-                                                  sampvarb[getattr(gdat, strg + 'indxfixpanglsour')], \
-                                                  sampvarb[getattr(gdat, strg + 'indxfixplgalsour')])
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpanglsour')])
 
     defl = zeros((gdat.numbsidecart, gdat.numbsidecart, 2))
 

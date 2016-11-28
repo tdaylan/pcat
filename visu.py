@@ -248,16 +248,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         plot_pntsprob(gdat, ptag='full', full=True)
         plot_pntsprob(gdat, ptag='cumu', cumu=True)
 
-    # compute credible intervals
-    gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
-    gdat.medifixp = gdat.postfixp[0, :]
-    if gdat.pntstype == 'lght':
-        gdat.medipsfn = retr_psfn(gdat, gdat.medifixp[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.psfntype)
-        gdat.medifwhm = 2. * retr_psfnwdth(gdat, gdat.medipsfn, 0.5)
-        if gdat.correxpo and gdat.backemis:
-            gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.medifixp[gdat.indxfixpbacp], gdat.medifwhm)
-            gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
-
     if gdat.numbtrap > 0:
         ## flux distribution
         for l in gdat.indxpopl:
@@ -284,11 +274,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k])
     ### full covariance plot
     path = gdat.pathpost + 'fixp'
-    print 'gdat.listfixp[:, gdat.indxfixpactv]'
-    print gdat.listfixp[:, gdat.indxfixpactv]
-    print 'gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv]'
-    print gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv]
-    print
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpactv] * gdat.factfixpplot[None, gdat.indxfixpactv], gdat.strgfixp[gdat.indxfixpactv], \
                                                                                       truepara=gdat.truefixp[gdat.indxfixpactv] * gdat.factfixpplot[gdat.indxfixpactv])
     ### grouped covariance plots
@@ -314,7 +299,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbtrap > 0:
         numbtrapplot = min(10, gdat.numbtrap)
         indxtrapplot = choice(gdat.indxsampcomp, size=numbtrapplot, replace=False)
-        path = gdat.pathplot + 'listsamp_'
+        path = gdat.pathpost + 'listsamp'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     strgllik = r'$\ln P(D|x)$'
@@ -449,8 +434,8 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         listydat[1, :] = postpntsfluxmean[0, :]
         listyerr[:, 1, :] = tdpy.util.retr_errrvarb(postpntsfluxmean)
         for c in gdat.indxback:
-            listydat[c+2, :] = gdat.postbacp[0, c, :] * gdat.backfluxmean[c, :]
-            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(gdat.postbacp[:, c, :]) * gdat.backfluxmean[c, :]
+            listydat[c+2, :] = gdat.medifixp[gdat.indxfixpbacp[c]] * gdat.backfluxmean[c, :]
+            listyerr[:, c+2, :] = tdpy.util.retr_errrvarb(gdat.postfixp[:, gdat.indxfixpbacp[c]]) * gdat.backfluxmean[c, :]
     else:
         if gdat.correxpo:
             listydat[1, :] = sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
@@ -773,7 +758,19 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
                 axissigm.set_xlim([binssigm[i, 0], binssigm[i, -1]])
                 axissigm.axvline(1., ls='--', alpha=0.1)
                 axissigm.axvline(5., ls='--', alpha=0.1)
-    
+        
+        if gdat.pntstype == 'lens':
+            
+            if post:
+                axis.axvline(gdat.medifixp[gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
+            else:
+                axis.axvline(gdatmodi.thissampvarb[gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
+            axis.axvline(gdat.truefixp[gdat.trueindxfixpbeinhost] * gdat.fluxfactplot, color='g', ls='--', alpha=0.3)
+            
+            axis.set_xlim([gdat.fluxfactplot * gdat.minmspecplot[i], 2. * gdat.fluxfactplot * gdat.maxmfixp[gdat.indxfixpbeinhost]])
+        else:
+            axis.set_xlim([gdat.fluxfactplot * gdat.minmspecplot[i], gdat.fluxfactplot * gdat.maxmspecplot[i]])
+
         # superimpose the true catalog
         if gdat.trueinfo and gdat.trueindxpntscomp[l].size > 0:
             truehist = axis.hist(gdat.fluxfactplot * gdat.truespec[l][0, i, gdat.trueindxpntscomp[l]], gdat.fluxfactplot * gdat.binsspecplot[i, :], alpha=gdat.alphmrkr, \
@@ -787,7 +784,6 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         if gdat.enerbins:
             axis.text(0.75, 0.65, gdat.strgbinsener[i], ha='center', va='center', transform=axis.transAxes)
         axis.set_ylim(gdat.limshist)
-        axis.set_xlim([gdat.fluxfactplot * gdat.minmspecplot[i], gdat.fluxfactplot * gdat.maxmspecplot[i]])
         if plotspec:
             if i == 0:
                 axis.set_ylabel('$N$')
