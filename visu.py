@@ -30,7 +30,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     
     # Gelman-Rubin test
     if gdat.numbproc > 1:
-        if isfinite(gmrbstat).all():
+        if isfinite(gdat.gmrbstat).all():
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             bins = linspace(1., amax(gmrbstat), 40)
             axis.hist(gmrbstat, bins=bins)
