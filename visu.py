@@ -41,7 +41,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             plt.close(figr)
             path = gdat.pathplot + 'diag/gmrbheal.pdf'
             maps = zeros(gdat.numbpixl)
-            maps[indxpixlsave] = gdat.gmrbstat
+            maps[gdat.indxpixlsave] = gdat.gmrbstat
             tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                                     minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                     minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
