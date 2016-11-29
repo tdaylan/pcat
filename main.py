@@ -1679,11 +1679,12 @@ def plot_samp(gdat, gdatmodi):
         # PSF FWHM
         gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
         
-        if gdat.varioaxi:
-            indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-            fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
-        else:
-            fwhmtemp = gdatmodi.thisfwhm
+        # temp
+        #if gdat.varioaxi:
+        #    indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+        #    fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
+        #else:
+        #    fwhmtemp = gdatmodi.thisfwhm
    
     if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
         # number of background counts per PSF
