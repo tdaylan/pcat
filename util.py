@@ -428,7 +428,8 @@ def retr_thisindxprop(gdat, gdatmodi):
             indxsampfull = concatenate((gdat.indxfixpactvprop, concatenate(gdatmodi.thisindxsampcompcolr)))
         else:
             indxsampfull = gdat.indxfixpactvprop
-        gdatmodi.indxsampmodi = choice(indxsampfull)
+        # temp
+        gdatmodi.indxsampmodi = array([choice(indxsampfull)])
         
         if gdat.numbtrap > 0:
             if gdatmodi.indxsampmodi < gdat.indxsampcomp[0]:
@@ -474,7 +475,7 @@ def retr_thisindxprop(gdat, gdatmodi):
                 if gdatmodi.indxcompmodi == 0:
                     gdatmodi.thisindxprop = gdat.indxproplgal
                     gdatmodi.proplgal = True
-                if gdatmodi.indxcompmodi == 1:
+                elif gdatmodi.indxcompmodi == 1:
                     gdatmodi.thisindxprop = gdat.indxpropbgal
                     gdatmodi.propbgal = True
                 elif gdatmodi.indxcompmodi < 2 + gdat.numbener:
@@ -484,6 +485,13 @@ def retr_thisindxprop(gdat, gdatmodi):
                     gdatmodi.thisindxprop = gdat.indxpropspep
                     gdatmodi.propspep = True
                     gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
+                
+                if gdatmodi.proplgal:
+                    print 'gdatmodi.proplgal'
+                    print gdatmodi.proplgal
+                    print 'gdatmodi.thisindxprop'
+                    print gdatmodi.thisindxprop
+                    print
 
         if gdat.verbtype > 1:
             print 'indxsampmodi'
@@ -1357,10 +1365,6 @@ def retr_fermpsfn(gdat):
 
 def updt_samp(gdat, gdatmodi):
     
-    # temp
-    #print 'hey'
-    #gdatmodioldd = deepcopy(gdatmodi)
-    
     # update the sample vector
     if not gdatmodi.propdeth:
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
@@ -1493,27 +1497,93 @@ def updt_samp(gdat, gdatmodi):
                     gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 1]
 
 
-    # temp
-    #print 'hey'
-    #diag_gdatmodi(gdatmodi, gdatmodioldd)
-    
-
-def diag_gdatmodi(gdatmodi, gdatmodioldd):
+def diag_gdatmodi(gdatmodi, gdatmodiprev):
 
     listvalu = []
     listattr = []
     print 'diag_gdatmodi'
     for attr, valu in gdatmodi.__dict__.iteritems():
-        valuoldd = getattr(gdatmodioldd, attr)
-        if valu != valuoldd:
-            print 'attr'
-            print attr
-            print 'valuoldd'
-            print valuoldd
-            print 'valu'
-            print valu
+       
+        if attr == 'thissampvarb' or 'drmcsamp':
+            
+            indx = where(valu - valuprev != 0.)
+            if indx[0].size > 0:
+                print valu[indx]
+            
+        boolmodi = False
+        try:    
+            valuprev = getattr(gdatmodiprev, attr)
+        except:
+            pass
+            continue
+
+        print 'attr'
+        print attr
+
+        if isinstance(valuprev, ndarray):
+            try:
+                indx = where(valu - valuprev != 0.)
+                if indx[0].size > 0:
+                    boolmodi = True
+            except:
+                print 'ndarry failed'
+                print 'attr'
+                print attr
+                print
+                #boolmodi = True
+                
+        elif isinstance(valuprev, list):
+            continue
+            for k, item in enumerate(valu):
+                if isinstance(item, list):
+                    for l, itemitem in enumerate(item):
+                        if valuprev[k] != item:
+                            boolmodi = True
+                    print item
+                if valuprev[k] != item:
+                    boolmodi = True
+        elif isinstance(valuprev, (int, bool, float)):
+            
+            try:
+                if valu != valuprev:
+                    boolmodi = True
+            except:
+                boolmodi = True
+        else:
+            print 'other than numpy'
+            print type(valuprev)
             print
 
+        if boolmodi:
+            print 'attr'
+            print attr
+            if isinstance(valuprev, ndarray):
+                if len(indx) > 1:
+                    print 'valuprev'
+                    print valuprev[indx[0]]
+                    print 'valu'
+                    print valu[indx[0]]
+                else:
+                    print 'valuprev'
+                    print valuprev
+                    print 'valu'
+                    print valu
+            else:
+                print 'valuprev'
+                print valuprev
+                print 'valu'
+                print valu
+            print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
 
 
 def retr_listpair(gdat, lgal, bgal):
@@ -3510,7 +3580,7 @@ def setpfinl(gdat, boolinitsetp=False):
         # lgal
         gdat.strgprop.append('lgal')
         gdat.indxproplgal = cntr.incr()
-        
+       
         # bgal
         gdat.strgprop.append('bgal')
         gdat.indxpropbgal = cntr.incr()
@@ -3527,6 +3597,12 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.strgprop.append('spep')
             gdat.indxpropspep = cntr.incr()
             gdat.indxproppnts.append(gdat.indxpropspep)
+
+        print 'gdat.indxproplgal'
+        print gdat.indxproplgal
+        print 'gdat.indxproppnts'
+        print gdat.indxproppnts
+        print
 
     else:
         gdat.indxproppnts = []

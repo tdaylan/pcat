@@ -1921,7 +1921,18 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print 'drmcsamp'
                 print gdatmodi.drmcsamp[indxsampbadd, :]
                 raise Exception('Unit sample vector went outside [0,1].')
-            
+           
+            # check what has been changed
+            if gdatmodi.cntrswep != 0:
+                diag_gdatmodi(gdatmodi, gdatmodiprev)
+            try:
+                if gdatmodi.indxpoplmodi < 0:
+                    raise
+
+            except:
+                pass
+            gdatmodiprev = deepcopy(gdatmodi)
+             
             if gdatmodi.propllik:
                 if not isfinite(gdatmodi.nextmodlflux).all():
                     raise Exception('Proposed flux model is not finite.')
