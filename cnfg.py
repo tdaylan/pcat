@@ -21,8 +21,7 @@ def test_info():
                                   numbburn=numbburn[k], \
                                   indxenerincl=arange(2, 3), \
                                   randinit=False, \
-                                  boolproppsfn=False, \
-                                  boolpropsind=False, \
+                                  proppsfp=False, \
                                   lgalcntr=deg2rad(0.), \
                                   bgalcntr=deg2rad(90.), \
                                   indxevttincl=arange(3, 4), \
@@ -108,10 +107,8 @@ def test_time():
 
         if numbener == 1:
             indxenerincl = arange(2, 3)
-            boolpropsind = False
         if numbener == 3:
             indxenerincl = arange(1, 4)
-            boolpropsind = False
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         
         print 'k'
@@ -122,7 +119,6 @@ def test_time():
                                   numbproc=numbproc, \
                                   strgback=[1.], \
                                   strgexpo=1., \
-                                  boolpropsind=False, \
                                   exprinfo=False, \
                                   indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
@@ -232,8 +228,7 @@ def test_nomi():
       
     init( \
          exprinfo=False, \
-         boolproppsfn=False, \
-         boolpropsind=False, \
+         proppsfp=False, \
          indxenerincl=arange(1, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -271,8 +266,7 @@ def test_errr():
                                   diagmode=True, \
                                   exprinfo=False, \
                                   makeanim=True, \
-                                  boolproppsfn=False, \
-                                  boolpropsind=False, \
+                                  proppsfp=False, \
                                   numbangl=numbangl, \
                                   binsangltype=binsangltype, \
                                   indxenerincl=arange(2, 3), \
@@ -320,8 +314,7 @@ def test_uppr():
     init( \
          #factthin=100, \
          exprinfo=False, \
-         boolproppsfn=False, \
-         boolpropsind=False, \
+         proppsfp=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -348,8 +341,7 @@ def test_prio():
     for k in range(numbiter):
         gridchan, dictpcat = init( \
                                   exprinfo=False, \
-                                  boolproppsfn=False, \
-                                  boolpropsind=False, \
+                                  proppsfp=False, \
                                   indxenerincl=arange(2, 3), \
                                   indxevttincl=arange(3, 4), \
                                   priofactdoff=priofactdoff[k], \
@@ -389,8 +381,7 @@ def test_lowr():
     init( \
          numbswep=100000, \
          exprinfo=False, \
-         boolproppsfn=False, \
-         boolpropsind=False, \
+         proppsfp=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -463,7 +454,6 @@ def test_atcr():
                                   numbpntsmodi=listnumbpntsmodi[k], \
                                   exprinfo=False, \
                                   indxenerincl=arange(2, 3), \
-                                  boolpropsind=False, \
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \

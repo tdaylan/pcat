@@ -415,6 +415,7 @@ def init( \
          boolpropfluxdistbrek=True, \
          proppsfp=True, \
          propbacp=True, \
+         proplenp=True, \
          proplens=True, \
          radispmr=None, \
 
@@ -944,11 +945,14 @@ def init( \
     # check the call stack for the name of the configuration function
     gdat.strgcnfg = inspect.stack()[1][3]
    
-    if gdat.pntstype == 'lens' or gdat.numbback == 0:
+    if gdat.pntstype == 'lens':
         gdat.evalpsfnpnts = False
-        gdat.backemis = False
     else:
         gdat.evalpsfnpnts = True
+
+    if gdat.numbback == 0:
+        gdat.backemis = False
+    else:
         gdat.backemis = True
 
     # temp
@@ -966,9 +970,12 @@ def init( \
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
 
-    if not gdat.propbacp and gdat.backemis:
+    if gdat.propbacp and not gdat.backemis:
         raise Exception('Background changes cannot be proposed if no background emission is in the model.')
 
+    if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.strgback[0], float)):
+        raise Exception('In a lensing problem, the background can only be uniform.')
+        
     if gdat.verbtype > 0:
         print 'PCAT v0.1 started at %s' % gdat.strgtimestmp
         print 'Configuration %s' % gdat.strgcnfg
@@ -1770,7 +1777,7 @@ def plot_samp(gdat, gdatmodi):
             # temp -- restrict compfrac and other plots to indxmodlpntscomp
             if gdat.correxpo and gdat.pntstype == 'lght':
                 plot_histcnts(gdat, l, gdatmodi=gdatmodi)
-            if gdat.backemis:
+            if gdat.backemis and gdat.pntstype == 'lght':
                 plot_compfrac(gdat, gdatmodi=gdatmodi)
     
     for l in gdat.indxpopl:
@@ -1922,10 +1929,15 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print 'drmcsamp'
                 print gdatmodi.drmcsamp[indxsampbadd, :]
                 raise Exception('Unit sample vector went outside [0,1].')
-           
+            
+            if gdatmodi.indxenermodi.ndim != 1:
+                raise 'indxenermodi is wrong.'
+
             # check what has been changed
             if gdatmodi.cntrswep != 0:
-                diag_gdatmodi(gdatmodi, gdatmodiprev)
+                # temp
+                pass
+                #diag_gdatmodi(gdatmodi, gdatmodiprev)
             try:
                 if gdatmodi.indxpoplmodi < 0:
                     raise
@@ -1937,6 +1949,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdatmodi.propllik:
                 if not isfinite(gdatmodi.nextmodlflux).all():
                     raise Exception('Proposed flux model is not finite.')
+                if not isfinite(gdatmodi.detllik):
+                    raise Exception('Delta loglikelihood is not finite.')
+
+            if gdatmodi.proplpri:
+                if not isfinite(gdatmodi.detlpri):
+                    raise Exception('Delta logprior is not finite.')
 
             if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
                 show_samp(gdat, gdatmodi)

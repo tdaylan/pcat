@@ -486,13 +486,6 @@ def retr_thisindxprop(gdat, gdatmodi):
                     gdatmodi.propspep = True
                     gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
                 
-                if gdatmodi.proplgal:
-                    print 'gdatmodi.proplgal'
-                    print gdatmodi.proplgal
-                    print 'gdatmodi.thisindxprop'
-                    print gdatmodi.thisindxprop
-                    print
-
         if gdat.verbtype > 1:
             print 'indxsampmodi'
             print gdatmodi.indxsampmodi
@@ -760,6 +753,20 @@ def retr_llik(gdat, gdatmodi, init=False):
                                 gdatmodi.nextlensobjt = franlens.LensModel(gdat.truelenstype, lgal[k], bgal[k], 0., 0., 0., 0., spec[i, k])
                             if gdat.pntstype == 'lght':
                                 if gdat.evalcirc:
+                                    print 'hey'
+                                    print 'spectemp'
+                                    print spectemp
+                                    print spectemp.shape
+                                    print 'psfn'
+                                    print psfn.shape
+                                    print 'i'
+                                    print i
+                                    print 'gdatmodi.indxenermodi'
+                                    print gdatmodi.indxenermodi
+                                    print 'thisindxpixlprox[k]'
+                                    print thisindxpixlprox[k].size
+                                    print
+
                                     gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
                                 else:
                                     gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], :, :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
@@ -1369,6 +1376,9 @@ def updt_samp(gdat, gdatmodi):
     if not gdatmodi.propdeth:
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
     
+    # update the unit sample vector
+    gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -2] = gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1]
+    
     # update the log-prior
     if gdatmodi.proplpri:
         gdatmodi.thislpri[gdatmodi.indxpoplmodi, :] = gdatmodi.nextlpri[gdatmodi.indxpoplmodi, :]
@@ -1401,7 +1411,7 @@ def updt_samp(gdat, gdatmodi):
                     fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdist[gdatmodi.indxpoplmodi][gdatmodi.indxfluxdistsloplowr]]
                     fluxdistslopuppr = gdatmodi.nextsampvarb[gdat.indxfixpfluxdist[gdatmodi.indxpoplmodi][gdatmodi.indxfluxdistslopuppr]]
                 fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-            gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, :], -1] = fluxunit
+            gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, :], -2] = fluxunit
         
     # PSF
     if gdatmodi.proppsfp:
@@ -1896,6 +1906,7 @@ def retr_prop(gdat, gdatmodi):
 
         ## hyperparameter changes
         if gdatmodi.prophypr:
+            
             gdatmodi.indxpoplmodi = (gdatmodi.indxsampmodi - gdat.indxfixpfluxdist[0]) // gdat.numbfluxdistpara
             
         # PSF parameter changes 
@@ -1920,20 +1931,28 @@ def retr_prop(gdat, gdatmodi):
             ## save the current background parameters
             gdatmodi.nextsampvarb[gdat.indxfixpbacp] = copy(gdatmodi.thissampvarb[gdat.indxfixpbacp])
             
-            if gdat.verbtype > 1:
-                print 'indxbackmodi'
-                print gdatmodi.indxbackmodi
-                print 'indxenermodi'
-                print gdatmodi.indxenermodi
-
         # lens parameter changes
         if gdatmodi.proplenp:
             # temp
-            gdatmodi.indxenermodi = 0
+            gdatmodi.indxenermodi = array([0])
 
         # inverse CDF transform the proposed variable 
         gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_fixp(gdat, gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdatmodi.indxsampmodi)
     
+        if gdat.verbtype > 1:
+            print 'gdatmodi.thissampvarb[gdatmodi.indxsampmodi]'
+            print gdatmodi.thissampvarb[gdatmodi.indxsampmodi]
+            print 'gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]'
+            print gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
+            print 'gdatmodi.drmcsamp[gdatmodi.indxsampmodi, :]'
+            print gdatmodi.drmcsamp[gdatmodi.indxsampmodi, :]
+            if gdatmodi.propllik:
+                print 'indxenermodi'
+                print gdatmodi.indxenermodi
+            if gdatmodi.propbacp:
+                print 'indxbackmodi'
+                print gdatmodi.indxbackmodi
+
     # birth
     if gdatmodi.propbrth:
 
@@ -2735,7 +2754,7 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.strgfluxunitextn = ' [%s]' % gdat.strgfluxunit
 
-    if gdat.enerbins:
+    if gdat.numbener > 1:
         gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
         if gdat.enerfluxdist == 0.:
             raise Exception('Pivot energy cannot be zero.')
@@ -3550,7 +3569,7 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxfixpactv.append(gdat.indxfixpbacp.flatten())
     
     # lensing parameters
-    if gdat.pntstype == 'lens':
+    if gdat.proplenp and gdat.pntstype == 'lens':
         gdat.indxfixpactv.append(gdat.indxfixplenp)
     
     gdat.indxfixpactv = concatenate(gdat.indxfixpactv).astype(int)
@@ -3597,12 +3616,6 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.strgprop.append('spep')
             gdat.indxpropspep = cntr.incr()
             gdat.indxproppnts.append(gdat.indxpropspep)
-
-        print 'gdat.indxproplgal'
-        print gdat.indxproplgal
-        print 'gdat.indxproppnts'
-        print gdat.indxproppnts
-        print
 
     else:
         gdat.indxproppnts = []
@@ -3862,7 +3875,7 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
         indxfixppsfpoaxi = sort(concatenate((indxfixppsfpoaxinorm, indxfixppsfpoaxiindx)))
 
     indxfixpbacp = []
-    if gdat.pntstype == 'lght':
+    if gdat.backemis:
         indxfixpbacp = arange(numbbacp).reshape((numbback, gdat.numbener)) + cntr.incr(numbbacp)
 
     indxfixplenp = []
@@ -3919,7 +3932,7 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
     for k in indxfixp:
         if k in indxfixpnumbpnts or k in indxfixphypr:
             
-            l = indxfixpnumbpnts % k
+            l = indxfixpnumbpnts[0] % k
             
             if k in indxfixpnumbpnts:
                 namefixp[k] = 'numbpntspop%d' % l
@@ -3931,32 +3944,32 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
                 strgfixp[k] = r'$\mu$'
                 scalfixp[k] = 'logt'
     
-            if k == indxfixpfluxdistslop:
+            if k in indxfixpfluxdistslop:
                 namefixp[k] = 'fluxdistsloppop%d' % l
                 strgfixp[k] = r'$\alpha$'
                 scalfixp[k] = 'atan'
        
-            if k == indxfixpfluxdistbrek:
+            if k in indxfixpfluxdistbrek:
                 namefixp[k] = 'fluxdistbrekpop%d' % l
                 strgfixp[k] = '$f_b$'
                 scalfixp[k] = 'logt'
     
-            if k == indxfixpfluxdistsloplowr:
+            if k in indxfixpfluxdistsloplowr:
                 namefixp[k] = 'fluxdistsloplowrpop%d' % l
                 strgfixp[k] = r'$\alpha_l$'
                 scalfixp[k] = 'atan'
     
-            if k == indxfixpfluxdistslopuppr:
+            if k in indxfixpfluxdistslopuppr:
                 namefixp[k] = 'fluxdistslopupprpop%d' % l
                 strgfixp[k] = r'$\alpha_u$'
                 scalfixp[k] = 'atan'
 
-            if k == indxfixpsinddistmean:
+            if k in indxfixpsinddistmean:
                 namefixp[k] = 'sinddistmeanpop%d' % l
                 strgfixp[k] = r'$\lambda_{\beta}$'
                 scalfixp[k] = 'atan'
 
-            if k == indxfixpsinddiststdv:
+            if k in indxfixpsinddiststdv:
                 namefixp[k] = 'sinddiststdvpop%d' % l
                 strgfixp[k] = r'$\sigma_{\beta}$'
                 scalfixp[k] = 'logt'
