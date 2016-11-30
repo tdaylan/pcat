@@ -2,7 +2,7 @@
 from __init__ import *
 
 def retr_psfnwdth(gdat, psfn, frac):
-    
+
     if len(psfn.shape) == 4:
         varioaxi = True
         numboaxi = psfn.shape[3]
