@@ -72,7 +72,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         maxm = amax(histtotl)
         axis.set_ylim([0., maxm])
         try:
-            axis.set_title('%d%%' % int(sum(histaccp) / sum(histtotl) * 100.))
+            axis.set_title('%.3g%%' % int(sum(histaccp) / sum(histtotl) * 100.))
         except:
             pass
         listtick = linspace(maxm / 2., maxm, numbtick)
@@ -1042,7 +1042,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                     else:
                         indxlowr = 2 * h
                         indxuppr = gdat.numbfluxplot
-                temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr].T, 2)
+                temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr], 2).T
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
                 else:
@@ -1062,7 +1062,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 else:
                     axis.set_xticklabels([])
                 if b == 0:
-                    axis.set_ylabel(gdat.strgyaxi)
+                    axis.set_ylabel(gdat.strgyaxitotl)
                 else:
                     axis.set_yticklabels([])
 
@@ -1072,10 +1072,10 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                                                                                             tdpy.util.mexp(gdat.fluxfactplot * gdat.binsspecplot[gdat.indxenerfluxdist, indxuppr])
                 axis.set_title(titl)
         
-        plt.figtext(0.5, 0.97, '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn), ha='center', va='center')
-        axiscomm = figr.add_axes([0.92, 0.06, 0.02, 0.8])
+        plt.figtext(0.5, 0.95, '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn), ha='center', va='center')
+        axiscomm = figr.add_axes([0.9, 0.1, 0.02, 0.8])
         cbar = figr.colorbar(imag, cax=axiscomm)
-        plt.subplots_adjust(left=0.1, top=.92, hspace=0.05, wspace=0.03, bottom=0.08)
+        plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)
         figr.savefig(gdat.pathpost + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
         plt.close(figr)
        
@@ -1368,11 +1368,11 @@ def plot_mosa(gdat):
                     
                     if gdat.enerbins:
                         plt.figtext(0.5, 0.93, gdat.strgbinsener[i], ha='center', va='center')
-                    axiscomm = figr.add_axes([0.92, 0.06, 0.02, 0.8])
+                    axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
                     cbar = figr.colorbar(imag, cax=axiscomm)
                     cbar.set_ticks(gdat.tickdatacnts[i, :])
                     cbar.set_ticklabels(gdat.labldatacnts[i, :])
-                    plt.subplots_adjust(left=0.1, top=.91, hspace=0.01, wspace=0.03, bottom=0.09)
+                    plt.subplots_adjust(left=0.1, top=.91, hspace=0.01, wspace=0.05, bottom=0.09)
                     if l == 1:
                         strg = ''
                     else:
@@ -1676,11 +1676,9 @@ def plot_defl(gdat, gdatmodi=None):
     fact = 5
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], defllgal[::fact, ::fact], \
-                                                                            deflbgal[::fact, ::fact], gdat.fluxfactplot * deflmagn[::fact, ::fact], \
-                                                                            clim=[0., gdat.fluxfactplot * gdat.maxmbeinhost], cmap='magma')
-    
-    plt.colorbar(ptch)
-    supr_fram(gdat, None, axis, 0, 0, trueonly=True)
+                                                                                                  deflbgal[::fact, ::fact], gdat.fluxfactplot * deflmagn[::fact, ::fact])
+   
+    supr_fram(gdat, gdatmodi, axis, 0, 0)
     plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75)
     plt.savefig(path)
     plt.close(figr)

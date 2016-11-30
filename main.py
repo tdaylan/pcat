@@ -26,10 +26,6 @@ def work(gdat, indxprocwork):
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
    
-    print 'gdat.truefixp'
-    print gdat.truefixp
-    print 
-
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
         if gdat.randinit or gdat.truefixp[k] == None:
@@ -179,7 +175,7 @@ def work(gdat, indxprocwork):
     
     ## flux and count maps
     gdatmodi.nextpntsflux = zeros_like(gdat.datacnts)
-    gdatmodi.nextmodlflux = zeros_like(gdat.datacnts)
+    gdatmodi.nextmodlflux = ones_like(gdat.datacnts)
     gdatmodi.nextmodlcnts = zeros_like(gdat.datacnts)
         
     # plotting variables
@@ -413,10 +409,13 @@ def init( \
          fracrand=0.05, \
          boolpropfluxdist=True, \
          boolpropfluxdistbrek=True, \
+         prophypr=True, \
          proppsfp=True, \
          propbacp=True, \
          proplenp=True, \
-         proplens=True, \
+         propcomp=True, \
+         probtran=None, \
+         probbrde=1., \
          radispmr=None, \
 
          truevarioaxi=None, \
@@ -460,6 +459,17 @@ def init( \
          numbdatasamp=100, \
         ):
 
+    """This function does something.
+
+    :param name: The name to use. 
+    :type name: str. 
+    :param state: Current state to be in. 
+    :type state: bool. 
+    :returns: int -- the return code. 
+    :raises: AttributeError, KeyError
+
+    """
+    
     # construct the global object 
     gdat = tdpy.util.gdatstrt()
     for attr, valu in locals().iteritems():
@@ -937,7 +947,6 @@ def init( \
     ## import the lensing solver by Francis-Yan if the PSs are lenses
     if gdat.pntstype == 'lens':
         gdat.pixltype = 'cart'
-        gdat.propbacp = False
 
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -1249,8 +1258,6 @@ def init( \
                     plt.tight_layout()
                     plt.savefig(path)
                     plt.close(figr)
-    
-                    plot_defl(gdat)
     
     # write the list of arguments to file
     fram = inspect.currentframe()
@@ -1931,7 +1938,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 raise Exception('Unit sample vector went outside [0,1].')
             
             if gdatmodi.indxenermodi.ndim != 1:
-                raise 'indxenermodi is wrong.'
+                raise Exception('indxenermodi is inappropriate.')
+            if not isinstance(gdatmodi.indxsampmodi, ndarray):
+                raise Exception('indxsampmodi is inappropriate.')
+            
+            if gdatmodi.cntrswep > 0:
+                if sum(gdatmodi.thisllik) - gdatmodi.thislliktotlprev < 10.:
+                    raise Exception('loglikelihood drop is very unlikely!')
+            gdatmodi.thislliktotlprev = sum(copy(gdatmodi.thisllik))
 
             # check what has been changed
             if gdatmodi.cntrswep != 0:
@@ -1945,15 +1959,19 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             except:
                 pass
             gdatmodiprev = deepcopy(gdatmodi)
-             
+            
             if gdatmodi.propllik:
-                if not isfinite(gdatmodi.nextmodlflux).all():
+                if not (isfinite(gdatmodi.nextmodlflux)).all():
                     raise Exception('Proposed flux model is not finite.')
-                if not isfinite(gdatmodi.detllik):
+                if (gdatmodi.nextmodlflux <= 0.).any():
+                    raise Exception('Proposed flux model is not positive')
+                summ(gdatmodi, 'nextmodlflux')
+                if not isfinite(gdatmodi.deltllik):
                     raise Exception('Delta loglikelihood is not finite.')
+            
 
             if gdatmodi.proplpri:
-                if not isfinite(gdatmodi.detlpri):
+                if not isfinite(gdatmodi.deltlpri):
                     raise Exception('Delta logprior is not finite.')
 
             if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():

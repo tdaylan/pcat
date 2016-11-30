@@ -10,13 +10,13 @@ def test_info():
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 100000
+    numbswep = zeros(numbiter, dtype=int) + 10000
     numbburn = 4 * numbswep / 5
     listlevi = zeros(numbiter)
     listinfo = zeros(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  modlpsfntype='doubking', \
+                                  psfntype='doubking', \
                                   numbswep=numbswep[k], \
                                   numbburn=numbburn[k], \
                                   indxenerincl=arange(2, 3), \
@@ -59,7 +59,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 100000
+    numbswepcomm = 10000
 
     tupl = [ \
             # reference
@@ -123,7 +123,7 @@ def test_time():
                                   indxenerincl=indxenerincl, \
                                   pixltype=pixltype, \
                                   indxevttincl=arange(3, 4), \
-                                  modlpsfntype='doubking', \
+                                  psfntype='doubking', \
                                   maxmnumbpnts=array([maxmnumbpnts]), \
                                   maxmgang=maxmgang, \
                                   minmflux=minmflux, \
@@ -180,8 +180,8 @@ def test_psfn():
         
         datatype = tupl[k][0]
         strgexpr = tupl[k][1]
-        modlpsfntype = tupl[k][2]
-        modlvarioaxi = tupl[k][3]
+        psfntype = tupl[k][2]
+        varioaxi = tupl[k][3]
         exprtype = tupl[k][4]
     
         if exprtype == 'ferm':
@@ -211,9 +211,12 @@ def test_psfn():
              exprtype=exprtype, \
              strgback=strgback, \
              strgexpo=strgexpo, \
-             probprop=array([0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]), \
-             modlpsfntype=modlpsfntype, \
-             modlvarioaxi=modlvarioaxi, \
+             propbacp=False, \
+             propcomp=False, \
+             probtran=0., \
+             prophypr=False, \
+             psfntype=psfntype, \
+             varioaxi=varioaxi, \
              bgalcntr=bgalcntr, \
              maxmnumbpnts=array([3]), \
              minmflux=minmflux, \
@@ -233,7 +236,7 @@ def test_nomi():
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         modlpsfntype='doubking', \
+         psfntype='doubking', \
          maxmnumbpnts=array([600]), \
          maxmgang=deg2rad(20.), \
          minmflux=5e-11, \
@@ -273,7 +276,7 @@ def test_errr():
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  modlpsfntype='doubking', \
+                                  psfntype='doubking', \
                                   maxmnumbpnts=array([100]), \
                                   maxmgang=deg2rad(10.), \
                                   specfraceval=specfraceval, \
@@ -319,7 +322,7 @@ def test_uppr():
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         modlpsfntype='doubking', \
+         psfntype='doubking', \
          maxmnumbpnts=array([800]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-9, \
@@ -347,7 +350,7 @@ def test_prio():
                                   priofactdoff=priofactdoff[k], \
                                   strgback=['fermisotflux.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  modlpsfntype='doubking', \
+                                  psfntype='doubking', \
                                   maxmnumbpnts=array([1000]), \
                                   maxmgang=deg2rad(30.), \
                                   minmflux=5e-11, \
@@ -379,7 +382,8 @@ def test_prio():
 def test_lowr():
       
     init( \
-         numbswep=100000, \
+         numbswep=10000, \
+         verbtype=1, \
          exprinfo=False, \
          proppsfp=False, \
          indxenerincl=arange(2, 3), \
@@ -387,12 +391,12 @@ def test_lowr():
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpr='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnumbpnts=array([100]), \
+         maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-24, \
          maxmflux=1e-20, \
          datatype='mock', \
-         mocknumbpnts=array([100]), \
+         mocknumbpnts=array([3]), \
         )
 
 
@@ -412,7 +416,8 @@ def test_post():
     		 factthin=1, \
              indxenerincl=indxenerincl, \
              indxevttincl=indxevttincl, \
-             probprop=array([0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 1., 1., 1., 1., 0., 0.], dtype=float), \
+             proptran=False, \
+             prophypr=False, \
              exprinfo=False, \
              strgback=['fermisotflux.fits'], \
              lablback=[r'$\mathcal{I}$'], \
@@ -423,7 +428,7 @@ def test_post():
              stdvlbhlmaxm=stdvlbhlmaxm, \
              stdvflux=stdvflux, \
              stdvsind=stdvsind, \
-             modlpsfntype='doubking', \
+             psfntype='doubking', \
              maxmnumbpnts=array([3]), \
              maxmgang=deg2rad(1.), \
              minmflux=minmflux, \
@@ -450,14 +455,13 @@ def test_atcr():
                                   factthin=1, \
                                   verbtype=2, \
                                   makeplot=False, \
-                                  probprop=array([0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.], dtype=float), \
                                   numbpntsmodi=listnumbpntsmodi[k], \
                                   exprinfo=False, \
                                   indxenerincl=arange(2, 3), \
                                   indxevttincl=arange(3, 4), \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  modlpsfntype='doubking', \
+                                  psfntype='doubking', \
                                   maxmnumbpnts=array([5]), \
                                   maxmgang=deg2rad(10.), \
                                   minmflux=3e-11, \
@@ -507,8 +511,12 @@ def test_spmr():
              indxevttincl=arange(3, 4), \
              strgback=['fermisotflux.fits'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
-             probprop=array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0.], dtype=float), \
-             modlpsfntype='doubking', \
+             prophypr=False, \
+             proppsfp=False, \
+             propbacp=False, \
+             propcomp=False, \
+             probbrde=0., \
+             psfntype='doubking', \
              maxmgang=deg2rad(1.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
@@ -523,7 +531,7 @@ def test_spmr():
 def test_leak():
      
     init( \
-         numbswep=100000, \
+         numbswep=10000, \
          exprinfo=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -547,7 +555,7 @@ def test_popl():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([3, 3]), \
          maxmgang=deg2rad(20.), \
-         modlpsfntype='gausking', \
+         psfntype='gausking', \
          minmflux=3e-11, \
          maxmflux=3e-7, \
          sinddiststdv=array([.5, .5]), \
@@ -565,7 +573,7 @@ def test():
          pixltype='unbd', \
          exprtype='chem', \
          verbtype=2, \
-         numbswep=100001, \
+         numbswep=10000, \
          numbswepplot=10000, \
          factthin=100, \
          numbburn=0, \
@@ -578,7 +586,7 @@ def test():
             #indxevttincl=arange(3, 4), \
             #strgback=['fermisotflux.fits', ], \
             #strgexpo='fermexpo_cmp0_ngal.fits', \
-            #modlpsfntype='doubking', \
+            #psfntype='doubking', \
             #maxmnumbpnts=array([4]), \
             #maxmgang=deg2rad(10.), \
             #minmflux=3e-11, \

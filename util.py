@@ -377,12 +377,12 @@ def retr_thisindxprop(gdat, gdatmodi):
     gdatmodi.propflux = False
     gdatmodi.propspep = False
 
-    if rand() < gdat.probproptran:
+    if rand() < gdat.probtran:
         
         gdatmodi.propllik = True
         
         gdatmodi.indxpoplmodi = choice(gdat.indxpopl)
-        if rand() < gdat.probpropbrth:
+        if rand() < gdat.probbrde:
             if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.maxmnumbpnts[gdatmodi.indxpoplmodi]:
                 gdatmodi.propdeth = True
             elif gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.minmnumbpnts[gdatmodi.indxpoplmodi]:
@@ -424,7 +424,7 @@ def retr_thisindxprop(gdat, gdatmodi):
     else:
 
         # determine the sample index to be modified
-        if gdat.numbtrap > 0:
+        if gdat.numbtrap > 0 and gdat.propcomp:
             indxsampfull = concatenate((gdat.indxfixpactvprop, concatenate(gdatmodi.thisindxsampcompcolr)))
         else:
             indxsampfull = gdat.indxfixpactvprop
@@ -816,9 +816,13 @@ def retr_llik(gdat, gdatmodi, init=False):
             summ(gdatmodi, 'thismodlfluxlens')
        
         if gdat.pntstype == 'lens':
-            if gdatmodi.proppsfp:
-                modlfluxlens = gdatmodi.thismodlfluxlens
-                psfnkern = gdatmodi.nextpsfnkern
+            if gdatmodi.proppsfp or gdatmodi.propbacp:
+                if gdatmodi.proppsfp:
+                    psfnkern = gdatmodi.nextpsfnkern
+                    modlfluxlens = gdatmodi.thismodlfluxlens
+                else:
+                    psfnkern = gdatmodi.thispsfnkern
+                    modlfluxlens = gdatmodi.thismodlfluxlens + gdatmodi.nextsampvarb[gdat.indxfixpbacp[0, 0]] * gdat.backfluxlens
             else:
                 if gdatmodi.proplenp or gdatmodi.proppnts:
                     if not gdatmodi.propsour:
@@ -905,7 +909,8 @@ def retr_llik(gdat, gdatmodi, init=False):
                         timefinl = gdat.functime()
                         gdatmodi.listchrollik[gdatmodi.cntrswep, 7] = timefinl - timeinit
 
-                gdatmodi.nextmodlfluxlens[0, :, :] = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1])
+                gdatmodi.nextmodlfluxlens[0, :, :] = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1]) + \
+                                                                                                + gdatmodi.thissampvarb[gdat.indxfixpbacp[0, 0]] * gdat.backfluxlens
                 modlfluxlens = gdatmodi.nextmodlfluxlens[0, :, :]
                 psfnkern = gdatmodi.thispsfnkern
             
@@ -1375,9 +1380,7 @@ def updt_samp(gdat, gdatmodi):
     # update the sample vector
     if not gdatmodi.propdeth:
         gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
-    
-    # update the unit sample vector
-    gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -2] = gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1]
+        gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -2] = gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1]
     
     # update the log-prior
     if gdatmodi.proplpri:
@@ -1919,7 +1922,7 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.nextsampvarb[gdat.indxfixppsfp] = copy(gdatmodi.thissampvarb[gdat.indxfixppsfp])
                 
             ## determine the background index to be modified
-            gdatmodi.indxenermodi = array([((gdatmodi.indxsampmodi - gdat.indxfixppsfp[0]) % gdat.numbpsfptotlener) // gdat.numbpsfptotl])
+            gdatmodi.indxenermodi = ((gdatmodi.indxsampmodi - gdat.indxfixppsfp[0]) % gdat.numbpsfptotlener) // gdat.numbpsfptotl
             
         # background parameter changes
         if gdatmodi.propbacp:
@@ -2762,6 +2765,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.factlogtenerpivt = log(gdat.enernorm)
         gdat.factspecener = gdat.enernorm**(-sqrt(gdat.minmsinddistmean * gdat.maxmsinddistmean))
         gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
+    else:
+        gdat.factspecener = array([1.])
 
     # angular deviation
     # temp -- check that gdat.numbangl does not degrade the performance
@@ -3149,6 +3154,10 @@ def setpinit(gdat, boolinitsetp=False):
     for c in gdat.indxback:
         gdat.backflux[c] = gdat.backflux[c][gdat.indxcuberofi]
 
+    # temp
+    if gdat.pntstype == 'lens':
+        gdat.backfluxlens = gdat.backflux[0][0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart))
+    
     if gdat.correxpo:
         gdat.backcnts = []
         gdat.backcntstotl = zeros_like(gdat.expo)
@@ -3547,18 +3556,19 @@ def setpfinl(gdat, boolinitsetp=False):
         
         ## number of PS
         gdat.indxfixpactv.append(gdat.indxfixpnumbpnts)
-    
-        ## mean number of PS
-        gdat.indxfixpactv.append(gdat.indxfixpmeanpnts)
-    
-        ## flux distribution
-        for l in gdat.indxpopl:
-            if gdat.fluxdisttype[l] == 'powr':  
-                gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistslop[l]]))
-            if gdat.fluxdisttype[l] == 'brok':  
-                gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistbrek[l]]))
-                gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistsloplowr[l]]))
-                gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistslopuppr[l]]))
+   
+        if gdat.prophypr:
+            ## mean number of PS
+            gdat.indxfixpactv.append(gdat.indxfixpmeanpnts)
+        
+            ## flux distribution
+            for l in gdat.indxpopl:
+                if gdat.fluxdisttype[l] == 'powr':  
+                    gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistslop[l]]))
+                if gdat.fluxdisttype[l] == 'brok':  
+                    gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistbrek[l]]))
+                    gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistsloplowr[l]]))
+                    gdat.indxfixpactv.append(array([gdat.indxfixpfluxdistslopuppr[l]]))
     
     # PSF parameters
     if gdat.proppsfp:
@@ -3575,7 +3585,7 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfixpactv = concatenate(gdat.indxfixpactv).astype(int)
     gdat.indxfixpactvprop = setdiff1d(gdat.indxfixpactv, gdat.indxfixpnumbpnts)
     gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop].tolist()
-    
+   
     gdat.numbfixpactvprop = gdat.indxfixpactvprop.size
     cntr = tdpy.util.cntr()
     cntr.incr(gdat.numbfixpactvprop)
@@ -3626,16 +3636,13 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxactvconv = zeros(gdat.numbfixp, dtype=int)
     gdat.indxactvconv[gdat.indxfixpactvprop] = arange(gdat.numbfixpactvprop, dtype=int)
     
-    if gdat.numbtrap > 0:
-        gdat.probproptran = 0.4
-    else:
-        gdat.probproptran = 0.
+    if gdat.probtran == None:
+        if gdat.numbtrap > 0:
+            gdat.probtran = 0.4
+        else:
+            gdat.probtran = 0.
         
-    gdat.probpropbrth = 1.
     gdat.stdvproppara = 1e-4 + zeros(gdat.numbfixp)
-    gdat.probtranmaxm = array([0., 1.])
-    gdat.probtranminm = array([1., 0.])
-    gdat.probtran = array([.5, .5])
         
     listindxsampunsd = []
     numbsampcumu = 0
@@ -4321,11 +4328,11 @@ def make_catllabl(gdat, axis):
     
     if gdat.trueinfo:
         axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label=gdat.truelablmiss, marker='o', linewidth=2, color='g')
+                                                                                                label=gdat.truelablhits, marker='x', linewidth=2, color='g')
         axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label=gdat.truelablbias, marker='*', linewidth=2, color='g', facecolor='none')
         axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label=gdat.truelablhits, marker='x', linewidth=2, color='g')
+                                                                                                label=gdat.truelablmiss, marker='o', linewidth=2, color='g')
     if gdat.pntstype == 'lens':
         axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label='Model Source', marker='<', linewidth=2, color='b')
@@ -4334,12 +4341,12 @@ def make_catllabl(gdat, axis):
                                                                                                 label='Model Host', marker='s', linewidth=2, color='b')
         if gdat.trueinfo:
             axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='True Source', marker='>', linewidth=2, color='g')
+                                                                                                label='%s Source' % gdat.truelabl, marker='>', linewidth=2, color='g')
         
             axis.scatter(gdat.anglfact * gdat.maxmgang * 5., gdat.anglfact * gdat.maxmgang * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='True Host', marker='D', linewidth=2, color='g')
+                                                                                                label='%s Host' % gdat.truelabl, marker='D', linewidth=2, color='g')
         
-    axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=2)
+    axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=4)
         
 
 def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot, trueonly=False):
