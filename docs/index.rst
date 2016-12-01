@@ -19,13 +19,8 @@ Usage
 
 .. function:: pcat.main.init()
 
-   Format the exception with a traceback.
+    Sample from the catalog space given a dataset.
 
-   :param etype: exception type
-   :type limit: integer or None
-   :param limit: maximum number of stack frames to show
-   :type limit: integer or None
-   :rtype: list of strings
-   :rtype: list of strings
-
+    :param datatype: Type of data
+    :type datatype: str
 
