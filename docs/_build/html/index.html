@@ -66,12 +66,18 @@
           
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Welcome to PCAT&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#installation">Installation</a><ul>
-<li><a class="reference internal" href="#hey">hey</a></li>
+<li><a class="reference internal" href="#">Welcome to PCAT&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#features">Features</a><ul>
+<li><a class="reference internal" href="#transdimensionality">Transdimensionality</a></li>
+<li><a class="reference internal" href="#hierarchical-priors">Hierarchical priors</a></li>
+<li><a class="reference internal" href="#adaptive-burn-in">Adaptive burn-in</a></li>
+<li><a class="reference internal" href="#identity-of-components">Identity of components</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 </ul>
 </div>
           
@@ -109,16 +115,11 @@
             
   <div class="section" id="welcome-to-pcat-s-documentation">
 <h1>Welcome to PCAT&#8217;s documentation!<a class="headerlink" href="#welcome-to-pcat-s-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
 <p>When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of objects whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different number of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidence. Yet another is to take samples from the union of the hypotheses using a set of transdimensional jumps across models. This is what PCAT (Probabilistic Cataloger) is designed for.</p>
 <p>PCAT is a hierarchical, transdimensional MCMC sampler. Given some data, it can be used to sample from the <strong>catalog space</strong>, i.e., the hypothesis space of a model with a variable number of components. Alternatively, it can be used as a general purpose Poisson mixture sampler to infer clusters in a dataset.</p>
 <p>A user manual for PCAT will be published here soon.</p>
-</div>
 <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="hey">
-<h2>hey<a class="headerlink" href="#hey" title="Permalink to this headline">¶</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>To install PCAT you can use pip</p>
 <div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pcat</span>
 </pre></div>
@@ -128,23 +129,81 @@
 </pre></div>
 </div>
 </div>
-</div>
 <div class="section" id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>All user interaction with PCAT is accomplished through the <code class="docutils literal"><span class="pre">pcat.main.init()</span></code> function.</p>
 <dl class="function">
 <dt id="pcat.main.init">
 <code class="descclassname">pcat.main.</code><code class="descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pcat.main.init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sample from the catalog space given a dataset.</p>
+<dd><p>Given an observed dataset, sample from the hypothesis space.</p>
+<p># User Interaction</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>datatype</strong> (<em>str</em>) &#8211; Type of data</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>verbtype</strong> (<em>int</em>) &#8211; <p>Verbosity level</p>
+<ul>
+<li><code class="docutils literal"><span class="pre">0</span></code> No standard output</li>
+<li><code class="docutils literal"><span class="pre">1</span></code> Minimal standard output including status of progress (Default)</li>
+<li><code class="docutils literal"><span class="pre">2</span></code> Diagnostic verbose standard output</li>
+</ul>
+</li>
+<li><strong>pathbase</strong> (<em>str</em>) &#8211; Data path of PCAT. PCAT expects input data in <code class="docutils literal"><span class="pre">pathbase/data/inpt/</span></code> and writes the output chains and plots in the relevant subfolders <code class="docutils literal"><span class="pre">pathbase/data/outp/rtag</span></code> and <code class="docutils literal"><span class="pre">pathbase/imag/rtag</span></code>, respectively, where <code class="docutils literal"><span class="pre">rtag</span></code> is the run tag. The <code class="docutils literal"><span class="pre">pathbase</span></code> folder is created if it does not already exist. It defaults to the value of the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>. Therefore <code class="docutils literal"><span class="pre">pathbase</span></code> can be omitted by setting the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p># diagnostics</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>diagmode</strong> (<em>bool</em>) &#8211; Start the run in diagnostic mode. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>cntrpnts</strong> (<em>bool</em>) &#8211; Force the mock data to a single PS at the center of the image. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p># chain</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>numbswep</strong> (<em>int</em>) &#8211; Number of samples to be taken by each process</li>
+<li><strong>numbburn</strong> (<em>int</em>) &#8211; Number of samples to be discarded from the beginning of each chain</li>
+<li><strong>factthin</strong> (<em>int</em>) &#8211; Factor by which to thin each chain. Only one sample out of <code class="docutils literal"><span class="pre">factthin</span></code> samples is saved.</li>
+<li><strong>indxenerincl</strong> (<em>ndarray int</em>) &#8211; Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.</li>
+<li><strong>indxevttincl</strong> (<em>ndarray int</em>) &#8211; Indices of PSF class bins to be taken into account. Works similar to <code class="docutils literal"><span class="pre">indxenerincl</span></code>.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="transdimensionality">
+<h3>Transdimensionality<a class="headerlink" href="#transdimensionality" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="hierarchical-priors">
+<h3>Hierarchical priors<a class="headerlink" href="#hierarchical-priors" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="adaptive-burn-in">
+<h3>Adaptive burn-in<a class="headerlink" href="#adaptive-burn-in" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="identity-of-components">
+<h3>Identity of components<a class="headerlink" href="#identity-of-components" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
 </div>
 
 

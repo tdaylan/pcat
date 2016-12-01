@@ -42,7 +42,7 @@ import sympy
 
 # tdpy
 import tdpy.util
-from tdpy.util import show, summ
+from tdpy.util import show, summgene, summ
 import tdpy.mcmc
 
 import networkx as nx

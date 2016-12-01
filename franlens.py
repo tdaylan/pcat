@@ -282,16 +282,19 @@ def retr_imaglens(gdat, gdatmodi=None, raww=False):
         defl += listlensobjt[k].deflection(gdat.lgalgridcart, gdat.bgalgridcart)
 
     # calculate the lensed image
-    imaglens = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1]) + \
-                                                                                        sampvarb[getattr(gdat, strg + 'indxfixpbacp')[0, 0]] * gdat.backfluxlens
-    
-    #Convolve with the PSF
+    lensflux = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1])
+
+    # convolve the lensed image with the PSF
     # temp
     if False:
-        imag = convolve(imaglens, psfnkern).flatten()
+        lensfluxconv = convolve(lensflux, psfnkern).flatten()
     else:
-        imag = imaglens.flatten()
+        lensfluxconv = lensflux.flatten()
 
-    return imag, imaglens, defl
+    # calculate the total map
+    
+    modlflux = lensfluxconv + sampvarb[getattr(gdat, strg + 'indxfixpbacp')] * gdat.backflux[0][0, :, 0]
+    
+    return modlflux, lensfluxconv, lensflux, defl
 
     

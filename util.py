@@ -76,7 +76,7 @@ def retr_indx(gdat, indxpntsfull):
 def retr_thismodlflux(gdat, gdatmodi):
 
     if gdat.pntstype == 'lens':
-        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thismodlfluxlens[0, :, :], gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
+        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
     else:
         if gdat.backemis:
             gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thispntsflux, gdat.indxcube)
@@ -578,11 +578,8 @@ def retr_llik(gdat, gdatmodi, init=False):
             
             if gdat.verbtype > 1:
                 if gdat.pntstype == 'lens':
-                    print 'Current model lensed flux before PSF convolution'
-                    summ(gdatmodi, 'thismodlfluxlens')
-                print 'Current model flux'
+                    summ(gdatmodi, 'thislensflux')
                 summ(gdatmodi, 'thismodlflux')
-                print 'Current model counts'
                 summ(gdatmodi, 'thismodlcnts')
             
             if gdat.liketype == 'pois':
@@ -617,7 +614,7 @@ def retr_llik(gdat, gdatmodi, init=False):
         if gdatmodi.proppnts or gdatmodi.proppsfp:
             timeinit = gdat.functime()
         
-            if gdatmodi.proppsfp:
+            if gdat.pntstype == 'lght' and gdatmodi.proppsfp:
                 lgal = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsamplgal)]
                 bgal = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampbgal)]
                 spec = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec, axis=1)[gdatmodi.indxenermodi, :]]
@@ -808,133 +805,125 @@ def retr_llik(gdat, gdatmodi, init=False):
         # lens parameters
         
         if gdat.pntstype == 'lens' and gdat.verbtype > 1:
-            print 'Data count map'
             summ(gdat, 'datacnts')
-            print 'Current deflection map'
             summ(gdatmodi, 'thisdefl')
-            print 'Current model flux map before PSF convolution'
-            summ(gdatmodi, 'thismodlfluxlens')
+            summ(gdatmodi, 'thislensflux')
        
         if gdat.pntstype == 'lens':
-            if gdatmodi.proppsfp or gdatmodi.propbacp:
+            if gdatmodi.propbacp:
+                gdatmodi.nextmodlflux[0, :, 0] = gdatmodi.thislensfluxconv + gdatmodi.nextsampvarb[gdat.indxfixpbacp.flatten()] * gdat.backflux[0][0, :, 0]
+            else:
+                bacp = gdatmodi.thissampvarb[gdat.indxfixpbacp]
                 if gdatmodi.proppsfp:
                     psfnkern = gdatmodi.nextpsfnkern
-                    modlfluxlens = gdatmodi.thismodlfluxlens
+                    lensflux = gdatmodi.thislensflux
                 else:
-                    psfnkern = gdatmodi.thispsfnkern
-                    modlfluxlens = gdatmodi.thismodlfluxlens + gdatmodi.nextsampvarb[gdat.indxfixpbacp[0, 0]] * gdat.backfluxlens
-            else:
-                if gdatmodi.proplenp or gdatmodi.proppnts:
-                    if not gdatmodi.propsour:
-                        timeinit = gdat.functime()
-                        
-                        # calculate the deflection matrix
-                        gdatmodi.nextdefl = copy(gdatmodi.thisdefl)
-                       
-                        if gdatmodi.prophost:
+                    if gdatmodi.proplenp or gdatmodi.proppnts:
+                        if not gdatmodi.propsour:
+                            timeinit = gdat.functime()
                             
-                            if gdat.verbtype > 1:
-                                print 'Perturbing the host lens...'
-                        
-                            thislensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpellphost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
-                            
-                            nextlensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.nextsampvarb[gdat.indxfixplgalhost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpbgalhost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpellphost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpanglhost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpsherhost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpsanghost], \
-                                                                                 gdatmodi.nextsampvarb[gdat.indxfixpbeinhost])
-                            
-                            gdatmodi.nextdefl -= thislensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
-                            gdatmodi.nextdefl += nextlensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
-                        
-                        
-                        else:
-                            
-                            if gdat.verbtype > 1:
-                                print 'Perturbing the subhalo lens...'
-
-                            for k in range(gdatmodi.numbpntsmodi):
-                                if gdatmodi.modispec[0, k] < 0:
-                                    modispectemp = abs(gdatmodi.modispec[0, k])
-                                    facttemp = -1.
-                                else:
-                                    modispectemp = gdatmodi.modispec[0, k]
-                                    facttemp = 1.
+                            # calculate the deflection matrix
+                            gdatmodi.nextdefl = copy(gdatmodi.thisdefl)
+                           
+                            if gdatmodi.prophost:
                                 
-                                lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.modilgal[k], gdatmodi.modibgal[k], 0., 0., 0., 0., modispectemp)
-                                gdatmodi.nextdefl += facttemp * lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
-                        
-                        if gdat.verbtype > 1:
-                            print 'Proposed deflection matrix'
-                            summ(gdatmodi, 'nextdefl')
-                        
-                        # take the current source object 
-                        sourobjt = franlens.Source(gdat.truesourtype, gdatmodi.thissampvarb[gdat.indxfixplgalsour], \
-                                                                      gdatmodi.thissampvarb[gdat.indxfixpbgalsour], \
-                                                                      gdatmodi.thissampvarb[gdat.indxfixpfluxsour], \
-                                                                      gdatmodi.thissampvarb[gdat.indxfixpsizesour], \
-                                                                      gdatmodi.thissampvarb[gdat.indxfixpratisour], \
-                                                                      gdatmodi.thissampvarb[gdat.indxfixpanglsour])
-                        
-                        # take the proosed deflection 
-                        defl = gdatmodi.nextdefl 
+                                if gdat.verbtype > 1:
+                                    print 'Perturbing the host lens...'
+                            
+                                thislensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpellphost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
+                                                                                     gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
+                                
+                                nextlensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.nextsampvarb[gdat.indxfixplgalhost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpbgalhost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpellphost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpanglhost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpsherhost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpsanghost], \
+                                                                                     gdatmodi.nextsampvarb[gdat.indxfixpbeinhost])
+                                
+                                gdatmodi.nextdefl -= thislensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+                                gdatmodi.nextdefl += nextlensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+                            
+                            
+                            else:
+                                
+                                if gdat.verbtype > 1:
+                                    print 'Perturbing the subhalo lens...'
 
-                        timefinl = gdat.functime()
-                        gdatmodi.listchrollik[gdatmodi.cntrswep, 6] = timefinl - timeinit
-                        
-                    else:
-                        timeinit = gdat.functime()
-                    
-                        if gdat.verbtype > 1:
-                            print 'Perturbing the source to be lensed...'
+                                for k in range(gdatmodi.numbpntsmodi):
+                                    if gdatmodi.modispec[0, k] < 0:
+                                        modispectemp = abs(gdatmodi.modispec[0, k])
+                                        facttemp = -1.
+                                    else:
+                                        modispectemp = gdatmodi.modispec[0, k]
+                                        facttemp = 1.
+                                    
+                                    lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.modilgal[k], gdatmodi.modibgal[k], 0., 0., 0., 0., modispectemp)
+                                    gdatmodi.nextdefl += facttemp * lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+                            
+                            if gdat.verbtype > 1:
+                                summ(gdatmodi, 'nextdefl')
+                            
+                            # take the current source object 
+                            sourobjt = franlens.Source(gdat.truesourtype, gdatmodi.thissampvarb[gdat.indxfixplgalsour], \
+                                                                          gdatmodi.thissampvarb[gdat.indxfixpbgalsour], \
+                                                                          gdatmodi.thissampvarb[gdat.indxfixpfluxsour], \
+                                                                          gdatmodi.thissampvarb[gdat.indxfixpsizesour], \
+                                                                          gdatmodi.thissampvarb[gdat.indxfixpratisour], \
+                                                                          gdatmodi.thissampvarb[gdat.indxfixpanglsour])
+                            
+                            # take the proosed deflection 
+                            defl = gdatmodi.nextdefl 
 
-                        # construct the proposed source object
-                        sourobjt = franlens.Source(gdat.truesourtype, gdatmodi.nextsampvarb[gdat.indxfixplgalsour], \
-                                                                      gdatmodi.nextsampvarb[gdat.indxfixpbgalsour], \
-                                                                      gdatmodi.nextsampvarb[gdat.indxfixpfluxsour], \
-                                                                      gdatmodi.nextsampvarb[gdat.indxfixpsizesour], \
-                                                                      gdatmodi.nextsampvarb[gdat.indxfixpratisour], \
-                                                                      gdatmodi.nextsampvarb[gdat.indxfixpanglsour])
-                        # take the current deflection matrix
-                        defl = gdatmodi.thisdefl
+                            timefinl = gdat.functime()
+                            gdatmodi.listchrollik[gdatmodi.cntrswep, 6] = timefinl - timeinit
+                            
+                        else:
+                            timeinit = gdat.functime()
+                        
+                            if gdat.verbtype > 1:
+                                print 'Perturbing the source to be lensed...'
+
+                            # construct the proposed source object
+                            sourobjt = franlens.Source(gdat.truesourtype, gdatmodi.nextsampvarb[gdat.indxfixplgalsour], \
+                                                                          gdatmodi.nextsampvarb[gdat.indxfixpbgalsour], \
+                                                                          gdatmodi.nextsampvarb[gdat.indxfixpfluxsour], \
+                                                                          gdatmodi.nextsampvarb[gdat.indxfixpsizesour], \
+                                                                          gdatmodi.nextsampvarb[gdat.indxfixpratisour], \
+                                                                          gdatmodi.nextsampvarb[gdat.indxfixpanglsour])
+                            # take the current deflection matrix
+                            defl = gdatmodi.thisdefl
         
-                        timefinl = gdat.functime()
-                        gdatmodi.listchrollik[gdatmodi.cntrswep, 7] = timefinl - timeinit
+                            timefinl = gdat.functime()
+                            gdatmodi.listchrollik[gdatmodi.cntrswep, 7] = timefinl - timeinit
 
-                gdatmodi.nextmodlfluxlens[0, :, :] = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1]) + \
-                                                                                                + gdatmodi.thissampvarb[gdat.indxfixpbacp[0, 0]] * gdat.backfluxlens
-                modlfluxlens = gdatmodi.nextmodlfluxlens[0, :, :]
-                psfnkern = gdatmodi.thispsfnkern
-            
-                if gdat.verbtype > 1:
-                    print 'Proposed model flux map before PSF convolution'
-                    summ(gdatmodi, 'nextmodlfluxlens')
-
-            # convolve the lensed image with the PSF
-            timeinit = gdat.functime()
-            
-            if False:
-                gdatmodi.nextmodlflux[0, :, 0] = convolve(modlfluxlens, psfnkern).flatten()
-            else:
-                gdatmodi.nextmodlflux[0, :, 0] = modlfluxlens.flatten()
+                    gdatmodi.nextlensflux = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1])
+                    lensflux = gdatmodi.nextlensflux
+                    psfnkern = gdatmodi.thispsfnkern
                 
-            timefinl = gdat.functime()
-            gdatmodi.listchrollik[gdatmodi.cntrswep, 8] = timefinl - timeinit
-        
-            if gdat.verbtype > 1:
-                print 'Proposed model flux map after PSF convolution'
-                summ(gdatmodi, 'nextmodlflux')
+                    if gdat.verbtype > 1:
+                        summ(gdatmodi, 'nextlensflux')
 
+                # convolve the lensed image with the PSF
+                timeinit = gdat.functime()
+                
+                if False:
+                    gdatmodi.nextmodlflux[0, :, 0] = convolve(lensflux, psfnkern).flatten() + bacp * gdat.backfluxlens
+                else:
+                    gdatmodi.nextmodlflux[0, :, 0] = lensflux.flatten() + bacp * gdat.backflux[0][0, :, 0]
+                    
+                timefinl = gdat.functime()
+                gdatmodi.listchrollik[gdatmodi.cntrswep, 8] = timefinl - timeinit
+        
+                if gdat.verbtype > 1:
+                    summ(gdatmodi, 'nextmodlflux')
+        
         if gdat.verbtype > 1:
-            print 'Proposed model flux map'
             summ(gdatmodi, 'nextmodlflux')
 
         # calculate the count map
@@ -949,7 +938,7 @@ def retr_llik(gdat, gdatmodi, init=False):
         gdatmodi.listchrollik[gdatmodi.cntrswep, 9] = timefinl - timeinit
     
         if gdat.verbtype > 1:
-            print 'Proposed model count map'
+            summ(gdatmodi, 'thismodlcnts')
             summ(gdatmodi, 'nextmodlcnts')
 
         # temp
@@ -1427,10 +1416,12 @@ def updt_samp(gdat, gdatmodi):
         else:
             gdatmodi.thispsfnkern = AiryDisk2DKernel(gdatmodi.nextsampvarb[gdat.indxfixppsfp[0]] / gdat.sizepixl)
         
-
     if gdat.pntstype == 'lens':
         if gdatmodi.prophost or gdatmodi.proppnts:
             gdatmodi.thisdefl = copy(gdatmodi.nextdefl)
+            gdatmodi.thislensflux = copy(gdatmodi.nextlensflux)
+            if gdatmodi.proppsfp:
+                gdatmodi.thislensfluxconv = copy(gdatmodi.nextlensfluxconv)
     else:    
         if gdatmodi.proppnts or gdatmodi.proppsfp:
             gdatmodi.thispntsflux[gdatmodi.indxcubemodi] = copy(gdatmodi.nextpntsflux[gdatmodi.indxcubemodi])
@@ -1790,8 +1781,8 @@ def retr_rtag(gdat):
 
 def retr_gaus(gdat, gdatmodi, indxsamp, stdv):
     
-    if gdat.fracrand > 0.:
-        if rand() < gdat.fracrand:
+    if gdat.probrand > 0.:
+        if rand() < gdat.probrand:
             gdatmodi.drmcsamp[indxsamp, 1] = rand()
         else:
             gdatmodi.drmcsamp[indxsamp, 1] = gdatmodi.drmcsamp[indxsamp, 0] + normal(scale=stdv)
@@ -1905,7 +1896,7 @@ def retr_prop(gdat, gdatmodi):
     if gdatmodi.propfixp:
     
         # take the step
-        retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvproppara[gdatmodi.indxsampmodi])
+        retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdatmodi.stdvproppara[gdatmodi.indxsampmodi])
 
         ## hyperparameter changes
         if gdatmodi.prophypr:
@@ -1916,7 +1907,7 @@ def retr_prop(gdat, gdatmodi):
         if gdatmodi.proppsfp:
             
             gdatmodi.numbpntsmodi = int(sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]))
-            if gdatmodi.numbpntsmodi == 0:
+            if gdat.pntstype == 'lght' and gdatmodi.numbpntsmodi == 0:
                 gdatmodi.boolreje = True
 
             gdatmodi.nextsampvarb[gdat.indxfixppsfp] = copy(gdatmodi.thissampvarb[gdat.indxfixppsfp])
@@ -2936,7 +2927,7 @@ def setpinit(gdat, boolinitsetp=False):
     # input data
     if gdat.datatype == 'inpt':
         
-        path = gdat.pathdata + 'inpt/' + gdat.strgexpr
+        path = gdat.pathdata + 'inpt/' + gdat.strgexprflux
         gdat.exprdataflux = pf.getdata(path)
         
         if gdat.pixltype == 'heal':
@@ -3642,8 +3633,6 @@ def setpfinl(gdat, boolinitsetp=False):
         else:
             gdat.probtran = 0.
         
-    gdat.stdvproppara = 1e-4 + zeros(gdat.numbfixp)
-        
     listindxsampunsd = []
     numbsampcumu = 0
     for l in gdat.indxpopl:
@@ -4155,6 +4144,9 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
             strgfixpunit[k] = strgfixp[k] + ' [%s]' % gdat.strganglunit
         else:
             strgfixpunit[k] = strgfixp[k]
+
+    if gdat.pntstype == 'lens':
+        indxfixpbacp = indxfixpbacp.flatten()
 
     for attr, valu in locals().iteritems():
         if attr != 'gdat' and '__' not in attr and not attr.endswith('temp') and attr != 'cntr':

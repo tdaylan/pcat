@@ -22,7 +22,14 @@ def work(gdat, indxprocwork):
     # construct the initial state
     if gdat.verbtype > 0:
         print 'Initializing the unit sample vector'
-    
+   
+    # proposal scale
+    gdatmodi.stdvproppara = 1e-4 + zeros(gdat.numbfixp)
+    gdatmodi.stdvproppara[gdat.indxfixphypr] = gdat.stdvprophypr
+    gdatmodi.stdvproppara[gdat.indxfixppsfp] = gdat.stdvproppsfp
+    gdatmodi.stdvproppara[gdat.indxfixpbacp] = gdat.stdvpropbacp
+    gdatmodi.stdvproppara[gdat.indxfixplenp] = gdat.stdvproplenp
+        
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
    
@@ -114,15 +121,17 @@ def work(gdat, indxprocwork):
    
     if gdat.pntstype == 'lens':
     
-        gdatmodi.thismodlfluxlens = empty((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart))
-        gdatmodi.nextmodlfluxlens = empty((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart))
         gdatmodi.thispsfnkern = AiryDisk2DKernel(gdatmodi.thissampvarb[gdat.indxfixppsfp[0]] / gdat.sizepixl)
-        
-        gdatmodi.thisdefl = zeros((gdat.numbsidecart, gdat.numbsidecart, 2))
         
         # calculate the initial predicted flux map
         gdatmodi.thismodlflux = empty_like(gdat.datacnts)
-        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thismodlfluxlens[0, :, :], gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
+        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
+        print 'gdatmodi.thislensflux'
+        print summgene(gdatmodi.thislensflux)
+        print 'gdatmodi.thislensfluxconv'
+        print summgene(gdatmodi.thislensfluxconv)
+        print 'gdatmodi.thismodlflux[0, :, 0]'
+        print summgene(gdatmodi.thismodlflux[0, :, 0])
         gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
         if gdat.enerbins:
             gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
@@ -252,16 +261,15 @@ def init( \
          pathbase=os.environ["PCAT_DATA_PATH"], \
 
          # diagnostics
-         # temp
          diagmode=True, \
-         pntscntr=False, \
+         # temp
+         cntrpnts=False, \
 
          # sampler
          numbswep=None, \
          numbburn=None, \
          factthin=None, \
          
-         datatype='mock', \
          indxevttincl=None, \
          indxenerincl=None, \
          
@@ -277,7 +285,7 @@ def init( \
          loadvaripara=False, \
          optiprop=False, \
          regulevi=False, \
-         strgexpr=None, \
+         strgexprflux=None, \
          strgcatl=None, \
          strgback=[1.], \
          lablback=None, \
@@ -397,16 +405,16 @@ def init( \
         
          # proposals
          numbpntsmodi=1, \
-         stdvmeanpnts=0.05, \
-         stdvfluxdistslop=0.1, \
-         stdvproppsfp=0.1, \
-         stdvback=0.04, \
+         stdvprophypr=0.1, \
+         stdvproppsfp=0.01, \
+         stdvpropbacp=0.01, \
+         stdvproplenp=0.01, \
          stdvlbhl=0.1, \
          stdvlbhlvari=True, \
          stdvflux=0.15, \
          stdvspep=0.15, \
          stdvspmrsind=0.2, \
-         fracrand=0.05, \
+         probrand=0.05, \
          boolpropfluxdist=True, \
          boolpropfluxdistbrek=True, \
          prophypr=True, \
@@ -467,6 +475,10 @@ def init( \
 
     # defaults
     ### number of backgrounds
+    if gdat.strgexprflux == None:
+        gdat.datatype = 'mock'
+    else:
+        gdat.datatype = 'inpt'
    
     ### number of populations
     gdat.numbpopl = gdat.maxmnumbpnts.size
@@ -1134,9 +1146,8 @@ def init( \
                 gdat.truesourtype = 'Gaussian'
                 gdat.truelenstype = 'SIE'
                 #gdat.mockfluxsour = 3631. * 1e-23 * 0.624 * 10**(-0.4 * (-20.)) / 0.1 # ph / cm^2 / s
-
-                gdat.mockmodlfluxraww = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-                gdat.mockmodlfluxraww[0, :, 0], gdat.mockmodlfluxlensraww, gdat.mockdeflraww = franlens.retr_imaglens(gdat, raww=True)
+                gdat.mockmodlfluxraww = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                gdat.mockmodlfluxraww[0, :, 0], gdat.mocklensfluxconvraww, gdat.mocklensfluxaww, gdat.mockdeflraww = franlens.retr_imaglens(gdat, raww=True)
 
                 gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix
                 if gdat.enerbins:
@@ -1145,8 +1156,14 @@ def init( \
                     gdat.mockmodlcntsraww[0, j, 0] = poisson(gdat.mockmodlcntsraww[0, j, 0])
                 
                 gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-                gdat.mockmodlflux[0, :, 0], gdat.mockmodlfluxlens, gdat.mockdefl = franlens.retr_imaglens(gdat)
-            
+                gdat.mockmodlflux[0, :, 0], gdat.mocklensfluxconv, gdat.mocklensflux, gdat.mockdefl = franlens.retr_imaglens(gdat)
+                print 'gdat.mockmodlflux[0, :, 0]'
+                print summgene(gdat.mockmodlflux[0, :, 0])
+                print 'gdat.mocklensfluxconv'
+                print summgene(gdat.mocklensfluxconv)
+                print 'gdat.mocklensflux'
+                print summgene(gdat.mocklensflux)
+    
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix
             if gdat.enerbins:
                 gdat.mockmodlcnts *= gdat.diffener[:, None, None]
@@ -1859,12 +1876,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
    
     # proposal scale optimization
     if gdat.optiprop:
-        pathvaripara = gdat.pathopti + '%s.fits' % gdat.rtag
-        if os.path.isfile(pathvaripara) and gdat.loadvaripara:
+        pathstdvprop = gdat.pathopti + '%s.fits' % gdat.rtag
+        if os.path.isfile(pathstdvprop) and gdat.loadvaripara:
             if gdat.verbtype > 0 and indxprocwork == 0:
-                print 'Reading the previously computed proposal scale from %s...' % pathvaripara
+                print 'Reading the previously computed proposal scale from %s...' % pathstdvprop
             gdat.optidone = True
-            varipara = pf.getdata(pathvaripara)
+            varipara = pf.getdata(pathstdvprop)
         else:
             if gdat.verbtype > 0 and indxprocwork == 0:
                 print 'Optimizing proposal scale...'
@@ -1877,7 +1894,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             cntrprop = zeros(gdat.numbprop)
             cntrproptotl = zeros(gdat.numbprop)
             gdat.optidone = False
-            cntroptimean = 0
+            gdatmodi.cntrswepopti = 0
+            gdatmodi.cntrswepoptistep = 0
     else:
         gdat.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
@@ -1932,7 +1950,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 raise Exception('indxsampmodi is inappropriate.')
             
             if gdatmodi.cntrswep > 0:
-                if sum(gdatmodi.thisllik) - gdatmodi.thislliktotlprev < 10.:
+                if sum(gdatmodi.thisllik) - gdatmodi.thislliktotlprev < -10.:
+                    print 'sum(gdatmodi.thisllik)'
+                    print sum(gdatmodi.thisllik)
+                    print 'gdatmodi.thislliktotlprev'
+                    print gdatmodi.thislliktotlprev
                     raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = sum(copy(gdatmodi.thisllik))
 
@@ -2111,10 +2133,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         if gdatmodi.proppsfp:
             if gdat.psfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[3]]:
+                    print 'Rejecting because of the PSF'
                     gdatmodi.boolreje = True
             elif gdat.psfntype == 'doubgaus':
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[2]]:
                     gdatmodi.boolreje = True
+                    print 'Rejecting because of the PSF'
             
         if not gdatmodi.boolreje:
 
@@ -2235,46 +2259,52 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             gdatmodi.cntrswep += 1
         else:
         
-            print 'gdatmodi.cntrswep'
-            print gdatmodi.cntrswep
-            print 'cntrproptotl'
-            print cntrproptotl
-            print 'perdpropeffi'
-            print perdpropeffi
-            print 
+            set_printoptions(precision=2)
+            if False:
+                print 'perdpropeffi'
+                print perdpropeffi
+                print 'cntrproptotl'
+                print cntrproptotl
+                print 'cntrprop'
+                print cntrprop
+                print 'cntrprop / cntrproptotl'
+                print cntrprop / cntrproptotl
+                print 
             cntrproptotl[gdatmodi.thisindxprop] += 1.
             if listaccp[gdatmodi.cntrswep]:
                 cntrprop[gdatmodi.thisindxprop] += 1.
             
-            if gdatmodi.cntrswep % perdpropeffi == 0 and (cntrproptotl > 0).all():
-                
+            if gdatmodi.cntrswepopti % perdpropeffi == 0 and (cntrproptotl > 0).all():
+               
+                print 'perdpropeffi'
                 thispropeffi = cntrprop / cntrproptotl
                 if gdat.verbtype > 0:
-                    print 'Proposal scale optimization step %d' % cntroptimean
+                    print 'Proposal scale optimization step %d' % gdatmodi.cntrswepoptistep
+                    print 'gdat.strgprop'
+                    print gdat.strgprop
                     print 'Current proposal efficiency'
                     print thispropeffi
                     print '%.3g +- %.3g' % (mean(thispropeffi), std(thispropeffi)) 
-                if (thispropeffi[gdat.indxpropactv] > minmpropeffi).all() and (thispropeffi[gdat.indxpropactv] < maxmpropeffi).all():
+                if (thispropeffi > minmpropeffi).all() and (thispropeffi < maxmpropeffi).all():
                     if gdat.verbtype > 0:
-                        print 'Optimized variance: '
-                        print varipara
-                        print 'Writing the optimized variance to %s...' % pathvaripara
+                        print 'Optimized proposal scale: '
+                        print gdatmodi.stdvproppara
+                        print 'Writing the optimized proposal scale to %s...' % pathstdvprop
                     gdat.optidone = True
-                    pf.writeto(pathvaripara, varipara, clobber=True)
+                    pf.writeto(pathstdvprop, gdatmodi.stdvproppara, clobber=True)
                 else:
                     factcorr = 2**(thispropeffi / targpropeffi - 1.)
-                    varipara *= factcorr
+                    gdatmodi.stdvproppara *= factcorr
                     cntrprop[:] = 0.
                     cntrproptotl[:] = 0.
                     if gdat.verbtype > 0:
-                        print 'Current sample'
-                        print thissampvarb
                         print 'Correction factor'
                         print factcorr
-                        print 'Current variance: '
-                        print varipara
+                        print 'Current proposal scale: '
+                        print gdatmodi.stdvproppara
                         print
-                cntroptimean += 1
+                gdatmodi.cntrswepoptistep += 1
+            gdatmodi.cntrswepopti += 1
 
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     

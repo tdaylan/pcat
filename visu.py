@@ -59,7 +59,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
     numbtick = 2
     
-    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, gdat.numbprop * gdat.plotsize / 4.), sharex='all')
+    sizefigryaxi = max(gdat.numbprop * gdat.plotsize / 4., gdat.plotsize / 2.)
+    figr, axgr = plt.subplots(gdat.numbprop, 1, figsize=(gdat.plotsize, sizefigryaxi), sharex='all')
     if gdat.numbprop == 1:
         axgr = [axgr]
     for n, axis in enumerate(axgr):
@@ -81,6 +82,17 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
     figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
+    plt.close(figr)
+  
+    # histogram of proposal types
+    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+    binsprop = linspace(-0.5, gdat.numbprop - 0.5, gdat.numbprop + 1)
+    axis.hist(gdat.listindxprop, bins=binsprop)[0]
+    axis.set_ylabel('$N_{samp}$')
+    axis.set_xlabel('$i_{prop}$')
+    axis.set_xticks(gdat.indxprop)
+    plt.tight_layout()
+    figr.savefig(gdat.pathdiag + 'histindxprop.pdf')
     plt.close(figr)
    
     # plot split and merge diagnostics
