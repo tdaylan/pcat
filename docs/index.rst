@@ -13,6 +13,18 @@ A user manual for PCAT will be published here soon.
 Installation
 ==================
 
+To install PCAT you can use pip
+
+.. code::
+
+    pip install pcat
+
+or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ and run
+
+.. code::
+
+    python setup.py install
+
 
 Usage
 ==================

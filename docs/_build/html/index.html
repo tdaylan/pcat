@@ -114,28 +114,26 @@
 </div>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>To install PCAT you can use pip</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pcat</span>
+</pre></div>
+</div>
+<p>or download <a class="reference external" href="https://github.com/tdaylan/pcat/releases/">the latest release</a> and run</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="pcat.main.init">
 <code class="descclassname">pcat.main.</code><code class="descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pcat.main.init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Format the exception with a traceback.</p>
+<dd><p>Sample from the catalog space given a dataset.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>etype</strong> &#8211; exception type</li>
-<li><strong>limit</strong> (<em>integer</em><em> or </em><em>None</em>) &#8211; maximum number of stack frames to show</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">list of strings</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of strings</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>datatype</strong> (<em>str</em>) &#8211; Type of data</td>
 </tr>
 </tbody>
 </table>
