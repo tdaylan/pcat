@@ -325,8 +325,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 
     ## log-prior
     path = gdat.pathpost + 'lpri'
-    tdpy.mcmc.plot_hist(path, sum(gdat.listlpri), strglpri)
-    tdpy.mcmc.plot_trac(path, sum(gdat.listlpri), strglpri)
+    tdpy.mcmc.plot_hist(path, sum(gdat.listlpri, 2).flatten(), strglpri)
+    tdpy.mcmc.plot_trac(path, sum(gdat.listlpri, 2).flatten(), strglpri)
 
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -404,31 +404,32 @@ def plot_chro(gdat):
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
+   
+    if (gdat.listchrollik != 0).any():
+        listlabl = ['PSF Intp.', 'Variables', 'Pixel mesh', 'Energy mesh', 'PS flux', 'Total flux', 'Lens host', 'Lens source', 'PSF conv.', 'Counts', 'Unbinned', 'Likelihood']
+        numblabl = len(listlabl)
+        figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
+        maxmchrollik = amax(gdat.listchrollik)
+        minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
+        binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
     
-    listlabl = ['PSF Intp.', 'Variables', 'Pixel mesh', 'Energy mesh', 'PS flux', 'Total flux', 'Lens host', 'Lens source', 'PSF conv.', 'Counts', 'Unbinned', 'Likelihood']
-    numblabl = len(listlabl)
-    figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
-    maxmchrollik = amax(gdat.listchrollik)
-    minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
-    binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
-
-    for k in range(gdat.numbchrollik):
-        chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
-        try:
-            axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
-        except:
-            print 'Skipping likelihood timing plot...'
-        axcl[k].set_xlim([amin(binstime), amax(binstime)])
-        axcl[k].set_ylim([0.5, None])
-        axcl[k].set_ylabel(listlabl[k])
-        axcl[k].set_xscale('log')
-        if k != gdat.numbchrollik - 1:
-            axcl[k].set_xticklabels([])
-        axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
-    axcl[-1].set_xlabel('$t$ [ms]')
-    plt.subplots_adjust(hspace=0.05)
-    figr.savefig(gdat.pathdiag + 'chrollik.pdf')
-    plt.close(figr)
+        for k in range(gdat.numbchrollik):
+            chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
+            try:
+                axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
+            except:
+                print 'Skipping likelihood timing plot...'
+            axcl[k].set_xlim([amin(binstime), amax(binstime)])
+            axcl[k].set_ylim([0.5, None])
+            axcl[k].set_ylabel(listlabl[k])
+            axcl[k].set_xscale('log')
+            if k != gdat.numbchrollik - 1:
+                axcl[k].set_xticklabels([])
+            axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
+        axcl[-1].set_xlabel('$t$ [ms]')
+        plt.subplots_adjust(hspace=0.05)
+        figr.savefig(gdat.pathdiag + 'chrollik.pdf')
+        plt.close(figr)
 
 
 def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
@@ -1085,7 +1086,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 axis.set_title(titl)
         
         plt.figtext(0.5, 0.95, '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn), ha='center', va='center')
-        axiscomm = figr.add_axes([0.9, 0.1, 0.02, 0.8])
+        axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
         cbar = figr.colorbar(imag, cax=axiscomm)
         plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)
         figr.savefig(gdat.pathpost + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')

@@ -413,8 +413,9 @@ def init( \
          stdvspep=0.15, \
          stdvspmrsind=0.2, \
          probrand=0.05, \
-         boolpropfluxdist=True, \
-         boolpropfluxdistbrek=True, \
+         propfluxdist=True, \
+         propsinddist=True, \
+         propfluxdistbrek=True, \
          prophypr=True, \
          proppsfp=True, \
          propbacp=True, \
@@ -1011,35 +1012,25 @@ def init( \
             gdat.mockminmflux = gdat.minmflux
         
         gdat.mockfixp = zeros(gdat.mocknumbfixp) + nan
-        # [None for k in gdat.mockindxfixp]
         if gdat.mocknumbpnts == None:
-            for l in gdat.mockindxpopl:
-                gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]] = random_integers(0, gdat.maxmnumbpnts[l])
+            if gdat.numbtrap > 0:
+                for l in gdat.mockindxpopl:
+                    gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]] = random_integers(0, gdat.maxmnumbpnts[l])
         else:
             gdat.mockfixp[gdat.mockindxfixpnumbpnts] = gdat.mocknumbpnts
-        gdat.mocknumbpopl = gdat.mocknumbpnts.size 
     
+        gdat.mockfixp[gdat.mockindxfixpmeanpnts] = gdat.mockfixp[gdat.mockindxfixpnumbpnts]
+
         if gdat.mockspatdisttype == None:
             gdat.mockspatdisttype = ['unif' for l in gdat.mockindxpopl]
         
         if gdat.mockfluxdisttype == None:
             gdat.mockfluxdisttype = ['powr' for l in gdat.mockindxpopl]
        
-        if gdat.mockfluxdistslop == None:
-            gdat.mockfixp[gdat.mockindxfixpfluxdistslop] = zeros(gdat.mocknumbpopl) + 2.
-        
-        if gdat.mockfluxdistbrek == None:
-            gdat.mockfixp[gdat.mockindxfixpfluxdistbrek] = zeros(gdat.mocknumbpopl) + 2.
-        
-        if gdat.mockfluxdistsloplowr == None:
-            gdat.mockfixp[gdat.mockindxfixpfluxdistsloplowr] = zeros(gdat.mocknumbpopl) + 1.
-        
-        if gdat.mockfluxdistslopuppr == None:
-            gdat.mockfixp[gdat.mockindxfixpfluxdistslopuppr] = zeros(gdat.mocknumbpopl) + 2.
-        
-        if gdat.mocksinddistmean == None:
-            gdat.mockfixp[gdat.mockindxfixpsinddistmean] = zeros(gdat.mocknumbpopl) + 2.
-       
+        defn_defa(gdat, 2., 'fluxdistslop', 'mock')
+        defn_defa(gdat, sqrt(gdat.mockminmflux * gdat.maxmflux), 'fluxdistbrek', 'mock')
+        defn_defa(gdat, 1., 'fluxdistsloplowr', 'mock')
+        defn_defa(gdat, 2., 'fluxdistslopuppr', 'mock')
         defn_defa(gdat, 2., 'sinddistmean', 'mock')
         defn_defa(gdat, 0.5, 'sinddiststdv', 'mock')
         
@@ -1063,7 +1054,7 @@ def init( \
         if not gdat.evalpsfnpnts:
             gdat.truepsfnkern = AiryDisk2DKernel(gdat.truepsfp[0] / gdat.sizepixl)
 
-        gdat.mocknumbpntstotl = sum(gdat.mocknumbpnts)
+        gdat.mocknumbpntstotl = sum(gdat.mockfixp[gdat.mockindxfixpnumbpnts])
         gdat.mockindxpntstotl = arange(gdat.mocknumbpntstotl)
     
         gdat.mockcnts = [[] for l in gdat.mockindxpopl]
@@ -1073,37 +1064,39 @@ def init( \
         gdat.mockaang = [[] for l in gdat.mockindxpopl]
         gdat.mockspec = [[] for l in gdat.mockindxpopl]
         gdat.mocknumbspep = retr_numbspep(gdat.mockspectype)
-        gdat.mockspep = [empty((gdat.mocknumbpnts[l], gdat.mocknumbspep[l])) for l in gdat.mockindxpopl]
+        if gdat.mocknumbtrap > 0:
+            gdat.mockspep = [empty((gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]], gdat.mocknumbspep[l])) for l in gdat.mockindxpopl]
         
         if gdat.mocknumbtrap > 0:
             for l in gdat.mockindxpopl:
                 if gdat.mockspatdisttype[l] == 'unif':
-                    gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl)
-                    gdat.mockbgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
+                    gdat.mocklgal[l] = icdf_self(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl)
+                    gdat.mockbgal[l] = icdf_self(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
                 if gdat.mockspatdisttype[l] == 'disc':
-                    gdat.mockbgal[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang) * choice(array([1., -1.]), size=gdat.mocknumbpnts[l])
-                    gdat.mocklgal[l] = icdf_self(rand(gdat.mocknumbpnts[l]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
+                    gdat.mockbgal[l] = icdf_logt(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.minmgang, gdat.factgang) * \
+                                                                                                choice(array([1., -1.]), size=gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]])
+                    gdat.mocklgal[l] = icdf_self(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl) 
                 if gdat.mockspatdisttype[l] == 'gang':
-                    gdat.mockgang[l] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmgang, gdat.factgang)
-                    gdat.mockaang[l] = icdf_self(rand(gdat.mocknumbpnts[l]), 0., 2. * pi)
+                    gdat.mockgang[l] = icdf_logt(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.minmgang, gdat.factgang)
+                    gdat.mockaang[l] = icdf_self(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), 0., 2. * pi)
                     gdat.mocklgal[l], gdat.mockbgal[l] = retr_lgalbgal(gdat.mockgang[l], gdat.mockaang[l])
                 
-                gdat.mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
+                gdat.mockspec[l] = empty((gdat.numbener, gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]))
                 if gdat.mockfluxdisttype[l] == 'powr':
-                    gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.maxmflux, \
+                    gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.mockminmflux, gdat.maxmflux, \
                                                                                                                     gdat.mockfixp[gdat.mockindxfixpfluxdistslop[l]])
                 if gdat.mockfluxdisttype[l] == 'brok':
-                    gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.maxmflux, gdat.mockfluxdistbrek[l], \
-                                                                                                                    gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
+                    gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), \
+                                                gdat.mockminmflux, gdat.maxmflux, gdat.mockfluxdistbrek[l], gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
                 if gdat.numbener > 1:
                     # spectral parameters
                     gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.mockfixp[gdat.mockindxfixpsinddistmean[l]], \
                                                                                                                             gdat.mockfixp[gdat.mockindxfixpsinddiststdv[l]])
                     if gdat.mockspectype[l] == 'curv':
-                        gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
+                        gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
                     
                     if gdat.mockspectype[l] == 'expo':
-                        gdat.mockspep[l][:, 1] = icdf_logt(rand(gdat.mocknumbpnts[l]), gdat.minmener, gdat.factener)
+                        gdat.mockspep[l][:, 1] = icdf_logt(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.minmener, gdat.factener)
                 
                 # spectra
                 gdat.mockspec[l] = retr_spec(gdat, gdat.mockspec[l][gdat.indxenerfluxdist[0], :], spep=gdat.mockspep[l], spectype=gdat.mockspectype[l])
@@ -1193,7 +1186,7 @@ def init( \
     setpfinl(gdat, True) 
 
     if gdat.makeplot:
-        if gdat.pixltype == 'cart':
+        if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
             figr, axis, path = init_figr(gdat, 'datacntspeak', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
             imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
             make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
@@ -1201,7 +1194,7 @@ def init( \
             
             # temp
             #axis.text(0.2, 0.95, '%0.7g %0.7g %0.7g' % (gdat.anglcatlrttr, rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr)), ha='center', va='center', transform=axis.transAxes)
-            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.3, s=20, edgecolor='none')
+            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
             
             plt.tight_layout()
             plt.savefig(path)
