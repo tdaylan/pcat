@@ -303,6 +303,9 @@ Hierarchical priors
 Adaptive burn-in
 +++++++++++++++++
 
+Initial state
+++++++++++++++++++++++
+
 Identity of components
 ++++++++++++++++++++++
 

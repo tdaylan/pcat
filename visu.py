@@ -290,9 +290,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
                                                                                       truepara=gdat.truefixp[gdat.indxfixpactv] * gdat.factfixpplot[gdat.indxfixpactv])
     ### grouped covariance plots
     #### hyperparameters
-    if len(gdat.indxfixphypr) > 0:
+    if gdat.indxfixphypractv.size > 0:
         path = gdat.pathpost + 'hypr'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.strgfixp[gdat.indxfixphypr], truepara=[gdat.truefixp[k] for k in gdat.indxfixphypr])
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypractv], gdat.strgfixp[gdat.indxfixphypractv], truepara=[gdat.truefixp[k] for k in gdat.indxfixphypractv])
     #### PSF
     if gdat.proppsfp:
         path = gdat.pathpost + 'psfp'

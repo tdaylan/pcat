@@ -78,7 +78,8 @@ def work(gdat, indxprocwork):
 
                     if gdat.numbener > 1:
                         # color parameters
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truesinddistmean[l], gdat.truesinddiststdv[l])
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
+                                                                                                                     gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
                         if gdat.spectype[l] == 'curv':
                             gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
                         if gdat.spectype[l] == 'expo':
@@ -86,12 +87,10 @@ def work(gdat, indxprocwork):
                 
                 randinittemp = False
             except:
+                
                 randinittemp = True
                 print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
        
-        print 'hey'
-        print 'randinittemp'
-        print randinittemp
         if randinittemp:
             for l in gdat.indxpopl:
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampcompcolr[l], 0] = rand(gdatmodi.thisindxsampcompcolr[l].size)
@@ -1231,13 +1230,6 @@ def init( \
                     plt.close(figr)
             
                     if gdat.backemis:
-                        figr, axis, path = init_figr(gdat, 'backcntstotl', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
-                        imag = retr_imag(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-                        make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-                        plt.tight_layout()
-                        plt.savefig(path)
-                        plt.close(figr)
-        
                         for c in gdat.indxback:
                             figr, axis, path = init_figr(gdat, 'backcnts', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
                             imag = retr_imag(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
@@ -1246,6 +1238,14 @@ def init( \
                             plt.savefig(path)
                             plt.close(figr)
         
+                        if gdat.numbback > 1:
+                            figr, axis, path = init_figr(gdat, 'backcntstotl', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
+                            imag = retr_imag(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                            plt.tight_layout()
+                            plt.savefig(path)
+                            plt.close(figr)
+            
                         figr, axis, path = init_figr(gdat, 'diffcntstotl', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
                         imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
                         make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
