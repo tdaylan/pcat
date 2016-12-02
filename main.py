@@ -40,7 +40,6 @@ def work(gdat, indxprocwork):
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[k] + 1))
             else:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = rand()
-        
         else:
             gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
           
@@ -89,7 +88,10 @@ def work(gdat, indxprocwork):
             except:
                 randinittemp = True
                 print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
-        
+       
+        print 'hey'
+        print 'randinittemp'
+        print randinittemp
         if randinittemp:
             for l in gdat.indxpopl:
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampcompcolr[l], 0] = rand(gdatmodi.thisindxsampcompcolr[l].size)
@@ -163,10 +165,7 @@ def work(gdat, indxprocwork):
             gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
         
     # log-prior
-    if gdat.bindprio:
-        gdatmodi.thislpri = empty((gdat.numbpopl, gdat.numbfluxplot))
-    else:
-        gdatmodi.thislpri = empty((gdat.numbpopl, 2))
+    gdatmodi.thislpri = zeros(gdat.numblpri)
 
     # allocate memory for variables to hold the proposed state
     ## sample vector
@@ -191,7 +190,7 @@ def work(gdat, indxprocwork):
     gdatmodi.thiscntsbackfwhm = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
    
     # log-prior
-    gdatmodi.nextlpri = empty((gdat.numbpopl, gdat.numbfluxplot))
+    gdatmodi.nextlpri = empty_like(gdatmodi.thislpri)
 
     # log the initial state
     if gdat.verbtype > 1 and gdat.numbtrap > 0:
@@ -480,8 +479,6 @@ def init( \
     else:
         gdat.datatype = 'inpt'
    
-    ### number of populations
-    gdat.numbpopl = gdat.maxmnumbpnts.size
     if gdat.datatype == 'mock':
         if gdat.mocknumbpnts == None:
             gdat.mocknumbpopl = 1
@@ -491,6 +488,9 @@ def init( \
             gdat.mockstrgback = gdat.strgback
         gdat.mocknumbback = len(gdat.mockstrgback)
         gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
+    
+    ### number of populations
+    gdat.numbpopl = gdat.maxmnumbpnts.size
     gdat.numbback = len(gdat.strgback)
     gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
     
@@ -827,7 +827,18 @@ def init( \
     
     # PS spectral model
     if gdat.spectype == None:
-        gdat.spectype = array(['powr' for l in gdat.indxpopl])
+        if gdat.mockspectype != None:
+            gdat.spectype = gdat.mockspectype
+        else:
+            gdat.spectype = array(['powr' for l in gdat.indxpopl])
+
+    if gdat.datatype == 'mock':
+        if gdat.mockspectype == None:
+            gdat.mockspectype = ['powr' for l in gdat.mockindxpopl]
+        if gdat.mockvarioaxi == None:
+            gdat.mockvarioaxi = gdat.truevarioaxi
+        if gdat.mockpsfntype == None:
+            gdat.mockpsfntype = gdat.truepsfntype
 
     ## PSF
     if gdat.psfntype == None:
@@ -898,19 +909,6 @@ def init( \
         else:
             gdat.maxmangl = 3. * gdat.maxmgang
 
-    if gdat.datatype == 'mock':
-        
-        if gdat.mockspectype == None:
-            gdat.mockspectype = ['powr' for l in gdat.mockindxpopl]
-
-        if gdat.mockvarioaxi == None:
-            gdat.mockvarioaxi = gdat.truevarioaxi
-       
-        if gdat.mockpsfntype == None:
-            gdat.mockpsfntype = gdat.truepsfntype
-
-        if gdat.mockminmflux == None:
-            gdat.mockminmflux = gdat.minmflux
 
     # number of total sweeps
     if gdat.numbswep == None:
@@ -1010,10 +1008,16 @@ def init( \
     # generate mock data
     if gdat.datatype == 'mock':
         
+        if gdat.mockminmflux == None:
+            gdat.mockminmflux = gdat.minmflux
+        
+        gdat.mockfixp = zeros(gdat.mocknumbfixp) + nan
+        # [None for k in gdat.mockindxfixp]
         if gdat.mocknumbpnts == None:
-            gdat.mocknumbpnts = empty(gdat.numbpopl, dtype=int)
-            for l in gdat.indxpopl:
-                gdat.mocknumbpnts[l] = random_integers(0, gdat.maxmnumbpnts[l])
+            for l in gdat.mockindxpopl:
+                gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]] = random_integers(0, gdat.maxmnumbpnts[l])
+        else:
+            gdat.mockfixp[gdat.mockindxfixpnumbpnts] = gdat.mocknumbpnts
         gdat.mocknumbpopl = gdat.mocknumbpnts.size 
     
         if gdat.mockspatdisttype == None:
@@ -1022,40 +1026,34 @@ def init( \
         if gdat.mockfluxdisttype == None:
             gdat.mockfluxdisttype = ['powr' for l in gdat.mockindxpopl]
        
-        # fix the hyperparameters
         if gdat.mockfluxdistslop == None:
-            gdat.mockfluxdistslop = zeros(gdat.mocknumbpopl) + 2.
-        
-        if gdat.mockfluxdistslop == None:
-            gdat.mockfluxdistslop = zeros(gdat.mocknumbpopl) + 2.
+            gdat.mockfixp[gdat.mockindxfixpfluxdistslop] = zeros(gdat.mocknumbpopl) + 2.
         
         if gdat.mockfluxdistbrek == None:
-            gdat.mockfluxdistbrek = zeros(gdat.mocknumbpopl) + 2.
+            gdat.mockfixp[gdat.mockindxfixpfluxdistbrek] = zeros(gdat.mocknumbpopl) + 2.
         
         if gdat.mockfluxdistsloplowr == None:
-            gdat.mockfluxdistsloplowr = zeros(gdat.mocknumbpopl) + 1.
+            gdat.mockfixp[gdat.mockindxfixpfluxdistsloplowr] = zeros(gdat.mocknumbpopl) + 1.
         
         if gdat.mockfluxdistslopuppr == None:
-            gdat.mockfluxdistslopuppr = zeros(gdat.mocknumbpopl) + 2.
+            gdat.mockfixp[gdat.mockindxfixpfluxdistslopuppr] = zeros(gdat.mocknumbpopl) + 2.
         
         if gdat.mocksinddistmean == None:
-            gdat.mocksinddistmean = zeros(gdat.mocknumbpopl) + 2.
+            gdat.mockfixp[gdat.mockindxfixpsinddistmean] = zeros(gdat.mocknumbpopl) + 2.
+       
+        defn_defa(gdat, 2., 'sinddistmean', 'mock')
+        defn_defa(gdat, 0.5, 'sinddiststdv', 'mock')
         
-        if gdat.mocksinddiststdv == None:
-            gdat.mocksinddiststdv = zeros(gdat.mocknumbpopl) + 0.5
-        
-        gdat.mockfixp = empty(gdat.mocknumbfixp)
         for k in gdat.mockindxfixp:
-            if k in gdat.mockindxfixpnumbpnts:
-                gdat.mockfixp[k] = gdat.mocknumbpnts[k]
-            else:
-                # temp
-                #valu = getattr(gdat, ''gdat.mocknamefixp[k])
-                if False:#valu != None:
-                    gdat.mockfixp[k] = valu
-                else:
-                    gdat.mockfixp[k] = icdf_fixp(gdat, rand(), k, mock=True)
-      
+            if k in gdat.mockindxfixppsfp:
+                gdat.mockfixp[k] = gdat.truepsfp[k-gdat.mockindxfixppsfp[0]]
+            elif not isfinite(gdat.mockfixp[k]):
+                gdat.mockfixp[k] = icdf_fixp(gdat, rand(), k, mock=True)
+        
+        if gdat.verbtype > 1 and gdat.datatype == 'mock':
+            print 'mock data'
+            print vstack((gdat.mockstrgfixp, gdat.mockfixp)).T
+
         # temp
         if gdat.pntstype == 'lens':
             gdat.mockfixp[gdat.mockindxfixplgalsour] = 0.2 * gdat.maxmgang * randn()
@@ -1066,9 +1064,6 @@ def init( \
         if not gdat.evalpsfnpnts:
             gdat.truepsfnkern = AiryDisk2DKernel(gdat.truepsfp[0] / gdat.sizepixl)
 
-        gdat.mockindxpnts = []
-        for l in gdat.mockindxpopl: 
-            gdat.mockindxpnts.append(arange(gdat.mocknumbpnts[l]))
         gdat.mocknumbpntstotl = sum(gdat.mocknumbpnts)
         gdat.mockindxpntstotl = arange(gdat.mocknumbpntstotl)
     
@@ -1097,13 +1092,14 @@ def init( \
                 gdat.mockspec[l] = empty((gdat.numbener, gdat.mocknumbpnts[l]))
                 if gdat.mockfluxdisttype[l] == 'powr':
                     gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.maxmflux, \
-                                                                                                                                gdat.mockfixp[gdat.mockindxfixpfluxdistslop[l]])
+                                                                                                                    gdat.mockfixp[gdat.mockindxfixpfluxdistslop[l]])
                 if gdat.mockfluxdisttype[l] == 'brok':
                     gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mocknumbpnts[l]), gdat.mockminmflux, gdat.maxmflux, gdat.mockfluxdistbrek[l], \
-                                                                                                                         gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
+                                                                                                                    gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
                 if gdat.numbener > 1:
                     # spectral parameters
-                    gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mocksinddistmean[l], gdat.mocksinddiststdv[l])
+                    gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.mockfixp[gdat.mockindxfixpsinddistmean[l]], \
+                                                                                                                            gdat.mockfixp[gdat.mockindxfixpsinddiststdv[l]])
                     if gdat.mockspectype[l] == 'curv':
                         gdat.mockspep[l][:, 1] = icdf_gaus(rand(gdat.mocknumbpnts[l]), gdat.mockcurvdistmean[l], gdat.mockcurvdiststdv[l])
                     
@@ -1387,7 +1383,7 @@ def init( \
     gdat.listchrollik = zeros((gdat.numbswep, gdat.numbproc, gdat.numbchrollik))
     gdat.listchrototl = zeros((gdat.numbswep, gdat.numbproc, gdat.numbchrototl))
     gdat.listllik = zeros((gdat.numbsamp, gdat.numbproc))
-    gdat.listlpri = zeros((gdat.numbsamp, gdat.numbproc))
+    gdat.listlpri = zeros((gdat.numbsamp, gdat.numbproc, gdat.numblpri))
     gdat.listaccp = zeros((gdat.numbswep, gdat.numbproc))
     gdat.listmodlcnts = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbpixlsave))
     gdat.listpntsfluxmean = zeros((gdat.numbsamp, gdat.numbproc, gdat.numbener))
@@ -1417,7 +1413,7 @@ def init( \
         gdat.listindxprop[:, k] = listchan[2]
         gdat.listchrototl[:, k, :] = listchan[3]
         gdat.listllik[:, k] = listchan[4]
-        gdat.listlpri[:, k] = listchan[5]
+        gdat.listlpri[:, k, :] = listchan[5]
         gdat.listaccp[:, k] = listchan[6]
         gdat.listmodlcnts[:, k, :] = listchan[7]    
         listindxpntsfulltemp.append(listchan[8])
@@ -1833,7 +1829,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listchrototl = zeros((gdat.numbswep, gdat.numbchrototl))
     gdatmodi.listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
     listllik = zeros(gdat.numbsamp)
-    listlpri = zeros(gdat.numbsamp)
+    listlpri = zeros((gdat.numbsamp, gdat.numblpri))
     listlprinorm = zeros(gdat.numbsamp)
     listaccp = zeros(gdat.numbswep, dtype=bool)
     listindxfixpmodi = zeros(gdat.numbswep, dtype=int)
@@ -1921,6 +1917,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print
             print '-----'
             print 'Proposing...'
+            print 'thislliktotl'
+            print sum(gdatmodi.thislliktotl)
+            print 'thislpritotl'
+            print sum(gdatmodi.thislpritotl)
+            print 'thislpostotl'
+            print sum(gdatmodi.thislliktotl) + sum(gdatmodi.thislpritotl)
             print
 
         # propose the next sample
@@ -1944,19 +1946,26 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print gdatmodi.drmcsamp[indxsampbadd, :]
                 raise Exception('Unit sample vector went outside [0,1].')
             
-            if gdatmodi.indxenermodi.ndim != 1:
-                raise Exception('indxenermodi is inappropriate.')
+            if gdat.pntstype == 'lght':
+                if gdatmodi.propllik:
+                    if gdatmodi.indxenermodi.ndim != 1:
+                        raise Exception('indxenermodi is inappropriate.')
             if not isinstance(gdatmodi.indxsampmodi, ndarray):
                 raise Exception('indxsampmodi is inappropriate.')
-            
+           
+            gdatmodi.thislpostotl = sum(gdatmodi.thisllik) + sum(gdatmodi.thislpri)
             if gdatmodi.cntrswep > 0:
-                if sum(gdatmodi.thisllik) - gdatmodi.thislliktotlprev < -10.:
-                    print 'sum(gdatmodi.thisllik)'
-                    print sum(gdatmodi.thisllik)
-                    print 'gdatmodi.thislliktotlprev'
-                    print gdatmodi.thislliktotlprev
+                if gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -10.:
+                    print 'gdatmodi.thislpostotl'
+                    print gdatmodi.thislpostotl
+                    print 'gdatmodi.thislpostotlprev'
+                    print gdatmodi.thislpostotlprev
                     raise Exception('loglikelihood drop is very unlikely!')
-            gdatmodi.thislliktotlprev = sum(copy(gdatmodi.thisllik))
+            gdatmodi.thislpostotlprev = gdatmodi.thislpostotl
+        
+            if gdat.pntstype == 'lght':
+                if amin(gdatmodi.thispntsflux) < 0.:
+                    raise Exception('thispntsflux went negative.')
 
             # check what has been changed
             if gdatmodi.cntrswep != 0:
@@ -1976,14 +1985,13 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     raise Exception('Proposed flux model is not finite.')
                 if (gdatmodi.nextmodlflux <= 0.).any():
                     raise Exception('Proposed flux model is not positive')
-                summ(gdatmodi, 'nextmodlflux')
                 if not isfinite(gdatmodi.deltllik):
                     raise Exception('Delta loglikelihood is not finite.')
             
-
-            if gdatmodi.proplpri:
-                if not isfinite(gdatmodi.deltlpri):
-                    raise Exception('Delta logprior is not finite.')
+            if gdatmodi.cntrswep > 0:
+                if gdatmodi.proplpri:
+                    if not isfinite(gdatmodi.deltlpri):
+                        raise Exception('Delta logprior is not finite.')
 
             if (gdatmodi.drmcsamp[gdat.indxsampunsd, 1] != 0.).any():
                 show_samp(gdat, gdatmodi)
@@ -2072,7 +2080,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                         listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 
             
             listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
-            listlpri[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thislpri)
+            listlpri[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thislpri
             lprinorm = 0.
             for l in gdat.indxpopl:
                 # temp
@@ -2145,12 +2153,18 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             # evaluate the log-prior
             timeinit = gdat.functime()
             retr_lpri(gdat, gdatmodi)
+            if gdat.diagmode:
+                if not isfinite(gdatmodi.deltllik):
+                    raise Exception('deltlpri is not finite.')
             timefinl = gdat.functime()
             listchrototl[gdatmodi.cntrswep, 2] = timefinl - timeinit
 
             # evaluate the log-likelihood
             timeinit = gdat.functime()
             retr_llik(gdat, gdatmodi) 
+            if gdat.diagmode:
+                if not isfinite(gdatmodi.deltllik):
+                    raise Exception('deltllik is not finite.')
             timefinl = gdat.functime()
             listchrototl[gdatmodi.cntrswep, 3] = timefinl - timeinit
    

@@ -299,7 +299,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.truefixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     #### backgrounds
-    if gdat.backemis:
+    if gdat.backemis and gdat.propbacp:
         path = gdat.pathpost + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp.flatten()], gdat.strgfixp[gdat.indxfixpbacp.flatten()], \
                                                                                                         truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()])
@@ -325,8 +325,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 
     ## log-prior
     path = gdat.pathpost + 'lpri'
-    tdpy.mcmc.plot_hist(path, gdat.listlpri, strglpri)
-    tdpy.mcmc.plot_trac(path, gdat.listlpri, strglpri)
+    tdpy.mcmc.plot_hist(path, sum(gdat.listlpri), strglpri)
+    tdpy.mcmc.plot_trac(path, sum(gdat.listlpri), strglpri)
 
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
