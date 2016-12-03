@@ -1552,7 +1552,7 @@ def make_anim(gdat):
 
     listname = ['psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
     listnamepopl = ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
-    listnamepoplenerevtt = ['datacnts', 'resicnts', 'modlcnts']
+    listnamepoplenerevtt = ['datacnts', 'resicnts', 'modlcnts', 'defl']
     listnameenerevtt = ['factoaxi', 'errr', 'errrcnts']
     for l in gdat.indxpopl:
         for k in range(len(listnamepopl)):

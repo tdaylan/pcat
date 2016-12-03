@@ -41,17 +41,12 @@ def work(gdat, indxprocwork):
             else:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = rand()
         else:
-            if k in gdat.indxfixpbacp:
-                print 'k'
-                print k
-                print 'gdat.truefixp[k]'
-                print gdat.truefixp[k]
-                print 'cdfn_fixp(gdat, gdat.truefixp[k], k)'
-                print cdfn_fixp(gdat, gdat.truefixp[k], k)
-                print
-
             gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
-          
+    
+    print 'gdatmodi.drmcsamp'
+    print gdatmodi.drmcsamp
+    print 
+
     ## lists of occupied and empty transdimensional parameters
     thisnumbpnts = gdatmodi.drmcsamp[gdat.indxfixpnumbpnts, 0].astype(int)
     gdatmodi.thisindxpntsfull = []
@@ -70,35 +65,35 @@ def work(gdat, indxprocwork):
         if gdat.randinit:
             randinittemp = True
         else:
-            #try:
-            for l in gdat.indxpopl:
-                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                if gdat.fluxdisttype[l] == 'powr':
-                    fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
-                    fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
-                if gdat.fluxdisttype[l] == 'brok':
-                    flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                    fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
-                    fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
-                    fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
-                    fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-                gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
+            try:
+                for l in gdat.indxpopl:
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                    if gdat.fluxdisttype[l] == 'powr':
+                        fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
+                        fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
+                    if gdat.fluxdisttype[l] == 'brok':
+                        flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+                        fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
+                        fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
+                        fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
+                        fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
 
-                if gdat.numbener > 1:
-                    # color parameters
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
-                                                                                                                 gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
-                    if gdat.spectype[l] == 'curv':
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
-                    if gdat.spectype[l] == 'expo':
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
-            
-            randinittemp = False
-            #except:
-            #    
-            #    randinittemp = True
-            #    print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
+                    if gdat.numbener > 1:
+                        # color parameters
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                     gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
+                        if gdat.spectype[l] == 'curv':
+                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
+                        if gdat.spectype[l] == 'expo':
+                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
+                
+                randinittemp = False
+            except:
+                
+                randinittemp = True
+                print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
        
         if randinittemp:
             for l in gdat.indxpopl:

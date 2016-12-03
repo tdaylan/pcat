@@ -87,7 +87,10 @@ def retr_thismodlflux(gdat, gdatmodi):
 def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
    
     numbpnts = lgal.size
-    pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    if gdat.pixltype == 'unbd':
+        pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt, 2))
+    else:
+        pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     for k in range(numbpnts):
         
         if evalcirc:
@@ -706,7 +709,10 @@ def retr_llik(gdat, gdatmodi, init=False):
                 print 'gdatmodi.indxcubemodi'
                 print gdatmodi.indxcubemodi[0].size
                 print
-
+                print 'gdatmodi.nextpntsflux'
+                print gdatmodi.nextpntsflux.shape
+                print 'gdatmodi.thispntsflux'
+                print gdatmodi.thispntsflux.shape
                 gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] = copy(gdatmodi.thispntsflux[gdatmodi.indxcubemodi])
 
                 ## when evaluating the PSF, avoid copying the current PS fluxes unnecessarily
@@ -1279,7 +1285,7 @@ def retr_maps(gdat, indxpntsfull, sampvarb, evalcirc):
                                                             concatenate(listspectemp, axis=1), sampvarb[gdat.indxfixppsfp], gdat.psfntype, gdat.varioaxi, evalcirc)
     
     else:
-        pntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        pntsflux = zeros_like(gdat.datacnts)
         
     if gdat.backemis:
         totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxfixpbacp], pntsflux, gdat.indxcube)
@@ -2783,7 +2789,7 @@ def setpinit(gdat, boolinitsetp=False):
             raise Exception('Pivot energy cannot be zero.')
         gdat.enernorm = gdat.meanener / gdat.enerfluxdist
         gdat.factlogtenerpivt = log(gdat.enernorm)
-        gdat.factspecener = gdat.enernorm**(-sqrt(gdat.minmsinddistmean * gdat.maxmsinddistmean))
+        gdat.factspecener = gdat.enernorm**(-sqrt(amin(gdat.minmsinddistmean) * amax(gdat.maxmsinddistmean)))
         gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
     else:
         gdat.factspecener = array([1.])
