@@ -703,6 +703,10 @@ def retr_llik(gdat, gdatmodi, init=False):
             if gdatmodi.proppnts or gdatmodi.proppsfp:
             
                 # copy the previous map
+                print 'gdatmodi.indxcubemodi'
+                print gdatmodi.indxcubemodi[0].size
+                print
+
                 gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] = copy(gdatmodi.thispntsflux[gdatmodi.indxcubemodi])
 
                 ## when evaluating the PSF, avoid copying the current PS fluxes unnecessarily
@@ -3292,7 +3296,7 @@ def setpfinl(gdat, boolinitsetp=False):
     
         # rotate PS coordinates to the ROI center
         if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
-            rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), gdat.anglcatlrttr], deg=True, eulertype='ZYX')
+            rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='ZYX')
             gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
             gdat.exprbgal = pi / 2. - gdat.exprbgal
      
@@ -3466,11 +3470,8 @@ def setpfinl(gdat, boolinitsetp=False):
 
         ## Real data
         if gdat.datatype == 'inpt':
-            gdat.truenumbpnts = None
-            gdat.truemeanpnts = None
-            gdat.truebacp = None
-            
-            gdat.truenumbpnts = array([gdat.exprnumbpnts], dtype=int)
+            gdat.truefixp[gdat.indxfixpnumbpnts] = array([gdat.exprnumbpnts], dtype=int)
+            gdat.truefixp[gdat.indxfixpmeanpnts] = gdat.truefixp[gdat.indxfixpnumbpnts]
             gdat.truelgal = [gdat.exprlgal]
             gdat.truebgal = [gdat.exprbgal]
             gdat.truespec = [gdat.exprspec]
@@ -3541,7 +3542,7 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.numbtrap > 0:
             for l in gdat.indxpopl:
                 indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
-                truebackcntstemp = zeros((gdat.numbener, gdat.truenumbpnts[l], gdat.numbevtt))
+                truebackcntstemp = zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]], gdat.numbevtt))
                 for k in range(gdat.truebgal[l].size):
                     if gdat.truevarioaxi:
                         indxoaxitemp = retr_indxoaxipnts(gdat, gdat.truelgal[l][k], gdat.truebgal[l][k])
@@ -3559,7 +3560,7 @@ def setpfinl(gdat, boolinitsetp=False):
                     print gdat.truespec
                     raise Exception('True PS parameters are not finite.')
 
-    if gdat.truenumbtrap > 0:
+    if gdat.numbtrap > 0:
         gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
                                                                                                         concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
     
@@ -3612,11 +3613,17 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfixpactvprop = setdiff1d(gdat.indxfixpactv, gdat.indxfixpnumbpnts)
     gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop].tolist()
    
+    if gdat.probtran == None:
+        if gdat.numbtrap > 0:
+            gdat.probtran = 0.4
+        else:
+            gdat.probtran = 0.
+        
     gdat.numbfixpactvprop = gdat.indxfixpactvprop.size
     cntr = tdpy.util.cntr()
     cntr.incr(gdat.numbfixpactvprop)
     if gdat.numbtrap > 0.:
-
+    
         gdat.indxproppnts = []
         if gdat.probtran > 0.:
             # birth
@@ -3670,12 +3677,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxactvconv = zeros(gdat.numbfixp, dtype=int)
     gdat.indxactvconv[gdat.indxfixpactvprop] = arange(gdat.numbfixpactvprop, dtype=int)
     
-    if gdat.probtran == None:
-        if gdat.numbtrap > 0:
-            gdat.probtran = 0.4
-        else:
-            gdat.probtran = 0.
-        
     listindxsampunsd = []
     numbsampcumu = 0
     for l in gdat.indxpopl:
@@ -4399,7 +4400,7 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot, trueonly=False):
             mrkrsize = retr_mrkrsize(gdat, gdat.truespec[indxpoplplot][0, gdat.indxenerfluxdist, :].flatten())
             lgal = copy(gdat.truelgal[indxpoplplot])
             bgal = copy(gdat.truebgal[indxpoplplot])
-            numbpnts = int(gdat.truenumbpnts[indxpoplplot])
+            numbpnts = int(gdat.truefixp[gdat.indxfixpnumbpnts][indxpoplplot])
             if not trueonly:
                 
                 ## associations
@@ -4535,7 +4536,7 @@ def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
     trueindxpntsassc.mult = []
         
     indxmodlpnts = zeros_like(gdat.truelgal[thisindxpopl], dtype=int) - 1
-    specassc = zeros((gdat.numbener, gdat.truenumbpnts[thisindxpopl]), dtype=float)
+    specassc = zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[thisindxpopl]]), dtype=float)
     numbassc = zeros_like(gdat.truelgal[thisindxpopl], dtype=int)
     distassc = zeros_like(gdat.truelgal[thisindxpopl]) + 3 * gdat.maxmgang
     dir1 = array([gdat.truelgal[thisindxpopl], gdat.truebgal[thisindxpopl]])
@@ -4560,12 +4561,12 @@ def corr_catl(gdat, thisindxpopl, modllgal, modlbgal, modlspec):
                 indxmodlpnts[trueindxpntstemp[0]] = k
 
     # get the flux limit that delineates the biased associations and hits 
-    fluxbias = empty((2, gdat.numbener, gdat.truenumbpnts[thisindxpopl]))
+    fluxbias = empty((2, gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[thisindxpopl]]))
     for i in gdat.indxener:
         fluxbias[:, i, :] = retr_fluxbias(gdat, gdat.truespec[thisindxpopl][0, i, :], i)
 
     # divide associations into subgroups
-    for k in range(gdat.truenumbpnts[thisindxpopl]):
+    for k in range(gdat.truefixp[gdat.indxfixpnumbpnts[thisindxpopl]].astype(int)):
         if numbassc[k] == 0:
             trueindxpntsassc.miss.append(k)
         else:

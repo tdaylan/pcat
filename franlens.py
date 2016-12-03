@@ -292,7 +292,6 @@ def retr_imaglens(gdat, gdatmodi=None, raww=False):
         lensfluxconv = lensflux.flatten()
 
     # calculate the total map
-    
     modlflux = lensfluxconv + sampvarb[getattr(gdat, strg + 'indxfixpbacp')] * gdat.backflux[0][0, :, 0]
     
     return modlflux, lensfluxconv, lensflux, defl

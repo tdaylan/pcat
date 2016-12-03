@@ -35,12 +35,21 @@ def work(gdat, indxprocwork):
    
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
-        if gdat.randinit or gdat.truefixp[k] == None:
+        if gdat.randinit or not isfinite(gdat.truefixp[k]):
             if k in gdat.indxfixpnumbpnts:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[k] + 1))
             else:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = rand()
         else:
+            if k in gdat.indxfixpbacp:
+                print 'k'
+                print k
+                print 'gdat.truefixp[k]'
+                print gdat.truefixp[k]
+                print 'cdfn_fixp(gdat, gdat.truefixp[k], k)'
+                print cdfn_fixp(gdat, gdat.truefixp[k], k)
+                print
+
             gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
           
     ## lists of occupied and empty transdimensional parameters
@@ -61,35 +70,35 @@ def work(gdat, indxprocwork):
         if gdat.randinit:
             randinittemp = True
         else:
-            try:
-                for l in gdat.indxpopl:
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                    if gdat.fluxdisttype[l] == 'powr':
-                        fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
-                        fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
-                    if gdat.fluxdisttype[l] == 'brok':
-                        flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                        fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
-                        fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
-                        fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
-                        fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
+            #try:
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                if gdat.fluxdisttype[l] == 'powr':
+                    fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop[l], gdat.factfluxdistslop[l])
+                    fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
+                if gdat.fluxdisttype[l] == 'brok':
+                    flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+                    fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek[l], gdat.factfluxdistbrek[l])
+                    fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr[l], gdat.factfluxdistsloplowr[l])
+                    fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr[l], gdat.factfluxdistslopuppr[l])
+                    fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
 
-                    if gdat.numbener > 1:
-                        # color parameters
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
-                                                                                                                     gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
-                        if gdat.spectype[l] == 'curv':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
-                        if gdat.spectype[l] == 'expo':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
-                
-                randinittemp = False
-            except:
-                
-                randinittemp = True
-                print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
+                if gdat.numbener > 1:
+                    # color parameters
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                 gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
+                    if gdat.spectype[l] == 'curv':
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
+                    if gdat.spectype[l] == 'expo':
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
+            
+            randinittemp = False
+            #except:
+            #    
+            #    randinittemp = True
+            #    print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
        
         if randinittemp:
             for l in gdat.indxpopl:
@@ -677,11 +686,11 @@ def init( \
         if gdat.pixltype == None:
             gdat.pixltype = 'cart'
     
-    if exprinfo == None:
-        if exprtype == 'ferm' or exprtype == 'chan':
-            exprinfo = True
+    if gdat.exprinfo == None:
+        if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
+            gdat.exprinfo = True
         else:
-            exprinfo = False
+            gdat.exprinfo = False
 
     if gdat.nameexpr == None:
         if gdat.exprtype == 'ferm':
@@ -1026,17 +1035,23 @@ def init( \
         
         if gdat.mockfluxdisttype == None:
             gdat.mockfluxdisttype = ['powr' for l in gdat.mockindxpopl]
-       
+      
+        # fix some mock parameters
         defn_defa(gdat, 2., 'fluxdistslop', 'mock')
         defn_defa(gdat, sqrt(gdat.mockminmflux * gdat.maxmflux), 'fluxdistbrek', 'mock')
         defn_defa(gdat, 1., 'fluxdistsloplowr', 'mock')
         defn_defa(gdat, 2., 'fluxdistslopuppr', 'mock')
         defn_defa(gdat, 2., 'sinddistmean', 'mock')
         defn_defa(gdat, 0.5, 'sinddiststdv', 'mock')
-        
+        defn_defa(gdat, 1., 'bacp', 'mock')
+       
         for k in gdat.mockindxfixp:
+
+            # assume the true PSF
             if k in gdat.mockindxfixppsfp:
                 gdat.mockfixp[k] = gdat.truepsfp[k-gdat.mockindxfixppsfp[0]]
+
+            # randomly sample the rest of the mock parameters
             elif not isfinite(gdat.mockfixp[k]):
                 gdat.mockfixp[k] = icdf_fixp(gdat, rand(), k, mock=True)
         
@@ -1760,7 +1775,7 @@ def plot_samp(gdat, gdatmodi):
                                                                                                                             gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
                 gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
                 
-                gdatmodi.thisspecmtch = zeros((gdat.numbener, gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]))
+                gdatmodi.thisspecmtch = zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]]))
                 temp = where(indxmodl >= 0)[0]
                 gdatmodi.thisspecmtch[:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
                 gdatmodi.thisspecmtch[:, trueindxpntsassc.miss] = 0.

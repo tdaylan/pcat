@@ -96,7 +96,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     plt.close(figr)
    
     # plot split and merge diagnostics
-    if gdat.numbtrap > 0:
+    if gdat.numbtrap > 0 and gdat.probtran > 0. and gdat.probbrde < 1.:
         indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
         indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
         indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
