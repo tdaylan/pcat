@@ -1584,8 +1584,7 @@ def make_anim(gdat):
             indxfileanim = arange(indxfilelowr, numbfile)
         else:
             indxfileanim = array([])
-        
-        numbfile = indxfileanim.size
+      
         if numbfile == 0:
             if gdat.verbtype > 0:
                 print 'Skipping animation for %s...' % name
@@ -1594,10 +1593,10 @@ def make_anim(gdat):
             if gdat.verbtype > 0:
                 print 'Producing animation for %s...' % name
             
-        indxfileanim = choice(arange(numbfile), replace=False, size=numbfile)
+        indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
 
         cmnd = 'convert -delay 20 -density 300 -quality 100 '
-        for k in range(numbfile):
+        for k in range(indxfileanim.size):
             cmnd += '%s%s ' % (gdat.pathfram, listfile[indxfileanim[k]])
         cmnd += ' %s%s.gif' % (pathanim, name)
         os.system(cmnd)

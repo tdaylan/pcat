@@ -21,7 +21,7 @@ def work(gdat, indxprocwork):
     
     # construct the initial state
     if gdat.verbtype > 0:
-        print 'Initializing the unit sample vector'
+        print 'Initializing the unit sample vector...'
    
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
@@ -392,11 +392,12 @@ def init( \
          # proposals
          numbpntsmodi=1, \
          stdvprophypr=0.1, \
-         stdvproppsfp=0.01, \
+         stdvproppsfp=0.1, \
          stdvpropbacp=0.01, \
-         stdvproplenp=0.01, \
+         stdvproplenp=1e-4, \
          varistdvlbhl=True, \
-         stdvlbhl=0.1, \
+         stdvlgal=0.1, \
+         stdvbgal=0.1, \
          stdvflux=0.15, \
          stdvspep=0.15, \
          stdvspmrsind=0.2, \
@@ -790,18 +791,21 @@ def init( \
     if gdat.fluxdisttype == None:
         gdat.fluxdisttype = array(['powr' for l in gdat.indxpopl])
 
-    if gdat.exprtype == 'ferm':
-        gdat.minmflux = 3e-11
-    if gdat.exprtype == 'chan':
-        gdat.minmflux = 1e-5
-    if gdat.exprtype == 'chem':
-        gdat.minmflux = 1e0
-    if gdat.exprtype == 'ferm':
-        gdat.maxmflux = 1e-7
-    if gdat.exprtype == 'chan':
-        gdat.maxmflux = 1e-3
-    if gdat.exprtype == 'chem':
-        gdat.maxmflux = 1e4
+    if gdat.minmflux == None:
+        if gdat.exprtype == 'ferm':
+            gdat.minmflux = 3e-11
+        if gdat.exprtype == 'chan':
+            gdat.minmflux = 1e-5
+        if gdat.exprtype == 'chem':
+            gdat.minmflux = 1e0
+    
+    if gdat.maxmflux == None:
+        if gdat.exprtype == 'ferm':
+            gdat.maxmflux = 1e-7
+        if gdat.exprtype == 'chan':
+            gdat.maxmflux = 1e-3
+        if gdat.exprtype == 'chem':
+            gdat.maxmflux = 1e4
     
     setp_varbfull(gdat, 'fluxdistslop', [gdat.minmfluxdistslop, gdat.maxmfluxdistslop], [1.5, 3.5], gdat.numbpopl)
     setp_varbfull(gdat, 'fluxdistbrek', [gdat.minmfluxbrek, gdat.maxmfluxbrek], [gdat.minmflux, gdat.maxmflux], gdat.numbpopl)
@@ -904,10 +908,7 @@ def init( \
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        if gdat.datatype == 'mock' and not gdat.randinit:
-            gdat.numbburn = 0
-        else:
-            gdat.numbburn = gdat.numbswep / 10
+        gdat.numbburn = gdat.numbswep / 10
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -995,9 +996,14 @@ def init( \
 
     # generate mock data
     if gdat.datatype == 'mock':
-    
+        
+        if gdat.verbtype > 0:
+            print 'Generating mock data...'
+
         if gdat.seedstat != None:
-            randommod.seed(gdat.seedstat)
+            if gdat.verbtype > 0:
+                print 'Setting the seed for the RNG...'
+            set_state(gdat.seedstat)
 
         if gdat.mockminmflux == None:
             gdat.mockminmflux = gdat.minmflux
@@ -1174,7 +1180,7 @@ def init( \
                         gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
     
         if gdat.seedstat != None:
-            randommod.seed()
+            seed()
 
     # final setup
     setpfinl(gdat, True) 
@@ -1878,10 +1884,10 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdat.verbtype > 0 and indxprocwork == 0:
                 print 'Optimizing proposal scale...'
             targpropeffi = 0.25
-            gdat.factpropeffi = 2.
+            gdat.factpropeffi = 4.
             minmpropeffi = targpropeffi / gdat.factpropeffi
             maxmpropeffi = targpropeffi * gdat.factpropeffi
-            perdpropeffi = 100 * gdat.numbstdp
+            perdpropeffi = 10 * gdat.numbstdp
             cntrprop = zeros(gdat.numbstdp)
             cntrproptotl = zeros(gdat.numbstdp)
             gdat.optidone = False
@@ -2297,7 +2303,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print 'gdat.strgstdp'
                 print gdat.strgstdp
 
-            if gdatmodi.thisindxprop < gdat.indxpropbrth:
+            if gdatmodi.thisindxprop < gdat.numbfixpactvprop:
                 gdatmodi.thisindxstdp = gdat.indxfixpactvprop[gdatmodi.thisindxprop]
             elif gdatmodi.thisindxprop == gdat.indxproplgal:
                 gdatmodi.thisindxstdp = gdat.numbfixp
@@ -2316,7 +2322,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             
                 thispropeffi = cntrprop / cntrproptotl
                 if gdat.verbtype > 0:
-                    print vstack((gdat.strgstdp, thispropeffi, gdat.stdvstdp)).T
                     print 'Proposal scale optimization step %d' % gdatmodi.cntrswepoptistep
                     print 'Current proposal efficiency'
                     print thispropeffi[gdat.indxstdpactv]

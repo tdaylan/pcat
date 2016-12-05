@@ -2389,10 +2389,14 @@ def retr_prop(gdat, gdatmodi):
             
         # propose
         if gdatmodi.proplgal or gdatmodi.propbgal:
-            if gdat.varistdvlbhl:
-                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdplbhl] * gdat.minmflux / thisspec[gdat.indxenerfluxdist[0]])
+            if gdatmodi.proplgal:
+                stdvlbhl = gdat.stdvstdp[gdat.indxstdplgal]
             else:
-                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdplbhl]) 
+                stdvlbhl = gdat.stdvstdp[gdat.indxstdpbgal]
+            if gdat.varistdvlbhl:
+                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, stdvlbhl * gdat.minmflux / thisspec[gdat.indxenerfluxdist[0]])
+            else:
+                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, stdvlbhl) 
         elif gdatmodi.propflux:
             retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdpflux])
         else:
@@ -3690,16 +3694,17 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxactvconv[gdat.indxfixpactvprop] = arange(gdat.numbfixpactvprop, dtype=int)
     
     gdat.strgstdp = concatenate((gdat.strgfixp, array(['lgal', 'bgal', 'flux'])))
+    gdat.numbstdp = gdat.strgstdp.size
+    gdat.indxstdplgal = gdat.numbfixp
+    gdat.indxstdpbgal = gdat.numbfixp + 1
+    gdat.indxstdpflux = gdat.numbfixp + 2
     if gdat.numbener > 1:
         gdat.strgstdp = concatenate((gdat.strgstdp, array(['spep'])))
-    gdat.numbstdp = gdat.strgstdp.size
-    gdat.indxstdplbhl = gdat.numbfixp + 1
-    gdat.indxstdpflux = gdat.numbfixp + 2
-    gdat.indxstdpspep = gdat.numbfixp + 3
+        gdat.indxstdpspep = gdat.numbfixp + 3
    
     gdat.indxstdpactv = gdat.indxfixpactvprop
     if gdat.propcomp and gdat.numbtrap > 0:
-        gdat.indxstdpactv = concatenate((gdat.indxstdpactv, array([gdat.indxstdplbhl, gdat.indxstdpflux])))
+        gdat.indxstdpactv = concatenate((gdat.indxstdpactv, array([gdat.indxstdplgal, gdat.indxstdpbgal, gdat.indxstdpflux])))
         if gdat.numbener > 1:
             gdat.indxstdpactv = concatenate((gdat.indxstdpactv, array([gdat.indxstdpspep])))
 
@@ -3709,7 +3714,8 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.stdvstdp[gdat.indxfixppsfp] = gdat.stdvproppsfp
     gdat.stdvstdp[gdat.indxfixpbacp] = gdat.stdvpropbacp
     gdat.stdvstdp[gdat.indxfixplenp] = gdat.stdvproplenp
-    gdat.stdvstdp[gdat.indxstdplbhl] = gdat.stdvlbhl
+    gdat.stdvstdp[gdat.indxstdplgal] = gdat.stdvlgal
+    gdat.stdvstdp[gdat.indxstdpbgal] = gdat.stdvbgal
     gdat.stdvstdp[gdat.indxstdpflux] = gdat.stdvflux
     if gdat.numbener > 1:
         gdat.stdvstdp[gdat.indxstdpspep] = gdat.stdvspep
