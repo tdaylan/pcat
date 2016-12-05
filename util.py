@@ -692,6 +692,9 @@ def retr_llik(gdat, gdatmodi, init=False):
         
         if gdat.evalcirc or (gdat.numbener != 1 and not gdatmodi.propcomp):
             gdatmodi.indxcubemodi = meshgrid(gdatmodi.indxenermodi, gdatmodi.indxpixlmodi, gdat.indxevtt, indexing='ij')
+            print 'gdatmodi.indxpixlmodi'
+            print gdatmodi.indxpixlmodi.size
+            print 
         else:
             gdatmodi.indxcubemodi = gdat.indxcube
         
@@ -709,10 +712,11 @@ def retr_llik(gdat, gdatmodi, init=False):
                 print 'gdatmodi.indxcubemodi'
                 print gdatmodi.indxcubemodi[0].size
                 print
-                print 'gdatmodi.nextpntsflux'
-                print gdatmodi.nextpntsflux.shape
-                print 'gdatmodi.thispntsflux'
-                print gdatmodi.thispntsflux.shape
+                if gdat.strgcnfg == 'test': 
+                    print 'gdatmodi.nextpntsflux'
+                    print gdatmodi.nextpntsflux.shape
+                    print 'gdatmodi.thispntsflux'
+                    print gdatmodi.thispntsflux.shape
                 gdatmodi.nextpntsflux[gdatmodi.indxcubemodi] = copy(gdatmodi.thispntsflux[gdatmodi.indxcubemodi])
 
                 ## when evaluating the PSF, avoid copying the current PS fluxes unnecessarily
@@ -1911,7 +1915,7 @@ def retr_prop(gdat, gdatmodi):
     if gdatmodi.propfixp:
     
         # take the step
-        retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdatmodi.stdvproppara[gdatmodi.indxsampmodi])
+        retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdatmodi.indxsampmodi])
 
         ## hyperparameter changes
         if gdatmodi.propmeanpnts:
@@ -2391,14 +2395,14 @@ def retr_prop(gdat, gdatmodi):
             
         # propose
         if gdatmodi.proplgal or gdatmodi.propbgal:
-            if gdat.stdvlbhlvari:
-                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvlbhl * gdat.minmflux / thisspec[gdat.indxenerfluxdist[0]])
+            if gdat.varistdvlbhl:
+                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdplbhl] * gdat.minmflux / thisspec[gdat.indxenerfluxdist[0]])
             else:
-                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvlbhl) 
+                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdplbhl]) 
         elif gdatmodi.propflux:
-            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvflux)
+            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdpflux])
         else:
-            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvspep)
+            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdpspep])
 
         gdatmodi.numbpntsmodi = 2
         gdatmodi.modispec[:, 0] = -thisspec.flatten()
@@ -3230,6 +3234,9 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                 gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
 
+        print 'gdat.numbpixl'
+        print gdat.numbpixl
+        print 
         # make a look-up table of nearby pixels for each pixel
         path = gdat.pathdata + 'indxpixlprox/'
         os.system('mkdir -p %s' % path)
@@ -3264,8 +3271,7 @@ def setpinit(gdat, boolinitsetp=False):
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
 
-    
-    
+
 def setpfinl(gdat, boolinitsetp=False):
 
     # number of samples to be saved
@@ -3617,14 +3623,17 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfixpactv = concatenate(gdat.indxfixpactv).astype(int)
     gdat.indxfixphypractv = intersect1d(gdat.indxfixphypr, gdat.indxfixpactv)
     gdat.indxfixpactvprop = setdiff1d(gdat.indxfixpactv, gdat.indxfixpnumbpnts)
-    gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop].tolist()
-   
+    gdat.numbfixpactvprop = gdat.indxfixpactvprop.size
+    gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop]
+    
     if gdat.probtran == None:
         if gdat.numbtrap > 0:
             gdat.probtran = 0.4
         else:
             gdat.probtran = 0.
-        
+       
+    gdat.indxpropstdp = arange(gdat.numbfixpactvprop)
+    
     gdat.numbfixpactvprop = gdat.indxfixpactvprop.size
     cntr = tdpy.util.cntr()
     cntr.incr(gdat.numbfixpactvprop)
@@ -3634,45 +3643,49 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.probtran > 0.:
             # birth
             gdat.indxpropbrth = cntr.incr()
-            gdat.strgprop.append('brth')
+            gdat.strgprop = append(gdat.strgprop, 'brth')
             gdat.indxproppnts.append(gdat.indxpropbrth)
             
             # death
             gdat.indxpropdeth = cntr.incr()
-            gdat.strgprop.append('deth')
+            gdat.strgprop = append(gdat.strgprop, 'deth')
             gdat.indxproppnts.append(gdat.indxpropdeth)
             
             if gdat.probbrde < 1.:
                 # split
-                gdat.strgprop.append('splt')
+                gdat.strgprop = append(gdat.strgprop, 'splt')
                 gdat.indxpropsplt = cntr.incr()
                 gdat.indxproppnts.append(gdat.indxpropsplt)
                 
                 # merge
-                gdat.strgprop.append('merg')
+                gdat.strgprop = append(gdat.strgprop, 'merg')
                 gdat.indxpropmerg = cntr.incr()
                 gdat.indxproppnts.append(gdat.indxpropmerg)
         
         # lgal
-        gdat.strgprop.append('lgal')
+        gdat.strgprop = append(gdat.strgprop, 'lgal')
         gdat.indxproplgal = cntr.incr()
         gdat.indxproppnts.append(gdat.indxproplgal)
-       
+        gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxproplgal]))) 
+
         # bgal
-        gdat.strgprop.append('bgal')
+        gdat.strgprop = append(gdat.strgprop, 'bgal')
         gdat.indxpropbgal = cntr.incr()
         gdat.indxproppnts.append(gdat.indxpropbgal)
+        gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropbgal]))) 
         
         # spec
-        gdat.strgprop.append('flux')
+        gdat.strgprop = append(gdat.strgprop, 'flux')
         gdat.indxpropflux = cntr.incr()
         gdat.indxproppnts.append(gdat.indxpropflux)
+        gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropflux]))) 
         
         # spep
         if gdat.numbener > 1:
-            gdat.strgprop.append('spep')
+            gdat.strgprop = append(gdat.strgprop, 'spep')
             gdat.indxpropspep = cntr.incr()
             gdat.indxproppnts.append(gdat.indxpropspep)
+            gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropspep]))) 
 
     else:
         gdat.indxproppnts = []
@@ -3682,6 +3695,23 @@ def setpfinl(gdat, boolinitsetp=False):
    
     gdat.indxactvconv = zeros(gdat.numbfixp, dtype=int)
     gdat.indxactvconv[gdat.indxfixpactvprop] = arange(gdat.numbfixpactvprop, dtype=int)
+    
+    gdat.strgstdp = concatenate((gdat.strgfixp, array(['lgal', 'bgal', 'flux'])))
+    if gdat.numbener > 1:
+        gdat.strgstdp = concatenate((gdat.strgstdp, array(['spep'])))
+    gdat.numbstdp = gdat.strgstdp.size
+    gdat.indxstdplbhl = gdat.numbfixp + 1
+    gdat.indxstdpflux = gdat.numbfixp + 2
+    gdat.indxstdpspep = gdat.numbfixp + 3
+   
+    gdat.indxstdpactv = gdat.indxfixpactvprop
+    if gdat.propcomp and gdat.numbtrap > 0:
+        gdat.indxstdpactv = concatenate((gdat.indxstdpactv, array([gdat.indxstdplbhl, gdat.indxstdpflux])))
+        if gdat.numbener > 1:
+            gdat.indxstdpactv = concatenate((gdat.indxstdpactv, array([gdat.indxstdpspep])))
+
+    # proposal scale
+    gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
     
     listindxsampunsd = []
     numbsampcumu = 0

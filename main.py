@@ -23,13 +23,16 @@ def work(gdat, indxprocwork):
     if gdat.verbtype > 0:
         print 'Initializing the unit sample vector'
    
-    # proposal scale
-    gdatmodi.stdvproppara = 1e-4 + zeros(gdat.numbfixp)
-    gdatmodi.stdvproppara[gdat.indxfixphypr] = gdat.stdvprophypr
-    gdatmodi.stdvproppara[gdat.indxfixppsfp] = gdat.stdvproppsfp
-    gdatmodi.stdvproppara[gdat.indxfixpbacp] = gdat.stdvpropbacp
-    gdatmodi.stdvproppara[gdat.indxfixplenp] = gdat.stdvproplenp
-        
+    # temp
+    #gdat.stdvstdp[gdat.indxfixphypr] = gdat.stdvprophypr
+    #gdat.stdvstdp[gdat.indxfixppsfp] = gdat.stdvproppsfp
+    #gdat.stdvstdp[gdat.indxfixpbacp] = gdat.stdvpropbacp
+    #gdat.stdvstdp[gdat.indxfixplenp] = gdat.stdvproplenp
+    #gdat.stdvstdp[gdat.indxstdplbhl] = gdat.stdvlbhl
+    #gdat.stdvstdp[gdat.indxstdpflux] = gdat.stdvflux
+    #if gdat.numbener > 1:
+    #    gdat.stdvstdp[gdat.indxstdpspep] = gdat.stdvspep
+    
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
    
@@ -42,10 +45,6 @@ def work(gdat, indxprocwork):
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = rand()
         else:
             gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
-    
-    print 'gdatmodi.drmcsamp'
-    print gdatmodi.drmcsamp
-    print 
 
     ## lists of occupied and empty transdimensional parameters
     thisnumbpnts = gdatmodi.drmcsamp[gdat.indxfixpnumbpnts, 0].astype(int)
@@ -131,12 +130,6 @@ def work(gdat, indxprocwork):
         # calculate the initial predicted flux map
         gdatmodi.thismodlflux = empty_like(gdat.datacnts)
         gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
-        print 'gdatmodi.thislensflux'
-        print summgene(gdatmodi.thislensflux)
-        print 'gdatmodi.thislensfluxconv'
-        print summgene(gdatmodi.thislensfluxconv)
-        print 'gdatmodi.thismodlflux[0, :, 0]'
-        print summgene(gdatmodi.thismodlflux[0, :, 0])
         gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
         if gdat.enerbins:
             gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
@@ -247,7 +240,7 @@ def work(gdat, indxprocwork):
 
     # run the sampler
     listchan = rjmc(gdat, gdatmodi, indxprocwork)
-    
+     
     timereal = time.time() - timereal
     timeproc = time.clock() - timeproc
     
@@ -411,8 +404,8 @@ def init( \
          stdvproppsfp=0.01, \
          stdvpropbacp=0.01, \
          stdvproplenp=0.01, \
+         varistdvlbhl=True, \
          stdvlbhl=0.1, \
-         stdvlbhlvari=True, \
          stdvflux=0.15, \
          stdvspep=0.15, \
          stdvspmrsind=0.2, \
@@ -1155,12 +1148,6 @@ def init( \
                 
                 gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
                 gdat.mockmodlflux[0, :, 0], gdat.mocklensfluxconv, gdat.mocklensflux, gdat.mockdefl = franlens.retr_imaglens(gdat)
-                print 'gdat.mockmodlflux[0, :, 0]'
-                print summgene(gdat.mockmodlflux[0, :, 0])
-                print 'gdat.mocklensfluxconv'
-                print summgene(gdat.mocklensfluxconv)
-                print 'gdat.mocklensflux'
-                print summgene(gdat.mocklensflux)
     
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix
             if gdat.enerbins:
@@ -1348,8 +1335,17 @@ def init( \
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdat, 'gdat')
 
+    gdat.optiproptemp = gdat.optiprop
+    if gdat.optiprop:
+        gdat.probtrantemp = gdat.probtran
+        gdat.probtran = 0.
+        gridchan = [work(gdat, 0)]
+        gdat.probtran = gdat.probtrantemp
+        gdat.optiproptemp = False
+        
     # lock the global object againts any future modifications
     gdat.lockmodi()
+
 
     gdat.timereal = zeros(gdat.numbproc)
     gdat.timeproc = zeros(gdat.numbproc)
@@ -1361,7 +1357,7 @@ def init( \
 
         # process lock for simultaneous plotting
         gdat.lock = mp.Manager().Lock()
-
+        
         # process pool
         pool = mp.Pool(gdat.numbproc)
         
@@ -1441,8 +1437,8 @@ def init( \
         gdat.sampvarbmaxmlpos[k, :] = listchan[26]
         gdat.listerrr[:, k, :, :] = listchan[27]
         gdat.listerrrfrac[:, k, :, :] = listchan[28]
-        gdat.timereal[k] = gridchan[k][29]
-        gdat.timeproc[k] = gridchan[k][30]
+        gdat.timereal[k] = gridchan[k][30]
+        gdat.timeproc[k] = gridchan[k][31]
 
     # merge samples from processes
     gdat.listindxprop = gdat.listindxprop.reshape((gdat.numbsweptotl, -1))
@@ -1874,7 +1870,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     sampvarbmaxmlpos = copy(gdatmodi.thissampvarb)
    
     # proposal scale optimization
-    if gdat.optiprop:
+    if gdat.optiproptemp:
         pathstdvprop = gdat.pathopti + '%s.fits' % gdat.rtag
         if os.path.isfile(pathstdvprop) and gdat.loadvaripara:
             if gdat.verbtype > 0 and indxprocwork == 0:
@@ -1885,13 +1881,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdat.verbtype > 0 and indxprocwork == 0:
                 print 'Optimizing proposal scale...'
             targpropeffi = 0.25
-            gdat.factpropeffi = 1.2
+            gdat.factpropeffi = 2.
             minmpropeffi = targpropeffi / gdat.factpropeffi
             maxmpropeffi = targpropeffi * gdat.factpropeffi
-            # temp
-            perdpropeffi = 100 * gdat.numbprop
-            cntrprop = zeros(gdat.numbprop)
-            cntrproptotl = zeros(gdat.numbprop)
+            perdpropeffi = 100 * gdat.numbstdp
+            cntrprop = zeros(gdat.numbstdp)
+            cntrproptotl = zeros(gdat.numbstdp)
             gdat.optidone = False
             gdatmodi.cntrswepopti = 0
             gdatmodi.cntrswepoptistep = 0
@@ -2286,39 +2281,66 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 print cntrprop
                 print 'cntrprop / cntrproptotl'
                 print cntrprop / cntrproptotl
-                print 
-            cntrproptotl[gdatmodi.thisindxprop] += 1.
-            if listaccp[gdatmodi.cntrswep]:
-                cntrprop[gdatmodi.thisindxprop] += 1.
-            
-            if gdatmodi.cntrswepopti % perdpropeffi == 0 and (cntrproptotl > 0).all():
-               
                 print 'perdpropeffi'
+                print perdpropeffi
+                print 'gdatmodi.cntrswepopti'
+                print gdatmodi.cntrswepopti
+                print 'gdatmodi.thisindxprop'
+                print gdatmodi.thisindxprop
+                print 'gdat.indxpropbrth'
+                print gdat.indxpropbrth
+                print 'gdat.indxpropdeth'
+                print gdat.indxpropdeth
+                print 'gdat.indxproplgal'
+                print gdat.indxproplgal
+                print 'gdat.indxfixpconvprop'
+                print gdat.indxfixpconvprop
+                print 'gdat.numbfixp'
+                print gdat.numbfixp
+                print 'gdat.strgstdp'
+                print gdat.strgstdp
+
+            if gdatmodi.thisindxprop < gdat.indxpropbrth:
+                gdatmodi.thisindxstdp = gdat.indxfixpactvprop[gdatmodi.thisindxprop]
+            elif gdatmodi.thisindxprop == gdat.indxproplgal:
+                gdatmodi.thisindxstdp = gdat.numbfixp
+            elif gdatmodi.thisindxprop == gdat.indxpropbgal:
+                gdatmodi.thisindxstdp = gdat.numbfixp + 1
+            elif gdatmodi.thisindxprop == gdat.indxpropflux:
+                gdatmodi.thisindxstdp = gdat.numbfixp + 2
+            elif gdatmodi.thisindxprop == gdat.indxpropspep:
+                gdatmodi.thisindxstdp = gdat.numbfixp + 3
+                
+            cntrproptotl[gdatmodi.thisindxstdp] += 1.
+            if listaccp[gdatmodi.cntrswep]:
+                cntrprop[gdatmodi.thisindxstdp] += 1.
+            
+            if gdatmodi.cntrswepopti % perdpropeffi == 0 and (cntrproptotl[gdat.indxfixpactvprop] > 0).all():
+            
                 thispropeffi = cntrprop / cntrproptotl
                 if gdat.verbtype > 0:
+                    print vstack((gdat.strgstdp, thispropeffi, gdat.stdvstdp)).T
                     print 'Proposal scale optimization step %d' % gdatmodi.cntrswepoptistep
-                    print 'gdat.strgprop'
-                    print gdat.strgprop
                     print 'Current proposal efficiency'
-                    print thispropeffi
-                    print '%.3g +- %.3g' % (mean(thispropeffi), std(thispropeffi)) 
+                    print thispropeffi[gdat.indxstdpactv]
+                    print '%.3g +- %.3g' % (mean(thispropeffi[gdat.indxstdpactv]), std(thispropeffi[gdat.indxstdpactv])) 
                 if (thispropeffi > minmpropeffi).all() and (thispropeffi < maxmpropeffi).all():
                     if gdat.verbtype > 0:
                         print 'Optimized proposal scale: '
-                        print gdatmodi.stdvproppara
+                        print gdat.stdvstdp[gdat.indxstdpactv]
                         print 'Writing the optimized proposal scale to %s...' % pathstdvprop
                     gdat.optidone = True
-                    pf.writeto(pathstdvprop, gdatmodi.stdvproppara, clobber=True)
+                    pf.writeto(pathstdvprop, gdat.stdvstdp, clobber=True)
                 else:
-                    factcorr = 2**(thispropeffi / targpropeffi - 1.)
-                    gdatmodi.stdvproppara *= factcorr
+                    factcorr = 2.**(thispropeffi / targpropeffi - 1.)
+                    gdat.stdvstdp *= factcorr
                     cntrprop[:] = 0.
                     cntrproptotl[:] = 0.
                     if gdat.verbtype > 0:
                         print 'Correction factor'
-                        print factcorr
+                        print factcorr[gdat.indxstdpactv]
                         print 'Current proposal scale: '
-                        print gdatmodi.stdvproppara
+                        print gdat.stdvstdp[gdat.indxstdpactv]
                         print
                 gdatmodi.cntrswepoptistep += 1
             gdatmodi.cntrswepopti += 1
@@ -2328,7 +2350,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, gdatmodi.listindxpntsfull, listindxfixpmodi, \
         listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
         listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos, \
-        listerrr, listerrrfrac]
+        listerrr, listerrrfrac, gdat.stdvstdp]
     
     return listchan
 
