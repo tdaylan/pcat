@@ -254,7 +254,8 @@ def init( \
          numbswep=None, \
          numbburn=None, \
          factthin=None, \
-         
+
+         seedstat=None, \
          indxevttincl=None, \
          indxenerincl=None, \
          
@@ -994,7 +995,10 @@ def init( \
 
     # generate mock data
     if gdat.datatype == 'mock':
-        
+    
+        if gdat.seedstat != None:
+            randommod.seed(gdat.seedstat)
+
         if gdat.mockminmflux == None:
             gdat.mockminmflux = gdat.minmflux
         
@@ -1168,6 +1172,9 @@ def init( \
                 for j in gdat.indxpixl:
                     for m in gdat.indxevtt:
                         gdat.mockdatacnts[i, j, m] = poisson(gdat.mockmodlcnts[i, j, m])
+    
+        if gdat.seedstat != None:
+            randommod.seed()
 
     # final setup
     setpfinl(gdat, True) 
