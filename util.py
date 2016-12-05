@@ -1060,7 +1060,9 @@ def retr_cntsbackfwhm(gdat, bacp, fwhm):
             cntsback = bacp[c, :, None, None, None] * gdat.backflux[c][:, :, :, None] * gdat.expo[:, :, :, None] * \
                                                                                                 gdat.diffener[:, None, None, None] * pi * fwhm[:, None, :, :]**2 / 4.
         else:
-            cntsback = bacp[c, :, None, None] * gdat.backflux[c] * gdat.expo * gdat.diffener[:, None, None] * pi * fwhm[:, None, :]**2 / 4.
+            cntsback = bacp[c, :, None, None] * gdat.backflux[c] * gdat.expo * pi * fwhm[:, None, :]**2 / 4.
+            if gdat.enerbins:
+                cntsback *= gdat.diffener[:, None, None]
         cntsbackfwhm += mean(cntsback, 1)
 
     return cntsbackfwhm
@@ -3132,7 +3134,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.expo = gdat.expo[gdat.indxcubeincl]
     for c in gdat.indxback:
         gdat.backflux[c] = gdat.backflux[c][gdat.indxcubeincl]
-    
+   
+    print 'gdat.pixltype'
+    print gdat.pixltype
+    print 
+
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for i in gdat.indxener:
@@ -3512,7 +3518,9 @@ def setpfinl(gdat, boolinitsetp=False):
     # get count data
     ## input data
     if gdat.datatype == 'inpt':
-        gdat.datacnts = gdat.exprdataflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
+        gdat.datacnts = gdat.exprdataflux * gdat.expo * gdat.apix
+        if gdat.enerbins:
+            gdat.datacnts *= gdat.diffener[:, None, None]
     
     if gdat.pixltype == 'cart':
         # temp
@@ -3569,8 +3577,8 @@ def setpfinl(gdat, boolinitsetp=False):
                     print gdat.truespec
                     raise Exception('True PS parameters are not finite.')
 
-    if gdat.numbtrap > 0:
-        gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
+        if gdat.numbtrap > 0:
+            gdat.truefluxbrgt, gdat.truefluxbrgtassc = retr_fluxbrgt(gdat, concatenate(gdat.truelgal), concatenate(gdat.truebgal), \
                                                                                                         concatenate(gdat.truespec)[0, gdat.indxenerfluxdist[0], :])
     
     if gdat.trueinfo:

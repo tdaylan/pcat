@@ -1585,7 +1585,7 @@ def make_anim(gdat):
         else:
             indxfileanim = array([])
       
-        if numbfile == 0:
+        if indxfileanim.size == 0:
             if gdat.verbtype > 0:
                 print 'Skipping animation for %s...' % name
             continue

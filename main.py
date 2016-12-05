@@ -520,7 +520,7 @@ def init( \
         else:
             if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
                 gdat.strgflux = 'f'
-            if gdat.exprtype == 'chem':
+            if gdat.exprtype == 'sdyn':
                 gdat.strgflux = 'p'
     
     if gdat.strgfluxunit == None:
@@ -545,22 +545,27 @@ def init( \
             gdat.strgenerunit = 'GeV'
         if gdat.exprtype == 'chan':
             gdat.strgenerunit = 'KeV'
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.strgenerunit = ''
 
     if gdat.exprtype == 'ferm':
         if gdat.anglassc == None:
             gdat.anglassc = deg2rad(0.5)
-        if gdat.pixltype == None:
+
+    if gdat.pixltype == None:
+        if gdat.exprtype == 'ferm':
             gdat.pixltype = 'heal'
-    
+        else:
+            gdat.pixltype = 'cart'
 
     if gdat.strgexprname == None:
         if gdat.exprtype == 'chan':
             gdat.strgcatl = 'Chandra'
         if gdat.exprtype == 'ferm':
             gdat.strgexprname = 'Fermi-LAT'
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sche':
+            gdat.strgexprname = 'XXXXX'
+        if gdat.exprtype == 'sdyn':
             gdat.strgexprname = 'TGAS-RAVE'
     
     if gdat.strganglunit == None:
@@ -580,7 +585,7 @@ def init( \
             gdat.anglfact = 180. / pi
         if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
             gdat.anglfact = 3600 * 180. / pi
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sche' or gdat.exprtype == 'sdyn':
             gdat.anglfact = 1.
 
     if gdat.fluxfactplot == None:
@@ -592,13 +597,11 @@ def init( \
     if gdat.enerfact == None:
         if gdat.exprtype == 'ferm':
             gdat.enerfact = 1.
-        if gdat.exprtype == 'chem':
-            gdat.enerfact = 1.
         if gdat.exprtype == 'chan':
             gdat.enerfact = 1e3
 
     if gdat.strgxaxi == None:
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.strgxaxi = r'$E_k^{\prime}$'
         else:
             if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
@@ -607,7 +610,7 @@ def init( \
                 gdat.strgxaxi = '$l$'
 
     if gdat.strgyaxi == None:
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.strgyaxi = r'$L_z^{\prime}$'
         else:
             if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
@@ -656,15 +659,11 @@ def init( \
     if gdat.exprtype == 'hubb':
         if gdat.anglassc == None:
             gdat.anglassc = 0.15 / gdat.anglfact
-        if gdat.pixltype == None:
-            gdat.pixltype = 'heal'
 
     ## Chandra and SDSS
     if gdat.exprtype == 'chan' or gdat.exprtype == 'sdss':
         if gdat.anglassc == None:
             gdat.anglassc = 0.5 / gdat.anglfact
-        if gdat.pixltype == None:
-            gdat.pixltype = 'cart'
     
     if gdat.exprinfo == None:
         if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
@@ -682,7 +681,7 @@ def init( \
         if gdat.exprtype == 'hubb':
             gdat.nameexpr = 'HST'
         # temp
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.nameexpr = 'Gaia'
     
     if gdat.lablback == None:
@@ -761,7 +760,7 @@ def init( \
     if gdat.exprtype == 'hubb':
         retr_hubbpsfn(gdat)
         gdat.truepsfntype = 'singgaus'
-    if gdat.exprtype == 'chem':
+    if gdat.exprtype == 'sdyn':
         gdat.truevarioaxi = False
         gdat.truepsfntype = 'singgaus'
         gdat.truepsfp = array([0.1 / gdat.anglfact])
@@ -775,7 +774,7 @@ def init( \
         gdat.maxmgang = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
     if gdat.exprtype == 'ferm':
         gdat.maxmgang = 20. / gdat.anglfact
-    if gdat.exprtype == 'chem':
+    if gdat.exprtype == 'sdyn':
         gdat.maxmgang = 1.
     if gdat.exprtype == 'hubb':
         gdat.maxmgang = 2. / gdat.anglfact
@@ -796,7 +795,7 @@ def init( \
             gdat.minmflux = 3e-11
         if gdat.exprtype == 'chan':
             gdat.minmflux = 1e-5
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
     
     if gdat.maxmflux == None:
@@ -804,7 +803,7 @@ def init( \
             gdat.maxmflux = 1e-7
         if gdat.exprtype == 'chan':
             gdat.maxmflux = 1e-3
-        if gdat.exprtype == 'chem':
+        if gdat.exprtype == 'sdyn':
             gdat.maxmflux = 1e4
     
     setp_varbfull(gdat, 'fluxdistslop', [gdat.minmfluxdistslop, gdat.maxmfluxdistslop], [1.5, 3.5], gdat.numbpopl)
@@ -933,8 +932,6 @@ def init( \
 
     # conditional imports
     ## import the lensing solver by Francis-Yan if the PSs are lenses
-    if gdat.pntstype == 'lens':
-        gdat.pixltype = 'cart'
 
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -988,12 +985,6 @@ def init( \
     # initial setup
     setpinit(gdat, True) 
    
-    # redirect standard output to a file if in a Screen session
-    # temp
-    # if os.environ["TERM"] == 'screen':
-    #    path = gdat.pathoutp + 'rlog.txt'
-    #    sys.stdout = open(path, 'w')
-
     # generate mock data
     if gdat.datatype == 'mock':
         
@@ -1186,22 +1177,17 @@ def init( \
     setpfinl(gdat, True) 
 
     if gdat.makeplot:
-        if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
-            figr, axis, path = init_figr(gdat, 'datacntspeak', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
-            imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
-            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
-            #supr_fram(gdat, None, axis, i, l, True)
-            
-            # temp
-            #axis.text(0.2, 0.95, '%0.7g %0.7g %0.7g' % (gdat.anglcatlrttr, rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr)), ha='center', va='center', transform=axis.transAxes)
-            axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
-            
-            plt.tight_layout()
-            plt.savefig(path)
-            plt.close(figr)
-    
         for i in gdat.indxener:
             for m in gdat.indxevtt:
+                if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
+                    figr, axis, path = init_figr(gdat, 'datacntspeak', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
+                    imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts[i], vmax=gdat.maxmdatacnts[i], scal=gdat.scalmaps)
+                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
+                    axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
+                    
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
     
                 figr, axis, path = init_figr(gdat, 'datacnts', indxenerplot=i, indxevttplot=m, pathfold=gdat.pathinit)
                 if gdat.pixltype != 'unbd':
@@ -1255,13 +1241,14 @@ def init( \
                     plt.close(figr)
     
     # write the list of arguments to file
-    fram = inspect.currentframe()
-    listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
-    fileargs = open(gdat.pathoutp + 'args.txt', 'w')
-    fileargs.write('PCAT call arguments')
-    for args in listargs:
-        fileargs.write('%s = %s\n' % (args, listargsvals[args]))
-    fileargs.close()
+    # temp
+    #fram = inspect.currentframe()
+    #listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
+    #fileargs = open(gdat.pathoutp + 'args.txt', 'w')
+    #fileargs.write('PCAT call arguments')
+    #for args in listargs:
+    #    fileargs.write('%s = %s\n' % (args, listargsvals[args]))
+    #fileargs.close()
 
     # start the timer
     gdat.timerealtotl = time.time()
@@ -1348,7 +1335,6 @@ def init( \
         
     # lock the global object againts any future modifications
     gdat.lockmodi()
-
 
     gdat.timereal = zeros(gdat.numbproc)
     gdat.timeproc = zeros(gdat.numbproc)
@@ -1666,9 +1652,6 @@ def init( \
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         
-    if os.environ["TERM"] == 'screen':
-        sys.stdout.close()
-    
     return gridchan, dictpcat
     
     
@@ -1714,7 +1697,9 @@ def plot_samp(gdat, gdatmodi):
         for l in gdat.indxpopl:
             # temp -- zero exposure pixels will give zero counts
             indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
-            cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expofull[:, indxpixltemp, :] * gdat.diffener[:, None, None]
+            cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expofull[:, indxpixltemp, :]
+            if gdat.enerbins:
+                cntstemp *= gdat.diffener[:, None, None]
             gdatmodi.thiscnts.append(cntstemp)
             if gdat.varioaxi:
                 sigmtemp = retr_sigm(gdat, cntstemp, gdatmodi.thiscntsbackfwhm, lgal=gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
