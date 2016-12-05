@@ -23,16 +23,6 @@ def work(gdat, indxprocwork):
     if gdat.verbtype > 0:
         print 'Initializing the unit sample vector'
    
-    # temp
-    #gdat.stdvstdp[gdat.indxfixphypr] = gdat.stdvprophypr
-    #gdat.stdvstdp[gdat.indxfixppsfp] = gdat.stdvproppsfp
-    #gdat.stdvstdp[gdat.indxfixpbacp] = gdat.stdvpropbacp
-    #gdat.stdvstdp[gdat.indxfixplenp] = gdat.stdvproplenp
-    #gdat.stdvstdp[gdat.indxstdplbhl] = gdat.stdvlbhl
-    #gdat.stdvstdp[gdat.indxstdpflux] = gdat.stdvflux
-    #if gdat.numbener > 1:
-    #    gdat.stdvstdp[gdat.indxstdpspep] = gdat.stdvspep
-    
     ## unit sample vector
     gdatmodi.drmcsamp = zeros((gdat.numbpara, 2))
    
@@ -2331,6 +2321,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                         print 'Writing the optimized proposal scale to %s...' % pathstdvprop
                     gdat.optidone = True
                     pf.writeto(pathstdvprop, gdat.stdvstdp, clobber=True)
+
+                    plot_opti(gdat, gdatmodi)
                 else:
                     factcorr = 2.**(thispropeffi / targpropeffi - 1.)
                     gdat.stdvstdp *= factcorr

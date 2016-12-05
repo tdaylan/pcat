@@ -1603,6 +1603,26 @@ def make_anim(gdat):
         os.system(cmnd)
 
        
+def plot_opti(gdat, gdatmodi):
+
+    for k in gdat.indxswepopti:
+        
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            
+        gdat.binsaccprati = logspace(-1., 1., 100)
+        axis.hist(gdatmodi.propeffi, bins=gdat.binsaccprati)
+        axis.set_ylim([0., gdat.numbstdp])
+        axis.set_xlabel('$N_{acc}/N_{tot}$')
+        axis.set_ylabel(r'N_{prop})')
+        axis.legend(loc=2)
+        plt.tight_layout()
+        path = '%sopti_%d.pdf' % (gdat.pathinit, k)
+        plt.savefig(path)
+        plt.close(figr)
+
+    os.system('convert -delay 10 %sopti*.pdf %s/opti.gif' % (gdat.pathinit, gdat.pathinit))
+
+
 def plot_factoaxi(gdat, i, m, gdatmodi=None):
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))

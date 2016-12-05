@@ -692,9 +692,6 @@ def retr_llik(gdat, gdatmodi, init=False):
         
         if gdat.evalcirc or (gdat.numbener != 1 and not gdatmodi.propcomp):
             gdatmodi.indxcubemodi = meshgrid(gdatmodi.indxenermodi, gdatmodi.indxpixlmodi, gdat.indxevtt, indexing='ij')
-            print 'gdatmodi.indxpixlmodi'
-            print gdatmodi.indxpixlmodi.size
-            print 
         else:
             gdatmodi.indxcubemodi = gdat.indxcube
         
@@ -709,9 +706,6 @@ def retr_llik(gdat, gdatmodi, init=False):
             if gdatmodi.proppnts or gdatmodi.proppsfp:
             
                 # copy the previous map
-                print 'gdatmodi.indxcubemodi'
-                print gdatmodi.indxcubemodi[0].size
-                print
                 if gdat.strgcnfg == 'test': 
                     print 'gdatmodi.nextpntsflux'
                     print gdatmodi.nextpntsflux.shape
@@ -2403,9 +2397,11 @@ def retr_prop(gdat, gdatmodi):
             retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdpflux])
         else:
             retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.stdvstdp[gdat.indxstdpspep])
+    
 
         gdatmodi.numbpntsmodi = 2
         gdatmodi.modispec[:, 0] = -thisspec.flatten()
+    
         if gdatmodi.proplgal or gdatmodi.propbgal:
             if gdatmodi.indxcompmodi == 0:
                 gdatmodi.modilgal[0] = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[gdatmodi.indxpoplmodi][gdatmodi.indxpntsfullmodi]]
@@ -2422,13 +2418,13 @@ def retr_prop(gdat, gdatmodi):
             if gdatmodi.propflux:
                 if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'powr':
                     fluxdistslop = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[gdatmodi.indxpoplmodi]]
-                    gdatmodi.modispec[gdat.indxenerfluxdist, :gdatmodi.numbpntsmodi] = icdf_flux_powr(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], \
+                    gdatmodi.modispec[gdat.indxenerfluxdist, 1] = icdf_flux_powr(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], \
                                                                                                                         gdat.minmflux, gdat.maxmflux, fluxdistslop)
                 if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'brok':
                     fluxdistbrek = gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[gdatmodi.indxpoplmodi]]
                     fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[gdatmodi.indxpoplmodi]]
                     fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[gdatmodi.indxpoplmodi]]
-                    gdatmodi.modispec[gdat.indxenerfluxdist, :gdatmodi.numbpntsmodi] = icdf_flux_brok(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmflux, \
+                    gdatmodi.modispec[gdat.indxenerfluxdist, 1] = icdf_flux_brok(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmflux, \
                                                                                                         gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
                 
                 if gdat.numbener > 1:
@@ -2438,7 +2434,7 @@ def retr_prop(gdat, gdatmodi):
                     if gdat.spectype[gdatmodi.indxpoplmodi] == 'expo':
                         gdatmodi.modispep[1, 1] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][gdatmodi.indxpntsfullmodi, 1]]
             else:
-                gdatmodi.modispec[gdat.indxenerfluxdist, :gdatmodi.numbpntsmodi] = \
+                gdatmodi.modispec[gdat.indxenerfluxdist, 1] = \
                                             gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, gdatmodi.indxpntsfullmodi]]
                 if gdatmodi.indxspepmodi == gdat.indxspepsind:
                     gdatmodi.modispep[1, 0] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[gdatmodi.indxpoplmodi]], \
@@ -3234,9 +3230,6 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                 gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
 
-        print 'gdat.numbpixl'
-        print gdat.numbpixl
-        print 
         # make a look-up table of nearby pixels for each pixel
         path = gdat.pathdata + 'indxpixlprox/'
         os.system('mkdir -p %s' % path)
@@ -3712,6 +3705,14 @@ def setpfinl(gdat, boolinitsetp=False):
 
     # proposal scale
     gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+    gdat.stdvstdp[gdat.indxfixphypr] = gdat.stdvprophypr
+    gdat.stdvstdp[gdat.indxfixppsfp] = gdat.stdvproppsfp
+    gdat.stdvstdp[gdat.indxfixpbacp] = gdat.stdvpropbacp
+    gdat.stdvstdp[gdat.indxfixplenp] = gdat.stdvproplenp
+    gdat.stdvstdp[gdat.indxstdplbhl] = gdat.stdvlbhl
+    gdat.stdvstdp[gdat.indxstdpflux] = gdat.stdvflux
+    if gdat.numbener > 1:
+        gdat.stdvstdp[gdat.indxstdpspep] = gdat.stdvspep
     
     listindxsampunsd = []
     numbsampcumu = 0
