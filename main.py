@@ -926,7 +926,8 @@ def init( \
     if gdat.numbproc == None:
         gdat.strgproc = os.uname()[1]
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
-            gdat.numbproc = 2
+            # temp
+            gdat.numbproc = 1
         else:
             gdat.numbproc = 1
 
