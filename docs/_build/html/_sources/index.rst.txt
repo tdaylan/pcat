@@ -303,8 +303,18 @@ Hierarchical priors
 Adaptive burn-in
 +++++++++++++++++
 
+Initial state
+++++++++++++++++++++++
+
 Identity of components
 ++++++++++++++++++++++
+
+Diagnostics
+------------
+
+.. note::
+
+   Make sure to run PCAT with ``diagmode=False`` for good time performance. ``diagmode=True`` puts the sampler in a conservative diagnostic mode and performs extensive checks on the state of critical data structures to ensure that the model and proposals are self consistent.
 
 .. toctree::
     :maxdepth: 2

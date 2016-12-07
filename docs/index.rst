@@ -31,7 +31,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     Given an observed dataset, sample from the hypothesis space.
 
-    # User Interaction
+.. # User Interaction
     
     :param verbtype:
 
@@ -50,7 +50,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 
 
-    # diagnostics
+.. # diagnostics
 
     :param diagmode:
         
@@ -308,6 +308,13 @@ Initial state
 
 Identity of components
 ++++++++++++++++++++++
+
+Diagnostics
+------------
+
+.. note::
+
+   Make sure to run PCAT with ``diagmode=False`` for good time performance. ``diagmode=True`` puts the sampler in a conservative diagnostic mode and performs extensive checks on the state of critical data structures to ensure that the model and proposals are self consistent.
 
 .. toctree::
     :maxdepth: 2

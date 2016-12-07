@@ -315,13 +315,17 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     strgllik = r'$\ln P(D|x)$'
+    strgdeltllik = r'$\Delta\ln P(D|x)$'
     strglpri = r'$\ln P(x)$'
 
     ## log-likelihood
     path = gdat.pathpost + 'llik'
     titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
-    tdpy.mcmc.plot_hist(path, gdat.listllik, strgllik, titl)
-    tdpy.mcmc.plot_trac(path, gdat.listllik, strgllik, varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
+    tdpy.mcmc.plot_hist(path, gdat.listllik.flatten(), strgllik, titl)
+    tdpy.mcmc.plot_trac(path, gdat.listllik.flatten(), strgllik, varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
+
+    path = gdat.pathpost + 'deltllik'
+    tdpy.mcmc.plot_hist(path, gdat.listdeltllik.flatten(), strgdeltllik)
 
     ## log-prior
     path = gdat.pathpost + 'lpri'

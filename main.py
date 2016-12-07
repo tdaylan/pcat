@@ -143,9 +143,9 @@ def work(gdat, indxprocwork):
             binsangltemp = gdat.binsangl
         
         if gdat.varioaxi:
-            gdatmodi.thispsfnintp = [[] for k in gdat.indxoaxi]
-            for k in gdat.indxoaxi:
-                gdatmodi.thispsfnintp[k] = interp1d(binsangltemp, gdatmodi.thispsfn[:, :, :, k], axis=1)
+            gdatmodi.thispsfnintp = [[] for p in gdat.indxoaxi]
+            for p in gdat.indxoaxi:
+                gdatmodi.thispsfnintp[p] = interp1d(binsangltemp, gdatmodi.thispsfn[:, :, :, p], axis=1)
             gdatmodi.nextpsfnintp = [[] for k in gdat.indxoaxi]
         else:
             gdatmodi.thispsfnintp = interp1d(binsangltemp, gdatmodi.thispsfn, axis=1)
@@ -926,7 +926,7 @@ def init( \
     if gdat.numbproc == None:
         gdat.strgproc = os.uname()[1]
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
-            gdat.numbproc = 20
+            gdat.numbproc = 2
         else:
             gdat.numbproc = 1
 
@@ -1518,6 +1518,7 @@ def init( \
     gdat.listlgal = [[] for l in gdat.indxpopl]
     gdat.listbgal = [[] for l in gdat.indxpopl]
     gdat.listspec = [[] for l in gdat.indxpopl]
+    gdat.listflux = [[] for l in gdat.indxpopl]
     if gdat.numbener > 1:
         gdat.listspep = [[] for l in gdat.indxpopl]
     if gdat.numbtrap > 0:
@@ -1529,6 +1530,7 @@ def init( \
                     gdat.listlgal[l].append(gdat.listsampvarb[j, k, indxsamplgal[l]])
                     gdat.listbgal[l].append(gdat.listsampvarb[j, k, indxsampbgal[l]])
                     gdat.listspec[l].append(gdat.listsampvarb[j, k, indxsampspec[l]])
+                    gdat.listflux[l].append(gdat.listsampvarb[j, k, indxsampspec[l]][gdat.indxenerfluxdist[0], :])
                     if gdat.numbener > 1:
                         gdat.listspep[l].append(gdat.listsampvarb[j, k, indxsampspep[l]])
                 
@@ -1544,6 +1546,11 @@ def init( \
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
+    
+    # construct a deterministic catalog
+    # temp
+    if gdat.strgcnfg == 'test':
+        retr_detrcatl(gdat)
     
     gdat.listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
     gdat.listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
@@ -1949,9 +1956,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislpostotlprev = gdatmodi.thislpostotl
         
-            if gdat.pntstype == 'lght':
+            # temp
+            if False and gdat.pntstype == 'lght':
+                
                 if amin(gdatmodi.thispntsflux) < 0.:
                     raise Exception('thispntsflux went negative.')
+                
+                if amin(gdatmodi.nextpntsflux) < 0.:
+                    raise Exception('nextpntsflux went negative.')
 
             # check what has been changed
             if gdatmodi.cntrswep != 0:

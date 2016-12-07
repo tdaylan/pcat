@@ -85,7 +85,10 @@ def retr_thismodlflux(gdat, gdatmodi):
 
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
-   
+  
+    if gdat.verbtype > 1:
+        print 'retr_pntsflux'
+
     numbpnts = lgal.size
     if gdat.pixltype == 'unbd':
         pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt, 2))
@@ -104,21 +107,35 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], indxpixltemp)
 
         # evaluate the PSF
-        psfn = retr_psfn(gdat, psfp, gdat.indxener, dist, psfntype, gdat.binsoaxi, varioaxi)
+        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, varioaxi)
             
-        # temp
-        #psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
+        if gdat.varioaxi:
+            psfnintp = []
+            for p in gdat.indxoaxi:
+                psfnintp.append(interp1d(gdat.binsangl, psfn[:, :, :, p], axis=1))
+        else:
+            psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
 
+        if gdat.verbtype > 1:
+            print 'k'
+            print k
+        
+        if varioaxi:
+            indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
+            psfntemp = psfnintp[indxoaxitemp](dist)
+        else:
+            psfntemp = psfnintp(dist)
+        
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                
-                if varioaxi:
-                    indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
-                    psfntemp = psfn[i, :, m, indxoaxitemp]
-                else:
-                    psfntemp = psfn[i, :, m]
-                
-                pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfntemp
+                if gdat.verbtype > 1:
+                    print 'i, m', i, m
+                    print 'psfntemp[i, :, m]'
+                    print summgene(psfntemp[i, :, m])
+                    print 'spec[i, k]'
+                    print spec[i, k]
+                    print
+                pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfntemp[i, :, m]
                 
     # sum contributions from all PS
     pntsflux = sum(pntsfluxsing, 0) 
@@ -633,8 +650,8 @@ def retr_llik(gdat, gdatmodi, init=False):
                 
                 ## interpolate
                 if gdat.varioaxi:
-                    for k in gdat.indxoaxi:
-                        gdatmodi.nextpsfnintp[k] = interp1d(gdat.binsangl, gdatmodi.nextpsfn[:, :, :, k], axis=1)
+                    for p in gdat.indxoaxi:
+                        gdatmodi.nextpsfnintp[p] = interp1d(gdat.binsangl, gdatmodi.nextpsfn[:, :, :, p], axis=1)
                 else:
                     gdatmodi.nextpsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
                 
@@ -706,7 +723,7 @@ def retr_llik(gdat, gdatmodi, init=False):
             if gdatmodi.proppnts or gdatmodi.proppsfp:
             
                 # copy the previous map
-                if gdat.strgcnfg == 'test': 
+                if gdat.strgcnfg == 'test_unbd': 
                     print 'gdatmodi.nextpntsflux'
                     print gdatmodi.nextpntsflux.shape
                     print 'gdatmodi.thispntsflux'
@@ -740,13 +757,16 @@ def retr_llik(gdat, gdatmodi, init=False):
                             dist = retr_angldistunit(gdat, lgal[k], bgal[k], gdat.indxpixl)
                             
                         # interpolate the PSF for each PS over the set of data pixels to be updated
-                        if gdat.evalpsfnpnts:
-                            if gdat.varioaxi:
-                                indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
-                                psfn = psfnintp[indxoaxitemp](dist)
-                            else:
-                                psfn = psfnintp(dist)
-                        
+                        if gdat.varioaxi:
+                            indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
+                            psfn = psfnintp[indxoaxitemp](dist)
+                        else:
+                            psfn = psfnintp(dist)
+                      
+                        if gdat.verbtype > 1:
+                            print 'k'
+                            print k
+
                         for i in range(gdatmodi.indxenermodi.size):
     
                             # expedite PSF proposals
@@ -757,15 +777,23 @@ def retr_llik(gdat, gdatmodi, init=False):
                                     spectemp = spec[i, k]
                             else:
                                 spectemp = spec[i, k]
+                        
+                            psfntemp = psfn[gdatmodi.indxenermodi[i], :, :]
 
+                            if gdat.verbtype > 1:
+                                print 'spectemp'
+                                print spectemp
+                                print 'i'
+                                print gdatmodi.indxenermodi[i]
+                                print 'psfntemp'
+                                print summgene(psfntemp)
+                                print
                             # add the contribution of the PS to the the proposed flux map
-                            if gdat.pntstype == 'lens':
-                                gdatmodi.nextlensobjt = franlens.LensModel(gdat.truelenstype, lgal[k], bgal[k], 0., 0., 0., 0., spec[i, k])
                             if gdat.pntstype == 'lght':
                                 if gdat.evalcirc:
-                                    gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
+                                    gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], thisindxpixlprox[k], :] += spectemp * psfntemp
                                 else:
-                                    gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], :, :] += spectemp * psfn[gdatmodi.indxenermodi[i], :, :]
+                                    gdatmodi.nextpntsflux[gdatmodi.indxenermodi[i], :, :] += spectemp * psfntemp
                             
                 if gdat.verbtype > 1:
                     summ(gdatmodi, 'thispntsflux')
@@ -1427,8 +1455,8 @@ def updt_samp(gdat, gdatmodi):
     if gdatmodi.proppsfp:
         if gdat.evalpsfnpnts:
             if gdat.varioaxi:
-                for k in gdat.indxoaxi:
-                    gdatmodi.thispsfnintp[k] = interp1d(gdat.binsangl, gdatmodi.nextpsfn[:, :, :, k], axis=1)
+                for p in gdat.indxoaxi:
+                    gdatmodi.thispsfnintp[p] = interp1d(gdat.binsangl, gdatmodi.nextpsfn[:, :, :, p], axis=1)
             else:
                 gdatmodi.thispsfnintp = interp1d(gdat.binsangl, gdatmodi.nextpsfn, axis=1)
         else:
@@ -1693,19 +1721,20 @@ def retr_chandata(gdat):
     wcso = ap.wcs.WCS(listhdun[0].header)
     wx, wy = wcso.wcs_pix2world(1200, 1000, 1)
     a, b = wcso.wcs_world2pix(53.20, -27.9, 1)
-
-    print 'w.wcs_pix2world(0, 0, 1)'
-    print wcso.wcs_pix2world(0, 0, 1)
-    print 'w.wcs_pix2world(0, 3279, 1)'
-    print wcso.wcs_pix2world(0, 3279, 1)
-    print 'w.wcs_pix2world(3259, 0, 1)'
-    print wcso.wcs_pix2world(3259, 0, 1)
-    print 'w.wcs_pix2world(0, 3280, 1)'
-    print wcso.wcs_pix2world(0, 3280, 1)
     a, b = wcso.wcs_world2pix(lgalchan, bgalchan, 1)
-    print a
-    print b
-
+    
+    # temp
+    if False:
+        print 'w.wcs_pix2world(0, 0, 1)'
+        print wcso.wcs_pix2world(0, 0, 1)
+        print 'w.wcs_pix2world(0, 3279, 1)'
+        print wcso.wcs_pix2world(0, 3279, 1)
+        print 'w.wcs_pix2world(3259, 0, 1)'
+        print wcso.wcs_pix2world(3259, 0, 1)
+        print 'w.wcs_pix2world(0, 3280, 1)'
+        print wcso.wcs_pix2world(0, 3280, 1)
+        print a
+        print b
 
     gdat.exprlgal = deg2rad(lgalchan)
     gdat.exprbgal = deg2rad(bgalchan)
@@ -3135,10 +3164,6 @@ def setpinit(gdat, boolinitsetp=False):
     for c in gdat.indxback:
         gdat.backflux[c] = gdat.backflux[c][gdat.indxcubeincl]
    
-    print 'gdat.pixltype'
-    print gdat.pixltype
-    print 
-
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for i in gdat.indxener:
@@ -3273,6 +3298,58 @@ def setpinit(gdat, boolinitsetp=False):
             fobj = open(path, 'wb')
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
+
+
+def retr_detrcatl(gdat):
+
+    for l in gdat.indxpopl:
+        
+        listindxpnts = [arange(gdat.listlgal[l][n].size) for n in gdat.indxsamptotl]
+
+        listlgalstck = concatenate(gdat.listlgal[l])
+        listbgalstck = concatenate(gdat.listbgal[l])
+        listfluxstck = concatenate(gdat.listflux[l])
+        if gdat.numbener > 1:
+            listspepstck = concatenate(gdat.listspep[l])
+            
+        indxsampstck = concatenate(listindxpnts)
+        print 'indxsampstck'
+        print summgene(indxsampstck)
+
+        numbpntsstck = listlgalstck.size
+        for k in range(numbpntsstck):
+            indxsamptotlself = indxsampstck[k]
+            print 'indxsamptotlself'
+            print indxsamptotlself
+            print 'gdat.listlgal[l]'
+            print len(gdat.listlgal[l])
+            print
+            listlgalstcktemp = setdiff1d(listlgalstck, gdat.listlgal[l][indxsamptotlself])
+            listbgalstcktemp = setdiff1d(listbgalstck, gdat.listbgal[l][indxsamptotlself])
+            listfluxstcktemp = setdiff1d(listfluxstck, gdat.listflux[l][indxsamptotlself])
+
+            dist = ((listlgalstck[k] - listlgalstck) / listlgalstck)**2 + ((listbgalstck[k] - listbgalstck) / listbgalstck)**2 + \
+                                                                                                        ((listfluxstck[k] - listfluxstck) / listfluxstck)**2 
+            #if gdat.numbener > 1:
+            #    dist += ((listspepstck[k] - listspepstck) / listspepstck)**2
+            
+            indxpntsstck = where(dist < 0.1)[0]
+            
+        indxpntsstcksort = argsort(numbpntsstck)
+        
+        detrcatl = []
+        for a in range(numbpntsstck):
+            
+            if len(indxpntsstck) > 0:
+                
+                # delete the member PS from the stacked catalog
+                delete(listcatlstck, indxpntsstcksort[a])
+                
+                # calculate the posterior median of the PS in the group
+                medicatlstck = median(listcatlstck)
+                
+                # append the median PS to the list
+                detrcatl.append(catl) 
 
 
 def setpfinl(gdat, boolinitsetp=False):
@@ -3702,13 +3779,13 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxactvconv[gdat.indxfixpactvprop] = arange(gdat.numbfixpactvprop, dtype=int)
     
     gdat.strgstdp = concatenate((gdat.strgfixp, array(['lgal', 'bgal', 'flux'])))
-    gdat.numbstdp = gdat.strgstdp.size
     gdat.indxstdplgal = gdat.numbfixp
     gdat.indxstdpbgal = gdat.numbfixp + 1
     gdat.indxstdpflux = gdat.numbfixp + 2
     if gdat.numbener > 1:
         gdat.strgstdp = concatenate((gdat.strgstdp, array(['spep'])))
         gdat.indxstdpspep = gdat.numbfixp + 3
+    gdat.numbstdp = gdat.strgstdp.size
    
     gdat.indxstdpactv = gdat.indxfixpactvprop
     if gdat.propcomp and gdat.numbtrap > 0:

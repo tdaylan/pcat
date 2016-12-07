@@ -31,8 +31,7 @@ def test_info():
                                   maxmflux=1e-7, \
                                   strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
                                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  datatype='inpt', \
-                                  strgexpr='fermflux_cmp0_ngal.fits', \
+                                  strgexprflux='fermflux_cmp0_ngal.fits', \
                                  )
         listlevi[k] = dictpcat['levi']
         listinfo[k] = dictpcat['info']
@@ -128,7 +127,6 @@ def test_time():
                                   maxmgang=maxmgang, \
                                   minmflux=minmflux, \
                                   maxmflux=1e6, \
-                                  datatype='mock', \
                                   numbsidecart=numbsidecart, \
                                   mocknumbpnts=array([mocknumbpnts]), \
                                  )
@@ -164,25 +162,24 @@ def test_time():
 def test_psfn():
     
     tupl = [ \
-            ['mock',                          None, 'singgaus',  True, 'chan'], \
-            ['mock',                          None, 'singgaus', False, 'chan'], \
-            #['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
-            #['inpt', 'chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
-            #['mock',                          None, 'doubking', False, 'ferm'], \
-            #['mock',                          None, 'gausking', False, 'ferm'], \
-            #['mock',                          None, 'doubgaus', False, 'ferm'], \
-            #['mock',                          None, 'singking', False, 'ferm'], \
-            #['mock',                          None, 'singgaus', False, 'ferm'], \
-            #['inpt',     'fermflux_cmp0_ngal.fits', 'doubking', False, 'ferm'] \
+            [                         None, 'singgaus',  True, 'chan'], \
+            [                         None, 'singgaus', False, 'chan'], \
+            ['chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
+            ['chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
+            [                         None, 'doubking', False, 'ferm'], \
+            [                         None, 'gausking', False, 'ferm'], \
+            [                         None, 'doubgaus', False, 'ferm'], \
+            [                         None, 'singking', False, 'ferm'], \
+            [                         None, 'singgaus', False, 'ferm'], \
+            [    'fermflux_cmp0_ngal.fits', 'doubking', False, 'ferm'] \
            ]
     numbtupl = len(tupl)
     for k in range(numbtupl):
         
-        datatype = tupl[k][0]
-        strgexpr = tupl[k][1]
-        psfntype = tupl[k][2]
-        varioaxi = tupl[k][3]
-        exprtype = tupl[k][4]
+        strgexprflux = tupl[k][0]
+        psfntype = tupl[k][1]
+        varioaxi = tupl[k][2]
+        exprtype = tupl[k][3]
     
         if exprtype == 'ferm':
             indxenerincl = arange(2, 3)
@@ -221,8 +218,7 @@ def test_psfn():
              maxmnumbpnts=array([3]), \
              minmflux=minmflux, \
              maxmflux=maxmflux, \
-             datatype=datatype, \
-             strgexpr=strgexpr, \
+             strgexprflux=strgexprflux, \
              mocknumbpnts=array([3]), \
             )
                 
@@ -241,7 +237,6 @@ def test_nomi():
          maxmgang=deg2rad(20.), \
          minmflux=5e-11, \
          maxmflux=1e-7, \
-         datatype='mock', \
          mocknumbpnts=array([300]), \
         )
 
@@ -282,7 +277,6 @@ def test_errr():
                                   specfraceval=specfraceval, \
                                   minmflux=1e-9, \
                                   maxmflux=1e-5, \
-                                  datatype='mock', \
                                   mocknumbpnts=array([50]), \
                                  )
         stdverrrfracdimm[:, k] = dictpcat['stdverrrfracdimm'].flatten()
@@ -327,7 +321,6 @@ def test_uppr():
          maxmgang=deg2rad(10.), \
          minmflux=1e-9, \
          maxmflux=1e-5, \
-         datatype='mock', \
          mocknumbpnts=array([400]), \
         )
 
@@ -355,7 +348,6 @@ def test_prio():
                                   maxmgang=deg2rad(30.), \
                                   minmflux=5e-11, \
                                   maxmflux=1e-7, \
-                                  datatype='mock', \
                                   mocknumbpnts=mocknumbpnts, \
                                  )
         postnumbpnts[:, k] = dictpcat['postnumbpnts']
@@ -389,13 +381,12 @@ def test_lowr():
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgback=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         strgexpr='fermflux_cmp0_ngal.fits', \
+         strgexprflux='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([3]), \
          maxmgang=deg2rad(10.), \
          minmflux=1e-24, \
          maxmflux=1e-20, \
-         datatype='mock', \
          mocknumbpnts=array([3]), \
         )
 
@@ -433,7 +424,6 @@ def test_post():
              maxmgang=deg2rad(1.), \
              minmflux=minmflux, \
              maxmflux=maxmflux, \
-             datatype='mock', \
              mocknumbpnts=array([3]), \
              mockfluxdistslop=array([1.9]), \
             )
@@ -466,7 +456,6 @@ def test_atcr():
                                   maxmgang=deg2rad(10.), \
                                   minmflux=3e-11, \
                                   maxmflux=3e-7, \
-                                  datatype='mock', \
                                   mocknumbpnts=array([2]), \
                                  )
         timeatcr[k] = dictpcat['timeatcr']
@@ -520,7 +509,6 @@ def test_spmr():
              maxmgang=deg2rad(1.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
-             datatype='mock', \
              maxmnumbpnts=array([3]), \
              mocknumbpnts=array([2]), \
              #maxmnumbpnts=array([3]), \
@@ -539,7 +527,6 @@ def test_leak():
          exprtype='ferm', \
          minmflux=3e-8, \
          maxmflux=3e-7, \
-         datatype='mock', \
          mockminmflux=3e-11, \
          mocknumbpnts=array([100]), \
         )
@@ -560,14 +547,13 @@ def test_popl():
          maxmflux=3e-7, \
          sinddiststdv=array([.5, .5]), \
          sinddistmean=array([2., 2.]), \
-         datatype='mock', \
          mockfluxdisttype=['powr', 'powr'], \
          mocknumbpnts=array([2, 3]), \
          mockfluxdistslop=array([1.9, 1.1]), \
         )
 
 
-def test():
+def test_unbd():
     
     init( \
          pixltype='unbd', \
@@ -579,20 +565,17 @@ def test():
          numbburn=0, \
          maxmnumbpnts=array([20]), \
         )
-            #numbburn=0, \
-            #factthin=1, \
-            #exprinfo=False, \
-            #indxenerincl=arange(2, 3), \
-            #indxevttincl=arange(3, 4), \
-            #strgback=['fermisotflux.fits', ], \
-            #strgexpo='fermexpo_cmp0_ngal.fits', \
-            #psfntype='doubking', \
-            #maxmnumbpnts=array([4]), \
-            #maxmgang=deg2rad(10.), \
-            #minmflux=3e-11, \
-            #maxmflux=1e-7, \
-            #datatype='mock', \
-            #mocknumbpnts=array([3]), \
+
+
+def test():
+    
+    init( \
+         numbswep=1000, \
+         factthin=900, \
+         maxmnumbpnts=array([10]), \
+         makeplot=False, \
+         diagmode=False, \
+        )
 
 
 if len(sys.argv) > 1:
