@@ -16,7 +16,6 @@ def test_info():
     listinfo = zeros(numbiter)
     for k in range(numbiter):
         gridchan, dictpcat = init( \
-                                  psfntype='doubking', \
                                   numbswep=numbswep[k], \
                                   numbburn=numbburn[k], \
                                   indxenerincl=arange(2, 3), \

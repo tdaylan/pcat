@@ -136,9 +136,8 @@
 <p>All user interaction with PCAT is accomplished through the <code class="docutils literal"><span class="pre">pcat.main.init()</span></code> function.</p>
 <dl class="function">
 <dt id="pcat.main.init">
-<code class="descclassname">pcat.main.</code><code class="descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pcat.main.init" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pcat.main.</code><code class="descname">init</code><span class="sig-paren">(</span><em>...</em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.main.init" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an observed dataset, sample from the hypothesis space.</p>
-<p># User Interaction</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -152,35 +151,16 @@
 </ul>
 </li>
 <li><strong>pathbase</strong> (<em>str</em>) &#8211; Data path of PCAT. PCAT expects input data in <code class="docutils literal"><span class="pre">pathbase/data/inpt/</span></code> and writes the output chains and plots in the relevant subfolders <code class="docutils literal"><span class="pre">pathbase/data/outp/rtag</span></code> and <code class="docutils literal"><span class="pre">pathbase/imag/rtag</span></code>, respectively, where <code class="docutils literal"><span class="pre">rtag</span></code> is the run tag. The <code class="docutils literal"><span class="pre">pathbase</span></code> folder is created if it does not already exist. It defaults to the value of the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>. Therefore <code class="docutils literal"><span class="pre">pathbase</span></code> can be omitted by setting the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p># diagnostics</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>diagmode</strong> (<em>bool</em>) &#8211; Start the run in diagnostic mode. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
 <li><strong>cntrpnts</strong> (<em>bool</em>) &#8211; Force the mock data to a single PS at the center of the image. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p># chain</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>numbswep</strong> (<em>int</em>) &#8211; Number of samples to be taken by each process</li>
 <li><strong>numbburn</strong> (<em>int</em>) &#8211; Number of samples to be discarded from the beginning of each chain</li>
 <li><strong>factthin</strong> (<em>int</em>) &#8211; Factor by which to thin each chain. Only one sample out of <code class="docutils literal"><span class="pre">factthin</span></code> samples is saved.</li>
 <li><strong>indxenerincl</strong> (<em>ndarray int</em>) &#8211; Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.</li>
 <li><strong>indxevttincl</strong> (<em>ndarray int</em>) &#8211; Indices of PSF class bins to be taken into account. Works similar to <code class="docutils literal"><span class="pre">indxenerincl</span></code>.</li>
+<li><strong>anglassc</strong> (<em>float</em>) &#8211; Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.</li>
+<li><strong>margfactcomp</strong> (<em>float</em>) &#8211; The ratio of the side of the square in which the sample point sources are associated with the reference catalog, to the size of the image.</li>
+<li><strong>nameexpr</strong> (<em>str</em>) &#8211; A string that describes the provided reference catalog to be shown in the plot legends.</li>
 </ul>
 </td>
 </tr>

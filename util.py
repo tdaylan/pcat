@@ -1719,22 +1719,43 @@ def retr_chandata(gdat):
     path = '/Users/tansu/Documents/work/data/tdgu/xray_back/data/CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     listhdun = ap.io.fits.open(path)
     wcso = ap.wcs.WCS(listhdun[0].header)
-    wx, wy = wcso.wcs_pix2world(1200, 1000, 1)
-    a, b = wcso.wcs_world2pix(53.20, -27.9, 1)
-    a, b = wcso.wcs_world2pix(lgalchan, bgalchan, 1)
-    
-    # temp
-    if False:
-        print 'w.wcs_pix2world(0, 0, 1)'
-        print wcso.wcs_pix2world(0, 0, 1)
-        print 'w.wcs_pix2world(0, 3279, 1)'
-        print wcso.wcs_pix2world(0, 3279, 1)
-        print 'w.wcs_pix2world(3259, 0, 1)'
-        print wcso.wcs_pix2world(3259, 0, 1)
-        print 'w.wcs_pix2world(0, 3280, 1)'
-        print wcso.wcs_pix2world(0, 3280, 1)
-        print a
-        print b
+   
+    skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
+    rascchan = skycobjt.fk5.ra.degree
+    declchan = skycobjt.fk5.dec.degree
+
+    print 'lgalchan'
+    print summgene(lgalchan)
+    print 'bgalchan'
+    print summgene(bgalchan)
+    print 'rascchan'
+    print summgene(rascchan)
+    print 'declchan'
+    print summgene(declchan)
+  
+    print 'hey'
+    indxpixllgal = 1490
+    indxpixlbgal = 1510
+
+    lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
+    lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
+    bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
+    lgalchan *= gdat.sizepixl * gdat.anglfact
+    bgalchan *= gdat.sizepixl * gdat.anglfact
+    print 'lgalchan'
+    print summgene(lgalchan)
+    print 'bgalchan'
+    print summgene(bgalchan)
+
+    lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 1)
+    lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
+    bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
+    lgalchan *= gdat.sizepixl * gdat.anglfact
+    bgalchan *= gdat.sizepixl * gdat.anglfact
+    print 'lgalchan'
+    print summgene(lgalchan)
+    print 'bgalchan'
+    print summgene(bgalchan)
 
     gdat.exprlgal = deg2rad(lgalchan)
     gdat.exprbgal = deg2rad(bgalchan)
@@ -1751,7 +1772,10 @@ def retr_chandata(gdat):
 
     gdat.exprcnts[0, :, 0] = cntschansoft
     gdat.exprcnts[1, :, 0] = cntschanhard
-    
+
+    print 'gdat.exprspec'
+    print summgene(gdat.exprspec)
+
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
@@ -3572,7 +3596,9 @@ def setpfinl(gdat, boolinitsetp=False):
             #gdat.truestrg = [gdat.exprstrg]
             #gdat.truestrgclss = [gdat.exprstrgclss]
             #gdat.truestrgassc = [gdat.exprstrgassc]
-
+            
+            print 'gdat.truespec[0]'
+            print summgene(gdat.truespec[0])
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             for l in gdat.indxpopl: 

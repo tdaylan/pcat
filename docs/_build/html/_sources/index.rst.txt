@@ -27,12 +27,10 @@ Usage
 
 All user interaction with PCAT is accomplished through the ``pcat.main.init()`` function.
 
-.. function:: pcat.main.init()
+.. function:: pcat.main.init(...)
 
     Given an observed dataset, sample from the hypothesis space.
 
-    # User Interaction
-    
     :param verbtype:
 
         Verbosity level
@@ -49,66 +47,57 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pathbase: str
 
 
-
-    # diagnostics
-
-    :param diagmode:
-        
-        Start the run in diagnostic mode. Defaults to ``False``.
+    :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
 
     :type diagmode: bool
 
 
-    :param cntrpnts:
-        
-        Force the mock data to a single PS at the center of the image. Defaults to ``False``.
+    :param cntrpnts: Force the mock data to a single PS at the center of the image. Defaults to ``False``.
     
     :type cntrpnts: bool
 
 
-    # chain
-    
-    :param numbswep:
-        
-        Number of samples to be taken by each process
+    :param numbswep: Number of samples to be taken by each process
 
     :type numbswep: int
 
 
-    :param numbburn:
-        
-        Number of samples to be discarded from the beginning of each chain
+    :param numbburn: Number of samples to be discarded from the beginning of each chain
 
     :type numbburn: int
 
 
-    :param factthin:
-        
-        Factor by which to thin each chain. Only one sample out of ``factthin`` samples is saved.
+    :param factthin: Factor by which to thin each chain. Only one sample out of ``factthin`` samples is saved.
 
     :type factthin: int
 
 
-    :param indxenerincl:
-        
-        Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.
+    :param indxenerincl: Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.
     
     :type indxenerincl: ndarray int
 
     
-    :param indxevttincl:
-        
-        Indices of PSF class bins to be taken into account. Works similar to ``indxenerincl``.
+    :param indxevttincl: Indices of PSF class bins to be taken into account. Works similar to ``indxenerincl``.
     
     :type indxevttincl: ndarray int
 
     
-         
+    :param anglassc: Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.
+    
+    :type anglassc: float
+
+
+    :param margfactcomp: The ratio of the side of the square in which the sample point sources are associated with the reference catalog, to the size of the image.
+
+    :type margfactcomp: float
+
+
+    :param nameexpr: A string that describes the provided reference catalog to be shown in the plot legends.
+
+    :type nameexpr: str
+    
+
 ..     
-         # comparison with the reference catalog
-         anglassc=None, \
-         margfactcomp=0.9, \
-         nameexpr=None, \
          numbspatdims=2, \
          pntstype='lght', \
          randinit=None, \
