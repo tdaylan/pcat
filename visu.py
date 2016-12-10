@@ -1706,16 +1706,19 @@ def plot_histcnts(gdat, l, gdatmodi=None):
     plt.close(figr)
     
 
-def plot_defl(gdat, gdatmodi=None):
+def plot_defl(gdat, gdatmodi=None, defl=None, indxdefl=None):
 
-    if gdatmodi == None:
-        defl = gdat.mockdefl
-        strg = 'mockdefl'
-        pathfold = gdat.pathinit
-    else:
+    if defl != None and gdatmodi != None:
+        strg = 'defl%d' % indxdefl
+        pathfold = gdat.pathfram
+    elif gdatmodi != None:
         defl = gdatmodi.thisdefl
         strg = 'defl'
         pathfold = gdat.pathfram
+    else:
+        defl = gdat.mockdefl
+        strg = 'mockdefl'
+        pathfold = gdat.pathinit
 
     figr, axis, path = init_figr(gdat, strg, gdatmodi, indxpoplplot=0, pathfold=pathfold)
     make_catllabl(gdat, axis)

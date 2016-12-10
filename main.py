@@ -1801,7 +1801,7 @@ def plot_samp(gdat, gdatmodi):
                         else:
                             lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k], bgal[k], 0., 0., 0., 0., bein[k])
                         defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
-                        plot_defl(gdat, defl=defl, indxdefl=k)
+                        plot_defl(gdat, gdatmodi=gdatmodi, defl=defl, indxdefl=k)
 
                 if gdat.pixltype == 'unbd':
                     plot_catlfram(gdat, gdatmodi, l, i, m)
