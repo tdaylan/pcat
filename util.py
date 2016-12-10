@@ -538,13 +538,14 @@ def retr_thisindxprop(gdat, gdatmodi):
                 else:
                     gdatmodi.thisindxprop = gdat.indxpropspep
                     gdatmodi.propspep = True
+                    gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
                     if gdatmodi.indxspepmodi in gdat.indxspepsind:
                         gdatmodi.propsind = True
-                    if gdatmodi.indxspepmodi in gdat.indxspepcurv:
-                        gdatmodi.propcurv = True
-                    if gdatmodi.indxspepmodi in gdat.indxspepexpo:
-                        gdatmodi.propexpo = True
-                    gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
+                    else:
+                        if gdat.spectype[gdatmodi.indxpoplmodi] == 'curv':
+                            gdatmodi.propcurv = True
+                        if gdat.spectype[gdatmodi.indxpoplmodi] == 'expo':
+                            gdatmodi.propexpo = True
                 
         if gdat.verbtype > 1:
             print 'indxsampmodi'
