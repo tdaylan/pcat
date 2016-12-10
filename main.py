@@ -1783,9 +1783,9 @@ def plot_samp(gdat, gdatmodi):
                 if gdat.pntstype == 'lens':
                     plot_defl(gdat, gdatmodi)
 
-                    numbpntsplot = min(5, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
+                    numbpntsplot = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
                     numbplot = numbpntsplot + 1
-                    indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])
+                    indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
                     lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
                     bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
                     bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]

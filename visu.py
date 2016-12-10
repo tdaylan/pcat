@@ -850,15 +850,9 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
-        if gdat.strgcnfg == 'pcat_lens_mock_arry':
-            print 'xdat'
-            print xdat
-            print 'ydat'
-            print ydat
-            print 'yerr'
-            print yerr
-            print
-
+        if (ydat == 0.).all():
+            continue
+            
         # temp -- this is dangerous!!
         xdat *= gdat.fluxfactplot
         xerr *= gdat.fluxfactplot
@@ -1726,13 +1720,13 @@ def plot_defl(gdat, gdatmodi=None, defl=None, indxdefl=None):
   
     defllgal = defl[:, :, 0]
     deflbgal = defl[:, :, 1]
-    fact = 5
+    fact = 10
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
-    ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], defllgal[::fact, ::fact], \
-                                                                                                  deflbgal[::fact, ::fact], gdat.fluxfactplot * deflmagn[::fact, ::fact])
+    ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
+                                                                      gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact])
    
     supr_fram(gdat, gdatmodi, axis, 0, 0)
-    plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75)
+    plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
     plt.savefig(path)
     plt.close(figr)
     

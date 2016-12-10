@@ -1754,6 +1754,10 @@ def retr_chandata(gdat):
     gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e12 / 16.
     
     # temp
+    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :] * 0.9
+    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :] * 1.1
+
+    # temp
     gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
 
     gdat.exprcnts[0, :, 0] = cntschansoft
@@ -3386,22 +3390,12 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.exprtype == 'chan':
             retr_chandata(gdat)
     
-        print 'gdat.exprlgal'
-        print summgene(gdat.exprlgal)
-        print 'gdat.exprbgal'
-        print summgene(gdat.exprbgal)
-     
         # rotate PS coordinates to the ROI center
         if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
             rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='ZYX')
             gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
             gdat.exprbgal = pi / 2. - gdat.exprbgal
 
-        print 'gdat.exprlgal'
-        print summgene(gdat.exprlgal)
-        print 'gdat.exprbgal'
-        print summgene(gdat.exprbgal)
-     
         # select PSs in the ROI
         gdat.indxpntsrofi = arange(gdat.exprlgal.size, dtype=int)
         # temp
@@ -3411,8 +3405,6 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
                                                             (fabs(gdat.exprbgal) < gdat.maxmgangmodl))[0], gdat.indxpntsrofi)
 
-        
-        print ''
         gdat.exprlgal = gdat.exprlgal[gdat.indxpntsrofi]
         gdat.exprbgal = gdat.exprbgal[gdat.indxpntsrofi]
         gdat.exprspec = gdat.exprspec[:, :, gdat.indxpntsrofi]
