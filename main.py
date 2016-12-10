@@ -1799,7 +1799,7 @@ def plot_samp(gdat, gdatmodi):
                                                                              gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
                                                                              gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
                         else:
-                            lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k], bgal[k], 0., 0., 0., 0., bein[k])
+                            lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-1], bgal[k-1], 0., 0., 0., 0., bein[k-1])
                         defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
                         plot_defl(gdat, gdatmodi=gdatmodi, defl=defl, indxdefl=k)
 

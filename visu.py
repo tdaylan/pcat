@@ -850,7 +850,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
-        if gdat.strgcnfg == 'pcat_lens_mock':
+        if gdat.strgcnfg == 'pcat_lens_mock_arry':
             print 'xdat'
             print xdat
             print 'ydat'
