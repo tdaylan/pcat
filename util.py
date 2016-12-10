@@ -102,10 +102,10 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
             indxpixltemp = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
         else:
             indxpixltemp = gdat.indxpixl
-        
+    
         # calculate the distance to all pixels from each point source
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], indxpixltemp)
-
+    
         # evaluate the PSF
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, varioaxi)
             
@@ -119,7 +119,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
         if gdat.verbtype > 1:
             print 'k'
             print k
-        
+      
         if varioaxi:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
             psfntemp = psfnintp[indxoaxitemp](dist)
@@ -1724,41 +1724,18 @@ def retr_chandata(gdat):
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
 
-    print 'lgalchan'
-    print summgene(lgalchan)
-    print 'bgalchan'
-    print summgene(bgalchan)
-    print 'rascchan'
-    print summgene(rascchan)
-    print 'declchan'
-    print summgene(declchan)
-  
-    print 'hey'
     indxpixllgal = 1490
     indxpixlbgal = 1510
 
+    # temp 0 or 1 makes a difference!
     lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
     lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
     bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
-    lgalchan *= gdat.sizepixl * gdat.anglfact
-    bgalchan *= gdat.sizepixl * gdat.anglfact
-    print 'lgalchan'
-    print summgene(lgalchan)
-    print 'bgalchan'
-    print summgene(bgalchan)
+    lgalchan *= gdat.sizepixl
+    bgalchan *= gdat.sizepixl
 
-    lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 1)
-    lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
-    bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
-    lgalchan *= gdat.sizepixl * gdat.anglfact
-    bgalchan *= gdat.sizepixl * gdat.anglfact
-    print 'lgalchan'
-    print summgene(lgalchan)
-    print 'bgalchan'
-    print summgene(bgalchan)
-
-    gdat.exprlgal = deg2rad(lgalchan)
-    gdat.exprbgal = deg2rad(bgalchan)
+    gdat.exprbgal = lgalchan
+    gdat.exprlgal = bgalchan
     
     gdat.exprspec = zeros((3, gdat.numbener, gdat.exprlgal.size))
     gdat.exprcnts = zeros((gdat.numbener, gdat.exprlgal.size, gdat.numbevtt))
@@ -1773,19 +1750,15 @@ def retr_chandata(gdat):
     gdat.exprcnts[0, :, 0] = cntschansoft
     gdat.exprcnts[1, :, 0] = cntschanhard
 
-    print 'gdat.exprspec'
-    print summgene(gdat.exprspec)
-
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
 
-    indxsort = argsort(fluxchansoft)[::-1]
-    
-    gdat.exprlgal = gdat.exprlgal[indxsort][:150]
-    gdat.exprbgal = gdat.exprbgal[indxsort][:150]
-    gdat.exprspec = gdat.exprspec[:, :, indxsort][:150]
-    gdat.exprcnts = gdat.exprcnts[:, indxsort][:150]
+    #indxsort = argsort(fluxchansoft)[::-1]
+    #gdat.exprlgal = gdat.exprlgal[indxsort][:150]
+    #gdat.exprbgal = gdat.exprbgal[indxsort][:150]
+    #gdat.exprspec = gdat.exprspec[:, :, indxsort][:150]
+    #gdat.exprcnts = gdat.exprcnts[:, indxsort][:150]
 
 
 def retr_fermdata(gdat):
@@ -2593,8 +2566,8 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
     
     indxpsfpinit = numbpsfptotl * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
     if varioaxi:
-        indxpsfpoaxinorm = numbpsfptotl * gdat.indxener[indxenertemp] + numbpsfpform
-        indxpsfpoaxiindx = numbpsfptotl * gdat.indxener[indxenertemp] + numbpsfpform + 1
+        indxpsfpoaxinorm = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp]
+        indxpsfpoaxiindx = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp] + 1
 
     if gdat.exprtype == 'ferm':
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
@@ -3253,11 +3226,9 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.backcntstotl[:] += backcntstemp 
 
     if gdat.pntstype == 'lght':
-        # temp
-        #if gdat.truevarioaxi:
-        #    gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdat.truepsfp[gdat.trueindxpsfpoaxinorm], gdat.truepsfp[gdat.trueindxpsfpoaxiindx])
         
         gdat.truepsfn = retr_psfn(gdat, gdat.truepsfp, gdat.indxener, gdat.binsangl, gdat.truepsfntype, gdat.binsoaxi, gdat.truevarioaxi)
+        
         gdat.truefwhm = 2. * retr_psfnwdth(gdat, gdat.truepsfn, 0.5)
         
         gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
@@ -3309,15 +3280,11 @@ def setpinit(gdat, boolinitsetp=False):
             cntrsave = -1.
             # temp
             for j in gdat.indxpixl:
-                if gdat.indxpixl.size == 1500**2:
-                    for h in range(gdat.numbfluxprox):
-                        gdat.indxpixlprox[h].append(array([0]))
-                else: 
-                    dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
-                    dist[j] = 0.
-                    for h in range(gdat.numbfluxprox):
-                        indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
-                        gdat.indxpixlprox[h].append(indxpixlproxtemp)
+                dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
+                dist[j] = 0.
+                for h in range(gdat.numbfluxprox):
+                    indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
+                    gdat.indxpixlprox[h].append(indxpixlproxtemp)
                 cntrsave = tdpy.util.show_prog(j, gdat.indxpixl.size, cntrsave)
             fobj = open(path, 'wb')
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -3410,11 +3377,21 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.exprtype == 'chan':
             retr_chandata(gdat)
     
+        print 'gdat.exprlgal'
+        print summgene(gdat.exprlgal)
+        print 'gdat.exprbgal'
+        print summgene(gdat.exprbgal)
+     
         # rotate PS coordinates to the ROI center
         if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
             rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='ZYX')
             gdat.exprbgal, gdat.exprlgal = rttr(pi / 2. - gdat.exprbgal, gdat.exprlgal)
             gdat.exprbgal = pi / 2. - gdat.exprbgal
+
+        print 'gdat.exprlgal'
+        print summgene(gdat.exprlgal)
+        print 'gdat.exprbgal'
+        print summgene(gdat.exprbgal)
      
         # select PSs in the ROI
         gdat.indxpntsrofi = arange(gdat.exprlgal.size, dtype=int)
@@ -3425,6 +3402,8 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxpntsrofi = intersect1d(where((fabs(gdat.exprlgal) < gdat.maxmgangmodl) & \
                                                             (fabs(gdat.exprbgal) < gdat.maxmgangmodl))[0], gdat.indxpntsrofi)
 
+        
+        print ''
         gdat.exprlgal = gdat.exprlgal[gdat.indxpntsrofi]
         gdat.exprbgal = gdat.exprbgal[gdat.indxpntsrofi]
         gdat.exprspec = gdat.exprspec[:, :, gdat.indxpntsrofi]
@@ -3440,7 +3419,13 @@ def setpfinl(gdat, boolinitsetp=False):
             for m in gdat.indxevtt:
                 indxpixltemp = retr_indxpixl(gdat, gdat.exprbgal, gdat.exprlgal)
                 gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
-       
+      
+        if gdat.strgcnfg == 'pcat_chan_inpt':
+            print 'gdat.exprcnts'
+            print gdat.exprcnts[:, :, 0].T
+            print 'gdat.exprcntscalc'
+            print gdat.exprcntscalc[:, :, 0].T
+
         if gdat.exprcnts != None and gdat.exprlgal.size > 0 and gdat.verbtype > 0:
             if amax(fabs((gdat.exprcnts - gdat.exprcntscalc) / gdat.exprcnts)) > 0.01:
                 print 'Experimental information on PS counts is inconsistent.'
@@ -3614,7 +3599,9 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
     
-    if gdat.pntstype == 'lght':
+    if gdat.evalpsfnpnts:
+        gdat.truenumbpsfpform, gdat.truenumbpsfpoaxi, gdat.truenumbpsfptotl, gdat.trueindxpsfpoaxinorm, gdat.trueindxpsfpoaxiindx = \
+                                                                                            retr_indxpsfp(gdat, gdat.truepsfntype, gdat.truevarioaxi)
         if gdat.truevarioaxi:
             gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdat.truepsfp[gdat.trueindxpsfpoaxinorm], gdat.truepsfp[gdat.trueindxpsfpoaxiindx])
     
@@ -3846,9 +3833,12 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.minmfluxplot = gdat.minmflux
     gdat.maxmfluxplot = gdat.maxmflux
     if gdat.trueinfo:
-        gdat.minmfluxplot = min(gdat.minmfluxplot, gdat.trueminmflux)
-        gdat.maxmfluxplot = max(gdat.maxmfluxplot, gdat.truemaxmflux)
+        if gdat.trueminmflux != 0.:
+            gdat.minmfluxplot = min(gdat.minmfluxplot, gdat.trueminmflux)
+        if gdat.truemaxmflux != None:
+            gdat.maxmfluxplot = max(gdat.maxmfluxplot, gdat.truemaxmflux)
     gdat.binsfluxplot = logspace(log10(gdat.minmfluxplot), log10(gdat.maxmfluxplot), gdat.numbfluxplot + 1)
+
     gdat.meanfluxplot = sqrt(gdat.binsfluxplot[1:] * gdat.binsfluxplot[:-1])
     gdat.difffluxplot = gdat.binsfluxplot[1:] - gdat.binsfluxplot[:-1]
     
@@ -4029,38 +4019,22 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
     indxfixppsfp = indxfixpsigc + indxfixpsigt + indxfixpgamc + indxfixpgamt + indxfixppsff + indxfixpoaxinorm + indxfixpoaxiindx
     indxfixppsfp = sort(array(indxfixppsfp))
 
-    if psfntype == 'singgaus':
-        numbpsfpform = 1
-    elif psfntype == 'singking':
-        numbpsfpform = 2
-    elif psfntype == 'doubgaus':
-        numbpsfpform = 3
-    elif psfntype == 'gausking':
-        numbpsfpform = 4
-    elif psfntype == 'doubking':
-        numbpsfpform = 5
+    numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfpoaxinorm, indxpsfpoaxiindx = retr_indxpsfp(gdat, psfntype, varioaxi)
     
-    if varioaxi:
-        numbpsfpoaxi = 2
-    else:
-        numbpsfpoaxi = 0
-
-    numbpsfptotl = numbpsfpform + numbpsfpoaxi
     numbpsfptotlevtt = gdat.numbevtt * numbpsfptotl
     numbpsfptotlener = gdat.numbener * numbpsfptotl
     numbpsfp = numbpsfptotl * gdat.numbener * gdat.numbevtt
     indxpsfpoaxi = arange(numbpsfpoaxi) 
     indxpsfpform = arange(numbpsfpform)
     indxpsfptotl = arange(numbpsfptotl)
-    indxpsfp = arange(numbpsfp)
-    indxpsfpinit = numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
-
+   
     if varioaxi:
-        indxpsfpoaxinorm = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
-        indxpsfpoaxiindx = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
         indxfixppsfpoaxinorm = indxfixppsfp[0] + indxpsfpoaxinorm
         indxfixppsfpoaxiindx = indxfixppsfp[0] + indxpsfpoaxiindx
         indxfixppsfpoaxi = sort(concatenate((indxfixppsfpoaxinorm, indxfixppsfpoaxiindx)))
+
+    indxpsfp = arange(numbpsfp)
+    indxpsfpinit = numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
 
     indxfixpbacp = []
     if gdat.backemis:
@@ -4634,6 +4608,36 @@ def supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot, trueonly=False):
                 for k in range(lgal.size):
                     axis.add_artist(plt.Circle((gdat.anglfact * lgal[k], gdat.anglfact * bgal[k]), \
                                 gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[indxpoplplot][0, k]], edgecolor='b', facecolor='none', ls='--', lw=2))
+
+
+def retr_indxpsfp(gdat, psfntype, varioaxi):
+
+    if psfntype == 'singgaus':
+        numbpsfpform = 1
+    elif psfntype == 'singking':
+        numbpsfpform = 2
+    elif psfntype == 'doubgaus':
+        numbpsfpform = 3
+    elif psfntype == 'gausking':
+        numbpsfpform = 4
+    elif psfntype == 'doubking':
+        numbpsfpform = 5
+    
+    if varioaxi:
+        numbpsfpoaxi = 2
+    else:
+        numbpsfpoaxi = 0
+
+    numbpsfptotl = numbpsfpform + numbpsfpoaxi
+    
+    if varioaxi:
+        indxpsfpoaxinorm = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
+        indxpsfpoaxiindx = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
+    else:
+        indxpsfpoaxinorm = []
+        indxpsfpoaxiindx = []
+
+    return numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfpoaxinorm, indxpsfpoaxiindx
 
 
 def retr_levi(listllik):

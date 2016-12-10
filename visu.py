@@ -312,6 +312,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         numbtrapplot = min(10, gdat.numbtrap)
         indxtrapplot = choice(gdat.indxsampcomp, size=numbtrapplot, replace=False)
         path = gdat.pathpost + 'listsamp'
+        print 'gdat.listsamp'
+        print gdat.listsamp
+        print 'indxtrapplot'
+        print indxtrapplot
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     strgllik = r'$\ln P(D|x)$'
@@ -846,6 +850,15 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         else:
             ydat = gdatmodi.thisspecmtch[i, :]
 
+        if gdat.strgcnfg == 'pcat_lens_mock':
+            print 'xdat'
+            print xdat
+            print 'ydat'
+            print ydat
+            print 'yerr'
+            print yerr
+            print
+
         # temp -- this is dangerous!!
         xdat *= gdat.fluxfactplot
         xerr *= gdat.fluxfactplot
@@ -874,11 +887,12 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         if plotdiff:
             axis.axhline(0., ls='--', alpha=gdat.alphmrkr, color='black')
         else:
-            # superimpose the bias line
-            fluxbias = retr_fluxbias(gdat, gdat.binsspecplot[i, :], i)
-            axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * gdat.binsspecplot[i, :], ls='--', alpha=gdat.alphmrkr, color='black')
-            axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
-            axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
+            if gdat.pntstype == 'lght':
+                # superimpose the bias line
+                fluxbias = retr_fluxbias(gdat, gdat.binsspecplot[i, :], i)
+                axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * gdat.binsspecplot[i, :], ls='--', alpha=gdat.alphmrkr, color='black')
+                axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
+                axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
         
         axis.set_xlabel('$%s_{%s}$%s' % (gdat.strgflux, gdat.strgcatl, gdat.strgfluxunitextn))
         if i == 0:

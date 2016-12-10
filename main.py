@@ -275,7 +275,6 @@ def init( \
          strgcatl=None, \
          strgback=[1.], \
          lablback=None, \
-         nameback=None, \
          strgexpo=1., \
          numbproc=None, \
          liketype='pois', \
@@ -391,7 +390,7 @@ def init( \
         
          # proposals
          numbpntsmodi=1, \
-         stdvprophypr=0.1, \
+         stdvprophypr=0.02, \
          stdvproppsfp=0.1, \
          stdvpropbacp=0.01, \
          stdvproplenp=1e-4, \
@@ -690,12 +689,6 @@ def init( \
         else:
             gdat.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
     
-    if gdat.nameback == None:
-        if gdat.numbback == 1:
-            gdat.nameback = ['normisot']
-        else:
-            gdat.nameback = ['normisot', 'normdiff']
-    
     if gdat.radispmr == None:
         gdat.radispmr = 2. / gdat.anglfact
    
@@ -970,7 +963,10 @@ def init( \
 
     if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.strgback[0], float)):
         raise Exception('In a lensing problem, the background can only be uniform.')
-        
+    
+    if gdat.minmflux >= gdat.maxmflux:
+        raise Exception('Minimum flux is greater than maximum flux.')
+
     if gdat.verbtype > 0:
         print 'PCAT v0.1 started at %s' % gdat.strgtimestmp
         print 'Configuration %s' % gdat.strgcnfg
@@ -1618,6 +1614,7 @@ def init( \
 
     # compute credible intervals
     gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
+    gdat.stdvfixp = std(gdat.listfixp, 0)
     gdat.medifixp = gdat.postfixp[0, :]
     if gdat.pntstype == 'lght':
         gdat.medipsfn = retr_psfn(gdat, gdat.medifixp[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.psfntype)
@@ -1647,11 +1644,6 @@ def init( \
     gdat.timerealtotl = time.time() - gdat.timerealtotl
     gdat.timeproctotl = time.clock() - gdat.timeproctotl
      
-    # output dictionary
-    dictpcat = dict()
-    for attr, valu in gdat.__dict__.iteritems():
-        dictpcat[attr] = valu
-
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdat.timereal[k], gdat.timeproc[k])
@@ -1660,7 +1652,7 @@ def init( \
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         
-    return gridchan, dictpcat
+    return gridchan, gdat
     
     
 def plot_samp(gdat, gdatmodi):
@@ -1790,6 +1782,27 @@ def plot_samp(gdat, gdatmodi):
                 plot_datacnts(gdat, l, gdatmodi, i, m)
                 if gdat.pntstype == 'lens':
                     plot_defl(gdat, gdatmodi)
+
+                    numbpntsplot = min(5, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
+                    numbplot = numbpntsplot + 1
+                    indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])
+                    lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
+                    bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
+                    bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]
+                    for k in range(numbplot):
+                        if k == 0:
+                            lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpellphost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
+                                                                             gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
+                        else:
+                            lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k], bgal[k], 0., 0., 0., 0., bein[k])
+                        defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+                        plot_defl(gdat, defl=defl, indxdefl=k)
+
                 if gdat.pixltype == 'unbd':
                     plot_catlfram(gdat, gdatmodi, l, i, m)
                 else:

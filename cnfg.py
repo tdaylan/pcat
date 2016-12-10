@@ -411,7 +411,6 @@ def test_post():
              exprinfo=False, \
              strgback=['fermisotflux.fits'], \
              lablback=[r'$\mathcal{I}$'], \
-             nameback=['normisot'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
              stdvback=stdvback, \
              stdvlbhlminm=stdvlbhlminm, \
