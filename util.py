@@ -403,6 +403,9 @@ def retr_thisindxprop(gdat, gdatmodi):
     gdatmodi.propbgal = False
     gdatmodi.propflux = False
     gdatmodi.propspep = False
+    gdatmodi.propsind = False
+    gdatmodi.propcurv = False
+    gdatmodi.propexpo = False
 
     if rand() < gdat.probtran:
         
@@ -535,6 +538,12 @@ def retr_thisindxprop(gdat, gdatmodi):
                 else:
                     gdatmodi.thisindxprop = gdat.indxpropspep
                     gdatmodi.propspep = True
+                    if gdatmodi.indxspepmodi in gdat.indxspepsind:
+                        gdatmodi.propsind = True
+                    if gdatmodi.indxspepmodi in gdat.indxspepcurv:
+                        gdatmodi.propcurv = True
+                    if gdatmodi.indxspepmodi in gdat.indxspepexpo:
+                        gdatmodi.propexpo = True
                     gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
                 
         if gdat.verbtype > 1:
@@ -1538,9 +1547,9 @@ def updt_samp(gdat, gdatmodi):
         else:
             gdatmodi.thissampvarb[gdatmodi.indxsampmodispec] = gdatmodi.modispec[:, 1]
             if gdatmodi.propspep:
-                if gdatmodi.indxspepmodi == gdat.indxspepsind:
+                if gdatmodi.propsind:
                     gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 0]
-                if gdatmodi.indxspepmodi == gdat.indxspepcurv or gdatmodi.indxspepmodi == gdat.indxspepexpo:
+                if gdatmodi.propcurv or gdatmodi.propexpo:
                     gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 1]
 
 
@@ -2468,7 +2477,7 @@ def retr_prop(gdat, gdatmodi):
             else:
                 gdatmodi.modispec[gdat.indxenerfluxdist, 1] = \
                                             gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[gdatmodi.indxpoplmodi][gdat.indxenerfluxdist, gdatmodi.indxpntsfullmodi]]
-                if gdatmodi.indxspepmodi == gdat.indxspepsind:
+                if gdatmodi.propsind:
                     gdatmodi.modispep[1, 0] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[gdatmodi.indxpoplmodi]], \
                                                                                                       gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[gdatmodi.indxpoplmodi]])
                     if gdat.spectype[gdatmodi.indxpoplmodi] == 'curv':
@@ -2478,10 +2487,10 @@ def retr_prop(gdat, gdatmodi):
            
                 else:
                     gdatmodi.modispep[1, 0] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][gdatmodi.indxpntsfullmodi, 0]]
-                    if gdatmodi.indxspepmodi == gdat.indxspepcurv:
+                    if gdatmodi.propcurv:
                         gdatmodi.modispep[1, 1] = icdf_gaus(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.sinddistmean[gdatmodi.indxpoplmodi], \
                                                                                                                             gdat.sinddiststdv[gdatmodi.indxpoplmodi])
-                    if gdatmodi.indxspepmodi == gdat.indxspepexpo:
+                    if gdatmodi.propexpo:
                         gdatmodi.modispep[1, 1] = icdf_logt(gdatmodi.drmcsamp[gdatmodi.indxsampmodi, -1], gdat.minmener, gdat.factener)
            
             if gdat.numbener > 1:
