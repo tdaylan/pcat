@@ -539,7 +539,7 @@ def retr_thisindxprop(gdat, gdatmodi):
                     gdatmodi.thisindxprop = gdat.indxpropspep
                     gdatmodi.propspep = True
                     gdatmodi.indxspepmodi = gdatmodi.indxcompmodi % gdat.indxcompspep[gdatmodi.indxpoplmodi]
-                    if gdatmodi.indxspepmodi in gdat.indxspepsind:
+                    if gdatmodi.indxspepmodi == gdat.indxspepsind:
                         gdatmodi.propsind = True
                     else:
                         if gdat.spectype[gdatmodi.indxpoplmodi] == 'curv':
