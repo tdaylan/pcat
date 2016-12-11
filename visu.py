@@ -64,8 +64,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbprop == 1:
         axgr = [axgr]
     for n, axis in enumerate(axgr):
-        histtotl = axis.hist(where(gdat.listindxprop == gdat.indxprop[n])[0], bins=binstimemcmc)[0]
-        histaccp = axis.hist(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp == True)[0]), bins=binstimemcmc)[0]
+        histtotl = axis.hist(gdat.listindxsampprop[n], bins=binstimemcmc)[0]
+        histaccp = axis.hist(gdat.listindxsamppropaccp[n], bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgprop[n])
         if n == gdat.numbprop - 1:
             axis.set_xlabel('$i_{samp}$')
@@ -112,12 +112,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             ## labels and names
             listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
                                             r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
-            listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct', 'deltllik', 'deltlpri']
+            listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct']
             
             ## variables
             listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
                                              exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
-                                             gdat.listjcbnfact, exp(gdat.listdeltllik), exp(gdat.listdeltlpri)]
+                                             gdat.listjcbnfact]
            
             print 'gdat.listauxipara'
             print gdat.listauxipara
@@ -129,12 +129,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             print gdat.listdeltlpri
             print 'gdat.listcombfact'
             print gdat.listcombfact
-            print 'gdat.listdeltllik'
-            print gdat.listdeltllik[indxsampsplttotl]
-            print gdat.listdeltllik[indxsampmergtotl]
-            print 'gdat.listdeltlpri'
-            print gdat.listdeltlpri[indxsampsplttotl]
-            print gdat.listdeltlpri[indxsampmergtotl]
             print
     
             # rescale the Jacobian and the prior fraction to make them dimensionless
@@ -329,8 +323,18 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     tdpy.mcmc.plot_trac(path, gdat.listllik.flatten(), strgllik, varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
     path = gdat.pathpost + 'deltllik'
-    tdpy.mcmc.plot_hist(path, gdat.listdeltllik.flatten(), strgdeltllik)
-
+    tdpy.mcmc.plot_trac(path, gdat.listdeltllik.flatten(), strgdeltllik)
+    if gdat.numbproc > 1:
+        path = gdat.pathpost + 'deltllikproc'
+        tdpy.mcmc.plot_trac(path, gdat.listdeltllik, strgdeltllik, titl='All processes')
+    for n in gdat.indxprop:
+        path = gdat.pathpost + 'deltllik_%s' % gdat.nameprop[n]
+        tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsampprop[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n])
+        path = gdat.pathpost + 'deltllik_%s_accp' % gdat.nameprop[n]
+        tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsamppropaccp[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n] + ', Accepted')
+        path = gdat.pathpost + 'deltllik_%s_reje' % gdat.nameprop[n]
+        tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsamppropreje[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n] + ', Rejected')
+        
     ## log-prior
     path = gdat.pathpost + 'lpri'
     tdpy.mcmc.plot_hist(path, sum(gdat.listlpri, 2).flatten(), strglpri)
@@ -365,7 +369,7 @@ def plot_chro(gdat):
     if gdat.numbprop == 1:
         axcl = [axcl]
     for k in gdat.indxprop:
-        indxswepchro = intersect1d(where(gdat.listindxprop == k)[0], where(gdat.listchrototl[:, 0] > 0)[0])
+        indxswepchro = intersect1d(gdat.listindxsampprop[k], where(gdat.listchrototl[:, 0] > 0)[0])
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:

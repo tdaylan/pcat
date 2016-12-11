@@ -1554,95 +1554,6 @@ def updt_samp(gdat, gdatmodi):
                     gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.modispep[1, 1]
 
 
-def diag_gdatmodi(gdatmodi, gdatmodiprev):
-
-    listvalu = []
-    listattr = []
-    print 'diag_gdatmodi'
-    for attr, valu in gdatmodi.__dict__.iteritems():
-       
-        if attr == 'thissampvarb' or 'drmcsamp':
-            
-            indx = where(valu - valuprev != 0.)
-            if indx[0].size > 0:
-                print valu[indx]
-            
-        boolmodi = False
-        try:    
-            valuprev = getattr(gdatmodiprev, attr)
-        except:
-            pass
-            continue
-
-        print 'attr'
-        print attr
-
-        if isinstance(valuprev, ndarray):
-            try:
-                indx = where(valu - valuprev != 0.)
-                if indx[0].size > 0:
-                    boolmodi = True
-            except:
-                print 'ndarry failed'
-                print 'attr'
-                print attr
-                print
-                #boolmodi = True
-                
-        elif isinstance(valuprev, list):
-            continue
-            for k, item in enumerate(valu):
-                if isinstance(item, list):
-                    for l, itemitem in enumerate(item):
-                        if valuprev[k] != item:
-                            boolmodi = True
-                    print item
-                if valuprev[k] != item:
-                    boolmodi = True
-        elif isinstance(valuprev, (int, bool, float)):
-            
-            try:
-                if valu != valuprev:
-                    boolmodi = True
-            except:
-                boolmodi = True
-        else:
-            print 'other than numpy'
-            print type(valuprev)
-            print
-
-        if boolmodi:
-            print 'attr'
-            print attr
-            if isinstance(valuprev, ndarray):
-                if len(indx) > 1:
-                    print 'valuprev'
-                    print valuprev[indx[0]]
-                    print 'valu'
-                    print valu[indx[0]]
-                else:
-                    print 'valuprev'
-                    print valuprev
-                    print 'valu'
-                    print valu
-            else:
-                print 'valuprev'
-                print valuprev
-                print 'valu'
-                print valu
-            print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-
-
 def retr_listpair(gdat, lgal, bgal):
     
     if gdat.verbtype > 1:
@@ -2527,8 +2438,9 @@ def retr_prop(gdat, gdatmodi):
             print gdatmodi.modibgal[:gdatmodi.numbpntsmodi]
             print 'modispec'
             print gdatmodi.modispec[:, :gdatmodi.numbpntsmodi]
-            print 'gdatmodi.indxsampmodi'
-            print gdatmodi.indxsampmodi
+            if gdatmodi.propmerg and not gdatmodi.boolreje:
+                print 'gdatmodi.indxsampmodi'
+                print gdatmodi.indxsampmodi
             print 
 
     # calculate the factor, i.e., Jacobian and combinatorial, to multiply the acceptance rate
@@ -2740,6 +2652,29 @@ def retr_numbspep(spectype):
 
 def setpinit(gdat, boolinitsetp=False):
 
+    # number of samples to be saved
+    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    gdat.indxsamp = arange(gdat.numbsamp)
+    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
+    gdat.indxsamptotl = arange(gdat.numbsamptotl)
+    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
+
+    # run tag
+    gdat.rtag = retr_rtag(gdat)
+    
+    # plot paths
+    if gdat.makeplot:
+        gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+        gdat.pathfram = gdat.pathplot + 'fram/'
+        gdat.pathpost = gdat.pathplot + 'post/'
+        gdat.pathinit = gdat.pathplot + 'init/'
+        os.system('mkdir -p %s %s %s %s' % (gdat.pathplot, gdat.pathfram, gdat.pathpost, gdat.pathinit))
+        gdat.pathdiag = gdat.pathplot + 'diag/'
+        os.system('mkdir -p %s' % gdat.pathdiag)
+        if gdat.optiprop:
+            gdat.pathopti = gdat.pathplot + 'opti/'
+            os.system('mkdir -p %s' % gdat.pathopti)
+ 
     # spectral model
     ## total number of spectral parameters allowed
     gdat.numbspeptotl = 3
@@ -3359,29 +3294,6 @@ def retr_detrcatl(gdat):
 
 def setpfinl(gdat, boolinitsetp=False):
 
-    # number of samples to be saved
-    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
-    gdat.indxsamp = arange(gdat.numbsamp)
-    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
-    gdat.indxsamptotl = arange(gdat.numbsamptotl)
-    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
-
-    # run tag
-    gdat.rtag = retr_rtag(gdat)
-    
-    # plot paths
-    if gdat.makeplot:
-        gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
-        gdat.pathfram = gdat.pathplot + 'fram/'
-        gdat.pathpost = gdat.pathplot + 'post/'
-        gdat.pathinit = gdat.pathplot + 'init/'
-        os.system('mkdir -p %s %s %s %s' % (gdat.pathplot, gdat.pathfram, gdat.pathpost, gdat.pathinit))
-        gdat.pathdiag = gdat.pathplot + 'diag/'
-        os.system('mkdir -p %s' % gdat.pathdiag)
-        if gdat.optiprop:
-            gdat.pathopti = gdat.pathplot + 'opti/'
-            os.system('mkdir -p %s' % gdat.pathopti)
- 
     # get the experimental catalog
     if gdat.exprinfo:
         
@@ -3722,7 +3634,14 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxfixpactvprop = setdiff1d(gdat.indxfixpactv, gdat.indxfixpnumbpnts)
     gdat.numbfixpactvprop = gdat.indxfixpactvprop.size
     gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop]
-    
+    gdat.nameprop = gdat.namefixp[gdat.indxfixpactvprop]
+   
+    print 'hey'
+    print 'gdat.strgprop'
+    print gdat.strgprop
+    print gdat.nameprop
+    print 
+
     if gdat.probtran == None:
         if gdat.numbtrap > 0:
             gdat.probtran = 0.4
@@ -3740,46 +3659,54 @@ def setpfinl(gdat, boolinitsetp=False):
         if gdat.probtran > 0.:
             # birth
             gdat.indxpropbrth = cntr.incr()
-            gdat.strgprop = append(gdat.strgprop, 'brth')
+            gdat.strgprop = append(gdat.strgprop, r'$\mathcal{B}$')
+            gdat.nameprop = append(gdat.nameprop, 'brth')
             gdat.indxproppnts.append(gdat.indxpropbrth)
             
             # death
             gdat.indxpropdeth = cntr.incr()
-            gdat.strgprop = append(gdat.strgprop, 'deth')
+            gdat.strgprop = append(gdat.strgprop, r'$\mathcal{D}$')
+            gdat.nameprop = append(gdat.nameprop, 'deth')
             gdat.indxproppnts.append(gdat.indxpropdeth)
             
             if gdat.probbrde < 1.:
                 # split
-                gdat.strgprop = append(gdat.strgprop, 'splt')
+                gdat.strgprop = append(gdat.strgprop, r'$\mathcal{S}$')
+                gdat.nameprop = append(gdat.nameprop, 'splt')
                 gdat.indxpropsplt = cntr.incr()
                 gdat.indxproppnts.append(gdat.indxpropsplt)
                 
                 # merge
-                gdat.strgprop = append(gdat.strgprop, 'merg')
+                gdat.strgprop = append(gdat.strgprop, r'$\mathcal{M}$')
+                gdat.nameprop = append(gdat.nameprop, 'merg')
                 gdat.indxpropmerg = cntr.incr()
                 gdat.indxproppnts.append(gdat.indxpropmerg)
         
         # lgal
-        gdat.strgprop = append(gdat.strgprop, 'lgal')
+        gdat.strgprop = append(gdat.strgprop, r'$\delta l$')
+        gdat.nameprop = append(gdat.nameprop, 'lgal')
         gdat.indxproplgal = cntr.incr()
         gdat.indxproppnts.append(gdat.indxproplgal)
         gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxproplgal]))) 
 
         # bgal
-        gdat.strgprop = append(gdat.strgprop, 'bgal')
+        gdat.strgprop = append(gdat.strgprop, r'$\delta b$')
+        gdat.nameprop = append(gdat.nameprop, 'bgal')
         gdat.indxpropbgal = cntr.incr()
         gdat.indxproppnts.append(gdat.indxpropbgal)
         gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropbgal]))) 
         
         # spec
-        gdat.strgprop = append(gdat.strgprop, 'flux')
+        gdat.strgprop = append(gdat.strgprop, r'$\delta f$')
+        gdat.nameprop = append(gdat.nameprop, 'flux')
         gdat.indxpropflux = cntr.incr()
         gdat.indxproppnts.append(gdat.indxpropflux)
         gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropflux]))) 
         
         # spep
         if gdat.numbener > 1:
-            gdat.strgprop = append(gdat.strgprop, 'spep')
+            gdat.strgprop = append(gdat.strgprop, r'$\delta s$')
+            gdat.nameprop = append(gdat.nameprop, 'spep')
             gdat.indxpropspep = cntr.incr()
             gdat.indxproppnts.append(gdat.indxpropspep)
             gdat.indxpropstdp = concatenate((gdat.indxpropstdp, array([gdat.indxpropspep]))) 

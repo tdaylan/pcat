@@ -964,15 +964,16 @@ def init( \
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
     
-    # create the PCAT folders
-    gdat.pathoutp = gdat.pathdata + 'outp/' + gdat.strgtimestmp + '_' + gdat.strgcnfg + '/'
-    os.system('mkdir -p %s' % gdat.pathoutp)
-    pathpcatlite = gdat.pathoutp + 'catllite.fits'  
-    pathpcat = gdat.pathoutp + 'catl.fits'  
-    
     # initial setup
     setpinit(gdat, True) 
    
+    # create the PCAT folders
+    gdat.pathoutp = gdat.pathdata + 'outp/'
+    gdat.pathoutpthis = gdat.pathoutp + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+    os.system('mkdir -p %s' % gdat.pathoutpthis)
+    pathcatllite = gdat.pathoutpthis + 'catllite.fits'  
+    pathcatl = gdat.pathoutpthis + 'catl.fits'  
+    
     # generate mock data
     if gdat.datatype == 'mock':
         
@@ -1232,7 +1233,7 @@ def init( \
     # temp
     #fram = inspect.currentframe()
     #listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
-    #fileargs = open(gdat.pathoutp + 'args.txt', 'w')
+    #fileargs = open(gdat.pathoutpthis + 'args.txt', 'w')
     #fileargs.write('PCAT call arguments')
     #for args in listargs:
     #    fileargs.write('%s = %s\n' % (args, listargsvals[args]))
@@ -1434,8 +1435,6 @@ def init( \
     gdat.listcombfact = gdat.listcombfact.reshape(gdat.numbsweptotl)
     gdat.listchrollik = gdat.listchrollik.reshape((gdat.numbsweptotl, gdat.numbchrollik)) 
     gdat.listboolreje = gdat.listboolreje.reshape(gdat.numbsweptotl)
-    gdat.listdeltllik = gdat.listdeltllik.reshape(gdat.numbsweptotl)
-    gdat.listdeltlpri = gdat.listdeltlpri.reshape(gdat.numbsweptotl)
     gdat.listerrr = gdat.listerrr.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
     gdat.listerrrfrac = gdat.listerrrfrac.reshape((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
     gdat.listsamp = gdat.listsamp.reshape(gdat.numbsamptotl, -1)
@@ -1603,6 +1602,15 @@ def init( \
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
+    # construct lists of samples for each proposal type
+    gdat.listindxsampprop = []
+    gdat.listindxsamppropaccp = []
+    gdat.listindxsamppropreje = []
+    for n in gdat.indxprop:
+        gdat.listindxsampprop.append(where(gdat.listindxprop == gdat.indxprop[n])[0])
+        gdat.listindxsamppropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
+        gdat.listindxsamppropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
+
     # compute credible intervals
     gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
     gdat.stdvfixp = std(gdat.listfixp, 0)
@@ -1618,16 +1626,16 @@ def init( \
     if False:
         # write the PCAT output to disc
         if gdat.verbtype > 0:
-            print 'Writing the PCAT output to %s...' % pathpcat
+            print 'Writing the PCAT output to %s...' % pathcatl
   
-        shel = shelve.open(pathpcat, 'n')
+        shel = shelve.open(pathcatl, 'n')
         for attr, valu in locals().iteritems():
             if attr == 'gdat':
                 shel[attr] = valu
         shel.close()
 
         if gdat.makeplot:
-            plot_post(pathpcat=pathpcat, verbtype=gdat.verbtype, makeanim=gdat.makeanim)
+            plot_post(pathcatl=pathcatl, verbtype=gdat.verbtype, makeanim=gdat.makeanim)
     else:
         if gdat.makeplot:
             plot_post(gdat=gdat, writ=False)
@@ -1639,7 +1647,7 @@ def init( \
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdat.timereal[k], gdat.timeproc[k])
         print 'PCAT has run in %d real seconds, %d CPU seconds.' % (gdat.timerealtotl, gdat.timeproctotl)
-        print 'The ensemble of catalogs is at ' + pathpcat
+        print 'The ensemble of catalogs is at ' + pathcatl
         if gdat.makeplot:
             print 'The plots are in ' + gdat.pathplot
         
@@ -1970,15 +1978,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 if amin(gdatmodi.nextpntsflux) < 0.:
                     raise Exception('nextpntsflux went negative.')
 
-            # check what has been changed
-            if gdatmodi.cntrswep != 0:
-                # temp
-                pass
-                #diag_gdatmodi(gdatmodi, gdatmodiprev)
             try:
                 if gdatmodi.indxpoplmodi < 0:
                     raise
-
             except:
                 pass
             gdatmodiprev = deepcopy(gdatmodi)
