@@ -459,10 +459,11 @@ def retr_thisindxprop(gdat, gdatmodi):
     else:
 
         # determine the sample index to be modified
-        print 'gdatmodi.thisindxsampcompcolr'
-        print gdatmodi.thisindxsampcompcolr
-        print 'gdat.indxfixpactvprop'
-        print gdat.indxfixpactvprop
+        if gdat.strgcnfg == 'test_spmr':
+            print 'gdatmodi.thisindxsampcompcolr'
+            print gdatmodi.thisindxsampcompcolr
+            print 'gdat.indxfixpactvprop'
+            print gdat.indxfixpactvprop
         if gdat.numbtrap > 0 and gdat.propcomp:
             indxsampfull = concatenate((gdat.indxfixpactvprop, concatenate(gdatmodi.thisindxsampcompcolr)))
         else:
