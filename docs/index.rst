@@ -128,7 +128,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type regulevi: bool
 
 
-    :param strgexprflux: Name of the FITS file (without the extension) in ```pathdata``` containing the observed data as an ```ndarray```. The file should contain a numpy array of dimension $(N_e, N_{pix}, N_{psf}$, where $N_e$ is the number of energy bins, $N_{pix}$ is the number of spatial pixels and $N_{psf}$ is the number of PSF classes. The units should be photons per $cm^2$ per seconds per GeV.
+    :param strgexprflux: Name of the FITS file (without the extension) in ``pathdata`` containing the observed data as an ``ndarray``. The file should contain a numpy array of dimension $(N_e, N_{pix}, N_{psf}$, where $N_e$ is the number of energy bins, $N_{pix}$ is the number of spatial pixels and $N_{psf}$ is the number of PSF classes. The units should be photons per $cm^2$ per seconds per GeV.
 
     :type strgexprflux: str
 
@@ -138,7 +138,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type strgcatl: str
 
 
-    :param strgback: A list of FITS file names (without the extension) in ```pathdata``` each containing a spatial template for the background prediction as an ```ndarray```. See ```strgexprflux``` for the content of the file and its unit. One element of the list can be a float, indicating an isotropic template with the provided amplitude.
+    :param strgback: A list of FITS file names (without the extension) in ``pathdata`` each containing a spatial template for the background prediction as an ``ndarray``. See ``strgexprflux`` for the content of the file and its unit. One element of the list can be a float, indicating an isotropic template with the provided amplitude.
 
     :type strgback: list of str or int
     
@@ -148,12 +148,12 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type lablback: list of str
 
 
-    :param strgexpo: Name of the FITS file (without the extension) in ```pathdata``` containing the exposure map. See ```strgexprflux``` for the format of the numpy array. ```strgexpo``` can also be a float, in which case the exposure map will be assumed to be uniform across along all data dimensions.
+    :param strgexpo: Name of the FITS file (without the extension) in ``pathdata`` containing the exposure map. See ``strgexprflux`` for the format of the numpy array. ``strgexpo`` can also be a float, in which case the exposure map will be assumed to be uniform across along all data dimensions.
 
     :type strgexpo: str or float
 
 
-    :param numbproc: Number of processes. The total number of samples before thinning and burn-in, will be ```numbproc``` times ```numbswep```.
+    :param numbproc: Number of processes. The total number of samples before thinning and burn-in, will be ``numbproc`` times ``numbswep``.
 
     :type numbproc: int
 
@@ -166,7 +166,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type liketype: strg
 
 
-    :param exprtype: Name of the experiment used to collect the observed data. ```exprtype``` can be used to set other options to their default values for the particular experiment. 
+    :param exprtype: Name of the experiment used to collect the observed data. ``exprtype`` can be used to set other options to their default values for the particular experiment. 
         - ``ferm`` Fermi-LAT
         - ``chan`` Chandra
         - ``hubb`` HST
@@ -175,12 +175,12 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type exprtype: str
 
 
-    :param lgalcntr: Galactic longitude of the image center. ```lgalcntr``` and ```bgalcntr``` are used to rotate the observed data, exposure and background maps as well as the provided reference catalog to the center of the ROI. They are only effective when pixelization is HealPix, i.e, ```pixltype='heal'```.
+    :param lgalcntr: Galactic longitude of the image center. ``lgalcntr`` and ``bgalcntr`` are used to rotate the observed data, exposure and background maps as well as the provided reference catalog to the center of the ROI. They are only effective when pixelization is HealPix, i.e, ``pixltype='heal'``.
 
     :type lgalcntr: float
 
 
-    :param bgalcntr: Galactic latitude of the image center. See ```lgalcntr```.
+    :param bgalcntr: Galactic latitude of the image center. See ``lgalcntr``.
 
     :type bgalcntr: float
 

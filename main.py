@@ -1404,8 +1404,8 @@ def init( \
         gdat.listpntsfluxmean[:, k, :] = listchan[15]
         gdat.listchrollik[:, k, :] = listchan[16]
         gdat.listboolreje[:, k] = listchan[17]
-        gdat.listdeltllik[:, k] = listchan[18]
-        gdat.listdeltlpri[:, k] = listchan[19]
+        gdat.listdeltlpri[:, k] = listchan[18]
+        gdat.listdeltllik[:, k] = listchan[19]
         gdat.listmemoresi[:, k] = listchan[20]
         gdat.maxmllikswep[k] = listchan[21]
         gdat.indxswepmaxmllik[k] = listchan[22]
@@ -1956,8 +1956,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 if gdatmodi.propllik:
                     if gdatmodi.indxenermodi.ndim != 1:
                         raise Exception('indxenermodi is inappropriate.')
-            if not isinstance(gdatmodi.indxsampmodi, ndarray):
-                raise Exception('indxsampmodi is inappropriate.')
+            if not (gdatmodi.propmerg and gdatmodi.boolreje):
+                if not isinstance(gdatmodi.indxsampmodi, ndarray):
+                    raise Exception('indxsampmodi is inappropriate.')
            
             gdatmodi.thislpostotl = sum(gdatmodi.thisllik) + sum(gdatmodi.thislpri)
             if gdatmodi.cntrswep > 0:
@@ -2356,9 +2357,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listchrollik = array(gdatmodi.listchrollik)
     
     listchan = [listsamp, listsampvarb, listindxprop, listchrototl, listllik, listlpri, listaccp, listmodlcnts, gdatmodi.listindxpntsfull, listindxfixpmodi, \
-        listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
-        listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos, \
-        listerrr, listerrrfrac, gdat.stdvstdp]
+                listauxipara, listlaccfact, listnumbpair, listjcbnfact, listcombfact, listpntsfluxmean, gdatmodi.listchrollik, listboolreje, listdeltlpri, \
+                listdeltllik, listmemoresi, maxmllikswep, indxswepmaxmllik, sampvarbmaxmllik, maxmlposswep, indxswepmaxmlpos, sampvarbmaxmlpos, \
+                listerrr, listerrrfrac, gdat.stdvstdp]
     
     return listchan
 

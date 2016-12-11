@@ -322,17 +322,19 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     tdpy.mcmc.plot_hist(path, gdat.listllik.flatten(), strgllik, titl)
     tdpy.mcmc.plot_trac(path, gdat.listllik.flatten(), strgllik, varbdraw=[gdat.maxmllikswep], labldraw=['Maximum likelihood Sample'])
 
-    path = gdat.pathpost + 'deltllik'
+    gdat.pathpostdeltllik = gdat.pathpost + 'deltllik/'
+    os.system('mkdir -p %s' % gdat.pathpostdeltllik)
+    path = gdat.pathpostdeltllik + 'deltllik'
     tdpy.mcmc.plot_trac(path, gdat.listdeltllik.flatten(), strgdeltllik)
     if gdat.numbproc > 1:
-        path = gdat.pathpost + 'deltllikproc'
+        path = gdat.pathpostdeltllik + 'deltllikproc'
         tdpy.mcmc.plot_trac(path, gdat.listdeltllik, strgdeltllik, titl='All processes')
     for n in gdat.indxprop:
-        path = gdat.pathpost + 'deltllik_%s' % gdat.nameprop[n]
+        path = gdat.pathpostdeltllik + 'deltllik_%s' % gdat.nameprop[n]
         tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsampprop[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n])
-        path = gdat.pathpost + 'deltllik_%s_accp' % gdat.nameprop[n]
+        path = gdat.pathpostdeltllik + 'deltllik_%s_accp' % gdat.nameprop[n]
         tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsamppropaccp[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n] + ', Accepted')
-        path = gdat.pathpost + 'deltllik_%s_reje' % gdat.nameprop[n]
+        path = gdat.pathpostdeltllik + 'deltllik_%s_reje' % gdat.nameprop[n]
         tdpy.mcmc.plot_trac(path, gdat.listdeltllik[gdat.listindxsamppropreje[n], :].flatten(), strgdeltllik, titl=gdat.strgprop[n] + ', Rejected')
         
     ## log-prior

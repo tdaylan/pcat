@@ -386,6 +386,11 @@ def retr_thisindxprop(gdat, gdatmodi):
  
     gdatmodi.prophypr = False
     
+    gdatmodi.proplpri = False
+    gdatmodi.propllik = False
+   
+    gdatmodi.prophypr = False
+
     gdatmodi.propmeanpnts = False
     gdatmodi.propfluxdist = False
     gdatmodi.propsinddist = False
@@ -454,6 +459,10 @@ def retr_thisindxprop(gdat, gdatmodi):
     else:
 
         # determine the sample index to be modified
+        print 'gdatmodi.thisindxsampcompcolr'
+        print gdatmodi.thisindxsampcompcolr
+        print 'gdat.indxfixpactvprop'
+        print gdat.indxfixpactvprop
         if gdat.numbtrap > 0 and gdat.propcomp:
             indxsampfull = concatenate((gdat.indxfixpactvprop, concatenate(gdatmodi.thisindxsampcompcolr)))
         else:
@@ -472,7 +481,6 @@ def retr_thisindxprop(gdat, gdatmodi):
         gdatmodi.proptran = False
    
         if gdatmodi.indxsampmodi in gdat.indxfixphypr:
-            gdatmodi.propllik = False
             gdatmodi.proplpri = True
             gdatmodi.prophypr = True
             if gdatmodi.indxsampmodi in gdat.indxfixpmeanpnts:
@@ -483,8 +491,6 @@ def retr_thisindxprop(gdat, gdatmodi):
                 gdatmodi.propsinddist = True
         else:
             gdatmodi.propllik = True
-            gdatmodi.proplpri = False
-            gdatmodi.prophypr = False
             if gdatmodi.indxsampmodi in gdat.indxfixppsfp:
                     gdatmodi.proppsfp = True
             elif gdatmodi.indxsampmodi in gdat.indxfixpbacp:
@@ -2795,7 +2801,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.truelabl = 'Mock'
     if gdat.datatype == 'inpt':
         gdat.truelabl = gdat.strgcatl
-    if gdat.strganglunit != None:
+    if gdat.strganglunit != '':
         gdat.strgxaxitotl = gdat.strgxaxi + ' [%s]' % gdat.strganglunit
         gdat.strgyaxitotl = gdat.strgyaxi + ' [%s]' % gdat.strganglunit
     else:
@@ -3636,12 +3642,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.strgprop = gdat.strgfixp[gdat.indxfixpactvprop]
     gdat.nameprop = gdat.namefixp[gdat.indxfixpactvprop]
    
-    print 'hey'
-    print 'gdat.strgprop'
-    print gdat.strgprop
-    print gdat.nameprop
-    print 
-
     if gdat.probtran == None:
         if gdat.numbtrap > 0:
             gdat.probtran = 0.4
