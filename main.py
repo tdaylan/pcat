@@ -354,16 +354,16 @@ def init( \
 
          psfntype=None, \
          varioaxi=None, \
-         minmsigm=None, \
-         maxmsigm=None, \
          meansigm=None, \
          stdvsigm=None, \
+         
+         minmsigm=None, \
+         maxmsigm=None, \
          minmgamm=None, \
          maxmgamm=None, \
+         
          meangamm=None, \
          stdvgamm=None, \
-         minmpsff=None, \
-         maxmpsff=None, \
          meanpsff=None, \
          stdvpsff=None, \
 
@@ -570,12 +570,16 @@ def init( \
     if gdat.strganglunit == None:
         if gdat.exprtype == 'ferm':
             gdat.strganglunit = '$^o$'
+        if gdat.exprtype == 'sdyn':
+            gdat.strganglunit = ''
         if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
             gdat.strganglunit = '$^{\prime\prime}$'
 
     if gdat.strganglunittext == None:
         if gdat.exprtype == 'ferm':
             gdat.strganglunittext = 'degree'
+        if gdat.exprtype == 'sdyn':
+            gdat.strganglunittext = ''
         if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
             gdat.strganglunittext = 'arcsec'
     
@@ -601,7 +605,7 @@ def init( \
 
     if gdat.strgxaxi == None:
         if gdat.exprtype == 'sdyn':
-            gdat.strgxaxi = r'$E_k^{\prime}$'
+            gdat.strgxaxi = r'$L_z^{\prime}$'
         else:
             if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
                 gdat.strgxaxi = '$x$'
@@ -610,7 +614,7 @@ def init( \
 
     if gdat.strgyaxi == None:
         if gdat.exprtype == 'sdyn':
-            gdat.strgyaxi = r'$L_z^{\prime}$'
+            gdat.strgyaxi = r'$E_k^{\prime}$'
         else:
             if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
                 gdat.strgyaxi = '$y$'
@@ -838,21 +842,8 @@ def init( \
         gdat.meanpsfp = gdat.truepsfp
         gdat.stdvpsfp = 0.1 * gdat.truepsfp
     else:
-        if gdat.exprtype == 'ferm':
-            minmsigm = 0.1
-            maxmsigm = 5.
-        if gdat.exprtype == 'chan':
-            minmsigm = 0.1 / gdat.anglfact
-            maxmsigm = 1. / gdat.anglfact
-        if gdat.exprtype == 'hubb':
-            minmsigm = 0.01 / gdat.anglfact
-            maxmsigm = 0.1 / gdat.anglfact
-        setp_varbfull(gdat, 'sigm', [gdat.minmsigm, gdat.maxmsigm], [0.5, 2.])
-        
-        minmgamm = 2.
-        maxmgamm = 20.
-        setp_varbfull(gdat, 'sigm', [gdat.minmgamm, gdat.maxmgamm], [0.5, 2.])
-        
+        setp_varbfull(gdat, 'sigm', [gdat.minmsigm, gdat.maxmsigm], [1e-2 * gdat.maxmgang, 5e-1 * gdat.maxmgang])
+        setp_varbfull(gdat, 'gamm', [gdat.minmgamm, gdat.maxmgamm], [1.5, 20.])
         gdat.minmpsff = 0.
         gdat.maxmpsff = 1.
  
