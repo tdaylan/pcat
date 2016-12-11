@@ -575,10 +575,4 @@ def test():
          diagmode=False, \
         )
 
-
-if len(sys.argv) > 1:
-    name = globals().copy()
-    name.get(sys.argv[1])()
-else:
-    pass
-
+globals().get(sys.argv[1])()
