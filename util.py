@@ -1668,7 +1668,7 @@ def retr_listpair(gdat, lgal, bgal):
 
 def retr_chandata(gdat):
 
-    with open(gdat.pathdata + 'inpt/chancatl.txt', 'r') as thisfile:
+    with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
         G_long = [] #deg
         G_lat = [] #deg
         id_number = []
@@ -1725,8 +1725,7 @@ def retr_chandata(gdat):
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
 
-    #path = '/Users/tansu/Documents/work/data/tdgu/xray_back/data/CDFS-4Ms-0p5to2-bin1.emap'
-    path = '/Users/tansu/Documents/work/data/tdgu/xray_back/data/CDFS-4Ms-0p5to2-asca-im-bin1.fits'
+    path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     listhdun = ap.io.fits.open(path)
     wcso = ap.wcs.WCS(listhdun[0].header)
    
@@ -3008,7 +3007,7 @@ def setpinit(gdat, boolinitsetp=False):
     # input data
     if gdat.datatype == 'inpt':
         
-        path = gdat.pathdata + 'inpt/' + gdat.strgexprflux
+        path = gdat.pathinpt + gdat.strgexprflux
         gdat.exprdataflux = pf.getdata(path)
         
         if gdat.pixltype == 'heal':
@@ -3134,7 +3133,7 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.datatype == 'inpt':
                 gdat.expo = gdat.strgexpo * ones_like(gdat.exprdataflux)
         else:
-            path = gdat.pathdata + 'inpt/' + gdat.strgexpo
+            path = gdat.pathinpt + gdat.strgexpo
             gdat.expo = pf.getdata(path)
             if amin(gdat.expo) == amax(gdat.expo):
                 raise Exception('Bad input exposure map.')
@@ -3156,7 +3155,7 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.datatype == 'inpt':
                 backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.strgback[c]
         else:
-            path = gdat.pathdata + 'inpt/' + gdat.strgback[c]
+            path = gdat.pathinpt + gdat.strgback[c]
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'cart':
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
@@ -3370,6 +3369,7 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.rtag = retr_rtag(gdat)
     
     # plot paths
+    gdat.pathinpt = gdat.pathplot + 'inpt/'
     if gdat.makeplot:
         gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         gdat.pathfram = gdat.pathplot + 'fram/'
