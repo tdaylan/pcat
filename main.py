@@ -1953,12 +1953,12 @@ def rjmc(gdat, gdatmodi, indxprocwork):
            
             gdatmodi.thislpostotl = sum(gdatmodi.thisllik) + sum(gdatmodi.thislpri)
             if gdatmodi.cntrswep > 0:
-                if gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -10.:
+                if gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:
                     print 'gdatmodi.thislpostotl'
                     print gdatmodi.thislpostotl
                     print 'gdatmodi.thislpostotlprev'
                     print gdatmodi.thislpostotlprev
-                    raise Exception('loglikelihood drop is very unlikely!')
+                    print 'loglikelihood drop is very unlikely!'
             gdatmodi.thislpostotlprev = gdatmodi.thislpostotl
         
             # temp
