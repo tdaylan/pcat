@@ -3005,6 +3005,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.binsaang = linspace(0., 2. * pi, gdat.numbaang + 1)
 
     # input data
+    gdat.pathinpt = gdat.pathplot + 'inpt/'
     if gdat.datatype == 'inpt':
         
         path = gdat.pathinpt + gdat.strgexprflux
@@ -3369,7 +3370,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.rtag = retr_rtag(gdat)
     
     # plot paths
-    gdat.pathinpt = gdat.pathplot + 'inpt/'
     if gdat.makeplot:
         gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
         gdat.pathfram = gdat.pathplot + 'fram/'
