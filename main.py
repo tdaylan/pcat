@@ -49,6 +49,10 @@ def work(gdat, indxprocwork):
     gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampspep, \
                                                                                                     gdatmodi.thisindxsampcompcolr = retr_indx(gdat, gdatmodi.thisindxpntsfull)
         
+    print 'hey'
+    print 'gdatmodi.thisindxpntsfull'
+    print gdatmodi.thisindxpntsfull
+    
     if gdat.numbtrap > 0:
         ## PS components
         if gdat.randinit:
@@ -86,6 +90,11 @@ def work(gdat, indxprocwork):
        
         if randinittemp:
             for l in gdat.indxpopl:
+                print 'gdatmodi.drmcsamp'
+                print gdatmodi.drmcsamp.shape
+                print 'gdatmodi.thisindxsampcompcolr[l]'
+                print gdatmodi.thisindxsampcompcolr[l]
+                print
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampcompcolr[l], 0] = rand(gdatmodi.thisindxsampcompcolr[l].size)
 
     if gdat.verbtype > 1:
@@ -129,8 +138,8 @@ def work(gdat, indxprocwork):
         if gdatmodi.thismodlcnts.shape[1] != gdat.numbpixl:
             raise Exception('Number of pixels in the lensing map mismatches with that of PCAT')
 
-    ## indices of the PS parameters
-    indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampspeptemp, indxsampcompcolrtemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
+    # temp
+    #indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampspeptemp, indxsampcompcolrtemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
     
     if gdat.evalpsfnpnts:
         ## PSF

@@ -4000,6 +4000,11 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
     indxfixp = arange(numbfixp)
 
     # total number of parameters
+    print 'hey'
+    print 'numbfixp'
+    print numbfixp
+    print 'gdat.maxmnumbcomptotl'
+    print gdat.maxmnumbcomptotl
     numbpara = numbfixp + gdat.maxmnumbcomptotl
     indxsampcomp = arange(numbfixp, numbpara)
     indxpara = arange(numbpara)
