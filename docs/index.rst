@@ -385,10 +385,16 @@ Hierarchical priors
 Adaptive burn-in
 +++++++++++++++++
 
-Initial state
+Labeling degeneracy
 ++++++++++++++++++++++
 
-Identity of components
+Input
+--------------
+
+Producing mock data
+++++++++++++++++++++++
+
+Prior and initial state specification
 ++++++++++++++++++++++
 
 
