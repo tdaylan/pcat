@@ -791,7 +791,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.minmflux = 3e-11
         if gdat.exprtype == 'chan':
-            gdat.minmflux = 1e-5
+            gdat.minmflux = 1e-6
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
     

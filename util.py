@@ -1681,6 +1681,8 @@ def retr_chandata(gdat):
     gdat.exprcnts[0, :, 0] = cntschansoft
     gdat.exprcnts[1, :, 0] = cntschanhard
 
+    gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.enernorm)
+    
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
