@@ -3299,6 +3299,84 @@ def retr_detrcatl(gdat):
                 detrcatl.append(catl) 
 
 
+def diag_gdatmodi(gdatmodi, gdatmodiprev):
+
+    listvalu = []
+    listattr = []
+    print 'diag_gdatmodi'
+    for attr, valu in gdatmodi.__dict__.iteritems():
+       
+        boolmodi = False
+        
+        try:    
+            valuprev = getattr(gdatmodiprev, attr)
+        except:
+            pass
+            continue
+
+        if attr == 'thissampvarb' or attr == 'drmcsamp':
+            
+            indx = where(valu - valuprev != 0.)
+            if indx[0].size > 0:
+                print valu[indx]
+            
+        if isinstance(valuprev, ndarray):
+            try:
+                indx = where(valu - valuprev != 0.)
+                if indx[0].size > 0:
+                    boolmodi = True
+            except:
+                print 'ndarry failed'
+                print 'attr'
+                print attr
+                print
+                #boolmodi = True
+                
+        elif isinstance(valuprev, list):
+            continue
+            for k, item in enumerate(valu):
+                if isinstance(item, list):
+                    for l, itemitem in enumerate(item):
+                        if valuprev[k] != item:
+                            boolmodi = True
+                    print item
+                if valuprev[k] != item:
+                    boolmodi = True
+        elif isinstance(valuprev, (int, bool, float)):
+            
+            try:
+                if valu != valuprev:
+                    boolmodi = True
+            except:
+                boolmodi = True
+        else:
+            print 'other than numpy'
+            print type(valuprev)
+            print
+
+        if boolmodi:
+            print 'attr'
+            print attr
+            if isinstance(valuprev, ndarray):
+                if len(indx) > 1:
+                    print 'valuprev'
+                    print valuprev[indx[0]]
+                    print 'valu'
+                    print valu[indx[0]]
+                else:
+                    print 'valuprev'
+                    print valuprev
+                    print 'valu'
+                    print valu
+            else:
+                print 'valuprev'
+                print valuprev
+                print 'valu'
+                print valu
+            print
+    print
+
+
 def setpfinl(gdat, boolinitsetp=False):
 
     # get the experimental catalog
@@ -3334,6 +3412,13 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
         gdat.exprnumbpnts = gdat.exprlgal.size
     
+        # reorder PS with respect to flux
+        indxpnts = argsort(gdat.exprspec[0, gdat.indxenerfluxdist[0], :])[::-1]
+        gdat.exprlgal = gdat.exprlgal[indxpnts]
+        gdat.exprbgal = gdat.exprbgal[indxpnts]
+        gdat.exprspec[0, :, :] = gdat.exprspec[0, :, indxpnts]
+        gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
+
         # compute the catalog counts based on the exposure
         gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))
         for i in gdat.indxener:
@@ -3503,8 +3588,6 @@ def setpfinl(gdat, boolinitsetp=False):
             #gdat.truestrgclss = [gdat.exprstrgclss]
             #gdat.truestrgassc = [gdat.exprstrgassc]
             
-            print 'gdat.truespec[0]'
-            print summgene(gdat.truespec[0])
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             for l in gdat.indxpopl: 
@@ -4000,11 +4083,6 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
     indxfixp = arange(numbfixp)
 
     # total number of parameters
-    print 'hey'
-    print 'numbfixp'
-    print numbfixp
-    print 'gdat.maxmnumbcomptotl'
-    print gdat.maxmnumbcomptotl
     numbpara = numbfixp + gdat.maxmnumbcomptotl
     indxsampcomp = arange(numbfixp, numbpara)
     indxpara = arange(numbpara)

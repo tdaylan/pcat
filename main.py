@@ -49,10 +49,6 @@ def work(gdat, indxprocwork):
     gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampspep, \
                                                                                                     gdatmodi.thisindxsampcompcolr = retr_indx(gdat, gdatmodi.thisindxpntsfull)
         
-    print 'hey'
-    print 'gdatmodi.thisindxpntsfull'
-    print gdatmodi.thisindxpntsfull
-    
     if gdat.numbtrap > 0:
         ## PS components
         if gdat.randinit:
@@ -90,9 +86,6 @@ def work(gdat, indxprocwork):
        
         if randinittemp:
             for l in gdat.indxpopl:
-                print 'gdatmodi.drmcsamp'
-                print gdatmodi.drmcsamp.shape
-                print
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampcompcolr[l], 0] = rand(gdatmodi.thisindxsampcompcolr[l].size)
 
     if gdat.verbtype > 1:
@@ -1078,6 +1071,10 @@ def init( \
                 if gdat.mockfluxdisttype[l] == 'brok':
                     gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), \
                                                 gdat.mockminmflux, gdat.maxmflux, gdat.mockfluxdistbrek[l], gdat.mockfluxdistsloplowr[l], gdat.mockfluxdistslopuppr[l])
+                
+                # temp -- make sure this reordering does not mess up other thins
+                gdat.mockspec[l][gdat.indxenerfluxdist[0], :] = sort(gdat.mockspec[l][gdat.indxenerfluxdist[0], :])[::-1]
+
                 if gdat.numbener > 1:
                     # spectral parameters
                     gdat.mockspep[l][:, 0] = icdf_gaus(rand(gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]]), gdat.mockfixp[gdat.mockindxfixpsinddistmean[l]], \
@@ -1618,6 +1615,30 @@ def init( \
         gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
         gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
 
+    # cross correlation with the reference catalog
+    if gdat.numbtrap > 0:
+        if gdat.verbtype > 0:
+            print 'Cross-correlating the sample catalogs with the reference catalog...'
+        timeinit = gdat.functime()
+        if gdat.trueinfo:
+            for l in gdat.indxpopl:
+                listindxmodl = []
+                for n in gdat.indxsamptotl:
+                    indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n])
+                    listindxmodl.append(indxmodl)
+                gdat.postspecassc = zeros((3, gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]]))
+                for i in gdat.indxener:
+                    gdat.listspecassc = zeros((gdat.numbsamptotl, gdat.truefixp[gdat.indxfixpnumbpnts[l]]))
+                    for p in gdat.indxsamptotl:
+                        indxpntstrue = where(listindxmodl[p] >= 0)[0]
+                        gdat.listspecassc[p, indxpntstrue] = gdat.listspec[l][p][i, listindxmodl[p][indxpntstrue]]
+                    gdat.postspecassc[0, i, :] = percentile(gdat.listspecassc, 50., axis=0)
+                    gdat.postspecassc[1, i, :] = percentile(gdat.listspecassc, 16., axis=0)
+                    gdat.postspecassc[2, i, :] = percentile(gdat.listspecassc, 84., axis=0)
+        timefinl = gdat.functime()
+        if gdat.verbtype > 0:
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
+    
     # compute credible intervals
     gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
     gdat.stdvfixp = std(gdat.listfixp, 0)
@@ -1760,10 +1781,10 @@ def plot_samp(gdat, gdatmodi):
                                                                                                                             gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
                 gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
                 
-                gdatmodi.thisspecmtch = zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]]))
+                gdatmodi.thisspecassc = zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]]))
                 temp = where(indxmodl >= 0)[0]
-                gdatmodi.thisspecmtch[:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
-                gdatmodi.thisspecmtch[:, trueindxpntsassc.miss] = 0.
+                gdatmodi.thisspecassc[:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
+                gdatmodi.thisspecassc[:, trueindxpntsassc.miss] = 0.
                
                 try:
                     plot_scatspec(gdat, l, gdatmodi=gdatmodi)
@@ -1986,12 +2007,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 if amin(gdatmodi.nextpntsflux) < 0.:
                     raise Exception('nextpntsflux went negative.')
 
+            # check what has been changed
+            if gdatmodi.cntrswep != 0:
+                diag_gdatmodi(gdatmodi, gdatmodiprev)
+            gdatmodiprev = deepcopy(gdatmodi)
+            
+            # check the population index
             try:
                 if gdatmodi.indxpoplmodi < 0:
                     raise
             except:
                 pass
-            gdatmodiprev = deepcopy(gdatmodi)
             
             if gdatmodi.propllik:
                 if not (isfinite(gdatmodi.nextmodlflux)).all():

@@ -223,31 +223,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         if gdat.verbtype > 0:
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-    # cross correlation with the reference catalog
-    if gdat.numbtrap > 0:
-        if gdat.verbtype > 0:
-            print 'Cross-correlating the sample catalogs with the reference catalog...'
-        timeinit = gdat.functime()
-        if gdat.trueinfo:
-            for l in gdat.indxpopl:
-                listindxmodl = []
-                for n in gdat.indxsamptotl:
-                    indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n])
-                    listindxmodl.append(indxmodl)
-                postspecmtch = zeros((3, gdat.numbener, gdat.truenumbpnts[l]))
-                for i in gdat.indxener:
-                    gdat.listspecmtch = zeros((gdat.numbsamptotl, gdat.truenumbpnts[l]))
-                    for p in gdat.indxsamptotl:
-                        indxpntstrue = where(listindxmodl[p] >= 0)[0]
-                        gdat.listspecmtch[p, indxpntstrue] = gdat.listspec[l][p][i, listindxmodl[p][indxpntstrue]]
-                    postspecmtch[0, i, :] = percentile(gdat.listspecmtch, 16., axis=0)
-                    postspecmtch[1, i, :] = percentile(gdat.listspecmtch, 50., axis=0)
-                    postspecmtch[2, i, :] = percentile(gdat.listspecmtch, 84., axis=0)
-                plot_scatspec(gdat, l, postspecmtch=postspecmtch)
-        timefinl = gdat.functime()
-        if gdat.verbtype > 0:
-            print 'Done in %.3g seconds.' % (timefinl - timeinit)
-    
     # stacked posteiors binned in position and flux
     if gdat.numbtrap > 0:
         plot_pntsprob(gdat, ptag='quad')
@@ -269,6 +244,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
             plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
 
+        # cross correlation with the reference catalog
+        if gdat.trueinfo:
+            for l in gdat.indxpopl:
+                plot_scatspec(gdat, l, postspecassc=gdat.postspecassc)
+    
     ## mosaic of images of posterior catalogs 
     plot_mosa(gdat)
    
@@ -304,7 +284,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     ## randomly selected trandimensional parameters
     if gdat.numbtrap > 0:
         numbtrapplot = min(10, gdat.numbtrap)
-        indxtrapplot = choice(gdat.indxsampcomp, size=numbtrapplot, replace=False)
+        indxtrapplot = sort(choice(gdat.indxsampcomp, size=numbtrapplot, replace=False))
         path = gdat.pathpost + 'listsamp'
         print 'gdat.listsamp'
         print gdat.listsamp
@@ -832,9 +812,9 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     plt.close(figr)
     
 
-def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
+def plot_scatspec(gdat, l, gdatmodi=None, postspecassc=None, plotdiff=False):
     
-    if postspecmtch != None:
+    if postspecassc != None:
         post = True
     else:
         post = False
@@ -849,12 +829,12 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         xerr = tdpy.util.retr_errrvarb(gdat.truespec[l][:, i, :])
         yerr = zeros((2, xdat.size))
         if post:
-            yerr[0, :] = postspecmtch[0, i, :]
-            ydat = copy(postspecmtch[1, i, :])
-            yerr[1, :] = postspecmtch[2, i, :]
+            ydat = copy(postspecassc[0, i, :])
+            yerr[0, :] = postspecassc[1, i, :]
+            yerr[1, :] = postspecassc[2, i, :]
             yerr = fabs(yerr - ydat)
         else:
-            ydat = gdatmodi.thisspecmtch[i, :]
+            ydat = gdatmodi.thisspecassc[i, :]
 
         if (ydat == 0.).all():
             continue
@@ -920,9 +900,9 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecmtch=None, plotdiff=False):
         strg = 'diff'
     else:
         strg = ''
-    if postspecmtch != None:
+    if postspecassc != None:
         path = gdat.pathpost + 'scatspec%s_pop%d' % (strg, l) + '.pdf'
-    elif gdatmodi.thisspecmtch != None:
+    elif gdatmodi.thisspecassc != None:
         path = gdat.pathfram + 'scatspec%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
 
     plt.tight_layout()
@@ -1809,7 +1789,7 @@ def plot_catlfram(gdat, gdatmodi, indxpoplplot, indxenerplot, indxevttplot):
         offs = 0.05 * gdat.maxmgang
         if gdat.trueinfo:
             for l in gdat.indxpopl:
-                numbpnts = int(gdat.truenumbpnts[l])
+                numbpnts = int(gdat.truefixp[gdat.indxfixpnumbpnts[l]])
                 for a in range(numbpnts):
                     if gdat.correxpo:
                         cnts = copy(gdat.truecnts[l][indxenerplot, a, :])
