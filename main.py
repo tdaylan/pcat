@@ -1859,7 +1859,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
     # initialize the worker sampler
     listsamp = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
-    listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) + -1.
+    listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) - 1
     listindxprop = zeros(gdat.numbswep)
     listchrototl = zeros((gdat.numbswep, gdat.numbchrototl))
     gdatmodi.listchrollik = zeros((gdat.numbswep, gdat.numbchrollik))
@@ -2007,11 +2007,18 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 if amin(gdatmodi.nextpntsflux) < 0.:
                     raise Exception('nextpntsflux went negative.')
 
+            
             # check what has been changed
             if gdatmodi.cntrswep != 0:
-                diag_gdatmodi(gdatmodi, gdatmodiprev)
+                # temp
+                pass
+                #diag_gdatmodi(gdatmodi, gdatmodiprev)
             gdatmodiprev = deepcopy(gdatmodi)
             
+            # temp -- only works for single population
+            if gdatmodi.cntrswep > 10000 and std(listsampvarb[where(listsampvarb[:, gdat.indxfixpnumbpnts[0]] >= 0)[0], gdat.indxfixpnumbpnts[0]]) == 0.:
+                raise Exception('Number of PS is not changing.')
+
             # check the population index
             try:
                 if gdatmodi.indxpoplmodi < 0:

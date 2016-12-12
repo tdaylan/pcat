@@ -1681,7 +1681,7 @@ def retr_chandata(gdat):
     gdat.exprcnts[0, :, 0] = cntschansoft
     gdat.exprcnts[1, :, 0] = cntschanhard
 
-    gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.enernorm)
+    #gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.enernorm)
     
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
@@ -3357,25 +3357,26 @@ def diag_gdatmodi(gdatmodi, gdatmodiprev):
             print
 
         if boolmodi:
-            print 'attr'
+            #print 'attr'
             print attr
-            if isinstance(valuprev, ndarray):
-                if len(indx) > 1:
-                    print 'valuprev'
-                    print valuprev[indx[0]]
-                    print 'valu'
-                    print valu[indx[0]]
+            if False:
+                if isinstance(valuprev, ndarray):
+                    if len(indx) > 1:
+                        print 'valuprev'
+                        print valuprev[indx[0]]
+                        print 'valu'
+                        print valu[indx[0]]
+                    else:
+                        print 'valuprev'
+                        print valuprev
+                        print 'valu'
+                        print valu
                 else:
                     print 'valuprev'
                     print valuprev
                     print 'valu'
                     print valu
-            else:
-                print 'valuprev'
-                print valuprev
-                print 'valu'
-                print valu
-            print
+            #print
     print
 
 
@@ -3418,7 +3419,7 @@ def setpfinl(gdat, boolinitsetp=False):
         indxpnts = argsort(gdat.exprspec[0, gdat.indxenerfluxdist[0], :])[::-1]
         gdat.exprlgal = gdat.exprlgal[indxpnts]
         gdat.exprbgal = gdat.exprbgal[indxpnts]
-        gdat.exprspec[0, :, :] = gdat.exprspec[0, :, indxpnts]
+        gdat.exprspec[0, :, :] = gdat.exprspec[0, :, indxpnts].T
         gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
 
         # compute the catalog counts based on the exposure

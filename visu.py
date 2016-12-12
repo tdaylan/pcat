@@ -516,21 +516,24 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
             listsize[k] = trapz(listydat[k+1, :], gdat.meanener)
         else:
             listsize[k] = listydat[k+1, :]
-    
-    print 'hey'
-    print 'listsize'
-    print listsize
+   
+    if gdat.strgcnfg == 'pcat_ferm_mock_ngal':
+        print 'hey'
+        print 'listsize'
+        print listsize
     listsize *= 100. / sum(listsize)
-    print 'listsize'
-    print listsize
+    if gdat.strgcnfg == 'pcat_ferm_mock_ngal':
+        print 'listsize'
+        print listsize
         
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
 
     labl = ['PS'] + gdat.lablback
    
-    print 'listydat'
-    print listydat
-    print 
+    if gdat.strgcnfg == 'pcat_ferm_mock_ngal':
+        print 'listydat'
+        print listydat
+        print 
 
     axis.pie(listsize, explode=listexpl, labels=labl, autopct='%1.1f%%')
     axis.axis('equal')
