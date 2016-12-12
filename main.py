@@ -28,7 +28,7 @@ def work(gdat, indxprocwork):
    
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
-        if gdat.randinit or not isfinite(gdat.truefixp[k]):
+        if gdat.randinit or not isfinite(gdat.truefixp[k]) or k in gdat.indxfixpnumbpnts and gdat.truefixp[k] > gdat.maxmnumbpntstotl:
             if k in gdat.indxfixpnumbpnts:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[k] + 1))
             else:
@@ -92,8 +92,6 @@ def work(gdat, indxprocwork):
             for l in gdat.indxpopl:
                 print 'gdatmodi.drmcsamp'
                 print gdatmodi.drmcsamp.shape
-                print 'gdatmodi.thisindxsampcompcolr[l]'
-                print gdatmodi.thisindxsampcompcolr[l]
                 print
                 gdatmodi.drmcsamp[gdatmodi.thisindxsampcompcolr[l], 0] = rand(gdatmodi.thisindxsampcompcolr[l].size)
 
@@ -1612,13 +1610,13 @@ def init( \
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # construct lists of samples for each proposal type
-    gdat.listindxsampprop = []
-    gdat.listindxsamppropaccp = []
-    gdat.listindxsamppropreje = []
+    gdat.listindxsamptotlprop = []
+    gdat.listindxsamptotlpropaccp = []
+    gdat.listindxsamptotlpropreje = []
     for n in gdat.indxprop:
-        gdat.listindxsampprop.append(where(gdat.listindxprop == gdat.indxprop[n])[0])
-        gdat.listindxsamppropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
-        gdat.listindxsamppropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
+        gdat.listindxsamptotlprop.append(where(gdat.listindxprop == gdat.indxprop[n])[0])
+        gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
+        gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
 
     # compute credible intervals
     gdat.postfixp = tdpy.util.retr_postvarb(gdat.listfixp)
