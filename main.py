@@ -2016,8 +2016,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             gdatmodiprev = deepcopy(gdatmodi)
             
             # temp -- only works for single population
-            if gdatmodi.cntrswep > 10000 and std(listsampvarb[where(listsampvarb[:, gdat.indxfixpnumbpnts[0]] >= 0)[0], gdat.indxfixpnumbpnts[0]]) == 0.:
-                raise Exception('Number of PS is not changing.')
+            # temp
+            #if gdatmodi.cntrswep > 10000 and std(listsampvarb[where(listsampvarb[:, gdat.indxfixpnumbpnts[0]] >= 0)[0], gdat.indxfixpnumbpnts[0]]) == 0.:
+            #    raise Exception('Number of PS is not changing.')
 
             # check the population index
             try:
@@ -2173,7 +2174,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Process %d started making a frame.' % indxprocwork
             plot_samp(gdat, gdatmodi)
-
             if gdat.verbtype > 0:
                 print 'Process %d finished making a frame.' % indxprocwork
             if gdat.numbproc > 1:

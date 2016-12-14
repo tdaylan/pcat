@@ -372,43 +372,43 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          numbsideheal=256, \
          numbdatasamp=100, \
 
-
-Features
-----------
-
-Transdimensionality
-+++++++++++++++++++
-
-Hierarchical priors
-+++++++++++++++++++++
-
-Adaptive burn-in
-+++++++++++++++++
-
-Labeling degeneracy
-++++++++++++++++++++++
-
-Input
---------------
-
-Producing mock data
-++++++++++++++++++++++
-
-Prior and initial state specification
-++++++++++++++++++++++
-
-
-Output
--------------
-
-Plots
-+++++
-
-
-Post processing samples from the catalog space
-++++++++++++++++++++
-
-
+..
+.. Features
+.. ----------
+.. 
+.. Transdimensionality
+.. +++++++++++++++++++
+.. 
+.. Hierarchical priors
+.. +++++++++++++++++++++
+.. 
+.. Adaptive burn-in
+.. +++++++++++++++++
+.. 
+.. Labeling degeneracy
+.. ++++++++++++++++++++++
+.. 
+.. Input
+.. --------------
+.. 
+.. Producing mock data
+.. ++++++++++++++++++++++
+.. 
+.. Prior and initial state specification
+.. ++++++++++++++++++++++
+.. 
+.. 
+.. Output
+.. -------------
+.. 
+.. Plots
+.. +++++
+.. 
+.. 
+.. Post processing samples from the catalog space
+.. ++++++++++++++++++++
+.. 
+.. 
 
 
 Diagnostics
