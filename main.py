@@ -1997,7 +1997,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     print gdatmodi.thislpostotlprev
                     print 'loglikelihood drop is very unlikely!'
             gdatmodi.thislpostotlprev = gdatmodi.thislpostotl
-        
+       
             # temp
             if False and gdat.pntstype == 'lght':
                 

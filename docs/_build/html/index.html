@@ -69,14 +69,6 @@
 <li><a class="reference internal" href="#">Welcome to PCAT&#8217;s documentation!</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
-<li><a class="reference internal" href="#features">Features</a><ul>
-<li><a class="reference internal" href="#transdimensionality">Transdimensionality</a></li>
-<li><a class="reference internal" href="#hierarchical-priors">Hierarchical priors</a></li>
-<li><a class="reference internal" href="#adaptive-burn-in">Adaptive burn-in</a></li>
-<li><a class="reference internal" href="#initial-state">Initial state</a></li>
-<li><a class="reference internal" href="#identity-of-components">Identity of components</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#diagnostics">Diagnostics</a></li>
 </ul>
 </li>
@@ -151,8 +143,6 @@
 </ul>
 </li>
 <li><strong>pathbase</strong> (<em>str</em>) &#8211; Data path of PCAT. PCAT expects input data in <code class="docutils literal"><span class="pre">pathbase/data/inpt/</span></code> and writes the output chains and plots in the relevant subfolders <code class="docutils literal"><span class="pre">pathbase/data/outp/rtag</span></code> and <code class="docutils literal"><span class="pre">pathbase/imag/rtag</span></code>, respectively, where <code class="docutils literal"><span class="pre">rtag</span></code> is the run tag. The <code class="docutils literal"><span class="pre">pathbase</span></code> folder is created if it does not already exist. It defaults to the value of the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>. Therefore <code class="docutils literal"><span class="pre">pathbase</span></code> can be omitted by setting the environment variable <code class="docutils literal"><span class="pre">PCAT_DATA_PATH</span></code>.</li>
-<li><strong>diagmode</strong> (<em>bool</em>) &#8211; Start the run in diagnostic mode. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
-<li><strong>cntrpnts</strong> (<em>bool</em>) &#8211; Force the mock data to a single PS at the center of the image. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
 <li><strong>numbswep</strong> (<em>int</em>) &#8211; Number of samples to be taken by each process</li>
 <li><strong>numbburn</strong> (<em>int</em>) &#8211; Number of samples to be discarded from the beginning of each chain</li>
 <li><strong>factthin</strong> (<em>int</em>) &#8211; Factor by which to thin each chain. Only one sample out of <code class="docutils literal"><span class="pre">factthin</span></code> samples is saved.</li>
@@ -161,6 +151,68 @@
 <li><strong>anglassc</strong> (<em>float</em>) &#8211; Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.</li>
 <li><strong>margfactcomp</strong> (<em>float</em>) &#8211; The ratio of the side of the square in which the sample point sources are associated with the reference catalog, to the size of the image.</li>
 <li><strong>nameexpr</strong> (<em>str</em>) &#8211; A string that describes the provided reference catalog to be shown in the plot legends.</li>
+<li><strong>diagmode</strong> (<em>bool</em>) &#8211; Start the run in diagnostic mode. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>cntrpnts</strong> (<em>bool</em>) &#8211; Force the mock data to a single PS at the center of the image. Defaults to <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>numbspatdims</strong> (<em>None</em>) &#8211; Number of spatial dimensions. Currently not functional.</li>
+<li><strong>pntstype</strong> (<em>str</em>) &#8211; <p>Functional type of point sources.</p>
+<ul>
+<li><code class="docutils literal"><span class="pre">lght</span></code> Point sources are light sources</li>
+<li><code class="docutils literal"><span class="pre">lens</span></code> Point sources are lenses.</li>
+</ul>
+</li>
+<li><strong>randinit</strong> (<em>bool</em>) &#8211; Force the initial state to be randomly drawn from the prior. Default behavior for mock data is to initialize the chain with the true state.</li>
+<li><strong>loadvaripara</strong> (<em>None</em>) &#8211; Load the diagonal elements of the previously learned covariance</li>
+<li><strong>optiprop</strong> &#8211; Optimize the scale of each proposal by acceptance ratio feedback. All samples during the tuning are discarded.</li>
+<li><strong>regulevi</strong> (<em>bool</em>) &#8211; Regularize the log-evidence estimate.</li>
+<li><strong>strgexprflux</strong> (<em>str</em>) &#8211; Name of the FITS file (without the extension) in <code class="docutils literal"><span class="pre">pathdata</span></code> containing the observed data as an <code class="docutils literal"><span class="pre">ndarray</span></code>. The file should contain a numpy array of dimension $(N_e, N_{pix}, N_{psf}$, where $N_e$ is the number of energy bins, $N_{pix}$ is the number of spatial pixels and $N_{psf}$ is the number of PSF classes. The units should be photons per $cm^2$ per seconds per GeV.</li>
+<li><strong>strgcatl</strong> (<em>str</em>) &#8211; A descriptive name for the provided reference catalog to be shown in the plot legends.</li>
+<li><strong>strgback</strong> (<em>list of str</em><em> or </em><em>int</em>) &#8211; A list of FITS file names (without the extension) in <code class="docutils literal"><span class="pre">pathdata</span></code> each containing a spatial template for the background prediction as an <code class="docutils literal"><span class="pre">ndarray</span></code>. See <code class="docutils literal"><span class="pre">strgexprflux</span></code> for the content of the file and its unit. One element of the list can be a float, indicating an isotropic template with the provided amplitude.</li>
+<li><strong>lablback</strong> (<em>list of str</em>) &#8211; a list of axis labels for the spatial background templates to be shown in plots.</li>
+<li><strong>strgexpo</strong> (<em>str</em><em> or </em><em>float</em>) &#8211; Name of the FITS file (without the extension) in <code class="docutils literal"><span class="pre">pathdata</span></code> containing the exposure map. See <code class="docutils literal"><span class="pre">strgexprflux</span></code> for the format of the numpy array. <code class="docutils literal"><span class="pre">strgexpo</span></code> can also be a float, in which case the exposure map will be assumed to be uniform across along all data dimensions.</li>
+<li><strong>numbproc</strong> (<em>int</em>) &#8211; Number of processes. The total number of samples before thinning and burn-in, will be <code class="docutils literal"><span class="pre">numbproc</span></code> times <code class="docutils literal"><span class="pre">numbswep</span></code>.</li>
+<li><strong>liketype</strong> (<em>strg</em>) &#8211; <p>Type of the likelihood.</p>
+<ul>
+<li><code class="docutils literal"><span class="pre">pois</span></code> Poisson probability of getting the observed number of counts given the model prediction (default).</li>
+<li><code class="docutils literal"><span class="pre">gaus</span></code> Gaussian approximation of the above. This may accelerate the execution in cases, where the bottle neck of the sampler time budget is likelihood evaluation.</li>
+</ul>
+</li>
+<li><strong>exprtype</strong> (<em>str</em>) &#8211; Name of the experiment used to collect the observed data. <code class="docutils literal"><span class="pre">exprtype</span></code> can be used to set other options to their default values for the particular experiment.
+- <code class="docutils literal"><span class="pre">ferm</span></code> Fermi-LAT
+- <code class="docutils literal"><span class="pre">chan</span></code> Chandra
+- <code class="docutils literal"><span class="pre">hubb</span></code> HST
+- <code class="docutils literal"><span class="pre">sdss</span></code> SDSS</li>
+<li><strong>lgalcntr</strong> (<em>float</em>) &#8211; Galactic longitude of the image center. <code class="docutils literal"><span class="pre">lgalcntr</span></code> and <code class="docutils literal"><span class="pre">bgalcntr</span></code> are used to rotate the observed data, exposure and background maps as well as the provided reference catalog to the center of the ROI. They are only effective when pixelization is HealPix, i.e, <code class="docutils literal"><span class="pre">pixltype='heal'</span></code>.</li>
+<li><strong>bgalcntr</strong> (<em>float</em>) &#8211; Galactic latitude of the image center. See <code class="docutils literal"><span class="pre">lgalcntr</span></code>.</li>
+<li><strong>maxmangl</strong> (<em>float</em>) &#8211; Maximum angular separation at which PSF can be interpolated. It defaults to three times the diagonal legth of the image, enough to evaluate the PSF across the whole image.</li>
+<li><strong>exprinfo</strong> (<em>bool</em>) &#8211; Overplot the provided reference catalog on the output plots.</li>
+<li><strong>pixltype</strong> &#8211; <p>Type of the pixelization.</p>
+<ul>
+<li><code class="docutils literal"><span class="pre">heal</span></code> HealPix</li>
+<li><code class="docutils literal"><span class="pre">chan</span></code> Cartesian</li>
+<li><code class="docutils literal"><span class="pre">unbd</span></code> Unbinned (Not yet functional)</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Plotting</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>numbswepplot</strong> (<em>int</em>) &#8211; Number of samples (before thinning and burn-in) for which one set of frame plots will be produced. Frame plots reveal individual samples in detail and are later used for producing animations.</li>
+<li><strong>makeplot</strong> (<em>bool</em>) &#8211; Make output plots, which is the default behavior. If <code class="docutils literal"><span class="pre">False</span></code>, no output plots are produced.</li>
+<li><strong>scalmaps</strong> (<em>str</em>) &#8211; <p>A string that sets the stretch of the count maps</p>
+<ul>
+<li><code class="docutils literal"><span class="pre">asnh</span></code> Arcsinh (default)</li>
+<li><code class="docutils literal"><span class="pre">self</span></code> Linear</li>
+<li><code class="docutils literal"><span class="pre">logt</span></code> Log 10</li>
+</ul>
+</li>
+<li><strong>satumaps</strong> (<em>bool</em>) &#8211; Saturate the count maps</li>
 </ul>
 </td>
 </tr>
@@ -168,24 +220,6 @@
 </table>
 </dd></dl>
 
-</div>
-<div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="transdimensionality">
-<h3>Transdimensionality<a class="headerlink" href="#transdimensionality" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="hierarchical-priors">
-<h3>Hierarchical priors<a class="headerlink" href="#hierarchical-priors" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="adaptive-burn-in">
-<h3>Adaptive burn-in<a class="headerlink" href="#adaptive-burn-in" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="initial-state">
-<h3>Initial state<a class="headerlink" href="#initial-state" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="identity-of-components">
-<h3>Identity of components<a class="headerlink" href="#identity-of-components" title="Permalink to this headline">¶</a></h3>
-</div>
 </div>
 <div class="section" id="diagnostics">
 <h2>Diagnostics<a class="headerlink" href="#diagnostics" title="Permalink to this headline">¶</a></h2>

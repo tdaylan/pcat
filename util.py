@@ -2648,15 +2648,19 @@ def retr_numbspep(spectype):
     
     numbpopl = len(spectype)
     numbspep = empty(numbpopl, dtype=int)
+    liststrgspep = [[] for l in range(numbpopl)]
+    liststrgfluxspep = [[] for l in range(numbpopl)]
     for l in range(numbpopl):
         if spectype[l] == 'powr':
-            numbspep[l] = 1
+            liststrgspep[l] = ['sind']
         if spectype[l] == 'expo':
-            numbspep[l] = 2
+            liststrgspep[l] = ['sind', 'expo']
         if spectype[l] == 'curv':
-            numbspep[l] = 2
-     
-    return numbspep
+            liststrgspep[l] = ['sind', 'curv']
+        liststrgfluxspep[l] = ['flux'] + liststrgspep[l]
+        numbspep[l] = len(liststrgspep[l]) 
+
+    return numbspep, liststrgspep, liststrgfluxspep
     
 
 def setpinit(gdat, boolinitsetp=False):
@@ -2689,7 +2693,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbspeptotl = 3
     gdat.indxspeptotl = arange(gdat.numbspeptotl)
     ## number of model spectral parameters for each population
-    gdat.numbspep = retr_numbspep(gdat.spectype)
+    gdat.numbspep, gdat.liststrgspep, gdat.liststrgfluxspep = retr_numbspep(gdat.spectype)
     gdat.indxspep = [arange(gdat.numbspep[l]) for l in gdat.indxpopl]
     ## plotting
     ### number of bins for histogram plots of spectral parameters
@@ -2758,7 +2762,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmgangmodl = gdat.maxmgang * gdat.margfactmodl
 
     # axes
-    gdat.numbfluxplot = 20
+    # temp
+    gdat.liststrgpntspara = ['lgal', 'bgal'] + list(set([strg for strg in gdat.liststrgfluxspep[l] for l in gdat.indxpopl]))
+    for strgpntspara in gdat.liststrgpntspara:
+        setattr(gdat, 'numb' + strgpntspara + 'plot') = 20
     
     gdat.indxspepsind = 0
     gdat.indxspepcurv = 1
@@ -3420,7 +3427,8 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.exprlgal = gdat.exprlgal[indxpnts]
         gdat.exprbgal = gdat.exprbgal[indxpnts]
         gdat.exprspec[0, :, :] = gdat.exprspec[0, :, indxpnts].T
-        gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
+        if gdat.exprcnts != None:
+            gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
 
         # compute the catalog counts based on the exposure
         gdat.exprcntscalc = empty((gdat.numbener, gdat.exprnumbpnts, gdat.numbevtt))

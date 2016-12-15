@@ -31,19 +31,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     Given an observed dataset, sample from the hypothesis space.
 
-    :param verbtype: Verbosity level
-        
-        - ``0`` No standard output
-        - ``1`` Minimal standard output including status of progress (Default)
-        - ``2`` Diagnostic verbose standard output
-    
-    :type verbtype: int
-
-    
-    :param pathbase: Data path of PCAT. PCAT expects input data in ``pathbase/data/inpt/`` and writes the output chains and plots in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``PCAT_DATA_PATH``.
-
-    :type pathbase: str
-
+    **Sampler settings**
 
     :param numbswep: Number of samples to be taken by each process
 
@@ -60,6 +48,12 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type factthin: int
 
 
+    :param numbproc: Number of processes. The total number of samples before thinning and burn-in, will be ``numbproc`` times ``numbswep``.
+
+    :type numbproc: int
+
+
+    **Input**
     :param indxenerincl: Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.
     
     :type indxenerincl: ndarray int
@@ -69,7 +63,25 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     
     :type indxevttincl: ndarray int
 
+   
+    **Output**
+
+    :param verbtype: Verbosity level
+        
+        - ``0`` No standard output
+        - ``1`` Minimal standard output including status of progress (Default)
+        - ``2`` Diagnostic verbose standard output
     
+    :type verbtype: int
+
+    
+    :param pathbase: Data path of PCAT. See the output_ section.
+
+    :type pathbase: str
+
+
+    **Asscociations with the reference catalog**
+ 
     :param anglassc: Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.
     
     :type anglassc: float
@@ -85,20 +97,19 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type nameexpr: str
     
 
-    :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
-
-    :type diagmode: bool
-
-
     :param cntrpnts: Force the mock data to a single PS at the center of the image. Defaults to ``False``.
     
     :type cntrpnts: bool
 
 
+    **Unfunctional
+ 
     :param numbspatdims: Number of spatial dimensions. Currently not functional.
 
     :type numbspatdims: None
 
+
+    **Asscociations with the reference catalog**
 
     :param pntstype: Functional type of point sources. 
         
@@ -113,16 +124,18 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type randinit: bool
 
 
+    **Adaptive burn-in**
     :param loadvaripara: Load the diagonal elements of the previously learned covariance
 
     :type loadvaripara: None
 
 
-    :param optiprop: Optimize the scale of each proposal by acceptance ratio feedback. All samples during the tuning are discarded.
+    :param optiprop: Optimize the scale of each proposal by acceptance rate feedback. All samples during the tuning are discarded.
         
     :type randinit: bool
 
 
+    **Post processing**
     :param regulevi: Regularize the log-evidence estimate.
 
     :type regulevi: bool
@@ -151,11 +164,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :param strgexpo: Name of the FITS file (without the extension) in ``pathdata`` containing the exposure map. See ``strgexprflux`` for the format of the numpy array. ``strgexpo`` can also be a float, in which case the exposure map will be assumed to be uniform across along all data dimensions.
 
     :type strgexpo: str or float
-
-
-    :param numbproc: Number of processes. The total number of samples before thinning and burn-in, will be ``numbproc`` times ``numbswep``.
-
-    :type numbproc: int
 
 
     :param liketype: Type of the likelihood. 
@@ -190,11 +198,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type maxmangl: float
 
 
-    :param exprinfo: Overplot the provided reference catalog on the output plots.
-
-    :type exprinfo: bool
-
-
     :param pixltype: Type of the pixelization.
         
         - ``heal`` HealPix
@@ -202,26 +205,70 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
         - ``unbd`` Unbinned (Not yet functional)
 
 
-    :param numbswepplot: Number of samples (before thinning and burn-in) for which one set of frame plots will be produced. Frame plots reveal individual samples in detail and are later used for producing animations.
-
-    :type numbswepplot: int
-
+    **Plotting**
 
     :param makeplot: Make output plots, which is the default behavior. If ``False``, no output plots are produced.
 
     :type makeplot: bool
 
 
-    :param 
+    :param numbswepplot: Number of samples (before thinning and burn-in) for which one set of frame plots will be produced. Frame plots reveal individual samples in detail and are later used for producing animations.
+
+    :type numbswepplot: int
+
+
+    :param scalmaps: A string that sets the stretch of the count maps
+
+        - ``asnh`` Arcsinh (default)
+        - ``self`` Linear
+        - ``logt`` Log 10
+
+    :type scalmaps: str
+    
+
+    :param satumaps: Saturate the count maps
+
+    :type satumaps: bool
+
+
+    :param exprinfo: Overplot the provided reference catalog on the output plots.
+
+    :type exprinfo: bool
+
+
+    :param makeanim: Make animations of the frame plots. Defaults to ``True``.
+
+    :type makeanim: bool
+
+
+    :param anotcatl: Anotate the catalog members on the plots, if an annotation text is provided along with the reference catalog. (Default: ``False``)
+
+    :type anotcatl: bool
+
+    
+    :param strgbinsener: A string holding the label for the energy axis.
+
+    :type strgbinsener: str
+
+
+    **Diagnostics**
+
+    :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
+
+    :type diagmode: bool
+
+
+    :param strgexprname: A string describing the experiment used to collect the observed data.
+
+    :type strgexprname: str
+
+
+    :param strganglunit: Label for the spatial axes.
+
+    :type strganglunit: str
+
 
 ..    
-         scalmaps='asnh', \
-         satumaps=None, \
-         makeanim=True, \
-         anotcatl=False, \
-         strgbinsener=None, \
-         strgexprname=None, \
-         strganglunit=None, \
          strganglunittext=None, \
          anglfact=None, \
          fluxfactplot=None, \
@@ -400,11 +447,20 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 .. 
 .. Output
 .. -------------
+    PCAT expects input data in ``pathbase/data/inpt/`` and writes the output chains and plots in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``PCAT_DATA_PATH``.
 .. 
 .. Plots
 .. +++++
 .. 
 .. 
+.. Tutorial
+.. --------------
+.. In this tutorial, a typical run on a mock dataset.
+..
+.. Diagnosing the sampler
+.. --------------
+.. .note:: The acceptance rate of the birth and death moves shows whether the prior on the amplitude of the elements is appropriate. If the acceptance rate of birth and deaths proposals is too low, the lower limit of the prior on the amplitude is too high. Likewise, if it is too low, the lower limit of the prior on the amplitude is too low. This behaviour is due to the fact that element parameters (position, amplitude and, if relevant, spectral or shape parameters) are drawn randomly from the prior when a birth is proposed. Therefore the lower limit on the amplitude prior should be adjusted such that the birth and death acceptance rate is between $\sim 5%% - \sim30%%$. Otherwise across-model sampling will be inefficient and result in slow convergence.  
+..
 .. Post processing samples from the catalog space
 .. ++++++++++++++++++++
 .. 

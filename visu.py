@@ -225,9 +225,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 
     # stacked posteiors binned in position and flux
     if gdat.numbtrap > 0:
-        plot_pntsprob(gdat, ptag='quad')
-        plot_pntsprob(gdat, ptag='full', full=True)
-        plot_pntsprob(gdat, ptag='cumu', cumu=True)
+        liststrgbins = ['quad', 'full', 'cumu']
+        for l in gdat.indxpopl:
+            liststrgfluxspep = gdat.liststrgfluxspep[l]
+            for strgbins in liststrgbins:
+                for strgfluxspep in liststrgfluxspep:
+                    plot_pntsprob(gdat, l, strgbins, strgfluxspep)
 
     if gdat.numbtrap > 0:
         ## flux distribution
@@ -1022,15 +1025,18 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_pntsprob(gdat, ptag, full=False, cumu=False):
-    
-    if cumu:
+def plot_pntsprob(gdat, strgbins, strgfluxspep):
+   
+    numbparaplot = getattr(gdat, 'numb' + strgfluxspep + 'plot')
+
+    if strgbins == 'cumu':
         numbrows = 1
         numbcols = 1
     else:
         numbcols = 2
-        if full:
-            numbrows = gdat.numbfluxplot / 2
+        if strgbins == 'full':
+            
+            numbrows = numbparaplot / 2
         else:
             numbrows = 2
         
@@ -1043,19 +1049,19 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 axrw = [axrw]
             for b, axis in enumerate(axrw):
                 h = a * 2 + b
-                if full:
+                if strgbins == 'full':
                     indxlowr = h
                     indxuppr = h + 1
-                elif cumu:
+                elif strgbins == 'cumu':
                     indxlowr = 0
-                    indxuppr = gdat.numbfluxplot
+                    indxuppr = numbparaplot
                 else:
                     if h < 3:
                         indxlowr = 2 * h
                         indxuppr = 2 * (h + 1)
                     else:
                         indxlowr = 2 * h
-                        indxuppr = gdat.numbfluxplot
+                        indxuppr = numbparaplot
                 temp = sum(gdat.pntsprob[l, :, :, indxlowr:indxuppr], 2).T
                 if where(temp > 0.)[0].size > 0:
                     imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
@@ -1066,7 +1072,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
                 # temp
                 if gdat.trueinfo:
                     indxpnts = where((gdat.binsspecplot[gdat.indxenerfluxdist[0], indxlowr] < gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]) & \
-                        (gdat.truespec[l][0, gdat.indxenerfluxdist[0], :] < gdat.binsspecplot[gdat.indxenerfluxdist[0], indxuppr]))[0]
+                                                        (gdat.truespec[l][0, gdat.indxenerfluxdist[0], :] < gdat.binsspecplot[gdat.indxenerfluxdist[0], indxuppr]))[0]
                     mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], indxpnts])
                     axis.scatter(gdat.anglfact * gdat.truelgal[l][indxpnts], gdat.anglfact * gdat.truebgal[l][indxpnts], \
                                                                                             s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
@@ -1090,7 +1096,7 @@ def plot_pntsprob(gdat, ptag, full=False, cumu=False):
         axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
         cbar = figr.colorbar(imag, cax=axiscomm)
         plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)
-        figr.savefig(gdat.pathpost + 'pntsbind' + ptag + '%d%d' % (l, gdat.indxenerincl[gdat.indxenerfluxdist]) + '.pdf')
+        figr.savefig(gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgfluxspep, l) + '.pdf')
         plt.close(figr)
        
     
