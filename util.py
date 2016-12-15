@@ -2765,7 +2765,7 @@ def setpinit(gdat, boolinitsetp=False):
     # temp
     gdat.liststrgpntspara = ['lgal', 'bgal'] + list(set([strg for strg in gdat.liststrgfluxspep[l] for l in gdat.indxpopl]))
     for strgpntspara in gdat.liststrgpntspara:
-        setattr(gdat, 'numb' + strgpntspara + 'plot') = 20
+        setattr(gdat, 'numb' + strgpntspara + 'plot', 20)
     
     gdat.indxspepsind = 0
     gdat.indxspepcurv = 1
