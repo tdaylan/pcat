@@ -7,6 +7,8 @@ PCAT is a hierarchical, transdimensional MCMC sampler. Given some data, it can b
 
 A user manual for PCAT will be published here soon.
 
+.. _sectinst:
+
 Installation
 -------------
 To install PCAT you can use pip
@@ -75,7 +77,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type verbtype: int
 
     
-    :param pathbase: Data path of PCAT. See the output_ section.
+    :param pathbase: Data path of PCAT. See :ref:`sectoutp`.
 
     :type pathbase: str
 
@@ -102,7 +104,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type cntrpnts: bool
 
 
-    **Unfunctional
+    **Unfunctional**
  
     :param numbspatdims: Number of spatial dimensions. Currently not functional.
 
@@ -444,19 +446,32 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 .. Prior and initial state specification
 .. ++++++++++++++++++++++
 .. 
-.. 
-.. Output
-.. -------------
-    PCAT expects input data in ``pathbase/data/inpt/`` and writes the output chains and plots in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``PCAT_DATA_PATH``.
-.. 
-.. Plots
+
+.. _sectoutp:
+
+Output
+-------------
+
+PCAT expects input data in ``pathbase/data/inpt/`` and writes the output chains and plots in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``PCAT_DATA_PATH``.
+
+Plots
++++++
+If not disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are produced at predetermined times during the sampling and others are produced in the postprocessing after all chains have run. There are five subfolders in the plot folder of a given run.
+
+- ``init`` Initial setup, pixel lookup table (if applicable)
+- ``fram`` Frame plots
+- ``diag`` Diagnostic plots
+- ``post`` Posterior distribution plots of model parameters and derived quantities, prior and likelihood.
+- ``anim`` GIF animations made from the frame plots in ``fram`` that are producing during sampling.
+
+.. Chain
 .. +++++
-.. 
-.. 
+
+
 .. Tutorial
 .. --------------
-.. In this tutorial, a typical run on a mock dataset.
-..
+.. In this tutorial, a typical run on a mock dataset will be illustrated. Assuming that you have :ref:`installed <sectinst>`
+
 .. Diagnosing the sampler
 .. --------------
 .. .note:: The acceptance rate of the birth and death moves shows whether the prior on the amplitude of the elements is appropriate. If the acceptance rate of birth and deaths proposals is too low, the lower limit of the prior on the amplitude is too high. Likewise, if it is too low, the lower limit of the prior on the amplitude is too low. This behaviour is due to the fact that element parameters (position, amplitude and, if relevant, spectral or shape parameters) are drawn randomly from the prior when a birth is proposed. Therefore the lower limit on the amplitude prior should be adjusted such that the birth and death acceptance rate is between $\sim 5%% - \sim30%%$. Otherwise across-model sampling will be inefficient and result in slow convergence.  
@@ -477,4 +492,12 @@ Diagnostics
 .. toctree::
     :maxdepth: 2
 
+
+Garbage collection
+-------------------
+
+PCAT produces two folders for the output of each run, one for plots and the other to contain the chain saved to the disc. Given that many test and intermediate runs may be needed before each science run, the number of folders (and files therein) may increase quickly. In order to avoid this, the script ``gcol.py`` is provided to the user as a convenience. When executed, it erases the output from all runs that
+
+- have not run to completion, i.e., does not have the animations, which are produced at the very end, or
+- has collected less than 100000 samples per chain.
 

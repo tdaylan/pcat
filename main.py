@@ -273,9 +273,14 @@ def init( \
          regulevi=False, \
          strgexprflux=None, \
          strgcatl=None, \
-         strgback=[1.], \
+         
+         back=None, \
+         strgback=None, \
+         nameback=None, \
          lablback=None, \
+         
          strgexpo=1., \
+         
          numbproc=None, \
          liketype='pois', \
          exprtype='ferm', \
@@ -431,7 +436,7 @@ def init( \
          mocksinddiststdv=None, \
          mockpsfntype=None, \
          mockvarioaxi=None, \
-         mockstrgback=None, \
+         mockback=None, \
          mockbacp=None, \
          
          mocklgalsour=None, \
@@ -472,14 +477,14 @@ def init( \
             gdat.mocknumbpopl = 1
         else:
             gdat.mocknumbpopl = gdat.mocknumbpnts.size
-        if gdat.mockstrgback == None:
-            gdat.mockstrgback = gdat.strgback
-        gdat.mocknumbback = len(gdat.mockstrgback)
+        if gdat.mockback == None:
+            gdat.mockback = gdat.back
+        gdat.mocknumbback = len(gdat.mockback)
         gdat.mockindxpopl = arange(gdat.mocknumbpopl, dtype=int)
     
     ### number of populations
     gdat.numbpopl = gdat.maxmnumbpnts.size
-    gdat.numbback = len(gdat.strgback)
+    gdat.numbback = len(gdat.back)
     gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
     
     if gdat.indxevttincl == None:
@@ -687,11 +692,28 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.nameexpr = 'Gaia'
     
-    if gdat.lablback == None:
-        if gdat.numbback == 1:
-            gdat.lablback = [r'$\mathcal{I}$']
+    if gdat.back == None:
+        if gdat.exprtype == 'ferm':
+            gdat.back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+        elif gdat.exprtype == 'chan':
+            gdat.back = ['chanfluxisot.fits']
         else:
-            gdat.lablback = [r'$\mathcal{I}$', r'$\mathcal{D}$']
+            gdat.back = [1.]
+
+    if gdat.lablback == None:
+        gdat.lablback = [r'$\mathcal{I}$']
+        if gdat.exprtype == 'ferm':
+            gdat.lablback.append(r'$\mathcal{D}$')
+    
+    if gdat.strgback == None:
+        gdat.strgback = ['fluxisot']
+        if gdat.exprtype == 'ferm':
+            gdat.strgback.append(r'fluxfdfm')
+    
+    if gdat.nameback == None:
+        gdat.nameback = ['Isotropic']
+        if gdat.exprtype == 'ferm':
+            gdat.nameback.append(r'Fermi Diffuse Model')
     
     if gdat.radispmr == None:
         gdat.radispmr = 2. / gdat.anglfact
@@ -952,7 +974,7 @@ def init( \
     if gdat.propbacp and not gdat.backemis:
         raise Exception('Background changes cannot be proposed if no background emission is in the model.')
 
-    if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.strgback[0], float)):
+    if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.back[0], float)):
         raise Exception('In a lensing problem, the background can only be uniform.')
     
     if gdat.minmflux >= gdat.maxmflux:
@@ -1233,6 +1255,8 @@ def init( \
                     plt.savefig(path)
                     plt.close(figr)
     
+    print 'done'
+
     # write the list of arguments to file
     # temp
     #fram = inspect.currentframe()

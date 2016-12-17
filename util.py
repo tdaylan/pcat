@@ -2774,6 +2774,14 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbsinddistpara = 2
     gdat.numbfluxdistpara = 4
     
+    gdat.listlablcompfrac = ['Data']
+    if gdat.pntstype == 'lght':
+        gdat.listlablcompfrac.append('PS')
+    if gdat.pntstype == 'lght' or gdat.numbback > 1:
+        gdat.listlablcompfrac.append('Total Model')
+    gdat.listlablcompfrac += gdat.lablback
+    gdat.numblablcompfrac = len(gdat.listlablcompfrac)
+
     if gdat.strgfluxunit == None:
         gdat.strgfluxunitextn = ''
     else:
@@ -3096,23 +3104,23 @@ def setpinit(gdat, boolinitsetp=False):
     # backgrounds
     gdat.backflux = []
     for c in gdat.indxback:
-        if isinstance(gdat.strgback[c], float):
+        if isinstance(gdat.back[c], float):
             if gdat.datatype == 'mock':
                 if gdat.pixltype == 'heal':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.strgback[c]
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.back[c]
                 if gdat.pixltype == 'cart':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.strgback[c]
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.back[c]
                 if gdat.pixltype == 'unbd':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbdatasamp, gdat.numbevttfull)) + gdat.strgback[c]
+                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbdatasamp, gdat.numbevttfull)) + gdat.back[c]
             if gdat.datatype == 'inpt':
-                backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.strgback[c]
+                backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.back[c]
         else:
-            path = gdat.pathinpt + gdat.strgback[c]
+            path = gdat.pathinpt + gdat.back[c]
             backfluxtemp = pf.getdata(path)
             if gdat.pixltype == 'cart':
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
         gdat.backflux.append(backfluxtemp)
-    
+   
     for c in gdat.indxback:
         if amin(gdat.backflux[c]) <= 0.:
             raise Exception('Background templates must be positive.')
@@ -3592,6 +3600,16 @@ def setpfinl(gdat, boolinitsetp=False):
             gdat.truefixp[gdat.indxfixpmeanpnts] = gdat.truefixp[gdat.indxfixpnumbpnts]
             gdat.truelgal = [gdat.exprlgal]
             gdat.truebgal = [gdat.exprbgal]
+            
+            print 'hey'
+            print 'gdat.exprspec'
+            print gdat.exprspec
+            print gdat.exprspec.shape
+            print 'gdat.exprspep'
+            print gdat.exprspep
+            print gdat.exprspep.shape
+            print
+
             gdat.truespec = [gdat.exprspec]
             gdat.truecnts = [gdat.exprcnts]
             gdat.truespep = [gdat.exprspep]
