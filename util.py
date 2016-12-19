@@ -78,10 +78,7 @@ def retr_thismodlflux(gdat, gdatmodi):
     if gdat.pntstype == 'lens':
         gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
     else:
-        if gdat.backemis:
-            gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thispntsflux, gdat.indxcube)
-        else:
-            gdatmodi.thismodlflux = gdatmodi.thispntsflux
+        gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thispntsflux, gdat.indxcube)
 
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfp, psfntype, varioaxi, evalcirc):
@@ -822,27 +819,23 @@ def retr_llik(gdat, gdatmodi, init=False):
             # update the total model flux map
             timeinit = gdat.functime()
 
-            if gdat.backemis:
-                
-                ## grab the meshed indices of background template and energy bin
-                if gdat.numbener > 1 and gdatmodi.indxenermodi.size == 1:
-                    indxtemp = meshgrid(gdat.indxback, gdatmodi.indxenermodi, indexing='ij')
-                else:
-                    indxtemp = gdat.meshbackener
-            
-                ## grab the background and PS flux map
-                if gdatmodi.propbacp:
-                    bacp = gdatmodi.nextsampvarb[gdat.indxfixpbacp[indxtemp]]
-                    pntsflux = gdatmodi.thispntsflux
-                
-                if gdatmodi.proppsfp or gdatmodi.proppnts:
-                    bacp = gdatmodi.thissampvarb[gdat.indxfixpbacp[indxtemp]]
-                    pntsflux = gdatmodi.nextpntsflux
-            
-                ## calculate the total flux map
-                gdatmodi.nextmodlflux[gdatmodi.indxcubemodi] = retr_rofi_flux(gdat, bacp, pntsflux, gdatmodi.indxcubemodi)
+            ## grab the meshed indices of background template and energy bin
+            if gdat.numbener > 1 and gdatmodi.indxenermodi.size == 1:
+                indxtemp = meshgrid(gdat.indxback, gdatmodi.indxenermodi, indexing='ij')
             else:
-                gdatmodi.nextmodlflux = gdatmodi.nextpntsflux
+                indxtemp = gdat.meshbackener
+            
+            ## grab the background and PS flux map
+            if gdatmodi.propbacp:
+                bacp = gdatmodi.nextsampvarb[gdat.indxfixpbacp[indxtemp]]
+                pntsflux = gdatmodi.thispntsflux
+            
+            if gdatmodi.proppsfp or gdatmodi.proppnts:
+                bacp = gdatmodi.thissampvarb[gdat.indxfixpbacp[indxtemp]]
+                pntsflux = gdatmodi.nextpntsflux
+            
+            ## calculate the total flux map
+            gdatmodi.nextmodlflux[gdatmodi.indxcubemodi] = retr_rofi_flux(gdat, bacp, pntsflux, gdatmodi.indxcubemodi)
             
             timefinl = gdat.functime()
             gdatmodi.listchrollik[gdatmodi.cntrswep, 5] = timefinl - timeinit
@@ -1332,10 +1325,7 @@ def retr_maps(gdat, indxpntsfull, sampvarb, evalcirc):
     else:
         pntsflux = zeros_like(gdat.datacnts)
         
-    if gdat.backemis:
-        totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxfixpbacp], pntsflux, gdat.indxcube)
-    else:
-        totlflux = pntsflux
+    totlflux = retr_rofi_flux(gdat, sampvarb[gdat.indxfixpbacp], pntsflux, gdat.indxcube)
     
     if gdat.pixltype == 'unbd':
         
@@ -2635,6 +2625,16 @@ def retr_randunitpsfp(gdat):
     return randunitpsfp
 
 
+def retr_varb(gdat, strg, gdatmodi=None, perc='medi'):
+        
+    if gdatmodi != None:
+        varb = gdatmodi.thissampvarb[getattr(gdat, 'indx' + strg)]
+    else:
+        varb = getattr(gdat, perc + strg)
+
+    return varb
+
+
 def retr_eerrnorm(minmvarb, maxmvarb, meanvarb, stdvvarb):
    
     cdfnminm = 0.5 * (sp.special.erf((minmvarb - meanvarb) / stdvvarb / sqrt(2.)) + 1.)
@@ -2709,7 +2709,8 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.numbener > 1:
         gdat.numbcomp += gdat.numbspep + gdat.numbener - 1
         gdat.numbcompcolr += gdat.numbspep
-    
+    gdat.maxmnumbcompcolr = amax(gdat.numbcompcolr)
+
     gdat.indxcomp = []
     for l in gdat.indxpopl:
         gdat.indxcomp.append(arange(gdat.numbcomp[l]))
@@ -3527,7 +3528,8 @@ def setpfinl(gdat, boolinitsetp=False):
     # pixels whose posterior predicted emission will be saved
     gdat.numbpixlsave = min(1000, gdat.numbpixl)
     gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
-
+    gdat.indxcubesave = meshgrid(gdat.indxener, gdat.indxpixlsave, gdat.indxevtt, indexing='ij')
+    
     if gdat.correxpo:
         # limits on counts, which are used to bin or overplot PS counts 
         gdat.minmcnts = gdat.minmflux * mean(mean(gdat.expo, 1), 1)
@@ -4078,9 +4080,7 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
     indxpsfp = arange(numbpsfp)
     indxpsfpinit = numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
 
-    indxfixpbacp = []
-    if gdat.backemis:
-        indxfixpbacp = arange(numbbacp).reshape((numbback, gdat.numbener)) + cntr.incr(numbbacp)
+    indxfixpbacp = arange(numbbacp).reshape((numbback, gdat.numbener)) + cntr.incr(numbbacp)
 
     indxfixplenp = []
     indxfixpanglsour = []
@@ -4834,64 +4834,75 @@ def retr_fluxbias(gdat, spec, indxenerthis):
     return fluxbias
 
 
-def plot_pdfntotlflux():
+def retr_imaglens(gdat, gdatmodi=None, raww=False):
+    
+    if gdatmodi != None:
+        gdattemp = gdat
+        strg = ''
+        sampvarb = getattr(gdatmodi, 'thissampvarb')
+        psfnkern = gdatmodi.thispsfnkern
+    else:
+        gdattemp = gdatmodi
+        sampvarb = getattr(gdat, 'mockfixp')
+        strg = 'mock'
+        psfnkern = gdat.truepsfnkern
 
-    minm = 1e-9
-    maxm = 10e-9
-    numbvarb = 90
-    numbsamp = 100000
-    numbbins = 40
-    alph = 0.5
+    sourobjt = franlens.Source(gdat.truesourtype, sampvarb[getattr(gdat, strg + 'indxfixplgalsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpbgalsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpfluxsour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpsizesour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpratisour')], \
+                                                  sampvarb[getattr(gdat, strg + 'indxfixpanglsour')])
+
+    defl = zeros((gdat.numbsidecart, gdat.numbsidecart, 2))
+
+    if raww:
+        beinhost = 0.
+        sherhost = 0.
+    else:
+        sherhost = sampvarb[getattr(gdat, strg + 'indxfixpsherhost')]
+        beinhost = sampvarb[getattr(gdat, strg + 'indxfixpbeinhost')]
+    listlensobjt = []
+    listlensobjt.append(franlens.LensModel(gdat.truelenstype, sampvarb[getattr(gdat, strg + 'indxfixplgalhost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpbgalhost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpellphost')], \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpanglhost')], \
+                                                              sherhost, \
+                                                              sampvarb[getattr(gdat, strg + 'indxfixpsanghost')], \
+                                                              beinhost))
+
+    ## PS
+    if getattr(gdat, strg + 'numbtrap') > 0 and not raww:
+        for l in getattr(gdat, strg + 'indxpopl'):
+            numbpnts = sampvarb[getattr(gdat, strg + 'indxfixpnumbpnts')[l]].astype(int)
+            for k in range(numbpnts):
+                # create lens model object for the PS 
+                if gdatmodi == None:
+                    listlensobjt.append(franlens.LensModel(gdat.truelenstype, gdat.mocklgal[l][k], gdat.mockbgal[l][k], 0., 0., 0., 0., gdat.mockspec[l][0, k]))
+                else:
+                    listlensobjt.append(franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][k]], \
+                                                                              gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][k]], \
+                                                                              0., 0., 0., 0., \
+                                                                              # beta
+                                                                              gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][0, k]]))
+    numblensobjt = len(listlensobjt)
+    for k in range(numblensobjt):
+        defl += listlensobjt[k].deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+
+    # calculate the lensed image
+    lensflux = sourobjt.brightness(gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1])
+
+    # convolve the lensed image with the PSF
+    # temp
+    if False:
+        lensfluxconv = convolve(lensflux, psfnkern).flatten()
+    else:
+        lensfluxconv = lensflux.flatten()
+
+    # calculate the total map
+    modlflux = lensfluxconv + sampvarb[getattr(gdat, strg + 'indxfixpbacp')] * gdat.backflux[0][0, :, 0]
     
-    binssing = linspace(minm, maxm, numbvarb + 1)
-    meansing = (binssing[:-1] + binssing[1:]) / 2.
-    deltsing = binssing[1:] - binssing[:-1]
+    return modlflux, lensfluxconv, lensflux, defl
+
     
-    binsdoub = linspace(2. * minm, 2. * maxm, 2 * numbvarb)
-    meandoub = (binsdoub[:-1] + binsdoub[1:]) / 2.
-    deltdoub = binsdoub[1:] - binsdoub[:-1]
-    
-    bins = linspace(minm, 2. * maxm, 2 * numbvarb + 1)
-    
-    arry = empty((2, numbsamp))
-    
-    minmslop = 1.5
-    maxmslop = 3.
-    numbslop = 4
-    sloparry = linspace(minmslop, maxmslop, numbslop)
-    for n in range(numbslop):
-        slop = sloparry[n]
-        for k in range(2):
-            arry[k, :] = (rand(numbsamp) * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
-        
-        totl = sum(arry, 0)
-        
-        powrprob = (1. - slop) / (maxm**(1. - slop) - minm**(1. - slop)) * meansing**(-slop)
-        
-        convprob = convolve(powrprob, powrprob) * deltdoub[0]
-        
-        indxdoub = where(meandoub <= maxm)[0]
-        convprobpoly = polyval(polyfit(meandoub[indxdoub], convprob[indxdoub], 8), meandoub[indxdoub])
-        
-        figr, axis = plt.subplots()
-        axis.hist(arry[k, :], bins=bins, alpha=alph, label='$f_1$ (Sampled)', color='b')
-        axis.hist(totl, bins=bins, alpha=alph, label='$f_0$ (Sampled)', color='g')
-        axis.plot(meansing, powrprob * numbsamp * deltsing, label='$f_1$ (Analytic)', color='b')
-        axis.plot(meandoub, convprob * numbsamp * deltdoub[0], label='$f_0$ (Numerically convolved)', color='g')
-        
-        axis.plot(meandoub[indxdoub], convprobpoly * numbsamp * deltdoub[indxdoub], label='$f_0$ (Fit)', color='r')
-    
-        axis.set_ylim([0.5, numbsamp])
-        axis.set_xlabel('$f$')
-        axis.set_xlim([amin(bins), amax(bins)])
-        axis.set_xscale('log')
-        axis.set_yscale('log')
-        axis.set_ylabel('$N_{samp}$')
-        axis.legend()
-        plt.tight_layout()
-        pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
-        os.system('mkdir -p ' + pathfold)
-        figr.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
-        plt.close(figr)
-        
 

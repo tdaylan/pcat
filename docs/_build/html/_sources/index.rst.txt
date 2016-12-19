@@ -3,9 +3,11 @@ Welcome to PCAT's documentation!
 
 When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of objects whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different number of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidence. Yet another is to take samples from the union of the hypotheses using a set of transdimensional jumps across models. This is what PCAT (Probabilistic Cataloger) is designed for.
 
-PCAT is a hierarchical, transdimensional MCMC sampler. Given some data, it can be used to sample from the **catalog space**, i.e., the hypothesis space of a model with a variable number of components. Alternatively, it can be used as a general purpose Poisson mixture sampler to infer clusters in a dataset.
+PCAT is a hierarchical, transdimensional MCMC sampler. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, submitted to ApJ. Given some data, it can be used to sample from the **catalog space**, i.e., the hypothesis space of a model with a variable number of components. Alternatively, it can be used as a general purpose Poisson mixture sampler to infer clusters in a dataset.
 
-A user manual for PCAT will be published here soon.
+.. toctree::
+   :maxdepth: 4
+
 
 .. _sectinst:
 
@@ -24,10 +26,153 @@ or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ an
     python setup.py install
 
 
-Usage
+.. _sectinpt:
+
+Input
+--------------
+PCAT expects input data in the folder ``pathbase/data/inpt/``. The principal input is the observed dataset, which could be binned or unbinned (currently unfunctional).
+
+Supplying data
++++++++++++++++
+Input dataset is provided through the ``strgexprflux`` argument. This should be the name of a FITS file (including the ``.fits`` extension), which contains a numpy array of dimension :math:`N_e \times N_{pix} \times N_{psf}`, where :math:`N_e` is the number of energy bins, :math:`N_{pix}` is the number of spatial pixels and :math:`N_{psf}` is the number of PSF classes. The units should be photons per cm :math:`^2` per seconds per GeV.
+
+The exposure map is suppled via the ``strgexpo`` argument. This should be the name of a FITS file (including the ``.fits`` extension). The format should be the same as ``strgexprflux``, whereas units should be cm :math:`^2` GeV.
+
+Similary, background templates can be provided via the ``back`` argument. ``back`` should be a list of FITS file names (including the ``.fits`` extension), whose format should be same as that of ``strgexprflux``.
+
+Specifying model priors
++++++++++++++++++++++++++
+
+The prior structure of the model is set by the relevant arguments to ``pcat.main.init()``. PCAT allows the following components in the model:
+
+- Background prediction
+
+    Given some an observed dataset, it can be expressed as a Poisson realization of the integral emission from a large number of point sources. However, due to the prohibitively large number of point sources required, it is favorable to represent the contribution of extremely faint point sources (those that negligibly affect the likelihood) with background templates. PCAT allows a list of spatially and spectrally distinct background templates to be in the model simultaneously. 
+
+
+- Point Spread Function (PSF)
+    
+    PSF defines a how a delta function in the position space projects onto the data space, e.g., the image. PCAT assumes that all point sources are characterized by the same PSF. 
+
+
+Generating mock data
++++++++++++++++++++++
+PCAT ships with a built-in mock (simulated) data generator. The generated mock data is randomly drawn from a generative mock model, not to be confused with the above model subject to inference. Once the user configures the prior probability density of this model, PCAT samples from the catalog space given the simulated dataset. Some of the mock model parameters can be fixed, i.e., assigned delta function priors. These are
+
+- the number of mock point sources, ``mocknumbpnts``,
+- hyperparameters controlling the population characteristics of these point sources.
+
+All other mock model parameters are fair draws from the hierarchical prior. 
+
+When working on variations of a certain problem or different analyses on the same dataset, it is useful to have default priors. PCAT allows unique defaults for different built-in experiments, controlled by the argument ``exprtype``. Currently the built-in experimental types are 
+
+- ``ferm``: Fermi-LAT (Default)
+- ``chan``: Chandra
+- ``hubb``: Hubble Space Telescope
+- ``sdss``: SDSS
+- ``gaia``: Gaia
+
+By setting ``exprtype`` the user imposes the default prior structure for the chosen experimental type. However, it is also desirable to be able to change the prior of a specific parameter. This is accomplished by setting the :ref:`relevant argument(s) <sectoutp>`.
+
+.. note::
+
+    The mock generative model defaults to that of the model subject to inference. In other words, if the user does not specify any mock model parameters, the generative mock model will be the same as the model used to fit the data. In most cases, one will be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by deliberately setting the mock model parameters different from the prior model. 
+
+Selecting the initial state
++++++++++++++++++++++++++++++
+When the dataset is supplied by the user (``strgexprflux`` is set), and unless specified otherwise by setting ``randinit=False``, the initial state of the chain is drawn randomly from the prior. Note that in order for the initial state to be nonrandom, a reference catalog needs to be internally supplied.
+
+In constrast, if the dataset is simulated, ``randinit`` is not ``True`` and generative mock model is the same as the prior model, then the initial state of the chain is set to be the state from which the mock dataset was drawn.  
+
+
+.. _sectoutp:
+
+Output
+-------------
+A function call to ``pcat.main.init()`` returns the collected samples as well as postprocessed variables in an object that we will refer to as ``gdat``. Any output (as well as many internal variables of the sampler) can be accessed via the attributes of this global object. 
+
+Furthermore, PCAT ships with extensive routines to visualize the output chain. The output plots are placed in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``$PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``$PCAT_DATA_PATH``.
+
+
+.. _sectplot:
+
+Plots
++++++
+If not disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are produced at predetermined times during the sampling and others are produced in the postprocessing after all chains have run. There are five subfolders in the plot folder of a given run.
+
+- ``init`` Initial setup, pixel lookup table (if applicable)
+- ``fram`` Frame plots
+- ``diag`` Diagnostic plots
+- ``post`` Posterior distribution plots of model parameters and derived quantities, prior and likelihood.
+- ``anim`` GIF animations made from the frame plots in ``fram`` that are producing during sampling.
+
+
+Chain
++++++
+``pcat.main.init()`` returns an object that contains the output chain.
+
+
+Diagnostics
+------------
+
+Autocorrelation
++++++++++++++++++++++++++++++
+
+A chain of states needs to be Markovian (memoryless) in order to be interpreted as fair draws from a target probability density. The autocorrelation of the chain shows whether the chain is self-similar along the simulation time (either due to low acceptance rate or small step size). Therefore the autocorrelation plots should be monitored after eah run.
+
+In a transdimensional setting, the autocorrelation of a parameter is ill-defined, since parameters can be born, killed or change identity. Therefore, for such parameters, we calculate the autocorrelation
+The autocorrelation Note that the
+In the The acceptance rate of the birth and death moves shows whether the prior on the amplitude of the elements is appropriate. If the acceptance rate of birth and deaths proposals is too low, the lower limit of the prior on the amplitude is too high. Likewise, if it is too low, the lower limit of the prior on the amplitude is too low. This behaviour is due to the fact that element parameters (position, amplitude and, if relevant, spectral or shape parameters) are drawn randomly from the prior when a birth is proposed. Therefore the lower limit on the amplitude prior should be adjusted such that the birth and death acceptance rate is between :math:`\sim 5%% - \sim30%%`. Otherwise across-model sampling will be inefficient and result in slow convergence.  
+
+Gelman-Rubin test
++++++++++++++++++++++++++++++
+PCAT nominally runs multiple, noninteracting chains, whose samples are aggregated at the end. In order to ensure convergence, therefore, one can compare within-chain variance with across-chain variance. This is known as the Gelman-Rubin test. PCAT outputs the GR test statistics in ``gdat.gmrb`` and plots the relevant diagnostics in ``$PCAT_DATA_PATH/imag/rtag/diag/``.
+
+.. note:: Make sure to run PCAT with the argument ``diagmode=False`` for reasonable time performance. ``diagmode=True`` option puts the sampler in a conservative diagnostic mode and performs extensive checks on the state of critical data structures to ensure that the model and proposals are self consistent, largely slowing down execution.
+
+
+Tutorial
+--------------
+In this tutorial, we will illustrate how to run PCAT during a typical science analysis. Assuming that you have :ref:`installed <sectinst>` PCAT, let us first run it on mock data.
+
+All user interaction with PCAT can be performed through the ``pcat.main.init()`` funtion. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run.
+
+.. code-block:: python
+
+    import pcat.main
+    pcat.main.init()
+
+This runs PCAT on mock Fermi-LAT data to collect a single chain of 100000 samples before thinning and burn-in. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
+
+.. code-block:: none
+    
+    >> The ensemble of catalogs is at $PCAT_DATA_PATH/data/outp/rtag/
+
+While the sampler is running, you can check ``$PCAT_DATA_PATH/imag/rtag/`` to inspect :ref:`the output plots <sectplot>`.
+
+
+.. code-block:: python
+
+    pcat.main.init( \
+              randinit=True, \
+              maxmgang=deg2rad(20.), \
+              indxenerincl=arange(1, 4), \
+              indxevttincl=arange(2, 4), \
+              lgalcntr=lgalcntr, \
+              bgalcntr=bgalcntr, \
+              minmflux=3e-11, \
+              maxmflux=3e-6, \
+              strgback=['isotflux.fits', 'fdfmflux%s.fits' % strgcntr], \
+              strgexpo='fermexpo_cmp0_igal%s.fits' % strgcntr, \
+              strgexprflux='fermflux_cmp0_igal%s.fits' % strgcntr, \
+             )
+    
+    
+
+API
 ---------
 
-All user interaction with PCAT is accomplished through the ``pcat.main.init()`` function.
+All user interaction with PCAT is accomplished through the ``pcat.main.init()`` function. Below is a list of its function arguments.
 
 .. function:: pcat.main.init(...)
 
@@ -55,7 +200,9 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type numbproc: int
 
 
+
     **Input**
+
     :param indxenerincl: Indices of energy bins to be taken into account. It is only effective if data is provided by the user, i.e., for non-simulation runs, where it defaults to all available energy bins. Other energy bins are discarded.
     
     :type indxenerincl: ndarray int
@@ -82,7 +229,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pathbase: str
 
 
-    **Asscociations with the reference catalog**
+    **Associations with the reference catalog**
  
     :param anglassc: Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.
     
@@ -104,14 +251,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type cntrpnts: bool
 
 
-    **Unfunctional**
- 
-    :param numbspatdims: Number of spatial dimensions. Currently not functional.
-
-    :type numbspatdims: None
-
-
-    **Asscociations with the reference catalog**
+    **General**
 
     :param pntstype: Functional type of point sources. 
         
@@ -121,29 +261,33 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pntstype: str
 
 
+    **Initial state**
+
     :param randinit: Force the initial state to be randomly drawn from the prior. Default behavior for mock data is to initialize the chain with the true state.
 
     :type randinit: bool
 
 
     **Adaptive burn-in**
+
     :param loadvaripara: Load the diagonal elements of the previously learned covariance
 
-    :type loadvaripara: None
+    :type loadvaripara: bool
 
 
     :param optiprop: Optimize the scale of each proposal by acceptance rate feedback. All samples during the tuning are discarded.
         
-    :type randinit: bool
+    :type optiprop: bool
 
 
     **Post processing**
+
     :param regulevi: Regularize the log-evidence estimate.
 
     :type regulevi: bool
 
 
-    :param strgexprflux: Name of the FITS file (without the extension) in ``pathdata`` containing the observed data as an ``ndarray``. The file should contain a numpy array of dimension $(N_e, N_{pix}, N_{psf}$, where $N_e$ is the number of energy bins, $N_{pix}$ is the number of spatial pixels and $N_{psf}$ is the number of PSF classes. The units should be photons per $cm^2$ per seconds per GeV.
+    :param strgexprflux: Name of the FITS file (without the extension) in ``pathdata`` containing the observed data as an ``ndarray``.
 
     :type strgexprflux: str
 
@@ -269,6 +413,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :type strganglunit: str
 
+.. _sectmockpara:
 
 ..    
          strganglunittext=None, \
@@ -421,6 +566,13 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          numbsideheal=256, \
          numbdatasamp=100, \
 
+    **Unfunctional**
+ 
+    :param numbspatdims: Number of spatial dimensions. Currently not functional.
+
+    :type numbspatdims: None
+
+
 ..
 .. Features
 .. ----------
@@ -437,60 +589,8 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 .. Labeling degeneracy
 .. ++++++++++++++++++++++
 .. 
-.. Input
-.. --------------
-.. 
-.. Producing mock data
-.. ++++++++++++++++++++++
-.. 
-.. Prior and initial state specification
-.. ++++++++++++++++++++++
-.. 
 
-.. _sectoutp:
-
-Output
--------------
-
-PCAT expects input data in ``pathbase/data/inpt/`` and writes the output chains and plots in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``PCAT_DATA_PATH``.
-
-Plots
-+++++
-If not disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are produced at predetermined times during the sampling and others are produced in the postprocessing after all chains have run. There are five subfolders in the plot folder of a given run.
-
-- ``init`` Initial setup, pixel lookup table (if applicable)
-- ``fram`` Frame plots
-- ``diag`` Diagnostic plots
-- ``post`` Posterior distribution plots of model parameters and derived quantities, prior and likelihood.
-- ``anim`` GIF animations made from the frame plots in ``fram`` that are producing during sampling.
-
-.. Chain
-.. +++++
-
-
-.. Tutorial
-.. --------------
-.. In this tutorial, a typical run on a mock dataset will be illustrated. Assuming that you have :ref:`installed <sectinst>`
-
-.. Diagnosing the sampler
-.. --------------
-.. .note:: The acceptance rate of the birth and death moves shows whether the prior on the amplitude of the elements is appropriate. If the acceptance rate of birth and deaths proposals is too low, the lower limit of the prior on the amplitude is too high. Likewise, if it is too low, the lower limit of the prior on the amplitude is too low. This behaviour is due to the fact that element parameters (position, amplitude and, if relevant, spectral or shape parameters) are drawn randomly from the prior when a birth is proposed. Therefore the lower limit on the amplitude prior should be adjusted such that the birth and death acceptance rate is between $\sim 5%% - \sim30%%$. Otherwise across-model sampling will be inefficient and result in slow convergence.  
-..
-.. Post processing samples from the catalog space
-.. ++++++++++++++++++++
-.. 
-.. 
-
-
-Diagnostics
-------------
-
-.. note::
-
-   Make sure to run PCAT with ``diagmode=False`` for good time performance. ``diagmode=True`` puts the sampler in a conservative diagnostic mode and performs extensive checks on the state of critical data structures to ensure that the model and proposals are self consistent.
-
-.. toctree::
-    :maxdepth: 2
+    
 
 
 Garbage collection

@@ -276,7 +276,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.truefixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     #### backgrounds
-    if gdat.backemis and gdat.propbacp:
+    if gdat.propbacp:
         path = gdat.pathpost + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp.flatten()], gdat.strgfixp[gdat.indxfixpbacp.flatten()], \
                                                                                                         truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()])
@@ -443,13 +443,8 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
+def plot_compfrac(gdat, gdatmodi=None):
     
-    if postpntsfluxmean != None:
-        post = True
-    else:
-        post = False
-        
     listydat = empty((gdat.numblablcompfrac, gdat.numbener))
     listyerr = zeros((2, gdat.numblablcompfrac, gdat.numbener))
     
@@ -457,67 +452,39 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     listydat[0, :] = gdat.datafluxmean
     cntr = 1
     
-    if post:
-        ## total model
-        if gdat.numblablcompfrac > 2:
-            listydat[cntr, :] = sum(gdat.medifixp[gdat.indxfixpbacp] * gdat.backfluxmean, 0)
-            listyerr[:, cntr, :] = mean(tdpy.util.retr_errrvarb(gdat.postfixp[:, gdat.indxfixpbacp]) * gdat.backfluxmean, 0)
-            cntr += 1
+    ## total model
+    if gdat.numblablcompfrac > 2:
+        listydat[cntr, :] = sum(retr_varb(gdat, 'fixp', gdatmodi)[gdat.indxfixpbacp] * gdat.backfluxmean, 0)
+        if gdatmodi == None:
+            listyerr[:, cntr, :] = mean(retr_varb(gdat, 'fixp', gdatmodi, perc='errr')[:, gdat.indxfixpbacp] * gdat.backfluxmean, 0)
+        cntr += 1
 
-        ## PS
-        if gdat.pntstype == 'lght':
-            listydat[cntr, :] = postpntsfluxmean[0, :]
-            listyerr[:, cntr, :] = tdpy.util.retr_errrvarb(postpntsfluxmean)
-            cntr += 1
-        
-        ## background templates
-        for c in gdat.indxback:
-            listydat[cntr+c, :] = gdat.medifixp[gdat.indxfixpbacp[c]] * gdat.backfluxmean[c, :]
-            listyerr[:, cntr+c, :] = tdpy.util.retr_errrvarb(gdat.postfixp[:, gdat.indxfixpbacp[c]]) * gdat.backfluxmean[c, :]
+    ## PS
+    if gdat.pntstype == 'lght':
+        listydat[cntr, :] = gdatmodi.thispntsfluxmean
+        if gdatmodi == None:
+            listyerr[:, cntr, :] = retr_varb(gdat, 'pntsfluxmean', gdatmodi, perc='errr')
+        cntr += 1
     
-    else:
-        if gdat.correxpo:
-            listydat[1, :] = sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
-        else:
-            listydat[1, :] = sum(gdatmodi.thispntsflux)
+    ## background templates
+    for c in gdat.indxback:
+        listydat[cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi)[gdat.indxfixpbacp[c]] * gdat.backfluxmean[c, :]
+        if gdatmodi == None:
+            listyerr[:, cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi, perc='errr')[:, gdat.indxfixpbacp[c]] * gdat.backfluxmean[c, :]
     
-        if False:
-            print 'hey'
-            print 'listydat'
-            print listydat[0, :]
-            print listydat[1, :]
-            print 'gdat.datacnts'
-            print sum(sum(gdat.datacnts, 1), 1)
-            print 'sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1)'
-            print sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1)
-            print 
-            print 'gdat.datacntsmean'
-            print gdat.datacntsmean
-            print 'sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)'
-            print sum(sum(gdatmodi.thispntsflux * gdat.expo, 1), 1) / sum(sum(gdat.expo, 1), 1)
-            for c in gdat.indxback:
-                if gdat.correxpo:
-                    print 'sum(sum(gdat.backflux[c] * gdat.expo, 1), 1) * gdat.apix * gdat.diffener / sum(sum(gdat.expo, 1), 1)'
-                    print sum(sum(gdat.backflux[c] * gdat.expo, 1), 1) * gdat.apix * gdat.diffener / sum(sum(gdat.expo, 1), 1)
-                else:
-                    print 'gdat.backflux[c][0, :, 0, 0].size'
-            print 'gdat.backfluxmean'
-            print gdat.backfluxmean
-            if gdat.correxpo:
-                print 'gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener'
-                print gdat.backfluxmean * mean(mean(gdat.expo, 1), 1) * gdat.apix * gdat.diffener
-            print
-
-        for c in gdat.indxback:
-            listydat[c+2, :] = gdatmodi.thissampvarb[gdat.indxfixpbacp[c, :]] * gdat.backfluxmean[c, :]
-       
     # plot energy spectra of the data, background model components and total background
     if gdat.numbener > 1:
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
        
-        numbplot = len(gdat.listlablcompfrac)
         xdat = gdat.enerfact * gdat.meanener
-        for k in range(numbplot):
+        for k in range(gdat.numblablcompfrac):
+            
+            print 'gdat.listlablcompfrac'
+            print gdat.listlablcompfrac[k]
+            print 'listydat'
+            print listydat[k, :]
+            print 
+
             ydat = gdat.meanener**2 * listydat[k, :]
             yerr = gdat.meanener**2 * listyerr[:, k, :]
             axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, label=gdat.listlablcompfrac[k])
@@ -529,15 +496,19 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
         axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
         axis.legend()
     
-        if post:
+        if gdatmodi != None:
             path = gdat.pathpost + 'compfracspec.pdf'
         else:
             path = gdat.pathfram + 'compfracspec_swep%09d.pdf' % gdatmodi.cntrswep
         plt.tight_layout()
         plt.savefig(path)
         plt.close(figr)
-    
-    numbplot = gdat.numbback + 1
+   
+    # pie plot illustrating contribution of each background template (and PS) to the total model
+    if gdat.numblablcompfrac > 2:
+        numbplot = gdat.numblablcompfrac - 2
+    else:
+        numbplot = gdat.numblablcompfrac - 1
     listexpl = zeros(numbplot)
     listexpl[0] = 0.1
     listsize = zeros(numbplot)
@@ -569,7 +540,7 @@ def plot_compfrac(gdat, gdatmodi=None, postpntsfluxmean=None):
     axis.pie(listsize, explode=listexpl, labels=labl, autopct='%1.1f%%')
     axis.axis('equal')
 
-    if post:
+    if gdatmodi != None:
         path = gdat.pathpost + 'compfrac.pdf'
     else:
         path = gdat.pathfram + 'compfrac_swep%09d.pdf' % gdatmodi.cntrswep
@@ -620,6 +591,67 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     plt.savefig(path)
     plt.close(figr)
     
+
+def plot_pdfntotlflux():
+
+    minm = 1e-9
+    maxm = 10e-9
+    numbvarb = 90
+    numbsamp = 100000
+    numbbins = 40
+    alph = 0.5
+    
+    binssing = linspace(minm, maxm, numbvarb + 1)
+    meansing = (binssing[:-1] + binssing[1:]) / 2.
+    deltsing = binssing[1:] - binssing[:-1]
+    
+    binsdoub = linspace(2. * minm, 2. * maxm, 2 * numbvarb)
+    meandoub = (binsdoub[:-1] + binsdoub[1:]) / 2.
+    deltdoub = binsdoub[1:] - binsdoub[:-1]
+    
+    bins = linspace(minm, 2. * maxm, 2 * numbvarb + 1)
+    
+    arry = empty((2, numbsamp))
+    
+    minmslop = 1.5
+    maxmslop = 3.
+    numbslop = 4
+    sloparry = linspace(minmslop, maxmslop, numbslop)
+    for n in range(numbslop):
+        slop = sloparry[n]
+        for k in range(2):
+            arry[k, :] = (rand(numbsamp) * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
+        
+        totl = sum(arry, 0)
+        
+        powrprob = (1. - slop) / (maxm**(1. - slop) - minm**(1. - slop)) * meansing**(-slop)
+        
+        convprob = convolve(powrprob, powrprob) * deltdoub[0]
+        
+        indxdoub = where(meandoub <= maxm)[0]
+        convprobpoly = polyval(polyfit(meandoub[indxdoub], convprob[indxdoub], 8), meandoub[indxdoub])
+        
+        figr, axis = plt.subplots()
+        axis.hist(arry[k, :], bins=bins, alpha=alph, label='$f_1$ (Sampled)', color='b')
+        axis.hist(totl, bins=bins, alpha=alph, label='$f_0$ (Sampled)', color='g')
+        axis.plot(meansing, powrprob * numbsamp * deltsing, label='$f_1$ (Analytic)', color='b')
+        axis.plot(meandoub, convprob * numbsamp * deltdoub[0], label='$f_0$ (Numerically convolved)', color='g')
+        
+        axis.plot(meandoub[indxdoub], convprobpoly * numbsamp * deltdoub[indxdoub], label='$f_0$ (Fit)', color='r')
+    
+        axis.set_ylim([0.5, numbsamp])
+        axis.set_xlabel('$f$')
+        axis.set_xlim([amin(bins), amax(bins)])
+        axis.set_xscale('log')
+        axis.set_yscale('log')
+        axis.set_ylabel('$N_{samp}$')
+        axis.legend()
+        plt.tight_layout()
+        pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
+        os.system('mkdir -p ' + pathfold)
+        figr.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
+        plt.close(figr)
+        
 
 def plot_brgt(gdat, gdatmodi=None, listspecbrgthist=None):
     
@@ -803,7 +835,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         if gdat.pntstype == 'lens':
             
             if post:
-                axis.axvline(gdat.medifixp[gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
+                axis.axvline(gdat.postfixp[0, gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
             else:
                 axis.axvline(gdatmodi.thissampvarb[gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
             axis.axvline(gdat.truefixp[gdat.trueindxfixpbeinhost] * gdat.fluxfactplot, color='g', ls='--', alpha=0.3)

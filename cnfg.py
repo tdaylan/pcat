@@ -573,4 +573,9 @@ def test():
          diagmode=False, \
         )
 
+def defa():
+    
+    init()
+
+
 globals().get(sys.argv[1])()
