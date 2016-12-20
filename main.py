@@ -1365,7 +1365,7 @@ def init( \
     
     # aggregate samples from the chains
     ## list of parameters to be gathered
-    gdat.liststrgchan = ['samp', 'sampvarb', 'modlcnts', 'lpri', 'llik', 'deltlpri', 'deltllik', 'chrollik', 'chrototl', 'accp', 'boolreje', \
+    gdat.liststrgchan = ['samp', 'sampvarb', 'modlcnts', 'resicnts', 'lpri', 'llik', 'deltlpri', 'deltllik', 'chrollik', 'chrototl', 'accp', 'boolreje', \
                                                                             'indxprop', 'indxfixpmodi', 'auxipara', 'laccfact', 'numbpair', 'jcbnfact', 'combfact', 'memoresi']
     if gdat.evalcirc:
         gdat.liststrgchan += ['psfn']
@@ -1647,7 +1647,8 @@ def init( \
         gdat.listfluxhistprio[n, :] = retr_fluxhistprio(gdat, l, gdat.listsampvarb[n, :])
 
     # compute credible intervals
-    gdat.liststrgpost = ['fixp', 'modlcnts']
+    gdat.liststrgpostsave = ['modlcnts', 'resicnts']
+    gdat.liststrgpost = ['fixp']
     if gdat.trueinfo:
         gdat.liststrgpost += ['specassc']
     if gdat.evalcirc:
@@ -1655,11 +1656,13 @@ def init( \
     if gdat.inclpnts:
         gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
     if gdat.pntstype == 'lght':
-        gdat.liststrgpost += ['pntsflux', 'pntsfluxmean']
-        if gdat.numbener > 1:
-            gdat.liststrgpost += ['spephist', 'fluxspephist']
+        gdat.liststrgpostsave += ['pntsflux']
+        gdat.liststrgpost += ['pntsfluxmean']
     if gdat.pntstype == 'lens':
-        gdat.liststrgpost += ['defl']
+        gdat.liststrgpostsave += ['defl']
+    if gdat.numbener > 1:
+        gdat.liststrgpost += ['spephist', 'fluxspephist']
+    gdat.liststrgpost += gdat.liststrgpostsave
     for strg in gdat.liststrgpost:
         listtemp = getattr(gdat, 'list' + strg)
         if isinstance(listtemp, list):
@@ -1676,7 +1679,15 @@ def init( \
         else:
             
             posttemp = tdpy.util.retr_postvarb(listtemp)
-            if 'strg'modlcnts
+            if strg in gdat.liststrgpostsave:
+                if gdat.pntstype == 'lght':
+                    posttemptemp = zeros((3, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                    posttemptemp[:, :, gdat.indxpixlsave, :] = posttemp 
+                else:
+                    posttemptemp = zeros((3, gdat.numbsidecar, gdat.numsidecart, 2))
+                    posttemptemp[:, gdat.indxsidesave[0], gdat.indxsidesave[1], :] = posttemp 
+                posttemp = posttemptemp
+
             meditemp = posttemp[0, :]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
         setattr(gdat, 'post' + strg, posttemp)
@@ -1727,6 +1738,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listsampvarb = zeros((gdat.numbsamp, gdat.numbpara)) - 1
     
     gdatmodi.listmodlcnts = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
+    gdatmodi.listresicnts = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     if gdat.evalpsfnpnts:
         gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl, gdat.numbevtt))
     if gdat.pntstype == 'lght':
@@ -1982,6 +1994,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                     gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
 
                 gdatmodi.listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[gdat.indxcubesave]
+                gdatmodi.listresicnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thisresicnts[gdat.indxcubesave]
                 if gdat.pntstype == 'lght':
                     gdatmodi.listpntsflux[gdat.indxsampsave[gdatmodi.cntrswep], :, :, :] = gdatmodi.thispntsflux[gdat.indxcubesave]
                 if gdat.pntstype == 'lens':
