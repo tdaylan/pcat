@@ -4,6 +4,193 @@ from __init__ import *
 # internal functions
 from util import *
 
+def plot_samp(gdat, gdatmodi=None):
+   
+    if gdatmodi != None:
+        # do necessary preprocessing for frame plots
+        if gdat.numbtrap > 0:
+            for l in gdat.indxpopl:
+                gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+
+        retr_thismodlflux(gdat, gdatmodi)
+
+        if gdat.pixltype != 'unbd':
+            gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
+            if gdat.enerbins:
+                gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
+            gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
+   
+        if gdat.pntstype == 'lght':
+            
+            gdatmodi.thispntsfluxmean = sum(sum(gdatmodi.thispntsflux * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
+
+            # PSF radial profile
+            if gdat.varioaxi:
+                for p in gdat.indxoaxi:
+                    gdatmodi.thispsfn[:, :, :, p] = gdatmodi.thispsfnintp[p](gdat.binsangl)
+            else:
+                gdatmodi.thispsfn = gdatmodi.thispsfnintp(gdat.binsangl)
+
+            # PSF FWHM
+            gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
+            
+            # temp
+            #if gdat.varioaxi:
+            #    indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+            #    fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
+            #else:
+            #    fwhmtemp = gdatmodi.thisfwhm
+   
+        if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
+            # number of background counts per PSF
+            gdatmodi.thiscntsbackfwhm = retr_cntsbackfwhm(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thisfwhm)
+        
+            # number of counts and standard deviation of each PS
+            gdatmodi.thiscnts = []
+            gdatmodi.thissigm = []
+            for l in gdat.indxpopl:
+                # temp -- zero exposure pixels will give zero counts
+                indxpixltemp = retr_indxpixl(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]])
+                cntstemp = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, :, None] * gdat.expofull[:, indxpixltemp, :]
+                if gdat.enerbins:
+                    cntstemp *= gdat.diffener[:, None, None]
+                gdatmodi.thiscnts.append(cntstemp)
+                if gdat.varioaxi:
+                    sigmtemp = retr_sigm(gdat, cntstemp, gdatmodi.thiscntsbackfwhm, lgal=gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
+                                                                                    bgal=gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+                else:
+                    sigmtemp = retr_sigm(gdat, cntstemp, gdatmodi.thiscntsbackfwhm)
+                gdatmodi.thissigm.append(sigmtemp)
+            
+            # standard deviation axis
+            gdatmodi.binssigm = retr_sigm(gdat, gdat.binscnts, gdatmodi.thiscntsbackfwhm)
+    
+        # temp -- list may not be the ultimate solution to copy gdatmodi.thisindxpntsfull
+        if gdat.calcerrr and gdat.numbtrap > 0:
+            temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb), evalcirc=False)
+            gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
+            gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
+            indxcubegood = where(temppntscnts > 1e-10)
+            gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
+            if False and amax(fabs(gdatmodi.thiserrr)) > 0.1:
+                raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
+    
+
+        if gdat.numbtrap > 0 and gdat.trueinfo:
+            gdatmodi.trueindxpntsassc = []
+            gdatmodi.thisspecassc = []
+            for l in gdat.indxpopl:
+                indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
+                                                                                                                            gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
+                gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
+                gdatmodi.thisspecassc.append(zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]])))
+                temp = where(indxmodl >= 0)[0]
+                gdatmodi.thisspecassc[l][:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
+                gdatmodi.thisspecassc[l][:, gdatmodi.trueindxpntsassc[l].miss] = 0.
+               
+    # plots
+    ## frame-only
+    if gdatmodi != None:
+        ## brightest PS
+        if gdat.pntstype == 'lght':
+            if gdatmodi == None or sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
+                plot_brgt(gdat, gdatmodi)
+
+    ## PSF radial profile
+    if gdat.pntstype == 'lght':
+        plot_psfn(gdat, gdatmodi)
+
+        if gdat.varioaxi or gdat.truevarioaxi:
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    plot_factoaxi(gdat, i, m, gdatmodi)
+    
+        ## PSF FWHM
+        if False:
+            plot_fwhm(gdat, gdatmodi)
+    
+    # number of background counts per PSF
+    if False:
+        for i in gdat.indxener:
+            path = gdat.pathplot + 'cntsbackfwhmflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
+            tdpy.util.plot_maps(path, sum(gdatmodi.thiscntsbackfwhm, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
+                                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+
+    if gdat.numbtrap > 0:
+        for l in gdat.indxpopl:
+            if gdat.trueinfo:
+                plot_scatspec(gdat, l, gdatmodi)
+                plot_scatspec(gdat, l, gdatmodi, plotdiff=True)
+    
+            plot_histspec(gdat, l, gdatmodi)
+            if gdat.pntstype == 'lght' and gdat.numbener > 1:
+                plot_histsind(gdat, l, gdatmodi)
+                plot_fluxsind(gdat, l, gdatmodi, 'hist')
+                if gdatmodi != None:
+                    plot_fluxsind(gdat, l, gdatmodi, 'scat')
+            # temp -- restrict compfrac and other plots to indxmodlpntscomp
+            if gdat.correxpo and gdat.pntstype == 'lght':
+                plot_histcnts(gdat, l, gdatmodi)
+            if gdat.pntstype == 'lght':
+                plot_compfrac(gdat, gdatmodi)
+    
+    for i in gdat.indxener:
+        for m in gdat.indxevttplot:
+            plot_scatpixl(gdat, gdatmodi)
+    
+    for l in gdat.indxpopl:
+        for i in gdat.indxener:
+            for m in gdat.indxevttplot:
+                if gdatmodi != None:
+                    plot_datacnts(gdat, l, gdatmodi, i, m)
+                
+                if gdat.pntstype == 'lens':
+                    
+                    plot_defl(gdat, gdatmodi)
+
+                    if gdatmodi != None:
+                        numbpntsplot = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
+                        indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
+                        lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
+                        bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
+                        bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]
+                        
+                        numbplot = numbpntsplot + 1
+                        for k in range(numbplot):
+                            if k == 0:
+                                lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpellphost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
+                            else:
+                                lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-1], bgal[k-1], 0., 0., 0., 0., bein[k-1])
+                            defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
+                            plot_defl(gdat, gdatmodi=gdatmodi, defl=defl, indxdefl=k)
+
+                if gdat.pixltype == 'unbd':
+                    plot_catlfram(gdat, gdatmodi, l, i, m)
+                else:
+                    plot_modlcnts(gdat, l, gdatmodi, i, m)
+                    plot_resicnts(gdat, l, gdatmodi, i, m)
+                if gdat.calcerrr and gdat.numbtrap > 0:
+                    plot_errrcnts(gdat, gdatmodi, i, m)
+  
+            # temp
+            #for m in gdat.indxevtt:
+            #    plot_datacnts(gdat, gdatmodi, i, m)
+            #    plot_catl(gdat, gdatmodi, i, m, thiscnts)
+            #    plot_modlcnts(gdat, gdatmodi, i, m)
+            #    plot_resicnts(gdat, gdatmodi, i, m)
+    
+    # temp
+    #if gdat.numbener > 1:
+    #    plot_datacnts(gdat, l, gdatmodi, None, None)
+        
+
 def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     
     if writ:
@@ -22,7 +209,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         shel.close()
     
     if gdat.verbtype > 0:
-        print 'Producing plots for the PCAT output...'
+        print 'Producing postprocessing plots...'
 
     timetotlinit = gdat.functime()
     
@@ -37,11 +224,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{pix}$')
             plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
+            plt.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
             plt.close(figr)
-            path = gdat.pathplot + 'diag/gmrbheal.pdf'
+            
             maps = zeros(gdat.numbpixl)
             maps[gdat.indxpixlsave] = gdat.gmrbstat
+            path = gdat.pathplot + 'diag/gmrbheal.pdf'
             tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                                     minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                     minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
@@ -81,7 +269,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'accpratiprop.pdf')
+    plt.savefig(gdat.pathdiag + 'accpratiprop.pdf')
     plt.close(figr)
   
     # histogram of proposal types
@@ -92,7 +280,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     axis.set_xlabel('$i_{prop}$')
     axis.set_xticks(gdat.indxprop)
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'histindxprop.pdf')
+    plt.savefig(gdat.pathdiag + 'histindxprop.pdf')
     plt.close(figr)
    
     # plot split and merge diagnostics
@@ -168,7 +356,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
                 axis.set_xlabel(listlabl[k])
                 axis.legend()
                 plt.tight_layout()
-                figr.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
+                plt.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
                 plt.close(figr)
     
     if gdat.verbtype > 0:
@@ -232,25 +420,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
                 for strgfluxspep in liststrgfluxspep:
                     plot_pntsprob(gdat, l, strgbins, strgfluxspep)
 
-    if gdat.numbtrap > 0:
-        ## flux distribution
-        for l in gdat.indxpopl:
-            plot_histspec(gdat, l, listspechist=gdat.listspechist[:, l, :, :])
-    
-        ## color distribution
-        if gdat.pntstype == 'lght' and gdat.numbener > 1:
-            for l in gdat.indxpopl:
-                plot_histsind(gdat, l, listsindhist=gdat.listspephist[l][:, 0, :])
-    
-        ## emission components
-        if gdat.numbback == 2:
-            postpntsfluxmean = tdpy.util.retr_postvarb(gdat.listpntsfluxmean)
-            plot_compfrac(gdat, postpntsfluxmean=postpntsfluxmean)
-
-        # cross correlation with the reference catalog
-        if gdat.trueinfo:
-            for l in gdat.indxpopl:
-                plot_scatspec(gdat, l, postspecassc=gdat.postspecassc)
+    # posterior versions of the frame plots
+    plot_samp(gdat)
     
     ## mosaic of images of posterior catalogs 
     plot_mosa(gdat)
@@ -321,8 +492,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
         pathpostdelt = gdat.pathpost + 'delt' + strg + '/'
-        pathpostdeltaccp = gdat.pathpost + 'delt' + strg + 'accp/'
-        pathpostdeltreje = gdat.pathpost + 'delt' + strg + 'reje/'
+        pathpostdeltaccp = pathpostdelt + 'accp/'
+        pathpostdeltreje = pathpostdelt + 'reje/'
         for path in [pathpostdelt, pathpostdeltaccp, pathpostdeltreje]:
             os.system('mkdir -p %s' % path)
 
@@ -345,7 +516,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     axis.set_ylabel(r'$M$ [GB]')
     axis.set_xlabel(r'$i_{samp}$')
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'memoresi.pdf')
+    plt.savefig(gdat.pathdiag + 'memoresi.pdf')
     plt.close(figr)
 
     # animate the frame plots
@@ -382,7 +553,7 @@ def plot_chro(gdat):
             axcl[k].set_xticklabels([])
     axcl[-1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(hspace=0.05)
-    figr.savefig(gdat.pathdiag + 'chroprop.pdf')
+    plt.savefig(gdat.pathdiag + 'chroprop.pdf')
     plt.close(figr)
 
     labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Save', 'Rest']
@@ -411,7 +582,7 @@ def plot_chro(gdat):
     axcl[0].set_xticklabels([])
     axcl[1].set_xlabel('$t$ [ms]')
     plt.subplots_adjust(bottom=0.15, hspace=0.18)
-    figr.savefig(gdat.pathdiag + 'chrototl.pdf')
+    plt.savefig(gdat.pathdiag + 'chrototl.pdf')
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
@@ -429,7 +600,7 @@ def plot_chro(gdat):
             try:
                 axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
             except:
-                print 'Skipping likelihood timing plot...'
+                pass
             axcl[k].set_xlim([amin(binstime), amax(binstime)])
             axcl[k].set_ylim([0.5, None])
             axcl[k].set_ylabel(listlabl[k])
@@ -439,11 +610,11 @@ def plot_chro(gdat):
             axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
         axcl[-1].set_xlabel('$t$ [ms]')
         plt.subplots_adjust(hspace=0.05)
-        figr.savefig(gdat.pathdiag + 'chrollik.pdf')
+        plt.savefig(gdat.pathdiag + 'chrollik.pdf')
         plt.close(figr)
 
 
-def plot_compfrac(gdat, gdatmodi=None):
+def plot_compfrac(gdat, gdatmodi):
     
     listydat = empty((gdat.numblablcompfrac, gdat.numbener))
     listyerr = zeros((2, gdat.numblablcompfrac, gdat.numbener))
@@ -461,9 +632,11 @@ def plot_compfrac(gdat, gdatmodi=None):
 
     ## PS
     if gdat.pntstype == 'lght':
-        listydat[cntr, :] = gdatmodi.thispntsfluxmean
         if gdatmodi == None:
-            listyerr[:, cntr, :] = retr_varb(gdat, 'pntsfluxmean', gdatmodi, perc='errr')
+            listydat[cntr, :] = gdat.medipntsfluxmean
+            listyerr[:, cntr, :] = gdat.errrpntsfluxmean
+        else:
+            listydat[cntr, :] = gdatmodi.thispntsfluxmean
         cntr += 1
     
     ## background templates
@@ -496,11 +669,8 @@ def plot_compfrac(gdat, gdatmodi=None):
         axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
         axis.legend()
     
-        if gdatmodi != None:
-            path = gdat.pathpost + 'compfracspec.pdf'
-        else:
-            path = gdat.pathfram + 'compfracspec_swep%09d.pdf' % gdatmodi.cntrswep
         plt.tight_layout()
+        path = retr_plotpath(gdat, 'compfracspec', gdatmodi)
         plt.savefig(path)
         plt.close(figr)
    
@@ -540,28 +710,19 @@ def plot_compfrac(gdat, gdatmodi=None):
     axis.pie(listsize, explode=listexpl, labels=labl, autopct='%1.1f%%')
     axis.axis('equal')
 
-    if gdatmodi != None:
-        path = gdat.pathpost + 'compfrac.pdf'
-    else:
-        path = gdat.pathfram + 'compfrac_swep%09d.pdf' % gdatmodi.cntrswep
     plt.subplots_adjust(top=0.8, bottom=0.2, left=0.2, right=0.8)
+    path = retr_plotpath(gdat, 'compfrac', gdatmodi)
     plt.savefig(path)
     plt.close(figr)
      
 
-def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
+def plot_histsind(gdat, l, gdatmodi):
     
-    if listsindhist == None:
-        post = False
-    else:
-        post = True
-        
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    if post:
+    if gdatmodi == None:
         xdat = gdat.meansind
-        postsindhist = tdpy.util.retr_postvarb(listsindhist)
-        ydat = postsindhist[0, :]
-        yerr = tdpy.util.retr_errrvarb(postsindhist)
+        ydat = gdat.medispephist[l][0, :]
+        yerr = gdat.errrspephist[l][:, 0, :]
         axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
     else:
         try:
@@ -583,11 +744,9 @@ def plot_histsind(gdat, l, gdatmodi=None, listsindhist=None):
     axis.set_ylabel('$N$')
     axis.set_ylim(gdat.limshist)
     axis.legend(loc=2)
-    if post:
-        path = gdat.pathpost + 'histsind_pop%d.pdf' % l
-    else:
-        path = gdat.pathfram + 'histsind_pop%d_swep%09d.pdf' % (l, gdatmodi.cntrswep)
+    
     plt.tight_layout()
+    path = retr_plotpath(gdat, 'histsind_pop%d' % l, gdatmodi)
     plt.savefig(path)
     plt.close(figr)
     
@@ -649,24 +808,16 @@ def plot_pdfntotlflux():
         plt.tight_layout()
         pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
         os.system('mkdir -p ' + pathfold)
-        figr.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
+        plt.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
         plt.close(figr)
         
 
-def plot_brgt(gdat, gdatmodi=None, listspecbrgthist=None):
+def plot_brgt(gdat, gdatmodi):
     
-    if listspecbrgthist == None:
-        post = False
-    else:
-        post = True
-        
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    if post:
-        xdat = gdat.meansind
-        postsindhist = tdpy.util.retr_postvarb(listspecbrgthist)
-        ydat = postsindhist[0, :]
-        yerr = tdpy.util.retr_errrvarb(postsindhist)
-        axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
+    if gdatmodi == None:
+        # temp
+        pass
     else:   
         fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsamplgal)], \
                                                                          gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampbgal)], \
@@ -685,55 +836,62 @@ def plot_brgt(gdat, gdatmodi=None, listspecbrgthist=None):
     axis.set_ylim([gdat.minmfluxplot, gdat.maxmfluxplot])
     axis.set_ylabel(r'$%s_{max}$' % gdat.strgflux)
     axis.legend(loc=2)
-    if post:
-        path = gdat.pathpost + 'scatbrgt.pdf'
-    else:
-        path = gdat.pathfram + 'scatbrgt_swep%09d.pdf' % (gdatmodi.cntrswep)
+    
     plt.tight_layout()
+    path = retr_plotpath(gdat, 'scatbrgt', gdatmodi)
     plt.savefig(path)
     plt.close(figr)
     
 
-def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, listsindhist=None):
+def plot_fluxsind(gdat, l, gdatmodi, strgtype):
     
-    if listsindhist == None:
-        post = False
-    else:
-        post = True
-        
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    if post:
-        postsindhist = tdpy.util.retr_postvarb(listsindhist)
-        ydat = postsindhist[0, :]
-        yerr = tdpy.util.retr_errrvarb(postsindhist)
-        #axis.hist2d(flux, sind, gdat.binsflux, gdat.binssind, color='b', alpha=gdat.alphmrkr)
-        sns.kdeplot(flux, sind, ax=axis, cmap="Blues")
+    if gdatmodi == None:
+        
+        #ydat = gdat.medispephist[l][0, :]
+        #yerr = gdat.errrspephist[l][:, 0, :]
+        #axis.hist2d(flux, sind, [gdat.binsfluxplot, gdat.binssind], color='b', alpha=gdat.alphmrkr)
+        
+        #imag = axis.imshow(gdat.medifluxspephist[l][0, :], cmap='Purples', extent=[])
+        imag = axis.pcolor(gdat.binsfluxplot, gdat.binssind, gdat.medifluxspephist[l][0, :], cmap='Purples')
+
+        #cset = plt.contour(gdat.medifluxspephist[l][0, :], np.arange(-1, 1.5, 0.2), linewidths=2, cmap='Blues', \
+        #                                                        extent=[amin(gdat.binsfluxplot), amax(gdat.binsfluxplot), amin(gdat.binssind), amax(gdat.binssind)])
+        #plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
+        plt.colorbar(imag) 
 
     else:
         flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
         sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[l][:, 0]]
         if strgtype == 'hist':
-            #hist = histogram2d(flux, sind, bins=[gdat.binsflux, gdat.binssind])[0]
-            #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Blues', label='Sample',  alpha=gdat.alphmrkr)
-            try:
-                sns.kdeplot(flux, sind, ax=axis, cmap='Blues', label='Sample', legend=True)
-            except:
-                print 'Skipping flux-color scatter plot...'
+            print 'flux'
+            print flux
+            print 'sind'
+            print sind
+            print 'gdat.binsfluxplot'
+            print gdat.binsfluxplot
+            print 'gdat.binssind'
+            print gdat.binssind
+            print
+            axis.hist2d(flux, sind, [gdat.binsfluxplot, gdat.binssind], cmap='Blues', alpha=gdat.alphmrkr)
+            #hist = histogram2d(flux, sind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
+            #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, cmap='Blues', label='Sample',  alpha=gdat.alphmrkr)
         else:
             axis.scatter(flux, sind, alpha=gdat.alphmrkr, color='b', label='Sample')
     
     if gdat.trueinfo and gdat.truespep[l] != None:
         if strgtype == 'hist':
-            #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], bins=[gdat.binsflux, gdat.binssind], )[0]
-            #axis.pcolor(gdat.binsflux, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
-            sns.kdeplot(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], ax=axis, cmap='Greens', label=gdat.truelabl)
+            axis.hist2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], [gdat.binsfluxplot, gdat.binssind], cmap='Greens', alpha=gdat.alphmrkr)
+            #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], bins=[gdat.binsfluxplot, gdat.binssind], )[0]
+            #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
         else:
             axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprspep != None:
             if strgtype == 'hist':
-                #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsflux, gdat.binssind])[0]
-                #axis.pcolor(gdat.binsflux, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.alphmrkr)
-                sns.kdeplot(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprspep[:, 0], ax=axis, cmap='Reds', label=gdat.nameexpr)
+                axis.hist2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprspep[:, 0], [gdat.binsfluxplot, gdat.binssind], cmap='Reds', \
+                                                                                                                    alpha=gdat.alphmrkr, label=gdat.nameexpr)
+                #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
+                #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.alphmrkr)
             else:
                 axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprspep[:, 0], alpha=gdat.alphmrkr, color='r', label=gdat.nameexpr)
     axis.set_xscale('log')
@@ -742,24 +900,17 @@ def plot_fluxsind(gdat, l, strgtype='scat', gdatmodi=None, listspechist=None, li
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
     axis.set_ylim([gdat.minmsind, gdat.maxmsind])
     axis.legend(loc=2)
-    if post:
-        path = gdat.pathpost + '%sfluxsind_pop%d' % (strgtype, l) + '.pdf'
-    else:
-        path = gdat.pathfram + '%sfluxsind_pop%d' % (strgtype, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
+
     plt.tight_layout()
+    path = retr_plotpath(gdat, '%sfluxsind_pop%d' % (strgtype, l), gdatmodi)
     plt.savefig(path)
     plt.close(figr)
     
 
-def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
+def plot_histspec(gdat, l, gdatmodi, plotspec=False):
   
-    if listspechist == None:
-        post = False
-    else:
-        post = True
-    
     if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
-        if post:
+        if gdatmodi == None:
             binssigm = gdat.medibinssigm
         else:
             binssigm = gdatmodi.binssigm
@@ -784,11 +935,10 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
     
     for i in indxenertemp:
         axis = axcl[i]
-        if post:
+        if gdatmodi == None:
             xdat = gdat.fluxfactplot * gdat.meanspecplot[i, :]
-            postspechist = tdpy.util.retr_postvarb(listspechist[:, :, i])
-            ydat = postspechist[0, :]
-            yerr = tdpy.util.retr_errrvarb(postspechist)
+            ydat = gdat.medispechist[l, :, i]
+            yerr = gdat.errrspechist[:, l, :, i]
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
         else:
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, gdatmodi.indxmodlpntscomp[l]]
@@ -834,7 +984,7 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         
         if gdat.pntstype == 'lens':
             
-            if post:
+            if gdatmodi == None:
                 axis.axvline(gdat.postfixp[0, gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
             else:
                 axis.axvline(gdatmodi.thissampvarb[gdat.indxfixpbeinhost] * gdat.fluxfactplot, color='b', alpha=0.3)
@@ -865,26 +1015,19 @@ def plot_histspec(gdat, l, gdatmodi=None, plotspec=False, listspechist=None):
         else:
             axis.set_ylabel('$N$')
             axis.legend(loc=7)
+    
+    plt.tight_layout()
     if plotspec:
         strg = 'spec'
     else:
         strg = 'flux'
-    if post:
-        path = gdat.pathpost + 'hist%s_pop%d' % (strg, l) + '.pdf'
-    else:
-        path = gdat.pathfram + 'hist%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
-    plt.tight_layout()
+    path = retr_plotpath(gdat, 'hist%s_pop%d' % (strg, l), gdatmodi)
     plt.savefig(path)
     plt.close(figr)
     
 
-def plot_scatspec(gdat, l, gdatmodi=None, postspecassc=None, plotdiff=False):
+def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
     
-    if postspecassc != None:
-        post = True
-    else:
-        post = False
-
     figr, axrw = plt.subplots(1, gdat.numbener, figsize=(gdat.plotsize * gdat.numbener, gdat.plotsize))
     if gdat.numbener == 1:
         axrw = [axrw]
@@ -894,13 +1037,11 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecassc=None, plotdiff=False):
         xdat = copy(gdat.truespec[l][0, i, :])
         xerr = tdpy.util.retr_errrvarb(gdat.truespec[l][:, i, :])
         yerr = zeros((2, xdat.size))
-        if post:
-            ydat = copy(postspecassc[0, i, :])
-            yerr[0, :] = postspecassc[1, i, :]
-            yerr[1, :] = postspecassc[2, i, :]
-            yerr = fabs(yerr - ydat)
+        if gdatmodi == None:
+            ydat = copy(gdat.medispecassc[l][i, :])
+            yerr = copy(gdat.errrspecassc[l][:, i, :])
         else:
-            ydat = gdatmodi.thisspecassc[i, :]
+            ydat = gdatmodi.thisspecassc[l][i, :]
 
         if (ydat == 0.).all():
             continue
@@ -925,7 +1066,7 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecassc=None, plotdiff=False):
             axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
         # plot associations to multiple model point sources
-        if not post:
+        if gdatmodi != None:
             indx = intersect1d(gdatmodi.trueindxpntsassc[l].mult, gdat.trueindxpntscomp[l])
             if len(indx) > 0:
                 axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='r')
@@ -962,21 +1103,17 @@ def plot_scatspec(gdat, l, gdatmodi=None, postspecassc=None, plotdiff=False):
         if gdat.enerbins:
             axis.set_title(gdat.strgbinsener[i])
    
+    plt.tight_layout()
     if plotdiff:
         strg = 'diff'
     else:
         strg = ''
-    if postspecassc != None:
-        path = gdat.pathpost + 'scatspec%s_pop%d' % (strg, l) + '.pdf'
-    elif gdatmodi.thisspecassc != None:
-        path = gdat.pathfram + 'scatspec%s_pop%d' % (strg, l) + '_swep%09d.pdf' % gdatmodi.cntrswep
-
-    plt.tight_layout()
+    path = retr_plotpath(gdat, 'scatspec%s_pop%d' % (strg, l), gdatmodi)
     plt.savefig(path)
     plt.close(figr)
 
 
-def plot_scatpixl(gdat, gdatmodi, l):
+def plot_scatpixl(gdat, gdatmodi):
     
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
     if gdat.numbevtt == 1:
@@ -985,15 +1122,20 @@ def plot_scatpixl(gdat, gdatmodi, l):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            
-            slop, intc, coef, pval, stdv = sp.stats.linregress(gdat.datacnts[i, :, m], gdatmodi.thismodlcnts[i, :, m])
-            axis.scatter(gdat.datacnts[i, :, m], gdatmodi.thismodlcnts[i, :, m], alpha=gdat.alphmrkr)
+           
+            if gdatmodi == None:
+                ydat = gdat.medimodlcnts[i, :, m]
+            else:
+                ydat = gdatmodi.thismodlcnts[i, gdat.indxpixlsave, m]
+            axis.scatter(gdat.datacnts[i, gdat.indxpixlsave, m], ydat, alpha=gdat.alphmrkr)
 
             axislimt = [0., amax(gdat.datacnts[i, :, m]) * 1.5]
             axis.set_xlim(axislimt)
             axis.set_ylim(axislimt)
             
+            slop, intc, coef, pval, stdv = sp.stats.linregress(gdat.datacnts[i, gdat.indxpixlsave, m], ydat)
             axis.text(0.5, 0.9, '$m = %.3g, b = %.3g, r = %.3g$' % (slop, intc, coef), va='center', ha='center', transform=axis.transAxes, fontsize=16)
+            
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel('Data Counts')
             if i == 0:
@@ -1005,7 +1147,8 @@ def plot_scatpixl(gdat, gdatmodi, l):
                 axis.set_title(gdat.strgbinsener[i])
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fram/scatpixl_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep)
+    path = retr_plotpath(gdat, 'scatpixl', gdatmodi)
+    plt.savefig(path)
     plt.close(figr)
     
     
@@ -1154,8 +1297,10 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep):
     plt.figtext(0.5, 0.95, '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn), ha='center', va='center')
     axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
     cbar = figr.colorbar(imag, cax=axiscomm)
+
     plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)
-    figr.savefig(gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgfluxspep, indxpopltemp) + '.pdf')
+    path = gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgfluxspep, indxpopltemp) + '.pdf'
+    plt.savefig(path)
     plt.close(figr)
        
     
@@ -1192,17 +1337,25 @@ def plot_psfn(gdat, gdatmodi):
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
     if gdat.numbevtt == 1:
         axgr = [axgr]
-    if gdat.varioaxi:
-        psfntemp = gdatmodi.thispsfn[:, :, :, 0]
-    else:
-        psfntemp = gdatmodi.thispsfn
-
     for m, axrw in enumerate(axgr):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
             
-            axis.plot(gdat.binsanglplot, psfntemp[i, :, m], label='Sample')
+            if gdatmodi == None:
+                if gdat.varioaxi:
+                    ydat = gdat.medipsfn[i, :, m, 0]
+                    yerr = gdat.errrpsfn[:, i, :, m, 0]
+                else:
+                    ydat = gdat.medipsfn[i, :, m]
+                    yerr = gdat.errrpsfn[:, i, :, m]
+                axis.errorbar(gdat.binsanglplot, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black', label='Posterior')
+            else:
+                if gdat.varioaxi:
+                    psfntemp = gdatmodi.thispsfn[i, :, m, 0]
+                else:
+                    psfntemp = gdatmodi.thispsfn[i, :, m]
+                axis.plot(gdat.binsanglplot, psfntemp, label='Sample')
            
             if gdat.truevarioaxi:
                 truepsfntemp = gdat.truepsfn[i, :, m, 0]
@@ -1225,40 +1378,43 @@ def plot_psfn(gdat, gdatmodi):
                 axis.set_title(gdat.strgbinsener[i])  
             if i == gdat.numbener - 1 and m == gdat.numbevtt - 1:
                 axis.legend()
-  
-            indxsamptemp = gdat.indxfixppsfp[0] + i * gdat.numbpsfptotl + m * gdat.numbener * gdat.numbpsfptotl
-            if gdat.strganglunit != None:
-                strganglunit = gdat.strganglunit
-            else:
-                strganglunit = ''
-            if gdat.psfntype == 'singgaus':
-                strg = r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp], strganglunit)
-                # temp
-            elif gdat.psfntype == 'singking':
-                strg = r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp], strganglunit) + '\n'
-                strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+1]
-            elif gdat.psfntype == 'doubgaus':
-                strg = r'$f = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
-                strg += r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
-                strg += r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+2], strganglunit)
-            elif gdat.psfntype == 'gausking':
-                strg = r'$f_G = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
-                strg += r'$\sigma_G = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
-                strg += r'$\sigma_K = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+2], strganglunit) + '\n'
-                strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+3]
-            elif gdat.psfntype == 'doubking':
-                strg = r'$f_c = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
-                strg += r'$\sigma_c = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
-                strg += r'$\gamma_c = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+2] + '\n'
-                strg += r'$\sigma_t = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+3], strganglunit) + '\n'
-                strg += r'$\gamma_t = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+4]
-            axis.text(0.2, 0.2, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
+
+            # overplot the PSF parameter values
+            if gdatmodi != None:
+                indxsamptemp = gdat.indxfixppsfp[0] + i * gdat.numbpsfptotl + m * gdat.numbener * gdat.numbpsfptotl
+                if gdat.strganglunit != None:
+                    strganglunit = gdat.strganglunit
+                else:
+                    strganglunit = ''
+                if gdat.psfntype == 'singgaus':
+                    strg = r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp], strganglunit)
+                    # temp
+                elif gdat.psfntype == 'singking':
+                    strg = r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp], strganglunit) + '\n'
+                    strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+1]
+                elif gdat.psfntype == 'doubgaus':
+                    strg = r'$f = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
+                    strg += r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
+                    strg += r'$\sigma = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+2], strganglunit)
+                elif gdat.psfntype == 'gausking':
+                    strg = r'$f_G = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
+                    strg += r'$\sigma_G = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
+                    strg += r'$\sigma_K = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+2], strganglunit) + '\n'
+                    strg += r'$\gamma = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+3]
+                elif gdat.psfntype == 'doubking':
+                    strg = r'$f_c = %.3g$' % gdatmodi.thissampvarb[indxsamptemp] + '\n'
+                    strg += r'$\sigma_c = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+1], strganglunit) + '\n'
+                    strg += r'$\gamma_c = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+2] + '\n'
+                    strg += r'$\sigma_t = %.3g$%s' % (gdat.anglfact * gdatmodi.thissampvarb[indxsamptemp+3], strganglunit) + '\n'
+                    strg += r'$\gamma_t = %.3g$' % gdatmodi.thissampvarb[indxsamptemp+4]
+                axis.text(0.2, 0.2, strg, va='center', ha='center', transform=axis.transAxes, fontsize=18)
             
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fram/psfnprof_swep%09d.pdf' % gdatmodi.cntrswep)
+    path = retr_plotpath(gdat, 'psfn', gdatmodi)
+    plt.savefig(path)
     plt.close(figr)
-    
-    
+   
+
 def plot_fwhm(gdat, gdatmodi):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -1279,7 +1435,8 @@ def plot_fwhm(gdat, gdatmodi):
             axis.text(gdat.meanener[i], gdat.indxevttincl[m] + 0.5, r'$%.3g^\circ$' % rad2deg(tranfwhm[m, i]), ha='center', va='center', fontsize=14)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fram/fwhmcnts_swep%09d.pdf' % gdatmodi.cntrswep)
+    path = retr_plotpath(gdat, 'fwhm', gdatmodi)
+    plt.savefig(path)
     plt.close(figr)
     
     
@@ -1467,15 +1624,15 @@ def plot_mosa(gdat):
             print 'Skipping the mosaic image plot...'
 
 
-def plot_grap(igal=False, verbtype=0):
+def plot_grap(plottype='igal', verbtype=0):
         
     figr, axis = plt.subplots(figsize=(6, 6))
 
     grap = nx.DiGraph()
-    if igal:
+    if plottype == 'igal':
         listcolr = ['black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', \
                                                                             'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
-    else:
+    if plottype == 'ngal':
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
 
     grap.add_edges_from([ \
@@ -1494,25 +1651,26 @@ def plot_grap(igal=False, verbtype=0):
                          ('numbpnts','flux'), \
                          ('numbpnts', 'sind') \
                         ])
-    if igal:
+    
+    if plottype == 'igal':
         grap.add_edges_from([ \
                              ('numbpnts', 'expo'), \
                              ('expo', 'modl'), \
                              ('spatdistslop', 'lgal'), \
                              ('spatdistslop', 'bgal') \
                             ])
-    else:
+    if plottype == 'ngal' or plottype == 'lens':
         pass
 
         
     labl = {}
     labl['numbpnts'] = '$N$'
     labl['meanpnts'] = r'$\mu$'
-    if igal:
+    if plottype == 'igal':
         labl['fluxdistslop'] = r'$\vec{\alpha}$'
         labl['sinddistslop'] = r'$\vec{\beta}$'
         labl['spatdistslop'] = r'$\vec{\gamma}$'
-    else:
+    if plottype == 'ngal':
         labl['fluxdistslop'] = r'$\alpha$'
         labl['sinddistslop'] = r'$\beta$'
     labl['psfp'] = r'$\vec{\eta}$'
@@ -1521,7 +1679,7 @@ def plot_grap(igal=False, verbtype=0):
     labl['bgal'] = r'$\vec{b}$'
     labl['flux'] = r'$\vec{f}$'
     labl['sind'] = r'$\vec{s}$'
-    if igal:
+    if plottype == 'igal':
         labl['expo'] = r'$\vec{E_c}$'
     labl['modl'] = r'$\mathcal{M}$'
     labl['data'] = r'$\mathcal{D}$'
@@ -1529,21 +1687,21 @@ def plot_grap(igal=False, verbtype=0):
     posi = nx.circular_layout(grap)
     posi['numbpnts'] = array([0., 0.075])
     posi['meanpnts'] = array([0., 0.15])
-    if igal:
+    if plottype == 'igal':
         posi['spatdistslop'] = array([-0.2, 0.15])
     posi['fluxdistslop'] = array([0.2, 0.15])
     posi['sinddistslop'] = array([0.4, 0.15])
-    if igal:
+    if plottype == 'igal':
         posi['psfp'] = array([0.9, -0.0])
         posi['bacp'] = array([0.7, -0.0])
-    else:
+    if plottype == 'ngal':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.5, -0.0])
     posi['lgal'] = array([-0.3, -0.0])
     posi['bgal'] = array([-0.1, -0.0])
     posi['flux'] = array([0.1, -0.0])
     posi['sind'] = array([0.3, -0.0])
-    if igal:
+    if plottype == 'igal':
         posi['expo'] = array([0.5, -0.0])
     posi['modl'] = array([0., -0.075])
     posi['data'] = array([0., -0.15])
@@ -1565,21 +1723,17 @@ def plot_grap(igal=False, verbtype=0):
     nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
-    if igal:
+    if plottype == 'igal':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'fluxdistslop', 'sinddistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind', 'expo'], node_color='g', node_size=size)
-    else:
+    if plottype == 'ngal':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop', 'sinddistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
     plt.tight_layout()
-    if igal:
-        strg = 'igal'
-    else:
-        strg = ''
-    plt.savefig(pathplot + 'grap%s.pdf' % strg)
+    plt.savefig(pathplot + 'grap%s.pdf' % plottype)
     plt.close(figr)
 
 
@@ -1688,7 +1842,7 @@ def plot_opti(gdat, gdatmodi):
     os.system('convert -delay 10 %sopti*.pdf %s/opti.gif' % (gdat.pathinit, gdat.pathinit))
 
 
-def plot_factoaxi(gdat, i, m, gdatmodi=None):
+def plot_factoaxi(gdat, i, m, gdatmodi):
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if gdat.varioaxi:
@@ -1707,16 +1861,14 @@ def plot_factoaxi(gdat, i, m, gdatmodi=None):
     axis.set_xlabel(r'$\phi$%s' % gdat.strganglunit)
     axis.set_ylabel(r'f($\phi$)')
     axis.legend(loc=2)
+    
     plt.tight_layout()
-    if gdatmodi == None:
-        strg = 'post/factoaxi_%d%d.pdf' % (i, m)
-    else:
-        strg = 'fram/factoaxi_%d%d_swep%09d.pdf' % (i, m, gdatmodi.cntrswep)
-    plt.savefig(gdat.pathplot + strg)
+    path = retr_plotpath(gdat, 'factoaxi_%d%d' % (i, m), gdatmodi)
+    plt.savefig(path)
     plt.close(figr)
     
 
-def plot_histcnts(gdat, l, gdatmodi=None):
+def plot_histcnts(gdat, l, gdatmodi):
 
     figr, axgr = plt.subplots(gdat.numbevtt, gdat.numbener, figsize=(gdat.numbener * gdat.plotsize, gdat.numbevtt * gdat.plotsize))
     if gdat.numbevtt == 1:
@@ -1750,11 +1902,12 @@ def plot_histcnts(gdat, l, gdatmodi=None):
                 axis.legend()
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'fram/histcnts_pop%d' % l + '_swep%09d.pdf' % gdatmodi.cntrswep)
+    path = retr_plotpath(gdat, 'histcnts_pop%d' % l, gdatmodi)
+    plt.savefig(path)
     plt.close(figr)
     
 
-def plot_defl(gdat, gdatmodi=None, defl=None, indxdefl=None):
+def plot_defl(gdat, gdatmodi, defl=None, indxdefl=None):
 
     if defl != None and gdatmodi != None:
         strg = 'defl%d' % indxdefl
@@ -1778,8 +1931,9 @@ def plot_defl(gdat, gdatmodi=None, defl=None, indxdefl=None):
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
                                                                       gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact])
-   
-    supr_fram(gdat, gdatmodi, axis, 0, 0)
+  
+    if gdatmodi != None:
+        supr_fram(gdat, gdatmodi, axis, 0, 0)
     plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
     plt.savefig(path)
     plt.close(figr)
@@ -1804,14 +1958,18 @@ def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, 'modlcnts', gdatmodi, indxenerplot, indxevttplot, indxpoplplot)
     make_catllabl(gdat, axis)
-    if gdat.pixltype == 'unbd':
-        modltemp = gdatmodi.thismodlflux
+    if gdatmodi != None:
+        if gdat.pixltype == 'unbd':
+            modltemp = gdatmodi.thismodlflux
+        else:
+            modltemp = gdatmodi.thismodlcnts
     else:
-        modltemp = gdatmodi.thismodlcnts
+        modltemp = gdat.medimodlcnts
     imag = retr_imag(gdat, axis, modltemp, indxenerplot, indxevttplot, vmin=gdat.minmdatacnts[indxenerplot], \
                                                                                                                 vmax=gdat.maxmdatacnts[indxenerplot], scal=gdat.scalmaps)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
-    supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+    if gdatmodi != None:
+        supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
@@ -1821,8 +1979,14 @@ def plot_resicnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, 'resicnts', gdatmodi, indxenerplot, indxevttplot, indxpoplplot)
     make_catllabl(gdat, axis)
-    imag = retr_imag(gdat, axis, gdatmodi.thisresicnts, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu', scal=gdat.scalmaps)
-    supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+    if gdatmodi != None:
+        resitemp = gdatmodi.thisresicnts
+    else:
+        resitemp = gdat.medimodlcnts
+        
+    imag = retr_imag(gdat, axis, resitemp, indxenerplot, indxevttplot, vmax=gdat.maxmresicnts[indxenerplot], cmap='RdBu', scal=gdat.scalmaps)
+    if gdatmodi != None:
+        supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
     make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickresicnts[indxenerplot, :], labl=gdat.lablresicnts[indxenerplot, :])
     plt.tight_layout()
     plt.savefig(path)

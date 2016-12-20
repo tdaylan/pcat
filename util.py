@@ -73,10 +73,20 @@ def retr_indx(gdat, indxpntsfull):
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampspep, indxsampcompcolr
 
 
+def retr_plotpath(gdat, strg, gdatmodi):
+    
+    if gdatmodi == None:
+        path = gdat.pathpost + strg + '.pdf'
+    else:
+        path = gdat.pathfram + strg + '_swep%09d.pdf' % gdatmodi.cntrswep
+    
+    return path
+
+
 def retr_thismodlflux(gdat, gdatmodi):
 
     if gdat.pntstype == 'lens':
-        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = franlens.retr_imaglens(gdat, gdatmodi=gdatmodi)
+        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = retr_imaglens(gdat, gdatmodi=gdatmodi)
     else:
         gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thispntsflux, gdat.indxcube)
 
@@ -3625,11 +3635,11 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.trueminmflux = min(gdat.trueminmflux, amin(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
                 gdat.truemaxmflux = max(gdat.truemaxmflux, amax(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
             
-            gdat.truefluxdistslop = None
-            gdat.truefluxdistbrek = None
-            gdat.truefluxdistsloplowr = None
-            gdat.truefluxdistslopuppr = None
-
+    if sum(gdat.truefixp[gdat.indxfixpnumbpnts]) > 0 or gdat.numbtrap > 0:
+        gdat.inclpnts = True
+    else:
+        gdat.inclpnts = False
+        
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
@@ -4487,21 +4497,13 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
    
     # filter the map
     if thisindxevtt == None:
-        if thisindxener == None:
-            if mean:
-                maps = sum(maps * gdat.expo, axis=2) / sum(gdat.expo, axis=2)
-            else:
-                maps = sum(maps, axis=2)
-        else:
+        if thisindxener != None:
             if mean:
                 maps = sum(maps[thisindxener, :, :] * gdat.expo[thisindxener, :, :], axis=1) / sum(gdat.expo[thisindxener, :, :], axis=1)
             else:
                 maps = sum(maps[thisindxener, :, :], axis=1)
     else:
         maps = maps[thisindxener, :, thisindxevtt]
-    
-    # temp
-    maps = maps.squeeze()
     
     # project the map to 2D
     if gdat.pixltype == 'heal':
@@ -4512,10 +4514,20 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
         mapstemp = empty(gdat.numbsidecart**2)
         mapstemp[gdat.indxpixlrofi] = maps
         maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
-    
-    # rescale the map
-    if scal == 'asnh':
-        maps = arcsinh(maps)
+   
+    if thisindxevtt == None and thisindxener == None:
+        # plot the color of the map
+        mapstemp = sum(maps, 2)
+        mapstemp = maps[0, :] / maps[-1, :]
+        mapstemp /= amax(mapstemp)
+        mapsoutp = zeros((gdat.numbpixl, 3))
+        mapsoutp[0, :] = mapstemp
+        mapsoutp[2, :] = 1. - mapstemp
+        maps = mapsoutp
+    else:
+        # rescale the map
+        if scal == 'asnh':
+            maps = arcsinh(maps)
     
     imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
     
