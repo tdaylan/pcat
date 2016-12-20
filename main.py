@@ -1402,14 +1402,14 @@ def init( \
         gdat.sampvarbmaxmlpos[k] = listgdatmodi[k].sampvarbmaxmlpos
 
     # Gelman-Rubin test
-    gdat.gmrbfixp = zeros(gdat.numbfixp)
-    gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     if gdat.numbproc > 1:
+        gdat.gmrbfixp = zeros(gdat.numbfixp)
+        gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
         if gdat.verbtype > 0:
             print 'Computing the Gelman-Rubin TS...'
             timeinit = gdat.functime()
         for k in gdat.indxfixp:
-            gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listfixp[:, k])
+            gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, gdat.indxfixp[k]])
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 for n in gdat.indxpixlsave:
@@ -1494,7 +1494,6 @@ def init( \
     gdat.info = retr_info(gdat.listllik, gdat.levi)
 
     # parse the sample vector
-    ## fixed-dimensional parameters
     gdat.listfixp = gdat.listsampvarb[:, gdat.indxfixp]
 
     ## PS parameters
@@ -1527,11 +1526,6 @@ def init( \
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
-    
-    # construct a deterministic catalog
-    # temp
-    if gdat.strgcnfg == 'test':
-        retr_detrcatl(gdat)
     
     gdat.listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
     gdat.listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
@@ -1589,6 +1583,11 @@ def init( \
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
+    # construct a deterministic catalog
+    # temp
+    if gdat.strgcnfg == 'test':
+        retr_detrcatl(gdat)
+    
     # construct lists of samples for each proposal type
     gdat.listindxsamptotlprop = []
     gdat.listindxsamptotlpropaccp = []
@@ -1618,9 +1617,9 @@ def init( \
         if gdat.verbtype > 0:
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
    
-    # post process samples to calculate further variables
+    # post process samples
+    ## FWHM
     if gdat.evalcirc:
-        ## FWHM
         gdat.listfwhm = empty((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
         for n in gdat.indxsamptotl:
             if gdat.varioaxi:
@@ -1629,7 +1628,7 @@ def init( \
                 psfn = gdat.listpsfn[n, :, :, :]
             gdat.listfwhm[n, :] = 2. * retr_psfnwdth(gdat, psfn, 0.5)
     
-    # find the spatial mean of maps
+    ## spatial mean of maps
     gdat.liststrgmean = ['modlcnts']
     if gdat.pntstype == 'lght':
         gdat.liststrgmean.append('pntsflux')
@@ -1642,6 +1641,11 @@ def init( \
             temp[n, :] = sum(sum(tempinpt[n, :, :, :] * gdat.expo[gdat.indxcubesave], 2), 1) / sum(sum(gdat.expo[gdat.indxcubesave], 2), 1)
         setattr(gdat, 'list' + strg + 'mean', temp)
 
+    ## prior on the flux distribution
+    gdat.listfluxhistprio = empty((gdat.numbsamptotl, gdat.numbfluxplot))
+    for n in gdat.indxsamptotl:
+        gdat.listfluxhistprio[n, :] = retr_fluxhistprio(gdat, l, gdat.listsampvarb[n, :])
+
     # compute credible intervals
     gdat.liststrgpost = ['fixp', 'modlcnts']
     if gdat.trueinfo:
@@ -1649,7 +1653,7 @@ def init( \
     if gdat.evalcirc:
         gdat.liststrgpost += ['psfn', 'fwhm']
     if gdat.inclpnts:
-        gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist']
+        gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
     if gdat.pntstype == 'lght':
         gdat.liststrgpost += ['pntsflux', 'pntsfluxmean']
         if gdat.numbener > 1:
@@ -1670,7 +1674,9 @@ def init( \
                 meditemp.append(meditempsing)
                 errrtemp.append(errrtempsing)
         else:
+            
             posttemp = tdpy.util.retr_postvarb(listtemp)
+            if 'strg'modlcnts
             meditemp = posttemp[0, :]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
         setattr(gdat, 'post' + strg, posttemp)

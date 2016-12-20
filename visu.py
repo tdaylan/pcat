@@ -548,8 +548,7 @@ def plot_chro(gdat):
         try:
             axcl[k].hist(gdat.listchrototl[indxswepchro, 0], binstime, log=True, label=gdat.strgprop[k])
         except:
-            if gdat.verbtype > 0:
-                print 'Skipping proposal timing plot...'
+            pass
         axcl[k].set_xlim([amin(binstime), amax(binstime)])
         axcl[k].set_ylim([0.5, None])
         axcl[k].set_ylabel(gdat.strgprop[k])
@@ -945,6 +944,11 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
             ydat = gdat.medispechist[l, :, i]
             yerr = gdat.errrspechist[:, l, :, i]
             axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
+        
+            # superimpose posterior on the flux hyperprior
+            ydat = gdat.listfluxhistprio
+            tdpy.util.plot_braz(axis, xdat, ydat, lcol='lightgrey', dcol='grey', labl='Flux prior')
+
         else:
             spec = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][i, gdatmodi.indxmodlpntscomp[l]]
             # temp -- gdat.binsspecplot may be too narrow if there are many energy bins or PS colors are extreme
@@ -955,16 +959,8 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
             
             # superimpose the current prior flux distribution
             if i == gdat.indxenerfluxdist[0]:
-                meanpnts = gdatmodi.thissampvarb[gdat.indxfixpmeanpnts[l]]
-                if gdat.fluxdisttype[l] == 'powr':
-                    fluxdistslop = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]]  
-                    fluxhistmodl = meanpnts * pdfn_flux_powr(gdat, gdat.meanfluxplot, fluxdistslop) * gdat.difffluxplot
-                if gdat.fluxdisttype[l] == 'brok':
-                    fluxdistbrek = gdatmodi.thissampvarb[gdat.indxsampfluxdistbrek[l]]  
-                    fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[l]]  
-                    fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[l]]  
-                    fluxhistmodl = meanpnts * pdfn_flux_brok(gdat, gdat.meanfluxplot, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr) * gdat.difffluxplot
-                axis.plot(gdat.fluxfactplot * gdat.meanspecplot[i, :], fluxhistmodl, ls='--', alpha=gdat.alphmrkr, color='b')
+                fluxhistprio = retr_fluxhistprio(gdat, l, gdatmodi.thissampvarb)
+                axis.plot(gdat.fluxfactplot * gdat.meanspecplot[i, :], fluxhistprio, ls='--', alpha=gdat.alphmrkr, color='b')
 
         if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
             # add another horizontal axis for counts

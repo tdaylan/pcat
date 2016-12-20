@@ -73,6 +73,24 @@ def retr_indx(gdat, indxpntsfull):
     return indxsamplgal, indxsampbgal, indxsampspec, indxsampspep, indxsampcompcolr
 
 
+def retr_fluxhistprio(gdat, l, sampvarb):
+    
+    meanpnts = sampvarb[gdat.indxfixpmeanpnts[l]]
+    if gdat.fluxdisttype[l] == 'powr':
+        fluxdistslop = sampvarb[gdat.indxfixpfluxdistslop[l]]  
+    if gdat.fluxdisttype[l] == 'brok':
+        fluxdistbrek = sampvarb[gdat.indxsampfluxdistbrek[l]]  
+        fluxdistsloplowr = sampvarb[gdat.indxfixpfluxdistsloplowr[l]]  
+        fluxdistslopuppr = sampvarb[gdat.indxfixpfluxdistslopuppr[l]]  
+
+    if gdat.fluxdisttype[l] == 'powr':
+        fluxhistprio = meanpnts * pdfn_flux_powr(gdat, gdat.meanfluxplot, fluxdistslop) * gdat.difffluxplot
+    if gdat.fluxdisttype[l] == 'brok':
+        fluxhistprio = meanpnts * pdfn_flux_brok(gdat, gdat.meanfluxplot, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr) * gdat.difffluxplot
+    
+    return fluxhistprio
+            
+
 def retr_plotpath(gdat, strg, gdatmodi):
     
     if gdatmodi == None:
