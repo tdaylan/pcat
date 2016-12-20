@@ -219,20 +219,25 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            bins = linspace(1., amax(gdat.gmrbstat), 40)
-            axis.hist(gdat.gmrbstat, bins=bins)
+            minm = min(amin(gdat.gmbrstat), amin(gdat.gmbrfixp))
+            maxm = max(amax(gdat.gmbrstat), amax(gdat.gmbrfixp))
+            bins = linspace(minm, maxm, 40)
+            axis.hist(gdat.gmrbstat, bins=bins, label='Data proj.')
+            axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
             axis.set_xlabel('PSRF')
-            axis.set_ylabel('$N_{pix}$')
+            axis.set_ylabel('$N_{stat}$')
             plt.tight_layout()
             plt.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
             plt.close(figr)
             
-            maps = zeros(gdat.numbpixl)
-            maps[gdat.indxpixlsave] = gdat.gmrbstat
-            path = gdat.pathplot + 'diag/gmrbheal.pdf'
-            tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                    minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                    minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    maps = zeros(gdat.numbpixl)
+                    maps[gdat.indxpixlsave] = gdat.gmrbstat[i, :, m]
+                    path = gdat.pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
+                    tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         else:
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 

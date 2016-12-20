@@ -1401,6 +1401,23 @@ def init( \
         gdat.indxswepmaxmlpos[k] = listgdatmodi[k].indxswepmaxmlpos
         gdat.sampvarbmaxmlpos[k] = listgdatmodi[k].sampvarbmaxmlpos
 
+    # Gelman-Rubin test
+    gdat.gmrbfixp = zeros(gdat.numbfixp)
+    gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
+    if gdat.numbproc > 1:
+        if gdat.verbtype > 0:
+            print 'Computing the Gelman-Rubin TS...'
+            timeinit = gdat.functime()
+        for k in gdat.indxfixp:
+            gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listfixp[:, k])
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                for n in gdat.indxpixlsave:
+                    gdat.gmrbstat[i, n, m] = tdpy.mcmc.gmrb_test(gdat.listmodlcnts[:, :, i, n, m])
+        if gdat.verbtype > 0:
+            timefinl = gdat.functime()
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
     # flatten the chain output
     ## PS indices
     gdat.listindxpntsfull = []
@@ -1557,20 +1574,6 @@ def init( \
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
-
-    # Gelman-Rubin test
-    gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
-    if gdat.numbproc > 1:
-        if gdat.verbtype > 0:
-            print 'Computing the Gelman-Rubin TS...'
-            timeinit = gdat.functime()
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                for n in range(gdat.numbpixlsave):
-                    gdat.gmrbstat[i, n, m] = tdpy.mcmc.gmrb_test(gdat.listmodlcnts[:, :, i, n, m])
-        if gdat.verbtype > 0:
-            timefinl = gdat.functime()
-            print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # calculate the autocorrelation of the chains
     if gdat.verbtype > 0:
