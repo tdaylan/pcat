@@ -884,14 +884,14 @@ def plot_fluxsind(gdat, l, gdatmodi, strgtype):
             axis.scatter(flux, sind, alpha=gdat.alphmrkr, color='b', label='Sample')
     
     if gdat.trueinfo and gdat.truespep[l] != None:
-        if strgtype == 'hist':
+        if False:
             axis.hist2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], [gdat.binsfluxplot, gdat.binssind], cmap='Greens', alpha=gdat.alphmrkr)
             #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], bins=[gdat.binsfluxplot, gdat.binssind], )[0]
             #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
         else:
             axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truespep[l][:, 0], alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
         if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprspep != None:
-            if strgtype == 'hist':
+            if False:
                 axis.hist2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprspep[:, 0], [gdat.binsfluxplot, gdat.binssind], cmap='Reds', \
                                                                                                                     alpha=gdat.alphmrkr, label=gdat.nameexpr)
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
@@ -1125,9 +1125,10 @@ def plot_scatpixl(gdat, gdatmodi):
         for i, axis in enumerate(axrw):
            
             if gdatmodi == None:
-                ydat = gdat.medimodlcnts[i, :, m]
+                ydat = gdat.medimodlcnts[i, gdat.indxpixlsave, m]
             else:
                 ydat = gdatmodi.thismodlcnts[i, gdat.indxpixlsave, m]
+            
             axis.scatter(gdat.datacnts[i, gdat.indxpixlsave, m], ydat, alpha=gdat.alphmrkr)
 
             axislimt = [0., amax(gdat.datacnts[i, :, m]) * 1.5]
@@ -1878,11 +1879,15 @@ def plot_histcnts(gdat, l, gdatmodi):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            try:
+    
+            xdat = gdat.meancnts[i, :]
+            if gdatmodi == None:
+                ydat = gdat.medicntshist[l][i, :]
+                yerr = gdat.errrcntshist[l][:, i, :]
+                axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
+            else:
                 axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
-            except:
-                if gdat.verbtype > 0:
-                    print 'Skipping PS count histogram plot...'
+            
             if gdat.trueinfo:
                 try:
                     truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)

@@ -1496,14 +1496,14 @@ def init( \
     # parse the sample vector
     gdat.listfixp = gdat.listsampvarb[:, gdat.indxfixp]
 
-    ## PS parameters
-    gdat.listlgal = [[] for l in gdat.indxpopl]
-    gdat.listbgal = [[] for l in gdat.indxpopl]
-    gdat.listspec = [[] for l in gdat.indxpopl]
-    gdat.listflux = [[] for l in gdat.indxpopl]
-    if gdat.numbener > 1:
-        gdat.listspep = [[] for l in gdat.indxpopl]
     if gdat.numbtrap > 0:
+        # collect PS parameters from the chains
+        gdat.listlgal = [[] for l in gdat.indxpopl]
+        gdat.listbgal = [[] for l in gdat.indxpopl]
+        gdat.listspec = [[] for l in gdat.indxpopl]
+        gdat.listflux = [[] for l in gdat.indxpopl]
+        if gdat.numbener > 1:
+            gdat.listspep = [[] for l in gdat.indxpopl]
         for n in gdat.indxsamptotl: 
             for l in gdat.indxpopl:
                 indxsamplgal, indxsampbgal, indxsampspec, indxsampspep, indxsampcompcolr = retr_indx(gdat, gdat.listindxpntsfull[n])
@@ -1513,16 +1513,19 @@ def init( \
                 gdat.listflux[l].append(gdat.listsampvarb[n, indxsampspec[l]][gdat.indxenerfluxdist[0], :])
                 if gdat.numbener > 1:
                     gdat.listspep[l].append(gdat.listsampvarb[n, indxsampspep[l]])
-                
-        # calculate the radial and azimuthal position 
+        
+        # calculate the PS counts, radial and azimuthal positions 
+        if gdat.pntstype == 'lght':
+            gdat.listcnts = [[] for l in gdat.indxpopl]
         gdat.listgang = [[] for l in gdat.indxpopl]
         gdat.listaang = [[] for l in gdat.indxpopl]
         for l in gdat.indxpopl:
             for n in gdat.indxsamptotl:
                 gdat.listgang[l].append(retr_gang(gdat.listlgal[l][n], gdat.listbgal[l][n]))
                 gdat.listaang[l].append(retr_aang(gdat.listlgal[l][n], gdat.listbgal[l][n]))
+                gdat.listcnts[l].append(retr_pntscnts(gdat, gdat.listlgal[l], gdat.listbgal[l], gdat.listspec[l]))
 
-    ## binned PS parameters
+    ## bin PS parameters
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
@@ -1530,6 +1533,8 @@ def init( \
     gdat.listlgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numblgal))
     gdat.listbgalhist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbbgal))
     gdat.listspechist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbfluxplot, gdat.numbener))
+    if gdat.pntstype == 'lght':
+        gdat.listcntshist = empty((gdat.numbsamptotl, gdat.numbpopl, gdat.numbfluxplot, gdat.numbener, gdat.numbevtt))
     if gdat.numbener > 1:
         gdat.listspephist = []
         gdat.listfluxspephist = []
@@ -1548,6 +1553,9 @@ def init( \
                 gdat.listbgalhist[n, l, :] = histogram(gdat.listbgal[l][n][indxmodlpntscomp], gdat.binsbgal)[0]
                 for i in gdat.indxener:
                     gdat.listspechist[n, l, :, i] = histogram(gdat.listspec[l][n][i, indxmodlpntscomp], gdat.binsspecplot[i, :])[0]
+                    if gdat.pntstype == 'lght':
+                        for m in gdat.indxevtt:
+                            gdat.listcntshist[n, l, :, i, m] = histogram(gdat.listcnts[l][n][i, indxmodlpntscomp, m], gdat.binscntsplot[i, :])[0]
                 if gdat.numbener > 1:
                     for p in gdat.indxspep[l]:
                         gdat.listspephist[l][n, p, :] = histogram(gdat.listspep[l][n][indxmodlpntscomp, p], gdat.binsspep[:, p])[0]
@@ -1657,7 +1665,7 @@ def init( \
         gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
     if gdat.pntstype == 'lght':
         gdat.liststrgpostsave += ['pntsflux']
-        gdat.liststrgpost += ['pntsfluxmean']
+        gdat.liststrgpost += ['cntshist', 'pntsfluxmean']
     if gdat.pntstype == 'lens':
         gdat.liststrgpostsave += ['defl']
     if gdat.numbener > 1:

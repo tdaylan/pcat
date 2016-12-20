@@ -2804,10 +2804,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbfluxdistpara = 4
     
     gdat.listlablcompfrac = ['Data']
-    if gdat.pntstype == 'lght':
-        gdat.listlablcompfrac.append('PS')
     if gdat.pntstype == 'lght' or gdat.numbback > 1:
         gdat.listlablcompfrac.append('Total Model')
+    if gdat.pntstype == 'lght':
+        gdat.listlablcompfrac.append('PS')
     gdat.listlablcompfrac += gdat.lablback
     gdat.numblablcompfrac = len(gdat.listlablcompfrac)
 
@@ -3424,6 +3424,16 @@ def diag_gdatmodi(gdatmodi, gdatmodiprev):
     print
 
 
+def retr_pntscnts(gdat, lgal, bgal, spec):
+    
+    indxpixltemp = retr_indxpixl(gdat, bgal, lgal)
+    cnts = empty((gdat.numbener, lgal.size, gdat.numbevtt))
+    for k in range(lgal.size):
+        cnts[:, k, :] += spec[:, indxpixltemp[k], None] * gdat.expo[:, indxpixltemp[k], :] * gdat.diffener[:, None]
+
+    return cnts
+
+
 def setpfinl(gdat, boolinitsetp=False):
 
     # get the experimental catalog
@@ -3705,6 +3715,8 @@ def setpfinl(gdat, boolinitsetp=False):
                     print '%20s%20s%5s%20.6g%20.6g%s' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k], strg)
                 else:
                     print '%20s%20s%5s%20.6g%20.6g' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k])
+
+
 
     if gdat.trueinfo and gdat.correxpo and gdat.pntstype == 'lght':
         truebackcnts = []
@@ -4447,7 +4459,10 @@ def retr_indxoaxipnts(gdat, lgal, bgal):
 def init_figr(gdat, strgplot, gdatmodi=None, indxenerplot=None, indxevttplot=None, indxpoplplot=None, pathfold=None):
 
     if pathfold == None:
-        pathfold = gdat.pathfram
+        if gdatmodi != None:
+            pathfold = gdat.pathfram
+        else:
+            pathfold = gdat.pathpost
 
     figr, axis = plt.subplots(figsize=(gdat.sizeimag, gdat.sizeimag))
     
