@@ -2014,7 +2014,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
                 if gdat.enerbins:
                     gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
-
+                gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
                 gdatmodi.listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[gdat.indxcubesave]
                 gdatmodi.listresicnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thisresicnts[gdat.indxcubesave]
                 if gdat.pntstype == 'lght':
