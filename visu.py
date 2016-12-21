@@ -225,8 +225,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-            minm = min(amin(gdat.gmbrstat), amin(gdat.gmbrfixp))
-            maxm = max(amax(gdat.gmbrstat), amax(gdat.gmbrfixp))
+            minm = min(amin(gdat.gmrbstat), amin(gdat.gmrbfixp))
+            maxm = max(amax(gdat.gmrbstat), amax(gdat.gmrbfixp))
             bins = linspace(minm, maxm, 40)
             axis.hist(gdat.gmrbstat, bins=bins, label='Data proj.')
             axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
