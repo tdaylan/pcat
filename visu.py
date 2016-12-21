@@ -228,7 +228,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             minm = min(amin(gdat.gmrbstat), amin(gdat.gmrbfixp))
             maxm = max(amax(gdat.gmrbstat), amax(gdat.gmrbfixp))
             bins = linspace(minm, maxm, 40)
-            axis.hist(gdat.gmrbstat, bins=bins, label='Data proj.')
+            axis.hist(gdat.gmrbstat.flatten(), bins=bins, label='Data proj.')
             axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{stat}$')
