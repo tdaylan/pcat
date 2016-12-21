@@ -1661,11 +1661,6 @@ def init( \
             gdat.listconv[n, :, :] = retr_conv(gdat, gdat.listdefl[n, :, :, :]) 
             gdat.listconvpsec[n, :, :] = retr_psec(gdat, gdat.listconv[n, :, :])
             gdat.listconvpsecodim[n, :] = retr_psecodim(gdat, gdat.listconvpsec[n, :, :]) 
-            print 'retr_psec(gdat, gdat.listconv[n, :, :])'
-            print retr_psec(gdat, gdat.listconv[n, :, :])
-            print 'retr_psecodim(gdat, gdat.listconvpsec[n, :, :])'
-            print retr_psecodim(gdat, gdat.listconvpsec[n, :, :])
-            print
 
     ## prior on the flux distribution
     if gdat.numbtrap > 0:

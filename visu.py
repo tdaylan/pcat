@@ -138,7 +138,7 @@ def plot_samp(gdat, gdatmodi=None):
             plot_scatpixl(gdat, gdatmodi)
     
     if gdat.pntstype == 'lens':
-        plot_conv(gdat, gdatmodi)
+        plot_genemaps(gdat, 'conv', gdatmodi)
         plot_gene(gdat, gdatmodi, 'convpsecodim', 'wvecodim', scal='logt', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$')
 
     for l in gdat.indxpopl:
@@ -1037,7 +1037,7 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
         strg = 'spec'
     else:
         strg = 'flux'
-    path = retr_plotpath(gdat, 'hist%s_pop%d' % (strg, l), gdatmodi)
+    path = retr_plotpath(gdat, 'hist%s%d' % (strg, l), gdatmodi)
     plt.savefig(path)
     plt.close(figr)
     
@@ -1058,12 +1058,16 @@ def plot_gene(gdat, gdatmodi, strgplot, strgxdat, scal=None, scalxaxi=None, scal
     xdat = getattr(gdat, 'mean' + strgxdat)
     if gdatmodi == None:
         ydat = getattr(gdat, 'medi' + strgplot)
+        yerr = getattr(gdat, 'errr' + strgplot)
+        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', color='black', markersize=5)
     else:
         ydat = getattr(gdatmodi, 'this' + strgplot)
-    
-    axis.plot(xdat, ydat)
+        axis.plot(xdat, ydat)
+
     if scalxaxi == 'logt':
         axis.set_xscale('log')
+    if scalyaxi == 'logt':
+        axis.set_yscale('log')
     
     axis.set_xlabel(lablxaxi)
     axis.set_ylabel(lablyaxi)
@@ -1821,7 +1825,7 @@ def make_anim(gdat):
 
     listname = ['psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
     listname += ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
-    listname += ['datacnts', 'resicnts', 'modlcnts', 'defl']
+    listname += ['datacnts', 'resicnts', 'modlcnts', 'defl', 'convpsecodim', 'conv', 'convpsec']
     listname += ['factoaxi', 'errr', 'errrcnts']
 
     gdat.pathanim = gdat.pathplot + 'anim/'
@@ -2004,24 +2008,20 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     plt.close(figr)
     
     
-def plot_conv(gdat, gdatmodi):
+def plot_genemaps(gdat, strg, gdatmodi):
     
-    figr, axis, path = init_figr(gdat, 'modlconv', gdatmodi)
-    #make_catllabl(gdat, axis)
+    figr, axis, path = init_figr(gdat, strg, gdatmodi)
     if gdatmodi == None:
-        conv = gdat.mediconv
+        maps = getattr(gdat, 'medi' + strg)
     else:
-        conv = gdatmodi.thisconv
+        maps = getattr(gdatmodi, 'this' + strg)
     
     # temp
-    conv = conv.flatten()[None, :, None]
+    maps = maps.flatten()[None, :, None]
 
-    imag = retr_imag(gdat, axis, conv, cmap='Purples')
+    imag = retr_imag(gdat, axis, maps, cmap='Purples')
     make_cbar(gdat, axis, imag)
-    #imag = axis.imshow(conv, cmap='Purples')
-    #plt.colorbar(imag) 
 
-    #supr_fram(gdat, gdatmodi, axis)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
