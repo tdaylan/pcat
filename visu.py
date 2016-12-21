@@ -222,7 +222,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     gdat.strgbest = 'ML'
     
     # Gelman-Rubin test
-    if gdat.numbproc > 1:
+    # temp
+    if False and gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             minm = min(amin(gdat.gmrbstat), amin(gdat.gmrbfixp))
