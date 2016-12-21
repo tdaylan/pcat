@@ -1523,7 +1523,8 @@ def init( \
             for n in gdat.indxsamptotl:
                 gdat.listgang[l].append(retr_gang(gdat.listlgal[l][n], gdat.listbgal[l][n]))
                 gdat.listaang[l].append(retr_aang(gdat.listlgal[l][n], gdat.listbgal[l][n]))
-                gdat.listcnts[l].append(retr_pntscnts(gdat, gdat.listlgal[l], gdat.listbgal[l], gdat.listspec[l]))
+                if gdat.pntstype == 'lght':
+                    gdat.listcnts[l].append(retr_pntscnts(gdat, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n]))
 
     ## bin PS parameters
     if gdat.verbtype > 0:
@@ -1555,7 +1556,9 @@ def init( \
                     gdat.listspechist[n, l, :, i] = histogram(gdat.listspec[l][n][i, indxmodlpntscomp], gdat.binsspecplot[i, :])[0]
                     if gdat.pntstype == 'lght':
                         for m in gdat.indxevtt:
-                            gdat.listcntshist[n, l, :, i, m] = histogram(gdat.listcnts[l][n][i, indxmodlpntscomp, m], gdat.binscntsplot[i, :])[0]
+                            #print 'gdat.listcnts[l][n][i, indxmodlpntscomp, m]'
+                            #print gdat.listcnts[l][n][i, indxmodlpntscomp, m]
+                            gdat.listcntshist[n, l, :, i, m] = histogram(gdat.listcnts[l][n][i, indxmodlpntscomp, m], gdat.binscnts[i, :])[0]
                 if gdat.numbener > 1:
                     for p in gdat.indxspep[l]:
                         gdat.listspephist[l][n, p, :] = histogram(gdat.listspep[l][n][indxmodlpntscomp, p], gdat.binsspep[:, p])[0]
@@ -1605,7 +1608,8 @@ def init( \
         gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
         gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
 
-    # cross correlation with the reference catalog
+    # post process samples
+    ## cross correlation with the reference catalog
     if gdat.numbtrap > 0 and gdat.trueinfo:
         
         if gdat.verbtype > 0:
@@ -1625,7 +1629,6 @@ def init( \
         if gdat.verbtype > 0:
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
    
-    # post process samples
     ## FWHM
     if gdat.evalcirc:
         gdat.listfwhm = empty((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt))
@@ -1649,28 +1652,48 @@ def init( \
             temp[n, :] = sum(sum(tempinpt[n, :, :, :] * gdat.expo[gdat.indxcubesave], 2), 1) / sum(sum(gdat.expo[gdat.indxcubesave], 2), 1)
         setattr(gdat, 'list' + strg + 'mean', temp)
 
+    ## lensing variables
+    if gdat.pntstype == 'lens':
+        gdat.listconv = empty((gdat.numbsamptotl, gdat.numbsidecart, gdat.numbsidecart))
+        gdat.listconvpsec = empty((gdat.numbsamptotl, gdat.numbsidewvec, gdat.numbsidewvec))
+        gdat.listconvpsecodim = empty((gdat.numbsamptotl, gdat.numbwvecodim))
+        for n in gdat.indxsamptotl:
+            gdat.listconv[n, :, :] = retr_conv(gdat, gdat.listdefl[n, :, :, :]) 
+            gdat.listconvpsec[n, :, :] = retr_psec(gdat, gdat.listconv[n, :, :])
+            gdat.listconvpsecodim[n, :] = retr_psecodim(gdat, gdat.listconvpsec[n, :, :]) 
+            print 'retr_psec(gdat, gdat.listconv[n, :, :])'
+            print retr_psec(gdat, gdat.listconv[n, :, :])
+            print 'retr_psecodim(gdat, gdat.listconvpsec[n, :, :])'
+            print retr_psecodim(gdat, gdat.listconvpsec[n, :, :])
+            print
+
     ## prior on the flux distribution
-    gdat.listfluxhistprio = empty((gdat.numbsamptotl, gdat.numbfluxplot))
-    for n in gdat.indxsamptotl:
-        gdat.listfluxhistprio[n, :] = retr_fluxhistprio(gdat, l, gdat.listsampvarb[n, :])
+    if gdat.numbtrap > 0:
+        gdat.listfluxhistprio = empty((gdat.numbsamptotl, gdat.numbfluxplot))
+        for n in gdat.indxsamptotl:
+            gdat.listfluxhistprio[n, :] = retr_fluxhistprio(gdat, l, gdat.listsampvarb[n, :])
 
     # compute credible intervals
-    gdat.liststrgpostsave = ['modlcnts', 'resicnts']
+    gdat.liststrgpostsaveodim = ['modlcnts', 'resicnts']
+    gdat.liststrgpostsavetdim = []
     gdat.liststrgpost = ['fixp']
-    if gdat.trueinfo:
-        gdat.liststrgpost += ['specassc']
-    if gdat.evalcirc:
-        gdat.liststrgpost += ['psfn', 'fwhm']
-    if gdat.inclpnts:
-        gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
-    if gdat.pntstype == 'lght':
-        gdat.liststrgpostsave += ['pntsflux']
-        gdat.liststrgpost += ['cntshist', 'pntsfluxmean']
     if gdat.pntstype == 'lens':
-        gdat.liststrgpostsave += ['defl']
-    if gdat.numbener > 1:
-        gdat.liststrgpost += ['spephist', 'fluxspephist']
-    gdat.liststrgpost += gdat.liststrgpostsave
+        gdat.liststrgpost += ['defl', 'conv', 'convpsec', 'convpsecodim']
+    if gdat.numbtrap > 0:
+        gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
+        if gdat.evalcirc:
+            gdat.liststrgpost += ['psfn', 'fwhm']
+        if gdat.trueinfo:
+            gdat.liststrgpost += ['specassc']
+        if gdat.pntstype == 'lght':
+            gdat.liststrgpostsaveodim += ['pntsflux']
+            gdat.liststrgpost += ['cntshist', 'pntsfluxmean']
+        if gdat.numbener > 1:
+            gdat.liststrgpost += ['spephist', 'fluxspephist']
+    #if gdat.pntstype == 'lens':
+    #    gdat.liststrgpostsavetdim += ['defl']
+    gdat.liststrgpost += gdat.liststrgpostsaveodim
+    gdat.liststrgpost += gdat.liststrgpostsavetdim
     for strg in gdat.liststrgpost:
         listtemp = getattr(gdat, 'list' + strg)
         if isinstance(listtemp, list):
@@ -1687,15 +1710,11 @@ def init( \
         else:
             
             posttemp = tdpy.util.retr_postvarb(listtemp)
-            if strg in gdat.liststrgpostsave:
-                if gdat.pntstype == 'lght':
-                    posttemptemp = zeros((3, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-                    posttemptemp[:, :, gdat.indxpixlsave, :] = posttemp 
-                else:
-                    posttemptemp = zeros((3, gdat.numbsidecar, gdat.numsidecart, 2))
-                    posttemptemp[:, gdat.indxsidesave[0], gdat.indxsidesave[1], :] = posttemp 
+            if strg in gdat.liststrgpostsaveodim:
+                posttemptemp = zeros((3, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                posttemptemp[:, :, gdat.indxpixlsave, :] = posttemp 
                 posttemp = posttemptemp
-
+            
             meditemp = posttemp[0, :]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
         setattr(gdat, 'post' + strg, posttemp)

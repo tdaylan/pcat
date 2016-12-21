@@ -33,13 +33,6 @@ def plot_samp(gdat, gdatmodi=None):
 
             # PSF FWHM
             gdatmodi.thisfwhm = 2. * retr_psfnwdth(gdat, gdatmodi.thispsfn, 0.5)
-            
-            # temp
-            #if gdat.varioaxi:
-            #    indxoaxitemp = retr_indxoaxipnts(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-            #    fwhmtemp = gdatmodi.thisfwhm[:, :, indxoaxitemp]
-            #else:
-            #    fwhmtemp = gdatmodi.thisfwhm
    
         if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
             # number of background counts per PSF
@@ -87,7 +80,12 @@ def plot_samp(gdat, gdatmodi=None):
                 temp = where(indxmodl >= 0)[0]
                 gdatmodi.thisspecassc[l][:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
                 gdatmodi.thisspecassc[l][:, gdatmodi.trueindxpntsassc[l].miss] = 0.
-               
+
+        if gdat.pntstype == 'lens':
+            gdatmodi.thisconv = retr_conv(gdat, gdatmodi.thisdefl) 
+            gdatmodi.thisconvpsec = retr_psec(gdat, gdatmodi.thisconv)
+            gdatmodi.thisconvpsecodim = retr_psecodim(gdat, gdatmodi.thisconvpsec) 
+
     # plots
     ## frame-only
     if gdatmodi != None:
@@ -139,6 +137,10 @@ def plot_samp(gdat, gdatmodi=None):
         for m in gdat.indxevttplot:
             plot_scatpixl(gdat, gdatmodi)
     
+    if gdat.pntstype == 'lens':
+        plot_conv(gdat, gdatmodi)
+        plot_gene(gdat, gdatmodi, 'convpsecodim', 'wvecodim', scal='logt', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$')
+
     for l in gdat.indxpopl:
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
@@ -150,12 +152,16 @@ def plot_samp(gdat, gdatmodi=None):
                     plot_defl(gdat, gdatmodi)
 
                     if gdatmodi != None:
-                        numbpntsplot = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
-                        indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
-                        lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
-                        bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
-                        bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]
                         
+
+                        if gdat.inclpnts:
+                            numbpntsplot = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
+                            indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
+                            lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
+                            bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
+                            bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]
+                        else:
+                            numbpntsplot = 0
                         numbplot = numbpntsplot + 1
                         for k in range(numbplot):
                             if k == 0:
@@ -962,6 +968,15 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
                 fluxhistprio = retr_fluxhistprio(gdat, l, gdatmodi.thissampvarb)
                 axis.plot(gdat.fluxfactplot * gdat.meanspecplot[i, :], fluxhistprio, ls='--', alpha=gdat.alphmrkr, color='b')
 
+        if gdat.pntstype == 'lens':
+            axiscnts = axis.twiny()
+            axiscnts.set_xscale('log')
+            axiscnts.set_xlabel(r'$M$ [$M_{\odot}$]')
+            axiscnts.spines['bottom'].set_position(('axes', 1.))
+            axiscnts.set_xlim([gdat.minmmass, gdat.maxmmass])
+            axiscnts.xaxis.set_ticks_position('bottom')
+            axiscnts.xaxis.set_label_position('bottom')
+           
         if gdat.pixltype != 'unbd' and gdat.pntstype == 'lght':
             # add another horizontal axis for counts
             axiscnts = axis.twiny()
@@ -1026,6 +1041,38 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
     plt.savefig(path)
     plt.close(figr)
     
+
+def plot_gene(gdat, gdatmodi, strgplot, strgxdat, scal=None, scalxaxi=None, scalyaxi=None, lablxaxi='', lablyaxi=''):
+    
+    if scal == None:
+        if scalxaxi == None:
+            scalxaxi = 'linr'
+        if scalyaxi == None:
+            scalyaxi = 'linr'
+    else:
+        scalxaxi = scal
+        scalyaxi = scal
+
+    figr, axis = plt.subplots(figsize=(gdat.plotsize * gdat.numbener, gdat.plotsize))
+
+    xdat = getattr(gdat, 'mean' + strgxdat)
+    if gdatmodi == None:
+        ydat = getattr(gdat, 'medi' + strgplot)
+    else:
+        ydat = getattr(gdatmodi, 'this' + strgplot)
+    
+    axis.plot(xdat, ydat)
+    if scalxaxi == 'logt':
+        axis.set_xscale('log')
+    
+    axis.set_xlabel(lablxaxi)
+    axis.set_ylabel(lablyaxi)
+
+    plt.tight_layout()
+    path = retr_plotpath(gdat, strgplot, gdatmodi)
+    plt.savefig(path)
+    plt.close(figr)
+
 
 def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
     
@@ -1773,55 +1820,52 @@ def plot_3fgl_thrs(gdat):
 def make_anim(gdat):
 
     listname = ['psfnprof', 'compfrac', 'compfracspec', 'scatpixl']
-    listnamepopl = ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
-    listnamepoplenerevtt = ['datacnts', 'resicnts', 'modlcnts', 'defl']
-    listnameenerevtt = ['factoaxi', 'errr', 'errrcnts']
-    for l in gdat.indxpopl:
-        for k in range(len(listnamepopl)):
-            listname.append('%s_pop%d' % (listnamepopl[k], l))
-        for i in gdat.indxener:
-            for m in gdat.indxevttplot:
-                if m == None:
-                    strgevtt = 'A'
-                else:
-                    strgevtt = '%d' % m
-                for k in range(len(listnamepoplenerevtt)):
-                    listname.append('%s%d%s%d' % (listnamepoplenerevtt[k], i, strgevtt, l))
-                for k in range(len(listnameenerevtt)):
-                    listname.append('%s_%d%s' % (listnameenerevtt[k], i, strgevtt))
+    listname += ['histspec', 'histflux', 'scatfluxsind', 'histfluxsind', 'histcnts', 'histsind', 'scatspec']
+    listname += ['datacnts', 'resicnts', 'modlcnts', 'defl']
+    listname += ['factoaxi', 'errr', 'errrcnts']
 
-    pathanim = gdat.pathplot + 'anim/'
+    gdat.pathanim = gdat.pathplot + 'anim/'
 
-    os.system('mkdir -p %s' % pathanim)
+    os.system('mkdir -p %s' % gdat.pathanim)
     if gdat.verbtype > 0:
         print 'Making animations...'
     for name in listname:
-    
-        strg = '%s_swep*.pdf' % name
-        listfile = fnmatch.filter(os.listdir(gdat.pathfram), strg)
         
+        strgswep = '%s*_swep*.pdf' % name
+        listfile = fnmatch.filter(os.listdir(gdat.pathfram), strgswep)
         numbfile = len(listfile)
-        indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
-        if indxfilelowr < numbfile:
-            indxfileanim = arange(indxfilelowr, numbfile)
-        else:
-            indxfileanim = array([])
-      
-        if indxfileanim.size == 0:
-            if gdat.verbtype > 0:
-                print 'Skipping animation for %s...' % name
-            continue
-        else:
-            if gdat.verbtype > 0:
-                print 'Producing animation for %s...' % name
+        liststrgextn = []
+        for k in range(numbfile):
+            liststrgextn.append((listfile[k].split(name)[1]).split('_')[0])
+        
+        liststrgextn = list(set(liststrgextn))
+        
+        for k in range(len(liststrgextn)):
+    
+            listfile = fnmatch.filter(os.listdir(gdat.pathfram), name + liststrgextn[k] + '_swep*.pdf')
+            numbfile = len(listfile)
             
-        indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
-
-        cmnd = 'convert -delay 20 -density 300 -quality 100 '
-        for k in range(indxfileanim.size):
-            cmnd += '%s%s ' % (gdat.pathfram, listfile[indxfileanim[k]])
-        cmnd += ' %s%s.gif' % (pathanim, name)
-        os.system(cmnd)
+            indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
+            if indxfilelowr < numbfile:
+                indxfileanim = arange(indxfilelowr, numbfile)
+            else:
+                indxfileanim = array([])
+          
+            if indxfileanim.size == 0:
+                if gdat.verbtype > 0:
+                    print 'Skipping animation for %s...' % name
+                continue
+            else:
+                if gdat.verbtype > 0:
+                    print 'Producing animation for %s...' % name
+                
+            indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
+   
+            cmnd = 'convert -delay 20 -density 300 -quality 100 '
+            for n in range(indxfileanim.size):
+                cmnd += '%s%s ' % (gdat.pathfram, listfile[indxfileanim[n]])
+            cmnd += ' %s%s.gif' % (gdat.pathanim, name + liststrgextn[k])
+            os.system(cmnd)
 
        
 def plot_opti(gdat, gdatmodi):
@@ -1936,11 +1980,11 @@ def plot_defl(gdat, gdatmodi, defl=None, indxdefl=None):
     fact = 10
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
-                                                                      gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact])
+                                                 gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], units='xy')
   
     if gdatmodi != None:
         supr_fram(gdat, gdatmodi, axis, 0, 0)
-    plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
+    #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
     plt.savefig(path)
     plt.close(figr)
     
@@ -1960,6 +2004,29 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
     plt.close(figr)
     
     
+def plot_conv(gdat, gdatmodi):
+    
+    figr, axis, path = init_figr(gdat, 'modlconv', gdatmodi)
+    #make_catllabl(gdat, axis)
+    if gdatmodi == None:
+        conv = gdat.mediconv
+    else:
+        conv = gdatmodi.thisconv
+    
+    # temp
+    conv = conv.flatten()[None, :, None]
+
+    imag = retr_imag(gdat, axis, conv, cmap='Purples')
+    make_cbar(gdat, axis, imag)
+    #imag = axis.imshow(conv, cmap='Purples')
+    #plt.colorbar(imag) 
+
+    #supr_fram(gdat, gdatmodi, axis)
+    plt.tight_layout()
+    plt.savefig(path)
+    plt.close(figr)
+    
+
 def plot_modlcnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
 
     figr, axis, path = init_figr(gdat, 'modlcnts', gdatmodi, indxenerplot, indxevttplot, indxpoplplot)

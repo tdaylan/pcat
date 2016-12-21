@@ -2621,6 +2621,31 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
     return psfn
 
 
+def retr_axis(gdat, strg, minm=None, maxm=None, numb=None, bins=None, scal='self'):
+    
+    if bins == None:
+        if scal == 'self':
+            bins = linspace(minm, maxm, numb + 1)
+            mean = (bins[1:] + bins[:-1]) / 2.
+        else:
+            bins = logspace(log10(minm), log10(maxm), numb + 1)
+            mean = sqrt(bins[1:] * bins[:-1])
+    else:
+        if scal == 'self':
+            mean = (bins[1:] + bins[:-1]) / 2.
+        else:
+            mean = sqrt(bins[1:] * bins[:-1])
+        numb = mean.size
+    indx = arange(numb)
+    delt = diff(bins) 
+
+    setattr(gdat, 'bins' + strg, bins)
+    setattr(gdat, 'mean' + strg, mean)
+    setattr(gdat, 'delt' + strg, delt)
+    setattr(gdat, 'numb' + strg, numb)
+    setattr(gdat, 'indx' + strg, indx)
+
+
 def retr_unit(lgal, bgal):
 
     xaxi = cos(bgal) * cos(lgal)
@@ -2628,6 +2653,24 @@ def retr_unit(lgal, bgal):
     zaxi = sin(bgal)
 
     return xaxi, yaxi, zaxi
+
+
+def retr_psec(gdat, conv):
+
+    psec = (abs(fft.fft2(conv))**2)[:gdat.numbsidecart/2, :gdat.numbsidecart/2]
+    # temp
+    #psec = 
+
+    return psec
+    
+def retr_psecodim(gdat, psec):
+
+    psecodim = empty(gdat.numbwvecodim)
+    for k in gdat.indxwvecodim:
+        indxwvec = where((gdat.meanwvec > gdat.binswvecodim[k]) & (gdat.meanwvec < gdat.binswvecodim[k+1]))
+        psecodim[k] = mean(psec[indxwvec])
+    
+    return psecodim
 
 
 def retr_randunitpsfp(gdat):
@@ -2661,6 +2704,13 @@ def retr_varb(gdat, strg, gdatmodi=None, perc='medi'):
         varb = getattr(gdat, perc + strg)
 
     return varb
+
+
+def retr_massfrombein(bein):
+    
+    mass = 10**12 * (bein / (1.8 * pi / 3600. / 180.))**2
+    
+    return mass
 
 
 def retr_eerrnorm(minmvarb, maxmvarb, meanvarb, stdvvarb):
@@ -2748,7 +2798,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxpntstotl = arange(gdat.maxmnumbpntstotl)
     gdat.maxmnumbpntscumr = cumsum(gdat.maxmnumbpnts)
     gdat.maxmnumbpntscuml = concatenate((array([0]), gdat.maxmnumbpntscumr[:-1]))
-    
+   
     # minimum number of PS
     gdat.minmnumbpnts = zeros(gdat.numbpopl, dtype=int)
    
@@ -2795,7 +2845,12 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.liststrgpntspara = ['lgal', 'bgal'] + list(set([strg for strg in gdat.liststrgfluxspep[l] for l in gdat.indxpopl]))
     for strgpntspara in gdat.liststrgpntspara:
         setattr(gdat, 'numb' + strgpntspara + 'plot', 20)
-    
+   
+    if gdat.pntstype == 'lens':
+        gdat.minmmass = retr_massfrombein(gdat.minmflux)
+        gdat.maxmmass = retr_massfrombein(gdat.maxmflux)
+        retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, 10)
+
     gdat.indxspepsind = 0
     gdat.indxspepcurv = 1
     gdat.indxspepexpo = 2
@@ -3033,10 +3088,10 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.apix = (2. * gdat.maxmgang / gdat.numbsidecart)**2
             gdat.sizepixl = sqrt(gdat.apix)
             gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
-            indxsidecart = arange(gdat.numbsidecart)
-            temp = meshgrid(indxsidecart, indxsidecart, indexing='ij')
-            gdat.bgalgrid = gdat.bgalcart[temp[1].flatten()]
-            gdat.lgalgrid = gdat.lgalcart[temp[0].flatten()]
+            gdat.indxsidecart = arange(gdat.numbsidecart)
+            gdat.indxsidemesh = meshgrid(gdat.indxsidecart, gdat.indxsidecart, indexing='ij')
+            gdat.bgalgrid = gdat.bgalcart[gdat.indxsidemesh[1].flatten()]
+            gdat.lgalgrid = gdat.lgalcart[gdat.indxsidemesh[0].flatten()]
             gdat.shapcart = (gdat.numbsidecart, gdat.numbsidecart)
             gdat.lgalgridcart = gdat.lgalgrid.reshape(gdat.shapcart)
             gdat.bgalgridcart = gdat.bgalgrid.reshape(gdat.shapcart)
@@ -3066,6 +3121,22 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.jcbnsplt = 2.**(2 - gdat.numbener)
     
+    # power spectra
+    if gdat.pixltype == 'cart':
+        gdat.factkpcs = 1e-6
+        gdat.numbwvecodim = 40
+        gdat.indxwvecodim = arange(gdat.numbwvecodim)
+        gdat.minmwvecodim = 2. * pi / sqrt(2) / gdat.maxmgang * gdat.factkpcs # [1/kpc]
+        gdat.maxmwvecodim = 2. * pi / gdat.sizepixl * gdat.factkpcs
+        gdat.binswvecodim = linspace(gdat.minmwvecodim, gdat.maxmwvecodim, gdat.numbwvecodim + 1)
+        gdat.meanwvecodim = (gdat.binswvecodim[1:] + gdat.binswvecodim[:-1]) / 2.
+        gdat.numbsidewvec = gdat.numbsidecart / 2
+        temp = fft.fftfreq(gdat.numbsidewvec, gdat.sizepixl)
+        gdat.meanwveclgal, gdat.meanwvecbgal = meshgrid(temp, temp, indexing='ij')
+        gdat.meanwveclgal *= gdat.factkpcs
+        gdat.meanwvecbgal *= gdat.factkpcs
+        gdat.meanwvec = sqrt(gdat.meanwveclgal**2 + gdat.meanwvecbgal**2)
+
     # component indices
     gdat.indxcomplgal = 0
     gdat.indxcompbgal = 1
@@ -3345,6 +3416,13 @@ def retr_detrcatl(gdat):
                 detrcatl.append(catl) 
 
 
+def retr_conv(gdat, defl):
+    
+    conv = (gradient(defl[:, :, 0], gdat.sizepixl, axis=0) + gradient(defl[:, :, 1], gdat.sizepixl, axis=1)) / 2.
+
+    return conv
+
+
 def diag_gdatmodi(gdatmodi, gdatmodiprev):
 
     listvalu = []
@@ -3427,9 +3505,11 @@ def diag_gdatmodi(gdatmodi, gdatmodiprev):
 def retr_pntscnts(gdat, lgal, bgal, spec):
     
     indxpixltemp = retr_indxpixl(gdat, bgal, lgal)
+    print 'indxpixltemp'
+    print indxpixltemp
     cnts = empty((gdat.numbener, lgal.size, gdat.numbevtt))
     for k in range(lgal.size):
-        cnts[:, k, :] += spec[:, indxpixltemp[k], None] * gdat.expo[:, indxpixltemp[k], :] * gdat.diffener[:, None]
+        cnts[:, k, :] += spec[:, k, None] * gdat.expo[:, indxpixltemp[k], :] * gdat.diffener[:, None]
 
     return cnts
 
@@ -3567,7 +3647,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.numbpixlsave = min(1000, gdat.numbpixl)
     gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
     gdat.indxcubesave = meshgrid(gdat.indxener, gdat.indxpixlsave, gdat.indxevtt, indexing='ij')
-    
     if gdat.correxpo:
         # limits on counts, which are used to bin or overplot PS counts 
         gdat.minmcnts = gdat.minmflux * mean(mean(gdat.expo, 1), 1)
@@ -3578,7 +3657,8 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.binscnts = zeros((gdat.numbener, gdat.numbfluxplot + 1))
         for i in gdat.indxener:
             gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbfluxplot + 1) # [1]
-   
+        gdat.meancnts = sqrt(gdat.binscnts[:, :-1] * gdat.binscnts[:, 1:]) 
+    
     # temp -- gdat.numbfixp should change
     gdat.truefixp = zeros(gdat.numbfixp) + nan
     # load the true data into the reference data structure
@@ -4521,7 +4601,10 @@ def retr_scat(gdat, axis, maps, thisindxener, thisindxevtt):
     return scat
 
 
-def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=False, vmin=None, vmax=None, scal=None):
+def retr_imag(gdat, axis, maps, thisindxener=None, thisindxevtt=None, cmap='Reds', mean=False, vmin=None, vmax=None, scal=None):
+
+    if scal == None:
+        scal = gdat.scalmaps
 
     if vmin == None and vmax != None:
         vmin = -vmax
@@ -4548,7 +4631,7 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
         mapstemp[gdat.indxpixlrofi] = maps
         maps = mapstemp.reshape((gdat.numbsidecart, gdat.numbsidecart)).T
    
-    if thisindxevtt == None and thisindxener == None:
+    if gdat.numbener > 1 and thisindxevtt == None and thisindxener == None:
         # plot the color of the map
         mapstemp = sum(maps, 2)
         mapstemp = maps[0, :] / maps[-1, :]
@@ -4570,11 +4653,11 @@ def retr_imag(gdat, axis, maps, thisindxener, thisindxevtt, cmap='Reds', mean=Fa
 def make_cbar(gdat, axis, imag, indxenerplot=None, tick=None, labl=None):
 
     # make a color bar
-    if indxenerplot != None:
-        cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
-        if tick != None and labl != None:
-            cbar.set_ticks(tick)
-            cbar.set_ticklabels(labl)
+    cbar = plt.colorbar(imag, ax=axis, fraction=0.05)
+    if tick != None and labl != None:
+        cbar.set_ticks(tick)
+        cbar.set_ticklabels(labl)
+    
     return cbar
 
 
