@@ -1,228 +1,167 @@
 from __init__ import *
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import numpy as np
 from scipy import signal
 from astropy.convolution import convolve, AiryDisk2DKernel
 
 class Params(object):
-    """
-    The main parameter class, used to define 
-    the lensmodel and source parameters. It
-    contains the parameter name, its value,
-    a default range in which the parameter
-    should lie (used as prior for running MCMC),
-    and a boolean flag determining whether the 
-    parameter should be varied in an MCMC.
-    """
     
-    def __init__(self,name,value,prior,tv):
-        """
-        Initialization of a parameter.
-
-        Args:
-            name: A string containing the name of the parameter.
-            value: The parameter value.
-            prior: a 1D array containing the lower and upper bounds of the parameters.
-            tv: a boolean operator determining whether we want to vary the parameter in MCMC.
-
-        Returns:
-            An instance of the parameter class.
-
-        Raises:
-            TypeError: if name is not a string.
-            TypeError: if value is not a float.
-            TypeError: if prior is not a list
-            TypeError: if tv is not a boolean operator
-        """
-        #Check for type errors
-        if not isinstance(name,str):
-            raise TypeError('The parameter name must be a string.')
-        if not isinstance(value,float):
-            raise TypeError('The parameter value must be a float.')
-        if not isinstance(prior,list):
-            raise TypeError('The prior range is not a list of an upper and lower bounds.')
-        if not isinstance(tv,bool):
-            raise TypeError('The tv attribute must be a boolean operator.')
+    def __init__(self, valu):
         
-        #Assign values
-        self.name  = name
-        self.value = value
-        self.prior = np.array(prior)
-        self.tv = tv
+        self.value = valu
         
 
 class LensModel(object):
-    """The main lens model class"""
     
-    def __init__(self, massmodel, xgal, ygal, ellipticity, ellipt_angle, shear, shear_angle, *args):
+    def __init__(self, massmodel, lgal, bgal, ellp, angl, sher, sang, bein, rcor):
         self.massmodel = massmodel
-        #Primary lens parameters
         self.lensparams = []
-        self.lensparams.append(Params('xgal',xgal,[-2.0,2.0],False))
-        self.lensparams.append(Params('ygal',ygal,[-2.0,2.0],False))
-        self.lensparams.append(Params('ellipticity',ellipticity,[0,0.5],False))
-        self.lensparams.append(Params('ellipticity_angle',ellipt_angle,[0.0,180.0],False)) #Note that this angle is measured counterclockwise from the y-axis
-        self.lensparams.append(Params('shear',shear,[0.0,0.3],False))
-        self.lensparams.append(Params('shear_angle',shear_angle,[0.0,180],False)) #This angle is measured c.c. from x-axis
-        self.s = 1e-20
-        
-        if self.massmodel == 'SIE':
-            self.lensparams.append(Params('b_ein',args[0],[0.2,2.0],False))
-        
-        elif self.massmodel == 'alpha':
-            self.lensparams.append(Params('b_ein',args[0],[0.2,2.0],False))
-            self.lensparams.append(Params('alpha',args[1],[0.5,1.5],False))
-            print('Note: alpha lens model has not yet been coded up')
+        self.lensparams.append(Params(lgal))
+        self.lensparams.append(Params(bgal))
+        self.lensparams.append(Params(ellp))
+        self.lensparams.append(Params(angl))
+        self.lensparams.append(Params(sher))
+        self.lensparams.append(Params(sang))
+        self.lensparams.append(Params(bein))
+        self.lensparams.append(Params(rcor))
             
-        else:
-            raise RuntimeError('Type of lens unrecognized!')
-            
-        self.numlensparams = len(self.lensparams)
-            
-    def potential(self,xx,yy):
-        """The projected gravitational potential method"""
-        
-        #Translate to the center of the potential
-        xxt = xx - self.lensparams[0].value
-        yyt = yy - self.lensparams[1].value
-        
-        #Define rotation angle
-        rot_angle = self.lensparams[3].value*np.pi/180.0
-        
-        #Rotate coordinates according to given angle
-        x = -np.sin(rot_angle)*xxt + np.cos(rot_angle)*yyt
-        y = -np.cos(rot_angle)*xxt - np.sin(rot_angle)*yyt
-        
-        #Define q
-        q = 1.0 - self.lensparams[2].value
-        
-        #Compute the potential
-        if self.massmodel == 'SIE':
-            if self.lensparams[2].value > 1.0e-4:    
-                psi = np.sqrt(q**2*(self.s**2+x**2)+y**2)
-                phix = (self.lensparams[6].value*q/np.sqrt(1.0-q**2)*
-                        np.arctan(np.sqrt(1.0-q**2)*x/(psi+self.s)))
-                phiy = (self.lensparams[6].value*q/np.sqrt(1.0-q**2)*
-                        np.arctanh(np.sqrt(1.0-q**2)*y/(psi+q**2*self.s)))
-                phi = (x*phix + y*phiy-self.lensparams[6].value*q*self.s*np.log(np.sqrt((psi+self.s)**2+(1.0-q**2)*x**2)) 
-                      +self.lensparams[6].value*q*self.s*np.log((1+q)*self.s))
-            else:
-                phi = self.lensparams[6].value*(np.sqrt(x**2 + y**2 + self.s**2)- self.s - 
-                        self.s*np.log(0.50 + np.sqrt(x**2 + y**2 + self.s**2)/(2.0*self.s)))
-           
-                   
-        elif self.massmodel == 'alpha':
-            phi = 0.0
-        
-        #Add the external shear contribution
-        phi += (0.5*self.lensparams[4].value*np.cos(2.0*self.lensparams[5].value*np.pi/180.0)*(xx**2 - yy**2) 
-                    + self.lensparams[4].value*np.sin(2.0*self.lensparams[5].value*np.pi/180.0)*xx*yy)
-        
-        return phi
     
     def deflection(self,xx,yy):
-        """The deflection vector at position x,y"""
         
-        #Translate to the center of the potential
-        xxt = xx - self.lensparams[0].value
-        yyt = yy - self.lensparams[1].value
+        lgal = self.lensparams[0].value
+        bgal = self.lensparams[1].value
+        ellp = self.lensparams[2].value
+        angl = self.lensparams[3].value
+        sher = self.lensparams[4].value
+        sang = self.lensparams[5].value
+        bein = self.lensparams[6].value
+        rcor = self.lensparams[7].value
 
-        #Define rotation angle
-        rot_angle = self.lensparams[3].value*np.pi/180.0
+        # translate the grid
+        lgaltran = xx - lgal
+        bgaltran = yy - bgal
         
-        #Rotate coordinates according to given angle
-        x = -np.sin(rot_angle)*xxt + np.cos(rot_angle)*yyt
-        y = -np.cos(rot_angle)*xxt - np.sin(rot_angle)*yyt
-        
-        #Define q
-        q = 1.0 - self.lensparams[2].value
+        # rotate the grid
+        lgalrttr = cos(angl) * lgaltran - sin(angl) * bgaltran
+        bgalrttr = sin(angl) * lgaltran + cos(angl) * bgaltran
        
-        if self.massmodel == 'SIE':
-            if self.lensparams[2].value > 1.0e-4:
-                psi = np.sqrt(q**2*(self.s**2+x**2)+y**2)
-                alphaxt = (self.lensparams[6].value*q/np.sqrt(1.0-q**2)*
-                            np.arctan(np.sqrt(1.0-q**2)*x/(psi+self.s)))
-                alphayt = (self.lensparams[6].value*q/np.sqrt(1.0-q**2)*
-                            np.arctanh(np.sqrt(1.0-q**2)*y/(psi+q**2*self.s)))
-            else:
-                    
-                rint = np.sqrt(x**2 + y**2 + self.s**2)
-                alphaxt = self.lensparams[6].value*(x/(rint+self.s)) 
-                alphayt = self.lensparams[6].value*(y/(rint+self.s))
+        if False:
+            print 'angl'
+            print angl
+            print 'lgaltran'
+            summgene(lgaltran)
+            print 'bgaltran'
+            summgene(bgaltran)
+            print 'lgalrttr'
+            summgene(lgalrttr)
+            print 'bgalrttr'
+            summgene(bgalrttr)
+
+        if ellp > 1e-4:
+            factflat = (1. - ellp)**2
+            factrcor = sqrt(factflat * (rcor**2 + lgalrttr**2) + bgalrttr**2)
+            factellp = sqrt(1. - factflat)
+            factbein = (bein * (1. - ellp) / factellp)
+            defllgalrttr = factbein *  arctan(factellp * lgalrttr / (factrcor + rcor))
+            deflbgalrttr = factbein * arctanh(factellp * bgalrttr / (factrcor + factflat * rcor))
         
-        elif self.massmodel == 'alpha':
-            alphaxt = 0.0
-            alphayt = 0.0
-            
+            if False:
+                print 'factflat'
+                print factflat
+                print 'factrcor'
+                summgene(factrcor)
+                print 'factellp'
+                print factellp
+                print 'factbein'
+                print factbein
+                print 'factrcor'
+                summgene(factrcor)
+        
+        else:
+            rint = sqrt(lgalrttr**2 + bgalrttr**2 + rcor**2)
+            defllgalrttr = bein * lgalrttr / (rint + rcor) 
+            deflbgalrttr = bein * bgalrttr / (rint + rcor)
+        
         #Rotate back vector to original basis
-        alphax = -np.cos(rot_angle)*alphayt-np.sin(rot_angle)*alphaxt
-        alphay = np.cos(rot_angle)*alphaxt-np.sin(rot_angle)*alphayt
+        defllgal =  cos(angl) * defllgalrttr + sin(angl) * deflbgalrttr
+        deflbgal = -sin(angl) * defllgalrttr + cos(angl) * deflbgalrttr
         
-        #Add the external shear contribution
-        alphax += (self.lensparams[4].value*np.cos(2.0*self.lensparams[5].value*np.pi/180.0)*xx 
-                + self.lensparams[4].value*np.sin(2.0*self.lensparams[5].value*np.pi/180.0)*yy)
-        alphay += (-self.lensparams[4].value*np.cos(2.0*self.lensparams[5].value*np.pi/180.0)*yy 
-                + self.lensparams[4].value*np.sin(2.0*self.lensparams[5].value*np.pi/180.0)*xx)
-        
-        return dstack((alphax, alphay))
+        # external shear
+        factcosi = sher * cos(2. * sang)
+        factsine = sher * cos(2. * sang)
+        defllgal += factcosi * xx + factsine * yy
+        deflbgal += factsine * xx - factcosi * yy
+       
+        if False:
+            print 'rcor'
+            print rcor
+            print 'bein'
+            print bein
+            print 'ellp'
+            print ellp
+            print 'defllgal'
+            summgene(defllgal)
+            print 'deflbgal'
+            summgene(deflbgal)
+            print 'lgaltran'
+            summgene(lgaltran)
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+
+        return dstack((defllgal, deflbgal))
    
 
-def gauss_mat(size,axis_ratio,angle):
-    """
-    Compute the covariance matrix of a Gaussian, given a typical size,
-    an axis ratio, and an angle
-    """
-    rot_mat = np.array([[np.cos(angle*np.pi/180.0),-np.sin(angle*np.pi/180.0)],
-                        [np.sin(angle*np.pi/180.0),np.cos(angle*np.pi/180.0)]])
-    pre_mat = np.array([[1.0/(axis_ratio*size)**2,0.0],[0.0,1.0/size**2]])
+def gausmatr(size, rati, angl):
     
-    return np.dot(np.transpose(rot_mat),np.dot(pre_mat,rot_mat))
+    rttrmatr = array([[cos(angl), -sin(angl)], [sin(angl), cos(angl)]])
+    icovmatr = array([[1. / (rati * size)**2, 0.], [0., 1. / size**2]])
+    
+    return dot(transpose(rttrmatr), dot(icovmatr, rttrmatr))
     
            
 class Source(object):
-    """The main source class"""
         
-    def __init__(self,model,usrc,vsrc,peak_bright,*args):
+    def __init__(self,model, lgalsour, bgalsour, fluxsour, sizesour, ratisour, anglsour):
         self.model = model
         self.srcparams = []
-        self.srcparams.append(Params('usrc',usrc,[-1.0,1.0],False))
-        self.srcparams.append(Params('vsrc',vsrc,[-1.0,1.0],False))
-        self.srcparams.append(Params('peak_brightness',peak_bright,[0.01,10],False))
+        self.srcparams.append(Params(lgalsour))
+        self.srcparams.append(Params(bgalsour))
+        self.srcparams.append(Params(fluxsour))
+        if self.model == 'gaus':
+            self.srcparams.append(Params(sizesour))
+            self.srcparams.append(Params(ratisour)) 
+            self.srcparams.append(Params(anglsour))
+            self.icovmatr = gausmatr(sizesour, ratisour, anglsour)
         
-        if self.model == 'Gaussian':
-            self.srcparams.append(Params('src_size',args[0],[0.001,1.0],False))
-            #How much is the Gaussian stretched along the x-axis compared to the y-axis
-            self.srcparams.append(Params('src_axis_ratio',args[1],[1.0,7.0],False)) 
-            self.srcparams.append(Params('src_angle',args[2],[0.0,180.0],False))
-            self.cov_src = gauss_mat(args[0],args[1],args[2])
-        else:
-            raise RuntimeError('Type of source unrecognized!')
-        
-        self.numsrcparams = len(self.srcparams)
-                 
+    
     def brightness(self,u,v):
         
-        if self.model == 'Gaussian':
+        lgal = self.srcparams[0].value
+        bgal = self.srcparams[1].value
+        flux = self.srcparams[2].value
+        size = self.srcparams[3].value
+        rati = self.srcparams[4].value
+        if self.model == 'gaus':
+            posi = array([u - lgal, v - bgal])
+            brgt = flux * exp(-0.5 * sum(posi * tensordot(self.icovmatr, posi, (1,0)), 0)) / size**2 / rati
             
-            src_pos = np.array([u-self.srcparams[0].value,v-self.srcparams[1].value])
-            S = self.srcparams[2].value * np.exp(-0.5 * np.sum(src_pos * np.tensordot(self.cov_src, src_pos,(1,0)),0))
-            
-        return S
-        
+        return brgt
+       
+
     def gradient(self,u,v):
-        """The gradient of the source in the source plane"""
         
-        if self.model == 'Gaussian':
-            src_pos = np.array([u-self.srcparams[0].value,v-self.srcparams[1].value])
-            shift = np.tensordot(self.cov_src,src_pos,(1,0))
-            exp_arg = np.sum(src_pos*shift,0)
-            dSdu = -self.srcparams[2].value*shift[0]*np.exp(-0.5*exp_arg)
-            dSdv = -self.srcparams[2].value*shift[1]*np.exp(-0.5*exp_arg)
-        else:
-            dSdu = 0.0
-            dSdv = 0.0
+        if self.model == 'gaus':
+            src_pos = array([u-self.srcparams[0].value,v-self.srcparams[1].value])
+            shift = tensordot(self.icovmatr,src_pos,(1,0))
+            exp_arg = sum(src_pos*shift,0)
+            dSdu = -self.srcparams[2].value*shift[0]*exp(-0.5*exp_arg)
+            dSdv = -self.srcparams[2].value*shift[1]*exp(-0.5*exp_arg)
             
-        return np.array([dSdu,dSdv])
+        return array([dSdu,dSdv])
     
 

@@ -9,29 +9,28 @@ def test_info():
     
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
-    maxmnumbpnts = zeros(numbiter, dtype=int) + 3000
-    numbswep = zeros(numbiter, dtype=int) + 10000
-    numbburn = 4 * numbswep / 5
-    listlevi = zeros(numbiter)
-    listinfo = zeros(numbiter)
+    liststrgvarb = ['levi', 'info']
     for k in range(numbiter):
         seedstat = get_state()
-        gridchan, dictpcat = init( \
-                                  seedstat=seedstat, \
-                                  numbswep=numbswep[k], \
-                                  numbburn=numbburn[k], \
-                                  indxenerincl=arange(2, 3), \
-                                  randinit=False, \
-                                  proppsfp=False, \
-                                  indxevttincl=arange(3, 4), \
-                                  maxmnumbpnts=array([maxmnumbpnts[k]]), \
-                                  minmflux=listminmflux[k], \
-                                  maxmflux=1e-7, \
-                                  back=['fermisotflux.fits'], \
-                                  strgexpo='fermexpo_cmp0_ngal.fits', \
-                                 )
-        listlevi[k] = dictpcat['levi']
-        listinfo[k] = dictpcat['info']
+        gdat = init( \
+                    seedstat=seedstat, \
+                    numbswep=10000, \
+                    indxenerincl=arange(2, 3), \
+                    randinit=False, \
+                    proppsfp=False, \
+                    indxevttincl=arange(3, 4), \
+                    minmflux=listminmflux[k], \
+                    maxmflux=1e-7, \
+                    back=['fermisotflux.fits'], \
+                    strgexpo='fermexpo_cmp0_ngal.fits', \
+                   )
+        for strg in liststrgvarb:
+            if k == 0:
+                varb = getattr(gdat, strg)
+                shap = [numbiter] + list(varb.shap)
+                varbdict[strg] = empty(shap)
+            else:
+                varbdict[k, :] = getattr(gdat, strg)
 
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     figr, axis = plt.subplots()
@@ -85,12 +84,9 @@ def test_time():
            ]
     numbtupl = len(tupl)
     indxtupl = np.arange(numbtupl)
-    timereal = empty(numbtupl)
-    timeproc = empty(numbtupl)
-    timeatcr = empty(numbtupl)
-    meanmemoresi = empty(numbtupl)
-    derimemoresi = empty(numbtupl)
     strgtupl = []
+    liststrgvarb = ['timereal', 'timeproc', 'timeatcr', 'meanmemoresi', 'derimemoresi']
+    varbdict = dict() 
     for k in range(numbtupl):
         mocknumbpnts, maxmnumbpnts, temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
         strgtupl.append(strg)
@@ -107,35 +103,25 @@ def test_time():
             indxenerincl = arange(1, 4)
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
         
-        print 'k'
-        print k
-        
-        gridchan, dictpcat = init( \
-                                  numbswep=numbswep, \
-                                  numbproc=numbproc, \
-                                  back=[1.], \
-                                  strgexpo=1., \
-                                  exprinfo=False, \
-                                  indxenerincl=indxenerincl, \
-                                  pixltype=pixltype, \
-                                  indxevttincl=arange(3, 4), \
-                                  psfntype='doubking', \
-                                  maxmnumbpnts=array([maxmnumbpnts]), \
-                                  maxmgang=maxmgang, \
-                                  minmflux=minmflux, \
-                                  maxmflux=1e6, \
-                                  numbsidecart=numbsidecart, \
-                                  mocknumbpnts=array([mocknumbpnts]), \
-                                 )
-        timereal[k] = dictpcat['timerealtotl']
-        timeproc[k] = dictpcat['timeproctotl']
-        timeatcr[k] = dictpcat['timeatcr']
-        listmemoresi = dictpcat['listmemoresi']
-        meanmemoresi[k] = mean(listmemoresi)
-        derimemoresi[k] = (listmemoresi[-1] - listmemoresi[0]) / numbswep
-        print 'timeatcr'
-        print timeatcr[k]
-        print
+        gdat = init( \
+                    numbswep=numbswep, \
+                    numbproc=numbproc, \
+                    back=[1.], \
+                    strgexpo=1., \
+                    exprinfo=False, \
+                    indxenerincl=indxenerincl, \
+                    pixltype=pixltype, \
+                    indxevttincl=arange(3, 4), \
+                    psfntype='doubking', \
+                    maxmnumbpnts=array([maxmnumbpnts]), \
+                    maxmgang=maxmgang, \
+                    minmflux=minmflux, \
+                    maxmflux=1e6, \
+                    numbsidecart=numbsidecart, \
+                    mocknumbpnts=array([mocknumbpnts]), \
+                   )
+        for strg in liststrgvarb:
+            varbdict[strg] = getattr(gdat, strg)
 
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
@@ -251,33 +237,34 @@ def test_errr():
     stdverrrfracdimm = empty((2, numbtupl))
     stdverrrfrac = empty((2, numbtupl))
     strgtupl = empty(numbtupl, dtype=object)
+    liststrgvarb = ['stdverrrfracdimm', 'stdverrrfrac']
     for k in range(numbtupl):
         
         specfraceval = tupl[k][0]
         binsangltype = tupl[k][1]
         numbangl = tupl[k][2]
         strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
-        gridchan, dictpcat = init( \
-                                  diagmode=True, \
-                                  exprinfo=False, \
-                                  makeanim=True, \
-                                  proppsfp=False, \
-                                  numbangl=numbangl, \
-                                  binsangltype=binsangltype, \
-                                  indxenerincl=arange(2, 3), \
-                                  indxevttincl=arange(3, 4), \
-                                  back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                                  strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  psfntype='doubking', \
-                                  maxmnumbpnts=array([100]), \
-                                  maxmgang=deg2rad(10.), \
-                                  specfraceval=specfraceval, \
-                                  minmflux=1e-9, \
-                                  maxmflux=1e-5, \
-                                  mocknumbpnts=array([50]), \
-                                 )
-        stdverrrfracdimm[:, k] = dictpcat['stdverrrfracdimm'].flatten()
-        stdverrrfrac[:, k] = dictpcat['stdverrrfrac'].flatten()
+        gdat = init( \
+                    diagmode=True, \
+                    exprinfo=False, \
+                    makeanim=True, \
+                    proppsfp=False, \
+                    numbangl=numbangl, \
+                    binsangltype=binsangltype, \
+                    indxenerincl=arange(2, 3), \
+                    indxevttincl=arange(3, 4), \
+                    back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                    strgexpo='fermexpo_cmp0_ngal.fits', \
+                    psfntype='doubking', \
+                    maxmnumbpnts=array([100]), \
+                    maxmgang=deg2rad(10.), \
+                    specfraceval=specfraceval, \
+                    minmflux=1e-9, \
+                    maxmflux=1e-5, \
+                    mocknumbpnts=array([50]), \
+                   )
+        for strg in liststrgvarb:
+            varbdict[strg] = getattr(gdat, strg)
 
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_errr/'
@@ -326,29 +313,33 @@ def test_prio():
     
     mocknumbpnts = array([200])
     priofactdoff = array([-1., -0.5, 0., 0.5, 1., 1.5, 2.])
-    numbiter = priofactdoff.size
-    postnumbpnts = empty((3, numbiter))
-    postmeanpnts = empty((3, numbiter))
-
     arry = array([1., 0.8, 1.2])
+    numbiter = priofactdoff.size
+    liststrgvarb = ['postnumbpnts', 'postmeanpnts']
     for k in range(numbiter):
-        gridchan, dictpcat = init( \
-                                  exprinfo=False, \
-                                  proppsfp=False, \
-                                  indxenerincl=arange(2, 3), \
-                                  indxevttincl=arange(3, 4), \
-                                  priofactdoff=priofactdoff[k], \
-                                  back=['fermisotflux.fits'], \
-                                  strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  psfntype='doubking', \
-                                  maxmnumbpnts=array([1000]), \
-                                  maxmgang=deg2rad(30.), \
-                                  minmflux=5e-11, \
-                                  maxmflux=1e-7, \
-                                  mocknumbpnts=mocknumbpnts, \
-                                 )
-        postnumbpnts[:, k] = dictpcat['postnumbpnts']
-        postmeanpnts[:, k] = dictpcat['postmeanpnts']
+        gdat = init( \
+                    exprinfo=False, \
+                    proppsfp=False, \
+                    indxenerincl=arange(2, 3), \
+                    indxevttincl=arange(3, 4), \
+                    priofactdoff=priofactdoff[k], \
+                    back=['fermisotflux.fits'], \
+                    strgexpo='fermexpo_cmp0_ngal.fits', \
+                    psfntype='doubking', \
+                    maxmnumbpnts=array([1000]), \
+                    maxmgang=deg2rad(30.), \
+                    minmflux=5e-11, \
+                    maxmflux=1e-7, \
+                    mocknumbpnts=mocknumbpnts, \
+                   )
+        for strg in liststrgvarb:
+            if k == 0:
+                varb = getattr(gdat, strg)
+                shap = [numbiter] + list(varb.shap)
+                varbdict[strg] = empty(shap)
+            else:
+                varbdict[strg] = getattr(gdat, strg)
+    
     postnumbpnts = 100. * postnumbpnts / mocknumbpnts[0] - 100.
     postmeanpnts = 100. * postmeanpnts / mocknumbpnts[0] - 100.
     errrnumbpnts = tdpy.util.retr_errrvarb(postnumbpnts)
@@ -437,26 +428,26 @@ def test_atcr():
     #timeatcr = array([5670., 3420., 3042., 1023., 403.])
     #timeproc = array([103., 114., 105., 134., 140.])
     for k in range(numbiter):
-        gridchan, dictpcat = init( \
-                                  factthin=1, \
-                                  verbtype=2, \
-                                  makeplot=False, \
-                                  numbpntsmodi=listnumbpntsmodi[k], \
-                                  exprinfo=False, \
-                                  indxenerincl=arange(2, 3), \
-                                  indxevttincl=arange(3, 4), \
-                                  back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-                                  strgexpo='fermexpo_cmp0_ngal.fits', \
-                                  psfntype='doubking', \
-                                  maxmnumbpnts=array([5]), \
-                                  maxmgang=deg2rad(10.), \
-                                  minmflux=3e-11, \
-                                  maxmflux=3e-7, \
-                                  mocknumbpnts=array([2]), \
-                                 )
-        timeatcr[k] = dictpcat['timeatcr']
-        timereal[k] = dictpcat['timerealtotl']
-        timeproc[k] = dictpcat['timeproctotl']
+        gdat = init( \
+                    factthin=1, \
+                    #verbtype=2, \
+                    makeplot=False, \
+                    numbpntsmodi=listnumbpntsmodi[k], \
+                    exprinfo=False, \
+                    indxenerincl=arange(2, 3), \
+                    indxevttincl=arange(3, 4), \
+                    back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
+                    strgexpo='fermexpo_cmp0_ngal.fits', \
+                    psfntype='doubking', \
+                    maxmnumbpnts=array([5]), \
+                    maxmgang=deg2rad(10.), \
+                    minmflux=3e-11, \
+                    maxmflux=3e-7, \
+                    mocknumbpnts=array([2]), \
+                   )
+        timeatcr[k] = pcat.timeatcr
+        timereal[k] = pcat.timerealtotl
+        timeproc[k] = pcat.timeproctotl
         break
 
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_atcr/'
@@ -489,7 +480,7 @@ def test_spmr():
     numbiter = listminmflux.size
     for k in range(numbiter):
         init( \
-             verbtype=2, \
+             #verbtype=2, \
              factthin=1, \
              exprinfo=False, \
              indxenerincl=arange(2, 3), \
@@ -554,12 +545,20 @@ def test_unbd():
     init( \
          pixltype='unbd', \
          exprtype='chem', \
-         verbtype=2, \
+         #verbtype=2, \
          numbswep=10000, \
          numbswepplot=10000, \
          factthin=100, \
          numbburn=0, \
          maxmnumbpnts=array([20]), \
+        )
+
+
+def test_empt():
+    
+    init( \
+         numbswep=10000000, \
+         emptsamp=True, \
         )
 
 

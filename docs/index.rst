@@ -261,6 +261,13 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pntstype: str
 
 
+    **Proposals**
+
+    :param propcova: Propose from the full covariance, taking steps in all parameters in a single proposal. Otherwise, a step is taken along only one dimension. Defults to False.
+
+    :type randinit: bool
+
+
     **Initial state**
 
     :param randinit: Force the initial state to be randomly drawn from the prior. Default behavior for mock data is to initialize the chain with the true state.
@@ -399,6 +406,11 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     **Diagnostics**
 
+    :param emptsamp: Perform a futile run without collecting any samples, but creating all data structures and producing all visualizations as if in a normal run. Defaults to ``False``.
+
+    :type emptsamp: bool
+
+
     :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
 
     :type diagmode: bool
@@ -529,39 +541,10 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          radispmr=None, \
          truevarioaxi=None, \
          truepsfntype=None, \
-         # mock data
-         mockspatdisttype=None, \
-         mockspatdistslop=None, \
-         mockfluxdisttype=None, \
-         mockminmflux=None, \
-         mockmaxmflux=None, \
-         mockfluxdistslop=None, \
-         mockfluxdistbrek=None, \
-         mockfluxdistsloplowr=None, \
-         mockfluxdistslopuppr=None, \
-         mockspectype=None, \
-         mocksinddistmean=None, \
-         mocksinddiststdv=None, \
-         mockpsfntype=None, \
-         mockvarioaxi=None, \
-         mockstrgback=None, \
-         mockbacp=None, \
-         
-         mocklgalsour=None, \
-         mockbgalsour=None, \
-         mockfluxsour=None, \
-         mocksizesour=None, \
-         mockratisour=None, \
-         mockanglsour=None, \
-         mocklgalhost=None, \
-         mockbgalhost=None, \
-         mockellphost=None, \
-         mockanglhost=None, \
-         mocksherhost=None, \
-         mocksanghost=None, \
-         mockbeinhost=None, \
          
          mocknumbpnts=None, \
+         
+         
          numbsidecart=200, \
          numbsideheal=256, \
          numbdatasamp=100, \
@@ -572,6 +555,10 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :type numbspatdims: None
 
+
+.. note::
+    
+    The mock model parameters can be set by preceeding the parameter name with ``mock``. For example, in order to set the mock number of PS, you can specify ``mocknumbpnts=array([10])``.
 
 ..
 .. Features

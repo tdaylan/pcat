@@ -72,7 +72,7 @@ def work(gdat, indxprocwork):
                     if gdat.numbener > 1:
                         # color parameters
                         gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
-                                                                                                                     gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
+                                                                                                                          gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
                         if gdat.spectype[l] == 'curv':
                             gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
                         if gdat.spectype[l] == 'expo':
@@ -256,11 +256,15 @@ def init( \
          indxevttincl=None, \
          indxenerincl=None, \
          
+         # empty run
+         emptsamp=False, \
+
          # comparison with the reference catalog
          anglassc=None, \
          margfactcomp=0.9, \
          nameexpr=None, \
-
+        
+         propcova=False, \
          numbspatdims=2, \
          pntstype='lght', \
 
@@ -377,10 +381,13 @@ def init( \
          maxmratisour=None, \
          minmellphost=None, \
          maxmellphost=None, \
-         minmsherhost=None, \
-         maxmsherhost=None, \
          minmbeinhost=None, \
          maxmbeinhost=None, \
+         minmfluxhost=None, \
+         maxmfluxhost=None, \
+         
+         minmsherhost=None, \
+         maxmsherhost=None, \
     
          spectype=None, \
          
@@ -392,7 +399,7 @@ def init( \
         
          # proposals
          numbpntsmodi=1, \
-         stdvprophypr=0.02, \
+         stdvprophypr=0.01, \
          stdvproppsfp=0.1, \
          stdvpropbacp=0.01, \
          stdvproplenp=1e-4, \
@@ -479,7 +486,7 @@ def init( \
     if gdat.strgback == None:
         gdat.strgback = ['fluxisot']
         if gdat.exprtype == 'ferm':
-            gdat.strgback.append(r'fluxfdfm')
+            gdat.strgback.append('fluxfdfm')
     
     if gdat.nameback == None:
         gdat.nameback = ['Isotropic']
@@ -539,7 +546,7 @@ def init( \
 
     if gdat.strgflux == None:
         if gdat.pntstype == 'lens':
-            gdat.strgflux = 'R'
+            gdat.strgflux = r'\theta_E'
         else:
             if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
                 gdat.strgflux = 'f'
@@ -874,24 +881,24 @@ def init( \
     gdat.minmbgalsour = gdat.minmbgal
     gdat.maxmbgalsour = gdat.maxmbgal
     
-    #fact = 3631. * 0.624 * 10**(-0.4 * (-20.)) / 0.1 # ph / cm^2 / s
-    setp_varbfull(gdat, 'fluxsour', [gdat.minmfluxsour, gdat.maxmfluxsour], array([0.5, 2.]) )
+    setp_varbfull(gdat, 'fluxsour', [gdat.minmfluxsour, gdat.maxmfluxsour], array([1e-19, 1e-18]) )
     setp_varbfull(gdat, 'sizesour', [gdat.minmsizesour, gdat.maxmsizesour], [0.1 / gdat.anglfact, 0.2 / gdat.anglfact])
     setp_varbfull(gdat, 'ratisour', [gdat.minmratisour, gdat.maxmratisour], [0.5, 2.])
     gdat.minmanglsour = 0.
-    gdat.maxmanglsour = 180.
+    gdat.maxmanglsour = pi
     
     gdat.minmlgalhost = gdat.minmlgal
     gdat.maxmlgalhost = gdat.maxmlgal
     gdat.minmbgalhost = gdat.minmbgal
     gdat.maxmbgalhost = gdat.maxmbgal
+    setp_varbfull(gdat, 'beinhost', [gdat.minmbeinhost, gdat.maxmbeinhost], [0.5 / gdat.anglfact, 1. / gdat.anglfact])
+    setp_varbfull(gdat, 'fluxhost', [gdat.minmfluxhost, gdat.maxmfluxhost], array([0.5, 2.]) )
     setp_varbfull(gdat, 'ellphost', [gdat.minmellphost, gdat.maxmellphost], [0., 0.5])
     gdat.minmanglhost = 0.
-    gdat.maxmanglhost = 180.
+    gdat.maxmanglhost = pi
     setp_varbfull(gdat, 'sherhost', [gdat.minmsherhost, gdat.maxmsherhost], [0., 0.3])
     gdat.minmsanghost = 0.
-    gdat.maxmsanghost = 180.
-    setp_varbfull(gdat, 'beinhost', [gdat.minmbeinhost, gdat.maxmbeinhost], [0.5 / gdat.anglfact, 1. / gdat.anglfact])
+    gdat.maxmsanghost = pi
 
     if gdat.maxmangl == None:
         if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
@@ -1056,7 +1063,7 @@ def init( \
         gdat.mockgang = [[] for l in gdat.mockindxpopl]
         gdat.mockaang = [[] for l in gdat.mockindxpopl]
         gdat.mockspec = [[] for l in gdat.mockindxpopl]
-        gdat.mocknumbspep = retr_numbspep(gdat.mockspectype)
+        gdat.mocknumbspep, gdat.mockliststrgspep, gdat.mockliststrgfluxspep = retr_numbspep(gdat.mockspectype)
         if gdat.mocknumbtrap > 0:
             gdat.mockspep = [empty((gdat.mockfixp[gdat.mockindxfixpnumbpnts[l]], gdat.mocknumbspep[l])) for l in gdat.mockindxpopl]
         
@@ -1125,12 +1132,12 @@ def init( \
                 gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix * gdat.diffener[:, None, None] # [1]
             if gdat.pntstype == 'lens':
                 # create the source object
-                gdat.truesourtype = 'Gaussian'
+                gdat.truesourtype = 'gaus'
                 gdat.truelenstype = 'SIE'
                 #gdat.mockfluxsour = 3631. * 1e-23 * 0.624 * 10**(-0.4 * (-20.)) / 0.1 # ph / cm^2 / s
                 gdat.mockmodlfluxraww = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
                 gdat.mockmodlfluxraww[0, :, 0], gdat.mocklensfluxconvraww, gdat.mocklensfluxaww, gdat.mockdeflraww = retr_imaglens(gdat, raww=True)
-
+                
                 gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix
                 if gdat.enerbins:
                     gdat.mockmodlcntsraww *= gdat.diffener[:, None, None]
@@ -1556,8 +1563,6 @@ def init( \
                     gdat.listspechist[n, l, :, i] = histogram(gdat.listspec[l][n][i, indxmodlpntscomp], gdat.binsspecplot[i, :])[0]
                     if gdat.pntstype == 'lght':
                         for m in gdat.indxevtt:
-                            #print 'gdat.listcnts[l][n][i, indxmodlpntscomp, m]'
-                            #print gdat.listcnts[l][n][i, indxmodlpntscomp, m]
                             gdat.listcntshist[n, l, :, i, m] = histogram(gdat.listcnts[l][n][i, indxmodlpntscomp, m], gdat.binscnts[i, :])[0]
                 if gdat.numbener > 1:
                     for p in gdat.indxspep[l]:
@@ -1585,8 +1590,7 @@ def init( \
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
    
-    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts, verbtype=gdat.verbtype, maxmatcr=True)
-
+    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts, verbtype=gdat.verbtype)
     if gdat.timeatcr == 0.:
         print 'Autocorrelation time estimation failed.'
 
@@ -1715,11 +1719,15 @@ def init( \
         setattr(gdat, 'post' + strg, posttemp)
         setattr(gdat, 'medi' + strg, meditemp)
         setattr(gdat, 'errr' + strg, errrtemp)
-    
+       
     # temp
     if gdat.evalcirc and gdat.correxpo:
         gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.postfixp[0, gdat.indxfixpbacp], gdat.postfwhm[0, :])
         gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
+   
+    # memory usage
+    gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
+    gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
     
     # temp
     if False:
@@ -1794,7 +1802,6 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     
     ## log-likelihood
     retr_llik(gdat, gdatmodi, init=True)
-    gdatmodi.thislliktotl = sum(gdatmodi.thisllik)
     ## log-prior
     retr_lpri(gdat, gdatmodi, init=True)
 
@@ -1802,8 +1809,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.cntrswepsave = -1
    
     # store the initial sample as the best fit sample
-    gdatmodi.maxmllikswep = gdatmodi.thislliktotl
-    gdatmodi.maxmlposswep = gdatmodi.thislliktotl + gdatmodi.thislpritotl
+    gdatmodi.maxmllikswep = sum(gdatmodi.thisllik)
+    gdatmodi.maxmlposswep = sum(gdatmodi.thisllik) + sum(gdatmodi.thislpri)
     gdatmodi.indxswepmaxmllik = -1 
     gdatmodi.indxswepmaxmlpos = -1 
     gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
@@ -1836,7 +1843,10 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print 'Skipping proposal scale optimization...'
 
     while gdatmodi.cntrswep < gdat.numbswep:
-    
+        
+        if gdat.emptsamp:
+            continue
+
         timetotlinit = gdat.functime()
         
         if gdat.verbtype > 1:
@@ -1856,11 +1866,11 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             print '-----'
             print 'Proposing...'
             print 'thislliktotl'
-            print sum(gdatmodi.thislliktotl)
+            print sum(gdatmodi.thisllik)
             print 'thislpritotl'
-            print sum(gdatmodi.thislpritotl)
+            print sum(gdatmodi.thislpri)
             print 'thislpostotl'
-            print sum(gdatmodi.thislliktotl) + sum(gdatmodi.thislpritotl)
+            print sum(gdatmodi.thisllik) + sum(gdatmodi.thislpri)
             print
 
         # propose the next sample
@@ -2008,13 +2018,14 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
             if gdat.correxpo:
 
-                # get the model flux map
+                # preprocess the current sample to calculate variables that are not updated
+                ##  model flux map
                 retr_thismodlflux(gdat, gdatmodi)
-                
                 gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
                 if gdat.enerbins:
                     gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
                 gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
+                
                 gdatmodi.listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[gdat.indxcubesave]
                 gdatmodi.listresicnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thisresicnts[gdat.indxcubesave]
                 if gdat.pntstype == 'lght':
@@ -2038,8 +2049,8 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if gdat.evalcirc:
                 gdatmodi.listpsfn[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thispsfn
             
-            gdatmodi.listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislliktotl
-            gdatmodi.listlpri[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thislpri
+            gdatmodi.listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thisllik)
+            gdatmodi.listlpri[gdat.indxsampsave[gdatmodi.cntrswep], :] = sum(gdatmodi.thislpri)
             lprinorm = 0.
             for l in gdat.indxpopl:
                 # temp
@@ -2096,7 +2107,7 @@ def rjmc(gdat, gdatmodi, indxprocwork):
             if where((gdatmodi.drmcsamp[gdatmodi.indxsampmodi, 1] < 0.) | (gdatmodi.drmcsamp[gdatmodi.indxsampmodi, 1] > 1.))[0].size > 0:
                 gdatmodi.boolreje = True
 
-        if gdatmodi.proppsfp:
+        if gdat.propcova or gdatmodi.proppsfp:
             if gdat.psfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[3]]:
                     print 'Rejecting because of the PSF'
@@ -2158,13 +2169,13 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
             # check if the accepted sample has
             ## maximal likelihood
-            llikswep = gdatmodi.deltllik + gdatmodi.thislliktotl
+            llikswep = gdatmodi.deltllik + sum(gdatmodi.thisllik)
             if llikswep > gdatmodi.maxmllikswep:
                 gdatmodi.maxmllikswep = llikswep
                 gdatmodi.indxswepmaxmllik = gdatmodi.cntrswep
                 gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
             ## maximal posterior
-            lposswep = llikswep + gdatmodi.deltlpri + gdatmodi.thislpritotl
+            lposswep = llikswep + gdatmodi.deltlpri + sum(gdatmodi.thislpri)
             if llikswep > gdatmodi.maxmlposswep:
                 gdatmodi.maxmlposswep = lposswep
                 gdatmodi.indxswepmaxmlpos = gdatmodi.cntrswep
@@ -2184,14 +2195,15 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         # temp
         #gdatmodi.listindxfixpmodi[gdatmodi.cntrswep] = gdatmodi.indxsampmodi
 
-
+        
         ## proposal type
-        gdatmodi.listindxprop[gdatmodi.cntrswep] = gdatmodi.thisindxprop
+        if not gdat.propcova:
+            gdatmodi.listindxprop[gdatmodi.cntrswep] = gdatmodi.thisindxprop
         ## others
         gdatmodi.listboolreje[gdatmodi.cntrswep] = gdatmodi.boolreje
-        if gdatmodi.propllik:
+        if gdat.propcova or gdatmodi.propllik:
             gdatmodi.listdeltllik[gdatmodi.cntrswep] = gdatmodi.deltllik
-        if gdatmodi.proplpri:
+        if gdat.propcova or gdatmodi.proplpri:
             gdatmodi.listdeltlpri[gdatmodi.cntrswep] = gdatmodi.deltlpri
         if gdatmodi.propsplt or gdatmodi.propmerg:
             gdatmodi.listauxipara[gdatmodi.cntrswep, :gdat.numbcompcolr[gdatmodi.indxpoplmodi], gdatmodi.indxpoplmodi] = gdatmodi.auxipara

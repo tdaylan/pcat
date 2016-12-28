@@ -129,7 +129,10 @@ def plot_samp(gdat, gdatmodi=None):
                     plot_fluxsind(gdat, l, gdatmodi, 'scat')
             # temp -- restrict compfrac and other plots to indxmodlpntscomp
             if gdat.correxpo and gdat.pntstype == 'lght':
-                plot_histcnts(gdat, l, gdatmodi)
+                try:
+                    plot_histcnts(gdat, l, gdatmodi)
+                except:
+                    pass
             if gdat.pntstype == 'lght':
                 plot_compfrac(gdat, gdatmodi)
     
@@ -171,9 +174,9 @@ def plot_samp(gdat, gdatmodi=None):
                                                                                  gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
                                                                                  gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
                                                                                  gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbeinhost])
+                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbeinhost], 0.)
                             else:
-                                lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-1], bgal[k-1], 0., 0., 0., 0., bein[k-1])
+                                lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-1], bgal[k-1], 0., 0., 0., 0., bein[k-1], 0.)
                             defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
                             plot_defl(gdat, gdatmodi=gdatmodi, defl=defl, indxdefl=k)
 
@@ -249,6 +252,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 
     # plot autocorrelation
+    print 'gdat.atcr'
+    print gdat.atcr.shape
+    print 'gdat.timeatcr'
+    print gdat.timeatcr.shape
     tdpy.mcmc.plot_atcr(gdat.pathdiag, gdat.atcr, gdat.timeatcr)
     
     # plot proposal efficiency
@@ -832,7 +839,7 @@ def plot_brgt(gdat, gdatmodi):
     else:   
         fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsamplgal)], \
                                                                          gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampbgal)], \
-                                                                         gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec)[gdat.indxenerfluxdist[0], :]])
+                                                                         gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampspec, axis=1)[gdat.indxenerfluxdist[0], :]])
         if fluxbrgt.size > 0:
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label='Sample')
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
@@ -864,7 +871,7 @@ def plot_fluxsind(gdat, l, gdatmodi, strgtype):
         #axis.hist2d(flux, sind, [gdat.binsfluxplot, gdat.binssind], color='b', alpha=gdat.alphmrkr)
         
         #imag = axis.imshow(gdat.medifluxspephist[l][0, :], cmap='Purples', extent=[])
-        imag = axis.pcolor(gdat.binsfluxplot, gdat.binssind, gdat.medifluxspephist[l][0, :], cmap='Purples')
+        imag = axis.pcolor(gdat.binsfluxplot, gdat.binssind, gdat.medifluxspephist[l][0, :], cmap='gray')
 
         #cset = plt.contour(gdat.medifluxspephist[l][0, :], np.arange(-1, 1.5, 0.2), linewidths=2, cmap='Blues', \
         #                                                        extent=[amin(gdat.binsfluxplot), amax(gdat.binsfluxplot), amin(gdat.binssind), amax(gdat.binssind)])
@@ -1099,15 +1106,15 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
         if (ydat == 0.).all():
             continue
             
+        if plotdiff:
+            ydat = 100. * (ydat - xdat) / xdat
+       
         # temp -- this is dangerous!!
         xdat *= gdat.fluxfactplot
         xerr *= gdat.fluxfactplot
         ydat *= gdat.fluxfactplot
         yerr *= gdat.fluxfactplot
         
-        if plotdiff:
-            ydat = 100. * (ydat - xdat) / xdat
-       
         # plot all associations
         indx = where(ydat > 0.)[0]
         if indx.size > 0:
@@ -1134,9 +1141,9 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
                 axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[0, :], ls='--', alpha=gdat.alphmrkr, color='black')
                 axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * fluxbias[1, :], ls='--', alpha=gdat.alphmrkr, color='black')
         
-        axis.set_xlabel('$%s_{%s}$%s' % (gdat.strgflux, gdat.strgcatl, gdat.strgfluxunitextn))
+        axis.set_xlabel(r'$%s^{%s}$%s' % (gdat.strgflux, gdat.strgcatl, gdat.strgfluxunitextn))
         if i == 0:
-            axis.set_ylabel('$%s_{samp}$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
+            axis.set_ylabel('$%s^{samp}$ [%s]' % (gdat.strgflux, gdat.strgfluxunit))
         if i == gdat.numbener / 2:
             axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black', alpha=0.1)
             axis.errorbar(0., 0., ls='', yerr=0., xerr=0., lw=1, marker='o', markersize=5, color='black')
@@ -1181,9 +1188,17 @@ def plot_scatpixl(gdat, gdatmodi):
             else:
                 ydat = gdatmodi.thismodlcnts[i, gdat.indxpixlsave, m]
             
+            print 'hey'
+            print 'plot_scatpixl'
+            print 'i,m'
+            print i, m
+            print 'ydat'
+            summgene(ydat)
+            print
+
             axis.scatter(gdat.datacnts[i, gdat.indxpixlsave, m], ydat, alpha=gdat.alphmrkr)
 
-            axislimt = [0., amax(gdat.datacnts[i, :, m]) * 1.5]
+            axislimt = [0., amax(gdat.datacnts[i, gdat.indxpixlsave, m]) * 1.1]
             axis.set_xlim(axislimt)
             axis.set_ylim(axislimt)
             
@@ -1683,56 +1698,82 @@ def plot_grap(plottype='igal', verbtype=0):
     figr, axis = plt.subplots(figsize=(6, 6))
 
     grap = nx.DiGraph()
-    if plottype == 'igal':
-        listcolr = ['black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', \
-                                                                            'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
     if plottype == 'ngal':
-        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
+        listcolr = ['black', 'black', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+
+    if plottype == 'igal':
+        listcolr = ['black', 'black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', \
+                                                                                                    'magenta', 'magenta', 'magenta', 'magenta', 'magenta']
+    if plottype == 'chan':
+        listcolr = ['black', 'black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+
+    if plottype == 'lens':
+        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta']
 
     grap.add_edges_from([ \
-                         ('fluxdistslop', 'flux'), \
-                         ('sinddistslop', 'sind'), \
+                         ('ampldistslop', 'ampl'), \
+                         ('ampl', 'modl'), \
                          ('meanpnts', 'numbpnts'), \
                          ('modl','data'), \
                          ('psfp', 'modl'), \
                          ('bacp', 'modl'), \
                          ('lgal','modl'), \
                          ('bgal','modl'), \
-                         ('flux','modl'), \
-                         ('sind','modl'), \
                          ('numbpnts','lgal'), \
                          ('numbpnts','bgal'), \
-                         ('numbpnts','flux'), \
-                         ('numbpnts', 'sind') \
+                         ('numbpnts','ampl'), \
                         ])
+    
+    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+        grap.add_edges_from([ \
+                             ('numbpnts', 'sind'), \
+                             ('sind','modl'), \
+                            ])
+    else:
+        grap.add_edges_from([ \
+                             ('lenp', 'modl') \
+                            ])
+    
+    if plottype == 'igal' or plottype == 'chan':
+        grap.add_edges_from([ \
+                             ('sinddistslop', 'sind'), \
+                            ])
     
     if plottype == 'igal':
         grap.add_edges_from([ \
                              ('numbpnts', 'expo'), \
                              ('expo', 'modl'), \
                              ('spatdistslop', 'lgal'), \
-                             ('spatdistslop', 'bgal') \
+                             ('spatdistslop', 'bgal'), \
                             ])
-    if plottype == 'ngal' or plottype == 'lens':
-        pass
-
         
     labl = {}
     labl['numbpnts'] = '$N$'
     labl['meanpnts'] = r'$\mu$'
+    
     if plottype == 'igal':
-        labl['fluxdistslop'] = r'$\vec{\alpha}$'
+        labl['ampldistslop'] = r'$\vec{\alpha}$'
+    else:
+        labl['ampldistslop'] = r'$\alpha$'
+    
+    if plottype == 'igal':
         labl['sinddistslop'] = r'$\vec{\beta}$'
-        labl['spatdistslop'] = r'$\vec{\gamma}$'
-    if plottype == 'ngal':
-        labl['fluxdistslop'] = r'$\alpha$'
+    if plottype == 'chan':
         labl['sinddistslop'] = r'$\beta$'
+    
+    if plottype == 'igal':
+        labl['spatdistslop'] = r'$\vec{\gamma}$'
+    if plottype == 'lens':
+        labl['lenp'] = r'$\vec{\rho}$'
     labl['psfp'] = r'$\vec{\eta}$'
     labl['bacp'] = r'$\vec{A}$'
     labl['lgal'] = r'$\vec{l}$'
     labl['bgal'] = r'$\vec{b}$'
-    labl['flux'] = r'$\vec{f}$'
-    labl['sind'] = r'$\vec{s}$'
+    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+        labl['sind'] = r'$\vec{s}$'
+        labl['ampl'] = r'$\vec{f}$'
+    else:
+        labl['ampl'] = r'$\vec{R}$'
     if plottype == 'igal':
         labl['expo'] = r'$\vec{E_c}$'
     labl['modl'] = r'$\mathcal{M}$'
@@ -1741,54 +1782,73 @@ def plot_grap(plottype='igal', verbtype=0):
     posi = nx.circular_layout(grap)
     posi['numbpnts'] = array([0., 0.075])
     posi['meanpnts'] = array([0., 0.15])
+    if plottype == 'igal' or plottype == 'chan':
+        posi['sinddistslop'] = array([0.4, 0.15])
     if plottype == 'igal':
         posi['spatdistslop'] = array([-0.2, 0.15])
-    posi['fluxdistslop'] = array([0.2, 0.15])
-    posi['sinddistslop'] = array([0.4, 0.15])
+    posi['ampldistslop'] = array([0.2, 0.15])
     if plottype == 'igal':
         posi['psfp'] = array([0.9, -0.0])
         posi['bacp'] = array([0.7, -0.0])
     if plottype == 'ngal':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.5, -0.0])
+    if plottype == 'lens':
+        posi['psfp'] = array([0.5, -0.0])
+        posi['bacp'] = array([0.3, -0.0])
+    if plottype == 'chan':
+        posi['psfp'] = array([0.7, -0.0])
+        posi['bacp'] = array([0.5, -0.0])
+    if plottype == 'lens':
+        posi['lenp'] = array([0.7, -0.0])
     posi['lgal'] = array([-0.3, -0.0])
     posi['bgal'] = array([-0.1, -0.0])
-    posi['flux'] = array([0.1, -0.0])
-    posi['sind'] = array([0.3, -0.0])
+    posi['ampl'] = array([0.1, -0.0])
+    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+        posi['sind'] = array([0.3, -0.0])
     if plottype == 'igal':
         posi['expo'] = array([0.5, -0.0])
     posi['modl'] = array([0., -0.075])
     posi['data'] = array([0., -0.15])
    
     if verbtype > 0:
-        print 'len(labl)'
-        print len(labl) 
-        print 'len(posi)'
-        print len(posi)
-        print 'grap.edges()'
-        print grap.edges()
-        print 'len(grap.edges())'
-        print len(grap.edges())
-        print 'len(listcolr)'
-        print len(listcolr)
-
+        numb = max(len(grap.edges()), len(listcolr))
+        for k in range(numb):
+            try:
+                print '%15s %15s %15s' % (grap.edges()[k][0], grap.edges()[k][1], listcolr[k])
+            except:
+                print 'unequal'
+        print
     size = 500
     nx.draw(grap, posi, labels=labl, ax=axis, edgelist=[], nodelist=[])
     nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
     if plottype == 'igal':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'fluxdistslop', 'sinddistslop'], node_color='r', node_size=size)
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind', 'expo'], node_color='g', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'ampldistslop', 'sinddistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind', 'expo'], node_color='g', node_size=size)
+    if plottype == 'chan':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop', 'sinddistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
     if plottype == 'ngal':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'fluxdistslop', 'sinddistslop'], node_color='r', node_size=size)
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'flux', 'sind'], node_color='g', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
+    if plottype == 'lens':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl'], node_color='g', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lenp'], node_color='y', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
     plt.tight_layout()
     plt.savefig(pathplot + 'grap%s.pdf' % plottype)
     plt.close(figr)
+
+
+#plot_grap(verbtype=1)
+#plot_grap(plottype='ngal', verbtype=1)
+#plot_grap(plottype='lens', verbtype=1)
+#plot_grap(plottype='chan', verbtype=1)
 
 
 def plot_3fgl_thrs(gdat):
@@ -1931,10 +1991,26 @@ def plot_histcnts(gdat, l, gdatmodi):
     
             xdat = gdat.meancnts[i, :]
             if gdatmodi == None:
-                ydat = gdat.medicntshist[l][i, :]
-                yerr = gdat.errrcntshist[l][:, i, :]
+                ydat = gdat.medicntshist[l, :, i, m]
+                yerr = gdat.errrcntshist[:, l, :, i, m]
+                print 'xdat'
+                print xdat.shape
+                print 'ydat'
+                print ydat.shape
+                print 'yerr'
+                print yerr.shape
                 axis.errorbar(xdat, ydat, ls='', yerr=yerr, lw=1, marker='o', markersize=5, color='black')
             else:
+                print 'hey'
+                print 'gdat.binscnts[i, :]'
+                print gdat.binscnts[i, :]
+                print 'gdatmodi.thiscnts'
+                print gdatmodi.thiscnts
+                print 'gdatmodi.thiscnts[l][i, :, m]'
+                print gdatmodi.thiscnts[l][i, :, m]
+                summgene(gdatmodi.thiscnts[l][i, :, m])
+                print
+
                 axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
             
             if gdat.trueinfo:
