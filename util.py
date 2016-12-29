@@ -104,7 +104,7 @@ def retr_plotpath(gdat, strg, gdatmodi):
 def retr_thismodlflux(gdat, gdatmodi):
 
     if gdat.pntstype == 'lens':
-        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = retr_imaglens(gdat, gdatmodi=gdatmodi)
+        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = retr_imaglens(gdat, gdatmodi)
     else:
         gdatmodi.thismodlflux = retr_rofi_flux(gdat, gdatmodi.thissampvarb[gdat.indxfixpbacp], gdatmodi.thispntsflux, gdat.indxcube)
 
@@ -1326,14 +1326,6 @@ def retr_sampvarb(gdat, indxpntsfull, samp):
     
     sampvarb = zeros_like(samp)
     for k in gdat.indxfixp:
-        print 'k'
-        print k
-        print gdat.namefixp[k]
-        print 'samp[gdat.indxfixp[k]]'
-        print samp[gdat.indxfixp[k]]
-        print 'sampvarb[gdat.indxfixp[k]]'
-        print sampvarb[gdat.indxfixp[k]]
-        print 
         sampvarb[gdat.indxfixp[k]] = icdf_fixp(gdat, samp[gdat.indxfixp[k]], k)
     
     if gdat.numbtrap > 0:

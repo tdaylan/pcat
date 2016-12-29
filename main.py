@@ -15,7 +15,7 @@ def work(gdat, indxprocwork):
     
     # empty object to hold chain-specific variables that will be modified by the chain
     gdatmodi = tdpy.util.gdatstrt()
-    
+   
     # data structure to hold the indices of model PS to be compared to the reference catalog 
     gdatmodi.indxmodlpntscomp = [[] for l in gdat.indxpopl]
     
@@ -379,13 +379,12 @@ def init( \
          maxmsizesour=None, \
          minmratisour=None, \
          maxmratisour=None, \
-         minmellphost=None, \
-         maxmellphost=None, \
          minmbeinhost=None, \
          maxmbeinhost=None, \
          minmfluxhost=None, \
          maxmfluxhost=None, \
-         
+         minmellphost=None, \
+         maxmellphost=None, \
          minmsherhost=None, \
          maxmsherhost=None, \
     
@@ -451,11 +450,12 @@ def init( \
          mockanglsour=None, \
          mocklgalhost=None, \
          mockbgalhost=None, \
+         mockbeinhost=None, \
+         mockfluxhost=None, \
          mockellphost=None, \
          mockanglhost=None, \
          mocksherhost=None, \
          mocksanghost=None, \
-         mockbeinhost=None, \
          
          mocknumbpnts=None, \
          numbsidecart=200, \

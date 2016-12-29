@@ -13,6 +13,9 @@ def plot_samp(gdat, gdatmodi=None):
                 gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
 
         retr_thismodlflux(gdat, gdatmodi)
+        print 'hey'
+        summgene(gdatmodi.thismodlflux)
+        print 
 
         if gdat.pixltype != 'unbd':
             gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
