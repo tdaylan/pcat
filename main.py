@@ -1372,16 +1372,11 @@ def init( \
     
     # aggregate samples from the chains
     ## list of parameters to be gathered
-    gdat.liststrgchan = ['samp', 'sampvarb', 'modlcnts', 'resicnts', 'lpri', 'llik', 'deltlpri', 'deltllik', 'chrollik', 'chrototl', 'accp', 'boolreje', \
-                                                                            'indxprop', 'indxfixpmodi', 'auxipara', 'laccfact', 'numbpair', 'jcbnfact', 'combfact', 'memoresi']
-    if gdat.evalcirc:
-        gdat.liststrgchan += ['psfn']
-    if gdat.pntstype == 'lght':
-        gdat.liststrgchan += ['pntsflux']
-    if gdat.pntstype == 'lens':
-        gdat.liststrgchan += ['defl']
-    if gdat.calcerrr:
-        gdat.liststrgchan += ['errr', 'errrfrac']
+    gdat.liststrgchan = []
+    for attr, valu in listgdatmodi[0].__dict__.iteritems():
+        if attr.startswith('list') and not isinstance(valu, list):
+            gdat.liststrgchan.append(attr[4:])
+    
     for strg in gdat.liststrgchan:
         for k in gdat.indxproc:
             if k == 0:
@@ -1614,7 +1609,6 @@ def init( \
         gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
         gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
 
-    
     ## cross correlation with the reference catalog
     if gdat.numbtrap > 0 and gdat.trueinfo:
         
@@ -1686,6 +1680,8 @@ def init( \
     gdat.liststrgpost = ['fixp']
     if gdat.pntstype == 'lens':
         gdat.liststrgpost += ['defl', 'conv', 'convpsec', 'convpsecodim']
+        if gdat.trueinfo:
+            gdat.liststrgpost += ['deflresi', 'deflcomp']
     if gdat.numbtrap > 0:
         gdat.liststrgpost += ['lgalhist', 'bgalhist', 'spechist', 'ganghist', 'aanghist', 'fluxhistprio']
         if gdat.evalcirc:
@@ -1699,6 +1695,7 @@ def init( \
             gdat.liststrgpost += ['spephist', 'fluxspephist']
         if gdat.varioaxi:
             gdat.liststrgpost += ['factoaxi']
+
     #if gdat.pntstype == 'lens':
     #    gdat.liststrgpostsavetdim += ['defl']
     gdat.liststrgpost += gdat.liststrgpostsaveodim
@@ -1788,6 +1785,9 @@ def rjmc(gdat, gdatmodi, indxprocwork):
         gdatmodi.listpntsflux = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     if gdat.pntstype == 'lens':
         gdatmodi.listdefl = zeros((gdat.numbsamp, gdat.numbsidecart, gdat.numbsidecart, 2))
+        if gdat.trueinfo:
+            gdatmodi.listdeflresi = zeros((gdat.numbsamp, gdat.numbsidecart, gdat.numbsidecart, 2))
+            gdatmodi.listdeflcomp = zeros((gdat.numbsamp, gdat.numbsidecart, gdat.numbsidecart))
     
     gdatmodi.listllik = zeros(gdat.numbsamp)
     gdatmodi.listlpri = zeros((gdat.numbsamp, gdat.numblpri))
@@ -2023,22 +2023,17 @@ def rjmc(gdat, gdatmodi, indxprocwork):
 
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
+           
+            # preprocess the current sample to calculate variables that are not updated
+            procsamp(gdat, gdatmodi)
             
             timeinit = gdat.functime()
-            
+        
+            # fill the sample lists
             gdatmodi.listsamp[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.drmcsamp[:, 0]
             gdatmodi.listsampvarb[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thissampvarb
             gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
             if gdat.correxpo:
-
-                # preprocess the current sample to calculate variables that are not updated
-                ##  model flux map
-                retr_thismodlflux(gdat, gdatmodi)
-                gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
-                if gdat.enerbins:
-                    gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
-                gdatmodi.thisresicnts = gdat.datacnts - gdatmodi.thismodlcnts
-                
                 gdatmodi.listmodlcnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thismodlcnts[gdat.indxcubesave]
                 gdatmodi.listresicnts[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thisresicnts[gdat.indxcubesave]
                 if gdat.pntstype == 'lght':
@@ -2046,60 +2041,20 @@ def rjmc(gdat, gdatmodi, indxprocwork):
                 if gdat.pntstype == 'lens':
                     gdatmodi.listdefl[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = gdatmodi.thisdefl
                 if gdat.calcerrr:
-                    temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, list(gdatmodi.thisindxpntsfull), copy(gdatmodi.thissampvarb), evalcirc=False)
-                    
                     if gdat.pntstype == 'lght':
-                        gdatmodi.thispntscnts = gdatmodi.thispntsflux * gdat.expo * gdat.apix
-                        if gdat.enerbins:
-                            gdatmodi.thispntscnts *= gdat.diffener[:, None, None]
-                        gdatmodi.thiserrrcnts = gdatmodi.thispntscnts - temppntscnts
-                        gdatmodi.thiserrr = zeros_like(gdatmodi.thiserrrcnts)
-                        indxcubegood = where(temppntscnts > 1e-10)
-                        gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
                         gdatmodi.listerrr[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(gdatmodi.thiserrr, 1)
                         gdatmodi.listerrrfrac[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = mean(100. * gdatmodi.thiserrr / temppntscnts, 1) 
-            
             if gdat.evalcirc:
                 gdatmodi.listpsfn[gdat.indxsampsave[gdatmodi.cntrswep], :] = gdatmodi.thispsfn
-            
+            gdatmodi.listdeflresi[gdat.indxsampsave[gdatmodi.cntrswep], :, :, :] = gdatmodi.thisdeflresi
+            gdatmodi.listdeflcomp[gdat.indxsampsave[gdatmodi.cntrswep], :, :] = gdatmodi.thisdeflcomp
             gdatmodi.listllik[gdat.indxsampsave[gdatmodi.cntrswep]] = sum(gdatmodi.thisllik)
             gdatmodi.listlpri[gdat.indxsampsave[gdatmodi.cntrswep], :] = sum(gdatmodi.thislpri)
-            lprinorm = 0.
-            for l in gdat.indxpopl:
-                # temp
-                ## brok terms are not complete
-                ## lpri calculation is turned off
-                break
-                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]]
-                meanpnts = gdatmodi.thissampvarb[gdat.indxfixpmeanpnts[l]]
-                lpri += numbpnts * gdat.priofactlgalbgal + gdat.priofactfluxdistslop + gdat.priofactmeanpnts - log(meanpnts)
-                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]]
-                if gdat.fluxdisttype[l] == 'powr':
-                    fluxdistslop = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]]
-                    lpri -= log(1. + fluxdistslop**2)
-                    lpri += sum(log(pdfn_flux_powr(gdat, flux, fluxdistslop)))
-                if gdat.fluxdisttype[l] == 'brok':
-                    fluxdistbrek = gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[l]]
-                    fluxdistsloplowr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[l]]
-                    fluxdistslopuppr = gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[l]]
-                    lpri += sum(log(pdfn_flux_brok(gdat, flux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)))
-            gdatmodi.listlprinorm[gdat.indxsampsave[gdatmodi.cntrswep]] = lprinorm
-            
-            if gdat.tracsamp:
-                
-                numbpnts = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[0]]
-                diffllikdiffpara = empty(numbpnts)
-                for k in range(numbpnts):
-                    diffllikdiffpara[k]
-                gdatmodi.listdiffllikdiffpara.append(diffllikdiffpara)
-
-                tranmatr = diffllikdiffpara[:, None] * gdatmodi.listdiffllikdiffpara[gdatmodi.cntrswep-1][None, :]
-                gdatmodi.listtranmatr.append(tranmatr)
-
+            gdatmodi.listlprinorm[gdat.indxsampsave[gdatmodi.cntrswep]] = gdatmodi.thislprinorm
             gdatmodi.listmemoresi[gdat.indxsampsave[gdatmodi.cntrswep]] = tdpy.util.retr_memoresi()[0]
+            
             timefinl = gdat.functime()
             gdatmodi.listchrototl[gdatmodi.cntrswep, 4] = timefinl - timeinit
-
 
         # plot the current sample
         if thismakefram:
