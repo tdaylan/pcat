@@ -15,6 +15,7 @@ from numpy.random import *
 #from numpy.random import choice
 # temp
 #seterr(divide='raise', over='raise', invalid='raise')
+seterr(all='warn')
 
 # scipy
 import scipy as sp

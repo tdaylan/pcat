@@ -11,6 +11,7 @@ PCAT is a hierarchical, transdimensional MCMC sampler. It's theoretical framewor
 
 .. _sectinst:
 
+
 Installation
 -------------
 To install PCAT you can use pip
@@ -27,6 +28,26 @@ or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ an
 
 
 .. _sectinpt:
+
+
+Features
+----------
+
+Transdimensionality
++++++++++++++++++++
+
+PCAT takes steps across models by adding parameters drawn from the prior or killing them while maintaining detailed balance in the hyper model space.
+
+
+Hierarchical priors
++++++++++++++++++++++
+
+Adaptive burn-in
++++++++++++++++++
+
+Labeling degeneracy
+++++++++++++++++++++++
+
 
 Input
 --------------
@@ -560,22 +581,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     
     The mock model parameters can be set by preceeding the parameter name with ``mock``. For example, in order to set the mock number of PS, you can specify ``mocknumbpnts=array([10])``.
 
-..
-.. Features
-.. ----------
-.. 
-.. Transdimensionality
-.. +++++++++++++++++++
-.. 
-.. Hierarchical priors
-.. +++++++++++++++++++++
-.. 
-.. Adaptive burn-in
-.. +++++++++++++++++
-.. 
-.. Labeling degeneracy
-.. ++++++++++++++++++++++
-.. 
+
 
     
 

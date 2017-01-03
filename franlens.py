@@ -59,18 +59,18 @@ class LensModel(object):
         if ellp > 1e-4:
             factflat = (1. - ellp)**2
             factrcor = sqrt(factflat * (rcor**2 + lgalrttr**2) + bgalrttr**2)
-            factellp = sqrt(1. - factflat)
-            factbein = (bein * (1. - ellp) / factellp)
-            defllgalrttr = factbein *  arctan(factellp * lgalrttr / (factrcor + rcor))
-            deflbgalrttr = factbein * arctanh(factellp * bgalrttr / (factrcor + factflat * rcor))
+            facteccc = sqrt(1. - factflat)
+            factbein = (bein * (1. - ellp) / facteccc)
+            defllgalrttr = factbein *  arctan(facteccc * lgalrttr / (factrcor + rcor))
+            deflbgalrttr = factbein * arctanh(facteccc * bgalrttr / (factrcor + factflat * rcor))
         
             if False:
                 print 'factflat'
                 print factflat
                 print 'factrcor'
                 summgene(factrcor)
-                print 'factellp'
-                print factellp
+                print 'facteccc'
+                print facteccc
                 print 'factbein'
                 print factbein
                 print 'factrcor'

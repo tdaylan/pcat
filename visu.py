@@ -13,9 +13,6 @@ def plot_samp(gdat, gdatmodi=None):
                 gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
 
         retr_thismodlflux(gdat, gdatmodi)
-        print 'hey'
-        summgene(gdatmodi.thismodlflux)
-        print 
 
         if gdat.pixltype != 'unbd':
             gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
@@ -70,13 +67,49 @@ def plot_samp(gdat, gdatmodi=None):
             gdatmodi.thiserrr[indxcubegood] = 100. * gdatmodi.thiserrrcnts[indxcubegood] / temppntscnts[indxcubegood]
             if False and amax(fabs(gdatmodi.thiserrr)) > 0.1:
                 raise Exception('Approximation error in calculating the PS flux map is above the tolerance level.')
-    
+   
+        # deflection field
+        if gdat.pntstype == 'lens':
+            if gdat.inclpnts:
+                gdatmodi.numbdeflpnts = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
+                indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
+                lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:gdatmodi.numbdeflpnts]
+                bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:gdatmodi.numbdeflpnts]
+                bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:gdatmodi.numbdeflpnts]
+            else:
+                gdatmodi.numbdeflpnts = 0
+            gdatmodi.numbdeflsing = gdatmodi.numbdeflpnts + 2
+            gdatmodi.thisdeflsing = empty((gdat.numbsidecart, gdat.numbsidecart, 2, gdatmodi.numbdeflsing))
+            for k in range(gdatmodi.numbdeflsing):
+                if k == 0:
+                    lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpellphost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
+                                                                     0., \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpbeinhost], 0.)
+                elif k == 1:
+                    lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpellphost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
+                                                                     gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
+                                                                     0., 0.)
+                else:
+                    lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-2], bgal[k-2], 0., 0., 0., 0., bein[k-2], 0.)
+                gdatmodi.thisdeflsing[:, :, :, k] = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
 
+            if gdat.trueinfo and gdat.datatype == 'mock':
+                gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.mockdefl
+                gdatmodi.thisdeflcomp = sum(gdatmodi.thisdefl * gdat.mockdefl, 2)
+                            
         if gdat.numbtrap > 0 and gdat.trueinfo:
             gdatmodi.trueindxpntsassc = []
             gdatmodi.thisspecassc = []
             for l in gdat.indxpopl:
-                indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
+                indxmodl, trueindxpntsassc = corr_catl(gdat, gdatmodi, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
                                                                                                                             gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
                 gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
                 gdatmodi.thisspecassc.append(zeros((gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]])))
@@ -88,6 +121,10 @@ def plot_samp(gdat, gdatmodi=None):
             gdatmodi.thisconv = retr_conv(gdat, gdatmodi.thisdefl) 
             gdatmodi.thisconvpsec = retr_psec(gdat, gdatmodi.thisconv)
             gdatmodi.thisconvpsecodim = retr_psecodim(gdat, gdatmodi.thisconvpsec) 
+
+        if gdat.varioaxi:
+            gdatmodi.thisfactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdatmodi.thissampvarb[gdat.indxfixppsfpoaxinorm], gdatmodi.thissampvarb[gdat.indxfixppsfpoaxiindx])
+
 
     # plots
     ## frame-only
@@ -154,34 +191,15 @@ def plot_samp(gdat, gdatmodi=None):
                     plot_datacnts(gdat, l, gdatmodi, i, m)
                 
                 if gdat.pntstype == 'lens':
-                    
+                   
+                    # overall deflection field
                     plot_defl(gdat, gdatmodi)
+                    plot_defl(gdat, gdatmodi, strgcomp='resi')
+                    plot_deflcomp(gdat, gdatmodi)
 
-                    if gdatmodi != None:
-                        
-
-                        if gdat.inclpnts:
-                            numbpntsplot = min(3, gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[l]].astype(int))
-                            indxpntssortbrgt = argsort(gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :]])[::-1]
-                            lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l][indxpntssortbrgt]][:numbpntsplot]
-                            bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l][indxpntssortbrgt]][:numbpntsplot]
-                            bein = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], indxpntssortbrgt]][:numbpntsplot]
-                        else:
-                            numbpntsplot = 0
-                        numbplot = numbpntsplot + 1
-                        for k in range(numbplot):
-                            if k == 0:
-                                lensobjt = franlens.LensModel(gdat.truelenstype, gdatmodi.thissampvarb[gdat.indxfixplgalhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbgalhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpellphost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpanglhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsherhost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpsanghost], \
-                                                                                 gdatmodi.thissampvarb[gdat.indxfixpbeinhost], 0.)
-                            else:
-                                lensobjt = franlens.LensModel(gdat.truelenstype, lgal[k-1], bgal[k-1], 0., 0., 0., 0., bein[k-1], 0.)
-                            defl = lensobjt.deflection(gdat.lgalgridcart, gdat.bgalgridcart)
-                            plot_defl(gdat, gdatmodi=gdatmodi, defl=defl, indxdefl=k)
+                    # deflection field due to individual lenses
+                    for k in range(gdatmodi.numbdeflsing):
+                        plot_defl(gdat, gdatmodi, indxdefl=k)
 
                 if gdat.pixltype == 'unbd':
                     plot_catlfram(gdat, gdatmodi, l, i, m)
@@ -1191,14 +1209,6 @@ def plot_scatpixl(gdat, gdatmodi):
             else:
                 ydat = gdatmodi.thismodlcnts[i, gdat.indxpixlsave, m]
             
-            print 'hey'
-            print 'plot_scatpixl'
-            print 'i,m'
-            print i, m
-            print 'ydat'
-            summgene(ydat)
-            print
-
             axis.scatter(gdat.datacnts[i, gdat.indxpixlsave, m], ydat, alpha=gdat.alphmrkr)
 
             axislimt = [0., amax(gdat.datacnts[i, gdat.indxpixlsave, m]) * 1.1]
@@ -1657,7 +1667,7 @@ def plot_mosa(gdat):
                                 # cross-correlate with the reference catalog
                                 if gdat.trueinfo:
                                     gdatmodi.trueindxpntsassc = []
-                                    indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
+                                    indxmodl, trueindxpntsassc = corr_catl(gdat, gdatmodi, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
                                                                                                                         gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
                                                                                                                         gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
                                     gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
@@ -1961,17 +1971,16 @@ def plot_factoaxi(gdat, i, m, gdatmodi):
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if gdat.varioaxi:
         if gdatmodi == None:
-            psfpoaxinorm = gdat.postpsfpoaxinorm
-            psfpoaxiindx = gdat.postpsfpoaxiindx
+            axis.plot(gdat.binsoaxi * gdat.anglfact, gdat.postfactoaxi[i, :], label='Sample', color='b')
         else:
-            psfpoaxinorm = gdatmodi.thissampvarb[gdat.indxfixppsfpoaxinorm]
-            psfpoaxiindx = gdatmodi.thissampvarb[gdat.indxfixppsfpoaxiindx]
-        factoaxi = retr_factoaxi(gdat, gdat.binsoaxi, psfpoaxinorm, psfpoaxiindx)
-        axis.plot(gdat.binsoaxi * gdat.anglfact, factoaxi[i, :], label='Sample', color='b')
+            axis.plot(gdat.binsoaxi * gdat.anglfact, gdatmodi.thisfactoaxi[i, :], label='Sample', color='b')
     
     if gdat.truefactoaxi != None:
         axis.plot(gdat.binsoaxi * gdat.anglfact, gdat.truefactoaxi[i, :], label=gdat.truelabl, color='g', ls='--')
-        axis.set_ylim([0., 2. * amax(gdat.truefactoaxi[i, :])])
+        
+    if gdat.trueinfo:
+        maxmydat = amax(gdat.truefactoaxi[i, :])
+        axis.set_ylim([0., maxmydat])
     axis.set_xlabel(r'$\phi$%s' % gdat.strganglunit)
     axis.set_ylabel(r'f($\phi$)')
     axis.legend(loc=2)
@@ -2041,19 +2050,44 @@ def plot_histcnts(gdat, l, gdatmodi):
     plt.close(figr)
     
 
-def plot_defl(gdat, gdatmodi, defl=None, indxdefl=None):
+def plot_defl(gdat, gdatmodi, strgdata='modl', strgcomp='', indxdefl=None):
 
-    if defl != None and gdatmodi != None:
-        strg = 'defl%d' % indxdefl
-        pathfold = gdat.pathfram
-    elif gdatmodi != None:
-        defl = gdatmodi.thisdefl
-        strg = 'defl'
+    if gdatmodi != None:
+        strg = 'thisdefl'
+    else:
+        if strgdata == 'modl':
+            strg = 'medidefl'
+        if strgdata == 'mock':
+            strg = 'mockdefl'
+    
+    if indxdefl != None:
+        strg += 'sing'
+    strg += strgcomp
+    
+    if gdatmodi != None:
+        defl = getattr(gdatmodi, strg)
+    else:
+        defl = getattr(gdat, strg)
+   
+    print 'hey'
+    print 'defl'
+    print defl.shape
+
+    if indxdefl != None:
+        defl = defl[:, :, :, indxdefl]
+        strg += '%04d' % indxdefl
+
+    print 'defl'
+    print defl.shape
+    print
+    
+    if gdatmodi != None:
         pathfold = gdat.pathfram
     else:
-        defl = gdat.mockdefl
-        strg = 'mockdefl'
-        pathfold = gdat.pathinit
+        if strgdata == 'true':
+            pathfold = gdat.pathinit
+        if strgdata == 'comp' or strgdata == 'modl':
+            pathfold = gdat.pathpost
 
     figr, axis, path = init_figr(gdat, strg, gdatmodi, indxpoplplot=0, pathfold=pathfold)
     make_catllabl(gdat, axis)
@@ -2063,12 +2097,29 @@ def plot_defl(gdat, gdatmodi, defl=None, indxdefl=None):
     deflbgal = defl[:, :, 1]
     fact = 10
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
+    axis.imshow(zeros((10, 10)))
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
                                                  gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], units='xy')
   
     if gdatmodi != None:
         supr_fram(gdat, gdatmodi, axis, 0, 0)
     #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
+    plt.savefig(path)
+    plt.close(figr)
+    
+    
+def plot_deflcomp(gdat, gdatmodi):
+
+    figr, axis, path = init_figr(gdat, 'deflcomp', gdatmodi, None, None, None)
+    make_catllabl(gdat, axis)
+    if gdatmodi != None:
+        deflcomp = gdatmodi.thisdeflcomp
+    else:
+        deflcomp = gdat.postdeflcomp
+    imag = retr_imag(gdat, axis, deflcomp, vmin=-1., vmax=1., scal=gdat.scalmaps)
+    make_cbar(gdat, axis, imag, tick=gdat.tickdeflcomp, labl=gdat.labldeflcomp)
+    supr_fram(gdat, gdatmodi, axis)
+    plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)
     
@@ -2082,7 +2133,7 @@ def plot_datacnts(gdat, indxpoplplot, gdatmodi, indxenerplot, indxevttplot):
         make_cbar(gdat, axis, imag, indxenerplot, tick=gdat.tickdatacnts[indxenerplot, :], labl=gdat.labldatacnts[indxenerplot, :])
     else:
         imag = retr_scat(gdat, axis, gdat.datacnts, indxenerplot, indxevttplot)
-    supr_fram(gdat, gdatmodi, axis, indxenerplot, indxpoplplot)
+    supr_fram(gdat, gdatmodi, axis, indxpoplplot)
     plt.tight_layout()
     plt.savefig(path)
     plt.close(figr)

@@ -892,7 +892,7 @@ def init( \
     gdat.minmbgalhost = gdat.minmbgal
     gdat.maxmbgalhost = gdat.maxmbgal
     setp_varbfull(gdat, 'beinhost', [gdat.minmbeinhost, gdat.maxmbeinhost], [0.5 / gdat.anglfact, 1. / gdat.anglfact])
-    setp_varbfull(gdat, 'fluxhost', [gdat.minmfluxhost, gdat.maxmfluxhost], array([0.5, 2.]) )
+    setp_varbfull(gdat, 'fluxhost', [gdat.minmfluxhost, gdat.maxmfluxhost], array([1e-16, 1e-15]) )
     setp_varbfull(gdat, 'ellphost', [gdat.minmellphost, gdat.maxmellphost], [0., 0.5])
     gdat.minmanglhost = 0.
     gdat.maxmanglhost = pi
@@ -1202,7 +1202,7 @@ def init( \
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts[i, :], labl=gdat.labldatacnts[i, :])
                 else:
                     imag = retr_scat(gdat, axis, gdat.datacnts, i, m)
-                supr_fram(gdat, None, axis, i, l, True)
+                supr_fram(gdat, None, axis, l, True)
                 plt.tight_layout()
                 plt.savefig(path)
                 plt.close(figr)
@@ -1503,6 +1503,8 @@ def init( \
     # parse the sample vector
     gdat.listfixp = gdat.listsampvarb[:, gdat.indxfixp]
 
+    # post process samples
+    
     if gdat.numbtrap > 0:
         # collect PS parameters from the chains
         gdat.listlgal = [[] for l in gdat.indxpopl]
@@ -1598,7 +1600,7 @@ def init( \
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-    # construct a deterministic catalog
+    ## construct a deterministic catalog
     # temp
     if gdat.strgcnfg == 'test':
         retr_detrcatl(gdat)
@@ -1612,7 +1614,7 @@ def init( \
         gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
         gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
 
-    # post process samples
+    
     ## cross correlation with the reference catalog
     if gdat.numbtrap > 0 and gdat.trueinfo:
         
@@ -1624,7 +1626,7 @@ def init( \
         for l in gdat.indxpopl:
             gdat.listspecassc.append(zeros((gdat.numbsamptotl, gdat.numbener, gdat.truefixp[gdat.indxfixpnumbpnts[l]])))
             for n in gdat.indxsamptotl:
-                indxmodl, trueindxpntsassc = corr_catl(gdat, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n])
+                indxmodl, trueindxpntsassc = corr_catl(gdat, None, l, gdat.listlgal[l][n], gdat.listbgal[l][n], gdat.listspec[l][n], None)
                 indxpntstrue = where(indxmodl >= 0)[0]
                 for i in gdat.indxener:
                     gdat.listspecassc[l][n, i, indxpntstrue] = gdat.listspec[l][n][i, indxmodl[indxpntstrue]]
@@ -1666,11 +1668,17 @@ def init( \
             gdat.listconvpsec[n, :, :] = retr_psec(gdat, gdat.listconv[n, :, :])
             gdat.listconvpsecodim[n, :] = retr_psecodim(gdat, gdat.listconvpsec[n, :, :]) 
 
-    ## prior on the flux distribution
     if gdat.numbtrap > 0:
+        ## prior on the flux distribution
         gdat.listfluxhistprio = empty((gdat.numbsamptotl, gdat.numbfluxplot))
         for n in gdat.indxsamptotl:
             gdat.listfluxhistprio[n, :] = retr_fluxhistprio(gdat, l, gdat.listsampvarb[n, :])
+
+        ## off-axis angle variation
+        if gdat.varioaxi:
+            gdat.listfactoaxi = empty((gdat.numbsamptotl, gdat.numboaxi))
+            for n in gdat.indxsamptotl:
+                gdat.listfactoaxi[n, :] = retr_factoaxi(gdat, gdat.binsoaxi, gdat.listsampvarb[n, gdat.indxfixppsfpoaxinorm], gdat.listsampvarb[n, gdat.indxfixppsfpoaxiindx])
 
     # compute credible intervals
     gdat.liststrgpostsaveodim = ['modlcnts', 'resicnts']
@@ -1689,6 +1697,8 @@ def init( \
             gdat.liststrgpost += ['cntshist', 'pntsfluxmean']
         if gdat.numbener > 1:
             gdat.liststrgpost += ['spephist', 'fluxspephist']
+        if gdat.varioaxi:
+            gdat.liststrgpost += ['factoaxi']
     #if gdat.pntstype == 'lens':
     #    gdat.liststrgpostsavetdim += ['defl']
     gdat.liststrgpost += gdat.liststrgpostsaveodim
@@ -1719,7 +1729,7 @@ def init( \
         setattr(gdat, 'post' + strg, posttemp)
         setattr(gdat, 'medi' + strg, meditemp)
         setattr(gdat, 'errr' + strg, errrtemp)
-       
+    
     # temp
     if gdat.evalcirc and gdat.correxpo:
         gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.postfixp[0, gdat.indxfixpbacp], gdat.postfwhm[0, :])
@@ -1770,7 +1780,10 @@ def rjmc(gdat, gdatmodi, indxprocwork):
     gdatmodi.listmodlcnts = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     gdatmodi.listresicnts = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     if gdat.evalpsfnpnts:
-        gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl, gdat.numbevtt))
+        if gdat.varioaxi:
+            gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl, gdat.numbevtt, gdat.numboaxi))
+        else:
+            gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl, gdat.numbevtt))
     if gdat.pntstype == 'lght':
         gdatmodi.listpntsflux = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixlsave, gdat.numbevtt))
     if gdat.pntstype == 'lens':
