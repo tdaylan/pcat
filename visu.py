@@ -215,9 +215,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         indxsampreje = where(gdat.listboolreje == False)
         if indxsampspmrtotl.size > 0:
     
-            ## create plot subfolder
-            os.system('mkdir -p %s' % gdat.pathplot + 'spmr')
-    
             ## labels and names
             listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
                                             r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
@@ -277,7 +274,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
                 axis.set_xlabel(listlabl[k])
                 axis.legend()
                 plt.tight_layout()
-                plt.savefig(gdat.pathplot + 'spmr/' + listname[k] + '.pdf')
+                plt.savefig(gdat.pathpostspmr + listname[k] + '.pdf')
                 plt.close(figr)
     
     if gdat.verbtype > 0:
@@ -388,12 +385,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     ## log-prior and log-likelihood
-    for strg in ['llik', 'lpri']:
+    for strg in ['lpri', 'llik']:
 
-        if strg == 'llik':
-            labltemp = '\ln P(x)'
         if strg == 'lpri':
             labltemp = '\ln P(D|x)'
+        if strg == 'llik':
+            labltemp = '\ln P(x)'
         
         setattr(gdat, 'list' + strg + 'flat', getattr(gdat, 'list' + strg).flatten())
         setattr(gdat, 'listdelt' + strg + 'flat', getattr(gdat, 'listdelt' + strg).flatten())
@@ -412,23 +409,17 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             labldraw = None
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
-        pathpostdelt = gdat.pathpost + 'delt' + strg + '/'
-        pathpostdeltaccp = pathpostdelt + 'accp/'
-        pathpostdeltreje = pathpostdelt + 'reje/'
-        for path in [pathpostdelt, pathpostdeltaccp, pathpostdeltreje]:
-            os.system('mkdir -p %s' % path)
-
-        path = pathpostdelt + 'delt' + strg
+        path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s' % strg
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat'), labldelt)
         if gdat.numbproc > 1:
-            path = pathpostdelt + 'delt' + strg + 'proc'
+            path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc' % strg
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg), labldelt, titl='All processes')
         for n in gdat.indxprop:
-            path = pathpostdelt + 'delt%s_%s' % (strg, gdat.nameprop[n])
+            path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_%s' % (strg, gdat.nameprop[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlprop[n]], labldelt, titl=gdat.strgprop[n])
-            path = pathpostdeltaccp + 'delt%s_%s_accp' % (strg, gdat.nameprop[n])
+            path = getattr(gdat, 'pathpostdelt%saccp' % strg) + 'delt%s_%s_accp' % (strg, gdat.nameprop[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropaccp[n]], labldelt, titl=gdat.strgprop[n] + ', Accepted')
-            path = pathpostdeltreje + 'delt%s_%s_reje' % (strg, gdat.nameprop[n])
+            path = getattr(gdat, 'pathpostdelt%sreje' % strg) + 'delt%s_%s_reje' % (strg, gdat.nameprop[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropreje[n]], labldelt, titl=gdat.strgprop[n] + ', Rejected')
         
     # plot resident memory
@@ -1783,9 +1774,6 @@ def make_anim(gdat):
     listname += ['datacnts', 'resicnts', 'modlcnts', 'defl', 'convpsecodim', 'conv', 'convpsec']
     listname += ['factoaxi', 'errr', 'errrcnts']
 
-    gdat.pathanim = gdat.pathplot + 'anim/'
-
-    os.system('mkdir -p %s' % gdat.pathanim)
     if gdat.verbtype > 0:
         print 'Making animations...'
     for name in listname:

@@ -503,6 +503,23 @@ def test_spmr():
             )
         
 
+def test_cova():
+     
+    init( \
+         numbswep=10000, \
+         exprinfo=False, \
+         propcova=True, \
+         indxenerincl=arange(2, 3), \
+         indxevttincl=arange(3, 4), \
+         strgexpo='fermexpo_cmp0_ngal.fits', \
+         exprtype='ferm', \
+         minmflux=3e-8, \
+         maxmflux=3e-7, \
+         mockminmflux=3e-11, \
+         mocknumbpnts=array([100]), \
+        )
+
+
 def test_leak():
      
     init( \

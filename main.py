@@ -114,28 +114,16 @@ def work(gdat, indxprocwork):
             gdatmodi.thispntsflux, gdatmodi.thismodlflux, gdatmodi.thismodlfluxtotl = temp 
    
     if gdat.pntstype == 'lens':
-    
         gdatmodi.thispsfnkern = AiryDisk2DKernel(gdatmodi.thissampvarb[gdat.indxfixppsfp[0]] / gdat.sizepixl)
-        
-        # calculate the initial predicted flux map
         gdatmodi.thismodlflux = empty_like(gdat.datacnts)
-        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl = retr_imaglens(gdat, gdatmodi=gdatmodi)
+        gdatmodi.thismodlflux[0, :, 0], gdatmodi.thislensfluxconv, gdatmodi.thislensflux, gdatmodi.thisdefl, gdatmodi.thismapshost = retr_imaglens(gdat, gdatmodi=gdatmodi)
         gdatmodi.thismodlcnts = gdatmodi.thismodlflux * gdat.expo * gdat.apix
         if gdat.enerbins:
             gdatmodi.thismodlcnts *= gdat.diffener[:, None, None]
 
-    # temp
-    if gdat.pntstype == 'lens':
-        if gdatmodi.thismodlcnts.shape[1] != gdat.numbpixl:
-            raise Exception('Number of pixels in the lensing map mismatches with that of PCAT')
-
-    # temp
-    #indxsamplgaltemp, indxsampbgaltemp, indxsampspectemp, indxsampspeptemp, indxsampcompcolrtemp = retr_indx(gdat, gdatmodi.thisindxpntsfull)
-    
     if gdat.evalpsfnpnts:
         ## PSF
-        gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.psfntype, \
-                                                                                                                    binsoaxi=gdat.binsoaxi, varioaxi=gdat.varioaxi)
+        gdatmodi.thispsfn = retr_psfn(gdat, gdatmodi.thissampvarb[gdat.indxfixppsfp], gdat.indxener, gdat.binsangl, gdat.psfntype, binsoaxi=gdat.binsoaxi, varioaxi=gdat.varioaxi)
         
         if gdat.boolintpanglcosi:
             binsangltemp = gdat.binsanglcosi
@@ -1136,7 +1124,7 @@ def init( \
                 gdat.truelenstype = 'SIE'
                 #gdat.mockfluxsour = 3631. * 1e-23 * 0.624 * 10**(-0.4 * (-20.)) / 0.1 # ph / cm^2 / s
                 gdat.mockmodlfluxraww = empty((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-                gdat.mockmodlfluxraww[0, :, 0], gdat.mocklensfluxconvraww, gdat.mocklensfluxaww, gdat.mockdeflraww = retr_imaglens(gdat, raww=True)
+                gdat.mockmodlfluxraww[0, :, 0], gdat.mocklensfluxconvraww, gdat.mocklensfluxaww, gdat.mockdeflraww, gdat.mockmapshostraww = retr_imaglens(gdat, raww=True)
                 
                 gdat.mockmodlcntsraww = gdat.mockmodlfluxraww * gdat.expo * gdat.apix
                 if gdat.enerbins:
@@ -1145,7 +1133,7 @@ def init( \
                     gdat.mockmodlcntsraww[0, j, 0] = poisson(gdat.mockmodlcntsraww[0, j, 0])
                 
                 gdat.mockmodlflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-                gdat.mockmodlflux[0, :, 0], gdat.mocklensfluxconv, gdat.mocklensflux, gdat.mockdefl = retr_imaglens(gdat)
+                gdat.mockmodlflux[0, :, 0], gdat.mocklensfluxconv, gdat.mocklensflux, gdat.mockdefl, gdat.mockmapshost = retr_imaglens(gdat)
     
             gdat.mockmodlcnts = gdat.mockmodlflux * gdat.expo * gdat.apix
             if gdat.enerbins:
