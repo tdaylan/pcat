@@ -27,9 +27,9 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             indxydat = [i, slice(None), m]
                         strgindx = '%d%d' % (i, m)
-                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'angl', indxydat=indxydat, strgindx=strgindx, \
+                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=r'$\theta$ [%s]' % gdat.strganglunit, lablyaxi=r'$\mathcal{P}$')
-                        plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'oaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
+                        plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=r'$\theta_0$ [%s]' % gdat.strganglunit, lablyaxi=r'$f(\phi)$')
 
             ## PSF FWHM
@@ -75,8 +75,8 @@ def plot_samp(gdat, gdatmodi, strg):
         plot_genemaps(gdat, gdatmodi, strg, 'mapshost')
         plot_genemaps(gdat, gdatmodi, strg, 'lensflux')
         if strg != 'true':
-            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'wvecodim', scal='logt', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$')
-        plot_gene(gdat, gdatmodi, strg, 'histdefl', 'defl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N(\alpha)$', factxdat=gdat.anglfact)
+            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', scal='logt', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$')
+        plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N(\alpha)$', factxdat=gdat.anglfact)
 
     for l in gdat.indxpopl:
         
@@ -479,7 +479,7 @@ def plot_chro(gdat):
     plt.savefig(gdat.pathdiag + 'chroprop.pdf')
     plt.close(figr)
 
-    labl = ['Total', 'Proposal', 'Prior', 'Likelihood', 'Save', 'Rest']
+    labl = ['Total', 'Proposal', 'Process', 'Save', 'Rest']
     listcolr = ['black', 'b', 'g', 'r', 'y', 'm']
     numblabl = len(labl)
     figr, axcl = plt.subplots(2, 1, figsize=(2 * gdat.plotsize, gdat.plotsize))
@@ -971,11 +971,18 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize * gdat.numbener, gdat.plotsize))
 
-    xdat = getattr(gdat, 'mean' + strgxdat) * factxdat
+    xdat = getattr(gdat, strgxdat) * factxdat
     ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
     
+    print 'ydat'
+    print ydat.shape
     if indxydat != None:
         ydat = ydat[indxydat]
+    print 'ydat'
+    print ydat.shape
+    print 'xdat'
+    print xdat.shape
+    print
 
     if strg == 'post':  
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgydat, errr=True) * factydat

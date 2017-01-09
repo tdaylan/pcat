@@ -173,7 +173,7 @@ def init( \
          stdvflux=0.001, \
          stdvspep=0.001, \
          stdvspmrsind=0.2, \
-         probrand=0.05, \
+         probrand=0.0, \
          propfluxdist=True, \
          propsinddist=True, \
          propfluxdistbrek=True, \
@@ -1649,15 +1649,8 @@ def work(gdat, indxprocwork):
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
-    # sweeps to be saved
-    gdat.boolsave = zeros(gdat.numbswep, dtype=bool)
-    indxswepsave = arange(gdat.numbburn, gdat.numbburn + gdat.numbsamp * gdat.factthin, gdat.factthin)
-    gdat.boolsave[indxswepsave] = True
-    gdat.indxsampsave = zeros(gdat.numbswep, dtype=int) - 1
-    gdat.indxsampsave[indxswepsave] = arange(gdat.numbsamp)
-    
     if gdat.diagmode:
-        if indxswepsave.size != gdat.numbsamp:
+        if gdat.indxswepsave.size != gdat.numbsamp:
             raise Exception('Inappropriate number of samples.')
 
     # initialize the worker sampler
@@ -1669,7 +1662,7 @@ def work(gdat, indxprocwork):
     gdatmodi.listmodlcnts = zeros((gdat.numbsamp, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     if gdat.pntstype == 'lght':
         if gdat.varioaxi:
-            gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl, gdat.numbevtt, gdat.numboaxi + 1))
+            gdatmodi.listpsfn = zeros((gdat.numbsamp, gdat.numbener, gdat.numbangl + 1, gdat.numbevtt, gdat.numboaxi + 1))
             gdatmodi.listfwhm = empty((gdat.numbsamp, gdat.numbener, gdat.numbevtt))
             gdatmodi.listfactoaxi = empty((gdat.numbsamptotl, gdat.numbener, gdat.numbevtt, gdat.numboaxi + 1))
         else:
@@ -1734,7 +1727,7 @@ def work(gdat, indxprocwork):
         if os.path.isfile(pathstdvprop) and gdat.loadvaripara:
             if gdat.verbtype > 0 and indxprocwork == 0:
                 print 'Reading the previously computed proposal scale from %s...' % pathstdvprop
-            gdat.optidone = True
+            gdatmodi.optidone = True
             varipara = pf.getdata(pathstdvprop)
         else:
             if gdat.verbtype > 0 and indxprocwork == 0:
@@ -1743,14 +1736,52 @@ def work(gdat, indxprocwork):
             gdat.factpropeffi = 4.
             minmpropeffi = targpropeffi / gdat.factpropeffi
             maxmpropeffi = targpropeffi * gdat.factpropeffi
-            perdpropeffi = 10 * gdat.numbstdp
+            perdpropeffi = 20
             cntrprop = zeros(gdat.numbstdp)
             cntrproptotl = zeros(gdat.numbstdp)
-            gdat.optidone = False
+            gdatmodi.optidone = False
             gdatmodi.cntrswepopti = 0
             gdatmodi.cntrswepoptistep = 0
+    
+        gdatmodi.drmcsampcopy = copy(gdatmodi.drmcsamp)
+        diffpara = 1e-1
+        stdvpara = empty(gdat.numbfixp)
+        
+        samp = copy(gdatmodi.drmcsamp[:, 0])
+        llikcntr = retr_negalpos(samp, gdat, gdatmodi)
+        print 'llikcntr'
+        print llikcntr
+        for k in gdat.indxfixpactvprop:
+            samp = copy(gdatmodi.drmcsamp[:, 0])
+            samp[k] += diffpara
+            llikdelt = retr_negalpos(samp, gdat, gdatmodi)
+            gdat.stdvstdp[k] = 2. * diffpara * sqrt(0.5 / fabs(llikcntr - llikdelt))
+            
+            if gdat.namefixp[k] == 'bacp':
+                print 'samp'
+                print samp
+                print 'gdat.namefixp'
+                print gdat.namefixp[k]
+                print 'llikdelt'
+                print llikdelt
+                print 'gdat.stdvstdp[k]'
+                print gdat.stdvstdp[k]
+                print 
+        gdatmodi.optidone = True
+        gdatmodi.drmcsamp = copy(gdatmodi.drmcsampcopy)
+    
+        raise
+
+        #cons = ({'type':'eq', 'fun':lambda(x):gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]},
+        #cons = ({'type':'ineq', 'fun':lambda(x):x},
+        #  	    {'type':'ineq', 'fun':lambda(x):1-x})
+        #rest = sp.optimize.minimize(retr_negalpos, gdatmodi.drmcsamp[:, 0], args=(gdat, gdatmodi), tol=1e-6, options={'eps':1e-3}, method='SLSQP', constraints=cons)
+        #print rest.x
+        #print rest
+        #print rest.message
+        
     else:
-        gdat.optidone = True
+        gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
 
@@ -1767,7 +1798,7 @@ def work(gdat, indxprocwork):
             print 'Sweep %d' % gdatmodi.cntrswep
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                                                                                                        and gdat.makeplot and gdat.optidone
+                                                                                                                                        and gdat.makeplot and gdatmodi.optidone
         gdatmodi.boolreje = False
     
         # choose a proposal type
@@ -1777,7 +1808,7 @@ def work(gdat, indxprocwork):
             print
             print '-----'
             print 'Proposing...'
-            if gdatmodi.cntrswep > 0:
+            if gdatmodi.cntrswep > 0 and gdat.diagmode:
                 print 'gdatmodi.thislpostotlprev'
                 print gdatmodi.thislpostotlprev
             print 'thislliktotl'
@@ -1790,7 +1821,9 @@ def work(gdat, indxprocwork):
 
         # propose the next sample
         timeinit = gdat.functime()
+        
         retr_prop(gdat, gdatmodi)
+        
         timefinl = gdat.functime()
         gdatmodi.listchrototl[gdatmodi.cntrswep, 1] = timefinl - timeinit
 
@@ -1910,15 +1943,14 @@ def work(gdat, indxprocwork):
                         print sind[indxtemp]
                         raise Exception('Color of a PS went outside the prior range.') 
 
-
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
            
+            timeinit = gdat.functime()
+        
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
             
-            timeinit = gdat.functime()
-        
             indxsampsave = gdat.indxsampsave[gdatmodi.cntrswep]
 
             # fill the sample lists
@@ -1960,7 +1992,7 @@ def work(gdat, indxprocwork):
             gdatmodi.listmemoresi[indxsampsave] = tdpy.util.retr_memoresi()[0]
             
             timefinl = gdat.functime()
-            gdatmodi.listchrototl[gdatmodi.cntrswep, 4] = timefinl - timeinit
+            gdatmodi.listchrototl[gdatmodi.cntrswep, 2] = timefinl - timeinit
 
         # plot the current sample
         if thismakefram:
@@ -1970,10 +2002,17 @@ def work(gdat, indxprocwork):
                 gdat.lock.acquire()
             if gdat.verbtype > 0:
                 print 'Process %d started making a frame.' % indxprocwork
+            
+            timeinit = gdat.functime()
+            
             proc_samp(gdat, gdatmodi, 'this')
             plot_samp(gdat, gdatmodi, 'this')
             if gdat.verbtype > 0:
                 print 'Process %d finished making a frame.' % indxprocwork
+        
+            timefinl = gdat.functime()
+            gdatmodi.listchrollik[gdatmodi.cntrswep, 1] = timefinl - timeinit
+    
             if gdat.numbproc > 1:
                 gdat.lock.release()
             
@@ -1996,24 +2035,19 @@ def work(gdat, indxprocwork):
             
             # evaluate the log-prior
             timeinit = gdat.functime()
+            
             proc_samp(gdat, gdatmodi, 'next')
             
-            #retr_lpri(gdat, gdatmodi)
-            if gdat.diagmode:
-                if not isfinite(gdatmodi.deltllik):
-                    raise Exception('deltlpri is not finite.')
-            timefinl = gdat.functime()
-            gdatmodi.listchrototl[gdatmodi.cntrswep, 2] = timefinl - timeinit
-
-            # evaluate the log-likelihood
-            timeinit = gdat.functime()
-            #retr_llik(gdat, gdatmodi) 
-            if gdat.diagmode:
-                if not isfinite(gdatmodi.deltllik):
-                    raise Exception('deltllik is not finite.')
             timefinl = gdat.functime()
             gdatmodi.listchrototl[gdatmodi.cntrswep, 3] = timefinl - timeinit
    
+            if gdat.diagmode:
+                if not isfinite(gdatmodi.deltllik):
+                    raise Exception('deltlpri is not finite.')
+            if gdat.diagmode:
+                if not isfinite(gdatmodi.deltllik):
+                    raise Exception('deltllik is not finite.')
+            
             # evaluate the acceptance probability
             accpprob = exp(gdatmodi.deltllik + gdatmodi.deltlpri + gdatmodi.laccfact)
 
@@ -2105,7 +2139,7 @@ def work(gdat, indxprocwork):
             print
         
         # update the sweep counter
-        if gdat.optidone:
+        if gdatmodi.optidone:
             gdatmodi.cntrswep += 1
         else:
         
@@ -2129,8 +2163,6 @@ def work(gdat, indxprocwork):
                 print gdat.indxpropbrth
                 print 'gdat.indxpropdeth'
                 print gdat.indxpropdeth
-                print 'gdat.indxproplgal'
-                print gdat.indxproplgal
                 print 'gdat.indxfixpconvprop'
                 print gdat.indxfixpconvprop
                 print 'gdat.numbfixp'
@@ -2138,20 +2170,9 @@ def work(gdat, indxprocwork):
                 print 'gdat.strgstdp'
                 print gdat.strgstdp
 
-            if gdatmodi.thisindxprop < gdat.numbfixpactvprop:
-                gdatmodi.thisindxstdp = gdat.indxfixpactvprop[gdatmodi.thisindxprop]
-            elif gdatmodi.thisindxprop == gdat.indxproplgal:
-                gdatmodi.thisindxstdp = gdat.numbfixp
-            elif gdatmodi.thisindxprop == gdat.indxpropbgal:
-                gdatmodi.thisindxstdp = gdat.numbfixp + 1
-            elif gdatmodi.thisindxprop == gdat.indxpropflux:
-                gdatmodi.thisindxstdp = gdat.numbfixp + 2
-            elif gdatmodi.thisindxprop == gdat.indxpropspep:
-                gdatmodi.thisindxstdp = gdat.numbfixp + 3
-                
-            cntrproptotl[gdatmodi.thisindxstdp] += 1.
+            cntrproptotl[0] += 1.
             if gdatmodi.listaccp[gdatmodi.cntrswep]:
-                cntrprop[gdatmodi.thisindxstdp] += 1.
+                cntrprop[0] += 1.
             
             if gdatmodi.cntrswepopti % perdpropeffi == 0 and (cntrproptotl[gdat.indxfixpactvprop] > 0).all():
             
@@ -2166,7 +2187,7 @@ def work(gdat, indxprocwork):
                         print 'Optimized proposal scale: '
                         print gdat.stdvstdp[gdat.indxstdpactv]
                         print 'Writing the optimized proposal scale to %s...' % pathstdvprop
-                    gdat.optidone = True
+                    gdatmodi.optidone = True
                     pf.writeto(pathstdvprop, gdat.stdvstdp, clobber=True)
 
                     plot_opti(gdat, gdatmodi)
