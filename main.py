@@ -1071,14 +1071,6 @@ def init( \
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdat, 'gdat')
 
-    gdat.optiproptemp = gdat.optiprop
-    if gdat.optiprop:
-        gdat.probtrantemp = gdat.probtran
-        gdat.probtran = 0.
-        listgdatmodi = [work(gdat, 0)]
-        gdat.probtran = gdat.probtrantemp
-        gdat.optiproptemp = False
-        
     # lock the global object againts any future modifications
     gdat.lockmodi()
 
@@ -1710,7 +1702,16 @@ def work(gdat, indxprocwork):
    
     # proposal scale optimization
     gdatmodi.stdvstdp = copy(gdat.stdvstdp)
-    if gdat.optiproptemp:
+    if gdat.optiprop:
+        
+        # perform a maximum likelihood fit to bring the sampler to a high likelihood region 
+        if False:
+            gdat.probtrantemp = gdat.probtran
+            gdat.probtran = 0.
+            listgdatmodi = [work(gdat, 0)]
+            gdat.probtran = gdat.probtrantemp
+            gdat.optiproptemp = False
+        
         pathstdvprop = gdat.pathopti + '%s.fits' % gdat.rtag
         if os.path.isfile(pathstdvprop) and gdat.loadvaripara:
             if gdat.verbtype > 0 and indxprocwork == 0:
@@ -1797,9 +1798,10 @@ def work(gdat, indxprocwork):
         gdatmodi.drmcsamp = copy(gdatmodi.drmcsampcopy)
    
         if gdat.makeplot:
-            xdat = gdatmodi.thissampvarb[concatenate(gdatmodi.thissampflux)]
+            xdat = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)]
             ydat = gdatmodi.stdvlgaltemp
-            tdpy.util.plot_gene(path, xdat, ydat, scalyaxi='logt', lablxaxi=gdat.strgflux, lablyaxi=r'$\sigma_l$')
+            path = gdat.pathinit + 'stdvlgalflux.pdf'
+            tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat=gdat.strgflux, lablydat=r'$\sigma_l$')
         
     else:
         gdatmodi.optidone = True
