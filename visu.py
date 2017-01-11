@@ -396,6 +396,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     ## log-prior and log-likelihood
+    gdat.listlliktotl = sum(gdat.listllik, axis=(1, 2, 3))
+    gdat.listlpritotl = sum(gdat.listlpri, axis=1)
+
     for strg in ['lpri', 'llik']:
 
         if strg == 'lpri':
@@ -403,7 +406,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         if strg == 'llik':
             labltemp = '\ln P(x)'
         
-        setattr(gdat, 'list' + strg + 'flat', getattr(gdat, 'list' + strg).flatten())
+        setattr(gdat, 'list' + strg + 'flat', getattr(gdat, 'list' + strg + 'totl').flatten())
         setattr(gdat, 'listdelt' + strg + 'flat', getattr(gdat, 'listdelt' + strg).flatten())
         
         labl = r'$%s$' % labltemp
@@ -421,6 +424,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
         path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s' % strg
+        print 'getattr(gdat, listdel + strg + flat)'
+        summgene(getattr(gdat, 'listdelt' + strg + 'flat'))
+        print
+        print
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat'), labldelt)
         if gdat.numbproc > 1:
             path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc' % strg
