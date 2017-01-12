@@ -16,7 +16,7 @@ from numpy.random import *
 # temp
 #seterr(divide='raise', over='raise', invalid='raise')
 #seterr(all='raise')
-seterr(under='ignore')
+#seterr(under='ignore')
 
 # scipy
 import scipy as sp

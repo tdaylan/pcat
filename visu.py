@@ -26,7 +26,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             indxydat = [i, slice(None), m]
                         strgindx = '%d%d' % (i, m)
-                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, \
+                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, scalyaxi='logt', \
                                                                                     factxdat=gdat.anglfact, lablxaxi=r'$\theta$ [%s]' % gdat.strganglunit, lablyaxi=r'$\mathcal{P}$')
                         plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=r'$\theta_0$ [%s]' % gdat.strganglunit, lablyaxi=r'$f(\phi)$')
@@ -74,6 +74,7 @@ def plot_samp(gdat, gdatmodi, strg):
         plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts')
         plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts')
         if strg != 'true':
+            plot_genemaps(gdat, gdatmodi, strg, 'deflcomp')
             plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', scal='logt', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$ [kpc]', ylim=[0.1, 100.])
             plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, hist=True)
 
@@ -85,7 +86,6 @@ def plot_samp(gdat, gdatmodi, strg):
             plot_defl(gdat, gdatmodi, strg)
             if strg != 'true':
                 plot_defl(gdat, gdatmodi, strg, strgcomp='resi')
-                plot_deflcomp(gdat, gdatmodi, strg)
 
             # deflection field due to individual lenses
             if strg == 'this':
@@ -378,11 +378,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     #### backgrounds
     if gdat.propbacp:
         path = gdat.pathpostfixp + 'bacp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp.flatten()], gdat.strgfixp[gdat.indxfixpbacp.flatten()], \
-                                                                                                        truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()])
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
+                                                                                                        truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp])
         if gdat.indxfixpbacp.size == 2:
-            tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp.flatten()], gdat.strgfixp[gdat.indxfixpbacp.flatten()], \
-                                                                            truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp.flatten()], join=True)
+            tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
+                                                                            truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp], join=True)
     
     ## randomly selected trandimensional parameters
     if gdat.numbtrap > 0:
@@ -424,10 +424,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
         path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s' % strg
-        print 'getattr(gdat, listdel + strg + flat)'
-        summgene(getattr(gdat, 'listdelt' + strg + 'flat'))
-        print
-        print
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat'), labldelt)
         if gdat.numbproc > 1:
             path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc' % strg
@@ -570,9 +566,9 @@ def plot_compfrac(gdat, gdatmodi):
     
     ## background templates
     for c in gdat.indxback:
-        listydat[cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi)[gdat.indxfixpbacp[c]] * gdat.backfluxmean[c, :]
+        listydat[cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi)[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
         if gdatmodi == None:
-            listyerr[:, cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi, perc='errr')[:, gdat.indxfixpbacp[c], None] * gdat.backfluxmean[None, c, :]
+            listyerr[:, cntr+c, :] = retr_varb(gdat, 'fixp', gdatmodi, perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
     
     # plot energy spectra of the data, background model components and total background
     if gdat.numbener > 1:
@@ -957,7 +953,7 @@ def plot_histspec(gdat, l, gdatmodi, plotspec=False):
     
 
 def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=None, scal=None, scalxaxi=None, scalyaxi=None, \
-                            lablxaxi='', lablyaxi='', factxdat=1., factydat=1., hist=False, ylim=None):
+                                                                                        lablxaxi='', lablyaxi='', factxdat=1., factydat=1., hist=False, ylim=None):
     
     if scal == None:
         if scalxaxi == None:
@@ -1380,7 +1376,8 @@ def plot_datacntshist(gdat):
                 axis.set_title(gdat.strgbinsener[i])
             if i == 0 and gdat.evttbins:
                 axis.set_ylabel(gdat.strgevtt[m])
-        
+            axis.set_yscale('log')
+
     plt.tight_layout()
     plt.savefig(gdat.pathinit + 'datacntshist.pdf')
     plt.close(figr)
@@ -1455,13 +1452,16 @@ def plot_eval(gdat):
     limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * psfntemp)
     maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * psfntemp[::-1], gdat.binsanglplot[::-1])
     
-    if limt > 0:
-        axis.axhline(limt, color='red', ls=':', label='Flux floor')
-    axis.set_xlim([None, maxmangltemp])
     axis.set_ylim([1e-3 * limt, None])
-    legd = axis.legend(frameon=True, shadow=True, fancybox=True, framealpha=1.)
-    legd.get_frame().set_facecolor('white')
-    
+    try:
+        if limt > 0:
+            axis.axhline(limt, color='red', ls=':', label='Flux floor')
+        axis.set_xlim([None, maxmangltemp])
+        legd = axis.legend(frameon=True, shadow=True, fancybox=True, framealpha=1.)
+        legd.get_frame().set_facecolor('white')
+    except:
+        pass
+
     plt.tight_layout()
     plt.savefig(gdat.pathinit + 'eval.pdf')
     plt.close(figr)
@@ -1869,19 +1869,6 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None):
     plt.close(figr)
     
     
-def plot_deflcomp(gdat, gdatmodi, strg):
-
-    figr, axis, path = init_figr(gdat, gdatmodi, 'deflcomp', strg)
-    make_catllabl(gdat, axis)
-    deflcomp = retr_fromgdat(gdat, gdatmodi, strg, 'deflcomp')
-    imag = retr_imag(gdat, axis, deflcomp, vmin=-1., vmax=1., scal=gdat.scalmaps)
-    make_cbar(gdat, axis, imag, tick=gdat.tickdeflcomp, labl=gdat.labldeflcomp)
-    supr_fram(gdat, gdatmodi, axis)
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close(figr)
-    
-    
 def plot_datacnts(gdat, gdatmodi, indxenerplot, indxevttplot, indxpoplplot):
 
     figr, axis, path = init_figr(gdat, gdatmodi, 'datacnts', '', indxenerplot, indxevttplot, indxpoplplot)
@@ -1920,10 +1907,15 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None):
         cmap = 'Reds'
     if strgcbar == 'resicnts':
         cmap = 'RdBu'
+    if strgcbar == 'deflcomp':
+        cmap = 'Oranges'
     if strgcbar == 'conv':
-        cmap = 'Purple'
-        
-    imag = retr_imag(gdat, axis, maps, vmin=vmin, vmax=vmax)
+        cmap = 'Purples'
+
+    if gdat.scalmaps == 'asnh':
+        mapstemp = arcsinh(maps)
+    
+    imag = retr_imag(gdat, axis, mapstemp, vmin=vmin, vmax=vmax, cmap=cmap)
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
         
     plt.tight_layout()
@@ -2042,7 +2034,7 @@ def plot_pntsdiff():
     tempsamp[gdat.indxfixpfluxdistslop] = cdfn_atan(array([1.5]), minmfluxdistslop, factfluxdistslop)
     tempsamp[gdat.indxfixppsfp] = 0.5
     for c in gdat.indxback:
-        tempsamp[gdat.indxfixpbacp[c, 0]] = cdfn_logt(array([1.]), minmbacp[c], factbacp[c])
+        tempsamp[gdat.indxfixpbacp[c*gdat.numbener]] = cdfn_logt(array([1.]), minmbacp[c], factbacp[c])
     
     tempsampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, drmcsamp[:, 0])
     temppntsflux, temppntscnts, tempmodlflux, tempmodlcnts = retr_maps(gdat, tempindxpntsfull, tempsampvarb)
