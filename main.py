@@ -593,6 +593,8 @@ def init( \
             gdat.minmflux = 1e-7
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
+        if gdat.pntstype == 'lens':
+            gdat.minmflux = 2e-4
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
@@ -601,6 +603,8 @@ def init( \
             gdat.maxmflux = 1e-3
         if gdat.exprtype == 'sdyn':
             gdat.maxmflux = 1e4
+        if gdat.pntstype == 'lens':
+            gdat.maxmflux = 0.5
    
     # PS spectral model
     if gdat.spectype == None:
@@ -744,6 +748,11 @@ def init( \
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
 
     if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.back[0], float)):
+        print 'gdat.numbback'
+        print gdat.numbback
+        print 'gdat.back'
+        print gdat.back
+        print
         raise Exception('In a lensing problem, the background can only be uniform.')
     
     if gdat.minmflux >= gdat.maxmflux:
@@ -796,8 +805,8 @@ def init( \
                 gdat.trueindxpntsfull.append(range(gdat.truenumbpnts[l]))
         else:
             gdat.trueindxpntsfull = []
-        gdat.trueindxsamplgal, gdat.trueindxsampbgal, gdat.trueindxsampflux, gdat.trueindxsampspec, gdat.trueindxsampspep, \
-                                                                                    gdat.trueindxsampcompcolr = retr_indx(gdat, gdat.trueindxpntsfull)
+        gdat.trueindxsamplgal, gdat.trueindxsampbgal, gdat.trueindxsampflux, gdat.trueindxsampspec, gdat.trueindxsampsind, gdat.trueindxsampcurv, gdat.trueindxsampexpo, \
+                                                                                      gdat.trueindxsampcompcolr = retr_indx(gdat, gdat.trueindxpntsfull, gdat.truespectype)
         
         gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbpnts]
 
@@ -806,14 +815,19 @@ def init( \
         
         if gdat.truefluxdisttype == None:
             gdat.truefluxdisttype = 'powr'
-      
+     
+        print 'gdat.truefluxdisttype'
+        print gdat.truefluxdisttype
         # fix some true parameters
-        defn_defa(gdat, 2., 'fluxdistslop', 'true')
-        defn_defa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek', 'true')
-        defn_defa(gdat, 1., 'fluxdistsloplowr', 'true')
-        defn_defa(gdat, 2., 'fluxdistslopuppr', 'true')
-        defn_defa(gdat, 2., 'sinddistmean', 'true')
-        defn_defa(gdat, 0.5, 'sinddiststdv', 'true')
+        for l in gdat.trueindxpopl:
+            if gdat.truefluxdisttype == 'powr':
+                defn_defa(gdat, 2., 'fluxdistslop', 'true')
+            else:
+                defn_defa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek', 'true')
+                defn_defa(gdat, 1., 'fluxdistsloplowr', 'true')
+                defn_defa(gdat, 2., 'fluxdistslopuppr', 'true')
+            defn_defa(gdat, 2., 'sinddistmean', 'true')
+            defn_defa(gdat, 0.5, 'sinddiststdv', 'true')
        
         for k in gdat.trueindxfixp:
 
@@ -855,7 +869,9 @@ def init( \
         gdat.truespec = [[] for l in gdat.trueindxpopl]
         gdat.truenumbspep, gdat.trueliststrgspep, gdat.trueliststrgfluxspep = retr_numbspep(gdat.truespectype)
         if gdat.truenumbtrap > 0:
-            gdat.truespep = [empty((gdat.truefixp[gdat.trueindxfixpnumbpnts[l]], gdat.truenumbspep[l])) for l in gdat.trueindxpopl]
+            gdat.truesind = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
+            gdat.truecurv = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
+            gdat.trueexpo = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
         
             for l in gdat.trueindxpopl:
                 if gdat.truespatdisttype[l] == 'unif':
@@ -884,22 +900,27 @@ def init( \
     
                 if gdat.numbener > 1:
                     # spectral parameters
-                    gdat.truespep[l][:, 0] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
+                    gdat.truesind[l] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
                     if gdat.truespectype[l] == 'curv':
-                        gdat.truespep[l][:, 1] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truecurvdistmean[l], gdat.truecurvdiststdv[l])
+                        gdat.truecurv[l] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truecurvdistmean[l], gdat.truecurvdiststdv[l])
                     
                     if gdat.truespectype[l] == 'expo':
-                        gdat.truespep[l][:, 1] = icdf_logt(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.minmener, gdat.factener)
+                        gdat.trueexpo[l] = icdf_logt(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.minmener, gdat.factener)
                 
-                # spectra
-                gdat.truespec[l][:] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], spep=gdat.truespep[l], spectype=gdat.truespectype[l])[None, :, :]
+                    # spectra
+                    gdat.truespec[l][:] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
+                                                                                                             gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l])[None, :, :]
                 
                 gdat.truesampvarb[gdat.trueindxsamplgal[l]] = gdat.truelgal[l]
                 gdat.truesampvarb[gdat.trueindxsampbgal[l]] = gdat.truebgal[l]
                 gdat.truesampvarb[gdat.trueindxsampspec[l]] = gdat.truespec[l]
                 if gdat.numbener > 1:
-                    gdat.truesampvarb[gdat.trueindxsampspep[l]] = gdat.truespep[l]
+                    gdat.truesampvarb[gdat.trueindxsampsind[l]] = gdat.truesind[l]
+                    if gdat.truespectype[l] == 'curv':
+                        gdat.truesampvarb[gdat.trueindxsampcurv[l]] = gdat.truecurv[l]
+                    if gdat.truespectype[l] == 'expo':
+                        gdat.truesampvarb[gdat.trueindxsampexpo[l]] = gdat.trueexpo[l]
                 if gdat.verbtype > 1:
                     print 'l'
                     print l
@@ -908,10 +929,14 @@ def init( \
                     print 'truebgal[l]'
                     print gdat.truebgal[l]
                     if gdat.numbener > 1:
+                        print 'truesind[l]'
+                        print gdat.truesind[l]
+                        print 'truecurv[l]'
+                        print gdat.truecurv[l]
+                        print 'trueexpo[l]'
+                        print gdat.trueexpo[l]
                         print 'truespectype[l]'
                         print gdat.truespectype[l]
-                        print 'truespep[l]'
-                        print gdat.truespep[l]
                     print 'truespec[l]'
                     print gdat.truespec[l]
                
@@ -1247,16 +1272,23 @@ def init( \
         gdat.listspec = [[] for l in gdat.indxpopl]
         gdat.listflux = [[] for l in gdat.indxpopl]
         if gdat.numbener > 1:
-            gdat.listspep = [[] for l in gdat.indxpopl]
+            gdat.listsind = [[] for l in gdat.indxpopl]
+            gdat.listcurv = [[] for l in gdat.indxpopl]
+            gdat.listexpo = [[] for l in gdat.indxpopl]
         for n in gdat.indxsamptotl: 
             for l in gdat.indxpopl:
-                indxsamplgal, indxsampbgal, indxsampflux, indxsampspec, indxsampspep, indxsampcompcolr = retr_indx(gdat, gdat.listindxpntsfull[n])
+                indxsamplgal, indxsampbgal, indxsampflux, indxsampspec, indxsampsind, indxsampcurv, \
+                                                                    indxsampexpo, indxsampcompcolr = retr_indx(gdat, gdat.listindxpntsfull[n], gdat.spectype)
                 gdat.listlgal[l].append(gdat.listsampvarb[n, indxsamplgal[l]])
                 gdat.listbgal[l].append(gdat.listsampvarb[n, indxsampbgal[l]])
                 gdat.listspec[l].append(gdat.listsampvarb[n, indxsampspec[l]])
                 gdat.listflux[l].append(gdat.listsampvarb[n, indxsampspec[l]][gdat.indxenerfluxdist[0], :])
                 if gdat.numbener > 1:
-                    gdat.listspep[l].append(gdat.listsampvarb[n, indxsampspep[l]])
+                    gdat.listsind[l].append(gdat.listsampvarb[n, indxsampsind[l]])
+                    if gdat.spectype[l] == 'curv':
+                        gdat.listcurv[l].append(gdat.listsampvarb[n, indxsampcurv[l]])
+                    if gdat.spectype[l] == 'expo':
+                        gdat.listexpo[l].append(gdat.listsampvarb[n, indxsampexpo[l]])
         
         # calculate the PS counts, radial and azimuthal positions 
         if gdat.pntstype == 'lght':
@@ -1509,8 +1541,8 @@ def work(gdat, indxprocwork):
             gdatmodi.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
     else:
         gdatmodi.thisindxpntsfull = []
-    gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampspep, \
-                                                                                                    gdatmodi.thisindxsampcompcolr = retr_indx(gdat, gdatmodi.thisindxpntsfull)
+    gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampsind, \
+                                    gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, gdatmodi.thisindxsampcompcolr = retr_indx(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
         
     if gdat.numbtrap > 0:
         ## PS components
@@ -1534,12 +1566,12 @@ def work(gdat, indxprocwork):
 
                     if gdat.numbener > 1:
                         # color parameters
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 0], 0] = cdfn_gaus(gdat.truespep[l][:, 0], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
-                                                                                                                          gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_gaus(gdat.truesind[l], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                                gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
                         if gdat.spectype[l] == 'curv':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_gaus(gdat.truespep[l][:, 1], gdat.curvdistmean[l], gdat.curvdiststdv[l])
+                            gdatmodi.drmcsamp[gdatmodi.thisindxsampcurv[l], 0] = cdfn_gaus(gdat.truecurv[l], gdat.curvdistmean[l], gdat.curvdiststdv[l])
                         if gdat.spectype[l] == 'expo':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampspep[l][:, 1], 0] = cdfn_logt(gdat.truespep[l][:, 1], gdat.minmener, gdat.factener)
+                            gdatmodi.drmcsamp[gdatmodi.thisindxsampexpo[l], 0] = cdfn_logt(gdat.trueexpo[l], gdat.minmener, gdat.factener)
                 
                 randinittemp = False
             except:
@@ -1606,41 +1638,7 @@ def work(gdat, indxprocwork):
 
     # log the initial state
     if gdat.verbtype > 1 and gdat.numbtrap > 0:
-        print 'thisindxpntsfull'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxpntsfull[l]
-        
-        print 'thisindxpntsempt'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxpntsempt  
-        
-        print 'thisindxsamplgal'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxsamplgal[l]
-        
-        print 'thisindxsampbgal'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxsampbgal[l]
-        
-        print 'thisindxsampspec'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxsampspec[l]
-       
-        if gdat.numbener > 1:
-            print 'thisindxsampspep'
-            for l in gdat.indxpopl:
-                print gdatmodi.thisindxsampspep[l]
-        
-        print 'thisindxsampcompcolr'
-        for l in gdat.indxpopl:
-            print gdatmodi.thisindxsampcompcolr[l]
-
-    if gdat.verbtype > 1:
-        print 'thissampvarb'
-        for k in gdat.indxpara:
-            print gdatmodi.thissampvarb[k]
-        
-    if gdat.verbtype > 1:
+        show_samp(gdat, gdatmodi)
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
     if gdat.diagmode:
@@ -1749,8 +1747,8 @@ def work(gdat, indxprocwork):
     
         gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
         gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
-        gdatmodi.nextindxsamplgal, gdatmodi.nextindxsampbgal, gdatmodi.nextindxsampflux, gdatmodi.nextindxsampspec, gdatmodi.nextindxsampspep, \
-                                                                                                    gdatmodi.nextindxsampcompcolr = retr_indx(gdat, gdatmodi.nextindxpntsfull)
+        gdatmodi.nextindxsamplgal, gdatmodi.nextindxsampbgal, gdatmodi.nextindxsampflux, gdatmodi.nextindxsampspec, gdatmodi.nextindxsampsind, \
+                    gdatmodi.nextindxsampcurv, gdatmodi.nextindxsampexpo, gdatmodi.nextindxsampcompcolr = retr_indx(gdat, gdatmodi.nextindxpntsfull, gdat.spectype)
         lposcntr = retr_negalpos(gdat, gdatmodi)
         
         gdatmodi.stdvstdp[gdat.indxstdpcomp] = 0.
@@ -1763,16 +1761,20 @@ def work(gdat, indxprocwork):
                 gdatmodi.indxstdppara[k] = cntr
                 gdat.indxsampactvprop[cntr] = k
                 cntr += 1
-            elif k in concatenate(gdatmodi.thisindxsamplgal):
+            if k in concatenate(gdatmodi.thisindxsamplgal):
                 gdatmodi.indxstdppara[k] = gdat.indxstdplgal
-            elif k in concatenate(gdatmodi.thisindxsampbgal):
+            if k in concatenate(gdatmodi.thisindxsampbgal):
                 gdatmodi.indxstdppara[k] = gdat.indxstdpbgal
-            elif k in concatenate(gdatmodi.thisindxsampflux):
+            if k in concatenate(gdatmodi.thisindxsampflux):
                 gdatmodi.indxstdppara[k] = gdat.indxstdpflux
-            else:
-                if gdat.numbener > 1:
-                    if k in concatenate(gdatmodi.thisindxsampspep, axis=0):
-                        gdatmodi.indxstdppara[k] = gdat.indxstdpspep
+            
+            if gdat.numbener > 1:
+                if k in concatenate(gdatmodi.thisindxsampsind):
+                    gdatmodi.indxstdppara[k] = gdat.indxstdpsind
+                if k in concatenate(gdatmodi.thisindxsampcurv):
+                    gdatmodi.indxstdppara[k] = gdat.indxstdpcurv
+                if k in concatenate(gdatmodi.thisindxsampexpo):
+                    gdatmodi.indxstdppara[k] = gdat.indxstdpexpo
        
         # temp
         deltparastep = 1e-3
@@ -1997,22 +1999,6 @@ def work(gdat, indxprocwork):
                     print flux
                     raise Exception('')
     
-                if gdat.numbener > 1:
-                    sind = gdatmodi.thissampvarb[gdatmodi.thisindxsampspep[l]]
-                    indxtemp = where((sind < gdat.minmsind) | (sind > gdat.maxmsind))[0]
-                    if indxtemp.size > 0:
-                        print 'indxtemp'
-                        print indxtemp
-                        print 'sind'
-                        print sind
-                        print 'minmsind'
-                        print gdat.minmsind
-                        print 'maxmsind'
-                        print gdat.maxmsind
-                        print 'sind[indxtemp]'
-                        print sind[indxtemp]
-                        raise Exception('Color of a PS went outside the prior range.') 
-
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
            
