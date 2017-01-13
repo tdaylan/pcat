@@ -202,9 +202,9 @@ def init( \
          truefluxdistbrek=None, \
          truefluxdistsloplowr=None, \
          truefluxdistslopuppr=None, \
-         truespectype=None, \
          truesinddistmean=None, \
          truesinddiststdv=None, \
+         truespectype=None, \
          truevarioaxi=None, \
          truepsfntype=None, \
          trueback=None, \
@@ -815,7 +815,7 @@ def init( \
         
         if gdat.truefluxdisttype == None:
             gdat.truefluxdisttype = 'powr'
-     
+        
         print 'gdat.truefluxdisttype'
         print gdat.truefluxdisttype
         # fix some true parameters
@@ -826,8 +826,13 @@ def init( \
                 defn_defa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek', 'true')
                 defn_defa(gdat, 1., 'fluxdistsloplowr', 'true')
                 defn_defa(gdat, 2., 'fluxdistslopuppr', 'true')
-            defn_defa(gdat, 2., 'sinddistmean', 'true')
-            defn_defa(gdat, 0.5, 'sinddiststdv', 'true')
+            if gdat.numbener > 1:
+                defn_defa(gdat, 2., 'sinddistmean', 'true')
+                defn_defa(gdat, 0.5, 'sinddiststdv', 'true')
+                defn_defa(gdat, 2., 'curvdistmean', 'true')
+                defn_defa(gdat, 0.5, 'curvdiststdv', 'true')
+                defn_defa(gdat, 2., 'expodistmean', 'true')
+                defn_defa(gdat, 0.5, 'expodiststdv', 'true')
        
         for k in gdat.trueindxfixp:
 

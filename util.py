@@ -1138,7 +1138,7 @@ def retr_prop(gdat, gdatmodi):
     else:
         indxpntsfull = gdatmodi.thisindxpntsfull
     
-    indxsamplgal, indxsampbgal, indxsampflux, indxsampspec, indxsampspep, indxsampcompcolr = retr_indx(gdat, indxpntsfull, gdat.spectype)
+    indxsamplgal, indxsampbgal, indxsampflux, indxsampspec, indxsampsind, indxsampcurv, indxsampexpo, indxsampcompcolr = retr_indx(gdat, indxpntsfull, gdat.spectype)
     
     # PSs
     for l in gdat.indxpopl:
@@ -2006,7 +2006,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock':
         # set mock sample vector indices
         retr_indxsamp(gdat, gdat.truepsfntype, gdat.truespectype, gdat.truevarioaxi, strgpara='true')
-
+    
     # process index
     gdat.indxproc = arange(gdat.numbproc)
 
@@ -2472,11 +2472,6 @@ def setpinit(gdat, boolinitsetp=False):
 
     # temp
     if gdat.pntstype == 'lens':
-        print 'gdat.numbsidecart'
-        print gdat.numbsidecart
-        print 'gdat.backflux[0]'
-        print gdat.backflux[0].shape
-
         gdat.backfluxlens = gdat.backflux[0][0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart))
     
     if gdat.correxpo:
@@ -3067,6 +3062,7 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
             indxfixpfluxdistsloplowr = arange(numbpopl) + cntr.incr(numbpopl)
             indxfixpfluxdistslopuppr = arange(numbpopl) + cntr.incr(numbpopl)
             indxfixphypr += [indxfixpfluxdistbrek, indxfixpfluxdistsloplowr, indxfixpfluxdistslopuppr]
+        
         if gdat.numbener > 1:
             indxfixpsinddistmean = arange(numbpopl) + cntr.incr(numbpopl)
             indxfixpsinddiststdv = arange(numbpopl) + cntr.incr(numbpopl)
@@ -3456,9 +3452,9 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
 
 def defn_defa(gdat, valu, strg, strgpara=''):
 
-    numbpopl = getattr(gdat, strgpara + 'numbpopl')
     varb = getattr(gdat, strgpara + strg)
     if varb == None:
+        numbpopl = getattr(gdat, strgpara + 'numbpopl')
         valutemp = zeros(numbpopl) + valu
     else:
         valutemp = varb
@@ -4081,11 +4077,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
     lgalconc = concatenate(lgal)
     bgalconc = concatenate(bgal)
     specconc = concatenate(spec, axis=1)
+    sind = [[] for l in gdat.indxpopl]
+    curv = [[] for l in gdat.indxpopl]
+    expo = [[] for l in gdat.indxpopl]
     if gdat.numbener > 1:
         indxsampspec = getattr(gdatobjt, strg + 'indxsampspec')
-        sind = [[] for l in gdat.indxpopl]
-        curv = [[] for l in gdat.indxpopl]
-        expo = [[] for l in gdat.indxpopl]
         for l in range(numbpopl):
             sind[l] = sampvarb[indxsampsind[l]]
             if gdat.spectype == 'curv':
@@ -4121,13 +4117,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         psfntype = getattr(gdat, strgtype + 'psfntype')
        
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, varioaxi)
-        if varioaxi:
-            psfnintp = []
-            for p in gdat.indxoaxi:
-                psfnintp.append(interp1d(gdat.binsangl, psfn[:, :, :, p], axis=1))
-        else:
-            psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
-        setattr(gdatobjt, strg + 'psfnintp', psfnintp)
+        # temp
+        #if varioaxi:
+        #    psfnintp = []
+        #    for p in gdat.indxoaxi:
+        #        psfnintp.append(interp1d(gdat.binsangl, psfn[:, :, :, p], axis=1))
+        #else:
+        #    psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
+        #setattr(gdatobjt, strg + 'psfnintp', psfnintp)
     
     if strg != 'true':
         setattr(gdatobjt, strg + 'lgal', lgal)
