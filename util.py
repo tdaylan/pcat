@@ -3067,14 +3067,12 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
             indxfixpsinddistmean = arange(numbpopl) + cntr.incr(numbpopl)
             indxfixpsinddiststdv = arange(numbpopl) + cntr.incr(numbpopl)
             indxfixphypr += [indxfixpsinddistmean, indxfixpsinddiststdv]
-            if spectype == 'curv':
-                indxfixpcurvdistmean = arange(numbpopl) + cntr.incr(numbpopl)
-                indxfixpcurvdiststdv = arange(numbpopl) + cntr.incr(numbpopl)
-                indxfixphypr += [indxfixpcurvdistmean, indxfixpcurvdiststdv]
-            if spectype == 'expo':
-                indxfixpexpodistmean = arange(numbpopl) + cntr.incr(numbpopl)
-                indxfixpexpodiststdv = arange(numbpopl) + cntr.incr(numbpopl)
-                indxfixphypr += [indxfixpexpodistmean, indxfixpexpodiststdv]
+            indxfixpcurvdistmean = arange(numbpopl) + cntr.incr(numbpopl)
+            indxfixpcurvdiststdv = arange(numbpopl) + cntr.incr(numbpopl)
+            indxfixphypr += [indxfixpcurvdistmean, indxfixpcurvdiststdv]
+            indxfixpexpodistmean = arange(numbpopl) + cntr.incr(numbpopl)
+            indxfixpexpodiststdv = arange(numbpopl) + cntr.incr(numbpopl)
+            indxfixphypr += [indxfixpexpodistmean, indxfixpexpodiststdv]
              
         indxfixphypr = concatenate(indxfixphypr)
 
@@ -3238,27 +3236,25 @@ def retr_indxsamp(gdat, psfntype, spectype, varioaxi, strgpara=''):
                     strgfixp[k] = r'$\sigma_{s}$'
                     scalfixp[k] = 'logt'
 
-                if gdat.spectype == 'curv':
-                    if k in indxfixpcurvdistmean:
-                        namefixp[k] = 'curvdistmeanpop%d' % l
-                        strgfixp[k] = r'$\lambda_{c}$'
-                        scalfixp[k] = 'atan'
+                if k in indxfixpcurvdistmean:
+                    namefixp[k] = 'curvdistmeanpop%d' % l
+                    strgfixp[k] = r'$\lambda_{c}$'
+                    scalfixp[k] = 'atan'
 
-                    if k in indxfixpcurvdiststdv:
-                        namefixp[k] = 'curvdiststdvpop%d' % l
-                        strgfixp[k] = r'$\sigma_{c}$'
-                        scalfixp[k] = 'logt'
+                if k in indxfixpcurvdiststdv:
+                    namefixp[k] = 'curvdiststdvpop%d' % l
+                    strgfixp[k] = r'$\sigma_{c}$'
+                    scalfixp[k] = 'logt'
 
-                if gdat.spectype == 'curv':
-                    if k in indxfixpexpodistmean:
-                        namefixp[k] = 'expodistmeanpop%d' % l
-                        strgfixp[k] = r'$\lambda_{\epsilon}$'
-                        scalfixp[k] = 'logt'
+                if k in indxfixpexpodistmean:
+                    namefixp[k] = 'expodistmeanpop%d' % l
+                    strgfixp[k] = r'$\lambda_{\epsilon}$'
+                    scalfixp[k] = 'logt'
 
-                    if k in indxfixpexpodiststdv:
-                        namefixp[k] = 'expodiststdvpop%d' % l
-                        strgfixp[k] = r'$\sigma_{\epsilon}$'
-                        scalfixp[k] = 'logt'
+                if k in indxfixpexpodiststdv:
+                    namefixp[k] = 'expodiststdvpop%d' % l
+                    strgfixp[k] = r'$\sigma_{\epsilon}$'
+                    scalfixp[k] = 'logt'
 
         if k in indxfixppsfp:
             if gdat.psfninfoprio:
@@ -4117,14 +4113,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         psfntype = getattr(gdat, strgtype + 'psfntype')
        
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, varioaxi)
-        # temp
-        #if varioaxi:
-        #    psfnintp = []
-        #    for p in gdat.indxoaxi:
-        #        psfnintp.append(interp1d(gdat.binsangl, psfn[:, :, :, p], axis=1))
-        #else:
-        #    psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
-        #setattr(gdatobjt, strg + 'psfnintp', psfnintp)
+        if varioaxi:
+            psfnintp = []
+            for p in gdat.indxoaxi:
+                psfnintp.append(interp1d(gdat.binsangl, psfn[:, :, :, p], axis=1))
+        else:
+            psfnintp = interp1d(gdat.binsangl, psfn, axis=1)
+        setattr(gdatobjt, strg + 'psfnintp', psfnintp)
     
     if strg != 'true':
         setattr(gdatobjt, strg + 'lgal', lgal)

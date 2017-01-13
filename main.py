@@ -122,6 +122,14 @@ def init( \
          maxmsinddistmean=None, \
          minmsinddiststdv=None, \
          maxmsinddiststdv=None, \
+         minmcurvdistmean=None, \
+         maxmcurvdistmean=None, \
+         minmcurvdiststdv=None, \
+         maxmcurvdiststdv=None, \
+         minmexpodistmean=None, \
+         maxmexpodistmean=None, \
+         minmexpodiststdv=None, \
+         maxmexpodiststdv=None, \
 
          psfntype=None, \
          varioaxi=None, \
@@ -204,6 +212,10 @@ def init( \
          truefluxdistslopuppr=None, \
          truesinddistmean=None, \
          truesinddiststdv=None, \
+         truecurvdistmean=None, \
+         truecurvdiststdv=None, \
+         trueexpodistmean=None, \
+         trueexpodiststdv=None, \
          truespectype=None, \
          truevarioaxi=None, \
          truepsfntype=None, \
@@ -643,6 +655,10 @@ def init( \
     if gdat.numbener > 1:
         setp_varbfull(gdat, 'sinddistmean', [0.5, 3.], numbpopl=gdat.numbpopl)
         setp_varbfull(gdat, 'sinddiststdv', [0.1, 1.], numbpopl=gdat.numbpopl)
+        setp_varbfull(gdat, 'curvdistmean', [0.5, 3.], numbpopl=gdat.numbpopl)
+        setp_varbfull(gdat, 'curvdiststdv', [0.1, 1.], numbpopl=gdat.numbpopl)
+        setp_varbfull(gdat, 'expodistmean', [0.5, 3.], numbpopl=gdat.numbpopl)
+        setp_varbfull(gdat, 'expodiststdv', [0.1, 1.], numbpopl=gdat.numbpopl)
    
     # PSF
     if gdat.psfninfoprio:
@@ -816,8 +832,6 @@ def init( \
         if gdat.truefluxdisttype == None:
             gdat.truefluxdisttype = 'powr'
         
-        print 'gdat.truefluxdisttype'
-        print gdat.truefluxdisttype
         # fix some true parameters
         for l in gdat.trueindxpopl:
             if gdat.truefluxdisttype == 'powr':
@@ -1121,7 +1135,7 @@ def init( \
     gdat.timereal = zeros(gdat.numbproc)
     gdat.timeproc = zeros(gdat.numbproc)
     if gdat.numbproc == 1:
-        listgdatmodi = [work(gdat, 0)]
+        listgdatmodi = [worktrac(gdat, 0)]
     else:
         if gdat.verbtype > 0:
             print 'Forking the sampler...'
@@ -1133,7 +1147,7 @@ def init( \
         pool = mp.Pool(gdat.numbproc)
         
         # spawn the processes
-        workpart = functools.partial(work, gdat)
+        workpart = functools.partial(worktrac, gdat)
         listgdatmodi = pool.map(workpart, gdat.indxproc)
 
         pool.close()
@@ -1493,7 +1507,15 @@ def init( \
         print 'The ensemble of catalogs is at ' + pathcatl
     return gdat
     
-    
+
+def worktrac(gdat, indxprocwork):
+	
+    try:
+        return work(gdat, indxprocwork)
+    except:
+        raise Exception("".join(traceback.format_exception(*sys.exc_info())))
+
+
 def work(gdat, indxprocwork):
 
     timereal = time.time()
