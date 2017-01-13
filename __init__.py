@@ -27,7 +27,8 @@ import scipy.ndimage
 import scipy.ndimage.filters
 
 import astropy as ap
-    
+
+import traceback
 import shelve
 
 # multiprocessing

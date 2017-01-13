@@ -1490,7 +1490,8 @@ def plot_mosa(gdat):
                             gdatmodi.thissampvarb = gdat.listsampvarb[indxsampmosa[numbcols*a+b], :].flatten()
                             if gdat.numbtrap > 0:
                                 gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampspec, \
-                                                                gdatmodi.thisindxsampspep, gdatmodi.thisindxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[l])
+                                                                        gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, \
+                                                                        gdatmodi.thisindxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[l], gdat.spectype)
                                 gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
                                                                                                                 gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
                                 # cross-correlate with the reference catalog

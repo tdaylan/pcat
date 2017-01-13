@@ -3996,13 +3996,13 @@ def retr_lpridist(gdat, gdatmodi, flux, sind, curv, expo, lpri, sampvarb):
             sinddiststdv = sampvarb[gdat.indxfixpsinddiststdv[l]]
             lpri[1+2*gdat.numbpopl+l] = sum(lpdf_gaus(sind, gdatmodi.tempsinddistmean[l], gdatmodi.tempsinddiststdv[l])) 
             if gdat.spectype[l] == 'curv':
-                curvdistmean[l] = sampvarb[gdat.indxfixpcurvdistmean[l]]
-                curvdiststdv[l] = sampvarb[gdat.indxfixpcurvdiststdv[l]]
-                lpri[1+3*gdat.numbpopl+l] = sum(lpdf_gaus(sind, curvdistmean[l], curvdiststdv[l])) 
+                curvdistmean = sampvarb[gdat.indxfixpcurvdistmean[l]]
+                curvdiststdv = sampvarb[gdat.indxfixpcurvdiststdv[l]]
+                lpri[1+3*gdat.numbpopl+l] = sum(lpdf_gaus(sind, curvdistmean, curvdiststdv)) 
             if gdat.spectype[l] == 'expo':
-                expodistmean[l] = sampvarb[gdat.indxfixpexpodistmean[l]]
-                expodiststdv[l] = sampvarb[gdat.indxfixpexpodiststdv[l]]
-                lpri[1+3*gdat.numbpopl+l] = sum(lpdf_gaus(sind, expodistmean[l], expodiststdv[l])) 
+                expodistmean = sampvarb[gdat.indxfixpexpodistmean[l]]
+                expodiststdv = sampvarb[gdat.indxfixpexpodiststdv[l]]
+                lpri[1+3*gdat.numbpopl+l] = sum(lpdf_gaus(sind, expodistmean, expodiststdv)) 
 
 
 def proc_samp(gdat, gdatmodi, strg, raww=False):
