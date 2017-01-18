@@ -2599,10 +2599,6 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, 'minm' + strgpara, minm)
             setattr(gdat, 'maxm' + strgpara, maxm)
         
-        print 'gdat.minmsind'
-        print gdat.minmsind
-        print 'gdat.maxmsind'
-        print gdat.maxmsind
         retr_axis(gdat, 'sind', gdat.minmsind, gdat.maxmsind, gdat.numbbinsplot)
         retr_axis(gdat, 'curv', gdat.minmcurv, gdat.maxmcurv, gdat.numbbinsplot)
         retr_axis(gdat, 'expo', gdat.minmener, gdat.maxmener, gdat.numbbinsplot)
