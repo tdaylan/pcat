@@ -848,8 +848,10 @@ def init( \
         gdat.exprlgal = gdat.exprlgal[gdat.indxpntsrofi]
         gdat.exprbgal = gdat.exprbgal[gdat.indxpntsrofi]
         gdat.exprspec = gdat.exprspec[:, :, gdat.indxpntsrofi]
-        if gdat.exprcnts != None:
+        try:
             gdat.exprcnts = gdat.exprcnts[:, gdat.indxpntsrofi, :]
+        except:
+            gdat.exprcnts = None
         if gdat.numbener > 1 and gdat.exprsind != None:
             gdat.exprsind = gdat.exprsind[gdat.indxpntsrofi]
         gdat.exprnumbpnts = gdat.exprlgal.size

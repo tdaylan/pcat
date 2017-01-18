@@ -1894,20 +1894,6 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
         print summgene(maps[:, :, :, 3])
         print
     
-    if strgcbar == 'datacnts':
-        print 'vmin'
-        print vmin
-        print 'vmax'
-        print vmax
-        print 'tick'
-        print tick
-        print 'labl'
-        print labl
-        print
-
-    print 'maps'
-    print maps.shape
-
     imag = retr_imag(gdat, axis, maps, vmin=vmin, vmax=vmax, cmap=cmap, thisindxener=thisindxener, thisindxevtt=thisindxevtt)
     
     # temp
