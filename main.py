@@ -1629,7 +1629,12 @@ def work(gdat, indxprocwork):
             else:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = rand()
         else:
-            gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
+            if gdat.datatype == 'mock':
+                gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
+            else:
+                if k == 0:
+                    gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
+                
 
     ## lists of occupied and empty transdimensional parameters
     gdatmodi.thisindxpntsfull = []

@@ -87,9 +87,9 @@ def plot_samp(gdat, gdatmodi, strg):
                 strgxaxitwin = 'cntspivt'
                 lablxaxitwin = '$C$'
                 factxdat = 1.
-            lablaxi = '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn)
-            plot_gene(gdat, gdatmodi, strg, 'fluxhist', 'meanfluxplot', scal='logt', lablxaxi='$f$', lablyaxi=r'$N$', indxydat=indxydat, strgindx=strgindx, hist=True, \
-                                                                                                                                                            factxdat=factxdat)
+            lablxaxi = '$%s$%s' % (gdat.strgflux, gdat.strgfluxunitextn)
+            plot_gene(gdat, gdatmodi, strg, 'fluxhist', 'meanfluxplot', scal='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', indxydat=indxydat, strgindx=strgindx, hist=True, \
+                                                                                                         strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin, factxdat=factxdat)
             
             if gdat.pntstype == 'lght' and gdat.numbener > 1:
                 plot_gene(gdat, gdatmodi, strg, 'sindhist', 'meansind', scalyaxi='logt', lablxaxi='$s$', lablyaxi=r'$N$', indxydat=indxydat, strgindx=strgindx, hist=True)
@@ -1013,6 +1013,15 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
         axistwin.xaxis.set_ticks_position('bottom')
         axistwin.xaxis.set_label_position('bottom')
        
+    # superimpose prior on the feature
+    if strgydat.startswith('hist') and strgydat[4:8] in gdat.liststrgcomp and strg != 'true':
+        if strg == 'post':
+            ydatsupr = getattr(gdat, strgydat + 'prio')[indxydat]
+            tdpy.util.plot_braz(axis, xdat, ydat, lcol='lightgrey', dcol='grey', labl='Prior')
+        else:
+            ydatsupr = getattr(gdatmodi, strgydat + 'prio')[indxydat]
+            axis.plot(xdat, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
+
     if indxydat != None:
         strgydat += strgindx
     axis.legend()
@@ -1499,16 +1508,8 @@ def plot_mosa(gdat):
                                 gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampspec, \
                                                                         gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, \
                                                                         gdatmodi.thisindxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[l], gdat.spectype)
-                                gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
-                                                                                                                gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-                                # cross-correlate with the reference catalog
-                                if gdat.trueinfo:
-                                    gdatmodi.trueindxpntsassc = []
-                                    indxmodl, trueindxpntsassc = corr_catl(gdat, gdatmodi, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], \
-                                                                                                                        gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
-                                                                                                                        gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
-                                    gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
-         
+                                retr_assc(gdat, gdatmodi)
+
                             if a == numbrows - 1:
                                 axis.set_xlabel(gdat.strgxaxitotl)
                             else:

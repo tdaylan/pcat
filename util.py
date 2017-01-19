@@ -2050,7 +2050,8 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.pntstype == 'lens':
         gdat.minmmass = retr_massfrombein(gdat.minmflux)
         gdat.maxmmass = retr_massfrombein(gdat.maxmflux)
-        retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, 10)
+        retr_axis(gdat, 'mass', gdat.minmmass, gdat.maxmmass, gdat.numbbinsplot)
+        retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, gdat.numbbinsplot)
 
     gdat.indxspepsind = 0
     gdat.indxspepcurv = 1
@@ -3882,6 +3883,31 @@ def corr_catl(gdat, gdatmodi, thisindxpopl, modllgal, modlbgal, modlspec, modlde
     return indxmodlpnts, trueindxpntsassc
 
 
+def retr_assc(gdat, gdatmodi):
+    
+    for l in gdat.indxpopl:
+        gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
+    gdatmodi.trueindxpntsassc = []
+    gdatmodi.thisspecassc = []
+    for l in gdat.indxpopl:
+        indxmodl, trueindxpntsassc = corr_catl(gdat, gdatmodi, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
+                                                                                                                    gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
+        gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
+        gdatmodi.thisspecassc.append(zeros((gdat.numbener, gdat.truenumbpnts[l])))
+        temp = where(indxmodl >= 0)[0]
+        gdatmodi.thisspecassc[l][:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
+        gdatmodi.thisspecassc[l][:, gdatmodi.trueindxpntsassc[l].miss] = 0.
+        
+        print 'hey'
+        print 'gdatmodi.trueindxpntsassc'
+        print gdatmodi.trueindxpntsassc
+        print 'l'
+        print l
+        print 'gdat.indxpopl'
+        print gdat.indxpopl
+        print 
+
+
 def pert_llik(gdat, gdatmodi, indxparapert, stdvparapert):
 
     numbpert = indxparapert.size 
@@ -4440,22 +4466,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
      
 	    ### PS indices to compare with the reference catalog
         if strg == 'this' and gdat.numbtrap > 0 and gdat.trueinfo:
-            for l in gdat.indxpopl:
-                gdatmodi.indxmodlpntscomp[l] = retr_indxpntscomp(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]])
-            gdatmodi.trueindxpntsassc = []
-            gdatmodi.thisspecassc = []
-            for l in gdat.indxpopl:
-                indxmodl, trueindxpntsassc = corr_catl(gdat, gdatmodi, l, gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]], gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]], \
-                                                                                                                            gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]])
-                gdatmodi.trueindxpntsassc.append(trueindxpntsassc)
-                gdatmodi.thisspecassc.append(zeros((gdat.numbener, gdat.truenumbpnts[l])))
-                temp = where(indxmodl >= 0)[0]
-                gdatmodi.thisspecassc[l][:, temp] = gdatmodi.thissampvarb[gdatmodi.thisindxsampspec[l]][:, indxmodl[temp]]
-                gdatmodi.thisspecassc[l][:, gdatmodi.trueindxpntsassc[l].miss] = 0.
+            
+            retr_assc(gdat, gdatmodi)
 
             if gdat.pntstype == 'lens' and gdat.trueinfo and gdat.datatype == 'mock':
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
-                gdatmodi.thisdeflcomp = 1. - sum(gdatmodi.thisdefl * gdat.truedefl, 2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / sqrt(sum(gdatmodi.truedefl**2, axis=2))
+                gdatmodi.thisdeflcomp = 1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / sqrt(sum(gdat.truedefl**2, axis=2))
            
                 print 'gdatmodi.thisdeflcomp'
                 summgene(gdatmodi.thisdeflcomp)
@@ -4464,7 +4480,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 print 'sqrt(sum(gdatmodi.thisdefl**2, axis=2))'
                 summgene(sqrt(sum(gdatmodi.thisdefl**2, axis=2)))
                 print 'sqrt(sum(gdatmodi.truedefl**2, axis=2))'
-                summgene(sqrt(sum(gdatmodi.truedefl**2, axis=2)))
+                summgene(sqrt(sum(gdat.truedefl**2, axis=2)))
                 print
 
         if gdatmodi != None:
