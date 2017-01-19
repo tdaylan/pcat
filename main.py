@@ -59,6 +59,7 @@ def init( \
          # plotting
          numbswepplot=50000, \
          makeplot=True, \
+         makeplotintr=False, \
          scalmaps='asnh', \
          satumaps=None, \
          makeanim=True, \
@@ -238,7 +239,7 @@ def init( \
          truesanghost=None, \
          
          truenumbpnts=None, \
-         numbsidecart=100, \
+         numbsidecart=200, \
          numbsideheal=256, \
          numbdatasamp=100, \
 
@@ -1124,7 +1125,7 @@ def init( \
             for m in gdat.indxevtt:
                 if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
                     figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.datacnts, i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                    imag = retr_imag(gdat, axis, gdat.datacnts, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                     axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
                     
@@ -1134,7 +1135,7 @@ def init( \
     
                 if gdat.correxpo:
                     figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.expo, i, m)
+                    imag = retr_imag(gdat, axis, gdat.expo, '', i, m)
                     make_cbar(gdat, axis, imag, i)
                     plt.tight_layout()
                     plt.savefig(path)
@@ -1142,7 +1143,7 @@ def init( \
             
                     for c in gdat.indxback:
                         figr, axis, path = init_figr(gdat, None, 'backcnts', '', indxenerplot=i, indxevttplot=m)
-                        imag = retr_imag(gdat, axis, gdat.backcnts[c], i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                        imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                         make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                         plt.tight_layout()
                         plt.savefig(path)
@@ -1150,14 +1151,14 @@ def init( \
         
                     if gdat.numbback > 1:
                         figr, axis, path = init_figr(gdat, None, 'backcntstotl', '', indxenerplot=i, indxevttplot=m)
-                        imag = retr_imag(gdat, axis, gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                        imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                         make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                         plt.tight_layout()
                         plt.savefig(path)
                         plt.close(figr)
             
                     figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                    imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                     plt.tight_layout()
                     plt.savefig(path)
@@ -1166,7 +1167,7 @@ def init( \
                 if gdat.pntstype == 'lens':
                     
                     figr, axis, path = init_figr(gdat, None, 'modlcntsraww', 'true', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                    imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, tdim=True)
                     make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                     plt.tight_layout()
                     plt.savefig(path)
@@ -1224,16 +1225,19 @@ def init( \
                 plot_indxprox(gdat)
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
+        
         # temp
-        #plot_intr()
-        #plot_plot()
-        #plot_king(gdat)
-        if gdat.evalcirc:
-            plot_eval(gdat)
-        #if gdat.datatype == 'mock':
-        #    plot_pntsdiff()
+        if gdat.makeplotintr:
+            plot_intr(gdat)
+            plot_pert()
+            plot_king(gdat)
+            if gdat.evalcirc:
+                plot_eval(gdat)
+            #if gdat.datatype == 'mock':
+            #    plot_pntsdiff()
+            return
 
-    if gdat.verbtype > 1:
+    if gdat.verbtype > 0:
         tdpy.util.show_memo(gdat, 'gdat')
 
     # lock the global object againts any future modifications
@@ -1619,7 +1623,7 @@ def work(gdat, indxprocwork):
    
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
-        if gdat.randinit or gdat.datatype == 'inpt' or not isfinite(gdat.truefixp[k]) or k in gdat.indxfixpnumbpnts and gdat.truefixp[k] > gdat.maxmnumbpntstotl:
+        if gdat.randinit:
             if k in gdat.indxfixpnumbpnts:
                 gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = choice(arange(gdat.minmnumbpnts, gdat.maxmnumbpnts[k] + 1))
             else:
@@ -1628,52 +1632,57 @@ def work(gdat, indxprocwork):
             gdatmodi.drmcsamp[gdat.indxfixp[k], 0] = cdfn_fixp(gdat, gdat.truefixp[k], k)
 
     ## lists of occupied and empty transdimensional parameters
-    thisnumbpnts = gdatmodi.drmcsamp[gdat.indxfixpnumbpnts, 0].astype(int)
     gdatmodi.thisindxpntsfull = []
     gdatmodi.thisindxpntsempt = []
     if gdat.numbtrap > 0:
         for l in gdat.indxpopl:
-            gdatmodi.thisindxpntsfull.append(range(thisnumbpnts[l]))
-            gdatmodi.thisindxpntsempt.append(range(thisnumbpnts[l], gdat.maxmnumbpnts[l]))
+            gdatmodi.thisindxpntsfull.append(range(gdatmodi.drmcsamp[gdat.indxfixpnumbpnts[l], 0].astype(int)))
+            gdatmodi.thisindxpntsempt.append(range(gdatmodi.drmcsamp[gdat.indxfixpnumbpnts[l], 0].astype(int), gdat.maxmnumbpnts[l]))
     else:
         gdatmodi.thisindxpntsfull = []
+    
     gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampspec, gdatmodi.thisindxsampsind, \
                                     gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, gdatmodi.thisindxsampcompcolr = retr_indx(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
-        
+    
+    print 'gdatmodi.drmcsamp[gdat.indxfixpnumbpnts, 0]'
+    print gdatmodi.drmcsamp[gdat.indxfixpnumbpnts, 0]
+    print
+
     if gdat.numbtrap > 0:
         ## PS components
         if gdat.randinit:
             randinittemp = True
         else:
-            try:
-                for l in gdat.indxpopl:
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
-                    if gdat.fluxdisttype == 'powr':
-                        fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop, gdat.factfluxdistslop)
-                        fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
-                    if gdat.fluxdisttype == 'brok':
-                        flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                        fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek, gdat.factfluxdistbrek)
-                        fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr, gdat.factfluxdistsloplowr)
-                        fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr, gdat.factfluxdistslopuppr)
-                        fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
-                    gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
+            #try:
+            
+            for l in gdat.indxpopl:
+                gdatmodi.drmcsamp[gdatmodi.thisindxsamplgal[l], 0] = copy(cdfn_self(gdat.truelgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampbgal[l], 0] = copy(cdfn_self(gdat.truebgal[l], -gdat.maxmgangmodl, 2. * gdat.maxmgangmodl))
+                if gdat.fluxdisttype == 'powr':
+                    fluxdistslop = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslop[l], 0], gdat.minmfluxdistslop, gdat.factfluxdistslop)
+                    fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, fluxdistslop)
+                if gdat.fluxdisttype == 'brok':
+                    flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+                    fluxdistbrek = icdf_logt(gdatmodi.drmcsamp[gdat.indxfixpfluxdistbrek[l], 0], gdat.minmfluxdistbrek, gdat.factfluxdistbrek)
+                    fluxdistsloplowr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistsloplowr[l], 0], gdat.minmfluxdistsloplowr, gdat.factfluxdistsloplowr)
+                    fluxdistslopuppr = icdf_atan(gdatmodi.drmcsamp[gdat.indxfixpfluxdistslopuppr[l], 0], gdat.minmfluxdistslopuppr, gdat.factfluxdistslopuppr)
+                    fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                gdatmodi.drmcsamp[gdatmodi.thisindxsampspec[l][gdat.indxenerfluxdist[0], :], 0] = copy(fluxunit)
 
-                    if gdat.numbener > 1:
-                        # color parameters
-                        gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_gaus(gdat.truesind[l], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
-                                                                                                                                gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
-                        if gdat.spectype[l] == 'curv':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampcurv[l], 0] = cdfn_gaus(gdat.truecurv[l], gdat.curvdistmean[l], gdat.curvdiststdv[l])
-                        if gdat.spectype[l] == 'expo':
-                            gdatmodi.drmcsamp[gdatmodi.thisindxsampexpo[l], 0] = cdfn_logt(gdat.trueexpo[l], gdat.minmener, gdat.factener)
-                
-                randinittemp = False
-            except:
-                
-                randinittemp = True
-                print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
+                if gdat.numbener > 1:
+                    # color parameters
+                    gdatmodi.drmcsamp[gdatmodi.thisindxsampsind[l], 0] = cdfn_gaus(gdat.truesind[l], gdat.truefixp[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                            gdat.truefixp[gdat.indxfixpsinddiststdv[l]])
+                    if gdat.spectype[l] == 'curv':
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampcurv[l], 0] = cdfn_gaus(gdat.truecurv[l], gdat.curvdistmean[l], gdat.curvdiststdv[l])
+                    if gdat.spectype[l] == 'expo':
+                        gdatmodi.drmcsamp[gdatmodi.thisindxsampexpo[l], 0] = cdfn_logt(gdat.trueexpo[l], gdat.minmener, gdat.factener)
+            
+            randinittemp = False
+            #except:
+            #    
+            #    randinittemp = True
+            #    print 'Reference catalog is inappropriate for deterministic initial state. Seeding the initial state randomly...'
        
         if randinittemp:
             for l in gdat.indxpopl:
@@ -1725,11 +1734,6 @@ def work(gdat, indxprocwork):
         
     # log-prior
     gdatmodi.nextlpri = empty_like(gdatmodi.thislpri)
-
-    # log the initial state
-    if gdat.verbtype > 1 and gdat.numbtrap > 0:
-        show_samp(gdat, gdatmodi)
-        tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
     if gdat.diagmode:
         if gdat.indxswepsave.size != gdat.numbsamp:
@@ -1818,6 +1822,29 @@ def work(gdat, indxprocwork):
     gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
     gdatmodi.sampvarbmaxmlpos = copy(gdatmodi.thissampvarb)
    
+    gdatmodi.indxstdppara = zeros(gdat.numbpara, dtype=int) - 1
+    cntr = 0
+    gdat.indxparaprop = zeros(gdat.numbfixpprop, dtype=int)
+    for k in gdat.indxpara:
+        if k in gdat.indxfixpprop:
+            gdatmodi.indxstdppara[k] = cntr
+            gdat.indxparaprop[cntr] = k
+            cntr += 1
+        if k in concatenate(gdatmodi.thisindxsamplgal):
+            gdatmodi.indxstdppara[k] = gdat.indxstdplgal
+        if k in concatenate(gdatmodi.thisindxsampbgal):
+            gdatmodi.indxstdppara[k] = gdat.indxstdpbgal
+        if k in concatenate(gdatmodi.thisindxsampflux):
+            gdatmodi.indxstdppara[k] = gdat.indxstdpflux
+        
+        if gdat.numbener > 1:
+            if k in concatenate(gdatmodi.thisindxsampsind):
+                gdatmodi.indxstdppara[k] = gdat.indxstdpsind
+            if k in concatenate(gdatmodi.thisindxsampcurv):
+                gdatmodi.indxstdppara[k] = gdat.indxstdpcurv
+            if k in concatenate(gdatmodi.thisindxsampexpo):
+                gdatmodi.indxstdppara[k] = gdat.indxstdpexpo
+       
     # proposal scale optimization
     gdatmodi.stdvstdp = copy(gdat.stdvstdp)
     if gdat.optiprop:
@@ -1852,37 +1879,14 @@ def work(gdat, indxprocwork):
             gdatmodi.cntrswepopti = 0
             gdatmodi.cntrswepoptistep = 0
     
+        gdatmodi.stdvstdp[gdat.indxstdpcomp] = 0.
+        
         gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
         gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
         gdatmodi.nextindxsamplgal, gdatmodi.nextindxsampbgal, gdatmodi.nextindxsampflux, gdatmodi.nextindxsampspec, gdatmodi.nextindxsampsind, \
                     gdatmodi.nextindxsampcurv, gdatmodi.nextindxsampexpo, gdatmodi.nextindxsampcompcolr = retr_indx(gdat, gdatmodi.nextindxpntsfull, gdat.spectype)
         lposcntr = retr_negalpos(gdat, gdatmodi)
         
-        gdatmodi.stdvstdp[gdat.indxstdpcomp] = 0.
-        
-        gdatmodi.indxstdppara = zeros(gdat.numbpara, dtype=int) - 1
-        cntr = 0
-        gdat.indxparaprop = zeros(gdat.numbfixpprop, dtype=int)
-        for k in gdat.indxpara:
-            if k in gdat.indxfixpprop:
-                gdatmodi.indxstdppara[k] = cntr
-                gdat.indxparaprop[cntr] = k
-                cntr += 1
-            if k in concatenate(gdatmodi.thisindxsamplgal):
-                gdatmodi.indxstdppara[k] = gdat.indxstdplgal
-            if k in concatenate(gdatmodi.thisindxsampbgal):
-                gdatmodi.indxstdppara[k] = gdat.indxstdpbgal
-            if k in concatenate(gdatmodi.thisindxsampflux):
-                gdatmodi.indxstdppara[k] = gdat.indxstdpflux
-            
-            if gdat.numbener > 1:
-                if k in concatenate(gdatmodi.thisindxsampsind):
-                    gdatmodi.indxstdppara[k] = gdat.indxstdpsind
-                if k in concatenate(gdatmodi.thisindxsampcurv):
-                    gdatmodi.indxstdppara[k] = gdat.indxstdpcurv
-                if k in concatenate(gdatmodi.thisindxsampexpo):
-                    gdatmodi.indxstdppara[k] = gdat.indxstdpexpo
-       
         # temp
         deltparastep = 1e-3
         maxmstdv = 1e-2
@@ -1904,19 +1908,6 @@ def work(gdat, indxprocwork):
 
                 stdv = deltparastep * sqrt(0.5 / amax(fabs(lposcntr - lposdelt))) / sqrt(gdat.numbpara) / fudgstdv
                 
-                print 'k'
-                print k
-                print 'gdatmodi.indxstdppara'
-                print gdatmodi.indxstdppara
-                print 'gdatmodi.indxstdppara[where(gdatmodi.indxstdppara != -1.)]'
-                print gdatmodi.indxstdppara[where(gdatmodi.indxstdppara != -1.)]
-                print 'gdatmodi.indxstdppara[k]'
-                print gdatmodi.indxstdppara[k]
-                print 'gdatmodi.stdvstdp'
-                print gdatmodi.stdvstdp
-                print gdatmodi.stdvstdp.shape
-                print
-
                 if k in concatenate(gdatmodi.thisindxsampcompcolr):
                     if k in concatenate(gdatmodi.thisindxsamplgal):
                         gdatmodi.stdvlgaltemp.append(stdv)
@@ -1929,24 +1920,8 @@ def work(gdat, indxprocwork):
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork, showmemo=True)
 
-                if False:
-                    print 'lposcntr - lposdelt'
-                    print lposcntr - lposdelt
-                    print 'stdv'
-                    print stdv
-
         gdatmodi.stdvlgaltemp = array(gdatmodi.stdvlgaltemp)
    
-        if False:
-            print vstack((gdat.namestdp, gdatmodi.stdvstdp)).T
-            print
-            print 'gdatmodi.stdvlgaltemp'
-            print gdatmodi.stdvlgaltemp
-            print 'gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)]'
-            print gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)]
-            print
-            raise
-
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
@@ -1972,6 +1947,11 @@ def work(gdat, indxprocwork):
         gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
+
+    # log the initial state
+    if gdat.verbtype > 0 and gdat.numbtrap > 0:
+        show_samp(gdat, gdatmodi)
+        tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
     if gdat.verbtype > 0:
         print 'Sampling...'

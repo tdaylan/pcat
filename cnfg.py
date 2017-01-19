@@ -224,6 +224,16 @@ def test_nomi():
         )
 
 
+def plot_main_lens():
+        init( \
+             numbswep=1000, \
+             makeplotintr=True, \
+             pntstype='lens', \
+             exprtype='hubb', \
+             truenumbpnts=array([40]), \
+            )
+    
+
 def test_errr():
       
     tupl = [ \
