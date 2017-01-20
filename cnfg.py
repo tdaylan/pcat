@@ -16,7 +16,6 @@ def test_info():
                     seedstat=seedstat, \
                     numbswep=10000, \
                     indxenerincl=arange(2, 3), \
-                    randinit=False, \
                     proppsfp=False, \
                     indxevttincl=arange(3, 4), \
                     minmflux=listminmflux[k], \

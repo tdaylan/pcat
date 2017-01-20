@@ -425,6 +425,11 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type strgbinsener: str
 
 
+    :param asscmetrtype: Type of metric used to associate the sample catalogs with the reference catalog
+
+    :type asscmetrtype: str
+
+
     **Diagnostics**
 
     :param emptsamp: Perform a futile run without collecting any samples, but creating all data structures and producing all visualizations as if in a normal run. Defaults to ``False``.

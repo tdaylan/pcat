@@ -62,7 +62,7 @@ from healpy import ang2pix
 import warnings
 warnings.simplefilter('ignore')
     
-import franlens
+#import franlens
 
 from skimage.feature import blob_doh
 from astropy.convolution import convolve, AiryDisk2DKernel
