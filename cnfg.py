@@ -90,10 +90,10 @@ def test_time():
         truenumbpnts, maxmnumbpnts, temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
         strgtupl.append(strg)
         if pixltype == 'heal':
-            maxmgang = deg2rad(temp)
+            maxmgangdata = deg2rad(temp)
             numbsidecart = None
         else:
-            maxmgang = None
+            maxmgangdata = None
             numbsidecart = temp
 
         if numbener == 1:
@@ -113,7 +113,7 @@ def test_time():
                     indxevttincl=arange(3, 4), \
                     psfntype='doubking', \
                     maxmnumbpnts=array([maxmnumbpnts]), \
-                    maxmgang=maxmgang, \
+                    maxmgangdata=maxmgangdata, \
                     minmflux=minmflux, \
                     maxmflux=1e6, \
                     numbsidecart=numbsidecart, \
@@ -216,7 +216,7 @@ def test_nomi():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          psfntype='doubking', \
          maxmnumbpnts=array([600]), \
-         maxmgang=deg2rad(20.), \
+         maxmgangdata=deg2rad(20.), \
          minmflux=5e-11, \
          maxmflux=1e-7, \
          truenumbpnts=array([300]), \
@@ -266,7 +266,7 @@ def test_errr():
                     strgexpo='fermexpo_cmp0_ngal.fits', \
                     psfntype='doubking', \
                     maxmnumbpnts=array([100]), \
-                    maxmgang=deg2rad(10.), \
+                    maxmgangdata=deg2rad(10.), \
                     specfraceval=specfraceval, \
                     minmflux=1e-9, \
                     maxmflux=1e-5, \
@@ -311,7 +311,7 @@ def test_uppr():
          strgexpo='fermexpo_cmp0_ngal.fits', \
          psfntype='doubking', \
          maxmnumbpnts=array([800]), \
-         maxmgang=deg2rad(10.), \
+         maxmgangdata=deg2rad(10.), \
          minmflux=1e-9, \
          maxmflux=1e-5, \
          truenumbpnts=array([400]), \
@@ -336,7 +336,7 @@ def test_prio():
                     strgexpo='fermexpo_cmp0_ngal.fits', \
                     psfntype='doubking', \
                     maxmnumbpnts=array([1000]), \
-                    maxmgang=deg2rad(30.), \
+                    maxmgangdata=deg2rad(30.), \
                     minmflux=5e-11, \
                     maxmflux=1e-7, \
                     truenumbpnts=mocknumbpnts, \
@@ -381,7 +381,7 @@ def test_lowr():
          strgexprflux='fermflux_cmp0_ngal.fits', \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([3]), \
-         maxmgang=deg2rad(10.), \
+         maxmgangdata=deg2rad(10.), \
          minmflux=1e-24, \
          maxmflux=1e-20, \
          truenumbpnts=array([3]), \
@@ -417,7 +417,7 @@ def test_post():
              stdvsind=stdvsind, \
              psfntype='doubking', \
              maxmnumbpnts=array([3]), \
-             maxmgang=deg2rad(1.), \
+             maxmgangdata=deg2rad(1.), \
              minmflux=minmflux, \
              maxmflux=maxmflux, \
              truenumbpnts=array([3]), \
@@ -449,7 +449,7 @@ def test_atcr():
                     strgexpo='fermexpo_cmp0_ngal.fits', \
                     psfntype='doubking', \
                     maxmnumbpnts=array([5]), \
-                    maxmgang=deg2rad(10.), \
+                    maxmgangdata=deg2rad(10.), \
                     minmflux=3e-11, \
                     maxmflux=3e-7, \
                     truenumbpnts=array([2]), \
@@ -502,7 +502,7 @@ def test_spmr():
              propcomp=False, \
              probbrde=0., \
              psfntype='doubking', \
-             maxmgang=deg2rad(1.), \
+             maxmgangdata=deg2rad(1.), \
              minmflux=listminmflux[k], \
              maxmflux=listmaxmflux[k], \
              maxmnumbpnts=array([3]), \
@@ -555,7 +555,7 @@ def test_popl():
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          maxmnumbpnts=array([3, 3]), \
-         maxmgang=deg2rad(20.), \
+         maxmgangdata=deg2rad(20.), \
          psfntype='gausking', \
          minmflux=3e-11, \
          maxmflux=3e-7, \
