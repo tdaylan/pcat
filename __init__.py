@@ -64,7 +64,7 @@ warnings.simplefilter('ignore')
     
 #import franlens
 
-from skimage.feature import blob_doh
+#from skimage.feature import blob_doh
 from astropy.convolution import convolve, AiryDisk2DKernel
 
 from copy import deepcopy
