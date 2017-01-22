@@ -581,14 +581,15 @@ def init( \
     setp_varbfull(gdat, 'meanpnts', [1., 1e3], numbpopl=gdat.numbpopl)
     
     ### spatial
-    if gdat.exprtype == 'chan':
-        gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
-    if gdat.exprtype == 'ferm':
-        gdat.maxmgangdata = 20. / gdat.anglfact
-    if gdat.exprtype == 'sdyn':
-        gdat.maxmgangdata = 1.
-    if gdat.exprtype == 'hubb':
-        gdat.maxmgangdata = 2. / gdat.anglfact
+    if gdat.maxmgangdata == None:
+        if gdat.exprtype == 'chan':
+            gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
+        if gdat.exprtype == 'ferm':
+            gdat.maxmgangdata = 20. / gdat.anglfact
+        if gdat.exprtype == 'sdyn':
+            gdat.maxmgangdata = 1.
+        if gdat.exprtype == 'hubb':
+            gdat.maxmgangdata = 2. / gdat.anglfact
     
     if gdat.spatdisttype == None:
         gdat.spatdisttype = array(['unif' for l in gdat.indxpopl])

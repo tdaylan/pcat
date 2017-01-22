@@ -742,12 +742,8 @@ def plot_fluxsind(gdat, gdatmodi, strg, l, strgtype):
                 #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
                 #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.alphmrkr)
             else:
-                axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=0.05, color='r', label=gdat.nameexpr)
-                print 'gdat.indxexprpntsrofi'
-                summgene(gdat.indxexprpntsrofi)
-                print 'gdat.exprspec'
-                print gdat.exprspec.shape
-                axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], gdat.indxexprpntsrofi], gdat.exprsind[gdat.indxexprpntsrofi], alpha=0.3, color='r', label=gdat.nameexpr)
+                axis.scatter(gdat.exprspectotl[0, gdat.indxenerfluxdist[0], :], gdat.exprsindtotl, alpha=0.05, color='r', label=gdat.nameexpr)
+                axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=0.3, color='r', label=gdat.nameexpr)
     axis.set_xscale('log')
     axis.set_xlabel(gdat.lablfeattotl['flux'])
     axis.set_ylabel(gdat.lablfeattotl['sind'])
