@@ -211,6 +211,7 @@ def init( \
          # true data
          truespatdisttype=None, \
          truespatdistslop=None, \
+         truegangdistscalpop2=None, \
          truefluxdisttype=None, \
          trueminmflux=None, \
          truemaxmflux=None, \
@@ -300,7 +301,7 @@ def init( \
     
     if gdat.indxenerincl == None:
         if gdat.exprtype == 'ferm':
-            gdat.indxenerincl = arange(1, 3)
+            gdat.indxenerincl = arange(1, 4)
         elif gdat.exprtype == 'chan':
             gdat.indxenerincl = arange(2)
         else:
@@ -934,35 +935,41 @@ def init( \
             gdat.truefluxdisttype = 'powr'
         
         # fix some true parameters
-        for l in gdat.trueindxpopl:
-            if gdat.truefluxdisttype == 'powr':
-                defn_defa(gdat, 2., 'fluxdistslop', 'true')
-            else:
-                defn_defa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek', 'true')
-                defn_defa(gdat, 1., 'fluxdistsloplowr', 'true')
-                defn_defa(gdat, 2., 'fluxdistslopuppr', 'true')
-            if gdat.numbener > 1:
-                defn_defa(gdat, 2., 'sinddistmean', 'true')
-                defn_defa(gdat, 0.5, 'sinddiststdv', 'true')
-                defn_defa(gdat, 2., 'curvdistmean', 'true')
-                defn_defa(gdat, 0.5, 'curvdiststdv', 'true')
-                defn_defa(gdat, 2., 'expodistmean', 'true')
-                defn_defa(gdat, 0.1, 'expodiststdv', 'true')
-
-        # temp
-        gdat.truegangdistscalpop2 = 6. / gdat.anglfact
-        gdat.truebgaldistscalpop1 = 3. / gdat.anglfact
-        gdat.trueexpodiststdvpop1 = 0.1
-        gdat.trueexpodiststdvpop2 = 0.1
-
+        defn_truedefa(gdat, 6. / gdat.anglfact, 'gangdistscalpop2')
+        defn_truedefa(gdat, 3. / gdat.anglfact, 'bgaldistscalpop1')
+        defn_truedefa(gdat, 2.5, 'fluxdistsloppop0')
+        defn_truedefa(gdat, 2., 'fluxdistsloppop1')
+        defn_truedefa(gdat, 3., 'fluxdistsloppop2')
+        defn_truedefa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek')
+        defn_truedefa(gdat, 1., 'fluxdistsloplowr')
+        defn_truedefa(gdat, 2., 'fluxdistslopuppr')
+        
+        defn_truedefa(gdat, 2.5, 'sinddistmeanpop0')
+        defn_truedefa(gdat, 0.5, 'sinddiststdvpop0')
+        defn_truedefa(gdat, 1.5, 'sinddistmeanpop1')
+        defn_truedefa(gdat, 0.5, 'sinddiststdvpop1')
+        defn_truedefa(gdat, 1.5, 'sinddistmeanpop2')
+        defn_truedefa(gdat, 0.5, 'sinddiststdvpop2')
+        
+        defn_truedefa(gdat, 2., 'curvdistmean')
+        defn_truedefa(gdat, 0.5, 'curvdiststdv')
+        
+        defn_truedefa(gdat, 5., 'expodistmeanpop1')
+        defn_truedefa(gdat, 5., 'expodistmeanpop2')
+        defn_truedefa(gdat, 0.3, 'expodiststdvpop1')
+        defn_truedefa(gdat, 0.3, 'expodiststdvpop2')
+        
+        defn_truedefa(gdat, 0.05, 'bacp')
         for k in gdat.trueindxfixp:
+            
+            if k in gdat.trueindxfixpnumbpnts or k in gdat.trueindxfixpmeanpnts:
+                continue
 
             # assume the true PSF
             if k in gdat.trueindxfixppsfp:
                 gdat.truefixp[k] = gdat.exprpsfp[k-gdat.trueindxfixppsfp[0]]
 
             else:
-                
                 ## read input mock model parameters
                 try:
                     if getattr(gdat, 'true' + gdat.namefixp[k]) != None:
@@ -1226,8 +1233,6 @@ def init( \
             
             if gdat.evalcirc:
                 plot_eval(gdat)
-            #if gdat.datatype == 'mock':
-            #    plot_pntsdiff()
             return
 
     if gdat.verbtype > 0:
@@ -1811,9 +1816,9 @@ def work(gdat, indxprocwork):
         lposcntr = retr_negalpos(gdat, gdatmodi)
         
         # temp
-        deltparastep = 1e-5
+        deltparastep = 1e-6
         maxmstdv = 1e-2
-        fudgstdv = 1.
+        fudgstdv = 0.1
         diffpara = deltparastep * array([-1., 0., 1])
         lposdelt = zeros(3)
         gdatmodi.stdvlgaltemp = []
@@ -1831,7 +1836,7 @@ def work(gdat, indxprocwork):
 
                 stdv = deltparastep * sqrt(0.5 / amax(fabs(lposcntr - lposdelt))) / sqrt(gdat.numbpara) / fudgstdv
             
-                if stdv > maxmstdv or isfinite(stdv):
+                if stdv > maxmstdv or not isfinite(stdv):
                     stdv = maxmstdv
                 
                 if k in concatenate(gdatmodi.thisindxsampcomp):
@@ -1851,8 +1856,6 @@ def work(gdat, indxprocwork):
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
-            #if gdatmodi.stdvstdp[k] > maxmstdv or not isfinite(gdatmodi.stdvstdp[k]):
-            #    gdatmodi.stdvstdp[k] = maxmstdv
    
         gdatmodi.optidone = True
    
@@ -1860,21 +1863,21 @@ def work(gdat, indxprocwork):
             xdat = gdat.indxstdp
             ydat = gdatmodi.stdvstdp
             path = gdat.pathopti + 'stdv%d.pdf' % indxprocwork
-            tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', hist=True)
+            tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
-            xdat = gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)]
-            ydat = gdatmodi.stdvlgaltemp
+            xdat = [gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
+            ydat = [gdatmodi.stdvlgaltemp * gdat.anglfact, gdatmodi.stdvstdp[gdat.indxstdpflux] * gdat.minmflux / gdat.meanfluxplot * gdat.anglfact]
             
             path = gdat.pathopti + 'stdvlgalflux.pdf'
             lablxdat = gdat.lablfeattotl['flux']
-            limtydat = array([1e-4, 1e-3]) * gdat.maxmgang * gdat.anglfact
-            tdpy.util.plot_gene(path, xdat, ydat * gdat.anglfact, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, limtxdat=[gdat.minmflux, gdat.maxmflux], \
-                                                        limtydat=limtydat, lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat['lgal'], gdat.lablfeatunit['lgal']), scat=True)
+            tdpy.util.plot_gene(path, xdat, ydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, limtxdat=[gdat.minmflux, gdat.maxmflux], \
+                                                 lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat['lgal'], gdat.lablfeatunit['lgal']), plottype=['scat', 'line'])
+           
     else:
         gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
-
+    
     # log the initial state
     if gdat.verbtype > 0 and gdat.numbtrap > 0:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
@@ -2060,7 +2063,7 @@ def work(gdat, indxprocwork):
                 print 'Process %d finished making a frame.' % indxprocwork
         
             timefinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 1] = timefinl - timeinit
+            workdict['listchrototl'][gdatmodi.cntrswep, 3] = timefinl - timeinit
     
             if gdat.numbproc > 1:
                 gdat.lock.release()
@@ -2089,7 +2092,7 @@ def work(gdat, indxprocwork):
             proc_samp(gdat, gdatmodi, 'next')
             
             timefinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 3] = timefinl - timeinit
+            workdict['listchrototl'][gdatmodi.cntrswep, 4] = timefinl - timeinit
    
             if gdat.diagmode:
                 if not isfinite(gdatmodi.thisdeltllik):
