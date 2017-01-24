@@ -1,7 +1,7 @@
 # plotting
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 mpl.use('pdf')
+import matplotlib.pyplot as plt
 mpl.rc('image', interpolation='nearest', origin='lower')
 
 import seaborn as sns
