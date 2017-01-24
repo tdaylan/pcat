@@ -1,6 +1,6 @@
 # plotting
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('pdf')
 mpl.rc('image', interpolation='nearest', origin='lower')
 import matplotlib.pyplot as plt
 
