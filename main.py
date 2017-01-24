@@ -1004,9 +1004,9 @@ def init( \
         gdat.trueaang = [[] for l in gdat.trueindxpopl]
         gdat.truespec = [[] for l in gdat.trueindxpopl]
         if gdat.truenumbtrap > 0:
-            gdat.truesind = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
-            gdat.truecurv = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
-            gdat.trueexpo = [empty(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]) for l in gdat.trueindxpopl]
+            gdat.truesind = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
+            gdat.truecurv = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
+            gdat.trueexpo = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
         
             for l in gdat.trueindxpopl:
                 if gdat.truespatdisttype[l] == 'unif':
