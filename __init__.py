@@ -1,8 +1,8 @@
 # plotting
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 mpl.use('pdf')
 mpl.rc('image', interpolation='nearest', origin='lower')
-import matplotlib.pyplot as plt
 
 import seaborn as sns
 sns.set(context='poster', style='ticks', color_codes=True)

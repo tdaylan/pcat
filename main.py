@@ -1010,25 +1010,25 @@ def init( \
         
             for l in gdat.trueindxpopl:
                 if gdat.truespatdisttype[l] == 'unif':
-                    gdat.truelgal[l] = icdf_self(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-                    gdat.truebgal[l] = icdf_self(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
+                    gdat.truelgal[l] = icdf_self(rand(gdat.truenumbpnts[l]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+                    gdat.truebgal[l] = icdf_self(rand(gdat.truenumbpnts[l]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
 
                 if gdat.truespatdisttype[l] == 'gang':
-                    gdat.truegang[l] = icdf_expo(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpgangdistscal[l]])
-                    gdat.trueaang[l] = icdf_self(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), 0., 2. * pi)
+                    gdat.truegang[l] = icdf_expo(rand(gdat.truenumbpnts[l]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpgangdistscal[l]])
+                    gdat.trueaang[l] = icdf_self(rand(gdat.truenumbpnts[l]), 0., 2. * pi)
                     gdat.truelgal[l], gdat.truebgal[l] = retr_lgalbgal(gdat.truegang[l], gdat.trueaang[l])
                 
                 if gdat.truespatdisttype[l] == 'disc':
-                    gdat.truelgal[l] = icdf_self(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-                    gdat.truebgal[l] = icdf_expo(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpbgaldistscal[l]]) * \
-                                                                                                choice(array([1., -1.]), size=gdat.truefixp[gdat.trueindxfixpnumbpnts[l]])
+                    gdat.truelgal[l] = icdf_self(rand(gdat.truenumbpnts[l]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+                    gdat.truebgal[l] = icdf_expo(rand(gdat.truenumbpnts[l]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpbgaldistscal[l]]) * \
+                                                                                                choice(array([1., -1.]), size=gdat.truenumbpnts[l])
                 
-                gdat.truespec[l] = empty((3, gdat.numbener, gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]))
+                gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
                 if gdat.truefluxdisttype == 'powr':
-                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.trueminmflux, gdat.maxmflux, \
+                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.truenumbpnts[l]), gdat.trueminmflux, gdat.maxmflux, \
                                                                                                                     gdat.truefixp[gdat.trueindxfixpfluxdistslop[l]])
                 if gdat.truefluxdisttype == 'brok':
-                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), \
+                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.truenumbpnts[l]), \
                                                 gdat.trueminmflux, gdat.maxmflux, gdat.truefluxdistbrek[l], gdat.truefluxdistsloplowr[l], gdat.truefluxdistslopuppr[l])
                 
                 # temp -- make sure this reordering does not mess up other things
@@ -1036,14 +1036,14 @@ def init( \
     
                 if gdat.numbener > 1:
                     # spectral parameters
-                    gdat.truesind[l] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
+                    gdat.truesind[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
                     if gdat.truespectype[l] == 'curv':
-                        gdat.truecurv[l] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truefixp[gdat.trueindxfixpcurvdistmean[l]], \
+                        gdat.truecurv[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpcurvdistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpcurvdiststdv[l]])
                     
                     if gdat.truespectype[l] == 'expo':
-                        gdat.trueexpo[l] = icdf_gaus(rand(gdat.truefixp[gdat.trueindxfixpnumbpnts[l]]), gdat.truefixp[gdat.trueindxfixpexpodistmean[l]], \
+                        gdat.trueexpo[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpexpodistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpexpodiststdv[l]])
                 
                     # spectra
