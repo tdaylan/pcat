@@ -10,26 +10,40 @@ def test_info():
     listminmflux = logspace(-12., -8., 10)
     numbiter = listminmflux.size
     liststrgvarb = ['levi', 'info']
+    varbdict = {}
     for k in range(numbiter):
         seedstat = get_state()
         gdat = init( \
+                    verbtype=0, \
                     seedstat=seedstat, \
-                    numbswep=10000, \
+                    numbswep=100, \
                     indxenerincl=arange(2, 3), \
                     proppsfp=False, \
                     indxevttincl=arange(3, 4), \
                     minmflux=listminmflux[k], \
                     maxmflux=1e-7, \
+                    truenumbpnts=array([5]), \
                     back=['fermisotflux.fits'], \
                     strgexpo='fermexpo_cmp0_ngal.fits', \
                    )
         for strg in liststrgvarb:
             if k == 0:
                 varb = getattr(gdat, strg)
-                shap = [numbiter] + list(varb.shap)
+                if isinstance(varb, ndarray):
+                    shap = [numbiter] + list(varb.shap)
+                elif isinstance(varb, float):
+                    shap = [numbiter, 1]
+                
+                print 'strg'
+                print strg
+                print 'shap'
+                print shap
+                print 
+                print
+
                 varbdict[strg] = empty(shap)
             else:
-                varbdict[k, :] = getattr(gdat, strg)
+                varbdict[strg][k, :] = getattr(gdat, strg)
 
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     figr, axis = plt.subplots()
@@ -117,7 +131,7 @@ def test_time():
                     minmflux=minmflux, \
                     maxmflux=1e6, \
                     numbsidecart=numbsidecart, \
-                    truenumbpnts=array([mocknumbpnts]), \
+                    truenumbpnts=array([truenumbpnts]), \
                    )
         for strg in liststrgvarb:
             varbdict[strg] = getattr(gdat, strg)
@@ -339,7 +353,7 @@ def test_prio():
                     maxmgangdata=deg2rad(30.), \
                     minmflux=5e-11, \
                     maxmflux=1e-7, \
-                    truenumbpnts=mocknumbpnts, \
+                    truenumbpnts=truenumbpnts, \
                    )
         for strg in liststrgvarb:
             if k == 0:
@@ -508,7 +522,7 @@ def test_spmr():
              maxmnumbpnts=array([3]), \
              truenumbpnts=array([2]), \
              #maxmnumbpnts=array([3]), \
-             #mocknumbpnts=array([2]), \
+             #truenumbpnts=array([2]), \
             )
         
 

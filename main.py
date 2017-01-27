@@ -65,16 +65,14 @@ def init( \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
-         strgbinsener=None, \
+         strgbinsenerfull=None, \
          strgexprname=None, \
          strganglunit=None, \
          strganglunittext=None, \
          anglfact=None, \
          fluxfactplot=None, \
-         enerfact=None, \
          
          # misc
-         strgfunctime='clck', \
          lablgangunit=None, \
          labllgal=None, \
          lablbgal=None, \
@@ -91,6 +89,7 @@ def init( \
          indxenerfull=None, \
          indxevttfull=None, \
          binsenerfull=None, \
+         minmnumbpnts=None, \
          maxmnumbpnts=array([1000]), \
          asymfluxprop=False, \
          psfninfoprio=True, \
@@ -107,10 +106,8 @@ def init( \
          minmmeanpnts=None, \
          maxmmeanpnts=None, \
     
-         spatdisttype=None, \
          spatdistslop=None, \
          
-         fluxdisttype=None, \
          minmgangdistscal=None, \
          maxmgangdistscal=None, \
          minmbgaldistscal=None, \
@@ -170,8 +167,6 @@ def init( \
          minmsherhost=None, \
          maxmsherhost=None, \
     
-         spectype=None, \
-         
          curvdistmean=None, \
          curvdiststdv=None, \
          
@@ -209,10 +204,8 @@ def init( \
          exprpsfntype=None, \
 
          # true data
-         truespatdisttype=None, \
          truespatdistslop=None, \
          truegangdistscalpop2=None, \
-         truefluxdisttype=None, \
          trueminmflux=None, \
          truemaxmflux=None, \
          truefluxdistslop=None, \
@@ -225,7 +218,6 @@ def init( \
          truecurvdiststdv=None, \
          trueexpodistmean=None, \
          trueexpodiststdv=None, \
-         truespectype=None, \
          truevarioaxi=None, \
          truepsfntype=None, \
          trueback=None, \
@@ -252,6 +244,7 @@ def init( \
          numbdatasamp=100, \
 
          defa=False, \
+         **args \
         ):
 
     # construct the global object 
@@ -298,6 +291,9 @@ def init( \
     gdat.numbpopl = gdat.maxmnumbpnts.size
     gdat.numbback = len(gdat.back)
     gdat.indxpopl = arange(gdat.numbpopl, dtype=int)
+   
+    if gdat.minmnumbpnts == None:
+        gdat.minmnumbpnts = zeros(gdat.numbpopl, dtype=int)
     
     if gdat.indxenerincl == None:
         if gdat.exprtype == 'ferm':
@@ -423,12 +419,6 @@ def init( \
         else:
             gdat.fluxfactplot = 1.
 
-    if gdat.enerfact == None:
-        if gdat.exprtype == 'ferm':
-            gdat.enerfact = 1.
-        if gdat.exprtype == 'chan':
-            gdat.enerfact = 1e3
-
     if gdat.labllgal == None:
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_z^{\prime}'
@@ -446,9 +436,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
         elif gdat.exprtype == 'chan':
-            gdat.binsenerfull = array([5e-4, 2e-3, 8e-3])
-        else:
-            gdat.binsenerfull = array([0.])
+            gdat.binsenerfull = array([0.5, 2., 8.])
    
     # energy bin indices
     if gdat.indxenerfull == None:
@@ -460,18 +448,15 @@ def init( \
             gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
    
     # energy band string
-    if gdat.strgbinsener == None and gdat.binsenerfull != None:
+    if gdat.strgbinsenerfull == None and gdat.binsenerfull != None:
         if gdat.exprtype == 'sdss':
-            gdat.strgbinsener = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
+            gdat.strgbinsenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
         elif gdat.exprtype == 'hubb':
-            gdat.strgbinsener = ['F606W']
+            gdat.strgbinsenerfull = ['F606W']
         elif gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
-            gdat.strgbinsener = []
+            gdat.strgbinsenerfull = []
             for i in gdat.indxenerfull:
-                gdat.strgbinsener.append('%.3g %s - %.3g %s' % (gdat.enerfact * gdat.binsenerfull[i], gdat.strgenerunit, \
-                                                                                                                   gdat.enerfact * gdat.binsenerfull[i+1], gdat.strgenerunit))
-        else:
-            gdat.strgbinsener = None
+                gdat.strgbinsenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.strgenerunit, gdat.binsenerfull[i+1], gdat.strgenerunit))
    
     # flux bin for likelihood evaluation inside circles
     if gdat.exprtype == 'ferm':
@@ -545,16 +530,22 @@ def init( \
 
     ## energy
     gdat.numbener = gdat.indxenerincl.size
-    gdat.numbenerfull = len(gdat.strgbinsener)
+    gdat.numbenerfull = len(gdat.strgbinsenerfull)
+    gdat.strgbinsener = [gdat.strgbinsenerfull[k] for k in indxenerincl]
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
     gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
     gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
     if gdat.enerdiff:
         gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
-        gdat.diffener = (roll(gdat.binsener, -1) - gdat.binsener)[0:-1]
-        gdat.meanener = sqrt(roll(gdat.binsener, -1) * gdat.binsener)[0:-1]
         gdat.minmener = gdat.binsener[0]
         gdat.maxmener = gdat.binsener[-1]
+        for strg in ['', 'plot']:
+            if strg == '':
+                numbbins = gdat.numbener
+            else:
+                numbbins = 100
+            retr_axis(gdat, 'ener' + strg, gdat.minmener, gdat.maxmener, numbbins)
+        
         gdat.indxenerfull = gdat.binsenerfull.size - 1
     gdat.indxener = arange(gdat.numbener, dtype=int)
     gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
@@ -594,13 +585,30 @@ def init( \
         if gdat.exprtype == 'hubb':
             gdat.maxmgangdata = 2. / gdat.anglfact
     
-    if gdat.spatdisttype == None:
-        gdat.spatdisttype = array(['unif' for l in gdat.indxpopl])
-    
-    ### flux
-    if gdat.fluxdisttype == None:
-        gdat.fluxdisttype = 'powr'
+    for strg, valu in args.iteritems():
+        setattr(gdat, strg, valu)
 
+    gdat.liststrgtype = ['spatdisttype', 'fluxdisttype', 'spectype']
+    for strg in gdat.liststrgtype:
+   
+        # default the true model types
+        try:
+            truetype = getattr(gdat, 'true' + strg)
+        except:
+            if strg == 'spatdisttype':
+                strgtemp = 'unif'
+            if strg == 'fluxdisttype' or strg == 'spectype':
+                strgtemp = 'powr'
+
+            truetype = [strgtemp for l in gdat.indxpopl]
+            setattr(gdat, 'true' + strg, truetype)
+        
+        # default the model types to the true model
+        try:
+            getattr(gdat, strg)
+        except:
+            setattr(gdat, strg, truetype)
+    
     if gdat.minmgang == None:
         if gdat.exprtype == 'ferm':
             gdat.minmgang = 1e-1 / gdat.anglfact
@@ -664,11 +672,11 @@ def init( \
     
     ### spectral index
     if gdat.numbener > 1:
-        setp_varbfull(gdat, 'sinddistmean', [0.5, 3.])
-        setp_varbfull(gdat, 'sinddiststdv', [0.1, 1.])
+        setp_varbfull(gdat, 'sinddistmean', [1., 3.])
+        setp_varbfull(gdat, 'sinddiststdv', [0.01, 1.])
         setp_varbfull(gdat, 'curvdistmean', [-1., 1.])
         setp_varbfull(gdat, 'curvdiststdv', [0.1, 1.])
-        setp_varbfull(gdat, 'expodistmean', [gdat.minmener, gdat.maxmener])
+        setp_varbfull(gdat, 'expodistmean', [1., 8.])
         setp_varbfull(gdat, 'expodiststdv', [0.01 * gdat.maxmener, gdat.maxmener])
    
     # PSF
@@ -684,12 +692,11 @@ def init( \
     # background parameters
     setp_varbfull(gdat, 'bacp', [0.5, 2.])
     
-    # lensing
+    ## lensing
     gdat.minmlgalsour = gdat.minmlgal
     gdat.maxmlgalsour = gdat.maxmlgal
     gdat.minmbgalsour = gdat.minmbgal
     gdat.maxmbgalsour = gdat.maxmbgal
-    
     gdat.minmlgalhost = gdat.minmlgal
     gdat.maxmlgalhost = gdat.maxmlgal
     gdat.minmbgalhost = gdat.minmbgal
@@ -766,18 +773,10 @@ def init( \
         raise Exception('Bad number of burn-in sweeps.')
     if gdat.factthin > gdat.numbswep - gdat.numbburn:
         raise Exception('Bad thinning factor.')
-    
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
-
     if gdat.pntstype == 'lens' and (gdat.numbback > 1 or not isinstance(gdat.back[0], float)):
-        print 'gdat.numbback'
-        print gdat.numbback
-        print 'gdat.back'
-        print gdat.back
-        print
         raise Exception('In a lensing problem, the background can only be uniform.')
-    
     if gdat.minmflux >= gdat.maxmflux:
         raise Exception('Minimum flux is greater than maximum flux.')
 
@@ -837,7 +836,7 @@ def init( \
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 indxpixltemp = retr_indxpixl(gdat, gdat.exprbgal, gdat.exprlgal)
-                gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.diffener[i]
+                gdat.exprcntscalc[i, :, m] = gdat.exprspec[0, i, :] * gdat.expo[i, indxpixltemp, m] * gdat.deltener[i]
         
         if gdat.strgcnfg == 'pcat_chan_inpt':
             print 'gdat.exprcnts'
@@ -930,12 +929,6 @@ def init( \
         
         gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbpnts]
 
-        if gdat.truespatdisttype == None:
-            gdat.truespatdisttype = ['unif' for l in gdat.trueindxpopl]
-        
-        if gdat.truefluxdisttype == None:
-            gdat.truefluxdisttype = 'powr'
-        
         # fix some true parameters
         defn_truedefa(gdat, 4. / gdat.anglfact, 'gangdistscalpop2')
         defn_truedefa(gdat, 2. / gdat.anglfact, 'bgaldistscalpop1')
@@ -947,19 +940,19 @@ def init( \
         defn_truedefa(gdat, 2., 'fluxdistslopuppr')
         
         defn_truedefa(gdat, 2.5, 'sinddistmeanpop0')
-        defn_truedefa(gdat, 0.5, 'sinddiststdvpop0')
+        defn_truedefa(gdat, 0.2, 'sinddiststdvpop0')
         defn_truedefa(gdat, 1.5, 'sinddistmeanpop1')
-        defn_truedefa(gdat, 0.5, 'sinddiststdvpop1')
+        defn_truedefa(gdat, 0.2, 'sinddiststdvpop1')
         defn_truedefa(gdat, 1.5, 'sinddistmeanpop2')
-        defn_truedefa(gdat, 0.5, 'sinddiststdvpop2')
+        defn_truedefa(gdat, 0.2, 'sinddiststdvpop2')
         
         defn_truedefa(gdat, 2., 'curvdistmean')
         defn_truedefa(gdat, 0.5, 'curvdiststdv')
         
-        defn_truedefa(gdat, 4., 'expodistmeanpop1')
-        defn_truedefa(gdat, 4., 'expodistmeanpop2')
-        defn_truedefa(gdat, 0.5, 'expodiststdvpop1')
-        defn_truedefa(gdat, 0.5, 'expodiststdvpop2')
+        defn_truedefa(gdat, 2., 'expodistmeanpop1')
+        defn_truedefa(gdat, 2., 'expodistmeanpop2')
+        defn_truedefa(gdat, 0.2, 'expodiststdvpop1')
+        defn_truedefa(gdat, 0.2, 'expodiststdvpop2')
         
         defn_truedefa(gdat, 1., 'bacp')
 
@@ -1003,6 +996,7 @@ def init( \
         gdat.truegang = [[] for l in gdat.trueindxpopl]
         gdat.trueaang = [[] for l in gdat.trueindxpopl]
         gdat.truespec = [[] for l in gdat.trueindxpopl]
+        gdat.truespecplot = [[] for l in gdat.trueindxpopl]
         if gdat.truenumbtrap > 0:
             gdat.truesind = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
             gdat.truecurv = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
@@ -1024,10 +1018,11 @@ def init( \
                                                                                                 choice(array([1., -1.]), size=gdat.truenumbpnts[l])
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
-                if gdat.truefluxdisttype == 'powr':
+                gdat.truespecplot[l] = empty((gdat.numbenerplot, gdat.truenumbpnts[l]))
+                if gdat.truefluxdisttype[l] == 'powr':
                     gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.truenumbpnts[l]), gdat.trueminmflux, gdat.maxmflux, \
                                                                                                                     gdat.truefixp[gdat.trueindxfixpfluxdistslop[l]])
-                if gdat.truefluxdisttype == 'brok':
+                if gdat.truefluxdisttype[l] == 'brok':
                     gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.truenumbpnts[l]), \
                                                 gdat.trueminmflux, gdat.maxmflux, gdat.truefluxdistbrek[l], gdat.truefluxdistsloplowr[l], gdat.truefluxdistslopuppr[l])
                 
@@ -1049,6 +1044,9 @@ def init( \
                     # spectra
                     gdat.truespec[l][:] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
                                                                                                              gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l])[None, :, :]
+                    
+                    gdat.truespecplot[l] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
+                                                                                              gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l], plot=True)
                 
                 gdat.truesampvarb[gdat.trueindxsamplgal[l]] = gdat.truelgal[l]
                 gdat.truesampvarb[gdat.trueindxsampbgal[l]] = gdat.truebgal[l]
@@ -1080,7 +1078,7 @@ def init( \
                     indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
                     gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
                     if gdat.enerdiff:
-                        gdat.truecnts[l] *= gdat.diffener[:, None, None]
+                        gdat.truecnts[l] *= gdat.deltener[:, None, None]
         
         if gdat.pntstype == 'lens':
             gdat.truesourtype = 'gaus'
@@ -1104,7 +1102,7 @@ def init( \
             gdat.truepsfncdfn = roll(cumsum(gdat.truepsfn, axis=1), 1)[0, :, 0]
             gdat.truepsfncdfn[0] = 0.
             gdat.truepsfncdfn /= amax(gdat.truepsfncdfn)
-            truepsfnicdfintp = interp1d(gdat.truepsfncdfn, gdat.binsangl)
+            truepsfnicdfintp = interp1d_pick(gdat.truepsfncdfn, gdat.binsangl)
 
             if gdat.trueindxpntstotl.size > 0:
                 for k in gdat.indxdatasamp:
@@ -1607,9 +1605,9 @@ def work(gdat, indxprocwork):
                 gdatmodi.thissamp[gdatmodi.thisindxsamplgal[l]] = cdfn_self(gdat.truelgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
                 gdatmodi.thissamp[gdatmodi.thisindxsampbgal[l]] = cdfn_self(gdat.truebgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
 
-                if gdat.fluxdisttype == 'powr':
+                if gdat.fluxdisttype[l] == 'powr':
                     fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]])
-                if gdat.fluxdisttype == 'brok':
+                if gdat.fluxdisttype[l] == 'brok':
                     flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
                     fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
                 gdatmodi.thissamp[gdatmodi.thisindxsampflux[l]] = fluxunit
@@ -1646,6 +1644,8 @@ def work(gdat, indxprocwork):
     indxsampbadduppr = where(gdatmodi.thissamp[gdat.numbpopl:] > 1.)[0] + gdat.numbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
+        print 'indxsampbadd'
+        print indxsampbadd
         raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
@@ -1910,8 +1910,8 @@ def work(gdat, indxprocwork):
         retr_prop(gdat, gdatmodi)
         
         timefinl = gdat.functime()
-        workdict['listchrototl'][gdatmodi.cntrswep, 1] = timefinl - timeinit
-
+        gdatmodi.thischrototl[1] = timefinl - timeinit
+       
         # diagnostics
         if gdat.diagmode:
             # sanity checks
@@ -2023,7 +2023,7 @@ def work(gdat, indxprocwork):
             gdatmodi.listspecassc.append(deepcopy(gdatmodi.thisspecassc))
 
             timefinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 2] = timefinl - timeinit
+            gdatmodi.thischrototl[2] = timefinl - timeinit
 
         # plot the current sample
         if thismakefram:
@@ -2042,7 +2042,7 @@ def work(gdat, indxprocwork):
                 print 'Process %d finished making a frame.' % indxprocwork
         
             timefinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 3] = timefinl - timeinit
+            gdatmodi.thischrototl[3] = timefinl - timeinit
     
             if gdat.numbproc > 1:
                 gdat.lock.release()
@@ -2071,7 +2071,7 @@ def work(gdat, indxprocwork):
             proc_samp(gdat, gdatmodi, 'next')
             
             timefinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 4] = timefinl - timeinit
+            gdatmodi.thischrototl[4] = timefinl - timeinit
    
             if gdat.diagmode:
                 if not isfinite(gdatmodi.thisdeltllik):
@@ -2104,7 +2104,7 @@ def work(gdat, indxprocwork):
                 gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
             
             # register the sample as accepted
-            workdict['listaccp'][gdatmodi.cntrswep] = True
+            gdatmodi.thisaccp = True
 
         # reject the sample
         else:
@@ -2112,19 +2112,19 @@ def work(gdat, indxprocwork):
             if gdat.verbtype > 1:
                 print 'Rejected.'
 
-            workdict['listaccp'][gdatmodi.cntrswep] = False
+            gdatmodi.thisaccp = False
         
         gdatmodi.thislpriprop = copy(gdatmodi.nextlpri)
 
+        # save the execution time for the sweep
+        if not thismakefram:
+            timetotlfinl = gdat.functime()
+            gdatmodi.thischrototl[0] = timetotlfinl - timetotlinit
+        
         ## variables to be saved for each sweep
         for strg in gdatmodi.liststrgvarbswep:
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
                         
-        # save the execution time for the sweep
-        if not thismakefram:
-            timetotlfinl = gdat.functime()
-            workdict['listchrototl'][gdatmodi.cntrswep, 0] = timetotlfinl - timetotlinit
-
         # log the progress
         if gdat.verbtype > 0:
             minm = max(0, gdatmodi.cntrswep - 50)
@@ -2188,10 +2188,6 @@ def work(gdat, indxprocwork):
                 gdatmodi.cntrswepoptistep += 1
             gdatmodi.cntrswepopti += 1
    
-    print 'workdict[listchrototl]'
-    for k in range(5):
-        summgene(workdict['listchrototl'][:, k])
-
     for strg in gdatmodi.liststrgvarbsamp + gdatmodi.liststrgvarbswep:
         valu = workdict['list' + strg]
         setattr(gdatmodi, 'list' + strg, valu)

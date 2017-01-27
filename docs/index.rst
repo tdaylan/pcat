@@ -32,6 +32,22 @@ or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ an
 
 Features
 ----------
+Compared to mainstream point source inference methods, PCAT has a series of desirable features.
+
+- samples from the space of catalogs given some observation, unlike conventional cataloging, which estimates the most likely catalog,
+- allows marginalization over all relevant nuisance parameters in the problem, including the dimensionality of the nuisance.
+- reveals potentially non-Gaussian within and across model covariances
+- constrains source population characteristics via hierarchical priors,
+- is a Bayesian framework, because point estimates fail in nearly degenerate likelihood topologies
+- implements Occam's razor, i.e., model parsimony, through detailed balance across models, 
+- does not discard information contained in low-significance ($< 4 \sigma$) fluctuations in the observed dataset,
+- reduces to a deterministic cataloger when the labeling degeneracy is explicitly broken,
+- simultaneously infers the PSF and the level of diffuse background.
+
+Transdimensionality
++++++++++++++++++++
+
+The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference. The main reason for thfthese are possible at the expense of PCAT being a much slower algorithm.
 
 Transdimensionality
 +++++++++++++++++++
@@ -442,6 +458,8 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type diagmode: bool
 
 
+    **Plotting**
+
     :param strgexprname: A string describing the experiment used to collect the observed data.
 
     :type strgexprname: str
@@ -451,19 +469,24 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :type strganglunit: str
 
+    
+    :param labllgal: Label for the horizontal axis
+
+    :type labllgal: str
+
+    
+    :param lablbgal: Label for the vertical axis
+
+    :type lablbgal: str
+
+    
+
+    
+
 .. _sectmockpara:
 
 ..    
-         strganglunittext=None, \
-         anglfact=None, \
-         fluxfactplot=None, \
-         enerfact=None, \
          
-         # misc
-         strgfunctime='clck', \
-         strgxaxi=None, \
-         strgyaxi=None, \
-         # model
          ## PSF
          specfraceval=0.1, \
          numbangl=1000, \
@@ -476,7 +499,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          indxevttfull=None, \
          binsenerfull=None, \
          maxmnumbpnts=array([1000]), \
-         asymfluxprop=False, \
          psfninfoprio=True, \
          ## spectral
          # prior
@@ -484,32 +506,33 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          priofactdoff=0., \
          margfactmodl=0.9, \
          bindprio=False, \
-         maxmbacp=None, \
-         minmbacp=None, \
+         
          maxmgang=None, \
          minmmeanpnts=None, \
          maxmmeanpnts=None, \
     
          spatdisttype=None, \
-         spatdistslop=None, \
          
          fluxdisttype=None, \
+         spectype=None, \
+         
+         gangdistscal=None, \
+         bgaldistscal=None, \
+         curvdistmean=None, \
+         curvdiststdv=None, \
+         minmflux=None, \
+         maxmflux=None, \
          minmfluxdistslop=None, \
-         maxmfluxdistslop=None, \
          minmfluxbrek=None, \
-         maxmfluxbrek=None, \
          minmfluxdistbrek=None, \
-         maxmfluxdistbrek=None, \
          minmfluxdistsloplowr=None, \
-         maxmfluxdistsloplowr=None, \
          minmfluxdistslopuppr=None, \
-         maxmfluxdistslopuppr=None, \
          minmsinddistmean=None, \
-         maxmsinddistmean=None, \
          minmsinddiststdv=None, \
-         maxmsinddiststdv=None, \
+         
          psfntype=None, \
          varioaxi=None, \
+         
          minmsigm=None, \
          maxmsigm=None, \
          meansigm=None, \
@@ -522,26 +545,22 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          maxmpsff=None, \
          meanpsff=None, \
          stdvpsff=None, \
-         minmfluxsour=None, \
-         maxmfluxsour=None, \
-         minmsizesour=None, \
-         maxmsizesour=None, \
-         minmratisour=None, \
-         maxmratisour=None, \
-         minmellphost=None, \
-         maxmellphost=None, \
-         minmsherhost=None, \
-         maxmsherhost=None, \
-         minmbeinhost=None, \
-         maxmbeinhost=None, \
+         
+         bacp=None, \
+         fluxsour=None, \
+         fluxsour=None, \
+         sizesour=None, \
+         sizesour=None, \
+         ratisour=None, \
+         ratisour=None, \
+         ellphost=None, \
+         ellphost=None, \
+         sherhost=None, \
+         sherhost=None, \
+         beinhost=None, \
+         beinhost=None, \
     
-         spectype=None, \
          
-         curvdistmean=None, \
-         curvdiststdv=None, \
-         
-         minmflux=None, \
-         maxmflux=None, \
         
          # proposals
          numbpntsmodi=1, \

@@ -16,17 +16,21 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_brgt(gdat, gdatmodi, strg)
 
     # PS spectra
-    if strg  == 'true' and gdat.numbener > 1 and gdat.pntstype == 'lght':
+    if strg  == 'true' and gdat.datatype == 'mock' and gdat.numbener > 1 and gdat.pntstype == 'lght':
         for l in gdat.indxpopl:
+            listxdat = []
+            listplottype = []
             listydat = []
             for k in range(gdat.truenumbpnts[l]):
-                spec = copy(gdat.truespec[l][0, :, k])
+                spec = copy(gdat.truespecplot[l][:, k])
                 if gdat.enerdiff:
-                    spec *= gdat.meanener**2
+                    spec *= gdat.meanenerplot**2
+                listplottype.append('line')
+                listxdat.append(gdat.meanenerplot)
                 listydat.append(spec)
             path = gdat.pathinit + 'truespecpop%d.pdf' % l
-            tdpy.util.plot_gene(path, gdat.meanener, gdat.truespec[l][0, :, :], scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr='g', alph=0.02, \
-                                                                    limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'])
+            tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr='g', alph=0.1, plottype=listplottype, \
+                  limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'], limtydat=[amin(gdat.minmspecplot), amax(gdat.maxmspecplot)])
     
     ## PSF radial profile
     if strg != 'true':
@@ -139,9 +143,9 @@ def plot_samp(gdat, gdatmodi, strg):
             if strg != 'true':
                 plot_genemaps(gdat, gdatmodi, strgtemp, 'deflcomp', tdim=True)
         for i in gdat.indxener:
-            plot_genemaps(gdat, gdatmodi, strgtemp, 'modlcnts', strgcbar='datacnts', thisindxener=i)
-            for i in gdat.indxener:
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'resicnts', thisindxener=i)
+            for m in gdat.indxevtt:
+                plot_genemaps(gdat, gdatmodi, strgtemp, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m)
+                plot_genemaps(gdat, gdatmodi, strgtemp, 'resicnts', thisindxener=i, thisindxevtt=m)
         
     if gdat.pntstype == 'lens':
         if strg != 'true':
@@ -197,9 +201,15 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     gdat.strgbest = 'ML'
   
     # prior components
-    if False:
+    if True:
         gdat.indxlpri = arange(gdat.numblpri)
         gdat.indxlpau = arange(gdat.numblpau)
+        indxbadd = where(isfinite(gdat.listlpri) == False)
+        if indxbadd[0].size > 0:
+            gdat.listlpri[indxbadd] = 5.
+        indxbadd = where(isfinite(gdat.listlpriprop) == False)
+        if indxbadd[0].size > 0:
+            gdat.listlpriprop[indxbadd] = 5.
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpri%04d' % k
@@ -622,7 +632,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
     if gdat.numbener > 1:
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
        
-        xdat = gdat.enerfact * gdat.meanener
+        xdat = gdat.meanener
         for k in range(gdat.numblablcompfracspec):
             ydat = listydat[k, :]
             yerr = listyerr[:, k, :]
@@ -631,7 +641,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
                 yerr *= gdat.meanener**2
             axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, label=gdat.listlablcompfracspec[k])
     
-        axis.set_xlim([gdat.enerfact * amin(gdat.binsener), gdat.enerfact * amax(gdat.binsener)])
+        axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
         axis.set_yscale('log')
         axis.set_xlabel('$E$ [%s]' % gdat.strgenerunit)
         axis.set_xscale('log')
@@ -648,7 +658,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
     listsize = zeros(gdat.numblablcompfrac)
     for k in range(gdat.numblablcompfrac):
         if gdat.enerdiff:
-            listsize[k] = sum(listydat[k, :] * gdat.diffener)
+            listsize[k] = sum(listydat[k, :] * gdat.deltener)
         else:
             listsize[k] = listydat[k, :]
    
@@ -1757,7 +1767,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=Non
     plt.close(figr)
     
 
-def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=None, thisindxevtt=-1, tdim=False, thisindxpopl=None):
+def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=None, thisindxevtt=-1, tdim=False, thisindxpopl=-1):
     
     if strgcbar == None:
         strgcbar = strgvarb
@@ -1778,7 +1788,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
         mapstemp[..., 3] = mean(mapserrr, axis=0)
         maps = mapstemp
 
-    figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxpoplplot=thisindxpopl)
+    figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl)
     
     vmin = getattr(gdat, 'minm' + strgcbar)
     vmax = getattr(gdat, 'maxm' + strgcbar)
