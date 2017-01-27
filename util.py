@@ -1577,6 +1577,14 @@ def retr_factoaxi(gdat, bins, norm, indx):
     return factoaxi
 
 
+def gang_detr():
+
+    gang, aang, lgal, bgal = sympy.symbols('gang aang lgal bgal')
+
+    AB = sympy.matrices.Matrix([[a1*b1,a1*b2,a1*b3],[a2*b1,a2*b2,a2*b3],[a3*b1,a3*b2,a3*b3]])
+    print AB.det()
+
+
 def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, varioaxi=None, strgpara=''):
 
     numbpsfpform = getattr(gdat, strgpara + 'numbpsfpform')
