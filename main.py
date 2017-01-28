@@ -21,7 +21,9 @@ def init( \
          seedstat=None, \
          indxevttincl=None, \
          indxenerincl=None, \
-         
+        
+         procrtag=None, \
+
          # empty run
          emptsamp=False, \
 
@@ -65,7 +67,7 @@ def init( \
          satumaps=None, \
          makeanim=True, \
          anotcatl=False, \
-         strgbinsenerfull=None, \
+         strgenerfull=None, \
          strgexprname=None, \
          strganglunit=None, \
          strganglunittext=None, \
@@ -247,11 +249,23 @@ def init( \
          **args \
         ):
 
+    
     # construct the global object 
     gdat = tdpy.util.gdatstrt()
     for attr, valu in locals().iteritems():
         if '__' not in attr:
             setattr(gdat, attr, valu)
+
+    if gdat.procrtag != None:
+        
+        path = gdat.pathdata + gdat.procrtag + '/outp.fits'
+        gdat = pf.getdata(path, 1)
+
+        
+        pf.writeto(gdat, gdat.stdvstdp, clobber=True)
+
+        
+        plot_init(gdat)
 
     # defaults
     if gdat.back == None:
@@ -445,19 +459,19 @@ def init( \
         elif gdat.exprtype == 'chan':
             gdat.indxenerfull = arange(2)
         else:   
-            gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
+            gdat.indxenerfull = arange(1)
    
     # energy band string
-    if gdat.strgbinsenerfull == None and gdat.binsenerfull != None:
+    if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
-            gdat.strgbinsenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
+            gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
         elif gdat.exprtype == 'hubb':
-            gdat.strgbinsenerfull = ['F606W']
+            gdat.strgenerfull = ['F606W']
         elif gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
-            gdat.strgbinsenerfull = []
+            gdat.strgenerfull = []
             for i in gdat.indxenerfull:
-                gdat.strgbinsenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.strgenerunit, gdat.binsenerfull[i+1], gdat.strgenerunit))
-   
+                gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.strgenerunit, gdat.binsenerfull[i+1], gdat.strgenerunit))
+    
     # flux bin for likelihood evaluation inside circles
     if gdat.exprtype == 'ferm':
         gdat.numbfluxprox = 3
@@ -529,9 +543,10 @@ def init( \
     gdat.indxevtt = arange(gdat.numbevtt)
 
     ## energy
+    gdat.numbenerplot = 100
     gdat.numbener = gdat.indxenerincl.size
-    gdat.numbenerfull = len(gdat.strgbinsenerfull)
-    gdat.strgbinsener = [gdat.strgbinsenerfull[k] for k in indxenerincl]
+    gdat.numbenerfull = len(gdat.strgenerfull)
+    gdat.strgener = [gdat.strgenerfull[k] for k in gdat.indxenerincl]
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
     gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
     gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
@@ -543,7 +558,7 @@ def init( \
             if strg == '':
                 numbbins = gdat.numbener
             else:
-                numbbins = 100
+                numbbins = gdat.numbenerplot
             retr_axis(gdat, 'ener' + strg, gdat.minmener, gdat.maxmener, numbbins)
         
         gdat.indxenerfull = gdat.binsenerfull.size - 1
@@ -1126,58 +1141,8 @@ def init( \
         return gdat
 
     if gdat.makeplot:
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
-                    figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.datacnts, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                    axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
-                    
-                    plt.tight_layout()
-                    plt.savefig(path)
-                    plt.close(figr)
-    
-                if gdat.correxpo:
-                    figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.expo, '', i, m)
-                    make_cbar(gdat, axis, imag, i)
-                    plt.tight_layout()
-                    plt.savefig(path)
-                    plt.close(figr)
-            
-                    for c in gdat.indxback:
-                        figr, axis, path = init_figr(gdat, None, 'backcnts', '', indxenerplot=i, indxevttplot=m)
-                        imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                        make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                        plt.tight_layout()
-                        plt.savefig(path)
-                        plt.close(figr)
-        
-                    if gdat.numbback > 1:
-                        figr, axis, path = init_figr(gdat, None, 'backcntstotl', '', indxenerplot=i, indxevttplot=m)
-                        imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                        make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                        plt.tight_layout()
-                        plt.savefig(path)
-                        plt.close(figr)
-            
-                    figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                    plt.tight_layout()
-                    plt.savefig(path)
-                    plt.close(figr)
-    
-                if gdat.pntstype == 'lens':
-                    
-                    figr, axis, path = init_figr(gdat, None, 'modlcntsraww', 'true', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, tdim=True)
-                    make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                    plt.tight_layout()
-                    plt.savefig(path)
-                    plt.close(figr)
-    
+        plot_init(gdat)
+
     # write the list of arguments to file
     # temp
     #fram = inspect.currentframe()
@@ -1207,33 +1172,6 @@ def init( \
             print gdat.anglfact * gdat.maxmangleval, ' ', gdat.strganglunit
         print
             
-    # make initial plots
-    if gdat.makeplot:
-        #plot_3fgl_thrs(gdat)
-        if gdat.pixltype != 'unbd':
-            plot_datacntshist(gdat)
-            if gdat.pntstype == 'lght':
-                plot_indxprox(gdat)
-        #if gdat.exprtype == 'ferm':
-        #    plot_fgl3(gdat)
-        
-        # temp
-        if gdat.makeplotintr:
-            plot_intr(gdat)
-            plot_pert()
-            plot_king(gdat)
-    
-            if gdat.pntstype == 'lens':
-                listanglscal = [0.]
-                listdefl = []
-                for anglscal in listanglscal:
-                    listdefl.append(retr_deflcutf(gdat.binsangl, anglscal, anglcutf))
-                plot_gene(path, xdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat='', lablydat='')
-            
-            if gdat.evalcirc:
-                plot_eval(gdat)
-            return
-
     if gdat.verbtype > 0:
         tdpy.util.show_memo(gdat, 'gdat')
 
@@ -1800,11 +1738,14 @@ def work(gdat, indxprocwork):
         fudgstdv = 0.1
         diffpara = deltparastep * array([-1., 0., 1])
         lposdelt = zeros(3)
-        gdatmodi.stdvlgaltemp = []
+        gdatmodi.dictmodi = {}
+        for strg in gdat.liststrgcomp:
+            gdatmodi.dictmodi['stdv' + strg + 'indv'] = zeros(sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts] * gdat.numbcomp))
         gdatmodi.cntrparasave = 0
         lliktemp = empty(gdat.numbstdp)
         numbiter = diffpara.size
         indxcntr = (numbiter - 1) / 2
+        cntr = 0
         for k in gdat.indxpara:
             if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp):
                 for n in range(numbiter):
@@ -1819,19 +1760,17 @@ def work(gdat, indxprocwork):
                     stdv = maxmstdv
                 
                 if k in concatenate(gdatmodi.thisindxsampcomp):
-                    if k in concatenate(gdatmodi.thisindxsamplgal):
-                        gdatmodi.stdvlgaltemp.append(stdv)
-                        gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[k+2] / gdat.minmflux)**0.5
-                    else:
-                        gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv
+                    for strg in gdat.liststrgcomp:
+                        if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
+                            gdatmodi.dictmodi['stdv' + strg + 'indv'][cntr] = stdv
+                            gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[k+2] / gdat.minmflux)**0.5
+                    cntr += 1
                 else:
                     gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] = stdv
             
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork, showmemo=True)
 
-        gdatmodi.stdvlgaltemp = array(gdatmodi.stdvlgaltemp)
-   
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
@@ -1845,8 +1784,14 @@ def work(gdat, indxprocwork):
             tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
             xdat = [gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
-            ydat = [gdatmodi.stdvlgaltemp * gdat.anglfact, gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdat.meanfluxplot / gdat.minmflux)**0.5 * gdat.anglfact]
+            ydat = [gdatmodi.dictmodi['stdvlgalindv'] * gdat.anglfact, gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdat.meanfluxplot / gdat.minmflux)**0.5 * gdat.anglfact]
             
+            print 'xdat'
+            print xdat[0].shape
+            print 'gdatmodi.dictmodi[stdvlgalindv]'
+            print gdatmodi.dictmodi['stdvlgalindv'].shape
+            print
+
             path = gdat.pathopti + 'stdvlgalflux.pdf'
             lablxdat = gdat.lablfeattotl['flux']
             tdpy.util.plot_gene(path, xdat, ydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, limtxdat=[gdat.minmflux, gdat.maxmflux], \

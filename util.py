@@ -2032,7 +2032,7 @@ def setpinit(gdat, boolinitsetp=False):
  
     # plotting
     ## number of bins in histogram plots
-    gdat.numbbinsplot = 10
+    gdat.numbbinsplot = 20
     ## number of bins in hyperprior plots
     gdat.numbbinsplotprio = 100
     # temp
@@ -3528,7 +3528,7 @@ def init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=None, indxevttplot=No
     axis.set_ylabel(gdat.lablfeattotl['bgal'])
     if indxenerplot != None and gdat.numbener > 1 or indxevttplot != None and gdat.numbevtt > 1:
         if indxenerplot != None and gdat.numbener > 1:
-            titl = gdat.strgbinsener[indxenerplot]
+            titl = gdat.strgener[indxenerplot]
         else:
             titl += ', ' + gdat.strgevtt[indxevttplot]
         axis.set_title(titl)
@@ -4116,9 +4116,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 elif gdat.spatdisttype[l] == 'gang':
                     gang = retr_gang(dicttemp['lgal'][l], dicttemp['bgal'][l])
                     lpri[1+gdat.numbpopl+l] = sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[gdat.indxfixpgangdistscal[l]]))) 
-                    if not isfinite(sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[gdat.indxfixpgangdistscal[l]])))):  
-                        print 'gang'
-                        print gang
+                    #if not isfinite(sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[gdat.indxfixpgangdistscal[l]])))):  
+                    #    print 'gang'
+                    #    print gang
 
                     # temp
                     #lpri[1+2*gdat.numbpopl+l] = -numbpnts[l] * log(2. * pi) 

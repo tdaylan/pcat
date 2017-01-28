@@ -129,9 +129,10 @@ def plot_samp(gdat, gdatmodi, strg):
         liststrg = [strg]
     
     if strg != 'true':
-        for l in gdat.indxpopl:
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                plot_genemaps(gdat, gdatmodi, '', 'datacnts', thisindxener=i, thisindxevtt=m)
+                for l in gdat.indxpopl:
                     plot_genemaps(gdat, gdatmodi, '', 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
     for strgtemp in liststrg:
@@ -1011,15 +1012,13 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
             axis.set_yscale('log')
         axis.set_xscale('log')
         if gdat.enerbins:
-            axis.set_title(gdat.strgbinsener[i])
+            axis.set_title(gdat.strgener[i])
         if plotdiff:
             limsyaxi = array([-100., 100.])
         else:
             limsyaxi = gdat.fluxfactplot * array([gdat.minmspecplot[i], gdat.maxmspecplot[i]])
         axis.set_ylim(limsyaxi)
         axis.set_xlim([gdat.fluxfactplot * gdat.minmspecplot[i], gdat.fluxfactplot * gdat.maxmspecplot[i]])
-        if gdat.enerbins:
-            axis.set_title(gdat.strgbinsener[i])
    
     plt.tight_layout()
     if plotdiff:
@@ -1068,7 +1067,7 @@ def plot_scatpixl(gdat, gdatmodi, strg):
                     labl += ', ' + gdat.strgevtt[m]
                 axis.set_ylabel(labl)
             if gdat.enerbins and m == 0:
-                axis.set_title(gdat.strgbinsener[i])
+                axis.set_title(gdat.strgener[i])
             
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatpixl')
@@ -1296,7 +1295,7 @@ def plot_datacntshist(gdat):
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             if m == 0 and gdat.enerbins:
-                axis.set_title(gdat.strgbinsener[i])
+                axis.set_title(gdat.strgener[i])
             if i == 0 and gdat.evttbins:
                 axis.set_ylabel(gdat.strgevtt[m])
             axis.set_yscale('log')
@@ -1431,7 +1430,7 @@ def plot_mosa(gdat):
                             supr_fram(gdat, gdatmodi, axis, l)
                     
                     if gdat.enerbins:
-                        plt.figtext(0.5, 0.93, gdat.strgbinsener[i], ha='center', va='center')
+                        plt.figtext(0.5, 0.93, gdat.strgener[i], ha='center', va='center')
                     axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
                     cbar = figr.colorbar(imag, cax=axiscomm)
                     cbar.set_ticks(gdat.tickdatacnts)
@@ -1720,7 +1719,7 @@ def plot_histcnts(gdat, l, gdatmodi):
             axis.set_xscale('log')
             axis.set_ylim(gdat.limshist)
             if m == 0 and gdat.enerbins:
-                axis.set_title(gdat.strgbinsener[i])
+                axis.set_title(gdat.strgener[i])
             if i == 0 and gdat.evttbins:
                 axis.set_ylabel(gdat.strgevtt[m])
             if m == gdat.numbevtt / 2 and i == gdat.numbener / 2:
@@ -1731,6 +1730,88 @@ def plot_histcnts(gdat, l, gdatmodi):
     plt.savefig(path)
     plt.close(figr)
     
+
+def plot_init(gdat):
+        
+    # make initial plots
+    if gdat.makeplot:
+        #plot_3fgl_thrs(gdat)
+        if gdat.pixltype != 'unbd':
+            plot_datacntshist(gdat)
+            if gdat.pntstype == 'lght':
+                plot_indxprox(gdat)
+        #if gdat.exprtype == 'ferm':
+        #    plot_fgl3(gdat)
+        
+        # temp
+        if gdat.makeplotintr:
+            plot_intr(gdat)
+            plot_pert()
+            plot_king(gdat)
+    
+            if gdat.pntstype == 'lens':
+                listanglscal = [0.]
+                listdefl = []
+                for anglscal in listanglscal:
+                    listdefl.append(retr_deflcutf(gdat.binsangl, anglscal, anglcutf))
+                plot_gene(path, xdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat='', lablydat='')
+            
+            if gdat.evalcirc:
+                plot_eval(gdat)
+            return
+        
+    for i in gdat.indxener:
+        for m in gdat.indxevtt:
+            if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
+                figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.datacnts, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
+                
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+    
+            if gdat.correxpo:
+                figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.expo, '', i, m)
+                make_cbar(gdat, axis, imag, i)
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+        
+                for c in gdat.indxback:
+                    figr, axis, path = init_figr(gdat, None, 'backcnts', '', indxenerplot=i, indxevttplot=m)
+                    imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
+    
+                if gdat.numbback > 1:
+                    figr, axis, path = init_figr(gdat, None, 'backcntstotl', '', indxenerplot=i, indxevttplot=m)
+                    imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                    plt.tight_layout()
+                    plt.savefig(path)
+                    plt.close(figr)
+        
+                figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+    
+            if gdat.pntstype == 'lens':
+                
+                figr, axis, path = init_figr(gdat, None, 'modlcntsraww', 'true', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, tdim=True)
+                make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                plt.tight_layout()
+                plt.savefig(path)
+                plt.close(figr)
+
 
 def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=None):
 
