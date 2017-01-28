@@ -1740,12 +1740,12 @@ def work(gdat, indxprocwork):
         lposdelt = zeros(3)
         gdatmodi.dictmodi = {}
         for strg in gdat.liststrgcomp:
-            gdatmodi.dictmodi['stdv' + strg + 'indv'] = zeros(sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts] * gdat.numbcomp))
+            gdatmodi.dictmodi['stdv' + strg + 'indv'] = zeros(sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]))
         gdatmodi.cntrparasave = 0
         lliktemp = empty(gdat.numbstdp)
         numbiter = diffpara.size
         indxcntr = (numbiter - 1) / 2
-        cntr = 0
+        cntr = zeros(gdat.maxmnumbcomp)
         for k in gdat.indxpara:
             if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp):
                 for n in range(numbiter):
@@ -1762,9 +1762,9 @@ def work(gdat, indxprocwork):
                 if k in concatenate(gdatmodi.thisindxsampcomp):
                     for strg in gdat.liststrgcomp:
                         if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
-                            gdatmodi.dictmodi['stdv' + strg + 'indv'][cntr] = stdv
+                            gdatmodi.dictmodi['stdv' + strg + 'indv'][cntr[gdatmodi.indxstdppara[k]]] = stdv
+                            cntr[gdatmodi.indxstdppara[k]] += 1
                             gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[k+2] / gdat.minmflux)**0.5
-                    cntr += 1
                 else:
                     gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] = stdv
             
