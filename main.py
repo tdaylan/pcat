@@ -825,7 +825,6 @@ def init( \
     # external reference catalog
     if gdat.exprinfo:
         gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal) < gdat.maxmgangdata) & (fabs(gdat.exprbgal) < gdat.maxmgangdata))[0]
-    
         for strgfeat in gdat.liststrgfeat:
             try:
                 feat = getattr(gdat, 'expr' + strgfeat)
@@ -835,6 +834,7 @@ def init( \
             if feat == None:
                 setattr(gdat, 'expr' + strgfeat, None)
             else:
+                summgene(gdat.indxexprpntsrofi)
                 setattr(gdat, 'expr' + strgfeat, feat[..., gdat.indxexprpntsrofi])
         gdat.exprnumbpnts = gdat.exprlgal.size
         
@@ -1592,6 +1592,8 @@ def work(gdat, indxprocwork):
     if gdat.verbtype > 1:
         print 'thissamp, thissampvarb'
         for k in gdat.indxpara:
+            if k in concatenate(gdatmodi.thisindxsamplgal):
+                print
             print '%15f %15f' % (gdatmodi.thissamp[k], gdatmodi.thissampvarb[k])
     
     ## sample index
@@ -1740,7 +1742,8 @@ def work(gdat, indxprocwork):
         lposdelt = zeros(3)
         gdatmodi.dictmodi = {}
         for strg in gdat.liststrgcomp:
-            gdatmodi.dictmodi['stdv' + strg + 'indv'] = zeros(sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]))
+            gdatmodi.dictmodi['stdv' + strg + 'indv'] = []
+            gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = []
         gdatmodi.cntrparasave = 0
         lliktemp = empty(gdat.numbstdp)
         numbiter = diffpara.size
@@ -1760,17 +1763,31 @@ def work(gdat, indxprocwork):
                     stdv = maxmstdv
                 
                 if k in concatenate(gdatmodi.thisindxsampcomp):
-                    for strg in gdat.liststrgcomp:
+                    for n, strg in enumerate(gdat.liststrgcomp):
+                        indxsampflux = k + 2 - n
                         if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
-                            gdatmodi.dictmodi['stdv' + strg + 'indv'][cntr[gdatmodi.indxstdppara[k]]] = stdv
-                            cntr[gdatmodi.indxstdppara[k]] += 1
-                            gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[k+2] / gdat.minmflux)**0.5
+                            gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
+                            gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
+                            gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
+                            print 'k'
+                            print k
+                            print 'n'
+                            print n
+                            print 'gdatmodi.thissampvarb[k]'
+                            print gdatmodi.thissampvarb[k]
+                            print 'gdatmodi.thissampvarb[indxsampflux]'
+                            print gdatmodi.thissampvarb[indxsampflux]
+                            print
                 else:
                     gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] = stdv
             
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork, showmemo=True)
 
+        for strg in gdat.liststrgcomp:
+            gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])
+            gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = array(gdatmodi.dictmodi['stdv' + strg + 'indvflux'])
+        
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
@@ -1783,25 +1800,39 @@ def work(gdat, indxprocwork):
             path = gdat.pathopti + 'stdv%d.pdf' % indxprocwork
             tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
-            xdat = [gdatmodi.thissampvarb[concatenate(gdatmodi.thisindxsampflux)] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
-            ydat = [gdatmodi.dictmodi['stdvlgalindv'] * gdat.anglfact, gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdat.meanfluxplot / gdat.minmflux)**0.5 * gdat.anglfact]
-            
-            print 'xdat'
-            print xdat[0].shape
-            print 'gdatmodi.dictmodi[stdvlgalindv]'
-            print gdatmodi.dictmodi['stdvlgalindv'].shape
-            print
-
-            path = gdat.pathopti + 'stdvlgalflux.pdf'
-            lablxdat = gdat.lablfeattotl['flux']
-            tdpy.util.plot_gene(path, xdat, ydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, limtxdat=[gdat.minmflux, gdat.maxmflux], \
-                                                 lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat['lgal'], gdat.lablfeatunit['lgal']), plottype=['scat', 'line'])
+            for strg in gdat.liststrgcomp:
+                path = gdat.pathopti + 'stdv' + strg + '.pdf'
+                xdat = [gdatmodi.dictmodi['stdv' + strg + 'indvflux'] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
+                ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (gdat.meanfluxplot / gdat.minmflux)**0.5]
+                factydat = gdat.dictglob['fact' + strg + 'plot']
+                lablxdat = gdat.lablfeattotl['flux']
+                scalxdat = gdat.dictglob['scalfluxplot']
+                limtxdat = gdat.dictglob['limtfluxplot']
+                print 'strg'
+                print strg
+                print 'xdat'
+                print xdat[0]
+                print xdat[1]
+                print 'ydat'
+                print ydat[0]
+                print ydat[1]
+                print 'gdat.fluxfactplot'
+                print gdat.fluxfactplot
+                print 'factydat'
+                print factydat
+                print 
+                tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
+                                                 lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
     else:
         gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
     
+    for strg in gdat.liststrgcomp:
+        print gdatmodi.dictmodi['stdv' + strg + 'indv']
+    raise
+
     # log the initial state
     if gdat.verbtype > 0 and gdat.numbtrap > 0:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')

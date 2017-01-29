@@ -110,7 +110,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         scalxaxi = 'logt'
                     else:
                         scalxaxi = 'linr'
-                    factxaxi = gdat.factfeatplot[strgfeat]
+                    factxaxi = gdat.dictglob['fact' + strgfeat + 'plot']
                     lablxaxi = gdat.lablfeattotl[strgfeat]
                     limtxdat = [getattr(gdat, 'minm' + strgfeat + 'plot') * factxaxi, getattr(gdat, 'maxm' + strgfeat + 'plot') * factxaxi]
                     

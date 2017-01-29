@@ -2043,16 +2043,14 @@ def setpinit(gdat, boolinitsetp=False):
 
     # list of source features in the problem
     gdat.liststrgfeat = ['gang', 'aang', 'lgal', 'bgal', 'flux', 'spec', 'cnts']
-    if gdat.numbener > 1 and gdat.pntstype == 'lght':
-        gdat.liststrgfeat += ['sind', 'curv', 'expo']
     
     # list of source components, i.e., primary model parameters
     gdat.liststrgcomptotl = ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expo']
     gdat.liststrgcomp = ['lgal', 'bgal', 'flux']
-    if gdat.numbener > 1 and gdat.pntstype == 'lght':
-        gdat.liststrgcomp += ['sind', 'curv', 'expo']
-   
     gdat.liststrgfeatprio = [[] for l in gdat.indxpopl]
+    if gdat.numbener > 1 and gdat.pntstype == 'lght':
+        gdat.liststrgcomp += ['sind']
+        gdat.liststrgfeat += ['sind']
     for l in gdat.indxpopl:
         if gdat.spatdisttype[l] == 'gang':
             gdat.liststrgfeatprio[l] += ['gang', 'aang']
@@ -2060,7 +2058,17 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.liststrgfeatprio[l] += ['lgal', 'bgal']
         gdat.liststrgfeatprio[l] += ['flux']
         if gdat.numbener > 1 and gdat.pntstype == 'lght':
-            gdat.liststrgfeatprio[l] += ['sind', 'curv', 'expo']
+            gdat.liststrgfeatprio[l] += ['sind']
+            if gdat.spectype[l] == 'curv':
+                gdat.liststrgcomp += ['curv']
+                gdat.liststrgfeatprio[l] += ['curv']
+                gdat.liststrgfeat += ['curv']
+            if gdat.spectype[l] == 'expo':
+                gdat.liststrgcomp += ['expo']
+                gdat.liststrgfeatprio[l] += ['expo']
+                gdat.liststrgfeat += ['expo']
+    gdat.liststrgcomp = list(set(gdat.liststrgcomp)) 
+    gdat.liststrgfeat = list(set(gdat.liststrgfeat)) 
     
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
@@ -2080,9 +2088,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablcnts = 'C'
     gdat.lablcntsunit = ''
     gdat.lablfeat = {}
+    gdat.dictglob = {}
     gdat.lablfeatunit = {}
     gdat.lablfeattotl = {}
-    gdat.factfeatplot = {}
     for strgfeat in gdat.liststrgfeat:
         gdat.lablfeat[strgfeat] = getattr(gdat, 'labl' + strgfeat)
         gdat.lablfeatunit[strgfeat] = getattr(gdat, 'labl' + strgfeat + 'unit')
@@ -2090,10 +2098,15 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.lablfeatunit[strgfeat] = ' [%s]' % gdat.lablfeatunit[strgfeat]
         gdat.lablfeattotl[strgfeat] = '$%s$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat])
         if strgfeat == 'flux' and gdat.pntstype == 'lens' or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal':
-            gdat.factfeatplot[strgfeat] = gdat.anglfact
+            gdat.dictglob['fact' + strgfeat + 'plot'] = gdat.anglfact
         else:
-            gdat.factfeatplot[strgfeat] = 1.
+            gdat.dictglob['fact' + strgfeat + 'plot'] = 1.
         setattr(gdat, 'numb' + strgfeat + 'plot', 20)
+        
+        if strgfeat == 'flux':
+            gdat.dictglob['scal' + strgfeat + 'plot'] = 'logt'
+        else:
+            gdat.dictglob['scal' + strgfeat + 'plot'] = 'self'
 
     # total maximum number of PS
     gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
@@ -2621,6 +2634,8 @@ def setpinit(gdat, boolinitsetp=False):
                     limt = getattr(gdat, 'maxm' + strgcomp + 'distmean') + getattr(gdat, 'maxm' + strgcomp + 'diststdv')
             else:
                 limt = getattr(gdat, strglimt + strgcomp)
+            
+            setattr(gdat, strglimt + strgcomp, limt)
 
             if truelimt == None:
                 setattr(gdat, strglimt + strgcomp + 'plot', limt)
@@ -2628,10 +2643,15 @@ def setpinit(gdat, boolinitsetp=False):
                 limt = min(limt, truelimt)
                 setattr(gdat, strglimt + strgcomp + 'plot', limt)
     
-    gdat.minmgangplot = 0.
-    gdat.maxmgangplot = gdat.maxmlgal
+    gdat.minmaang = -pi
+    gdat.maxmaang = pi
+
+    # temp
     gdat.minmaangplot = -pi
     gdat.maxmaangplot = pi
+    
+    gdat.minmgangplot = 0.
+    gdat.maxmgangplot = gdat.maxmlgal
     gdat.minmspecplot = gdat.minmfluxplot * gdat.factspecener
     gdat.maxmspecplot = gdat.maxmfluxplot * gdat.factspecener
     gdat.minmcntsplot = 0.1 * gdat.minmflux * mean(mean(gdat.expo, 1), 1)
@@ -2644,7 +2664,11 @@ def setpinit(gdat, boolinitsetp=False):
         liststrgcbar = ['conv', 'deflcomp']
         for strgcbar in liststrgcbar:
             retr_ticklabl(gdat, strgcbar)
-    
+   
+    # temp
+    gdat.minmspec = gdat.minmflux * gdat.factspecener
+    gdat.maxmspec = gdat.maxmflux * gdat.factspecener
+
     for strgfeat in gdat.liststrgfeat:
         if strgfeat == 'spec':
             gdat.minmspecplot = gdat.minmfluxplot * gdat.factspecener
@@ -2674,6 +2698,9 @@ def setpinit(gdat, boolinitsetp=False):
             retr_axis(gdat, strgfeat + 'plot', minm, maxm, gdat.numbbinsplot, scal=scal)
             retr_axis(gdat, strgfeat + 'plotprio', minm, maxm, gdat.numbbinsplotprio, scal=scal)
     
+    for strgfeat in gdat.liststrgfeat:
+        gdat.dictglob['limt' + strgfeat + 'plot'] = [getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)]
+
 
 def setpfinl(gdat, boolinitsetp=False):
 
