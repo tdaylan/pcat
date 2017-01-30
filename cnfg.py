@@ -33,14 +33,6 @@ def test_info():
                     shap = [numbiter] + list(varb.shap)
                 elif isinstance(varb, float):
                     shap = [numbiter, 1]
-                
-                print 'strg'
-                print strg
-                print 'shap'
-                print shap
-                print 
-                print
-
                 varbdict[strg] = empty(shap)
             else:
                 varbdict[strg][k, :] = getattr(gdat, strg)
@@ -48,9 +40,9 @@ def test_info():
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     figr, axis = plt.subplots()
     axistwin = axis.twinx()
-    axis.plot(listminmflux, listinfo, label='Relative entropy')
+    axis.plot(listminmflux, varbdict['info'][:, 0], label='Relative entropy')
     axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
-    axistwin.plot(listminmflux, listlevi, label='Log-evidence', color='g')
+    axistwin.plot(listminmflux, varbdict['levi'][:, 0], label='Log-evidence', color='g')
     axistwin.legend(bbox_to_anchor=[0.8, 1.08])
     axis.set_ylabel('$D_{KL}$ [nats]')
     axistwin.set_ylabel(r'$\log P(D)$ [nats]')

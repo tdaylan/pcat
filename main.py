@@ -834,7 +834,6 @@ def init( \
             if feat == None:
                 setattr(gdat, 'expr' + strgfeat, None)
             else:
-                summgene(gdat.indxexprpntsrofi)
                 setattr(gdat, 'expr' + strgfeat, feat[..., gdat.indxexprpntsrofi])
         gdat.exprnumbpnts = gdat.exprlgal.size
         
@@ -1354,14 +1353,14 @@ def init( \
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
         
-        gdat.pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbbinsplot))
-        for l in gdat.indxpopl:
-            temparry = concatenate([gdat.listlgal[l][n] for n in gdat.indxsamptotl])
-            temp = empty((len(temparry), 3))
-            temp[:, 0] = temparry
-            temp[:, 1] = concatenate([gdat.listbgal[l][n] for n in gdat.indxsamptotl])
-            temp[:, 2] = concatenate([gdat.listflux[l][n] for n in gdat.indxsamptotl])
-            gdat.pntsprob[l, :, :, :] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, gdat.binsfluxplot))[0]
+    gdat.pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbbinsplot))
+    for l in gdat.indxpopl:
+        temparry = concatenate([gdat.listlgal[l][n] for n in gdat.indxsamptotl])
+        temp = empty((len(temparry), 3))
+        temp[:, 0] = temparry
+        temp[:, 1] = concatenate([gdat.listbgal[l][n] for n in gdat.indxsamptotl])
+        temp[:, 2] = concatenate([gdat.listflux[l][n] for n in gdat.indxsamptotl])
+        gdat.pntsprob[l, :, :, :] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, gdat.binsfluxplot))[0]
 
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
@@ -1741,7 +1740,7 @@ def work(gdat, indxprocwork):
         diffpara = deltparastep * array([-1., 0., 1])
         lposdelt = zeros(3)
         gdatmodi.dictmodi = {}
-        for strg in gdat.liststrgcomp:
+        for strg in gdat.liststrgcomptotl:
             gdatmodi.dictmodi['stdv' + strg + 'indv'] = []
             gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = []
         gdatmodi.cntrparasave = 0
@@ -1763,28 +1762,22 @@ def work(gdat, indxprocwork):
                     stdv = maxmstdv
                 
                 if k in concatenate(gdatmodi.thisindxsampcomp):
-                    for n, strg in enumerate(gdat.liststrgcomp):
-                        indxsampflux = k + 2 - n
+                    cntr = 0
+                    indxpnts = (k - gdat.indxsampcomp[0])
+                    for strg in gdat.liststrgcomptotl:
                         if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
+                            indxsampflux = k + 2 - cntr
                             gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
                             gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
                             gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
-                            print 'k'
-                            print k
-                            print 'n'
-                            print n
-                            print 'gdatmodi.thissampvarb[k]'
-                            print gdatmodi.thissampvarb[k]
-                            print 'gdatmodi.thissampvarb[indxsampflux]'
-                            print gdatmodi.thissampvarb[indxsampflux]
-                            print
+                        cntr += 1
                 else:
                     gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] = stdv
             
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork, showmemo=True)
 
-        for strg in gdat.liststrgcomp:
+        for strg in gdat.liststrgcomptotl:
             gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])
             gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = array(gdatmodi.dictmodi['stdv' + strg + 'indvflux'])
         
@@ -1800,7 +1793,7 @@ def work(gdat, indxprocwork):
             path = gdat.pathopti + 'stdv%d.pdf' % indxprocwork
             tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
-            for strg in gdat.liststrgcomp:
+            for strg in gdat.liststrgcomptotl:
                 path = gdat.pathopti + 'stdv' + strg + '.pdf'
                 xdat = [gdatmodi.dictmodi['stdv' + strg + 'indvflux'] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
                 ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (gdat.meanfluxplot / gdat.minmflux)**0.5]
@@ -1808,19 +1801,6 @@ def work(gdat, indxprocwork):
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
                 limtxdat = gdat.dictglob['limtfluxplot']
-                print 'strg'
-                print strg
-                print 'xdat'
-                print xdat[0]
-                print xdat[1]
-                print 'ydat'
-                print ydat[0]
-                print ydat[1]
-                print 'gdat.fluxfactplot'
-                print gdat.fluxfactplot
-                print 'factydat'
-                print factydat
-                print 
                 tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
@@ -1828,11 +1808,7 @@ def work(gdat, indxprocwork):
         gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
             print 'Skipping proposal scale optimization...'
-    
-    for strg in gdat.liststrgcomp:
-        print gdatmodi.dictmodi['stdv' + strg + 'indv']
-    raise
-
+   
     # log the initial state
     if gdat.verbtype > 0 and gdat.numbtrap > 0:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
@@ -1940,7 +1916,7 @@ def work(gdat, indxprocwork):
             # check the population index
             try:
                 if gdatmodi.indxpoplmodi < 0:
-                    raise
+                    raise Exception('Bad population index')
             except:
                 pass
             
@@ -1979,7 +1955,7 @@ def work(gdat, indxprocwork):
                     print 'flux'
                     print flux
                     print
-                    raise Exception('')
+                    raise Exception('Spectrum of a PS went outside the prior range.')
     
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
@@ -2054,7 +2030,8 @@ def work(gdat, indxprocwork):
                     raise Exception('deltllik is not finite.')
             
             # evaluate the acceptance probability
-            accpprob = exp(gdatmodi.thisdeltllik + gdatmodi.nextlpritotl + gdatmodi.thislpautotl + gdatmodi.thisjcbnfact + gdatmodi.thiscombfact - gdatmodi.thislpritotl)
+            accpprob = exp(gdatmodi.thisdeltllik + gdatmodi.nextlpritotl + gdatmodi.thislpautotl + gdatmodi.thisjcbnfact + \
+                                                                                gdatmodi.thiscombfact - gdatmodi.thislpritotl + gdatmodi.lfctprop)
             
             if gdat.verbtype > 1:
                 print 'deltllik'

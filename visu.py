@@ -520,9 +520,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 
 def plot_chro(gdat):
 
-    if amin(gdat.listchrototl <= 0.) or amin(gdat.listchrollik <= 0.):
-        print 'Invalid chronometer...'
-
     gdat.listchrototl *= 1e3
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
 
@@ -534,13 +531,6 @@ def plot_chro(gdat):
         if k == numblabl - 1:
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
-            print 'chro'
-            print 'k'
-            print k
-            print 'gdat.listchrototl[:, k]'
-            summgene(gdat.listchrototl[:, k])
-            print
-
             varb = gdat.listchrototl[:, k]
         try:
             axis.hist(varb, binstime, log=True, label=labl[k], alpha=0.3)
@@ -1457,7 +1447,7 @@ def plot_grap(plottype='igal', verbtype=0):
 
     grap = nx.DiGraph()
     if plottype == 'ngal':
-        listcolr = ['black', 'black', 'olive', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
 
     if plottype == 'igal':
         listcolr = ['black', 'black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', \
@@ -1813,7 +1803,7 @@ def plot_init(gdat):
                 plt.close(figr)
 
 
-def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=None):
+def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1):
 
     strgvarb = 'defl'
     if indxdefl != None:

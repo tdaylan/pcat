@@ -527,8 +527,7 @@ def retr_indxpixl(gdat, bgal, lgal):
         indxpixl = gdat.pixlcnvt[ang2pix(gdat.numbsideheal, pi / 2. - bgal, lgal)]
         if gdat.diagmode:
             if (indxpixl == -1).any():  
-                print 'pixlcnvt went negative!'
-                raise Exception
+                raise Exception('pixlcnvt went negative!')
 
     if gdat.pixltype == 'cart':
         indxlgcr = floor(gdat.numbsidecart * (lgal - gdat.minmlgaldata) / 2. / gdat.maxmgangdata).astype(int)
@@ -692,7 +691,7 @@ def retr_sampvarb(gdat, indxpntsfull, samp, strg):
             if not isfinite(sampvarb[indxsampflux[l]]).all():
                 print 'sampvarb[indxsampflux[l]]'
                 print sampvarb[indxsampflux[l]]
-                raise
+                raise Exception('Flux is not finite.')
             
             if gdat.numbener > 1:
                 sampvarb[indxsampsind[l]] = icdf_gaus(samp[indxsampsind[l]], sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]])
@@ -1253,24 +1252,22 @@ def retr_prop(gdat, gdatmodi):
     else:
         indxpntsfull = gdatmodi.thisindxpntsfull
     
-    indxsamplgal, indxsampbgal, indxsampflux, indxsampsind, indxsampcurv, indxsampexpo, indxsampcomp = retr_indx(gdat, indxpntsfull, gdat.spectype)
+    gdatmodi.dictmodi['indxsamplgal'], gdatmodi.dictmodi['indxsampbgal'], gdatmodi.dictmodi['indxsampflux'], gdatmodi.dictmodi['indxsampsind'], \
+        	    gdatmodi.dictmodi['indxsampcurv'], gdatmodi.dictmodi['indxsampexpo'], gdatmodi.dictmodi['indxsampcomp'] = retr_indx(gdat, indxpntsfull, gdat.spectype)
     
     # PSs
+    gdatmodi.lfctprop = 0.
     for l in gdat.indxpopl:
-        stdvlbhl = gdatmodi.stdvstdp[gdat.indxstdplgal] / (gdatmodi.thissampvarb[indxsampflux[l]] / gdat.minmflux)**0.5
         for k in range(len(indxpntsfull[l])):
-            retr_gaus(gdat, gdatmodi, indxsamplgal[l][k], stdvlbhl[k])
-            retr_gaus(gdat, gdatmodi, indxsampbgal[l][k], stdvlbhl[k])
-        retr_gaus(gdat, gdatmodi, indxsampflux[l], gdatmodi.stdvstdp[gdat.indxstdpflux], inpl=True)
-        if gdat.numbener > 1:
-            retr_gaus(gdat, gdatmodi, indxsampsind[l], gdatmodi.stdvstdp[gdat.indxstdpsind], inpl=True)
-            if gdat.spectype[l] == 'expo':
-                retr_gaus(gdat, gdatmodi, indxsampexpo[l], gdatmodi.stdvstdp[gdat.indxstdpexpo], inpl=True)
-            if gdat.spectype[l] == 'curv':
-                retr_gaus(gdat, gdatmodi, indxsampcurv[l], gdatmodi.stdvstdp[gdat.indxstdpcurv], inpl=True)
-   
+            for f in gdat.indxcomp[l]:
+                gdatmodi.thisstdv = gdatmodi.stdvstdp[gdat.indxstdpcomp[f]] / (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
+                gdatmodi.nextstdv = gdatmodi.stdvstdp[gdat.indxstdpcomp[f]] / (gdatmodi.nextsampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
+                retr_gaus(gdat, gdatmodi, gdatmodi.dictmodi['indxsamp' + gdat.liststrgcomp[l][f]][l][k], gdatmodi.thisstdv)
+                gdatmodi.lfctprop += sum((gdatmodi.nextsamp[gdat.indxfixpprop] - gdatmodi.thissamp[gdat.indxfixpprop]) * \
+                                                                                            (1. / gdatmodi.nextstdv**2 - 1. / gdatmodi.thisstdv**2))
+    
     if gdat.numbtrap > 0:
-        gdatmodi.indxsampchec = concatenate((gdat.indxfixpprop, concatenate(indxsampcomp)))
+        gdatmodi.indxsampchec = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.dictmodi['indxsampcomp'])))
         if gdatmodi.propbrth:
             gdatmodi.indxsampmodi = concatenate((gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi, None], gdatmodi.indxsampchec, gdatmodi.indxsamptran))
         else:
@@ -1381,8 +1378,7 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
 
             if gdatmodi.nextnumbpair == 0:
-                print 'Number of pairs should not be zero in the reverse proposal of a split'
-                raise
+                raise Exception('Number of pairs should not be zero in the reverse proposal of a split')
 
             ## first new component
             gdatmodi.nextsamp[gdatmodi.indxsampfrst+gdat.indxcomplgal] = cdfn_self(gdatmodi.spltlgalfrst, -gdat.maxmgang, 2. * gdat.maxmgang)
@@ -2045,13 +2041,15 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.liststrgfeat = ['gang', 'aang', 'lgal', 'bgal', 'flux', 'spec', 'cnts']
     
     # list of source components, i.e., primary model parameters
-    gdat.liststrgcomptotl = ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expo']
-    gdat.liststrgcomp = ['lgal', 'bgal', 'flux']
+    gdat.liststrgcompdefa = ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expo']
+    gdat.liststrgcomp = [[] for l in gdat.indxpopl]
     gdat.liststrgfeatprio = [[] for l in gdat.indxpopl]
     if gdat.numbener > 1 and gdat.pntstype == 'lght':
-        gdat.liststrgcomp += ['sind']
         gdat.liststrgfeat += ['sind']
     for l in gdat.indxpopl:
+        gdat.liststrgcomp[l] = ['lgal', 'bgal', 'flux']
+        if gdat.numbener > 1 and gdat.pntstype == 'lght':
+            gdat.liststrgcomp[l] += ['sind']
         if gdat.spatdisttype[l] == 'gang':
             gdat.liststrgfeatprio[l] += ['gang', 'aang']
         elif gdat.spatdisttype[l] == 'disc' or gdat.spatdisttype[l] == 'unif':
@@ -2060,16 +2058,22 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.numbener > 1 and gdat.pntstype == 'lght':
             gdat.liststrgfeatprio[l] += ['sind']
             if gdat.spectype[l] == 'curv':
-                gdat.liststrgcomp += ['curv']
+                gdat.liststrgcomp[l] += ['curv']
                 gdat.liststrgfeatprio[l] += ['curv']
-                gdat.liststrgfeat += ['curv']
+                if not 'curv' in gdat.liststrgfeat:
+                    gdat.liststrgfeat += ['curv']
             if gdat.spectype[l] == 'expo':
-                gdat.liststrgcomp += ['expo']
+                gdat.liststrgcomp[l] += ['expo']
                 gdat.liststrgfeatprio[l] += ['expo']
-                gdat.liststrgfeat += ['expo']
-    gdat.liststrgcomp = list(set(gdat.liststrgcomp)) 
-    gdat.liststrgfeat = list(set(gdat.liststrgfeat)) 
+                if not 'expo' in gdat.liststrgfeat:
+                    gdat.liststrgfeat += ['expo']
     
+    gdat.liststrgcomptotl = []
+    for listsubb in gdat.liststrgcomp:
+        for strg in listsubb:
+            if not strg in gdat.liststrgcomptotl:
+                gdat.liststrgcomptotl.append(strg)
+
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
     gdat.lablgang = r'\theta'
@@ -2418,7 +2422,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.expo = pf.getdata(path)
             if amin(gdat.expo) == amax(gdat.expo):
                 raise Exception('Bad input exposure map.')
-                return
             if gdat.pixltype == 'cart':
                 gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
 
@@ -2620,7 +2623,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.maxmexpo = gdat.maxmexpodistmean
     
     ## plot limits for element parameters
-    for strgcomp in gdat.liststrgcomp:
+    for strgcomp in gdat.liststrgcomptotl:
         for strglimt in ['minm', 'maxm']:
             try:
                 truelimt = getattr(gdat, 'true' + strglimt + strgcomp)
@@ -2698,7 +2701,6 @@ def setpinit(gdat, boolinitsetp=False):
             retr_axis(gdat, strgfeat + 'plot', minm, maxm, gdat.numbbinsplot, scal=scal)
             retr_axis(gdat, strgfeat + 'plotprio', minm, maxm, gdat.numbbinsplotprio, scal=scal)
     
-    for strgfeat in gdat.liststrgfeat:
         gdat.dictglob['limt' + strgfeat + 'plot'] = [getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)]
 
 
@@ -2886,8 +2888,8 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxstdpcurv = gdat.numbfixpprop + 4
         gdat.indxstdpexpo = gdat.numbfixpprop + 4
     gdat.numbstdp = gdat.numbfixpprop + gdat.maxmnumbcomp
-    gdat.strgstdp = concatenate((gdat.strgfixp[gdat.indxfixpprop], gdat.liststrgcomp))
-    gdat.namestdp = concatenate((gdat.namefixp[gdat.indxfixpprop], gdat.liststrgcomp))
+    gdat.strgstdp = concatenate((gdat.strgfixp[gdat.indxfixpprop], gdat.liststrgcomptotl))
+    gdat.namestdp = concatenate((gdat.namefixp[gdat.indxfixpprop], gdat.liststrgcomptotl))
     gdat.indxstdp = arange(gdat.numbstdp)
     gdat.indxstdpfixp = arange(gdat.numbfixpprop)
     gdat.indxstdpcomp = setdiff1d(gdat.indxstdp, gdat.indxstdpfixp)
@@ -4014,14 +4016,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
 
     indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
     indxsamplgal, indxsampbgal, indxsampflux, indxsampsind, indxsampcurv, indxsampexpo, indxsampcomp = retr_indx(gdat, indxpntsfull, spectype)
-    dicttemp['indxsamplgal'] = indxsamplgal 
-    dicttemp['indxsampbgal'] = indxsampbgal 
-    dicttemp['indxsampflux'] = indxsampflux 
-    dicttemp['indxsampsind'] = indxsampsind 
-    dicttemp['indxsampcurv'] = indxsampcurv 
-    dicttemp['indxsampexpo'] = indxsampexpo
-    dicttemp['indxsampcomp'] = indxsampcomp
-    for strgcomp in gdat.liststrgcomp:
+    dicttemp['indxsamplgal'], dicttemp['indxsampbgal'], dicttemp['indxsampflux'], dicttemp['indxsampsind'], dicttemp['indxsampcurv'], \
+																				dicttemp['indxsampexpo'], dicttemp['indxsampcomp'] = retr_indx(gdat, indxpntsfull, spectype)
+    for strgcomp in gdat.liststrgcompdefa:
         setattr(gdatobjt, strg + 'indxsamp' + strgcomp, dicttemp['indxsamp' + strgcomp])
     setattr(gdatobjt, strg + 'indxsampcomp', dicttemp['indxsampcomp'])
     
@@ -4031,12 +4028,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
     numbpnts = getattr(gdatobjt, strg + 'sampvarb')[gdat.indxfixpnumbpnts].astype(int)
     numbpopl = numbpnts.size
     
-    for strgcomp in gdat.liststrgcomptotl:
+    for strgcomp in gdat.liststrgcompdefa:
         dicttemp[strgcomp] = [[] for l in range(numbpopl)] 
-    for strgcomp in gdat.liststrgcomp:
-        for l in range(numbpopl):
-            if not (strgcomp == 'curv' and spectype[l] != 'curv' or strgcomp == 'expo' and spectype[l] != 'expo'):
-                dicttemp[strgcomp][l] = sampvarb[dicttemp['indxsamp' + strgcomp][l]]
+    for l in range(numbpopl):
+    	for strgcomp in gdat.liststrgcomp[l]:
+            dicttemp[strgcomp][l] = sampvarb[dicttemp['indxsamp' + strgcomp][l]]
     
     dicttemp['spec'] = [[] for l in range(numbpopl)]
     for l in range(numbpopl):
@@ -4349,20 +4345,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                             booltemp = True
                         
                         if booltemp:
-                            
-                            if False:
-                                print 'strgfeat'
-                                print strgfeat
-                                print 'l'
-                                print l
-                                print 'pdfn'
-                                print pdfn
-                                print 'delt'
-                                print delt
-                                print 'meanpnts[l]'
-                                print meanpnts[l]
-                                print
-
                             dicttemp[strg + strgfeat + 'histprio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
                 
                 setattr(gdatobjt, strg + strgfeat + 'histprio', dicttemp[strg + strgfeat + 'histprio'])
