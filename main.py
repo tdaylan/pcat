@@ -720,8 +720,7 @@ def init( \
     setp_varbfull(gdat, 'ellpsour', [0., 0.3])
     setp_varbfull(gdat, 'spechost', array([1e-21, 1e-17]) )
     setp_varbfull(gdat, 'sizehost', [0.2 / gdat.anglfact, 1. / gdat.anglfact])
-    # temp
-    setp_varbfull(gdat, 'beinhost', [0.005 / gdat.anglfact, 0.01 / gdat.anglfact])
+    setp_varbfull(gdat, 'beinhost', [0.5 / gdat.anglfact, 1. / gdat.anglfact])
     setp_varbfull(gdat, 'ellphost', [0., 0.5])
     setp_varbfull(gdat, 'sherhost', [0., 0.3])
     gdat.minmanglsour = 0.

@@ -541,7 +541,7 @@ def plot_chro(gdat):
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
             varb = gdat.listchrototl[:, k]
-        axis.hist(varb, binstime, log=True, label=labl[k], color=listcolr[k], facecolor=None)
+        axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], facecolor=None)
 
     axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])
