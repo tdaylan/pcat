@@ -483,9 +483,9 @@ def retr_thisindxprop(gdat, gdatmodi):
                 gdatmodi.propdeth = True
         
         if gdatmodi.propbrth:
-            gdatmodi.thisindxprop = gdat.indxproptypebrth
+            gdatmodi.thisindxproptype = gdat.indxproptypebrth
         else:
-            gdatmodi.thisindxprop = gdat.indxproptypedeth
+            gdatmodi.thisindxproptype = gdat.indxproptypedeth
 
     else:
         
@@ -501,10 +501,10 @@ def retr_thisindxprop(gdat, gdatmodi):
                 gdatmodi.propmerg = True
         
         if gdatmodi.propsplt:
-            gdatmodi.thisindxprop = gdat.indxproptypesplt
+            gdatmodi.thisindxproptype = gdat.indxproptypesplt
         else:
-            gdatmodi.thisindxprop = gdat.indxproptypemerg
-
+            gdatmodi.thisindxproptype = gdat.indxproptypemerg
+    
     if gdat.verbtype > 1:
         print 
         print 'retr_thisindxprop()'
@@ -1256,20 +1256,16 @@ def retr_prop(gdat, gdatmodi):
         	    gdatmodi.dictmodi['indxsampcurv'], gdatmodi.dictmodi['indxsampexpo'], gdatmodi.dictmodi['indxsampcomp'] = retr_indx(gdat, indxpntsfull, gdat.spectype)
     
     # PSs
-    gdatmodi.lfctprop = 0.
+    gdatmodi.thislfctprop = 0.
     for l in gdat.indxpopl:
         for k in range(len(indxpntsfull[l])):
             for f in gdat.indxcomp[l]:
                 gdatmodi.thisstdv = gdatmodi.stdvstdp[gdat.indxstdpcomp[f]] / (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
                 gdatmodi.nextstdv = gdatmodi.stdvstdp[gdat.indxstdpcomp[f]] / (gdatmodi.nextsampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
                 retr_gaus(gdat, gdatmodi, gdatmodi.dictmodi['indxsamp' + gdat.liststrgcomp[l][f]][l][k], gdatmodi.thisstdv)
-                gdatmodi.lfctprop += sum((gdatmodi.nextsamp[gdat.indxfixpprop] - gdatmodi.thissamp[gdat.indxfixpprop]) * \
-                                                                                            (1. / gdatmodi.nextstdv**2 - 1. / gdatmodi.thisstdv**2))
-    
-    print 'gdatmodi.lfctprop'
-    print gdatmodi.lfctprop
-    gdatmodi.lfctprop = 0.
-
+                gdatmodi.thislfctprop += sum((gdatmodi.nextsamp[gdatmodi.dictmodi['indxsamp' + gdat.liststrgcomp[l][f]]] - \
+                                          gdatmodi.thissamp[gdatmodi.dictmodi['indxsamp' + gdat.liststrgcomp[l][f]]])**2 * (1. / gdatmodi.nextstdv**2 - 1. / gdatmodi.thisstdv**2))
+ 
     if gdat.numbtrap > 0:
         gdatmodi.indxsampchec = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.dictmodi['indxsampcomp'])))
         if gdatmodi.propbrth:
@@ -2838,6 +2834,9 @@ def setpfinl(gdat, boolinitsetp=False):
                 gdat.strgproptype = append(gdat.strgproptype, r'$\mathcal{M}$')
                 gdat.nameproptype = append(gdat.nameproptype, 'merg')
     
+    gdat.numbproptype = gdat.nameproptype.size
+    gdat.indxproptype = arange(gdat.numbproptype)
+
     gdat.indxstdplgal = gdat.numbfixpprop
     gdat.indxstdpbgal = gdat.numbfixpprop + 1
     gdat.indxstdpflux = gdat.numbfixpprop + 2

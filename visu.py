@@ -202,29 +202,33 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     gdat.strgbest = 'ML'
   
     # prior components
-    if True:
-        gdat.indxlpri = arange(gdat.numblpri)
-        gdat.indxlpau = arange(gdat.numblpau)
-        indxbadd = where(isfinite(gdat.listlpri) == False)
-        if indxbadd[0].size > 0:
-            gdat.listlpri[indxbadd] = 5.
-        indxbadd = where(isfinite(gdat.listlpriprop) == False)
-        if indxbadd[0].size > 0:
-            gdat.listlpriprop[indxbadd] = 5.
+    gdat.indxlpri = arange(gdat.numblpri)
+    gdat.indxlpau = arange(gdat.numblpau)
+    indxbadd = where(isfinite(gdat.listlpri) == False)
+    if indxbadd[0].size > 0:
+        gdat.listlpri[indxbadd] = 5.
+    indxbadd = where(isfinite(gdat.listlpriprop) == False)
+    if indxbadd[0].size > 0:
+        gdat.listlpriprop[indxbadd] = 5.
+
+    for n in gdat.indxproptype:
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpri%04d' % k
-                tdpy.mcmc.plot_trac(path, gdat.listlpri[:, k], '%04d' % k)
+                path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.strgproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
             if (gdat.listlpriprop[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpriprop%04d' % k
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[:, k], '%04d' % k)
+                path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.strgproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k], '%04d' % k)
             if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpridelt%04d' % k
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[:, k] - gdat.listlpri[:, k], '%04d' % k)
+                path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.strgproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k] - gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
         for k in gdat.indxlpau:
             if (gdat.listlpau[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpau%04d' % k
-                tdpy.mcmc.plot_trac(path, gdat.listlpau[:, k], '%04d' % k)
+                path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.strgproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+        if (gdat.listlfctprop[:, 0] != 0.).any():
+            path = gdat.pathpostlpri + 'lfctprop' + gdat.strgproptype[n]
+            tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
     
     # Gelman-Rubin test
     # temp
@@ -266,8 +270,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     numbtimemcmc = 20
     binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
     numbtick = 2
-    gdat.numbproptype = 2
-    gdat.indxproptype = arange(gdat.numbproptype)
     sizefigryaxi = max(gdat.numbproptype * gdat.plotsize / 4., gdat.plotsize / 2.)
     figr, axgr = plt.subplots(gdat.numbproptype, 1, figsize=(gdat.plotsize, sizefigryaxi), sharex='all')
     if gdat.numbproptype == 1:

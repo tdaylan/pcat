@@ -1388,10 +1388,13 @@ def init( \
     gdat.listindxsamptotlprop = []
     gdat.listindxsamptotlpropaccp = []
     gdat.listindxsamptotlpropreje = []
-    for n in gdat.indxprop:
-        gdat.listindxsamptotlprop.append(where(gdat.listindxprop == gdat.indxprop[n])[0])
-        gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(gdat.listaccp)[0]))
-        gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxprop == gdat.indxprop[n])[0], where(logical_not(gdat.listaccp))[0]))
+    for n in gdat.indxproptype:
+        gdat.listindxsamptotlprop.append(where(gdat.listindxproptype == gdat.indxproptype[n])[0])
+        gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccp)[0]))
+        gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
+    
+    print 'gdat.listindxsamptotlprop'
+    print gdat.listindxsamptotlprop
 
     ## spatial mean of maps
     gdat.liststrgmean = ['modlcnts']
@@ -1585,7 +1588,7 @@ def work(gdat, indxprocwork):
         print indxsampbadd
         print gdat.namepara[indxsampbadd]
         print 'gdatmodi.thissamp'
-        print gdatmodi.thissam[:, None]
+        print gdatmodi.thissamp[:, None]
         raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
@@ -1630,7 +1633,7 @@ def work(gdat, indxprocwork):
     gdatmodi.listindxpntsfull = []
     gdatmodi.listspecassc = []
     
-    gdatmodi.liststrgvarbswep = ['memoresi', 'lpri', 'lpriprop', 'lpau', 'deltllik', 'chrototl', 'chrollik', 'accp', 'boolreje', 'indxprop']
+    gdatmodi.liststrgvarbswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltllik', 'chrototl', 'chrollik', 'accp', 'boolreje', 'indxproptype']
     if gdat.probbrde < 1.:
         gdatmodi.liststrgvarbswep += ['auxipara', 'numbpair', 'jcbnfact', 'combfact']
    
@@ -1646,12 +1649,13 @@ def work(gdat, indxprocwork):
     gdatmodi.thischrototl = zeros(gdat.numbchrototl)
     gdatmodi.thisaccp = zeros(1, dtype=bool)
     gdatmodi.thisboolreje = zeros(1, dtype=bool)
-    gdatmodi.thisindxprop = zeros(1, dtype=int)
+    gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.maxmnumbcomp)
     gdatmodi.thisnumbpair = zeros(1, dtype=int)
     gdatmodi.thisjcbnfact = zeros(1)
     gdatmodi.thiscombfact = zeros(1)
     gdatmodi.thislpau = zeros(gdat.numblpau)
+    gdatmodi.thislfctprop = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
     
     workdict = {}
@@ -1875,7 +1879,7 @@ def work(gdat, indxprocwork):
                 print 'cntrswep'
                 print gdatmodi.cntrswep
                 print 'thisindxproptype'
-                print gdat.strgproptype[gdatmodi.thisindxprop]
+                print gdat.strgproptype[gdatmodi.thisindxproptype]
                 print 'indxsampbadd'
                 print indxsampbadd
                 print 'thissamp'
@@ -2034,7 +2038,7 @@ def work(gdat, indxprocwork):
             
             # evaluate the acceptance probability
             accpprob = exp(gdatmodi.thisdeltllik + gdatmodi.nextlpritotl + gdatmodi.thislpautotl + gdatmodi.thisjcbnfact + \
-                                                                                gdatmodi.thiscombfact - gdatmodi.thislpritotl + gdatmodi.lfctprop)
+                                                                                gdatmodi.thiscombfact - gdatmodi.thislpritotl + gdatmodi.thislfctprop)
             
             if gdat.verbtype > 1:
                 print 'deltllik'
@@ -2076,11 +2080,19 @@ def work(gdat, indxprocwork):
         if not thismakefram:
             timetotlfinl = gdat.functime()
             gdatmodi.thischrototl[0] = timetotlfinl - timetotlinit
+       
+        print 'gdatmodi.thisindxproptype'
+        print gdatmodi.thisindxproptype
+        print
         
         ## variables to be saved for each sweep
         for strg in gdatmodi.liststrgvarbswep:
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
                         
+        print 'gdatmodi.listindxproptype'
+        print gdatmodi.listindxproptype
+        print
+        
         # log the progress
         if gdat.verbtype > 0:
             minm = max(0, gdatmodi.cntrswep - 50)

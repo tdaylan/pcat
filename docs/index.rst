@@ -312,13 +312,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pntstype: str
 
 
-    **Proposals**
-
-    :param propcova: Propose from the full covariance, taking steps in all parameters in a single proposal. Otherwise, a step is taken along only one dimension. Defults to False.
-
-    :type randinit: bool
-
-
     **Initial state**
 
     :param randinit: Force the initial state to be randomly drawn from the prior. Default behavior for mock data is to initialize the chain with the true state.
@@ -460,20 +453,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type asscmetrtype: str
 
 
-    **Diagnostics**
-
-    :param emptsamp: Perform a futile run without collecting any samples, but creating all data structures and producing all visualizations as if in a normal run. Defaults to ``False``.
-
-    :type emptsamp: bool
-
-
-    :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
-
-    :type diagmode: bool
-
-
-    **Plotting**
-
     :param strgexprname: A string describing the experiment used to collect the observed data.
 
     :type strgexprname: str
@@ -494,6 +473,20 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type lablbgal: str
 
     
+    **Diagnostics**
+
+    :param emptsamp: Perform a futile run without collecting any samples, but creating all data structures and producing all visualizations as if in a normal run. Defaults to ``False``.
+
+    :type emptsamp: bool
+
+
+    :param diagmode: Start the run in diagnostic mode. Defaults to ``False``.
+
+    :type diagmode: bool
+
+
+    **Model**
+
     :param spatdisttype: Type of spatial distribution of sources for each population
 
     :type spatdisttype: list of str
