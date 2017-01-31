@@ -594,7 +594,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         listydat[cntr+c, :] = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
         if gdatmodi == None:
             listyerr[:, cntr+c, :] = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
-        cntr = +1
+        cntr += 1
     
     ## PS
     if gdat.pntstype == 'lght':
