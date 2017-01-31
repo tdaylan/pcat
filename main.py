@@ -138,7 +138,7 @@ def init( \
          maxmexpodiststdv=None, \
 
          psfntype=None, \
-         varioaxi=None, \
+         oaxitype=None, \
          meansigm=None, \
          stdvsigm=None, \
          
@@ -177,7 +177,6 @@ def init( \
          maxmflux=None, \
         
          # proposals
-         numbpntsmodi=1, \
          stdvprophypr=0.01, \
          stdvproppsfp=0.1, \
          stdvpropbacp=0.01, \
@@ -202,7 +201,7 @@ def init( \
          probbrde=1., \
          radispmr=None, \
 
-         exprvarioaxi=None, \
+         exproaxitype=None, \
          exprpsfntype=None, \
 
          # true data
@@ -220,7 +219,7 @@ def init( \
          truecurvdiststdv=None, \
          trueexpodistmean=None, \
          trueexpodiststdv=None, \
-         truevarioaxi=None, \
+         trueoaxitype=None, \
          truepsfntype=None, \
          trueback=None, \
          truebacp=None, \
@@ -581,7 +580,7 @@ def init( \
         retr_hubbpsfn(gdat)
         gdat.exprpsfntype = 'singgaus'
     if gdat.exprtype == 'sdyn':
-        gdat.exprvarioaxi = False
+        gdat.exproaxitype = False
         gdat.exprpsfntype = 'singgaus'
         gdat.exprpsfp = array([0.1 / gdat.anglfact])
  
@@ -661,11 +660,11 @@ def init( \
     if gdat.psfntype == None:
         gdat.psfntype = gdat.exprpsfntype
 
-    if gdat.varioaxi == None:
+    if gdat.oaxitype == None:
         if gdat.exprtype == 'chan':
-            gdat.varioaxi = True
+            gdat.oaxitype = True
         else:
-            gdat.varioaxi = False
+            gdat.oaxitype = False
 
     # maximum horizontal/vertical distance of the elements from the image center
     gdat.maxmgang = gdat.maxmgangdata * gdat.margfactmodl
@@ -920,8 +919,8 @@ def init( \
         
         if gdat.truespectype == None:
             gdat.truespectype = ['powr' for l in gdat.trueindxpopl]
-        if gdat.truevarioaxi == None:
-            gdat.truevarioaxi = gdat.exprvarioaxi
+        if gdat.trueoaxitype == None:
+            gdat.trueoaxitype = gdat.exproaxitype
         if gdat.truepsfntype == None:
             gdat.truepsfntype = gdat.exprpsfntype
 
@@ -1585,6 +1584,8 @@ def work(gdat, indxprocwork):
         print 'indxsampbadd'
         print indxsampbadd
         print gdat.namepara[indxsampbadd]
+        print 'gdatmodi.thissamp'
+        print gdatmodi.thissam[:, None]
         raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector

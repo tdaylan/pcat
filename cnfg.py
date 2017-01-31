@@ -20,11 +20,12 @@ def test_info():
                     indxenerincl=arange(1, 3), \
                     indxevttincl=arange(3, 4), \
                     minmflux=listminmflux[k], \
+                    strgexpo=1e-20, \
                     maxmflux=1e-7, \
                     trueminmflux=1e-8, \
                     truenumbpnts=array([50]), \
                     back=['fermisotflux.fits'], \
-                    strgexpo='fermexpo_cmp0_ngal.fits', \
+                    #strgexpo='fermexpo_cmp0_ngal.fits', \
                    )
         for strg in liststrgvarb:
             if k == 0:

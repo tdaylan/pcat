@@ -494,14 +494,37 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type lablbgal: str
 
     
+    :param spatdisttype: Type of spatial distribution of sources for each population
 
+    :type spatdisttype: list of str
     
 
-.. _sectmockpara:
+    :param fluxdisttype: Type of flux distribution of sources for each population
 
-..    
-         
-         ## PSF
+    :type fluxdisttype: list of str
+    
+
+    :param spatdisttype: Type of spatial distribution of sources for each population
+
+    :type spatdisttype: list of str
+    
+
+    :param spectype: Type of energy spectrum of sources for each population
+
+    :type spectype: list of str
+    
+
+    :param psfntype: Type of PSF radial profile
+
+    :type spectype: list of str
+    
+
+    :param oaxitype: Type of PSF off-axis profile
+
+    :type oaxitype: list of str
+    
+
+.. ## PSF
          specfraceval=0.1, \
          numbangl=1000, \
          binsangltype='logt', \
@@ -523,19 +546,11 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          
          maxmgang=None, \
          minmmeanpnts=None, \
-         maxmmeanpnts=None, \
-    
-         spatdisttype=None, \
-         
-         fluxdisttype=None, \
-         spectype=None, \
-         
          gangdistscal=None, \
          bgaldistscal=None, \
          curvdistmean=None, \
          curvdiststdv=None, \
          minmflux=None, \
-         maxmflux=None, \
          minmfluxdistslop=None, \
          minmfluxbrek=None, \
          minmfluxdistbrek=None, \
@@ -544,19 +559,13 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          minmsinddistmean=None, \
          minmsinddiststdv=None, \
          
-         psfntype=None, \
-         varioaxi=None, \
-         
          minmsigm=None, \
-         maxmsigm=None, \
          meansigm=None, \
          stdvsigm=None, \
          minmgamm=None, \
-         maxmgamm=None, \
          meangamm=None, \
          stdvgamm=None, \
          minmpsff=None, \
-         maxmpsff=None, \
          meanpsff=None, \
          stdvpsff=None, \
          
@@ -573,11 +582,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          sherhost=None, \
          beinhost=None, \
          beinhost=None, \
-    
          
-        
-         # proposals
-         numbpntsmodi=1, \
          stdvprophypr=0.1, \
          stdvproppsfp=0.01, \
          stdvpropbacp=0.01, \
@@ -598,12 +603,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          probtran=None, \
          probbrde=1., \
          radispmr=None, \
-         truevarioaxi=None, \
-         truepsfntype=None, \
-         
-         mocknumbpnts=None, \
-         
-         
          numbsidecart=200, \
          numbsideheal=256, \
          numbdatasamp=100, \

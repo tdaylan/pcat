@@ -23,17 +23,17 @@ class interp1d_pick:
 def retr_psfnwdth(gdat, psfn, frac):
 
     if len(psfn.shape) == 4:
-        varioaxi = True
+        oaxitype = True
         numboaxi = psfn.shape[3]
         wdth = zeros((gdat.numbener, gdat.numbevtt, numboaxi))
     else:
-        varioaxi = False
+        oaxitype = False
         numboaxi = psfn.shape[2]
         wdth = zeros((gdat.numbener, gdat.numbevtt))
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             for p in arange(numboaxi):
-                if varioaxi:
+                if oaxitype:
                     psfntemp = psfn[i, :, m, p]
                 else:
                     if p > 0:
@@ -43,7 +43,7 @@ def retr_psfnwdth(gdat, psfn, frac):
                 intpwdth = max(frac * amax(psfntemp), amin(psfntemp))
                 if intpwdth > amin(psfntemp[indxanglgood]) and intpwdth < amax(psfntemp[indxanglgood]):
                     wdthtemp = interp1d_pick(psfntemp[indxanglgood], gdat.binsangl[indxanglgood])(intpwdth)
-                if varioaxi:
+                if oaxitype:
                     wdth[i, m, p] = wdthtemp
                 else:
                     wdth[i, m] = wdthtemp
@@ -110,7 +110,7 @@ def retr_plotpath(gdat, gdatmodi, strg, strgplot):
     return path
 
 
-def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, varioaxi, evalcirc):
+def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
     
     if gdat.verbtype > 1:
         print 'retr_pntsflux'
@@ -141,7 +141,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, varioaxi, evalcirc):
         # calculate the distance to all pixels from each point source
         dist = retr_angldistunit(gdat, lgal[k], bgal[k], indxpixltemp)
         
-        if varioaxi:
+        if oaxitype:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k], bgal[k])
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
@@ -583,11 +583,11 @@ def retr_cntsmaps(gdat, fluxmaps, cart=False):
 
 def retr_cntsbackfwhm(gdat, bacp, fwhm):
 
-    varioaxi = len(fwhm.shape) == 3
+    oaxitype = len(fwhm.shape) == 3
     cntsbackfwhm = zeros_like(fwhm)
     for c in gdat.indxback:
         indxbacp = c * gdat.numbener + gdat.indxener
-        if varioaxi:
+        if oaxitype:
             cntsback = bacp[indxbacp, None, None, None] * gdat.backflux[c][:, :, :, None] * gdat.expo[:, :, :, None] * \
                                                                                                 gdat.deltener[:, None, None, None] * pi * fwhm[:, None, :, :]**2 / 4.
         else:
@@ -601,14 +601,14 @@ def retr_cntsbackfwhm(gdat, bacp, fwhm):
 
 def retr_sigm(gdat, cnts, cntsbackfwhm, lgal=None, bgal=None):
    
-    varioaxi = len(cntsbackfwhm.shape) == 3
+    oaxitype = len(cntsbackfwhm.shape) == 3
     if cnts.ndim == 2:
-        if varioaxi:
+        if oaxitype:
             sigm = cnts / sum(cntsbackfwhm[:, :, 0], 1)[:, None]
         else:
             sigm = cnts / sum(cntsbackfwhm, 1)[:, None]
     else:
-        if varioaxi:
+        if oaxitype:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
             sigm = cnts / swapaxes(cntsbackfwhm[:, :, indxoaxitemp], 1, 2)
         else:
@@ -713,24 +713,24 @@ def retr_mrkrsize(gdat, flux):
 def retr_hubbpsfn(gdat):
 
     gdat.exprpsfp = array([0.05]) / gdat.anglfact
-    gdat.exprvarioaxi = False
+    gdat.exproaxitype = False
 
 
 def retr_sdsspsfn(gdat):
    
     gdat.exprpsfp = array([0.25 / gdat.anglfact, 1.7e6, 1.9, 0.25 / gdat.anglfact, 2.1e6, 2.])
-    gdat.exprvarioaxi = False
+    gdat.exproaxitype = False
 
 
 def retr_chanpsfn(gdat):
 
     gdat.exprpsfp = array([0.3 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.6e-1, 2.])
-    gdat.exprvarioaxi = True
+    gdat.exproaxitype = True
    
 
 def retr_fermpsfn(gdat):
    
-    gdat.exprvarioaxi = False
+    gdat.exproaxitype = False
     if False:
         reco = 8
     else:
@@ -1585,13 +1585,13 @@ def gang_detr():
     print AB.det()
 
 
-def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, varioaxi=None, strgpara=''):
+def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxitype=None, strgpara=''):
 
     numbpsfpform = getattr(gdat, strgpara + 'numbpsfpform')
     numbpsfptotl = getattr(gdat, strgpara + 'numbpsfptotl')
     
     indxpsfpinit = numbpsfptotl * (indxenertemp[:, None] + gdat.numbener * gdat.indxevtt[None, :])
-    if varioaxi:
+    if oaxitype:
         indxpsfponor = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp]
         indxpsfpoind = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp] + 1
 
@@ -1599,17 +1599,17 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
         scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
     else:
-        if varioaxi:
+        if oaxitype:
             scalangl = thisangl[None, :, None, None]
         else:
             scalangl = thisangl[None, :, None]
     
-    if varioaxi:
+    if oaxitype:
         factoaxi = retr_factoaxi(gdat, binsoaxi, psfp[indxpsfponor], psfp[indxpsfpoind])
    
     if psfntype == 'singgaus':
         sigc = psfp[indxpsfpinit]
-        if varioaxi:
+        if oaxitype:
             sigc = sigc[:, None, :, None] * factoaxi[:, None, :, :]
         else:
             sigc = sigc[:, None, :]
@@ -1619,7 +1619,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         sigc = psfp[indxpsfpinit]
         gamc = psfp[indxpsfpinit+1]
         psfn = retr_singking(scalangl, sigc, gamc)
-        if varioaxi:
+        if oaxitype:
             sigc = sigc[:, None, :, None] * factoaxi[:, None, :, :]
             gamc = gamc[:, None, :, None]
         else:
@@ -1630,7 +1630,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         frac = psfp[indxpsfpinit]
         sigc = psfp[indxpsfpinit+1]
         sigt = psfp[indxpsfpinit+2]
-        if varioaxi:
+        if oaxitype:
             frac = frac[:, None, :, None]
             sigc = sigc[:, None, :, None] * factoaxi[:, None, :, :]
             sigt = sigt[:, None, :, None] * factoaxi[:, None, :, :]
@@ -1645,7 +1645,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         sigc = psfp[indxpsfpinit+1]
         sigt = psfp[indxpsfpinit+2]
         gamt = psfp[indxpsfpinit+3]
-        if varioaxi:
+        if oaxitype:
             frac = frac[:, None, :, None]
             sigc = sigc[:, None, :, None] * factoaxi[:, None, :, :]
             sigt = sigt[:, None, :, None] * factoaxi[:, None, :, :]
@@ -1663,7 +1663,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, vario
         gamc = psfp[indxpsfpinit+2]
         sigt = psfp[indxpsfpinit+3]
         gamt = psfp[indxpsfpinit+4]
-        if varioaxi:
+        if oaxitype:
             frac = frac[:, None, :, None]
             sigc = sigc[:, None, :, None] * factoaxi[:, None, :, :]
             gamc = gamc[:, None, :, None]
@@ -2211,7 +2211,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.correxpo = True
     
     # off-axis angle
-    if gdat.varioaxi or gdat.truevarioaxi:
+    if gdat.oaxitype or gdat.trueoaxitype:
         gdat.numboaxi = 10
         gdat.minmoaxi = 0.
         gdat.maxmoaxi = 1.1 * sqrt(2.) * gdat.maxmgang
@@ -2514,7 +2514,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.calcerrr = False
     
     if gdat.pntstype == 'lght':
-        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxi, gdat.exprvarioaxi)
+        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxi, gdat.exproaxitype)
 
     if gdat.evalcirc:
         # determine the maximum angle at which the PS flux map will be computed
@@ -2689,7 +2689,7 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                if gdat.truevarioaxi:
+                if gdat.trueoaxitype:
                     psfn = gdat.exprpsfn[i, :, m, 0]
                 else:
                     psfn = gdat.exprpsfn[i, :, m]
@@ -2740,8 +2740,8 @@ def setpfinl(gdat, boolinitsetp=False):
     # temp -- needed for experimental PSF
     # if gdat.evalpsfnpnts:
     #     gdat.truenumbpsfpform, gdat.truenumbpsfpoaxi, gdat.truenumbpsfptotl, gdat.trueindxpsfponor, gdat.trueindxpsfpoind = \
-    #                                                                                         retr_indxpsfp(gdat, gdat.truepsfntype, gdat.truevarioaxi)
-    #     if gdat.truevarioaxi:
+    #                                                                                         retr_indxpsfp(gdat, gdat.truepsfntype, gdat.trueoaxitype)
+    #     if gdat.trueoaxitype:
     #         gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdat.truepsfp[gdat.trueindxpsfponor], gdat.truepsfp[gdat.trueindxpsfpoind])
     
     # get count data
@@ -2930,7 +2930,7 @@ def retr_indxsamp(gdat, strgpara=''):
     spectype = getattr(gdat, strgpara + 'spectype')
     spatdisttype = getattr(gdat, strgpara + 'spatdisttype')
     fluxdisttype = getattr(gdat, strgpara + 'fluxdisttype')
-    varioaxi = getattr(gdat, strgpara + 'varioaxi')
+    oaxitype = getattr(gdat, strgpara + 'oaxitype')
     psfntype = getattr(gdat, strgpara + 'psfntype')
 
     numbback = getattr(gdat, strgpara + 'numbback')
@@ -3064,7 +3064,7 @@ def retr_indxsamp(gdat, strgpara=''):
                 dicttemp['indxfixpsigtene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpgamtene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
-            if varioaxi:
+            if oaxitype:
                 dicttemp['indxfixponorene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpoindene%devt%d' % (i, m)] = cntr.incr()
     
@@ -3080,7 +3080,7 @@ def retr_indxsamp(gdat, strgpara=''):
                                                                     strg.startswith('indxfixppsffe') or strg.startswith('indxfixponore') or strg.startswith('indxfixpoinde'):
             dicttemp['indxfixppsfp'].append(valu)
     dicttemp['indxfixppsfp'] = array(dicttemp['indxfixppsfp']) 
-    numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfponor, indxpsfpoind = retr_indxpsfp(gdat, psfntype, varioaxi)
+    numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfponor, indxpsfpoind = retr_indxpsfp(gdat, psfntype, oaxitype)
     
     numbpsfptotlevtt = gdat.numbevtt * numbpsfptotl
     numbpsfptotlener = gdat.numbener * numbpsfptotl
@@ -3089,7 +3089,7 @@ def retr_indxsamp(gdat, strgpara=''):
     indxpsfpform = arange(numbpsfpform)
     indxpsfptotl = arange(numbpsfptotl)
    
-    if varioaxi:
+    if oaxitype:
         indxfixppsfponor = indxfixppsfp[0] + indxpsfponor
         indxfixppsfpoind = indxfixppsfp[0] + indxpsfpoind
         indxfixppsfpoaxi = sort(concatenate((indxfixppsfponor, indxfixppsfpoind)))
@@ -3780,7 +3780,7 @@ def supr_fram(gdat, gdatmodi, axis, indxpoplplot=-1, trueonly=False):
                                         gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l][k]], edgecolor='b', facecolor='none', ls='--', lw=2))
     
     
-def retr_indxpsfp(gdat, psfntype, varioaxi):
+def retr_indxpsfp(gdat, psfntype, oaxitype):
 
     if psfntype == 'singgaus':
         numbpsfpform = 1
@@ -3793,14 +3793,14 @@ def retr_indxpsfp(gdat, psfntype, varioaxi):
     elif psfntype == 'doubking':
         numbpsfpform = 5
     
-    if varioaxi:
+    if oaxitype:
         numbpsfpoaxi = 2
     else:
         numbpsfpoaxi = 0
 
     numbpsfptotl = numbpsfpform + numbpsfpoaxi
     
-    if varioaxi:
+    if oaxitype:
         indxpsfponor = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
         indxpsfpoind = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
     else:
@@ -4018,7 +4018,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         defl += deflextr
 
     if gdat.pntstype == 'lght':
-        varioaxi = getattr(gdat, strgtype + 'varioaxi')
+        oaxitype = getattr(gdat, strgtype + 'oaxitype')
 
     indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
     indxsamplgal, indxsampbgal, indxsampflux, indxsampsind, indxsampcurv, indxsampexpo, indxsampcomp = retr_indx(gdat, indxpntsfull, spectype)
@@ -4057,15 +4057,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         
     if gdat.pntstype == 'lght':
         ### PSF off-axis factor
-        if varioaxi:
+        if oaxitype:
             onor = sampvarb[getattr(gdat, 'indxfixppsfponor')]
             oind = sampvarb[getattr(gdat, 'indxfixppsfpoind')]
             factoaxi = retr_factoaxi(gdat, gdat.binsoaxi, onor, oind)
     
         psfntype = getattr(gdat, strgtype + 'psfntype')
-        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, varioaxi)
+        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
 
-        if varioaxi:
+        if oaxitype:
             psfnintp = []
             for p in gdat.indxoaxi:
                 psfnintp.append(interp1d_pick(gdat.binsangl, psfn[:, :, :, p], axis=1))
@@ -4110,7 +4110,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
     if gdat.pntstype == 'lght':
         
         ### PS flux map
-        pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, varioaxi, evalcirc=gdat.evalcirc)
+        pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, oaxitype, evalcirc=gdat.evalcirc)
         setattr(gdatobjt, strg + 'pntsflux', pntsflux)
         
         ### model flux map
@@ -4356,7 +4356,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 setattr(gdatobjt, strg + strgfeat + 'histprio', dicttemp[strg + strgfeat + 'histprio'])
         
         if gdat.pntstype == 'lght':
-            if varioaxi:
+            if oaxitype:
                 setattr(gdatobjt, strg + 'factoaxi', factoaxi)
            
             setattr(gdatobjt, strg + 'psfn', psfn)
@@ -4377,14 +4377,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 sigm = []
                 for l in gdat.indxpopl:
                     # temp -- zero exposure pixels will give zero counts
-                    if gdat.varioaxi:
+                    if gdat.oaxitype:
                         sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm, lgal=lgal[l], bgal=bgal[l])
                     else:
                         sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm)
                     sigm.append(sigmtemp)
                 
             if gdat.calcerrr and gdat.numbtrap > 0:
-                pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, gdat.varioaxi, evalcirc=False)
+                pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, gdat.oaxitype, evalcirc=False)
                 pntscnts = retr_cntsmaps(gdat, pntsflux)
                 errrcnts = pntscnts - temppntscnts
                 indxcubegood = where(temppntscnts > 1e-10)

@@ -35,10 +35,10 @@ def plot_samp(gdat, gdatmodi, strg):
     ## PSF radial profile
     if strg != 'true':
         if gdat.pntstype == 'lght':
-            if gdat.varioaxi or gdat.truevarioaxi:
+            if gdat.oaxitype or gdat.trueoaxitype:
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
-                        if gdat.varioaxi:
+                        if gdat.oaxitype:
                             indxydat = [i, slice(None), m, 0]
                         else:
                             indxydat = [i, slice(None), m]
@@ -1334,7 +1334,7 @@ def plot_intr(gdat):
         
 def plot_eval(gdat):
 
-    if gdat.exprvarioaxi:
+    if gdat.exproaxitype:
         psfntemp = copy(gdat.exprpsfn[0, :, 0, 0])
     else:
         psfntemp = copy(gdat.exprpsfn[0, :, 0])
