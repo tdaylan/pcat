@@ -68,7 +68,6 @@ PCAT discards the first ``numbburn`` samples and thins the resulting chain by a 
 Labeling degeneracy
 ++++++++++++++++++++++
 
-Due to the invariance of poin
 Due to **hairlessness** of the point sources, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two point sources leaves the likelihood invariant. This fact has consequences for **nonpersistent** sources, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such sources, the degeneracy must be broken in post-processing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posteior of all transdimensional parameters will eventually look similar.
 
 .. Breaking the labeling degeneracy
@@ -156,7 +155,7 @@ If not disabled by the user, PCAT produces plots in every stage of a run. Some p
 - ``fram`` Frame plots
 - ``diag`` Diagnostic plots
 - ``post`` Posterior distribution plots of model parameters and derived quantities, prior and likelihood.
-- ``anim`` GIF animations made from the frame plots in ``fram`` that are producing during sampling.
+- ``anim`` GIF animations made from the frame plots in ``fram`` that are produced during sampling.
 
 
 Chain
