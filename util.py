@@ -4420,7 +4420,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                     deflsing[:, :, :, k] = deflextr
                 else:
                     # temp
-                    if k - 2 < lgalsort.size:
+                    if numbpntsconc > 1:
                         deflsing[:, :, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0.)
 
             ### convergence
