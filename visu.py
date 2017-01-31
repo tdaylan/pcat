@@ -214,20 +214,20 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     for n in gdat.indxproptype:
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.strgproptype[n]
+                path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
             if (gdat.listlpriprop[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.strgproptype[n]
+                path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k], '%04d' % k)
             if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.strgproptype[n]
+                path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k] - gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
         for k in gdat.indxlpau:
             if (gdat.listlpau[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.strgproptype[n]
+                path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
         if (gdat.listlfctprop[:, 0] != 0.).any():
-            path = gdat.pathpostlpri + 'lfctprop' + gdat.strgproptype[n]
+            path = gdat.pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
             tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
     
     # Gelman-Rubin test
@@ -496,11 +496,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg), labldelt, titl='All processes')
         for n in gdat.indxproptype:
             path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_%s' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlprop[n]], labldelt, titl=gdat.strgproptype[n])
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlprop[n]], labldelt, titl=gdat.nameproptype[n])
             path = getattr(gdat, 'pathpostdelt%saccp' % strg) + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropaccp[n]], labldelt, titl=gdat.strgproptype[n] + ', Accepted')
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
             path = getattr(gdat, 'pathpostdelt%sreje' % strg) + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropreje[n]], labldelt, titl=gdat.strgproptype[n] + ', Rejected')
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
         
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -526,18 +526,23 @@ def plot_chro(gdat):
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
 
     labl = ['Total', 'Proposal', 'Save', 'Plot', 'Posterior', 'Rest']
+    listcolr = ['black', 'b', 'g', 'r', 'm', 'yellow']
     numblabl = len(labl)
     figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
     for k in range(numblabl):
-        
         if k == numblabl - 1:
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
             varb = gdat.listchrototl[:, k]
-        try:
-            axis.hist(varb, binstime, log=True, label=labl[k], alpha=0.3)
-        except:
-            pass
+        axis.hist(varb, binstime, log=True, label=labl[k], color=listcolr[k], alpha=0.3)
+    
+    for k in range(numblabl):
+        if k == numblabl - 1:
+            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
+        else:
+            varb = gdat.listchrototl[:, k]
+        axis.hist(varb, binstime, log=True, label=labl[k], color=listcolr[k], facecolor=None)
+
     axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])
     axis.set_xscale('log')

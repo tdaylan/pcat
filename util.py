@@ -3432,8 +3432,8 @@ def retr_indxsamp(gdat, strgpara=''):
     namepara = zeros(numbpara, dtype=object)
     namepara[indxfixp] = namefixp
     for k in range(numbtrap):
-        indxpopltemp = (k - indxsampcomp[0]) // numbtrapcumr
-        indxcomptemp = (k - indxsampcomp[0] - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopl]
+        indxpopltemp = argmin(where(k // numbtrapcumr == 0))
+        indxcomptemp = (k - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopltemp]
         namepara[numbfixp+k] = liststrgcomp[indxpopltemp][indxcomptemp]
     
     for strg, valu in locals().iteritems():

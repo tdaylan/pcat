@@ -1393,9 +1393,6 @@ def init( \
         gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccp)[0]))
         gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
     
-    print 'gdat.listindxsamptotlprop'
-    print gdat.listindxsamptotlprop
-
     ## spatial mean of maps
     gdat.liststrgmean = ['modlcnts']
     if gdat.pntstype == 'lght':
@@ -1878,8 +1875,8 @@ def work(gdat, indxprocwork):
             if indxsampbadd.size > 0:
                 print 'cntrswep'
                 print gdatmodi.cntrswep
-                print 'thisindxproptype'
-                print gdat.strgproptype[gdatmodi.thisindxproptype]
+                print 'thisnameproptype'
+                print gdat.nameproptype[gdatmodi.thisindxproptype]
                 print 'indxsampbadd'
                 print indxsampbadd
                 print 'thissamp'
@@ -2081,18 +2078,10 @@ def work(gdat, indxprocwork):
             timetotlfinl = gdat.functime()
             gdatmodi.thischrototl[0] = timetotlfinl - timetotlinit
        
-        print 'gdatmodi.thisindxproptype'
-        print gdatmodi.thisindxproptype
-        print
-        
         ## variables to be saved for each sweep
         for strg in gdatmodi.liststrgvarbswep:
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
-                        
-        print 'gdatmodi.listindxproptype'
-        print gdatmodi.listindxproptype
-        print
-        
+      
         # log the progress
         if gdat.verbtype > 0:
             minm = max(0, gdatmodi.cntrswep - 50)
