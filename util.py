@@ -2194,7 +2194,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.numbevtt == 1:
         gdat.indxevttplot = gdat.indxevtt
     else:
-        gdat.indxevttplot = concatenate((array([None]), gdat.indxevtt))
+        gdat.indxevttplot = concatenate((array([-1]), gdat.indxevtt))
     
     if gdat.pntstype == 'lght' and gdat.pixltype != 'unbd':
         gdat.evalcirc = True

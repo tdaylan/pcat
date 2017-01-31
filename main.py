@@ -968,6 +968,9 @@ def init( \
         defn_truedefa(gdat, 0.2, 'expodiststdvpop2')
         
         defn_truedefa(gdat, 1., 'bacp')
+        
+        defn_truedefa(gdat, 0.05, 'sizesour')
+        
 
         for k in gdat.trueindxfixp:
             
