@@ -1838,6 +1838,53 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
     plt.close(figr)
     
 
+def plot_genetdpy(path, xdat, ydat, scalxdat=None, scalydat=None, lablxdat='', lablydat='', plottype=['line'], limtxdat=None, limtydat=None, colr=None, alph=None):
+    
+    figr, axis = plt.subplots(figsize=(6, 6))
+    
+    if not isinstance(plottype, list):
+        listplottype = [plottype]
+    else:
+        listplottype = plottype
+    
+    if not isinstance(xdat, list):
+        listxdat = [xdat]
+    else:
+        listxdat = xdat
+    
+    if not isinstance(ydat, list):
+        listydat = [ydat]
+    else:
+        listydat = ydat
+    
+    for xdat, ydat, plottype in zip(listxdat, listydat, listplottype):
+        
+        if plottype == 'scat':
+            axis.scatter(xdat, ydat, color=colr, alpha=alph)
+        elif plottype == 'hist':
+            deltxdat = xdat[1] - xdat[0]
+            axis.bar(xdat - deltxdat / 2., ydat, deltxdat, color=colr, alpha=alph)
+        else:
+            axis.plot(xdat, ydat, color=colr, lw=2, alpha=alph)
+    
+    if scalxdat == 'logt':
+        axis.set_xscale('log')
+    if scalydat == 'logt':
+        axis.set_yscale('log')
+
+    if limtxdat != None:
+        axis.set_xlim(limtxdat)
+    if limtydat != None:
+        axis.set_ylim(limtydat)
+
+    axis.set_xlabel(lablxdat)
+    axis.set_ylabel(lablydat)
+
+    figr.tight_layout()
+    figr.savefig(path)
+    plt.close(figr)
+
+
 def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=None, thisindxevtt=-1, tdim=False, thisindxpopl=-1):
     
     if strgcbar == None:

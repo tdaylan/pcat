@@ -721,7 +721,8 @@ def init( \
     setp_varbfull(gdat, 'ellpsour', [0., 0.3])
     setp_varbfull(gdat, 'spechost', array([1e-21, 1e-17]) )
     setp_varbfull(gdat, 'sizehost', [0.2 / gdat.anglfact, 1. / gdat.anglfact])
-    setp_varbfull(gdat, 'beinhost', [0.5 / gdat.anglfact, 1. / gdat.anglfact])
+    # temp
+    setp_varbfull(gdat, 'beinhost', [0.005 / gdat.anglfact, 0.01 / gdat.anglfact])
     setp_varbfull(gdat, 'ellphost', [0., 0.5])
     setp_varbfull(gdat, 'sherhost', [0., 0.3])
     gdat.minmanglsour = 0.
@@ -925,7 +926,7 @@ def init( \
             gdat.truepsfntype = gdat.exprpsfntype
 
         # set mock sample vector indices
-        retr_indxsamp(gdat, gdat.truepsfntype, gdat.truespectype, gdat.truevarioaxi, strgpara='true')
+        retr_indxsamp(gdat, strgpara='true')
     
         ## unit sample vector
         gdat.truesamp = zeros(gdat.truenumbpara)
@@ -1168,7 +1169,7 @@ def init( \
             print gdat.maxmcnts
         if gdat.evalcirc:
             print 'maxmangleval'
-            print gdat.anglfact * gdat.maxmangleval, ' ', gdat.strganglunit
+            print gdat.anglfact * gdat.maxmangleval, ' [%s]' % gdat.strganglunit
         print
             
     if gdat.verbtype > 0:
@@ -1583,6 +1584,7 @@ def work(gdat, indxprocwork):
     if indxsampbadd.size > 0:
         print 'indxsampbadd'
         print indxsampbadd
+        print gdat.namepara[indxsampbadd]
         raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
@@ -1791,7 +1793,7 @@ def work(gdat, indxprocwork):
             xdat = gdat.indxstdp
             ydat = gdatmodi.stdvstdp
             path = gdat.pathopti + 'stdv%d.pdf' % indxprocwork
-            tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
+            plot_genetdpy(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
             for strg in gdat.liststrgcomptotl:
                 path = gdat.pathopti + 'stdv' + strg + '.pdf'
@@ -1800,8 +1802,8 @@ def work(gdat, indxprocwork):
                 factydat = gdat.dictglob['fact' + strg + 'plot']
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
-                limtxdat = array([gdat.dictglob['limtfluxplot']]) * gdat.fluxfactplot
-                tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
+                limtxdat = array(gdat.dictglob['limtfluxplot']) * gdat.fluxfactplot
+                plot_genetdpy(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
     else:
