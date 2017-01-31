@@ -47,22 +47,37 @@ Compared to mainstream point source inference methods, PCAT has a series of desi
 Transdimensionality
 +++++++++++++++++++
 
-The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference. The main reason for thfthese are possible at the expense of PCAT being a much slower algorithm.
-
-Transdimensionality
-+++++++++++++++++++
-
 PCAT takes steps across models by adding parameters drawn from the prior or killing them while maintaining detailed balance in the hyper model space.
 
 
 Hierarchical priors
 +++++++++++++++++++++
 
+When there are multiple model sources, each with a set of properties, it is more natural to put priors on the distribution of these properties, as opposed to placing individual priors separately on each source property. This assumes that a certain property of all point sources in a given population are drawn from a single probability distribution. This is particularly useful when such a parametrization is subject to inference, where individual sources can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of source properties, i.e., **hyperparameters**, and the prior on the individual source properties are made conditional on these hyperparameters. 
+
+
+.. Proposals
+.. +++++++++++++++++++++
+
+
 Adaptive burn-in
 +++++++++++++++++
 
+PCAT discards the first ``numbburn`` samples and thins the resulting chain by a factor ``factthin``. In order to estimate proposal scales for parameters, it initially takes the derivative of log-likelihood with respect to all parameters at a likely region in the parameter space.
+
 Labeling degeneracy
 ++++++++++++++++++++++
+
+Due to the invariance of poin
+Due to **hairlessness** of the point sources, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two point sources leaves the likelihood invariant. This fact has consequences for **nonpersistent** sources, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such sources, the degeneracy must be broken in post-processing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posteior of all transdimensional parameters will eventually look similar.
+
+.. Breaking the labeling degeneracy
+.. +++++++++++++++++++
+
+Performance
++++++++++++++++++++
+
+The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference. The main reason for thfthese are possible at the expense of PCAT being a much slower algorithm.
 
 
 Input

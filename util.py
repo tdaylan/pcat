@@ -3430,11 +3430,12 @@ def retr_indxsamp(gdat, strgpara=''):
         else:
             strgfixpunit[k] = strgfixp[k]
 
-    namepara = list(deepcopy(namefixp))
+    namepara = zeros(numbpara, dtype=object)
+    namepara[indxfixp] = namefixp
     for k in range(numbtrap):
         indxpopltemp = (k - indxsampcomp[0]) // numbtrapcumr
         indxcomptemp = (k - indxsampcomp[0] - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopl]
-        namepara.append(liststrgcomp[indxpopltemp][indxcomptemp])
+        namepara[numbfixp+k] = liststrgcomp[indxpopltemp][indxcomptemp]
     
     for strg, valu in locals().iteritems():
         if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
