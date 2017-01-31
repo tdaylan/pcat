@@ -1791,10 +1791,14 @@ def work(gdat, indxprocwork):
         gdatmodi.optidone = True
    
         if gdat.makeplot:
+            
+            if gdat.numbproc > 1:
+                gdat.lock.acquire()
+        
             xdat = gdat.indxstdp
             ydat = gdatmodi.stdvstdp
             path = gdat.pathopti + 'stdv%d.pdf' % indxprocwork
-            plot_genetdpy(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
+            tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist')
             
             for strg in gdat.liststrgcomptotl:
                 path = gdat.pathopti + 'stdv' + strg + '.pdf'
@@ -1804,9 +1808,12 @@ def work(gdat, indxprocwork):
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
                 limtxdat = array(gdat.dictglob['limtfluxplot']) * gdat.fluxfactplot
-                plot_genetdpy(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
+                tdpy.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
+            if gdat.numbproc > 1:
+                gdat.lock.release()
+            
     else:
         gdatmodi.optidone = True
         if gdat.verbtype > 0 and indxprocwork == 0:
