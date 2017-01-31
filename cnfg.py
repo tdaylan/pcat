@@ -7,22 +7,22 @@ from visu import *
 
 def test_info():
     
-    listminmflux = logspace(-12., -8., 10)
+    listminmflux = logspace(-9., -8., 2)
     numbiter = listminmflux.size
     liststrgvarb = ['levi', 'info']
     varbdict = {}
     for k in range(numbiter):
         seedstat = get_state()
         gdat = init( \
-                    verbtype=0, \
                     seedstat=seedstat, \
-                    numbswep=100, \
-                    indxenerincl=arange(2, 3), \
-                    proppsfp=False, \
+                    numbswep=50000, \
+                    factthin=500, \
+                    indxenerincl=arange(1, 3), \
                     indxevttincl=arange(3, 4), \
                     minmflux=listminmflux[k], \
                     maxmflux=1e-7, \
-                    truenumbpnts=array([5]), \
+                    trueminmflux=1e-8, \
+                    truenumbpnts=array([50]), \
                     back=['fermisotflux.fits'], \
                     strgexpo='fermexpo_cmp0_ngal.fits', \
                    )

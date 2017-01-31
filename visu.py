@@ -242,7 +242,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{stat}$')
             plt.tight_layout()
-            plt.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
+            figr.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
             plt.close(figr)
             
             for i in gdat.indxener:
@@ -290,7 +290,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    plt.savefig(gdat.pathdiag + 'accpratiproptype.pdf')
+    figr.savefig(gdat.pathdiag + 'accpratiproptype.pdf')
     plt.close(figr)
   
     # plot split and merge diagnostics
@@ -355,7 +355,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     
                 make_legd(axis)
                 plt.tight_layout()
-                plt.savefig(gdat.pathpostspmr + listname[k] + '.pdf')
+                figr.savefig(gdat.pathpostspmr + listname[k] + '.pdf')
                 plt.close(figr)
     
     if gdat.verbtype > 0:
@@ -506,7 +506,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     axis.set_ylabel(r'$M$ [GB]')
     axis.set_xlabel(r'$i_{samp}$')
     plt.tight_layout()
-    plt.savefig(gdat.pathdiag + 'memoresi.pdf')
+    figr.savefig(gdat.pathdiag + 'memoresi.pdf')
     plt.close(figr)
 
     # animate the frame plots
@@ -543,7 +543,7 @@ def plot_chro(gdat):
     numbcols = len(labl)
     make_legd(axis, loca=9, numbcols=numbcols)
     axis.set_xlabel('$t$ [ms]')
-    plt.savefig(gdat.pathdiag + 'chrototl.pdf')
+    figr.savefig(gdat.pathdiag + 'chrototl.pdf')
     plt.close(figr)
 
     gdat.listchrollik *= 1e3
@@ -571,7 +571,7 @@ def plot_chro(gdat):
             axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
         axcl[-1].set_xlabel('$t$ [ms]')
         plt.subplots_adjust(hspace=0.05)
-        plt.savefig(gdat.pathdiag + 'chrollik.pdf')
+        figr.savefig(gdat.pathdiag + 'chrollik.pdf')
         plt.close(figr)
 
 
@@ -641,7 +641,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
     
         plt.tight_layout()
         path = retr_plotpath(gdat, gdatmodi, strg, 'compfracspec')
-        plt.savefig(path)
+        figr.savefig(path)
         plt.close(figr)
    
     # pie plot illustrating contribution of each background template (and PS) to the total model
@@ -662,7 +662,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
 
     plt.subplots_adjust(top=0.8, bottom=0.2, left=0.2, right=0.8)
     path = retr_plotpath(gdat, gdatmodi, strg, 'compfrac')
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
      
 
@@ -723,7 +723,7 @@ def plot_pdfntotlflux():
         plt.tight_layout()
         pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
         os.system('mkdir -p ' + pathfold)
-        plt.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
+        figr.savefig(pathfold + 'powrpdfn%04d.pdf' % n)
         plt.close(figr)
         
 
@@ -750,7 +750,7 @@ def plot_brgt(gdat, gdatmodi, strg):
     
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatbrgt')
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     
 
@@ -806,7 +806,7 @@ def plot_fluxsind(gdat, gdatmodi, strg, l, strgtype):
 
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, '%sfluxsind_pop%d' % (strgtype, l))
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     
 
@@ -929,7 +929,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
 
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, strgydat)
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
 
 
@@ -1016,7 +1016,7 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
     else:
         strg = ''
     path = retr_plotpath(gdat, gdatmodi, 'post', 'scatspec%s_pop%d' % (strg, l))
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
 
 
@@ -1061,7 +1061,7 @@ def plot_scatpixl(gdat, gdatmodi, strg):
             
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatpixl')
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     
     
@@ -1085,7 +1085,7 @@ def plot_indxprox(gdat):
     axis.set_ylabel("Number of tables")
     make_legd(axis)
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'init/indxprox.pdf')
+    figr.savefig(gdat.pathplot + 'init/indxprox.pdf')
     plt.close()
     
     
@@ -1137,7 +1137,7 @@ def plot_evidtest():
     plt.colorbar(imag, ax=axis, fraction=0.03)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'evidtest.pdf')
+    figr.savefig(gdat.pathplot + 'evidtest.pdf')
     plt.close(figr)
     
     
@@ -1229,7 +1229,7 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
     else:
         strgtemp = ''
     path = gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
        
     
@@ -1255,7 +1255,7 @@ def plot_king(gdat):
         axis.set_xlabel(r'$\mathcal{K}$')
         
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'king.pdf')
+    figr.savefig(gdat.pathplot + 'king.pdf')
     plt.close(figr)
     
     
@@ -1291,7 +1291,7 @@ def plot_datacntshist(gdat):
             axis.set_yscale('log')
 
     plt.tight_layout()
-    plt.savefig(gdat.pathinit + 'datacntshist.pdf')
+    figr.savefig(gdat.pathinit + 'datacntshist.pdf')
     plt.close(figr)
     
     
@@ -1328,7 +1328,7 @@ def plot_intr(gdat):
         axis.set_axis_bgcolor('black')
         figr.set_facecolor('black')
         plt.tight_layout()
-        plt.savefig(gdat.pathimag + 'talkintr.pdf', facecolor=figr.get_facecolor())
+        figr.savefig(gdat.pathimag + 'talkintr.pdf', facecolor=figr.get_facecolor())
         plt.close()  
         
         
@@ -1372,7 +1372,7 @@ def plot_eval(gdat):
     make_legd(axis)
 
     plt.tight_layout()
-    plt.savefig(gdat.pathinit + 'eval.pdf')
+    figr.savefig(gdat.pathinit + 'eval.pdf')
     plt.close(figr)
 
 
@@ -1434,7 +1434,7 @@ def plot_mosa(gdat):
                         path = gdat.pathpost + 'mosa' + strg + '_%dA.pdf' % (gdat.indxenerincl[i])
                     else:
                         path = gdat.pathpost + 'mosa' + strg + '_%d%d.pdf' % (gdat.indxenerincl[i], gdat.indxevttincl[m])
-                    plt.savefig(path)
+                    figr.savefig(path)
                     plt.close(figr)
     else:
         if gdat.verbtype > 0:
@@ -1590,7 +1590,7 @@ def plot_grap(plottype='igal', verbtype=0):
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
     plt.tight_layout()
-    plt.savefig(pathplot + 'grap%s.pdf' % plottype)
+    figr.savefig(pathplot + 'grap%s.pdf' % plottype)
     plt.close(figr)
 
 
@@ -1627,7 +1627,7 @@ def plot_3fgl_thrs(gdat):
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.tight_layout()
-    plt.savefig(gdat.pathplot + 'thrs.pdf')
+    figr.savefig(gdat.pathplot + 'thrs.pdf')
     plt.close(figr)
     
 
@@ -1717,7 +1717,7 @@ def plot_histcnts(gdat, l, gdatmodi):
         
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, 'post', 'histcnts_pop%d' % l)
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     
 
@@ -1759,7 +1759,7 @@ def plot_init(gdat):
                 axis.scatter(gdat.anglfact * gdat.lgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.bgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
                 
                 plt.tight_layout()
-                plt.savefig(path)
+                figr.savefig(path)
                 plt.close(figr)
     
             if gdat.correxpo:
@@ -1767,7 +1767,7 @@ def plot_init(gdat):
                 imag = retr_imag(gdat, axis, gdat.expo, '', i, m)
                 make_cbar(gdat, axis, imag, i)
                 plt.tight_layout()
-                plt.savefig(path)
+                figr.savefig(path)
                 plt.close(figr)
         
                 for c in gdat.indxback:
@@ -1775,7 +1775,7 @@ def plot_init(gdat):
                     imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                     plt.tight_layout()
-                    plt.savefig(path)
+                    figr.savefig(path)
                     plt.close(figr)
     
                 if gdat.numbback > 1:
@@ -1783,14 +1783,14 @@ def plot_init(gdat):
                     imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                     plt.tight_layout()
-                    plt.savefig(path)
+                    figr.savefig(path)
                     plt.close(figr)
         
                 figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                 plt.tight_layout()
-                plt.savefig(path)
+                figr.savefig(path)
                 plt.close(figr)
     
             if gdat.pntstype == 'lens':
@@ -1799,7 +1799,7 @@ def plot_init(gdat):
                 imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, tdim=True)
                 make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                 plt.tight_layout()
-                plt.savefig(path)
+                figr.savefig(path)
                 plt.close(figr)
 
 
@@ -1834,7 +1834,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
                   gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], scale_units='xy', angles='xy', scale=1)
     supr_fram(gdat, gdatmodi, axis)
     #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     
 
@@ -1887,6 +1887,6 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     supr_fram(gdat, gdatmodi, axis, thisindxpopl)
 
     plt.tight_layout()
-    plt.savefig(path)
+    figr.savefig(path)
     plt.close(figr)
     

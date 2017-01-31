@@ -3877,11 +3877,28 @@ def pert_llik(gdat, gdatmodi, indxparapert, stdvparapert):
     return lpospert
 
 
-def retr_defl(gdat, lgal, bgal, bein, ellp, angl, sher, sang, rcor):
-        
+def retr_deflextr(gdat, sher, sang):
+    
+    factcosi = sher * cos(2. * sang)
+    factsine = sher * cos(2. * sang)
+    defllgal = factcosi * gdat.lgalgridcart + factsine * gdat.bgalgridcart
+    deflbgal = factsine * gdat.lgalgridcart - factcosi * gdat.bgalgridcart
+    
+    return dstack((defllgal, deflbgal)) 
+
+
+def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor, thisevalcirc=False):
+    
+    if thisevalcirc and gdat.evalcirc:
+        indxfluxproxtemp = digitize(bein[k], gdat.binsfluxprox) - 1
+        indxpixlpnts = retr_indxpixl(gdat, bgal[k], lgal[k])
+        indxpixlprox = gdat.indxsidemeshprox[indxfluxproxtemp][indxpixlpnts]
+    else:
+        indxpixlprox = gdat.indxsidemesh
+    
     # translate the grid
-    lgaltran = gdat.lgalgridcart - lgal
-    bgaltran = gdat.bgalgridcart - bgal
+    lgaltran = gdat.lgalgridcart[indxpixlprox] - lgal
+    bgaltran = gdat.bgalgridcart[indxpixlprox] - bgal
     
     # rotate the grid
     lgalrttr = cos(angl) * lgaltran - sin(angl) * bgaltran
@@ -3901,14 +3918,9 @@ def retr_defl(gdat, lgal, bgal, bein, ellp, angl, sher, sang, rcor):
         deflbgalrttr = bein * bgalrttr / (rint + rcor)
     
     # totate back vector to original basis
-    defllgal =  cos(angl) * defllgalrttr + sin(angl) * deflbgalrttr
+    defllgal = cos(angl) * defllgalrttr + sin(angl) * deflbgalrttr
     deflbgal = -sin(angl) * defllgalrttr + cos(angl) * deflbgalrttr
     
-    # external shear
-    factcosi = sher * cos(2. * sang)
-    factsine = sher * cos(2. * sang)
-    defllgal += factcosi * gdat.lgalgridcart + factsine * gdat.bgalgridcart
-    deflbgal += factsine * gdat.lgalgridcart - factcosi * gdat.bgalgridcart
     
     return dstack((defllgal, deflbgal))
    
@@ -4009,8 +4021,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         sanghost = sampvarb[getattr(gdat, strgtype + 'indxfixpsanghost')]
        
         # host halo and external shear
-        defl = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, sherhost, sanghost, 0.)
-    
+        defl = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
+        deflextr = retr_deflextr(gdat, sherhost, sanghost)
+        defl += deflextr
+
     if gdat.pntstype == 'lght':
         varioaxi = getattr(gdat, strgtype + 'varioaxi')
 
@@ -4075,7 +4089,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         if numbpntsconc > 0 and not raww:
             for k in range(numbpntsconc):
                 # temp -- fix truncation
-                defl += retr_defl(gdat, lgalconc[k], bgalconc[k], specconc[0, k], 0., 0., 0., 0., 0.)
+                defl += retr_defl(gdat, lgalconc[k], bgalconc[k], specconc[0, k], 0., 0., 0., thisevalcirc=True)
                         
         # lensed image
         lensflux = retr_mapsraww(gdat, gdat.lgalgridcart - defl[:, :, 0], gdat.bgalgridcart - defl[:, :, 1], bacp, lgalsour, bgalsour, specsour, sizesour, ellpsour, anglsour)
@@ -4410,13 +4424,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
             deflsing = zeros((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
             for k in range(gdat.numbdeflsing):
                 if k == 0:
-                    deflsing[:, :, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0., 0., 0.)
+                    deflsing[:, :, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
                 elif k == 1:
-                    deflsing[:, :, :, k] = retr_defl(gdat, 0., 0., 0., 0., 0., sherhost, sanghost, 0.)
+                    deflsing[:, :, :, k] = deflextr
                 else:
                     # temp
                     if k - 2 < lgalsort.size:
-                        deflsing[:, :, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0., 0., 0.)
+                        deflsing[:, :, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0.)
 
             ### convergence
             conv = retr_conv(gdat, defl) 

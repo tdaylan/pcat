@@ -1800,7 +1800,7 @@ def work(gdat, indxprocwork):
                 factydat = gdat.dictglob['fact' + strg + 'plot']
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
-                limtxdat = gdat.dictglob['limtfluxplot']
+                limtxdat = array([gdat.dictglob['limtfluxplot']]) * gdat.fluxfactplot
                 tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
