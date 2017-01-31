@@ -1585,7 +1585,10 @@ def work(gdat, indxprocwork):
         print gdat.namepara[indxsampbadd]
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[:, None]
-        raise Exception('Initial unit sample vector went outside the unit interval...')
+        gdatmodi.thissamp[indxsampbaddlowr] = 0.
+        gdatmodi.thissamp[indxsampbadduppr] = 1.
+        print 'Initial unit sample vector went outside the unit interval...'
+        #raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
@@ -1808,7 +1811,7 @@ def work(gdat, indxprocwork):
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
                 limtxdat = array(gdat.dictglob['limtfluxplot']) * gdat.fluxfactplot
-                tdpy.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
+                tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
            
             if gdat.numbproc > 1:
