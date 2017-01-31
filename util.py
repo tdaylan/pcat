@@ -1266,6 +1266,10 @@ def retr_prop(gdat, gdatmodi):
                 gdatmodi.lfctprop += sum((gdatmodi.nextsamp[gdat.indxfixpprop] - gdatmodi.thissamp[gdat.indxfixpprop]) * \
                                                                                             (1. / gdatmodi.nextstdv**2 - 1. / gdatmodi.thisstdv**2))
     
+    print 'gdatmodi.lfctprop'
+    print gdatmodi.lfctprop
+    gdatmodi.lfctprop = 0.
+
     if gdat.numbtrap > 0:
         gdatmodi.indxsampchec = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.dictmodi['indxsampcomp'])))
         if gdatmodi.propbrth:
@@ -3426,6 +3430,12 @@ def retr_indxsamp(gdat, strgpara=''):
         else:
             strgfixpunit[k] = strgfixp[k]
 
+    namepara = list(deepcopy(namefixp))
+    for k in range(numbtrap):
+        indxpopltemp = (k - indxsampcomp[0]) // numbtrapcumr
+        indxcomptemp = (k - indxsampcomp[0] - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopl]
+        namepara.append(liststrgcomp[indxpopltemp][indxcomptemp])
+    
     for strg, valu in locals().iteritems():
         if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
             setattr(gdat, strgpara + strg, valu)
@@ -3435,12 +3445,6 @@ def retr_indxsamp(gdat, strgpara=''):
         if isinstance(valu, ndarray) and strg[12:16] != 'dist':
             valu = sort(valu)
         setattr(gdat, strgpara + strg, valu)
-  
-    namepara = list(deepcopy(namefixp))
-    for k in range(numbtrap):
-        indxpopltemp = (k - indxsampcomp[0]) // numbtrapcumr
-        indxcomptemp = (k - indxsampcomp[0] - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopl]
-        namepara.append(liststrgcomp[indxpopltemp][indxcomptemp])
 
 
 def defn_truedefa(gdat, valu, strgvarb):
