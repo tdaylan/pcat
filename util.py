@@ -4420,7 +4420,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
                 beinsort = dicttemp['flux'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
             
-            gdatmodi.numbdeflsing = gdatmodi.numbpntsconc + 2
+            gdatmodi.numbdeflsing = numbpntsconc + 2
             deflsing = zeros((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
             for k in range(gdatmodi.numbdeflsing):
                 if k == 0:
