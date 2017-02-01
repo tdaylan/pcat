@@ -108,11 +108,17 @@ def test_time():
         if numbener == 3:
             indxenerincl = arange(1, 4)
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
-        
+     
+        print 'tupl[k]'
+        print tupl[k]
+        print
+
         gdat = init( \
                     numbswep=numbswep, \
                     numbproc=numbproc, \
                     back=[1.], \
+                    makeplot=False, \
+                    verbtype=0, \
                     strgexpo=1., \
                     exprinfo=False, \
                     indxenerincl=indxenerincl, \

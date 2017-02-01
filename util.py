@@ -2411,6 +2411,14 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.pixltype == 'cart':
         gdat.backfluxcart = []
         for c in gdat.indxback:
+            print 'gdat.backflux[c]'
+            print gdat.backflux[c].shape
+            print 'gdat.numbener'
+            print gdat.numbener
+            print 'gdat.numbsidecart'
+            print gdat.numbsidecart
+            print 'gdat.numbevtt'
+            print gdat.numbevtt
             gdat.backfluxcart.append(gdat.backflux[c].reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt)))
         gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
 
@@ -4412,16 +4420,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
                 beinsort = dicttemp['flux'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
             
+            gdatmodi.numbdeflsing = gdatmodi.numbpntsconc + 2
             deflsing = zeros((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
-            for k in range(gdat.numbdeflsing):
+            for k in range(gdatmodi.numbdeflsing):
                 if k == 0:
                     deflsing[:, :, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
                 elif k == 1:
                     deflsing[:, :, :, k] = deflextr
                 else:
-                    # temp
-                    if numbpntsconc > 1:
-                        deflsing[:, :, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0.)
+                    deflsing[:, :, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0.)
 
             ### convergence
             conv = retr_conv(gdat, defl) 
