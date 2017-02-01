@@ -239,7 +239,7 @@ def icdf_flux_powr(fluxunit, minmflux, maxmflux, fluxdistslop):
 def cdfn_powr(flux, minm, maxm, slop):
         
     unit = (flux**(1. - slop) - minm**(1. - slop)) / (maxm**(1. - slop) - minm**(1. - slop))
-        
+    
     return unit
 
 
@@ -688,20 +688,6 @@ def retr_sampvarb(gdat, indxpntsfull, samp, strg):
                 fluxdistslopuppr = sampvarb[gdat.indxfixpfluxdistslopuppr[l]]
                 sampvarb[indxsampflux[l]] = icdf_flux_brok(fluxunit, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
             
-            print 'gdat.minmflux'
-            print gdat.minmflux * gdat.anglfact
-            print 'gdat.maxmflux'
-            print gdat.maxmflux * gdat.anglfact
-            print 'gdat.trueminmflux'
-            print gdat.trueminmflux * gdat.anglfact
-            print 'gdat.truemaxmflux'
-            print gdat.truemaxmflux * gdat.anglfact
-            print 'samp[indxsampflux[l]]'
-            print samp[indxsampflux[l]]
-            print 'sampvarb[indxsampflux[l]]'
-            print sampvarb[indxsampflux[l]]
-            print 
-
             if not isfinite(sampvarb[indxsampflux[l]]).all():
                 print 'sampvarb[indxsampflux[l]]'
                 print sampvarb[indxsampflux[l]]

@@ -142,6 +142,8 @@ def test_time():
                 varbdict[strg] = empty([numbiter] + shap)
         
         for strg in liststrgvarb:
+            print 'varbdict'
+            print varbdict
             varbdict[strg][k, :] = getattr(gdat, strg)
 
     size = 0.5

@@ -1550,9 +1550,9 @@ def work(gdat, indxprocwork):
             for l in gdat.indxpopl:
                 gdatmodi.thissamp[gdatmodi.thisindxsamplgal[l]] = cdfn_self(gdat.truelgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
                 gdatmodi.thissamp[gdatmodi.thisindxsampbgal[l]] = cdfn_self(gdat.truebgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
-
+                
                 if gdat.fluxdisttype[l] == 'powr':
-                    fluxunit = cdfn_flux_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]])
+                    fluxunit = cdfn_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]])
                 if gdat.fluxdisttype[l] == 'brok':
                     flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
                     fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
@@ -1603,9 +1603,9 @@ def work(gdat, indxprocwork):
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[:, None]
         raise Exception('Initial unit sample vector went outside the unit interval...')
-        gdatmodi.thissamp[indxsampbaddlowr] = 0.
-        gdatmodi.thissamp[indxsampbadduppr] = 1.
-        print 'Initial unit sample vector went outside the unit interval...'
+        #gdatmodi.thissamp[indxsampbaddlowr] = 0.
+        #gdatmodi.thissamp[indxsampbadduppr] = 1.
+        #print 'Initial unit sample vector went outside the unit interval...'
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
@@ -1757,7 +1757,7 @@ def work(gdat, indxprocwork):
         lposcntr = retr_negalpos(gdat, gdatmodi)
         
         # temp
-        deltparastep = 1e-6
+        deltparastep = 1e-10
         maxmstdv = 1e-2
         fudgstdv = 0.1
         diffpara = deltparastep * array([-1., 0., 1])
