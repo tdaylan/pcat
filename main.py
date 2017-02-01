@@ -638,7 +638,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
         if gdat.pntstype == 'lens':
-            gdat.minmflux = 5e-5 / gdat.anglfact
+            gdat.minmflux = 5e-3 / gdat.anglfact
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
@@ -1759,7 +1759,7 @@ def work(gdat, indxprocwork):
         # temp
         deltparastep = 1e-10
         maxmstdv = 1e-2
-        fudgstdv = 0.1
+        fudgstdv = 100.
         diffpara = deltparastep * array([-1., 0., 1])
         lposdelt = zeros(3)
         gdatmodi.dictmodi = {}
@@ -1779,7 +1779,7 @@ def work(gdat, indxprocwork):
                     else:
                         lposdelt[n] = pert_llik(gdat, gdatmodi, array([k]), array([diffpara[n]]))
 
-                stdv = deltparastep * sqrt(0.5 / amax(fabs(lposcntr - lposdelt))) / sqrt(gdat.numbpara) / fudgstdv
+                stdv = deltparastep * sqrt(0.5 / amax(fabs(lposcntr - lposdelt))) * fudgstdv # / sqrt(gdat.numbpara)
             
                 if stdv > maxmstdv or not isfinite(stdv):
                     stdv = maxmstdv
