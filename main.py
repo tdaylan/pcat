@@ -514,6 +514,7 @@ def init( \
     
     # paths
     gdat.pathdata = gdat.pathbase + 'data/'
+    gdat.pathdataopti = gdat.pathdata + 'opti/'
     gdat.pathimag = gdat.pathbase + 'imag/'
     
 
@@ -637,7 +638,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
         if gdat.pntstype == 'lens':
-            gdat.minmflux = 2e-4 / gdat.anglfact
+            gdat.minmflux = 1e-3 / gdat.anglfact
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
@@ -1714,7 +1715,7 @@ def work(gdat, indxprocwork):
             gdat.probtran = gdat.probtrantemp
             gdat.optiproptemp = False
         
-        pathstdvprop = gdat.pathopti + '%s.fits' % gdat.rtag
+        pathstdvprop = gdat.pathdataopti + '%s.fits' % gdat.rtag
         if os.path.isfile(pathstdvprop) and gdat.loadvaripara:
             if gdat.verbtype > 0 and indxprocwork == 0:
                 print 'Reading the previously computed proposal scale from %s...' % pathstdvprop
