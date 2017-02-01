@@ -688,6 +688,20 @@ def retr_sampvarb(gdat, indxpntsfull, samp, strg):
                 fluxdistslopuppr = sampvarb[gdat.indxfixpfluxdistslopuppr[l]]
                 sampvarb[indxsampflux[l]] = icdf_flux_brok(fluxunit, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
             
+            print 'gdat.minmflux'
+            print gdat.minmflux * gdat.anglfact
+            print 'gdat.maxmflux'
+            print gdat.maxmflux * gdat.anglfact
+            print 'gdat.trueminmflux'
+            print gdat.trueminmflux * gdat.anglfact
+            print 'gdat.truemaxmflux'
+            print gdat.truemaxmflux * gdat.anglfact
+            print 'samp[indxsampflux[l]]'
+            print samp[indxsampflux[l]]
+            print 'sampvarb[indxsampflux[l]]'
+            print sampvarb[indxsampflux[l]]
+            print 
+
             if not isfinite(sampvarb[indxsampflux[l]]).all():
                 print 'sampvarb[indxsampflux[l]]'
                 print sampvarb[indxsampflux[l]]
@@ -2408,17 +2422,16 @@ def setpinit(gdat, boolinitsetp=False):
                 backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
         gdat.backflux.append(backfluxtemp)
     
+    # only include desired energy and PSF class bins 
+    gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
+    if gdat.correxpo:
+        gdat.expo = gdat.expo[gdat.indxcubeincl]
+    for c in gdat.indxback:
+        gdat.backflux[c] = gdat.backflux[c][gdat.indxcubeincl]
+  
     if gdat.pixltype == 'cart':
         gdat.backfluxcart = []
         for c in gdat.indxback:
-            print 'gdat.backflux[c]'
-            print gdat.backflux[c].shape
-            print 'gdat.numbener'
-            print gdat.numbener
-            print 'gdat.numbsidecart'
-            print gdat.numbsidecart
-            print 'gdat.numbevtt'
-            print gdat.numbevtt
             gdat.backfluxcart.append(gdat.backflux[c].reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt)))
         gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
 
@@ -2426,8 +2439,6 @@ def setpinit(gdat, boolinitsetp=False):
         if amin(gdat.backflux[c]) <= 0.:
             raise Exception('Background templates must be positive.')
 
-    # only include desired energy and PSF class bins 
-    gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     # temp
     if False and gdat.datatype == 'inpt':
         gdat.exprdataflux = gdat.exprdataflux[gdat.indxcubeincl]
@@ -2447,11 +2458,6 @@ def setpinit(gdat, boolinitsetp=False):
             print r
             print
 
-    if gdat.correxpo:
-        gdat.expo = gdat.expo[gdat.indxcubeincl]
-    for c in gdat.indxback:
-        gdat.backflux[c] = gdat.backflux[c][gdat.indxcubeincl]
-  
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for i in gdat.indxener:

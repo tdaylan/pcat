@@ -82,14 +82,19 @@ def test_time():
             [100,   'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
 
            ]
-    numbtupl = len(tupl)
-    indxtupl = np.arange(numbtupl)
-    strgtupl = []
-    liststrgvarb = ['timereal', 'timeproc', 'timeatcr', 'meanmemoresi', 'derimemoresi']
-    varbdict = dict() 
-    for k in range(numbtupl):
-        temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
-        strgtupl.append(strg)
+    
+    truenumbpnts = array([100])
+
+    numbiter = len(tupl)
+    indxiter = np.arange(numbiter)
+    
+    liststrgvarb = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
+    listlablvarb = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
+    
+    listticklabl = []
+    for k in indxiter:
+        temp, pixltype, minmflux, numbener, numbswep, numbproc, ticklabl = tupl[k]
+        listticklabl.append(ticklabl)
         if pixltype == 'heal':
             maxmgangdata = deg2rad(temp)
             numbsidecart = None
@@ -101,9 +106,7 @@ def test_time():
             indxenerincl = arange(2, 3)
         if numbener == 3:
             indxenerincl = arange(1, 4)
-        binsenerfull = linspace(1., 1. + numbener, numbener + 1)
      
-        print
         print 'tupl[k]'
         print tupl[k]
 
@@ -112,39 +115,49 @@ def test_time():
                     numbproc=numbproc, \
                     back=[1.], \
                     makeplot=False, \
-                    #verbtype=0, \
+                    verbtype=0, \
                     strgexpo=1., \
                     exprinfo=False, \
                     indxenerincl=indxenerincl, \
                     pixltype=pixltype, \
                     indxevttincl=arange(3, 4), \
                     psfntype='doubking', \
-                    maxmnumbpnts=array([maxmnumbpnts]), \
                     maxmgangdata=maxmgangdata, \
                     minmflux=minmflux, \
                     maxmflux=1e6, \
                     numbsidecart=numbsidecart, \
-                    truenumbpnts=array([truenumbpnts]), \
+                    truenumbpnts=truenumbpnts, \
                    )
+        
+        print
+        
+        if k == 0:
+            varbdict = dict() 
+            for strg in liststrgvarb:
+                varb = getattr(gdat, strg)
+                if isinstance(varb, float):
+                    shap = [1]
+                else:
+                    shap = list(getattr(gdat, strg).shape)
+                varbdict[strg] = empty([numbiter] + shap)
+        
         for strg in liststrgvarb:
-            varbdict[strg] = getattr(gdat, strg)
+            varbdict[strg][k, :] = getattr(gdat, strg)
 
     size = 0.5
     path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
     os.system('mkdir -p %s' % path)
     strgtimestmp = tdpy.util.retr_strgtimestmp()
-    liststrg = ['timereal', 'timeproc', 'timeprocsamp', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
-    listlabl = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
-    listvarb = [timereal, timeproc, timeproc / numbswep, timeatcr, timeproc / (numbswep / timeatcr), meanmemoresi, derimemoresi]
-    numbplot = len(liststrg)
+
+    numbplot = len(liststrgvarb)
     for k in range(numbplot):
         figr, axis = plt.subplots()
-        axis.bar(indxtupl, listvarb[k], 2 * size)
-        axis.set_ylabel(listlabl[k])
+        axis.bar(indxiter, dictvarb[k, :], 2 * size)
+        axis.set_ylabel(listlablvarb[k])
         axis.set_xticks(indxtupl + size)
-        axis.set_xticklabels(strgtupl, rotation=45)
+        axis.set_xticklabels(listtticklabl, rotation=45)
         plt.tight_layout()
-        figr.savefig(path + '%s_%04d_%s.pdf' % (liststrg[k], log10(numbswep), strgtimestmp))
+        figr.savefig(path + '%s_%04d_%s.pdf' % (liststrgvarb[k], log10(numbswep), strgtimestmp))
         plt.close(figr)
 
     

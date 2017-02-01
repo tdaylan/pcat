@@ -638,7 +638,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
         if gdat.pntstype == 'lens':
-            gdat.minmflux = 5e-3 / gdat.anglfact
+            gdat.minmflux = 5e-5 / gdat.anglfact
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
@@ -648,7 +648,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.maxmflux = 1e4
         if gdat.pntstype == 'lens':
-            gdat.maxmflux = 5e-1 / gdat.anglfact
+            gdat.maxmflux = 1. / gdat.anglfact
    
     # PS spectral model
     if gdat.spectype == None:
@@ -717,7 +717,7 @@ def init( \
     gdat.minmbgalhost = gdat.minmbgal
     gdat.maxmbgalhost = gdat.maxmbgal
     setp_varbfull(gdat, 'specsour', array([1e-21, 1e-17]) )
-    setp_varbfull(gdat, 'sizesour', [0.1 / gdat.anglfact, 1. / gdat.anglfact])
+    setp_varbfull(gdat, 'sizesour', [0.01 / gdat.anglfact, 1. / gdat.anglfact])
     setp_varbfull(gdat, 'ellpsour', [0., 0.3])
     setp_varbfull(gdat, 'spechost', array([1e-21, 1e-17]) )
     setp_varbfull(gdat, 'sizehost', [0.2 / gdat.anglfact, 1. / gdat.anglfact])
@@ -886,6 +886,10 @@ def init( \
 
         if gdat.trueminmflux == None:
             gdat.trueminmflux = gdat.minmflux
+        
+        # temp
+        if gdat.truemaxmflux == None:
+            gdat.truemaxmflux = gdat.maxmflux
         
         if gdat.truenumbpnts == None:
             gdat.truenumbpnts = empty(gdat.numbpopl, dtype=int)
@@ -1419,8 +1423,8 @@ def init( \
             meditemp = []
             errrtemp = []
             numbelem = len(listtemp[0])
-            shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
             for k in range(numbelem):
+                shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
                 for n in gdat.indxsamptotl:
                     temp[n, ...] = listtemp[n][k]
@@ -1467,7 +1471,9 @@ def init( \
 
     gdat.timerealtotl = time.time() - gdat.timerealtotl
     gdat.timeproctotl = time.clock() - gdat.timeproctotl
-     
+    gdat.timeproctotlswep = gdat.timeproctotl / gdat.numbswep
+    gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcr
+
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdat.timereal[k], gdat.timeproc[k])
@@ -1579,6 +1585,13 @@ def work(gdat, indxprocwork):
             for l in gdat.indxpopl:
                 gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]] = rand(gdatmodi.thisindxsampcomp[l].size)
 
+    if gdat.verbtype > 1:
+        print 'thissamp'
+        for k in gdat.indxpara:
+            if k in concatenate(gdatmodi.thisindxsamplgal):
+                print
+            print '%15f' % gdatmodi.thissamp[k]
+
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.thissamp[gdat.numbpopl:] < 0.)[0] + gdat.numbpopl
     indxsampbadduppr = where(gdatmodi.thissamp[gdat.numbpopl:] > 1.)[0] + gdat.numbpopl
@@ -1589,10 +1602,10 @@ def work(gdat, indxprocwork):
         print gdat.namepara[indxsampbadd]
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[:, None]
+        raise Exception('Initial unit sample vector went outside the unit interval...')
         gdatmodi.thissamp[indxsampbaddlowr] = 0.
         gdatmodi.thissamp[indxsampbadduppr] = 1.
         print 'Initial unit sample vector went outside the unit interval...'
-        #raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
