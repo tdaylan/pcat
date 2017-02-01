@@ -638,7 +638,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
         if gdat.pntstype == 'lens':
-            gdat.minmflux = 1e-3 / gdat.anglfact
+            gdat.minmflux = 5e-3 / gdat.anglfact
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
