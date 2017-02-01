@@ -4420,9 +4420,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
                 beinsort = dicttemp['flux'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
             
-            gdatmodi.numbdeflsing = numbpntsconc + 2
             deflsing = zeros((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
-            for k in range(gdatmodi.numbdeflsing):
+            numbdeflsing = numbpntsconc + 2
+            for k in range(numbdeflsing):
                 if k == 0:
                     deflsing[:, :, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
                 elif k == 1:

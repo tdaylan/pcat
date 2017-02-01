@@ -60,7 +60,7 @@ def test_time():
    
     print 'Time-test suite for PCAT'
 
-    numbswepcomm = 10000
+    numbswepcomm = 100
 
     tupl = [ \
             # reference
@@ -109,16 +109,16 @@ def test_time():
             indxenerincl = arange(1, 4)
         binsenerfull = linspace(1., 1. + numbener, numbener + 1)
      
+        print
         print 'tupl[k]'
         print tupl[k]
-        print
 
         gdat = init( \
                     numbswep=numbswep, \
                     numbproc=numbproc, \
                     back=[1.], \
                     makeplot=False, \
-                    verbtype=0, \
+                    #verbtype=0, \
                     strgexpo=1., \
                     exprinfo=False, \
                     indxenerincl=indxenerincl, \
