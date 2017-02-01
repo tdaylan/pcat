@@ -4416,12 +4416,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
             #### number of deflection components
             if numbpntsconc > 0:
                 indxpntssortbrgt = argsort(dicttemp['flux'][0])[::-1]
-                lgalsort = dicttemp['lgal'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
-                bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
-                beinsort = dicttemp['flux'][0][indxpntssortbrgt][:gdat.numbdeflpnts]
+                lgalsort = dicttemp['lgal'][0][indxpntssortbrgt][:numbpntsconc]
+                bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:numbpntsconc]
+                beinsort = dicttemp['flux'][0][indxpntssortbrgt][:numbpntsconc]
             
             deflsing = zeros((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
-            numbdeflsing = numbpntsconc + 2
+            numbdeflsing = min(gdat.numbdeflpnts, numbpntsconc) + 2
             for k in range(numbdeflsing):
                 if k == 0:
                     deflsing[:, :, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)

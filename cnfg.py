@@ -64,29 +64,23 @@ def test_time():
 
     tupl = [ \
             # reference
-            [50, 100, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
+            [11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
             
-            # numbproc
-            # temp
-            #[50, 100,   100, 'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
-
-            # cart
-            [50, 100,   100, 'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
-
-            # maxmnumbpnts
-            [50, 200, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Max PS'], \
-            
-            # minmflux
-            [50, 400, 11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
-            
-            # truenumbpnts
-            [100, 100, 11.44, 'heal', 1e2, 1,          numbswepcomm, 1, '2X Mock PS'], \
-
             # numbpixl
-            [50, 100, 22.88, 'heal', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
+            [200,   'cart', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
+            
+            # pixelization type
+            [100,   'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
+
+            # minmflux
+            [11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
             
             # numbener
-            [50, 100, 11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
+            [11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
+            
+            # numbproc
+            [100,   'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
+
            ]
     numbtupl = len(tupl)
     indxtupl = np.arange(numbtupl)
@@ -94,7 +88,7 @@ def test_time():
     liststrgvarb = ['timereal', 'timeproc', 'timeatcr', 'meanmemoresi', 'derimemoresi']
     varbdict = dict() 
     for k in range(numbtupl):
-        truenumbpnts, maxmnumbpnts, temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
+        temp, pixltype, minmflux, numbener, numbswep, numbproc, strg = tupl[k]
         strgtupl.append(strg)
         if pixltype == 'heal':
             maxmgangdata = deg2rad(temp)
