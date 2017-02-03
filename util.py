@@ -505,6 +505,14 @@ def retr_thisindxprop(gdat, gdatmodi):
         else:
             gdatmodi.thisindxproptype = gdat.indxproptypemerg
     
+    if False:
+        print 'gdatmodi.propbrth'
+        print gdatmodi.propbrth
+        print 'gdatmodi.propdeth'
+        print gdatmodi.propdeth
+        print 'gdatmodi.thisindxproptype'
+        print gdatmodi.thisindxproptype
+
     if gdat.verbtype > 1:
         print 
         print 'retr_thisindxprop()'
@@ -1277,9 +1285,9 @@ def retr_prop(gdat, gdatmodi):
             print 'indxchecfail'
             print indxchecfail
             print
-        gdatmodi.thisrejeprio = True
+        gdatmodi.thisaccpprio = False
     
-    if not gdatmodi.thisrejeprio:
+    if gdatmodi.thisaccpprio:
         #gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = retr_sampvarb(gdat, gdatmodi.nextindxpntsfull, gdatmodi.nextsamp, 'next')[gdatmodi.indxsampmodi]
         gdatmodi.nextsampvarb = retr_sampvarb(gdat, gdatmodi.nextindxpntsfull, gdatmodi.nextsamp, 'next')
    
@@ -1346,11 +1354,7 @@ def retr_prop(gdat, gdatmodi):
         if fabs(gdatmodi.spltlgalfrst) > gdat.maxmgang or fabs(gdatmodi.spltlgalseco) > gdat.maxmgang or \
                                             fabs(gdatmodi.spltbgalfrst) > gdat.maxmgang or fabs(gdatmodi.spltbgalseco) > gdat.maxmgang or \
                                             gdatmodi.fluxfrst < gdat.minmflux or gdatmodi.fluxseco < gdat.minmflux:
-            gdatmodi.boolreje = True
-
-        if gdat.verbtype > 1:
-            print 'boolreje'
-            print gdatmodi.boolreje
+            gdatmodi.thisaccpprio = True
 
         # calculate the list of pairs
         ## current
@@ -1358,7 +1362,7 @@ def retr_prop(gdat, gdatmodi):
                                                                                     gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[gdatmodi.indxpoplmodi]])
         gdatmodi.thisnumbpair = len(gdatmodi.thislistpair)
         
-        if not gdatmodi.boolreje:
+        if gdatmodi.thisaccpprio:
 
             # calculate the list of pairs
             ## proposed
@@ -1530,7 +1534,7 @@ def retr_prop(gdat, gdatmodi):
                 print
 
     # calculate the factor, i.e., Jacobian and combinatorial, to multiply the acceptance rate
-    if (gdatmodi.propsplt or gdatmodi.propmerg) and not gdatmodi.thisrejeprio:
+    if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisaccpprio:
         
         ## Jacobian
         jcbnfacttemp = log(gdatmodi.fluxpare * fabs(gdatmodi.auxipara[1] * (sin(gdatmodi.auxipara[2]) * cos(gdatmodi.auxipara[2]) + cos(gdatmodi.auxipara[2])**2)))
@@ -3956,6 +3960,11 @@ def retr_negalpos(gdat, gdatmodi):
    
     proc_samp(gdat, gdatmodi, 'next')
     
+    print 'gdatmodi.deltlliktotl'
+    print gdatmodi.nextlliktotl - gdatmodi.thislliktotl
+    print 'gdatmodi.deltlpritotl'
+    print gdatmodi.nextlpritotl - gdatmodi.thislpritotl
+
     return -gdatmodi.nextlliktotl - gdatmodi.nextlpritotl
 
 

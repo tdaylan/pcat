@@ -211,31 +211,24 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if indxbadd[0].size > 0:
         gdat.listlpriprop[indxbadd] = 5.
     
-    print 'hey'
-    print 'gdat.listlpau'
-    print gdat.listlpau.shape
-    for k in range(gdat.listlpau.shape[1]):
-        summgene(gdat.listlpau[:, k])
-    print 
-
     for n in gdat.indxproptype:
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
+                tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k] - gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k] - gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
         for k in gdat.indxlpau:
             if (gdat.listlpau[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
+                tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
         if (gdat.listlfctprop[:, 0] != 0.).any():
             path = gdat.pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
-            tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotlprop[n], 0], '$q_{lfct}$', logthist=True)
+            tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
     
     # Gelman-Rubin test
     # temp
@@ -282,8 +275,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     if gdat.numbproptype == 1:
         axgr = [axgr]
     for n, axis in enumerate(axgr):
-        histtotl = axis.hist(gdat.listindxsamptotlprop[n], bins=binstimemcmc)[0]
-        histaccp = axis.hist(gdat.listindxsamptotlpropaccp[n], bins=binstimemcmc)[0]
+        histtotl = axis.hist(gdat.listindxsamptotl[n], bins=binstimemcmc)[0]
+        histaccp = axis.hist(gdat.listindxsamptotlaccp[n], bins=binstimemcmc)[0]
         axis.set_ylabel('%s' % gdat.strgproptype[n])
         if n == gdat.numbproptype - 1:
             axis.set_xlabel('$i_{samp}$')
@@ -308,12 +301,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             print 'Split and merge related plots...'
     
         indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-        indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listboolreje == False)[0])
+        indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listaccpprop)[0])
         indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-        indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listboolreje == False)[0])
+        indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listaccpprop)[0])
         indxsampspmr = union1d(indxsampsplt, indxsampmerg)
         indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
-        indxsampreje = where(gdat.listboolreje == False)
         if indxsampspmrtotl.size > 0:
     
             ## labels and names
@@ -503,11 +495,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg), labldelt, titl='All processes')
         for n in gdat.indxproptype:
             path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_%s' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlprop[n]], labldelt, titl=gdat.nameproptype[n])
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])
             path = getattr(gdat, 'pathpostdelt%saccp' % strg) + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
             path = getattr(gdat, 'pathpostdelt%sreje' % strg) + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlpropreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'flat')[gdat.listindxsamptotlreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
         
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -1753,7 +1745,7 @@ def plot_init(gdat):
         #plot_3fgl_thrs(gdat)
         if gdat.pixltype != 'unbd':
             plot_datacntshist(gdat)
-            if gdat.evalcirc:
+            if gdat.evalcirc != 'full':
                 plot_indxprox(gdat)
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)

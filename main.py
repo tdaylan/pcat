@@ -1391,13 +1391,15 @@ def init( \
         retr_detrcatl(gdat)
     
     # construct lists of samples for each proposal type
-    gdat.listindxsamptotlprop = []
-    gdat.listindxsamptotlpropaccp = []
-    gdat.listindxsamptotlpropreje = []
+    gdat.listindxsamptotlaccpprop = []
+    gdat.listindxsamptotl = []
+    gdat.listindxsamptotlaccp = []
+    gdat.listindxsamptotlreje = []
     for n in gdat.indxproptype:
-        gdat.listindxsamptotlprop.append(where(gdat.listindxproptype == gdat.indxproptype[n])[0])
-        gdat.listindxsamptotlpropaccp.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccp)[0]))
-        gdat.listindxsamptotlpropreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
+        gdat.listindxsamptotl.append(where(gdat.listindxproptype == gdat.indxproptype[n])[0])
+        gdat.listindxsamptotlaccp.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccp)[0]))
+        gdat.listindxsamptotlaccpprop.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccpprop)[0]))
+        gdat.listindxsamptotlreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
     
     ## spatial mean of maps
     gdat.liststrgmean = ['modlcnts']
@@ -1647,7 +1649,7 @@ def work(gdat, indxprocwork):
     gdatmodi.listindxpntsfull = []
     gdatmodi.listspecassc = []
     
-    gdatmodi.liststrgvarbswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltllik', 'chrototl', 'chrollik', 'accp', 'rejepsfn', 'rejeprio', 'indxproptype']
+    gdatmodi.liststrgvarbswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltllik', 'chrototl', 'chrollik', 'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     if gdat.probbrde < 1.:
         gdatmodi.liststrgvarbswep += ['auxipara', 'numbpair', 'jcbnfact', 'combfact']
    
@@ -1662,8 +1664,9 @@ def work(gdat, indxprocwork):
     gdatmodi.thischrollik = zeros(gdat.numbchrollik)
     gdatmodi.thischrototl = zeros(gdat.numbchrototl)
     gdatmodi.thisaccp = zeros(1, dtype=bool)
-    gdatmodi.thisrejepsfn = zeros(1, dtype=bool)
-    gdatmodi.thisrejeprio = zeros(1, dtype=bool)
+    gdatmodi.thisaccppsfn = zeros(1, dtype=bool)
+    gdatmodi.thisaccpprio = zeros(1, dtype=bool)
+    gdatmodi.thisaccpprop = zeros(1, dtype=bool)
     gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.maxmnumbcomp)
     gdatmodi.thisnumbpair = zeros(1, dtype=int)
@@ -1788,12 +1791,6 @@ def work(gdat, indxprocwork):
                 hess = 4. * fabs(lposdelt[0] + lposdelt[2] - 2. * lposdelt[1]) / deltparastep**2 
                 stdv = 1. / sqrt(hess)
                 
-                print 'gdat.namepara[k]'
-                print gdat.namepara[k]
-                print 'stdv'
-                print stdv
-                print 
-
                 #for n in gdat.indxpara:
                 #    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp):
                 #        if k == n:
@@ -1813,7 +1810,12 @@ def work(gdat, indxprocwork):
                 #                    print lposdelt[a, b]
                 #                    print
 
-                
+                print 'gdat.namepara[k]'
+                print gdat.namepara[k]
+                print 'stdv'
+                print stdv
+                print
+
                 if stdv > maxmstdv or not isfinite(stdv):
                     stdv = maxmstdv
                 
@@ -1840,7 +1842,7 @@ def work(gdat, indxprocwork):
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
-            # temp
+             temp
             if k == 0 or k == 1:
                 gdatmodi.stdvstdp[k] = 0.05
                 
@@ -1903,8 +1905,8 @@ def work(gdat, indxprocwork):
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
                                                                                                                                         and gdat.makeplot and gdatmodi.optidone
-        gdatmodi.thisrejepsfn = False
-        gdatmodi.thisrejeprio = False
+        gdatmodi.thisaccppsfn = True
+        gdatmodi.thisaccpprio = True
     
         # choose a proposal type
         retr_thisindxprop(gdat, gdatmodi)
@@ -2068,7 +2070,7 @@ def work(gdat, indxprocwork):
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[3]]:
                     for k in range(20):
                         print 'Proposal rejected due to PSF'
-                    gdatmodi.thisrejepsfn = True
+                    gdatmodi.thisaccppsfn = False
                     print 'gdatmodi.nextsampvarb'
                     print gdatmodi.nextsampvarb
                     print 'gdatmodi.nextsampvarb[gdat.indxfixppsfp]'
@@ -2077,7 +2079,7 @@ def work(gdat, indxprocwork):
                     print gdatmodi.propbrth
             elif gdat.psfntype == 'doubgaus':
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[2]]:
-                    gdatmodi.thisrejepsfn = True
+                    gdatmodi.thisaccppsfn = False
                     for k in range(20):
                         print 'Proposal rejected due to PSF'
                     print 'gdatmodi.nextsampvarb[gdat.indxfixppsfp]'
@@ -2085,8 +2087,8 @@ def work(gdat, indxprocwork):
                     print 'gdatmodi.propbrth'
                     print gdatmodi.propbrth
         
-        gdatmodi.thisrejeprop = gdatmodi.thisrejeprio or gdatmodi.thisrejepsfn
-        if not gdatmodi.thisrejeprop:
+        gdatmodi.thisaccpprop = gdatmodi.thisaccpprio and gdatmodi.thisaccppsfn
+        if gdatmodi.thisaccpprop:
             
             # evaluate the log-prior
             timeinit = gdat.functime()
@@ -2144,30 +2146,19 @@ def work(gdat, indxprocwork):
             gdatmodi.thischrototl[0] = timetotlfinl - timetotlinit
        
         ## variables to be saved for each sweep
-        if not gdatmodi.thisrejeprop:
-            
-            for strg in gdatmodi.liststrgvarbswep:
-                workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
+        for strg in gdatmodi.liststrgvarbswep:
+            workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
         
-        # temp
-        if gdatmodi.thislpau[0] == 0. or gdatmodi.thislpau[1] == 0.:
-            print 'gdatmodi.propbrth'
-            print gdatmodi.propbrth
-            print 'gdatmodi.thisrejeprop'
-            print gdatmodi.thisrejeprop
-            print
-
-            
         # log the progress
         if gdat.verbtype > 0:
             minm = max(0, gdatmodi.cntrswep - 100)
             maxm = gdatmodi.cntrswep + 1
             accp = 100. * where(workdict['listaccp'][minm:maxm])[0].size / float(maxm - minm)
-            rejeprio = 100. * where(workdict['listrejeprio'][minm:maxm])[0].size / float(maxm - minm)
+            accpprio = 100. * where(workdict['listaccpprio'][minm:maxm])[0].size / float(maxm - minm)
             if maxm - minm < 2:
                 accp = None
             gdatmodi.cntrswepsave = tdpy.util.show_prog(gdatmodi.cntrswep, gdat.numbswep, gdatmodi.cntrswepsave, indxprocwork=indxprocwork, showmemo=True, \
-                                                                                                                                            accp=accp, rejeprio=rejeprio)
+                                                                                                                                            accp=accp, accpprio=accpprio)
         if gdat.verbtype > 1:
             print
             print
@@ -2222,15 +2213,6 @@ def work(gdat, indxprocwork):
                 gdatmodi.cntrswepoptistep += 1
             gdatmodi.cntrswepopti += 1
   
-    print 'hey'
-    print 'gdat.listlpau'
-    print 'workdict[listlpau]'
-    print workdict['listlpau']
-    print workdict['listlpau'].shape
-    for k in range(workdict['listlpau'].shape[1]):
-        summgene(workdict['listlpau'][:, k])
-    print 
-
     for strg in gdatmodi.liststrgvarbsamp + gdatmodi.liststrgvarbswep:
         valu = workdict['list' + strg]
         setattr(gdatmodi, 'list' + strg, valu)
