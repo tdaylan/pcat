@@ -1842,7 +1842,7 @@ def work(gdat, indxprocwork):
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
                 gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
-             temp
+            # temp
             if k == 0 or k == 1:
                 gdatmodi.stdvstdp[k] = 0.05
                 
