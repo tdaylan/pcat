@@ -312,6 +312,11 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pntstype: str
 
 
+    :param evalcirc: Flag to evaluate the likelihood only inside a circle of a certain radius around sources.
+
+    :type evalcirc: str
+
+
     **Initial state**
 
     :param randinit: Force the initial state to be randomly drawn from the prior. Default behavior for mock data is to initialize the chain with the true state.

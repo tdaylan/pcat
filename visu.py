@@ -210,25 +210,32 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     indxbadd = where(isfinite(gdat.listlpriprop) == False)
     if indxbadd[0].size > 0:
         gdat.listlpriprop[indxbadd] = 5.
+    
+    print 'hey'
+    print 'gdat.listlpau'
+    print gdat.listlpau.shape
+    for k in range(gdat.listlpau.shape[1]):
+        summgene(gdat.listlpau[:, k])
+    print 
 
     for n in gdat.indxproptype:
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+                tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k] - gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+                tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotlprop[n], k] - gdat.listlpri[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
         for k in gdat.indxlpau:
             if (gdat.listlpau[:, k] != 0.).any():
                 path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+                tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k, logthist=True)
         if (gdat.listlfctprop[:, 0] != 0.).any():
             path = gdat.pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
-            tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotlprop[n], k], '%04d' % k)
+            tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotlprop[n], 0], '$q_{lfct}$', logthist=True)
     
     # Gelman-Rubin test
     # temp
@@ -523,7 +530,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 def plot_chro(gdat):
 
     gdat.listchrototl *= 1e3
-    binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl)), 50)
+    indxchro = array([0, 1, 2, 4])
+    binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl[:, indxchro])), 50)
 
     labl = ['Total', 'Proposal', 'Save', 'Plot', 'Posterior', 'Rest']
     listcolr = ['black', 'b', 'g', 'r', 'm', 'yellow']
@@ -541,7 +549,7 @@ def plot_chro(gdat):
             varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
         else:
             varb = gdat.listchrototl[:, k]
-        axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], facecolor='none')
+        axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], linewidth=5, facecolor='none')
 
     axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])
@@ -606,12 +614,16 @@ def plot_compfrac(gdat, gdatmodi, strg):
         cntr += 1
     if gdat.pntstype == 'lens':
         for strgtemp in ['sour', 'host']:
+            indxvarb = getattr(gdat, 'indxfixpspec' + strgtemp)
             if gdatmodi == None:
-                listydat[cntr, :] = getattr(gdat, 'medifixp')[getattr(gdat, 'indxfixpspec' + strgtemp)]
-                # temp -- indxfixpspec**** should be multidimensional
-                listyerr[:, cntr, :] = getattr(gdat, 'errrfixp')[:, getattr(gdat, 'indxfixpspec' + strgtemp)][:, None]
+                if strg == 'post':
+                    listydat[cntr, :] = getattr(gdat, 'medifixp')[indxvarb]
+                    # temp -- indxfixpspec**** should be multidimensional
+                    listyerr[:, cntr, :] = getattr(gdat, 'errrfixp')[:, indxvarb][:, None]
+                else:
+                    listydat[cntr, :] = gdat.truesampvarb[indxvarb]
             else:
-                listydat[cntr, :] = gdatmodi.thissampvarb[gdat.indxfixpspecsour]
+                listydat[cntr, :] = gdatmodi.thissampvarb[indxvarb]
             cntr += 1
             
     ## data
@@ -620,6 +632,12 @@ def plot_compfrac(gdat, gdatmodi, strg):
     
     ## total model
     if gdat.numblablcompfrac > 1:
+        
+        print 'hey'
+        print 'gdat.backfluxmean'
+        print gdat.backfluxmean
+        print 'retr_varb(gdat, gdatmodi, fixp)[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener))'
+        print retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener))
         listydat[cntr, :] = sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
         if gdatmodi == None:
             listyerr[:, cntr, :] = mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
@@ -919,7 +937,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
         if strg == 'post':
             ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio')[indxydat]
             yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio')[[slice(None)] + indxydat]
-            tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl='Prior')
+            tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl='Distribution')
         else:
             ydatsupr = getattr(gdattemp, strg + strgydat + 'prio')[indxydat]
             axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
@@ -1735,7 +1753,7 @@ def plot_init(gdat):
         #plot_3fgl_thrs(gdat)
         if gdat.pixltype != 'unbd':
             plot_datacntshist(gdat)
-            if gdat.pntstype == 'lght':
+            if gdat.evalcirc:
                 plot_indxprox(gdat)
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
@@ -1743,15 +1761,23 @@ def plot_init(gdat):
         # temp
         if gdat.makeplotintr:
             plot_intr(gdat)
-            plot_pert()
-            plot_king(gdat)
+            #plot_pert()
+            #plot_king(gdat)
     
             if gdat.pntstype == 'lens':
-                listanglscal = [0.]
+                listbein = array([0.2, 0.5]) / gdat.anglfact
+                listanglscal = array([0.4, 0.6]) / gdat.anglfact
+                listanglcutf = array([1., 2.]) / gdat.anglfact
+                plottype = []
                 listdefl = []
-                for anglscal in listanglscal:
-                    listdefl.append(retr_deflcutf(gdat.binsangl, anglscal, anglcutf))
-                plot_gene(path, xdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat='', lablydat='')
+                listxdat = []
+                for bein, anglscal, anglcutf in zip(listbein, listanglscal, listanglcutf):
+                    listdefl.append(retr_deflcutf(gdat.binsangl, bein, anglscal, anglcutf))
+                    listxdat.append(gdat.binsangl * gdat.anglfact)
+                    plottype.append('line')
+                path = gdat.pathinit + 'deflcutf.pdf'
+                lablxdat = gdat.lablfeattotl['gang']
+                tdpy.util.plot_gene(path, listxdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$', plottype=plottype)
             
             if gdat.evalcirc:
                 plot_eval(gdat)
