@@ -64,6 +64,7 @@ def init( \
          # plotting
          numbswepplot=10000, \
          makeplot=True, \
+         makeplotfram=True, \
          makeplotintr=False, \
          scalmaps='asnh', \
          satumaps=None, \
@@ -265,15 +266,17 @@ def init( \
         
         pf.writeto(gdat, gdat.stdvstdp, clobber=True)
 
-        
     # defaults
     if gdat.back == None:
-        if gdat.exprtype == 'ferm':
-            gdat.back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-        elif gdat.exprtype == 'chan':
-            gdat.back = ['chanfluxisot.fits']
-        else:
-            gdat.back = [1.]
+        if gdat.pntstype == 'lght':
+            if gdat.exprtype == 'ferm':
+                gdat.back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            elif gdat.exprtype == 'chan':
+                gdat.back = ['chanfluxisot.fits']
+            else:
+                gdat.back = [1.]
+        if gdat.pntstype == 'lens':
+            gdat.back = [2e-8]
 
     if gdat.lablback == None:
         gdat.lablback = [r'$\mathcal{I}$']
@@ -638,7 +641,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.minmflux = 1e0
         if gdat.pntstype == 'lens':
-            gdat.minmflux = 5e-3 / gdat.anglfact
+            gdat.minmflux = 8e-3 / gdat.anglfact
     
     if gdat.maxmflux == None:
         if gdat.exprtype == 'ferm':
@@ -716,7 +719,7 @@ def init( \
     gdat.maxmlgalhost = gdat.maxmlgal
     gdat.minmbgalhost = gdat.minmbgal
     gdat.maxmbgalhost = gdat.maxmbgal
-    setp_varbfull(gdat, 'specsour', array([1e-21, 1e-17]) )
+    setp_varbfull(gdat, 'specsour', array([1e-21, 1e-15]) )
     setp_varbfull(gdat, 'sizesour', [0.01 / gdat.anglfact, 1. / gdat.anglfact])
     setp_varbfull(gdat, 'ellpsour', [0., 0.3])
     setp_varbfull(gdat, 'spechost', array([1e-21, 1e-17]) )
@@ -730,7 +733,7 @@ def init( \
     gdat.maxmanglhost = pi
     gdat.minmsanghost = 0.
     gdat.maxmsanghost = pi
-
+    
     if gdat.maxmangl == None:
         # temp
         if gdat.exprtype == 'ferm':
@@ -834,7 +837,11 @@ def init( \
     
     defn_truedefa(gdat, 1., 'bacp')
     
-    defn_truedefa(gdat, 0.05 / gdat.anglfact, 'sizesour')
+    defn_truedefa(gdat, 0.2 / gdat.anglfact, 'sizesour')
+    if gdat.pntstype == 'lens':
+        # temp
+        defn_truedefa(gdat, 1000. * gdat.hubbexpofact, 'specsour')
+        defn_truedefa(gdat, 10. * gdat.hubbexpofact, 'spechost')
     
     if gdat.defa:
         return gdat
@@ -1485,6 +1492,37 @@ def init( \
     return gdat
     
 
+def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
+
+    numbpert = indxparapert.size 
+    gdatmodi.thislpostotltemp = copy(gdatmodi.thislpostotl)
+    gdatmodi.thissampvarbtemp = copy(gdatmodi.thissampvarb)
+    gdatmodi.thissamptemp = copy(gdatmodi.thissamp)
+
+    for k in range(numbpert):
+        gdatmodi.thissamp[indxparapert[k]] += stdvparapert[k]
+    
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
+    
+    proc_samp(gdat, gdatmodi, 'this')
+    #plot_samp(gdat, gdatmodi, 'this')
+    
+    deltlpos = gdatmodi.thislpostotl - gdatmodi.thislpostotltemp
+    
+    print 'gdatmodi.thissampvarbtemp[k]'
+    print gdatmodi.thissampvarbtemp[indxparapert[0]]
+    print 'gdatmodi.thissampvarb[k]'
+    print gdatmodi.thissampvarb[indxparapert[0]]
+    print 'gdatmodi.deltlpostotl'
+    print gdatmodi.thislpritotl - gdatmodi.thislpostotltemp
+    
+    gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
+    gdatmodi.thissampvarb = copy(gdatmodi.thissampvarbtemp)
+    proc_samp(gdat, gdatmodi, 'this')
+    
+    return deltlpos
+
+
 def worktrac(gdat, indxprocwork):
 	
     try:
@@ -1561,7 +1599,7 @@ def work(gdat, indxprocwork):
                     flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
                     fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
                 gdatmodi.thissamp[gdatmodi.thisindxsampflux[l][indxtruepntsgood]] = fluxunit[indxtruepntsgood]
-
+    
                 if gdat.numbener > 1:
                     gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
                                                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]])
@@ -1752,15 +1790,9 @@ def work(gdat, indxprocwork):
     
         gdatmodi.stdvstdp[gdat.indxstdpcomp] = 0.
         
-        gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
-        gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
-        gdatmodi.nextindxsamplgal, gdatmodi.nextindxsampbgal, gdatmodi.nextindxsampflux, gdatmodi.nextindxsampsind, \
-                    gdatmodi.nextindxsampcurv, gdatmodi.nextindxsampexpo, gdatmodi.nextindxsampcomp = retr_indx(gdat, gdatmodi.nextindxpntsfull, gdat.spectype)
-        lposcntr = retr_negalpos(gdat, gdatmodi)
-        
         # temp
         deltparastep = 1e-3
-        maxmstdv = 0.01
+        maxmstdv = 1.
         fudgstdv = 100.
         #diffpara = zeros((2, 2, 2))
         #diffpara[0, 0, :] = deltparastep * array([-1., -1.])
@@ -1768,7 +1800,7 @@ def work(gdat, indxprocwork):
         #diffpara[1, 0, :] = deltparastep * array([1., -1.])
         #diffpara[1, 1, :] = deltparastep * array([1., 1.])
         diffpara = deltparastep * array([-1., 0., 1])
-        lposdelt = zeros(3)
+        deltlpos = zeros(3)
         gdatmodi.dictmodi = {}
         for strg in gdat.liststrgcomptotl:
             gdatmodi.dictmodi['stdv' + strg + 'indv'] = []
@@ -1781,41 +1813,41 @@ def work(gdat, indxprocwork):
         for k in gdat.indxpara:
             if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp):
                                 
-                for n in range(numbiter):
-                    if n == indxcntr:
-                        lposdelt[n] = lposcntr
-                    else:
-                        lposdelt[n] = pert_llik(gdat, gdatmodi, array([k]), array([diffpara[n]]))
+                print 'gdat.namepara[k]'
+                print gdat.namepara[k]
                 
-                #stdv = deltparastep * sqrt(0.5 / amax(fabs(lposcntr - lposdelt)))# * fudgstdv # / sqrt(gdat.numbpara)
-                hess = 4. * fabs(lposdelt[0] + lposdelt[2] - 2. * lposdelt[1]) / deltparastep**2 
-                stdv = 1. / sqrt(hess)
+                for n in range(numbiter):
+                    if n != indxcntr:
+                        deltlpos[n] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffpara[n]]))
+                
+                print 'deltlpos'
+                print deltlpos
+                hess = 4. * fabs(deltlpos[0] + deltlpos[2] - 2. * deltlpos[1]) / deltparastep**2
+                stdv = 1. / sqrt(hess) / sqrt(gdat.numbpara)
                 
                 #for n in gdat.indxpara:
                 #    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp):
                 #        if k == n:
-                #            gdat.hess[k, n] = 1. / 4. / deltparastep * (lposdelt[1, 1] - lposdelt[1, 0] - lposdelt[0, 1] + lposdelt[0, 0])
+                #            gdat.hess[k, n] = 1. / 4. / deltparastep * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
                 #            for a in range(2):
                 #                
                 #        else:
                 #            f
                 #            for a in range(2):
                 #                for b in range(2):
-                #                    lposdelt[a, b] = pert_llik(gdat, gdatmodi, array([k, n]), diffpara[a, b, :])
+                #                    deltlpos[a, b] = retr_deltlpos(gdat, gdatmodi, array([k, n]), diffpara[a, b, :])
                 #                    print 'a'
                 #                    print a
                 #                    print 'b'
                 #                    print b
-                #                    print 'lposdelt[a, b]'
-                #                    print lposdelt[a, b]
+                #                    print 'deltlpos[a, b]'
+                #                    print deltlpos[a, b]
                 #                    print
 
-                print 'gdat.namepara[k]'
-                print gdat.namepara[k]
                 print 'stdv'
                 print stdv
                 print
-
+                gdatmodi.cntrswep += 1
                 if stdv > maxmstdv or not isfinite(stdv):
                     stdv = maxmstdv
                 
@@ -1826,7 +1858,10 @@ def work(gdat, indxprocwork):
                         if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
                             indxsampflux = k + 2 - cntr
                             gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
-                            gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
+                            if strg == 'flux':
+                                gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2.
+                            else:
+                                gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
                             gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
                         cntr += 1
                 else:
@@ -1841,11 +1876,16 @@ def work(gdat, indxprocwork):
         
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
-                gdatmodi.stdvstdp[k] /= sum(gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts])
+                gdatmodi.stdvstdp[k] /= sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
             # temp
-            if k == 0 or k == 1:
-                gdatmodi.stdvstdp[k] = 0.05
+            #if k == gdat.indxstdplgal or k == gdat.indxstdpbgal:
+            #    gdatmodi.stdvstdp[k] = 1.
                 
+        gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
+        gdatmodi.thissampvarb = copy(gdatmodi.thissampvarbtemp)
+        proc_samp(gdat, gdatmodi, 'this')
+        gdatmodi.cntrswep = 0
+    
         gdatmodi.optidone = True
    
         if gdat.makeplot:
@@ -1861,7 +1901,10 @@ def work(gdat, indxprocwork):
             for strg in gdat.liststrgcomptotl:
                 path = gdat.pathopti + 'stdv' + strg + '.pdf'
                 xdat = [gdatmodi.dictmodi['stdv' + strg + 'indvflux'] * gdat.fluxfactplot, gdat.meanfluxplot * gdat.fluxfactplot]
-                ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (gdat.meanfluxplot / gdat.minmflux)**0.5]
+                if strg == 'flux':
+                    ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (gdat.meanfluxplot / gdat.minmflux)**2.]
+                else:
+                    ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (gdat.meanfluxplot / gdat.minmflux)**0.5]
                 lablxdat = gdat.lablfeattotl['flux']
                 scalxdat = gdat.dictglob['scalfluxplot']
                 limtxdat = array(gdat.dictglob['limtfluxplot']) * gdat.fluxfactplot
@@ -1904,7 +1947,7 @@ def work(gdat, indxprocwork):
             print 'Sweep %d' % gdatmodi.cntrswep
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                                                                                                        and gdat.makeplot and gdatmodi.optidone
+                                                                                                                     and gdat.makeplotfram and gdat.makeplot and gdatmodi.optidone
         gdatmodi.thisaccppsfn = True
         gdatmodi.thisaccpprio = True
     
@@ -2039,7 +2082,7 @@ def work(gdat, indxprocwork):
                 workdict['list' + strg][indxsampsave, ...] = valu
             gdatmodi.listindxpntsfull.append(deepcopy(gdatmodi.thisindxpntsfull))
             gdatmodi.listspecassc.append(deepcopy(gdatmodi.thisspecassc))
-
+            
             timefinl = gdat.functime()
             gdatmodi.thischrototl[2] = timefinl - timeinit
 
