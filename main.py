@@ -720,10 +720,10 @@ def init( \
     gdat.minmbgalhost = gdat.minmbgal
     gdat.maxmbgalhost = gdat.maxmbgal
     setp_varbfull(gdat, 'specsour', array([1e-21, 1e-15]) )
-    setp_varbfull(gdat, 'sizesour', [0.01 / gdat.anglfact, 1. / gdat.anglfact])
+    setp_varbfull(gdat, 'sizesour', [0.01 / gdat.anglfact, 2. / gdat.anglfact])
     setp_varbfull(gdat, 'ellpsour', [0., 0.3])
     setp_varbfull(gdat, 'spechost', array([1e-21, 1e-17]) )
-    setp_varbfull(gdat, 'sizehost', [0.2 / gdat.anglfact, 1. / gdat.anglfact])
+    setp_varbfull(gdat, 'sizehost', [0.01 / gdat.anglfact, 2. / gdat.anglfact])
     setp_varbfull(gdat, 'beinhost', [0.5 / gdat.anglfact, 1. / gdat.anglfact])
     setp_varbfull(gdat, 'ellphost', [0., 0.5])
     setp_varbfull(gdat, 'sherhost', [0., 0.3])
@@ -837,7 +837,8 @@ def init( \
     
     defn_truedefa(gdat, 1., 'bacp')
     
-    defn_truedefa(gdat, 0.2 / gdat.anglfact, 'sizesour')
+    defn_truedefa(gdat, 0.5 / gdat.anglfact, 'sizesour')
+    defn_truedefa(gdat, 1. / gdat.anglfact, 'sizesour')
     if gdat.pntstype == 'lens':
         # temp
         defn_truedefa(gdat, 1000. * gdat.hubbexpofact, 'specsour')
@@ -1505,16 +1506,8 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
     
     proc_samp(gdat, gdatmodi, 'this')
-    #plot_samp(gdat, gdatmodi, 'this')
     
     deltlpos = gdatmodi.thislpostotl - gdatmodi.thislpostotltemp
-    
-    print 'gdatmodi.thissampvarbtemp[k]'
-    print gdatmodi.thissampvarbtemp[indxparapert[0]]
-    print 'gdatmodi.thissampvarb[k]'
-    print gdatmodi.thissampvarb[indxparapert[0]]
-    print 'gdatmodi.deltlpostotl'
-    print gdatmodi.thislpritotl - gdatmodi.thislpostotltemp
     
     gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
     gdatmodi.thissampvarb = copy(gdatmodi.thissampvarbtemp)
@@ -1791,7 +1784,7 @@ def work(gdat, indxprocwork):
         gdatmodi.stdvstdp[gdat.indxstdpcomp] = 0.
         
         # temp
-        deltparastep = 1e-3
+        deltparastep = 1e-5
         maxmstdv = 1.
         fudgstdv = 100.
         #diffpara = zeros((2, 2, 2))
@@ -1812,18 +1805,12 @@ def work(gdat, indxprocwork):
         cntr = zeros(gdat.maxmnumbcomp)
         for k in gdat.indxpara:
             if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp):
-                                
-                print 'gdat.namepara[k]'
-                print gdat.namepara[k]
-                
                 for n in range(numbiter):
                     if n != indxcntr:
                         deltlpos[n] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffpara[n]]))
                 
-                print 'deltlpos'
-                print deltlpos
                 hess = 4. * fabs(deltlpos[0] + deltlpos[2] - 2. * deltlpos[1]) / deltparastep**2
-                stdv = 1. / sqrt(hess) / sqrt(gdat.numbpara)
+                stdv = 1. / sqrt(hess)
                 
                 #for n in gdat.indxpara:
                 #    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp):
@@ -1844,9 +1831,15 @@ def work(gdat, indxprocwork):
                 #                    print deltlpos[a, b]
                 #                    print
 
-                print 'stdv'
-                print stdv
-                print
+                if gdat.verbtype > 1:
+                    print 'gdat.namepara[k]'
+                    print gdat.namepara[k]
+                    print 'deltlpos'
+                    print deltlpos
+                    print 'stdv'
+                    print stdv
+                    print
+                
                 gdatmodi.cntrswep += 1
                 if stdv > maxmstdv or not isfinite(stdv):
                     stdv = maxmstdv

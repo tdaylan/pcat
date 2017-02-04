@@ -2507,7 +2507,7 @@ def setpinit(gdat, boolinitsetp=False):
                 if gdat.specfraceval == 0:
                     gdat.maxmangleval[h] = 3. * gdat.maxmgang
                 else:  
-                    frac = min(1e-5, gdat.specfraceval * gdat.binsfluxprox[0] / gdat.binsfluxprox[h+1])
+                    frac = min(1e-4, gdat.specfraceval * gdat.binsfluxprox[0] / gdat.binsfluxprox[h+1])
                     psfnwdth = retr_psfnwdth(gdat, gdat.exprpsfn, frac)
                     gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                     gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
@@ -3864,58 +3864,20 @@ def retr_deflextr(gdat, sher, sang):
     return vstack((defllgal, deflbgal)).T 
 
 
-def retr_deflcutf(angl, bein, anglscal, anglcutf):
+def retr_deflcutf(angl, bein, anglscal, anglcutf=None, asym=False):
 
     fracscal = angl / anglscal
-    fraccutf = anglscal / anglcutf
     
-    if False:
-        set_printoptions(threshold=nan)
-        print 'fracscal'
-        print fracscal
-        print 'arccos(1. / fracscal)'
-        print arccos(1. / fracscal)
-        print 'log(fraccutf)'
-        print log(fraccutf)
-        print 'log(sqrt(fracscal**2 + fraccutf**2) / fracscal - fraccutf) - pi'
-        print log(sqrt(fracscal**2 + fraccutf**2) / fracscal - fraccutf) - pi
-    
-        print '((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * arccos(1. / fracscal) / sqrt(fracscal**2 - 1.) + \
-                pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * log(sqrt(fracscal**2 + fraccutf**2) \
-                        / fracscal - fraccutf) - pi))'
-        print ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * arccos(1. / fracscal) / sqrt(fracscal**2 - 1.) + \
-                    pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * \
-                        log(sqrt(fracscal**2 + fraccutf**2) / fracscal - fraccutf) - pi))
-        
-        print '1. / 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2'
-        print 1./ 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2       
-        print
-        print
-    
-    indx = where(fracscal < 1.)[0]
     fact = arccos(1. / fracscal) / sqrt(fracscal**2 - 1.)
-    #fact[indx] = arccosh(1. / fracscal) / sqrt(1. - fracscal**2)
-    
-    fact[indx] = -log(1. / fracscal - sqrt((1. / fracscal)**2 - 1.)) / sqrt(1. - fracscal**2)
-
-    anglfact = 3600. / pi * 180.
-    print 'angl'
-    print angl * anglfact
-    print 'anglscal'
-    print anglscal * anglfact
-    print 'fracscal'
-    print fracscal * anglfact
-    print 'indx'
-    print indx
-    print 'fact'
-    print fact
-
-    deflcutf = bein / 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2 * ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * fact + \
-            pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * log(sqrt(fracscal**2 + fraccutf**2) \
-                    / fracscal - fraccutf) - pi))
-    
-    # temp
-    deflcutf[where(isnan(deflcutf))[0]] = bein
+    if asym:
+        deflcutf = fact + log(fracscal / 2.)
+    else:
+        fraccutf = anglscal / anglcutf
+        indx = where(fracscal < 1.)[0]
+        fact[indx] = -log(1. / fracscal - sqrt((1. / fracscal)**2 - 1.)) / sqrt(1. - fracscal**2)
+        deflcutf = bein / 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2 * ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * fact + \
+                pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * log(sqrt(fracscal**2 + fraccutf**2) \
+                        / fracscal - fraccutf) - pi))
 
     return deflcutf
 

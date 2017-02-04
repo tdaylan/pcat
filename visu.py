@@ -595,9 +595,9 @@ def plot_compfrac(gdat, gdatmodi, strg):
 
     ## background templates
     for c in gdat.indxback:
-        listydat[cntr+c, :] = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
+        listydat[cntr, :] = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
         if gdatmodi == None:
-            listyerr[:, cntr+c, :] = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
+            listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
         cntr += 1
     
     ## PS
@@ -608,6 +608,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         else:
             listydat[cntr, :] = gdatmodi.thispntsfluxmean
         cntr += 1
+    
     if gdat.pntstype == 'lens':
         for strgtemp in ['sour', 'host']:
             indxvarb = getattr(gdat, 'indxfixpspec' + strgtemp)
@@ -624,25 +625,15 @@ def plot_compfrac(gdat, gdatmodi, strg):
             
     ## data
     listydat[cntr, :] = gdat.datafluxmean
-    cntr = +1
+    cntr += 1
     
     ## total model
     if gdat.numblablcompfrac > 1:
-        
-        print 'hey'
-        print 'gdat.backfluxmean'
-        print gdat.backfluxmean
-        print 'retr_varb(gdat, gdatmodi, fixp)[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener))'
-        print retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener))
         listydat[cntr, :] = sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
         if gdatmodi == None:
             listyerr[:, cntr, :] = mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
                                                                                                                                     gdat.backfluxmean[None, :, :], 1)
         cntr += 1
-
-    print 'listydat'
-    print listydat
-    print
 
     # plot energy spectra of the data, background model components and total background
     if gdat.numbener > 1:
@@ -1363,9 +1354,9 @@ def plot_intr(gdat):
 def plot_eval(gdat):
 
     if gdat.exproaxitype:
-        psfntemp = copy(gdat.exprpsfn[0, :, 0, 0])
+        psfntemp = copy(gdat.truepsfn[0, :, 0, 0])
     else:
-        psfntemp = copy(gdat.exprpsfn[0, :, 0])
+        psfntemp = copy(gdat.truepsfn[0, :, 0])
     psfntemp /= amax(psfntemp)
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for k in range(gdat.numbfluxprox + 1):
@@ -1770,7 +1761,7 @@ def plot_init(gdat):
             if gdat.pntstype == 'lens':
                 listbein = array([0.1, 0.1]) / gdat.anglfact
                 listanglscal = array([0.2, 100.]) / gdat.anglfact
-                listanglcutf = array([0.5, 1e4]) / gdat.anglfact
+                listanglcutf = array([0.5, 1e8]) / gdat.anglfact
                 plottype = []
                 listdefl = []
                 listxdat = []
@@ -1778,11 +1769,16 @@ def plot_init(gdat):
                     listdefl.append(retr_deflcutf(gdat.binsangl, bein, anglscal, anglcutf))
                     listxdat.append(gdat.binsangl * gdat.anglfact)
                     plottype.append('line')
+
+                listdefl.append(retr_deflcutf(gdat.binsangl, bein, 0.5 / gdat.anglfact, asym=True))
+                listxdat.append(gdat.binsangl * gdat.anglfact)
+                plottype.append('line')
+
                 path = gdat.pathinit + 'deflcutf.pdf'
                 lablxdat = gdat.lablfeattotl['gang']
                 tdpy.util.plot_gene(path, listxdat, listdefl, scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$', plottype=plottype)
             
-            if gdat.evalcirc:
+            if gdat.evalcirc and gdat.pntstype == 'lght':
                 plot_eval(gdat)
             return
         
