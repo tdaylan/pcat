@@ -588,7 +588,7 @@ def plot_chro(gdat):
 
 def plot_compfrac(gdat, gdatmodi, strg):
     
-    listydat = empty((gdat.numblablcompfracspec, gdat.numbener))
+    listydat = zeros((gdat.numblablcompfracspec, gdat.numbener))
     listyerr = zeros((2, gdat.numblablcompfracspec, gdat.numbener))
    
     cntr = 0
@@ -598,6 +598,8 @@ def plot_compfrac(gdat, gdatmodi, strg):
         listydat[cntr, :] = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
         if gdatmodi == None:
             listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
+        if gdat.pntstype == 'lens':
+            listydat[cntr, :] *= 4. * gdat.maxmgang**2
         cntr += 1
     
     ## PS
@@ -608,7 +610,8 @@ def plot_compfrac(gdat, gdatmodi, strg):
         else:
             listydat[cntr, :] = gdatmodi.thispntsfluxmean
         cntr += 1
-    
+
+
     if gdat.pntstype == 'lens':
         for strgtemp in ['sour', 'host']:
             indxvarb = getattr(gdat, 'indxfixpspec' + strgtemp)
@@ -621,12 +624,6 @@ def plot_compfrac(gdat, gdatmodi, strg):
                     listydat[cntr, :] = gdat.truesampvarb[indxvarb]
             else:
                 listydat[cntr, :] = gdatmodi.thissampvarb[indxvarb]
-            
-            print 'listydat[cntr, :]'
-            print listydat[cntr, :]
-            print 'cntr'
-            print cntr
-            print
             cntr += 1
             
     ## data
@@ -652,7 +649,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
             if gdat.enerdiff:
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
-            axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, label=gdat.listlablcompfracspec[k])
+            axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=3, label=gdat.listlablcompfracspec[k])
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
         axis.set_yscale('log')
@@ -669,12 +666,16 @@ def plot_compfrac(gdat, gdatmodi, strg):
     # pie plot illustrating contribution of each background template (and PS) to the total model
     listexpl = zeros(gdat.numblablcompfrac)
     listsize = zeros(gdat.numblablcompfrac)
+    
     for k in range(gdat.numblablcompfrac):
         if gdat.enerdiff:
             listsize[k] = sum(listydat[k, :] * gdat.deltener)
         else:
             listsize[k] = listydat[k, :]
-   
+    
+    print 'listsize'
+    print listsize
+
     listsize *= 100. / sum(listsize)
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
