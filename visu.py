@@ -621,6 +621,12 @@ def plot_compfrac(gdat, gdatmodi, strg):
                     listydat[cntr, :] = gdat.truesampvarb[indxvarb]
             else:
                 listydat[cntr, :] = gdatmodi.thissampvarb[indxvarb]
+            
+            print 'listydat[cntr, :]'
+            print listydat[cntr, :]
+            print 'cntr'
+            print cntr
+            print
             cntr += 1
             
     ## data
@@ -1845,8 +1851,8 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
     defl = retr_fromgdat(gdat, gdatmodi, strg, strgvarb)
    
     # temp
-    #if strgcomp == 'resi':
-    #    defl *= 1e2
+    if strgcomp == 'resi':
+        defl *= 1e2
 
     strgplot = strg + strgvarb
     if indxdefl != None:

@@ -514,6 +514,10 @@ def retr_thisindxprop(gdat, gdatmodi):
             else:
                 gdatmodi.thisindxproptype = gdat.indxproptypemerg
     else:
+        if not gdat.propcova:
+            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcolr)))
+            gdat.indxsampmodi = choice(gdatmodi.thisindxsampfull)
+
         gdatmodi.thisindxproptype = gdat.indxproptypewith
         gdatmodi.propwith = True
 
@@ -936,7 +940,7 @@ def retr_chandata(gdat):
     gdat.exprcnts[0, :, 0] = cntschansoft
     gdat.exprcnts[1, :, 0] = cntschanhard
 
-    gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener / gdat.enerfluxdist)
+    gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
     
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
@@ -1164,7 +1168,15 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, '', gdatmodi.nextsamp[k], k)
 
         # rescale the unit sample vector due to the hyperparameter change
-        for l in gdat.indxpopl: 
+        if gdat.propcova:
+            indxpoplsampmodi = gdat.indxpopl
+        elif gdatmodi.indxsampmodi in gdat.indxfixpdist:
+            indxpoplsampmodi = [gdat.indxpoplsamp[gdatmodi.indxsampmodi]]
+        else:
+            indxpoplsampmodi = []
+        
+        for l in gdat.indxpopl:
+        #for l in indxpoplsampmodi: 
             
             ## flux distribution
             if gdat.fluxdisttype[l] == 'powr':
@@ -2519,7 +2531,7 @@ def setpinit(gdat, boolinitsetp=False):
         path = gdat.pathprox + 'indxprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), \
                                                                                                             1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
         if gdat.verbtype > 0 and boolinitsetp:
-            print 'PSF evaluation will be performed up to %.3g %s.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.lablfeatunit['gang'])
+            print 'Element evaluation will be performed up to %.3g %s.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.lablfeatunit['gang'])
         if os.path.isfile(path):
             if gdat.verbtype > 0 and boolinitsetp:
                 print 'Previously computed nearby pixel look-up table will be used.'
@@ -3081,13 +3093,13 @@ def retr_indxsamp(gdat, strgpara=''):
     indxpsfpform = arange(numbpsfpform)
     indxpsfptotl = arange(numbpsfptotl)
    
-    if oaxitype:
-        indxfixppsfponor = indxfixppsfp[0] + indxpsfponor
-        indxfixppsfpoind = indxfixppsfp[0] + indxpsfpoind
-        indxfixppsfpoaxi = sort(concatenate((indxfixppsfponor, indxfixppsfpoind)))
-
     indxpsfp = arange(numbpsfp)
-    indxpsfpinit = numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
+    indxfixppsfpinit = dicttemp['indxfixppsfp'][0]
+
+    if oaxitype:
+        indxfixppsfponor = indxfixppsfpinit + indxpsfponor
+        indxfixppsfpoind = indxfixppsfpinit + indxpsfpoind
+        indxfixppsfpoaxi = sort(concatenate((indxfixppsfponor, indxfixppsfpoind)))
 
     dicttemp['indxfixpbacp'] = []
     for i in gdat.indxener:

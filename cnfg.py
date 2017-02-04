@@ -321,6 +321,19 @@ def test_errr():
         plt.close(figr)
 
 
+def test_tuto():
+
+	init( \
+	     maxmgang=deg2rad(20.), \
+	     indxenerincl=arange(1, 4), \
+	     indxevttincl=arange(2, 4), \
+	     bgalcntr=pi/2., \
+	     strgback=['fermisotflux.fits', 'fdfmflux_ngal.fits'], \
+	     strgexpo='fermexpo_cmp0_ngal.fits', \
+	     strgexprflux='fermflux_cmp0_ngal.fits', \
+	    )
+
+
 def test_uppr():
       
     init( \
