@@ -115,8 +115,6 @@ def plot_samp(gdat, gdatmodi, strg):
                     limtxdat = [getattr(gdat, 'minm' + strgfeat + 'plot') * factxaxi, getattr(gdat, 'maxm' + strgfeat + 'plot') * factxaxi]
                     
                     limtydat = gdat.limtpntshist
-                    print 'strgfeat'
-                    print strgfeat
                     plot_gene(gdat, gdatmodi, strg, strgfeat + 'hist', 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, \
                                            		scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindx=strgindx, hist=True, \
                                                 strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin)

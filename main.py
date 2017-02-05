@@ -67,6 +67,7 @@ def init( \
          numbswepplot=10000, \
          makeplot=True, \
          makeplotfram=True, \
+         numbframpost=None, \
          makeplotintr=False, \
          scalmaps='asnh', \
          satumaps=None, \
@@ -878,10 +879,6 @@ def init( \
     # external reference catalog
     if gdat.exprinfo:
         gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal) < gdat.maxmgangdata) & (fabs(gdat.exprbgal) < gdat.maxmgangdata))[0]
-        print 'gdat.exprlgal'
-        print gdat.exprlgal.size
-        print
-
         for strgfeat in gdat.liststrgfeat:
             try:
                 feat = getattr(gdat, 'expr' + strgfeat)
@@ -891,14 +888,6 @@ def init( \
             if feat == None:
                 setattr(gdat, 'expr' + strgfeat, None)
             else:
-                print  'feat'
-                print feat.shape
-                print 'gdat.indxexprpntsrofi'
-                summgene(gdat.indxexprpntsrofi)
-                print 'strgfeat'
-                print strgfeat
-                print
-
                 setattr(gdat, 'expr' + strgfeat, feat[..., gdat.indxexprpntsrofi])
         gdat.exprnumbpnts = gdat.exprlgal.size
         
@@ -1362,15 +1351,16 @@ def init( \
     if gdat.numbtrap > 0:
         # collect PS parameters from the chains
         dicttemp = {}
+        for strg in gdat.liststrgcomptotl:
+            listtemp = [[] for l in gdat.indxpopl]
         for n in gdat.indxsamptotl: 
             dicttemp['indxsamplgal'], dicttemp['indxsampbgal'], dicttemp['indxsampflux'], dicttemp['indxsampsind'], dicttemp['indxsampcurv'], \
 															dicttemp['indxsampexpo'], dicttemp['indxsampcomp'] = retr_indx(gdat, gdat.listindxpntsfull[n], gdat.spectype)
-            for strg in gdat.liststrgcomptotl:
-                listtemp = [[] for l in gdat.indxpopl]
-                for l in gdat.indxpopl:
-                    if strg in gdat.liststrgcomp[l]:
-                        listtemp[l].append(gdat.listsampvarb[n, dicttemp['indxsamp' + strg][l]])
-                setattr(gdat, 'list' + strg, listtemp)
+            for l in gdat.indxpopl:
+                for strg in gdat.liststrgcomp[l]:
+                    listtemp[l].append(gdat.listsampvarb[n, dicttemp['indxsamp' + strg][l]])
+        for strg in gdat.liststrgcomptotl:
+            setattr(gdat, 'list' + strg, listtemp)
 
     ## bin PS parameters
     if gdat.verbtype > 0:
@@ -1491,7 +1481,10 @@ def init( \
     gdat.timerealtotl = time.time() - gdat.timerealtotl
     gdat.timeproctotl = time.clock() - gdat.timeproctotl
     gdat.timeproctotlswep = gdat.timeproctotl / gdat.numbswep
-    gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcr
+    if gdat.timeatcr == 0.:
+        gdat.timeprocnorm = 0.
+    else:
+        gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcr
 
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
@@ -1549,10 +1542,6 @@ def work(gdat, indxprocwork):
     gdatmodi.thissamp = zeros(gdat.numbpara)
     gdatmodi.thissampvarb = zeros(gdat.numbpara)
     
-    print 'gdat.truenumbpnts'
-    print gdat.truenumbpnts
-    print
-
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
         if gdat.inittype == 'rand':
