@@ -704,6 +704,14 @@ def retr_sampvarb(gdat, indxpntsfull, samp, strg):
                 fluxdistslopuppr = sampvarb[gdat.indxfixpfluxdistslopuppr[l]]
                 sampvarb[indxsampflux[l]] = icdf_flux_brok(fluxunit, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
            
+            print 'sampvarb[indxsampflux[l]]'
+            print sampvarb[indxsampflux[l]]
+            print 'samp[indxsampflux[l]]'
+            print samp[indxsampflux[l]]
+            print 'sampvarb[gdat.indxfixpfluxdistslop[l]]'
+            print sampvarb[gdat.indxfixpfluxdistslop[l]]
+            print
+
             if not isfinite(sampvarb[indxsampflux[l]]).all():
                 print 'sampvarb[indxsampflux[l]]'
                 print sampvarb[indxsampflux[l]]
@@ -925,7 +933,7 @@ def retr_chandata(gdat):
     gdat.exprlgal = bgalchan
     
     gdat.exprspec = zeros((3, gdat.numbener, gdat.exprlgal.size))
-    gdat.exprcnts = zeros((gdat.numbener, gdat.exprlgal.size, gdat.numbevtt))
+    #gdat.exprcnts = zeros((gdat.numbener, gdat.exprlgal.size, gdat.numbevtt))
 
     gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e12
     gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e12 / 16.
@@ -937,11 +945,16 @@ def retr_chandata(gdat):
     # temp
     gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
 
-    gdat.exprcnts[0, :, 0] = cntschansoft
-    gdat.exprcnts[1, :, 0] = cntschanhard
+    #gdat.exprcnts[0, :, 0] = cntschansoft
+    #gdat.exprcnts[1, :, 0] = cntschanhard
 
     gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
     
+    print 'hey'
+    print 'gdat.exprsind'
+    print gdat.exprsind.size
+    print
+
     #gdat.exprstrg = lgalstrg
     #gdat.exprstrgclss = lgalchanclss
     #gdat.exprstrgassc = lgalchanassc
@@ -2212,11 +2225,12 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.numboaxi = 10
         gdat.minmoaxi = 0.
         gdat.maxmoaxi = 1.1 * sqrt(2.) * gdat.maxmgang
-        retr_axis(gdat, 'oaxi', gdat.minmoaxi, gdat.maxmoaxi, gdat.numboaxi)
-        gdat.binsoaxiopen = gdat.binsoaxi[:-1]
-    else:
-        gdat.binsoaxi = None
-        gdat.numboaxi = 1
+        retr_axis(gdat, 'oaxiplot', gdat.minmoaxi, gdat.maxmoaxi, gdat.numboaxi)
+        gdat.binsoaxiopen = gdat.binsoaxiplot[:-1]
+    # temp
+    #else:
+    #    gdat.binsoaxi = None
+    #    gdat.numboaxi = 1
     gdat.indxoaxi = arange(gdat.numboaxi)
 
     gdat.numbenerevtt = gdat.numbener * gdat.numbevtt
@@ -2506,7 +2520,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.calcerrr = False
     
     if gdat.pntstype == 'lght':
-        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxi, gdat.exproaxitype)
+        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxiplot, gdat.exproaxitype)
 
     if gdat.evalcirc != 'full':
         gdat.numbfluxprox = 3
@@ -2743,7 +2757,7 @@ def setpfinl(gdat, boolinitsetp=False):
     #     gdat.truenumbpsfpform, gdat.truenumbpsfpoaxi, gdat.truenumbpsfptotl, gdat.trueindxpsfponor, gdat.trueindxpsfpoind = \
     #                                                                                         retr_indxpsfp(gdat, gdat.truepsfntype, gdat.trueoaxitype)
     #     if gdat.trueoaxitype:
-    #         gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxi, gdat.truepsfp[gdat.trueindxpsfponor], gdat.truepsfp[gdat.trueindxpsfpoind])
+    #         gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxiplot, gdat.truepsfp[gdat.trueindxpsfponor], gdat.truepsfp[gdat.trueindxpsfpoind])
     
     # get count data
     if gdat.pixltype == 'cart':
@@ -4073,10 +4087,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         if oaxitype:
             onor = sampvarb[getattr(gdat, 'indxfixppsfponor')]
             oind = sampvarb[getattr(gdat, 'indxfixppsfpoind')]
-            factoaxi = retr_factoaxi(gdat, gdat.binsoaxi, onor, oind)
+            factoaxi = retr_factoaxi(gdat, gdat.binsoaxiplot, onor, oind)
     
         psfntype = getattr(gdat, strgtype + 'psfntype')
-        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
+        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxiplot, oaxitype)
 
         if oaxitype:
             psfnintp = []
@@ -4211,6 +4225,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                         if gdat.spectype[gdatmodi.indxpoplmodi] == 'expo':
                             gdatmodi.thislpau[gdat.maxmnumbcomp*l+4] = retr_lpriexpodist(gdat, gdatmodi, sampvarbtemp[gdatmodi.indxsamptran[4]], \
                                                                                                                 gdatmodi.thissampvarb, gdatmodi.indxpoplmodi)
+                
+                # temp
+                if not isfinite(gdatmodi.thislpau).all():
+                    raise Exception('gdatmodi.thislpau is infinite.')
 
                 if gdatmodi.propbrth:
                     gdatmodi.thislpau *= -1.
@@ -4404,7 +4422,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 for l in gdat.indxpopl:
                     # temp -- zero exposure pixels will give zero counts
                     if gdat.oaxitype:
-                        sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm, lgal=lgal[l], bgal=bgal[l])
+                        sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm, lgal=dicttemp['lgal'][l], bgal=dicttemp['bgal'][l])
                     else:
                         sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm)
                     sigm.append(sigmtemp)

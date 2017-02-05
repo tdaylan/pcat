@@ -817,7 +817,10 @@ def init( \
         
     defn_truedefa(gdat, 4. / gdat.anglfact, 'gangdistscalpop2')
     defn_truedefa(gdat, 2. / gdat.anglfact, 'bgaldistscalpop1')
-    defn_truedefa(gdat, 2.6, 'fluxdistsloppop0')
+    if gdat.pntstype == 'lens':
+        defn_truedefa(gdat, 1.1, 'fluxdistsloppop0')
+    else:
+        defn_truedefa(gdat, 2.6, 'fluxdistsloppop0')
     defn_truedefa(gdat, 2.2, 'fluxdistsloppop1')
     defn_truedefa(gdat, 3.2, 'fluxdistsloppop2')
     defn_truedefa(gdat, sqrt(gdat.trueminmflux * gdat.maxmflux), 'fluxdistbrek')
@@ -875,6 +878,10 @@ def init( \
     # external reference catalog
     if gdat.exprinfo:
         gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal) < gdat.maxmgangdata) & (fabs(gdat.exprbgal) < gdat.maxmgangdata))[0]
+        print 'gdat.exprlgal'
+        print gdat.exprlgal.size
+        print
+
         for strgfeat in gdat.liststrgfeat:
             try:
                 feat = getattr(gdat, 'expr' + strgfeat)
@@ -884,6 +891,14 @@ def init( \
             if feat == None:
                 setattr(gdat, 'expr' + strgfeat, None)
             else:
+                print  'feat'
+                print feat.shape
+                print 'gdat.indxexprpntsrofi'
+                summgene(gdat.indxexprpntsrofi)
+                print 'strgfeat'
+                print strgfeat
+                print
+
                 setattr(gdat, 'expr' + strgfeat, feat[..., gdat.indxexprpntsrofi])
         gdat.exprnumbpnts = gdat.exprlgal.size
         
@@ -1346,26 +1361,16 @@ def init( \
     # post process samples
     if gdat.numbtrap > 0:
         # collect PS parameters from the chains
-        gdat.listlgal = [[] for l in gdat.indxpopl]
-        gdat.listbgal = [[] for l in gdat.indxpopl]
-        gdat.listflux = [[] for l in gdat.indxpopl]
-        if gdat.numbener > 1:
-            gdat.listsind = [[] for l in gdat.indxpopl]
-            gdat.listcurv = [[] for l in gdat.indxpopl]
-            gdat.listexpo = [[] for l in gdat.indxpopl]
         for n in gdat.indxsamptotl: 
-            for l in gdat.indxpopl:
-                indxsamplgal, indxsampbgal, indxsampflux, indxsampsind, indxsampcurv, indxsampexpo, indxsampcomp = retr_indx(gdat, gdat.listindxpntsfull[n], gdat.spectype)
-                gdat.listlgal[l].append(gdat.listsampvarb[n, indxsamplgal[l]])
-                gdat.listbgal[l].append(gdat.listsampvarb[n, indxsampbgal[l]])
-                gdat.listflux[l].append(gdat.listsampvarb[n, indxsampflux[l]])
-                if gdat.numbener > 1:
-                    gdat.listsind[l].append(gdat.listsampvarb[n, indxsampsind[l]])
-                    if gdat.spectype[l] == 'curv':
-                        gdat.listcurv[l].append(gdat.listsampvarb[n, indxsampcurv[l]])
-                    if gdat.spectype[l] == 'expo':
-                        gdat.listexpo[l].append(gdat.listsampvarb[n, indxsampexpo[l]])
-        
+            dicttemp['indxsamplgal'], dicttemp['indxsampbgal'], dicttemp['indxsampflux'], dicttemp['indxsampsind'], dicttemp['indxsampcurv'], \
+															dicttemp['indxsampexpo'], dicttemp['indxsampcomp'] = retr_indx(gdat, gdat.listindxpntsfull[n], gdat.spectype)
+            for strg in gdat.liststrgcomptotl:
+                listtemp = [[] for l in gdat.indxpopl]
+                for l in gdat.indxpopl:
+                    if strg in gdat.liststrgcomp[l]:
+                        listtemp[l].append(gdat.listsampvarb[n, dicttemp['indxsamp' + strg][l]])
+                setattr(gdat, 'list' + strg, listtemp)
+
     ## bin PS parameters
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
@@ -1542,7 +1547,11 @@ def work(gdat, indxprocwork):
     ## unit sample vector
     gdatmodi.thissamp = zeros(gdat.numbpara)
     gdatmodi.thissampvarb = zeros(gdat.numbpara)
-   
+    
+    print 'gdat.truenumbpnts'
+    print gdat.truenumbpnts
+    print
+
     ## Fixed-dimensional parameters
     for k in gdat.indxfixp:
         if gdat.inittype == 'rand':
@@ -1931,6 +1940,7 @@ def work(gdat, indxprocwork):
                 tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                  lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strg], plottype=['scat', 'line'])
 
+            path = gdat.pathopti + 'deltllikpnts.pdf'
             figr, axis = plt.subplots()
             axis.hist(deltllikpnts)
             axis.set_xlabel(r'$N$')
@@ -2013,6 +2023,9 @@ def work(gdat, indxprocwork):
                 print gdatmodi.thissamp[indxsampbadd]
                 raise Exception('Unit sample vector went outside [0,1].')
             
+            if not isfinite(gdatmodi.thislpau).all():
+                raise Exception('log-auxiliary variables probability went NaN.')
+
             gdatmodi.thislpostotl = gdatmodi.thislliktotl + gdatmodi.thislpritotl
             if False and gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:
                 print 'gdatmodi.thislpostotl'

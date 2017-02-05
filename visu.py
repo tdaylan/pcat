@@ -298,7 +298,18 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     plt.tight_layout()
     figr.savefig(gdat.pathdiag + 'accpratiproptype.pdf')
     plt.close(figr)
-  
+   
+    # post-processing frame plots
+    if gdat.numbframpost != None:
+        gdatmodi = tdpy.util.gdatstrt()
+        gdat.indxsamptotlfram = arange(gdat.numbframpost) * (gdat.indxsamptotl - gdat.indxsamptotl % gdat.numbframpost) / gdat.numbframpost
+        for n in gdat.indxsamptotlfram:
+            gdatmodi.cntrswep = n
+            gdatmodi.thisindxpntsfull = deepcopy(gdat.listindxpntsfull[n])
+            gdatmodi.thissampvarb = copy(gdat.listsampvarb[n, :])
+            proc_samp(gdat, gdatmodi, 'this')
+            plot_samp(gdat, gdatmodi, 'this')
+
     # plot split and merge diagnostics
     if gdat.numbtrap > 0 and gdat.probtran > 0. and gdat.probbrde < 1.:
         if gdat.verbtype > 0:
@@ -673,9 +684,6 @@ def plot_compfrac(gdat, gdatmodi, strg):
         else:
             listsize[k] = listydat[k, :]
     
-    print 'listsize'
-    print listsize
-
     listsize *= 100. / sum(listsize)
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -928,9 +936,10 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
             gdattemp = gdat
         else:
             gdattemp = gdatmodi
-
-        trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio')[indxydat]
-        axis.plot(xdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
+    
+        if gdat.datatype == 'mock':
+            trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio')[indxydat]
+            axis.plot(xdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
 
         if strg == 'post':
             ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio')[indxydat]
