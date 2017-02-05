@@ -184,16 +184,16 @@ PCAT nominally runs multiple, noninteracting chains, whose samples are aggregate
 
 Tutorial
 --------------
-In this tutorial, we will illustrate how to run PCAT during a typical science analysis. Assuming that you have :ref:`installed <sectinst>` PCAT, let us first run it on mock data.
+In this tutorial, we will illustrate how to run PCAT during a typical science analysis. Assuming that you have :ref:`installed <sectinst>` PCAT, let us run it on mock data.
 
-All user interaction with PCAT can be performed through the ``pcat.main.init()`` funtion. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run.
+All user interaction with PCAT can be performed through the ``pcat.main.init()`` funtion. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary IRF file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
 
 .. code-block:: python
 
     import pcat.main
     pcat.main.init()
 
-This runs PCAT on mock Fermi-LAT data to collect a single chain of 100000 samples before thinning and burn-in. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
+The default run collects a single chain of 100000 samples before thinning and burn-in. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
 
 .. code-block:: none
     
@@ -201,19 +201,6 @@ This runs PCAT on mock Fermi-LAT data to collect a single chain of 100000 sample
 
 While the sampler is running, you can check ``$PCAT_DATA_PATH/imag/rtag/`` to inspect :ref:`the output plots <sectplot>`.
 
-
-.. code-block:: python
-
-    pcat.main.init( \
-                   maxmgang=deg2rad(20.), \
-                   indxenerincl=arange(1, 4), \
-                   indxevttincl=arange(2, 4), \
-                   bgalcntr=pi/2., \
-                   strgback=['fermisotflux.fits', 'fdfmflux_ngal.fits'], \
-                   strgexpo='fermexpo_cmp0_ngal.fits', \
-                   strgexprflux='fermflux_cmp0_ngal.fits', \
-                  )
-    
 
 API
 ---------
