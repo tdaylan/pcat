@@ -3962,8 +3962,18 @@ def retr_lprifluxdist(gdat, gdatmodi, flux, sampvarb, l):
 
 def retr_lprisinddist(gdat, gdatmodi, sind, sampvarb, l):
     
+    print 'sampvarb[gdat.indxfixpsinddistmean[l]]'
+    print sampvarb[gdat.indxfixpsinddistmean[l]]
+    print 'sampvarb[gdat.indxfixpsinddiststdv[l]]'
+    print sampvarb[gdat.indxfixpsinddiststdv[l]]
+    print 'pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]])'
+    print pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]])
+    print 'log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))'
+    print log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))
     lprisinddist = sum(log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))) 
-    
+    print 'lprisinddist'
+    print lprisinddist
+    print 
     return lprisinddist
 
 
@@ -4223,6 +4233,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 
                 # temp
                 if not isfinite(gdatmodi.thislpau).all():
+                    print 'gdatmodi.thislpau'
+                    print gdatmodi.thislpau
                     raise Exception('gdatmodi.thislpau is infinite.')
 
                 if gdatmodi.propbrth:

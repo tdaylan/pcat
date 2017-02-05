@@ -1361,6 +1361,7 @@ def init( \
     # post process samples
     if gdat.numbtrap > 0:
         # collect PS parameters from the chains
+        dicttemp = {}
         for n in gdat.indxsamptotl: 
             dicttemp['indxsamplgal'], dicttemp['indxsampbgal'], dicttemp['indxsampflux'], dicttemp['indxsampsind'], dicttemp['indxsampcurv'], \
 															dicttemp['indxsampexpo'], dicttemp['indxsampcomp'] = retr_indx(gdat, gdat.listindxpntsfull[n], gdat.spectype)
