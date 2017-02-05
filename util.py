@@ -2215,26 +2215,21 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.indxevttplot = concatenate((array([-1]), gdat.indxevtt))
     
+    gdat.numbenerevtt = gdat.numbener * gdat.numbevtt
+    
     if gdat.pixltype == 'unbd':
         gdat.correxpo = False
     else:
         gdat.correxpo = True
     
     # off-axis angle
-    if gdat.oaxitype or gdat.trueoaxitype:
-        gdat.numboaxi = 10
-        gdat.minmoaxi = 0.
-        gdat.maxmoaxi = 1.1 * sqrt(2.) * gdat.maxmgang
-        retr_axis(gdat, 'oaxiplot', gdat.minmoaxi, gdat.maxmoaxi, gdat.numboaxi)
-        gdat.binsoaxiopen = gdat.binsoaxiplot[:-1]
-    # temp
-    #else:
-    #    gdat.binsoaxi = None
-    #    gdat.numboaxi = 1
+    gdat.numboaxi = 10
+    gdat.minmoaxi = 0.
+    gdat.maxmoaxi = 1.1 * sqrt(2.) * gdat.maxmgang
+    retr_axis(gdat, 'oaxiplot', gdat.minmoaxi, gdat.maxmoaxi, gdat.numboaxi)
+    gdat.binsoaxiopen = gdat.binsoaxiplot[:-1]
     gdat.indxoaxi = arange(gdat.numboaxi)
 
-    gdat.numbenerevtt = gdat.numbener * gdat.numbevtt
-    
     # pixelization
     if gdat.datatype == 'mock':
         if gdat.pixltype == 'cart':
