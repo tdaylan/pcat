@@ -2024,9 +2024,6 @@ def work(gdat, indxprocwork):
                 print gdatmodi.thissamp[indxsampbadd]
                 raise Exception('Unit sample vector went outside [0,1].')
             
-            if not isfinite(gdatmodi.thislpau).all():
-                raise Exception('log-auxiliary variables probability went NaN.')
-
             gdatmodi.thislpostotl = gdatmodi.thislliktotl + gdatmodi.thislpritotl
             if False and gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:
                 print 'gdatmodi.thislpostotl'

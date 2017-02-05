@@ -704,14 +704,6 @@ def retr_sampvarb(gdat, indxpntsfull, samp, strg):
                 fluxdistslopuppr = sampvarb[gdat.indxfixpfluxdistslopuppr[l]]
                 sampvarb[indxsampflux[l]] = icdf_flux_brok(fluxunit, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
            
-            print 'sampvarb[indxsampflux[l]]'
-            print sampvarb[indxsampflux[l]]
-            print 'samp[indxsampflux[l]]'
-            print samp[indxsampflux[l]]
-            print 'sampvarb[gdat.indxfixpfluxdistslop[l]]'
-            print sampvarb[gdat.indxfixpfluxdistslop[l]]
-            print
-
             if not isfinite(sampvarb[indxsampflux[l]]).all():
                 print 'sampvarb[indxsampflux[l]]'
                 print sampvarb[indxsampflux[l]]
@@ -3962,18 +3954,8 @@ def retr_lprifluxdist(gdat, gdatmodi, flux, sampvarb, l):
 
 def retr_lprisinddist(gdat, gdatmodi, sind, sampvarb, l):
     
-    print 'sampvarb[gdat.indxfixpsinddistmean[l]]'
-    print sampvarb[gdat.indxfixpsinddistmean[l]]
-    print 'sampvarb[gdat.indxfixpsinddiststdv[l]]'
-    print sampvarb[gdat.indxfixpsinddiststdv[l]]
-    print 'pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]])'
-    print pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]])
-    print 'log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))'
-    print log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))
     lprisinddist = sum(log(pdfn_gaus(sind, sampvarb[gdat.indxfixpsinddistmean[l]], sampvarb[gdat.indxfixpsinddiststdv[l]]))) 
-    print 'lprisinddist'
-    print lprisinddist
-    print 
+    
     return lprisinddist
 
 
@@ -4231,12 +4213,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                             gdatmodi.thislpau[gdat.maxmnumbcomp*l+4] = retr_lpriexpodist(gdat, gdatmodi, sampvarbtemp[gdatmodi.indxsamptran[4]], \
                                                                                                                 gdatmodi.thissampvarb, gdatmodi.indxpoplmodi)
                 
-                # temp
-                if not isfinite(gdatmodi.thislpau).all():
-                    print 'gdatmodi.thislpau'
-                    print gdatmodi.thislpau
-                    raise Exception('gdatmodi.thislpau is infinite.')
-
                 if gdatmodi.propbrth:
                     gdatmodi.thislpau *= -1.
                 
