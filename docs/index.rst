@@ -56,14 +56,13 @@ Hierarchical priors
 When there are multiple model sources, each with a set of properties, it is more natural to put priors on the distribution of these properties, as opposed to placing individual priors separately on each source property. This assumes that a certain property of all point sources in a given population are drawn from a single probability distribution. This is particularly useful when such a parametrization is subject to inference, where individual sources can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of source properties, i.e., **hyperparameters**, and the prior on the individual source properties are made conditional on these hyperparameters. 
 
 
-.. Proposals
-.. +++++++++++++++++++++
+Proposals
++++++++++++++++++++++
 
+The proposal scale for element features depend on how statistically significant they are. For example parameters of elements with lower statistical significance are varied with a larger proposal scale. This allows the chain to mix faster. 
 
-Adaptive burn-in
-+++++++++++++++++
+PCAT discards the first ``numbburn`` samples and thins the resulting chain by a factor ``factthin``.
 
-PCAT discards the first ``numbburn`` samples and thins the resulting chain by a factor ``factthin``. In order to estimate proposal scales for parameters, it initially takes the derivative of log-likelihood with respect to all parameters at a likely region in the parameter space.
 
 Labeling degeneracy
 ++++++++++++++++++++++
@@ -73,10 +72,22 @@ Due to **hairlessness** of the point sources, the likelihood function is invaria
 .. Breaking the labeling degeneracy
 .. +++++++++++++++++++
 
+Proposal optimization
++++++++++++++++++
+
+Any MCMC sampling problem requires a choice of proposal scale, which must remain constant during sampling in order to respect detailed balance. In transdimensional inference, the choice of proposal scale includes both within and across model jumps. PCAT chooses the proposal scale for a particular sampling problem based on an initial estimate of the Hessian matrix of the parameter vector in the beginning of each run. The inverse of the Hessian yields the model covariance, from which proposals are drawn during the sampling.
+
+
 Performance
 +++++++++++++++++++
 
-The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference. The main reason for thfthese are possible at the expense of PCAT being a much slower algorithm.
+The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference.
+
+PCAT alleviates the performance issues in two ways:
+
+- Use of parallelism via bypassing Python's Global Interpreter Lock (GIL) by using the ``multiprocessing`` module. The parent processes spawns multiple, (almost) noninteracting processes, which collect samples in parallel and report back to the parent process, which aggregates and post-processes the samples.
+
+- Locality approximation in the likelihood evaluation. The most time consuming part of the inference is the model evaluation, which can be prohibitevly slow (for large datasets and many elements) if no approximations are made. PCAT assumes that the contribution of the elements to the model vanishes outside some circle around the element.
 
 
 Input
@@ -142,7 +153,7 @@ Output
 -------------
 A function call to ``pcat.main.init()`` returns the collected samples as well as postprocessed variables in an object that we will refer to as ``gdat``. Any output (as well as many internal variables of the sampler) can be accessed via the attributes of this global object. 
 
-Furthermore, PCAT ships with extensive routines to visualize the output chain. The output plots are placed in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``$PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``$PCAT_DATA_PATH``.
+Furthermore, PCAT offers extensive routines to visualize the output chain. The output plots are placed in the relevant subfolders ``pathbase/data/outp/rtag`` and ``pathbase/imag/rtag``, respectively, where ``rtag`` is the run tag. The ``pathbase`` folder is created if it does not already exist. It defaults to the value of the environment variable ``$PCAT_DATA_PATH``. Therefore ``pathbase`` can be omitted by setting the environment variable ``$PCAT_DATA_PATH``.
 
 
 .. _sectplot:
@@ -158,9 +169,11 @@ If not disabled by the user, PCAT produces plots in every stage of a run. Some p
 - ``anim`` GIF animations made from the frame plots in ``fram`` that are produced during sampling.
 
 
+.. _sectchan:
+
 Chain
 +++++
-``pcat.main.init()`` returns an object that contains the output chain.
+``pcat.main.init()`` returns an object that contains a pointer to the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``. The chain is in the form of an HDF5 file with datasets that contain samples from the parameters, or quantities derived from the parameters, as well as diagnostic and utility variables. Chains from individual processes can also be found in ``$PCAT_DATA_PATH/outp/rtag/pcat_prcX.h5``, where X is the process index, although this is nominally not needed since ``$PCAT_DATA_PATH/outp/rtag/pcat.h5`` contains the agrregated chain. 
 
 
 Diagnostics
@@ -200,6 +213,8 @@ The default run collects a single chain of 100000 samples before thinning and bu
     >> The ensemble of catalogs is at $PCAT_DATA_PATH/data/outp/rtag/
 
 While the sampler is running, you can check ``$PCAT_DATA_PATH/imag/rtag/`` to inspect :ref:`the output plots <sectplot>`.
+
+Although PCAT visualizes the ensemble of catalogs in various projections to the data and model spaces, the user can also work directly on :ref:`the output chain <sectchan>`. 
 
 
 API
@@ -484,11 +499,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type fluxdisttype: list of str
     
 
-    :param spatdisttype: Type of spatial distribution of sources for each population
-
-    :type spatdisttype: list of str
-    
-
     :param spectype: Type of energy spectrum of sources for each population
 
     :type spectype: list of str
@@ -496,12 +506,19 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :param psfntype: Type of PSF radial profile
 
-    :type spectype: list of str
+    :type spectype: str
     
 
     :param oaxitype: Type of PSF off-axis profile
 
-    :type oaxitype: list of str
+    :type oaxitype: str
+    
+
+
+..
+    :param maxmgangdata: Half size of the image in radians
+
+    :type maxmgangdata: float
     
 
 .. ## PSF
@@ -524,20 +541,20 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          margfactmodl=0.9, \
          bindprio=False, \
          
+         meanpnts=None, \
          maxmgang=None, \
-         minmmeanpnts=None, \
          gangdistscal=None, \
          bgaldistscal=None, \
          curvdistmean=None, \
          curvdiststdv=None, \
-         minmflux=None, \
-         minmfluxdistslop=None, \
-         minmfluxbrek=None, \
-         minmfluxdistbrek=None, \
-         minmfluxdistsloplowr=None, \
-         minmfluxdistslopuppr=None, \
-         minmsinddistmean=None, \
-         minmsinddiststdv=None, \
+         flux=None, \
+         fluxdistslop=None, \
+         fluxbrek=None, \
+         fluxdistbrek=None, \
+         fluxdistsloplowr=None, \
+         fluxdistslopuppr=None, \
+         sinddistmean=None, \
+         sinddiststdv=None, \
          
          minmsigm=None, \
          meansigm=None, \
@@ -572,16 +589,19 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
          stdvflux=0.15, \
          stdvspep=0.15, \
          stdvspmrsind=0.2, \
+         
          probrand=0.05, \
-         boolpropfluxdist=True, \
-         boolpropfluxdistbrek=True, \
+         probtran=None, \
+         probbrde=1., \
+         
+         propfluxdist=True, \
+         propfluxdistbrek=True, \
          prophypr=True, \
          proppsfp=True, \
          propbacp=True, \
          proplenp=True, \
          propcomp=True, \
-         probtran=None, \
-         probbrde=1., \
+         
          radispmr=None, \
          numbsidecart=200, \
          numbsideheal=256, \

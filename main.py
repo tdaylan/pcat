@@ -262,11 +262,8 @@ def init( \
             setattr(gdat, attr, valu)
 
     if gdat.procrtag != None:
-        
         path = gdat.pathdata + gdat.procrtag + '/outp.fits'
         gdat = pf.getdata(path, 1)
-
-        
         pf.writeto(gdat, gdat.stdvstdp, clobber=True)
 
     # defaults
@@ -1157,6 +1154,9 @@ def init( \
     gdat.trueflux = [[] for l in gdat.trueindxpopl]
     for l in gdat.trueindxpopl:
         gdat.trueflux[l] = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+    
+    print 'gdat.strgstdv'
+    print gdat.strgstdv
 
     # final setup
     setpfinl(gdat, True) 
@@ -1178,6 +1178,9 @@ def init( \
     gdat.timerealtotl = time.time()
     gdat.timeproctotl = time.clock()
    
+    print 'gdat.strgstdv'
+    print gdat.strgstdv
+
     if gdat.verbtype > 1:
         print 'minmflux'
         print gdat.minmflux
@@ -1196,6 +1199,12 @@ def init( \
     if gdat.verbtype > 0:
         tdpy.util.show_memo(gdat, 'gdat')
 
+    print 'gdat.strgstdv'
+    print gdat.strgstdv
+
+    path = gdat.pathoutpthis + 'gdatinit.fits'
+    writfile(gdat, path) 
+    
     # lock the global object againts any future modifications
     gdat.lockmodi()
 
@@ -1525,6 +1534,10 @@ def worktrac(gdat, indxprocwork):
 
 def work(gdat, indxprocwork):
 
+    path = gdat.pathoutpthis + 'gdatinit.fits'
+    gdat = readfile(gdat, path) 
+    
+    
     timereal = time.time()
     timeproc = time.clock()
     
@@ -1723,6 +1736,7 @@ def work(gdat, indxprocwork):
     gdatmodi.indxswepmaxmllik = -1 
     gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
    
+    # proposal scale indices for each parameter
     gdatmodi.indxstdppara = zeros(gdat.numbpara, dtype=int) - 1
     cntr = 0
     gdat.indxparaprop = zeros(gdat.numbfixpprop, dtype=int)
@@ -1737,7 +1751,6 @@ def work(gdat, indxprocwork):
             gdatmodi.indxstdppara[k] = gdat.indxstdpbgal
         if k in concatenate(gdatmodi.thisindxsampflux):
             gdatmodi.indxstdppara[k] = gdat.indxstdpflux
-        
         if gdat.numbener > 1:
             if k in concatenate(gdatmodi.thisindxsampsind):
                 gdatmodi.indxstdppara[k] = gdat.indxstdpsind
@@ -1745,7 +1758,13 @@ def work(gdat, indxprocwork):
                 gdatmodi.indxstdppara[k] = gdat.indxstdpcurv
             if k in concatenate(gdatmodi.thisindxsampexpo):
                 gdatmodi.indxstdppara[k] = gdat.indxstdpexpo
-       
+    
+    path = gdat.pathoutpthis + 'gdatmodi_prc%d.fits' % indxprocwork
+    writfile(gdatmodi, path) 
+    
+    return
+
+
     # proposal scale optimization
     gdatmodi.stdvstdp = copy(gdat.stdvstdp)
     if gdat.optiprop:
@@ -1786,11 +1805,39 @@ def work(gdat, indxprocwork):
         gdatmodi.thislpostotltemp = copy(gdatmodi.thislpostotl)
         gdatmodi.thissampvarbtemp = copy(gdatmodi.thissampvarb)
         gdatmodi.thissamptemp = copy(gdatmodi.thissamp)
-        
+        gdatmodi.thisindxpntsfulltemp = deepcopy(gdatmodi.thisindxpntsfull)
+
+        # Optimize the prior boundary on the element feature that sets its significance 
+        if gdat.verbtype > 0:
+            print 'Optimizing the prior boundaries...'
+
+        # lock the global object againts any future modifications
+        gdat.lockmodi()
+
+        gdat.numbbrthopti = 100
+        gdat.deltlposbrthopti = zeros(gdat.numbbrthopti) - 10.
+        while fabs(mean(gdat.deltlposbrthopti) + 5.) > 1.:
+            for k in range(gdat.numbbrthopti):
+                gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
+                gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
+                prop_tran(gdat, gdatmodi)
+                gdatmodi.nextsampvarb = retr_sampvarb(gdat, gdatmodi.nextindxpntsfull, gdatmodi.thissamp, 'this')
+                proc_samp(gdat, gdatmodi, 'next')
+                gdat.deltlposbrthopti[k] = gdatmodi.thislpostotl - gdatmodi.thislpostotltemp
+            
+            if fabs(mean(gdat.deltlposbrthopti) + 5.) > 1.:
+                if gdat.verbtype > 0:
+                    print 'Updating the prior boundaries...'
+                
+                gdat.minmflux *= 2.**(mean(gdat.deltlposbrthopti) + 5.)
+
+        # unlock the global object
+        gdat.unlkmodi()
+    
         # temp
         deltparastep = 1e-5
         maxmstdv = 1.
-        fudgstdv = 100.
+        fudgstdv = 5.
         #diffpara = zeros((2, 2, 2))
         #diffpara[0, 0, :] = deltparastep * array([-1., -1.])
         #diffpara[0, 1, :] = deltparastep * array([-1., 1.])
@@ -1820,7 +1867,7 @@ def work(gdat, indxprocwork):
                         gdatmodi.cntrswep += 1
                 
                 hess = 4. * fabs(deltlpos[0] + deltlpos[2] - 2. * deltlpos[1]) / deltparastep**2
-                stdv = 1. / sqrt(hess) / sqrt(gdat.numbpara / 2.)
+                stdv = 1. / sqrt(hess) / sqrt(gdat.numbpara / 2.) / fudgstdv
                 
                 #for n in gdat.indxpara:
                 #    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp):
@@ -1861,13 +1908,13 @@ def work(gdat, indxprocwork):
                             indxsampflux = k + 2 - cntr
                             gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
                             if strg == 'flux':
-                                gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2.
+                                gdatmodi.stdvstdp[gdat.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2.
                             else:
-                                gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
+                                gdatmodi.stdvstdp[gdat.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5
                             gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
                         cntr += 1
                 else:
-                    gdatmodi.stdvstdp[gdatmodi.indxstdppara[k]] = stdv
+                    gdatmodi.stdvstdp[gdat.indxstdppara[k]] = stdv
             
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork, showmemo=True)

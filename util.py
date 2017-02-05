@@ -1233,52 +1233,9 @@ def retr_prop(gdat, gdatmodi):
     else:
         # number of unit sample vector elements to be modified
         numbcompmodi = gdat.numbcomp[gdatmodi.indxpoplmodi]
-        
-        if gdatmodi.propbrth:
-            
-            # find an empty slot in the PS list
-            for k in range(gdat.maxmnumbpnts[gdatmodi.indxpoplmodi]):
-                if not k in gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi]:
-                    indxpntsbrth = k
-                    break
-    
-            # sample indices to add the new PS
-            gdatmodi.indxsamptran = gdat.indxsampcomp[0] + gdat.numbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsbrth * gdat.numbcomp[gdatmodi.indxpoplmodi] + \
-                                                                                                                                     gdat.indxcomp[gdatmodi.indxpoplmodi]
-            
-            # sample auxiliary variables
-            gdatmodi.auxipara = rand(numbcompmodi)
-            
-            gdatmodi.nextsamp[gdatmodi.indxsamptran] = gdatmodi.auxipara
-                    
-            # change the number of PS
-            gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] + 1
-            gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].append(indxpntsbrth)
-        
-            indxpntsfull = gdatmodi.thisindxpntsfull
-        
-        # death
-        if gdatmodi.propdeth:
-            
-            # occupied PS index to be killed
-            dethindxindxpnts = choice(arange(gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
-            
-            # PS index to be killed
-            indxpntsdeth = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][dethindxindxpnts]
-    
-            # sample indices to add the new PS
-            gdatmodi.indxsamptran = gdat.indxsampcomp[0] + gdat.numbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsdeth * gdat.numbcomp[gdatmodi.indxpoplmodi] + \
-                                                                                                                                     gdat.indxcomp[gdatmodi.indxpoplmodi]
-      
-            indxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
-            indxpntsfull[gdatmodi.indxpoplmodi].remove(indxpntsdeth)
-            
-            # change the number of PS
-            gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
-            
-            # remove the PS from the occupied PS list
-            gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].remove(indxpntsdeth)
-    
+       
+    prop_tran(gdat, gdatmodi)
+
     if gdat.numbtrap > 0:
         if gdatmodi.propwith:
             gdatmodi.indxsampmodi = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.dictmodi['indxsampcomp'])))
@@ -1573,6 +1530,48 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.thiscombfact = log(gdatmodi.thisnumbpair / gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2)
 
         
+def prop_tran(gdat, gdatmodi):
+    
+    if gdatmodi.propbrth:
+        
+        # find an empty slot in the PS list
+        for k in range(gdat.maxmnumbpnts[gdatmodi.indxpoplmodi]):
+            if not k in gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi]:
+                indxpntsbrth = k
+                break
+    
+        # sample indices to add the new PS
+        gdatmodi.indxsamptran = gdat.indxsampcomp[0] + gdat.numbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsbrth * gdat.numbcomp[gdatmodi.indxpoplmodi] + \
+                                                                                                                                 gdat.indxcomp[gdatmodi.indxpoplmodi]
+        
+        # sample auxiliary variables
+        gdatmodi.auxipara = rand(numbcompmodi)
+        gdatmodi.nextsamp[gdatmodi.indxsamptran] = gdatmodi.auxipara
+                
+        # change the number of PS
+        gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] + 1
+        gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].append(indxpntsbrth)
+    
+    # death
+    if gdatmodi.propdeth:
+        
+        # occupied PS index to be killed
+        dethindxindxpnts = choice(arange(gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
+        
+        # PS index to be killed
+        indxpntsdeth = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][dethindxindxpnts]
+    
+        # sample indices to add the new PS
+        gdatmodi.indxsamptran = gdat.indxsampcomp[0] + gdat.numbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsdeth * gdat.numbcomp[gdatmodi.indxpoplmodi] + \
+                                                                                                                                 gdat.indxcomp[gdatmodi.indxpoplmodi]
+    
+        # remove the PS from the occupied PS list
+        gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].remove(indxpntsdeth)
+    
+        # change the number of PS
+        gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
+            
+
 def retr_factoaxi(gdat, bins, norm, indx):
 
     factoaxi = 1. + norm[:, None, None] * (bins[None, None, :] / gdat.oaxipivt)**indx[:, None, None]
@@ -2078,7 +2077,9 @@ def setpinit(gdat, boolinitsetp=False):
     
     # set model sample vector indices
     retr_indxsamp(gdat)
-    
+    print 'gdat.strgfixp'
+    print gdat.strgfixp
+
     gdat.lablfeat = {}
     gdat.dictglob = {}
     gdat.lablfeatunit = {}
@@ -2856,6 +2857,7 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.indxstdpexpo = gdat.numbfixpprop + 4
     gdat.numbstdp = gdat.numbfixpprop + gdat.maxmnumbcomp
     gdat.strgstdp = concatenate((gdat.strgfixp[gdat.indxfixpprop], gdat.liststrgcomptotl))
+    gdat.strgstdp = list(gdat.strgstdp)
     gdat.namestdp = concatenate((gdat.namefixp[gdat.indxfixpprop], gdat.liststrgcomptotl))
     gdat.indxstdp = arange(gdat.numbstdp)
     gdat.indxstdpfixp = arange(gdat.numbfixpprop)
@@ -3451,6 +3453,11 @@ def retr_indxsamp(gdat, strgpara=''):
         if isinstance(valu, ndarray) and strg[12:16] != 'dist':
             valu = sort(valu)
         setattr(gdat, strgpara + strg, valu)
+    
+    namefixp = list(namefixp)
+    strgfixp = list(strgfixp)
+    strgfixpunit = list(strgfixpunit)
+    scalfixp = list(scalfixp)
 
 
 def defn_truedefa(gdat, valu, strgvarb):
@@ -3713,17 +3720,17 @@ def supr_fram(gdat, gdatmodi, axis, indxpoplplot=-1, trueonly=False):
                     
                     ## associations
                     ### missed
-                    indx = gdatmodi.trueindxpntsassc[l].miss
+                    indx = gdatmodi.trueindxpntsasscmiss[l]
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablmiss, facecolor='none', \
                                                                                                                                 marker='o', linewidth=2, color='g')
                     
                     ### biased
-                    indx = gdatmodi.trueindxpntsassc[l].bias
+                    indx = gdatmodi.trueindxpntsasscbias[l]
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
                                                                                                 label=gdat.truelablbias, marker='*', linewidth=2, color='g', facecolor='none')
                     
                     ### hit
-                    indx = gdatmodi.trueindxpntsassc[l].hits
+                    indx = gdatmodi.trueindxpntsasschits[l]
                     
                 else:
                     indx = arange(lgal.size)
@@ -3877,17 +3884,53 @@ def retr_deflextr(gdat, sher, sang):
     return vstack((defllgal, deflbgal)).T 
 
 
+def readfile(path):
+
+    thisfile = h5py.File(path, 'r')
+    gdattemp = tdpy.util.gdatstrt()
+    for attr in thisfile:
+        print 'attr'
+        print attr
+        setattr(gdattemp, attr, thisfile[attr]) 
+    thisfile.close()
+    return gdattemp
+
+
+def writfile(gdattemp, path):
+
+    thisfile = h5py.File(path, 'w')
+    for attr, valu in gdattemp.__dict__.iteritems():
+        print 'attr'
+        print attr
+        print 'type'
+        print type(valu)
+        if isinstance(valu, ndarray):
+            print 'type(valu[0])'
+            print type(valu[0])
+
+        print 
+        if isinstance(valu, list):
+            data = array(valu, dtype=object)
+            thisfile.create_dataset(attr, data=data, dtype=h5py.special_dtype(vlen=str))
+        elif isscalar(valu) or isinstance(valu, ndarray) and type(valu[0]) != 'str':
+            thisfile.create_dataset(attr, data=valu)
+        else:
+            print 'Skipping %s' % attr
+    thisfile.close()
+
+
 def retr_deflcutf(angl, bein, anglscal, anglcutf=None, asym=False):
 
     fracscal = angl / anglscal
     
     fact = arccos(1. / fracscal) / sqrt(fracscal**2 - 1.)
+    indx = where(fracscal < 1.)[0]
+    fact[indx] = -log(1. / fracscal - sqrt((1. / fracscal)**2 - 1.)) / sqrt(1. - fracscal**2)
+    
     if asym:
         deflcutf = fact + log(fracscal / 2.)
     else:
-        fraccutf = anglscal / anglcutf
-        indx = where(fracscal < 1.)[0]
-        fact[indx] = -log(1. / fracscal - sqrt((1. / fracscal)**2 - 1.)) / sqrt(1. - fracscal**2)
+        fraccutf = anglcutf / anglscal
         deflcutf = bein / 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2 * ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * fact + \
                 pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * log(sqrt(fracscal**2 + fraccutf**2) \
                         / fracscal - fraccutf) - pi))
@@ -4494,13 +4537,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
     
     # correlate the current catalog sample with the reference catalog
     if strg == 'this':
-        gdatmodi.trueindxpntsassc = [tdpy.util.gdatstrt() for l in gdat.trueindxpopl]
+        gdatmodi.trueindxpntsasscmiss = [[] for l in gdat.trueindxpopl]
+        gdatmodi.trueindxpntsasscbias = [[] for l in gdat.trueindxpopl]
+        gdatmodi.trueindxpntsasschits = [[] for l in gdat.trueindxpopl]
+        gdatmodi.trueindxpntsasscmult = [[] for l in gdat.trueindxpopl]
         gdatmodi.thisspecassc = [[] for l in gdat.trueindxpopl] 
         for l in gdat.trueindxpopl:
-            gdatmodi.trueindxpntsassc[l].miss = []
-            gdatmodi.trueindxpntsassc[l].bias = []
-            gdatmodi.trueindxpntsassc[l].hits = []
-            gdatmodi.trueindxpntsassc[l].mult = []
             if gdat.asscmetrtype == 'dist':
                 dir1 = array([gdat.truelgal[l], gdat.truebgal[l]])
     
@@ -4541,18 +4583,18 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
             # divide associations into subgroups
             for k in range(gdat.truenumbpnts[l]):
                 if numbassc[k] == 0:
-                    gdatmodi.trueindxpntsassc[l].miss.append(k)
+                    gdatmodi.trueindxpntsasscmiss[l].append(k)
                 else:
                     if numbassc[k] > 1:
-                        gdatmodi.trueindxpntsassc[l].mult.append(k)
+                        gdatmodi.trueindxpntsasscmult[l].append(k)
             
                     ## check whether the flux of the associated model point source matches well with the flux of the deterministic point source
                     for i in gdat.indxener:
                         boolbias = specassc[i, k] > fluxbias[1, i, k] or specassc[i, k] < fluxbias[0, i, k]
                         if boolbias:
-                            gdatmodi.trueindxpntsassc[l].bias.append(k)
+                            gdatmodi.trueindxpntsasscbias[l].append(k)
                         else:
-                            gdatmodi.trueindxpntsassc[l].hits.append(k)
+                            gdatmodi.trueindxpntsasschits[l].append(k)
             
             gdatmodi.thisspecassc[l] = zeros((gdat.numbener, gdat.truenumbpnts[l]))
             temp = where(indxmodlpnts >= 0)[0]

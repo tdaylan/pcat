@@ -26,7 +26,7 @@ import multiprocessing as mp
 from copy import deepcopy
 
 # FITS files
-import pyfits as pf
+import pyfits as pf, h5py
 
 # utilities
 import os, time, sys, getpass, glob, fnmatch, cPickle, inspect, traceback, shelve

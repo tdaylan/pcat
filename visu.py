@@ -1004,7 +1004,7 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
         
         # plot associations to multiple model point sources
         if gdatmodi != None:
-            indxpntsasscmult = gdatmodi.trueindxpntsassc[l].mult
+            indxpntsasscmult = gdatmodi.trueindxpntsasscmult[l]
             if len(indxpntsasscmult) > 0:
                 axis.errorbar(xdat[indxpntsasscmult], ydat[indxpntsasscmult], ls='', yerr=yerr[:, indxpntsasscmult], xerr=xerr[:, indxpntsasscmult], \
                                                                                                                         lw=1, marker='o', markersize=5, color='r')
@@ -1775,24 +1775,21 @@ def plot_init(gdat):
             #plot_king(gdat)
     
             if gdat.pntstype == 'lens':
-                listbein = array([0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.2, 100.]) / gdat.anglfact
-                listanglcutf = array([0.5, 1e8]) / gdat.anglfact
-                plottype = []
-                listdefl = []
+                listbein = array([0.1, 0.1, 0.1]) / gdat.anglfact
+                listanglscal = array([0.5, 0.5, 0.5]) / gdat.anglfact
+                listanglcutf = array([3., 1e8, 0.]) / gdat.anglfact
+                listasym = [False, False, True]
                 listxdat = []
-                for bein, anglscal, anglcutf in zip(listbein, listanglscal, listanglcutf):
-                    listdefl.append(retr_deflcutf(gdat.binsangl, bein, anglscal, anglcutf))
+                listdefl = []
+                plottype = []
+                for bein, anglscal, anglcutf, asym in zip(listbein, listanglscal, listanglcutf, listasym):
                     listxdat.append(gdat.binsangl * gdat.anglfact)
+                    listdefl.append(retr_deflcutf(gdat.binsangl, bein, anglscal, anglcutf, asym=asym))
                     plottype.append('line')
-
-                listdefl.append(retr_deflcutf(gdat.binsangl, bein, 0.5 / gdat.anglfact, asym=True))
-                listxdat.append(gdat.binsangl * gdat.anglfact)
-                plottype.append('line')
-
+                
                 path = gdat.pathinit + 'deflcutf.pdf'
                 lablxdat = gdat.lablfeattotl['gang']
-                tdpy.util.plot_gene(path, listxdat, listdefl, scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$', plottype=plottype)
+                tdpy.util.plot_gene(path, listxdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$', plottype=plottype)
             
             if gdat.evalcirc and gdat.pntstype == 'lght':
                 plot_eval(gdat)
