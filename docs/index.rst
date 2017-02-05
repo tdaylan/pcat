@@ -87,7 +87,7 @@ Supplying data
 +++++++++++++++
 Input dataset is provided through the ``strgexprflux`` argument. This should be the name of a FITS file (including the ``.fits`` extension), which contains a numpy array of dimension :math:`N_e \times N_{pix} \times N_{psf}`, where :math:`N_e` is the number of energy bins, :math:`N_{pix}` is the number of spatial pixels and :math:`N_{psf}` is the number of PSF classes. The units should be photons per cm :math:`^2` per seconds per GeV.
 
-The exposure map is suppled via the ``strgexpo`` argument. This should be the name of a FITS file (including the ``.fits`` extension). The format should be the same as ``strgexprflux``, whereas units should be cm :math:`^2` GeV.
+The exposure map is suppled via the ``strgexpo`` argument. This should be the name of a FITS file (including the ``.fits`` extension). The format should be the same as ``strgexprflux``, whereas units should be cm :math:`^2` s.
 
 Similary, background templates can be provided via the ``back`` argument. ``back`` should be a list of FITS file names (including the ``.fits`` extension), whose format should be same as that of ``strgexprflux``.
 
@@ -205,19 +205,14 @@ While the sampler is running, you can check ``$PCAT_DATA_PATH/imag/rtag/`` to in
 .. code-block:: python
 
     pcat.main.init( \
-              randinit=True, \
-              maxmgang=deg2rad(20.), \
-              indxenerincl=arange(1, 4), \
-              indxevttincl=arange(2, 4), \
-              lgalcntr=lgalcntr, \
-              bgalcntr=bgalcntr, \
-              minmflux=3e-11, \
-              maxmflux=3e-6, \
-              strgback=['isotflux.fits', 'fdfmflux%s.fits' % strgcntr], \
-              strgexpo='fermexpo_cmp0_igal%s.fits' % strgcntr, \
-              strgexprflux='fermflux_cmp0_igal%s.fits' % strgcntr, \
-             )
-    
+                   maxmgang=deg2rad(20.), \
+                   indxenerincl=arange(1, 4), \
+                   indxevttincl=arange(2, 4), \
+                   bgalcntr=pi/2., \
+                   strgback=['fermisotflux.fits', 'fdfmflux_ngal.fits'], \
+                   strgexpo='fermexpo_cmp0_ngal.fits', \
+                   strgexprflux='fermflux_cmp0_ngal.fits', \
+                  )
     
 
 API
