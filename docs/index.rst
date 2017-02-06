@@ -40,7 +40,7 @@ Compared to mainstream point source inference methods, PCAT has a series of desi
 - constrains source population characteristics via hierarchical priors,
 - is a Bayesian framework, because point estimates fail in nearly degenerate likelihood topologies
 - implements Occam's razor, i.e., model parsimony, through detailed balance across models, 
-- does not discard information contained in low-significance ($< 4 \sigma$) fluctuations in the observed dataset,
+- does not discard information contained in low-significance :math:`(< 4 \sigma)` fluctuations in the observed dataset,
 - reduces to a deterministic cataloger when the labeling degeneracy is explicitly broken,
 - simultaneously infers the PSF and the level of diffuse background.
 
@@ -178,9 +178,15 @@ Chain
 =================  ==========================================================================
 Field              Explanation
 =================  ==========================================================================
-``listsampvarb``   Parameter vector
-``listsamp``       Scaled Parameter vector (uniform-distributed with respect to the prior)
-``listlgalpopi``   Horizontal coordinates of the ith population
+``sampvarb``       Parameter vector
+``samp``           Scaled Parameter vector (uniform-distributed with respect to the prior)
+``lgalpopi``       Horizontal coordinates of the ith population
+``bgalpopi``       Vertical coordinates of the ith population
+``fluxpopi``       Flux of the ith population
+``sindpopi``       Spectral index of the ith population
+``curvpopi``       Spectral curvature of the ith population
+``expopopi``       Spectral cutoff energy of the ith population
+``deltllikpopi``   Delta loglikelihood of the ith population
 =================  ==========================================================================
 
 In order to reduce inter-process communication, PCAT writes its internal state to the disc before child processes are spawned and after individual workers have finished their tasks. These states are python pickle objects and can also be found in ``$PCAT_DATA_PATH/outp/rtag/gdatinit.p`` and ``$PCAT_DATA_PATH/outp/rtag/gdatmodiXXXX.p``.
