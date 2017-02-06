@@ -448,12 +448,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     ## randomly selected trandimensional parameters
     if gdat.numbtrap > 0:
         # choose the parameters based on persistence
-        stdvlistsamptran = std(gdat.listsamp[:, gdat.indxsampcomp], axis=0)
+        stdvlistsamptran = std(gdat.listsamp[:, gdat.indxsamptrap], axis=0)
         indxtrapgood = where(stdvlistsamptran > 0.)[0]
         numbtrapgood = indxtrapgood.size
         numbtrapplot = min(10, numbtrapgood)
         if numbtrapplot > 0:
-            indxtrapplot = sort(choice(gdat.indxsampcomp[indxtrapgood], size=numbtrapplot, replace=False))
+            indxtrapplot = sort(choice(gdat.indxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
             path = gdat.pathpost + 'listsamp'
             tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
             path = gdat.pathpost + 'listsampvarb'
@@ -1633,7 +1633,7 @@ def plot_grap(plottype='igal', verbtype=0):
     plt.close(figr)
 
 
-plot_grap(verbtype=1)
+#plot_grap(verbtype=1)
 #plot_grap(plottype='ngal', verbtype=1)
 #plot_grap(plottype='lens', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)

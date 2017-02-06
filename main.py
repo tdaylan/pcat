@@ -1800,7 +1800,7 @@ def work(pathoutpthis, lock, indxprocwork):
         # temp
         deltparastep = 1e-5
         maxmstdv = 1.
-        fudgstdv = 5.
+        fudgstdv = 1.
         #diffpara = zeros((2, 2, 2))
         #diffpara[0, 0, :] = deltparastep * array([-1., -1.])
         #diffpara[0, 1, :] = deltparastep * array([-1., 1.])

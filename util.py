@@ -2041,7 +2041,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.labldistsour = 'd_{sa}'
     gdat.labldistsourunit = gdat.lablgangunit
     gdat.labldotpsour = r'\vec{\alpha}_a \cdot \nabla f_s'
-    gdat.labldotpsourunit = gdat.lablgangunit
+    gdat.labldotpsourunit = ''
    
     
     if gdat.pntstype == 'lght':
@@ -3189,8 +3189,8 @@ def retr_indxsamp(gdat, strgpara=''):
     
     # total number of parameters
     numbpara = numbfixp + numbtrap
-    indxsampcomp = arange(numbfixp, numbpara)
-    indxsampcompinit = indxsampcomp[0]
+    indxsamptrap = arange(numbfixp, numbpara)
+    indxsampcompinit = indxsamptrap[0]
     indxpara = arange(numbpara)
 
     # construct the fixed parameter structure
@@ -4458,7 +4458,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                     grad = dstack((gradient(lensfluxmean, gdat.sizepixl, axis=0), gradient(lensfluxmean, gdat.sizepixl, axis=1)))
                     dicttemp['dotpsour'][l] = empty(numbpnts[l])
                     for k in range(numbpnts[l]):
-                        dicttemp['dotpsour'][l][k] = sum(grad * deflsing[:, :, :, k])
+                        dicttemp['dotpsour'][l][k] = mean(sum(grad * deflsing[:, :, :, k], 2))
 
             ### distribution of component features and derived quantities
             if gdat.numbener > 1:
