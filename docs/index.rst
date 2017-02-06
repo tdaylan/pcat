@@ -37,7 +37,7 @@ Compared to mainstream point source inference methods, PCAT has a series of desi
 - samples from the space of catalogs given some observation, unlike conventional cataloging, which estimates the most likely catalog,
 - allows marginalization over all relevant nuisance parameters in the problem, including the dimensionality of the nuisance.
 - reveals potentially non-Gaussian within and across model covariances
-- constrains source population characteristics via hierarchical priors,
+- constrains element population characteristics via hierarchical priors,
 - is a Bayesian framework, because point estimates fail in nearly degenerate likelihood topologies
 - implements Occam's razor, i.e., model parsimony, through detailed balance across models, 
 - does not discard information contained in low-significance :math:`(< 4 \sigma)` fluctuations in the observed dataset,
@@ -53,7 +53,7 @@ PCAT takes steps across models by adding parameters drawn from the prior or kill
 Hierarchical priors
 +++++++++++++++++++++
 
-When there are multiple model sources, each with a set of properties, it is more natural to put priors on the distribution of these properties, as opposed to placing individual priors separately on each source property. This assumes that a certain property of all point sources in a given population are drawn from a single probability distribution. This is particularly useful when such a parametrization is subject to inference, where individual sources can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of source properties, i.e., **hyperparameters**, and the prior on the individual source properties are made conditional on these hyperparameters. 
+When there are multiple model elements, each with a set of parameters, it is more natural to put priors on the distribution of these parameters, as opposed to placing individual priors separately on each element parameter. This assumes that a certain parameter of all elements in a given population are drawn from a single probability distribution. This is particularly useful when such a parametrization is subject to inference, where individual elements can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of element parameters, i.e., **hyperparameters**, and the prior on the individual element parameters are made conditional on these hyperparameters. 
 
 
 Proposals
@@ -67,7 +67,7 @@ PCAT discards the first ``numbburn`` samples and thins the resulting chain by a 
 Labeling degeneracy
 ++++++++++++++++++++++
 
-Due to **hairlessness** of the point sources, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two point sources leaves the likelihood invariant. This fact has consequences for **nonpersistent** sources, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such sources, the degeneracy must be broken in post-processing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posteior of all transdimensional parameters will eventually look similar.
+Due to **hairlessness** of the elements, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two elements leaves the likelihood invariant. This fact has consequences for **nonpersistent** elements, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such elements, the degeneracy must be broken in post-processing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posteior of all transdimensional parameters will eventually look similar.
 
 .. Breaking the labeling degeneracy
 .. +++++++++++++++++++
@@ -81,7 +81,7 @@ Any MCMC sampling problem requires a choice of proposal scale, which must remain
 Performance
 +++++++++++++++++++
 
-The above properties are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference.
+The above features are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference.
 
 PCAT alleviates the performance issues in two ways:
 
@@ -109,7 +109,7 @@ The prior structure of the model is set by the relevant arguments to ``pcat.main
 
 - Background prediction
 
-    Given some an observed dataset, it can be expressed as a Poisson realization of the integral emission from a large number of point sources. However, due to the prohibitively large number of point sources required, it is favorable to represent the contribution of extremely faint point sources (those that negligibly affect the likelihood) with background templates. PCAT allows a list of spatially and spectrally distinct background templates to be in the model simultaneously. 
+    Given some an observed dataset, it can be expressed as a Poisson realization of the integral emission from a large number of sources. However, due to the prohibitively large number of sources required, it is favorable to represent the contribution of extremely faint sources (those that negligibly affect the likelihood) with background templates. PCAT allows a list of spatially and spectrally distinct background templates to be in the model simultaneously. 
 
 
 - Point Spread Function (PSF)
@@ -121,8 +121,8 @@ Generating mock data
 +++++++++++++++++++++
 PCAT ships with a built-in mock (simulated) data generator. The generated mock data is randomly drawn from a generative mock model, not to be confused with the above model subject to inference. Once the user configures the prior probability density of this model, PCAT samples from the catalog space given the simulated dataset. Some of the mock model parameters can be fixed, i.e., assigned delta function priors. These are
 
-- the number of mock point sources, ``mocknumbpnts``,
-- hyperparameters controlling the population characteristics of these point sources.
+- the number of mock elements, ``mocknumbpnts``,
+- hyperparameters controlling the population characteristics of these elements.
 
 All other mock model parameters are fair draws from the hierarchical prior. 
 
@@ -215,7 +215,7 @@ Tutorial
 --------------
 In this tutorial, we will illustrate how to run PCAT during a typical science analysis. Assuming that you have :ref:`installed <sectinst>` PCAT, let us run it on mock data.
 
-All user interaction with PCAT can be performed through the ``pcat.main.init()`` funtion. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary IRF file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
+All user interaction with PCAT can be performed through the ``pcat.main.init()`` funtion. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source distribution and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary IRF file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
 
 .. code-block:: python
 
@@ -295,12 +295,12 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     **Associations with the reference catalog**
  
-    :param anglassc: Radius of the circle within which sample catalog point sources can be associated with the point sources in the reference catalog.
+    :param anglassc: Radius of the circle within which sample catalog elements can be associated with the elements in the reference catalog.
     
     :type anglassc: float
 
 
-    :param margfactcomp: The ratio of the side of the square in which the sample point sources are associated with the reference catalog, to the size of the image.
+    :param margfactcomp: The ratio of the side of the square in which the sample elements are associated with the reference catalog, to the size of the image.
 
     :type margfactcomp: float
 
@@ -317,15 +317,15 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     **General**
 
-    :param pntstype: Functional type of point sources. 
+    :param pntstype: Functional type of elements. 
         
-        - ``lght`` Point sources are light sources
-        - ``lens`` Point sources are lenses.
+        - ``lght`` Elements are light sources
+        - ``lens`` Elements are lenses.
     
     :type pntstype: str
 
 
-    :param evalcirc: Flag to evaluate the likelihood only inside a circle of a certain radius around sources.
+    :param evalcirc: Flag to evaluate the likelihood only inside a circle of a certain radius around elements.
 
     :type evalcirc: str
 
@@ -505,17 +505,17 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     **Model**
 
-    :param spatdisttype: Type of spatial distribution of sources for each population
+    :param spatdisttype: Type of spatial distribution of elements for each population
 
     :type spatdisttype: list of str
     
 
-    :param fluxdisttype: Type of flux distribution of sources for each population
+    :param fluxdisttype: Type of flux distribution of elements for each population
 
     :type fluxdisttype: list of str
     
 
-    :param spectype: Type of energy spectrum of sources for each population
+    :param spectype: Type of energy spectrum of elements for each population
 
     :type spectype: list of str
     
