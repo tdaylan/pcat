@@ -1439,7 +1439,7 @@ def plot_mosa(gdat):
                             if gdat.numbtrap > 0:
                                 gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, \
                                                                         gdatmodi.thisindxsampsind, gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, \
-                                                                        gdatmodi.thisindxsampcomp = retr_indx(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
+                                                                        gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
                                 proc_samp(gdat, gdatmodi, 'this')
 
                             if a == numbrows - 1:
@@ -1485,7 +1485,7 @@ def plot_grap(plottype='igal', verbtype=0):
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
 
     if plottype == 'igal':
-        listcolr = ['black', 'black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', \
+        listcolr = ['black', 'black', 'black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', \
                                                                                                     'magenta', 'magenta', 'magenta', 'magenta', 'magenta']
     if plottype == 'chan':
         listcolr = ['black', 'black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
@@ -1520,6 +1520,7 @@ def plot_grap(plottype='igal', verbtype=0):
     if plottype == 'igal' or plottype == 'chan':
         grap.add_edges_from([ \
                              ('sinddistslop', 'sind'), \
+                             ('expodistslop', 'expo'), \
                             ])
     
     if plottype == 'igal':
@@ -1532,15 +1533,17 @@ def plot_grap(plottype='igal', verbtype=0):
         
     labl = {}
     labl['numbpnts'] = '$N$'
-    labl['meanpnts'] = r'$\mu$'
     
     if plottype == 'igal':
         labl['ampldistslop'] = r'$\vec{\alpha}$'
+        labl['meanpnts'] = r'$\vec{\mu}$'
     else:
         labl['ampldistslop'] = r'$\alpha$'
+        labl['meanpnts'] = r'$\mu$'
     
     if plottype == 'igal':
-        labl['sinddistslop'] = r'$\vec{\beta}$'
+        labl['expodistslop'] = r'$\vec{\tau_{E_c}}$'
+        labl['sinddistslop'] = r'$\vec{\tau_s}$'
     if plottype == 'chan':
         labl['sinddistslop'] = r'$\beta$'
     
@@ -1568,6 +1571,8 @@ def plot_grap(plottype='igal', verbtype=0):
     if plottype == 'igal' or plottype == 'chan':
         posi['sinddistslop'] = array([0.4, 0.15])
     if plottype == 'igal':
+        posi['expodistslop'] = array([0.8, 0.15])
+        posi['sinddistslop'] = array([0.6, 0.15])
         posi['spatdistslop'] = array([-0.2, 0.15])
     posi['ampldistslop'] = array([0.2, 0.15])
     if plottype == 'igal':
@@ -1609,7 +1614,8 @@ def plot_grap(plottype='igal', verbtype=0):
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
     if plottype == 'igal':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'ampldistslop', 'sinddistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'ampldistslop', 'sinddistslop', 'expodistslop'], \
+                                                                                                                                                node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind', 'expo'], node_color='g', node_size=size)
     if plottype == 'chan':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop', 'sinddistslop'], node_color='r', node_size=size)
@@ -1629,7 +1635,7 @@ def plot_grap(plottype='igal', verbtype=0):
     plt.close(figr)
 
 
-#plot_grap(verbtype=1)
+plot_grap(verbtype=1)
 #plot_grap(plottype='ngal', verbtype=1)
 #plot_grap(plottype='lens', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)

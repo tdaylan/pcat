@@ -85,7 +85,7 @@ The above properties are made possible by enlarging the hypothesis space so much
 
 PCAT alleviates the performance issues in two ways:
 
-- Use of parallelism via bypassing Python's Global Interpreter Lock (GIL) by using the ``multiprocessing`` module. The parent processes spawns multiple, (almost) noninteracting processes, which collect samples in parallel and report back to the parent process, which aggregates and post-processes the samples.
+- Use of parallelism via bypassing Python's Global Interpreter Lock (GIL) by employing independent processes as opposed to threads. The parent process spawns multiple, (almost) noninteracting processes, which collect samples in parallel and report back to the parent process, which aggregates and post-processes the samples.
 
 - Locality approximation in the likelihood evaluation. The most time consuming part of the inference is the model evaluation, which can be prohibitevly slow (for large datasets and many elements) if no approximations are made. PCAT assumes that the contribution of the elements to the model vanishes outside some circle around the element.
 
