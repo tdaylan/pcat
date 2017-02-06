@@ -1568,11 +1568,9 @@ def plot_grap(plottype='igal', verbtype=0):
     posi = nx.circular_layout(grap)
     posi['numbpnts'] = array([0., 0.075])
     posi['meanpnts'] = array([0., 0.15])
-    if plottype == 'igal' or plottype == 'chan':
-        posi['sinddistslop'] = array([0.4, 0.15])
+    posi['sinddistslop'] = array([0.4, 0.15])
     if plottype == 'igal':
-        posi['expodistslop'] = array([0.8, 0.15])
-        posi['sinddistslop'] = array([0.6, 0.15])
+        posi['expodistslop'] = array([0.6, 0.15])
         posi['spatdistslop'] = array([-0.2, 0.15])
     posi['ampldistslop'] = array([0.2, 0.15])
     if plottype == 'igal':
