@@ -175,7 +175,7 @@ Chain
 +++++
 ``pcat.main.init()`` returns a pointer to the object that contains the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``. The chain is in the form of an HDF5 file, where datasets contain samples from the parameters, or quantities derived from the parameters, as well as diagnostic and utility variables. Available chains are
 
------------------  --------------------------------------------------------------------------
+=================  ==========================================================================
 Field              Explanation
 =================  ==========================================================================
 ``listsampvarb``   Parameter vector
