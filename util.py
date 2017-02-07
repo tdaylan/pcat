@@ -137,6 +137,14 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
         
         if oaxitype:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k, None], bgal[k, None])
+            print 'indxoaxitemp'
+            print indxoaxitemp
+            print 'dist'
+            print dist * gdat.anglfact
+            print 'gdat.binsangl'
+            print gdat.binsangl * gdat.anglfact
+            print
+
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
             psfntemp = psfnintp(dist)

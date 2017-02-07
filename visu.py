@@ -905,7 +905,8 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
     if scalxaxi == 'logt':
         axis.set_xscale('log')
     if scalyaxi == 'logt':
-        axis.set_yscale('log')
+        if where(ydat > 0.)[0].size > 0:
+            axis.set_yscale('log')
         if hist:
             axis.set_ylim([0.5, None])
     
