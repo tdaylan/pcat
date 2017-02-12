@@ -33,20 +33,19 @@ def plot_samp(gdat, gdatmodi, strg):
                   limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'], limtydat=[amin(gdat.minmspecplot), amax(gdat.maxmspecplot)])
     
     ## PSF radial profile
-    if strg != 'true':
-        if gdat.pntstype == 'lght':
-            if gdat.oaxitype or gdat.trueoaxitype:
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        if gdat.oaxitype:
-                            indxydat = [i, slice(None), m, 0]
-                        else:
-                            indxydat = [i, slice(None), m]
-                        strgindx = '%d%d' % (i, m)
-                        lablxaxi = gdat.lablfeattotl['gang']
-                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, scalyaxi='logt', \
-                                                                                    factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$')
-                        plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
+    if gdat.pntstype == 'lght':
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                if gdat.oaxitype:
+                    indxydat = [i, slice(None), m, 0]
+                else:
+                    indxydat = [i, slice(None), m]
+                strgindx = '%d%d' % (i, m)
+                lablxaxi = gdat.lablfeattotl['gang']
+                plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, scalyaxi='logt', \
+                                                                            factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$')
+                if gdat.oaxitype or gdat.trueoaxitype:
+                    plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$f(\phi)$')
 
     # number of background counts per PSF
@@ -153,9 +152,12 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strgtemp, 'resicnts', thisindxener=i, thisindxevtt=m)
         
     if gdat.pntstype == 'lens':
-        if strg != 'true':
-            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$ [kpc]', ylim=[0.1, 100.], scalyaxi='logt')
-            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, hist=True)
+        print 
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 100.], scalxaxi='logt', scalyaxi='logt') #\
+#                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 100.], scalxaxi='logt', scalyaxi='logt') #\
+#                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, hist=True)
 
     for l in gdat.indxpopl:
         if gdat.pntstype == 'lens':
@@ -164,13 +166,13 @@ def plot_samp(gdat, gdatmodi, strg):
             plot_defl(gdat, gdatmodi, strg)
             
             # deflection field due to individual lenses
-            for k in range(gdat.numbdeflsing):
+            for k in range(gdat.numbdeflsingplot):
                 plot_defl(gdat, gdatmodi, strg, indxdefl=k)
             
             # residual deflection field
             if strg != 'true':
                 plot_defl(gdat, gdatmodi, strg, strgcomp='resi')
-                for k in range(gdat.numbdeflsing):
+                for k in range(gdat.numbdeflsingplot):
                     plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k)
 
         if strg != 'true':
@@ -391,6 +393,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
    
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
+    
+    if gdat.pntstype == 'lens':
+        path = gdat.pathpost + 'fracsubh'
+        tdpy.mcmc.plot_trac(path, gdat.listfracsubh[:, 0], '$f_s$', truepara=gdat.truefracsubh)
     
     ## fixed-dimensional parameters
     ### trace and marginal distribution of each parameter
@@ -630,7 +636,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
                 if strg == 'post':
                     listydat[cntr, :] = getattr(gdat, 'medifixp')[indxvarb]
                     # temp -- indxfixpspec**** should be multidimensional
-                    listyerr[:, cntr, :] = getattr(gdat, 'errrfixp')[:, indxvarb][:, None]
+                    listyerr[:, cntr, :] = getattr(gdat, 'errrfixp')[:, indxvarb]
                 else:
                     listydat[cntr, :] = gdat.truesampvarb[indxvarb]
             else:
@@ -955,6 +961,8 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
     
     if limtxdat != None:
         axis.set_xlim(limtxdat)
+    else:
+        axis.set_xlim([amin(xdat), amax(xdat)])
     if limtydat != None:
         axis.set_ylim(limtydat)
 
@@ -1271,7 +1279,7 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
     
 def plot_king(gdat):
 
-    angl = rad2deg(gdat.binsangl)
+    angl = rad2deg(gdat.binsanglplot)
 
     figr, axgr = plt.subplots(1, 2, figsize=(2 * gdat.plotsize, gdat.plotsize))
     figr.suptitle('King Function', fontsize=20)
@@ -1389,8 +1397,8 @@ def plot_eval(gdat):
             alph = 0.2
             labl = None
             colr = 'black'
-        axis.plot(gdat.binsanglplot, gdat.binsfluxprox[k] * psfntemp, label=labl, color=colr, alpha=alph)
-        axis.set_xlim([amin(gdat.binsanglplot), amax(gdat.binsanglplot)])
+        axis.plot(gdat.binsanglplot * gdat.anglfact, gdat.binsfluxprox[k] * psfntemp, label=labl, color=colr, alpha=alph)
+        axis.set_xlim([amin(gdat.binsanglplot) * gdat.anglfact, amax(gdat.binsanglplot) * gdat.anglfact])
         if k > 0:
             axis.axvline(gdat.anglfact * gdat.maxmangleval[k-1], ls='--', alpha=alph, color=colr)
     axis.set_yscale('log')
@@ -1398,7 +1406,7 @@ def plot_eval(gdat):
     axis.set_ylabel(gdat.lablfeattotl['flux'])
 
     limt = gdat.specfraceval * amax(gdat.binsfluxprox[0] * psfntemp)
-    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * psfntemp[::-1], gdat.binsanglplot[::-1])
+    maxmangltemp = interp(1e-1 * limt, gdat.binsfluxprox[k] * psfntemp[::-1], gdat.binsanglplot[::-1] * gdat.anglfact)
     
     axis.set_ylim([1e-3 * limt, None])
     if limt > 0:
@@ -1435,6 +1443,7 @@ def plot_mosa(gdat):
                             
                             n = indxsampmosa[numbcols*a+b]
                             gdatmodi.thissampvarb = gdat.listsampvarb[n, :].flatten()
+                            gdatmodi.thissamp = gdat.listsamp[n, :].flatten()
                             gdatmodi.thisindxpntsfull = gdat.listindxpntsfull[n]
                             
                             if gdat.numbtrap > 0:
@@ -1780,22 +1789,61 @@ def plot_init(gdat):
             #plot_king(gdat)
     
             if gdat.pntstype == 'lens':
-                listbein = array([0.1, 0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.5, 0.5, 0.5]) / gdat.anglfact
-                listanglcutf = array([3., 1e8, 0.]) / gdat.anglfact
+                listbein = array([0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
+                listanglscal = array([0.4, 0.4, 0.4, 0.4]) / gdat.anglfact
+                listanglcutf = array([0.8, 1.6, 1e10, 0.]) / gdat.anglfact
                 listasym = [False, False, True]
-                listxdat = []
-                listdefl = []
-                plottype = []
+                listydat = []
                 for bein, anglscal, anglcutf, asym in zip(listbein, listanglscal, listanglcutf, listasym):
-                    listxdat.append(gdat.binsangl * gdat.anglfact)
-                    listdefl.append(retr_deflcutf(gdat.binsangl, bein, anglscal, anglcutf, asym=asym))
-                    plottype.append('line')
+                    listydat.append(retr_deflcutf(gdat.binsanglplot, bein, anglscal, anglcutf, asym=asym))
+                
+                xdat = gdat.binsanglplot * gdat.anglfact
+                lablxdat = gdat.lablfeattotl['gang']
                 
                 path = gdat.pathinit + 'deflcutf.pdf'
-                lablxdat = gdat.lablfeattotl['gang']
-                tdpy.util.plot_gene(path, listxdat, listdefl, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$', plottype=plottype)
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$')
+       
+                spec = 1e-19 # [erg/cm^2/s]
+                listsize = array([1., 1., 1.]) / gdat.anglfact
+                listindx = array([1., 4., 10.])
+                listydat = []
+                for size, indx in zip(listsize, listindx):
+                    listydat.append(retr_sersprof(spec, gdat.binsanglplot, size, indx=indx))
+                path = gdat.pathinit + 'sersprof.pdf'
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$f$')
             
+                minmredshost = 0.01
+                maxmredshost = 1.
+                minmredssour = 0.01
+                maxmredssour = 5.
+                numbreds = 200
+                retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
+                retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
+                fact = zeros((numbreds + 1, numbreds + 1))
+                
+                import camb
+                pars = camb.CAMBparams()
+                cambdata = camb.get_background(pars)
+                for k, redshost in enumerate(gdat.binsredshost):
+                    for n, redssour in enumerate(gdat.binsredssour):
+                        if redssour > redshost:
+                            adishost = cambdata.angular_diameter_distance(redshost)
+                            adissour = cambdata.angular_diameter_distance(redssour)
+                            adishostsour = cambdata.angular_diameter_distance2(redshost, redssour)
+                            fact[n, k] = log(adishostsour / adissour / adishost)
+                
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                imag = axis.imshow(fact, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto')
+                axis.set_xlabel('$z_h$')
+                axis.set_ylabel('$z_s$')
+                axis.set_title(r'$f(D)$ [1/Mpc]')
+                path = gdat.pathinit + 'factadis.pdf'
+                plt.colorbar(imag) 
+                plt.tight_layout()
+                figr.savefig(path)
+                plt.close(figr)
+    
+
             if gdat.evalcirc and gdat.pntstype == 'lght':
                 plot_eval(gdat)
             return
@@ -1867,6 +1915,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
         defl *= 1e2
 
     strgplot = strg + strgvarb
+
     if indxdefl != None:
         defl = defl[:, :, :, indxdefl]
         strgplot += '%04d' % indxdefl
@@ -1877,7 +1926,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
   
     defllgal = defl[:, :, 0]
     deflbgal = defl[:, :, 1]
-    fact = 10
+    fact = 4
     deflmagn = sqrt(defllgal[::fact, ::fact]**2 + deflbgal[::fact, ::fact]**2)
     axis.imshow(zeros((10, 10)))
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \

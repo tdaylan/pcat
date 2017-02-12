@@ -42,7 +42,7 @@ def retr_psfnwdth(gdat, psfn, frac):
                 indxanglgood = argsort(psfntemp)
                 intpwdth = max(frac * amax(psfntemp), amin(psfntemp))
                 if intpwdth > amin(psfntemp[indxanglgood]) and intpwdth < amax(psfntemp[indxanglgood]):
-                    wdthtemp = interp1d_pick(psfntemp[indxanglgood], gdat.binsangl[indxanglgood])(intpwdth)
+                    wdthtemp = interp1d_pick(psfntemp[indxanglgood], gdat.binsanglplot[indxanglgood])(intpwdth)
                 if oaxitype:
                     wdth[i, m, p] = wdthtemp
                 else:
@@ -137,14 +137,6 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
         
         if oaxitype:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal[k, None], bgal[k, None])
-            print 'indxoaxitemp'
-            print indxoaxitemp
-            print 'dist'
-            print dist * gdat.anglfact
-            print 'gdat.binsangl'
-            print gdat.binsangl * gdat.anglfact
-            print
-
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
             psfntemp = psfnintp(dist)
@@ -431,7 +423,7 @@ def icdf_fixp(gdat, strg, fixpunit, thisindxfixp):
         
         minmfixp = getattr(gdat, strg + 'minmfixp')[thisindxfixp]
         factfixp = getattr(gdat, strg + 'factfixp')[thisindxfixp]
-        
+
         if scalfixp == 'self':
             fixp = icdf_self(fixpunit, minmfixp, factfixp)
         elif scalfixp == 'logt':
@@ -461,8 +453,11 @@ def icdf_fixp(gdat, strg, fixpunit, thisindxfixp):
     return fixp
 
 
-def retr_thisindxprop(gdat, gdatmodi):
+def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False):
 
+    gdatmodi.thisaccppsfn = True
+    gdatmodi.thisaccpprio = True
+    
     # initialize the Boolean flag indicating the type of transdimensional proposal
     gdatmodi.propwith = False
     gdatmodi.propbrth = False
@@ -475,15 +470,19 @@ def retr_thisindxprop(gdat, gdatmodi):
     gdatmodi.thiscombfact = 0.
    
     # index of the population in which a transdimensional proposal will be made
-    gdatmodi.indxpoplmodi = choice(gdat.indxpopl)
-    if rand() < gdat.probtran:
+    if thisindxpopl == None:
+        gdatmodi.indxpoplmodi = choice(gdat.indxpopl)
+    else:
+        gdatmodi.indxpoplmodi = thisindxpopl
+
+    if rand() < gdat.probtran or brth or deth:
         
-        if rand() < gdat.probbrde:
+        if rand() < gdat.probbrde or brth or deth:
             
             ## births and deaths
-            if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.maxmnumbpnts[gdatmodi.indxpoplmodi]:
+            if gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.maxmnumbpnts[gdatmodi.indxpoplmodi] or deth:
                 gdatmodi.propdeth = True
-            elif gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.minmnumbpnts[gdatmodi.indxpoplmodi]:
+            elif gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] == gdat.minmnumbpnts[gdatmodi.indxpoplmodi] or brth:
                 gdatmodi.propbrth = True
             else:
                 if rand() < 0.5:
@@ -589,7 +588,6 @@ def retr_cntsmaps(gdat, fluxmaps, cart=False):
         if gdat.enerdiff:
             cntsmaps *= gdat.deltener[:, None, None, None]
     else:
-        
         cntsmaps = fluxmaps * gdat.expo * gdat.apix
         if gdat.enerdiff:
             cntsmaps *= gdat.deltener[:, None, None]
@@ -639,41 +637,6 @@ def retr_probpois(data, modl):
 
     return prob
     
-    # temp
-    #if gdatmodi.propsplt or gdatmodi.propmerg:
-    #    
-    #    if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'powr':
-    #        lprbfrst = log(pdfn_flux_powr(gdat, gdatmodi.fluxfrst, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[gdatmodi.indxpoplmodi]]))
-    #        lprbseco = log(pdfn_flux_powr(gdat, gdatmodi.fluxseco, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[gdatmodi.indxpoplmodi]]))
-    #        lprbpare = log(pdfn_flux_powr(gdat, gdatmodi.fluxpare, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[gdatmodi.indxpoplmodi]]))
-    #    if gdat.fluxdisttype[gdatmodi.indxpoplmodi] == 'brok':
-    #        lprbfrst += log(pdfn_flux_brok(gdat, gdatmodi.fluxfrst, \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[gdatmodi.indxpoplmodi]]))
-    #        
-    #        lprbseco += log(pdfn_flux_brok(gdat, gdatmodi.fluxseco, \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[gdatmodi.indxpoplmodi]]))
-
-    #        lprbpare -= log(pdfn_flux_brok(gdat, gdatmodi.fluxpare, \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistbrek[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistsloplowr[gdatmodi.indxpoplmodi]], \
-    #                           gdatmodi.thissampvarb[gdat.indxfixpfluxdistslopuppr[gdatmodi.indxpoplmodi]]))
-    #    if gdatmodi.propsplt:
-    #        gdatmodi.nextlpri[gdat.indxlprispme] += lprbfrst
-    #        gdatmodi.nextlpri[gdat.indxlprispme] += lprbseco
-    #        gdatmodi.nextlpri[gdat.indxlprispme] -= lprbpare
-    #    else:
-    #        gdatmodi.nextlpri[gdat.indxlprispme] += lprbpare
-    #        gdatmodi.nextlpri[gdat.indxlprispme] -= lprbfrst
-    #        gdatmodi.nextlpri[gdat.indxlprispme] -= lprbseco
-    ## split
-    # P(f1)P(l1)P(b1)P(s1)P(f2)P(l2)P(b2)P(s2) / P(f0)P(l0)P(b0)P(s0)P(uf)P(ur)P(up)P(us)
-    # P(f1)P(f2)P(l2)P(b2) / P(f0)P(uf)P(ur)P(up)
-    # P(f1)P(f2) / P(f0)
-
         
 def retr_sampvarb(gdat, indxpntsfull, samp, strg):
     
@@ -747,12 +710,10 @@ def retr_chanpsfn(gdat):
 def retr_fermpsfn(gdat):
    
     gdat.exproaxitype = False
-    if False:
-        reco = 8
-    else:
-        reco = 7
-
-    if reco == 8:
+    
+    gdat.fermreco = 7
+    
+    if gdat.fermreco == 8:
         path = gdat.pathdata + 'expr/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
     else:
         path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_back.fits'
@@ -769,7 +730,7 @@ def retr_fermpsfn(gdat):
     
     parastrg = ['ntail', 'score', 'gcore', 'stail', 'gtail']
     for m in gdat.indxevtt:
-        if reco == 8:
+        if gdat.fermreco == 8:
             irfn = pf.getdata(path, 1 + 3 * gdat.indxevttincl[m])
             fermscal[m, :] = pf.getdata(path, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
         else:
@@ -788,14 +749,14 @@ def retr_fermpsfn(gdat):
     for m in gdat.indxevtt:
         for i in gdat.indxener:
             fermform[i, m, 0] = 1. / (1. + fermform[i, m, 0] * fermform[i, m, 3]**2 / fermform[i, m, 1]**2)
-    
+
     # store the fermi PSF parameters
-    gdat.exprpsfp = zeros((gdat.numbener * numbpsfpform * gdat.numbevtt))
+    gdat.exprpsfp = zeros(gdat.numbener * gdat.numbevtt * numbpsfpform)
     for m in gdat.indxevtt:
         for k in range(numbpsfpform):
             indxfermpsfptemp = m * numbpsfpform * gdat.numbener + gdat.indxener * numbpsfpform + k
             gdat.exprpsfp[indxfermpsfptemp] = fermform[:, m, k]
-
+    
     # calculate the scale factor
     gdat.fermscalfact = sqrt((fermscal[None, :, 0] * (10. * gdat.meanener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
     
@@ -1032,12 +993,9 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv, inpl=False):
             samp = gdatmodi.thissamp
         if isinstance(stdv, float):
             gdatmodi.nextsamp[indxsamp] = samp[indxsamp] + normal(scale=stdv)
-            # temp
         else:
             for k in range(stdv.size):
                 gdatmodi.nextsamp[indxsamp[k]] = samp[indxsamp[k]] + normal(scale=stdv[k])
-                # temp
-                #gdatmodi.nextsamp[indxsamp[k]] = gdatmodi.nextsamp[indxsamp[k]] % 1.
         gdatmodi.nextsamp[indxsamp] = gdatmodi.nextsamp[indxsamp] % 1.
             
        
@@ -1142,7 +1100,7 @@ def show_samp(gdat, gdatmodi):
                                                gdatmodi.nextsampvarb[k], gdatmodi.nextsampvarb[k] - gdatmodi.thissampvarb[k], strgboolmodi, gdat.indxstdppara[k])
     
 
-def retr_prop(gdat, gdatmodi):
+def retr_prop(gdat, gdatmodi, thisindxpnts=None):
  
     if gdat.verbtype > 1:
         print 'retr_prop()'
@@ -1221,16 +1179,15 @@ def retr_prop(gdat, gdatmodi):
         numbcompmodi = gdat.numbcomp[gdatmodi.indxpoplmodi]
        
     if gdatmodi.propbrth:
-        
+       
         # find an empty slot in the PS list
         for k in range(gdat.maxmnumbpnts[gdatmodi.indxpoplmodi]):
             if not k in gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi]:
                 indxpntsbrth = k
                 break
-    
+   
         # sample indices to add the new PS
-        gdatmodi.indxsamptran = gdat.indxsampcompinit + gdat.numbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsbrth * gdat.numbcomp[gdatmodi.indxpoplmodi] + \
-                                                                                                                                 gdat.indxcomp[gdatmodi.indxpoplmodi]
+        gdatmodi.indxsamptran = retr_indxsamppnts(gdat, gdatmodi.indxpoplmodi, indxpntsbrth)
         
         # sample auxiliary variables
         gdatmodi.auxipara = rand(numbcompmodi)
@@ -1243,9 +1200,12 @@ def retr_prop(gdat, gdatmodi):
     # death
     if gdatmodi.propdeth:
         
-        # occupied PS index to be killed
-        dethindxindxpnts = choice(arange(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
-        
+        if thisindxpnts != None:
+            dethindxindxpnts = thisindxpnts
+        else:
+            # occupied PS index to be killed
+            dethindxindxpnts = choice(arange(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
+            
         # PS index to be killed
         indxpntsdeth = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][dethindxindxpnts]
     
@@ -1257,8 +1217,9 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].remove(indxpntsdeth)
     
         # change the number of PS
-        gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
-            
+        gdatmodi.nextsamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
+        gdatmodi.nextsampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
+                  
     if gdat.numbtrap > 0:
         if gdatmodi.propwith:
             gdatmodi.indxsampmodi = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.dictmodi['indxsampcomp'])))
@@ -1285,7 +1246,7 @@ def retr_prop(gdat, gdatmodi):
         gdatmodi.thisaccpprio = False
         print 'gdatmodi.thisaccpprio'
 
-    if gdatmodi.thisaccpprio:
+    if gdatmodi.thisaccpprio and not gdatmodi.propdeth:
         gdatmodi.nextsampvarb = retr_sampvarb(gdat, gdatmodi.nextindxpntsfull, gdatmodi.nextsamp, 'next')
    
     # split
@@ -1353,7 +1314,7 @@ def retr_prop(gdat, gdatmodi):
         if fabs(gdatmodi.spltlgalfrst) > gdat.maxmgang or fabs(gdatmodi.spltlgalseco) > gdat.maxmgang or \
                                             fabs(gdatmodi.spltbgalfrst) > gdat.maxmgang or fabs(gdatmodi.spltbgalseco) > gdat.maxmgang or \
                                             gdatmodi.fluxfrst < gdat.minmflux or gdatmodi.fluxseco < gdat.minmflux:
-            gdatmodi.thisaccpprio = True
+            gdatmodi.thisaccpprio = False
 
         # calculate the list of pairs
         ## current
@@ -1525,13 +1486,6 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
         
-            if gdat.verbtype > 1:
-                # temp
-                if False:
-                    print 'nextlistpair'
-                    print gdatmodi.nextlistpair
-                print
-
     # calculate the factor, i.e., Jacobian and combinatorial, to multiply the acceptance rate
     if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisaccpprio:
         
@@ -1550,6 +1504,13 @@ def retr_prop(gdat, gdatmodi):
             gdatmodi.thiscombfact = log(gdatmodi.thisnumbpair / gdatmodi.thissampvarb[gdat.indxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2)
 
         
+def retr_indxsamppnts(gdat, l, k):
+
+    indxsamppnts = gdat.indxsampcompinit + gdat.numbtrapcuml[l] + k * gdat.numbcomp[l] + gdat.indxcomp[l]
+    
+    return indxsamppnts
+
+
 def retr_factoaxi(gdat, bins, norm, indx):
 
     factoaxi = 1. + norm[:, None, None] * (bins[None, None, :] / gdat.oaxipivt)**indx[:, None, None]
@@ -1574,10 +1535,10 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
     if oaxitype:
         indxpsfponor = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp]
         indxpsfpoind = numbpsfpform + numbpsfptotl * gdat.indxener[indxenertemp] + 1
-
+    
     if gdat.exprtype == 'ferm':
         scalangl = 2. * arcsin(sqrt(2. - 2. * cos(thisangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
-        scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsangl)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
+        scalanglnorm = 2. * arcsin(sqrt(2. - 2. * cos(gdat.binsanglplot)) / 2.)[None, :, None] / gdat.fermscalfact[:, None, :]
     else:
         if oaxitype:
             scalangl = thisangl[None, :, None, None]
@@ -1594,7 +1555,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
         else:
             sigc = sigc[:, None, :]
         psfn = retr_singgaus(scalangl, sigc)
-        
+    
     elif psfntype == 'singking':
         sigc = psfp[indxpsfpinit]
         gamc = psfp[indxpsfpinit+1]
@@ -1662,7 +1623,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
     
     # normalize the PSF
     if gdat.exprtype == 'ferm':
-        fact = 2. * pi * trapz(psfnnorm * sin(gdat.binsangl[None, :, None]), gdat.binsangl, axis=1)[:, None, :]
+        fact = 2. * pi * trapz(psfnnorm * sin(gdat.binsanglplot[None, :, None]), gdat.binsanglplot, axis=1)[:, None, :]
         psfn /= fact
 
     # temp
@@ -1675,7 +1636,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
     return psfn
 
 
-def retr_axis(gdat, strg, minm=None, maxm=None, numb=None, bins=None, scal='self'):
+def retr_axis(gdat, strg, minm=None, maxm=None, numb=None, bins=None, scal='self', invr=False):
     
     if bins == None:
         if scal == 'self':
@@ -1685,11 +1646,16 @@ def retr_axis(gdat, strg, minm=None, maxm=None, numb=None, bins=None, scal='self
             bins = logspace(log10(minm), log10(maxm), numb + 1)
             meanvarb = sqrt(bins[1:] * bins[:-1])
     else:
-        if scal == 'self':
-            meanvarb = (bins[1:] + bins[:-1]) / 2.
-        else:
-            meanvarb = sqrt(bins[1:] * bins[:-1])
-        numb = meanvarb.size
+        numb = bins.size - 1
+
+    if invr:
+        bins = bins[::-1]
+
+    if scal == 'self':
+        meanvarb = (bins[1:] + bins[:-1]) / 2.
+    else:
+        meanvarb = sqrt(bins[1:] * bins[:-1])
+    
     indx = arange(numb)
     delt = diff(bins) 
 
@@ -1713,19 +1679,16 @@ def retr_psec(gdat, conv):
 
     # temp
     psec = (abs(fft.fft2(conv))**2)[:gdat.numbsidecart/2, :gdat.numbsidecart/2] * 1e-3
-
+    
     return psec
    
 
 def retr_psecodim(gdat, psec):
 
-    psecodim = zeros(gdat.numbwvecodim)
-    for k in gdat.indxwvecodim:
+    psecodim = zeros(gdat.numbsidecart / 2)
+    for k in gdat.indxwvecodimplot:
         indxwvec = where((gdat.meanwvec > gdat.binswvecodimplot[k]) & (gdat.meanwvec < gdat.binswvecodimplot[k+1]))
         psecodim[k] = mean(psec[indxwvec])
-        #indxwvec = where((gdat.meanwvec > gdat.binswvecodim[k]) & (gdat.meanwvec < gdat.binswvecodim[k+1]))[0]
-        #if indxwvec.size > 0:
-        #    psecodim[k] = mean(psec[indxwvec])
     
     return psecodim
 
@@ -1780,95 +1743,197 @@ def retr_eerrnorm(minmvarb, maxmvarb, meanvarb, stdvvarb):
     
 
 def retr_detrcatl(gdat):
-    
+   
+    if gdat.verbtype > 0:
+        print 'Constructing a labeled catalog...'
+
+    #print 'gdat.listindxpntsfull'
+    #print gdat.listindxpntsfull
+
     # find the total number of elements across all the samples
     numbelem = 0
+    cntr = 0
+    indxtupl = []
+    indxelem = []
+    indxelemsamp = []
+    for n in gdat.indxsamptotl:
+        indxelem.append([])
+        indxelemsamptemp = []
+        for l in gdat.indxpopl:
+            indxelem[n].append([])
+            for k in range(len(gdat.listindxpntsfull[n][l])):
+                indxelem[n][l].append(numbelem)
+                indxelemsamptemp.append(numbelem)
+                indxtupl.append([n, l, k])
+                numbelem += 1
+        indxelemsamp.append(array(indxelemsamptemp))
+    
+    #print 'indxelem'
+    #print indxelem
+    #print 'indxtupl'
+    #print indxtupl
+    #print 'indxelemsamp'
+    #print indxelemsamp
+    #print 'numbelem'
+    #print numbelem
+
+    numbassc = zeros(numbelem)
+    listdist = zeros((numbelem, numbelem)) + 1e20
+    cntrsave = 0
     for n in gdat.indxsamptotl:
         for l in gdat.indxpopl:
-            numbelem += len(gdat.listindxpntsfull[n][l])
+            for k in range(len(gdat.listindxpntsfull[n][l])):
+                indxelemfrst = indxelem[n][l][k]
+                for nn in gdat.indxsamptotl:
+                    for ll in gdat.indxpopl:
+                        for kk in range(len(gdat.listindxpntsfull[nn][ll])):
+                            indxelemseco = indxelem[nn][ll][kk]
+                            
+                            if n == nn:
+                                #listelemgood[0].append(indxelemfrst)
+                                continue
+                
+                            ## compute distance
+                            indxsampfrst = retr_indxsamppnts(gdat, l, k)
+                            indxsampseco = retr_indxsamppnts(gdat, ll, kk)
+                            dist = sum(gdat.listsamp[n, indxsampfrst] - gdat.listsamp[nn, indxsampseco])**2
+                            
+                            ## preselect elements to compute the cross correlation againts
+                            ## compute derivative
+                            #deritemp = 0.
+                            #for e in gdat.indxcomp[l]:
+                            #    deritemp += 0.
+                            #if deritemp > derithrs:
+                            #    numbassc += 1
 
-    indxpoplelem = empty(numbelem, dtype=int)
-    indxsamptotlelem = empty(numbelem, dtype=int)
+                            listdist[indxelemfrst, indxelemseco] = dist
+                            
+                            cntr = 5 * floor(20. * cntr / numbelem**2)
+                            if cntr > cntrsave:
+                                if gdat.verbtype > 0:
+                                    print '%d%% completed.' % cntrsave
+                                cntrsave = cntr
 
-    indxpntsfull = deepcopy(gdat.listindxpntsfull)
 
-    while len(indxpntsfull):
+    indxelemleft = range(numbelem)
+    distthrs = 1e9
+
+    # list of sample lists of the labeled element
+    indxelemassc = []
+    cntr = 0
+    #print 'listdist'
+    #print listdist
+    while len(indxelemleft) > 0 and cntr < 10:
+       
+        #print 'Match step %d' % cntr
+        #print 'indxelemleft'
+        #print indxelemleft
+
+        # count number of associations
+        numbassc = zeros(numbelem, dtype=int)
+        for p in range(len(indxelemleft)):
+            numbassc[indxelemleft[p]] = where(listdist[indxelemleft[p], :] < distthrs)[0].size
         
-        numbassc = 0
-        cros = []
-        for n in gdat.indxsamptotl:
-            for l in gdat.indxpopl:
-                for k in range(len(gdat.listindxpntsfull[n][l])):
-                    for nn in gdat.indxsamptotl:
-                        for ll in gdat.indxpopl:
-                            for kk in range(len(gdat.listindxpntsfull[nn][ll])):
-                                
-                                if l != ll or n == nn:
-                                    continue
-                    
-                                ## compute distance
-
-                                ## preselect elements to compute the cross correlation againts
-
-                                ## compute derivative
-                                deritemp = 0.
-                                for e in gdat.indxcomp[l]:
-                                    deritemp += 0.
-
-                                if deritemp > derithrs:
-                                    numbassc += 1
-                                cros.append([n, l, k, nn, ll, kk, deritemp])
-
-        # cluster elements based on their correlation
-        #listindxclus =  
-        listindxpnts = [arange(gdat.listlgal[l][n].size) for n in gdat.indxsamptotl]
-
-        listlgalstck = concatenate(gdat.listlgal[l])
-        listbgalstck = concatenate(gdat.listbgal[l])
-        listfluxstck = concatenate(gdat.listflux[l])
-        if gdat.numbener > 1:
-            listspepstck = concatenate(gdat.listspep[l])
-            
-        indxsampstck = concatenate(listindxpnts)
-        print 'indxsampstck'
-        print summgene(indxsampstck)
-
-        numbpntsstck = listlgalstck.size
-        for k in range(numbpntsstck):
-            indxsamptotlself = indxsampstck[k]
-            print 'indxsamptotlself'
-            print indxsamptotlself
-            print 'gdat.listlgal[l]'
-            print len(gdat.listlgal[l])
-            print
-            listlgalstcktemp = setdiff1d(listlgalstck, gdat.listlgal[l][indxsamptotlself])
-            listbgalstcktemp = setdiff1d(listbgalstck, gdat.listbgal[l][indxsamptotlself])
-            listfluxstcktemp = setdiff1d(listfluxstck, gdat.listflux[l][indxsamptotlself])
-
-            dist = ((listlgalstck[k] - listlgalstck) / listlgalstck)**2 + ((listbgalstck[k] - listbgalstck) / listbgalstck)**2 + \
-                                                                                                        ((listfluxstck[k] - listfluxstck) / listfluxstck)**2 
-            #if gdat.numbener > 1:
-            #    dist += ((listspepstck[k] - listspepstck) / listspepstck)**2
-            
-            indxpntsstck = where(dist < 0.1)[0]
-            
-        indxpntsstcksort = argsort(numbpntsstck)
+        #print 'numbassc'
+        #print numbassc
         
-        detrcatl = []
-        for a in range(numbpntsstck):
+        # determine the element with the highest number of neighbors
+        indxelemcntr = argmax(numbassc)
+        indxsamptotlcntr = indxtupl[indxelemcntr][0]
+        indxpoplcntr = indxtupl[indxelemcntr][1]
+        indxpntscntr = indxtupl[indxelemcntr][2]
+
+        #print 'indxelemcntr'
+        #print indxelemcntr
+        
+        # add the central element sample
+        indxelemassc.append([])
+        indxelemassc[cntr].append(indxelemcntr)
+        indxelemleft.remove(indxelemcntr)
+
+        # add the associated element samples
+        if len(indxelemleft) > 0:
+            for n in gdat.indxsamptotl:
+                
+                indxelemtemp = intersect1d(array(indxelemleft), indxelemsamp[n])
+                #print 'n'
+                #print n
+                #print 'indxelemleft'
+                #print indxelemleft
+                #print 'indxelemsamp[n]'
+                #print indxelemsamp[n]
+                #print 'indxelemtemp'
+                #print indxelemtemp
+                if n == indxsamptotlcntr:
+                    continue
+                
+                if indxelemtemp.size > 0:
+                    indxleft = argsort(listdist[indxelemcntr, indxelemtemp])[0]
+                    indxelemthis = indxelemtemp[indxleft]
+                
+                    #print 'indxelemtemp'
+                    #print indxelemtemp
+                    #print 'indxleft'
+                    #print indxleft
+                    #print 'indxelemthis'
+                    #print indxelemthis
+                    #print 'listdist[indxelemcntr, indxelemthis]'
+                    #print listdist[indxelemcntr, indxelemthis]
+                    #print
+                
+                    if listdist[indxelemcntr, indxelemthis] < distthrs:
+                        indxelemassc[cntr].append(indxelemthis)
+                        indxelemleft.remove(indxelemthis)
             
-            if len(indxpntsstck) > 0:
-                
-                # delete the member PS from the stacked catalog
-                delete(listcatlstck, indxpntsstcksort[a])
-                
-                # calculate the posterior median of the PS in the group
-                medicatlstck = median(listcatlstck)
-                
-                # append the median PS to the list
-                detrcatl.append(catl) 
+            #print 'indxelemassc'
+            #print indxelemassc
+            #print
+            #print
+            #print
+            cntr += 1
+        
+    #print 'indxelemassc'
+    #print indxelemassc
+          
+    gdat.dictglob['listelemdetr'] = []
+    gdat.dictglob['postelemdetr'] = []
+    for r in range(len(indxelemassc)): 
+        gdat.dictglob['listelemdetr'].append([])
+        gdat.dictglob['listelemdetr'][r] = {}
+        gdat.dictglob['postelemdetr'].append([])
+        gdat.dictglob['postelemdetr'][r] = {}
+        for strgcomp in gdat.liststrgcomptotl:
+            gdat.dictglob['listelemdetr'][r][strgcomp] = []
+            gdat.dictglob['postelemdetr'][r][strgcomp] = zeros(3)
+        for k in range(len(indxelemassc[r])):
+            indxsamptotlcntr = indxtupl[indxelemassc[r][k]][0]
+            indxpoplcntr = indxtupl[indxelemassc[r][k]][1]
+            indxpntscntr = indxtupl[indxelemassc[r][k]][2]
+            #print 'indxsamptotlcntr'
+            #print indxsamptotlcntr
+            #print 'indxpoplcntr'
+            #print indxpoplcntr
+            #print 'indxpntscntr'
+            #print indxpntscntr
+            #print 'getattr(gdat, list + strgcomp)'
+            #print getattr(gdat, 'list' + strgcomp)
+            #print
+            for strgcomp in gdat.liststrgcomptotl:
+                temp = getattr(gdat, 'list' + strgcomp)[indxpoplcntr][indxsamptotlcntr][indxpntscntr]
+                gdat.dictglob['listelemdetr'][r][strgcomp].append(temp)
+    
+    for r in range(len(indxelemassc)): 
+        for strgcomp in gdat.liststrgcomptotl:
+            arry = array(gdat.dictglob['listelemdetr'][r][strgcomp])
+            gdat.dictglob['postelemdetr'][r][strgcomp][0] = median(arry)
+            gdat.dictglob['postelemdetr'][r][strgcomp][1] = percentile(arry, 16.)
+            gdat.dictglob['postelemdetr'][r][strgcomp][2] = percentile(arry, 84.)
+    
+    #print 'gdat.dictglob[listelemdetr]'
+    #print gdat.dictglob['listelemdetr']
+    #print
 
-
+        
 def retr_conv(gdat, defl):
     
     conv = (gradient(defl[:, :, 0], gdat.sizepixl, axis=0) + gradient(defl[:, :, 1], gdat.sizepixl, axis=1)) / 2.
@@ -1980,7 +2045,9 @@ def setpinit(gdat, boolinitsetp=False):
     
     # run tag
     gdat.rtag = retr_rtag(gdat)
-   
+    
+    gdat.liststrgtype = ['spatdisttype', 'fluxdisttype', 'spectype']
+
     # paths
     ## data
     gdat.pathpixlcnvt = gdat.pathdata + 'pixlcnvt/'
@@ -2021,12 +2088,6 @@ def setpinit(gdat, boolinitsetp=False):
     ### minima and maxima for spectral parameters
     gdat.numbstdv = 3.
 
-    # total maximum number of PS
-    gdat.maxmnumbpntstotl = sum(gdat.maxmnumbpnts)
-    gdat.indxpntstotl = arange(gdat.maxmnumbpntstotl)
-    gdat.maxmnumbpntscumr = cumsum(gdat.maxmnumbpnts)
-    gdat.maxmnumbpntscuml = concatenate((array([0]), gdat.maxmnumbpntscumr[:-1]))
-   
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
     gdat.lablgang = r'\theta'
@@ -2050,8 +2111,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.labldistsourunit = gdat.lablgangunit
     gdat.labldotpsour = r'\vec{\alpha}_a \cdot \nabla f_s'
     gdat.labldotpsourunit = ''
-   
     
+    ## descriptive string for the elements 
     if gdat.pntstype == 'lght':
         gdat.strgelem = 'PS'
     if gdat.pntstype == 'lens':
@@ -2059,6 +2120,8 @@ def setpinit(gdat, boolinitsetp=False):
     
     # set model sample vector indices
     retr_indxsamp(gdat)
+
+    setp_fixp(gdat)
 
     gdat.lablfeat = {}
     gdat.dictglob = {}
@@ -2070,7 +2133,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.lablfeatunit[strgfeat] != '':
             gdat.lablfeatunit[strgfeat] = ' [%s]' % gdat.lablfeatunit[strgfeat]
         gdat.lablfeattotl[strgfeat] = '$%s$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat])
-        if strgfeat == 'flux' and gdat.pntstype == 'lens' or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal':
+        if strgfeat == 'flux' and gdat.pntstype == 'lens' or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or strgfeat == 'distsour':
             gdat.dictglob['fact' + strgfeat + 'plot'] = gdat.anglfact
         else:
             gdat.dictglob['fact' + strgfeat + 'plot'] = 1.
@@ -2134,22 +2197,34 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numblablcompfrac = len(gdat.listlablcompfrac)
     gdat.numblablcompfracspec = len(gdat.listlablcompfracspec)
     
-    if gdat.numbener > 1:
-        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
-        if gdat.enerfluxdist == 0.:
-            raise Exception('Pivot energy cannot be zero.')
-        gdat.factspecener = (gdat.meanener / gdat.enerfluxdist)**(-sqrt(amin(gdat.minmsinddistmean) * amax(gdat.maxmsinddistmean)))
-        gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
-    else:
-        gdat.factspecener = array([1.])
-
     # angular deviation
-    # temp -- check that gdat.numbangl does not degrade the performance
+    # check if 1000 is too much
+    # temp
     gdat.numbangl = 100
-    retr_axis(gdat, 'angl', 0., gdat.maxmangl, gdat.numbangl)
-    gdat.binsanglcosi = sort(cos(gdat.binsangl))
+    if gdat.exprtype == 'ferm':
+        gdat.maxmangl = 17. / gdat.anglfact
+    if gdat.exprtype == 'chan':
+        gdat.maxmangl = 4. / gdat.anglfact
+    if gdat.exprtype == 'hubb':
+        gdat.maxmangl = 2. / gdat.anglfact
+    retr_axis(gdat, 'anglplot', 0., gdat.maxmangl, gdat.numbangl)
+    retr_axis(gdat, 'anglfull', 0., 3. * gdat.maxmgang, gdat.numbangl)
+    gdat.binsanglcosi = sort(cos(gdat.binsanglplot))
     
     gdat.meshbackener = meshgrid(gdat.indxback, gdat.indxener, indexing='ij')
+
+    if gdat.pntstype == 'lens':
+        import camb
+        pars = camb.CAMBparams()
+        cambdata = camb.get_background(pars)
+        
+        gdat.redshost = 0.5
+        gdat.redssour = 2.
+        gdat.adishost = cambdata.angular_diameter_distance(gdat.redshost)
+        gdat.adissour = cambdata.angular_diameter_distance(gdat.redssour)
+        gdat.adishostsour = cambdata.angular_diameter_distance2(gdat.redshost, gdat.redssour)
+        gdat.adisfact = gdat.adishost * gdat.adissour / gdat.adishostsour
+        gdat.massfrombein = gdat.adisfact * 2.09e19
 
     # plotting
     ## the normalized offset for text annotation of point sources in the frames
@@ -2173,10 +2248,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.truelablhost = gdat.truelabl + ' host'
     gdat.truelablsour = gdat.truelabl + ' sour'
     
-    ## scaled angle axis to be plotted
-    if gdat.pntstype == 'lght':
-        gdat.binsanglplot = gdat.anglfact * gdat.binsangl
-
     # PS indices in each population
     gdat.indxpntspopl = []
     for l in gdat.indxpopl:
@@ -2242,10 +2313,9 @@ def setpinit(gdat, boolinitsetp=False):
         retr_axis(gdat, 'deflplot', -gdat.maxmgang, gdat.maxmgang, 50)
 
     # lensing problem setup
-    ## number of subhalos to plot
-    gdat.numbdeflpnts = 3
     ## number of deflection components to plot
-    gdat.numbdeflsing = gdat.numbdeflpnts + 2
+    gdat.numbdeflpntsplot = 3
+    gdat.numbdeflsingplot = gdat.numbdeflpntsplot + 2
 
     # input data
     gdat.pathinpt = gdat.pathdata + 'inpt/'
@@ -2319,19 +2389,22 @@ def setpinit(gdat, boolinitsetp=False):
     
     # power spectra
     if gdat.pixltype == 'cart':
-        gdat.factkpcs = 1e-6
-        gdat.numbwvecodim = 40
-        gdat.indxwvecodim = arange(gdat.numbwvecodim)
-        gdat.minmwvecodim = 2. * pi / sqrt(2) / gdat.maxmgang * gdat.factkpcs # [1/kpc]
-        gdat.maxmwvecodim = 2. * pi / gdat.sizepixl * gdat.factkpcs
+        gdat.factkpcs = 1e3
+        gdat.numbwvecodim = gdat.numbsidecart
+        gdat.minmanglodim = 0.
+        gdat.maxmanglodim = 2. * gdat.maxmgang
+        gdat.minmmpolodim = 0.#1. / gdat.numbsidecart / gdat.sizepixl
+        gdat.maxmmpolodim = 1. / 2. / gdat.sizepixl
+        gdat.minmwvecodim = gdat.minmmpolodim / gdat.adishost / gdat.factkpcs
+        gdat.maxmwvecodim = gdat.maxmmpolodim / gdat.adishost / gdat.factkpcs
+        gdat.minmwlenodim = gdat.adishost * gdat.minmanglodim * gdat.factkpcs
+        gdat.maxmwlenodim = gdat.adishost * gdat.maxmanglodim * gdat.factkpcs
+        retr_axis(gdat, 'anglodimplot', gdat.minmanglodim, gdat.maxmanglodim, gdat.numbsidecart, invr=True)
+        retr_axis(gdat, 'wlenodimplot', gdat.minmwlenodim, gdat.maxmwlenodim, gdat.numbsidecart, invr=True)
+        retr_axis(gdat, 'mpolodimplot', gdat.minmmpolodim, gdat.maxmmpolodim, gdat.numbsidecart / 2)
+        retr_axis(gdat, 'wvecodimplot', gdat.minmwvecodim, gdat.maxmwvecodim, gdat.numbsidecart / 2)
         
-        retr_axis(gdat, 'wvecodimplot', gdat.minmwvecodim, gdat.maxmwvecodim, gdat.numbwvecodim)
-         
-        gdat.numbsidewvec = gdat.numbsidecart / 2
-        temp = fft.fftfreq(gdat.numbsidewvec, gdat.sizepixl)
-        gdat.meanwveclgal, gdat.meanwvecbgal = meshgrid(temp, temp, indexing='ij')
-        gdat.meanwveclgal *= gdat.factkpcs
-        gdat.meanwvecbgal *= gdat.factkpcs
+        gdat.meanwveclgal, gdat.meanwvecbgal = meshgrid(gdat.meanwvecodimplot, gdat.meanwvecodimplot, indexing='ij')
         gdat.meanwvec = sqrt(gdat.meanwveclgal**2 + gdat.meanwvecbgal**2)
 
     # element parameter vector indices
@@ -2488,8 +2561,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.calcerrr = False
     
     if gdat.pntstype == 'lght':
-        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxiplot, gdat.exproaxitype)
-
+        gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsanglplot, gdat.exprpsfntype, gdat.binsoaxiplot, gdat.exproaxitype)
+    
     if gdat.evalcirc != 'full':
         gdat.numbfluxprox = 3
         gdat.indxfluxprox = arange(gdat.numbfluxprox)
@@ -2501,19 +2574,40 @@ def setpinit(gdat, boolinitsetp=False):
                 if gdat.specfraceval == 0:
                     gdat.maxmangleval[h] = 3. * gdat.maxmgang
                 else:  
-                    frac = min(1e-4, gdat.specfraceval * gdat.binsfluxprox[0] / gdat.binsfluxprox[h+1])
+                    frac = gdat.specfraceval * gdat.binsfluxprox[0] / gdat.binsfluxprox[h+1]
                     psfnwdth = retr_psfnwdth(gdat, gdat.exprpsfn, frac)
                     gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                     gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
-
+        
         if gdat.evalcirc == 'bein':
-            gdat.maxmangleval = 15. * gdat.binsfluxprox[1:]
+            gdat.maxmangleval = 4. * gdat.binsfluxprox[1:]
+
+        if gdat.pntstype == 'lght' and gdat.maxmangl - amax(gdat.maxmangleval) < 1.1 * sqrt(2) * (gdat.maxmgang - gdat.maxmgangdata):
+            print 'gdat.maxmangl'
+            print gdat.maxmangl * gdat.anglfact
+            print 'gdat.maxmangleval'
+            print gdat.maxmangleval * gdat.anglfact
+            print 'gdat.maxmgang'
+            print gdat.maxmgang * gdat.anglfact
+            print 'gdat.maxmgangdata'
+            print gdat.maxmgangdata * gdat.anglfact
+            raise Exception('Angular axis is too short.')
+
+        # make a look-up table of nearby pixels for each pixel
+        path = gdat.pathprox + 'indxprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), \
+                                                                                                            1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
+    
+    if gdat.evalcirc != 'full':
 
         # make a look-up table of nearby pixels for each pixel
         path = gdat.pathprox + 'indxprox_%08d_%s_%0.4g_%0.4g_%04d.p' % (gdat.numbpixl, gdat.pixltype, 1e2 * amin(gdat.maxmangleval), \
                                                                                                             1e2 * amax(gdat.maxmangleval), gdat.numbfluxprox)
         if gdat.verbtype > 0 and boolinitsetp:
-            print 'Element evaluation will be performed up to %.3g %s.' % (amax(gdat.maxmangleval) * gdat.anglfact, gdat.lablfeatunit['gang'])
+            print 'Element evaluation will be performed up to'
+            print gdat.maxmangleval * gdat.anglfact
+            print 'with the binning'
+            print gdat.binsfluxprox
+
         if os.path.isfile(path):
             if gdat.verbtype > 0 and boolinitsetp:
                 print 'Previously computed nearby pixel look-up table will be used.'
@@ -2562,106 +2656,6 @@ def setpinit(gdat, boolinitsetp=False):
     # number of colorbar ticks in the maps
     gdat.numbtickcbar = 11
     
-    gdat.minmconv = 1e-2
-    gdat.maxmconv = 1e1
-    gdat.minmdeflcomp = 0.
-    gdat.maxmdeflcomp = 0.1
-    
-    if gdat.numbener > 1:
-        # temp
-        gdat.minmexpo = gdat.minmexpodistmean
-        gdat.maxmexpo = gdat.maxmexpodistmean
-    
-    gdat.minmaang = -pi
-    gdat.maxmaang = pi
-    
-    gdat.minmgangplot = 0.
-    gdat.maxmgangplot = gdat.maxmlgal
-    gdat.minmdeltllik = -1e4
-    gdat.maxmdeltllik = 1e4
-    gdat.minmdistsour = 0.
-    gdat.maxmdistsour = 3. * gdat.maxmgang
-    gdat.minmdotpsour = -1.
-    gdat.maxmdotpsour = 1.
-
-    ## plot limits for element parameters
-    for strgfeat in gdat.liststrgfeat:
-        for strglimt in ['minm', 'maxm']:
-            
-            # temp
-            if strgfeat == 'spec' or strgfeat == 'cnts':
-                continue
-
-            try:
-                truelimt = getattr(gdat, 'true' + strglimt + strgfeat)
-            except:
-                truelimt = None
-             
-            if strgfeat in ['sind', 'curv']:
-                if strglimt == 'minm':
-                    limt = getattr(gdat, 'minm' + strgfeat + 'distmean') - getattr(gdat, 'maxm' + strgfeat + 'diststdv')
-                else:
-                    limt = getattr(gdat, 'maxm' + strgfeat + 'distmean') + getattr(gdat, 'maxm' + strgfeat + 'diststdv')
-            else:
-                limt = getattr(gdat, strglimt + strgfeat)
-            
-            setattr(gdat, strglimt + strgfeat, limt)
-
-            if truelimt == None:
-                setattr(gdat, strglimt + strgfeat + 'plot', limt)
-            else:
-                limt = min(limt, truelimt)
-                setattr(gdat, strglimt + strgfeat + 'plot', limt)
-    
-    gdat.minmspecplot = gdat.minmfluxplot * gdat.factspecener
-    gdat.maxmspecplot = gdat.maxmfluxplot * gdat.factspecener
-    gdat.minmcntsplot = 0.1 * gdat.minmflux * mean(mean(gdat.expo, 1), 1)
-    gdat.maxmcntsplot = gdat.maxmflux * mean(mean(gdat.expo, 1), 1)
-    if gdat.enerdiff:
-        gdat.minmcntsplot *= gdat.deltener * gdat.factspecener
-        gdat.maxmcntsplot *= gdat.deltener * gdat.factspecener
-    
-
-    if gdat.pntstype == 'lens':
-        liststrgcbar = ['conv', 'deflcomp']
-        for strgcbar in liststrgcbar:
-            retr_ticklabl(gdat, strgcbar)
-   
-    # temp
-    gdat.minmspec = gdat.minmflux * gdat.factspecener
-    gdat.maxmspec = gdat.maxmflux * gdat.factspecener
-
-    for strgfeat in gdat.liststrgfeat:
-        if strgfeat == 'spec':
-            gdat.minmspecplot = gdat.minmfluxplot * gdat.factspecener
-            gdat.maxmspecplot = gdat.maxmfluxplot * gdat.factspecener
-            gdat.binsspecplot = gdat.binsfluxplot[None, :] * gdat.factspecener[:, None]
-            gdat.meanspecplot = empty((gdat.numbener, gdat.numbbinsplot))
-            for i in gdat.indxener:
-                gdat.meanspecplot[i, :] = sqrt(gdat.binsspecplot[i, 1:] * gdat.binsspecplot[i, :-1])
-        elif strgfeat == 'cnts':
-            gdat.minmcnts = 0.1 * gdat.minmflux * mean(mean(gdat.expo, 1), 1)
-            gdat.maxmcnts = gdat.maxmflux * mean(mean(gdat.expo, 1), 1)
-            if gdat.enerdiff:
-                gdat.minmcnts *= gdat.deltener * gdat.factspecener
-                gdat.maxmcnts *= gdat.deltener * gdat.factspecener
-            retr_axis(gdat, 'cntsplot', gdat.minmcnts[gdat.indxenerfluxdist[0]], gdat.maxmcnts[gdat.indxenerfluxdist[0]], gdat.numbbinsplot, scal='logt')
-            gdat.binscnts = empty((gdat.numbener, gdat.numbbinsplot + 1))
-            for i in gdat.indxener:
-                gdat.binscnts[i, :] = logspace(log10(gdat.minmcnts[i]), log10(gdat.maxmcnts[i]), gdat.numbbinsplot + 1) # [1]
-            gdat.meancnts = sqrt(gdat.binscnts[:, :-1] * gdat.binscnts[:, 1:]) 
-        else:
-            if strgfeat in ['flux', 'expo']:
-                scal = 'logt'
-            else:
-                scal = 'self'
-            maxm = getattr(gdat, 'maxm' + strgfeat + 'plot')
-            minm = getattr(gdat, 'minm' + strgfeat + 'plot')
-            retr_axis(gdat, strgfeat + 'plot', minm, maxm, gdat.numbbinsplot, scal=scal)
-            retr_axis(gdat, strgfeat + 'plotprio', minm, maxm, gdat.numbbinsplotprio, scal=scal)
-    
-        gdat.dictglob['limt' + strgfeat + 'plot'] = [getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)]
-
     # proposals
     gdat.indxfixpprop = []
     for k, strg in enumerate(gdat.namefixp):
@@ -2719,19 +2713,11 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.indxstdppara[k] = getattr(gdat, 'indxstdp' + strgcomp)
 
 
-def setpfinl(gdat, boolinitsetp=False):
-
     ## input data
     if gdat.datatype == 'inpt':
         gdat.datacnts = retr_cntsmaps(gdat, gdat.exprdataflux)
     
-    if gdat.pixltype != 'unbd':
-        gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
-        if gdat.enerdiff:
-            gdat.datafluxmean /= gdat.deltener
-    else:
-        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
-        
+
     if gdat.pntstype == 'lght':
         gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
         gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
@@ -2742,7 +2728,7 @@ def setpfinl(gdat, boolinitsetp=False):
                 else:
                     psfn = gdat.exprpsfn[i, :, m]
                 maxmpsfn = amax(psfn)
-                gdat.limsangl[i][m] = [0., gdat.binsangl[amax(where(psfn > 1e-6 * maxmpsfn)[0])] * gdat.anglfact]
+                gdat.limsangl[i][m] = [0., gdat.binsanglplot[amax(where(psfn > 1e-6 * maxmpsfn)[0])] * gdat.anglfact]
                 gdat.limspsfn[i][m] = [maxmpsfn * 1e-6, maxmpsfn]
        
     # spatially averaged background flux 
@@ -2754,28 +2740,6 @@ def setpfinl(gdat, boolinitsetp=False):
             else:
                 gdat.backfluxmean[c, i] += sum(gdat.backflux[c][i, :, 0])
     
-    # load the true data into the reference data structure
-    if gdat.trueinfo:
-        ## mock data
-        if gdat.datatype == 'mock':
-            for k in gdat.indxfixp:
-                 
-                # temp -- allow mismodeling
-                continue
-
-                if gdat.namefixp[k][:-1].endswith('pop'):
-                    strgpopl = gdat.namefixp[k][-1]
-                    l = int(strgpopl)
-                    #if gdat.truenumbpopl != gdat.numbpopl or gdat.namefixp[k].startswith('fluxdist') and gdat.truefluxdisttype[l] != gdat.fluxdisttype[l]:
-                    #    continue
-                    strg = gdat.namefixp[k][:-4]
-                    print 'true' + strg
-                    gdat.corrfixp[k] = getattr(gdat, 'mock' + strg)[l]
-                else:
-                    strg = gdat.namefixp[k]
-                    print 'true' + strg
-                    gdat.corrfixp[k] = getattr(gdat, 'mock' + strg)
-    
     if gdat.pixltype == 'unbd':
         gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
         gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
@@ -2785,18 +2749,6 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
     gdat.indxcubesave = meshgrid(gdat.indxener, gdat.indxpixlsave, gdat.indxevtt, indexing='ij')
    
-    # temp -- needed for experimental PSF
-    # if gdat.evalpsfnpnts:
-    #     gdat.truenumbpsfpform, gdat.truenumbpsfpoaxi, gdat.truenumbpsfptotl, gdat.trueindxpsfponor, gdat.trueindxpsfpoind = \
-    #                                                                                         retr_indxpsfp(gdat, gdat.truepsfntype, gdat.trueoaxitype)
-    #     if gdat.trueoaxitype:
-    #         gdat.truefactoaxi = retr_factoaxi(gdat, gdat.binsoaxiplot, gdat.truepsfp[gdat.trueindxpsfponor], gdat.truepsfp[gdat.trueindxpsfpoind])
-    
-    # get count data
-    if gdat.pixltype == 'cart':
-        # temp
-        gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
-
     if gdat.verbtype > 1 and boolinitsetp:
         print 'fixp'
         if gdat.datatype == 'mock':
@@ -2817,10 +2769,7 @@ def setpfinl(gdat, boolinitsetp=False):
                 listfeat = ('name', 'strg', 'scal', 'minm', 'maxm', 'sampvarb')
                 print '%20s%25s%5s%20s%20s%20s' % listfeat
             for k in getattr(gdat, strgpara + 'indxfixp'):
-                if strgpara == '':
-                    print '%20s%25s%5s%20.6g%20.6g' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k])
-                else:
-                    print '%20s%25s%5s%20.6g%20.6g%20.6g' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k], gdat.truefixp[k])
+                print '%20s%25s%5s%20.6g%20.6g' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k])
     
     if gdat.trueinfo and gdat.correxpo and gdat.pntstype == 'lght':
         gdat.exprfwhm = 2. * retr_psfnwdth(gdat, gdat.exprpsfn, 0.5)
@@ -2847,14 +2796,14 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.strgproptype = append(gdat.strgproptype, r'$\mathcal{W}$')
         gdat.nameproptype = append(gdat.nameproptype, 'with')
     
+        gdat.indxproptypebrth = cntr.incr()
+        gdat.indxproptypedeth = cntr.incr()
         if gdat.probtran > 0.:
             # birth
-            gdat.indxproptypebrth = cntr.incr()
             gdat.strgproptype = append(gdat.strgproptype, r'$\mathcal{B}$')
             gdat.nameproptype = append(gdat.nameproptype, 'brth')
             
             # death
-            gdat.indxproptypedeth = cntr.incr()
             gdat.strgproptype = append(gdat.strgproptype, r'$\mathcal{D}$')
             gdat.nameproptype = append(gdat.nameproptype, 'deth')
             
@@ -2873,6 +2822,19 @@ def setpfinl(gdat, boolinitsetp=False):
     gdat.indxproptype = arange(gdat.numbproptype)
 
    
+def setpfinl(gdat, boolinitsetp=False):
+
+    # get count data
+    if gdat.pixltype == 'cart':
+        # temp
+        gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
+
+    if gdat.pixltype != 'unbd':
+        gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
+        if gdat.enerdiff:
+            gdat.datafluxmean /= gdat.deltener
+    else:
+        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
 
     # sanity checks
     # temp
@@ -2893,7 +2855,7 @@ def retr_datatick(gdat):
     gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
     gdat.minmresicnts = -gdat.maxmresicnts
     gdat.maxmllik = 0.
-    gdat.minmllik = -1e3
+    gdat.minmllik = -1e2
     
     # plotting
     liststrgcbar = ['datacnts', 'resicnts', 'llik']
@@ -2944,17 +2906,24 @@ def retr_indxsamp(gdat, strgpara=''):
     fluxdisttype = getattr(gdat, strgpara + 'fluxdisttype')
     oaxitype = getattr(gdat, strgpara + 'oaxitype')
     psfntype = getattr(gdat, strgpara + 'psfntype')
-
-    numbback = getattr(gdat, strgpara + 'numbback')
+    maxmnumbpnts = getattr(gdat, strgpara + 'maxmnumbpnts') 
+    numbback = len(getattr(gdat, strgpara + 'back'))
     indxback = arange(numbback)
     
     numbbacp = numbback * gdat.numbener
-
+    
+    # total maximum number of PS
+    maxmnumbpntstotl = sum(maxmnumbpnts)
+    indxpntstotl = arange(maxmnumbpntstotl)
+    maxmnumbpntscumr = cumsum(maxmnumbpnts)
+    maxmnumbpntscuml = concatenate((array([0]), maxmnumbpntscumr[:-1]))
+   
     # population index vector
     numbpopl = getattr(gdat, strgpara + 'numbpopl')
     indxpopl = arange(numbpopl, dtype=int) 
 
     liststrgcomp = [[] for l in indxpopl]
+    listscalcomp = [[] for l in indxpopl]
     liststrgfeat = ['gang', 'aang', 'lgal', 'bgal', 'flux', 'spec', 'deltllik']
     if gdat.pntstype == 'lght':
         liststrgfeat += ['cnts']
@@ -2966,8 +2935,10 @@ def retr_indxsamp(gdat, strgpara=''):
         liststrgfeat += ['sind']
     for l in indxpopl:
         liststrgcomp[l] = ['lgal', 'bgal', 'flux']
+        listscalcomp[l] = ['self', 'self', 'powr']
         if gdat.numbener > 1 and gdat.pntstype == 'lght':
             liststrgcomp[l] += ['sind']
+            listscalcomp[l] += ['gaus']
         if spatdisttype[l] == 'gang':
             liststrgfeatprio[l] += ['gang', 'aang']
         elif spatdisttype[l] == 'disc' or spatdisttype[l] == 'unif':
@@ -2977,11 +2948,13 @@ def retr_indxsamp(gdat, strgpara=''):
             liststrgfeatprio[l] += ['sind']
             if spectype[l] == 'curv':
                 liststrgcomp[l] += ['curv']
+                listscalcomp[l] += ['gaus']
                 liststrgfeatprio[l] += ['curv']
                 if not 'curv' in liststrgfeat:
                     liststrgfeat += ['curv']
             if spectype[l] == 'expo':
                 liststrgcomp[l] += ['expo']
+                listscalcomp[l] += ['lgau']
                 liststrgfeatprio[l] += ['expo']
                 if not 'expo' in liststrgfeat:
                     liststrgfeat += ['expo']
@@ -3003,7 +2976,7 @@ def retr_indxsamp(gdat, strgpara=''):
     cntr = tdpy.util.cntr()
     
     dicttemp = {}
-    if gdat.maxmnumbpntstotl > 0:
+    if maxmnumbpntstotl > 0:
         for l in indxpopl:
             dicttemp['indxfixpnumbpntspop%d' % l] = cntr.incr()
         for l in indxpopl:
@@ -3011,6 +2984,8 @@ def retr_indxsamp(gdat, strgpara=''):
     
         liststrgvarb = ['gangdistscal', 'bgaldistscal', 'fluxdistslop', 'fluxdistbrek', 'fluxdistsloplowr', 'fluxdistslopuppr', 'sinddistmean', 'sinddiststdv', \
                                                                                                     'curvdistmean', 'curvdiststdv', 'expodistmean', 'expodiststdv']
+    
+        # temp
         for strgvarb in liststrgvarb:
             strgtemp = 'indxfixp' + strgvarb
             dicttemp[strgtemp] = zeros(numbpopl, dtype=int) - 1
@@ -3066,7 +3041,7 @@ def retr_indxsamp(gdat, strgpara=''):
             dicttemp['indxfixpdist'].append(valu)
         
     dicttemp['indxfixphypr'] = dicttemp['indxfixpdist'] +  dicttemp['indxfixpmeanpnts']
-    
+   
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             if psfntype == 'singgaus':
@@ -3075,20 +3050,20 @@ def retr_indxsamp(gdat, strgpara=''):
                 dicttemp['indxfixpsigcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpgamcene%devt%d' % (i, m)] = cntr.incr()
             if psfntype == 'doubgaus':
+                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigtene%devt%d' % (i, m)] = cntr.incr()
-                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
             if psfntype == 'gausking':
+                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpgamcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigtene%devt%d' % (i, m)] = cntr.incr()
-                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
             if psfntype == 'doubking':
+                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpgamcene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpsigtene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpgamtene%devt%d' % (i, m)] = cntr.incr()
-                dicttemp['indxfixppsffene%devt%d' % (i, m)] = cntr.incr()
             if oaxitype:
                 dicttemp['indxfixponorene%devt%d' % (i, m)] = cntr.incr()
                 dicttemp['indxfixpoindene%devt%d' % (i, m)] = cntr.incr()
@@ -3105,8 +3080,32 @@ def retr_indxsamp(gdat, strgpara=''):
                                                                     strg.startswith('indxfixppsffe') or strg.startswith('indxfixponore') or strg.startswith('indxfixpoinde'):
             dicttemp['indxfixppsfp'].append(valu)
     dicttemp['indxfixppsfp'] = array(dicttemp['indxfixppsfp']) 
-    numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfponor, indxpsfpoind = retr_indxpsfp(gdat, psfntype, oaxitype)
+
+    if psfntype == 'singgaus':
+        numbpsfpform = 1
+    elif psfntype == 'singking':
+        numbpsfpform = 2
+    elif psfntype == 'doubgaus':
+        numbpsfpform = 3
+    elif psfntype == 'gausking':
+        numbpsfpform = 4
+    elif psfntype == 'doubking':
+        numbpsfpform = 5
     
+    if oaxitype:
+        numbpsfpoaxi = 2
+    else:
+        numbpsfpoaxi = 0
+
+    numbpsfptotl = numbpsfpform + numbpsfpoaxi
+    
+    if oaxitype:
+        indxpsfponor = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
+        indxpsfpoind = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
+    else:
+        indxpsfponor = []
+        indxpsfpoind = []
+
     numbpsfptotlevtt = gdat.numbevtt * numbpsfptotl
     numbpsfptotlener = gdat.numbener * numbpsfptotl
     numbpsfp = numbpsfptotl * gdat.numbener * gdat.numbevtt
@@ -3128,37 +3127,63 @@ def retr_indxsamp(gdat, strgpara=''):
             dicttemp['indxfixpbacpene%dbac%d' % (i, c)] = cntr.incr()
             dicttemp['indxfixpbacp'].append(dicttemp['indxfixpbacpene%dbac%d' % (i, c)])
     dicttemp['indxfixpbacp'] = array(dicttemp['indxfixpbacp'])
+    dicttemp['indxfixphost'] = []
+    dicttemp['indxfixpsour'] = []
     dicttemp['indxfixplenp'] = []
     dicttemp['indxfixpanglsour'] = []
     dicttemp['indxfixpanglhost'] = []
     dicttemp['indxfixpangllens'] = []
-    dicttemp['indxfixpsour'] = []
-    dicttemp['indxfixphost'] = []
+    dicttemp['indxfixpspecsour'] = []
+    dicttemp['indxfixpspechost'] = []
 
     if gdat.pntstype == 'lens':
         dicttemp['indxfixplgalsour'] = cntr.incr()
         dicttemp['indxfixpbgalsour'] = cntr.incr()
-        dicttemp['indxfixpspecsour'] = cntr.incr()
+        for i in gdat.indxener:
+            dicttemp['indxfixpspecsourene%d' % i] = cntr.incr()
         dicttemp['indxfixpsizesour'] = cntr.incr()
         dicttemp['indxfixpellpsour'] = cntr.incr()
         dicttemp['indxfixpanglsour'] = cntr.incr()
         dicttemp['indxfixplgalhost'] = cntr.incr()
         dicttemp['indxfixpbgalhost'] = cntr.incr()
-        dicttemp['indxfixpspechost'] = cntr.incr()
+        for i in gdat.indxener:
+            dicttemp['indxfixpspechostene%d' % i] = cntr.incr()
         dicttemp['indxfixpsizehost'] = cntr.incr()
         dicttemp['indxfixpbeinhost'] = cntr.incr()
         dicttemp['indxfixpellphost'] = cntr.incr()
         dicttemp['indxfixpanglhost'] = cntr.incr()
         dicttemp['indxfixpsherhost'] = cntr.incr()
         dicttemp['indxfixpsanghost'] = cntr.incr()
-        dicttemp['indxfixpsour'] = [dicttemp['indxfixplgalsour'], dicttemp['indxfixpbgalsour'], dicttemp['indxfixpspecsour'], dicttemp['indxfixpsizesour'], \
-						dicttemp['indxfixpellpsour'], dicttemp['indxfixpanglsour']]
-        dicttemp['indxfixphost'] = [dicttemp['indxfixplgalhost'], dicttemp['indxfixpbgalhost'], dicttemp['indxfixpspechost'], dicttemp['indxfixpsizehost'], \
-						dicttemp['indxfixpbeinhost'], dicttemp['indxfixpellphost'], dicttemp['indxfixpanglhost'], dicttemp['indxfixpsherhost'], dicttemp['indxfixpsanghost']]
-        dicttemp['indxfixpemishost'] = [dicttemp['indxfixplgalhost'], dicttemp['indxfixpbgalhost'], dicttemp['indxfixpspechost'], dicttemp['indxfixpellphost'], \
-						dicttemp['indxfixpanglhost']]
-        dicttemp['indxfixplenp'] = list(set(dicttemp['indxfixpsour'] + dicttemp['indxfixphost'] + dicttemp['indxfixpemishost']))
-    
+        dicttemp['indxfixpsour'] = []
+
+        liststrgsour = ['lgalsour', 'bgalsour', 'specsour', 'sizesour', 'ellpsour', 'anglsour']
+        liststrghost = ['lgalhost', 'bgalhost', 'spechost', 'sizehost', 'beinhost', 'ellphost', 'anglhost', 'sherhost', 'sanghost']
+        for strg, valu in dicttemp.iteritems():
+            
+            for strgtemp in liststrgsour:
+                if strg[8:].startswith(strgtemp):
+                    if isinstance(valu, list):
+                        for valutemp in valu:
+                            dicttemp['indxfixpsour'].append(valutemp)
+                    else:
+                        dicttemp['indxfixpsour'].append(valu)
+            
+            for strgtemp in liststrghost:
+                if strg[8:].startswith(strgtemp):
+                    if isinstance(valu, list):
+                        for valutemp in valu:
+                            dicttemp['indxfixphost'].append(valutemp)
+                    else:
+                        dicttemp['indxfixphost'].append(valu)
+                
+            if strg[8:].startswith('specsourene'):
+                dicttemp['indxfixpspecsour'].append(valu)
+
+            if strg[8:].startswith('spechostene'):
+                dicttemp['indxfixpspechost'].append(valu)
+
+            if valu in dicttemp['indxfixpsour'] or valu in dicttemp['indxfixphost']:
+                dicttemp['indxfixplenp'].append(valu)
 
     # number of fixed-dimension parameters
     numbfixp = cntr.incr(0)
@@ -3201,6 +3226,33 @@ def retr_indxsamp(gdat, strgpara=''):
     indxsampcompinit = indxsamptrap[0]
     indxpara = arange(numbpara)
 
+    for strg, valu in locals().iteritems():
+        if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
+            setattr(gdat, strgpara + strg, valu)
+
+    for strg, valu in dicttemp.iteritems():
+        # temp
+        if isinstance(valu, ndarray) and strg[12:16] != 'dist':
+            valu = sort(valu)
+        setattr(gdat, strgpara + strg, valu)
+
+
+def setp_fixp(gdat, strgpara=''):
+    
+    listscalcomp = getattr(gdat, strgpara + 'listscalcomp')
+    liststrgcomp = getattr(gdat, strgpara + 'liststrgcomp')
+    numbcomp = getattr(gdat, strgpara + 'numbcomp')
+    numbtrapcuml = getattr(gdat, strgpara + 'numbtrapcuml')
+    numbtrapcumr = getattr(gdat, strgpara + 'numbtrapcumr')
+    indxfixp = getattr(gdat, strgpara + 'indxfixp')
+    numbfixp = getattr(gdat, strgpara + 'numbfixp')
+    numbback = getattr(gdat, strgpara + 'numbback')
+    numbtrap = getattr(gdat, strgpara + 'numbtrap')
+    numbpara = getattr(gdat, strgpara + 'numbpara')
+    numbpopl = getattr(gdat, strgpara + 'numbpopl')
+    psfntype = getattr(gdat, strgpara + 'psfntype')
+    numbpsfptotl = getattr(gdat, strgpara + 'numbpsfptotl')
+
     # construct the fixed parameter structure
     namefixp = zeros(numbfixp, dtype=object)
     strgfixp = zeros(numbfixp, dtype=object)
@@ -3215,13 +3267,22 @@ def retr_indxsamp(gdat, strgpara=''):
     cdfndifffixp = empty(numbfixp)
     factfixpplot = ones(numbfixp)
     
-    for strg, valu in dicttemp.iteritems():
+    for strg, valu in gdat.__dict__.iteritems():
         
+        if not strg.startswith(strgpara + 'indxfixp') or strg == strgpara + 'indxfixppsfpinit' or not isscalar(valu):
+            continue
+        
+        if strgpara == 'true':
+            strgvarb = strg[12:]
+        else:
+            strgvarb = strg[8:]
+
         if not isscalar(valu):
             continue
+
         k = valu
         
-        namefixp[k] = strg[8:]
+        namefixp[k] = strgvarb
 
         if strg[:-1].endswith('pop'):
             
@@ -3296,53 +3357,54 @@ def retr_indxsamp(gdat, strgpara=''):
                 meanfixp[k] = gdat.meanpsfp[n]
                 stdvfixp[k] = gdat.meanpsfp[n]
             else:
-                if strg[8:].startswith('sig'):
+                if strgvarb.startswith('sig'):
                     scalfixp[k] = 'logt'
-                if strg[8:].startswith('gam'):
+                if strgvarb.startswith('gam'):
                     scalfixp[k] = 'atan'
-                if strg[8:].startswith('psff'):
+                if strgvarb.startswith('psff'):
                     scalfixp[k] = 'atan'
-                if strg[8:].startswith('onor'):
+                if strgvarb.startswith('onor'):
                     scalfixp[k] = 'logt'
-                if strg[8:].startswith('oind'):
+                if strgvarb.startswith('oind'):
                     scalfixp[k] = 'atan'
-                
+            
             # strings for PSF parameters
-            if strg[8:].startswith('sig'):
+            if strgvarb.startswith('sig'):
                 strgvarbtemp = '\sigma'
                 factfixpplot[k] = gdat.anglfact
-            if strg[8:].startswith('gam'):
+            if strgvarb.startswith('gam'):
                 strgvarbtemp = '\gamma'
-            if strg[8:].startswith('psff'):
+            if strgvarb.startswith('psff'):
                 strgvarbtemp = 'f'
-            if strg[8:].startswith('onor'):
+            if strgvarb.startswith('onor'):
                 strgvarbtemp = 'a'
-            if strg[8:].startswith('oind'):
+            if strgvarb.startswith('oind'):
                 strgvarbtemp = 'b'
-            if strg[8:].startswith('sig') and psfntype == 'doubgaus' or psfntype == 'gausking' or psfntype == 'doubking':
+            if strgvarb.startswith('sig') and psfntype == 'doubgaus' or psfntype == 'gausking' or psfntype == 'doubking':
                 strgcomptemp = 'c'
-            elif strg[8:].startswith('gam') and psfntype == 'gausking' or psfntype == 'doubking':
+            elif strgvarb.startswith('gam') and psfntype == 'gausking' or psfntype == 'doubking':
                 strgcomptemp = 't'
             else:
                 strgcomptemp = ''
             if gdat.numbener > 1:
-                indxenertemp = gdat.indxenerincl[((k - dicttemp['indxfixpsigcene0evt0']) % (gdat.numbener * numbpsfptotl)) // numbpsfptotl]
+                indxenertemp = gdat.indxenerincl[((k - getattr(gdat, strgpara + 'indxfixpsigcene0evt0')) % (gdat.numbener * numbpsfptotl)) // numbpsfptotl]
                 strgenertemp = '%s' % indxenertemp
             else:
                 strgenertemp = ''
             if gdat.numbevtt > 1:
-                indxevtttemp = gdat.indxevttincl[(k - dicttemp['indxfixpsigcene0evt0']) // (gdat.numbener * numbpsfptotl)]
+                indxevtttemp = gdat.indxevttincl[(k - getattr(gdat, strgpara + 'indxfixpsigcene0evt0')) // (gdat.numbener * numbpsfptotl)]
                 strgevtttemp = '%s' % indxevtttemp
             else:
                 strgevtttemp = ''
             strgfixp[k] = r'$%s^{%s}_{%s%s}$' % (strgvarbtemp, strgcomptemp, strgenertemp, strgevtttemp)
         
-        if strg[8:].startswith('bacp'):
-            c = (k - dicttemp['indxfixpbacpene0bac0']) // gdat.numbener
+        if strgvarb.startswith('bacp'):
+            c = (k - getattr(gdat, strgpara + 'indxfixpbacpene0bac0')) // gdat.numbener
             if gdat.numbener > 1:
-                i = (k - dicttemp['indxfixpbacpene0bac0']) % gdat.numbener
+                i = (k - getattr(gdat, strgpara + 'indxfixpbacpene0bac0')) % gdat.numbener
                 strgenertemp = '%d' % i
             else:
+                i = 0
                 strgenertemp = ''
 
             if numbback > 1:
@@ -3354,89 +3416,75 @@ def retr_indxsamp(gdat, strgpara=''):
             scalfixp[k] = 'logt'
         
         if gdat.pntstype == 'lens':
-            if k in dicttemp['indxfixplenp']:
-                if strg[8:] == 'lgalsour':
+            if k in getattr(gdat, strgpara + 'indxfixplenp'):
+                if strgvarb == 'lgalsour':
                     strgfixp[k] = '$l_s$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'bgalsour':
+                if strgvarb == 'bgalsour':
                     strgfixp[k] = '$b_s$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'specsour':
-                    strgfixp[k] = '$f_s$'
+                if strgvarb.startswith('specsour'):
+                    if gdat.numbener > 1:
+                        strgfixp[k] = '$f_{s,%s}$' % strg[-1]
+                    else:
+                        strgfixp[k] = '$f_s$'
                     scalfixp[k] = 'logt'
-                if strg[8:] == 'sizesour':
+                if strgvarb == 'sizesour':
                     strgfixp[k] = '$a_s$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'ellpsour':
+                if strgvarb == 'ellpsour':
                     strgfixp[k] = r'$\epsilon_s$'
                     scalfixp[k] = 'self'
-                if strg[8:] == 'anglsour':
+                if strgvarb == 'anglsour':
                     strgfixp[k] = r'$\phi_s$'
                     scalfixp[k] = 'self'
-                if strg[8:] == 'lgalhost':
+                if strgvarb == 'lgalhost':
                     strgfixp[k] = '$l_h$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'bgalhost':
+                if strgvarb == 'bgalhost':
                     strgfixp[k] = '$b_h$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'spechost':
-                    strgfixp[k] = '$f_h$'
+                if strgvarb.startswith('spechost'):
+                    if gdat.numbener > 1:
+                        strgfixp[k] = '$f_{h,%s}$' % strg[-1]
+                    else:
+                        strgfixp[k] = '$f_h$'
                     scalfixp[k] = 'logt'
-                if strg[8:] == 'sizehost':
+                if strgvarb == 'sizehost':
                     strgfixp[k] = '$a_h$'
                     scalfixp[k] = 'logt'
-                if strg[8:] == 'beinhost':
+                if strgvarb == 'beinhost':
                     strgfixp[k] = r'$\theta_{E,h}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
-                if strg[8:] == 'ellphost':
+                if strgvarb == 'ellphost':
                     strgfixp[k] = r'$\epsilon_h$'
                     scalfixp[k] = 'self'
-                if strg[8:] == 'anglhost':
+                if strgvarb == 'anglhost':
                     strgfixp[k] = r'$\phi_h$'
                     scalfixp[k] = 'self'
-                if strg[8:] == 'sherhost':
+                if strgvarb == 'sherhost':
                     strgfixp[k] = r'$\gamma_e$'
                     scalfixp[k] = 'self'
-                if strg[8:] == 'sanghost':
+                if strgvarb == 'sanghost':
                     strgfixp[k] = r'$\phi_{\gamma}$'
                     scalfixp[k] = 'self'
         
         if scalfixp[k] == 'pois' or scalfixp[k] == 'self' or scalfixp[k] == 'logt' or scalfixp[k] == 'atan':
-            
-            if namefixp[k].startswith('numbpnts'):
-                l = k
-                minmfixp[k] = getattr(gdat, 'minm' + namefixp[k][:-4])[l]
-                maxmfixp[k] = getattr(gdat, 'maxm' + namefixp[k][:-4])[l]
-            elif namefixp[k][:-1].endswith('pop'):
-                minmfixp[k] = getattr(gdat, 'minm' + namefixp[k][:-4])
-                maxmfixp[k] = getattr(gdat, 'maxm' + namefixp[k][:-4])
-            elif namefixp[k][:-1].endswith('evt') or namefixp[k][:-1].endswith('bac'):
-                minmfixp[k] = getattr(gdat, 'minm' + namefixp[k][:-8])
-                maxmfixp[k] = getattr(gdat, 'maxm' + namefixp[k][:-8])
+            if strgvarb.startswith('numbpnts'):
+                minmfixp[k] = getattr(gdat, strgpara + 'minm' + strgvarb[:-4])[k]
+                maxmfixp[k] = getattr(gdat, strgpara + 'maxm' + strgvarb[:-4])[k]
             else:
-                minmfixp[k] = getattr(gdat, 'minm' + namefixp[k])
-                maxmfixp[k] = getattr(gdat, 'maxm' + namefixp[k])
-        
+                minmfixp[k] = getattr(gdat, strgpara + 'minm' + strgvarb)
+                maxmfixp[k] = getattr(gdat, strgpara + 'maxm' + strgvarb)
         if scalfixp[k] == 'gaus' or scalfixp[k] == 'eerr':
-            if gdat.psfninfoprio:
-                meanfixp[k] = getattr(gdat, 'meanpsfp')[k-dicttemp['indxfixpsigcene0evt0']]
-                stdvfixp[k] = getattr(gdat, 'stdvpsfp')[k-dicttemp['indxfixpsigcene0evt0']]
-            else:
-                if namefixp[k][:-1].endswith('pop'):
-                    meanfixp[k] = getattr(gdat, 'mean' + namefixp[k][:-4])
-                    stdvfixp[k] = getattr(gdat, 'stdv' + namefixp[k][:-4])
-                elif namefixp[k][:-1].endswith('evt') or namefixp[k][:-1].endswith('bac'):
-                    meanfixp[k] = getattr(gdat, 'mean' + namefixp[k][:-8])
-                    stdvfixp[k] = getattr(gdat, 'stdv' + namefixp[k][:-8])
-                else:
-                    meanfixp[k] = getattr(gdat, 'mean' + namefixp[k])
-                    stdvfixp[k] = getattr(gdat, 'stdv' + namefixp[k])
+            meanfixp[k] = getattr(gdat, strgpara + 'mean' + strgvarb)
+            stdvfixp[k] = getattr(gdat, strgpara + 'stdv' + strgvarb)
         if scalfixp[k] == 'self':
             factfixp[k] = maxmfixp[k] - minmfixp[k]
         if scalfixp[k] == 'logt':
@@ -3449,72 +3497,93 @@ def retr_indxsamp(gdat, strgpara=''):
         if scalfixp[k] == 'eerr':
             cdfnminmfixp[k], cdfndifffixp[k] = retr_eerrnorm(minmfixp[k], maxmfixp[k], meanfixp[k], stdvfixp[k])
         
-        if strg[16:20] == 'brek':
+        if strgvarb[8:12] == 'brek':
             strgfixpunit[k] = strgfixp[k] + ' [%s]' % getattr(gdat, 'lablfluxunit')
-        elif strg[8:].startswith('sig'):
+        elif strgvarb.startswith('sig'):
             strgfixpunit[k] = strgfixp[k] + ' [%s]' % getattr(gdat, 'lablgangunit')
         else:
             strgfixpunit[k] = strgfixp[k]
 
     namepara = zeros(numbpara, dtype=object)
+    scalpara = zeros(numbpara, dtype=object)
     namepara[indxfixp] = namefixp
+    scalpara[indxfixp] = scalfixp
     for k in range(numbtrap):
         indxpopltemp = argmin(where(k // numbtrapcumr == 0))
         indxcomptemp = (k - numbtrapcuml[indxpopltemp]) % numbcomp[indxpopltemp]
         namepara[numbfixp+k] = liststrgcomp[indxpopltemp][indxcomptemp]
+        scalpara[numbfixp+k] = listscalcomp[indxpopltemp][indxcomptemp]
     
     for strg, valu in locals().iteritems():
         if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
             setattr(gdat, strgpara + strg, valu)
 
-    for strg, valu in dicttemp.iteritems():
-        # temp
-        if isinstance(valu, ndarray) and strg[12:16] != 'dist':
-            valu = sort(valu)
-        setattr(gdat, strgpara + strg, valu)
-    
 
-def defn_truedefa(gdat, valu, strgvarb):
+def setp_true(gdat, strgvarb, valu, popl=False):
     
-    #strgtemp = 'trueindxfixp' + strgvarb
-    #for strg in gdat.__dict__.keys():
-    #    if strg.startswith(strgtemp):
-    #        strgrepl = 'true' + strgvarb + strg[len(strgtemp):]
-    #        try:
-    #            if getattr(gdat, strgrepl) == None:
-    #                setattr(gdat, strgrepl, valu)
-    #        except:
-    #            setattr(gdat, strgrepl, valu)
+    if popl:
+        liststrgvarb = []
+        for l in gdat.trueindxpopl:
+            liststrgvarb.append(strgvarb + 'pop%d' % l)
+    else:   
+        liststrgvarb = [strgvarb]
 
-    #strgrepl = 'true' + strgvarb + strg[len(strgtemp):]
-    try:
-        if getattr(gdat, 'true' + strgvarb) == None:
+    for strgvarb in liststrgvarb:
+        try:
+            getattr(gdat, 'true' + strgvarb)
+        except:
             setattr(gdat, 'true' + strgvarb, valu)
-    except:
-        setattr(gdat, 'true' + strgvarb, valu)
-
-
-def setp_varbfull(gdat, strgpara, listfeat, typelimt='minmmaxm', numbpopl=None):
-    
-    numbfeat = len(listfeat)
-
-    listfeattemp = listfeat
-
-    if typelimt == 'minmmaxm':
-        minmpara = getattr(gdat, 'minm' + strgpara)
-        maxmpara = getattr(gdat, 'minm' + strgpara)
-        if minmpara == None:
-            setattr(gdat, 'minm' + strgpara, listfeattemp[0])
-        if maxmpara == None:
-            setattr(gdat, 'maxm' + strgpara, listfeattemp[1])
-    else:
-        meanpara = getattr(gdat, 'mean' + strgpara)
-        stdvpara = getattr(gdat, 'stdv' + strgpara)
-        if meanmpara == None:
-            setattr(gdat, 'mean' + strgpara, listfeattemp[0])
-        if stdvpara == None:
-            setattr(gdat, 'stdv' + strgpara, listfeattemp[1])
  
+
+def setp_truedefa(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ener=False, evtt=False, back=False):
+    
+    liststrgvarb = []
+    if popl:
+        for l in gdat.trueindxpopl:
+            liststrgvarb.append(strgvarb + 'pop%d' % l)
+    elif ener and evtt:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                liststrgvarb.append(strgvarb + 'ene%devt%d' % (i, m))
+    elif ener and back:
+        for i in gdat.indxener:
+            for c in gdat.trueindxback:
+                liststrgvarb.append(strgvarb + 'ene%dbac%d' % (i, c))
+    elif ener:
+        for i in gdat.indxener:
+            liststrgvarb.append(strgvarb + 'ene%d' % i)
+    else:   
+        liststrgvarb.append(strgvarb)
+
+    for strgvarb in liststrgvarb:
+
+        if typelimt == 'minmmaxm':
+            try:
+                minmpara = getattr(gdat, 'trueminm' + strgvarb)
+            except:
+                setattr(gdat, 'trueminm' + strgvarb, listvalu[0])
+            try:
+                maxmpara = getattr(gdat, 'truemaxm' + strgvarb)
+            except:
+                setattr(gdat, 'truemaxm' + strgvarb, listvalu[1])
+        else:
+            try:
+                meanpara = getattr(gdat, 'truemean' + strgvarb)
+            except:
+                setattr(gdat, 'truemean' + strgvarb, listvalu[0])
+            try:
+                stdvpara = getattr(gdat, 'truestdv' + strgvarb)
+            except:
+                setattr(gdat, 'truestdv' + strgvarb, listvalu[1])
+ 
+
+def intp_sinc(gdat, lgal, bgal):
+
+    intpsinc = 4. * gdat.numbsidepsfn**2 * sum(gdat.temppsfn * sinc(gdat.numbsidepsfn * (gdat.gridpsfnlgal + lgal) - gdat.gridpsfnlgal) * \
+                                                                                                      sinc(gdat.numbsidepsfn * (gdat.gridpsfnbgal + bgal) - gdat.gridpsfnbgal))
+
+    return intpsinc
+
 
 def retr_fluxbrgt(gdat, lgal, bgal, flux):
 
@@ -3767,20 +3836,6 @@ def supr_fram(gdat, gdatmodi, axis, indxpoplplot=-1, trueonly=False):
                         axis.add_patch(plt.Circle((gdat.anglfact * lgal[k], gdat.anglfact * bgal[k]), \
                                         gdat.fluxfactplot * gdat.truespec[l][0, gdat.indxenerfluxdist[0], k], edgecolor='g', facecolor='none', lw=2))
     
-            ## annotate
-            if gdat.anotcatl:
-                for a in range(numbpnts):
-                    strg = ''
-                    if gdat.truestrg[l][a] != None:
-                        strg += '%s ' % gdat.truestrg[l][a]
-                    if gdat.truestrgassc[l][a] != None:
-                        strg += '%s ' % gdat.truestrgassc[l][a]
-                    if gdat.truestrgclss[l][a] != None:
-                        strg += '%s ' % gdat.truestrgclss[l][a]
-                    if strg != '':
-                        axis.text(gdat.anglfact * gdat.truelgal[l][a], gdat.anglfact * gdat.truebgal[l][a] - gdat.offstext, strg, \
-                                                                                                                            ha='center', va='center', color='g', fontsize=6)
-    
             # model catalog
             if gdatmodi != None and not trueonly:
                 if gdat.numbtrap > 0:
@@ -3810,36 +3865,6 @@ def supr_fram(gdat, gdatmodi, axis, indxpoplplot=-1, trueonly=False):
                                         gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l][k]], edgecolor='b', facecolor='none', ls='--', lw=2))
     
     
-def retr_indxpsfp(gdat, psfntype, oaxitype):
-
-    if psfntype == 'singgaus':
-        numbpsfpform = 1
-    elif psfntype == 'singking':
-        numbpsfpform = 2
-    elif psfntype == 'doubgaus':
-        numbpsfpform = 3
-    elif psfntype == 'gausking':
-        numbpsfpform = 4
-    elif psfntype == 'doubking':
-        numbpsfpform = 5
-    
-    if oaxitype:
-        numbpsfpoaxi = 2
-    else:
-        numbpsfpoaxi = 0
-
-    numbpsfptotl = numbpsfpform + numbpsfpoaxi
-    
-    if oaxitype:
-        indxpsfponor = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt)
-        indxpsfpoind = numbpsfpform + numbpsfptotl * arange(gdat.numbener * gdat.numbevtt) + 1
-    else:
-        indxpsfponor = []
-        indxpsfpoind = []
-
-    return numbpsfpform, numbpsfpoaxi, numbpsfptotl, indxpsfponor, indxpsfpoind
-
-
 def retr_levi(listllik):
     
     minmlistllik = amin(listllik)
@@ -3917,7 +3942,8 @@ def readfile(path):
 def writfile(gdattemp, path):
 
     thisfile = open(path, 'wb')
-    cPickle.dump(gdattemp, thisfile, protocol=cPickle.HIGHEST_PROTOCOL)
+    #cPickle.dump(gdattemp, thisfile, protocol=cPickle.HIGHEST_PROTOCOL)
+    cPickle.dump(gdattemp, thisfile)#, protocol=cPickle.HIGHEST_PROTOCOL)
     thisfile.close()
    
 
@@ -3937,15 +3963,15 @@ def retr_deflcutf(angl, bein, anglscal, anglcutf=None, asym=False):
     
     fact = arccos(1. / fracscal) / sqrt(fracscal**2 - 1.)
     indx = where(fracscal < 1.)[0]
-    fact[indx] = -log(1. / fracscal - sqrt((1. / fracscal)**2 - 1.)) / sqrt(1. - fracscal**2)
+    fact[indx] = arccosh(1. / fracscal) / sqrt(1. - fracscal**2)
     
     if asym:
-        deflcutf = fact + log(fracscal / 2.)
+        deflcutf = bein * (fact + log(fracscal / 2.)) / fracscal
     else:
         fraccutf = anglcutf / anglscal
-        deflcutf = bein / 2. / fracscal**2 * fraccutf**2 / (fraccutf**2 + 1)**2 * ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.) ) * fact + \
-                pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * log(sqrt(fracscal**2 + fraccutf**2) \
-                        / fracscal - fraccutf) - pi))
+        deflcutf = bein / 2. / fracscal * fraccutf**2 / (fraccutf**2 + 1)**2 * ((fraccutf**2 + 1. + 2. * (fracscal**2 - 1.)) * fact + \
+                pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * ((fraccutf - 1. / fraccutf) * \
+                log(fracscal / (sqrt(fracscal**2 + fraccutf**2) + fraccutf)) - pi))
 
     return deflcutf
 
@@ -4028,7 +4054,7 @@ def retr_lpriexpodist(gdat, gdatmodi, expo, sampvarb, l):
     return lpri
 
 
-def proc_samp(gdat, gdatmodi, strg, raww=False):
+def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
 
     if gdat.verbtype > 1:
         print 'proc_samp()'
@@ -4131,14 +4157,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
             factoaxi = retr_factoaxi(gdat, gdat.binsoaxiplot, onor, oind)
     
         psfntype = getattr(gdat, strgtype + 'psfntype')
-        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxiplot, oaxitype)
+        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsanglplot, psfntype, gdat.binsoaxiplot, oaxitype)
 
         if oaxitype:
             psfnintp = []
             for p in gdat.indxoaxi:
-                psfnintp.append(interp1d_pick(gdat.binsangl, psfn[:, :, :, p], axis=1))
+                psfnintp.append(interp1d_pick(gdat.binsanglplot, psfn[:, :, :, p], axis=1))
         else:
-            psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
+            psfnintp = interp1d_pick(gdat.binsanglplot, psfn, axis=1)
         setattr(gdatobjt, strg + 'psfnintp', psfnintp)
    
     bacp = sampvarb[getattr(gdat, 'indxfixpbacp')]
@@ -4167,7 +4193,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         
         # host emission
         hostfluxmaps = retr_mapssers(gdat, gdat.lgalgridcart, gdat.bgalgridcart, lgalhost, bgalhost, spechost, sizehost, ellphost, anglhost)
-        
+       
         # total emission
         modlfluxuncv = lensflux + bacp * gdat.backfluxcart[0] + hostfluxmaps
         
@@ -4200,7 +4226,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         
         ### model flux map
         modlflux = retr_mapslght(gdat, bacp, pntsflux, gdat.indxcube)
-   
+ 
     ### count map
     if gdat.pixltype != 'unbd':
         modlcnts = retr_cntsmaps(gdat, modlflux)
@@ -4209,7 +4235,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
             print 'modlcnts'
             summgene(modlcnts)
     
-        
     # mock data specific
     if strg == 'true':
         if raww:
@@ -4299,22 +4324,28 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
         if gdat.liketype == 'gaus':
             llik = -0.5 * (gdat.datacnts - modlcnts)**2 / gdat.datacnts
     lliktotl = sum(llik)
+    lpostotl = lpritotl + lliktotl
     
     setattr(gdatobjt, strg + 'lpritotl', lpritotl) 
     setattr(gdatobjt, strg + 'lliktotl', lliktotl) 
+    setattr(gdatobjt, strg + 'lpostotl', lpostotl) 
     setattr(gdatobjt, strg + 'lpri', lpri)
     setattr(gdatobjt, strg + 'llik', llik) 
+    
+    print 'lliktotl'
+    print lliktotl
+    
     if strg == 'next':
-        deltlliktotl = lliktotl - gdatmodi.thislliktotl
-        setattr(gdatmodi, 'thisdeltlliktotl', deltlliktotl)
+        #deltlliktotl = lliktotl - gdatmodi.thislliktotl
+        #setattr(gdatmodi, 'thisdeltlliktotl', deltlliktotl)
         setattr(gdatmodi, 'thislpriprop', lpri)
+    
+    if fast:
+        return
 
     ## tertiary variables that are not needed for likelihood evaluation
     if strg != 'next':
         
-        if strg == 'this':
-            lpostotl = lpritotl + lliktotl
-            setattr(gdatobjt, strg + 'lpostotl', lpostotl) 
        
         setattr(gdatobjt, strg + 'psfp', psfp)
         if gdat.pixltype != 'unbd':
@@ -4365,9 +4396,18 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 lgalsort = dicttemp['lgal'][0][indxpntssortbrgt][:numbpntsconc]
                 bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:numbpntsconc]
                 beinsort = dicttemp['flux'][0][indxpntssortbrgt][:numbpntsconc]
-            
-            deflsing = zeros((gdat.numbpixl, 2, gdat.numbdeflsing))
-            numbdeflsing = min(gdat.numbdeflpnts, numbpntsconc) + 2
+    
+            ### mass budget
+            masspnts = gdat.massfrombein * dicttemp['flux'][0]**2
+            masspntstotl = array([sum(masspnts)])
+            masshost = array([gdat.massfrombein * beinhost**2])
+            fracsubh = array([masspntstotl / masshost])
+            setattr(gdatobjt, strg + 'masspntstotl', masspntstotl)
+            setattr(gdatobjt, strg + 'masshost', masshost)
+            setattr(gdatobjt, strg + 'fracsubh', fracsubh)
+
+            deflsing = zeros((gdat.numbpixl, 2, gdat.numbdeflsingplot))
+            numbdeflsing = min(gdat.numbdeflpntsplot, numbpntsconc) + 2
             for k in range(numbdeflsing):
                 if k == 0:
                     deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
@@ -4382,9 +4422,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                         indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
-                    deflsing[indxpixltemp, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0., indxpixltemp=indxpixltemp)
+                        deflsing[indxpixltemp, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0., indxpixltemp=indxpixltemp)
+            deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
 
-            deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsing))
             ### convergence
             conv = retr_conv(gdat, defl) 
             convpsec = retr_psec(gdat, conv)
@@ -4412,30 +4452,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                 
             #### delta log-likelihood
             gdatmoditemp = tdpy.util.gdatstrt()
-            gdatmoditemp.propwith = False
-            gdatmoditemp.propbrth = False
-            gdatmoditemp.propsplt = False
-            gdatmoditemp.propmerg = False
-            gdatmoditemp.thisaccpprio = True
-            gdatmoditemp.propdeth = True
-            gdatmoditemp.thissamp = getattr(gdatobjt, strg + 'samp')
-            gdatmoditemp.thislliktotl = lliktotl
-            gdatmoditemp.thissampvarb = sampvarb
-            gdatmoditemp.thisindxpntsfull = indxpntsfull
             for l in range(numbpopl):
-                
-                gdatmoditemp.indxpoplmodi = l
                 dicttemp['deltllik'][l] = empty(numbpnts[l])
                 for k in range(numbpnts[l]):
-                    dicttemp['deltllik'][l][k] = 0.
-                    continue
-                    retr_prop(gdat, gdatmoditemp)
+                    gdatmoditemp.thissamp = getattr(gdatobjt, strg + 'samp')
+                    gdatmoditemp.thissampvarb = sampvarb
+                    gdatmoditemp.thisindxpntsfull = indxpntsfull
+                    retr_thisindxprop(gdat, gdatmoditemp, thisindxpopl=l, deth=True)
+                    retr_prop(gdat, gdatmoditemp, thisindxpnts=k)
                     proc_samp(gdat, gdatmoditemp, 'next')
-                    dicttemp['deltllik'][l][k] = gdatmoditemp.thisdeltlliktotl
-                    print 'gdatmoditemp.thisdeltlliktotl'
-                    print gdatmoditemp.thisdeltlliktotl
-                    print
-
+                    dicttemp['deltllik'][l][k] = gdatmoditemp.nextlliktotl - lliktotl
 
             # temp
             if False and gdat.pntstype == 'lght':
@@ -4465,8 +4491,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                     
                     grad = dstack((gradient(lensfluxmean, gdat.sizepixl, axis=0), gradient(lensfluxmean, gdat.sizepixl, axis=1)))
                     dicttemp['dotpsour'][l] = empty(numbpnts[l])
+                    deflsing = zeros((gdat.numbpixl, 2, numbpnts[l]))
                     for k in range(numbpnts[l]):
-                        dicttemp['dotpsour'][l][k] = mean(sum(grad * deflsing[:, :, :, k], 2))
+                        deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['flux'][l][k], 0., 0., 0., \
+                                                                                                                                                indxpixltemp=indxpixltemp)
+                        dicttemp['dotpsour'][l][k] = mean(sum(grad * deflsing[:, :, k].reshape((gdat.numbsidecart, gdat.numbsidecart, 2)), 2))
 
             ### distribution of component features and derived quantities
             if gdat.numbener > 1:
@@ -4561,8 +4590,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False):
                             dicttemp[strg + strgfeat + 'histprio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
                 
                 setattr(gdatobjt, strg + strgfeat + 'histprio', dicttemp[strg + strgfeat + 'histprio'])
-        
-	    
         
         ### PS indices to compare with the reference catalog
         if strg == 'this' and gdat.numbtrap > 0 and gdat.trueinfo:
@@ -4685,23 +4712,24 @@ def retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl):
     lgalrttr = (1. - ellp) * (cos(angl) * (lgalgrid - lgal) - sin(angl) * (bgalgrid - bgal))
     bgalrttr = sin(angl) * (lgalgrid - lgal) + cos(angl) * (bgalgrid - bgal) 
 
-    # temp
-    #mapssers = spec[:, None, None] * exp(-7.67 * ((sqrt(lgalrttr[None, :, :]**2 + bgalrttr[None, :, :]**2) / size)**0.25 - 1.))
-
-    mapssers = 1e-3 * spec * exp(-7.67 * ((sqrt(lgalrttr**2 + bgalrttr**2) / size)**0.25 - 1.)) / gdat.apix
-    mapssers = mapssers[None, :, :, None]
+    angl = sqrt(lgalrttr[None, :, :, None]**2 + bgalrttr[None, :, :, None]**2)
+    mapssers = retr_sersprof(spec[:, None, None, None], angl, size)
 
     return mapssers
 
+
+def retr_sersprof(spec, angl, size, indx=4):
     
+    fact = 3459.5
+    sersprof = spec / pi / 40320. / (size / fact)**2 * exp(-(angl / (size / fact))**(1. / indx))
+    
+    return sersprof
+
+
 def retr_mapsraww(gdat, lgalgrid, bgalgrid, bacp, lgal, bgal, spec, size, ellp, angl):
     
-    # source emission
-    mapssour = retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl)
+    mapsraww = retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl)
     
-    # total unlensed emission
-    mapsraww = mapssour
-        
     return mapsraww
 
 
