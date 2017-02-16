@@ -127,30 +127,25 @@ def plot_samp(gdat, gdatmodi, strg):
     if strg != 'true':
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                plot_genemaps(gdat, gdatmodi, '', 'datacnts', thisindxener=i, thisindxevtt=m)
+                plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m)
                 if gdat.numbpopl > 1:
                     for l in gdat.indxpopl:
-                        plot_genemaps(gdat, gdatmodi, '', 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
+                        plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
-    if strg == 'post':
-        liststrg = ['medi', 'errr']
-    else:
-        liststrg = [strg]
-    
-    for strgtemp in liststrg:
+    for stdv in [False, True]: 
         if gdat.pntstype == 'lens':
-            plot_genemaps(gdat, gdatmodi, strgtemp, 'conv', tdim=True)
+            plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
             for i in gdat.indxener:
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
             if strg != 'true':
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'deflcomp', tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'deflcomp', tdim=True)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 if strg != 'true':
-                    plot_genemaps(gdat, gdatmodi, strgtemp, 'llik', strgcbar='llik', thisindxener=i, thisindxevtt=m)
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m)
-                plot_genemaps(gdat, gdatmodi, strgtemp, 'resicnts', thisindxener=i, thisindxevtt=m)
+                    plot_genemaps(gdat, gdatmodi, strg, 'llik', strgcbar='llik', thisindxener=i, thisindxevtt=m)
+                plot_genemaps(gdat, gdatmodi, strg, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m)
+                plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
         
     if gdat.pntstype == 'lens':
         print 
@@ -387,11 +382,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     plot_samp(gdat, None, 'post')
     
     if gdat.verbtype > 0:
-        print 'PCAT mosaic...'
+        print 'Plotting a mosaic of samples...'
     
     ## mosaic of images of posterior catalogs 
     plot_mosa(gdat)
-   
+    
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
     
@@ -546,33 +541,43 @@ def plot_chro(gdat):
     indxchro = array([0, 1, 2, 4])
     binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl[:, indxchro])), 50)
 
-    labl = ['Total', 'Proposal', 'Save', 'Plot', 'Posterior', 'Rest']
-    listcolr = ['black', 'b', 'g', 'r', 'm', 'yellow']
+    labl = ['Choice', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Posterior', 'Advance', 'Total']
+    listcolr = ['b', 'g', 'r', 'm', 'orange', 'cyan', 'yellow', 'black']
     numblabl = len(labl)
     figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
     for k in range(numblabl):
-        if k == numblabl - 1:
-            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
-        else:
-            varb = gdat.listchrototl[:, k]
+        varb = gdat.listchrototl[:, k]
         axis.hist(varb, binstime, log=True, label=labl[k], color=listcolr[k], alpha=0.3)
     
     for k in range(numblabl):
-        if k == numblabl - 1:
-            varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
-        else:
-            varb = gdat.listchrototl[:, k]
+        varb = gdat.listchrototl[:, k]
         axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], linewidth=5, facecolor='none')
 
     axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])
     axis.set_xscale('log')
     axis.set_ylim([0.5, None])
-    numbcols = len(labl)
-    make_legd(axis, loca=9, numbcols=numbcols)
+    make_legd(axis)
     axis.set_xlabel('$t$ [ms]')
+    
+    plt.tight_layout()
     figr.savefig(gdat.pathdiag + 'chrototl.pdf')
     plt.close(figr)
+
+    #for k in range(numblabl):
+    #    figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
+    #    if k == numblabl - 1:
+    #        varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
+    #    else:
+    #        varb = gdat.listchrototl[:, k]
+    #    axis.hist(varb, binstime, log=True)
+    #    axis.set_title(labl[k])
+    #    axis.set_xlim([amin(binstime), amax(binstime)])
+    #    axis.set_xscale('log')
+    #    axis.set_xlabel('$t$ [ms]')
+    #    axis.set_ylim([0.5, None])
+    #    figr.savefig(gdat.pathdiag + 'chro%04d.pdf' % k)
+    #    plt.close(figr)
 
     gdat.listchrollik *= 1e3
    
@@ -1187,9 +1192,6 @@ def plot_evidtest():
     
 def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfeatsign=None):
     
-    print 'strgfeatsign'
-    print strgfeatsign
-
     if strgfeatsign != None:
         numbparaplot = getattr(gdat, 'numb' + strgfeatsign + 'plot')
     else:
@@ -1237,7 +1239,7 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfeatsign=None):
             
             # superimpose true PS
             # temp
-            if gdat.trueinfo:
+            try:
                 if strgfeatsign != None:
                     truefeat = getattr(gdat, 'true' + strgfeatsign)[indxpopltemp] 
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
@@ -1246,7 +1248,9 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                 mrkrsize = retr_mrkrsize(gdat, gdat.trueflux[indxpopltemp][indxpnts])
                 axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
-            
+            except:
+                pass
+
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.lablfeattotl['lgal'])
             else:
@@ -1485,7 +1489,7 @@ def plot_mosa(gdat):
                     plt.close(figr)
     else:
         if gdat.verbtype > 0:
-            print 'Skipping the mosaic image plot...'
+            print 'Skipping the mosaic plot...'
 
 
 def plot_grap(plottype='igal', verbtype=0):
@@ -1891,7 +1895,9 @@ def plot_init(gdat):
         
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            if gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
+            
+            # temp
+            if False and gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
                 figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.datacnts, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
@@ -1978,26 +1984,24 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
     plt.close(figr)
     
 
-def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=None, thisindxevtt=-1, tdim=False, thisindxpopl=-1):
+def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=None, thisindxevtt=-1, tdim=False, thisindxpopl=-1, stdv=False):
     
     if strgcbar == None:
         strgcbar = strgvarb
-
-    strgplot = strg + strgvarb
-    
-    maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb)
-    
-    if strg == 'errr':
-        maps = maps[0, ...] * maps[1, ...]
    
-    if strg == 'post':
-        mapserrr = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, errr=True)
-        shaptemp = list(maps.shape) + [4]
-        mapstemp = zeros(shaptemp)
-        mapstemp[..., 0] = maps
-        summgene(mapserrr)
-        mapstemp[..., 3] = mean(mapserrr, axis=0)
-        maps = mapstemp
+    if strgvarb == 'datacnts':
+        strgplot = strgvarb
+    else:
+        if strg == 'post':
+            if stdv:
+                strgtemp = 'stdv'
+            else:
+                strgtemp = 'medi'
+        else:
+            strgtemp = ''
+        strgplot = strgtemp + strgvarb
+    
+    maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, stdv=stdv)
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl)
     
@@ -2005,25 +2009,20 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     vmax = getattr(gdat, 'maxm' + strgcbar)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
-    if strg == 'post':
-        cmap = None
-    else:
-        if strgcbar == 'datacnts':
-            cmap = 'Reds'
-        if strgcbar == 'resicnts':
-            cmap = 'RdBu'
-        if strgcbar == 'deflcomp':
-            cmap = 'Oranges'
-        if strgcbar == 'conv':
-            cmap = 'Purples'
-        if strgcbar == 'llik':
-            cmap = 'YlGn'
+    if strgcbar == 'datacnts':
+        cmap = 'Reds'
+    if strgcbar == 'resicnts':
+        cmap = 'RdBu'
+    if strgcbar == 'deflcomp':
+        cmap = 'Oranges'
+    if strgcbar == 'conv':
+        cmap = 'Purples'
+    if strgcbar == 'llik':
+        cmap = 'YlGn'
 
     imag = retr_imag(gdat, axis, maps, strg, vmin=vmin, vmax=vmax, cmap=cmap, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
     
-    # temp
-    if not strg == 'post':
-        make_cbar(gdat, axis, imag, tick=tick, labl=labl)
+    make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     
     make_catllabl(gdat, axis)
     supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)

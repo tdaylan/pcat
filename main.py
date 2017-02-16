@@ -39,7 +39,7 @@ def init( \
          
          propcova=True, \
          optillik=False, \
-         optiprop=True, \
+         optiprop=False, \
          regulevi=False, \
          
          strgexprflux=None, \
@@ -569,11 +569,11 @@ def init( \
             minmsigm = 0.1
             maxmsigm = 10.
         if gdat.exprtype == 'hubb':
-            minmsigm = 0.05 / gdat.anglfact
-            maxmsigm = 0.15 / gdat.anglfact
+            minmsigm = 0.01 / gdat.anglfact
+            maxmsigm = 0.1 / gdat.anglfact
         if gdat.exprtype == 'chan':
-            minmsigm = 0.5 / gdat.anglfact
-            maxmsigm = 1.5 / gdat.anglfact
+            minmsigm = 0.1 / gdat.anglfact
+            maxmsigm = 2. / gdat.anglfact
         minmgamm = 1.5
         maxmgamm = 20.
         minmonor = 0.01
@@ -605,7 +605,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         minmflux = 5e-11
     if gdat.exprtype == 'chan':
-        minmflux = 1e-7
+        minmflux = 5e-10
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
@@ -615,7 +615,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         maxmflux = 1e-7
     if gdat.exprtype == 'chan':
-        maxmflux = 1e-3
+        maxmflux = 1e-7
     if gdat.exprtype == 'sdyn':
         maxmflux = 1e4
     if gdat.pntstype == 'lens':
@@ -635,6 +635,7 @@ def init( \
     ### spectral index
     if gdat.numbener > 1:
         setp_truedefa(gdat, 'sinddistmean', [1., 3.], popl=True)
+        #### standard deviations should not be too small
         setp_truedefa(gdat, 'sinddiststdv', [0.5, 2.], popl=True)
         setp_truedefa(gdat, 'curvdistmean', [-1., 1.], popl=True)
         setp_truedefa(gdat, 'curvdiststdv', [0.1, 1.], popl=True)
@@ -710,7 +711,7 @@ def init( \
     setp_true(gdat, 'fluxdistslopuppr', 2., popl=True)
     
     setp_true(gdat, 'sinddistmean', 2.5, popl=True)
-    setp_true(gdat, 'sinddiststdv', 0.2, popl=True)
+    setp_true(gdat, 'sinddiststdv', 1., popl=True)
     
     setp_true(gdat, 'curvdistmean', 2., popl=True)
     setp_true(gdat, 'curvdiststdv', 0.2, popl=True)
@@ -1413,6 +1414,7 @@ def init( \
             posttemp = []
             meditemp = []
             errrtemp = []
+            stdvtemp = []
             numbelem = len(listtemp[0])
             for k in range(numbelem):
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
@@ -1422,16 +1424,20 @@ def init( \
                 posttempsing = tdpy.util.retr_postvarb(temp)
                 meditempsing = posttempsing[0, ...]
                 errrtempsing = tdpy.util.retr_errrvarb(posttempsing)
+                stdvtempsing = std(temp)
                 posttemp.append(posttempsing)
                 meditemp.append(meditempsing)
                 errrtemp.append(errrtempsing)
+                stdvtemp.append(stdvtempsing)
         else:
             posttemp = tdpy.util.retr_postvarb(listtemp)
             meditemp = posttemp[0, ...]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
+            stdvtemp = std(posttemp)
         setattr(gdat, 'post' + strg, posttemp)
         setattr(gdat, 'medi' + strg, meditemp)
         setattr(gdat, 'errr' + strg, errrtemp)
+        setattr(gdat, 'stdv' + strg, stdvtemp)
     
     # temp
     if gdat.pntstype == 'lght':
@@ -1711,9 +1717,9 @@ def work(pathoutpthis, lock, indxprocwork):
     # construct the initial state
     if gdat.verbtype > 0:
         print 'Initializing the sampler state...'
-   
+  
     ## unit sample vector
-    gdatmodi.thissamp = zeros(gdat.numbpara)
+    gdatmodi.thissamp = rand(gdat.numbpara)
     gdatmodi.thissampvarb = zeros(gdat.numbpara)
     
     ## Fixed-dimensional parameters
@@ -1792,8 +1798,8 @@ def work(pathoutpthis, lock, indxprocwork):
             print '%15f' % gdatmodi.thissamp[k]
 
     # check the initial unit sample vector for bad entries
-    indxsampbaddlowr = where(gdatmodi.thissamp[gdat.numbpopl:] < 0.)[0] + gdat.numbpopl
-    indxsampbadduppr = where(gdatmodi.thissamp[gdat.numbpopl:] > 1.)[0] + gdat.numbpopl
+    indxsampbaddlowr = where(gdatmodi.thissamp[gdat.numbpopl:] <= 0.)[0] + gdat.numbpopl
+    indxsampbadduppr = where(gdatmodi.thissamp[gdat.numbpopl:] >= 1.)[0] + gdat.numbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'indxsampbadd'
@@ -1802,9 +1808,6 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[:, None]
         raise Exception('Initial unit sample vector went outside the unit interval...')
-        #gdatmodi.thissamp[indxsampbaddlowr] = 0.
-        #gdatmodi.thissamp[indxsampbadduppr] = 1.
-        #print 'Initial unit sample vector went outside the unit interval...'
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
@@ -1941,8 +1944,10 @@ def work(pathoutpthis, lock, indxprocwork):
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
                                                                                                           and gdat.makeplotfram and gdat.makeplot and gdatmodi.optipropdone
         # choose a proposal type
+        timeinit = gdat.functime()
+        
         retr_thisindxprop(gdat, gdatmodi)
-            
+        
         if gdat.verbtype > 1:        
             print
             print '-----'
@@ -1957,6 +1962,9 @@ def work(pathoutpthis, lock, indxprocwork):
             print 'thislpostotl'
             print gdatmodi.thislliktotl + gdatmodi.thislpritotl
             print
+        
+        timefinl = gdat.functime()
+        gdatmodi.thischrototl[0] = timefinl - timeinit
 
         # propose the next sample
         timeinit = gdat.functime()
@@ -1968,7 +1976,9 @@ def work(pathoutpthis, lock, indxprocwork):
        
         # diagnostics
         if gdat.diagmode:
-            # sanity checks
+            
+            timeinit = gdat.functime()
+            
             indxsampbadd = where((gdatmodi.thissamp[gdat.numbpopl:] > 1.) | (gdatmodi.thissamp[gdat.numbpopl:] < 0.))[0] + 1
             if indxsampbadd.size > 0:
                 print 'cntrswep'
@@ -1981,6 +1991,9 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.thissamp[indxsampbadd]
                 raise Exception('Unit sample vector went outside [0,1].')
             
+            if gdatmodi.propwith and gdatmodi.thislpautotl != 0.:
+                raise Exception('Auxiliary variable PDF should is not zero during a within-model proposal.')
+
             gdatmodi.thislpostotl = gdatmodi.thislliktotl + gdatmodi.thislpritotl
             if False and gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:
                 print 'gdatmodi.thislpostotl'
@@ -2000,16 +2013,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 
                 if amin(gdatmodi.nextpntsflux) < 0.:
                     raise Exception('nextpntsflux went negative.')
-
-            # check what has been changed
-            if gdatmodi.cntrswep != 0:
-                # temp
-                pass
-            
-            # temp -- only works for single population
-            # temp
-            #if gdatmodi.cntrswep > 10000 and std(gdatmodi.listsampvarb[where(gdatmodi.listsampvarb[:, gdat.indxfixpnumbpnts[0]] >= 0)[0], gdat.indxfixpnumbpnts[0]]) == 0.:
-            #    raise Exception('Number of PS is not changing.')
 
             # check the population index
             try:
@@ -2054,6 +2057,10 @@ def work(pathoutpthis, lock, indxprocwork):
                     print flux
                     print
                     raise Exception('Spectrum of a PS went outside the prior range.')
+        
+            timefinl = gdat.functime()
+            gdatmodi.thischrototl[2] = timefinl - timeinit
+       
     
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
@@ -2073,10 +2080,13 @@ def work(pathoutpthis, lock, indxprocwork):
             gdatmodi.listspecassc.append(deepcopy(gdatmodi.thisspecassc))
             
             timefinl = gdat.functime()
-            gdatmodi.thischrototl[2] = timefinl - timeinit
+            gdatmodi.thischrototl[3] = timefinl - timeinit
 
         # plot the current sample
         if thismakefram:
+            
+            timeinit = gdat.functime()
+            
             if gdat.verbtype > 0:
                 print 'Process %d is in queue for making a frame.' % indxprocwork
             if gdat.numbproc > 1:
@@ -2084,19 +2094,17 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Process %d started making a frame.' % indxprocwork
             
-            timeinit = gdat.functime()
-            
             proc_samp(gdat, gdatmodi, 'this')
             plot_samp(gdat, gdatmodi, 'this')
             if gdat.verbtype > 0:
                 print 'Process %d finished making a frame.' % indxprocwork
         
-            timefinl = gdat.functime()
-            gdatmodi.thischrototl[3] = timefinl - timeinit
-    
             if gdat.numbproc > 1:
                 lock.release()
         
+            timefinl = gdat.functime()
+            gdatmodi.thischrototl[4] = timefinl - timeinit
+    
         # temp
         if False and gdat.pntstype == 'lght':
             if gdat.psfntype == 'doubking':
@@ -2119,19 +2127,16 @@ def work(pathoutpthis, lock, indxprocwork):
                     print gdatmodi.nextsampvarb[gdat.indxfixppsfp]
                     print 'gdatmodi.propbrth'
                     print gdatmodi.propbrth
-        
+       
+        # determine the acceptance probability
+        timeinit = gdat.functime()
+
         gdatmodi.thisaccpprop = gdatmodi.thisaccpprio and gdatmodi.thisaccppsfn
         if gdatmodi.thisaccpprop:
-            
-            # evaluate the log-prior
-            timeinit = gdat.functime()
             
             proc_samp(gdat, gdatmodi, 'next')
             gdatmodi.thisdeltlliktotl = gdatmodi.nextlliktotl - gdatmodi.thislliktotl
             
-            timefinl = gdat.functime()
-            gdatmodi.thischrototl[4] = timefinl - timeinit
-   
             # evaluate the acceptance probability
             accpprob = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
                                                                                                                                 gdatmodi.thisjcbnfact + gdatmodi.thiscombfact)
@@ -2139,7 +2144,12 @@ def work(pathoutpthis, lock, indxprocwork):
         else:
             accpprob = 0.
     
+        timefinl = gdat.functime()
+        gdatmodi.thischrototl[5] = timefinl - timeinit
+   
         # accept or reject the proposal
+        timeinit = gdat.functime()
+
         if gdatmodi.optillikdone:
             booltemp = accpprob >= rand()
         else:
@@ -2168,10 +2178,13 @@ def work(pathoutpthis, lock, indxprocwork):
 
             gdatmodi.thisaccp = False
         
+        timefinl = gdat.functime()
+        gdatmodi.thischrototl[6] = timefinl - timeinit
+   
         # save the execution time for the sweep
         if not thismakefram:
             timetotlfinl = gdat.functime()
-            gdatmodi.thischrototl[0] = timetotlfinl - timetotlinit
+            gdatmodi.thischrototl[7] = timetotlfinl - timetotlinit
        
         ## variables to be saved for each sweep
         for strg in gdatmodi.liststrgvarbswep:
@@ -2196,6 +2209,11 @@ def work(pathoutpthis, lock, indxprocwork):
                             fact =  100. / float(where(workdict['listindxproptype'][minm:maxm] == k)[0].size)
                             accp = fact * where(logical_and(workdict['listaccp'][minm:maxm], workdict['listindxproptype'][minm:maxm] == k))[0].size
                             print '%s acceptance rate: %.3g%%' % (gdat.legdproptype[k], accp)
+                    print 'Chronometers: '
+                    for k in range(gdatmodi.thischrototl.size):
+                        print '%.3g msec' % (gdatmodi.thischrototl[k] * 1e3)
+                    print
+
 
         if gdat.verbtype > 1:
             print
