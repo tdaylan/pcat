@@ -89,6 +89,7 @@ def plot_samp(gdat, gdatmodi, strg):
             strgindx = '%d' % l
 
             for strgfeat in gdat.liststrgfeat:
+                # temp
                 if not (strgfeat == 'gang' and gdat.spatdisttype[l] != 'gang' or strgfeat == 'curv' and gdat.spectype[l] != 'curv' or strgfeat == 'cnts' or \
                                                                                 strgfeat == 'expo' and gdat.spectype[l] != 'expo' or strgfeat == 'spec'):
                 
@@ -153,9 +154,9 @@ def plot_samp(gdat, gdatmodi, strg):
         
     if gdat.pntstype == 'lens':
         print 
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 100.], scalxaxi='logt', scalyaxi='logt') #\
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 100.], scalxaxi='logt', scalyaxi='logt') #\
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, hist=True)
 
@@ -283,7 +284,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
     for n, axis in enumerate(axgr):
         histtotl = axis.hist(gdat.listindxsamptotl[n], bins=binstimemcmc)[0]
         histaccp = axis.hist(gdat.listindxsamptotlaccp[n], bins=binstimemcmc)[0]
-        axis.set_ylabel('%s' % gdat.strgproptype[n])
+        axis.set_ylabel('%s' % gdat.lablproptype[n])
         if n == gdat.numbproptype - 1:
             axis.set_xlabel('$i_{samp}$')
         # define the y-axis
@@ -467,16 +468,15 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
 
     if gdat.verbtype > 0:
         print 'Binned transdimensional parameters...'
-    
+   
     # stacked posteiors binned in position and flux
     if gdat.numbtrap > 0:
         liststrgbins = ['quad', 'full']
         for l in gdat.indxpopl:
             plot_pntsprob(gdat, l, 'cumu')
-            liststrgfluxspep = gdat.liststrgfluxspep[l]
             for strgbins in liststrgbins:
-                for strgfluxspep in liststrgfluxspep:
-                    plot_pntsprob(gdat, l, strgbins, strgfluxspep)
+                for strgfeatsign in gdat.liststrgfeatsign:
+                    plot_pntsprob(gdat, l, strgbins, strgfeatsign)
 
     if gdat.verbtype > 0:
         print 'Prior and likelihood...'
@@ -863,7 +863,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
 
     xdat = copy(getattr(gdat, strgxdat + 'plot') * factxdat)
     ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
-
+    
     if indxydat != None:
         ydat = ydat[indxydat]
     
@@ -1185,10 +1185,13 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
-  
-    if strgfluxspep != None:
-        numbparaplot = getattr(gdat, 'numb' + strgfluxspep + 'plot')
+def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfeatsign=None):
+    
+    print 'strgfeatsign'
+    print strgfeatsign
+
+    if strgfeatsign != None:
+        numbparaplot = getattr(gdat, 'numb' + strgfeatsign + 'plot')
     else:
         numbparaplot = 1
 
@@ -1198,7 +1201,6 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
     else:
         numbcols = 2
         if strgbins == 'full':
-            
             numbrows = numbparaplot / 2
         else:
             numbrows = 2
@@ -1230,14 +1232,14 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
             else:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi)
                 
-            if strgfluxspep != None:
-                bins = getattr(gdat, 'bins' + strgfluxspep + 'plot')
+            if strgfeatsign != None:
+                bins = getattr(gdat, 'bins' + strgfeatsign + 'plot')
             
             # superimpose true PS
             # temp
             if gdat.trueinfo:
-                if strgfluxspep != None:
-                    truefeat = getattr(gdat, 'true' + strgfluxspep)[indxpopltemp] 
+                if strgfeatsign != None:
+                    truefeat = getattr(gdat, 'true' + strgfeatsign)[indxpopltemp] 
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
                 else:
                     indxpnts = arange(gdat.trueflux[indxpopltemp].size)
@@ -1256,20 +1258,20 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfluxspep=None):
 
             draw_frambndr(gdat, axis)
             
-            if strgfluxspep != None:
-                strgfeat = gdat.lablfeat[strgfluxspep]
+            if strgfeatsign != None:
+                strgfeat = gdat.lablfeat[strgfeatsign]
                 titl = tdpy.util.mexp(gdat.fluxfactplot * bins[indxlowr]) + ' < $%s$ < ' % strgfeat + tdpy.util.mexp(gdat.fluxfactplot * bins[indxuppr])
                 axis.set_title(titl)
     
-    if strgfluxspep != None:
-        strgfeat = gdat.lablfeattotl[strgfluxspep]
+    if strgfeatsign != None:
+        strgfeat = gdat.lablfeattotl[strgfeatsign]
         plt.figtext(0.5, 0.95, '%s' % strgfeat, ha='center', va='center')
     axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
     cbar = figr.colorbar(imag, cax=axiscomm)
 
     plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)
-    if strgfluxspep != None:
-        strgtemp = strgfluxspep
+    if strgfeatsign != None:
+        strgtemp = strgfeatsign
     else:
         strgtemp = ''
     path = gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
@@ -1462,7 +1464,7 @@ def plot_mosa(gdat):
                                 axis.set_yticklabels([])
                             
                             imag = retr_imag(gdat, axis, gdat.datacnts, '', thisindxener=i, thisindxevtt=m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, scal=gdat.scalmaps)
-                            supr_fram(gdat, gdatmodi, axis, l)
+                            supr_fram(gdat, gdatmodi, 'this', axis, l)
                     
                     if gdat.enerbins:
                         plt.figtext(0.5, 0.93, gdat.strgener[i], ha='center', va='center')
@@ -1789,19 +1791,21 @@ def plot_init(gdat):
             #plot_king(gdat)
     
             if gdat.pntstype == 'lens':
-                listbein = array([0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.4, 0.4, 0.4, 0.4]) / gdat.anglfact
-                listanglcutf = array([0.8, 1.6, 1e10, 0.]) / gdat.anglfact
-                listasym = [False, False, True]
-                listydat = []
-                for bein, anglscal, anglcutf, asym in zip(listbein, listanglscal, listanglcutf, listasym):
-                    listydat.append(retr_deflcutf(gdat.binsanglplot, bein, anglscal, anglcutf, asym=asym))
-                
                 xdat = gdat.binsanglplot * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
+                listbein = array([0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
+                listanglscal = array([0.4, 0.4, 0.4, 0.4]) / gdat.anglfact
+                listanglcutf = array([0.8, 1.6, 1e10, 0.]) / gdat.anglfact
+                listasym = [False, False, False, True]
+                listydat = []
+                for bein, anglscal, anglcutf, asym in zip(listbein, listanglscal, listanglcutf, listasym):
+                    listydat.append(retr_deflcutf(gdat.binsanglplot, bein, anglscal, anglcutf, asym=asym) * gdat.anglfact)
+                
+                listydat.append(xdat * 0. + 0.05)
+                
                 path = gdat.pathinit + 'deflcutf.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$')
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
        
                 spec = 1e-19 # [erg/cm^2/s]
                 listsize = array([1., 1., 1.]) / gdat.anglfact
@@ -1819,29 +1823,66 @@ def plot_init(gdat):
                 numbreds = 200
                 retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
                 retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
-                fact = zeros((numbreds + 1, numbreds + 1))
                 
                 import camb
                 pars = camb.CAMBparams()
                 cambdata = camb.get_background(pars)
+                
+                gdat.meanadishost = empty(numbreds)
+                for k in range(numbreds):
+                    gdat.meanadishost[k] = cambdata.angular_diameter_distance(gdat.meanredshost[k]) * 1e3
+                
+                minmmass = zeros((numbreds + 1, numbreds + 1))
+                maxmmass = zeros((numbreds + 1, numbreds + 1))
                 for k, redshost in enumerate(gdat.binsredshost):
                     for n, redssour in enumerate(gdat.binsredssour):
                         if redssour > redshost:
                             adishost = cambdata.angular_diameter_distance(redshost)
                             adissour = cambdata.angular_diameter_distance(redssour)
                             adishostsour = cambdata.angular_diameter_distance2(redshost, redssour)
-                            fact[n, k] = log(adishostsour / adissour / adishost)
-                
+                            adisfact = adissour * adishost / adishostsour
+                            massfrombein = adisfact * 2.09e19 / 4.
+                            minmmass[n, k] = log10(massfrombein * gdat.minmflux**2)
+                            maxmmass[n, k] = log10(massfrombein * gdat.maxmflux**2)
+               
+                valulevl = linspace(6., 12., 20)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                imag = axis.imshow(fact, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto')
+                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=10)
+                cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
+                axis.clabel(cont, inline=1, fontsize=10)
                 axis.set_xlabel('$z_h$')
                 axis.set_ylabel('$z_s$')
-                axis.set_title(r'$f(D)$ [1/Mpc]')
-                path = gdat.pathinit + 'factadis.pdf'
+                axis.set_title(r'$M$ [$M_{\odot}$]')
+                path = gdat.pathinit + 'massredsminm.pdf'
                 plt.colorbar(imag) 
                 plt.tight_layout()
                 figr.savefig(path)
                 plt.close(figr)
+                
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=10)
+                cont = axis.contour(gdat.binsredshost, gdat.binsredssour, maxmmass, 10, colors='g', levels=valulevl)
+                axis.clabel(cont, inline=1, fontsize=10)
+                axis.set_xlabel('$z_h$')
+                axis.set_ylabel('$z_s$')
+                axis.set_title(r'$M$ [$M_{\odot}$]')
+                path = gdat.pathinit + 'massredsmaxm.pdf'
+                plt.colorbar(imag) 
+                plt.tight_layout()
+                figr.savefig(path)
+                plt.close(figr)
+                
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                axis.plot(gdat.meanredshost, gdat.meanadishost * gdat.sizepixl)
+                axis.plot(gdat.meanredshost, gdat.meanadishost * 2. * gdat.maxmgangdata)
+                axis.set_xlabel('$z_h$')
+                axis.set_yscale('log')
+                axis.set_ylabel(r'$\lambda$ [kpc]')
+                path = gdat.pathinit + 'wlenreds.pdf'
+                plt.tight_layout()
+                figr.savefig(path)
+                plt.close(figr)
+                
     
 
             if gdat.evalcirc and gdat.pntstype == 'lght':
@@ -1911,8 +1952,8 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
     defl = retr_fromgdat(gdat, gdatmodi, strg, strgvarb)
    
     # temp
-    if strgcomp == 'resi':
-        defl *= 1e2
+    #if strgcomp == 'resi':
+    #    defl *= 1e2
 
     strgplot = strg + strgvarb
 
@@ -1931,7 +1972,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
     axis.imshow(zeros((10, 10)))
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
                   gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], scale_units='xy', angles='xy', scale=1)
-    supr_fram(gdat, gdatmodi, axis)
+    supr_fram(gdat, gdatmodi, strg, axis)
     #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
     figr.savefig(path)
     plt.close(figr)
@@ -1985,7 +2026,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
         make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     
     make_catllabl(gdat, axis)
-    supr_fram(gdat, gdatmodi, axis, thisindxpopl)
+    supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
 
     plt.tight_layout()
     figr.savefig(path)
