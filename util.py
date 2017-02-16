@@ -1804,9 +1804,9 @@ def retr_detrcatl(gdat):
                         
                         listdist[indxelemfrst, indxelemseco] = dist
                         
-                        if cntr % 10000 == 0:
-                            print 'cntr'
-                            print cntr
+                        #if cntr % 10000 == 0:
+                        #    print 'cntr'
+                        #    print cntr
 
                         cntrperc = 5 * floor(20. * cntr / numbelem**2)
                         if cntrperc > cntrpercsave:

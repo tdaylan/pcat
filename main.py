@@ -1377,9 +1377,7 @@ def init( \
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     ## construct a deterministic catalog
-    # temp
-    if gdat.strgcnfg == 'pcat_ferm_mock_ngal':
-        retr_detrcatl(gdat)
+    retr_detrcatl(gdat)
     
     # construct lists of samples for each proposal type
     gdat.listindxsamptotlaccpprop = []
@@ -1908,6 +1906,7 @@ def work(pathoutpthis, lock, indxprocwork):
 
     while gdatmodi.cntrswep < gdat.numbswep:
         
+        gdatmodi.thischrototl[:] = 0.
         #print 'gdatmodi.listllikopti'
         #print gdatmodi.listllikopti
         #print 'gdatmodi.listllikopti'
