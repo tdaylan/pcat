@@ -767,10 +767,6 @@ def retr_fermpsfn(gdat):
             indxfermpsfptemp = m * numbpsfpform * gdat.numbener + gdat.indxener * numbpsfpform + k
             gdat.exprpsfp[indxfermpsfptemp] = fermform[:, m, k]
     
-    print 'gdat.exprpsfp'
-    print gdat.exprpsfp
-    print
-
     # calculate the scale factor
     gdat.fermscalfact = sqrt((fermscal[None, :, 0] * (10. * gdat.meanener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
     
@@ -3908,13 +3904,18 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     for k in range(lgal.size):
                         axis.add_artist(plt.Circle((gdat.anglfact * lgal[k], gdat.anglfact * bgal[k]), \
                                     gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l][k]], edgecolor='b', facecolor='none', ls='--', lw=2))
-    
-    if strg == 'post':
-        flux = array([gdat.dictglob['postelemdetr'][r]['flux'][0] for r in range(gdat.numbpntsdetr)])
-        mrkrsize = retr_mrkrsize(gdat, flux)
-        lgal = array([gdat.dictglob['postelemdetr'][r]['lgal'][0] for r in range(gdat.numbpntsdetr)])
-        bgal = array([gdat.dictglob['postelemdetr'][r]['bgal'][0] for r in range(gdat.numbpntsdetr)])
-        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Nondegenerate', marker='+', linewidth=2, color='black')
+   
+    # temp
+    try:
+        if strg == 'post':
+            flux = array([gdat.dictglob['postelemdetr'][r]['flux'][0] for r in range(gdat.numbpntsdetr)])
+            mrkrsize = retr_mrkrsize(gdat, flux)
+            lgal = array([gdat.dictglob['postelemdetr'][r]['lgal'][0] for r in range(gdat.numbpntsdetr)])
+            bgal = array([gdat.dictglob['postelemdetr'][r]['bgal'][0] for r in range(gdat.numbpntsdetr)])
+            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Nondegenerate', marker='+', linewidth=2, color='black')
+    except:
+        pass
+
 
 
 def retr_levi(listllik):

@@ -1840,13 +1840,6 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
-    
-
-    print 'gdatmodi.thissampvarb'
-    print gdatmodi.thissampvarb[gdat.indxfixppsfp]
-    print 'gdat.exprpsfp'
-    print gdat.exprpsfp
-    print
 
     if gdat.verbtype > 1:
         print 'thissamp, thissampvarb'
