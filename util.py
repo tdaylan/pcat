@@ -1755,7 +1755,6 @@ def retr_detrcatl(gdat):
 
     # find the total number of elements across all the samples
     numbelem = 0
-    cntr = 0
     indxtupl = []
     indxelem = []
     indxelemsamp = []
@@ -1781,6 +1780,7 @@ def retr_detrcatl(gdat):
         print 'numbelem'
         print numbelem
 
+    cntr = -1
     numbassc = zeros(numbelem)
     listdist = zeros((numbelem, numbelem)) + 1e20
     cntrpercsave = 0
@@ -1793,13 +1793,15 @@ def retr_detrcatl(gdat):
                         indxpntsseco = array(gdat.listindxpntsfull[nn][ll])
                         indxelemseco = array(indxelem[nn][ll])
                         
+                        cntr += indxpntsseco.size
+                        
                         if n == nn or len(gdat.listindxpntsfull[nn][ll]) == 0:
                             continue
                 
                         ## compute distance
                         indxsampfrst = retr_indxsamppnts(gdat, l, array([gdat.listindxpntsfull[n][l][k]]))
                         indxsampseco = retr_indxsamppnts(gdat, l, indxpntsseco)
-                        dist = sum(gdat.listsamp[n, indxsampfrst][:, None] - gdat.listsamp[nn, indxsampseco.reshape((indxsampfrst.size, -1))], axis=0)**2
+                        dist = sqrt(sum((gdat.listsamp[n, indxsampfrst][:, None] - gdat.listsamp[nn, indxsampseco.reshape((indxsampfrst.size, -1))])**2, axis=0))
                         
                         listdist[indxelemfrst, indxelemseco] = dist
                         
@@ -1812,8 +1814,7 @@ def retr_detrcatl(gdat):
                         if cntrperc > cntrpercsave:
                             if gdat.verbtype > 0:
                                 print 'Distance table calculation %d%% completed.' % cntrpercsave
-                            cntrsave = cntr
-                        cntr += 1
+                            cntrpercsave = cntrperc
 
     indxelemleft = range(numbelem)
     distthrs = 0.1
@@ -1827,7 +1828,11 @@ def retr_detrcatl(gdat):
         print listdist
     
     while len(indxelemleft) > 0 and cntr < 10:
-       
+        
+        if gdat.verbtype > 1:
+            print 'indxelemassc'
+            print indxelemassc
+
         # count number of associations
         numbassc = zeros(numbelem, dtype=int) - 1
         for p in range(len(indxelemleft)):
@@ -1845,12 +1850,12 @@ def retr_detrcatl(gdat):
 
         if gdat.verbtype > 1:
             print 'Match step %d' % cntr
-            print 'indxelemleft'
-            print indxelemleft
             print 'numbassc'
             print numbassc
             print 'indxelemcntr'
             print indxelemcntr
+            print 'indxelemleft'
+            print indxelemleft
         
         # add the central element sample
         # add the associated element samples
@@ -1862,8 +1867,6 @@ def retr_detrcatl(gdat):
                 if gdat.verbtype > 1:
                     print 'n'
                     print n
-                    print 'indxelemleft'
-                    print indxelemleft
                     print 'indxelemsamp[n]'
                     print indxelemsamp[n]
                     print 'indxelemtemp'
@@ -1877,21 +1880,28 @@ def retr_detrcatl(gdat):
                     indxelemthis = indxelemtemp[indxleft]
                 
                     if gdat.verbtype > 1:
-                        print 'indxelemtemp'
-                        print indxelemtemp
                         print 'indxleft'
                         print indxleft
                         print 'indxelemthis'
                         print indxelemthis
                         print 'listdist[indxelemcntr, indxelemthis]'
                         print listdist[indxelemcntr, indxelemthis]
-                        print
                 
                     if listdist[indxelemcntr, indxelemthis] < distthrs:
                         indxelemassc[cntr].append(indxelemthis)
                         indxelemleft.remove(indxelemthis)
+                        if gdat.verbtype > 1:
+                            print 'Appending...'
             
+                if gdat.verbtype > 1:
+                    print 
+
             cntr += 1
+        
+        if gdat.verbtype > 1:
+            print 
+            print 
+            print 
         
     if gdat.verbtype > 1:
         print 'gdat.listindxpntsfull'
@@ -2606,7 +2616,7 @@ def setpinit(gdat, boolinitsetp=False):
                 if gdat.specfraceval == 0:
                     gdat.maxmangleval[h] = 3. * gdat.maxmgang
                 else:  
-                    frac = gdat.specfraceval * gdat.binsprox[0] / gdat.binsprox[h+1]
+                    frac = min(1e-4, gdat.specfraceval * gdat.binsprox[0] / gdat.binsprox[h+1])
                     psfnwdth = retr_psfnwdth(gdat, gdat.exprpsfn, frac)
                     gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                     gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
@@ -2682,7 +2692,7 @@ def setpinit(gdat, boolinitsetp=False):
 
     ## marker opacity
     gdat.alphmrkr = 0.5
-    gdat.alphpnts = 0.4
+    gdat.alphpnts = 0.7
     gdat.alphmaps = 1.
     
     # number of colorbar ticks in the maps
