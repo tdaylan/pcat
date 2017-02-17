@@ -507,8 +507,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s' % strg
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat'), labldelt)
         if gdat.numbproc > 1:
-            path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc' % strg
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totl'), labldelt, titl='All processes')
+            for k in gdat.indxproc:
+                path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc%04d' % (strg, k)
+                tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totl')[:, k], labldelt, titl='Process %d' % k)
         for n in gdat.indxproptype:
             path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_%s' % (strg, gdat.nameproptype[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])

@@ -1748,12 +1748,10 @@ def retr_eerrnorm(minmvarb, maxmvarb, meanvarb, stdvvarb):
     
 
 def retr_detrcatl(gdat):
-   
-    if gdat.verbtype > 0:
-        print 'Constructing a labeled catalog...'
-
-    #print 'gdat.listindxpntsfull'
-    #print gdat.listindxpntsfull
+  
+    if gdat.verbtype > 1:
+        print 'gdat.listindxpntsfull'
+        print gdat.listindxpntsfull
 
     # find the total number of elements across all the samples
     numbelem = 0
@@ -1773,14 +1771,15 @@ def retr_detrcatl(gdat):
                 numbelem += 1
         indxelemsamp.append(array(indxelemsamptemp))
     
-    #print 'indxelem'
-    #print indxelem
-    #print 'indxtupl'
-    #print indxtupl
-    #print 'indxelemsamp'
-    #print indxelemsamp
-    #print 'numbelem'
-    #print numbelem
+    if gdat.verbtype > 1:
+        print 'indxelem'
+        print indxelem
+        print 'indxtupl'
+        print indxtupl
+        print 'indxelemsamp'
+        print indxelemsamp
+        print 'numbelem'
+        print numbelem
 
     numbassc = zeros(numbelem)
     listdist = zeros((numbelem, numbelem)) + 1e20
@@ -1804,14 +1803,15 @@ def retr_detrcatl(gdat):
                         
                         listdist[indxelemfrst, indxelemseco] = dist
                         
-                        #if cntr % 10000 == 0:
-                        #    print 'cntr'
-                        #    print cntr
+                        if gdat.verbtype > 1:
+                            if cntr % 10000 == 0:
+                                print 'cntr'
+                                print cntr
 
                         cntrperc = 5 * floor(20. * cntr / numbelem**2)
                         if cntrperc > cntrpercsave:
-                            #if gdat.verbtype > 0:
-                            #    print '%d%% completed.' % cntrpercsave
+                            if gdat.verbtype > 0:
+                                print 'Distance table calculation %d%% completed.' % cntrpercsave
                             cntrsave = cntr
                         cntr += 1
 
@@ -1822,8 +1822,9 @@ def retr_detrcatl(gdat):
     indxelemassc = []
     cntr = 0
     
-    #print 'listdist'
-    #print listdist
+    if gdat.verbtype > 1:
+        print 'listdist'
+        print listdist
     
     while len(indxelemleft) > 0 and cntr < 10:
        
@@ -1842,13 +1843,14 @@ def retr_detrcatl(gdat):
         indxelemassc[cntr].append(indxelemcntr)
         indxelemleft.remove(indxelemcntr)
 
-        #print 'Match step %d' % cntr
-        #print 'indxelemleft'
-        #print indxelemleft
-        #print 'numbassc'
-        #print numbassc
-        #print 'indxelemcntr'
-        #print indxelemcntr
+        if gdat.verbtype > 1:
+            print 'Match step %d' % cntr
+            print 'indxelemleft'
+            print indxelemleft
+            print 'numbassc'
+            print numbassc
+            print 'indxelemcntr'
+            print indxelemcntr
         
         # add the central element sample
         # add the associated element samples
@@ -1857,14 +1859,15 @@ def retr_detrcatl(gdat):
                 
                 indxelemtemp = intersect1d(array(indxelemleft), indxelemsamp[n])
                 
-                #print 'n'
-                #print n
-                #print 'indxelemleft'
-                #print indxelemleft
-                #print 'indxelemsamp[n]'
-                #print indxelemsamp[n]
-                #print 'indxelemtemp'
-                #print indxelemtemp
+                if gdat.verbtype > 1:
+                    print 'n'
+                    print n
+                    print 'indxelemleft'
+                    print indxelemleft
+                    print 'indxelemsamp[n]'
+                    print indxelemsamp[n]
+                    print 'indxelemtemp'
+                    print indxelemtemp
                 
                 if n == indxsamptotlcntr:
                     continue
@@ -1873,15 +1876,16 @@ def retr_detrcatl(gdat):
                     indxleft = argsort(listdist[indxelemcntr, indxelemtemp])[0]
                     indxelemthis = indxelemtemp[indxleft]
                 
-                    #print 'indxelemtemp'
-                    #print indxelemtemp
-                    #print 'indxleft'
-                    #print indxleft
-                    #print 'indxelemthis'
-                    #print indxelemthis
-                    #print 'listdist[indxelemcntr, indxelemthis]'
-                    #print listdist[indxelemcntr, indxelemthis]
-                    #print
+                    if gdat.verbtype > 1:
+                        print 'indxelemtemp'
+                        print indxelemtemp
+                        print 'indxleft'
+                        print indxleft
+                        print 'indxelemthis'
+                        print indxelemthis
+                        print 'listdist[indxelemcntr, indxelemthis]'
+                        print listdist[indxelemcntr, indxelemthis]
+                        print
                 
                     if listdist[indxelemcntr, indxelemthis] < distthrs:
                         indxelemassc[cntr].append(indxelemthis)
@@ -1889,9 +1893,10 @@ def retr_detrcatl(gdat):
             
             cntr += 1
         
-    #print 'indxelemassc'
-    #print indxelemassc
-    #print
+    if gdat.verbtype > 1:
+        print 'indxelemassc'
+        print indxelemassc
+        print
 
     gdat.dictglob['listelemdetr'] = []
     gdat.dictglob['postelemdetr'] = []
@@ -1908,24 +1913,26 @@ def retr_detrcatl(gdat):
             indxpoplcntr = indxtupl[indxelemassc[r][k]][1]
             indxpntscntr = indxtupl[indxelemassc[r][k]][2]
             
-            #print 'indxsamptotlcntr'
-            #print indxsamptotlcntr
-            #print 'indxpoplcntr'
-            #print indxpoplcntr
-            #print 'indxpntscntr'
-            #print indxpntscntr
-            #print
+            if gdat.verbtype > 1:
+                print 'indxsamptotlcntr'
+                print indxsamptotlcntr
+                print 'indxpoplcntr'
+                print indxpoplcntr
+                print 'indxpntscntr'
+                print indxpntscntr
+                print
             
             for strgcomp in gdat.liststrgcomptotl:
                 temp = getattr(gdat, 'list' + strgcomp)
                 
-                #print 'strgcomp'
-                #print strgcomp
-                #print 'getattr(gdat, list + strgcomp)'
-                #print getattr(gdat, 'list' + strgcomp)
-                #print 'gdat.listindxpntsfull'
-                #print gdat.listindxpntsfull
-                #print 
+                if gdat.verbtype > 1:
+                    print 'strgcomp'
+                    print strgcomp
+                    print 'getattr(gdat, list + strgcomp)'
+                    print getattr(gdat, 'list' + strgcomp)
+                    print 'gdat.listindxpntsfull'
+                    print gdat.listindxpntsfull
+                    print 
 
                 temp = temp[indxpoplcntr][indxsamptotlcntr][indxpntscntr]
                 gdat.dictglob['listelemdetr'][r][strgcomp].append(temp)
@@ -1939,18 +1946,18 @@ def retr_detrcatl(gdat):
             gdat.dictglob['postelemdetr'][r][strgcomp][1] = percentile(arry, 16.)
             gdat.dictglob['postelemdetr'][r][strgcomp][2] = percentile(arry, 84.)
    
-    #print 'gdat.dictglob[postelemdetr]'
-    #print gdat.dictglob['postelemdetr']
-    #print 'gdat.dictglob[listelemdetr]'
-    #for r in range(len(gdat.dictglob['listelemdetr'])):
-    #    print 'r'
-    #    print r
-    #    for strgcomp in gdat.liststrgcomptotl:
-    #        print strgcomp
-    #        print gdat.dictglob['listelemdetr'][r][strgcomp]
-    #        print 
+    if gdat.verbtype > 1:
+        print 'gdat.dictglob[postelemdetr]'
+        print gdat.dictglob['postelemdetr']
+        print 'gdat.dictglob[listelemdetr]'
+        for r in range(len(gdat.dictglob['listelemdetr'])):
+            print 'r'
+            print r
+            for strgcomp in gdat.liststrgcomptotl:
+                print strgcomp
+                print gdat.dictglob['listelemdetr'][r][strgcomp]
+                print 
         
-
         
 def retr_conv(gdat, defl):
     

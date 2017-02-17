@@ -40,6 +40,7 @@ def init( \
          propcova=True, \
          optillik=False, \
          optiprop=False, \
+         optipropsimp=True, \
          regulevi=False, \
          
          strgexprflux=None, \
@@ -1369,16 +1370,24 @@ def init( \
         timeinit = gdat.functime()
    
     gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts, verbtype=gdat.verbtype)
-    if gdat.timeatcr == 0.:
-        print 'Autocorrelation time estimation failed.'
 
     if gdat.verbtype > 0:
+        if gdat.timeatcr == 0.:
+            print 'Autocorrelation time estimation failed.'
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     ## construct a deterministic catalog
+    if gdat.verbtype > 0:
+        print 'Constructing a labeled catalog...'
+        timeinit = gdat.functime()
+   
     retr_detrcatl(gdat)
     
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
     # construct lists of samples for each proposal type
     gdat.listindxsamptotlaccpprop = []
     gdat.listindxsamptotl = []
@@ -1809,7 +1818,13 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
-             
+    
+
+    print 'gdatmodi.thissampvarb'
+    print gdatmodi.thissampvarb[gdat.indxfixppsfp]
+    print gdat.exprpsfp
+    print
+
     if gdat.verbtype > 1:
         print 'thissamp, thissampvarb'
         for k in gdat.indxpara:
@@ -2208,10 +2223,20 @@ def work(pathoutpthis, lock, indxprocwork):
                             fact =  100. / float(where(workdict['listindxproptype'][minm:maxm] == k)[0].size)
                             accp = fact * where(logical_and(workdict['listaccp'][minm:maxm], workdict['listindxproptype'][minm:maxm] == k))[0].size
                             print '%s acceptance rate: %.3g%%' % (gdat.legdproptype[k], accp)
+                        
+                        if gdat.optipropsimp and k == gdat.indxproptypewith and accp < 1.:
+                            gdatmodi.cntrswep = 0
+                            gdatmodi.percswepsave = -1.
+                            gdatmodi.stdvstdp /= 2.
+                            if gdat.verbtype > 0:
+                                print 'Acceptance ratio went below 1%%.'
+                                print 'Restarting the chain with a smaller proposal scale...'
+                                
                     print 'Chronometers: '
                     for k in range(gdatmodi.thischrototl.size):
                         print '%.3g msec' % (gdatmodi.thischrototl[k] * 1e3)
                     print
+
 
 
         if gdat.verbtype > 1:
