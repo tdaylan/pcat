@@ -1829,22 +1829,18 @@ def plot_init(gdat):
                 retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
                 retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
                 
-                import camb
-                pars = camb.CAMBparams()
-                cambdata = camb.get_background(pars)
-                
                 gdat.meanadishost = empty(numbreds)
                 for k in range(numbreds):
-                    gdat.meanadishost[k] = cambdata.angular_diameter_distance(gdat.meanredshost[k]) * 1e3
+                    gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
                 
                 minmmass = zeros((numbreds + 1, numbreds + 1))
                 maxmmass = zeros((numbreds + 1, numbreds + 1))
                 for k, redshost in enumerate(gdat.binsredshost):
                     for n, redssour in enumerate(gdat.binsredssour):
                         if redssour > redshost:
-                            adishost = cambdata.angular_diameter_distance(redshost)
-                            adissour = cambdata.angular_diameter_distance(redssour)
-                            adishostsour = cambdata.angular_diameter_distance2(redshost, redssour)
+                            adishost = gdat.adisobjt(redshost) * 1e3
+                            adissour = gdat.adisobjt(redssour) * 1e3
+                            adishostsour = (gdat.adisobjt(redssour) - gdat.adisobjt(redshost)) / (1. + redssour) * 1e3
                             adisfact = adissour * adishost / adishostsour
                             massfrombein = adisfact * 2.09e19 / 4.
                             minmmass[n, k] = log10(massfrombein * gdat.minmflux**2)

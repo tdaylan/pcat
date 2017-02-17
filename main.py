@@ -83,7 +83,9 @@ def init( \
          numbangl=1000, \
          binsangltype='logt', \
          numbsidepntsprob=400, \
-         
+         meanlgalprio=None, \
+         meanbgalprio=None, \
+
          lablgangunit=None, \
          labllgal=None, \
          lablbgal=None, \
@@ -415,7 +417,12 @@ def init( \
             gdat.maxmgangdata = 1.
         if gdat.exprtype == 'hubb':
             gdat.maxmgangdata = 2. / gdat.anglfact
-    
+   
+    if gdat.meanlgalprio == None or gdat.meanbgalprio == None:
+        gdat.numbspatprio = 20
+        gdat.meanlgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+        gdat.meanbgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
         retr_fermpsfn(gdat)
@@ -737,6 +744,14 @@ def init( \
     setpinit(gdat, True) 
     setp_fixp(gdat, strgpara='true')
     
+    gdat.lpdfspatprio = zeros((gdat.numbsidecart, gdat.numbsidecart))
+    for k in range(gdat.numbspatprio):
+        gdat.lpdfspatprio[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.lgalcart - gdat.meanlgalprio[k])**2 / gdat.stdvspatprio**2) * \
+                                                                            exp(-0.5 * (gdat.bgalcart - gdat.meanbgalprio[k])**2 / gdat.stdvspatprio**2)
+    gdat.lpdfspatprio += 1e-1 * amax(gdat.lpdfspatprio)
+    gdat.lpdfspatprio = log(gdat.lpdfspatprio)
+    gdat.lpdfspatprio = sp.interpolate.RectBivariateSpline(gdat.lgalcart, gdat.bgalcart, gdat.lpdfspatprio)
+    
     # intermediate setup
     if gdat.numbener > 1:
         gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
@@ -1038,6 +1053,11 @@ def init( \
                     gdat.truelgal[l] = icdf_self(rand(gdat.truenumbpnts[l]), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
                     gdat.truebgal[l] = icdf_expo(rand(gdat.truenumbpnts[l]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpbgaldistscal[l]]) * \
                                                                                                 choice(array([1., -1.]), size=gdat.truenumbpnts[l])
+                
+                if gdat.truespatdisttype[l] == 'gaus':
+                    for k in range(gdat.truenumbpnts[l]):
+                        gdat.truelgal[l] = icdf_gaus(rand(), gdat.meanlgalprio[k], gdat.stdvlgalprio[k])
+                        gdat.truebgal[l] = icdf_gaus(rand(), gdat.meanbgalprio[k], gdat.stdvbgalprio[k])
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
                 gdat.truespecplot[l] = empty((gdat.numbenerplot, gdat.truenumbpnts[l]))

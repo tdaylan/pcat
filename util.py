@@ -1898,9 +1898,16 @@ def retr_detrcatl(gdat):
             cntr += 1
         
     if gdat.verbtype > 1:
+        print 'gdat.listindxpntsfull'
+        print gdat.listindxpntsfull
         print 'indxelemassc'
         print indxelemassc
         print
+        for strgcomp in gdat.liststrgcomptotl:
+            print 'strgcomp'
+            print strgcomp
+            print 'getattr(gdat, list + strgcomp)'
+            print getattr(gdat, 'list' + strgcomp)
 
     gdat.dictglob['listelemdetr'] = []
     gdat.dictglob['postelemdetr'] = []
@@ -1928,16 +1935,6 @@ def retr_detrcatl(gdat):
             
             for strgcomp in gdat.liststrgcomptotl:
                 temp = getattr(gdat, 'list' + strgcomp)
-                
-                if gdat.verbtype > 1:
-                    print 'strgcomp'
-                    print strgcomp
-                    print 'getattr(gdat, list + strgcomp)'
-                    print getattr(gdat, 'list' + strgcomp)
-                    print 'gdat.listindxpntsfull'
-                    print gdat.listindxpntsfull
-                    print 
-
                 temp = temp[indxpoplcntr][indxsamptotlcntr][indxpntscntr]
                 gdat.dictglob['listelemdetr'][r][strgcomp].append(temp)
     
@@ -1951,8 +1948,6 @@ def retr_detrcatl(gdat):
             gdat.dictglob['postelemdetr'][r][strgcomp][2] = percentile(arry, 84.)
    
     if gdat.verbtype > 1:
-        print 'gdat.dictglob[postelemdetr]'
-        print gdat.dictglob['postelemdetr']
         print 'gdat.dictglob[listelemdetr]'
         for r in range(len(gdat.dictglob['listelemdetr'])):
             print 'r'
@@ -1961,6 +1956,8 @@ def retr_detrcatl(gdat):
                 print strgcomp
                 print gdat.dictglob['listelemdetr'][r][strgcomp]
                 print 
+        print 'gdat.dictglob[postelemdetr]'
+        print gdat.dictglob['postelemdetr']
         
         
 def retr_conv(gdat, defl):
@@ -2205,15 +2202,17 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.trueinfo = gdat.datatype == 'mock' or gdat.exprinfo
     
     if gdat.pntstype == 'lens':
-        import camb
-        pars = camb.CAMBparams()
-        cambdata = camb.get_background(pars)
-        
+        h5f = h5py.File(gdat.pathdata + 'inpt/adiscoef.h5','r')
+        adiscoef = h5f['adiscoef']#[:]
+        gdat.adisobjt = poly1d(adiscoef)
+        h5f.close()
+
         gdat.redshost = 0.5
         gdat.redssour = 2.
-        gdat.adishost = cambdata.angular_diameter_distance(gdat.redshost)
-        gdat.adissour = cambdata.angular_diameter_distance(gdat.redssour)
-        gdat.adishostsour = cambdata.angular_diameter_distance2(gdat.redshost, gdat.redssour)
+
+        gdat.adishost = gdat.adisobjt(gdat.redshost)
+        gdat.adissour = gdat.adisobjt(gdat.redssour)
+        gdat.adishostsour = gdat.adisobjt(gdat.redssour - gdat.redshost) / (1. + gdat.redssour)
         gdat.adisfact = gdat.adishost * gdat.adissour / gdat.adishostsour
         gdat.massfrombein = gdat.adisfact * 2.09e19
 
@@ -2379,11 +2378,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.indxpixlrofi = arange(gdat.numbdatasamp)
         gdat.apix = (2. * gdat.maxmgangdata)**2
     else:
+        gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
+        gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
+        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
         if gdat.pixltype == 'cart':
-            gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
-            gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
-            gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
-            gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
             gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
             gdat.sizepixl = sqrt(gdat.apix)
             gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
@@ -2813,8 +2812,11 @@ def setpinit(gdat, boolinitsetp=False):
             for k in getattr(gdat, strgpara + 'indxfixp'):
                 print '%20s%25s%5s%20.6g%20.6g' % (gdat.namefixp[k], gdat.strgfixp[k], gdat.scalfixp[k], gdat.minmfixp[k], gdat.maxmfixp[k])
     
-    if gdat.trueinfo and gdat.correxpo and gdat.pntstype == 'lght':
+    if gdat.pntstype == 'lght':
         gdat.exprfwhm = 2. * retr_psfnwdth(gdat, gdat.exprpsfn, 0.5)
+        gdat.stdvspatprio = amax(gdat.exprfwhm) / gdat.anglfact
+    if gdat.pntstype == 'lens':
+        gdat.stdvspatprio = amax(gdat.exprpsfp) / gdat.anglfact
 
     # proposals
     # parameters not subject to proposals
@@ -4341,6 +4343,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 gang = retr_gang(dicttemp['lgal'][l], dicttemp['bgal'][l])
                 lpri[1+gdat.numbpopl+l] = sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[gdat.indxfixpgangdistscal[l]]))) 
                 lpri[1+2*gdat.numbpopl+l] = -numbpnts[l] * log(2. * pi) 
+            elif spatdisttype[l] == 'gaus':
+                lpri[1+gdat.numbpopl+l] = sum(gdat.lpdfspatprio(dicttemp['lgal'][l], dicttemp['bgal'][l])) 
             lpri[1+3*gdat.numbpopl+l] = retr_lprifluxdist(gdat, gdatmodi, dicttemp['flux'][l], sampvarb, l)
             if gdat.numbener > 1:
                 lpri[1+4*gdat.numbpopl+l] = retr_lprisinddist(gdat, gdatmodi, dicttemp['sind'][l], sampvarb, l)
