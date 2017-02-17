@@ -1742,7 +1742,9 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.datatype == 'inpt':
                 if k in gdat.indxfixpnumbpnts:
                     gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, gdat.truenumbpnts[k], k)
-                if k in gdat.indxfixppsfp:
+                elif k in gdat.indxfixppsfp:
+                    gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, gdat.exprpsfp[k-gdat.indxfixppsfpinit], k)
+                else:
                     gdatmodi.thissamp[gdat.indxfixp[k]] = rand()
         gdatmodi.thissampvarb[k] = icdf_fixp(gdat, '', gdatmodi.thissamp[k], k)
                 
@@ -1822,6 +1824,7 @@ def work(pathoutpthis, lock, indxprocwork):
 
     print 'gdatmodi.thissampvarb'
     print gdatmodi.thissampvarb[gdat.indxfixppsfp]
+    print 'gdat.exprpsfp'
     print gdat.exprpsfp
     print
 

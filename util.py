@@ -767,6 +767,10 @@ def retr_fermpsfn(gdat):
             indxfermpsfptemp = m * numbpsfpform * gdat.numbener + gdat.indxener * numbpsfpform + k
             gdat.exprpsfp[indxfermpsfptemp] = fermform[:, m, k]
     
+    print 'gdat.exprpsfp'
+    print gdat.exprpsfp
+    print
+
     # calculate the scale factor
     gdat.fermscalfact = sqrt((fermscal[None, :, 0] * (10. * gdat.meanener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
     
@@ -3169,8 +3173,8 @@ def retr_indxsamp(gdat, strgpara=''):
     indxpsfptotl = arange(numbpsfptotl)
    
     indxpsfp = arange(numbpsfp)
-    indxfixppsfpinit = dicttemp['indxfixppsfp'][0]
-
+    indxfixppsfpinit = sort(dicttemp['indxfixppsfp'])[0]
+    
     if oaxitype:
         indxfixppsfponor = indxfixppsfpinit + indxpsfponor
         indxfixppsfpoind = indxfixppsfpinit + indxpsfpoind
