@@ -1402,7 +1402,7 @@ def init( \
         print 'Constructing a labeled catalog...'
         timeinit = gdat.functime()
    
-    retr_detrcatl(gdat)
+    #retr_detrcatl(gdat)
     
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
