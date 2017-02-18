@@ -102,7 +102,7 @@ The exposure map is suppled via the ``strgexpo`` argument. This should be the na
 
 Similary, background templates can be provided via the ``back`` argument. ``back`` should be a list of FITS file names (including the ``.fits`` extension), whose format should be same as that of ``strgexprflux``.
 
-Specifying model priors
+Specifying the model and placing priors
 +++++++++++++++++++++++++
 
 The prior structure of the model is set by the relevant arguments to ``pcat.main.init()``. PCAT allows the following components in the model:
@@ -115,6 +115,42 @@ The prior structure of the model is set by the relevant arguments to ``pcat.main
 - Point Spread Function (PSF)
     
     PSF defines a how a delta function in the position space projects onto the data space, e.g., the image. PCAT assumes that all point sources are characterized by the same PSF. 
+
+
+
+Distributions of element features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All features of Elements are assumed to have been drawn from an underlying probability distribution. Note that cross-correlations between elements are assumed to be zero. The 1-point function of the element features are then controlled by the function arguments to ``pcat.main.init()``. Since each population of elements admits its own set of hyperparameters, the input to these arguments should be a ``list`` of strings.
+
+- Spatial distribution
+
+There are three models for the spatial distribution of elements, set by the ``spatdisttype`` argument.
+
+- ``'unif'``
+Both vertical and horizontal positions are uniformly distributed.
+
+- ``'disc'``
+Horizontal positions are assumed to be uniformly distributed, whereas the vertical positions are drawn from the exponential distribution. The scale of the exponential distribution, ``bgaldistscal`` is a hyperparameter subject to inference.
+
+- ``'gang'``
+Radial positions are assumed to follow an exponential distribution with a scale, ``gangdistscal``. The azimuthal positions are then taken to be uniformly distributed.
+
+- ``'gaus'``
+The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog.
+
+
+- Flux distribution
+
+Flux distribution of elements can be set with the argument ``fluxdisttype``.
+
+- ``'powr'``
+Power law between ``minmflux`` and ``maxmflux`` with the slope ``fluxdistslop``.
+
+- ``'bind'``
+Power law
+Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``fluxdistslopbinX``, where X is the piece index.
+
 
 
 Generating mock data

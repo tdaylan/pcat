@@ -132,6 +132,9 @@ def plot_samp(gdat, gdatmodi, strg):
                     for l in gdat.indxpopl:
                         plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
+    if strg == 'true' and 'gaus' in gdat.truespatdisttype or strg != 'true' and 'gaus' in gdat.spatdisttype:
+        plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatprio', tdim=True)
+
     for stdv in [False, True]: 
         if gdat.pntstype == 'lens':
             plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
@@ -672,7 +675,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
             if gdat.enerdiff:
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
-            axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=3, label=gdat.listlablcompfracspec[k])
+            axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, label=gdat.listlablcompfracspec[k])
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
         axis.set_yscale('log')
@@ -989,8 +992,9 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
 
         # prepare data to be plotted
         xdat = copy(gdat.truespec[l][0, i, :])
+        
         xerr = tdpy.util.retr_errrvarb(gdat.truespec[l][:, i, :])
-
+        
         yerr = zeros((2, xdat.size))
         if gdatmodi == None:
             ydat = copy(gdat.medispecassc[l][i, :])

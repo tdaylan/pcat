@@ -18,7 +18,7 @@ import scipy.ndimage
 import scipy.ndimage.filters
 
 import astropy as ap
-from astropy.convolution import convolve, AiryDisk2DKernel
+from astropy.convolution import convolve_fft, AiryDisk2DKernel
 
 # multiprocessing
 import multiprocessing as mp

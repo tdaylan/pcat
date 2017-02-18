@@ -104,7 +104,8 @@ def init( \
          # prior
          priotype='logt', \
          priofactdoff=0., \
-         margfactmodl=1.1, \
+         # temp
+         margfactmodl=1., \
          bindprio=False, \
          maxmgangdata=None, \
     
@@ -122,7 +123,6 @@ def init( \
          
          propfluxdist=True, \
          propsinddist=True, \
-         propfluxdistbrek=True, \
          propnumbpnts=True, \
          prophypr=True, \
          proppsfp=None, \
@@ -158,6 +158,9 @@ def init( \
         path = gdat.pathdata + gdat.procrtag + '/outp.fits'
         gdat = pf.getdata(path, 1)
         pf.writeto(gdat, gdat.stdvstdp, clobber=True)
+
+    # preliminary setup
+    gdat.numbfluxdistnorm = 4
 
     # defaults
     if gdat.strgexprflux == None:
@@ -481,7 +484,7 @@ def init( \
 
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
-    setp_true(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'fluxdisttype', ['bind' for l in gdat.trueindxpopl])
     setp_true(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
     
     ### PSF model
@@ -617,7 +620,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.05 / gdat.anglfact
+        minmflux = 0.1 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -627,7 +630,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         maxmflux = 1e4
     if gdat.pntstype == 'lens':
-        maxmflux = 0.15 / gdat.anglfact
+        maxmflux = 0.5 / gdat.anglfact
     setp_true(gdat, 'maxmflux', maxmflux)
    
     # parameter defaults
@@ -636,10 +639,10 @@ def init( \
     setp_truedefa(gdat, 'gangdistscal', [1. / gdat.anglfact, 10. / gdat.anglfact], popl=True)
     setp_truedefa(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl=True)
     setp_truedefa(gdat, 'fluxdistslop', [1., 4.], popl=True)
-    setp_truedefa(gdat, 'fluxdistbrek', [gdat.trueminmflux, gdat.truemaxmflux], popl=True)
-    setp_truedefa(gdat, 'fluxdistsloplowr', [-1.5, 3.5], popl=True)
-    setp_truedefa(gdat, 'fluxdistslopuppr', [1.5, 3.5], popl=True)
     
+    for k in range(gdat.numbfluxdistnorm):
+        setp_truedefa(gdat, 'fluxdistnormbin%d' % k, [1e-3, 1e3], popl=True)
+
     ### spectral index
     if gdat.numbener > 1:
         setp_truedefa(gdat, 'sinddistmean', [1., 3.], popl=True)
@@ -712,11 +715,12 @@ def init( \
     else:
         fluxdistslop = 2.6
     setp_true(gdat, 'fluxdistslop', fluxdistslop, popl=True)
-    setp_true(gdat, 'fluxdistslop', 2.2, popl=True)
-    setp_true(gdat, 'fluxdistslop', 3.2, popl=True)
-    setp_true(gdat, 'fluxdistbrek', sqrt(gdat.trueminmflux * gdat.maxmflux), popl=True)
-    setp_true(gdat, 'fluxdistsloplowr', 1., popl=True)
-    setp_true(gdat, 'fluxdistslopuppr', 2., popl=True)
+
+    retr_axis(gdat, 'flux', gdat.trueminmflux, gdat.maxmflux, gdat.numbfluxdistnorm - 1, scal='logt', strg='true')
+    fluxdistnorm = gdat.truebinsflux**(-fluxdistslop)
+    fluxdistnorm *= 1e-2 / amin(fluxdistnorm)
+    for k in range(gdat.numbfluxdistnorm):
+        setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
     setp_true(gdat, 'sinddistmean', 2.5, popl=True)
     setp_true(gdat, 'sinddiststdv', 1., popl=True)
@@ -744,14 +748,6 @@ def init( \
     setpinit(gdat, True) 
     setp_fixp(gdat, strgpara='true')
     
-    gdat.lpdfspatprio = zeros((gdat.numbsidecart, gdat.numbsidecart))
-    for k in range(gdat.numbspatprio):
-        gdat.lpdfspatprio[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.lgalcart - gdat.meanlgalprio[k])**2 / gdat.stdvspatprio**2) * \
-                                                                            exp(-0.5 * (gdat.bgalcart - gdat.meanbgalprio[k])**2 / gdat.stdvspatprio**2)
-    gdat.lpdfspatprio += 1e-1 * amax(gdat.lpdfspatprio)
-    gdat.lpdfspatprio = log(gdat.lpdfspatprio)
-    gdat.lpdfspatprio = sp.interpolate.RectBivariateSpline(gdat.lgalcart, gdat.bgalcart, gdat.lpdfspatprio)
-    
     # intermediate setup
     if gdat.numbener > 1:
         gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
@@ -765,7 +761,7 @@ def init( \
     gdat.minmconv = 1e-2
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
-    gdat.maxmdeflcomp = 0.1
+    gdat.maxmdeflcomp = 1e-4
     
     if gdat.numbener > 1:
         # temp
@@ -909,7 +905,8 @@ def init( \
         indxpnts = argsort(gdat.exprspec[0, gdat.indxenerfluxdist[0], :])[::-1]
         gdat.exprlgal = gdat.exprlgal[indxpnts]
         gdat.exprbgal = gdat.exprbgal[indxpnts]
-        gdat.exprspec[0, :, :] = gdat.exprspec[0, :, indxpnts].T
+        for k in range(3):
+            gdat.exprspec[k, :, :] = gdat.exprspec[k, :, indxpnts].T
         if gdat.exprcnts != None:
             gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
 
@@ -1065,9 +1062,9 @@ def init( \
                 if gdat.truefluxdisttype[l] == 'powr':
                     gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.truenumbpnts[l]), gdat.trueminmflux, gdat.maxmflux, \
                                                                                                                     gdat.truefixp[gdat.trueindxfixpfluxdistslop[l]])
-                if gdat.truefluxdisttype[l] == 'brok':
-                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_brok(rand(gdat.truenumbpnts[l]), \
-                                                gdat.trueminmflux, gdat.maxmflux, gdat.truefluxdistbrek[l], gdat.truefluxdistsloplowr[l], gdat.truefluxdistslopuppr[l])
+                if gdat.truefluxdisttype[l] == 'bind':
+                    gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_bind(rand(gdat.truenumbpnts[l]), gdat.trueminmflux, gdat.maxmflux, \
+                                                                                           gdat.truebinsflux, gdat.truefixp[gdat.trueindxfixpfluxdistnorm[l, :]])
                 
                 # temp -- make sure this reordering does not mess up other things
                 gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = sort(gdat.truespec[l][:, gdat.indxenerfluxdist[0], :], axis=1)[::-1]
@@ -1791,11 +1788,12 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.thissamp[gdatmodi.thisindxsampbgal[l]] = cdfn_self(gdat.truebgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
                 
                 indxtruepntsgood = where(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :] > gdat.minmflux)[0]
+                flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
                 if gdat.fluxdisttype[l] == 'powr':
-                    fluxunit = cdfn_powr(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.minmflux, gdat.maxmflux, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]])
-                if gdat.fluxdisttype[l] == 'brok':
-                    flux = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                    fluxunit = cdfn_flux_brok(flux, gdat.minmflux, gdat.maxmflux, fluxdistbrek, fluxdistsloplowr, fluxdistslopuppr)
+                    fluxunit = cdfn_powr(flux, gdat.minmflux, gdat.maxmflux, gdatmodi.thissampvarb[gdat.indxfixpfluxdistslop[l]])
+                if gdat.fluxdisttype[l] == 'bind':
+                    fluxdistnorm = gdatmodi.thissampvarb[gdat.indxfixpfluxdistnorm[l, :]]
+                    fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, fluxdistnorm)
                 gdatmodi.thissamp[gdatmodi.thisindxsampflux[l][indxtruepntsgood]] = fluxunit[indxtruepntsgood]
                 
                 if gdat.numbener > 1:
@@ -2226,7 +2224,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdatmodi.nextpercswep > gdatmodi.percswepsave:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
                 
-                minm = max(0, gdatmodi.cntrswep - 100)
+                minm = max(0, gdatmodi.cntrswep - 1000)
                 maxm = gdatmodi.cntrswep + 1
                 if maxm > minm:
                     fact = 100. / float(maxm - minm)
@@ -2240,12 +2238,12 @@ def work(pathoutpthis, lock, indxprocwork):
                             accp = fact * where(logical_and(workdict['listaccp'][minm:maxm], workdict['listindxproptype'][minm:maxm] == k))[0].size
                             print '%s acceptance rate: %.3g%%' % (gdat.legdproptype[k], accp)
                         
-                        if gdat.optipropsimp and k == gdat.indxproptypewith and accp < 1.:
+                        if gdat.optipropsimp and k == gdat.indxproptypewith and accp < 0.1:
                             gdatmodi.cntrswep = 0
                             gdatmodi.percswepsave = -1.
                             gdatmodi.stdvstdp /= 2.
                             if gdat.verbtype > 0:
-                                print 'Acceptance ratio went below 1%%.'
+                                print 'Acceptance ratio went below 0.1%%.'
                                 print 'Restarting the chain with a smaller proposal scale...'
                                 
                     print 'Chronometers: '
