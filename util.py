@@ -244,7 +244,7 @@ def pdfn_bind(xdat, minm, maxm, bins, norm):
     return pdfn
 
 
-def cdfn_bind(xdat, minm, maxm, bins, norm):
+def cdfn_bind(para, minm, maxm, bins, norm):
   
     pdfn = norm / trapz(norm, bins)
     cdfn = cumsum(diff(bins) * (pdfn[:-1] + pdfn[1:]) / 2.)
