@@ -127,29 +127,33 @@ All features of Elements are assumed to have been drawn from an underlying proba
 
 There are three models for the spatial distribution of elements, set by the ``spatdisttype`` argument.
 
-- ``'unif'``
++ ``'unif'``
 Both vertical and horizontal positions are uniformly distributed.
 
-- ``'disc'``
++ ``'disc'``
 Horizontal positions are assumed to be uniformly distributed, whereas the vertical positions are drawn from the exponential distribution. The scale of the exponential distribution, ``bgaldistscal`` is a hyperparameter subject to inference.
 
-- ``'gang'``
++ ``'gang'``
 Radial positions are assumed to follow an exponential distribution with a scale, ``gangdistscal``. The azimuthal positions are then taken to be uniformly distributed.
 
-- ``'gaus'``
-The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog.
++ ``'gaus'``
+The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor. The amplitude of the constant, ``spatdistcons``, becomes a free parameter, which roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
 
 
 - Flux distribution
 
 Flux distribution of elements can be set with the argument ``fluxdisttype``.
 
-- ``'powr'``
++ ``'powr'``
 Power law between ``minmflux`` and ``maxmflux`` with the slope ``fluxdistslop``.
 
-- ``'bind'``
++ ``'bind'``
 Power law
 Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``fluxdistslopbinX``, where X is the piece index.
+
+- Spectral index distribution
+
+
 
 
 

@@ -105,11 +105,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         strgxaxitwin = None
                         lablxaxitwin = None
                         offs = None
-                    # temp
-                    if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'cnts':
-                        scalxaxi = 'logt'
-                    else:
-                        scalxaxi = 'linr'
+                    scalxaxi = gdat.dictglob['scal' + strgfeat + 'plot']
                     factxaxi = gdat.dictglob['fact' + strgfeat + 'plot']
                     lablxaxi = gdat.lablfeattotl[strgfeat]
                     limtxdat = [getattr(gdat, 'minm' + strgfeat + 'plot') * factxaxi, getattr(gdat, 'maxm' + strgfeat + 'plot') * factxaxi]
@@ -151,8 +147,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
         
     if gdat.pntstype == 'lens':
-        print 
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
@@ -1803,19 +1798,35 @@ def plot_init(gdat):
                 xdat = gdat.binsanglplot * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
-                listbein = array([0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.4, 0.4, 0.4, 0.4]) / gdat.anglfact
-                listanglcutf = array([0.8, 1.6, 1e10, 0.]) / gdat.anglfact
-                listasym = [False, False, False, True]
+                listdeflscal = array([0.2, 0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
+                listanglscal = array([0.05, 0.05, 0.05, 0.05, 0.05]) / gdat.anglfact
+                listanglcutf = array([0.3, 0.3, 0.6, 1e10, 0.]) / gdat.anglfact
+                listasym = [False, False, False, False, True]
                 listydat = []
-                for bein, anglscal, anglcutf, asym in zip(listbein, listanglscal, listanglcutf, listasym):
-                    listydat.append(retr_deflcutf(gdat.binsanglplot, bein, anglscal, anglcutf, asym=asym) * gdat.anglfact)
+                for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
+                    listydat.append(retr_deflcutf(gdat.binsanglplot, deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
                 
                 listydat.append(xdat * 0. + 0.05)
                 
                 path = gdat.pathinit + 'deflcutf.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
-       
+                
+                #xdat = gdat.binsanglplot * gdat.anglfact
+                #lablxdat = gdat.lablfeattotl['gang']
+                #listydat = []
+                #for l in indxpopl:
+                #    for k in arange(numbpnts[l]):
+                #        listydat.append(retr_deflcutf(gdat.binsanglplot, deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
+                #
+                #listydat.append(xdat * 0. + 0.05)
+                #
+                #path = gdat.pathinit + 'deflcutf.pdf'
+                #tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
+      
+
+
+
+
                 spec = 1e-19 # [erg/cm^2/s]
                 listsize = array([1., 1., 1.]) / gdat.anglfact
                 listindx = array([1., 4., 10.])

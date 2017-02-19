@@ -199,7 +199,7 @@ def init( \
 
     if gdat.lablflux == None:
         if gdat.pntstype == 'lens':
-            gdat.lablflux = r'\theta_E'
+            gdat.lablflux = r'\alpha_s'
         else:
             if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
                 gdat.lablflux = 'f'
@@ -484,7 +484,7 @@ def init( \
 
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
-    setp_true(gdat, 'fluxdisttype', ['bind' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_true(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
     
     ### PSF model
@@ -620,7 +620,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.1 / gdat.anglfact
+        minmflux = 0.04 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -637,6 +637,7 @@ def init( \
     ## distribution
     ### flux
     setp_truedefa(gdat, 'gangdistscal', [1. / gdat.anglfact, 10. / gdat.anglfact], popl=True)
+    setp_truedefa(gdat, 'spatdistcons', [1e-2, 1e1], popl=True)
     setp_truedefa(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl=True)
     setp_truedefa(gdat, 'fluxdistslop', [1., 4.], popl=True)
     
@@ -708,6 +709,7 @@ def init( \
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
 
+    setp_true(gdat, 'spatdistcons', 1e-1, popl=True)
     setp_true(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
     setp_true(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
     if gdat.pntstype == 'lens':
@@ -771,12 +773,12 @@ def init( \
     gdat.maxmaang = pi
     gdat.minmgangplot = 0.
     gdat.maxmgangplot = gdat.maxmlgal
-    gdat.minmdeltllik = -4.
+    gdat.minmdeltllik = -1.
     gdat.maxmdeltllik = 4.
     gdat.minmdistsour = 0.
     gdat.maxmdistsour = 3. * gdat.maxmgang
-    gdat.minmdotpsour = -1.
-    gdat.maxmdotpsour = 1.
+    gdat.minmdotpsour = 0.
+    gdat.maxmdotpsour = 5e-4
 
     ## plot limits for element parameters
     for strgfeat in gdat.liststrgfeat:
@@ -1013,10 +1015,10 @@ def init( \
 
         # temp
         if gdat.pntstype == 'lens':
-            gdat.truefixp[gdat.trueindxfixplgalsour] = 0.2 * gdat.maxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.2 * gdat.maxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixplgalhost] = 0.05 * gdat.maxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.05 * gdat.maxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.maxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.maxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.maxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.maxmgang * randn()
         
         gdat.truesampvarb = empty(gdat.truenumbpara)
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
@@ -1052,9 +1054,13 @@ def init( \
                                                                                                 choice(array([1., -1.]), size=gdat.truenumbpnts[l])
                 
                 if gdat.truespatdisttype[l] == 'gaus':
-                    for k in range(gdat.truenumbpnts[l]):
-                        gdat.truelgal[l] = icdf_gaus(rand(), gdat.meanlgalprio[k], gdat.stdvlgalprio[k])
-                        gdat.truebgal[l] = icdf_gaus(rand(), gdat.meanbgalprio[k], gdat.stdvbgalprio[k])
+                    numbrejesamp = gdat.truenumbpnts[l] * 1000
+                    lgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+                    bgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
+                    pdfntemp = gdat.truelpdfspatprioobjt(lgaltemp, bgaltemp)
+                    indxtemp = choice(arange(numbrejesamp), p=pdfntemp, size=gdat.truenumbpnts[l])
+                    gdat.truelgal[l] = lgaltemp[indxtemp]
+                    gdat.truebgal[l] = bgaltemp[indxtemp]
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
                 gdat.truespecplot[l] = empty((gdat.numbenerplot, gdat.truenumbpnts[l]))
