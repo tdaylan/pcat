@@ -3718,7 +3718,7 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # flatten the array
     if tdim:
         if thisindxener == None:
-            maps = maps.reshape((gdat.numbpixl))
+            maps = maps.flatten()#((gdat.numbpixl))
         else:
             maps = maps.reshape((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     
@@ -3948,15 +3948,21 @@ def retr_deflextr(gdat, sher, sang):
 
 def readfile(path):
 
-    thisfile = open(path, 'rb')
-    gdattemp = cPickle.load(thisfile)
-    thisfile.close()
+    filepick = open(path + '.p', 'rb')
+    filearry = h5py.File(path + '.h5', 'r')
+    gdattemptemp = cPickle.load(filepick)
+    
+    for attr in filearry:
+        setattr(gdattemptemp, attr, filearry[attr][()])
 
-    return gdattemp
+    filepick.close()
+    filearry.close()
+    
+    return gdattemptemp
 
 
 def readoutp(path):
-
+    
     thisfile = h5py.File(path, 'r')
     gdattemp = tdpy.util.gdatstrt()
     for attr in thisfile:
@@ -3967,23 +3973,20 @@ def readoutp(path):
 
 
 def writfile(gdattemp, path):
-
-    thisfile = open(path, 'wb')
-    listtype = [ndarray, list, float, str, int, bool]
+    
+    filepick = open(path + '.p', 'wb')
+    filearry = h5py.File(path + '.h5', 'w')
+    
+    gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
-        booltemp = True
-        for typetemp in listtype:
-            if isinstance(valu, typetemp):
-                booltemp = False
-        
-        # temp
-        #if booltemp:
-        #    print attr
-        #    print valu
-        #    print
+        if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
+            filearry.create_dataset(attr, data=valu)
+        else:
+            setattr(gdattemptemp, attr, valu)
 
-    cPickle.dump(gdattemp, thisfile, protocol=cPickle.HIGHEST_PROTOCOL)
-    thisfile.close()
+    cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
+    filepick.close()
+    filearry.close()
    
 
 def writoutp(gdat, path, catl=True):
@@ -4301,13 +4304,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         spatdistcons = sampvarb[getattr(gdat, strgtype + 'indxfixpspatdistcons')]
         pdfnspatpriotemp = getattr(gdat, strgtype + 'pdfnspatpriotemp')
         lpdfspatprio, lpdfspatprioobjt = retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp)
-        setattr(gdatobjt, strg + 'lpdfspatprio', lpdfspatprio)
+        lpdfspatpriointp = lpdfspatprioobjt(gdat.lgalcart, gdat.bgalcart)
+        setattr(gdatobjt, strg + 'lpdfspatpriointp', lpdfspatpriointp)
         setattr(gdatobjt, strg + 'lpdfspatprioobjt', lpdfspatprioobjt)
-
-        print 'hey'
-        print 'lpdfspatprio'
-        summgene(lpdfspatprio)
-        print
 
     ### log-prior
     if gdat.numbtrap > 0:

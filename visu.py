@@ -175,7 +175,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
     if strg == 'true' and 'gaus' in gdat.truespatdisttype or strg != 'true' and 'gaus' in gdat.spatdisttype:
-        plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatprio', tdim=True)
+        plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
 
     for stdv in [False, True]: 
         if gdat.pntstype == 'lens':
@@ -2052,16 +2052,17 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     vmax = getattr(gdat, 'maxm' + strgcbar)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
-    if strgcbar == 'datacnts':
-        cmap = 'Reds'
-    if strgcbar == 'resicnts':
-        cmap = 'RdBu'
-    if strgcbar == 'deflcomp':
-        cmap = 'Oranges'
-    if strgcbar == 'conv':
-        cmap = 'Purples'
-    if strgcbar == 'llik':
-        cmap = 'YlGn'
+    cmap = getattr(gdat, 'cmap' + strgcbar) 
+    #if strgcbar == 'datacnts':
+    #    cmap = 'Reds'
+    #if strgcbar == 'resicnts':
+    #    cmap = 'RdBu'
+    #if strgcbar == 'deflcomp':
+    #    cmap = 'Oranges'
+    #if strgcbar == 'conv':
+    #    cmap = 'Purples'
+    #if strgcbar == 'llik':
+    #    cmap = 'YlGn'
 
     imag = retr_imag(gdat, axis, maps, strg, vmin=vmin, vmax=vmax, cmap=cmap, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
     

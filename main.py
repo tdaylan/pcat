@@ -766,21 +766,29 @@ def init( \
         gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
     else:
         gdat.factspecener = array([1.])
-   
+  
+    # color bars
     gdat.minmconv = 1e-2
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
-    gdat.minmlpdfspatprio = log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatprio = log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
-    if gdat.pntstype == 'lens':
-        liststrgcbar = ['conv', 'deflcomp', 'llik', 'lpdfspatprio']
-        for strgcbar in liststrgcbar:
-            retr_ticklabl(gdat, strgcbar)
-   
+    gdat.cmapdatacnts = 'Reds'
+    gdat.cmapresicnts = 'RdBu'
+    gdat.cmapdeflcomp = 'Oranges'
+    gdat.cmapconv = 'Purples'
+    gdat.cmapllik = 'YlGn'
+    gdat.cmaplpdfspatpriointp = 'PuBu'
+    
+    liststrgcbar = ['conv', 'deflcomp', 'llik', 'lpdfspatpriointp']
+    for strgcbar in liststrgcbar:
+        retr_ticklabl(gdat, strgcbar)
+    
+    # element features
     if gdat.numbener > 1:
         # temp
         gdat.minmexpo = gdat.minmexpodistmeanpop0
@@ -1220,7 +1228,7 @@ def init( \
     
     if gdat.verbtype > 0:
         print 'Writing the global state to the disc before spawning workers...'
-    path = gdat.pathoutpthis + 'gdatinit.p'
+    path = gdat.pathoutpthis + 'gdatinit'
     writfile(gdat, path) 
     #writoutp(gdat, path, catl=False) 
     
@@ -1246,7 +1254,7 @@ def init( \
     
     listgdatmodi = []
     for k in gdat.indxproc:
-        path = gdat.pathoutpthis + 'gdatmodi%04d.p' % k
+        path = gdat.pathoutpthis + 'gdatmodi%04d' % k
         listgdatmodi.append(readfile(path))
    
     # aggregate samples from the chains
@@ -1749,7 +1757,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
 
 def work(pathoutpthis, lock, indxprocwork):
 
-    path = pathoutpthis + 'gdatinit.p'
+    path = pathoutpthis + 'gdatinit'
     gdat = readfile(path) 
     
     timereal = time.time()
@@ -2331,12 +2339,7 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
     
-    path = gdat.pathoutpthis + 'gdatmodi%04d.p' % indxprocwork
-    #for attr, valu in gdatmodi.__dict__.iteritems():
-    #    print attr
-    #    print valu
-    #    print 
-
+    path = gdat.pathoutpthis + 'gdatmodi%04d' % indxprocwork
     writfile(gdatmodi, path) 
     #writoutp(gdatmodi, path, catl=False) 
     
