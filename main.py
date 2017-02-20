@@ -1047,6 +1047,7 @@ def init( \
                 arryzero = array([0., 0.])
                 print 'gdat.truelpdfspatprioobjt(arryzero, arryzero)'
                 print gdat.truelpdfspatprioobjt(arryzero, arryzero)
+
                 print gdat.truelpdfspatprioobjt((rand(10)-0.5)*2.*gdat.maxmgangdata, (rand(10)-0.5)*2.*gdat.maxmgangdata)
                 print
                
