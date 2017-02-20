@@ -688,7 +688,9 @@ def init( \
     for strg, valu in temp.iteritems():
         if strg.startswith('true'):
             try:
-                getattr(gdat, strg[4:])
+                valumodl = getattr(gdat, strg[4:])
+                if valumodl == None:
+                    raise
             except:
                 setattr(gdat, strg[4:], getattr(gdat, strg))
    
@@ -769,7 +771,16 @@ def init( \
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
+    gdat.minmlpdfspatprio = log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatprio = log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.maxmllik = 0.
+    gdat.minmllik = -1e2
     
+    if gdat.pntstype == 'lens':
+        liststrgcbar = ['conv', 'deflcomp', 'llik', 'lpdfspatprio']
+        for strgcbar in liststrgcbar:
+            retr_ticklabl(gdat, strgcbar)
+   
     if gdat.numbener > 1:
         # temp
         gdat.minmexpo = gdat.minmexpodistmeanpop0
@@ -826,11 +837,6 @@ def init( \
     gdat.minmspec = gdat.minmflux * gdat.factspecener
     gdat.maxmspec = gdat.maxmflux * gdat.factspecener
 
-    if gdat.pntstype == 'lens':
-        liststrgcbar = ['conv', 'deflcomp']
-        for strgcbar in liststrgcbar:
-            retr_ticklabl(gdat, strgcbar)
-   
     for strgfeat in gdat.liststrgfeat:
         if strgfeat == 'spec':
             gdat.minmspecplot = gdat.minmfluxplot * gdat.factspecener
@@ -1027,9 +1033,6 @@ def init( \
             gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.maxmgang * randn()
             gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.maxmgang * randn()
         
-        print 'gdat.truenumbpara'
-        print gdat.truenumbpara
-
         gdat.truesampvarb = empty(gdat.truenumbpara)
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
         
@@ -1038,18 +1041,7 @@ def init( \
         
         for l in gdat.trueindxpopl:
             if gdat.truespatdisttype[l] == 'gaus':
-                print 'gdat.truepdfnspatpriotemp'
-                summgene(gdat.truepdfnspatpriotemp)
-                print 
                 gdat.truelpdfspatprio, gdat.truelpdfspatprioobjt = retr_spatprio(gdat, gdat.truesampvarb[gdat.trueindxfixpspatdistcons[l]], gdat.truepdfnspatpriotemp)
-                print 'gdat.truelpdfspatprio'
-                summgene(gdat.truelpdfspatprio)
-                arryzero = array([0., 0.])
-                print 'gdat.truelpdfspatprioobjt(arryzero, arryzero)'
-                print gdat.truelpdfspatprioobjt(arryzero, arryzero)
-
-                print gdat.truelpdfspatprioobjt((rand(10)-0.5)*2.*gdat.maxmgangdata, (rand(10)-0.5)*2.*gdat.maxmgangdata)
-                print
                
         gdat.truecnts = [[] for l in gdat.trueindxpopl]
         gdat.truelgal = [[] for l in gdat.trueindxpopl]
@@ -1081,27 +1073,14 @@ def init( \
                     numbrejesamp = gdat.truenumbpnts[l] * 1
                     lgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
                     bgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
-                    print 'hey'
-                    print 'gdat.binslgalcart'
-                    summgene(gdat.binslgalcart * gdat.anglfact)
-                    print 'gdat.binsbgalcart'
-                    summgene(gdat.binsbgalcart * gdat.anglfact)
-                    print 'lgaltemp'
                     lgaltemp * gdat.anglfact
-                    print 'bgaltemp'
                     bgaltemp * gdat.anglfact
-                    pdfntemp = gdat.truelpdfspatprioobjt(lgaltemp, bgaltemp)
-                    print 'pdfntemp'
-                    print pdfntemp
-                    print 'gdat.truenumbpnts[l]'
-                    print gdat.truenumbpnts[l]
-                    print 'arange(numbrejesamp)'
-                    print arange(numbrejesamp)
-                    raise Exception('')
-                    indxtemp = choice(arange(numbrejesamp), p=pdfntemp, size=gdat.truenumbpnts[l])
+                    lpdftemp = gdat.truelpdfspatprioobjt(lgaltemp, bgaltemp, grid=False)
+                    probtemp = exp(lpdftemp)
+                    probtemp /= sum(probtemp)
+                    indxtemp = choice(arange(numbrejesamp), p=probtemp, size=gdat.truenumbpnts[l])
                     gdat.truelgal[l] = lgaltemp[indxtemp]
                     gdat.truebgal[l] = bgaltemp[indxtemp]
-                    print 'done'
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
 
@@ -1136,14 +1115,6 @@ def init( \
                     gdat.truespec[l][:] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
                                                                                                              gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l])[None, :, :]
                     
-                print 'gdat.truelgal'
-                print gdat.truelgal
-                print 'gdat.trueindxsamplgal'
-                print gdat.trueindxsamplgal
-                print 'gdat.truenumbpnts'
-                print gdat.truenumbpnts
-                print 'gdat.truesampvarb[0]'
-                print gdat.truesampvarb[0]
                 gdat.truesampvarb[gdat.trueindxsamplgal[l]] = gdat.truelgal[l]
                 gdat.truesampvarb[gdat.trueindxsampbgal[l]] = gdat.truebgal[l]
                 gdat.truesampvarb[gdat.trueindxsampflux[l]] = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
@@ -1852,12 +1823,6 @@ def work(pathoutpthis, lock, indxprocwork):
         ## PS components
         if gdat.inittype == 'refr':
             for l in gdat.indxpopl:
-                print 'cdfn_self(gdat.truelgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)'
-                print cdfn_self(gdat.truelgal[l], -gdat.maxmgang, 2. * gdat.maxmgang).shape
-                print 'gdatmodi.thisindxsamplgal[l]'
-                print gdatmodi.thisindxsamplgal[l].shape
-                print 'gdatmodi.thissamp'
-                print gdatmodi.thissamp.shape
                 gdatmodi.thissamp[gdatmodi.thisindxsamplgal[l]] = cdfn_self(gdat.truelgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
                 gdatmodi.thissamp[gdatmodi.thisindxsampbgal[l]] = cdfn_self(gdat.truebgal[l], -gdat.maxmgang, 2. * gdat.maxmgang)
                 
@@ -1869,16 +1834,6 @@ def work(pathoutpthis, lock, indxprocwork):
                     if gdat.fluxdisttype[l] == 'bind':
                         fluxdistnorm = gdatmodi.thissampvarb[gdat.indxfixpfluxdistnorm[l, :]]
                         fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, fluxdistnorm)
-                    print 'fluxunit'
-                    print fluxunit.shape
-                    print 'indxtruepntsgood'
-                    print indxtruepntsgood.shape
-                    print 'gdatmodi.thisindxsampflux[l]'
-                    print gdatmodi.thisindxsampflux[l].shape
-                    print 'gdatmodi.thissamp'
-                    print gdatmodi.thissamp.shape
-                    print
-
                     gdatmodi.thissamp[gdatmodi.thisindxsampflux[l][indxtruepntsgood]] = fluxunit[indxtruepntsgood]
                 except:
                     gdatmodi.thissamp[gdatmodi.thisindxsampflux[l]] = rand(gdat.truenumbpnts[l])
@@ -2376,7 +2331,7 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
     
-    #path = gdat.pathoutpthis + 'gdatmodi%04d.p' % indxprocwork
+    path = gdat.pathoutpthis + 'gdatmodi%04d.p' % indxprocwork
     #for attr, valu in gdatmodi.__dict__.iteritems():
     #    print attr
     #    print valu
