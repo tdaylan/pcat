@@ -361,7 +361,7 @@ def test_spatprio():
          back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
          strgexpo='fermexpo_cmp0_ngal.fits', \
          truenumbpnts=array([100]), \
-         spatdisttype=['gaus'], \
+         truespatdisttype=['gaus'], \
         )
 
 

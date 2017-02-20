@@ -5,7 +5,26 @@ from __init__ import *
 from util import *
 
 def plot_samp(gdat, gdatmodi, strg):
-   
+    
+    if strg != 'post':
+        if strg == 'true':
+            strgtype = strg
+            gdatobjt = gdat
+        else:
+            strgtype = ''
+            gdatobjt = gdatmodi
+    
+        spectype = getattr(gdat, strgtype + 'spectype')
+        indxpopl = getattr(gdat, strgtype + 'indxpopl')
+        sampvarb = getattr(gdatobjt, strg + 'sampvarb')
+        numbpnts = sampvarb[getattr(gdat, strgtype + 'indxfixpnumbpnts')].astype(int)
+        if gdat.pntstype == 'lght' and gdat.numbener > 1:
+            specplot = getattr(gdatobjt, strg + 'specplot') 
+        indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
+        dicttemp = {}
+        dicttemp['indxsamplgal'], dicttemp['indxsampbgal'], dicttemp['indxsampflux'], dicttemp['indxsampsind'], dicttemp['indxsampcurv'], \
+   																	dicttemp['indxsampexpo'], dicttemp['indxsampcomp'] = retr_indxsampcomp(gdat, indxpntsfull, spectype)
+        
     # plots
     ## frame-only
     if gdatmodi != None:
@@ -14,23 +33,45 @@ def plot_samp(gdat, gdatmodi, strg):
         if False and gdat.pntstype == 'lght':
             if gdatmodi == None or sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
                 plot_brgt(gdat, gdatmodi, strg)
+    
+    # element features projected onto the data axes
+    if strg == 'this' or strg  == 'true' and gdat.datatype == 'mock':
+        alph = 0.1
+        if strg == 'this':
+            pathtemp = gdat.pathfram
+            colr = 'b'
+        else:
+            pathtemp = gdat.pathinit
+            colr = 'g'
 
-    # PS spectra
-    if strg  == 'true' and gdat.datatype == 'mock' and gdat.numbener > 1 and gdat.pntstype == 'lght':
-        for l in gdat.indxpopl:
-            listxdat = []
-            listplottype = []
-            listydat = []
-            for k in range(gdat.truenumbpnts[l]):
-                spec = copy(gdat.truespecplot[l][:, k])
-                if gdat.enerdiff:
-                    spec *= gdat.meanenerplot**2
-                listplottype.append('line')
-                listxdat.append(gdat.meanenerplot)
-                listydat.append(spec)
-            path = gdat.pathinit + 'truespecpop%d.pdf' % l
-            tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr='g', alph=0.1, plottype=listplottype, \
-                  limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'], limtydat=[amin(gdat.minmspecplot), amax(gdat.maxmspecplot)])
+        # PS spectra
+        if gdat.numbener > 1 and gdat.pntstype == 'lght':
+            for l in gdat.indxpopl:
+                listxdat = []
+                listplottype = []
+                listydat = []
+                for k in range(numbpnts[l]):
+                    spec = copy(specplot[l][:, k])
+                    if gdat.enerdiff:
+                        spec *= gdat.meanenerplot**2
+                    listplottype.append('line')
+                    listxdat.append(gdat.meanenerplot)
+                    listydat.append(spec)
+                path = pathtemp + 'specpop%d.pdf' % l
+                tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, plottype=listplottype, \
+                      limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'], limtydat=[amin(gdat.minmspecplot), amax(gdat.maxmspecplot)])
+        
+        # deflection profiles
+        if gdat.pntstype == 'lens':
+            xdat = gdat.binsanglplot * gdat.anglfact
+            lablxdat = gdat.lablfeattotl['gang']
+            for l in indxpopl:
+                listydat = []
+                for k in arange(numbpnts[l]):
+                    listydat.append(retr_deflcutf(gdat.binsanglplot, sampvarb[dicttemp['indxsampflux'][l][k]], gdat.anglscal, gdat.anglcutf) * gdat.anglfact)
+                listydat.append(xdat * 0. + gdat.anglfact * sampvarb[getattr(gdat, strgtype + 'indxfixpbeinhost')])
+                path = pathtemp + 'deflpntspop%d.pdf' % l
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
     
     ## PSF radial profile
     if gdat.pntstype == 'lght':
@@ -114,7 +155,12 @@ def plot_samp(gdat, gdatmodi, strg):
                     plot_gene(gdat, gdatmodi, strg, strgfeat + 'hist', 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, \
                                            		scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindx=strgindx, hist=True, \
                                                 strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin)
-            
+           
+    if gdatmodi != None:
+        gdatobjt = gdatmodi
+    else:
+        gdatobjt = gdat
+
     if gdat.pntstype == 'lght' and gdat.calcerrr:
         if strg != 'true':
             for i in gdat.indxener:
@@ -439,8 +485,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
                                                                                                         truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp])
         if gdat.indxfixpbacp.size == 2:
-            tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
-                                                                            truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp], join=True)
+            for i in gdat.indxener:
+                indx = gdat.indxfixpbacp[i+gdat.indxback*gdat.numbener]
+                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.strgfixp[indx], truepara=[gdat.truefixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'
@@ -1798,10 +1845,10 @@ def plot_init(gdat):
                 xdat = gdat.binsanglplot * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
-                listdeflscal = array([0.2, 0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.05, 0.05, 0.05, 0.05, 0.05]) / gdat.anglfact
-                listanglcutf = array([0.3, 0.3, 0.6, 1e10, 0.]) / gdat.anglfact
-                listasym = [False, False, False, False, True]
+                listdeflscal = array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
+                listanglscal = array([0.05, 0.05, 0.1, 0.05, 0.05, 0.05]) / gdat.anglfact
+                listanglcutf = array([0.3, 0.3, 0.3, 1., 2., 0.]) / gdat.anglfact
+                listasym = [False, False, False, False, False, True]
                 listydat = []
                 for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
                     listydat.append(retr_deflcutf(gdat.binsanglplot, deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
@@ -1810,25 +1857,9 @@ def plot_init(gdat):
                 
                 path = gdat.pathinit + 'deflcutf.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
-                
-                #xdat = gdat.binsanglplot * gdat.anglfact
-                #lablxdat = gdat.lablfeattotl['gang']
-                #listydat = []
-                #for l in indxpopl:
-                #    for k in arange(numbpnts[l]):
-                #        listydat.append(retr_deflcutf(gdat.binsanglplot, deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
-                #
-                #listydat.append(xdat * 0. + 0.05)
-                #
-                #path = gdat.pathinit + 'deflcutf.pdf'
-                #tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
-      
-
-
-
 
                 spec = 1e-19 # [erg/cm^2/s]
-                listsize = array([1., 1., 1.]) / gdat.anglfact
+                listsize = array([0.1, 0.1, 0.1]) / gdat.anglfact
                 listindx = array([1., 4., 10.])
                 listydat = []
                 for size, indx in zip(listsize, listindx):

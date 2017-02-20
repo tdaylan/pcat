@@ -11,7 +11,7 @@ def init( \
          pathbase=os.environ["PCAT_DATA_PATH"], \
 
          # diagnostics
-         diagmode=True, \
+         diagmode=False, \
          emptsamp=False, \
 
          # sampler
@@ -421,10 +421,12 @@ def init( \
         if gdat.exprtype == 'hubb':
             gdat.maxmgangdata = 2. / gdat.anglfact
    
-    if gdat.meanlgalprio == None or gdat.meanbgalprio == None:
-        gdat.numbspatprio = 20
-        gdat.meanlgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-        gdat.meanbgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+    numbspatprio = 20
+    lgalprio = icdf_self(rand(numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+    bgalprio = icdf_self(rand(numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+    setp_true(gdat, 'numbspatprio', numbspatprio)
+    setp_true(gdat, 'lgalprio', lgalprio)
+    setp_true(gdat, 'bgalprio', bgalprio)
 
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
@@ -485,6 +487,7 @@ def init( \
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
     setp_true(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'sinddisttype', ['gaus' for l in gdat.trueindxpopl])
     setp_true(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
     
     ### PSF model
@@ -637,7 +640,7 @@ def init( \
     ## distribution
     ### flux
     setp_truedefa(gdat, 'gangdistscal', [1. / gdat.anglfact, 10. / gdat.anglfact], popl=True)
-    setp_truedefa(gdat, 'spatdistcons', [1e-2, 1e1], popl=True)
+    setp_truedefa(gdat, 'spatdistcons', [1e-2, 1e0], popl=True)
     setp_truedefa(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl=True)
     setp_truedefa(gdat, 'fluxdistslop', [1., 4.], popl=True)
     
@@ -646,7 +649,9 @@ def init( \
 
     ### spectral index
     if gdat.numbener > 1:
-        setp_truedefa(gdat, 'sinddistmean', [1., 3.], popl=True)
+        sind = [1., 3.]
+        setp_truedefa(gdat, 'sind', sind, popl=True)
+        setp_truedefa(gdat, 'sinddistmean', sind, popl=True)
         #### standard deviations should not be too small
         setp_truedefa(gdat, 'sinddiststdv', [0.5, 2.], popl=True)
         setp_truedefa(gdat, 'curvdistmean', [-1., 1.], popl=True)
@@ -724,7 +729,7 @@ def init( \
     for k in range(gdat.numbfluxdistnorm):
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
-    setp_true(gdat, 'sinddistmean', 2.5, popl=True)
+    setp_true(gdat, 'sinddistmean', 2.15, popl=True)
     setp_true(gdat, 'sinddiststdv', 1., popl=True)
     
     setp_true(gdat, 'curvdistmean', 2., popl=True)
@@ -909,6 +914,7 @@ def init( \
         gdat.exprbgal = gdat.exprbgal[indxpnts]
         for k in range(3):
             gdat.exprspec[k, :, :] = gdat.exprspec[k, :, indxpnts].T
+        gdat.exprsind = gdat.exprsind[indxpnts]
         if gdat.exprcnts != None:
             gdat.exprcnts = gdat.exprcnts[:, indxpnts, :]
 
@@ -960,6 +966,7 @@ def init( \
         gdat.truespec = [gdat.exprspec]
         gdat.truecnts = [gdat.exprcnts]
         gdat.truesind = [gdat.exprsind]
+
         #gdat.truestrg = [gdat.exprstrg]
         #gdat.truestrgclss = [gdat.exprstrgclss]
         #gdat.truestrgassc = [gdat.exprstrgassc]
@@ -1025,14 +1032,26 @@ def init( \
         
         gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
         gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
-    
+        
+        for l in gdat.trueindxpopl:
+            if gdat.truespatdisttype[l] == 'gaus':
+                print 'gdat.truepdfnspatpriotemp'
+                summgene(gdat.truepdfnspatpriotemp)
+                print 
+                gdat.truelpdfspatprio, gdat.truelpdfspatprioobjt = retr_spatprio(gdat, gdat.truesampvarb[gdat.trueindxfixpspatdistcons[l]], gdat.truepdfnspatpriotemp)
+                print 'gdat.truelpdfspatprio'
+                summgene(gdat.truelpdfspatprio)
+                print 'gdat.truelpdfspatprioobjt(0., 0.)'
+                print gdat.truelpdfspatprioobjt(0., 0.)
+                print gdat.truelpdfspatprioobjt(array([0., 0.]), array([0., 0.]))
+                print
+               
         gdat.truecnts = [[] for l in gdat.trueindxpopl]
         gdat.truelgal = [[] for l in gdat.trueindxpopl]
         gdat.truebgal = [[] for l in gdat.trueindxpopl]
         gdat.truegang = [[] for l in gdat.trueindxpopl]
         gdat.trueaang = [[] for l in gdat.trueindxpopl]
         gdat.truespec = [[] for l in gdat.trueindxpopl]
-        gdat.truespecplot = [[] for l in gdat.trueindxpopl]
         if gdat.truenumbtrap > 0:
             gdat.truesind = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
             gdat.truecurv = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
@@ -1054,16 +1073,32 @@ def init( \
                                                                                                 choice(array([1., -1.]), size=gdat.truenumbpnts[l])
                 
                 if gdat.truespatdisttype[l] == 'gaus':
-                    numbrejesamp = gdat.truenumbpnts[l] * 1000
+                    numbrejesamp = gdat.truenumbpnts[l] * 1
                     lgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
                     bgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
+                    print 'hey'
+                    print 'gdat.binslgalcart'
+                    summgene(gdat.binslgalcart * gdat.anglfact)
+                    print 'gdat.binsbgalcart'
+                    summgene(gdat.binsbgalcart * gdat.anglfact)
+                    print 'lgaltemp'
+                    summgene(lgaltemp * gdat.anglfact)
+                    print 'bgaltemp'
+                    summgene(bgaltemp * gdat.anglfact)
                     pdfntemp = gdat.truelpdfspatprioobjt(lgaltemp, bgaltemp)
+                    print 'pdfntemp'
+                    print pdfntemp
+                    print 'gdat.truenumbpnts[l]'
+                    print gdat.truenumbpnts[l]
+                    print 'arange(numbrejesamp)'
+                    print arange(numbrejesamp)
+                    raise Exception('')
                     indxtemp = choice(arange(numbrejesamp), p=pdfntemp, size=gdat.truenumbpnts[l])
                     gdat.truelgal[l] = lgaltemp[indxtemp]
                     gdat.truebgal[l] = bgaltemp[indxtemp]
+                    print 'done'
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
-                gdat.truespecplot[l] = empty((gdat.numbenerplot, gdat.truenumbpnts[l]))
 
                 if gdat.truefluxdisttype[l] == 'powr':
                     gdat.truespec[l][:, gdat.indxenerfluxdist[0], :] = icdf_flux_powr(rand(gdat.truenumbpnts[l]), gdat.trueminmflux, gdat.maxmflux, \
@@ -1077,8 +1112,13 @@ def init( \
     
                 if gdat.numbener > 1:
                     # spectral parameters
-                    gdat.truesind[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
+                    if gdat.truesinddisttype[l] == 'gaus':
+                        gdat.truesind[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
+                    if gdat.truesinddisttype[l] == 'atan':
+                        gdat.truesind[l] = icdf_atan(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpsinddistmean[l]], \
+                                                                                                                            gdat.truefixp[gdat.trueindxfixpsinddiststdv[l]])
+                    
                     if gdat.truespectype[l] == 'curv':
                         gdat.truecurv[l] = icdf_gaus(rand(gdat.truenumbpnts[l]), gdat.truefixp[gdat.trueindxfixpcurvdistmean[l]], \
                                                                                                                             gdat.truefixp[gdat.trueindxfixpcurvdiststdv[l]])
@@ -1091,9 +1131,6 @@ def init( \
                     gdat.truespec[l][:] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
                                                                                                              gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l])[None, :, :]
                     
-                    gdat.truespecplot[l] = retr_spec(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], \
-                                                                                              gdat.truecurv[l], gdat.trueexpo[l], gdat.truespectype[l], plot=True)
-                
                 gdat.truesampvarb[gdat.trueindxsamplgal[l]] = gdat.truelgal[l]
                 gdat.truesampvarb[gdat.trueindxsampbgal[l]] = gdat.truebgal[l]
                 gdat.truesampvarb[gdat.trueindxsampflux[l]] = gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
@@ -1118,10 +1155,6 @@ def init( \
                     print
                 print '%20s %20f %15s' % (gdat.truenamepara[k], gdat.truesampvarb[k], gdat.truescalpara[k])
 
-        if gdat.pntstype == 'lens':
-            gdat.truesourtype = 'gaus'
-            gdat.truelenstype = 'SIE'
-        
         proc_samp(gdat, None, 'true', raww=True)
         proc_samp(gdat, None, 'true')
             
@@ -1787,6 +1820,19 @@ def work(pathoutpthis, lock, indxprocwork):
         for l in gdat.indxpopl:
             gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]] = rand(gdatmodi.thisindxsampcomp[l].size)
         
+        if gdat.strgcnfg == 'pcat_ferm_inpt_ngal':
+            print 'gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]'
+            print gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]
+            print 'len(gdatmodi.thisindxpntsfull[0])'
+            print len(gdatmodi.thisindxpntsfull[0])
+            print 'gdat.truenumbpnts[0]'
+            print gdat.truenumbpnts[0]
+            print 'gdat.truesind[0]'
+            print gdat.truesind[0].size
+            print 'gdatmodi.thisindxsampsind[0]'
+            print gdatmodi.thisindxsampsind[l].size
+            print
+
         ## PS components
         if gdat.inittype == 'refr':
             for l in gdat.indxpopl:
@@ -1803,7 +1849,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.thissamp[gdatmodi.thisindxsampflux[l][indxtruepntsgood]] = fluxunit[indxtruepntsgood]
                 
                 if gdat.numbener > 1:
-                    gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
+                    if gdat.sinddisttype[l] == 'gaus':
+                        gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                    gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]])
+                    if gdat.sinddisttype[l] == 'atan':
+                        gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
                                                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]])
                     if gdat.spectype[l] == 'curv':
                         try:
