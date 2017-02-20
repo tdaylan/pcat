@@ -131,16 +131,6 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
         if evalcirc:
             indxfluxproxtemp = digitize(spec[gdat.indxenerfluxdist[0], k], gdat.binsprox) - 1
             indxpixlpnts = retr_indxpixl(gdat, bgal[k], lgal[k])
-            
-            if gdat.strgcnfg == 'pcat_ferm_inpt_ngal' and gdat.numbproc > 1:
-                print 'lgal[k]'
-                print lgal[k] * gdat.anglfact
-                print 'bgal[k]'
-                print bgal[k] * gdat.anglfact
-                print 'spec[gdat.indxenerfluxdist[0], k]'
-                print spec[gdat.indxenerfluxdist[0], k]
-                print
-
             indxpixltemp = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
             if isinstance(indxpixltemp, int):
                 indxpixltemp = gdat.indxpixl
@@ -2565,9 +2555,15 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsanglplot, gdat.exprpsfntype, gdat.binsoaxiplot, gdat.exproaxitype)
     
     if gdat.evalcirc != 'full':
-        gdat.numbfluxprox = 3
+        
+        if gdat.evalcirc == 'psfn':
+            gdat.numbfluxprox = 3
+        if gdat.evalcirc == 'bein':
+            gdat.numbfluxprox = 3
+        
         gdat.indxprox = arange(gdat.numbfluxprox)
         gdat.binsprox = logspace(log10(gdat.minmflux), log10(gdat.maxmflux), gdat.numbfluxprox + 1)
+        
         if gdat.evalcirc == 'psfn':
             # determine the maximum angle at which the PS flux map will be computed
             gdat.maxmangleval = empty(gdat.numbfluxprox)
@@ -2581,7 +2577,8 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
         
         if gdat.evalcirc == 'bein':
-            gdat.maxmangleval = 6. * gdat.binsprox[1:]
+            gdat.maxmangleval = 10. * gdat.binsprox[1:]
+            #gdat.maxmangleval = array([1. / gdat.anglfact]) # 4 * gdat.binsprox[1:]
 
         if gdat.pntstype == 'lght' and gdat.maxmangl - amax(gdat.maxmangleval) < 1.1 * sqrt(2) * (gdat.maxmgang - gdat.maxmgangdata):
             print 'gdat.maxmangl'
@@ -2606,8 +2603,6 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.verbtype > 0 and boolinitsetp:
             print 'Element evaluation will be performed up to'
             print gdat.maxmangleval * gdat.anglfact
-            print 'with the binning'
-            print gdat.binsprox
 
         if os.path.isfile(path):
             if gdat.verbtype > 0 and boolinitsetp:
@@ -2779,20 +2774,33 @@ def setpinit(gdat, boolinitsetp=False):
     
     if gdat.pntstype == 'lght':
         gdat.exprfwhm = 2. * retr_psfnwdth(gdat, gdat.exprpsfn, 0.5)
-        gdat.stdvspatprio = amax(gdat.exprfwhm) / gdat.anglfact
+        gdat.stdvspatprio = amax(gdat.exprfwhm)
     if gdat.pntstype == 'lens':
-        gdat.stdvspatprio = amax(gdat.exprpsfp) / gdat.anglfact
+        gdat.stdvspatprio = amax(gdat.exprpsfp)
     
     # spatial template for the catalog prior
     for strgtype in ['', 'true']:
         temp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
         lgalprio = getattr(gdat, strgtype + 'lgalprio')
         bgalprio = getattr(gdat, strgtype + 'bgalprio')
-        for k in range(gdat.numbspatprio):
+        print 'strgtype'
+        print strgtype
+        print 'lgalprio'
+        print lgalprio * gdat.anglfact
+        print 'bgalprio'
+        print bgalprio * gdat.anglfact
+        print 'gdat.stdvspatprio'
+        print gdat.stdvspatprio * gdat.anglfact
+        for k in range(getattr(gdat, strgtype + 'numbspatprio')):
+            print 'temp'
+            summgene(temp)
             temp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcart - lgalprio[k])**2 / gdat.stdvspatprio**2) * \
                                                                                         exp(-0.5 * (gdat.binsbgalcart - bgalprio[k])**2 / gdat.stdvspatprio**2)
+        print 'temp'
+        summgene(temp)
         temp /= amax(temp)
         setattr(gdat, strgtype + 'pdfnspatpriotemp', temp)
+        print
     
     # proposals
     # parameters not subject to proposals
@@ -3258,7 +3266,7 @@ def retr_indxsamp(gdat, strgpara=''):
         indxcomp.append(arange(numbcomp[l]))
 
     # number of transdimensional parameters
-    numbtrappopl = gdat.maxmnumbpnts * numbcomp
+    numbtrappopl = maxmnumbpnts * numbcomp
     numbtrapcumr = cumsum(numbtrappopl)
     numbtrapcuml = concatenate((array([0]), numbtrapcumr[:-1]))
     numbtrap = sum(numbtrappopl)
@@ -4099,9 +4107,19 @@ def retr_lpricurvdist(gdat, gdatmodi, curv, sampvarb, l):
 
 def retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp):
     
+    print 'spatdistcons'
+    print spatdistcons
+    print 'pdfnspatpriotemp'
+    summgene(pdfnspatpriotemp)
     pdfnspatprio = spatdistcons + pdfnspatpriotemp
+    print 'pdfnspatprio'
+    summgene(pdfnspatprio)
     pdfnspatprio /= sum(pdfnspatprio)
+    print 'pdfnspatprio'
+    summgene(pdfnspatprio)
     lpdfspatprio = log(pdfnspatprio)
+    print 'pdfnspatprio'
+    summgene(pdfnspatprio)
     lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binslgalcart, gdat.binsbgalcart, lpdfspatprio)
     
     return lpdfspatprio, lpdfspatprioobjt
