@@ -772,8 +772,8 @@ def init( \
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.minmlpdfspatpriointp = 2. * log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = 2. * log(1. / 2. / gdat.maxmgang) + 2.
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
