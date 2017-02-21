@@ -189,12 +189,12 @@ Spectral indices :math:`s_a` follow a Gaussian distribution with mean :math:`\la
 
 Generating mock data
 +++++++++++++++++++++
-PCAT ships with a built-in mock (simulated) data generator. The generated mock data is randomly drawn from a generative mock model, not to be confused with the above model subject to inference. Once the user configures the prior probability density of this model, PCAT samples from the catalog space given the simulated dataset. Some of the mock model parameters can be fixed, i.e., assigned delta function priors. These are
+PCAT ships with a mock (simulated) data generator. Mock data is randomly drawn from a generative model, not to be confused with the model subject to inference, i.e., the fitting model. Once the user configures the prior probability density of the fitting model, PCAT samples from the catalog space given the simulated dataset. Some of the generative model parameters can be fixed, i.e., assigned delta function priors. These are
 
 - the number of mock elements, ``mocknumbpnts``,
 - hyperparameters controlling the population characteristics of these elements.
 
-All other mock model parameters are fair draws from the hierarchical prior. 
+All other generative model parameters are fair draws from the hierarchical prior. 
 
 When working on variations of a certain problem or different analyses on the same dataset, it is useful to have default priors. PCAT allows unique defaults for different built-in experiments, controlled by the argument ``exprtype``. Currently the built-in experimental types are 
 
@@ -208,13 +208,13 @@ By setting ``exprtype`` the user imposes the default prior structure for the cho
 
 .. note::
 
-    The mock generative model defaults to that of the model subject to inference. In other words, if the user does not specify any mock model parameters, the generative mock model will be the same as the model used to fit the data. In most cases, one will be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by deliberately setting the mock model parameters different from the prior model. 
+    PCAT has a built-in fudicial (default) generative model for each experiment type. The user can change parts of this model by providing arguments with the parameter names with a preceeding ``true`` (indicating the fudicial model). The model subject to inference defaults to the resulting fudicial model. The user can also change parts of the fitting model by setting arguments with the relevant parameter names (this time, without ``true``, indicating the fitting model). In other words, if the user does not specify any parameters, the fudicial model will be used to generate data, and the same model will be fitted to the data. In most cases, however, one is be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by forcing the prior structure of the fitting model to be different from the generator model.
 
 Selecting the initial state
 +++++++++++++++++++++++++++++
 When the dataset is supplied by the user (``strgexprflux`` is set), and unless specified otherwise by setting ``randinit=False``, the initial state of the chain is drawn randomly from the prior. Note that in order for the initial state to be nonrandom, a reference catalog needs to be internally supplied.
 
-In constrast, if the dataset is simulated, ``randinit`` is not ``True`` and generative mock model is the same as the prior model, then the initial state of the chain is set to be the state from which the mock dataset was drawn.  
+In constrast, if the dataset is simulated, ``randinit`` is not ``True`` and generative model is the same as the prior model, then the initial state of the chain is set to be the state from which the mock dataset was drawn.  
 
 
 .. _sectoutp:
@@ -700,7 +700,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 .. note::
     
-    The mock model parameters can be set by preceeding the parameter name with ``mock``. For example, in order to set the mock number of PS, you can specify ``mocknumbpnts=array([10])``.
+    The generative model parameters can be set by preceeding the parameter name with ``mock``. For example, in order to set the mock number of PS, you can specify ``mocknumbpnts=array([10])``.
 
 
 
