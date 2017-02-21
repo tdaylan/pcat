@@ -4277,6 +4277,20 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         
         ### PS flux map
         pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, oaxitype, evalcirc=gdat.evalcirc)
+    
+        print 'gdat.exprpsfp'
+        print gdat.exprpsfp
+        print 'psfp'
+        print sampvarb[gdat.trueindxfixppsfp]
+        print 'lgalconc'
+        summgene(lgalconc)
+        print 'bgalconc'
+        summgene(bgalconc)
+        print 'specconc'
+        summgene(specconc)
+        print 'pntsflux'
+        summgene(pntsflux)
+        print
 
         setattr(gdatobjt, strg + 'pntsflux', pntsflux)
         
