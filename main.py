@@ -484,11 +484,11 @@ def init( \
     if gdat.exprtype == 'sdyn':
         gdat.exprpsfntype = 'singgaus'
     
-    if psfninfoprio == None:
+    if gdat.psfninfoprio == None:
         if gdat.exprtype == 'ferm':
-            psfninfoprio = True
+            gdat.psfninfoprio = True
         else:
-            psfninfoprio = False
+            gdat.psfninfoprio = False
 
     psfntype = gdat.exprpsfntype
     setp_true(gdat, 'psfntype', psfntype)
@@ -784,10 +784,6 @@ def init( \
     gdat.maxmdistsour = 3. * gdat.maxmgang
     gdat.minmdotpsour = 0.
     gdat.maxmdotpsour = 5e-4
-
-    print 'gdat.psfninfoprio'
-    print gdat.psfninfoprio
-    print
 
     ## plot limits for element parameters
     for strgfeat in gdat.liststrgfeat:

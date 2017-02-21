@@ -3352,12 +3352,6 @@ def setp_fixp(gdat, strgpara=''):
                 n = k - getattr(gdat, strgpara + 'indxfixpsigcene0evt0')
                 meanfixp[k] = gdat.exprpsfp[n]
                 stdvfixp[k] = 0.1 * gdat.exprpsfp[n]
-
-                print 'k'
-                print k
-                print 'gdat.exprpsfp[n]'
-                print gdat.exprpsfp[n]
-                print 
             else:
                 if strgvarb.startswith('sig'):
                     scalfixp[k] = 'logt'
@@ -4192,14 +4186,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         psfntype = getattr(gdat, strgtype + 'psfntype')
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsanglplot, psfntype, gdat.binsoaxiplot, oaxitype)
         
-        print 'gdat.exprpsfp'
-        print gdat.exprpsfp
-        print 'sampvarb[gdat.indxfixppsfp]'
-        print sampvarb[gdat.indxfixppsfp]
-        print 'psfn'
-        summgene(psfn)
-        print
-
         if oaxitype:
             psfnintp = []
             for p in gdat.indxoaxi:
