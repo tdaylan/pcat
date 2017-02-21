@@ -123,7 +123,7 @@ def init( \
          propsinddist=True, \
          propnumbpnts=True, \
          prophypr=True, \
-         proppsfp=None, \
+         proppsfp=True, \
          propbacp=True, \
          proplenp=True, \
          propcomp=True, \
@@ -244,12 +244,6 @@ def init( \
             gdat.strgexprname = 'XXXXX'
         if gdat.exprtype == 'sdyn':
             gdat.strgexprname = 'TGAS-RAVE'
-    
-    if gdat.proppsfp == None:
-        if gdat.pntstype == 'lens':
-            gdat.proppsfp = False
-        else:
-            gdat.proppsfp = True
     
     if gdat.lablgangunit == None:
         if gdat.exprtype == 'ferm':

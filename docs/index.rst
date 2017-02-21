@@ -243,21 +243,21 @@ If not disabled by the user, PCAT produces plots in every stage of a run. Some p
 
 Chain
 +++++
-``pcat.main.init()`` returns a pointer to the object that contains the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``. The chain is in the form of an HDF5 file, where datasets contain samples from the parameters, or quantities derived from the parameters, as well as diagnostic and utility variables. Available chains are
+``pcat.main.init()`` returns a pointer to the object that contains the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``, which is an HDF5 file. Each dataset (or object attribute as in the former case) is an ``ndarray`` of samples, either of the parameters or of quantities derived from the parameters, as well as diagnostic and utility variables. Available datasets are
 
 =================  ==========================================================================
 Field              Explanation
 =================  ==========================================================================
 ``sampvarb``       Parameter vector
 ``samp``           Scaled parameter vector (uniformly distributed with respect to the prior)
-``lgalpopi``       Horizontal coordinates of the ith population
-``bgalpopi``       Vertical coordinates of the l:sup:`th` population
-``fluxpopi``       Flux of the ith population
-``sindpopi``       Spectral index of the ith population
-``curvpopi``       Spectral curvature of the ith population
-``expopopi``       Spectral cutoff energy of the ith population
-``deltllikpopi``   Delta loglikelihood of the ith population
+``lgalpopl``       Horizontal coordinates of the l:math:`^{th}` population
+``bgalpopl``       Vertical coordinates of the l:math:`^{th}` population
+``deltllikpopl``   Delta loglikelihood of the l:math:`^{th}` population
 =================  ==========================================================================
+``fluxpopl``       Flux of the l:math:`^{th}` population
+``sindpopl``       Spectral index of the l:math:`^{th}` population
+``curvpopl``       Spectral curvature of the l:math:`^{th}` population
+``expopopl``       Spectral cutoff energy of the l:math:`^{th}` population
 
 In order to reduce inter-process communication, PCAT writes its internal state to the disc before child processes are spawned and after individual workers have finished their tasks. These states are python pickle objects and can also be found in ``$PCAT_DATA_PATH/outp/rtag/gdatinit.p`` and ``$PCAT_DATA_PATH/outp/rtag/gdatmodiXXXX.p``.
 
