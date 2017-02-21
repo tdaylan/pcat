@@ -137,7 +137,13 @@ Horizontal positions are assumed to be uniformly distributed, whereas the vertic
 Radial positions are assumed to follow an exponential distribution with a scale, ``gangdistscal``. The azimuthal positions are then taken to be uniformly distributed.
 
 + ``'gaus'``
-The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor. The amplitude of the constant, ``spatdistcons``, becomes a free parameter, which roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
+The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor.
+
+.. math::
+    
+    P(\theta_1, \theta_2) \propto \alpha_c + c \sum_k \exp{-\frac{1}{2}\frac{(\theta_1 - \theta_k)^2}{\sigma_c^2}}
+
+:math:`c` is a normalizing constant that brings the maximum of the second term to unity. The amplitude of the floor, :math:`\alpha_c`, is set by the parameter ``spatdistcons``. It roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
 
 
 - Flux distribution
@@ -156,11 +162,10 @@ Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``flux
 Spectral index distribution of elements can be set with the argument ``sinddisttype``.
 
 + ``'atan'``
-Spectral indices :math:`s_a` are distributed such that :math:`\arctan(s_a)` follow the uniform distribution between :math:`\arctan(s_{min})` and :math:`arctan(s_{max})`. :math:`s_{min}` and :math:`arctan(s_{max})` can be set by ``minmsind`` and ``maxmflux``, respectively.
+Spectral indices :math:`s_a` are distributed such that :math:`\arctan(s_a)` follow the uniform distribution between :math:`\arctan(s_{min})` and :math:`\arctan(s_{max})`. :math:`s_{min}` and :math:`s_{max}` can be set by ``minmsind`` and ``maxmflux``, respectively.
 
-+ ``'bind'``
-Power law
-Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``fluxdistslopbinX``, where X is the piece index.
++ ``'gaus'``
+Spectral indices :math:`s_a` follow a Gaussian distribution with mean :math:`\lambda_s` and variance :math:`\sigma_s^2`.
 
 
 
