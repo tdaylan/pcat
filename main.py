@@ -948,6 +948,12 @@ def init( \
         if gdat.exprnumbpnts > 0:
             gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
 
+    print 'gdat.truesinddistype'
+    print gdat.truesinddistype
+    print 'gdat.sinddistype'
+    print gdat.sinddistype
+    print
+
     # generate true data
     if gdat.datatype == 'mock':
         

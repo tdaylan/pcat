@@ -4186,7 +4186,24 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
     for l in range(numbpopl):
         dicttemp['spec'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expo'][l], spectype=spectype[l])
-    
+   
+    if gdat.strgcnfg == 'pcat_ferm_quas_mock':
+        print 'dicttemp[lgal]'
+        print dicttemp['lgal']
+        print
+        print 'dicttemp[bgal]'
+        print dicttemp['bgal']
+        print
+        print 'dicttemp[flux]'
+        print dicttemp['flux']
+        print
+        print 'dicttemp[sind]'
+        print dicttemp['sind']
+        print
+        print 'dicttemp[spec]'
+        print dicttemp['spec']
+        print
+
     lgalconc = concatenate(dicttemp['lgal'])
     bgalconc = concatenate(dicttemp['bgal'])
     specconc = concatenate(dicttemp['spec'], axis=1)
@@ -4302,19 +4319,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
 
         setattr(gdatobjt, strg + 'lpdfspatpriointp', lpdfspatpriointp)
         setattr(gdatobjt, strg + 'lpdfspatprioobjt', lpdfspatprioobjt)
-
-    print 'dicttemp[lgal]'
-    print dicttemp['lgal']
-    print
-    print 'dicttemp[bgal]'
-    print dicttemp['bgal']
-    print
-    print 'dicttemp[flux]'
-    print dicttemp['flux']
-    print
-    print 'dicttemp[sind]'
-    print dicttemp['sind']
-    print
 
     ### log-prior
     if gdat.numbtrap > 0:
