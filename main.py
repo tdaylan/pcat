@@ -416,15 +416,7 @@ def init( \
             gdat.maxmgangdata = 1.
         if gdat.exprtype == 'hubb':
             gdat.maxmgangdata = 2. / gdat.anglfact
-   
-    numbspatprio = 20
-    lgalprio = icdf_self(rand(numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-    bgalprio = icdf_self(rand(numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-    setp_true(gdat, 'numbspatprio', numbspatprio)
-    setp_true(gdat, 'lgalprio', lgalprio)
-    setp_true(gdat, 'bgalprio', bgalprio)
     
-
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
         retr_fermpsfn(gdat)
@@ -772,8 +764,8 @@ def init( \
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
-    gdat.minmlpdfspatpriointp = 2. * log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = 2. * log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.minmlpdfspatpriointp = -8.#2. * log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = -15.#2. * log(1. / 2. / gdat.maxmgang) + 2.
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
@@ -1047,9 +1039,10 @@ def init( \
         gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
         gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
         
-        for l in gdat.trueindxpopl:
-            if gdat.truespatdisttype[l] == 'gaus':
-                gdat.truelpdfspatprio, gdat.truelpdfspatprioobjt = retr_spatprio(gdat, gdat.truesampvarb[gdat.trueindxfixpspatdistcons[l]], gdat.truepdfnspatpriotemp)
+        # temp
+        #for l in gdat.trueindxpopl:
+        #    if gdat.truespatdisttype[l] == 'gaus':
+        #        gdat.truelpdfspatprio, gdat.truelpdfspatprioobjt = retr_spatprio(gdat, gdat.truesampvarb[gdat.trueindxfixpspatdistcons[l]], gdat.truepdfnspatpriotemp)
                
         gdat.truecnts = [[] for l in gdat.trueindxpopl]
         gdat.truelgal = [[] for l in gdat.trueindxpopl]
@@ -1077,18 +1070,18 @@ def init( \
                     gdat.truebgal[l] = icdf_expo(rand(gdat.truenumbpnts[l]), gdat.maxmgang, gdat.truefixp[gdat.trueindxfixpbgaldistscal[l]]) * \
                                                                                                 choice(array([1., -1.]), size=gdat.truenumbpnts[l])
                 
-                if gdat.truespatdisttype[l] == 'gaus':
-                    numbrejesamp = gdat.truenumbpnts[l] * 1
-                    lgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-                    bgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
-                    lgaltemp * gdat.anglfact
-                    bgaltemp * gdat.anglfact
-                    lpdftemp = gdat.truelpdfspatprioobjt(lgaltemp, bgaltemp, grid=False)
-                    probtemp = exp(lpdftemp)
-                    probtemp /= sum(probtemp)
-                    indxtemp = choice(arange(numbrejesamp), p=probtemp, size=gdat.truenumbpnts[l])
-                    gdat.truelgal[l] = lgaltemp[indxtemp]
-                    gdat.truebgal[l] = bgaltemp[indxtemp]
+                #if gdat.truespatdisttype[l] == 'gaus':
+                #    numbrejesamp = gdat.truenumbpnts[l] * 1
+                #    lgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+                #    bgaltemp = icdf_self(rand(numbrejesamp), -gdat.maxmgangdata, 2. * gdat.maxmgangdata) 
+                #    lgaltemp * gdat.anglfact
+                #    bgaltemp * gdat.anglfact
+                #    lpdftemp = gdat.truelpdfspatprioobjt(bgaltemp, lgaltemp, grid=False)
+                #    probtemp = exp(lpdftemp)
+                #    probtemp /= sum(probtemp)
+                #    indxtemp = choice(arange(numbrejesamp), p=probtemp, size=gdat.truenumbpnts[l])
+                #    gdat.truelgal[l] = lgaltemp[indxtemp]
+                #    gdat.truebgal[l] = bgaltemp[indxtemp]
                 
                 gdat.truespec[l] = empty((3, gdat.numbener, gdat.truenumbpnts[l]))
 
@@ -1146,7 +1139,35 @@ def init( \
                 if k in concatenate(gdat.trueindxsamplgal):
                     print
                 print '%20s %20f %15s' % (gdat.truenamepara[k], gdat.truesampvarb[k], gdat.truescalpara[k])
+    
+        if gdat.lgalprio == None or gdat.bgalprio == None:
+            gdat.lgalprio = concatenate((gdat.truelgal))
+            gdat.bgalprio = concatenate((gdat.truebgal))
+            gdat.numbspatprio = gdat.lgalprio.size
 
+    if gdat.datatype == 'inpt':
+        if gdat.lgalprio == None or gdat.bgalprio == None:
+            gdat.numbspatprio = 20
+            gdat.lgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+            gdat.bgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
+    
+    # spatial template for the catalog prior
+    # temp -- this should move outside the if
+    gdat.pdfnspatpriotemp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
+    for k in range(gdat.numbspatprio):
+        gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
+                                                                                    exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
+    gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
+    
+    print 'gdat.truelgal'
+    print gdat.truelgal
+    print 
+    print 'gdat.pdfnspatpriotemp'
+    summgene(gdat.pdfnspatpriotemp)
+    print
+
+    if gdat.datatype == 'mock':
+        
         proc_samp(gdat, None, 'true', raww=True)
         proc_samp(gdat, None, 'true')
             

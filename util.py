@@ -2336,6 +2336,7 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
         gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
+        gdat.binslgalcartmesh, gdat.binsbgalcartmesh = meshgrid(gdat.binslgalcart, gdat.binsbgalcart)
         gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
         gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
         if gdat.pixltype == 'cart':
@@ -2778,17 +2779,6 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvspatprio = amax(gdat.exprfwhm)
     if gdat.pntstype == 'lens':
         gdat.stdvspatprio = amax(gdat.exprpsfp)
-    
-    # spatial template for the catalog prior
-    for strgtype in ['', 'true']:
-        temp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
-        lgalprio = getattr(gdat, strgtype + 'lgalprio')
-        bgalprio = getattr(gdat, strgtype + 'bgalprio')
-        for k in range(getattr(gdat, strgtype + 'numbspatprio')):
-            temp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcart - lgalprio[k])**2 / gdat.stdvspatprio**2) * \
-                                                                                        exp(-0.5 * (gdat.binsbgalcart - bgalprio[k])**2 / gdat.stdvspatprio**2)
-        temp /= amax(temp)
-        setattr(gdat, strgtype + 'pdfnspatpriotemp', temp)
     
     # proposals
     # parameters not subject to proposals
@@ -3718,7 +3708,7 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # flatten the array
     if tdim:
         if thisindxener == None:
-            maps = maps.flatten()#((gdat.numbpixl))
+            maps = maps.T.flatten()#((gdat.numbpixl))
         else:
             maps = maps.reshape((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     
@@ -4098,7 +4088,7 @@ def retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp):
     pdfnspatprio = spatdistcons + pdfnspatpriotemp
     pdfnspatprio /= sum(pdfnspatprio)
     lpdfspatprio = log(pdfnspatprio)
-    lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binslgalcart, gdat.binsbgalcart, lpdfspatprio)
+    lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binsbgalcart, gdat.binslgalcart, lpdfspatprio)
     
     return lpdfspatprio, lpdfspatprioobjt
 
@@ -4304,9 +4294,27 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         spatdistcons = sampvarb[getattr(gdat, strgtype + 'indxfixpspatdistcons')]
         pdfnspatpriotemp = getattr(gdat, strgtype + 'pdfnspatpriotemp')
         lpdfspatprio, lpdfspatprioobjt = retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp)
-        lpdfspatpriointp = lpdfspatprioobjt(gdat.lgalcart, gdat.bgalcart)
+        lpdfspatpriointp = lpdfspatprioobjt(gdat.bgalcart, gdat.lgalcart)
+        print 'tdpy.util.rbin(lpdfspatpriointp, [10, 10])'
+        set_printoptions(precision=1)
+        #print tdpy.util.rbin(lpdfspatpriointp, [10, 10]) - amin(tdpy.util.rbin(lpdfspatpriointp, [10, 10]))
+        print lpdfspatpriointp[:20, :20]
+
         setattr(gdatobjt, strg + 'lpdfspatpriointp', lpdfspatpriointp)
         setattr(gdatobjt, strg + 'lpdfspatprioobjt', lpdfspatprioobjt)
+
+    print 'dicttemp[lgal]'
+    print dicttemp['lgal']
+    print
+    print 'dicttemp[bgal]'
+    print dicttemp['bgal']
+    print
+    print 'dicttemp[flux]'
+    print dicttemp['flux']
+    print
+    print 'dicttemp[sind]'
+    print dicttemp['sind']
+    print
 
     ### log-prior
     if gdat.numbtrap > 0:
@@ -4329,7 +4337,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 lpri[1+gdat.numbpopl+l] = sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[gdat.indxfixpgangdistscal[l]]))) 
                 lpri[1+2*gdat.numbpopl+l] = -numbpnts[l] * log(2. * pi) 
             elif spatdisttype[l] == 'gaus':
-                lpri[1+gdat.numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['lgal'][l], dicttemp['bgal'][l], grid=False)) 
+                lpri[1+gdat.numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['bgal'][l], dicttemp['lgal'][l], grid=False)) 
             lpri[1+3*gdat.numbpopl+l] = retr_lprifluxdist(gdat, gdatmodi, dicttemp['flux'][l], sampvarb, l, minmflux, binsflux, fluxdisttype)
             if gdat.numbener > 1:
                 lpri[1+4*gdat.numbpopl+l] = retr_lprisinddist(gdat, gdatmodi, dicttemp['sind'][l], sampvarb, l, sinddisttype)

@@ -153,6 +153,15 @@ Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``flux
 
 - Spectral index distribution
 
+Spectral index distribution of elements can be set with the argument ``sinddisttype``.
+
++ ``'atan'``
+Spectral indices :math:`s_a` are distributed such that :math:`\arctan(s_a)` follow the uniform distribution between :math:`\arctan(s_{min})` and :math:`arctan(s_{max})`. :math:`s_{min}` and :math:`arctan(s_{max})` can be set by ``minmsind`` and ``maxmflux``, respectively.
+
++ ``'bind'``
+Power law
+Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``fluxdistslopbinX``, where X is the piece index.
+
 
 
 
