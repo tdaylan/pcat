@@ -130,8 +130,8 @@ Both horizontal positions, :math:`\theta_1`, and vertical positions, :math:`\the
 
 .. math::
     
-    P(\theta_1) = \frac{1}{2\theta_{max}} \\
-    P(\theta_2) = \frac{1}{2\theta_{max}}
+    P(\theta_1) &= \frac{1}{2\theta_{max}} \\
+    P(\theta_2) &= \frac{1}{2\theta_{max}}
 
 
 + ``'disc'``
@@ -139,8 +139,8 @@ Horizontal positions, :math:`\theta_1`, are assumed to be uniformly distributed,
 
 .. math::
     
-    P(\theta_1) = \frac{1}{2\theta_{max}} \\
-    P(\theta_2) = \frac{1}{\theta_{2s}} \exp \Bigg( -frac{\theta_2}{\theta_{2s}}\Bigg)
+    P(\theta_1) &= \frac{1}{2\theta_{max}} \\
+    P(\theta_2) &= \frac{1}{\theta_{2s}} \exp \Bigg( -\frac{\theta_2}{\theta_{2s}}\Bigg)
 
 The scale of the exponential distribution, :math:`\theta_{2s}`, is a hyperparameter subject to inference and set by ``bgaldistscal``.
 
@@ -150,8 +150,8 @@ Radial positions, :math:`\theta_r`, are assumed to follow an exponential distrib
 
 .. math::
     
-    P(\phi) = \frac{1}{2\phi} \\
-    P(\theta_r) = \frac{1}{\theta_{rs}} \exp \Bigg( -frac{\theta_r}{\theta_{rs}}\Bigg)
+    P(\phi) &= \frac{1}{2\phi} \\
+    P(\theta_r) &= \frac{1}{\theta_{rs}} \exp \Bigg( -\frac{\theta_r}{\theta_{rs}}\Bigg)
 
 
 + ``'gaus'``
@@ -161,7 +161,7 @@ The prior spatial distributon is the sum of a certain number of Gaussians and a 
     
     P(\theta_1, \theta_2) \propto \alpha_c + c \sum_k \exp \Bigg(-\frac{1}{2}\frac{(\theta_1 - \theta_k)^2}{\sigma_c^2}\Bigg) \exp \Bigg(-\frac{1}{2}\frac{(\theta_2 - \theta_k)^2}{\sigma_c^2}\Bigg)
 
-:math:`c` is a normalizing constant that brings the maximum of the second term to unity. The amplitude of the floor, :math:`\alpha_c`, is set by the parameter ``spatdistcons``. It roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
+:math:`c` is a normalizing constant that brings the maximum of the second term to unity. The amplitude of the floor, :math:`\alpha_c`, is set by the hyperparameter ``spatdistcons``. It roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
 
 
 - Flux distribution (``fluxdisttype``)
