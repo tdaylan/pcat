@@ -253,7 +253,6 @@ Field              Explanation
 ``lgalpopl``       Horizontal coordinates of the l:math:`^{th}` population
 ``bgalpopl``       Vertical coordinates of the l:math:`^{th}` population
 ``deltllikpopl``   Delta loglikelihood of the l:math:`^{th}` population
-=================  ==========================================================================
 ``fluxpopl``       Flux of the l:math:`^{th}` population
 ``sindpopl``       Spectral index of the l:math:`^{th}` population
 ``curvpopl``       Spectral curvature of the l:math:`^{th}` population
