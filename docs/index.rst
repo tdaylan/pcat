@@ -249,9 +249,9 @@ Chain
 Field              Explanation
 =================  ==========================================================================
 ``sampvarb``       Parameter vector
-``samp``           Scaled Parameter vector (uniform-distributed with respect to the prior)
+``samp``           Scaled parameter vector (uniformly distributed with respect to the prior)
 ``lgalpopi``       Horizontal coordinates of the ith population
-``bgalpopi``       Vertical coordinates of the ith population
+``bgalpopi``       Vertical coordinates of the l:sup:`th` population
 ``fluxpopi``       Flux of the ith population
 ``sindpopi``       Spectral index of the ith population
 ``curvpopi``       Spectral curvature of the ith population
