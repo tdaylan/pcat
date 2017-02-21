@@ -785,6 +785,10 @@ def init( \
     gdat.minmdotpsour = 0.
     gdat.maxmdotpsour = 5e-4
 
+    print 'gdat.psfninfoprio'
+    print gdat.psfninfoprio
+    print
+
     ## plot limits for element parameters
     for strgfeat in gdat.liststrgfeat:
         for strglimt in ['minm', 'maxm']:
@@ -883,6 +887,8 @@ def init( \
     if gdat.exprtype == 'chan':
         retr_chandata(gdat)
         gdat.exprinfo = True
+    
+    gdat.trueinfo = gdat.exprinfo or gdat.datatype == 'mock'
 
     # rotate PS coordinates to the ROI center
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
@@ -936,12 +942,6 @@ def init( \
         
         if gdat.exprnumbpnts > 0:
             gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprspec[0, gdat.indxenerfluxdist[0], :])
-
-    print 'gdat.truesinddisttype'
-    print gdat.truesinddisttype
-    print 'gdat.sinddisttype'
-    print gdat.sinddisttype
-    print
 
     # generate true data
     if gdat.datatype == 'mock':
@@ -1122,7 +1122,7 @@ def init( \
                         gdat.truesampvarb[gdat.trueindxsampcurv[l]] = gdat.truecurv[l]
                     if gdat.truespectype[l] == 'expo':
                         gdat.truesampvarb[gdat.trueindxsampexpo[l]] = gdat.trueexpo[l]
-               
+                
                 indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
                 gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
                 if gdat.enerdiff:
@@ -1155,13 +1155,6 @@ def init( \
                                                                                     exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
     gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
     
-    print 'gdat.truelgal'
-    print gdat.truelgal
-    print 
-    print 'gdat.pdfnspatpriotemp'
-    summgene(gdat.pdfnspatpriotemp)
-    print
-
     if gdat.datatype == 'mock':
         
         proc_samp(gdat, None, 'true', raww=True)

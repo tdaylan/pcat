@@ -142,7 +142,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
             psfntemp = psfnintp(dist)
-        
+            
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 pntsfluxsing[k, i, indxpixltemp, m] = spec[i, k] * psfntemp[i, :, m]
@@ -2675,6 +2675,8 @@ def setpinit(gdat, boolinitsetp=False):
     # proposal scale
     if gdat.pntstype == 'lens':
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+        # temp
+        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
         gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
     else:
         gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
@@ -3350,6 +3352,12 @@ def setp_fixp(gdat, strgpara=''):
                 n = k - getattr(gdat, strgpara + 'indxfixpsigcene0evt0')
                 meanfixp[k] = gdat.exprpsfp[n]
                 stdvfixp[k] = 0.1 * gdat.exprpsfp[n]
+
+                print 'k'
+                print k
+                print 'gdat.exprpsfp[n]'
+                print gdat.exprpsfp[n]
+                print 
             else:
                 if strgvarb.startswith('sig'):
                     scalfixp[k] = 'logt'
@@ -4161,23 +4169,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     for l in range(numbpopl):
         dicttemp['spec'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expo'][l], spectype=spectype[l])
    
-    if gdat.strgcnfg == 'pcat_ferm_quas_mock':
-        print 'dicttemp[lgal]'
-        print dicttemp['lgal']
-        print
-        print 'dicttemp[bgal]'
-        print dicttemp['bgal']
-        print
-        print 'dicttemp[flux]'
-        print dicttemp['flux']
-        print
-        print 'dicttemp[sind]'
-        print dicttemp['sind']
-        print
-        print 'dicttemp[spec]'
-        print dicttemp['spec']
-        print
-
     lgalconc = concatenate(dicttemp['lgal'])
     bgalconc = concatenate(dicttemp['bgal'])
     specconc = concatenate(dicttemp['spec'], axis=1)
@@ -4200,6 +4191,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
         psfntype = getattr(gdat, strgtype + 'psfntype')
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsanglplot, psfntype, gdat.binsoaxiplot, oaxitype)
+        
+        print 'gdat.exprpsfp'
+        print gdat.exprpsfp
+        print 'sampvarb[gdat.indxfixppsfp]'
+        print sampvarb[gdat.indxfixppsfp]
+        print 'psfn'
+        summgene(psfn)
+        print
 
         if oaxitype:
             psfnintp = []
@@ -4252,22 +4251,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         ### PS flux map
         pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, oaxitype, evalcirc=gdat.evalcirc)
     
-        print 'oaxitype'
-        print oaxitype
-        print 'gdat.exprpsfp'
-        print gdat.exprpsfp
-        print 'psfp'
-        print sampvarb[gdat.trueindxfixppsfp]
-        print 'lgalconc'
-        summgene(lgalconc)
-        print 'bgalconc'
-        summgene(bgalconc)
-        print 'specconc'
-        summgene(specconc)
-        print 'pntsflux'
-        summgene(pntsflux)
-        print
-
         setattr(gdatobjt, strg + 'pntsflux', pntsflux)
         
         ### model flux map
