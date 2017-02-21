@@ -675,6 +675,10 @@ def init( \
             except:
                 setattr(gdat, strg[4:], getattr(gdat, strg))
    
+    print 'gdat.indxfixppsfp'
+    print gdat.indxfixppsfp
+    print 
+
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -1174,7 +1178,11 @@ def init( \
 
     # final setup
     setpfinl(gdat, True) 
-
+    
+    print 'gdat.indxfixppsfp'
+    print gdat.indxfixppsfp
+    print 
+    
     # write the list of arguments to file
     # temp
     #fram = inspect.currentframe()
@@ -1875,6 +1883,10 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxpntsfull, gdatmodi.thissamp, 'this')
+
+    print 'gdatmodi.thissampvarb[gdat.indxfixppsfp]'
+    print gdatmodi.thissampvarb[gdat.indxfixppsfp]
+    print 
 
     if gdat.verbtype > 1:
         print 'thissamp, thissampvarb'

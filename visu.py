@@ -486,6 +486,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         if gdat.indxfixpbacp.size == 2:
             for i in gdat.indxener:
                 indx = gdat.indxfixpbacp[i+gdat.indxback*gdat.numbener]
+                path = gdat.pathpostfixp + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.strgfixp[indx], truepara=[gdat.truefixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:

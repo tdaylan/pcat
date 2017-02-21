@@ -2095,6 +2095,9 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.pntstype == 'lens':
         gdat.strgelem = 'Subhalo'
     
+    print 'gdat.indxfixppsfp'
+    print gdat.indxfixppsfp
+    
     # set model sample vector indices
     retr_indxsamp(gdat)
 
@@ -4170,7 +4173,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
     # process a sample vector and the occupancy list to calculate secondary variables
 	## secondary variables needed for likelihood evaluation    
-    psfp = sampvarb[getattr(gdat, 'indxfixppsfp')]
+    psfp = sampvarb[getattr(gdat, strgtype + 'indxfixppsfp')]
     if gdat.pntstype == 'lens':
         psfnkern = []
         for i in gdat.indxener:
@@ -4179,11 +4182,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     if gdat.pntstype == 'lght':
         ### PSF off-axis factor
         if oaxitype:
-            onor = sampvarb[getattr(gdat, 'indxfixppsfponor')]
-            oind = sampvarb[getattr(gdat, 'indxfixppsfpoind')]
+            onor = sampvarb[getattr(gdat, strgtype + 'indxfixppsfponor')]
+            oind = sampvarb[getattr(gdat, strgtype + 'indxfixppsfpoind')]
             factoaxi = retr_factoaxi(gdat, gdat.binsoaxiplot, onor, oind)
     
         psfntype = getattr(gdat, strgtype + 'psfntype')
+        
         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsanglplot, psfntype, gdat.binsoaxiplot, oaxitype)
         
         if oaxitype:
@@ -4194,7 +4198,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             psfnintp = interp1d_pick(gdat.binsanglplot, psfn, axis=1)
         setattr(gdatobjt, strg + 'psfnintp', psfnintp)
    
-    bacp = sampvarb[getattr(gdat, 'indxfixpbacp')]
+    bacp = sampvarb[getattr(gdat, strgtype + 'indxfixpbacp')]
     
     if gdat.pntstype == 'lens':
         
@@ -4597,7 +4601,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         
                         booltemp = False
                         if strgfeat == 'gang' and spatdisttype[l] == 'gang' or strgfeat == 'bgal' and spatdisttype[l] == 'disc': 
-                            scal = sampvarb[getattr(gdat, 'indxfixp' + strgfeat + 'distscal')[l]]
+                            scal = sampvarb[getattr(gdat, strgtype + 'indxfixp' + strgfeat + 'distscal')[l]]
                             if strgfeat == 'gang' and spatdisttype[l] == 'gang':
                                 pdfn = pdfn_expo(xdat, maxm, scal)
                             else:
@@ -4610,7 +4614,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             pdfn = 1. / 2. / gdat.maxmgang + zeros_like(xdat)
                             booltemp = True
                         if strgfeat == 'flux' and fluxdisttype[l] == 'powr':
-                            slop = sampvarb[getattr(gdat, 'indxfixp' + strgfeat + 'distslop')[l]]
+                            slop = sampvarb[getattr(gdat, strgtype + 'indxfixp' + strgfeat + 'distslop')[l]]
                             pdfn = pdfn_powr(xdat, minm, maxm, slop)
                             booltemp = True
                         elif strgfeat == 'flux' and fluxdisttype[l] == 'bind':
@@ -4619,8 +4623,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             booltemp = True
                         elif strgfeat == 'sind' or strgfeat == 'curv' and spectype[l] == 'curv' or strgfeat == 'expo' and spectype[l] == 'expo':
                             # this does not work for mismodeling
-                            meanvarb = sampvarb[getattr(gdat, 'indxfixp' + strgfeat + 'distmean')[l]]
-                            stdv = sampvarb[getattr(gdat, 'indxfixp' + strgfeat + 'diststdv')[l]]
+                            meanvarb = sampvarb[getattr(gdat, strgtype + 'indxfixp' + strgfeat + 'distmean')[l]]
+                            stdv = sampvarb[getattr(gdat, strgtype + 'indxfixp' + strgfeat + 'diststdv')[l]]
                             if strgfeat == 'expo' and spectype[l] == 'expo':
                                 pdfn = pdfn_gaus(xdat, meanvarb, stdv)
                             else:
