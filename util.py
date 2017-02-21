@@ -121,10 +121,7 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
         spec = spec[:, None]
 
     numbpnts = lgal.size
-    if gdat.pixltype == 'unbd':
-        pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt, 2))
-    else:
-        pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    pntsfluxsing = zeros((numbpnts, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     
     for k in range(numbpnts):
         
@@ -2153,10 +2150,6 @@ def setpinit(gdat, boolinitsetp=False):
     # process index
     gdat.indxproc = arange(gdat.numbproc)
 
-    # flag to indicate whether information from a deterministic catalog will be used or not
-    # temp -- if datatype == 'inpt' trueinfo should depend on whether truexxxx are provided
-    gdat.trueinfo = gdat.datatype == 'mock' or gdat.exprinfo
-    
     if gdat.pntstype == 'lens':
         h5f = h5py.File(gdat.pathdata + 'inpt/adiscoef.h5','r')
         adiscoef = h5f['adiscoef']#[:]
@@ -2246,10 +2239,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.numbenerevtt = gdat.numbener * gdat.numbevtt
     
-    if gdat.pixltype == 'unbd':
-        gdat.correxpo = False
-    else:
-        gdat.correxpo = True
+    gdat.correxpo = True
     
     # off-axis angle
     gdat.numboaxi = 10
@@ -2328,41 +2318,35 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.pixltype == 'heal':
             gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
     
-    if gdat.pixltype == 'unbd':
-        gdat.indxdatasamp = arange(gdat.numbdatasamp)
-        gdat.indxpixlfull = arange(gdat.numbdatasamp)
-        gdat.indxpixlrofi = arange(gdat.numbdatasamp)
-        gdat.apix = (2. * gdat.maxmgangdata)**2
-    else:
-        gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
-        gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
-        gdat.binslgalcartmesh, gdat.binsbgalcartmesh = meshgrid(gdat.binslgalcart, gdat.binsbgalcart)
-        gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
-        gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
-        if gdat.pixltype == 'cart':
-            gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
-            gdat.sizepixl = sqrt(gdat.apix)
-            gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
-            gdat.indxsidecart = arange(gdat.numbsidecart)
-            gdat.indxsidemesh = meshgrid(gdat.indxsidecart, gdat.indxsidecart, indexing='ij')
-            gdat.bgalgrid = gdat.bgalcart[gdat.indxsidemesh[1].flatten()]
-            gdat.lgalgrid = gdat.lgalcart[gdat.indxsidemesh[0].flatten()]
-            gdat.shapcart = (gdat.numbsidecart, gdat.numbsidecart)
-            gdat.lgalgridcart = gdat.lgalgrid.reshape(gdat.shapcart)
-            gdat.bgalgridcart = gdat.bgalgrid.reshape(gdat.shapcart)
-        if gdat.pixltype == 'heal':
-            lgalheal, bgalheal, gdat.numbpixlfull, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
-            lgalheal = deg2rad(lgalheal)
-            bgalheal = deg2rad(bgalheal)
+    gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
+    gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
+    gdat.binslgalcartmesh, gdat.binsbgalcartmesh = meshgrid(gdat.binslgalcart, gdat.binsbgalcart)
+    gdat.lgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+    gdat.bgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
+    if gdat.pixltype == 'cart':
+        gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
+        gdat.sizepixl = sqrt(gdat.apix)
+        gdat.indxpixlrofi = arange(gdat.numbsidecart**2)
+        gdat.indxsidecart = arange(gdat.numbsidecart)
+        gdat.indxsidemesh = meshgrid(gdat.indxsidecart, gdat.indxsidecart, indexing='ij')
+        gdat.bgalgrid = gdat.bgalcart[gdat.indxsidemesh[1].flatten()]
+        gdat.lgalgrid = gdat.lgalcart[gdat.indxsidemesh[0].flatten()]
+        gdat.shapcart = (gdat.numbsidecart, gdat.numbsidecart)
+        gdat.lgalgridcart = gdat.lgalgrid.reshape(gdat.shapcart)
+        gdat.bgalgridcart = gdat.bgalgrid.reshape(gdat.shapcart)
+    if gdat.pixltype == 'heal':
+        lgalheal, bgalheal, gdat.numbpixlfull, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
+        lgalheal = deg2rad(lgalheal)
+        bgalheal = deg2rad(bgalheal)
    
-            gdat.indxpixlrofi = where((fabs(lgalheal) < gdat.maxmgangdata) & (fabs(bgalheal) < gdat.maxmgangdata))[0]
-            
-            gdat.indxpixlrofimarg = where((fabs(lgalheal) < 1.2 * gdat.maxmgang) & (fabs(bgalheal) < 1.2 * gdat.maxmgang))[0]
+        gdat.indxpixlrofi = where((fabs(lgalheal) < gdat.maxmgangdata) & (fabs(bgalheal) < gdat.maxmgangdata))[0]
+        
+        gdat.indxpixlrofimarg = where((fabs(lgalheal) < 1.2 * gdat.maxmgang) & (fabs(bgalheal) < 1.2 * gdat.maxmgang))[0]
 
-            gdat.lgalgrid = lgalheal
-            gdat.bgalgrid = bgalheal
+        gdat.lgalgrid = lgalheal
+        gdat.bgalgrid = bgalheal
 
-        gdat.indxpixlfull = arange(gdat.numbpixlfull)
+    gdat.indxpixlfull = arange(gdat.numbpixlfull)
     
     if gdat.evttbins:
         # PSF class string
@@ -2439,8 +2423,6 @@ def setpinit(gdat, boolinitsetp=False):
                     backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.back[c]
                 if gdat.pixltype == 'cart':
                     backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.back[c]
-                if gdat.pixltype == 'unbd':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbdatasamp, gdat.numbevttfull)) + gdat.back[c]
             if gdat.datatype == 'inpt':
                 backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.back[c]
         else:
@@ -2498,12 +2480,11 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
     
-    if gdat.pixltype != 'unbd':
-        gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
-        gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
+    gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
+    gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
     
-        # store pixels as unit vectors
-        gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+    # store pixels as unit vectors
+    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
    
     # construct a lookup table for converting HealPix pixels to ROI pixels
     if gdat.pixltype == 'heal':
@@ -2743,10 +2724,6 @@ def setpinit(gdat, boolinitsetp=False):
             else:
                 gdat.backfluxmean[c, i] += sum(gdat.backflux[c][i, :, 0])
     
-    if gdat.pixltype == 'unbd':
-        gdat.bgalgrid = gdat.datacnts[0, :, 0, 0]
-        gdat.lgalgrid = gdat.datacnts[0, :, 0, 1]
-
     # pixels whose posterior predicted emission will be saved
     gdat.numbpixlsave = min(10000, gdat.numbpixl)
     gdat.indxpixlsave = choice(arange(gdat.numbpixlsave), size=gdat.numbpixlsave)
@@ -2841,12 +2818,9 @@ def setpfinl(gdat, boolinitsetp=False):
         # temp
         gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
 
-    if gdat.pixltype != 'unbd':
-        gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
-        if gdat.enerdiff:
-            gdat.datafluxmean /= gdat.deltener
-    else:
-        gdat.datafluxmean = array([gdat.numbdatasamp / gdat.apix])
+    gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
+    if gdat.enerdiff:
+        gdat.datafluxmean /= gdat.deltener
 
     # sanity checks
     # temp
@@ -4278,6 +4252,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         ### PS flux map
         pntsflux = retr_pntsflux(gdat, lgalconc, bgalconc, specconc, psfnintp, oaxitype, evalcirc=gdat.evalcirc)
     
+        print 'oaxitype'
+        print oaxitype
         print 'gdat.exprpsfp'
         print gdat.exprpsfp
         print 'psfp'
@@ -4420,9 +4396,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         
        
         setattr(gdatobjt, strg + 'psfp', psfp)
-        if gdat.pixltype != 'unbd':
-            resicnts = gdat.datacnts - modlcnts
-            setattr(gdatobjt, strg + 'resicnts', resicnts)
+        resicnts = gdat.datacnts - modlcnts
+        setattr(gdatobjt, strg + 'resicnts', resicnts)
         
         ## derived variables
         if gdat.pntstype == 'lght':

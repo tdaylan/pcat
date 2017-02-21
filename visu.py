@@ -100,9 +100,8 @@ def plot_samp(gdat, gdatmodi, strg):
     if strg != 'true':
         if gdat.numbtrap > 0:
             for l in gdat.indxpopl:
-                if gdat.trueinfo:
-                    plot_scatspec(gdat, l, gdatmodi)
-                    plot_scatspec(gdat, l, gdatmodi, plotdiff=True)
+                plot_scatspec(gdat, l, gdatmodi)
+                plot_scatspec(gdat, l, gdatmodi, plotdiff=True)
                 if gdat.pntstype == 'lght' and gdat.numbener > 1:
                     plot_fluxsind(gdat, gdatmodi, strg, l, 'hist')
                     if gdatmodi != None:
@@ -825,9 +824,8 @@ def plot_brgt(gdat, gdatmodi, strg):
         if fluxbrgt.size > 0:
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label='Sample')
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
-    if gdat.trueinfo:
-        if gdat.truefluxbrgt.size > 0:
-            axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
+    if gdat.truefluxbrgt.size > 0:
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
     axis.set_xscale('log')
     axis.set_yscale('log')
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
@@ -869,22 +867,21 @@ def plot_fluxsind(gdat, gdatmodi, strg, l, strgtype):
         else:
             axis.scatter(flux, sind, alpha=gdat.alphmrkr, color='b', label='Sample')
     
-    if gdat.trueinfo and gdat.truesind[l] != None:
+    if False:
+        axis.hist2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], [gdat.binsfluxplot, gdat.binssindplot], cmap='Greens', alpha=gdat.alphmrkr)
+        #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], bins=[gdat.binsfluxplot, gdat.binssind], )[0]
+        #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
+    else:
+        axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
+    if gdat.datatype == 'mock' and gdat.exprsind != None:
         if False:
-            axis.hist2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], [gdat.binsfluxplot, gdat.binssindplot], cmap='Greens', alpha=gdat.alphmrkr)
-            #hist = histogram2d(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], bins=[gdat.binsfluxplot, gdat.binssind], )[0]
-            #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, cmap='Greens', label=gdat.truelabl,  alpha=gdat.alphmrkr)
+            axis.hist2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, [gdat.binsfluxplot, gdat.binssindplot], cmap='Reds', \
+                                                                                                                alpha=gdat.alphmrkr, label=gdat.nameexpr)
+            #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
+            #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.alphmrkr)
         else:
-            axis.scatter(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :], gdat.truesind[l], alpha=gdat.alphmrkr, color='g', label=gdat.truelabl)
-        if gdat.datatype == 'mock' and gdat.exprinfo and gdat.exprsind != None:
-            if False:
-                axis.hist2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, [gdat.binsfluxplot, gdat.binssindplot], cmap='Reds', \
-                                                                                                                    alpha=gdat.alphmrkr, label=gdat.nameexpr)
-                #hist = histogram2d(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, bins=[gdat.binsfluxplot, gdat.binssind])[0]
-                #axis.pcolor(gdat.binsfluxplot, gdat.binssind, hist, color='Reds', label=gdat.nameexpr, alpha=gdat.alphmrkr)
-            else:
-                axis.scatter(gdat.exprspectotl[0, gdat.indxenerfluxdist[0], :], gdat.exprsindtotl, alpha=0.05, color='r', label=gdat.nameexpr, s=1)
-                axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=0.3, color='r', label=gdat.nameexpr)
+            axis.scatter(gdat.exprspectotl[0, gdat.indxenerfluxdist[0], :], gdat.exprsindtotl, alpha=0.05, color='r', label=gdat.nameexpr, s=1)
+            axis.scatter(gdat.exprspec[0, gdat.indxenerfluxdist[0], :], gdat.exprsind, alpha=0.3, color='r', label=gdat.nameexpr)
     axis.set_xscale('log')
     axis.set_xlabel(gdat.lablfeattotl['flux'])
     axis.set_ylabel(gdat.lablfeattotl['sind'])
@@ -1798,14 +1795,15 @@ def plot_histcnts(gdat, l, gdatmodi):
             else:
                 axis.hist(gdatmodi.thiscnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='b', log=True, label='Sample')
             
-            if gdat.trueinfo:
+            try:
+                truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
+            except:
+                pass
+            if gdat.datatype == 'mock':
                 try:
-                    truehist = axis.hist(gdat.truecnts[l][i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='g', log=True, label=gdat.truelabl)
-                except:
-                    if gdat.verbtype > 0:
-                        print 'Skipping PS count histogram plot...'
-                if gdat.datatype == 'mock' and gdat.exprinfo:
                     axis.hist(gdat.exprcnts[i, :, m], gdat.binscnts[i, :], alpha=gdat.alphmrkr, color='red', log=True, label=gdat.strgcatl)
+                except:
+                    pass
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
             axis.set_xscale('log')
@@ -1828,10 +1826,9 @@ def plot_init(gdat):
     # make initial plots
     if gdat.makeplot:
         #plot_3fgl_thrs(gdat)
-        if gdat.pixltype != 'unbd':
-            plot_datacntshist(gdat)
-            if gdat.evalcirc != 'full':
-                plot_indxprox(gdat)
+        plot_datacntshist(gdat)
+        if gdat.evalcirc != 'full':
+            plot_indxprox(gdat)
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
         
@@ -1958,28 +1955,28 @@ def plot_init(gdat):
                 figr.savefig(path)
                 plt.close(figr)
         
-                for c in gdat.indxback:
-                    figr, axis, path = init_figr(gdat, None, 'backcnts', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                    plt.tight_layout()
-                    figr.savefig(path)
-                    plt.close(figr)
-    
-                if gdat.numbback > 1:
-                    figr, axis, path = init_figr(gdat, None, 'backcntstotl', '', indxenerplot=i, indxevttplot=m)
-                    imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
-                    make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                    plt.tight_layout()
-                    figr.savefig(path)
-                    plt.close(figr)
-        
-                figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
-                imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+            for c in gdat.indxback:
+                figr, axis, path = init_figr(gdat, None, 'backcnts', '', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.backcnts[c], '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
                 plt.tight_layout()
                 figr.savefig(path)
                 plt.close(figr)
+    
+            if gdat.numbback > 1:
+                figr, axis, path = init_figr(gdat, None, 'backcntstotl', '', indxenerplot=i, indxevttplot=m)
+                imag = retr_imag(gdat, axis, gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+                make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+                plt.tight_layout()
+                figr.savefig(path)
+                plt.close(figr)
+        
+            figr, axis, path = init_figr(gdat, None, 'diffcntstotl', '', indxenerplot=i, indxevttplot=m)
+            imag = retr_imag(gdat, axis, gdat.datacnts - gdat.backcntstotl, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
+            make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
+            plt.tight_layout()
+            figr.savefig(path)
+            plt.close(figr)
     
             if gdat.pntstype == 'lens':
                 

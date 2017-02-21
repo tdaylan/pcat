@@ -126,7 +126,7 @@ All features of Elements are assumed to have been drawn from an underlying proba
 - Spatial distribution (``spatdisttype``)
 
 + ``'unif'``
-Both horizontal positions, :math:`\theta_1`, and vertical positions, :math:`\theta_2`, are uniformly distributed.
+Both horizontal positions, :math:`\theta_1`, and vertical positions, :math:`\theta_2`, are uniformly distributed between :math:`-\theta_{max}` and :math:`\theta_{max}`, where :math:`2\theta_{max}` is the side of the square in which model elements can exist.
 
 .. math::
     
@@ -150,7 +150,7 @@ Radial positions, :math:`\theta_r`, are assumed to follow an exponential distrib
 
 .. math::
     
-    P(\phi) &= \frac{1}{2\phi} \\
+    P(\phi) &= \frac{1}{2\pi} \\
     P(\theta_r) &= \frac{1}{\theta_{rs}} \exp \Bigg( -\frac{\theta_r}{\theta_{rs}}\Bigg)
 
 
@@ -208,7 +208,7 @@ By setting ``exprtype`` the user imposes the default prior structure for the cho
 
 .. note::
 
-    PCAT has a built-in fudicial (default) generative model for each experiment type. The user can change parts of this model by providing arguments with the parameter names with a preceeding ``true`` (indicating the fudicial model). The model subject to inference defaults to the resulting fudicial model. The user can also change parts of the fitting model by setting arguments with the relevant parameter names (this time, without ``true``, indicating the fitting model). In other words, if the user does not specify any parameters, the fudicial model will be used to generate data, and the same model will be fitted to the data. In most cases, however, one is be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by forcing the prior structure of the fitting model to be different from the generator model.
+    PCAT has a built-in fudicial (default) generative model for each experiment type. The user can change parts of this model by providing arguments with the parameter names with a preceeding string ``'true'`` (indicating the fudicial model). The model subject to inference defaults to the resulting fudicial model. The user can also change parts of the fitting model by setting arguments with the relevant parameter names (this time, without ``'true'``, indicating the fitting model). In other words, if the user does not specify any parameters, the fudicial model will be used to generate data, and the same model will be fitted to the data. In most cases, however, one is be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by forcing the prior structure of the fitting model to be different from the generator model.
 
 Selecting the initial state
 +++++++++++++++++++++++++++++

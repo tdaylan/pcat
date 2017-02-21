@@ -59,7 +59,6 @@ def init( \
          lgalcntr=0., \
          bgalcntr=0., \
          maxmangl=None, \
-         exprinfo=None, \
          pixltype=None, \
          
          asscmetrtype='dist', \
@@ -321,12 +320,6 @@ def init( \
         if gdat.exprtype == 'chan' or gdat.exprtype == 'sdss':
             gdat.anglassc = 0.5 / gdat.anglfact
     
-    if gdat.exprinfo == None:
-        if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
-            gdat.exprinfo = True
-        else:
-            gdat.exprinfo = False
-
     if gdat.nameexpr == None:
         if gdat.exprtype == 'ferm':
             gdat.nameexpr = 'Fermi-LAT'
@@ -886,8 +879,10 @@ def init( \
 
     if gdat.exprtype == 'ferm':
         retr_fermdata(gdat)
+        gdat.exprinfo = True
     if gdat.exprtype == 'chan':
         retr_chandata(gdat)
+        gdat.exprinfo = True
 
     # rotate PS coordinates to the ROI center
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
@@ -1128,11 +1123,10 @@ def init( \
                     if gdat.truespectype[l] == 'expo':
                         gdat.truesampvarb[gdat.trueindxsampexpo[l]] = gdat.trueexpo[l]
                
-                if gdat.pixltype != 'unbd':
-                    indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
-                    gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
-                    if gdat.enerdiff:
-                        gdat.truecnts[l] *= gdat.deltener[:, None, None]
+                indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
+                gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
+                if gdat.enerdiff:
+                    gdat.truecnts[l] *= gdat.deltener[:, None, None]
         
         if gdat.verbtype > 1:
             print
@@ -1176,28 +1170,6 @@ def init( \
         if gdat.makeplot:
             plot_samp(gdat, None, 'true')
         
-        # temp
-        if gdat.pixltype == 'unbd':
-            gdat.numbdims = 2
-            gdat.truedatacnts = zeros((gdat.numbener, gdat.numbdatasamp, gdat.numbevtt, gdat.numbdims))
-            truelgaltemp = concatenate(gdat.truelgal)
-            truebgaltemp = concatenate(gdat.truebgal)
-            truefluxtemp = concatenate(gdat.truespec)[gdat.indxenerfluxdist[0], :]
-            probpntsflux = truefluxtemp / sum(mockfluxtemp)
-
-            gdat.truepsfncdfn = roll(cumsum(gdat.truepsfn, axis=1), 1)[0, :, 0]
-            gdat.truepsfncdfn[0] = 0.
-            gdat.truepsfncdfn /= amax(gdat.truepsfncdfn)
-            truepsfnicdfintp = interp1d_pick(gdat.truepsfncdfn, gdat.binsanglplot)
-
-            if gdat.trueindxpntstotl.size > 0:
-                for k in gdat.indxdatasamp:
-                    indxpntsthis = choice(gdat.trueindxpntstotl, p=probpntsflux) 
-                    radi = truepsfnicdfintp(rand())
-                    aang = rand() * 2. * pi
-                    gdat.truedatacnts[0, k, 0, 0] = truelgaltemp[indxpntsthis] + radi * sin(aang)
-                    gdat.truedatacnts[0, k, 0, 1] = truebgaltemp[indxpntsthis] + radi * cos(aang)
-        
         if gdat.seedstat != None:
             seed()
     
@@ -1233,11 +1205,10 @@ def init( \
         print gdat.minmflux
         print 'maxmflux'
         print gdat.maxmflux
-        if gdat.pixltype != 'unbd':
-            print 'minmcntsplot'
-            print gdat.minmcntsplot
-            print 'maxmcntsplot'
-            print gdat.maxmcntsplot
+        print 'minmcntsplot'
+        print gdat.minmcntsplot
+        print 'maxmcntsplot'
+        print gdat.maxmcntsplot
         if gdat.evalcirc != 'full':
             print 'maxmangleval'
             print gdat.anglfact * gdat.maxmangleval, ' [%s]' % gdat.strganglunit
