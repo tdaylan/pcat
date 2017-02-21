@@ -47,7 +47,9 @@ def init( \
          strgcatl=None, \
          anglassc=None, \
          nameexpr=None, \
-        
+         
+         lgalprio=None, \
+         bgalprio=None, \
 
          strgexpo=None, \
          

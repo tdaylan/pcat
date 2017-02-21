@@ -123,12 +123,15 @@ Distributions of element features
 
 All features of Elements are assumed to have been drawn from an underlying probability distribution. Note that cross-correlations between elements are assumed to be zero. The 1-point function of the element features are then controlled by the function arguments to ``pcat.main.init()``. Since each population of elements admits its own set of hyperparameters, the input to these arguments should be a ``list`` of strings.
 
-- Spatial distribution
-
-There are three models for the spatial distribution of elements, set by the ``spatdisttype`` argument.
+- Spatial distribution (``spatdisttype``)
 
 + ``'unif'``
 Both vertical and horizontal positions are uniformly distributed.
+
+.. math::
+    
+    P(\theta_1) = \frac{1}{2\theta_{max}}
+    P(\theta_2) = \frac{1}{2\theta_{max}}
 
 + ``'disc'``
 Horizontal positions are assumed to be uniformly distributed, whereas the vertical positions are drawn from the exponential distribution. The scale of the exponential distribution, ``bgaldistscal`` is a hyperparameter subject to inference.
@@ -141,14 +144,12 @@ The prior spatial distributon is the sum of a certain number of Gaussians and a 
 
 .. math::
     
-    P(\theta_1, \theta_2) \propto \alpha_c + c \sum_k \exp{-\frac{1}{2}\frac{(\theta_1 - \theta_k)^2}{\sigma_c^2}}
+    P(\theta_1, \theta_2) \propto \alpha_c + c \sum_k \exp \Bigg(-\frac{1}{2}\frac{(\theta_1 - \theta_k)^2}{\sigma_c^2}\Bigg) \Bigg(-\frac{1}{2}\frac{(\theta_2 - \theta_k)^2}{\sigma_c^2}\Bigg)
 
 :math:`c` is a normalizing constant that brings the maximum of the second term to unity. The amplitude of the floor, :math:`\alpha_c`, is set by the parameter ``spatdistcons``. It roughly parametrizes the degree of belief in the provided catalog. This spatial model is useful is there is a strong prior belief that elements exist at certain locations. An example is searching for elements at the positions of a earlier (deterministic) catalog. 
 
 
-- Flux distribution
-
-Flux distribution of elements can be set with the argument ``fluxdisttype``.
+- Flux distribution (``fluxdisttype``)
 
 + ``'powr'``
 Power law between ``minmflux`` and ``maxmflux`` with the slope ``fluxdistslop``.
