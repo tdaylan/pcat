@@ -191,7 +191,7 @@ Generating mock data
 +++++++++++++++++++++
 PCAT ships with a mock (simulated) data generator. Mock data is randomly drawn from a generative model, not to be confused with the model subject to inference, i.e., the fitting model. Once the user configures the prior probability density of the fitting model, PCAT samples from the catalog space given the simulated dataset. Some of the generative model parameters can be fixed, i.e., assigned delta function priors. These are
 
-- the number of mock elements, ``mocknumbpnts``,
+- the number of mock elements, ``truenumbpnts``,
 - hyperparameters controlling the population characteristics of these elements.
 
 All other generative model parameters are fair draws from the hierarchical prior. 
@@ -289,7 +289,7 @@ All user interaction with PCAT can be performed through the ``pcat.main.init()``
 .. In case you don't, here is a script that should get you the necessary files.
 
 
-The default run collects a single chain of 100000 samples before thinning and burn-in. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
+The default run collects a single chain of 100000 samples, discards the initial 20% of the samples and thins the remaining samples to obtain a chain of 1000 samples. The number of processes, total number of samples per process, the number of samples to be discarded and the factor by which to thin the chain can be set using the arguments ``numbproc``, ``numbswep``, ``numbburn`` and ``factthin``, respectively. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
 
 .. code-block:: none
     
@@ -386,8 +386,8 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :param pntstype: Functional type of elements. 
         
-        - ``lght`` Elements are light sources
-        - ``lens`` Elements are lenses.
+        - ``'lght'`` Elements are light sources
+        - ``'lens'`` Elements are lenses.
     
     :type pntstype: str
 
@@ -450,17 +450,17 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :param liketype: Type of the likelihood. 
 
-        - ``pois`` Poisson probability of getting the observed number of counts given the model prediction (default). 
-        - ``gaus`` Gaussian approximation of the above. This may accelerate the execution in cases, where the bottle neck of the sampler time budget is likelihood evaluation.
+        - ``'pois'`` Poisson probability of getting the observed number of counts given the model prediction (default). 
+        - ``'gaus'`` Gaussian approximation of the above. This may accelerate the execution in cases, where the bottle neck of the sampler time budget is likelihood evaluation.
     
     :type liketype: strg
 
 
     :param exprtype: Name of the experiment used to collect the observed data. ``exprtype`` can be used to set other options to their default values for the particular experiment. 
-        - ``ferm`` Fermi-LAT
-        - ``chan`` Chandra
-        - ``hubb`` HST
-        - ``sdss`` SDSS
+        - ``'ferm'`` Fermi-LAT
+        - ``'chan'`` Chandra
+        - ``'hubb'`` HST
+        - ``'sdss'`` SDSS
 
     :type exprtype: str
 
@@ -484,7 +484,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
         
         - ``heal`` HealPix
         - ``chan`` Cartesian
-        - ``unbd`` Unbinned (Not yet functional)
 
 
     **Plotting**
@@ -501,9 +500,9 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :param scalmaps: A string that sets the stretch of the count maps
 
-        - ``asnh`` Arcsinh (default)
-        - ``self`` Linear
-        - ``logt`` Log 10
+        - ``'asnh'`` Arcsinh (default)
+        - ``'self'`` Linear
+        - ``'logt'`` Log 10
 
     :type scalmaps: str
     
@@ -699,7 +698,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 .. note::
     
-    The generative model parameters can be set by preceeding the parameter name with ``mock``. For example, in order to set the mock number of PS, you can specify ``mocknumbpnts=array([10])``.
+    The generative model parameters can be set by preceeding the parameter name with ``true``. For example, in order to set the mock number of elements, you can specify ``truenumbpnts=array([10])``.
 
 
 

@@ -6,13 +6,19 @@ from util import *
 
 def plot_samp(gdat, gdatmodi, strg):
     
+    if strg == 'true':
+        strgtype = strg
+    else:
+        strgtype = ''
+    
+    if gdatmodi != None:
+        gdatobjt = gdatmodi
+    else:
+        gdatobjt = gdat
+    
+    spatdisttype = getattr(gdat, strgtype + 'spatdisttype')
+    
     if strg != 'post':
-        if strg == 'true':
-            strgtype = strg
-            gdatobjt = gdat
-        else:
-            strgtype = ''
-            gdatobjt = gdatmodi
     
         spectype = getattr(gdat, strgtype + 'spectype')
         indxpopl = getattr(gdat, strgtype + 'indxpopl')
@@ -81,12 +87,12 @@ def plot_samp(gdat, gdatmodi, strg):
                     indxydat = [i, slice(None), m, 0]
                 else:
                     indxydat = [i, slice(None), m]
-                strgindx = '%d%d' % (i, m)
+                strgindxydat = '%d%d' % (i, m)
                 lablxaxi = gdat.lablfeattotl['gang']
-                plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindx=strgindx, scalyaxi='logt', \
+                plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindxydat=strgindxydat, scalyaxi='logt', \
                                                                             factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$')
                 if gdat.oaxitype or gdat.trueoaxitype:
-                    plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindx=strgindx, \
+                    plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindxydat=strgindxydat, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$f(\phi)$')
 
     # number of background counts per PSF
@@ -126,7 +132,7 @@ def plot_samp(gdat, gdatmodi, strg):
     if not (strg == 'true' and gdat.datatype == 'inpt'):
         for l in gdat.indxpopl:
             indxydat = [l, slice(None)]
-            strgindx = '%d' % l
+            strgindxydat = '%d' % l
 
             for strgfeat in gdat.liststrgfeat:
                 # temp
@@ -152,8 +158,8 @@ def plot_samp(gdat, gdatmodi, strg):
                     
                     limtydat = gdat.limtpntshist
                     plot_gene(gdat, gdatmodi, strg, strgfeat + 'hist', 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, \
-                                           		scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindx=strgindx, hist=True, \
-                                                strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin)
+                                          scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindxydat=strgindxydat, histodim=True, \
+                                          strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin)
            
     if gdatmodi != None:
         gdatobjt = gdatmodi
@@ -173,15 +179,19 @@ def plot_samp(gdat, gdatmodi, strg):
                     for l in gdat.indxpopl:
                         plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
-    if strg == 'true' and 'gaus' in gdat.truespatdisttype or strg != 'true' and 'gaus' in gdat.spatdisttype:
+    # temp
+    if 'gaus' in spatdisttype:
+        set_printoptions(precision=2)
         plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
 
     for stdv in [False, True]: 
         if gdat.pntstype == 'lens':
             plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
+            plot_genemaps(gdat, gdatmodi, strg, 'convelem', strgcbar='conv', tdim=True)
             for i in gdat.indxener:
                 plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True)
                 plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'modlfluxuncv', strgcbar='datacnts', thisindxener=i, tdim=True)
             if strg != 'true':
                 plot_genemaps(gdat, gdatmodi, strg, 'deflcomp', tdim=True)
         for i in gdat.indxener:
@@ -192,11 +202,12 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
         
     if gdat.pntstype == 'lens':
+        plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{subs}(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
-        plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, hist=True)
+        plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
 
     for l in gdat.indxpopl:
         if gdat.pntstype == 'lens':
@@ -222,7 +233,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     pass
                     
 
-def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
+def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, prio=False):
     
     if writ:
         gdat = tdpy.util.gdatstrt()
@@ -443,6 +454,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         path = gdat.pathpostfixp + gdat.namefixp[k]
         tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k], scalpara=gdat.scalfixp[k])
     
+    if gdat.checprio and not prio:
+        titl = '$D_{KL} = $%.3g' % gdat.infofracsubhtotl
+        path = gdat.pathpost + 'infofracsubh'
+        tdpy.mcmc.plot_plot(path, gdat.meanfracsubh, gdat.infofracsubh, '$f_s$', r'$\Delta D_{KL}$', titl=titl)
+    
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter covariance...'
     
@@ -483,7 +499,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True):
         path = gdat.pathpostfixp + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
                                                                                                         truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp])
-        if gdat.indxfixpbacp.size == 2:
+        if gdat.numbback == 2:
             for i in gdat.indxener:
                 indx = gdat.indxfixpbacp[i+gdat.indxback*gdat.numbener]
                 path = gdat.pathpostfixp + 'bacpene%d' % i
@@ -896,8 +912,9 @@ def plot_fluxsind(gdat, gdatmodi, strg, l, strgtype):
     plt.close(figr)
     
 
-def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=None, scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, \
-                                lablxaxi='', lablyaxi='', factxdat=1., factydat=1., hist=False, ylim=None, strgxaxitwin=None, lablxaxitwin=None, offslegd=None):
+def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, \
+                     scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, \
+                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, ylim=None, strgxaxitwin=None, lablxaxitwin=None, offslegd=None, tdim=False):
    
     if scal == None:
         if scalxaxi == None:
@@ -909,20 +926,29 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
         scalyaxi = scal
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-
-    xdat = copy(getattr(gdat, strgxdat + 'plot') * factxdat)
-    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
     
+    if tdim:
+        xdat = retr_fromgdat(gdat, gdatmodi, strg, strgxdat) * factxdat
+        ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
+    else:
+        xdat = getattr(gdat, strgxdat + 'plot') * factxdat
+        ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
+    
+    if indxxdat != None:
+        xdat = xdat[indxxdat]
     if indxydat != None:
         ydat = ydat[indxydat]
     
-    if hist:
-        deltxdat = getattr(gdat, 'delt' + strgxdat[4:] + 'plot') * factxdat
+    if tdim:
+        axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color='b', label='Sample')
+    else:
+        if histodim:
+            deltxdat = getattr(gdat, 'delt' + strgxdat[4:] + 'plot') * factxdat
 
-        if scalxaxi == 'logt':
-            xdattemp = 10**(log10(xdat) - diff(log10(xdat))[0] / 2.)
-        else:
-            xdattemp = xdat - deltxdat / 2.
+            if scalxaxi == 'logt':
+                xdattemp = 10**(log10(xdat) - diff(log10(xdat))[0] / 2.)
+            else:
+                xdattemp = xdat - deltxdat / 2.
     
     if strg == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgydat, errr=True) * factydat
@@ -935,34 +961,38 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
             caps.set_markeredgewidth(1)
 
     else:
-        if hist:
+        if histodim:
             axis.bar(xdattemp, ydat, deltxdat, label='Sample', alpha=0.5)
         else:
-            axis.plot(xdat, ydat, label='Sample Distribution', alpha=0.5)
+            axis.plot(xdat, ydat, label='Sample', alpha=0.5)
 
-    if gdat.datatype == 'mock':
-        try:
-            axis.bar(xdat - deltxdat / 2., getattr(gdat, 'expr' + strgydat), deltxdat, label=gdat.strgcatl, alpha=0.5)
-        except:
-            pass
-    
     try:
+        if strgxdat[4:] == strgydat[:4]:
+            strgtemp = strgydat[:4]
+            bins = copy(getattr(gdat, 'bins' + strgtemp + 'plot'))
+            varb = copy(getattr(gdat, 'expr' + strgtemp))
+            if strgtemp == 'lgal' or strgtemp == 'bgal':
+            	bins *= gdat.anglfact
+            	varb *= gdat.anglfact
+            axis.hist(varb, bins, label=gdat.strgcatl, alpha=0.5, color='r')
+    except:
+        pass
+    
+    if gdat.datatype == 'mock':
         ydat = getattr(gdat, 'true' + strgydat)
         if indxydat != None:
             ydat = ydat[indxydat]
-        if hist:
+        if histodim:
             axis.bar(xdattemp, ydat, deltxdat, color='g', label='True', alpha=0.5)
         else:
             axis.plot(xdat, ydat, color='g', label='True', alpha=0.5)
-    except:
-        pass
 
     if scalxaxi == 'logt':
         axis.set_xscale('log')
     if scalyaxi == 'logt':
         if where(ydat > 0.)[0].size > 0:
             axis.set_yscale('log')
-        if hist:
+        if histodim:
             axis.set_ylim([0.5, None])
     
     if ylim != None:
@@ -1006,7 +1036,10 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
             axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
 
     if indxydat != None:
-        strgydat += strgindx
+        strgydat += strgindxydat
+    
+    if indxxdat != None:
+        strgxdat += strgindxxdat
     
     if limtxdat != None:
         axis.set_xlim(limtxdat)
@@ -1014,7 +1047,12 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindx=
         axis.set_xlim([amin(xdat), amax(xdat)])
     if limtydat != None:
         axis.set_ylim(limtydat)
-
+    else:
+        if histodim:
+            axis.set_ylim([0.5, None])
+        else:
+            axis.set_ylim([amin(ydat), amax(ydat)])
+        
     make_legd(axis, offs=offslegd)
     
     plt.tight_layout()
@@ -1308,13 +1346,14 @@ def plot_pntsprob(gdat, indxpopltemp, strgbins, strgfeatsign=None):
             draw_frambndr(gdat, axis)
             
             if strgfeatsign != None:
-                strgfeat = gdat.lablfeat[strgfeatsign]
-                titl = tdpy.util.mexp(gdat.fluxfactplot * bins[indxlowr]) + ' < $%s$ < ' % strgfeat + tdpy.util.mexp(gdat.fluxfactplot * bins[indxuppr])
+                lablfeat = gdat.lablfeat[strgfeatsign]
+                factfeat = gdat.dictglob['fact' + strgfeatsign + 'plot']
+                titl = tdpy.util.mexp(factfeat * bins[indxlowr]) + ' < $%s$ < ' % lablfeat + tdpy.util.mexp(factfeat * bins[indxuppr])
                 axis.set_title(titl)
     
     if strgfeatsign != None:
-        strgfeat = gdat.lablfeattotl[strgfeatsign]
-        plt.figtext(0.5, 0.95, '%s' % strgfeat, ha='center', va='center')
+        lablfeattotl = gdat.lablfeattotl[strgfeatsign]
+        plt.figtext(0.5, 0.95, '%s' % lablfeattotl, ha='center', va='center')
     axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
     cbar = figr.colorbar(imag, cax=axiscomm)
 
@@ -1843,6 +1882,11 @@ def plot_init(gdat):
                 xdat = gdat.binsanglplot * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
+                # temp
+                #angl = linspace(0.1, 2., 20)
+                #defl = retr_deflcutf(angl, 0.1, 0.05, 0.3)
+                #coef = polyfit(angl, defl, 4)
+
                 listdeflscal = array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
                 listanglscal = array([0.05, 0.05, 0.1, 0.05, 0.05, 0.05]) / gdat.anglfact
                 listanglcutf = array([0.3, 0.3, 0.3, 1., 2., 0.]) / gdat.anglfact
@@ -2051,16 +2095,6 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
     cmap = getattr(gdat, 'cmap' + strgcbar) 
-    #if strgcbar == 'datacnts':
-    #    cmap = 'Reds'
-    #if strgcbar == 'resicnts':
-    #    cmap = 'RdBu'
-    #if strgcbar == 'deflcomp':
-    #    cmap = 'Oranges'
-    #if strgcbar == 'conv':
-    #    cmap = 'Purples'
-    #if strgcbar == 'llik':
-    #    cmap = 'YlGn'
 
     imag = retr_imag(gdat, axis, maps, strg, vmin=vmin, vmax=vmax, cmap=cmap, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
     
