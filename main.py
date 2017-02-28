@@ -309,7 +309,8 @@ def init( \
     
     if gdat.evalcirc == None:
         if gdat.pntstype == 'lens':
-            gdat.evalcirc = 'bein'
+            gdat.evalcirc = 'full'
+            #gdat.evalcirc = 'bein'
         else:
             gdat.evalcirc = 'psfn'
 
@@ -441,13 +442,10 @@ def init( \
         gdat.factthin = int(ceil(1e-3 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
 
     if gdat.strgcatl == None:
-        if gdat.datatype == 'mock':
-            gdat.strgcatl = 'Mock'
+        if gdat.exprtype == 'ferm':
+            gdat.strgcatl = '3FGL'
         else:
-            if gdat.exprtype == 'ferm':
-                gdat.strgcatl = '3FGL'
-            else:
-                gdat.strgcatl = gdat.strgexprname
+            gdat.strgcatl = gdat.strgexprname
     
     # evaluation of the PSF
     if gdat.pntstype == 'lens':
@@ -1427,13 +1425,13 @@ def proc_post(gdat, prio=False):
             listvarbscal = getattr(gdat, 'list' + strgvarbscal)
             histscalvarb = histogram(listvarbscal, bins=binsvarbscal)[0]
             
-            for meanvarbscaltemp in meanvarbscal:
-                print sp.stats.gaussian_kde(listvarbscal)(meanvarbscaltemp)
-    
             try:
                 pdfn = sp.stats.gaussian_kde(listvarbscal)(meanvarbscal)
             except: 
                 pdfn = zeros_like(meanvarbscal)
+            
+            pdfn[where(pdfn < 1e-50)[0]] = 1e-50
+
             if prio:
                 strgtemp = 'prio'
             else:
@@ -1450,13 +1448,7 @@ def proc_post(gdat, prio=False):
                 infototl = sum(info * deltvarbscal)
                 setattr(gdat, 'info' + strgvarbscal, info)
                 setattr(gdat, 'infototl' + strgvarbscal, infototl)
-        
-                print 'info'
-                print info
-                print 'infototl'
-                print infototl
-                print 
-    
+                
     # post process samples
     if gdat.numbtrap > 0:
         # collect element parameters from the chains
@@ -1511,6 +1503,8 @@ def proc_post(gdat, prio=False):
     
     # temp
     if gdat.strgcnfg == 'pcat_ferm_mock_ngal':
+        # temp
+        gdat.verbtype = 2
         retr_detrcatl(gdat)
     
     if gdat.verbtype > 0:
@@ -1741,7 +1735,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                 #                    print
 
                 
-                if gdat.verbtype > 1:
+                if stdv < 1e-4:
                     print 'gdat.namepara[k]'
                     print gdat.namepara[k]
                     print 'deltlpos'
@@ -1830,7 +1824,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
     
         # temp
         break
-
+    
     gdatmodi.cntrswep = 0
     gdatmodi.optipropdone = True
 

@@ -114,9 +114,6 @@ def retr_plotpath(gdat, gdatmodi, strg, strgplot):
 
 def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
     
-    if gdat.verbtype > 1:
-        print 'retr_pntsflux'
-    
     if lgal.ndim == 0:
         lgal = array([lgal])
         bgal = array([bgal])
@@ -2050,7 +2047,35 @@ def retr_pntscnts(gdat, lgal, bgal, spec):
     return cnts
 
 
+def retr_critmden(gdat, adissour, adishost, adishostsour):
+    
+    critmden = gdat.factnewtlght / 4. / pi * adissour / adishostsour / adishost
+        
+    return critmden
+
+
+def retr_massfrombein(gdat, adissour, adishost, adishostsour):
+
+    critmden = retr_critmden(gdat, adissour, adishost, adishostsour)
+    massfrombein = pi * adishost**2 * critmden
+
+    return massfrombein
+
+
+def retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, anglscal, anglcutf):
+    
+    critmden = retr_critmden(gdat, adissour, adishost, adishostsour)
+    massfromdeflscal = pi * anglscal**2 * adishost**2 * critmden / (1. + log(1. / 2.)) * anglcutf**2 / (anglcutf**2 + 1.)**2 * \
+                                                                                ((anglcutf**2 - 1.) * log(anglscal) + anglscal * pi - (anglcutf**2 + 1.))
+        
+    return massfromdeflscal
+
+
 def setpinit(gdat, boolinitsetp=False):
+
+    if gdat.pntstype == 'lens' and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
+        cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
+        cliblens.retr_deflsubh()
 
     # samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
@@ -2226,15 +2251,16 @@ def setpinit(gdat, boolinitsetp=False):
 
         gdat.redshost = 0.5
         gdat.redssour = 2.
-
-        gdat.adishost = gdat.adisobjt(gdat.redshost)
-        gdat.adissour = gdat.adisobjt(gdat.redssour)
+        gdat.adishost = gdat.adisobjt(gdat.redshost) * 1e3 # [kpc]
+        gdat.adissour = gdat.adisobjt(gdat.redssour) * 1e3 # [kpc]
         gdat.adishostsour = gdat.adisobjt(gdat.redssour - gdat.redshost) / (1. + gdat.redssour)
         gdat.adisfact = gdat.adishost * gdat.adissour / gdat.adishostsour
-        gdat.massfrombein = gdat.adisfact * 2.09e13
-
-        gdat.minmmass = gdat.massfrombein * gdat.minmflux
-        gdat.maxmmass = gdat.massfrombein * gdat.maxmflux
+        gdat.factnewtlght = 2.09e16 # Msun / kpc
+        gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
+        gdat.critmden = retr_critmden(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
+        gdat.massfromdeflscal = retr_massfromdeflscal(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour, gdat.anglscal, gdat.anglcutf)
+        gdat.minmmass = gdat.massfromdeflscal * gdat.minmflux
+        gdat.maxmmass = gdat.massfromdeflscal * gdat.maxmflux
         retr_axis(gdat, 'mass', gdat.minmmass, gdat.maxmmass, gdat.numbbinsplot)
         retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, gdat.numbbinsplot)
 
@@ -2744,9 +2770,9 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.pntstype == 'lens':
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
     else:
-        gdat.stdvstdp = 1e-7 + zeros(gdat.numbstdp)
-    gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
-    gdat.stdvstdp[gdat.indxstdpcomp] = 1e-5
+        gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
+    gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
+    gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
 
     # proposal scale indices for each parameter
     indxpntsfull = [range(gdat.maxmnumbpnts[l]) for l in gdat.indxpopl]
@@ -3752,7 +3778,24 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # flatten the array
     if tdim:
         if thisindxener == None:
-            maps = maps.flatten()#((gdat.numbpixl))
+
+            if gdat.strgcnfg == 'pcat_ferm_quas_mock':
+                print 'retr_imag'
+                print 'maps'
+                set_printoptions(precision=1)
+                for k in range(10):
+                    indxlgal = random_integers(0, 199)
+                    indxbgal = random_integers(0, 199)
+                    indxlgallowr = max(0, indxlgal - 10)
+                    indxlgaluppr = min(199, indxlgal + 10)
+                    indxbgallowr = max(0, indxbgal - 10)
+                    indxbgaluppr = min(199, indxbgal + 10)
+                    print maps[indxbgallowr:indxbgaluppr, indxlgallowr:indxlgaluppr]
+                    print
+                print
+                print
+                print
+            maps = maps.flatten()
         else:
             maps = maps.reshape((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
     
@@ -3764,12 +3807,12 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
             maps = maps[thisindxener, :, thisindxevtt]
     
     # project the map to 2D
-    if gdat.pixltype == 'heal':
+    if gdat.pixltype == 'heal' and not tdim:
         maps = tdpy.util.retr_cart(maps, indxpixlrofi=gdat.indxpixlrofi, numbsideinpt=gdat.numbsideheal, \
                                                                             minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
                                                                             minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata)
     
-    if gdat.pixltype == 'cart':
+    if gdat.pixltype == 'cart' or tdim:
         shap = [gdat.numbsidecart] + list(maps.shape)
         shap[1] = gdat.numbsidecart
         maps = maps.reshape(shap).swapaxes(0, 1)
@@ -3794,21 +3837,27 @@ def make_cbar(gdat, axis, imag, indxenerplot=None, tick=None, labl=None):
     return cbar
 
 
-def make_catllabl(gdat, axis):
-
-    axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, label='Model PS', marker='+', linewidth=2, color='b')
+def make_catllabl(gdat, strg, axis):
     
+    if strg == 'post':
+        colr = 'black'
+        labl = 'Condensed Model %s' % gdat.strgelem
+    else:
+        colr = 'b'
+        labl = 'Sample Model %s' % gdat.strgelem
+    axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, label=labl, marker='+', linewidth=2, color=colr)
+        
     if gdat.trueinfo:
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label=gdat.truelablhits, marker='x', linewidth=2, color='g')
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label=gdat.truelablbias, marker='*', linewidth=2, color='g', facecolor='none')
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, facecolor='none', \
-                                                                                                label=gdat.truelablmiss, marker='o', linewidth=2, color='g')
+                                                                                                    label=gdat.truelablmiss, marker='s', linewidth=2, color='g')
     if gdat.pntstype == 'lens':
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label='Model Source', marker='<', linewidth=2, color='b')
-
+    
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label='Model Host', marker='s', linewidth=2, color='b')
         if gdat.trueinfo:
@@ -3818,7 +3867,7 @@ def make_catllabl(gdat, axis):
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label='%s Host' % gdat.truelabl, marker='D', linewidth=2, color='g')
         
-    axis.legend(bbox_to_anchor=[0.5, 1.1], loc='center', ncol=4)
+    axis.legend(bbox_to_anchor=[0.5, 1.15], loc='center', ncol=3)
         
 
 def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
@@ -3843,7 +3892,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     ### missed
                     indx = gdatmodi.trueindxpntsasscmiss[l]
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.truelablmiss, facecolor='none', \
-                                                                                                                                marker='o', linewidth=2, color='g')
+                                                                                                                                marker='s', linewidth=2, color='g')
                     
                     ### biased
                     indx = gdatmodi.trueindxpntsasscbias[l]
@@ -3917,7 +3966,11 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
             mrkrsize = retr_mrkrsize(gdat, flux)
             lgal = array([gdat.dictglob['postelemdetr'][r]['lgal'][0] for r in range(gdat.numbpntsdetr)])
             bgal = array([gdat.dictglob['postelemdetr'][r]['bgal'][0] for r in range(gdat.numbpntsdetr)])
-            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Nondegenerate', marker='+', linewidth=2, color='black')
+            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', linewidth=2, color='black')
+            for r in len(gdat.numbpntsdetr):
+                lgal = gdat.dictglob['listelemdetr'][r]['lgal']
+                bgal = gdat.dictglob['listelemdetr'][r]['bgal']
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.3)
     except:
         pass
 
@@ -4042,7 +4095,7 @@ def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
     fact[indxlowr] = arccosh(1. / fracscal[indxlowr]) / sqrt(1. - fracscal[indxlowr]**2)
     fact[indxuppr] = arccos(1. / fracscal[indxuppr]) / sqrt(fracscal[indxuppr]**2 - 1.)
     
-    deflcutf = deflscal / fracscal / (1. + log(2.))
+    deflcutf = deflscal / fracscal
     if asym:
         deflcutf *= fact + log(fracscal / 2.)
     else:
@@ -4515,7 +4568,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 beinsort = dicttemp['flux'][0][indxpntssortbrgt][:numbpntsconc]
     
             ### mass budget
-            masspnts = gdat.massfrombein * dicttemp['flux'][0]**2
+            masspnts = gdat.massfromdeflscal * dicttemp['flux'][0]
             masspntstotl = array([sum(masspnts)])
             masshost = array([gdat.massfrombein * beinhost**2])
             fracsubh = masspntstotl / masshost

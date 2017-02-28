@@ -446,18 +446,29 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     if gdat.pntstype == 'lens':
         path = gdat.pathpost + 'fracsubh'
-        tdpy.mcmc.plot_trac(path, gdat.listfracsubh[:, 0], '$f_s$', truepara=gdat.truefracsubh)
+        tdpy.mcmc.plot_trac(path, gdat.listfracsubh, '$f_s$', truepara=gdat.truefracsubh)
     
     ## fixed-dimensional parameters
     ### trace and marginal distribution of each parameter
     for k in gdat.indxfixp:
+        
+        if gdat.strgcnfg == 'pcat_ferm_quas_mock':
+            print 'k'
+            print k
+            print 'gdat.listfixp'
+            print gdat.listfixp.shape
+            print 'gdat.strgfixp'
+            print gdat.strgfixp.shape
+            print 
+
         path = gdat.pathpostfixp + gdat.namefixp[k]
         tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k], scalpara=gdat.scalfixp[k])
     
     if gdat.checprio and not prio:
-        titl = '$D_{KL} = $%.3g' % gdat.infofracsubhtotl
-        path = gdat.pathpost + 'infofracsubh'
-        tdpy.mcmc.plot_plot(path, gdat.meanfracsubh, gdat.infofracsubh, '$f_s$', r'$\Delta D_{KL}$', titl=titl)
+        for strgvarbscal in gdat.liststrgvarbscal:
+            titl = '$D_{KL} = %.3g$' % getattr(gdat, 'infototl' + strgvarbscal)
+            path = gdat.pathpost + 'infofracsubh'
+            tdpy.mcmc.plot_plot(path, gdat.meanfracsubh, gdat.infofracsubh, '$f_s$', r'$\Delta D_{KL}$', titl=titl)
     
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter covariance...'
@@ -641,18 +652,18 @@ def plot_chro(gdat):
     #    figr.savefig(gdat.pathdiag + 'chro%04d.pdf' % k)
     #    plt.close(figr)
 
-    gdat.listchrollik *= 1e3
+    gdat.listchroproc *= 1e3
    
-    if (gdat.listchrollik != 0).any():
+    if (gdat.listchroproc != 0).any():
         listlabl = ['PSF Intp.', 'Variables', 'Pixel mesh', 'Energy mesh', 'PS flux', 'Total flux', 'Lens host', 'Lens source', 'PSF conv.', 'Counts', 'Unbinned', 'Likelihood']
         numblabl = len(listlabl)
-        figr, axcl = plt.subplots(gdat.numbchrollik, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
-        maxmchrollik = amax(gdat.listchrollik)
-        minmchrollik = amin(gdat.listchrollik[where(gdat.listchrollik > 0)])
-        binstime = logspace(log10(minmchrollik), log10(maxmchrollik), 50)
+        figr, axcl = plt.subplots(gdat.numbchroproc, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
+        maxmchroproc = amax(gdat.listchroproc)
+        minmchroproc = amin(gdat.listchroproc[where(gdat.listchroproc > 0)])
+        binstime = logspace(log10(minmchroproc), log10(maxmchroproc), 50)
     
-        for k in range(gdat.numbchrollik):
-            chro = gdat.listchrollik[where(gdat.listchrollik[:, k] > 0)[0], k]
+        for k in range(gdat.numbchroproc):
+            chro = gdat.listchroproc[where(gdat.listchroproc[:, k] > 0)[0], k]
             try:
                 axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
             except:
@@ -661,12 +672,12 @@ def plot_chro(gdat):
             axcl[k].set_ylim([0.5, None])
             axcl[k].set_ylabel(listlabl[k])
             axcl[k].set_xscale('log')
-            if k != gdat.numbchrollik - 1:
+            if k != gdat.numbchroproc - 1:
                 axcl[k].set_xticklabels([])
             axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
         axcl[-1].set_xlabel('$t$ [ms]')
         plt.subplots_adjust(hspace=0.05)
-        figr.savefig(gdat.pathdiag + 'chrollik.pdf')
+        figr.savefig(gdat.pathdiag + 'chroproc.pdf')
         plt.close(figr)
 
 
@@ -1514,7 +1525,8 @@ def plot_mosa(gdat):
 
     # empty global object
     gdatmodi = tdpy.util.gdatstrt()
-    
+    gdatmodi.thischroproc = zeros(gdat.numbchroproc)
+
     # data structure to hold the indices of model PS to be compared to the reference catalog 
     gdatmodi.indxmodlpntscomp = [[] for l in gdat.indxpopl]
     
@@ -1930,7 +1942,7 @@ def plot_init(gdat):
                             adissour = gdat.adisobjt(redssour) * 1e3
                             adishostsour = (gdat.adisobjt(redssour) - gdat.adisobjt(redshost)) / (1. + redssour) * 1e3
                             adisfact = adissour * adishost / adishostsour
-                            massfrombein = adisfact * 2.09e19 / 4.
+                            massfrombein = gdat.factnewtlght / 4. * adissour * adishost / adishostsour
                             minmmass[n, k] = log10(massfrombein * gdat.minmflux**2)
                             maxmmass[n, k] = log10(massfrombein * gdat.maxmflux**2)
                
@@ -2053,7 +2065,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1)
         strgplot += '%04d' % indxdefl
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxpoplplot=thisindxpopl)
-    make_catllabl(gdat, axis)
+    make_catllabl(gdat, strg, axis)
     draw_frambndr(gdat, axis)
   
     defllgal = defl[:, :, 0]
@@ -2100,7 +2112,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     
-    make_catllabl(gdat, axis)
+    make_catllabl(gdat, strg, axis)
     supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
 
     plt.tight_layout()

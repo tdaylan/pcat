@@ -18,6 +18,7 @@ import scipy.ndimage
 import scipy.ndimage.filters
 
 #import pyximport; pyximport.install()
+import ctypes
 
 import astropy as ap
 from astropy.convolution import convolve_fft, AiryDisk2DKernel
