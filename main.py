@@ -64,7 +64,7 @@ def init( \
          asscmetrtype='dist', \
 
          # plotting
-         numbswepplot=10000, \
+         numbswepplot=5000, \
          makeplot=True, \
          makeplotfram=True, \
          numbframpost=None, \
@@ -142,7 +142,6 @@ def init( \
          **args \
         ):
 
-    
     # construct the global object 
     gdat = tdpy.util.gdatstrt()
     for attr, valu in locals().iteritems():
@@ -602,7 +601,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         minmflux = 5e-11
     if gdat.exprtype == 'chan':
-        minmflux = 5e-10
+        minmflux = 7e-10
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
@@ -692,6 +691,9 @@ def init( \
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
     if gdat.minmflux >= gdat.maxmflux:
         raise Exception('Minimum flux is greater than maximum flux.')
+    if gdat.datatype == 'inpt':
+        if 'gaus' in gdat.spatdisttype and (gdat.lgalprio == None or gdat.bgalprio == None):
+            raise Exception('If spatdisttype is "gaus", spatial coordinates of the prior catalog should be provided via lgalprio and bgalprio.')
 
     if gdat.verbtype > 0:
         print 'PCAT v0.1 started at %s' % gdat.strgtimestmp
@@ -723,7 +725,7 @@ def init( \
     setp_true(gdat, 'expodistmeanpop1', 2., popl=True)
     setp_true(gdat, 'expodiststdvpop1', 0.2, popl=True)
     
-    setp_true(gdat, 'bacp', 1.)
+    setp_true(gdat, 'bacp', 1., ener=True, back=True)
     
     if gdat.pntstype == 'lens':
         setp_true(gdat, 'beinhost', 1.5 / gdat.anglfact)
@@ -760,8 +762,9 @@ def init( \
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
-    gdat.cmapdatacnts = 'Reds'
+    gdat.cmapdatacnts = 'Greys'
     gdat.cmapresicnts = 'RdBu'
+    gdat.cmapexpo = 'OrRd'
     gdat.cmapdeflcomp = 'Oranges'
     gdat.cmapconv = 'Purples'
     gdat.cmapllik = 'YlGn'
@@ -1123,25 +1126,25 @@ def init( \
                     print
                 print '%20s %20f %15s' % (gdat.truenamepara[k], gdat.truesampvarb[k], gdat.truescalpara[k])
     
+    if 'gaus' in gdat.spatdisttype:
         if gdat.lgalprio == None or gdat.bgalprio == None:
             gdat.lgalprio = concatenate((gdat.truelgal))
             gdat.bgalprio = concatenate((gdat.truebgal))
-            gdat.numbspatprio = gdat.lgalprio.size
+        gdat.numbspatprio = gdat.lgalprio.size
+    
+        # spatial template for the catalog prior
+        # temp -- this should move outside the if
+        gdat.pdfnspatpriotemp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
+        for k in range(gdat.numbspatprio):
+            gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
+                                                                                        exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
+        gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
+   
+    # temp
+    for l in gdat.trueindxpopl:
+        setattr(gdat, 'truenumbpntspop%d' % l, gdat.truenumbpnts[l])
+        setattr(gdat, 'truemeanpntspop%d' % l, gdat.truenumbpnts[l])
 
-    if gdat.datatype == 'inpt':
-        if gdat.lgalprio == None or gdat.bgalprio == None:
-            gdat.numbspatprio = 20
-            gdat.lgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-            gdat.bgalprio = icdf_self(rand(gdat.numbspatprio), -gdat.maxmgangdata, 2. * gdat.maxmgangdata)
-    
-    # spatial template for the catalog prior
-    # temp -- this should move outside the if
-    gdat.pdfnspatpriotemp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
-    for k in range(gdat.numbspatprio):
-        gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
-                                                                                    exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
-    gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
-    
     if gdat.datatype == 'mock':
         
         proc_samp(gdat, None, 'true', raww=True)
@@ -1918,12 +1921,11 @@ def work(pathoutpthis, lock, indxprocwork):
                     raise Exception('')
 
             if gdat.datatype == 'inpt':
-                if k in gdat.indxfixpnumbpnts:
-                    gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, 'true', gdat.truenumbpnts[k], k)
-                elif k in gdat.indxfixppsfp:
+                if k in gdat.indxfixppsfp:
                     gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, 'true', gdat.exprpsfp[k-gdat.indxfixppsfpinit], k)
-                else:
-                    gdatmodi.thissamp[gdat.indxfixp[k]] = rand()
+                elif k in gdat.indxfixp:
+                    varb = getattr(gdat, 'true' + gdat.namepara[k])
+                    gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, 'true', varb, k)
         gdatmodi.thissampvarb[k] = icdf_fixp(gdat, '', gdatmodi.thissamp[k], k)
                 
     ## lists of occupied and empty transdimensional parameters

@@ -925,6 +925,7 @@ def retr_fermdata(gdat):
     gdat.exprspec[0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
                                                                                             fgl3['Flux10000_100000']))[gdat.indxenerincl, :] / gdat.deltener[:, None]
     
+
     fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], \
                                                         fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.deltener[:, None, None] 
     gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :] + fgl3specstdvtemp[:, :, 0]
@@ -940,11 +941,23 @@ def retr_fermdata(gdat):
     fgl3strgclss = fgl3['CLASS1']
     fgl3strgassc = fgl3['ASSOC1']
     
+    fgl3timevari = fgl3['Variability_Index']
+
     fgl3spectype = fgl3['SpectrumType']
     gdat.exprsind = fgl3['Spectral_Index']
     gdat.exprcurv = fgl3['beta']
     gdat.exprexpo = fgl3['Cutoff'] * 1e-3
-    
+   
+    #indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0, gdat.indxenerfluxdist[0], :] > gdat.minmflux))[0]
+    indxtimevari = where(gdat.exprspec[0, gdat.indxenerfluxdist[0], :] > gdat.minmflux)[0]
+
+    gdat.exprlgal = gdat.exprlgal[indxtimevari]
+    gdat.exprbgal = gdat.exprbgal[indxtimevari]
+    gdat.exprsind = gdat.exprsind[indxtimevari]
+    gdat.exprcurv = gdat.exprcurv[indxtimevari]
+    gdat.exprexpo = gdat.exprexpo[indxtimevari]
+    gdat.exprspec = gdat.exprspec[:, :, indxtimevari]
+
 
 def retr_rtag(gdat):
     
@@ -2065,8 +2078,13 @@ def retr_massfrombein(gdat, adissour, adishost, adishostsour):
 def retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, anglscal, anglcutf):
     
     critmden = retr_critmden(gdat, adissour, adishost, adishostsour)
-    massfromdeflscal = pi * anglscal**2 * adishost**2 * critmden / (1. + log(1. / 2.)) * anglcutf**2 / (anglcutf**2 + 1.)**2 * \
-                                                                                ((anglcutf**2 - 1.) * log(anglscal) + anglscal * pi - (anglcutf**2 + 1.))
+    print 'critmden'
+    print critmden
+    print 'adishost'
+    print adishost
+    print
+    massfromdeflscal = pi * anglscal * adishost**2 * critmden / (1. - log(2.)) * anglcutf**2 / (anglcutf**2 + 1.)**2 * \
+                                                                                ((anglcutf**2 - 1.) * log(anglcutf) + anglcutf * pi - (anglcutf**2 + 1.))
         
     return massfromdeflscal
 
@@ -2170,10 +2188,19 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmfracsubh = 0.3
     gdat.scalfracsubh = 'self'
 
-    # set model sample vector indices
+    # set up the indices of the fitting model
     retr_indxsamp(gdat)
 
+    # construct the fitting model
     setp_fixp(gdat)
+    
+    # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
+    gdat.corrfixp = empty(gdat.numbfixp)
+    for k in gdat.indxfixp:
+        try:
+            gdat.corrfixp[k] = getattr(gdat, 'true' + gdat.namefixp[k])
+        except:
+            gdat.corrfixp[k] = None
    
     # copy fixp variables to individual variables
     for k, namefixp in enumerate(gdat.namefixp):
@@ -2244,16 +2271,19 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxproc = arange(gdat.numbproc)
 
     if gdat.pntstype == 'lens':
-        h5f = h5py.File(gdat.pathdata + 'inpt/adiscoef.h5','r')
-        adiscoef = h5f['adiscoef']#[:]
-        gdat.adisobjt = poly1d(adiscoef)
+        h5f = h5py.File(gdat.pathdata + 'inpt/adis.h5','r')
+        reds = h5f['reds']
+        adis = h5f['adis']
+        adistdim = h5f['adistdim']
+        gdat.adisobjt = interp1d_pick(reds, adis)
+        gdat.adistdimobjt = sp.interpolate.RectBivariateSpline(reds, reds, adistdim)
         h5f.close()
 
         gdat.redshost = 0.5
         gdat.redssour = 2.
         gdat.adishost = gdat.adisobjt(gdat.redshost) * 1e3 # [kpc]
         gdat.adissour = gdat.adisobjt(gdat.redssour) * 1e3 # [kpc]
-        gdat.adishostsour = gdat.adisobjt(gdat.redssour - gdat.redshost) / (1. + gdat.redssour)
+        gdat.adishostsour = gdat.adisobjt(gdat.redssour - gdat.redshost) * 1e3 / (1. + gdat.redssour)
         gdat.adisfact = gdat.adishost * gdat.adissour / gdat.adishostsour
         gdat.factnewtlght = 2.09e16 # Msun / kpc
         gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
@@ -3607,23 +3637,7 @@ def setp_fixp(gdat, strgpara=''):
             setattr(gdat, strgpara + strg, valu)
 
 
-def setp_true(gdat, strgvarb, valu, popl=False):
-    
-    if popl:
-        liststrgvarb = []
-        for l in gdat.trueindxpopl:
-            liststrgvarb.append(strgvarb + 'pop%d' % l)
-    else:   
-        liststrgvarb = [strgvarb]
-
-    for strgvarb in liststrgvarb:
-        try:
-            getattr(gdat, 'true' + strgvarb)
-        except:
-            setattr(gdat, 'true' + strgvarb, valu)
- 
-
-def setp_truedefa(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ener=False, evtt=False, back=False):
+def setp_truetemp(gdat, strgvarb, popl, ener, evtt, back):
     
     liststrgvarb = []
     if popl:
@@ -3642,6 +3656,24 @@ def setp_truedefa(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ene
             liststrgvarb.append(strgvarb + 'ene%d' % i)
     else:   
         liststrgvarb.append(strgvarb)
+
+    return liststrgvarb
+
+
+def setp_true(gdat, strgvarb, valu, popl=False, ener=False, evtt=False, back=False):
+    
+    liststrgvarb = setp_truetemp(gdat, strgvarb, popl, ener, evtt, back)
+
+    for strgvarb in liststrgvarb:
+        try:
+            getattr(gdat, 'true' + strgvarb)
+        except:
+            setattr(gdat, 'true' + strgvarb, valu)
+ 
+
+def setp_truedefa(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ener=False, evtt=False, back=False):
+    
+    liststrgvarb = setp_truetemp(gdat, strgvarb, popl, ener, evtt, back)
 
     for strgvarb in liststrgvarb:
 
@@ -3765,7 +3797,7 @@ def retr_scat(gdat, axis, maps, thisindxener, thisindxevtt):
     return scat
 
 
-def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='Reds', vmin=None, vmax=None, scal=None, tdim=False):
+def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='Greys', vmin=None, vmax=None, scal=None, tdim=False):
     
     if scal == None:
         scal = gdat.scalmaps
@@ -3778,23 +3810,6 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # flatten the array
     if tdim:
         if thisindxener == None:
-
-            if gdat.strgcnfg == 'pcat_ferm_quas_mock':
-                print 'retr_imag'
-                print 'maps'
-                set_printoptions(precision=1)
-                for k in range(10):
-                    indxlgal = random_integers(0, 199)
-                    indxbgal = random_integers(0, 199)
-                    indxlgallowr = max(0, indxlgal - 10)
-                    indxlgaluppr = min(199, indxlgal + 10)
-                    indxbgallowr = max(0, indxbgal - 10)
-                    indxbgaluppr = min(199, indxbgal + 10)
-                    print maps[indxbgallowr:indxbgaluppr, indxlgallowr:indxlgaluppr]
-                    print
-                print
-                print
-                print
             maps = maps.flatten()
         else:
             maps = maps.reshape((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
@@ -4095,7 +4110,7 @@ def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
     fact[indxlowr] = arccosh(1. / fracscal[indxlowr]) / sqrt(1. - fracscal[indxlowr]**2)
     fact[indxuppr] = arccos(1. / fracscal[indxuppr]) / sqrt(fracscal[indxuppr]**2 - 1.)
     
-    deflcutf = deflscal / fracscal
+    deflcutf = deflscal / fracscal / (1. - log(2.))
     if asym:
         deflcutf *= fact + log(fracscal / 2.)
     else:

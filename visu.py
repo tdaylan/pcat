@@ -451,18 +451,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ## fixed-dimensional parameters
     ### trace and marginal distribution of each parameter
     for k in gdat.indxfixp:
-        
-        if gdat.strgcnfg == 'pcat_ferm_quas_mock':
-            print 'k'
-            print k
-            print 'gdat.listfixp'
-            print gdat.listfixp.shape
-            print 'gdat.strgfixp'
-            print gdat.strgfixp.shape
-            print 
-
         path = gdat.pathpostfixp + gdat.namefixp[k]
-        tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.truefixp[k], scalpara=gdat.scalfixp[k])
+        tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.strgfixp[k], truepara=gdat.corrfixp[k], scalpara=gdat.scalfixp[k])
     
     if gdat.checprio and not prio:
         for strgvarbscal in gdat.liststrgvarbscal:
@@ -477,14 +467,14 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### overall
     path = gdat.pathpostfixp + 'fixp'
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.strgfixp[gdat.indxfixpprop], \
-                                                                                          truepara=gdat.truefixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+                                                                                          truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = gdat.pathpostfixpproc + 'proc%d' % k
             tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.strgfixp[gdat.indxfixpprop], \
-                                                                                      truepara=gdat.truefixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+                                                                                      truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
     ### grouped covariance plots
     if gdat.verbtype > 0:
@@ -492,7 +482,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### hyperparameters
     path = gdat.pathpostfixp + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.strgfixp[gdat.indxfixphypr], truepara=[gdat.truefixp[k] for k in gdat.indxfixphypr])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.strgfixp[gdat.indxfixphypr], truepara=[gdat.corrfixp[k] for k in gdat.indxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -500,7 +490,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### PSF
     if gdat.proppsfp:
         path = gdat.pathpostfixp + 'psfp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.truefixp[k] for k in gdat.indxfixppsfp], \
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.strgfixp[gdat.indxfixppsfp], truepara=[gdat.corrfixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     if gdat.verbtype > 0:
         print 'Background parameters...'
@@ -509,12 +499,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.propbacp:
         path = gdat.pathpostfixp + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
-                                                                                                        truepara=[gdat.truefixp[k] for k in gdat.indxfixpbacp])
+                                                                                                        truepara=[gdat.corrfixp[k] for k in gdat.indxfixpbacp])
         if gdat.numbback == 2:
             for i in gdat.indxener:
                 indx = gdat.indxfixpbacp[i+gdat.indxback*gdat.numbener]
                 path = gdat.pathpostfixp + 'bacpene%d' % i
-                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.strgfixp[indx], truepara=[gdat.truefixp[k] for k in indx], join=True)
+                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.strgfixp[indx], truepara=[gdat.corrfixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'
@@ -1792,7 +1782,7 @@ def make_anim(gdat):
     listname = list(set(listfiletemp))
 
     if gdat.verbtype > 0:
-        print 'Making animations...'
+        print 'Making animations of frame plots...'
     for name in listname:
         
         strgswep = '%s*_swep*.pdf' % name
@@ -1813,12 +1803,10 @@ def make_anim(gdat):
             if indxfilelowr < numbfile:
                 indxfileanim = arange(indxfilelowr, numbfile)
             else:
-                if gdat.verbtype > 0:
-                    print 'Skipping animation for %s...' % name
                 continue
             
             if gdat.verbtype > 0:
-                print 'Producing animation for %s...' % name
+                print 'Making %s animation...' % name
                 
             indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
             
@@ -1941,10 +1929,9 @@ def plot_init(gdat):
                             adishost = gdat.adisobjt(redshost) * 1e3
                             adissour = gdat.adisobjt(redssour) * 1e3
                             adishostsour = (gdat.adisobjt(redssour) - gdat.adisobjt(redshost)) / (1. + redssour) * 1e3
-                            adisfact = adissour * adishost / adishostsour
-                            massfrombein = gdat.factnewtlght / 4. * adissour * adishost / adishostsour
-                            minmmass[n, k] = log10(massfrombein * gdat.minmflux**2)
-                            maxmmass[n, k] = log10(massfrombein * gdat.maxmflux**2)
+                            massfromdeflscal = retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, gdat.anglscal, gdat.anglcutf)
+                            minmmass[n, k] = log10(massfromdeflscal * gdat.minmflux)
+                            maxmmass[n, k] = log10(massfromdeflscal * gdat.maxmflux)
                
                 valulevl = linspace(6., 12., 20)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -2006,7 +1993,7 @@ def plot_init(gdat):
     
             if gdat.correxpo:
                 figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
-                imag = retr_imag(gdat, axis, gdat.expo, '', i, m)
+                imag = retr_imag(gdat, axis, gdat.expo, '', i, m, cmap=gdat.cmapexpo)
                 make_cbar(gdat, axis, imag, i)
                 plt.tight_layout()
                 figr.savefig(path)
