@@ -511,9 +511,9 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             else:
                 gdatmodi.thisindxproptype = gdat.indxproptypemerg
     else:
-        if not gdat.propcova:
-            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcolr)))
-            gdat.indxsampmodi = choice(gdatmodi.thisindxsampfull)
+        gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcolr)))
+        if gdat.propwithsing:
+            gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
 
         gdatmodi.thisindxproptype = gdat.indxproptypewith
         gdatmodi.propwith = True
@@ -1117,14 +1117,15 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, '', gdatmodi.nextsamp[k], k)
 
         # rescale the unit sample vector due to the hyperparameter change
-        if gdat.propcova:
-            indxpoplsampmodi = gdat.indxpopl
-        elif gdatmodi.indxsampmodi in gdat.indxfixpdist:
-            indxpoplsampmodi = [gdat.indxpoplsamp[gdatmodi.indxsampmodi]]
+        if gdat.propwithsing:
+            if gdatmodi.indxsampmodi in gdat.indxfixpdist:
+                indxpoplsampmodi = [gdat.indxpoplsamp[gdatmodi.indxsampmodi]]
+            else:
+                indxpoplsampmodi = []
         else:
-            indxpoplsampmodi = []
+            indxpoplsampmodi = gdat.indxpopl
         
-        for l in gdat.indxpopl:
+        for l in indxpoplsampmodi:
             
             ## flux distribution
             flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l]]
@@ -2901,10 +2902,17 @@ def setpinit(gdat, boolinitsetp=False):
     cntr = tdpy.util.cntr()
     if gdat.numbtrap > 0.:
         
-        gdat.indxproptypewith = cntr.incr()
-        gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}$')
-        gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
-        gdat.nameproptype = append(gdat.nameproptype, 'with')
+        if gdat.propwithsing:
+            for k in gdat.indxstdp:    
+                gdat.indxproptypewith = cntr.incr()
+                gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W_{%d}}$' % k)
+                gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
+                gdat.nameproptype = append(gdat.nameproptype, gdat.namestdp[k])
+        else:    
+            gdat.indxproptypewith = cntr.incr()
+            gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}$')
+            gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
+            gdat.nameproptype = append(gdat.nameproptype, 'with')
     
         gdat.indxproptypebrth = cntr.incr()
         gdat.indxproptypedeth = cntr.incr()

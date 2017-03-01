@@ -38,6 +38,7 @@ def init( \
          loadvaripara=False, \
          
          propcova=True, \
+         propwithsing=False, \
          optillik=False, \
          optiprop=False, \
          optipropsimp=True, \
