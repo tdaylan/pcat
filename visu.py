@@ -1523,7 +1523,7 @@ def plot_mosa(gdat):
     numbrows = 3
     numbcols = 2
     numbsampmosa = numbrows * numbcols
-    if numbsampmosa <= gdat.numbsamp:
+    if numbsampmosa <= gdat.numbsamptotl:
         indxsampmosa = choice(gdat.indxsamp, size=numbsampmosa, replace=False)
         for l in gdat.indxpopl:
             for i in gdat.indxener:
