@@ -1738,7 +1738,7 @@ def plot_grap(plottype='igal', verbtype=0):
 
 
 #plot_grap(verbtype=1)
-plot_grap(plottype='ngal', verbtype=1)
+#plot_grap(plottype='ngal', verbtype=1)
 #plot_grap(plottype='lens', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)
 

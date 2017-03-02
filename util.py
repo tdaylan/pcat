@@ -3908,7 +3908,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         
             if gdat.numbtrap > 0:
                 mrkrsize = retr_mrkrsize(gdat, gdat.truespec[l][0, gdat.indxenerfluxdist, :].flatten())
-                lgal = copy(gdat.truelgal[l])
+                # temp
+                lgal = -copy(gdat.truelgal[l])
                 bgal = copy(gdat.truebgal[l])
                 numbpnts = int(gdat.truenumbpnts[l])
                 
@@ -3961,7 +3962,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         if gdatmodi != None:
             if gdat.numbtrap > 0:
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l]])
-                lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]
+                # temp
+                lgal = -gdatmodi.thissampvarb[gdatmodi.thisindxsamplgal[l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampbgal[l]]
                 axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b')
 
