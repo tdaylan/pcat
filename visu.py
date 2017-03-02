@@ -1524,7 +1524,7 @@ def plot_mosa(gdat):
     numbcols = 2
     numbsampmosa = numbrows * numbcols
     if numbsampmosa <= gdat.numbsamptotl:
-        indxsampmosa = choice(gdat.indxsamp, size=numbsampmosa, replace=False)
+        indxsampmosa = choice(gdat.indxsamptotl, size=numbsampmosa, replace=False)
         for l in gdat.indxpopl:
             for i in gdat.indxener:
                 for m in gdat.indxevttplot:
@@ -1655,8 +1655,10 @@ def plot_grap(plottype='igal', verbtype=0):
         labl['lenp'] = r'$\vec{\chi}$'
     labl['psfp'] = r'$\vec{\eta}$'
     labl['bacp'] = r'$\vec{A}$'
-    labl['lgal'] = r'$\vec{\theta_1}$'
-    labl['bgal'] = r'$\vec{\theta_2}$'
+    #labl['lgal'] = r'$\vec{\theta_1}$'
+    #labl['bgal'] = r'$\vec{\theta_2}$'
+    labl['lgal'] = r'$\vec{l}$'
+    labl['bgal'] = r'$\vec{b}$'
     if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
         labl['sind'] = r'$\vec{s}$'
         labl['ampl'] = r'$\vec{f}$'
@@ -1736,7 +1738,7 @@ def plot_grap(plottype='igal', verbtype=0):
 
 
 #plot_grap(verbtype=1)
-#plot_grap(plottype='ngal', verbtype=1)
+plot_grap(plottype='ngal', verbtype=1)
 #plot_grap(plottype='lens', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)
 
