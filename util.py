@@ -511,8 +511,8 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             else:
                 gdatmodi.thisindxproptype = gdat.indxproptypemerg
     else:
-        gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcolr)))
         if gdat.propwithsing:
+            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcolr)))
             gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
 
         gdatmodi.thisindxproptype = gdat.indxproptypewith
