@@ -272,13 +272,15 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_z^{\prime}'
         else:
-            gdat.labllgal = r'\theta_1'
+            #gdat.labllgal = r'\theta_1'
+            gdat.labllgal = r'\nu'
 
     if gdat.lablbgal == None:
         if gdat.exprtype == 'sdyn':
             gdat.lablbgal = r'E_k^{\prime}'
         else:
-            gdat.lablbgal = r'\theta_2'
+            #gdat.lablbgal = r'\theta_2'
+            gdat.lablbgal = r'\mu'
 
     ## experiment defaults
     if gdat.binsenerfull == None:

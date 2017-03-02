@@ -3843,6 +3843,9 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # rescale the map
     if scal == 'asnh':
         maps = arcsinh(maps)
+   
+    # temp
+    maps = fliplr(maps)
     
     imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
     
