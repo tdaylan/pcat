@@ -3072,14 +3072,6 @@ def retr_indxsamp(gdat, strgpara=''):
                 indxbackbacp[cntr] = c
                 cntr += 1
    
-    print 'indxbacpback'
-    print indxbacpback
-    print 'indxbackbacp'
-    print indxbackbacp
-    print 'indxenerbacp'
-    print indxenerbacp
-    print
-
     # total maximum number of elements
     maxmnumbpntstotl = sum(maxmnumbpnts)
     indxpntstotl = arange(maxmnumbpntstotl)
@@ -4230,9 +4222,6 @@ def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor, indxpixltemp=None, cutf=
         bgalrttr = sin(angl) * lgaltran + cos(angl) * bgaltran
         
         if ellp > 1e-4:
-            print 'Elliptical'
-            print 'ellp'
-            print ellp
             factflat = (1. - ellp)**2
             factrcor = sqrt(factflat * (rcor**2 + lgalrttr**2) + bgalrttr**2)
             facteccc = sqrt(1. - factflat)
@@ -4719,16 +4708,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             conv = retr_conv(gdat, defl) 
             convelem = retr_conv(gdat, deflelem) 
             
-            print 'defl'
-            summgene(defl)
-            print 'conv'
-            summgene(conv)
-            print 'deflelem'
-            summgene(deflelem)
-            print 'convelem'
-            summgene(convelem)
-            print
-
             convpsec = retr_psec(gdat, conv)
             convpsecelem = retr_psec(gdat, conv)
             convpsecodim = retr_psecodim(gdat, convpsec) 
