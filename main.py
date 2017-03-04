@@ -311,8 +311,7 @@ def init( \
     
     if gdat.evalcirc == None:
         if gdat.pntstype == 'lens':
-            gdat.evalcirc = 'full'
-            #gdat.evalcirc = 'bein'
+            gdat.evalcirc = 'bein'
         else:
             gdat.evalcirc = 'psfn'
 
@@ -517,6 +516,13 @@ def init( \
         back = [1e-7]
     setp_true(gdat, 'back', back)
     
+    #### spectra for the background
+    if gdat.exprtype == 'chan':
+        specback = [ones(gdat.numbener)]
+    else:
+        specback = [None, None]
+    setp_true(gdat, 'specback', specback)
+    
     #### label
     lablback = [r'$\mathcal{I}$']
     if gdat.exprtype == 'ferm':
@@ -608,7 +614,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.04 / gdat.anglfact
+        minmflux = 0.01 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -756,12 +762,12 @@ def init( \
         gdat.factspecener = array([1.])
   
     # color bars
-    gdat.minmconv = 1e-2
+    gdat.minmconv = 1e-4
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
-    gdat.minmlpdfspatpriointp = -8.#2. * log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = -15.#2. * log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
@@ -770,6 +776,7 @@ def init( \
     gdat.cmapexpo = 'OrRd'
     gdat.cmapdeflcomp = 'Oranges'
     gdat.cmapconv = 'Purples'
+    gdat.cmapconvelem = 'Purples'
     gdat.cmapllik = 'YlGn'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
@@ -1137,6 +1144,7 @@ def init( \
     
         # spatial template for the catalog prior
         # temp -- this should move outside the if
+        gdat.apixmodl = (gdat.maxmgang / gdat.numbsidecart)**2
         gdat.pdfnspatpriotemp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
         for k in range(gdat.numbspatprio):
             gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
@@ -1917,6 +1925,16 @@ def work(pathoutpthis, lock, indxprocwork):
                 else:  
                     indxtrue = where(gdat.truenamefixp == namefixp)[0]
                     if indxtrue.size > 0:
+                        
+                        
+                        print 'indxtrue'
+                        print indxtrue
+                        print 'namefixp'
+                        print namefixp
+                        print 'gdat.truenamefixp'
+                        print gdat.truenamefixp
+                        print 
+
                         gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[indxtrue], indxtrue)
                     else:
                         gdatmodi.thissamp[k] = rand()
@@ -1979,6 +1997,21 @@ def work(pathoutpthis, lock, indxprocwork):
                     gdatmodi.thissamp[gdatmodi.thisindxsampflux[l]] = rand(gdat.truenumbpnts[l])
                     
                 if gdat.numbener > 1:
+                    print 'gdat.truesind'
+                    print gdat.truesind
+                    print 'gdat.minmsind'
+                    print gdat.minmsind
+                    print 'gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]]'
+                    print gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]]
+                    print 'gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]]'
+                    print gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]]
+                    print 'gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]'
+                    print gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
+                    print 'gdat.minmflux'
+                    print gdat.minmflux
+                    print 'gdat.maxmflux'
+                    print gdat.maxmflux
+                    print 
                     if gdat.sinddisttype[l] == 'gaus':
                         gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
                                                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]])

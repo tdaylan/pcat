@@ -677,14 +677,34 @@ def plot_compfrac(gdat, gdatmodi, strg):
     listyerr = zeros((2, gdat.numblablcompfracspec, gdat.numbener))
    
     cntr = 0
+        
+    if strg == 'true':
+        strgtype = strg
+    else:
+        strgtype = ''
+    
+    specback = getattr(gdat, strgtype + 'specback')
 
     ## background templates
     for c in gdat.indxback:
-        listydat[cntr, :] = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[c, :]
+        temp = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[gdat.indxbacpback[c]]]
+        if specback != None:
+            norm = temp * specback
+        else:
+            norm = temp
+        listydat[cntr, :] = norm * gdat.backfluxmean[c, :]
+
         if gdatmodi == None:
-            listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[c*gdat.numbener+gdat.indxener]] * gdat.backfluxmean[None, c, :]
+            temp = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[gdat.indxbacpback[c]]]
+            if specback != None:
+                norm = temp * specback
+            else:
+                norm = temp
+            listyerr[:, cntr, :] = norm * gdat.backfluxmean[None, c, :]
+
         if gdat.pntstype == 'lens':
             listydat[cntr, :] *= 4. * gdat.maxmgang**2
+        
         cntr += 1
     
     ## PS
@@ -1904,17 +1924,19 @@ def plot_init(gdat):
 
                 spec = 1e-19 # [erg/cm^2/s]
                 listsize = array([0.1, 0.1, 0.1]) / gdat.anglfact
-                listindx = array([1., 4., 10.])
+                listindx = array([2., 4., 10.])
                 listydat = []
+                listledg = []
                 for size, indx in zip(listsize, listindx):
                     listydat.append(retr_sersprof(spec, gdat.binsanglplot, size, indx=indx))
+                    listledg.append('$R_e = %.3g, n = %.2g' % (size, indx))
                 path = gdat.pathinit + 'sersprof.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$f$')
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$f$', listledg=listledg)
             
                 minmredshost = 0.01
-                maxmredshost = 1.
+                maxmredshost = 0.4
                 minmredssour = 0.01
-                maxmredssour = 5.
+                maxmredssour = 2.
                 numbreds = 200
                 retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
                 retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
@@ -1930,14 +1952,14 @@ def plot_init(gdat):
                         if redssour > redshost:
                             adishost = gdat.adisobjt(redshost) * 1e3
                             adissour = gdat.adisobjt(redssour) * 1e3
-                            adishostsour = (gdat.adisobjt(redssour) - gdat.adisobjt(redshost)) / (1. + redssour) * 1e3
+                            adishostsour = adissour - (1. + redshost) / (1. + redssour) * adishost
                             massfromdeflscal = retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, gdat.anglscal, gdat.anglcutf)
                             minmmass[n, k] = log10(massfromdeflscal * gdat.minmflux)
                             maxmmass[n, k] = log10(massfromdeflscal * gdat.maxmflux)
-               
+                
                 valulevl = linspace(6., 12., 20)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=10)
+                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=9)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
                 axis.clabel(cont, inline=1, fontsize=10)
                 axis.set_xlabel('$z_h$')
