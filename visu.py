@@ -688,8 +688,11 @@ def plot_compfrac(gdat, gdatmodi, strg):
     ## background templates
     for c in gdat.indxback:
         temp = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[gdat.indxbacpback[c]]]
+        print 'c'
+        print 'specback'
+        print specback
         if specback[c] != None:
-            norm = temp * specback
+            norm = temp * specback[c]
         else:
             norm = temp
         listydat[cntr, :] = norm * gdat.backfluxmean[c, :]

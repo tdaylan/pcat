@@ -4676,9 +4676,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             masshost = array([gdat.massfrombein * beinhost**2])
             fracsubh = masspntstotl / masshost
             
-            print 'fracsubh'
-            print fracsubh
-
             setattr(gdatobjt, strg + 'masspntstotl', masspntstotl)
             setattr(gdatobjt, strg + 'masshost', masshost)
             setattr(gdatobjt, strg + 'fracsubh', fracsubh)
