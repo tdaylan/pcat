@@ -423,8 +423,8 @@ def init( \
         psfp = array([0.1 / gdat.anglfact])
    
     # number of processes
+    gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
-        gdat.strgproc = os.uname()[1]
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu':
             gdat.numbproc = 20
         else:
@@ -1925,16 +1925,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 else:  
                     indxtrue = where(gdat.truenamefixp == namefixp)[0]
                     if indxtrue.size > 0:
-                        
-                        
-                        print 'indxtrue'
-                        print indxtrue
-                        print 'namefixp'
-                        print namefixp
-                        print 'gdat.truenamefixp'
-                        print gdat.truenamefixp
-                        print 
-
                         gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[indxtrue], indxtrue)
                     else:
                         gdatmodi.thissamp[k] = rand()

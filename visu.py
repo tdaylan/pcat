@@ -688,7 +688,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
     ## background templates
     for c in gdat.indxback:
         temp = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[gdat.indxbacpback[c]]]
-        if specback != None:
+        if specback[c] != None:
             norm = temp * specback
         else:
             norm = temp
@@ -696,7 +696,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
 
         if gdatmodi == None:
             temp = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[gdat.indxbacpback[c]]]
-            if specback != None:
+            if specback[c] != None:
                 norm = temp * specback
             else:
                 norm = temp
