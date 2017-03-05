@@ -4098,12 +4098,10 @@ def writfile(gdattemp, path):
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
-            
+           
             print 'writfile'
-            print 'attr'
             print attr
-            print 'valu'
-            print valu
+            print type(valu)
             print
 
             setattr(gdattemptemp, attr, valu)
