@@ -127,25 +127,6 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
         if evalcirc:
             indxfluxproxtemp = digitize(spec[gdat.indxenerfluxdist[0], k], gdat.binsprox) - 1
             indxpixlpnts = retr_indxpixl(gdat, bgal[k], lgal[k])
-           
-            # temp
-            #if gdat.strgcnfg == 'pcat_ferm_quas_mock':
-            #    print 'spec'
-            #    print spec
-            #    print spec.shape
-            #    print 'spec[gdat.indxenerfluxdist[0], k]'
-            #    print spec[gdat.indxenerfluxdist[0], k]
-            #    print 'gdat.binsprox'
-            #    print gdat.binsprox
-            #    print 'digitize(spec[gdat.indxenerfluxdist[0], k], gdat.binsprox)'
-            #    print digitize(spec[gdat.indxenerfluxdist[0], k], gdat.binsprox)
-            #    print 'indxfluxproxtemp'
-            #    print indxfluxproxtemp
-            #    print 'indxpixlpnts'
-            #    print indxpixlpnts
-            #    summgene(indxpixlpnts)
-            #    print
-
             indxpixltemp = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
             if isinstance(indxpixltemp, int):
                 indxpixltemp = gdat.indxpixl
@@ -600,42 +581,6 @@ def retr_cntsmaps(gdat, fluxmaps, cart=False):
     return cntsmaps
 
 
-def retr_cntsbackfwhm(gdat, bacp, fwhm):
-
-    oaxitype = len(fwhm.shape) == 3
-    cntsbackfwhm = zeros_like(fwhm)
-    for c in gdat.indxback:
-        indxbacp = c * gdat.numbener + gdat.indxener
-        if oaxitype:
-            cntsback = bacp[indxbacp, None, None, None] * gdat.backflux[c][:, :, :, None] * gdat.expo[:, :, :, None] * \
-                                                                                                gdat.deltener[:, None, None, None] * pi * fwhm[:, None, :, :]**2 / 4.
-        else:
-            cntsback = bacp[indxbacp, None, None] * gdat.backflux[c] * gdat.expo * pi * fwhm[:, None, :]**2 / 4.
-            if gdat.enerdiff:
-                cntsback *= gdat.deltener[:, None, None]
-        cntsbackfwhm += mean(cntsback, 1)
-
-    return cntsbackfwhm
-
-
-def retr_sigm(gdat, cnts, cntsbackfwhm, lgal=None, bgal=None):
-   
-    oaxitype = len(cntsbackfwhm.shape) == 3
-    if cnts.ndim == 2:
-        if oaxitype:
-            sigm = cnts / sum(cntsbackfwhm[:, :, 0], 1)[:, None]
-        else:
-            sigm = cnts / sum(cntsbackfwhm, 1)[:, None]
-    else:
-        if oaxitype:
-            indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
-            sigm = cnts / swapaxes(cntsbackfwhm[:, :, indxoaxitemp], 1, 2)
-        else:
-            sigm = cnts / cntsbackfwhm[:, None, :]
-
-    return sigm
-
-
 def retr_probpois(data, modl):
     
     prob = data * log(modl) - modl - sp.special.gammaln(data + 1)
@@ -906,14 +851,6 @@ def retr_chandata(gdat):
     #gdat.exprcnts[0, :, 0] = cntschansoft
     #gdat.exprcnts[1, :, 0] = cntschanhard
         
-    print 'gdat.exprspec[0, 0, :]'
-    print gdat.exprspec[0, 0, :]
-    print 'gdat.exprspec[0, 1, :]'
-    print gdat.exprspec[0, 1, :]
-    print 'log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :])'
-    print log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :])
-    print
-
     gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
     gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
 
@@ -2816,9 +2753,9 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
     else:
         if gdat.exprtype == 'ferm':
-            gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
+            gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
@@ -4161,6 +4098,14 @@ def writfile(gdattemp, path):
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
+            
+            print 'writfile'
+            print 'attr'
+            print attr
+            print 'valu'
+            print valu
+            print
+
             setattr(gdattemptemp, attr, valu)
 
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -4760,21 +4705,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     nextlliktotl = sum(nextllik)
                     dicttemp['deltllik'][l][k] = arcsinh(lliktotl - nextlliktotl) / log(10.)
                  
-            # temp
-            if False and gdat.pntstype == 'lght':
-                ### number of background counts per PSF
-                cntsbackfwhm = retr_cntsbackfwhm(gdat, bacp, fwhm)
-            
-                ### number of counts and standard deviation of each PS
-                sigm = []
-                for l in gdat.indxpopl:
-                    # temp -- zero exposure pixels will give zero counts
-                    if gdat.oaxitype:
-                        sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm, lgal=dicttemp['lgal'][l], bgal=dicttemp['bgal'][l])
-                    else:
-                        sigmtemp = retr_sigm(gdat, dicttemp['cnts'][l], cntsbackfwhm)
-                    sigm.append(sigmtemp)
-                
             if gdat.pntstype == 'lens':
                 #### distance to the source
                 for l in range(numbpopl):

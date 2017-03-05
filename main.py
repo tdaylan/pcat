@@ -1248,13 +1248,16 @@ def init( \
         gdat.calcllik = False
         
         # save some variables that will be changed for the prior-only run
-        liststrgvarbsave = ['makeplot']
+        liststrgvarbsave = ['makeplot', 'pathfram', 'pathpost']
         for strgvarbsave in liststrgvarbsave:
             varb = getattr(gdat, strgvarbsave)
             setattr(gdat, strgvarbsave + 'saveprio', varb)
         
         gdat.makeplot = False
-        
+        gdat.pathpost += 'chec/'
+        gdat.pathfram += 'chec/'
+        os.system('mkdir -p %s %s' % (gdat.pathpost, gdat.pathfram))
+
         ## perform sampling
         worksamp(gdat)
         

@@ -688,9 +688,6 @@ def plot_compfrac(gdat, gdatmodi, strg):
     ## background templates
     for c in gdat.indxback:
         temp = retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp[gdat.indxbacpback[c]]]
-        print 'c'
-        print 'specback'
-        print specback
         if specback[c] != None:
             norm = temp * specback[c]
         else:
@@ -734,16 +731,22 @@ def plot_compfrac(gdat, gdatmodi, strg):
                 listydat[cntr, :] = gdatmodi.thissampvarb[indxvarb]
             cntr += 1
             
+    cntrdata = cntr
+
     ## data
     listydat[cntr, :] = gdat.datafluxmean
     cntr += 1
     
     ## total model
     if gdat.numblablcompfrac > 1:
-        listydat[cntr, :] = sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
+        if specback[c] != None:
+            norm = temp * specback[c]
+        else:
+            norm = temp
+        listydat[cntr, :] = sum(listydat[cntrdata]) # sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
         if gdatmodi == None:
-            listyerr[:, cntr, :] = mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
-                                                                                                                                    gdat.backfluxmean[None, :, :], 1)
+            listyerr[:, cntr, :] = mean(listydat[cntrdata]) # mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
+                                                              #                                                                      gdat.backfluxmean[None, :, :], 1)
         cntr += 1
 
     # plot energy spectra of the data, background model components and total background
