@@ -1208,7 +1208,7 @@ def init( \
         print
             
     # process lock for simultaneous plotting
-    gdat.lock = mp.Manager().Lock()
+    lock = mp.Manager().Lock()
         
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdat, 'gdat')
@@ -1259,7 +1259,7 @@ def init( \
         os.system('mkdir -p %s %s' % (gdat.pathpost, gdat.pathfram))
 
         ## perform sampling
-        worksamp(gdat)
+        worksamp(gdat, lock)
         
         ## post process the samples
         proc_post(gdat, prio=True)
@@ -1279,7 +1279,7 @@ def init( \
         gdat.calcllik = True
     
     # run the sampler
-    worksamp(gdat)
+    worksamp(gdat, lock)
     
     # post process the samples
     proc_post(gdat)
@@ -1586,11 +1586,6 @@ def proc_post(gdat, prio=False):
         setattr(gdat, 'errr' + strg, errrtemp)
         setattr(gdat, 'stdv' + strg, stdvtemp)
     
-    # temp
-    if gdat.pntstype == 'lght':
-        gdat.medicntsbackfwhm = retr_cntsbackfwhm(gdat, gdat.postfixp[0, gdat.indxfixpbacp], gdat.postfwhm[0, :])
-        gdat.medibinssigm = retr_sigm(gdat, gdat.binscnts, gdat.medicntsbackfwhm)
-   
     # memory usage
     gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
     gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
@@ -1846,7 +1841,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
     gdatmodi.optipropdone = True
 
 
-def worksamp(gdat):
+def worksamp(gdat, lock):
 
     if gdat.verbtype > 0:
         print 'Writing the global state to the disc before spawning workers...'
@@ -1854,7 +1849,7 @@ def worksamp(gdat):
     writfile(gdat, path) 
     
     if gdat.numbproc == 1:
-        worktrac(gdat.pathoutpthis, gdat.lock, 0)
+        worktrac(gdat.pathoutpthis, lock, 0)
     else:
         if gdat.verbtype > 0:
             print 'Forking the sampler...'
@@ -1863,7 +1858,7 @@ def worksamp(gdat):
         pool = mp.Pool(gdat.numbproc)
         
         # spawn the processes
-        workpart = functools.partial(worktrac, gdat.pathoutpthis, gdat.lock)
+        workpart = functools.partial(worktrac, gdat.pathoutpthis, lock)
         pool.map(workpart, gdat.indxproc)
 
         pool.close()

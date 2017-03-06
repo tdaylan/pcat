@@ -4101,9 +4101,9 @@ def writfile(gdattemp, path):
            
             print 'writfile'
             print attr
-            print type(valu)
-            print
-
+            thistype = type(valu)
+            if not (thistype == ):
+                print thistype
             setattr(gdattemptemp, attr, valu)
 
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
