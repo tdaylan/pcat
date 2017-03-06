@@ -1930,12 +1930,12 @@ def plot_init(gdat):
 
                 spec = 1e-19 # [erg/cm^2/s]
                 listsize = array([0.1, 0.1, 0.1]) / gdat.anglfact
-                listindx = array([2., 4., 10.])
+                listindx = array([3., 4., 5.])
                 listydat = []
                 listledg = []
                 for size, indx in zip(listsize, listindx):
                     listydat.append(retr_sersprof(spec, gdat.binsanglplot, size, indx=indx))
-                    listledg.append('$R_e = %.3g, n = %.2g' % (size, indx))
+                    listledg.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
                 path = gdat.pathinit + 'sersprof.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$f$', listledg=listledg)
             

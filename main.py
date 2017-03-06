@@ -1248,11 +1248,14 @@ def init( \
         gdat.calcllik = False
         
         # save some variables that will be changed for the prior-only run
-        liststrgvarbsave = ['makeplot', 'pathfram', 'pathpost']
+        liststrgvarbsave = ['numbswep', 'factthin', 'numbburn', 'stdvstdp', 'makeplot', 'pathfram', 'pathpost']
+        #liststrgvarbsave = gdat.__dict__.keys()
         for strgvarbsave in liststrgvarbsave:
             varb = getattr(gdat, strgvarbsave)
             setattr(gdat, strgvarbsave + 'saveprio', varb)
-        
+       
+        ## change the variables
+        gdat.stdvstdp[:] = 0.1
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
         os.system('mkdir -p %s %s' % (gdat.pathpost, gdat.pathfram))
@@ -2447,13 +2450,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 maxm = gdatmodi.cntrswep + 1
                 if maxm > minm:
                     fact = 100. / float(maxm - minm)
-                    accp = fact * where(workdict['listaccp'][minm:maxm])[0].size
                     print 'Sweep number %d' % gdatmodi.cntrswep
                     print '%3d%% completed.' % gdatmodi.nextpercswep
-                    print 'Acceptance rate: %.3g%%' % accp
                     for k in gdat.indxproptype:
                         numb = where(workdict['listindxproptype'][minm:maxm] == k)[0].size
-                        if numb > 0:
+                        if numb > 10:
                             fact =  100. / float(where(workdict['listindxproptype'][minm:maxm] == k)[0].size)
                             accp = fact * where(logical_and(workdict['listaccp'][minm:maxm], workdict['listindxproptype'][minm:maxm] == k))[0].size
                             print '%s acceptance rate: %.3g%%' % (gdat.legdproptype[k], accp)

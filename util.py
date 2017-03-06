@@ -2752,7 +2752,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     # proposal scale
     if gdat.pntstype == 'lens':
-        gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+        gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
         gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
         gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
     else:
@@ -3952,8 +3952,9 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 ## source
                 axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalsour], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalsour], \
                                                                                     alpha=gdat.alphpnts, label=gdat.truelablhits, s=300, marker='>', linewidth=2, color='g')
-    
-                if gdat.numbtrap > 0:
+            
+                # temp
+                if False and gdat.numbtrap > 0:
                     ## subhalos
                     for k in range(lgal.size):
                         axis.add_patch(plt.Circle((gdat.anglfact * lgal[k], gdat.anglfact * bgal[k]), \
@@ -3987,7 +3988,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 axis.add_patch(plt.Circle((gdat.anglfact * lgalhost, gdat.anglfact * bgalhost), gdat.fluxfactplot * beinhost, edgecolor='b', facecolor='none', lw=2, ls='--'))
                 
                 # subhalos
-                if gdat.numbtrap > 0:
+                # temp
+                if False and gdat.numbtrap > 0:
                     for k in range(lgal.size):
                         axis.add_artist(plt.Circle((gdat.anglfact * lgal[k], gdat.anglfact * bgal[k]), \
                                     gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampflux[l][k]], edgecolor='b', facecolor='none', ls='--', lw=2))
