@@ -2066,15 +2066,15 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pathpixlcnvt = gdat.pathdata + 'pixlcnvt/'
     gdat.pathprox = gdat.pathdata + 'prox/'
     ## plot
+    gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
+    gdat.pathinit = gdat.pathplot + 'init/'
+    gdat.pathdiag = gdat.pathplot + 'diag/'
+    gdat.pathfram = gdat.pathplot + 'fram/'
+    gdat.pathpost = gdat.pathplot + 'post/'
+    gdat.pathpostlpri = gdat.pathpost + 'lpri/'
+    gdat.pathpostfixp = gdat.pathpost + 'fixp/'
+    gdat.pathpostfixpproc = gdat.pathpostfixp + 'proc/'
     if gdat.makeplot:
-        gdat.pathplot = gdat.pathimag + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
-        gdat.pathinit = gdat.pathplot + 'init/'
-        gdat.pathdiag = gdat.pathplot + 'diag/'
-        gdat.pathfram = gdat.pathplot + 'fram/'
-        gdat.pathpost = gdat.pathplot + 'post/'
-        gdat.pathpostlpri = gdat.pathpost + 'lpri/'
-        gdat.pathpostfixp = gdat.pathpost + 'fixp/'
-        gdat.pathpostfixpproc = gdat.pathpostfixp + 'proc/'
         for strg in ['llik']:
             setattr(gdat, 'pathpostdelt%s' % strg, gdat.pathpost + 'delt%s/' % strg)
             setattr(gdat, 'pathpostdelt%saccp' % strg, gdat.pathpost + 'delt%saccp/' % strg)
