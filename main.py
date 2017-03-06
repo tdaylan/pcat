@@ -69,7 +69,7 @@ def init( \
          makeplot=True, \
          makeplotfram=True, \
          numbframpost=None, \
-         makeplotintr=True, \
+         makeplotintr=False, \
          scalmaps='asnh', \
          makeanim=True, \
          strgenerfull=None, \
@@ -614,7 +614,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.04 / gdat.anglfact
+        minmflux = 0.005 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
