@@ -4102,7 +4102,7 @@ def writfile(gdattemp, path):
             print 'writfile'
             print attr
             thistype = type(valu)
-            if not (thistype == ):
+            if not (thistype == list or thistype == int or thistype == bool or thistype == float):
                 print thistype
             setattr(gdattemptemp, attr, valu)
 

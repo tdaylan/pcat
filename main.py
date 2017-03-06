@@ -1253,7 +1253,6 @@ def init( \
             varb = getattr(gdat, strgvarbsave)
             setattr(gdat, strgvarbsave + 'saveprio', varb)
         
-        gdat.makeplot = False
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
         os.system('mkdir -p %s %s' % (gdat.pathpost, gdat.pathfram))
