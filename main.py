@@ -455,7 +455,7 @@ def init( \
         gdat.evalpsfnpnts = True
 
     ## generative model
-    setp_true(gdat, 'minmnumbpnts', array([0]))
+    setp_true(gdat, 'minmnumbpnts', array([1]))
     setp_true(gdat, 'maxmnumbpnts', array([1000]))
     
     # set mock sample vector indices
