@@ -135,7 +135,7 @@ def init( \
          
          radispmr=None, \
 
-         numbsidecart=200, \
+         numbsidecart=100, \
          numbsideheal=256, \
          numbdatasamp=100, \
 
@@ -311,7 +311,7 @@ def init( \
     
     if gdat.evalcirc == None:
         if gdat.pntstype == 'lens':
-            gdat.evalcirc = 'bein'
+            gdat.evalcirc = 'full'
         else:
             gdat.evalcirc = 'psfn'
 
@@ -1462,6 +1462,21 @@ def proc_post(gdat, prio=False):
                 info = retr_info(pdfnpost, pdfnprio)
                 deltvarbscal = getattr(gdat, 'delt' + strgvarbscal)
                 infototl = sum(info * deltvarbscal)
+            
+                print 'strgvarbscal'
+                print strgvarbscal
+                print 'pdfnpost'
+                print pdfnpost
+                print 'pdfnprio'
+                print pdfnprio
+                print 'info'
+                print info
+                print 'deltvarbscal'
+                print deltvarbscal
+                print 'infototl'
+                print infototl
+                print
+
                 setattr(gdat, 'info' + strgvarbscal, info)
                 setattr(gdat, 'infototl' + strgvarbscal, infototl)
                 

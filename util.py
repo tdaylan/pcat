@@ -1908,7 +1908,8 @@ def retr_detrcatl(gdat):
         
 def retr_conv(gdat, defl):
     
-    conv = (gradient(defl[:, :, 0], gdat.sizepixl, axis=0) + gradient(defl[:, :, 1], gdat.sizepixl, axis=1)) / 2.
+    # temp
+    conv = abs(gradient(defl[:, :, 0], gdat.sizepixl, axis=0) + gradient(defl[:, :, 1], gdat.sizepixl, axis=1)) / 2.
 
     return conv
 
@@ -4099,11 +4100,12 @@ def writfile(gdattemp, path):
             filearry.create_dataset(attr, data=valu)
         else:
            
-            print 'writfile'
-            print attr
-            thistype = type(valu)
-            if not (thistype == list or thistype == int or thistype == bool or thistype == float):
-                print thistype
+            #thistype = type(valu)
+            #if not (thistype == ndarray or thistype == list or thistype == int or thistype == bool or thistype == float or \
+            #                thistype == str or thistype == float64 or thistype == int64 or thistype == dict):
+            #    print attr
+            #    print thistype
+            
             setattr(gdattemptemp, attr, valu)
 
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
