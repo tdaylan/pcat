@@ -498,12 +498,18 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     else:
         if gdat.propwithsing:
             # temp
+            gdatmodi.indxstdpmodi = choice(gdat.indxstdp)
             gdatmodi.thisindxsamplgal, gdatmodi.thisindxsampbgal, gdatmodi.thisindxsampflux, gdatmodi.thisindxsampsind, \
                         gdatmodi.thisindxsampcurv, gdatmodi.thisindxsampexpo, gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxpntsfull, gdat.spectype) 
             gdatmodi.thisindxsampfull = concatenate((gdat.indxfixp, concatenate(gdatmodi.thisindxsampcomp)))
+            booltemp = False
+            for strg in gdat.liststrgcomptotl:
+                if gdatmodi.indxstdpmodi == getattr(gdat, 'indxstdp' + strg):
+                    booltemp = True
             gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
-
-        gdatmodi.thisindxproptype = gdat.indxproptypewith
+            gdatmodi.thisindxproptype = gdatmodi.indxsampmodi
+        else:
+            gdatmodi.thisindxproptype = gdat.indxproptypewith
         gdatmodi.propwith = True
 
     if gdat.verbtype > 1:
@@ -1071,10 +1077,7 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
 
         # rescale the unit sample vector due to the hyperparameter change
         if gdat.propwithsing:
-            if gdatmodi.indxsampmodi in gdat.indxfixpdist:
-                indxpoplsampmodi = [gdat.indxpoplsamp[gdatmodi.indxsampmodi]]
-            else:
-                indxpoplsampmodi = []
+            indxpoplsampmodi = []
         else:
             indxpoplsampmodi = gdat.indxpopl
         
@@ -2043,7 +2046,7 @@ def retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, anglscal, angl
 
 def setpinit(gdat, boolinitsetp=False):
 
-    if gdat.pntstype == 'lens' and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
+    if False and gdat.pntstype == 'lens' and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
         cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
         cliblens.retr_deflsubh()
 
@@ -2749,9 +2752,9 @@ def setpinit(gdat, boolinitsetp=False):
     
     # proposal scale
     if gdat.pntstype == 'lens':
-        gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
-        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+        gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
+        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
@@ -2863,7 +2866,7 @@ def setpinit(gdat, boolinitsetp=False):
             for k in gdat.indxstdp:    
                 gdat.indxproptypewith = cntr.incr()
                 gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W_{%d}}$' % k)
-                gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
+                gdat.legdproptype = append(gdat.legdproptype, 'Within-model parameter %d' % k)
                 gdat.nameproptype = append(gdat.nameproptype, gdat.namestdp[k])
         else:    
             gdat.indxproptypewith = cntr.incr()

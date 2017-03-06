@@ -743,9 +743,9 @@ def plot_compfrac(gdat, gdatmodi, strg):
             norm = temp * specback[c]
         else:
             norm = temp
-        listydat[cntr, :] = sum(listydat[cntrdata]) # sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
+        listydat[cntr, :] = sum(listydat[:cntrdata, :], 0) # sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
         if gdatmodi == None:
-            listyerr[:, cntr, :] = mean(listydat[cntrdata]) # mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
+            listyerr[:, cntr, :] = mean(listydat[:cntrdata, :], 0) # mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
                                                               #                                                                      gdat.backfluxmean[None, :, :], 1)
         cntr += 1
 

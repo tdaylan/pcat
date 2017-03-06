@@ -614,7 +614,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.04 / gdat.anglfact
+        minmflux = 0.01 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -644,7 +644,7 @@ def init( \
         setp_truedefa(gdat, 'sind', sind, popl=True)
         setp_truedefa(gdat, 'sinddistmean', sind, popl=True)
         #### standard deviations should not be too small
-        setp_truedefa(gdat, 'sinddiststdv', [0.5, 2.], popl=True)
+        setp_truedefa(gdat, 'sinddiststdv', [0.3, 2.], popl=True)
         setp_truedefa(gdat, 'curvdistmean', [-1., 1.], popl=True)
         setp_truedefa(gdat, 'curvdiststdv', [0.1, 1.], popl=True)
         setp_truedefa(gdat, 'expodistmean', [1., 8.], popl=True)
@@ -726,7 +726,7 @@ def init( \
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
     setp_true(gdat, 'sinddistmean', 2.15, popl=True)
-    setp_true(gdat, 'sinddiststdv', 1., popl=True)
+    setp_true(gdat, 'sinddiststdv', 0.5, popl=True)
     
     setp_true(gdat, 'curvdistmean', 2., popl=True)
     setp_true(gdat, 'curvdiststdv', 0.2, popl=True)
@@ -1441,10 +1441,11 @@ def proc_post(gdat, prio=False):
             listvarbscal = getattr(gdat, 'list' + strgvarbscal)
             histscalvarb = histogram(listvarbscal, bins=binsvarbscal)[0]
             
-            try:
-                pdfn = sp.stats.gaussian_kde(listvarbscal)(meanvarbscal)
-            except: 
-                pdfn = zeros_like(meanvarbscal)
+            pdfn = histogram(listvarbscal, bins=binsvarbscal)[0].astype(float)
+            #try:
+            #    pdfn = sp.stats.gaussian_kde(listvarbscal)(meanvarbscal)
+            #except: 
+            #    pdfn = zeros_like(meanvarbscal)
             
             pdfn[where(pdfn < 1e-50)[0]] = 1e-50
 
