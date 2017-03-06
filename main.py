@@ -65,11 +65,11 @@ def init( \
          asscmetrtype='dist', \
 
          # plotting
-         numbswepplot=5000, \
+         numbswepplot=2000, \
          makeplot=True, \
          makeplotfram=True, \
          numbframpost=None, \
-         makeplotintr=False, \
+         makeplotintr=True, \
          scalmaps='asnh', \
          makeanim=True, \
          strgenerfull=None, \
@@ -107,7 +107,7 @@ def init( \
          bindprio=False, \
          maxmgangdata=None, \
         
-         checprio=False, \
+         checprio=True, \
 
          # proposals
          stdvprophypr=0.01, \
@@ -181,13 +181,11 @@ def init( \
         else:
             gdat.indxevttincl = arange(1)
    
-    # temp
-    gdat.inittype = 'rand'
     if gdat.inittype == None:
         if gdat.datatype == 'mock':
-            gdat.inittype = 'refr'
+            gdat.inittype = 'pert'
         else:
-            gdat.inittype = 'blob'
+            gdat.inittype = 'rand'
 
     if gdat.pntstype == 'lens':
         gdat.hubbexpofact = 1.63050e-19
@@ -438,7 +436,7 @@ def init( \
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = gdat.numbswep / 5
+        gdat.numbburn = gdat.numbswep / 10
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -616,7 +614,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
-        minmflux = 0.01 / gdat.anglfact
+        minmflux = 0.04 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -1957,8 +1955,15 @@ def work(pathoutpthis, lock, indxprocwork):
                 elif k in gdat.indxfixp:
                     varb = getattr(gdat, 'true' + gdat.namepara[k])
                     gdatmodi.thissamp[gdat.indxfixp[k]] = cdfn_fixp(gdat, 'true', varb, k)
+        
+        if gdat.inittype == 'pert' and not k in gdat.indxfixpnumbpnts:
+            while True:
+                gdatmodi.thissamp[k] += 1e-2 * randn()
+                if gdatmodi.thissamp[k] > 0. and gdatmodi.thissamp[k] < 1.:
+                    break
+        
         gdatmodi.thissampvarb[k] = icdf_fixp(gdat, '', gdatmodi.thissamp[k], k)
-                
+    
     ## lists of occupied and empty transdimensional parameters
     gdatmodi.thisindxpntsfull = []
     if gdat.numbtrap > 0:
@@ -1975,19 +1980,6 @@ def work(pathoutpthis, lock, indxprocwork):
         for l in gdat.indxpopl:
             gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]] = rand(gdatmodi.thisindxsampcomp[l].size)
         
-        if gdat.strgcnfg == 'pcat_ferm_inpt_ngal':
-            print 'gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]'
-            print gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]
-            print 'len(gdatmodi.thisindxpntsfull[0])'
-            print len(gdatmodi.thisindxpntsfull[0])
-            print 'gdat.truenumbpnts[0]'
-            print gdat.truenumbpnts[0]
-            print 'gdat.truesind[0]'
-            print gdat.truesind[0].size
-            print 'gdatmodi.thisindxsampsind[0]'
-            print gdatmodi.thisindxsampsind[l].size
-            print
-
         ## element parameters
         if gdat.inittype == 'refr':
             for l in gdat.indxpopl:
@@ -2046,6 +2038,19 @@ def work(pathoutpthis, lock, indxprocwork):
                                 print 'Initializing the spectral cutoff energies randomly for population %d' % l
                             gdatmodi.thissamp[gdatmodi.thisindxsampexpo[l]] = rand(gdat.truenumbpnts[l])
             
+        if gdat.inittype == 'pert':
+            for l in gdat.indxpopl:
+                print 'gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]]'
+                print gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]]
+                for k in range(gdatmodi.thisindxsampcomp[l].size):
+                    while True:
+                        gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l][k]] += 1e-2 * randn()#randn(gdatmodi.thisindxsampcomp[l].size)
+                        if gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l][k]] > 0. and gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l][k]] < 1.:
+                            break
+                print 'gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]]'
+                print gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]]
+                print
+        
     if gdat.verbtype > 1:
         print 'thissamp'
         for k in gdat.indxpara:

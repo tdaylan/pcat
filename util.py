@@ -2761,9 +2761,9 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
         if gdat.exprtype == 'chan':
-            gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+            #gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
+            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
 
     # proposal scale indices for each parameter
     indxpntsfull = [range(gdat.maxmnumbpnts[l]) for l in gdat.indxpopl]
