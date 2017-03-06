@@ -180,7 +180,9 @@ def init( \
             gdat.indxevttincl = arange(2, 4)
         else:
             gdat.indxevttincl = arange(1)
-    
+   
+    # temp
+    gdat.inittype = 'rand'
     if gdat.inittype == None:
         if gdat.datatype == 'mock':
             gdat.inittype = 'refr'
@@ -1248,7 +1250,7 @@ def init( \
         gdat.calcllik = False
         
         # save some variables that will be changed for the prior-only run
-        liststrgvarbsave = ['numbswep', 'factthin', 'numbburn', 'stdvstdp', 'makeplot', 'pathfram', 'pathpost']
+        liststrgvarbsave = ['stdvstdp', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim']
         #liststrgvarbsave = gdat.__dict__.keys()
         for strgvarbsave in liststrgvarbsave:
             varb = getattr(gdat, strgvarbsave)
@@ -1258,7 +1260,9 @@ def init( \
         gdat.stdvstdp[:] = 0.1
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
-        os.system('mkdir -p %s %s' % (gdat.pathpost, gdat.pathfram))
+        gdat.pathdiag += 'chec/'
+        gdat.pathanim += 'chec/'
+        os.system('mkdir -p %s %s %s %s' % (gdat.pathpost, gdat.pathfram, gdat.pathdiag, gdat.pathanim))
 
         ## perform sampling
         worksamp(gdat, lock)
