@@ -85,6 +85,10 @@ def init( \
          numbangl=1000, \
          binsangltype='logt', \
          numbsidepntsprob=400, \
+    
+         listspecrefrplot=None, \
+         listenerreftplot=None, \
+         listlablreftplot=None, \
 
          lablgangunit=None, \
          labllgal=None, \
@@ -107,7 +111,7 @@ def init( \
          bindprio=False, \
          maxmgangdata=None, \
         
-         checprio=True, \
+         checprio=False, \
 
          # proposals
          stdvprophypr=0.01, \
@@ -267,7 +271,7 @@ def init( \
             gdat.fluxfactplot = gdat.anglfact
         else:
             gdat.fluxfactplot = 1.
-
+         
     if gdat.labllgal == None:
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_z^{\prime}'
@@ -509,7 +513,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         elif gdat.exprtype == 'chan':
-            back = ['chanfluxisot.fits']
+            back = [array([1.3e1, 4.]), 1e1]
         else:
             back = [1.]
     if gdat.pntstype == 'lens':
@@ -518,7 +522,7 @@ def init( \
     
     #### spectra for the background
     if gdat.exprtype == 'chan':
-        specback = [ones(gdat.numbener)]
+        specback = [None, array([1., 1.3])]
     else:
         specback = [None, None]
     setp_true(gdat, 'specback', specback)
@@ -527,18 +531,24 @@ def init( \
     lablback = [r'$\mathcal{I}$']
     if gdat.exprtype == 'ferm':
         lablback.append(r'$\mathcal{D}$')
+    if gdat.exprtype == 'chan':
+        lablback.append(r'$\mathcal{I}_p$')
     setp_true(gdat, 'lablback', lablback)
     
     #### name
     strgback = ['fluxisot']
     if gdat.exprtype == 'ferm':
         strgback.append('fluxfdfm')
+    if gdat.exprtype == 'chan':
+        strgback.append('fluxpart')
     setp_true(gdat, 'strgback', strgback)
     
     #### legend
     nameback = ['Isotropic']
     if gdat.exprtype == 'ferm':
         nameback.append(r'FDM')
+    if gdat.exprtype == 'chan':
+        nameback.append(r'Particle')
     setp_true(gdat, 'nameback', nameback)
     
     retr_indxsamp(gdat, strgpara='true')
@@ -610,7 +620,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         minmflux = 5e-11
     if gdat.exprtype == 'chan':
-        minmflux = 7e-10
+        minmflux = 3e-9
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.pntstype == 'lens':
@@ -640,7 +650,10 @@ def init( \
 
     ### spectral index
     if gdat.numbener > 1:
-        sind = [1., 3.]
+        if gdat.exprtype == 'ferm':
+            sind = [1., 3.]
+        if gdat.exprtype == 'chan':
+            sind = [-1., 3.]
         setp_truedefa(gdat, 'sind', sind, popl=True)
         setp_truedefa(gdat, 'sinddistmean', sind, popl=True)
         #### standard deviations should not be too small
@@ -725,7 +738,11 @@ def init( \
     for k in range(gdat.numbfluxdistnorm):
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
-    setp_true(gdat, 'sinddistmean', 2.15, popl=True)
+    if gdat.exprtype == 'ferm':
+        sinddistmean = 2.15
+    if gdat.exprtype == 'chan':
+        sinddistmean = 1.
+    setp_true(gdat, 'sinddistmean', sinddistmean, popl=True)
     setp_true(gdat, 'sinddiststdv', 0.5, popl=True)
     
     setp_true(gdat, 'curvdistmean', 2., popl=True)
@@ -751,6 +768,16 @@ def init( \
     setpinit(gdat, True) 
     setp_fixp(gdat, strgpara='true')
     
+    if gdat.listspecrefrplot == None:
+        if gdat.exprtype == 'chan':
+            gdat.listenerrefrplot = []
+            gdat.listspecrefrplot = []
+            gdat.listlablrefrplot = ['CDFS', 'HEAO', 'XMM', 'ROSAT']
+            for strgfile in ['cdfs', 'heao', 'xmmm', 'rost']:
+                path = gdat.pathinpt + '%s.csv' % strgfile
+                gdat.listenerrefrplot.append(loadtxt(path, delimiter=',')[:, 0])
+                gdat.listspecrefrplot.append(loadtxt(path, delimiter=',')[:, 1])
+
     # intermediate setup
     if gdat.numbener > 1:
         gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]

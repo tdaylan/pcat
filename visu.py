@@ -500,9 +500,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         path = gdat.pathpostfixp + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.strgfixp[gdat.indxfixpbacp], \
                                                                                                         truepara=[gdat.corrfixp[k] for k in gdat.indxfixpbacp])
-        if gdat.numbback == 2:
+        if gdat.numbback == 2 and gdat.specback == [None, None]:
             for i in gdat.indxener:
-                indx = gdat.indxfixpbacp[i+gdat.indxback*gdat.numbener]
+                indx = gdat.indxfixpbacp[gdat.indxback*gdat.numbener+i]
                 path = gdat.pathpostfixp + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.strgfixp[indx], truepara=[gdat.corrfixp[k] for k in indx], join=True)
     
@@ -673,6 +673,7 @@ def plot_chro(gdat):
 
 def plot_compfrac(gdat, gdatmodi, strg):
     
+
     listydat = zeros((gdat.numblablcompfracspec, gdat.numbener))
     listyerr = zeros((2, gdat.numblablcompfracspec, gdat.numbener))
    
@@ -697,7 +698,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         if gdatmodi == None:
             temp = retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp[gdat.indxbacpback[c]]]
             if specback[c] != None:
-                norm = temp * specback
+                norm = temp * specback[c]
             else:
                 norm = temp
             listyerr[:, cntr, :] = norm * gdat.backfluxmean[None, c, :]
@@ -743,16 +744,23 @@ def plot_compfrac(gdat, gdatmodi, strg):
             norm = temp * specback[c]
         else:
             norm = temp
-        listydat[cntr, :] = sum(listydat[:cntrdata, :], 0) # sum(retr_varb(gdat, gdatmodi, 'fixp')[gdat.indxfixpbacp].reshape((gdat.numbback, gdat.numbener)) * gdat.backfluxmean, 0)
+        listydat[cntr, :] = sum(listydat[:cntrdata, :], 0)
         if gdatmodi == None:
-            listyerr[:, cntr, :] = mean(listydat[:cntrdata, :], 0) # mean(retr_varb(gdat, gdatmodi, 'fixp', perc='errr')[:, gdat.indxfixpbacp].reshape((2, gdat.numbback, gdat.numbener)) * \
-                                                              #                                                                      gdat.backfluxmean[None, :, :], 1)
+            listyerr[:, cntr, :] = mean(listydat[:cntrdata, :], 0)
         cntr += 1
 
     # plot energy spectra of the data, background model components and total background
     if gdat.numbener > 1:
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-       
+        
+        # plot reference spectra
+        if gdat.listspecrefrplot != None:
+            for k in range(len(gdat.listspecrefrplot)):
+                axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], ls='--')
+
+        print 'listyerr'
+        print listyerr
+
         xdat = gdat.meanener
         for k in range(gdat.numblablcompfracspec):
             ydat = listydat[k, :]
@@ -767,13 +775,17 @@ def plot_compfrac(gdat, gdatmodi, strg):
         axis.set_xlabel('$E$ [%s]' % gdat.strgenerunit)
         axis.set_xscale('log')
         axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
-        make_legd(axis)
-    
+        make_legd(axis, numbcols=3)
+        
+        if gdat.exprtype == 'chan':
+            axis.set_ylim([None, 1e4])
+
         plt.tight_layout()
         path = retr_plotpath(gdat, gdatmodi, strg, 'compfracspec')
         figr.savefig(path)
         plt.close(figr)
-   
+    
+
     # pie plot illustrating contribution of each background template (and PS) to the total model
     listexpl = zeros(gdat.numblablcompfrac)
     listsize = zeros(gdat.numblablcompfrac)
@@ -784,6 +796,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         else:
             listsize[k] = listydat[k, :]
     
+
     listsize *= 100. / sum(listsize)
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))

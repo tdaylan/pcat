@@ -659,7 +659,7 @@ def retr_sdsspsfn(gdat):
 
 def retr_chanpsfn(gdat):
 
-    gdat.exprpsfp = array([0.3 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.6e-1, 2.])
+    gdat.exprpsfp = array([0.35 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.e-1, 2.])
     gdat.exproaxitype = True
    
 
@@ -1080,7 +1080,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             indxpoplsampmodi = []
         else:
             indxpoplsampmodi = gdat.indxpopl
-        
         for l in indxpoplsampmodi:
             
             ## flux distribution
@@ -1109,20 +1108,24 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
 
         # PSs
         gdatmodi.thislfctprop = 0.
-        for l in gdat.indxpopl:
-            for k in range(len(gdatmodi.thisindxpntsfull[l])):
-                for strg in gdat.liststrgcomp[l]:
-                    if strg == 'flux':
-                        gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
-                                                                                (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**2.
-                        gdatmodi.nextstdv = gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdatmodi.nextsampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
-                        gdatmodi.thislfctprop += sum(0.5 * (gdatmodi.nextsamp[gdatmodi.dictmodi['indxsampflux'][l]] - \
-                                               gdatmodi.thissamp[gdatmodi.dictmodi['indxsampflux'][l]])**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
-                    else:
-                        gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
-                                                                                (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
-                    retr_gaus(gdat, gdatmodi, gdatmodi.dictmodi['indxsamp' + strg][l][k], gdatmodi.thisstdv)
-                        
+        if gdat.propcomp:
+            for l in gdat.indxpopl:
+                for k in range(len(gdatmodi.thisindxpntsfull[l])):
+                    for strg in gdat.liststrgcomp[l]:
+                        if strg == 'flux':
+                            gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
+                                                                                    (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**2.
+                            gdatmodi.nextstdv = gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdatmodi.nextsampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
+                            gdatmodi.thislfctprop += sum(0.5 * (gdatmodi.nextsamp[gdatmodi.dictmodi['indxsampflux'][l]] - \
+                                                   gdatmodi.thissamp[gdatmodi.dictmodi['indxsampflux'][l]])**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
+                        else:
+                            gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
+                                                                                    (gdatmodi.thissampvarb[gdatmodi.dictmodi['indxsampflux'][l][k]] / gdat.minmflux)**0.5
+                        retr_gaus(gdat, gdatmodi, gdatmodi.dictmodi['indxsamp' + strg][l][k], gdatmodi.thisstdv)
+        else:
+            for l in gdat.indxpopl:
+                gdatmodi.thissamp[gdatmodi.thisindxsampcomp[l]] = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[l]]
+
         # temp
         gdatmodi.thislfctprop = 0.
 
@@ -2496,13 +2499,15 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.backflux = []
     for c in gdat.indxback:
         if isinstance(gdat.back[c], float):
-            if gdat.datatype == 'mock':
-                if gdat.pixltype == 'heal':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.back[c]
-                if gdat.pixltype == 'cart':
-                    backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.back[c]
-            if gdat.datatype == 'inpt':
-                backfluxtemp = zeros_like(gdat.exprdataflux) + gdat.back[c]
+            if gdat.pixltype == 'heal':
+                backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.back[c]
+            if gdat.pixltype == 'cart':
+                backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.back[c]
+        elif isinstance(gdat.back[c], ndarray) and gdat.back[c].ndim == 1:
+            if gdat.pixltype == 'heal':
+                backfluxtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + gdat.back[c][:, None, None]
+            if gdat.pixltype == 'cart':
+                backfluxtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + gdat.back[c][:, None, None]
         else:
             path = gdat.pathinpt + gdat.back[c]
             backfluxtemp = pf.getdata(path)
@@ -2637,6 +2642,10 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.indxmaxmangl = unravel_index(argmax(psfnwdth), psfnwdth.shape)
                     gdat.maxmangleval[h] = psfnwdth[gdat.indxmaxmangl]
         
+        if gdat.exprtype == 'chan':
+            for h in gdat.indxprox:
+                gdat.maxmangleval[h] = max(gdat.maxmangleval[h], 4. / gdat.anglfact)
+
         if gdat.evalcirc == 'bein':
             gdat.maxmangleval = 10. * gdat.binsprox[1:]
             #gdat.maxmangleval = array([1. / gdat.anglfact]) # 4 * gdat.binsprox[1:]
@@ -2752,7 +2761,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     # proposal scale
     if gdat.pntstype == 'lens':
-        gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
+        gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
         gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
         gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
     else:
@@ -2763,7 +2772,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             #gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
-            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
 
     # proposal scale indices for each parameter
     indxpntsfull = [range(gdat.maxmnumbpnts[l]) for l in gdat.indxpopl]
@@ -3853,7 +3862,7 @@ def retr_imag(gdat, axis, maps, strg, thisindxener=None, thisindxevtt=-1, cmap='
     # rescale the map
     if scal == 'asnh':
         maps = arcsinh(maps)
-   
+    
     imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
     
     return imag
