@@ -644,7 +644,7 @@ def init( \
     ## distribution
     ### flux
     setp_truedefa(gdat, 'gangdistscal', [1. / gdat.anglfact, 10. / gdat.anglfact], popl=True)
-    setp_truedefa(gdat, 'spatdistcons', [1e-2, 1e0], popl=True)
+    setp_truedefa(gdat, 'spatdistcons', [1e-4, 1e-2], popl=True)
     setp_truedefa(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl=True)
     setp_truedefa(gdat, 'fluxdistslop', [1., 4.], popl=True)
     
@@ -726,7 +726,7 @@ def init( \
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
 
-    setp_true(gdat, 'spatdistcons', 1e-1, popl=True)
+    setp_true(gdat, 'spatdistcons', 1e-3, popl=True)
     setp_true(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
     setp_true(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
     if gdat.pntstype == 'lens':
@@ -2028,21 +2028,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     gdatmodi.thissamp[gdatmodi.thisindxsampflux[l]] = rand(gdat.truenumbpnts[l])
                     
                 if gdat.numbener > 1:
-                    print 'gdat.truesind'
-                    print gdat.truesind
-                    print 'gdat.minmsind'
-                    print gdat.minmsind
-                    print 'gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]]'
-                    print gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]]
-                    print 'gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]]'
-                    print gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]]
-                    print 'gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]'
-                    print gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]
-                    print 'gdat.minmflux'
-                    print gdat.minmflux
-                    print 'gdat.maxmflux'
-                    print gdat.maxmflux
-                    print 
+                    
                     if gdat.sinddisttype[l] == 'gaus':
                         gdatmodi.thissamp[gdatmodi.thisindxsampsind[l]] = cdfn_gaus(gdat.truesind[l], gdatmodi.thissampvarb[gdat.indxfixpsinddistmean[l]], \
                                                                                                                     gdatmodi.thissampvarb[gdat.indxfixpsinddiststdv[l]])
