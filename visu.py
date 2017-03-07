@@ -181,7 +181,6 @@ def plot_samp(gdat, gdatmodi, strg):
     
     # temp
     if 'gaus' in spatdisttype:
-        set_printoptions(precision=2)
         plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
 
     for stdv in [False, True]: 

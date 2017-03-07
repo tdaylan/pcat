@@ -2771,8 +2771,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            #gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-3
-            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
+            gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
 
     # proposal scale indices for each parameter
     indxpntsfull = [range(gdat.maxmnumbpnts[l]) for l in gdat.indxpopl]
@@ -4342,6 +4342,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             pdfnspatpriotemp = getattr(gdat, strgtype + 'pdfnspatpriotemp')
             lpdfspatprio, lpdfspatprioobjt = retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp)
             lpdfspatpriointp = lpdfspatprioobjt(gdat.bgalcart, gdat.lgalcart)
+
+            # temp
+            lpdfspatpriointp = lpdfspatpriointp.T
             
             setattr(gdatobjt, strg + 'lpdfspatpriointp', lpdfspatpriointp)
             setattr(gdatobjt, strg + 'lpdfspatprioobjt', lpdfspatprioobjt)

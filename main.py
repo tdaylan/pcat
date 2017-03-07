@@ -1169,6 +1169,12 @@ def init( \
             gdat.bgalprio = concatenate((gdat.truebgal))
         gdat.numbspatprio = gdat.lgalprio.size
     
+        print 'gdat.lgalprio'
+        print gdat.lgalprio
+        print 'gdat.truelgal'
+        print gdat.truelgal
+        print
+
         # spatial template for the catalog prior
         # temp -- this should move outside the if
         gdat.apixmodl = (gdat.maxmgang / gdat.numbsidecart)**2
