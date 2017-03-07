@@ -757,9 +757,6 @@ def plot_compfrac(gdat, gdatmodi, strg):
             for k in range(len(gdat.listspecrefrplot)):
                 axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], ls='--')
 
-        print 'listyerr'
-        print listyerr
-
         xdat = gdat.meanener
         for k in range(gdat.numblablcompfracspec):
             ydat = listydat[k, :]
