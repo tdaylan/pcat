@@ -1278,7 +1278,7 @@ def init( \
         gdat.calcllik = False
         
         # save some variables that will be changed for the prior-only run
-        liststrgvarbsave = ['stdvstdp', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim']
+        liststrgvarbsave = ['makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim']
         #liststrgvarbsave = gdat.__dict__.keys()
         for strgvarbsave in liststrgvarbsave:
             varb = getattr(gdat, strgvarbsave)
