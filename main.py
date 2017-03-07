@@ -187,7 +187,10 @@ def init( \
    
     if gdat.inittype == None:
         if gdat.datatype == 'mock':
-            gdat.inittype = 'pert'
+            if gdat.pntstype == 'lens':
+                gdat.inittype = 'pert'
+            if gdat.pntstype == 'lght':
+                gdat.inittype = 'refr'
         else:
             gdat.inittype = 'rand'
 
@@ -1169,12 +1172,6 @@ def init( \
             gdat.bgalprio = concatenate((gdat.truebgal))
         gdat.numbspatprio = gdat.lgalprio.size
     
-        print 'gdat.lgalprio'
-        print gdat.lgalprio
-        print 'gdat.truelgal'
-        print gdat.truelgal
-        print
-
         # spatial template for the catalog prior
         # temp -- this should move outside the if
         gdat.apixmodl = (gdat.maxmgang / gdat.numbsidecart)**2
@@ -1288,7 +1285,6 @@ def init( \
             setattr(gdat, strgvarbsave + 'saveprio', varb)
        
         ## change the variables
-        gdat.stdvstdp[:] = 0.1
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
         gdat.pathdiag += 'chec/'
