@@ -732,7 +732,7 @@ def init( \
     if gdat.pntstype == 'lens':
         fluxdistslop = 3.
     else:
-        fluxdistslop = 2.6
+        fluxdistslop = 2.2
     setp_true(gdat, 'fluxdistslop', fluxdistslop, popl=True)
 
     retr_axis(gdat, 'flux', gdat.trueminmflux, gdat.maxmflux, gdat.numbfluxdistnorm - 1, scal='logt', strg='true')

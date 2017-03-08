@@ -3908,8 +3908,16 @@ def make_catllabl(gdat, strg, axis):
         
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
                                                                                                 label='%s Host' % gdat.truelabl, marker='D', linewidth=2, color='g')
-        
-    axis.legend(bbox_to_anchor=[0.5, 1.15], loc='center', ncol=3)
+    
+
+    temphand, temp = axis.get_legend_handles_labels()
+    numblabl = len(temp)
+    
+    if numblabl == 4:
+        numbcols = 2
+    else:
+        numbcols = 3
+    axis.legend(bbox_to_anchor=[0.5, 1.15], loc='center', ncol=numbcols)
         
 
 def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
