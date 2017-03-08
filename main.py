@@ -411,7 +411,7 @@ def init( \
         if gdat.exprtype == 'chan':
             gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
         if gdat.exprtype == 'ferm':
-            gdat.maxmgangdata = 20. / gdat.anglfact
+            gdat.maxmgangdata = 10. / gdat.anglfact
         if gdat.exprtype == 'sdyn':
             gdat.maxmgangdata = 1.
         if gdat.exprtype == 'hubb':
@@ -621,7 +621,7 @@ def init( \
     setp_true(gdat, 'minmgang', minmgang)
     
     if gdat.exprtype == 'ferm':
-        minmflux = 5e-11
+        minmflux = 3e-11
     if gdat.exprtype == 'chan':
         minmflux = 3e-9
     if gdat.exprtype == 'sdyn':
