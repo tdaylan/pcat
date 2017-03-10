@@ -243,7 +243,17 @@ If not disabled by the user, PCAT produces plots in every stage of a run. Some p
 
 Chain
 +++++
-``pcat.main.init()`` returns a pointer to the object that contains the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``, which is an HDF5 file. Each dataset (or object attribute as in the former case) is an ``ndarray`` of samples, either of the parameters or of quantities derived from the parameters, as well as diagnostic and utility variables. Available datasets are
+``pcat.main.init()`` returns a pointer to the object that contains the output chain. It also writes the output chain to ``$PCAT_DATA_PATH/outp/rtag/pcat.h5``, which is an HDF5 file. Each dataset (or object attribute as in the former case) is an ``ndarray`` of samples, either of the parameters or of quantities derived from the parameters, as well as diagnostic and utility variables.
+
+In overall, the output folder contains the following files:
+
+- ``args.txt``
+
+The list of arguments to ``pcat.main.init()``.
+
+- ``pcat.h5``
+
+HDF5 file containing samples from the hypothesis space, with the following fields:
 
 =================  ==========================================================================
 Field              Explanation
@@ -258,7 +268,7 @@ Field              Explanation
 ``curvpopl``       Spectral curvature of the l:math:`^{th}` population
 ``expopopl``       Spectral cutoff energy of the l:math:`^{th}` population
 
-In order to reduce inter-process communication, PCAT writes its internal state to the disc before child processes are spawned and after individual workers have finished their tasks. These states are python pickle objects and can also be found in ``$PCAT_DATA_PATH/outp/rtag/gdatinit.p`` and ``$PCAT_DATA_PATH/outp/rtag/gdatmodiXXXX.p``.
+In order to reduce inter-process communication, PCAT writes its internal state to the disc before child processes are spawned and after individual workers have finished their tasks. These intermediate files, in the form of python pickle objects, are temporarily written to the output folder, but deleted before the run ends.
 
 
 Diagnostics
