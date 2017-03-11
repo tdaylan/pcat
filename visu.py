@@ -24,7 +24,7 @@ def plot_samp(gdat, gdatmodi, strg):
         indxpopl = getattr(gdat, strgtype + 'indxpopl')
         sampvarb = getattr(gdatobjt, strg + 'sampvarb')
         numbpnts = sampvarb[getattr(gdat, strgtype + 'indxfixpnumbpnts')].astype(int)
-        if gdat.pntstype == 'lght' and gdat.numbener > 1:
+        if gdat.elemtype == 'lght' and gdat.numbener > 1:
             specplot = getattr(gdatobjt, strg + 'specplot') 
         indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
         dicttemp = {}
@@ -36,7 +36,7 @@ def plot_samp(gdat, gdatmodi, strg):
     if gdatmodi != None:
         ## brightest PS
         # temp
-        if False and gdat.pntstype == 'lght':
+        if False and gdat.elemtype == 'lght':
             if gdatmodi == None or sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
                 plot_brgt(gdat, gdatmodi, strg)
     
@@ -56,7 +56,7 @@ def plot_samp(gdat, gdatmodi, strg):
             colr = 'g'
 
         # PS spectra
-        if gdat.numbener > 1 and gdat.pntstype == 'lght':
+        if gdat.numbener > 1 and gdat.elemtype == 'lght':
             for l in gdat.indxpopl:
                 listxdat = []
                 listplottype = []
@@ -74,7 +74,7 @@ def plot_samp(gdat, gdatmodi, strg):
                       limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfeatunit['flux'], limtydat=[amin(gdat.minmspecplot), amax(gdat.maxmspecplot)])
         
         # deflection profiles
-        if gdat.pntstype == 'lens':
+        if gdat.elemtype == 'lens':
             xdat = gdat.binsanglplot * gdat.anglfact
             lablxdat = gdat.lablfeattotl['gang']
             for l in indxpopl:
@@ -86,7 +86,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
     
     ## PSF radial profile
-    if gdat.pntstype == 'lght':
+    if gdat.elemtype == 'lght':
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 if gdat.oaxitype:
@@ -144,10 +144,10 @@ def plot_samp(gdat, gdatmodi, strg):
                                                                                                                   strgfeat == 'expo' and gdat.spectype[l] != 'expo'):
                 
                     if strgfeat == 'flux':
-                        if gdat.pntstype == 'lens':
+                        if gdat.elemtype == 'lens':
                             strgxaxitwin = 'mass'
                             lablxaxitwin = r'$M$ [$M_{\odot}$]'
-                        if gdat.pntstype == 'lght':
+                        if gdat.elemtype == 'lght':
                             strgxaxitwin = 'cntsplot'
                             lablxaxitwin = '$C$'
                         offs = [0.9, 0.8]
@@ -170,7 +170,7 @@ def plot_samp(gdat, gdatmodi, strg):
     else:
         gdatobjt = gdat
 
-    if gdat.pntstype == 'lght' and gdat.calcerrr:
+    if gdat.elemtype == 'lght' and gdat.calcerrr:
         if strg != 'true':
             for i in gdat.indxener:
                 plot_genemaps(gdat, gdatmodi, strg, 'errrcnts', strgcbar='resicnts', thisindxener=i)
@@ -188,7 +188,7 @@ def plot_samp(gdat, gdatmodi, strg):
         plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
 
     for stdv in [False, True]: 
-        if gdat.pntstype == 'lens':
+        if gdat.elemtype == 'lens':
             plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
             plot_genemaps(gdat, gdatmodi, strg, 'convelem', strgcbar='conv', tdim=True)
             for i in gdat.indxener:
@@ -204,7 +204,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m)
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
         
-    if gdat.pntstype == 'lens':
+    if gdat.elemtype == 'lens':
         plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{subs}(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
@@ -213,7 +213,7 @@ def plot_samp(gdat, gdatmodi, strg):
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
 
     for l in gdat.indxpopl:
-        if gdat.pntstype == 'lens':
+        if gdat.elemtype == 'lens':
 
             # overall deflection field
             plot_defl(gdat, gdatmodi, strg)
@@ -447,7 +447,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
     
-    if gdat.pntstype == 'lens':
+    if gdat.elemtype == 'lens':
         path = gdat.pathpost + 'fracsubh'
         tdpy.mcmc.plot_trac(path, gdat.listfracsubh, '$f_s$', truepara=gdat.truefracsubh)
     
@@ -676,7 +676,6 @@ def plot_chro(gdat):
 
 def plot_compfrac(gdat, gdatmodi, strg):
     
-
     listydat = zeros((gdat.numblablcompfracspec, gdat.numbener))
     listyerr = zeros((2, gdat.numblablcompfracspec, gdat.numbener))
    
@@ -691,9 +690,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
 
     ## background templates
     for c in gdat.indxback:
-        temp = retr_varb(gdat, gdatmodi, strg, 'fixp', indx=[gdat.indxfixpbacp[gdat.indxbacpback[c]]])
-        print 'temp'
-        print temp
+        temp = retr_varb(gdat, gdatmodi, strg, 'sampvarb', indx=[gdat.indxfixpbacp[gdat.indxbacpback[c]]])
         if specback[c] != None:
             norm = temp * specback[c]
         else:
@@ -701,26 +698,26 @@ def plot_compfrac(gdat, gdatmodi, strg):
         listydat[cntr, :] = norm * gdat.backfluxmean[c, :]
 
         if strg == 'post':
-            temp = retr_varb(gdat, gdatmodi, strg, 'fixp', indx=[gdat.indxfixpbacp[gdat.indxbacpback[c]]], perc='errr')
+            temp = retr_varb(gdat, gdatmodi, strg, 'sampvarb', indx=[gdat.indxfixpbacp[gdat.indxbacpback[c]]], perc='errr')
             if specback[c] != None:
                 norm = temp * specback[c]
             else:
                 norm = temp
             listyerr[:, cntr, :] = norm * gdat.backfluxmean[None, c, :]
 
-        if gdat.pntstype == 'lens':
+        if gdat.elemtype == 'lens':
             listydat[cntr, :] *= 4. * gdat.maxmgang**2
         
         cntr += 1
     
     ## PS
-    if gdat.pntstype == 'lght':
+    if gdat.elemtype == 'lght':
         listydat[cntr, :] = retr_varb(gdat, gdatmodi, strg, 'pntsfluxmean')
         if strg == 'post':
-            listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, strg, 'fixp', perc='errr')
+            listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, strg, 'pntsfluxmean', perc='errr')
         cntr += 1
 
-    if gdat.pntstype == 'lens':
+    if gdat.elemtype == 'lens':
         for strgtemp in ['sour', 'host']:
             indxvarb = getattr(gdat, 'indxfixpspec' + strgtemp)
             if gdatmodi == None:
@@ -760,33 +757,33 @@ def plot_compfrac(gdat, gdatmodi, strg):
         # plot reference spectra
         if gdat.listspecrefrplot != None:
             for k in range(len(gdat.listspecrefrplot)):
-                if k == cntrdata:
-                    colr = 'black'
-                    linestyl = '-'
-                    mrkr = None
-                else:
-                    if strg == 'true':
-                        colr = 'g'
-                        linestyl = '--'
-                        mrkr = listmrkr[k]
-                    elif strg == '':
-                        colr = 'b'
-                        linestyl = '--'
-                        mrkr = listmrkr[k]
-                    else:
-                        colr = 'black'
-                        linestyl = ''
-                        mrkr = 'o'
-                axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], color=colr, marker=mrkr, ls=linestyl)
+                axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], color='m')
 
         xdat = gdat.meanener
         for k in range(gdat.numblablcompfracspec):
+            if k == cntrdata:
+                colr = 'black'
+                linestyl = '-'
+                mrkr = None
+            else:
+                if strg == 'true':
+                    colr = 'g'
+                    linestyl = '--'
+                    mrkr = listmrkr[k]
+                elif strg == '':
+                    colr = 'b'
+                    linestyl = '--'
+                    mrkr = listmrkr[k]
+                else:
+                    colr = 'black'
+                    linestyl = ''
+                    mrkr = 'o'
             ydat = listydat[k, :]
             yerr = listyerr[:, k, :]
             if gdat.enerdiff:
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
-            axis.errorbar(xdat, ydat, yerr=yerr, marker='o', markersize=5, label=gdat.listlablcompfracspec[k])
+            axis.errorbar(xdat, ydat, yerr=yerr, markersize=5, label=gdat.listlablcompfracspec[k], color=colr, marker=mrkr, ls=linestyl)
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
         axis.set_yscale('log')
@@ -917,44 +914,32 @@ def plot_brgt(gdat, gdatmodi, strg):
 
 def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, strgmome='medi'):
     
-    sizelarg = 3
+    sizelarg = 6
     sizesmll = 1
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strg == 'post':
-        varb = getattr(gdat, strgmome + strgfrst + strgseco + 'hist')[:, :, l]
+        varb = getattr(gdat, strgmome + strgfrst + strgseco + 'hist')[l, :, :]
         varbfrst = getattr(gdat, 'mean' + strgfrst + 'plot')
         varbseco = getattr(gdat, 'mean' + strgseco + 'plot')
-        imag = axis.pcolor(varbfrst, varbseco, varb, cmap='greys')
+        imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Greys')
         #imag = axis.imshow(gdat.medifluxsindhist[l], cmap='Purples', extent=[])
         plt.colorbar(imag) 
 
     if strg == 'this':
-        binsfrst = getattr(gdat, 'bins' + strgfrst + 'plot')
-        binsseco = getattr(gdat, 'bins' + strgseco + 'plot')
-        varbfrst = gdatmodi.thissampvarb[getattr(gdatmodi, 'thisindxsamp' + strgfrst)[l]]
-        varbseco = gdatmodi.thissampvarb[getattr(gdatmodi, 'thisindxsamp' + strgseco)[l]]
         if strgplottype == 'hist':
-            hist = getattr(gdatmodi, strgfrst + strgseco + 'hist')
-            imag = axis.pcolor(varbfrst, varbseco, hist, cmap='Blues', label='Sample',  alpha=gdat.alphmrkr)
+            meanfrst = getattr(gdat, 'bins' + strgfrst + 'plot')
+            meanseco = getattr(gdat, 'bins' + strgseco + 'plot')
+            hist = getattr(gdatmodi, strg + strgfrst + strgseco + 'hist')[l, :, :]
+            imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label='Sample',  alpha=gdat.alphmrkr)
         else:
+            varbfrst = getattr(gdatmodi, 'this' + strgfrst)[l]
+            varbseco = getattr(gdatmodi, 'this' + strgseco)[l]
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label='Sample')
     
     # true
     truevarbfrst = getattr(gdat, 'true' + strgfrst)[l]
     truevarbseco = getattr(gdat, 'true' + strgseco)[l]
-    print 'strg'
-    print strg
-    print 'strgfrst'
-    print strgfrst
-    print 'strgseco'
-    print strgseco
-    print 'truevarbfrst'
-    print truevarbfrst
-    print 'truevarbseco'
-    print truevarbseco
-    print
-
     axis.scatter(truevarbfrst, truevarbseco, alpha=gdat.alphmrkr, color='g', label=gdat.truelabl, s=sizelarg)
     
     # experimental
@@ -987,7 +972,11 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     make_legd(axis, loca=2)
 
     plt.tight_layout()
-    path = retr_plotpath(gdat, gdatmodi, strg, '%s%s%spop%d' % (strgplottype, strgfrst, strgseco, l))
+    if strg == 'post':
+        strgmometemp = strgmome
+    else:
+        strgmometemp = ''
+    path = retr_plotpath(gdat, gdatmodi, strg, '%s%s%s%spop%d' % (strgplottype, strgmometemp, strgfrst, strgseco, l))
     figr.savefig(path)
     plt.close(figr)
     
@@ -1199,7 +1188,7 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
         if plotdiff:
             axis.axhline(0., ls='--', alpha=gdat.alphmrkr, color='black')
         else:
-            if gdat.pntstype == 'lght':
+            if gdat.elemtype == 'lght':
                 # superimpose the bias line
                 fluxbias = retr_fluxbias(gdat, gdat.binsspecplot[i, :], i)
                 axis.plot(gdat.fluxfactplot * gdat.binsspecplot[i, :], gdat.fluxfactplot * gdat.binsspecplot[i, :], ls='--', alpha=gdat.alphmrkr, color='black')
@@ -1680,11 +1669,13 @@ def plot_grap(plottype='igal', verbtype=0):
         listcolr = ['black', 'black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
 
     if plottype == 'lens':
-        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta']
+        listcolr = ['olive', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', 'magenta']
+
+    if plottype == 'lensprim':
+        listcolr = ['olive', 'black', 'black', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'black', 'olive', 'magenta', 'magenta', \
+                                                                                                                                        'magenta', 'magenta', 'magenta']
 
     grap.add_edges_from([ \
-                         ('ampldistslop', 'ampl'), \
-                         ('ampl', 'modl'), \
                          ('meanpnts', 'numbpnts'), \
                          ('modl','data'), \
                          ('psfp', 'modl'), \
@@ -1693,17 +1684,31 @@ def plot_grap(plottype='igal', verbtype=0):
                          ('bgal','modl'), \
                          ('numbpnts','lgal'), \
                          ('numbpnts','bgal'), \
-                         ('numbpnts','ampl'), \
                         ])
     
     if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
         grap.add_edges_from([ \
+                             ('ampldistslop', 'ampl'), \
+                             ('ampl', 'modl'), \
+                             ('numbpnts','ampl'), \
                              ('numbpnts', 'sind'), \
                              ('sind','modl'), \
                             ])
-    else:
+    if plottype == 'lens' or plottype == 'lensprim':
         grap.add_edges_from([ \
-                             ('lenp', 'modl') \
+                             ('lenp', 'modl'), \
+                             ('defsdistslop', 'defs'), \
+                             ('defs', 'modl'), \
+                             ('numbpnts','defs'), \
+                            ])
+    if plottype == 'lensprim':
+        grap.add_edges_from([ \
+                             ('ascadistslop', 'asca'), \
+                             ('asca', 'modl'), \
+                             ('numbpnts','asca'), \
+                             ('acutdistslop', 'acut'), \
+                             ('acut', 'modl'), \
+                             ('numbpnts','acut'), \
                             ])
     
     if plottype == 'igal' or plottype == 'chan':
@@ -1727,8 +1732,14 @@ def plot_grap(plottype='igal', verbtype=0):
         labl['ampldistslop'] = r'$\vec{\alpha}$'
         labl['meanpnts'] = r'$\vec{\mu}$'
     else:
-        labl['ampldistslop'] = r'$\alpha$'
         labl['meanpnts'] = r'$\mu$'
+    if plottype == 'chan' or plottype == 'ngal':
+        labl['ampldistslop'] = r'$\alpha$'
+    if plottype == 'lens' or plottype == 'lensprim':
+        labl['defsdistslop'] = r'$\alpha$'
+    if plottype == 'lensprim':
+        labl['ascadistslop'] = r'$\lambda_s$'
+        labl['acutdistslop'] = r'$\lambda_\tau$'
     
     if plottype == 'igal':
         labl['expodistslop'] = r'$\vec{\tau_{E_c}}$'
@@ -1738,53 +1749,71 @@ def plot_grap(plottype='igal', verbtype=0):
     
     if plottype == 'igal':
         labl['spatdistslop'] = r'$\vec{\gamma}$'
-    if plottype == 'lens':
+    if plottype == 'lens' or plottype == 'lensprim':
         labl['lenp'] = r'$\vec{\chi}$'
     labl['psfp'] = r'$\vec{\eta}$'
     labl['bacp'] = r'$\vec{A}$'
-    #labl['lgal'] = r'$\vec{\theta_1}$'
-    #labl['bgal'] = r'$\vec{\theta_2}$'
-    labl['lgal'] = r'$\vec{l}$'
-    labl['bgal'] = r'$\vec{b}$'
+    labl['lgal'] = r'$\vec{\theta_1}$'
+    labl['bgal'] = r'$\vec{\theta_2}$'
     if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
         labl['sind'] = r'$\vec{s}$'
         labl['ampl'] = r'$\vec{f}$'
     else:
-        labl['ampl'] = r'$\vec{\theta_E}$'
+        labl['defs'] = r'$\vec{\alpha_s}$'
+    if plottype == 'lensprim':
+        labl['asca'] = r'$\vec{\theta_s}$'
+        labl['acut'] = r'$\vec{\tau}$'
+        
     if plottype == 'igal':
         labl['expo'] = r'$\vec{E_c}$'
     labl['modl'] = r'$\mathcal{M}$'
     labl['data'] = r'$\mathcal{D}$'
     
     posi = nx.circular_layout(grap)
-    posi['numbpnts'] = array([0., 0.075])
-    posi['meanpnts'] = array([0., 0.15])
     posi['sinddistslop'] = array([0.4, 0.15])
     if plottype == 'igal':
         posi['expodistslop'] = array([0.6, 0.15])
         posi['spatdistslop'] = array([-0.2, 0.15])
-    posi['ampldistslop'] = array([0.2, 0.15])
+    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+        posi['numbpnts'] = array([0., 0.075])
+        posi['meanpnts'] = array([0., 0.15])
+        posi['ampldistslop'] = array([0.2, 0.15])
+    if plottype == 'lens' or plottype == 'lensprim':
+        posi['numbpnts'] = array([-0.1, 0.075])
+        posi['meanpnts'] = array([-0.1, 0.15])
+        posi['defsdistslop'] = array([0.1, 0.15])
+    if plottype == 'lensprim':
+        posi['ascadistslop'] = array([0.3, 0.15])
+        posi['acutdistslop'] = array([0.5, 0.15])
     if plottype == 'igal':
         posi['psfp'] = array([0.9, -0.0])
         posi['bacp'] = array([0.7, -0.0])
     if plottype == 'ngal':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.5, -0.0])
-    if plottype == 'lens':
-        posi['psfp'] = array([0.5, -0.0])
-        posi['bacp'] = array([0.3, -0.0])
     if plottype == 'chan':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.5, -0.0])
     if plottype == 'lens':
+        posi['psfp'] = array([0.3, -0.0])
+        posi['bacp'] = array([0.5, -0.0])
         posi['lenp'] = array([0.7, -0.0])
+    if plottype == 'lensprim':
+        posi['psfp'] = array([0.7, -0.0])
+        posi['bacp'] = array([0.9, -0.0])
+        posi['lenp'] = array([1.1, -0.0])
     posi['lgal'] = array([-0.3, -0.0])
     posi['bgal'] = array([-0.1, -0.0])
-    posi['ampl'] = array([0.1, -0.0])
     if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
         posi['sind'] = array([0.3, -0.0])
+        posi['ampl'] = array([0.1, -0.0])
     if plottype == 'igal':
         posi['expo'] = array([0.5, -0.0])
+    if plottype == 'lensprim' or plottype == 'lens':
+        posi['defs'] = array([0.1, -0.0])
+    if plottype == 'lensprim':
+        posi['asca'] = array([0.3, -0.0])
+        posi['acut'] = array([0.5, -0.0])
     posi['modl'] = array([0., -0.075])
     posi['data'] = array([0., -0.15])
    
@@ -1813,10 +1842,14 @@ def plot_grap(plottype='igal', verbtype=0):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
-    if plottype == 'lens':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl'], node_color='g', node_size=size)
+    if plottype == 'lens' or plottype == 'lensprim':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'defsdistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lenp'], node_color='y', node_size=size)
+    if plottype == 'lens':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs'], node_color='g', node_size=size)
+    if plottype == 'lensprim':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['ascadistslop', 'acutdistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs', 'asca', 'acut'], node_color='g', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
     plt.tight_layout()
@@ -1826,7 +1859,8 @@ def plot_grap(plottype='igal', verbtype=0):
 
 #plot_grap(verbtype=1)
 #plot_grap(plottype='ngal', verbtype=1)
-#plot_grap(plottype='lens', verbtype=1)
+plot_grap(plottype='lens', verbtype=1)
+plot_grap(plottype='lensprim', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)
 
 
@@ -1923,7 +1957,7 @@ def plot_init(gdat):
             #plot_pert()
             #plot_king(gdat)
     
-            if gdat.pntstype == 'lens':
+            if gdat.elemtype == 'lens':
                 xdat = gdat.binsanglplot * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
@@ -2020,7 +2054,7 @@ def plot_init(gdat):
                 
     
 
-            if gdat.evalcirc and gdat.pntstype == 'lght':
+            if gdat.evalcirc and gdat.elemtype == 'lght':
                 plot_eval(gdat)
             return
         
@@ -2028,7 +2062,7 @@ def plot_init(gdat):
         for m in gdat.indxevtt:
             
             # temp
-            if False and gdat.pixltype == 'cart' and gdat.pntstype == 'lght':
+            if False and gdat.pixltype == 'cart' and gdat.elemtype == 'lght':
                 figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.datacnts, '', i, m, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
@@ -2069,7 +2103,7 @@ def plot_init(gdat):
             figr.savefig(path)
             plt.close(figr)
     
-            if gdat.pntstype == 'lens':
+            if gdat.elemtype == 'lens':
                 
                 figr, axis, path = init_figr(gdat, None, 'modlcntsraww', 'true', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 0, 0, vmin=gdat.minmdatacnts, vmax=gdat.maxmdatacnts, tdim=True)
