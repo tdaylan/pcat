@@ -5,7 +5,7 @@ PCAT is a Bayesian framework to sample from the catalog space. It's theoretical 
 
 ### Installation
 
-You can install PCAT by either by using ```pip```
+You can install PCAT either by using ```pip```
 ```
 pip install pcat
 ```
