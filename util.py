@@ -2822,24 +2822,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxstdpfixp = arange(gdat.numbfixpprop)
     gdat.indxstdpcomp = setdiff1d(gdat.indxstdp, gdat.indxstdpfixp)
     
-    # proposal scale
-    if gdat.elemtype == 'lens':
-        gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 5e-2
-        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
-    else:
-        if gdat.exprtype == 'ferm':
-            gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 4e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 4e-3
-            gdat.stdvstdp[gdat.indxstdpflux] = 0.05
-        if gdat.exprtype == 'chan':
-            gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
-            gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
-        if gdat.exprtype == 'sdyn':
-            gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
+    gdat.indxparaprop = gdat.indxfixpprop
 
     # proposal scale indices for each parameter
     indxpntsfull = [range(gdat.maxmnumbpnts[l]) for l in gdat.indxpopl]
@@ -2856,6 +2839,26 @@ def setpinit(gdat, boolinitsetp=False):
             for strgcomp in gdat.liststrgcomp[l]:
                 if k in indxsampcomp[strgcomp][l]:
                     gdat.indxstdppara[k] = getattr(gdat, 'indxstdp' + strgcomp)
+
+    # proposal scale
+    if gdat.elemtype == 'lens':
+        gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 5e-2
+        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
+    else:
+        if gdat.exprtype == 'ferm':
+            gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-2
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 4e-3
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpflux] = 0.01
+        if gdat.exprtype == 'chan':
+            gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+            gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
+            gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
+        if gdat.exprtype == 'sdyn':
+            gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
 
     ## input data
     if gdat.datatype == 'inpt':
@@ -4291,6 +4294,13 @@ def writoutp(gdat, path):
     for attr, valu in gdat.__dict__.iteritems():
         if attr.startswith('list'):
             attrtemp = attr[4:]
+
+            # temp
+            if attrtemp == 'meanpntspop0':
+                attrtemp = 'meanpnts'
+            if attrtemp == 'fluxdistsloppop0':
+                attrtemp = 'fluxdistslop'
+
             if attrtemp in gdat.liststrgfeatodimtotl:
                 # temp
                 if attrtemp == 'deltllik':
@@ -4309,12 +4319,12 @@ def writoutp(gdat, path):
     thisfile.close()
     
     # temp
-    #print 'hey'
-    #thisfile = h5py.File(gdat.pathoutpthis + 'pcat.h5', 'r')
-    #for attr, data in thisfile.items():
-    #    print attr
-    #    print data[()]
-    #print
+    print 'hey'
+    thisfile = h5py.File(gdat.pathoutpthis + 'pcat.h5', 'r')
+    for attr, data in thisfile.items():
+        print attr
+        print data[()]
+    print
 
 
 def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
@@ -4546,6 +4556,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             setattr(gdatobjt, strg + 'lpdfspatprioobjt', lpdfspatprioobjt)
         
         meanpnts = sampvarb[gdat.indxfixpmeanpnts]
+        
         lpri = zeros(gdat.numblpri)
         for l in gdat.indxpopl:
             lpri[0] -= 0.5 * gdat.priofactdoff * gdat.numbcomp[l] * numbpnts[l]
@@ -4576,6 +4587,17 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 if gdat.spectype[l] == 'expo':
                     lpri[1+6*gdat.numbpopl+l] = retr_lpriexpodist(gdat, gdatmodi, dicttemp['expo'][l], sampvarb, l)
        
+        if False and strg == 'next':
+            print 'gdatmodi.thissampvarb[gdat.indxfixpmeanpnts]'
+            print gdatmodi.thissampvarb[gdat.indxfixpmeanpnts]
+            print 'meanpnts'
+            print meanpnts
+            print 'numbpnts[l]'
+            print numbpnts[0]
+            print 'retr_probpois(numbpnts[l], meanpnts[l])'
+            print retr_probpois(numbpnts[0], meanpnts[0])
+            print
+
         lpritotl = sum(lpri)
         
         if strg == 'next' and (gdatmodi.propbrth or gdatmodi.propdeth):

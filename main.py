@@ -1709,7 +1709,7 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
     deltlpri = gdatmodi.thislpritotl - gdatmodi.thislpritotltemp
     deltllik = gdatmodi.thislliktotl - gdatmodi.thislliktotltemp
     
-    if True:
+    if False:
         print 'retr_deltlpos'
         print 'gdatmodi.thislpostotltemp'
         print gdatmodi.thislpostotltemp
@@ -1771,8 +1771,11 @@ def optiprop(gdat, gdatmodi, indxprocwork):
     # temp
     deltparastep = 1e-5
 
-    maxmstdv = 1.
+    maxmstdv = 0.1
     fudgstdv = 1.
+    diffparaodim = zeros(3)
+    diffparaodim[0] = -deltparastep
+    diffparaodim[2] = deltparastep
     diffpara = zeros((2, 2, 2))
     diffpara[0, 0, :] = deltparastep * array([-1., -1.])
     diffpara[0, 1, :] = deltparastep * array([-1., 1.])
@@ -1784,49 +1787,54 @@ def optiprop(gdat, gdatmodi, indxprocwork):
         gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = []
     gdatmodi.cntrparasave = 0
     lliktemp = empty(gdat.numbstdp)
-    numbiter = diffpara.size
-    indxcntr = (numbiter - 1) / 2
     cntr = zeros(gdat.maxmnumbcomp)
+    gdatmodi.stdvesti = zeros((gdat.numbstdp, gdat.numbstdp)) 
     gdatmodi.hess = zeros((gdat.numbstdp, gdat.numbstdp)) 
+    
+    deltlpos = zeros((3, 3))
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
     while True:
         
         for k in gdat.indxpara:
-            if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp):
+            if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp['comp']):
+                indxstdpfrst = gdat.indxstdppara[k]
                 for n in gdat.indxpara:
-                    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp):
+                    if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp['comp']):
+                        indxstdpseco = gdat.indxstdppara[n]
                         if k == n:
                             for a in [0, 2]:
                                 # evaluate the posterior
-                                deltlpos[a, 1] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffpara[a]]))
+                                deltlpos[a, 1] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffparaodim[a]]))
                                 
                                 # increase sample counter for plots
                                 gdatmodi.cntrswep += 1
                             
-                            gdatmodi.hess[k, n] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1]) / deltparastep**2
-                
-                            if k in concatenate(gdatmodi.thisindxsampcomp):
+                            gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
+                            gdatmodi.stdvesti[indxstdpfrst, indxstdpseco] = sqrt(1. / gdatmodi.hess[indxstdpfrst, indxstdpseco])
+                            if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
                                 cntr = 0
                                 indxpnts = (k - gdat.indxsampcompinit)
                                 for strg in gdat.liststrgcomptotl:
-                                    if k in concatenate(getattr(gdatmodi, 'thisindxsamp' + strg)):
+                                    if k in concatenate(gdatmodi.thisindxsampcomp[strg]):
                                         indxsampflux = k + 2 - cntr
-                                        gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
+                                        gdatmodi.dictmodi['stdv' + strg + 'indv'].append(gdatmodi.stdvesti[indxstdpfrst, indxstdpseco])
                                         if strg == 'flux':
-                                            gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2. \
+                                            gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] += gdatmodi.stdvesti[indxstdpfrst, indxstdpseco] * \
+                                                                                                (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2. \
                                                                                                                           / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
                                         else:
-                                            gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] += stdv * (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5 \
+                                            gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] += gdatmodi.stdvesti[indxstdpfrst, indxstdpseco] * \
+                                                                                                (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5 \
                                                                                                                           / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
-                                        
                                         gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
 
                                     cntr += 1
                             else:
-                                gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] = stdv
+                                gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] = gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]
             
                         else:
+                            continue
                             for a in [0, 2]:
                                 for b in [0, 2]:
                                     # evaluate the posterior
@@ -1837,27 +1845,29 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                             
                             gdatmodi.hess[k, n] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
                 
-                    print 'gdat.namepara[k]'
-                    print gdat.namepara[k]
-                    print 'deltlpos'
-                    print deltlpos
-                    print 'gdatmodi.hess[k, n]'
-                    print gdatmodi.hess[k, n]
-                    print
+                        print 'gdat.namepara[k]'
+                        print gdat.namepara[k]
+                        #print 'deltlpos'
+                        #print deltlpos
+                        #print 'gdatmodi.hess[indxstdpfrst, indxstdpseco]'
+                        #print gdatmodi.hess[indxstdpfrst, indxstdpseco]
+                        print 'gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]'
+                        print gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]
+                        print
                 
-                if gdat.verbtype > 0 and not isfinite(gdatmodi.hess[k, n]):
-                    print 'Proposal scale estimate went infinite.'
-                    print gdat.namepara[k]
-                    raise Exception('')
-                    print
+                        if gdat.verbtype > 0 and not isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]):
+                            print 'Proposal scale estimate went infinite.'
+                            print gdat.namepara[k]
+                            raise Exception('')
+                            print
 
-                #if stdv > maxmstdv or not isfinite(stdv):
-                #    stdv = maxmstdv
+                if stdv > maxmstdv or not isfinite(stdv):
+                    stdv = maxmstdv
                 
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
         
-        stdvtemp = 1. / sqrt(hess[indxstdp, indxstdp]) / sqrt(gdat.numbpara) / fudgstdv
+        stdvtemp = 1. / sqrt(gdatmodi.hess[gdat.indxstdp, gdat.indxstdp]) / sqrt(gdat.numbpara) / fudgstdv
 
         for strg in gdat.liststrgcomptotl:
             gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])
@@ -1869,8 +1879,11 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                 
                 # temp 
                 #gdatmodi.stdvstdptemp[k] = 1.
-        
+         
         gdatmodi.stdvstdp = copy(gdatmodi.stdvstdptemp)
+        
+        print 'gdatmodi.stdvstdp'
+        print gdatmodi.stdvstdp
 
         gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
         gdatmodi.thissampvarb = copy(gdatmodi.thissampvarbtemp)
@@ -2193,13 +2206,6 @@ def work(pathoutpthis, lock, indxprocwork):
             if booltemp:
                 optiprop(gdat, gdatmodi, indxprocwork)
             
-            # temp
-            for k in gdat.indxfixp:
-                if not k in gdat.indxfixpnumbpnts:
-                    gdatmodi.thissamp[gdat.indxfixp[k]] = rand()
-            for l in gdat.indxpopl:
-                gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
-
         if gdat.emptsamp:
             continue
 
@@ -2483,7 +2489,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdatmodi.nextpercswep > gdatmodi.percswepsave:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
                 
-                minm = max(0, gdatmodi.cntrswep - 1000)
+                minm = max(0, gdatmodi.cntrswep - 100)
                 maxm = gdatmodi.cntrswep + 1
                 if maxm > minm:
                     fact = 100. / float(maxm - minm)
