@@ -677,11 +677,11 @@ def init( \
     
     if gdat.elemtype == 'lens':
         ### scale angular distance
-        setp_truedefa(gdat, 'ascadistmean', [0., gdat.maxmgang], popl=True)
-        setp_truedefa(gdat, 'ascadiststdv', [0.3, gdat.maxmgang], popl=True)
+        setp_truedefa(gdat, 'ascadistmean', [gdat.maxmgang * 1e-2, gdat.maxmgang], popl=True)
+        setp_truedefa(gdat, 'ascadiststdv', [gdat.maxmgang * 1e-3, gdat.maxmgang], popl=True)
         ### cutoff angular distance
-        setp_truedefa(gdat, 'acutdistmean', [0.1, 10.], popl=True)
-        setp_truedefa(gdat, 'acutdiststdv', [0.3, 1.], popl=True)
+        setp_truedefa(gdat, 'acutdistmean', [gdat.maxmgang * 1e-2, gdat.maxmgang], popl=True)
+        setp_truedefa(gdat, 'acutdiststdv', [gdat.maxmgang * 1e-3, gdat.maxmgang], popl=True)
     
     ## lensing
     setp_truedefa(gdat, 'lgalsour', [-gdat.maxmgang, gdat.maxmgang])
@@ -1098,12 +1098,12 @@ def init( \
         gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
         gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
         
-        gdat.truecnts = [[] for l in gdat.trueindxpopl]
-        gdat.truelgal = [[] for l in gdat.trueindxpopl]
-        gdat.truebgal = [[] for l in gdat.trueindxpopl]
-        gdat.truegang = [[] for l in gdat.trueindxpopl]
-        gdat.trueaang = [[] for l in gdat.trueindxpopl]
+        for strgfeat in gdat.liststrgfeat:
+            setattr(gdat, 'true' + strgfeat, [[] for l in gdat.trueindxpopl])
+        
+        # temp
         gdat.truespec = [[] for l in gdat.trueindxpopl]
+
         if gdat.truenumbtrap > 0:
             gdat.truesind = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
             gdat.truecurv = [empty(gdat.truenumbpnts[l]) for l in gdat.trueindxpopl]
@@ -1175,10 +1175,10 @@ def init( \
                     if gdat.truespectype[l] == 'expo':
                         gdat.truesampvarb[gdat.trueindxsampcomp['expo'][l]] = gdat.trueexpo[l]
                 
-                indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
-                gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
-                if gdat.enerdiff:
-                    gdat.truecnts[l] *= gdat.deltener[:, None, None]
+                    indxpixltemp = retr_indxpixl(gdat, gdat.truebgal[l], gdat.truelgal[l])
+                    gdat.truecnts[l] = gdat.truespec[l][0, :, :, None] * gdat.expo[:, indxpixltemp, :]
+                    if gdat.enerdiff:
+                        gdat.truecnts[l] *= gdat.deltener[:, None, None]
         
         if gdat.verbtype > 1:
             print

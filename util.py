@@ -2832,7 +2832,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 4e-3
             gdat.stdvstdp[gdat.indxstdpcomp] = 4e-3
-            gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpflux] = 0.05
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
@@ -3597,7 +3597,7 @@ def setp_fixp(gdat, strgpara=''):
             
             if namefixp[k].startswith('sinddistmean'):
                 strgfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablsind)
-                scalfixp[k] = 'atan'
+                scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('sinddiststdv'):
                 strgfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablsind)
@@ -3613,18 +3613,26 @@ def setp_fixp(gdat, strgpara=''):
             
             if namefixp[k].startswith('expodistmean'):
                 strgfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablexpo)
-                scalfixp[k] = 'atan'
+                scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('expodiststdv'):
                 strgfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablexpo)
                 scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('ascadistmean'):
-                strgfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablexpo)
-                scalfixp[k] = 'atan'
+                strgfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablasca)
+                scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('ascadiststdv'):
-                strgfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablcurv)
+                strgfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablasca)
+                scalfixp[k] = 'logt'
+            
+            if namefixp[k].startswith('acutdistmean'):
+                strgfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablacut)
+                scalfixp[k] = 'logt'
+            
+            if namefixp[k].startswith('acutdiststdv'):
+                strgfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablacut)
                 scalfixp[k] = 'logt'
             
         if strg[:-1].endswith('evt'):
@@ -4398,6 +4406,27 @@ def retr_lpricurvdist(gdat, gdatmodi, curv, sampvarb, l):
     return lpri
 
 
+def retr_lpriexpodist(gdat, gdatmodi, expo, sampvarb, l):
+    
+    lpri = sum(log(pdfn_gaus(expo, sampvarb[gdat.indxfixpexpodistmean[l]], sampvarb[gdat.indxfixpexpodiststdv[l]])))
+    
+    return lpri
+
+
+def retr_lpriascadist(gdat, gdatmodi, asca, sampvarb, l):
+    
+    lpri = sum(log(pdfn_gaus(asca, sampvarb[gdat.indxfixpascadistmean[l]], sampvarb[gdat.indxfixpascadiststdv[l]]))) 
+    
+    return lpri
+
+
+def retr_lpriacutdist(gdat, gdatmodi, acut, sampvarb, l):
+    
+    lpri = sum(log(pdfn_gaus(acut, sampvarb[gdat.indxfixpacutdistmean[l]], sampvarb[gdat.indxfixpacutdiststdv[l]]))) 
+    
+    return lpri
+
+
 def traptdim(gdat, arry):
     
     s1 = arry[0, 0] + arry[-1, 0] + arry[0, -1] + arry[-1, -1]
@@ -4417,13 +4446,6 @@ def retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp):
     lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binsbgalcart, gdat.binslgalcart, lpdfspatprio)
     
     return lpdfspatprio, lpdfspatprioobjt
-
-
-def retr_lpriexpodist(gdat, gdatmodi, expo, sampvarb, l):
-    
-    lpri = sum(log(pdfn_gaus(expo, sampvarb[gdat.indxfixpexpodistmean[l]], sampvarb[gdat.indxfixpexpodiststdv[l]])))
-    
-    return lpri
 
 
 def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
@@ -4489,7 +4511,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     for l in indxpopl:
     	for strgcomp in gdat.liststrgcomp[l]:
             dicttemp[strgcomp][l] = sampvarb[indxsampcomp[strgcomp][l]]
-
+    
     lgalconc = concatenate(dicttemp['lgal'])
     bgalconc = concatenate(dicttemp['bgal'])
     if gdat.elemtype == 'lght':
