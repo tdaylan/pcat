@@ -1074,56 +1074,81 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
     gdatmodi.nextsampvarb = copy(gdatmodi.thissampvarb)
     gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
   
+    if gdat.optiprop:
+        gdatmodi.nextstdvstdp = copy(gdatmodi.thisstdvstdp)
+        gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi] += randn() * 1e-4
+        stdvstdp = gdatmodi.nextstdvstdp
+    else:
+        stdvstdp = gdat.stdvstdp
+        
     if gdatmodi.propwith:
         
         for k in gdat.indxprop:
-            if gdatmodi.optipropdone:
-                stdvstdp = gdatmodi.stdvstdp[k]
-            else:
-                stdvstdp = gdatmodi.nextstdvstdp[k]
-            retr_gaus(gdat, gdatmodi, gdat.indxfixpprop[k], stdvstdp)
+            print 'stdvstdp'
+            print stdvstdp
+            print 'gdat.indxfixpprop[k]'
+            print gdat.indxfixpprop[k]
+            print
+            retr_gaus(gdat, gdatmodi, gdat.indxfixpprop[k], stdvstdp[k])
         
         for k in gdat.indxfixpdist:
             gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, '', gdatmodi.nextsamp[k], k)
 
         # rescale the unit sample vector due to the hyperparameter change
         if gdat.propwithsing:
-            indxpoplsampmodi = []
+            if gdatmodi.indxsampmodi in gdat.indxfixphypr:
+                indxpoplsampmodi = int(gdat.namepara[gdatmodi.indxsampmodi][-1])
+                indxcompmodi = gdat.liststrgcomp[indxpoplsampmodi].index(gdat.namepara[gdatmodi.indxsampmodi][:4])
+            else:
+                indxpoplsampmodi = []
         else:
             indxpoplsampmodi = gdat.indxpopl
         for l in indxpoplsampmodi:
             
-            ## flux distribution
-            flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l]]
-            if gdat.fluxdisttype[l] == 'powr':
-                fluxunit = cdfn_flux_powr(flux, gdat.minmflux, gdat.maxmflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistslop[l]])
-            if gdat.fluxdisttype[l] == 'bind':
-                fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistnorm[l, :]])
-            
-            gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['flux'][l]] = fluxunit
+            if True:
+                for strgcomp in gdat.liststrgcomp[l]:
+                    if strg == 'flux':
+                        if gdat.fluxdisttype[l] == 'powr':
+                            fluxunit = cdfn_flux_powr(flux, gdat.minmflux, gdat.maxmflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistslop[l]])
+                        if gdat.fluxdisttype[l] == 'bind':
+                            fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistnorm[l, :]])
+                    else:
+                        if getattr(strgcomp + 'disttype')[l] == 'gaus':
+                            distmean = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'distmean')[l]]
+                            diststdv = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'diststdv')[l]]
+                            unit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]], distmean, diststdv)
+                            gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = unit
+            else: 
+                ## flux distribution
+                flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l]]
+                if gdat.fluxdisttype[l] == 'powr':
+                    fluxunit = cdfn_flux_powr(flux, gdat.minmflux, gdat.maxmflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistslop[l]])
+                if gdat.fluxdisttype[l] == 'bind':
+                    fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistnorm[l, :]])
+                gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['flux'][l]] = fluxunit
         
-            if gdat.elemtype == 'lens':
-                ascaunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['asca'][l]], gdatmodi.nextsampvarb[gdat.indxfixpascadistmean[l]], \
-                                                                                                                    gdatmodi.nextsampvarb[gdat.indxfixpascadiststdv[l]])
-                gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['asca'][l]] = ascaunit
-                
-                acutunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['acut'][l]], gdatmodi.nextsampvarb[gdat.indxfixpacutdistmean[l]], \
-                                                                                                                    gdatmodi.nextsampvarb[gdat.indxfixpacutdiststdv[l]])
-                gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['acut'][l]] = acutunit
-            if gdat.elemtype == 'lght' and gdat.numbener > 1:
-                sindunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['sind'][l]], gdatmodi.nextsampvarb[gdat.indxfixpsinddistmean[l]], \
-                                                                                                                    gdatmodi.nextsampvarb[gdat.indxfixpsinddiststdv[l]])
-                gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['sind'][l]] = sindunit
-                
-                if gdat.spectype[l] == 'curv':
-                    curvunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['curv'][l]], gdatmodi.nextsampvarb[gdat.indxfixpcurvdistmean[l]], \
-                                                                                                                    gdatmodi.nextsampvarb[gdat.indxfixpcurvdiststdv[l]])
-                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['curv'][l]] = curvunit
+                if gdat.elemtype == 'lens':
+                    ascaunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['asca'][l]], gdatmodi.nextsampvarb[gdat.indxfixpascadistmean[l]], \
+                                                                                                                        gdatmodi.nextsampvarb[gdat.indxfixpascadiststdv[l]])
+                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['asca'][l]] = ascaunit
+                    
+                    acutunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['acut'][l]], gdatmodi.nextsampvarb[gdat.indxfixpacutdistmean[l]], \
+                                                                                                                        gdatmodi.nextsampvarb[gdat.indxfixpacutdiststdv[l]])
+                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['acut'][l]] = acutunit
+                if gdat.elemtype == 'lght' and gdat.numbener > 1:
+                    sindunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['sind'][l]], gdatmodi.nextsampvarb[gdat.indxfixpsinddistmean[l]], \
+                                                                                                                        gdatmodi.nextsampvarb[gdat.indxfixpsinddiststdv[l]])
+                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['sind'][l]] = sindunit
+                    
+                    if gdat.spectype[l] == 'curv':
+                        curvunit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['curv'][l]], gdatmodi.nextsampvarb[gdat.indxfixpcurvdistmean[l]], \
+                                                                                                                        gdatmodi.nextsampvarb[gdat.indxfixpcurvdiststdv[l]])
+                        gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['curv'][l]] = curvunit
 
-                if gdat.spectype[l] == 'expo':
-                    expounit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['expo'][l]], gdatmodi.nextsampvarb[gdat.indxfixpexpodistmean[l]], \
-                                                                                                                    gdatmodi.nextsampvarb[gdat.indxfixpexpodiststdv[l]])
-                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['expo'][l]] = expounit
+                    if gdat.spectype[l] == 'expo':
+                        expounit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['expo'][l]], gdatmodi.nextsampvarb[gdat.indxfixpexpodistmean[l]], \
+                                                                                                                        gdatmodi.nextsampvarb[gdat.indxfixpexpodiststdv[l]])
+                        gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['expo'][l]] = expounit
 
         # PSs
         gdatmodi.thislfctprop = 0.
@@ -1132,13 +1157,13 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 for k in range(len(gdatmodi.thisindxpntsfull[l])):
                     for strg in gdat.liststrgcomp[l]:
                         if strg == 'flux':
-                            gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
+                            gdatmodi.thisstdv = stdvstdp[getattr(gdat, 'indxstdp' +strg)] / \
                                                                                     (gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l][k]] / gdat.minmflux)**2.
-                            gdatmodi.nextstdv = gdatmodi.stdvstdp[gdat.indxstdpflux] / (gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp['flux'][l][k]] / gdat.minmflux)**0.5
+                            gdatmodi.nextstdv = stdvstdp[gdat.indxstdpflux] / (gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp['flux'][l][k]] / gdat.minmflux)**0.5
                             gdatmodi.thislfctprop += sum(0.5 * (gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['flux'][l]] - \
                                                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['flux'][l]])**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
                         else:
-                            gdatmodi.thisstdv = gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / \
+                            gdatmodi.thisstdv = stdvstdp[getattr(gdat, 'indxstdp' + strg)] / \
                                                                                     (gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l][k]] / gdat.minmflux)**0.5
                         retr_gaus(gdat, gdatmodi, gdatmodi.thisindxsampcomp[strg][l][k], gdatmodi.thisstdv)
         else:
@@ -2855,10 +2880,10 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
-            #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-2
-            #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 4e-3
-            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
-            #gdat.stdvstdp[gdat.indxstdpflux] = 0.01
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-3
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpflux] = 0.01
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
