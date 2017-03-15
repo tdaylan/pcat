@@ -2854,7 +2854,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
     else:
         if gdat.exprtype == 'ferm':
-            gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+            gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
             #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-2
             #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 4e-3
             #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3

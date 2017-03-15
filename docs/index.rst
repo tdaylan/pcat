@@ -394,12 +394,12 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     **General**
 
-    :param pntstype: Functional type of elements. 
+    :param elemtype: Functional type of elements. 
         
         - ``'lght'`` Elements are light sources
         - ``'lens'`` Elements are lenses.
     
-    :type pntstype: str
+    :type elemtype: str
 
 
     :param evalcirc: Flag to evaluate the likelihood only inside a circle of a certain radius around elements.
@@ -414,12 +414,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type randinit: bool
 
 
-    **Adaptive burn-in**
-
-    :param loadvaripara: Load the diagonal elements of the previously learned covariance
-
-    :type loadvaripara: bool
-
+    **Adaptivity**
 
     :param optiprop: Optimize the scale of each proposal by acceptance rate feedback. All samples during the tuning are discarded.
         
@@ -427,11 +422,6 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 
     **Post processing**
-
-    :param regulevi: Regularize the log-evidence estimate.
-
-    :type regulevi: bool
-
 
     :param strgexprflux: Name of the FITS file (without the extension) in ``pathdata`` containing the observed data as an ``ndarray``.
 
@@ -598,7 +588,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
     :param psfntype: Type of PSF radial profile
 
-    :type spectype: str
+    :type psfntype: str
     
 
     :param oaxitype: Type of PSF off-axis profile

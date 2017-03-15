@@ -1793,12 +1793,6 @@ def optiprop(gdat, gdatmodi, indxprocwork):
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
 
-    print 'gdat.maxmnumbpnts'
-    print gdat.maxmnumbpnts
-    print 'gdat.numbpara'
-    print gdat.numbpara
-    raise Exception('')
-
     while True:
         
         for k in gdat.indxpara:
@@ -1838,6 +1832,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                                 gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] = gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]
             
                         else:
+                            continue
                             for a in [0, 2]:
                                 for b in [0, 2]:
                                     # evaluate the posterior
@@ -1847,16 +1842,6 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                                     gdatmodi.cntrswep += 1
                             
                             gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
-                
-                        print 'gdat.namepara[k]'
-                        print gdat.namepara[k]
-                        #print 'deltlpos'
-                        #print deltlpos
-                        #print 'gdatmodi.hess[indxstdpfrst, indxstdpseco]'
-                        #print gdatmodi.hess[indxstdpfrst, indxstdpseco]
-                        print 'gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]'
-                        print gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]
-                        print
                 
                         if gdat.verbtype > 0 and not isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]):
                             print 'Proposal scale estimate went infinite.'
@@ -1880,7 +1865,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
         print
 
         gdatmodi.stdvesti[gdat.indxstdpcomp, gdat.indxstdpcomp] = 1. / sqrt(gdatmodi.hess[gdat.indxstdpcomp, gdat.indxstdpcomp])
-        gdatmodi.stdvesti /= sqrt(gdat.numbpara) * fudgstdv
+        gdatmodi.stdvesti *= 2.38 / sqrt(gdat.numbpara) * fudgstdv
 
         indx = where((gdatmodi.stdvesti > maxmstdv) | logical_not(isfinite(gdatmodi.stdvesti)))
         gdatmodi.stdvesti[indx] = maxmstdv
@@ -1891,12 +1876,12 @@ def optiprop(gdat, gdatmodi, indxprocwork):
         
         for k in gdat.indxstdp:
             if k in gdat.indxstdpcomp:
-                gdatmodi.stdvstdptemp[k] /= sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
+                gdatmodi.stdvesti[k] /= sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
                 
                 # temp 
                 #gdatmodi.stdvstdptemp[k] = 1.
          
-        gdatmodi.stdvstdp = copy(gdatmodi.stdvstdptemp)
+        gdatmodi.stdvstdp = copy(gdatmodi.stdvesti)
         
         print 'gdatmodi.stdvstdp'
         print gdatmodi.stdvstdp
