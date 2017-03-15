@@ -137,7 +137,8 @@ def init( \
          probrand=0.0, \
          probtran=None, \
          probbrde=1., \
-         fracproprand=0.05, \
+         # when proposing from the covariance, fracproprand should be very small!
+         fracproprand=0., \
          
          radispmr=None, \
 
@@ -1303,8 +1304,12 @@ def init( \
         gdat.numbprocsave = gdat.numbproc
         gdat.numbproc = 1
         worksamp(gdat, lock)
+        if gdat.verbtype > 0:
+            print 'Writing the estimated covariance matrix to the disc...'
+        
         thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'r')
         gdat.stdvstdp = thisfile['stdvstdp'][()]
+        thisfile.close()
         gdat.numbproc = gdat.numbprocsave
         
     gdat.optiprop = False
@@ -2173,10 +2178,13 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'Sampling...'
 
     if gdat.verbtype > 1:
-        print 'gdatmodi.stdvstdp'
-        print gdatmodi.stdvstdp[:, None]
+        print 'gdat.stdvstdp'
+        print gdat.stdvstdp[:, None]
         print
     
+    if gdat.optiprop:
+        gdatmodi.thisstdvstdp = copy(gdat.stdvstdp)
+
     gdatmodi.optidone = False 
 
     while gdatmodi.cntrswep < gdat.numbswep:
@@ -2184,7 +2192,7 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thischroproc[:] = 0.
         gdatmodi.thischrototl[:] = 0.
         
-        if gdat.opti:
+        if gdat.optihess:
             if gdat.optillik:
                 booltemp = len(gdatmodi.listllikopti) > 10 and amax(diff(array(gdatmodi.listllikopti))[-10:]) < 1e-3
             else:
@@ -2194,6 +2202,9 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.optidone = True
             
         if gdatmodi.optidone:
+            thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'w')
+            thisfile.create_dataset('stdvstdp', data=gdat.stdvstdp)
+            thisfile.close()
             break
 
         if gdat.emptsamp:
@@ -2421,11 +2432,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 
             
             # evaluate the acceptance probability
-            accpprob = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
+            gdatmodi.accpprob = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
                                                                                                                                 gdatmodi.thisjcbnfact + gdatmodi.thiscombfact)
             
         else:
-            accpprob = 0.
+            gdatmodi.accpprob = 0.
     
         timefinl = gdat.functime()
         gdatmodi.thischrototl[5] = timefinl - timeinit
@@ -2436,7 +2447,7 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.optillik:
             booltemp = gdatmodi.thisaccpprop and gdatmodi.thisdeltlliktotl > 0.
         else:
-            booltemp = accpprob >= rand()
+            booltemp = gdatmodi.accpprob >= rand()
         if booltemp:
             if gdat.verbtype > 1:
                 print 'Accepted.'
@@ -2520,9 +2531,11 @@ def work(pathoutpthis, lock, indxprocwork):
         # update the sweep counter
         if gdat.opti:
             if gdat.optiprop:
-                if gdatmodi.thisaccp:
-                    gdatmodi.thisstdvstdp[gdatmodi.cntrstdpmodi] = gdatmodi.nextstdvstdp[gdatmodi.cntsstdpmodi]
+                if gdatmodi.accpprob > 0.75:
+                    gdatmodi.thisstdvstdp[gdatmodi.cntrstdpmodi] = gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi]
                 gdatmodi.cntrstdpmodi += 1
+                if gdatmodi.cntrstdpmodi == gdat.numbstdp:
+                    gdatmodi.cntrstdpmodi = 0
 
             if gdatmodi.thisaccp and gdat.optillik:
                 gdatmodi.listllikopti.append(gdatmodi.nextlliktotl)

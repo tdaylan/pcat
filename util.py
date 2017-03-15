@@ -1055,7 +1055,7 @@ def show_samp(gdat, gdatmodi):
             name = ''
 
         gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.thisindxsampcomp['comp'])))
-        if k in concatenate(indxsampcomp['lgal']):
+        if k in concatenate(gdatmodi.thisindxsampcomp['lgal']):
             print
         try:
             strgboolmodi = '%s' % (k in gdatmodi.indxsampmodi)
@@ -1075,8 +1075,11 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
     gdatmodi.nextindxpntsfull = deepcopy(gdatmodi.thisindxpntsfull)
   
     if gdat.optiprop:
-        gdatmodi.nextstdvstdp = copy(gdatmodi.thisstdvstdp)
-        gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi] += randn() * 1e-4
+        while True:
+            gdatmodi.nextstdvstdp = copy(gdatmodi.thisstdvstdp)
+            gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi] += randn() * 1e-4
+            if gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi] > 0.:
+                break
         stdvstdp = gdatmodi.nextstdvstdp
     else:
         stdvstdp = gdat.stdvstdp
@@ -1084,11 +1087,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
     if gdatmodi.propwith:
         
         for k in gdat.indxprop:
-            print 'stdvstdp'
-            print stdvstdp
-            print 'gdat.indxfixpprop[k]'
-            print gdat.indxfixpprop[k]
-            print
             retr_gaus(gdat, gdatmodi, gdat.indxfixpprop[k], stdvstdp[k])
         
         for k in gdat.indxfixpdist:
@@ -1096,9 +1094,11 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
 
         # rescale the unit sample vector due to the hyperparameter change
         if gdat.propwithsing:
-            if gdatmodi.indxsampmodi in gdat.indxfixphypr:
-                indxpoplsampmodi = int(gdat.namepara[gdatmodi.indxsampmodi][-1])
-                indxcompmodi = gdat.liststrgcomp[indxpoplsampmodi].index(gdat.namepara[gdatmodi.indxsampmodi][:4])
+            if gdatmodi.indxsampmodi in gdat.indxfixpdist:
+                indxpoplsampmodi = [int(gdat.namepara[gdatmodi.indxsampmodi][-1])]
+                print 'gdat.namepara[gdatmodi.indxsampmodi]'
+                print gdat.namepara[gdatmodi.indxsampmodi]
+                indxcompmodi = gdat.liststrgcomp[indxpoplsampmodi[0]].index(gdat.namepara[gdatmodi.indxsampmodi][:4])
             else:
                 indxpoplsampmodi = []
         else:
@@ -1107,17 +1107,19 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             
             if True:
                 for strgcomp in gdat.liststrgcomp[l]:
-                    if strg == 'flux':
+                    if strgcomp == 'lgal' or strgcomp == 'bgal':
+                        continue
+                    elif strgcomp == 'flux':
+                        flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l]]
                         if gdat.fluxdisttype[l] == 'powr':
                             fluxunit = cdfn_flux_powr(flux, gdat.minmflux, gdat.maxmflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistslop[l]])
                         if gdat.fluxdisttype[l] == 'bind':
                             fluxunit = cdfn_bind(flux, gdat.minmflux, gdat.maxmflux, gdat.binsflux, gdatmodi.nextsampvarb[gdat.indxfixpfluxdistnorm[l, :]])
                     else:
-                        if getattr(strgcomp + 'disttype')[l] == 'gaus':
-                            distmean = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'distmean')[l]]
-                            diststdv = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'diststdv')[l]]
-                            unit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]], distmean, diststdv)
-                            gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = unit
+                        distmean = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'distmean')[l]]
+                        diststdv = gdatmodi.nextsampvarb[getattr(gdat, 'indxfixp' + strgcomp + 'diststdv')[l]]
+                        unit = cdfn_gaus(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]], distmean, diststdv)
+                        gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = unit
             else: 
                 ## flux distribution
                 flux = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l]]
