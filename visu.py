@@ -185,22 +185,27 @@ def plot_samp(gdat, gdatmodi, strg):
     if 'gaus' in spatdisttype:
         plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
 
-    for stdv in [False, True]: 
+    if strg == 'post':
+        listbool = [False, True]
+    else:
+        listbool = [False]
+    for stdv in listbool:
+        
         if gdat.elemtype == 'lens':
-            plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
-            plot_genemaps(gdat, gdatmodi, strg, 'convelem', strgcbar='conv', tdim=True)
+            plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True, stdv=stdv)
+            plot_genemaps(gdat, gdatmodi, strg, 'convelem', strgcbar='conv', tdim=True, stdv=stdv)
             for i in gdat.indxener:
-                plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'modlfluxuncv', strgcbar='datacnts', thisindxener=i, tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
+                plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
+                plot_genemaps(gdat, gdatmodi, strg, 'modlfluxuncv', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
             if strg != 'true':
-                plot_genemaps(gdat, gdatmodi, strg, 'deflcomp', tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'deflcomp', tdim=True, stdv=stdv)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 if strg != 'true':
-                    plot_genemaps(gdat, gdatmodi, strg, 'llik', strgcbar='llik', thisindxener=i, thisindxevtt=m)
-                plot_genemaps(gdat, gdatmodi, strg, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m)
-                plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
+                    plot_genemaps(gdat, gdatmodi, strg, 'llik', strgcbar='llik', thisindxener=i, thisindxevtt=m, stdv=stdv)
+                plot_genemaps(gdat, gdatmodi, strg, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m, stdv=stdv)
+                plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m, stdv=stdv)
         
     if gdat.elemtype == 'lens':
         plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{subs}(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
@@ -531,10 +536,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.numbtrap > 0:
         liststrgbins = ['quad', 'full']
         for l in gdat.indxpopl:
-            plot_samphistmaps(gdat, l, 'cumu')
+            plot_postbindmaps(gdat, l, 'cumu')
             for strgbins in liststrgbins:
                 for strgfeatsign in gdat.liststrgfeatsign[l]:
-                    plot_samphistmaps(gdat, l, strgbins, strgfeatsign)
+                    plot_postbindmaps(gdat, l, strgbins, strgfeatsign)
 
     if gdat.verbtype > 0:
         print 'Prior and likelihood...'
@@ -788,7 +793,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
             gdat.ylimcompfracspec
         except:
             gdat.ylimcompfracspec = axis.get_ylim()
-        axis.set_ylim(gdat.ylimcompfracspec)
+        axis.set_ylim([1e-4 * amax(gdat.datafluxmean), 1e1 * amax(gdat.datafluxmean)])
         axis.set_yscale('log')
         axis.set_xlabel('$E$ [%s]' % gdat.strgenerunit)
         axis.set_xscale('log')
@@ -1083,8 +1088,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     if scalyaxi == 'logt':
         if where(ydat > 0.)[0].size > 0:
             axis.set_yscale('log')
-        if histodim:
-            axis.set_ylim([0.5, None])
     
     if ylim != None:
         axis.set_ylim(ylim)
@@ -1142,7 +1145,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         axis.set_ylim(limtydat)
     else:
         if histodim:
-            axis.set_ylim([0.5, None])
+            axis.set_ylim(gdat.histylim)
         else:
             axis.set_ylim([amin(ydat), amax(ydat)])
         
@@ -1366,7 +1369,7 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_samphistmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
+def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
     
     if strgfeatsign != None:
         numbparaplot = getattr(gdat, 'numb' + strgfeatsign + 'plot')
@@ -1410,6 +1413,16 @@ def plot_samphistmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                     indxlowr = 2 * h
                     indxuppr = numbparaplot
             
+            if strgbins == 'cumu':
+                print 'indxlowr'
+                print indxlowr
+                print 'indxuppr'
+                print indxuppr
+                print 'indxfeat'
+                print indxfeat
+                print 'strgfeatsign'
+                print strgfeatsign
+
             temp = sum(gdat.pntsprob[indxpopltemp, :, :, indxlowr:indxuppr, indxfeat], 2).T
             if where(temp > 0.)[0].size > 0:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
@@ -1461,7 +1474,7 @@ def plot_samphistmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
         strgtemp = strgfeatsign
     else:
         strgtemp = ''
-    path = gdat.pathpost + 'pntsbind%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
+    path = gdat.pathpost + 'postbindmaps%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
     figr.savefig(path)
     plt.close(figr)
        
@@ -2186,7 +2199,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
         strgplot = strgtemp + strgvarb
     
     maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, stdv=stdv)
-
+    
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl)
     
     vmin = getattr(gdat, 'minm' + strgcbar)

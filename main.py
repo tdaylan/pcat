@@ -137,6 +137,7 @@ def init( \
          probrand=0.0, \
          probtran=None, \
          probbrde=1., \
+         fracproprand=0.05, \
          
          radispmr=None, \
 
@@ -215,7 +216,7 @@ def init( \
     
     if gdat.lablfluxunit == None:
         if gdat.elemtype == 'lens':
-            gdat.lablfluxunit = 'arcsec'
+            gdat.lablfluxunit = u'$^{\prime\prime}$'
         else:
             if gdat.exprtype == 'sdss' or gdat.exprtype == 'hubb':
                 gdat.lablfluxunit = 'mag'
@@ -282,15 +283,13 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_z^{\prime}'
         else:
-            #gdat.labllgal = r'\theta_1'
-            gdat.labllgal = r'\nu'
+            gdat.labllgal = r'\theta_1'
 
     if gdat.lablbgal == None:
         if gdat.exprtype == 'sdyn':
             gdat.lablbgal = r'E_k^{\prime}'
         else:
-            #gdat.lablbgal = r'\theta_2'
-            gdat.lablbgal = r'\mu'
+            gdat.lablbgal = r'\theta_2'
 
     ## experiment defaults
     if gdat.binsenerfull == None:
@@ -1657,7 +1656,7 @@ def proc_post(gdat, prio=False):
             posttemp = tdpy.util.retr_postvarb(listtemp)
             meditemp = posttemp[0, ...]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
-            stdvtemp = std(posttemp)
+            stdvtemp = std(posttemp, axis=0)
 
         setattr(gdat, 'post' + strgchan, posttemp)
         setattr(gdat, 'medi' + strgchan, meditemp)
@@ -1776,11 +1775,11 @@ def optiprop(gdat, gdatmodi, indxprocwork):
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
-    diffpara = zeros((2, 2, 2))
+    diffpara = zeros((3, 3, 2))
     diffpara[0, 0, :] = deltparastep * array([-1., -1.])
-    diffpara[0, 1, :] = deltparastep * array([-1., 1.])
-    diffpara[1, 0, :] = deltparastep * array([1., -1.])
-    diffpara[1, 1, :] = deltparastep * array([1., 1.])
+    diffpara[0, 2, :] = deltparastep * array([-1., 1.])
+    diffpara[2, 0, :] = deltparastep * array([1., -1.])
+    diffpara[2, 2, :] = deltparastep * array([1., 1.])
     gdatmodi.dictmodi = {}
     for strg in gdat.liststrgcomptotl:
         gdatmodi.dictmodi['stdv' + strg + 'indv'] = []
@@ -1790,10 +1789,16 @@ def optiprop(gdat, gdatmodi, indxprocwork):
     cntr = zeros(gdat.maxmnumbcomp)
     gdatmodi.stdvesti = zeros((gdat.numbstdp, gdat.numbstdp)) 
     gdatmodi.hess = zeros((gdat.numbstdp, gdat.numbstdp)) 
-    
     deltlpos = zeros((3, 3))
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
+
+    print 'gdat.maxmnumbpnts'
+    print gdat.maxmnumbpnts
+    print 'gdat.numbpara'
+    print gdat.numbpara
+    raise Exception('')
+
     while True:
         
         for k in gdat.indxpara:
@@ -1811,7 +1816,6 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                                 gdatmodi.cntrswep += 1
                             
                             gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
-                            gdatmodi.stdvesti[indxstdpfrst, indxstdpseco] = sqrt(1. / gdatmodi.hess[indxstdpfrst, indxstdpseco])
                             if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
                                 cntr = 0
                                 indxpnts = (k - gdat.indxsampcompinit)
@@ -1834,7 +1838,6 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                                 gdatmodi.stdvstdptemp[gdat.indxstdppara[k]] = gdatmodi.stdvesti[indxstdpfrst, indxstdpseco]
             
                         else:
-                            continue
                             for a in [0, 2]:
                                 for b in [0, 2]:
                                     # evaluate the posterior
@@ -1843,7 +1846,7 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                                     # increase sample counter for plots
                                     gdatmodi.cntrswep += 1
                             
-                            gdatmodi.hess[k, n] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
+                            gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
                 
                         print 'gdat.namepara[k]'
                         print gdat.namepara[k]
@@ -1861,14 +1864,27 @@ def optiprop(gdat, gdatmodi, indxprocwork):
                             raise Exception('')
                             print
 
-                if stdv > maxmstdv or not isfinite(stdv):
-                    stdv = maxmstdv
-                
             if gdat.verbtype > 0:
                 gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
-        
-        stdvtemp = 1. / sqrt(gdatmodi.hess[gdat.indxstdp, gdat.indxstdp]) / sqrt(gdat.numbpara) / fudgstdv
+       
+        gdatmodi.stdvesti = zeros_like(gdatmodi.hess)
+        gdatmodi.stdvesti[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
+        print 'gdat.numbstdp'
+        print gdat.numbstdp
+        print 'gdat.numbstdpfixp'
+        print gdat.numbstdpfixp
+        print 'gdat.indxstdpcomp'
+        print gdat.indxstdpcomp
+        print 'gdatmodi.stdvesti'
+        print gdatmodi.stdvesti.shape
+        print
 
+        gdatmodi.stdvesti[gdat.indxstdpcomp, gdat.indxstdpcomp] = 1. / sqrt(gdatmodi.hess[gdat.indxstdpcomp, gdat.indxstdpcomp])
+        gdatmodi.stdvesti /= sqrt(gdat.numbpara) * fudgstdv
+
+        indx = where((gdatmodi.stdvesti > maxmstdv) | logical_not(isfinite(gdatmodi.stdvesti)))
+        gdatmodi.stdvesti[indx] = maxmstdv
+                
         for strg in gdat.liststrgcomptotl:
             gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])
             gdatmodi.dictmodi['stdv' + strg + 'indvflux'] = array(gdatmodi.dictmodi['stdv' + strg + 'indvflux'])

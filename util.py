@@ -958,9 +958,13 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv, inpl=False):
             samp = gdatmodi.thissamp
         if isinstance(stdv, float):
             gdatmodi.nextsamp[indxsamp] = samp[indxsamp] + normal(scale=stdv)
+            if rand() < gdat.fracproprand:
+                gdatmodi.nextsamp[indxsamp] += randn()
         else:
             for k in range(stdv.size):
                 gdatmodi.nextsamp[indxsamp[k]] = samp[indxsamp[k]] + normal(scale=stdv[k])
+                if rand() < gdat.fracproprand:
+                    gdatmodi.nextsamp[indxsamp[k]] += randn()
         gdatmodi.nextsamp[indxsamp] = gdatmodi.nextsamp[indxsamp] % 1.
             
        
@@ -1800,7 +1804,7 @@ def retr_condcatl(gdat):
         print 'listdist'
         print listdist
     
-    while len(indxelemleft) > 0 and cntr < 10:
+    while len(indxelemleft) > 0:
         
         if gdat.verbtype > 1:
             print 'indxelemassc'
@@ -2761,6 +2765,8 @@ def setpinit(gdat, boolinitsetp=False):
             fobj.close()
 
     # plot settings
+    gdat.histylim = [0.5, max(gdat.truemaxmnumbpntstotl, gdat.maxmnumbpntstotl)]
+
     ## upper limit of histograms
     gdat.limtpntshist = [0.5, 10**ceil(log10(gdat.maxmnumbpntstotl))]
     
@@ -2815,6 +2821,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.indxstdpasca = gdat.numbfixpprop + 3
         gdat.indxstdpacut = gdat.numbfixpprop + 4
     gdat.numbstdp = gdat.numbfixpprop + gdat.maxmnumbcomp
+    gdat.numbstdpfixp = gdat.numbfixpprop
     gdat.strgstdp = concatenate((array(gdat.strgfixp)[gdat.indxfixpprop], gdat.liststrgcomptotl))
     gdat.strgstdp = list(gdat.strgstdp)
     gdat.namestdp = concatenate((array(gdat.namefixp)[gdat.indxfixpprop], gdat.liststrgcomptotl))
@@ -2848,10 +2855,10 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-2
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 4e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpflux] = 0.01
+            #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-2
+            #gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 4e-3
+            #gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            #gdat.stdvstdp[gdat.indxstdpflux] = 0.01
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
@@ -4178,7 +4185,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         for r in range(gdat.numbpntscond):
             lgal = array([gdat.dictglob['listelemcond'][r]['lgal']])
             bgal = array([gdat.dictglob['listelemcond'][r]['bgal']])
-            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.3)
+            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1)
 
 
 def retr_levi(listllik):
@@ -4319,12 +4326,12 @@ def writoutp(gdat, path):
     thisfile.close()
     
     # temp
-    print 'hey'
-    thisfile = h5py.File(gdat.pathoutpthis + 'pcat.h5', 'r')
-    for attr, data in thisfile.items():
-        print attr
-        print data[()]
-    print
+    #print 'hey'
+    #thisfile = h5py.File(gdat.pathoutpthis + 'pcat.h5', 'r')
+    #for attr, data in thisfile.items():
+    #    print attr
+    #    print data[()]
+    #print
 
 
 def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
