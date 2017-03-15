@@ -2882,9 +2882,9 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-3
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 5e-3
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 5e-3
+            gdat.stdvstdp[gdat.indxstdpcomp] = 5e-3
             gdat.stdvstdp[gdat.indxstdpflux] = 0.01
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
