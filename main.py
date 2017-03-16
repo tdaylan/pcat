@@ -1836,8 +1836,6 @@ def optihess(gdat, gdatmodi, indxprocwork):
                                 if k in concatenate(gdatmodi.thisindxsampcomp[strg]):
                                     indxsampflux = k + 2 - cntr
                                     fluxfact = gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux
-                                    print 'fluxfact'
-                                    print fluxfact
                                     if strg == 'flux':
                                         gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] * \
                                                                                             (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2. \
