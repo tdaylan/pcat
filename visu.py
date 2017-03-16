@@ -77,11 +77,17 @@ def plot_samp(gdat, gdatmodi, strg):
             lablxdat = gdat.lablfeattotl['gang']
             for l in indxpopl:
                 listydat = []
+                listvlinfrst = []
+                listvlinseco = []
                 for k in arange(numbpnts[l]):
-                    listydat.append(retr_deflcutf(gdat.binsanglplot, sampvarb[indxsampcomp['flux'][l][k]], gdat.anglscal, gdat.anglcutf) * gdat.anglfact)
+                    listydat.append(retr_deflcutf(gdat.binsanglplot, sampvarb[indxsampcomp['flux'][l][k]], sampvarb[indxsampcomp['asca'][l][k]], \
+                                                                                                                    sampvarb[indxsampcomp['acut'][l][k]]) * gdat.anglfact)
+                    listvlinfrst.append(sampvarb[indxsampcomp['asca'][l][k]] * gdat.anglfact) 
+                    listvlinseco.append(sampvarb[indxsampcomp['acut'][l][k]] * gdat.anglfact) 
                 listydat.append(xdat * 0. + gdat.anglfact * sampvarb[getattr(gdat, strgtype + 'indxfixpbeinhost')])
                 path = pathtemp + 'deflpntspop%d%s.pdf' % (l, strgswep)
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, \
+                                                        colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
     
     ## PSF radial profile
     if gdat.elemtype == 'lght':

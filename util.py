@@ -2163,8 +2163,7 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, 'pathpostdelt%sreje' % strg, gdat.pathpost + 'delt%sreje/' % strg)
         if gdat.probtran > 0. and gdat.probbrde < 1.:
             gdat.pathpostspmr = gdat.pathpost + 'spmr/'
-        if gdat.optiprop:
-            gdat.pathopti = gdat.pathplot + 'opti/'
+        gdat.pathopti = gdat.pathplot + 'opti/'
         if gdat.makeanim:
             gdat.pathanim = gdat.pathplot + 'anim/'
     ## make the directories 
@@ -4203,7 +4202,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                                     gdat.fluxfactplot * gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['flux'][l][k]], edgecolor='b', facecolor='none', ls='--', lw=2))
    
     # temp
-    if strg == 'post':
+    if strg == 'post' and gdat.condcatl:
         flux = array([gdat.dictglob['postelemcond'][r]['flux'][0] for r in range(gdat.numbpntscond)])
         mrkrsize = retr_mrkrsize(gdat, flux)
         lgal = array([gdat.dictglob['postelemcond'][r]['lgal'][0] for r in range(gdat.numbpntscond)])
