@@ -2882,10 +2882,10 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 5e-3
-            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 5e-3
-            gdat.stdvstdp[gdat.indxstdpcomp] = 5e-3
-            gdat.stdvstdp[gdat.indxstdpflux] = 0.01
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpmeanpnts]] = 1e-3
+            gdat.stdvstdp[gdat.indxstdppara[gdat.indxfixpdist]] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpflux] = 1e-3
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 1e-2
@@ -4209,10 +4209,11 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         lgal = array([gdat.dictglob['postelemcond'][r]['lgal'][0] for r in range(gdat.numbpntscond)])
         bgal = array([gdat.dictglob['postelemcond'][r]['bgal'][0] for r in range(gdat.numbpntscond)])
         axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', linewidth=2, color='black')
-        for r in range(gdat.numbpntscond):
-            lgal = array([gdat.dictglob['listelemcond'][r]['lgal']])
-            bgal = array([gdat.dictglob['listelemcond'][r]['bgal']])
-            axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1)
+        if False:
+            for r in range(gdat.numbpntscond):
+                lgal = array([gdat.dictglob['listelemcond'][r]['lgal']])
+                bgal = array([gdat.dictglob['listelemcond'][r]['bgal']])
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1)
 
 
 def retr_levi(listllik):
