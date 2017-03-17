@@ -1790,7 +1790,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     deltparastep = 1e-5
 
     maxmstdv = 0.1
-    fudgstdv = 1.
+    fudgstdv = 1e-7
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
@@ -1828,7 +1828,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
                         
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
-                            gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
+                            stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                             
                             cntr = 0
                             indxpnts = (k - gdat.indxsampcompinit)
@@ -1837,14 +1837,10 @@ def optihess(gdat, gdatmodi, indxprocwork):
                                     indxsampflux = k + 2 - cntr
                                     fluxfact = gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux
                                     if strg == 'flux':
-                                        gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] * \
-                                                                                            (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**2. \
-                                                                                                                      / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
+                                        gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * fluxfact**2. / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
                                     else:
-                                        gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] * \
-                                                                                            (gdatmodi.thissampvarb[indxsampflux] / gdat.minmflux)**0.5 \
-                                                                                                                      / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
-                                    gdatmodi.dictmodi['stdv' + strg + 'indv'].append(gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco])
+                                        gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * fluxfact**0.5 / sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts])
+                                    gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
                                     gdatmodi.dictmodi['stdv' + strg + 'indvflux'].append(gdatmodi.thissampvarb[indxsampflux])
 
                                 cntr += 1
@@ -1869,14 +1865,32 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
         if gdat.verbtype > 0:
             gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
-    
+   
+
+    print 'gdatmodi.hess'
+    print gdatmodi.hess[:9, :9]
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
-    #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
+    gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
 
     gdatmodi.stdvstdpmatr *= 2.38 / sqrt(gdat.numbpara) * fudgstdv
+    
+    print 'gdatmodi.stdvstdpmatr'
+    print gdatmodi.stdvstdpmatr[:9, :9]
+    print
+
+    print 'gdat.namestdp'
+    print gdat.namestdp
+    print
 
     indx = where((gdatmodi.stdvstdpmatr > maxmstdv) | logical_not(isfinite(gdatmodi.stdvstdpmatr)))
-    gdatmodi.stdvstdpmatr[indx] = maxmstdv
+    for k in range(indx[0].size):
+        if indx[0][k] == indx[1][k]:
+            print 'Bad estimation of the proposal scale'
+            print 'gdat.namestdp[indx[k]]'
+            print gdat.namestdp[indx[0][k]]
+            print
+
+        gdatmodi.stdvstdpmatr[indx] = maxmstdv
             
     for strg in gdat.liststrgcomptotl:
         gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])

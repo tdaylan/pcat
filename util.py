@@ -2875,9 +2875,9 @@ def setpinit(gdat, boolinitsetp=False):
 
     # proposal scale
     if gdat.elemtype == 'lens':
-        gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-        gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 5e-2
-        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
+        gdat.stdvstdp = 5e-5 + zeros(gdat.numbstdp)
+        #gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 5e-2
+        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
