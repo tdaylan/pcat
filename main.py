@@ -107,7 +107,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=1., \
+         priofactdoff=0., \
          # temp
          margfactmodl=1., \
          bindprio=False, \
@@ -814,7 +814,7 @@ def init( \
         gdat.factspecener = array([1.])
   
     # color bars
-    gdat.minmconv = 1e-4
+    gdat.minmconv = 1e-5
     gdat.maxmconv = 1e1
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4

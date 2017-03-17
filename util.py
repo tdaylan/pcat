@@ -4931,7 +4931,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             convelem = retr_conv(gdat, deflelem) 
             
             convpsec = retr_psec(gdat, conv)
-            convpsecelem = retr_psec(gdat, conv)
+            convpsecelem = retr_psec(gdat, convelem)
             convpsecodim = retr_psecodim(gdat, convpsec) 
             convpsecelemodim = retr_psecodim(gdat, convpsecelem) 
             
