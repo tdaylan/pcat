@@ -4563,9 +4563,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     # temp -- this may slow down execution
     indxsampcomp = retr_indxsampcomp(gdat, indxpntsfull, spectype)
    
-    # temp
-    #for strgcomp in gdat.liststrgcomptotl:
-    #    setattr(gdatobjt, strg + 'indxsamp' + strgcomp, indxsampcomp[strgcomp])
     setattr(gdatobjt, strg + 'indxsampcomp', indxsampcomp)
     
     if strg == 'next' and gdat.verbtype > 1:
@@ -4581,6 +4578,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     	for strgcomp in gdat.liststrgcomp[l]:
             dicttemp[strgcomp][l] = sampvarb[indxsampcomp[strgcomp][l]]
     
+    # temp
+    if gdat.elemtype == 'lens':
+        indx = where(dicttemp['asca'][l] < 0.)[0]
+        if indx.size > 0:
+            dicttemp['asca'][l][indx] = abs(dicttemp['asca'][l][indx])
+        indx = where(dicttemp['acut'][l] < 0.)[0]
+        if indx.size > 0:
+            dicttemp['acut'][l][indx] = abs(dicttemp['acut'][l][indx])
+
     lgalconc = concatenate(dicttemp['lgal'])
     bgalconc = concatenate(dicttemp['bgal'])
     if gdat.elemtype == 'lght':

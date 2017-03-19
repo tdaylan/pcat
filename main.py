@@ -446,7 +446,7 @@ def init( \
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = gdat.numbswep / 10
+        gdat.numbburn = gdat.numbswep / 20
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -633,7 +633,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.elemtype == 'lens':
-        minmflux = 2e-3 / gdat.anglfact
+        minmflux = 1e-3 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -678,11 +678,11 @@ def init( \
     
     if gdat.elemtype == 'lens':
         ### scale angular distance
-        setp_truedefa(gdat, 'ascadistmean', [gdat.maxmgang * 1e-2, gdat.maxmgang], popl=True)
-        setp_truedefa(gdat, 'ascadiststdv', [gdat.maxmgang * 1e-3, gdat.maxmgang], popl=True)
+        setp_truedefa(gdat, 'ascadistmean', [0.1 / gdat.anglfact, 0.3 / gdat.anglfact], popl=True)
+        setp_truedefa(gdat, 'ascadiststdv', [0.001 / gdat.anglfact, 0.01 / gdat.anglfact], popl=True)
         ### cutoff angular distance
-        setp_truedefa(gdat, 'acutdistmean', [gdat.maxmgang * 1e-2, gdat.maxmgang], popl=True)
-        setp_truedefa(gdat, 'acutdiststdv', [gdat.maxmgang * 1e-3, gdat.maxmgang], popl=True)
+        setp_truedefa(gdat, 'acutdistmean', [0.4 / gdat.anglfact, 0.8 / gdat.anglfact], popl=True)
+        setp_truedefa(gdat, 'acutdiststdv', [0.001 / gdat.anglfact, 0.01 / gdat.anglfact], popl=True)
     
     ## lensing
     setp_truedefa(gdat, 'lgalsour', [-gdat.maxmgang, gdat.maxmgang])
@@ -763,9 +763,9 @@ def init( \
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
     setp_true(gdat, 'ascadistmean', 0.2 / gdat.anglfact, popl=True)
-    setp_true(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'ascadiststdv', 0.004 / gdat.anglfact, popl=True)
     setp_true(gdat, 'acutdistmean', 0.6 / gdat.anglfact, popl=True)
-    setp_true(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'acutdiststdv', 0.004 / gdat.anglfact, popl=True)
         
     if gdat.numbener > 1:
         if gdat.exprtype == 'ferm':
@@ -1388,6 +1388,10 @@ def init( \
     else:
         gdat.calcllik = True
     
+    print 'gdat.stdvstdp'
+    print gdat.stdvstdp
+    print
+
     # run the sampler
     worksamp(gdat, lock)
     
@@ -1602,23 +1606,7 @@ def proc_post(gdat, prio=False):
         for k, strgfeat in enumerate(gdat.liststrgfeatsign[l]):
             temp[:, 2] = concatenate([getattr(gdat, 'list' + strgfeat)[n][l] for n in gdat.indxsamptotl])
             bins = getattr(gdat, 'bins' + strgfeat + 'plot')
-            
-            print 'strgfeat'
-            print strgfeat
-            print 'temp[:, 0]'
-            summgene(temp[:, 0])
-            print 'temp[:, 1]'
-            summgene(temp[:, 1])
-            print 'temp[:, 2]'
-            summgene(temp[:, 2])
-            print 'bins'
-            print bins
-            print 'gdat.pntsprob[l, :, :, :, k]'
-            summgene(gdat.pntsprob[l][:, :, :, k])
             gdat.pntsprob[l][:, :, :, k] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, bins))[0]
-            print 'gdat.pntsprob[l, :, :, :, k]'
-            summgene(gdat.pntsprob[l][:, :, :, k])
-            print 
 
     if gdat.verbtype > 0:
         timefinl = gdat.functime()

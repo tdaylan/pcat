@@ -316,21 +316,38 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             minm = min(amin(gdat.gmrbstat), amin(gdat.gmrbfixp))
             maxm = max(amax(gdat.gmrbstat), amax(gdat.gmrbfixp))
             bins = linspace(minm, maxm, 40)
-            axis.hist(gdat.gmrbstat.flatten(), bins=bins, label='Data proj.')
-            axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
+            # temp
+            try:
+                axis.hist(gdat.gmrbstat.flatten(), bins=bins, label='Data proj.')
+            except:
+                print 'gdat.gmrbstat'
+                print gdat.gmrbstat
+                print 'bins'
+                print bins
+            try:
+                axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
+            except:
+                print 'gdat.gmrbfixp'
+                print gdat.gmrbfixp
+                print 'bins'
+                print bins
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{stat}$')
             plt.tight_layout()
             figr.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
             plt.close(figr)
             
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
-                    maps = gdat.gmrbstat[i, :, m]
-                    path = gdat.pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
-                    tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            try:
+                for i in gdat.indxener:
+                    for m in gdat.indxevtt:
+                        maps = gdat.gmrbstat[i, :, m]
+                        path = gdat.pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
+                        tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+            except:
+                print 'gdat.gmrbstat'
+                print gdat.gmrbstat
         else:
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 
@@ -1970,17 +1987,6 @@ def make_anim(gdat):
             
             indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
             
-            print 'indxfilelowr'
-            print indxfilelowr
-            print 'numbfile'
-            print numbfile
-            print 'gdat.numbburn'
-            print gdat.numbburn
-            print 'gdat.numbswep'
-            print gdat.numbswep
-            print
-            print
-
             if indxfilelowr < numbfile:
                 indxfileanim = arange(indxfilelowr, numbfile)
             else:
