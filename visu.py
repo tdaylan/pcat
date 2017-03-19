@@ -154,16 +154,8 @@ def plot_samp(gdat, gdatmodi, strg):
                                                                                                                   strgfeat == 'expo' and gdat.spectype[l] != 'expo'):
                 
                     if strgfeat == 'flux':
-                        if gdat.elemtype == 'lens':
-                            strgxaxitwin = 'mass'
-                            lablxaxitwin = r'$M$ [$M_{\odot}$]'
-                        if gdat.elemtype == 'lght':
-                            strgxaxitwin = 'cntsplot'
-                            lablxaxitwin = '$C$'
                         offs = [0.9, 0.8]
                     else:
-                        strgxaxitwin = None
-                        lablxaxitwin = None
                         offs = None
                     scalxaxi = gdat.dictglob['scal' + strgfeat + 'plot']
                     factxaxi = gdat.dictglob['fact' + strgfeat + 'plot']
@@ -172,8 +164,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     
                     limtydat = gdat.limtpntshist
                     plot_gene(gdat, gdatmodi, strg, strgfeat + 'hist', 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, \
-                                          scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindxydat=strgindxydat, histodim=True, \
-                                          strgxaxitwin=strgxaxitwin, lablxaxitwin=lablxaxitwin)
+                                          scalxaxi=scalxaxi, limtxdat=limtxdat, limtydat=limtydat, offslegd=offs, indxydat=indxydat, strgindxydat=strgindxydat, histodim=True)
            
     if gdatmodi != None:
         gdatobjt = gdatmodi
@@ -222,10 +213,8 @@ def plot_samp(gdat, gdatmodi, strg):
         
     if gdat.elemtype == 'lens':
         plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{subs}(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
-#                                                                                                    strgxaxitwin='meananglodim', lablxaxitwin=gdat.lablgang, scalyaxi='logt')
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
-#                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
         plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
 
