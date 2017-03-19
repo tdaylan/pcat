@@ -446,7 +446,7 @@ def init( \
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = gdat.numbswep / 20
+        gdat.numbburn = gdat.numbswep / 10
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -1319,9 +1319,8 @@ def init( \
    
     setp_indxswepsave(gdat)
     
-    gdat.opti = gdat.optiprop or gdat.optillik or gdat.optihess
-
     # estimate the covariance
+    gdat.opti = gdat.optiprop or gdat.optillik or gdat.optihess
     if gdat.opti:
         gdat.numbprocsave = gdat.numbproc
         gdat.numbproc = 1
@@ -1356,9 +1355,12 @@ def init( \
         liststrgvarbsave = ['legdsampdist', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim', 'stdvstdp']
         
         for strgvarbsave in liststrgvarbsave:
-            varb = copy(getattr(gdat, strgvarbsave))
-            setattr(gdat, strgvarbsave + 'saveprio', varb)
-       
+            varb = getattr(gdat, strgvarbsave)
+            if strgvarbsave == 'stdvstdp':
+                setattr(gdat, strgvarbsave + 'saveprio', copy(varb))
+            else:
+                setattr(gdat, strgvarbsave + 'saveprio', varb)
+           
         ## change the variables
         gdat.stdvstdp[:] = 1e-2
         gdat.legdsampdist = 'Prior'
