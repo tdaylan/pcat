@@ -1356,7 +1356,7 @@ def init( \
         liststrgvarbsave = ['legdsampdist', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim', 'stdvstdp']
         
         for strgvarbsave in liststrgvarbsave:
-            varb = getattr(gdat, strgvarbsave)
+            varb = copy(getattr(gdat, strgvarbsave))
             setattr(gdat, strgvarbsave + 'saveprio', varb)
        
         ## change the variables
@@ -1614,7 +1614,7 @@ def proc_post(gdat, prio=False):
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
    
-    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts, verbtype=gdat.verbtype)
+    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts)
 
     if gdat.verbtype > 0:
         if gdat.timeatcr == 0.:
