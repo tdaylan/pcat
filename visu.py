@@ -1418,6 +1418,8 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
     print strgbins
     print 'strgfeatsign'
     print strgfeatsign
+    print 'indxfeat'
+    print indxfeat
 
     figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize), sharex='all', sharey='all')
     if numbrows == 1:
@@ -1426,31 +1428,29 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
         if numbcols == 1:
             axrw = [axrw]
         for b, axis in enumerate(axrw):
-            h = a * 2 + b
-            if strgbins == 'full':
-                indxlowr = h
-                indxuppr = h + 1
-            elif strgbins == 'cumu':
-                indxlowr = 0
-                indxuppr = numbparaplot
-            else:
-                if h < 3:
-                    indxlowr = 2 * h
-                    indxuppr = 2 * (h + 1)
-                else:
-                    indxlowr = 2 * h
-                    indxuppr = numbparaplot
-            
-            print 'indxlowr'
-            print indxlowr
-            print 'indxuppr'
-            print indxuppr
             if strgfeatsign != None:
-                print 'indxfeat'
-                print indxfeat
+                h = a * 2 + b
+                if strgbins == 'full':
+                    indxlowr = h
+                    indxuppr = h + 1
+                elif strgbins == 'cumu':
+                    indxlowr = 0
+                    indxuppr = numbparaplot
+                else:
+                    if h < 3:
+                        indxlowr = 2 * h
+                        indxuppr = 2 * (h + 1)
+                    else:
+                        indxlowr = 2 * h
+                        indxuppr = numbparaplot
+                
+                print 'indxlowr'
+                print indxlowr
+                print 'indxuppr'
+                print indxuppr
                 temp = sum(gdat.pntsprob[indxpopltemp, :, :, indxlowr:indxuppr, indxfeat], 2).T
             else:
-                temp = sum(sum(gdat.pntsprob[indxpopltemp, :, :, indxlowr:indxuppr, :], 2), 2).T
+                temp = sum(sum(gdat.pntsprob[indxpopltemp, :, :, :, :], 2), 2).T
                 
             if where(temp > 0.)[0].size > 0:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
@@ -1472,10 +1472,10 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                 print 'true'
                 print 'indxpnts'
                 print indxpnts
-                print 'bins[indxlowr]'
-                print bins[indxlowr]
-                print 'bins[indxuppr]'
-                print bins[indxuppr]
+                print 'gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts]'
+                print gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts]
+                print 'gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts]'
+                print gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts]
                 print
 
                 mrkrsize = retr_mrkrsize(gdat, gdat.trueflux[indxpopltemp][indxpnts])
@@ -1504,7 +1504,7 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
     if strgfeatsign != None:
         lablfeattotl = gdat.lablfeattotl[strgfeatsign]
         plt.figtext(0.5, 0.95, '%s' % lablfeattotl, ha='center', va='center')
-    axiscomm = figr.add_axes([0.9, 0.2, 0.02, 0.6])
+    axiscomm = figr.add_axes([0.87, 0.2, 0.02, 0.6])
     cbar = figr.colorbar(imag, cax=axiscomm)
 
     plt.subplots_adjust(left=0.18, top=.9, right=0.82, bottom=0.15, hspace=0.08, wspace=0.08)

@@ -1574,21 +1574,6 @@ def proc_post(gdat, prio=False):
                 info = retr_info(pdfnpost, pdfnprio)
                 deltvarbscal = getattr(gdat, 'delt' + namevarbscal)
                 infototl = sum(info * deltvarbscal)
-            
-                print 'namevarbscal'
-                print namevarbscal
-                print 'pdfnpost'
-                print pdfnpost
-                print 'pdfnprio'
-                print pdfnprio
-                print 'info'
-                print info
-                print 'deltvarbscal'
-                print deltvarbscal
-                print 'infototl'
-                print infototl
-                print
-
                 setattr(gdat, 'info' + namevarbscal, info)
                 setattr(gdat, 'infototl' + namevarbscal, infototl)
                 
