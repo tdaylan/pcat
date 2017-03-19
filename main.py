@@ -1360,7 +1360,7 @@ def init( \
             setattr(gdat, strgvarbsave + 'saveprio', varb)
        
         ## change the variables
-        gdat.stdvstdp = 1e-2
+        gdat.stdvstdp[:] = 1e-2
         gdat.legdsampdist = 'Prior'
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
