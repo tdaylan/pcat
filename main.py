@@ -633,7 +633,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.elemtype == 'lens':
-        minmflux = 1e-3 / gdat.anglfact
+        minmflux = 7e-4 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -751,7 +751,7 @@ def init( \
     setp_true(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
     setp_true(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
     if gdat.elemtype == 'lens':
-        fluxdistslop = 3.
+        fluxdistslop = 1.9
     else:
         fluxdistslop = 2.2
     setp_true(gdat, 'fluxdistslop', fluxdistslop, popl=True)
@@ -1463,6 +1463,8 @@ def proc_post(gdat, prio=False):
             timeinit = gdat.functime()
         for k in gdat.indxfixp:
             gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, gdat.indxfixp[k]])
+            if not isfinite(gdat.gmrbfixp[k]):
+                gdat.gmrbfixp[k] = 0.
         for i in gdat.indxener:
             for j in gdat.indxpixl:
                 for m in gdat.indxevtt:
@@ -1477,17 +1479,12 @@ def proc_post(gdat, prio=False):
         setattr(gdat, 'list' + strgvarb, [])
 
     # temp
-    #gdat.listindxpntsfull = []
-    #gdat.listspecassc = []
     for strgvarb in gdat.liststrgvarblistsamp:
         listtemp = []
         for j in gdat.indxsamp:      
             for k in gdat.indxproc:
                 listtemp.append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
-                #gdat.listindxpntsfull.append(listgdatmodi[k].listindxpntsfull[j])
         setattr(gdat, 'list' + strgvarb, listtemp)
-                #if gdat.trueinfo:
-                #    gdat.listspecassc.append(listgdatmodi[k].listspecassc[j])
 
     ## list of other parameters to be flattened
     gdat.liststrgvarbarryflat = deepcopy(gdat.liststrgvarbarry)

@@ -2185,8 +2185,13 @@ def setpinit(gdat, boolinitsetp=False):
     ## labels
     if gdat.elemtype == 'lens':
         gdat.lablfracsubh = '$f_{sub}$'
+        gdat.factfracsubh = 1.
+
         gdat.lablmasssubhtotl = '$M_{sub}$'
+        gdat.factmasssubhtotl = 1.
+        
         gdat.lablmasshostbein = '$M_{h,E}$'
+        gdat.factmasshostbein = 1.
 
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
