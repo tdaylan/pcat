@@ -204,6 +204,7 @@ def plot_samp(gdat, gdatmodi, strg):
     for stdv in listbool:
         
         if gdat.elemtype == 'lens':
+            plot_genemaps(gdat, gdatmodi, strg, 'invm', tdim=True, stdv=stdv)
             plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True, stdv=stdv)
             plot_genemaps(gdat, gdatmodi, strg, 'convelem', strgcbar='conv', tdim=True, stdv=stdv)
             for i in gdat.indxener:
@@ -226,6 +227,7 @@ def plot_samp(gdat, gdatmodi, strg):
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt') #\
 #                                                                                                   strgxaxitwin='meanwlenodim', lablxaxitwin='$l$', scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+        plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
 
     for l in gdat.indxpopl:
         if gdat.elemtype == 'lens':
@@ -305,8 +307,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
     
     # Gelman-Rubin test
-    # temp
-    if False and gdat.numbproc > 1:
+    if gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             if gdat.verbtype > 0:
                 print 'Gelman-Rubin TS...'
@@ -462,29 +463,25 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
     
-    if gdat.elemtype == 'lens':
-        path = gdat.pathpost + 'fracsubh'
-        tdpy.mcmc.plot_trac(path, gdat.listfracsubh, gdat.lablfracsubh, truepara=gdat.truefracsubh)
-    
-    ## fixed-dimensional parameters
+    ## scalar variables
     ### trace and marginal distribution of each parameter
-    for k in gdat.indxfixp:
-        path = gdat.pathpostfixp + gdat.namefixp[k]
-        tdpy.mcmc.plot_trac(path, gdat.listfixp[:, k], gdat.lablfixp[k], truepara=gdat.corrfixp[k], scalpara=gdat.scalfixp[k])
+    for name in gdat.listnamevarbscal:
+        path = gdat.pathvarbscal + name
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name), getattr(gdat, 'labl' + name), truepara=getattr(gdat, 'corr' + name))
     
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
         for namevarbscal in gdat.listnamevarbscal:
             titl = '$D_{KL} = %.3g$' % getattr(gdat, 'infototl' + namevarbscal)
-            xdat = getattr(gdat, 'mean' + namevarbscal)
+            xdat = getattr(gdat, 'mean' + namevarbscal) * getattr(gdat, 'fact' + namevarbscal + 'plot')
             lablxdat = getattr(gdat, 'labl' + namevarbscal)
             
-            path = gdat.pathpost + 'info' + namevarbscal
+            path = gdat.pathinfo + 'info' + namevarbscal
             ydat = getattr(gdat, 'info' + namevarbscal)
             lablydat = r'$\Delta D_{KL}$'
             tdpy.mcmc.plot_plot(path, xdat, ydat, lablxdat, lablydat, titl=titl)
 
-            path = gdat.pathpost + 'pdfn' + namevarbscal
+            path = gdat.pathinfo + 'pdfn' + namevarbscal
             ydat = [getattr(gdat, 'pdfnpost' + namevarbscal), getattr(gdat, 'pdfnprio' + namevarbscal)]
             lablydat = r'$P$'
             legd = ['$P$(%s|$D$)' % lablxdat, '$P$(%s)' % lablxdat]
@@ -1408,18 +1405,9 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
             numbrows = 2
     
     if strgfeatsign != None:
-        indxfeat = gdat.liststrgfeat.index(strgfeatsign)
+        indxfeat = gdat.liststrgfeatsign[indxpopltemp].index(strgfeatsign)
     else:
         indxfeat = arange(len(gdat.liststrgfeat))
-
-    print 'gdat.pntsprob'
-    print gdat.pntsprob.shape
-    print 'strgbins'
-    print strgbins
-    print 'strgfeatsign'
-    print strgfeatsign
-    print 'indxfeat'
-    print indxfeat
 
     figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize), sharex='all', sharey='all')
     if numbrows == 1:
@@ -1443,14 +1431,9 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                     else:
                         indxlowr = 2 * h
                         indxuppr = numbparaplot
-                
-                print 'indxlowr'
-                print indxlowr
-                print 'indxuppr'
-                print indxuppr
-                temp = sum(gdat.pntsprob[indxpopltemp, :, :, indxlowr:indxuppr, indxfeat], 2).T
+                temp = sum(gdat.pntsprob[indxpopltemp][:, :, indxlowr:indxuppr, indxfeat], 2).T
             else:
-                temp = sum(sum(gdat.pntsprob[indxpopltemp, :, :, :, :], 2), 2).T
+                temp = sum(sum(gdat.pntsprob[indxpopltemp], 2), 2).T
                 
             if where(temp > 0.)[0].size > 0:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
@@ -1468,15 +1451,6 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
                 else:
                     indxpnts = arange(gdat.trueflux[indxpopltemp].size)
-
-                print 'true'
-                print 'indxpnts'
-                print indxpnts
-                print 'gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts]'
-                print gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts]
-                print 'gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts]'
-                print gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts]
-                print
 
                 mrkrsize = retr_mrkrsize(gdat, gdat.trueflux[indxpopltemp][indxpnts])
                 axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts], \
@@ -1995,6 +1969,18 @@ def make_anim(gdat):
             numbfile = len(listfile)
             
             indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
+            
+            print 'indxfilelowr'
+            print indxfilelowr
+            print 'numbfile'
+            print numbfile
+            print 'gdat.numbburn'
+            print gdat.numbburn
+            print 'gdat.numbswep'
+            print gdat.numbswep
+            print
+            print
+
             if indxfilelowr < numbfile:
                 indxfileanim = arange(indxfilelowr, numbfile)
             else:
@@ -2074,6 +2060,9 @@ def plot_init(gdat):
                 for k in range(numbreds):
                     gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
                 
+                asca = 0.05 / gdat.anglfact 
+                acut = 1. / gdat.anglfact 
+    
                 minmmass = zeros((numbreds + 1, numbreds + 1))
                 maxmmass = zeros((numbreds + 1, numbreds + 1))
                 for k, redshost in enumerate(gdat.binsredshost):
@@ -2082,7 +2071,7 @@ def plot_init(gdat):
                             adishost = gdat.adisobjt(redshost) * 1e3
                             adissour = gdat.adisobjt(redssour) * 1e3
                             adishostsour = adissour - (1. + redshost) / (1. + redssour) * adishost
-                            massfromdeflscal = retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, gdat.anglscal, gdat.anglcutf)
+                            massfromdeflscal = retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, asca, acut)
                             minmmass[n, k] = log10(massfromdeflscal * gdat.minmflux)
                             maxmmass[n, k] = log10(massfromdeflscal * gdat.maxmflux)
                 

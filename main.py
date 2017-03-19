@@ -819,31 +819,41 @@ def init( \
         gdat.factspecener = array([1.])
   
     # color bars
-    gdat.minmconv = 1e-4
-    gdat.maxmconv = 10.
-    gdat.minmdeflcomp = 0.
-    gdat.maxmdeflcomp = 1e-4
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
+    gdat.scalllik = 'linr'
+    gdat.cmapllik = 'YlGn'
     
     gdat.scaldatacnts = 'logt'
     gdat.cmapdatacnts = 'Greys'
+    
     gdat.scalresicnts = 'asnh'
     gdat.cmapresicnts = 'RdBu'
+    
     gdat.scalexpo = 'logt'
     gdat.cmapexpo = 'OrRd'
-    gdat.scaldeflcomp = 'logt'
-    gdat.cmapdeflcomp = 'Oranges'
-    gdat.scalconv = 'logt'
-    gdat.cmapconv = 'Purples'
-    gdat.scalllik = 'linr'
-    gdat.cmapllik = 'YlGn'
+    
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
     gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
-    liststrgcbar = ['conv', 'deflcomp', 'llik', 'lpdfspatpriointp']
+    gdat.minmconv = 1e-4
+    gdat.maxmconv = 10.
+    gdat.scalconv = 'logt'
+    gdat.cmapconv = 'Purples'
+    
+    gdat.minminvm = -1e2
+    gdat.maxminvm = 1e2
+    gdat.scalinvm = 'asnh'
+    gdat.cmapinvm = 'BrBG'
+    
+    gdat.minmdeflcomp = 1e-7
+    gdat.maxmdeflcomp = 1e-4
+    gdat.scaldeflcomp = 'logt'
+    gdat.cmapdeflcomp = 'Oranges'
+    
+    liststrgcbar = ['llik', 'lpdfspatpriointp', 'conv', 'invm', 'deflcomp']
     for strgcbar in liststrgcbar:
         retr_ticklabl(gdat, strgcbar)
     
@@ -1343,14 +1353,14 @@ def init( \
         gdat.calcllik = False
         
         # save some variables that will be changed for the prior-only run
-        liststrgvarbsave = ['legdsampdist', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim']
+        liststrgvarbsave = ['legdsampdist', 'makeplot', 'pathfram', 'pathpost', 'pathdiag', 'pathanim', 'stdvstdp']
         
-        #liststrgvarbsave = gdat.__dict__.keys()
         for strgvarbsave in liststrgvarbsave:
             varb = getattr(gdat, strgvarbsave)
             setattr(gdat, strgvarbsave + 'saveprio', varb)
        
         ## change the variables
+        gdat.stdvstdp = 1e-2
         gdat.legdsampdist = 'Prior'
         gdat.pathpost += 'chec/'
         gdat.pathfram += 'chec/'
@@ -1538,7 +1548,7 @@ def proc_post(gdat, prio=False):
     # parse the sample vector
     gdat.listfixp = gdat.listsampvarb[:, gdat.indxfixp]
     for k, namefixp in enumerate(gdat.namefixp):
-        setattr(gdat, 'list' + namefixp, getattr(gdat, 'listfixp')[:, k])
+        setattr(gdat, 'list' + namefixp, gdat.listfixp[:, k])
     
     # temp
     if gdat.elemtype == 'lens':
@@ -1550,8 +1560,6 @@ def proc_post(gdat, prio=False):
             meanvarbscal = getattr(gdat, 'mean' + namevarbscal)
             deltvarbscal = getattr(gdat, 'delt' + namevarbscal)
             listvarbscal = getattr(gdat, 'list' + namevarbscal)
-            histscalvarb = histogram(listvarbscal, bins=binsvarbscal)[0]
-            
             pdfn = histogram(listvarbscal, bins=binsvarbscal)[0].astype(float)
             #try:
             #    pdfn = sp.stats.gaussian_kde(listvarbscal)(meanvarbscal)
@@ -1582,19 +1590,35 @@ def proc_post(gdat, prio=False):
     if gdat.verbtype > 0:
         print 'Binning the probabilistic catalog...'
         timeinit = gdat.functime()
-        
-    gdat.pntsprob = zeros((gdat.numbpopl, gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbbinsplot, gdat.numbelemfeat))
+       
+    gdat.pntsprob = [[] for l in gdat.indxpopl]
     for l in gdat.indxpopl:
+        numb = len(gdat.liststrgfeatsign[l])
+        gdat.pntsprob[l] = zeros((gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbbinsplot, numb))
         temparry = concatenate([gdat.listlgal[n][l] for n in gdat.indxsamptotl])
         temp = empty((len(temparry), 3))
         temp[:, 0] = temparry
         temp[:, 1] = concatenate([gdat.listbgal[n][l] for n in gdat.indxsamptotl])
-        for k, strgfeat in enumerate(gdat.liststrgfeatodim[l]):
-            print 'strgfeat'
-            print strgfeat
+        for k, strgfeat in enumerate(gdat.liststrgfeatsign[l]):
             temp[:, 2] = concatenate([getattr(gdat, 'list' + strgfeat)[n][l] for n in gdat.indxsamptotl])
             bins = getattr(gdat, 'bins' + strgfeat + 'plot')
-            gdat.pntsprob[l, :, :, :, k] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, bins))[0]
+            
+            print 'strgfeat'
+            print strgfeat
+            print 'temp[:, 0]'
+            summgene(temp[:, 0])
+            print 'temp[:, 1]'
+            summgene(temp[:, 1])
+            print 'temp[:, 2]'
+            summgene(temp[:, 2])
+            print 'bins'
+            print bins
+            print 'gdat.pntsprob[l, :, :, :, k]'
+            summgene(gdat.pntsprob[l][:, :, :, k])
+            gdat.pntsprob[l][:, :, :, k] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, bins))[0]
+            print 'gdat.pntsprob[l, :, :, :, k]'
+            summgene(gdat.pntsprob[l][:, :, :, k])
+            print 
 
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
@@ -1827,11 +1851,6 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
     
-    print 'gdat.indxfixpprop'
-    print gdat.indxfixpprop
-    print 'gdat.indxstdppara'
-    print gdat.indxstdppara
-
     for k in gdat.indxpara:
         if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp['comp']):
             indxstdpfrst = gdat.indxstdppara[k]
@@ -1912,7 +1931,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
     gdatmodi.stdvstdpmatr *= 2.38 / sqrt(gdat.numbpara) * fudgstdv
     
-    indx = where((gdatmodi.stdvstdpmatr > maxmstdv) | logical_not(isfinite(gdatmodi.stdvstdpmatr)))
+    indx = where(logical_not(isfinite(gdatmodi.stdvstdpmatr)))
     for k in range(indx[0].size):
         if indx[0][k] == indx[1][k]:
             print 'Bad estimation of the proposal scale'

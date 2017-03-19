@@ -1974,6 +1974,15 @@ def retr_conv(gdat, defl):
     return conv
 
 
+def retr_invm(gdat, defl):
+    
+    # temp
+    invm = (1. - gradient(defl[:, :, 0], gdat.sizepixl, axis=0)) * (1. - gradient(defl[:, :, 1], gdat.sizepixl, axis=1)) - \
+                                                                         gradient(defl[:, :, 0], gdat.sizepixl, axis=1) * gradient(defl[:, :, 1], gdat.sizepixl, axis=0)
+
+    return invm
+
+
 def diag_gdatmodi(gdatmodi, gdatmodiprev):
 
     listvalu = []
@@ -2132,8 +2141,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pathdiag = gdat.pathplot + 'diag/'
     gdat.pathfram = gdat.pathplot + 'fram/'
     gdat.pathpost = gdat.pathplot + 'post/'
+    gdat.pathinfo = gdat.pathplot + 'info/'
+    gdat.pathvarbscal = gdat.pathpost + 'varbscal/'
     gdat.pathpostlpri = gdat.pathpost + 'lpri/'
-    gdat.pathpostfixp = gdat.pathpost + 'fixp/'
+    gdat.pathpostfixp = gdat.pathvarbscal + 'fixp/'
     gdat.pathpostcond = gdat.pathpost + 'cond/'
     gdat.pathpostfixpproc = gdat.pathpostfixp + 'proc/'
     if gdat.makeplot:
@@ -2174,6 +2185,8 @@ def setpinit(gdat, boolinitsetp=False):
     ## labels
     if gdat.elemtype == 'lens':
         gdat.lablfracsubh = '$f_{sub}$'
+        gdat.lablmasssubhtotl = '$M_{sub}$'
+        gdat.lablmasshostbein = '$M_{h,E}$'
 
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
@@ -2211,10 +2224,21 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'lens':
         gdat.strgelem = 'Subhalo'
     
+    gdat.minmmass = 1e6
+    gdat.maxmmass = 1e10
+    
     # scalar variables
     gdat.minmfracsubh = 0.
     gdat.maxmfracsubh = 0.3
     gdat.scalfracsubh = 'self'
+    
+    gdat.minmmasshostbein = gdat.minmmass
+    gdat.maxmmasshostbein = gdat.maxmmass
+    gdat.scalmasshostbein = 'self'
+    
+    gdat.minmmasssubhtotl = gdat.minmmass
+    gdat.maxmmasssubhtotl = gdat.maxmmass
+    gdat.scalmasssubhtotl = 'self'
 
     # set up the indices of the fitting model
     retr_indxsamp(gdat)
@@ -2222,14 +2246,28 @@ def setpinit(gdat, boolinitsetp=False):
     # construct the fitting model
     setp_fixp(gdat)
     
+    # list of scalar variable names
+    gdat.listnamevarbscal = list(gdat.namefixp)
+    if gdat.elemtype == 'lens':
+        gdat.listnamevarbscal += ['fracsubh', 'masssubhtotl', 'masshostbein']
+    gdat.numbvarbscal = len(gdat.listnamevarbscal)
+    gdat.indxvarbscal = arange(gdat.numbvarbscal)
+
     # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
-    gdat.corrfixp = empty(gdat.numbfixp)
+    for k in gdat.indxvarbscal:
+        try:
+            temp = getattr(gdat, 'true' + gdat.namevarbscal[k])
+        except:
+            temp = None
+        setattr(gdat, 'corr' + gdat.listnamevarbscal[k], temp)
+    
+	gdat.corrfixp = empty(gdat.numbfixp)
     for k in gdat.indxfixp:
         try:
             gdat.corrfixp[k] = getattr(gdat, 'true' + gdat.namefixp[k])
         except:
             gdat.corrfixp[k] = None
-   
+ 
     # copy fixp variables to individual variables
     for k, namefixp in enumerate(gdat.namefixp):
         setattr(gdat, 'minm' + namefixp, gdat.minmfixp[k])
@@ -2240,11 +2278,6 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, 'minmnumbpntspop%d' % l, gdat.minmnumbpnts[l])
         setattr(gdat, 'maxmnumbpntspop%d' % l, gdat.maxmnumbpnts[l])
     
-    # list of scalar variable names
-    gdat.listnamevarbscal = list(gdat.namefixp)
-    if gdat.elemtype == 'lens':
-        gdat.listnamevarbscal += ['fracsubh']
-
     # construct bins for the scalar variables
     for namevarbscal in gdat.listnamevarbscal:
         minm = getattr(gdat, 'minm' + namevarbscal)
@@ -2256,10 +2289,6 @@ def setpinit(gdat, boolinitsetp=False):
             thisscal = 'self'
         retr_axis(gdat, namevarbscal, minm, maxm, gdat.numbbinsplot, scal=thisscal)
 
-    # temp
-    gdat.anglscal = 0.05 / gdat.anglfact 
-    gdat.anglcutf = 1. / gdat.anglfact 
-    
     gdat.lablfeat = {}
     gdat.dictglob = {}
     gdat.lablfeatunit = {}
@@ -2315,9 +2344,6 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.factnewtlght = 2.09e16 # Msun / kpc
         gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         gdat.critmden = retr_critmden(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
-        gdat.massfromdeflscal = retr_massfromdeflscal(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour, gdat.anglscal, gdat.anglcutf)
-        gdat.minmmass = gdat.massfromdeflscal * gdat.minmflux
-        gdat.maxmmass = gdat.massfromdeflscal * gdat.maxmflux
         retr_axis(gdat, 'mass', gdat.minmmass, gdat.maxmmass, gdat.numbbinsplot)
         retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, gdat.numbbinsplot)
 
@@ -2436,6 +2462,7 @@ def setpinit(gdat, boolinitsetp=False):
 
     if gdat.elemtype == 'lens': 
         retr_axis(gdat, 'deflplot', -gdat.maxmgang, gdat.maxmgang, 50)
+        retr_axis(gdat, 'deflelemplot', -gdat.maxmgang * 4e-3, gdat.maxmgang * 4e-3, 50)
 
     # lensing problem setup
     ## number of deflection components to plot
@@ -3835,7 +3862,8 @@ def setp_fixp(gdat, strgpara=''):
     if strgpara == '':
         for k in indxfixp:
             setattr(gdat, 'labl' + namefixp[k], lablfixp[k])
-
+            setattr(gdat, 'fact' + namefixp[k] + 'plot', factfixpplot[k])
+        
     namepara[indxfixp] = namefixp
     scalpara[indxfixp] = scalfixp
     for k in range(numbtrap):
@@ -4358,7 +4386,7 @@ def writoutp(gdat, path):
     #print
 
 
-def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
+def retr_deflcutf(angl, deflscal, anglscal, anglcutf, asym=False):
 
     fracscal = angl / anglscal
     
@@ -4381,7 +4409,7 @@ def retr_deflcutf(angl, deflscal, anglscal, anglcutf=None, asym=False):
     return deflcutf
 
 
-def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor, indxpixltemp=None, cutf=False):
+def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor=0., asca=None, acut=None, indxpixltemp=None):
     
     if indxpixltemp == None:
         indxpixltemp = gdat.indxpixl
@@ -4390,9 +4418,9 @@ def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor, indxpixltemp=None, cutf=
     lgaltran = gdat.lgalgrid[indxpixltemp] - lgal
     bgaltran = gdat.bgalgrid[indxpixltemp] - bgal
     
-    if cutf:
+    if acut != None:
         angl = sqrt(lgaltran**2 + bgaltran**2)
-        defl = retr_deflcutf(angl, bein, anglscal=gdat.anglscal, anglcutf=gdat.anglcutf)
+        defl = retr_deflcutf(angl, bein, asca, acut)
         
         defllgal = lgaltran / angl * defl
         deflbgal = bgaltran / angl * defl
@@ -4561,6 +4589,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         specconc = concatenate(dicttemp['spec'], axis=1)
     if gdat.elemtype == 'lens':
         defsconc = concatenate(dicttemp['flux'])
+        ascaconc = concatenate(dicttemp['asca'])
+        acutconc = concatenate(dicttemp['acut'])
     
     for l in gdat.indxpopl:
         if amin(sampvarb[indxsampcomp['acut'][l]] * gdat.anglfact) < 0.:
@@ -4731,7 +4761,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             sanghost = sampvarb[getattr(gdat, strgtype + 'indxfixpsanghost')]
            
             ## host halo deflection
-            defl = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
+            defl = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
             
             ## external shear
             deflextr = retr_deflextr(gdat, sherhost, sanghost)
@@ -4776,7 +4806,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
-                    deflelem[indxpixltemp, :] += retr_defl(gdat, lgalconc[k], bgalconc[k], defsconc[k], 0., 0., 0., indxpixltemp=indxpixltemp, cutf=True)
+                    deflelem[indxpixltemp, :] += retr_defl(gdat, lgalconc[k], bgalconc[k], defsconc[k], 0., 0., asca=ascaconc[k], acut=acutconc[k], indxpixltemp=indxpixltemp)
                 defl += deflelem
             defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
             
@@ -4917,23 +4947,26 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 indxpntssortbrgt = argsort(dicttemp['flux'][0])[::-1]
                 lgalsort = dicttemp['lgal'][0][indxpntssortbrgt][:numbpntsconc]
                 bgalsort = dicttemp['bgal'][0][indxpntssortbrgt][:numbpntsconc]
-                beinsort = dicttemp['flux'][0][indxpntssortbrgt][:numbpntsconc]
+                defssort = dicttemp['flux'][0][indxpntssortbrgt][:numbpntsconc]
+                ascasort = dicttemp['asca'][0][indxpntssortbrgt][:numbpntsconc]
+                acutsort = dicttemp['acut'][0][indxpntssortbrgt][:numbpntsconc]
     
             ### mass budget
-            masspnts = gdat.massfromdeflscal * dicttemp['flux'][0]
-            masspntstotl = array([sum(masspnts)])
-            masshost = array([gdat.massfrombein * beinhost**2])
-            fracsubh = masspntstotl / masshost
+            factmassdeflscal = retr_massfromdeflscal(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour, dicttemp['asca'][0], dicttemp['acut'][0]) 
+            masssubh = factmassdeflscal * dicttemp['flux'][0]
+            masssubhtotl = array([sum(masssubh)])
+            masshostbein = array([gdat.massfrombein * beinhost**2])
+            fracsubh = masssubhtotl / masshostbein
             
-            setattr(gdatobjt, strg + 'masspntstotl', masspntstotl)
-            setattr(gdatobjt, strg + 'masshost', masshost)
+            setattr(gdatobjt, strg + 'masssubhtotl', masssubhtotl)
+            setattr(gdatobjt, strg + 'masshostbein', masshostbein)
             setattr(gdatobjt, strg + 'fracsubh', fracsubh)
 
             deflsing = zeros((gdat.numbpixl, 2, gdat.numbdeflsingplot))
             numbdeflsing = min(gdat.numbdeflpntsplot, numbpntsconc) + 2
             for k in range(numbdeflsing):
                 if k == 0:
-                    deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost, 0.)
+                    deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
                 elif k == 1:
                     deflsing[:, :, k] = deflextr
                 else:
@@ -4941,18 +4974,22 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         indxpixltemp = gdat.indxpixl
                     else:
                         indxpixlpnts = retr_indxpixl(gdat, bgalsort[k-2], lgalsort[k-2])
-                        indxproxtemp = digitize(beinsort[k-2], gdat.binsprox) - 1
+                        indxproxtemp = digitize(defssort[k-2], gdat.binsprox) - 1
                         indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
-                    deflsing[indxpixltemp, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], beinsort[k-2], 0., 0., 0., indxpixltemp=indxpixltemp, cutf=True)
+                    deflsing[indxpixltemp, :, k] = retr_defl(gdat, lgalsort[k-2], bgalsort[k-2], defssort[k-2], 0., 0., asca=ascasort[k-2], acut=acutsort[k-2], \
+                                                                                                                                                indxpixltemp=indxpixltemp)
             deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
 
             ### convergence
             deflelem = deflelem.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
         
+            invm = retr_invm(gdat, defl) 
             conv = retr_conv(gdat, defl) 
             convelem = retr_conv(gdat, deflelem) 
+            
+            invm = retr_invm(gdat, defl) 
             
             convpsec = retr_psec(gdat, conv)
             convpsecelem = retr_psec(gdat, convelem)
@@ -4960,6 +4997,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             convpsecelemodim = retr_psecodim(gdat, convpsecelem) 
             
             histdefl = histogram(defl, bins=gdat.binsdeflplot)[0]
+            histdeflelem = histogram(deflelem, bins=gdat.binsdeflelemplot)[0]
+            
+            setattr(gdatobjt, strg + 'invm', invm)
             setattr(gdatobjt, strg + 'conv', conv)
             setattr(gdatobjt, strg + 'convelem', convelem)
             setattr(gdatobjt, strg + 'convpsec', convpsec)
@@ -4968,6 +5008,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             setattr(gdatobjt, strg + 'convpsecelemodim', convpsecelemodim)
             
             setattr(gdatobjt, strg + 'histdefl', histdefl)
+            setattr(gdatobjt, strg + 'histdeflelem', histdeflelem)
             setattr(gdatobjt, strg + 'deflsing', deflsing)
      
         ## element features
@@ -4991,7 +5032,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if gdat.elemtype == 'lens':
                         defltemp = copy(defl.reshape((gdat.numbpixl, 2)))
                         defltemp[indxpixltemp, :] -= retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['flux'][l][k], \
-                                                                                                                0., 0., 0., indxpixltemp=indxpixltemp, cutf=True)
+                                                                                 0., 0., asca=dicttemp['asca'][l][k], acut=dicttemp['acut'][l][k], indxpixltemp=indxpixltemp)
                         defltemp = defltemp.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
                         lensflux = retr_mapssers(gdat, gdat.lgalgridcart - defltemp[:, :, 0], gdat.bgalgridcart - defltemp[:, :, 1], \
                                                                                                             lgalsour, bgalsour, specsour, sizesour, ellpsour, anglsour)
@@ -5021,8 +5062,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     dicttemp['dots'][l] = empty(numbpnts[l])
                     deflsing = zeros((gdat.numbpixl, 2, numbpnts[l]))
                     for k in range(numbpnts[l]):
-                        deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['flux'][l][k], 0., 0., 0., \
-                                                                                                                                        indxpixltemp=indxpixltemp, cutf=True)
+                        deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['flux'][l][k], 0., 0., \
+                                                                                      asca=dicttemp['asca'][l][k], acut=dicttemp['acut'][l][k], indxpixltemp=indxpixltemp)
                         deflsingtemp = deflsing[:, :, k].reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
                         dotstemp = sum(grad * deflsingtemp, 2)
                         #fact = sqrt(grad[:, :, 0]**2 + grad[:, :, 1]**2) * sqrt(deflsingtemp[:, :, 0]**2 + deflsingtemp[:, :, 1]**2)
