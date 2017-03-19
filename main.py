@@ -1921,24 +1921,12 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
         if gdat.verbtype > 0:
             gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.numbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
-   
-
-    print 'gdatmodi.hess'
-    print gdatmodi.hess[:9, :9]
 
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
 
     gdatmodi.stdvstdpmatr *= 2.38 / sqrt(gdat.numbpara) * fudgstdv
     
-    print 'gdatmodi.stdvstdpmatr'
-    print gdatmodi.stdvstdpmatr[:9, :9]
-    print
-
-    print 'gdat.namestdp'
-    print gdat.namestdp
-    print
-
     indx = where((gdatmodi.stdvstdpmatr > maxmstdv) | logical_not(isfinite(gdatmodi.stdvstdpmatr)))
     for k in range(indx[0].size):
         if indx[0][k] == indx[1][k]:

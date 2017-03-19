@@ -3306,9 +3306,6 @@ def retr_indxsamp(gdat, strgpara=''):
         
     dicttemp['indxfixphypr'] = array(dicttemp['indxfixpdist'] +  dicttemp['indxfixpmeanpnts'])
     
-    print 'dicttemp[indxfixphypr]'
-    print dicttemp['indxfixphypr']
-
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             if psfntype == 'singgaus':
