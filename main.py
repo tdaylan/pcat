@@ -762,6 +762,11 @@ def init( \
     for k in range(gdat.numbfluxdistnorm):
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
+    setp_true(gdat, 'ascadistmean', 0.2 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'acutdistmean', 0.6 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
+        
     if gdat.numbener > 1:
         if gdat.exprtype == 'ferm':
             sinddistmean = 2.15
@@ -814,8 +819,8 @@ def init( \
         gdat.factspecener = array([1.])
   
     # color bars
-    gdat.minmconv = 1e-5
-    gdat.maxmconv = 1e1
+    gdat.minmconv = 1e-4
+    gdat.maxmconv = 10.
     gdat.minmdeflcomp = 0.
     gdat.maxmdeflcomp = 1e-4
     gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
@@ -823,13 +828,19 @@ def init( \
     gdat.maxmllik = 0.
     gdat.minmllik = -1e2
     
+    gdat.scaldatacnts = 'logt'
     gdat.cmapdatacnts = 'Greys'
+    gdat.scalresicnts = 'asnh'
     gdat.cmapresicnts = 'RdBu'
+    gdat.scalexpo = 'logt'
     gdat.cmapexpo = 'OrRd'
+    gdat.scaldeflcomp = 'logt'
     gdat.cmapdeflcomp = 'Oranges'
+    gdat.scalconv = 'logt'
     gdat.cmapconv = 'Purples'
-    gdat.cmapconvelem = 'Purples'
+    gdat.scalllik = 'linr'
     gdat.cmapllik = 'YlGn'
+    gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
     liststrgcbar = ['conv', 'deflcomp', 'llik', 'lpdfspatpriointp']
@@ -1534,11 +1545,11 @@ def proc_post(gdat, prio=False):
         gdat.listfracsubh = gdat.listfracsubh.flatten()
     
     if gdat.checprio:
-        for strgvarbscal in gdat.liststrgvarbscal:
-            binsvarbscal = getattr(gdat, 'bins' + strgvarbscal)
-            meanvarbscal = getattr(gdat, 'mean' + strgvarbscal)
-            deltvarbscal = getattr(gdat, 'delt' + strgvarbscal)
-            listvarbscal = getattr(gdat, 'list' + strgvarbscal)
+        for namevarbscal in gdat.listnamevarbscal:
+            binsvarbscal = getattr(gdat, 'bins' + namevarbscal)
+            meanvarbscal = getattr(gdat, 'mean' + namevarbscal)
+            deltvarbscal = getattr(gdat, 'delt' + namevarbscal)
+            listvarbscal = getattr(gdat, 'list' + namevarbscal)
             histscalvarb = histogram(listvarbscal, bins=binsvarbscal)[0]
             
             pdfn = histogram(listvarbscal, bins=binsvarbscal)[0].astype(float)
@@ -1554,18 +1565,18 @@ def proc_post(gdat, prio=False):
             else:
                 strgtemp = 'post'
             
-            setattr(gdat, 'pdfn' + strgtemp + strgvarbscal, pdfn)
+            setattr(gdat, 'pdfn' + strgtemp + namevarbscal, pdfn)
         
         if not prio:
-            for strgvarbscal in gdat.liststrgvarbscal:
-                pdfnpost = getattr(gdat, 'pdfnpost' + strgvarbscal)
-                pdfnprio = getattr(gdat, 'pdfnprio' + strgvarbscal)
+            for namevarbscal in gdat.listnamevarbscal:
+                pdfnpost = getattr(gdat, 'pdfnpost' + namevarbscal)
+                pdfnprio = getattr(gdat, 'pdfnprio' + namevarbscal)
                 info = retr_info(pdfnpost, pdfnprio)
-                deltvarbscal = getattr(gdat, 'delt' + strgvarbscal)
+                deltvarbscal = getattr(gdat, 'delt' + namevarbscal)
                 infototl = sum(info * deltvarbscal)
             
-                print 'strgvarbscal'
-                print strgvarbscal
+                print 'namevarbscal'
+                print namevarbscal
                 print 'pdfnpost'
                 print pdfnpost
                 print 'pdfnprio'
@@ -1578,8 +1589,8 @@ def proc_post(gdat, prio=False):
                 print infototl
                 print
 
-                setattr(gdat, 'info' + strgvarbscal, info)
-                setattr(gdat, 'infototl' + strgvarbscal, infototl)
+                setattr(gdat, 'info' + namevarbscal, info)
+                setattr(gdat, 'infototl' + namevarbscal, infototl)
                 
     # post process samples
     ## bin element features
@@ -1694,7 +1705,16 @@ def proc_post(gdat, prio=False):
     # memory usage
     gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
     gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
-    
+   
+    # temp
+    if gdat.numbtrap > 0:
+        liststrgbins = ['quad', 'full']
+        for l in gdat.indxpopl:
+            plot_postbindmaps(gdat, l, 'cumu')
+            for strgbins in liststrgbins:
+                for strgfeatsign in gdat.liststrgfeatsign[l]:
+                    plot_postbindmaps(gdat, l, strgbins, strgfeatsign)
+
     path = gdat.pathoutpthis + 'pcat.h5'
     writoutp(gdat, path)
     os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
@@ -1725,11 +1745,21 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
     numbpert = indxparapert.size 
     
     gdatmodi.thissamp = copy(gdatmodi.thissamptemp)
+    
     for k in range(numbpert):
         gdatmodi.thissamp[indxparapert[k]] += stdvparapert[k]
     
+    # rescale
+    gdatmodi.nextsamp = copy(gdatmodi.thissamp)
+    gdatmodi.nextsampvarb = zeros_like(gdatmodi.thissamp) 
+    for k in gdat.indxfixpdist:
+        gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, '', gdatmodi.thissamp[k], k)
+    for k in range(numbpert):
+        rscl_elem(gdat, gdatmodi, indxparapert[k])
+    gdatmodi.thissamp = copy(gdatmodi.nextsamp)
+
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxsampcomp, gdatmodi.thissamp, 'this')
-    
+
     proc_samp(gdat, gdatmodi, 'this', fast=True)
    
     deltlpos = gdatmodi.thislpostotl - gdatmodi.thislpostotltemp
@@ -1790,7 +1820,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     deltparastep = 1e-5
 
     maxmstdv = 0.1
-    fudgstdv = 1e-7
+    fudgstdv = 1e0
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
@@ -1811,6 +1841,11 @@ def optihess(gdat, gdatmodi, indxprocwork):
     deltlpos = zeros((3, 3))
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
+    
+    print 'gdat.indxfixpprop'
+    print gdat.indxfixpprop
+    print 'gdat.indxstdppara'
+    print gdat.indxstdppara
 
     for k in gdat.indxpara:
         if k in gdat.indxfixpprop or k in concatenate(gdatmodi.thisindxsampcomp['comp']):
@@ -1819,6 +1854,20 @@ def optihess(gdat, gdatmodi, indxprocwork):
                 if n in gdat.indxfixpprop or n in concatenate(gdatmodi.thisindxsampcomp['comp']):
                     indxstdpseco = gdat.indxstdppara[n]
                     if k == n:
+                       
+                        if False:
+                            print 'k'
+                            print k
+                            print 'gdat.namepara[k]'
+                            print gdat.namepara[k]
+                            print 'n'
+                            print n
+                            print 'indxstdpfrst'
+                            print indxstdpfrst
+                            print 'indxstdpseco'
+                            print indxstdpseco
+                            print 
+                        
                         for a in [0, 2]:
                             # evaluate the posterior
                             deltlpos[a, 1] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffparaodim[a]]))
@@ -1827,6 +1876,13 @@ def optihess(gdat, gdatmodi, indxprocwork):
                             gdatmodi.cntrswep += 1
                         
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
+                        
+                        if False:
+                            print 'deltlpos'
+                            print deltlpos
+                            if gdatmodi.hess[indxstdpfrst, indxstdpseco] == 0.:
+                                raise Exception('')
+
                         if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
                             stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                             
@@ -1869,6 +1925,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
     print 'gdatmodi.hess'
     print gdatmodi.hess[:9, :9]
+
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
 
@@ -1889,6 +1946,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
             print 'gdat.namestdp[indx[k]]'
             print gdat.namestdp[indx[0][k]]
             print
+            #raise Exception('')
 
         gdatmodi.stdvstdpmatr[indx] = maxmstdv
             
