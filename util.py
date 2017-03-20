@@ -1131,7 +1131,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         else:
             rscl_elem(gdat, gdatmodi)
 
-
         # PSs
         gdatmodi.thislfctprop = 0.
         if gdat.propcomp:
@@ -1152,7 +1151,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             for l in gdat.indxpopl:
                 gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp['comp'][l]]
         
-
         # temp
         gdatmodi.thislfctprop = 0.
 
@@ -2292,7 +2290,7 @@ def setpinit(gdat, boolinitsetp=False):
             thisscal = 'logt'
         else:
             thisscal = 'self'
-        retr_axis(gdat, namevarbscal, minm, maxm, gdat.numbbinsplot, scal=thisscal)
+        retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=thisscal)
 
     gdat.lablfeat = {}
     gdat.dictglob = {}
