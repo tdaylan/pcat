@@ -646,7 +646,7 @@ def plot_chro(gdat):
     for k in range(gdat.numbchro):
         varb = gdat.listchro[:, k]
         #axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], linewidth=5, facecolor='none')
-        axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.5, facecolor='none')
+        axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.3)
 
     axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchro[where(gdat.listchro[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])

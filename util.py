@@ -2866,7 +2866,7 @@ def setpinit(gdat, boolinitsetp=False):
 
     ## marker opacity
     gdat.alphmrkr = 0.5
-    gdat.alphpnts = 0.7
+    gdat.alphpnts = 1.
     gdat.alphmaps = 1.
     
     # number of colorbar ticks in the maps

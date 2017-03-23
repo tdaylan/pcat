@@ -1973,15 +1973,6 @@ def optihess(gdat, gdatmodi, indxprocwork):
                         
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
                     
-                    print 'gdat.namepara[k]'
-                    print gdat.namepara[k]
-                    print 'deltlpos'
-                    print deltlpos
-                    print 'gdatmodi.hess[indxstdpfrst, indxstdpseco]'
-                    print gdatmodi.hess[indxstdpfrst, indxstdpseco]
-                    print
-                    print
-
                     if not isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]):
                         print 'Proposal scale estimate went infinite.'
                         print gdat.namepara[k]
