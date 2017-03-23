@@ -207,14 +207,13 @@ def plot_samp(gdat, gdatmodi, strg):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 if strg != 'true':
-                    plot_genemaps(gdat, gdatmodi, strg, 'llik', strgcbar='llik', thisindxener=i, thisindxevtt=m, stdv=stdv)
+                    plot_genemaps(gdat, gdatmodi, strg, 'llik', strgcbar='llikmaps', thisindxener=i, thisindxevtt=m, stdv=stdv)
                 plot_genemaps(gdat, gdatmodi, strg, 'modlcnts', strgcbar='datacnts', thisindxener=i, thisindxevtt=m, stdv=stdv)
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m, stdv=stdv)
         
     if gdat.elemtype == 'lens':
-        plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{subs}(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt') #\
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanmpolodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[1., 1e3], scalxaxi='logt', scalyaxi='logt')
-        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', ylim=[0.1, 1e4], scalxaxi='logt', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{sub}(k)$', limtydat=[1e-5, 1e-2], scalxaxi='logt', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', limtydat=[1e-1, 1e2], scalxaxi='logt', scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
         plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
 
@@ -592,7 +591,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strg + 'flat'), labl, titl)
         if strg == 'llik':
-            varbdraw = [gdat.maxmllikswep]
+            varbdraw = [gdat.maxmllik]
             labldraw = ['Maximum likelihood Sample']
         else:
             varbdraw = None
@@ -633,23 +632,23 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
 
 def plot_chro(gdat):
 
-    gdat.listchrototl *= 1e3
+    gdat.listchro *= 1e3
     indxchro = array([0, 1, 2, 4])
-    binstime = logspace(log10(amin(gdat.listchrototl[where(gdat.listchrototl > 0)])), log10(amax(gdat.listchrototl[:, indxchro])), 50)
+    binstime = logspace(log10(amin(gdat.listchro[where(gdat.listchro > 0)])), log10(amax(gdat.listchro[:, indxchro])), 50)
 
-    labl = ['Choice', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Posterior', 'Advance', 'Total']
-    listcolr = ['b', 'g', 'r', 'm', 'orange', 'cyan', 'yellow', 'black']
-    numblabl = len(labl)
+    gdat.listlegdchro = ['Total', 'Type', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Process', 'Posterior', 'Prior']
     figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
-    for k in range(numblabl):
-        varb = gdat.listchrototl[:, k]
-        axis.hist(varb, binstime, log=True, label=labl[k], color=listcolr[k], alpha=0.3)
+    #listcolr = ['b', 'g', 'r', 'm', 'orange', 'cyan', 'yellow', 'black']
+    #for k in range(gdat.numbchro):
+    #    varb = gdat.listchro[:, k]
+    #    axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], color=listcolr[k], alpha=0.3)
     
-    for k in range(numblabl):
-        varb = gdat.listchrototl[:, k]
-        axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], linewidth=5, facecolor='none')
+    for k in range(gdat.numbchro):
+        varb = gdat.listchro[:, k]
+        #axis.hist(varb, binstime, log=True, edgecolor=listcolr[k], linewidth=5, facecolor='none')
+        axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.5, facecolor='none')
 
-    axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchrototl[where(gdat.listchrototl[:, 0] > 0)[0], 0]))
+    axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchro[where(gdat.listchro[:, 0] > 0)[0], 0]))
     axis.set_xlim([amin(binstime), amax(binstime)])
     axis.set_xscale('log')
     axis.set_ylim([0.5, None])
@@ -657,36 +656,19 @@ def plot_chro(gdat):
     axis.set_xlabel('$t$ [ms]')
     
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'chrototl.pdf')
+    figr.savefig(gdat.pathdiag + 'chro.pdf')
     plt.close(figr)
 
-    #for k in range(numblabl):
-    #    figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
-    #    if k == numblabl - 1:
-    #        varb = gdat.listchrototl[:, 0] - sum(gdat.listchrototl[:, 1:], 1)
-    #    else:
-    #        varb = gdat.listchrototl[:, k]
-    #    axis.hist(varb, binstime, log=True)
-    #    axis.set_title(labl[k])
-    #    axis.set_xlim([amin(binstime), amax(binstime)])
-    #    axis.set_xscale('log')
-    #    axis.set_xlabel('$t$ [ms]')
-    #    axis.set_ylim([0.5, None])
-    #    figr.savefig(gdat.pathdiag + 'chro%04d.pdf' % k)
-    #    plt.close(figr)
-
-    gdat.listchroproc *= 1e3
+    gdat.listchro *= 1e3
    
-    if (gdat.listchroproc != 0).any():
-        listlabl = ['PSF Intp.', 'Variables', 'Pixel mesh', 'Energy mesh', 'PS flux', 'Total flux', 'Lens host', 'Lens source', 'PSF conv.', 'Counts', 'Unbinned', 'Likelihood']
-        numblabl = len(listlabl)
-        figr, axcl = plt.subplots(gdat.numbchroproc, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * numblabl / 3.))
-        maxmchroproc = amax(gdat.listchroproc)
-        minmchroproc = amin(gdat.listchroproc[where(gdat.listchroproc > 0)])
-        binstime = logspace(log10(minmchroproc), log10(maxmchroproc), 50)
+    if (gdat.listchro != 0).any() and False:
+        figr, axcl = plt.subplots(gdat.numbchro, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * gdat.numbchro / 3.))
+        maxmchro = amax(gdat.listchro)
+        minmchro = amin(gdat.listchro[where(gdat.listchro > 0)])
+        binstime = logspace(log10(minmchro), log10(maxmchro), 50)
     
-        for k in range(gdat.numbchroproc):
-            chro = gdat.listchroproc[where(gdat.listchroproc[:, k] > 0)[0], k]
+        for k in range(gdat.numbchro):
+            chro = gdat.listchro[where(gdat.listchro[:, k] > 0)[0], k]
             try:
                 axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
             except:
@@ -695,12 +677,12 @@ def plot_chro(gdat):
             axcl[k].set_ylim([0.5, None])
             axcl[k].set_ylabel(listlabl[k])
             axcl[k].set_xscale('log')
-            if k != gdat.numbchroproc - 1:
+            if k != gdat.numbchro - 1:
                 axcl[k].set_xticklabels([])
             axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
         axcl[-1].set_xlabel('$t$ [ms]')
         plt.subplots_adjust(hspace=0.05)
-        figr.savefig(gdat.pathdiag + 'chroproc.pdf')
+        figr.savefig(gdat.pathdiag + 'chro.pdf')
         plt.close(figr)
 
 
@@ -1026,7 +1008,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
 
 def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, \
                      scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, \
-                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, ylim=None, strgxaxitwin=None, lablxaxitwin=None, offslegd=None, tdim=False):
+                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, strgxaxitwin=None, lablxaxitwin=None, offslegd=None, tdim=False):
    
     if scal == None:
         if scalxaxi == None:
@@ -1113,9 +1095,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         if where(ydat > 0.)[0].size > 0:
             axis.set_yscale('log')
     
-    if ylim != None:
-        axis.set_ylim(ylim)
-
     axis.set_xlabel(lablxaxi)
     axis.set_ylabel(lablyaxi)
 
@@ -1168,7 +1147,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     if limtydat != None:
         axis.set_ylim(limtydat)
     else:
-        if histodim:
+        if histodim and strgydat[4:] in getattr(gdat, strgtype + 'liststrgfeatodimtotl'):
             axis.set_ylim(gdat.histylim)
         else:
             axis.set_ylim([amin(ydat), amax(ydat)])
@@ -1250,7 +1229,7 @@ def plot_scatspec(gdat, l, gdatmodi, plotdiff=False):
         if not plotdiff:
             axis.set_yscale('log')
         axis.set_xscale('log')
-        if gdat.enerbins:
+        if gdat.numbener > 1:
             axis.set_title(gdat.strgener[i])
         if plotdiff:
             limsyaxi = array([-100., 100.])
@@ -1532,25 +1511,15 @@ def plot_datacntshist(gdat):
         if gdat.numbener == 1:
             axrw = [axrw]
         for i, axis in enumerate(axrw):
-            
             datacntstemp = gdat.datacnts[i, :, m]
-            
-            maxmdatacntstemp = amax(datacntstemp)
-            minmdatacntstemp = 0.
-            gdat.binscntstemp = linspace(minmdatacntstemp, maxmdatacntstemp, 20)
-            meancntstemp = (gdat.binscntstemp[1:] + gdat.binscntstemp[0:-1]) / 2.
-            diffcntstemp = gdat.binscntstemp[1:] - gdat.binscntstemp[0:-1]
-            
-            datacntshist = axis.hist(datacntstemp, gdat.binscntstemp, color='b')[0]
-
-            init = [meancntstemp[argmax(datacntshist)], 1.]
-            
-            axis.set_xlim([amin(gdat.binscntstemp), amax(gdat.binscntstemp)])
+            axis.hist(datacntstemp, gdat.binsdatacnts)
+            axis.axvline(mean(datacntstemp), ls='--')
+            axis.set_xscale('log')
             if m == gdat.numbevtt - 1:
                 axis.set_xlabel(r'$k$')
-            if m == 0 and gdat.enerbins:
+            if m == 0 and gdat.numbener > 1:
                 axis.set_title(gdat.strgener[i])
-            if i == 0 and gdat.evttbins:
+            if i == 0 and gdat.numbevtt > 1:
                 axis.set_ylabel(gdat.strgevtt[m])
             axis.set_yscale('log')
 
@@ -1644,7 +1613,7 @@ def plot_mosa(gdat):
 
     # empty global object
     gdatmodi = tdpy.util.gdatstrt()
-    gdatmodi.thischroproc = zeros(gdat.numbchroproc)
+    gdatmodi.thischro = zeros(gdat.numbchro)
 
     # data structure to hold the indices of model PS to be compared to the reference catalog 
     gdatmodi.indxmodlpntscomp = [[] for l in gdat.indxpopl]
@@ -2032,9 +2001,9 @@ def plot_init(gdat):
                 path = gdat.pathinitintr + 'deflcutf.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')
 
-                spec = 1e-19 # [erg/cm^2/s]
-                listsize = array([0.1, 0.1, 0.1]) / gdat.anglfact
-                listindx = array([3., 4., 5.])
+                spec = 1e-17 # [erg/cm^2/s/A]
+                listsize = array([0.1, 0.1, 0.3, 0.1]) / gdat.anglfact
+                listindx = array([2., 4., 4., 10.])
                 listydat = []
                 listlegd = []
                 for size, indx in zip(listsize, listindx):
@@ -2072,7 +2041,7 @@ def plot_init(gdat):
                 
                 valulevl = linspace(6., 12., 20)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=9)
+                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=6, vmax=8)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
                 axis.clabel(cont, inline=1, fontsize=10)
                 axis.set_xlabel('$z_h$')
@@ -2108,10 +2077,22 @@ def plot_init(gdat):
                 figr.savefig(path)
                 plt.close(figr)
                 
+                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                factacut = logspace(-1., 2., 20)
+                masstcut = 1e7 * retr_masstcutfrommass(factacut)
+                axis.loglog(factacut, masstcut)
+                axis.set_xlabel(gdat.lablacuttotl)
+                axis.set_ylabel(gdat.lablmasstcuttotl)
+                axis.axhline(1e7, ls='--')
+                path = gdat.pathinitintr + 'masstcut.pdf'
+                plt.tight_layout()
+                figr.savefig(path)
+                plt.close(figr)
+                
+
             if gdat.evalcirc and gdat.elemtype == 'lght':
                 plot_eval(gdat)
-            return
-        
+    
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             
@@ -2128,7 +2109,7 @@ def plot_init(gdat):
     
             if gdat.correxpo:
                 figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
-                imag = retr_imag(gdat, axis, gdat.expo, '', 'expo', thisindxener=i, thisindxevtt=m)
+                imag = retr_imag(gdat, axis, gdat.expo, '', 'expomaps', thisindxener=i, thisindxevtt=m)
                 make_cbar(gdat, axis, imag, i)
                 plt.tight_layout()
                 figr.savefig(path)
