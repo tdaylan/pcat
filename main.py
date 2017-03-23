@@ -641,7 +641,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         minmflux = 1e0
     if gdat.elemtype == 'lens':
-        minmflux = 4e-4 / gdat.anglfact
+        minmflux = 1e-3 / gdat.anglfact
     setp_true(gdat, 'minmflux', minmflux)
     
     if gdat.exprtype == 'ferm':
@@ -1885,7 +1885,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     deltparastep = 1e-5
 
     maxmstdv = 0.1
-    fudgstdv = 0.1
+    fudgstdv = 0.04
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
