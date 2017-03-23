@@ -2198,7 +2198,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     retr_axis(gdat, 'flux', gdat.minmflux, gdat.maxmflux, gdat.numbfluxdistnorm - 1, scal='logt')
      
-    ## labels
+    ## labels and scales for variables
     if gdat.elemtype == 'lens':
         gdat.lablfracsubh = '$f_{sub}$'
         gdat.factfracsubhplot = 1.
@@ -2208,6 +2208,9 @@ def setpinit(gdat, boolinitsetp=False):
         
         gdat.lablmasshostbein = '$M_{h,E}$'
         gdat.factmasshostbeinplot = 1.
+    
+    gdat.scalmaxmnumbpnts = 'logt'
+    gdat.scalmedilliktotl = 'logt'
 
     gdat.lablener = 'E'
     gdat.lablenertotl = '$%s$ [%s]' % (gdat.lablener, gdat.strgenerunit)
@@ -2222,6 +2225,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablcurvunit = ''
     gdat.lablexpo = r'\epsilon'
     gdat.lablexpounit = gdat.strgenerunit
+    
+    gdat.labllliktotl = r'\mathcal{L}'
+    gdat.lablmedilliktotl = r'\mathcal{L}^{med}'
     
     gdat.lablasca = r'\theta_s'
     gdat.lablascaunit = gdat.lablgangunit
@@ -4928,6 +4934,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     if strg == 'next':
         setattr(gdatmodi, 'thislpriprop', lpri)
     
+    stopchro(gdat, gdatmodi, 'proc')
+    
     if fast:
         return
 
@@ -5313,8 +5321,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdatmodi.thisspecassc[l][:, temp] = dicttemp['spec'][l][:, indxmodlpnts[temp]]
             if gdat.elemtype == 'lens':
                 gdatmodi.thisspecassc[l][:, temp] = dicttemp['flux'][l][indxmodlpnts[temp]]
-    
-    stopchro(gdat, gdatmodi, 'proc')
     
     
 def retr_info(pdfnpost, pdfnprio):

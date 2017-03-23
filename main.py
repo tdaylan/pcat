@@ -205,7 +205,7 @@ def init( \
     
     if gdat.strgexpo == None:
         if gdat.elemtype == 'lens':
-            gdat.strgexpo = 1e3 / gdat.hubbexpofact
+            gdat.strgexpo = 2.2e3 / gdat.hubbexpofact
         else:
             gdat.strgexpo = 1.
 
@@ -1399,10 +1399,9 @@ def init( \
     else:
         gdat.calcllik = True
     
-    print 'gdat.stdvstdp'
-    print gdat.stdvstdp
-    print
-
+    if gdat.verbtype > 0:
+        print 'Sampling from the posterior...'
+        
     # run the sampler
     worksamp(gdat, lock)
     
@@ -1885,7 +1884,10 @@ def optihess(gdat, gdatmodi, indxprocwork):
     deltparastep = 1e-5
 
     maxmstdv = 0.1
-    fudgstdv = 0.04
+    if gdat.exprtype == 'ferm':
+        fudgstdv = 0.5
+    else:
+        fudgstdv = 0.04
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep

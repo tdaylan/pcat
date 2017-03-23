@@ -1762,10 +1762,10 @@ def plot_grap(plottype='igal', verbtype=0):
     if plottype == 'chan' or plottype == 'ngal':
         labl['ampldistslop'] = r'$\alpha$'
     if plottype == 'lens' or plottype == 'lensprim':
-        labl['defsdistslop'] = r'$\alpha$'
+        labl['defsdistslop'] = r'$\alpha_{\alpha_s}$'
     if plottype == 'lensprim':
-        labl['ascadistslop'] = r'$\lambda_s$'
-        labl['acutdistslop'] = r'$\lambda_\tau$'
+        labl['ascadistslop'] = r'$\lambda_{\theta_s}$'
+        labl['acutdistslop'] = r'$\lambda_{\theta_c}$'
     
     if plottype == 'igal':
         labl['expodistslop'] = r'$\vec{\tau_{E_c}}$'
@@ -1788,7 +1788,7 @@ def plot_grap(plottype='igal', verbtype=0):
         labl['defs'] = r'$\vec{\alpha_s}$'
     if plottype == 'lensprim':
         labl['asca'] = r'$\vec{\theta_s}$'
-        labl['acut'] = r'$\vec{\tau}$'
+        labl['acut'] = r'$\vec{\theta_c}$'
         
     if plottype == 'igal':
         labl['expo'] = r'$\vec{E_c}$'
