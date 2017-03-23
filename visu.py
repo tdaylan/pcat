@@ -1147,6 +1147,11 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     if limtydat != None:
         axis.set_ylim(limtydat)
     else:
+        # temp
+        if strg == 'true':
+            strgtype = 'true'
+        else:
+            strgtype = ''
         if histodim and strgydat[4:] in getattr(gdat, strgtype + 'liststrgfeatodimtotl'):
             axis.set_ylim(gdat.histylim)
         else:
