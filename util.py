@@ -2252,7 +2252,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablspecunit = gdat.lablfluxunit
     gdat.lablcnts = 'C'
     gdat.lablcntsunit = ''
-    gdat.labldeltllik = r'\Delta_a P(D|x)'
+    gdat.labldeltllik = r'\Delta_a \ln \mathcal{L}'
     gdat.labldeltllikunit = ''
     gdat.labldiss = r'\theta_{sa}'
     gdat.labldissunit = gdat.lablgangunit
@@ -2283,7 +2283,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.minmdots = 1e-7
     gdat.maxmdots = 1e-5
 
-    gdat.minmmcut = 1e7
+    gdat.minmmcut = 5e7
     gdat.maxmmcut = 1e10
     
     # scalar variables
