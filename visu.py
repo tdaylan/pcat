@@ -73,14 +73,14 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # deflection profiles
         if gdat.elemtype == 'lens':
-            xdat = gdat.binsanglplot * gdat.anglfact
+            xdat = gdat.binsanglplot[1:] * gdat.anglfact
             lablxdat = gdat.lablfeattotl['gang']
             for l in indxpopl:
                 listydat = []
                 listvlinfrst = []
                 listvlinseco = []
                 for k in arange(numbpnts[l]):
-                    listydat.append(retr_deflcutf(gdat.binsanglplot, sampvarb[indxsampcomp['flux'][l][k]], sampvarb[indxsampcomp['asca'][l][k]], \
+                    listydat.append(retr_deflcutf(gdat.binsanglplot[1:], sampvarb[indxsampcomp['flux'][l][k]], sampvarb[indxsampcomp['asca'][l][k]], \
                                                                                                                     sampvarb[indxsampcomp['acut'][l][k]]) * gdat.anglfact)
                     listvlinfrst.append(sampvarb[indxsampcomp['asca'][l][k]] * gdat.anglfact) 
                     listvlinseco.append(sampvarb[indxsampcomp['acut'][l][k]] * gdat.anglfact)
@@ -94,7 +94,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 path = pathtemp + 'deflsubhpop%d%s.pdf' % (l, strgswep)
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, \
                                                         colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
-    
+                
     ## PSF radial profile
     if gdat.elemtype == 'lght':
         for i in gdat.indxener:
@@ -210,7 +210,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m, stdv=stdv)
         
     if gdat.elemtype == 'lens':
-        plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{sub}(k)$', limtydat=[1e-5, 1e-2], scalxaxi='logt', scalyaxi='logt')
+        plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{sub}(k)$', limtydat=[1e-5, 1e-1], scalxaxi='logt', scalyaxi='logt')
         plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', limtydat=[1e-1, 1e2], scalxaxi='logt', scalyaxi='logt')
         print ''
         plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
@@ -2003,9 +2003,7 @@ def plot_init(gdat):
                 listydat.append(xdat * 0. + 0.05)
                 
                 path = gdat.pathinitintr + 'deflcutf.pdf'
-                # temp
-                #tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', drawdiag=True)
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', drawdiag=False)
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', drawdiag=True)
 
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
                 listsize = array([0.5, 1., 1., 1.]) / gdat.anglfact
