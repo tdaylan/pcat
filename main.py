@@ -687,10 +687,10 @@ def init( \
     if gdat.elemtype == 'lens':
         ### scale angular distance
         setp_truedefa(gdat, 'ascadistmean', [0.1 / gdat.anglfact, 0.3 / gdat.anglfact], popl=True)
-        setp_truedefa(gdat, 'ascadiststdv', [0.001 / gdat.anglfact, 0.01 / gdat.anglfact], popl=True)
+        setp_truedefa(gdat, 'ascadiststdv', [0.01 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
         ### cutoff angular distance
         setp_truedefa(gdat, 'acutdistmean', [0.4 / gdat.anglfact, 0.8 / gdat.anglfact], popl=True)
-        setp_truedefa(gdat, 'acutdiststdv', [0.001 / gdat.anglfact, 0.01 / gdat.anglfact], popl=True)
+        setp_truedefa(gdat, 'acutdiststdv', [0.01 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
     
     ## lensing
     setp_truedefa(gdat, 'lgalsour', [-gdat.maxmgang, gdat.maxmgang])
@@ -702,8 +702,8 @@ def init( \
     setp_truedefa(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
     setp_truedefa(gdat, 'ellpsour', [0., 0.3])
     for i in gdat.indxener:
-        setp_truedefa(gdat, 'spechostene%d' % i, array([1e-19, 1e-15]))
-    setp_truedefa(gdat, 'sizehost', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
+        setp_truedefa(gdat, 'spechostene%d' % i, array([1e-20, 1e-16]))
+    setp_truedefa(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_truedefa(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
     setp_truedefa(gdat, 'ellphost', [0., 0.5])
     setp_truedefa(gdat, 'sherhost', [0., 0.3])
@@ -772,9 +772,9 @@ def init( \
         setp_true(gdat, 'fluxdistnormbin%d' % k, fluxdistnorm[k], popl=True)
     
     setp_true(gdat, 'ascadistmean', 0.2 / gdat.anglfact, popl=True)
-    setp_true(gdat, 'ascadiststdv', 0.004 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
     setp_true(gdat, 'acutdistmean', 0.6 / gdat.anglfact, popl=True)
-    setp_true(gdat, 'acutdiststdv', 0.004 / gdat.anglfact, popl=True)
+    setp_true(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
         
     if gdat.numbener > 1:
         if gdat.exprtype == 'ferm':
@@ -794,7 +794,7 @@ def init( \
     
     if gdat.elemtype == 'lens':
         setp_true(gdat, 'beinhost', 1.5 / gdat.anglfact)
-        setp_true(gdat, 'sizesour', 0.5 / gdat.anglfact)
+        setp_true(gdat, 'sizesour', 0.3 / gdat.anglfact)
         setp_true(gdat, 'sizehost', 1. / gdat.anglfact)
         for i in gdat.indxener:
             setp_true(gdat, 'specsourene%d' % i, 1e-19)
@@ -852,17 +852,17 @@ def init( \
     gdat.scalconv = 'logt'
     gdat.cmapconv = 'Purples'
     
-    gdat.minminvm = -1e2
-    gdat.maxminvm = 1e2
-    gdat.scalinvm = 'asnh'
-    gdat.cmapinvm = 'BrBG'
+    gdat.minmmagn = -1e2
+    gdat.maxmmagn = 1e2
+    gdat.scalmagn = 'asnh'
+    gdat.cmapmagn = 'BrBG'
     
     gdat.minmdeflcomp = 1e-7
     gdat.maxmdeflcomp = 1e-4
     gdat.scaldeflcomp = 'logt'
     gdat.cmapdeflcomp = 'Oranges'
     
-    liststrgcbar = ['llikmaps', 'lpdfspatpriointp', 'conv', 'invm', 'deflcomp', 'expomaps']
+    liststrgcbar = ['llikmaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'expomaps']
     for strgcbar in liststrgcbar:
         retr_ticklabl(gdat, strgcbar)
     
@@ -870,13 +870,6 @@ def init( \
     #gdat.minmgangplot = 0.
     #gdat.maxmgangplot = gdat.maxmlgal
     
-    gdat.minmdeltllik = -1.
-    gdat.maxmdeltllik = 4.
-    gdat.minmdiss = 0.
-    gdat.maxmdiss = 3. * gdat.maxmgang
-    gdat.minmdots = 2e-7
-    gdat.maxmdots = 1e-5
-
     ## plot limits for element parameters
     for strgfeat in gdat.liststrgfeat:
         for strglimt in ['minm', 'maxm']:
@@ -1299,7 +1292,7 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', \
+    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     if gdat.probbrde < 1.:
         gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'jcbnfact', 'combfact']
@@ -1986,7 +1979,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
 
-    gdatmodi.stdvstdpmatr *= 2.38 / sqrt(gdat.numbpara) * fudgstdv
+    gdatmodi.stdvstdpmatr *= 2.38 / gdat.numbpara * fudgstdv
     
     indx = where(logical_not(isfinite(gdatmodi.stdvstdpmatr)))
     for k in range(indx[0].size):
@@ -2246,6 +2239,8 @@ def work(pathoutpthis, lock, indxprocwork):
     # initialize the worker sampler
     gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thisdeltlliktotl = zeros(1)
+    gdatmodi.thisstdvsamp = zeros(gdat.numbpara)
+    gdatmodi.thisaccpprob = zeros(1)
     gdatmodi.thischro = zeros(gdat.numbchro)
     gdatmodi.thisaccp = zeros(1, dtype=bool)
     gdatmodi.thisaccppsfn = zeros(1, dtype=bool)
@@ -2535,17 +2530,17 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 
             
             # evaluate the acceptance probability
-            gdatmodi.accpprob = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
                                                                                                                                 gdatmodi.thisjcbnfact + gdatmodi.thiscombfact)
             
         else:
-            gdatmodi.accpprob = 0.
+            gdatmodi.thisaccpprob[0] = 0.
     
         # accept or reject the proposal
         if gdat.optillik:
             booltemp = gdatmodi.thisaccpprop and gdatmodi.thisdeltlliktotl > 0.
         else:
-            booltemp = gdatmodi.accpprob >= rand()
+            booltemp = gdatmodi.thisaccpprob[0] >= rand()
         if booltemp:
             if gdat.verbtype > 1:
                 print 'Accepted.'
@@ -2576,7 +2571,11 @@ def work(pathoutpthis, lock, indxprocwork):
         
         # save the execution time for the sweep
         stopchro(gdat, gdatmodi, 'totl')
-       
+        
+        workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.thisaccpprob[0]
+        if gdatmodi.propwith:
+            workdict['liststdvsamp'][gdatmodi.cntrswep, :] = gdatmodi.thisstdvsamp
+
         # log the progress
         if gdat.verbtype > 0:
             gdatmodi.nextpercswep = 10 * int(10. * gdatmodi.cntrswep / gdat.numbswep) 
@@ -2589,11 +2588,12 @@ def work(pathoutpthis, lock, indxprocwork):
                     fact = 100. / float(maxm - minm)
                     print 'Sweep number %d' % gdatmodi.cntrswep
                     print '%3d%% completed.' % gdatmodi.nextpercswep
+                    indxswepintv = arange(minm, maxm)
                     for k in gdat.indxproptype:
-                        numb = where(workdict['listindxproptype'][minm:maxm] == k)[0].size
+                        numb = where(workdict['listindxproptype'][indxswepintv] == k)[0].size
                         if numb > 10:
-                            fact =  100. / float(where(workdict['listindxproptype'][minm:maxm] == k)[0].size)
-                            accp = fact * where(logical_and(workdict['listaccp'][minm:maxm], workdict['listindxproptype'][minm:maxm] == k))[0].size
+                            fact =  100. / float(where(workdict['listindxproptype'][indxswepintv] == k)[0].size)
+                            accp = fact * where(logical_and(workdict['listaccp'][indxswepintv], workdict['listindxproptype'][indxswepintv] == k))[0].size
                             print '%s acceptance rate: %.3g%%' % (gdat.legdproptype[k], accp)
                         
                     print 'Number of elements:'
@@ -2602,7 +2602,14 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'chro'
                     for name, valu in gdat.indxchro.iteritems():
                         print '%s: %.3g msec' % (name, gdatmodi.thischro[valu] * 1e3)
-                    print
+
+                    corrstdv = mean((workdict['liststdvsamp'][indxswepintv, :] - mean(workdict['liststdvsamp'][indxswepintv, :], axis=0)) * \
+                                                                  (workdict['listaccpprob'][indxswepintv, 0] - mean(workdict['listaccpprob'][indxswepintv, 0]))[:, None], axis=0)
+                    corrstdv /= std(workdict['liststdvsamp'][indxswepintv, :], axis=0) * std(workdict['listaccpprob'][indxswepintv, 0])
+                    print 'Acceptance correlations: '
+                    for k in gdat.indxstdp:
+                        print '%20s: %.3g ' % (gdat.namepara[k], corrstdv[k])
+                    print 
 
         if gdat.verbtype > 1:
             print
@@ -2626,10 +2633,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.thisstdvstdp
     
             if gdat.optiprop:
-                print 'hey'
-                print 'gdatmodi.accpprob'
-                print gdatmodi.accpprob
-                if gdatmodi.accpprob[gdatmodi.cntrstdpmodi] > 0.75:
+                if gdatmodi.thisaccpprob[gdatmodi.cntrstdpmodi] > 0.75:
                     gdatmodi.thisstdvstdp[gdatmodi.cntrstdpmodi] = gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi]
                 gdatmodi.cntrstdpmodi += 1
                 if gdatmodi.cntrstdpmodi == gdat.numbstdp:

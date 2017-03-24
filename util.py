@@ -957,16 +957,18 @@ def retr_gaus(gdat, gdatmodi, indxsamp, stdv, inpl=False):
         else:
             samp = gdatmodi.thissamp
         if isinstance(stdv, float):
-            gdatmodi.nextsamp[indxsamp] = samp[indxsamp] + normal(scale=stdv)
+            gdatmodi.thisstdvsamp[indxsamp] = normal(scale=stdv)
             if rand() < gdat.fracproprand:
-                gdatmodi.nextsamp[indxsamp] += randn()
+                gdatmodi.thisstdvsamp[indxsamp] += randn()
         else:
             for k in range(stdv.size):
-                gdatmodi.nextsamp[indxsamp[k]] = samp[indxsamp[k]] + normal(scale=stdv[k])
+                gdatmodi.thisstdvsamp[indxsamp[k]] = normal(scale=stdv[k])
                 if rand() < gdat.fracproprand:
-                    gdatmodi.nextsamp[indxsamp[k]] += randn()
+                    gdatmodi.thisstdvsamp[indxsamp[k]] += randn()
+
+        gdatmodi.nextsamp[indxsamp] = samp[indxsamp] + gdatmodi.thisstdvsamp[indxsamp]
         gdatmodi.nextsamp[indxsamp] = gdatmodi.nextsamp[indxsamp] % 1.
-            
+
        
 def retr_angldistunit(gdat, lgal, bgal, indxpixltemp, retranglcosi=False):
    
@@ -2114,15 +2116,24 @@ def retr_massfromdeflscal(gdat, adissour, adishost, adishostsour, anglscal, angl
     critmden = retr_critmden(gdat, adissour, adishost, adishostsour)
     
     fraccutf = anglcutf / anglscal
-    massfromdeflscal = pi * anglscal * adishost**2 * critmden / (1. - log(2.)) * fraccutf**2 / (fraccutf**2 + 1.)**2 * \
+    massfromdeflscal = pi * adishost**2 * critmden * anglscal / (1. - log(2.)) * fraccutf**2 / (fraccutf**2 + 1.)**2 * \
                                                                                 ((fraccutf**2 - 1.) * log(fraccutf) + fraccutf * pi - (fraccutf**2 + 1.))
         
     return massfromdeflscal
 
 
-def retr_masstcutfrommass(acut):
+def retr_mcut(gdat, defs, asca, acut):
     
-    masstcut =  acut**2 / (acut**2 + 1.)**2 * ((acut**2 - 1.) * log(acut) + acut * pi - (acut**2 + 1.))
+    massscal = defs * pi * gdat.adishost**2 * gdat.critmden * asca / (1. - log(2.))
+    factacut = acut / asca
+    mcut = massscal * retr_masstcutfrommass(factacut)
+    
+    return mcut
+
+
+def retr_masstcutfrommass(factacut):
+    
+    masstcut = factacut**2 / (factacut**2 + 1.)**2 * ((factacut**2 - 1.) * log(factacut) + factacut * pi - (factacut**2 + 1.))
 
     return masstcut
 
@@ -2231,11 +2242,11 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.lablasca = r'\theta_s'
     gdat.lablascaunit = gdat.lablgangunit
-    gdat.lablacut = r'\tau_c'
-    gdat.lablacutunit = ''
+    gdat.lablacut = r'\theta_c'
+    gdat.lablacutunit = gdat.lablgangunit
     
-    gdat.lablmasstcut = r'M_{\tau}'
-    gdat.lablmasstcutunit = r'$M_{\odot}$'
+    gdat.lablmcut = r'M_c'
+    gdat.lablmcutunit = r'$M_{\odot}$'
     
     gdat.lablspec = gdat.lablflux
     gdat.lablspecunit = gdat.lablfluxunit
@@ -2265,20 +2276,27 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'lens':
         gdat.strgelem = 'Subhalo'
     
-    gdat.minmmass = 1e6
-    gdat.maxmmass = 1e10
+    gdat.minmdeltllik = -1.
+    gdat.maxmdeltllik = 4.
+    gdat.minmdiss = 0.
+    gdat.maxmdiss = 3. * gdat.maxmgang
+    gdat.minmdots = 1e-7
+    gdat.maxmdots = 1e-5
+
+    gdat.minmmcut = 1e7
+    gdat.maxmmcut = 1e10
     
     # scalar variables
     gdat.minmfracsubh = 0.
     gdat.maxmfracsubh = 0.3
     gdat.scalfracsubh = 'self'
     
-    gdat.minmmasshostbein = gdat.minmmass
-    gdat.maxmmasshostbein = gdat.maxmmass
+    gdat.minmmasshostbein = 1e10
+    gdat.maxmmasshostbein = 1e14
     gdat.scalmasshostbein = 'self'
     
-    gdat.minmmasssubhtotl = gdat.minmmass
-    gdat.maxmmasssubhtotl = gdat.maxmmass
+    gdat.minmmasssubhtotl = 1e8
+    gdat.maxmmasssubhtotl = 1e10
     gdat.scalmasssubhtotl = 'self'
 
     # set up the indices of the fitting model
@@ -2342,13 +2360,14 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.lablfeatunit[strgfeat] != '':
             gdat.lablfeatunit[strgfeat] = ' [%s]' % gdat.lablfeatunit[strgfeat]
         gdat.lablfeattotl[strgfeat] = '$%s$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat])
-        if strgfeat == 'flux' and gdat.elemtype == 'lens' or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or strgfeat == 'diss':
+        if strgfeat == 'flux' and gdat.elemtype == 'lens' or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or \
+                                                                                                    strgfeat == 'diss' or strgfeat == 'asca' or strgfeat == 'acut':
             gdat.dictglob['fact' + strgfeat + 'plot'] = gdat.anglfact
         else:
             gdat.dictglob['fact' + strgfeat + 'plot'] = 1.
         setattr(gdat, 'numb' + strgfeat + 'plot', 20)
         
-        if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'cnts' or strgfeat == 'dots':
+        if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'cnts' or strgfeat == 'dots' or strgfeat == 'mcut':
             gdat.dictglob['scal' + strgfeat + 'plot'] = 'logt'
         else:
             gdat.dictglob['scal' + strgfeat + 'plot'] = 'self'
@@ -2378,8 +2397,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.adisobjt = interp1d_pick(reds, adis)
         h5f.close()
 
-        gdat.redshost = 0.5
-        gdat.redssour = 2.
+        gdat.redshost = 0.2
+        gdat.redssour = 1.
         gdat.adishost = gdat.adisobjt(gdat.redshost) * 1e3 # [kpc]
         gdat.adissour = gdat.adisobjt(gdat.redssour) * 1e3 # [kpc]
         gdat.adishostsour = gdat.adissour - (1. + gdat.redshost) / (1. + gdat.redssour) * gdat.adishost
@@ -2387,8 +2406,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.factnewtlght = 2.09e16 # Msun / kpc
         gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         gdat.critmden = retr_critmden(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
-        retr_axis(gdat, 'mass', gdat.minmmass, gdat.maxmmass, gdat.numbbinsplot)
-        retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, gdat.numbbinsplot)
+        
+        retr_axis(gdat, 'mcut', gdat.minmmcut, gdat.maxmmcut, gdat.numbbinsplot)
+        
+        # temp
+        #retr_axis(gdat, 'bein', gdat.minmflux, gdat.maxmflux, gdat.numbbinsplot)
 
     gdat.listlablcompfrac = deepcopy(gdat.nameback)
     if gdat.elemtype == 'lght':
@@ -3223,7 +3245,7 @@ def retr_indxsamp(gdat, strgpara=''):
         if gdat.numbener > 1:
             liststrgfeat += ['sind']
     if gdat.elemtype == 'lens':
-        liststrgfeat += ['asca', 'acut', 'diss', 'dots']
+        liststrgfeat += ['mcut', 'asca', 'acut', 'diss', 'dots']
 
     liststrgcomp = [[] for l in indxpopl]
     listscalcomp = [[] for l in indxpopl]
@@ -3264,7 +3286,7 @@ def retr_indxsamp(gdat, strgpara=''):
             liststrgcomp[l] += ['asca', 'acut']
             listscalcomp[l] += ['gaus', 'gaus']
             liststrgfeatprio[l] += ['asca', 'acut']
-            liststrgfeatodim[l] += ['diss', 'dots']
+            liststrgfeatodim[l] += ['mcut', 'asca', 'acut', 'diss', 'dots']
         
         for strgfeat in liststrgfeatodim[l]:
             if strgfeat != 'lgal' and strgfeat != 'bgal':
@@ -3610,8 +3632,8 @@ def setp_fixp(gdat, strgpara=''):
             try:
                 indx = liststrgcomp[l].index(strgcomp)
                 if listscalcomp[l][indx] == 'gaus':
-                    minmtemp = getattr(gdat, 'minm' + strgcomp + 'distmeanpop%d' % l) - 3. * getattr(gdat, 'maxm' + strgcomp + 'diststdvpop%d' % l)
-                    maxmtemp = getattr(gdat, 'maxm' + strgcomp + 'distmeanpop%d' % l) + 3. * getattr(gdat, 'maxm' + strgcomp + 'diststdvpop%d' % l)
+                    minmtemp = getattr(gdat, 'minm' + strgcomp + 'distmeanpop%d' % l) - 2. * getattr(gdat, 'maxm' + strgcomp + 'diststdvpop%d' % l)
+                    maxmtemp = getattr(gdat, 'maxm' + strgcomp + 'distmeanpop%d' % l) + 2. * getattr(gdat, 'maxm' + strgcomp + 'diststdvpop%d' % l)
                     minm = min(minmtemp, minm)
                     maxm = max(maxmtemp, maxm)
             except:
@@ -4430,7 +4452,7 @@ def retr_deflcutf(angl, deflscal, anglscal, anglcutf, asym=False):
     
     fact = zeros_like(fracscal)
     indxlowr = where(fracscal < 1.)[0]
-    indxuppr = where(fracscal > 1.)[0]
+    indxuppr = where(fracscal >= 1.)[0]
     fact[indxlowr] = arccosh(1. / fracscal[indxlowr]) / sqrt(1. - fracscal[indxlowr]**2)
     fact[indxuppr] = arccos(1. / fracscal[indxuppr]) / sqrt(fracscal[indxuppr]**2 - 1.)
     
@@ -4443,7 +4465,21 @@ def retr_deflcutf(angl, deflscal, anglscal, anglcutf, asym=False):
                 pi * fraccutf + (fraccutf**2 - 1.) * log(fraccutf) + sqrt(fracscal**2 + fraccutf**2) * (-pi + (fraccutf**2 - 1.) / fraccutf * \
                 log(fracscal / (sqrt(fracscal**2 + fraccutf**2) + fraccutf))))
         deflcutf *= factcutf
-    
+       
+        # temp
+        #print 'indxlowr'
+        #print indxlowr
+        #print 'indxuppr'
+        #print indxuppr
+        #print 'fact'
+        #print fact
+        #print 'fraccutf'
+        #print fraccutf
+        #print 'factcutf'
+        #print factcutf
+        #print 'deflcutf'
+        #print deflcutf
+
     return deflcutf
 
 
@@ -5033,11 +5069,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             ### convergence
             deflelem = deflelem.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
         
-            invm = retr_invm(gdat, defl) 
+            magn = 1. / retr_invm(gdat, defl) 
             conv = retr_conv(gdat, defl) 
             convelem = retr_conv(gdat, deflelem) 
-            
-            invm = retr_invm(gdat, defl) 
             
             convpsec = retr_psec(gdat, conv)
             convpsecelem = retr_psec(gdat, convelem)
@@ -5047,7 +5081,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             histdefl = histogram(defl, bins=gdat.binsdeflplot)[0]
             histdeflelem = histogram(deflelem, bins=gdat.binsdeflelemplot)[0]
             
-            setattr(gdatobjt, strg + 'invm', invm)
+            setattr(gdatobjt, strg + 'magn', magn)
             setattr(gdatobjt, strg + 'conv', conv)
             setattr(gdatobjt, strg + 'convelem', convelem)
             setattr(gdatobjt, strg + 'convpsec', convpsec)
@@ -5104,6 +5138,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 
                 lensfluxmean = mean(sum(lensflux, 3), 0)
                 
+                for l in range(numbpopl):
+                    dicttemp['mcut'][l] = retr_mcut(gdat, dicttemp['flux'][l], dicttemp['asca'][l], dicttemp['acut'][l])
+                
                 #### dot product with the source flux gradient
                 for l in range(numbpopl):
                     grad = dstack((gradient(lensfluxmean, gdat.sizepixl, axis=0), gradient(lensfluxmean, gdat.sizepixl, axis=1)))
@@ -5134,25 +5171,25 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener, gdat.numbevtt))
                 else:
                     temp = zeros((numbpopl, gdat.numbbinsplot))
-                dicttemp[strgfeat + 'hist'] = temp
+                dicttemp['hist' + strgfeat] = temp
             
             for strgfeat in gdat.liststrgfeat:
                 for l in range(numbpopl):
                     if strgfeat == 'spec':
                         for i in gdat.indxener:
-                            dicttemp[strgfeat + 'hist'][l, :, i] = histogram(dicttemp['spec'][l][i, indxmodlpntscomp[l]], gdat.binsspecplot[i, :])[0]
+                            dicttemp['hist' + strgfeat][l, :, i] = histogram(dicttemp['spec'][l][i, indxmodlpntscomp[l]], gdat.binsspecplot[i, :])[0]
                     elif strgfeat == 'cnts':
                         for i in gdat.indxener:
                             for m in gdat.indxevtt:
-                                dicttemp[strgfeat + 'hist'][l, :, i, m] = histogram(dicttemp['cnts'][l][i, indxmodlpntscomp[l], m], gdat.binscnts[i, :])[0]
+                                dicttemp['hist' + strgfeat][l, :, i, m] = histogram(dicttemp['cnts'][l][i, indxmodlpntscomp[l], m], gdat.binscnts[i, :])[0]
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expo' and spectype[l] != 'expo'):
                         bins = getattr(gdat, 'bins' + strgfeat + 'plot')
-                        dicttemp[strgfeat + 'hist'][l, :] = histogram(dicttemp[strgfeat][l][indxmodlpntscomp[l]], bins)[0]
+                        dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat][l][indxmodlpntscomp[l]], bins)[0]
                 
             #### two dimensional
             for strgfrst in gdat.liststrgfeatodimtotl:
                 for strgseco in gdat.liststrgfeatodimtotl:
-                    dicttemp[strgfrst + strgseco + 'hist'] = zeros((numbpopl, gdat.numbbinsplot, gdat.numbbinsplot))
+                    dicttemp['hist' + strgfrst + strgseco] = zeros((numbpopl, gdat.numbbinsplot, gdat.numbbinsplot))
             
             for l in indxpopl:
                 for a, strgfrst in enumerate(gdat.liststrgfeatodim[l]):
@@ -5160,13 +5197,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         if a < b:
                             binsfrst = getattr(gdat, 'bins' + strgfrst + 'plot')
                             binsseco = getattr(gdat, 'bins' + strgseco + 'plot')
-                            dicttemp[strgfrst + strgseco + 'hist'][l, :, :] = histogram2d(dicttemp[strgfrst][l][indxmodlpntscomp[l]], \
+                            dicttemp['hist' + strgfrst + strgseco][l, :, :] = histogram2d(dicttemp[strgfrst][l][indxmodlpntscomp[l]], \
                                                                                                         dicttemp[strgseco][l][indxmodlpntscomp[l]], [binsfrst, binsseco])[0]
-                            setattr(gdatobjt, strg + strgfrst + strgseco + 'hist', dicttemp[strgfrst + strgseco + 'hist'])
+                            setattr(gdatobjt, strg + 'hist' + strgfrst + strgseco, dicttemp['hist' + strgfrst + strgseco])
             
             ### priors on element parameters and features
             for strgfeat in gdat.liststrgfeat:
-                dicttemp[strgfeat + 'histprio'] = empty((numbpopl, gdat.numbbinsplotprio))
+                dicttemp['hist' + strgfeat + 'prio'] = empty((numbpopl, gdat.numbbinsplotprio))
             
                 for l in range(numbpopl):
                     if strgfeat in gdat.liststrgfeatprio[l]:
@@ -5222,7 +5259,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             print 
 
                         if booltemp:
-                            dicttemp[strgfeat + 'histprio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
+                            dicttemp['hist' + strgfeat + 'prio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
         
         for strgfeat in liststrgfeat:
             # temp
@@ -5230,8 +5267,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 setattr(gdatobjt, strg + strgfeat, dicttemp[strgfeat])
 
         for strgfeat in gdat.liststrgfeat:
-            setattr(gdatobjt, strg + strgfeat + 'hist', dicttemp[strgfeat + 'hist'])
-            setattr(gdatobjt, strg + strgfeat + 'histprio', dicttemp[strgfeat + 'histprio'])
+            setattr(gdatobjt, strg + 'hist' + strgfeat, dicttemp['hist' + strgfeat])
+            setattr(gdatobjt, strg + 'hist' + strgfeat + 'prio', dicttemp['hist' + strgfeat + 'prio'])
 
         ### PS indices to compare with the reference catalog
         if strg == 'this' and gdat.numbtrap > 0 and gdat.trueinfo:
