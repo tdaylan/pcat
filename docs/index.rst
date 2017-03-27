@@ -32,15 +32,16 @@ or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ an
 
 Features
 ----------
-Compared to mainstream Bayesian inference methods, PCAT has a series of desirable features.
+Compared to mainstream Bayesian inference methods, PCAT has a series of desirable features. It
 
 - samples from the space of catalogs given some observation, unlike conventional cataloging, which estimates the most likely catalog,
-- allows marginalization over all relevant nuisance parameters in the problem, including the dimensionality of the nuisance.
-- reveals potentially non-Gaussian within and across model covariances
+- allows marginalization over all relevant nuisance parameters in the problem, including the dimensionality of the nuisance,
+- reveals potentially non-Gaussian within and across model covariances,
 - constrains element population characteristics via hierarchical priors,
-- is a Bayesian framework, because point estimates fail in nearly degenerate likelihood topologies
-- implements Occam's razor, i.e., model parsimony, through detailed balance across models, 
-- does not discard information contained in low-significance :math:`(< 4 \sigma)` fluctuations in the observed dataset,
+- is a Bayesian framework, because point estimates fail in nearly degenerate likelihood topologies,
+- implements Occam's razor (model parsimony) through natural priors on the number of degrees of freedom,
+- strictly respects detailed across models, 
+- does not discard information contained in low-significance :math:`(< 5 \sigma)` fluctuations in the observed dataset,
 - reduces to a deterministic cataloger when the labeling degeneracy is explicitly broken,
 - simultaneously infers the PSF and the level of diffuse background.
 
