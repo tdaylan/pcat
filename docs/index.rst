@@ -1,9 +1,9 @@
 Welcome to PCAT's documentation!
 ================================
 
-When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of objects whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different number of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidence. Yet another is to take samples from the union of the hypotheses using a set of transdimensional jumps across models. This is what PCAT (Probabilistic Cataloger) is designed for.
+When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of elements whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different numbers of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidences. Yet another is to take samples from the union of these models (hereafter, **the metamodel**) using a set of transdimensional jumps across models. This is what PCAT (Probabilistic Cataloger) is designed for.
 
-PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, submitted to ApJ. In astrophysical applications, given the output of a photon counting experiment, it can be used to sample from the **catalog space**, i.e., the hypothesis space of a model with a variable number of components. Alternatively, it can be used as a general purpose Poisson mixture sampler to infer clusters in a dataset.
+PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, accepted to ApJ. In astrophysical applications, given the output of a photon counting experiment, it can be used to sample from **the catalog space**. Alternatively, it can be used as a general purpose mixture sampler to infer or marginalize over elements in Poisson distributed data.
 
 .. toctree::
    :maxdepth: 4
@@ -32,7 +32,7 @@ or download `the latest release <https://github.com/tdaylan/pcat/releases/>`_ an
 
 Features
 ----------
-Compared to mainstream point source inference methods, PCAT has a series of desirable features.
+Compared to mainstream Bayesian inference methods, PCAT has a series of desirable features.
 
 - samples from the space of catalogs given some observation, unlike conventional cataloging, which estimates the most likely catalog,
 - allows marginalization over all relevant nuisance parameters in the problem, including the dimensionality of the nuisance.
