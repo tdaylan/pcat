@@ -3098,6 +3098,9 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.numbproptype = gdat.nameproptype.size
     gdat.indxproptype = arange(gdat.numbproptype)
+    
+    # data structures for JIT
+    gdat.deflelem = zeros((gdat.numbpixl, 2))
 
    
 def setpfinl(gdat, boolinitsetp=False):
@@ -3118,6 +3121,61 @@ def setpfinl(gdat, boolinitsetp=False):
 
     if amin(gdat.datacnts) < 0. and boolinitsetp:
         print 'Negative counts!'
+
+    if gdat.jitt:
+        gdat.llik = empty_like(gdat.datacnts)
+        modlcnts = zeros_like(gdat.datacnts)
+        gdat.numbthre = 4
+        gdat.indxthre = arange(gdat.numbthre)
+        gdat.sizechun = (gdat.numbpixl + gdat.numbthre - 1) // gdat.numbthre
+        gdat.llikchun = [gdat.llik[:, k*gdat.sizechun:(k+1)*gdat.sizechun, :] for k in gdat.indxthre]
+        gdat.datacntschun = [gdat.datacnts[:, k*gdat.sizechun:(k+1)*gdat.sizechun, :] for k in gdat.indxthre]
+        timefunc(None, "numpy (1 thread)", retr_llik_nump, gdat, modlcnts)
+        timefunc("numba (1 thread)", retr_llik_sequ, gdat.llik, gdat.datacnts, modlcnts)
+        timefunc("numba (%d threads)" % gdat.numbthre, retr_llik_mult, gdat, modlcnts)
+
+
+def retr_llik_nump(gdat, modlcnts):
+    
+    llik = gdat.datacnts * log(modlcnts) - modlcnts
+    
+    return llik
+
+
+@jit(nopython=True, nogil=True)
+def retr_llik_sequ(llik, datacnts, modlcnts):
+    
+    for i in range(llik.shape[0]):
+        for j in range(llik.shape[1]):
+            for m in range(llik.shape[2]):
+                llik[i, j, m] = datacnts[i, j, m] * log(modlcnts[i, j, m]) - modlcnts[i, j, m]
+    
+
+def retr_llik_mult(gdat, modlcnts):
+    
+    listchun = []
+    for k in gdat.indxthre:
+        listchun.append([gdat.llikchun[k], gdat.datacntschun[k], modlcnts[:, k*gdat.sizechun:(k+1)*gdat.sizechun, :]])
+    threads = [threading.Thread(target=retr_llik_sequ, args=chun) for chun in listchun]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+
+def timefunc(name, func, *args, **kwargs):
+
+    func(*args, **kwargs)
+    minm = 1e10
+    for k in range(5):
+        timeinit = time.clock()
+        func(*args, **kwargs)
+        timefinl = time.clock()
+        timediff = timefinl - timeinit
+        minm = min(timediff, minm)
+    
+    print 'Timing %s...' % name
+    print '%.3g ms' % (1e3 * (timefinl - timeinit))
 
 
 def retr_listconc(thislist):
@@ -4495,14 +4553,22 @@ def stopchro(gdat, gdatmodi, name):
         gdatmodi.thischro[gdat.indxchro[name]] = gdat.functime() - gdatmodi.thischro[gdat.indxchro[name]]
 
 
-def retr_defl(gdat, lgal, bgal, bein, ellp, angl, rcor=0., asca=None, acut=None, indxpixltemp=None):
+def retr_defl(gdat, *listargs, **dictargskeyw):
+    
+    defl = retr_defl_jitt(gdat.indxpixl, gdat.lgalgrid, gdat.bgalgrid, *listargs, **dictargskeyw)
+
+    return defl
+
+    
+#@jit(nopython=True, nogil=True)
+def retr_defl_jitt(indxpixl, lgalgrid, bgalgrid, lgal, bgal, bein, ellp, angl, rcor=0., asca=None, acut=None, indxpixltemp=None):
     
     if indxpixltemp == None:
-        indxpixltemp = gdat.indxpixl
+        indxpixltemp = indxpixl
     
     # translate the grid
-    lgaltran = gdat.lgalgrid[indxpixltemp] - lgal
-    bgaltran = gdat.bgalgrid[indxpixltemp] - bgal
+    lgaltran = lgalgrid[indxpixltemp] - lgal
+    bgaltran = bgalgrid[indxpixltemp] - bgal
     
     if acut != None:
         angl = sqrt(lgaltran**2 + bgaltran**2)
@@ -4601,6 +4667,13 @@ def retr_spatprio(gdat, spatdistcons, pdfnspatpriotemp):
     lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binsbgalcart, gdat.binslgalcart, lpdfspatprio)
     
     return lpdfspatprio, lpdfspatprioobjt
+
+
+@jit(nopython=True, nogil=True)
+def retr_deflelem_jitt(deflelem, indxpixl, lgalgrid, bgalgrid, numbpntsconc, lgalconc, bgalconc, defsconc, ascaconc, acutconc):
+    
+    for k in range(numbpntsconc):
+        deflelem[:] += retr_defl_jitt(indxpixl, lgalgrid, bgalgrid, lgalconc[k], bgalconc[k], defsconc[k], 0., 0., asca=ascaconc[k], acut=acutconc[k])
 
 
 def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
@@ -4879,19 +4952,28 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             
             ## subhalos
             if numbpntsconc > 0 and not raww:
-                deflelem = zeros((gdat.numbpixl, 2))
-                for k in range(numbpntsconc):
-                    # temp -- fix truncation
-                    if gdat.evalcirc == 'full':
-                        indxpixltemp = gdat.indxpixl
-                    else:
-                        indxpixlpnts = retr_indxpixl(gdat, bgalconc[k], lgalconc[k])
-                        indxproxtemp = digitize(defsconc[k], gdat.binsprox) - 1
-                        indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
-                        if isinstance(indxpixltemp, int):
+                if gdat.jitt:
+                    timefunc('retr_deflelem_jitt', retr_deflelem_jitt, gdat.deflelem, gdat.indxpixl, gdat.lgalgrid, \
+                                                                                gdat.bgalgrid, numbpntsconc, lgalconc, bgalconc, defsconc, ascaconc, acutconc)
+                    retr_deflelem_jitt(gdat.deflelem, gdat.indxpixl, gdat.lgalgrid, gdat.bgalgrid, numbpntsconc, lgalconc, bgalconc, defsconc, ascaconc, acutconc)
+                    print 'gdat.deflelem'
+                    summgene(gdat.deflelem)
+                else:        
+                    deflelem = zeros((gdat.numbpixl, 2))
+                    for k in range(numbpntsconc):
+                        # temp -- fix truncation
+                        if gdat.evalcirc == 'full':
                             indxpixltemp = gdat.indxpixl
-                    deflelem[indxpixltemp, :] += retr_defl(gdat, lgalconc[k], bgalconc[k], defsconc[k], 0., 0., asca=ascaconc[k], acut=acutconc[k], indxpixltemp=indxpixltemp)
-                defl += deflelem
+                        else:
+                            indxpixlpnts = retr_indxpixl(gdat, bgalconc[k], lgalconc[k])
+                            indxproxtemp = digitize(defsconc[k], gdat.binsprox) - 1
+                            indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
+                            if isinstance(indxpixltemp, int):
+                                indxpixltemp = gdat.indxpixl
+                        deflelem[indxpixltemp, :] += retr_defl_jitt(gdat.indxpixl, gdat.lgalgrid, gdat.bgalgrid, lgalconc[k], bgalconc[k], defsconc[k], 0., 0., \
+                                                                                                                asca=ascaconc[k], acut=acutconc[k], indxpixltemp=indxpixltemp)
+                    defl += deflelem
+            
             defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
             
             # lensed image
@@ -4950,7 +5032,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdat.datafluxmean /= gdat.deltener
         
         ### log-likelihood
-        llik = retr_llik(gdat, modlcnts)
+        #llik = retr_llik_mult(gdat, modlcnts)
+        llik = retr_llik_depr(gdat, modlcnts)
         lliktotl = sum(llik)
     
         setattr(gdatobjt, strg + 'llik', llik) 
@@ -5127,7 +5210,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         pntsfluxtemp -= retr_pntsflux(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['spec'][l][:, k], psfnintp, oaxitype, evalcirc=gdat.evalcirc)
                         modlflux = retr_mapslght(gdat, bacp, pntsfluxtemp, gdat.indxcube)
                     modlcnts = retr_cntsmaps(gdat, modlflux)
-                    nextllik = retr_llik(gdat, modlcnts)
+                    #nextllik = retr_llik_mult(gdat, modlcnts)
+                    nextllik = retr_llik_depr(gdat, modlcnts)
                     nextlliktotl = sum(nextllik)
                     dicttemp['deltllik'][l][k] = arcsinh(lliktotl - nextlliktotl) / log(10.)
                  
@@ -5367,10 +5451,10 @@ def retr_info(pdfnpost, pdfnprio):
     return info
 
 
-def retr_llik(gdat, modlcnts):
+def retr_llik_depr(gdat, modlcnts):
     
     if gdat.liketype == 'pois':
-        llik = gdat.datacnts * log(modlcnts) - modlcnts
+    	llik = gdat.datacnts * log(modlcnts) - modlcnts
     if gdat.liketype == 'gaus':
         llik = -0.5 * (gdat.datacnts - modlcnts)**2 / gdat.datacnts
     

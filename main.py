@@ -142,7 +142,9 @@ def init( \
          probbrde=1., \
          # when proposing from the covariance, fracproprand should be very small!
          fracproprand=0., \
-         
+            
+         jitt=False, \
+
          radispmr=None, \
 
          numbsidecart=100, \
@@ -1443,8 +1445,16 @@ def initarry( \
             dictvarb[strgvarb] = valu[k]
         gdat = init(**dictvarb)
         for strgvarb in liststrgvarboutp:
+            print 'strgvarb'
+            print strgvarb
+            print 'getattr(gdat, strgvarb)'
+            print getattr(gdat, strgvarb)
             dictoutp[strgvarb][k] = getattr(gdat, strgvarb)
-  
+        
+        print 'dictoutp'
+        print dictoutp
+        print 
+
     if makeplotarry:
         
         strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -1457,6 +1467,14 @@ def initarry( \
                 axis.plot(varbvari, varboutp)
                 axis.set_xticklabels(listlablinpt)
                 axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
+                print 'strgvarbvari'
+                print strgvarbvari
+                print 'getattr(gdat, scal + strgvarbvari)'
+                print getattr(gdat, 'scal' + strgvarbvari)
+                print 'strgvarboutp'
+                print strgvarboutp
+                print 'getattr(gdat, scal + strgvarboutp)'
+                print getattr(gdat, 'scal' + strgvarboutp)
                 if getattr(gdat, 'scal' + strgvarbvari) == 'logt':
                     axis.set_xscale('log')
                 if getattr(gdat, 'scal' + strgvarboutp) == 'logt':

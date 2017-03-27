@@ -17,6 +17,10 @@ from scipy.stats import poisson as pss
 import scipy.ndimage
 import scipy.ndimage.filters
 
+# jit
+from numba import jit
+import threading
+
 #import pyximport; pyximport.install()
 import ctypes
 

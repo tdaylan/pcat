@@ -230,13 +230,15 @@ Furthermore, PCAT offers extensive routines to visualize the output chain. The o
 
 Plots
 +++++
-If not disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are produced at predetermined times during the sampling and others are produced in the postprocessing after all chains have run. There are five subfolders in the plot folder of a given run.
+If not expilicity disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are generated at predetermined times during the sampling and others are made in the postprocessing after all chains have run. The plot path, ``pathbase/imag/rtag``, has the following structure:
 
-- ``init`` Initial setup, pixel lookup table (if applicable)
-- ``fram`` Frame plots
+- ``init`` Problem setup
+- ``fram`` Frame plots, giving snapshots of the MCMC state
 - ``diag`` Diagnostic plots
-- ``post`` Posterior distribution plots of model parameters and derived quantities, prior and likelihood.
+- ``post`` Posterior distribution of model parameters and derived quantities
 - ``anim`` GIF animations made from the frame plots in ``fram`` that are produced during sampling.
+- ``opti`` Proposal scale optimization
+- ``info`` Information gain
 
 
 .. _sectchan:
