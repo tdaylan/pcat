@@ -77,7 +77,7 @@ Proposal optimization
 
 Construction of an MCMC chain requires a choice of proposal scale, which must remain constant (or strictly decrease) during sampling in order to respect detailed balance. In transdimensional inference, the choice of proposal scale includes both within and across model jumps. PCAT chooses the proposal scale for a particular sampling problem based on an initial calculation of the Fisher information at the maximum likelihood solution, in the beginning of each run, yielding an estimate of the model covariance. The tighter a parameter is constrained, the smaller the proposal scale for that parameter becomes. This ensures that the acceptance ratio is around 25% and minimizes the autocorrelation time of the resulting chain.
 
-PCAT takes heavy-tailed within-model steps in a space, where the prior is uniformly distributed. The transdimensional proposals are 
+PCAT takes heavy-tailed within-model steps in a space, where the prior is uniformly distributed.
 
 In order to ensure that the chains start from a well mixed state, the first ``numbburn`` samples are discarded and the resulting chain is thinned by  a factor of ``factthin``.
 
