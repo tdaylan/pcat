@@ -1,9 +1,16 @@
 Welcome to PCAT's documentation!
 ================================
 
-When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of elements whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different numbers of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidences. Yet another is to take samples from the union of these models (hereafter, **the metamodel**) using a set of transdimensional jumps across models. This is what PCAT (Probabilistic Cataloger) is designed for.
+When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of elements whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different numbers of elem parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidences. Yet another is to take samples from the union of these models using a set of transdimensional jumps across models. This is what the Probabilistic Cataloger (PCAT) is designed for.
 
-PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, accepted to ApJ. In astrophysical applications, given the output of a photon counting experiment, it can be used to sample from **the catalog space**. Alternatively, it can be used as a general purpose mixture sampler to infer or marginalize over elements in Poisson distributed data.
+PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, accepted to ApJ. In astrophysical applications, given the output of a photon counting experiment, it can be used to sample from **the catalog space**. In a more general context, it can be used as a mixture sampler to infer the posterior distribution of a metamodel given some Poisson distributed data.
+
+In what follows, we assume that **the metamodel** is the union of models with different dimensionality. All such models have a certain number of common, **fixed-dimensional** parameters. In addition, each model has a different number of **elements**. An element is a collection of parameters that only exist together, and characterize an entity in the model. Examples are:
+
+- A light source such as a pulsar, Active Galactic Nucleus (AGN) in an astrophysical emission model,
+- A dark matter subhalo that deflects background light,
+- A term in the polynomial used to perform linear regression
+
 
 .. toctree::
    :maxdepth: 4
@@ -43,26 +50,18 @@ Compared to mainstream Bayesian inference methods, PCAT has a series of desirabl
 - strictly respects detailed across models, 
 - does not discard information contained in low-significance :math:`(< 5 \sigma)` fluctuations in the observed dataset,
 - reduces to a deterministic cataloger when the labeling degeneracy is explicitly broken,
-- simultaneously infers the PSF and the level of diffuse background.
+- simultaneously infers the Point Spread Function (PSF) and the level of diffuse background.
 
 Transdimensionality
 +++++++++++++++++++
 
-PCAT takes steps across models by adding parameters drawn from the prior or killing them while maintaining detailed balance in the hyper model space.
+PCAT takes steps across models by proposing to add elements whose parameters are drawn from the prior, or to kill randomly chosen elements, while respecting detailed balance in the metamodel.
 
 
 Hierarchical priors
 +++++++++++++++++++++
 
-When there are multiple model elements, each with a set of parameters, it is more natural to put priors on the distribution of these parameters, as opposed to placing individual priors separately on each element parameter. This assumes that a certain parameter of all elements in a given population are drawn from a single probability distribution. This is particularly useful when such a parametrization is subject to inference, where individual elements can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of element parameters, i.e., **hyperparameters**, and the prior on the individual element parameters are made conditional on these hyperparameters. 
-
-
-Proposals
-+++++++++++++++++++++
-
-The proposal scale for element features depend on how statistically significant they are. For example parameters of elements with lower statistical significance are varied with a larger proposal scale. This allows the chain to mix faster. 
-
-PCAT discards the first ``numbburn`` samples and thins the resulting chain by a factor ``factthin``.
+When there are multiple model elements, each with a set of parameters, it is natural to put priors on the **distribution** of these parameters, as opposed to placing individual priors separately on each element parameter. This assumes that a certain type of parameter of all elements, are drawn from a single probability distribution. This is particularly useful when such a parameter is subject to inference, and individual elements can be marginalized over. This results in a hierarchical prior structure, where the prior is placed on the distribution of element parameters, i.e., **hyperparameters**, and the prior on the individual element parameters are made conditional on these hyperparameters. 
 
 
 Labeling degeneracy
@@ -76,13 +75,17 @@ Due to **hairlessness** of the elements, the likelihood function is invariant to
 Proposal optimization
 +++++++++++++++++
 
-Any MCMC sampling problem requires a choice of proposal scale, which must remain constant during sampling in order to respect detailed balance. In transdimensional inference, the choice of proposal scale includes both within and across model jumps. PCAT chooses the proposal scale for a particular sampling problem based on an initial estimate of the Hessian matrix of the parameter vector in the beginning of each run. The inverse of the Hessian yields the model covariance, from which proposals are drawn during the sampling.
+Construction of an MCMC chain requires a choice of proposal scale, which must remain constant (or strictly decrease) during sampling in order to respect detailed balance. In transdimensional inference, the choice of proposal scale includes both within and across model jumps. PCAT chooses the proposal scale for a particular sampling problem based on an initial calculation of the Fisher information at the maximum likelihood solution, in the beginning of each run, yielding an estimate of the model covariance. The tighter a parameter is constrained, the smaller the proposal scale for that parameter becomes. This ensures that the acceptance ratio is around 25% and minimizes the autocorrelation time of the resulting chain.
+
+PCAT takes heavy-tailed within-model steps in a space, where the prior is uniformly distributed. The transdimensional proposals are 
+
+In order to ensure that the chains start from a well mixed state, the first ``numbburn`` samples are discarded and the resulting chain is thinned by  a factor of ``factthin``.
 
 
 Performance
 +++++++++++++++++++
 
-The above features are made possible by enlarging the hypothesis space so much that there is no mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference.
+The above features are made possible by enlarging the hypothesis space so as to minimize mismodeling of the observed data. This is, however, at the expense of seriously slowing down inference.
 
 PCAT alleviates the performance issues in two ways:
 
@@ -93,7 +96,7 @@ PCAT alleviates the performance issues in two ways:
 
 Input
 --------------
-PCAT expects input data in the folder ``pathbase/data/inpt/``. The principal input is the observed dataset, which could be binned or unbinned (currently unfunctional).
+PCAT expects input data in the folder ``pathbase/data/inpt/``. The typical inputs are the data and exposure data cubes, background template(s) (if applicable), element kernel template(s) and the PSF (if applicable).
 
 Supplying data
 +++++++++++++++
@@ -106,23 +109,21 @@ Similary, background templates can be provided via the ``back`` argument. ``back
 Specifying the model and placing priors
 +++++++++++++++++++++++++
 
-The prior structure of the model is set by the relevant arguments to ``pcat.main.init()``. PCAT allows the following components in the model:
+The prior structure of the model is set by the relevant arguments to ``pcat.main.init()``. PCAT allows the following fixed dimensional parameters in each member of the metamodel:
 
 - Background prediction
 
-    Given some an observed dataset, it can be expressed as a Poisson realization of the integral emission from a large number of sources. However, due to the prohibitively large number of sources required, it is favorable to represent the contribution of extremely faint sources (those that negligibly affect the likelihood) with background templates. PCAT allows a list of spatially and spectrally distinct background templates to be in the model simultaneously. 
+    Given an observed count map, the number of counts in each pixel can be modeled as a Poisson realization of the total counts from a number of elements. In practice, however, this number can be prohibitively large, when there are many more **faint** elements compared to bright ones. Therefore, it is computationally more favorable to represent the overall contribution of faint elements (those that negligibly affect the likelihood) with **background** templates. PCAT allows a list of spatially and spectrally distinct background templates to be in the model simultaneously. 
 
-
-- Point Spread Function (PSF)
+- PSF
     
-    PSF defines a how a delta function in the position space projects onto the data space, e.g., the image. PCAT assumes that all point sources are characterized by the same PSF. 
-
+    PSF defines a how a delta function in the position space projects onto the observed count maps. When the elements are count sources, PCAT assumes that the projection of all elements to the count maps are characterized by the same PSF. PSF convolution of the model prediction is only applicable for applications, where the observed count map has been collected with an instrument with a finite PSF.
 
 
 Distributions of element features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-All features of Elements are assumed to have been drawn from an underlying probability distribution. Note that cross-correlations between elements are assumed to be zero. The 1-point function of the element features are then controlled by the function arguments to ``pcat.main.init()``. Since each population of elements admits its own set of hyperparameters, the input to these arguments should be a ``list`` of strings.
+All features of elements are assumed to have been drawn from an underlying probability distribution, and cross-correlations between element features are assumed to be zero. The 1-point function of the element features are controlled by the function arguments to ``pcat.main.init()``. Furthermore, elements are divided into **populations**, where each population admits its own set of hyperparameters. Therefore the input to these arguments should be a ``list`` of strings.
 
 - Spatial distribution (``spatdisttype``)
 
@@ -185,17 +186,14 @@ Spectral indices :math:`s_a` are distributed such that :math:`\arctan(s_a)` foll
 Spectral indices :math:`s_a` follow a Gaussian distribution with mean :math:`\lambda_s` and variance :math:`\sigma_s^2`.
 
 
-
-
-
 Generating mock data
 +++++++++++++++++++++
-PCAT ships with a mock (simulated) data generator. Mock data is randomly drawn from a generative model, not to be confused with the model subject to inference, i.e., the fitting model. Once the user configures the prior probability density of the fitting model, PCAT samples from the catalog space given the simulated dataset. Some of the generative model parameters can be fixed, i.e., assigned delta function priors. These are
+PCAT ships with a mock (simulated) data generator. Mock data is randomly drawn from a generative metamodel, not to be confused with the metamodel subject to inference, (hereafter, **the fitting metamodel**). Once the user configures the prior probability density of the fitting metamodel, PCAT samples from this metamodel given the simulated dataset. Some of the generative metamodel parameters can be fixed, i.e., assigned delta function priors. These are
 
 - the number of mock elements, ``truenumbpnts``,
 - hyperparameters controlling the population characteristics of these elements.
 
-All other generative model parameters are fair draws from the hierarchical prior. 
+All other generative metamodel parameters are fair draws from the hierarchical prior. 
 
 When working on variations of a certain problem or different analyses on the same dataset, it is useful to have default priors. PCAT allows unique defaults for different built-in experiments, controlled by the argument ``exprtype``. Currently the built-in experimental types are 
 
@@ -209,13 +207,12 @@ By setting ``exprtype`` the user imposes the default prior structure for the cho
 
 .. note::
 
-    PCAT has a built-in fudicial (default) generative model for each experiment type. The user can change parts of this model by providing arguments with the parameter names with a preceeding string ``'true'`` (indicating the fudicial model). The model subject to inference defaults to the resulting fudicial model. The user can also change parts of the fitting model by setting arguments with the relevant parameter names (this time, without ``'true'``, indicating the fitting model). In other words, if the user does not specify any parameters, the fudicial model will be used to generate data, and the same model will be fitted to the data. In most cases, however, one is be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by forcing the prior structure of the fitting model to be different from the generator model.
+    PCAT has a built-in fudicial (default) generative metamodel for each experiment type. The user can change parts of this model by providing arguments with the parameter names with a preceeding string ``'true'`` (indicating the fudicial model). The model subject to inference defaults to the resulting fudicial model. The user can also change parts of the fitting metamodel by setting arguments with the relevant parameter names (this time, without ``'true'``, indicating the fitting metamodel). In other words, if the user does not specify any parameters, the fudicial model will be used to generate data, and the same model will be fitted to the data. In most cases, however, one is be interested in studying mismodeling, i.e., when the mock data is generated from a model different from that used to fit the data. This can be achieved by forcing the prior structure of the fitting metamodel to be different from the generator model.
+
 
 Selecting the initial state
 +++++++++++++++++++++++++++++
-When the dataset is supplied by the user (``strgexprflux`` is set), and unless specified otherwise by setting ``randinit=False``, the initial state of the chain is drawn randomly from the prior. Note that in order for the initial state to be nonrandom, a reference catalog needs to be internally supplied.
-
-In constrast, if the dataset is simulated, ``randinit`` is not ``True`` and generative model is the same as the prior model, then the initial state of the chain is set to be the state from which the mock dataset was drawn.  
+The initial state of the chain is drawn randomly from the prior.
 
 
 .. _sectoutp:
@@ -263,9 +260,10 @@ Field              Explanation
 =================  ==========================================================================
 ``sampvarb``       Parameter vector
 ``samp``           Scaled parameter vector (uniformly distributed with respect to the prior)
+``deltllikpopl``   Delta loglikelihood of the l:math:`^{th}` population
 ``lgalpopl``       Horizontal coordinates of the l:math:`^{th}` population
 ``bgalpopl``       Vertical coordinates of the l:math:`^{th}` population
-``deltllikpopl``   Delta loglikelihood of the l:math:`^{th}` population
+
 ``fluxpopl``       Flux of the l:math:`^{th}` population
 ``sindpopl``       Spectral index of the l:math:`^{th}` population
 ``curvpopl``       Spectral curvature of the l:math:`^{th}` population
@@ -282,9 +280,9 @@ Autocorrelation
 
 A chain of states needs to be Markovian (memoryless) in order to be interpreted as fair draws from a target probability density. The autocorrelation of the chain shows whether the chain is self-similar along the simulation time (either due to low acceptance rate or small step size). Therefore the autocorrelation plots should be monitored after eah run.
 
-In a transdimensional setting, the autocorrelation of a parameter is ill-defined, since parameters can be born, killed or change identity. Therefore, for such parameters, we calculate the autocorrelation
-The autocorrelation Note that the
-In the The acceptance rate of the birth and death moves shows whether the prior on the amplitude of the elements is appropriate. If the acceptance rate of birth and deaths proposals is too low, the lower limit of the prior on the amplitude is too high. Likewise, if it is too low, the lower limit of the prior on the amplitude is too low. This behaviour is due to the fact that element parameters (position, amplitude and, if relevant, spectral or shape parameters) are drawn randomly from the prior when a birth is proposed. Therefore the lower limit on the amplitude prior should be adjusted such that the birth and death acceptance rate is between :math:`\sim 5%% - \sim30%%`. Otherwise across-model sampling will be inefficient and result in slow convergence.  
+In a transdimensional setting, the autocorrelation of a parameter is ill-defined, since parameters can be born, killed or change identity. Therefore, for such parameters, we calculate the autocorrelation of the model count map.
+
+The acceptance rate of the birth and death moves shows whether the prior on the element parameters are appropriate. If the acceptance rate of birth and deaths proposals is too low, this indicates that an element randomly drawn from the prior is very unlikely to fit the data. In contrast, if it is too high, it means that most of the prior volume is insensitive to the data. Therefore the prior should be adjusted such that the birth and death acceptance rate is between :math:`\sim 5%% - \sim30%%`. This allows efficient jumps and minimizes autocorrelation across models. 
 
 Gelman-Rubin test
 +++++++++++++++++++++++++++++
@@ -300,7 +298,6 @@ In this tutorial, we will illustrate how to run PCAT during a typical science an
 All user interaction with PCAT can be performed through the ``pcat.main.init()`` function. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source distribution and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary IRF file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
 
 .. In case you don't, here is a script that should get you the necessary files.
-
 
 The default run collects a single chain of 100000 samples, discards the initial 20% of the samples and thins the remaining samples to obtain a chain of 1000 samples. The number of processes, total number of samples per process, the number of samples to be discarded and the factor by which to thin the chain can be set using the arguments ``numbproc``, ``numbswep``, ``numbburn`` and ``factthin``, respectively. After initialization, PCAT collects samples, produces frame plots (snapshots of the sampler state during the execution) and postprocesses the samples at the end. The run should finish in under half an hour with the message
 
@@ -701,11 +698,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 .. note::
     
-    The generative model parameters can be set by preceeding the parameter name with ``true``. For example, in order to set the mock number of elements, you can specify ``truenumbpnts=array([10])``.
-
-
-
-    
+    The generative metamodel parameters can be set by preceeding the parameter name with ``true``. For example, in order to set the mock number of elements, you can specify ``truenumbpnts=array([10])``.
 
 
 Garbage collection
