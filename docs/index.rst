@@ -260,14 +260,15 @@ Field              Explanation
 =================  ==========================================================================
 ``sampvarb``       Parameter vector
 ``samp``           Scaled parameter vector (uniformly distributed with respect to the prior)
-``deltllikpopl``   Delta loglikelihood of the l:math:`^{th}` population
-``lgalpopl``       Horizontal coordinates of the l:math:`^{th}` population
-``bgalpopl``       Vertical coordinates of the l:math:`^{th}` population
 
-``fluxpopl``       Flux of the l:math:`^{th}` population
-``sindpopl``       Spectral index of the l:math:`^{th}` population
-``curvpopl``       Spectral curvature of the l:math:`^{th}` population
-``expopopl``       Spectral cutoff energy of the l:math:`^{th}` population
+``deltllikpopl``   Delta loglikelihood of the :math:`l^{th}` population
+``lgalpopl``       Horizontal coordinates of the :math:`l^{th}` population
+``bgalpopl``       Vertical coordinates of the :math:`l^{th}` population
+
+``fluxpopl``       Flux of the :math:`l^{th}` population
+``sindpopl``       Spectral index of the :math:`l^{th}` population
+``curvpopl``       Spectral curvature of the :math:`l^{th}` population
+``expopopl``       Spectral cutoff energy of the :math:`l^{th}` population
 
 In order to reduce inter-process communication, PCAT writes its internal state to the disc before child processes are spawned and after individual workers have finished their tasks. These intermediate files, in the form of python pickle objects, are temporarily written to the output folder, but deleted before the run ends.
 
