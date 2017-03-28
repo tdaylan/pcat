@@ -1,7 +1,7 @@
 Welcome to PCAT's documentation!
 ================================
 
-When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of elements whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different numbers of elem parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidences. Yet another is to take samples from the union of these models using a set of transdimensional jumps across models. This is what the Probabilistic Cataloger (PCAT) is designed for.
+When testing hypotheses or inferring their free parameters, a recurring problem is to compare models that contain a number of elements whose multiplicity is itself unknown. Therefore, given some data, it is desirable to be able to compare models with different numbers of parameters. One way of achieving this is to obtain a point estimate (usually the most likely point) in the parameter space of each model and, then, rely on some information criterion to penalize more complex models for excess degrees of freedom. Another way is to sample from the parameter space of each model and compare their Bayesian evidences. Yet another is to take samples from the union of these models using a set of transdimensional jumps across models. This is what the Probabilistic Cataloger (PCAT) is designed for.
 
 PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's theoretical framework is introduced in `Daylan, Portillo & Finkbeiner (2016) <https://arxiv.org/abs/1607.04637>`_, accepted to ApJ. In astrophysical applications, given the output of a photon counting experiment, it can be used to sample from **the catalog space**. In a more general context, it can be used as a mixture sampler to infer the posterior distribution of a metamodel given some Poisson distributed data.
 
@@ -67,7 +67,7 @@ When there are multiple model elements, each with a set of parameters, it is nat
 Labeling degeneracy
 ++++++++++++++++++++++
 
-Due to **hairlessness** of the elements, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two elements leaves the likelihood invariant. This fact has consequences for **nonpersistent** elements, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such elements, the degeneracy must be broken in post-processing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posterior of all transdimensional parameters will eventually look similar.
+Due to **hairlessness** of the elements, the likelihood function is invariant to their permutations in the parameter vector, i.e., exchanging the labels of two elements leaves the likelihood invariant. This fact has consequences for **nonpersistent** elements, which get born or killed at least once during an MCMC run. Because of label changes, the posterior of these parameters look the same, which makes them useless for inferring their properties. In order to constrain such elements, the degeneracy must be broken in postprocessing of the samples. Note that, if the sampling is continued sufficiently long, e.g., for a Hubble time, the posterior of all transdimensional parameters will eventually look similar.
 
 .. Breaking the labeling degeneracy
 .. +++++++++++++++++++
@@ -89,9 +89,9 @@ The above features are made possible by enlarging the hypothesis space so as to 
 
 PCAT alleviates the performance issues in two ways:
 
-- Use of parallelism via bypassing Python's Global Interpreter Lock (GIL) by employing independent processes as opposed to threads. The parent process spawns multiple, (almost) noninteracting processes, which collect samples in parallel and report back to the parent process, which aggregates and post-processes the samples.
+- Use of parallelism via bypassing Python's Global Interpreter Lock (GIL) by employing independent processes as opposed to threads. The parent process spawns multiple, (almost) noninteracting processes, which collect samples in parallel and report back to the parent process, which aggregates and postprocesses the samples.
 
-- Locality approximation in the likelihood evaluation. The most time consuming part of the inference is the model evaluation, which can be prohibitevly slow (for large datasets and many elements) if no approximations are made. PCAT assumes that the contribution of the elements to the model vanishes outside some circle around the element.
+- Locality approximation in the likelihood evaluation. The most time consuming part of the inference is the model evaluation, which can be prohibitively slow (for large datasets and many elements) if no approximations are made. PCAT assumes that the contribution of the elements to the model vanishes outside some circle around the element.
 
 
 Input
@@ -104,7 +104,7 @@ Input dataset is provided through the ``strgexprflux`` argument. This should be 
 
 The exposure map is suppled via the ``strgexpo`` argument. This should be the name of a FITS file (including the ``.fits`` extension). The format should be the same as ``strgexprflux``, whereas units should be cm :math:`^2` s.
 
-Similary, background templates can be provided via the ``back`` argument. ``back`` should be a list of FITS file names (including the ``.fits`` extension), whose format should be same as that of ``strgexprflux``.
+Similarly, background templates can be provided via the ``back`` argument. ``back`` should be a list of FITS file names (including the ``.fits`` extension), whose format should be same as that of ``strgexprflux``.
 
 Specifying the model and placing priors
 +++++++++++++++++++++++++
@@ -157,7 +157,7 @@ Radial positions, :math:`\theta_r`, are assumed to follow an exponential distrib
 
 
 + ``'gaus'``
-The prior spatial distributon is the sum of a certain number of Gaussians and a spatially constant floor.
+The prior spatial distribution is the sum of a certain number of Gaussians and a spatially constant floor.
 
 .. math::
     
@@ -228,7 +228,7 @@ Furthermore, PCAT offers extensive routines to visualize the output chain. The o
 
 Plots
 +++++
-If not expilicity disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are generated at predetermined times during the sampling and others are made in the postprocessing after all chains have run. The plot path, ``pathbase/imag/rtag``, has the following structure:
+If not explicitly disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are generated at predetermined times during the sampling and others are made in the postprocessing after all chains have run. The plot path, ``pathbase/imag/rtag``, has the following structure:
 
 - ``init`` Problem setup
 - ``fram`` Frame plots, giving snapshots of the MCMC state
@@ -278,7 +278,7 @@ Diagnostics
 Autocorrelation
 +++++++++++++++++++++++++++++
 
-A chain of states needs to be Markovian (memoryless) in order to be interpreted as fair draws from a target probability density. The autocorrelation of the chain shows whether the chain is self-similar along the simulation time (either due to low acceptance rate or small step size). Therefore the autocorrelation plots should be monitored after eah run.
+A chain of states needs to be Markovian (memoryless) in order to be interpreted as fair draws from a target probability density. The autocorrelation of the chain shows whether the chain is self-similar along the simulation time (either due to low acceptance rate or small step size). Therefore the autocorrelation plots should be monitored after each run.
 
 In a transdimensional setting, the autocorrelation of a parameter is ill-defined, since parameters can be born, killed or change identity. Therefore, for such parameters, we calculate the autocorrelation of the model count map.
 
@@ -295,7 +295,7 @@ Tutorial
 --------------
 In this tutorial, we will illustrate how to run PCAT during a typical science analysis. Assuming that you have :ref:`installed <sectinst>` PCAT, let us run it on mock data.
 
-All user interaction with PCAT can be performed through the ``pcat.main.init()`` function. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source distribution and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary IRF file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
+All user interaction with PCAT can be performed through the ``pcat.main.init()`` function. Because arguments to this function have hierarchically defined defaults, even the default call (without arguments) starts a valid PCAT run. The default call generates mock Fermi-LAT data with an isotropic background and point source distribution and takes samples from the catalog space of the generated data. Therefore it assumes that you have the necessary Instrument Response Function (IRF) file as well as exposure, data and background flux files in ``pathbase/data/inpt/``.
 
 .. In case you don't, here is a script that should get you the necessary files.
 
