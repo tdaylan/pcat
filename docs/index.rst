@@ -7,9 +7,9 @@ PCAT is a hierarchical, transdimensional, Bayesian inference framework. It's the
 
 In what follows, we assume that **the metamodel** is the union of models with different dimensionality. All such models have a certain number of common, **fixed-dimensional** parameters. In addition, each model has a different number of **elements**. An element is a collection of parameters that only exist together, and characterize an entity in the model. Examples are:
 
-- A light source such as a pulsar, Active Galactic Nucleus (AGN) in an astrophysical emission model,
-- A dark matter subhalo that deflects background light,
-- A term in the polynomial used to perform linear regression
+- A light source such as a star or galaxy, in an astrophysical emission model,
+- A light deflecting dark matter subhalo in an gravitational lensing model,
+- A term in the polynomial used to perform linear regression,
 
 
 .. toctree::
