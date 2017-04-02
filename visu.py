@@ -509,14 +509,14 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
-                                                                                          truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
             tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
-                                                                                      truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+                                                                                      truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
     ### grouped covariance plots
     if gdat.verbtype > 0:
@@ -524,7 +524,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### hyperparameters
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.lablfixp[gdat.indxfixphypr], truepara=[gdat.corrfixp[k] for k in gdat.indxfixphypr])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.lablfixp[gdat.indxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -532,7 +532,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### PSF
     if gdat.proppsfp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'psfp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.lablfixp[gdat.indxfixppsfp], truepara=[gdat.corrfixp[k] for k in gdat.indxfixppsfp], \
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.lablfixp[gdat.indxfixppsfp], truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     if gdat.verbtype > 0:
         print 'Background parameters...'
@@ -541,12 +541,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.propbacp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.lablfixp[gdat.indxfixpbacp], \
-                                                                                                        truepara=[gdat.corrfixp[k] for k in gdat.indxfixpbacp])
+                                                                                                        truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixpbacp])
         if gdat.numbback == 2 and gdat.specback == [None, None]:
             for i in gdat.indxener:
                 indx = gdat.indxfixpbacp[gdat.indxback*gdat.numbener+i]
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
-                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.lablfixp[indx], truepara=[gdat.corrfixp[k] for k in indx], join=True)
+                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.lablfixp[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'

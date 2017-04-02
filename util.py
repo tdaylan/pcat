@@ -3108,7 +3108,7 @@ def setpinit(gdat, boolinitsetp=False):
         for strgmodl in ['fitt', 'true']:
             print 'strgmodl'
             print strgmodl
-            if strgmodl == '':
+            if strgmodl == 'fitt':
                 listfeat = ('name', 'strg', 'scal', 'minm', 'maxm', 'true')
                 print '%20s%25s%5s%20s%20s%20s' % listfeat
             else:
@@ -4089,7 +4089,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
     namepara = zeros(numbpara, dtype=object)
     scalpara = zeros(numbpara, dtype=object)
     
-    if strgmodl == '':
+    if strgmodl == 'fitt':
         for k in indxfixp:
             setattr(gdat, 'labl' + namefixp[k], lablfixp[k])
             setattr(gdat, 'fact' + namefixp[k] + 'plot', factfixpplot[k])
