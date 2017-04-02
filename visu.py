@@ -1184,7 +1184,7 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
     #indx = where(ydat > 0.)[0]
     #if indx.size > 0:
     #axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
-    axis.errorbar(xdat, ydat, ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
+    axis.errorbar(xdat, ydat, ls='', yerr=yerr, xerr=xerr, lw=1, marker='o', markersize=5, color='black')
     
     # temp -- plot associations inside the comparison area
     
