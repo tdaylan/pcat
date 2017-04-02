@@ -481,7 +481,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ## scalar variables
     ### trace and marginal distribution of each parameter
     for name in gdat.listnamevarbscal:
-        path = gdat.pathvarbscal + name
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + name
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name), getattr(gdat, 'labl' + name), truepara=getattr(gdat, 'corr' + name))
     
     if gdat.checprio and not prio:
@@ -552,24 +552,23 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         print 'Transdimensional parameters...'
     
     ## randomly selected trandimensional parameters
-    if gdat.numbtrap > 0:
+    if gdat.fittnumbtrap > 0:
         # choose the parameters based on persistence
         stdvlistsamptran = std(gdat.listsamp[:, gdat.indxsamptrap], axis=0)
         indxtrapgood = where(stdvlistsamptran > 0.)[0]
         numbtrapgood = indxtrapgood.size
         numbtrapplot = min(10, numbtrapgood)
-        if numbtrapplot > 0:
-            indxtrapplot = sort(choice(gdat.indxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
-            path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsamp'
-            tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-            path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsampvarb'
-            tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
+        indxtrapplot = sort(choice(gdat.indxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsamp'
+        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsampvarb'
+        tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     if gdat.verbtype > 0:
         print 'Binned transdimensional parameters...'
    
     # stacked posteiors binned in position and flux
-    if gdat.numbtrap > 0:
+    if gdat.fittnumbtrap > 0:
         liststrgbins = ['quad', 'full']
         for l in indxpopl:
             plot_postbindmaps(gdat, l, 'cumu')
@@ -934,8 +933,8 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strg == 'post':
         varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco)[l, :, :]
-        varbfrst = getattr(gdat, 'bins' + strgfrst + 'plot') * gdat.dictglob['fact' + strgfrst + 'plot']
-        varbseco = getattr(gdat, 'bins' + strgseco + 'plot') * gdat.dictglob['fact' + strgseco + 'plot']
+        varbfrst = getattr(gdat, 'bins' + strgfrst) * gdat.dictglob['fact' + strgfrst + 'plot']
+        varbseco = getattr(gdat, 'bins' + strgseco) * gdat.dictglob['fact' + strgseco + 'plot']
         labl = gdat.legdsampdist + ' ' + legdmome
         imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Greys', label=labl)
         #imag = axis.imshow(gdat.medifluxsindhist[l], cmap='Purples', extent=[])
@@ -1603,7 +1602,7 @@ def plot_mosa(gdat):
                             gdatmodi.thissamp = gdat.listsamp[n, :].flatten()
                             gdatmodi.thisindxpntsfull = gdat.listindxpntsfull[n]
                             
-                            if gdat.numbtrap > 0:
+                            if gdat.fittnumbtrap > 0:
                                 # temp
                                 #gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
                                 proc_samp(gdat, gdatmodi, 'this')
