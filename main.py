@@ -469,6 +469,10 @@ def init( \
     setp_true(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
     setp_true(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1000)
     
+    for l in gdat.trueindxpopl:
+        setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
+        setattr(gdat, 'truemaxmnumbpntspop%d' % l, gdat.truemaxmnumbpnts[l])
+        
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
     setp_true(gdat, 'defsdisttype', ['powr' for l in gdat.trueindxpopl])
@@ -831,7 +835,7 @@ def init( \
     else:
         gdat.factspecener = array([1.])
   
-    for strgfeat in gdat.fittliststrgfeattotl:
+    for namevarb in gdat.fittliststrgfeattotl + list(gdat.fittnamefixp):
         
         for strglimt in ['minm', 'maxm']:
            
@@ -849,18 +853,18 @@ def init( \
             #        setattr(gdat, strgmodl + strglimt + strgfeat, limt)
             
             try:
-                limt = getattr(gdat, strglimt + strgfeat)
-                setattr(gdat, 'true' + strglimt + strgfeat, limt)
-                setattr(gdat, 'fitt' + strglimt + strgfeat, limt)
+                limt = getattr(gdat, strglimt + namevarb)
+                setattr(gdat, 'true' + strglimt + namevarb, limt)
+                setattr(gdat, 'fitt' + strglimt + namevarb, limt)
             except:
-                truelimt = getattr(gdat, 'true' + strglimt + strgfeat)
-                fittlimt = getattr(gdat, 'fitt' + strglimt + strgfeat)
+                truelimt = getattr(gdat, 'true' + strglimt + namevarb)
+                fittlimt = getattr(gdat, 'fitt' + strglimt + namevarb)
                 if strglimt == 'minm':
                     limt = min(fittlimt, truelimt)
                 else:
                     limt = max(fittlimt, truelimt)
                 
-                setattr(gdat, strglimt + strgfeat, limt)
+                setattr(gdat, strglimt + namevarb, limt)
 
     # color bars
     gdat.maxmllikmaps = 0.
@@ -951,6 +955,19 @@ def init( \
         
             gdat.dictglob['limt' + strgfeat + 'plot'] = array([getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)])
 
+    # construct bins for the scalar variables
+    for namevarbscal in gdat.listnamevarbscal:
+        
+        minm = getattr(gdat, 'minm' + namevarbscal)
+        maxm = getattr(gdat, 'maxm' + namevarbscal)
+        scal = getattr(gdat, 'fittscal' + namevarbscal)
+        
+        if scal == 'logt' or scal == 'gaus':
+            thisscal = 'logt'
+        else:
+            thisscal = 'self'
+        retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=thisscal)
+    
     # create the PCAT folders
     gdat.pathoutp = gdat.pathdata + 'outp/'
     gdat.pathoutpthis = gdat.pathoutp + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
@@ -1274,7 +1291,7 @@ def init( \
         for strgvarb in gdat.liststrgchan:
             
             # temp
-            if strgvarb == 'indxpntsfull':
+            if strgvarb in gdat.fittliststrgfeattotl or strgvarb == 'indxpntsfull':
                 continue
 
             setattr(gdat, 'prio' + strgvarb, getattr(gdat, 'medi' + strgvarb))
@@ -1282,9 +1299,9 @@ def init( \
         gdat.calcllik = True
         
         ## retrieve saved variables
-        for strgvarbsave in liststrgvarbsave:
-            varb = getattr(gdat, strgvarbsave + 'saveprio')
-            setattr(gdat, strgvarbsave, varb)
+        #for strgvarbsave in liststrgvarbsave:
+        #    varb = getattr(gdat, strgvarbsave + 'saveprio')
+        #    setattr(gdat, strgvarbsave, varb)
 
     else:
         gdat.calcllik = True
@@ -1334,10 +1351,10 @@ def workopti(gdat, lock):
         gdat.numbproc = gdat.numbprocsave
     
     # temp
-    #gdat.optiprop = False
-    #gdat.optillik = False
-    #gdat.optihess = False
-    #gdat.opti = False
+    gdat.optiprop = False
+    gdat.optillik = False
+    gdat.optihess = False
+    gdat.opti = False
 
 
 def initarry( \
@@ -1491,22 +1508,6 @@ def proc_post(gdat, prio=False):
         listtemp = []
         for j in gdat.indxsamp:      
             for k in gdat.indxproc:
-                print 'gdat.numbproc'
-                print gdat.numbproc
-                print 'gdat.numbsamp'
-                print gdat.numbsamp
-                print 'gdat.numbsamptotl'
-                print gdat.numbsamptotl
-                print 'listgdatmodi'
-                print listgdatmodi
-                print 'getattr(listgdatmodi[k], list + strgvarb)'
-                print getattr(listgdatmodi[k], 'list' + strgvarb)
-                print 'j'
-                print j
-                print 'strgvarb'
-                print strgvarb
-                print
-
                 listtemp.append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
         setattr(gdat, 'list' + strgvarb, listtemp)
 
@@ -1689,7 +1690,7 @@ def proc_post(gdat, prio=False):
         if isinstance(listtemp, list):
 
             # ensure that transdimensional lists are not included
-            if strgchan in gdat.fittliststrgfeat or strgchan == 'indxpntsfull':
+            if strgchan in gdat.fittliststrgfeattotl or strgchan == 'indxpntsfull':
                 continue
             
             posttemp = []
@@ -1701,15 +1702,7 @@ def proc_post(gdat, prio=False):
             for k in range(numbelem):
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
-                print 'strgchan'
-                print strgchan
-                print 'temp'
-                print temp.shape
                 for n in gdat.indxsamptotl:
-                    print 'listtemp[n][k]'
-                    print listtemp[n][k].shape
-                    print
-
                     temp[n, ...] = listtemp[n][k]
                 posttempsing = tdpy.util.retr_postvarb(temp)
                 meditempsing = posttempsing[0, ...]
@@ -1939,10 +1932,8 @@ def optihess(gdat, gdatmodi, indxprocwork):
                         
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * (deltlpos[1, 1] - deltlpos[1, 0] - deltlpos[0, 1] + deltlpos[0, 0])
                     
-                    if not isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]):
-                        print 'Proposal scale estimate went infinite.'
-                        print gdat.fittnamepara[k]
-                        raise Exception('')
+                    if not isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]) or gdatmodi.hess[indxstdpfrst, indxstdpseco] == 0.:
+                        print 'Proposal scale estimate went infinite for %s...' % gdat.fittnamepara[k]
 
         if gdat.verbtype > 0:
             gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.fittnumbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
@@ -2083,12 +2074,6 @@ def work(pathoutpthis, lock, indxprocwork):
                     varb = getattr(gdat, 'true' + gdat.fittnamepara[k])
                     gdatmodi.thissamp[gdat.fittindxfixp[k]] = cdfn_fixp(gdat, 'true', varb, k)
         
-        if gdat.inittype == 'pert' and not k in gdat.fittindxfixpnumbpnts:
-            while True:
-                gdatmodi.thissamp[k] += 1e-2 * randn()
-                if gdatmodi.thissamp[k] > 0. and gdatmodi.thissamp[k] < 1.:
-                    break
-        
         gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
     
     ## lists of occupied and empty transdimensional parameters
@@ -2109,43 +2094,35 @@ def work(pathoutpthis, lock, indxprocwork):
         ## element parameters
         if gdat.inittype == 'refr':
             for l in gdat.fittindxpopl:
-                for k, strgcomp in gdat.fittliststrgcomp[l]:
+                for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
                     try:
-                        comp = getattr(gdat, 'true' + strgfeat)[l]
-                        minm = getattr(gdat, 'fittminm' + strgfeat)
-                        maxm = getattr(gdat, 'fittmaxm' + strgfeat)
-                        bins = getattr(gdat, 'fittbins' + strgfeat)
+                        comp = getattr(gdat, 'true' + strgcomp)[l]
+                        minm = getattr(gdat, 'fittminm' + strgcomp)
+                        maxm = getattr(gdat, 'fittmaxm' + strgcomp)
+                        bins = getattr(gdat, 'fittbins' + strgcomp)
                         if gdat.fittlistscalcomp[l][k] == 'self':
-                            fact = getattr(gdat, 'fittfact' + strgfeat)
+                            fact = getattr(gdat, 'fittfact' + strgcomp)
                             compunit = cdfn_self(comp, minm, fact)
                         if gdat.fittlistscalcomp[l][k] == 'powr':
-                            slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgfeat + 'distslop')[l]]
+                            slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
                             compunit = cdfn_powr(comp, minm, maxm, slop)
                         if gdat.fittlistscalcomp[l][k] == 'bind':
-                            norm = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgfeat + 'distnorm')[l, :]]
-                            compunit = cdfn_powr(comp, bins, norm)
+                            norm = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distnorm')[l, :]]
+                            compunit = cdfn_bind(comp, bins, norm)
                         if gdat.fittlistscalcomp[l][k] == 'gaus':
-                            mean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgfeat + 'distmean')[l]]
-                            stdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgfeat + 'diststdv')[l]]
-                            compunit = cdfn_powr(comp, mean, stdv)
+                            distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
+                            diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
+                            compunit = cdfn_gaus(comp, distmean, diststdv)
                     except:
-                        if gdat.verbtype > 1:
-                            print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgfeat
+                        if gdat.verbtype > 0:
+                            print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
                         compunit = rand(gdat.truenumbpnts[l])
-                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgfeat][l]] = compunit
+                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
                 
         if gdat.inittype == 'pert':
             for l in gdat.fittindxpopl:
-                print 'gdatmodi.thissamp[gdatmodi.thisindxsampcomp[comp][l]]'
-                print gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]]
                 for k in range(gdatmodi.thisindxsampcomp['comp'][l].size):
-                    while True:
-                        gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l][k]] += 1e-2 * randn()#randn(gdatmodi.thisindxsampcomp[l].size)
-                        if gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l][k]] > 0. and gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l][k]] < 1.:
-                            break
-                print 'gdatmodi.thissamp[gdatmodi.thisindxsampcomp[comp][l]]'
-                print gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]]
-                print
+                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
         
     if gdat.verbtype > 1:
         print 'thissamp'
@@ -2168,12 +2145,6 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## sample vector
     gdatmodi.thissampvarb = retr_sampvarb(gdat, gdatmodi.thisindxsampcomp, gdatmodi.thissamp, 'fitt')
-    
-    print 'gdat.truedefs'
-    print gdat.truedefs
-    print 'gdat.thisdefs'
-    print gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['defs'][0]]
-    print
     
     if gdat.verbtype > 1:
         print 'thissamp, thissampvarb'
@@ -2419,7 +2390,8 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
-            for strgvarb in gdat.liststrgvarblistsamp:
+            
+            for strgvarb in gdat.liststrgvarblistsamp:  
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
             
             stopchro(gdat, gdatmodi, 'save')

@@ -18,15 +18,15 @@ def plot_samp(gdat, gdatmodi, strg):
     
     spatdisttype = getattr(gdat, strgmodl + 'spatdisttype')
     
+    numbpopl = getattr(gdat, strgmodl + 'numbpopl')
+    numbtrap = getattr(gdat, strgmodl + 'numbtrap')
+    spectype = getattr(gdat, strgmodl + 'spectype')
+    indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+    sampvarb = getattr(gdatobjt, strg + 'sampvarb')
+    numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
+    if gdat.elemtype == 'lght' and gdat.numbener > 1:
+        specplot = getattr(gdatobjt, strg + 'specplot') 
     if strg != 'post':
-    
-        numbtrap = getattr(gdat, strgmodl + 'numbtrap')
-        spectype = getattr(gdat, strgmodl + 'spectype')
-        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-        sampvarb = getattr(gdatobjt, strg + 'sampvarb')
-        numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
-        if gdat.elemtype == 'lght' and gdat.numbener > 1:
-            specplot = getattr(gdatobjt, strg + 'specplot') 
         indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
         indxsampcomp = retr_indxsampcomp(gdat, indxpntsfull, strgmodl)
         
@@ -48,7 +48,7 @@ def plot_samp(gdat, gdatmodi, strg):
     if strg == 'this' or strg  == 'true' and gdat.datatype == 'mock':
         alph = 0.1
         if strg == 'this':
-            pathtemp = gdat.pathfram
+            pathtemp = gdat.pathplot + gdat.namesampdist + '/fram/'
             colr = 'b'
         else:
             pathtemp = gdat.pathinit
@@ -127,6 +127,9 @@ def plot_samp(gdat, gdatmodi, strg):
         for l in indxpopl:
             if strg != 'true' and gdat.trueinfo:
                 for strgfeat in gdat.fittliststrgfeat[l]:
+                    print 'strgfeat'
+                    print strgfeat
+                    print
                     plot_scatassc(gdat, l, gdatmodi, strgfeat)
                     plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=True)
             for a, strgfrst in enumerate(liststrgfeatodim[l]):
@@ -177,7 +180,7 @@ def plot_samp(gdat, gdatmodi, strg):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m)
-                if gdat.numbpopl > 1:
+                if numbpopl > 1:
                     for l in indxpopl:
                         plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
     
@@ -280,25 +283,27 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         gdat.listlpriprop[indxbadd] = 5.
     
     for n in gdat.indxproptype:
+        pathpostlpri = getattr(gdat, 'path' + gdat.namesampdist + 'finllpri')
         for k in gdat.indxlpri:
             if (gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
+                path = pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
+                path = pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
             if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
+                path = pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k] - gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
         for k in gdat.indxlpau:
             if (gdat.listlpau[:, k] != 0.).any():
-                path = gdat.pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
+                path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
         if (gdat.listlfctprop[:, 0] != 0.).any():
-            path = gdat.pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
+            path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
             tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
     
     # Gelman-Rubin test
+    pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
     if gdat.numbproc > 1:
         if isfinite(gdat.gmrbstat).all():
             if gdat.verbtype > 0:
@@ -333,7 +338,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
                         maps = gdat.gmrbstat[i, :, m]
-                        path = gdat.pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
+                        path = pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
                         tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                                                 minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                                 minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
@@ -346,7 +351,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     # plot autocorrelation
     if gdat.verbtype > 0:
         print 'Autocorrelation...'
-    tdpy.mcmc.plot_atcr(gdat.pathdiag, gdat.atcr, gdat.timeatcr)
+    tdpy.mcmc.plot_atcr(pathdiag, gdat.atcr, gdat.timeatcr)
     
     # plot proposal efficiency
     if gdat.verbtype > 0:
@@ -376,7 +381,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         axis.set_yticks(listtick)
         axis.set_yticklabels(listlabltick)
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'accpratiproptype.pdf')
+    figr.savefig(pathdiag + 'accpratiproptype.pdf')
     plt.close(figr)
    
     # post-processing frame plots
@@ -391,7 +396,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             plot_samp(gdat, gdatmodi, 'this')
 
     # plot split and merge diagnostics
-    if gdat.numbtrap > 0 and gdat.probtran > 0. and gdat.probbrde < 1.:
+    if gdat.fittnumbtrap > 0 and gdat.probtran > 0. and gdat.probbrde < 1.:
         if gdat.verbtype > 0:
             print 'Split and merge related plots...'
     
@@ -451,7 +456,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
                 make_legd(axis)
                 plt.tight_layout()
-                figr.savefig(gdat.pathpostspmr + listname[k] + '.pdf')
+                path = getattr(gdat, 'path' + gdat.namesampdist + 'finlspmr') + listname[k] + '.pdf'
+                figr.savefig(path)
                 plt.close(figr)
     
     if gdat.verbtype > 0:
@@ -501,14 +507,14 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     ### covariance
     #### overall
-    path = gdat.pathpostfixp + 'fixp'
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
                                                                                           truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
-            path = gdat.pathpostfixpproc + 'proc%d' % k
+            path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
             tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
                                                                                       truepara=gdat.corrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
     
@@ -517,7 +523,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         print 'Hyperparameters...'
     
     #### hyperparameters
-    path = gdat.pathpostfixp + 'hypr'
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.lablfixp[gdat.indxfixphypr], truepara=[gdat.corrfixp[k] for k in gdat.indxfixphypr])
     
     if gdat.verbtype > 0:
@@ -525,7 +531,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### PSF
     if gdat.proppsfp:
-        path = gdat.pathpostfixp + 'psfp'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'psfp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.lablfixp[gdat.indxfixppsfp], truepara=[gdat.corrfixp[k] for k in gdat.indxfixppsfp], \
                                                                                                                                         numbplotside=gdat.numbpsfptotl)
     if gdat.verbtype > 0:
@@ -533,13 +539,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### backgrounds
     if gdat.propbacp:
-        path = gdat.pathpostfixp + 'bacp'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.lablfixp[gdat.indxfixpbacp], \
                                                                                                         truepara=[gdat.corrfixp[k] for k in gdat.indxfixpbacp])
         if gdat.numbback == 2 and gdat.specback == [None, None]:
             for i in gdat.indxener:
                 indx = gdat.indxfixpbacp[gdat.indxback*gdat.numbener+i]
-                path = gdat.pathpostfixp + 'bacpene%d' % i
+                path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.lablfixp[indx], truepara=[gdat.corrfixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
@@ -554,9 +560,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         numbtrapplot = min(10, numbtrapgood)
         if numbtrapplot > 0:
             indxtrapplot = sort(choice(gdat.indxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
-            path = gdat.pathpost + 'listsamp'
+            path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsamp'
             tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-            path = gdat.pathpost + 'listsampvarb'
+            path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsampvarb'
             tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     if gdat.verbtype > 0:
@@ -591,7 +597,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         labl = r'$%s$' % labltemp
         labldelt = r'$\Delta%s$' % labltemp
 
-        path = gdat.pathpost + strg
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + strg
         titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strg + 'flat'), labl, titl)
         if strg == 'llik':
@@ -622,7 +628,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     axis.set_ylabel(r'$M$ [GB]')
     axis.set_xlabel(r'$i_{samp}$')
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'memoresi.pdf')
+    figr.savefig(pathdiag + 'memoresi.pdf')
     plt.close(figr)
 
     # animate the frame plots
@@ -635,6 +641,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
 
 
 def plot_chro(gdat):
+    
+    pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
 
     gdat.listchro *= 1e3
     indxchro = array([0, 1, 2, 4])
@@ -660,7 +668,7 @@ def plot_chro(gdat):
     axis.set_xlabel('$t$ [ms]')
     
     plt.tight_layout()
-    figr.savefig(gdat.pathdiag + 'chro.pdf')
+    figr.savefig(pathdiag + 'chro.pdf')
     plt.close(figr)
 
     gdat.listchro *= 1e3
@@ -686,7 +694,7 @@ def plot_chro(gdat):
             axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
         axcl[-1].set_xlabel('$t$ [ms]')
         plt.subplots_adjust(hspace=0.05)
-        figr.savefig(gdat.pathdiag + 'chro.pdf')
+        figr.savefig(pathdiag + 'chro.pdf')
         plt.close(figr)
 
 
@@ -1172,9 +1180,11 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
         yerr *= factplot
     
     # plot all associations
-    indx = where(ydat > 0.)[0]
-    if indx.size > 0:
-        axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
+    # temp
+    #indx = where(ydat > 0.)[0]
+    #if indx.size > 0:
+    #axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
+    axis.errorbar(xdat, ydat, ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
     
     # temp -- plot associations inside the comparison area
     
@@ -1428,7 +1438,7 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
         strgtemp = ''
     else:
         strgtemp = strgfeatsign
-    path = gdat.pathpost + 'postbindmaps%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'postbindmaps%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
     figr.savefig(path)
     plt.close(figr)
        
@@ -1621,10 +1631,11 @@ def plot_mosa(gdat):
                         strg = ''
                     else:
                         strg = 'pop%d' % l
+                    pathfinl = getattr(gdat, 'path' + gdat.namesampdist + 'finl')
                     if m == None:
-                        path = gdat.pathpost + 'mosa' + strg + 'ene%dA.pdf' % (gdat.indxenerincl[i])
+                        path = pathfinl + 'mosa' + strg + 'ene%dA.pdf' % (gdat.indxenerincl[i])
                     else:
-                        path = gdat.pathpost + 'mosa' + strg + 'ene%devtt%d.pdf' % (gdat.indxenerincl[i], gdat.indxevttincl[m])
+                        path = pathfinl + 'mosa' + strg + 'ene%devtt%d.pdf' % (gdat.indxenerincl[i], gdat.indxevttincl[m])
                     figr.savefig(path)
                     plt.close(figr)
     else:
