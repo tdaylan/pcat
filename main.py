@@ -629,7 +629,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-3 / gdat.anglfact
+    minmdefs = 5e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e0
@@ -732,7 +732,7 @@ def init( \
                     print 'Received custom input for ' + strg[4:]
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
-   
+
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -1408,6 +1408,8 @@ def initarry( \
         os.system('mkdir -p %s' % path)
         for strgvarbvari, varbvari in dictvarbvari.iteritems():
             for strgvarboutp, varboutp in dictoutp.iteritems():
+                if strgvarbvari.startswith('fitt'):
+                    strgvarbvari = strgvarbvari[4:]
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 axis.plot(varbvari, varboutp)
                 axis.set_xticklabels(listlablinpt)
@@ -1844,7 +1846,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 0.04
+        fudgstdv = 1.
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
@@ -2523,6 +2525,11 @@ def work(pathoutpthis, lock, indxprocwork):
                     indxswepintv = arange(minm, maxm)
                     for k in gdat.indxproptype:
                         numb = where(workdict['listindxproptype'][indxswepintv] == k)[0].size
+                        print 'k'
+                        print k
+                        print 'numb'
+                        print numb
+                        print
                         if numb > 10:
                             fact =  100. / float(where(workdict['listindxproptype'][indxswepintv] == k)[0].size)
                             accp = fact * where(logical_and(workdict['listaccp'][indxswepintv], workdict['listindxproptype'][indxswepintv] == k))[0].size

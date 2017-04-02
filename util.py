@@ -508,12 +508,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     else:
         if gdat.propwithsing:
             # temp
-            gdatmodi.indxstdpmodi = choice(gdat.indxstdp)
-            gdatmodi.thisindxsampfull = concatenate((gdat.fittindxfixp, concatenate(gdatmodi.thisindxsampcomp['comp'])))
-            booltemp = False
-            for strg in gdat.fittliststrgcomptotl:
-                if gdatmodi.indxstdpmodi == getattr(gdat, 'indxstdp' + strg):
-                    booltemp = True
+            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.thisindxsampcomp['comp'])))
             gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
             gdatmodi.thisindxproptype = gdatmodi.indxsampmodi
         else:
@@ -523,6 +518,8 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     if gdat.verbtype > 1:
         print 
         print 'retr_thisindxprop()'
+        print 'propwith'
+        print gdatmodi.propwith
         print 'propbrth'
         print gdatmodi.propbrth
         print 'propdeth'
@@ -533,6 +530,9 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
         print gdatmodi.propmerg
         print 'indxpoplmodi'
         print gdatmodi.indxpoplmodi
+        if gdat.propwithsing:
+            print 'indxsampmodi'
+            print gdatmodi.indxsampmodi
         print
 
 
@@ -1146,17 +1146,19 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         
     if gdatmodi.propwith:
         
-        for k in gdat.indxprop:
-            retr_gaus(gdat, gdatmodi, gdat.indxfixpprop[k], stdvstdp[k])
-        
-        for k in gdat.fittindxfixpdist:
-            gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.nextsamp[k], k)
-
         # rescale the unit sample vector due to the hyperparameter change
         if gdat.propwithsing:
+            if gdatmodi.indxsampmodi in gdat.fittindxfixp:
+                retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdat.indxstdpfixp[gdatmodi.indxsampmodi])
             if gdatmodi.indxsampmodi in gdat.fittindxfixpdist:
                 rscl_elem(gdat, gdatmodi, gdatmodi.indxsampmodi)
         else:
+            for k in gdat.indxprop:
+                retr_gaus(gdat, gdatmodi, gdat.indxfixpprop[k], stdvstdp[k])
+            
+            for k in gdat.fittindxfixpdist:
+                gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.nextsamp[k], k)
+
             rscl_elem(gdat, gdatmodi)
 
         # PSs
@@ -1948,7 +1950,7 @@ def retr_condcatl(gdat):
         print 'indxelemassc'
         print indxelemassc
         print
-        for strgcomp in gdat.liststrgcomptotl:
+        for strgcomp in gdat.fittliststrgcomptotl:
             print 'strgcomp'
             print strgcomp
             print 'getattr(gdat, list + strgcomp)'

@@ -36,7 +36,7 @@ def plot_samp(gdat, gdatmodi, strg):
         ## brightest PS
         # temp
         if False and gdat.elemtype == 'lght':
-            if gdatmodi == None or sum(gdatmodi.thissampvarb[gdat.indxfixpnumbpnts]) != 0:
+            if gdatmodi == None or sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]) != 0:
                 plot_brgt(gdat, gdatmodi, strg)
     
     if gdatmodi != None:
@@ -331,7 +331,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{stat}$')
             plt.tight_layout()
-            figr.savefig(gdat.pathplot + 'diag/gmrbhist.pdf')
+            figr.savefig(pathdiag + 'gmrbhist.pdf')
             plt.close(figr)
             
             try:
@@ -465,12 +465,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     plot_chro(gdat)
 
     if gdat.verbtype > 0:
-        print 'Plotting the posterior...'
+        print 'Derived quantities...'
+
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'post')
     
     if gdat.verbtype > 0:
-        print 'Plotting a mosaic of samples...'
+        print 'A mosaic of samples...'
     
     ## mosaic of images of posterior catalogs 
     plot_mosa(gdat)
@@ -508,15 +509,15 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ### covariance
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
-                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.fittfactfixpplot[None, gdat.indxfixpprop], gdat.fittlablfixp[gdat.indxfixpprop], \
+                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.fittfactfixpplot[gdat.indxfixpprop])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
-            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.factfixpplot[None, gdat.indxfixpprop], gdat.lablfixp[gdat.indxfixpprop], \
-                                                                                      truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.factfixpplot[gdat.indxfixpprop])
+            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.fittfactfixpplot[None, gdat.indxfixpprop], \
+                                gdat.fittlablfixp[gdat.indxfixpprop], truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.fittfactfixpplot[gdat.indxfixpprop])
     
     ### grouped covariance plots
     if gdat.verbtype > 0:
@@ -524,7 +525,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### hyperparameters
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixphypr], gdat.lablfixp[gdat.indxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixphypr])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr], gdat.fittlablfixp[gdat.fittindxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -532,21 +533,21 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### PSF
     if gdat.proppsfp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'psfp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixppsfp], gdat.lablfixp[gdat.indxfixppsfp], truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixppsfp], \
-                                                                                                                                        numbplotside=gdat.numbpsfptotl)
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixppsfp], gdat.fittlablfixp[gdat.fittindxfixppsfp], \
+                                                                            truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
     if gdat.verbtype > 0:
         print 'Background parameters...'
     
     #### backgrounds
     if gdat.propbacp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'bacp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpbacp], gdat.lablfixp[gdat.indxfixpbacp], \
-                                                                                                        truepara=[gdat.fittcorrfixp[k] for k in gdat.indxfixpbacp])
-        if gdat.numbback == 2 and gdat.specback == [None, None]:
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixp[gdat.fittindxfixpbacp], \
+                                                                                                        truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixpbacp])
+        if gdat.fittnumbback == 2 and gdat.fittspecback == [None, None]:
             for i in gdat.indxener:
-                indx = gdat.indxfixpbacp[gdat.indxback*gdat.numbener+i]
+                indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
-                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.lablfixp[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
+                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixp[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'
@@ -554,11 +555,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ## randomly selected trandimensional parameters
     if gdat.fittnumbtrap > 0:
         # choose the parameters based on persistence
-        stdvlistsamptran = std(gdat.listsamp[:, gdat.indxsamptrap], axis=0)
+        stdvlistsamptran = std(gdat.listsamp[:, gdat.fittindxsamptrap], axis=0)
         indxtrapgood = where(stdvlistsamptran > 0.)[0]
         numbtrapgood = indxtrapgood.size
         numbtrapplot = min(10, numbtrapgood)
-        indxtrapplot = sort(choice(gdat.indxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
+        indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsamp'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsampvarb'
@@ -570,10 +571,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     # stacked posteiors binned in position and flux
     if gdat.fittnumbtrap > 0:
         liststrgbins = ['quad', 'full']
-        for l in indxpopl:
+        for l in gdat.fittindxpopl:
             plot_postbindmaps(gdat, l, 'cumu')
             for strgbins in liststrgbins:
-                for strgfeatsign in gdat.liststrgfeatsign[l]:
+                for strgfeatsign in gdat.fittliststrgfeatsign[l]:
                     plot_postbindmaps(gdat, l, strgbins, strgfeatsign)
 
     if gdat.verbtype > 0:
@@ -607,18 +608,19 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             labldraw = None
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
-        path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s' % strg
+        pathbase = getattr(gdat, 'path' + gdat.namesampdist + 'finldelt%s' % strg)
+        path = pathbase + 'delt%s' % strg
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat'), labldelt)
         if gdat.numbproc > 1:
             for k in gdat.indxproc:
-                path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_proc%04d' % (strg, k)
+                path = pathbase + 'delt%s_proc%04d' % (strg, k)
                 tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totl')[:, k], labldelt, titl='Process %d' % k)
         for n in gdat.indxproptype:
-            path = getattr(gdat, 'pathpostdelt%s' % strg) + 'delt%s_%s' % (strg, gdat.nameproptype[n])
+            path = pathbase + 'delt%s_%s' % (strg, gdat.nameproptype[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])
-            path = getattr(gdat, 'pathpostdelt%saccp' % strg) + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
+            path = pathbase + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
-            path = getattr(gdat, 'pathpostdelt%sreje' % strg) + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
+            path = pathbase + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
             tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
         
     # plot resident memory
