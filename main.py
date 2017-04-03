@@ -196,9 +196,11 @@ def init( \
    
     if gdat.inittype == None:
         if gdat.datatype == 'mock':
+            if gdat.elemtype == 'lght':
+                gdat.inittype = 'refr'
             if gdat.elemtype == 'lens':
                 gdat.inittype = 'pert'
-            if gdat.elemtype == 'lght':
+            if gdat.elemtype == 'clus':
                 gdat.inittype = 'refr'
         else:
             gdat.inittype = 'rand'
@@ -275,13 +277,13 @@ def init( \
          
     if gdat.labllgal == None:
         if gdat.exprtype == 'sdyn':
-            gdat.labllgal = r'L_z^{\prime}'
+            gdat.labllgal = r'L_{z}'
         else:
             gdat.labllgal = r'\theta_1'
 
     if gdat.lablbgal == None:
         if gdat.exprtype == 'sdyn':
-            gdat.lablbgal = r'E_k^{\prime}'
+            gdat.lablbgal = r'E_k'
         else:
             gdat.lablbgal = r'\theta_2'
 
@@ -313,10 +315,10 @@ def init( \
                 gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.strgenerunit, gdat.binsenerfull[i+1], gdat.strgenerunit))
     
     if gdat.evalcirc == None:
-        if gdat.elemtype == 'lens':
-            gdat.evalcirc = 'full'
-        else:
+        if gdat.elemtype == 'lght':
             gdat.evalcirc = 'psfn'
+        else:
+            gdat.evalcirc = 'full'
 
     ## Lensing
     if gdat.anglassc == None:
@@ -402,6 +404,8 @@ def init( \
                 retr_axis(gdat, 'ener' + strg, gdat.minmener, gdat.maxmener, numbbins)
 
             gdat.indxenerfull = gdat.binsenerfull.size - 1
+    else:
+        gdat.numbenerfull = 1
     gdat.indxener = arange(gdat.numbener, dtype=int)
        
     ### spatial extent of the data
@@ -454,12 +458,6 @@ def init( \
         else:
             gdat.specfraceval = 0.1
 
-    # evaluation of the PSF
-    if gdat.elemtype == 'lens':
-        gdat.evalpsfnpnts = False
-    else:
-        gdat.evalpsfnpnts = True
-
     ## generative model
     # set mock sample vector indices
     setp_true(gdat, 'numbpnts', array([50]))
@@ -475,8 +473,9 @@ def init( \
         
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
-    setp_true(gdat, 'defsdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_true(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'defsdisttype', ['powr' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'nobjdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_true(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
     
     gdat.calcllik = True
@@ -521,6 +520,8 @@ def init( \
             back = [1.]
     if gdat.elemtype == 'lens':
         back = [1e-7]
+    if gdat.elemtype == 'clus':
+        back = [1.]
     setp_true(gdat, 'back', back)
    
     #### spectra for the background
@@ -581,8 +582,8 @@ def init( \
                     setp_truedefa(gdat, 'gamtene%devt%d' % (i, m), [meangamt, stdvgamt], typelimt='meanstdv')
     else:
         if gdat.exprtype == 'sdyn':
-            minmsigm = 0.1
-            maxmsigm = 0.2
+            minmsigm = 0.1 / gdat.anglfact
+            maxmsigm = 0.2 / gdat.anglfact
         if gdat.exprtype == 'ferm':
             minmsigm = 0.1
             maxmsigm = 10.
@@ -629,7 +630,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 2e-3 / gdat.anglfact
+    minmdefs = 1e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e0
@@ -660,6 +661,8 @@ def init( \
         setp_truedefa(gdat, 'fluxdistslop', [1., 4.], popl=True)
     if gdat.elemtype == 'lens':
         setp_truedefa(gdat, 'defsdistslop', [1., 4.], popl=True)
+    if gdat.elemtype == 'clus':
+        setp_truedefa(gdat, 'nobjdistslop', [1., 4.], popl=True)
     
     for k in gdat.indxbind:
         setp_truedefa(gdat, 'fluxdistnormbin%d' % k, [1e-3, 1e3], popl=True)
@@ -764,6 +767,8 @@ def init( \
         setp_true(gdat, 'fluxdistslop', 2.2, popl=True)
     if gdat.elemtype == 'lens':
         setp_true(gdat, 'defsdistslop', 1.9, popl=True)
+    if gdat.elemtype == 'clus':
+        setp_true(gdat, 'nobjdistslop', 1.9, popl=True)
 
     for l in gdat.trueindxpopl:
         for k, strgcomp in enumerate(gdat.trueliststrgcomp[l]):
@@ -857,13 +862,15 @@ def init( \
                 setattr(gdat, 'true' + strglimt + namevarb, limt)
                 setattr(gdat, 'fitt' + strglimt + namevarb, limt)
             except:
-                truelimt = getattr(gdat, 'true' + strglimt + namevarb)
                 fittlimt = getattr(gdat, 'fitt' + strglimt + namevarb)
-                if strglimt == 'minm':
-                    limt = min(fittlimt, truelimt)
+                if gdat.datatype == 'mock':
+                    truelimt = getattr(gdat, 'true' + strglimt + namevarb)
+                    if strglimt == 'minm':
+                        limt = min(fittlimt, truelimt)
+                    else:
+                        limt = max(fittlimt, truelimt)
                 else:
-                    limt = max(fittlimt, truelimt)
-                
+                    limt = fittlimt
                 setattr(gdat, strglimt + namevarb, limt)
 
     # color bars
@@ -1679,7 +1686,7 @@ def proc_post(gdat, prio=False):
     
     ## spatial mean of maps
     gdat.liststrgmean = ['modlcnts']
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.liststrgmean.append('pntsflux')
     for strg in gdat.liststrgmean:
         tempinpt = getattr(gdat, 'list' + strg)
@@ -1851,7 +1858,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 1.
+        fudgstdv = 0.1
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep

@@ -97,10 +97,10 @@ def plot_samp(gdat, gdatmodi, strg):
                                                         colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                 
     ## PSF radial profile
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                if gdat.oaxitype:
+                if gdat.fittoaxitype:
                     indxydat = [i, slice(None), m, 0]
                 else:
                     indxydat = [i, slice(None), m]
@@ -108,7 +108,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 lablxaxi = gdat.lablfeattotl['gang']
                 plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindxydat=strgindxydat, scalyaxi='logt', \
                                                                             factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$')
-                if gdat.oaxitype or gdat.trueoaxitype:
+                if gdat.fittoaxitype or gdat.trueoaxitype:
                     plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindxydat=strgindxydat, \
                                                                                     factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$f(\phi)$')
 
@@ -170,7 +170,7 @@ def plot_samp(gdat, gdatmodi, strg):
     else:
         gdatobjt = gdat
 
-    if gdat.elemtype == 'lght' and gdat.calcerrr:
+    if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and gdat.calcerrr:
         if strg != 'true':
             for i in gdat.indxener:
                 plot_genemaps(gdat, gdatmodi, strg, 'errrcnts', strgcbar='resicnts', thisindxener=i)
@@ -742,7 +742,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         cntr += 1
     
     ## PS
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         listydat[cntr, :] = retr_varb(gdat, gdatmodi, strg, 'pntsfluxmean')
         if strg == 'post':
             listyerr[:, cntr, :] = retr_varb(gdat, gdatmodi, strg, 'pntsfluxmean', perc='errr')
@@ -1116,17 +1116,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     # superimpose prior on the feature
     liststrgfeatprio = getattr(gdat, strgmodl + 'liststrgfeatprio')
     
-    # temp
-    #print 'strgydat'
-    #print strgydat
-    #print 'indxydat'
-    #print indxydat
-    #print 'liststrgfeatprio'
-    #print liststrgfeatprio
-    #print 'liststrgfeatprio[indxydat[0]]'
-    #print liststrgfeatprio[indxydat[0]]
-    #print
-
     if strgydat.startswith('hist') and indxydat != None and strgydat[4:] in liststrgfeatprio[indxydat[0]]:
         xdatprio = getattr(gdat, strgmodl + strgxdat + 'prio') * factxdat
         if strg == 'true' or strg == 'post':
@@ -1138,15 +1127,16 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
             trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio')[indxydat]
             axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
-
-        if strg == 'post':
-            ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio')[indxydat]
-            yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio')[[slice(None)] + indxydat]
-            labl = gdat.legdsampdist + ' hyper-distribution'
-            tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
-        else:
-            ydatsupr = getattr(gdattemp, strg + strgydat + 'prio')[indxydat]
-            axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
+        
+        if strg != 'true':
+            if strg == 'post':
+                ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio')[indxydat]
+                yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio')[[slice(None)] + indxydat]
+                labl = gdat.legdsampdist + ' hyper-distribution'
+                tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
+            else:
+                ydatsupr = getattr(gdattemp, strg + strgydat + 'prio')[indxydat]
+                axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
 
     if indxydat != None:
         strgydat += strgindxydat
@@ -1219,9 +1209,11 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
         axis.axhline(0., ls='--', alpha=gdat.alphmrkr, color='black')
     else:
         axis.plot(factplot * binsplot, factplot * binsplot, ls='--', alpha=gdat.alphmrkr, color='black')
-   
-    axis.set_xlabel(r'$%s^{%s}$%s' % (gdat.lablfeat[strgfeat], gdat.strgcatl, gdat.lablfeatunit[strgfeat]))
-    axis.set_ylabel('$%s^{samp}$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat]))
+    
+    lablxdat = r'$%s^{%s}$%s' % (gdat.lablfeat[strgfeat], gdat.strgcatl, gdat.lablfeatunit[strgfeat])
+    lablydat = '$%s^{samp}$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat])
+    axis.set_xlabel(lablxdat)
+    axis.set_ylabel(lablydat)
     if indx.size > 0:
         if not plotdiff:
             axis.set_yscale('log')
@@ -2086,14 +2078,14 @@ def plot_init(gdat):
                 figr.savefig(path)
                 plt.close(figr)
 
-            if gdat.evalcirc and gdat.elemtype == 'lght':
+            if gdat.evalcirc and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
                 plot_eval(gdat)
     
     for i in gdat.indxener:
         for m in gdat.indxevtt:
             
             # temp
-            if False and gdat.pixltype == 'cart' and gdat.elemtype == 'lght':
+            if False and gdat.pixltype == 'cart' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
                 figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.datacnts, '', 'datacnts', thisindxener=i, thisindxevtt=m)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
