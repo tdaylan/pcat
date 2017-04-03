@@ -629,7 +629,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 5e-3 / gdat.anglfact
+    minmdefs = 2e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e0
@@ -947,11 +947,11 @@ def init( \
                 scal = gdat.dictglob['scal' + strgfeat + 'plot']
                 maxm = getattr(gdat, 'maxm' + strgfeat)
                 minm = getattr(gdat, 'minm' + strgfeat)
-                retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplot, scal=scal)
+                retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplot, scal=scal, strginit=strgmodl)
                 if strgfeat in liststrgfeatpriototl:
                     maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                     minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
-                    retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
+                    retr_axis(gdat, strgfeat + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
         
             gdat.dictglob['limt' + strgfeat + 'plot'] = array([getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)])
 
@@ -1331,6 +1331,9 @@ def init( \
 
 def workopti(gdat, lock):
 
+    inittypesave = gdat.inittype 
+    gdat.inittype = 'refr'
+
     # estimate the covariance
     gdat.opti = gdat.optiprop or gdat.optillik or gdat.optihess
     if gdat.opti:
@@ -1349,6 +1352,8 @@ def workopti(gdat, lock):
         gdat.stdvstdp = thisfile['stdvstdp'][()]
         thisfile.close()
         gdat.numbproc = gdat.numbprocsave
+    
+    gdat.inittype = inittypesave
     
     # temp
     gdat.optiprop = False
@@ -1630,7 +1635,7 @@ def proc_post(gdat, prio=False):
         temp[:, 1] = concatenate([gdat.listbgal[n][l] for n in gdat.indxsamptotl])
         for k, strgfeat in enumerate(gdat.fittliststrgfeatsign[l]):
             temp[:, 2] = concatenate([getattr(gdat, 'list' + strgfeat)[n][l] for n in gdat.indxsamptotl])
-            bins = getattr(gdat, 'bins' + strgfeat)
+            bins = getattr(gdat, 'fittbins' + strgfeat)
             gdat.pntsprob[l][:, :, :, k] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, bins))[0]
 
     if gdat.verbtype > 0:
@@ -1942,7 +1947,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
 
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
-
+    
     gdatmodi.stdvstdpmatr *= 2.38 / gdat.fittnumbpara * fudgstdv
     
     indx = where(logical_not(isfinite(gdatmodi.stdvstdpmatr)))
@@ -1964,6 +1969,9 @@ def optihess(gdat, gdatmodi, indxprocwork):
     
     gdatmodi.stdvstdp = gdatmodi.stdvstdpmatr[gdat.indxstdp, gdat.indxstdp]
     
+    # temp
+    gdatmodi.stdvstdp[0:2] *= gdat.fittnumbpara
+    
     if gdat.makeplot:
         
         if gdat.numbproc > 1:
@@ -1975,27 +1983,27 @@ def optihess(gdat, gdatmodi, indxprocwork):
         path = pathopti + 'stdv%d.pdf' % indxprocwork
         tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist', limtydat=[amin(ydat) / 2., 2. * amax(ydat)])
         
-        for strg in gdat.fittliststrgcomptotl:
-            path = pathopti + 'stdv' + strg + '.pdf'
-            factplot = gdat.dictglob['fact' + strg + 'plot']
-            meanplot = getattr(gdat, 'mean' + strg)
+        for strgcomp in gdat.fittliststrgcomptotl:
+            path = pathopti + 'stdv' + strgcomp + '.pdf'
+            factplot = gdat.dictglob['fact' + strgcomp + 'plot']
+            meanplot = getattr(gdat, 'fittmean' + strgcomp)
             minm = getattr(gdat, 'minm' + gdat.namecompsign)
             factsignplot = gdat.dictglob['fact' + gdat.namecompsign + 'plot']
-            xdat = [gdatmodi.dictmodi['stdv' + strg + 'indv' + gdat.namecompsign] * factsignplot, meanplot * factsignplot]
-            if strg == gdat.namecompsign:
-                ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (meanplot / minm)**2.]
+            xdat = [gdatmodi.dictmodi['stdv' + strgcomp + 'indv' + gdat.namecompsign] * factsignplot, meanplot * factsignplot]
+            if strgcomp == gdat.namecompsign:
+                ydat = [gdatmodi.dictmodi['stdv' + strgcomp + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)] / (meanplot / minm)**2.]
             else:
-                ydat = [gdatmodi.dictmodi['stdv' + strg + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strg)] / (meanplot / minm)**0.5]
+                ydat = [gdatmodi.dictmodi['stdv' + strgcomp + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)] / (meanplot / minm)**0.5]
             lablxdat = gdat.lablfeattotl[gdat.namecompsign]
             scalxdat = gdat.dictglob['scal' + gdat.namecompsign + 'plot']
             limtxdat = array(gdat.dictglob['limt' + gdat.namecompsign + 'plot']) * factsignplot
             tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
-                                             lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strg], plottype=['scat', 'line'])
+                                             lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strgcomp], plottype=['scat', 'line'])
             #tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
-            #                                 lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strg], gdat.lablfeatunit[strg]), plottype=['scat', 'line'])
+            #                                 lablydat=r'$\sigma_{%s}$%s' % (gdat.lablfeat[strgcomp], gdat.lablfeatunit[strgcomp]), plottype=['scat', 'line'])
             
             tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
-                                             lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strg], plottype=['scat', 'line'])
+                                             lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strgcomp], plottype=['scat', 'line'])
 
         if gdat.numbproc > 1:
             lock.release()

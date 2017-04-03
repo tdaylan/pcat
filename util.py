@@ -1796,7 +1796,17 @@ def retr_condcatl(gdat):
                 for m, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
                     arryelem[indxelem[n][l][k], m] = gdat.listsamp[n, indxsampcomp[strgcomp][l][k]]
 
+
+    if gdat.verbtype > 0:
+        print 'Constructing the distance matrix for %d stacked samples...' % arryelem.shape[0]
+        timeinit = gdat.functime()
+    
+    # construct lists of samples for each proposal type
     listdist = sqrt(sum((arryelem[:, None, :] - arryelem[None, :, :])**2, axis=2))
+
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     #cntr = -1
     #numbassc = zeros(numbelem)
@@ -1836,7 +1846,7 @@ def retr_condcatl(gdat):
     #                        cntrpercsave = cntrperc
    
     if gdat.makeplot:
-        path = gdat.pathpostcond + 'histdist'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlcond') + 'histdist'
         listtemp = copy(listdist).flatten()
         listtemp = listtemp[where(listtemp != 1e20)[0]]
         tdpy.mcmc.plot_hist(path, listtemp, r'$\xi$')
@@ -2210,6 +2220,8 @@ def setpinit(gdat, boolinitsetp=False):
         for nameseco in ['histodim', 'histtdim', 'assc', 'scattdim']:
             for namethrd in ['init', 'fram', 'finl', 'anim']:
                 if namethrd == 'init':
+                    if nameseco == 'assc' or nameseco == 'histtdim':
+                        continue
                     setattr(gdat, 'path' + namethrd + nameseco, gdat.pathplot + 'init/' + nameseco + '/')
                 else:
                     setattr(gdat, 'path' + name + namethrd + nameseco, path + namethrd + '/' + nameseco + '/')
@@ -5168,15 +5180,18 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if gdat.evalcirc == 'full':
                         indxpixltemp = gdat.indxpixl
                     else:
-                        print 'dicttemp[bgalsort][k-2]'
-                        print dicttemp['bgalsort'][k-2]
-                        print
-
                         indxpixlpnts = retr_indxpixl(gdat, dicttemp['bgalsort'][k-2], dicttemp['lgalsort'][k-2])
                         indxproxtemp = digitize(dicttemp['defssort'][k-2], gdat.binsprox) - 1
                         indxpixltemp = gdat.indxpixlprox[indxproxtemp][indxpixlpnts]
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
+                    
+                    print 'k'
+                    print k
+                    print 'dicttemp[defssort][k-2]'
+                    print dicttemp['defssort'][k-2]
+                    print
+
                     deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgalsort'][k-2], dicttemp['bgalsort'][k-2], dicttemp['defssort'][k-2], 0., 0., \
                                                                                       asca=dicttemp['ascasort'][k-2], acut=dicttemp['acutsort'][k-2], indxpixltemp=indxpixltemp)
             deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
@@ -5302,7 +5317,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             for m in gdat.indxevtt:
                                 dicttemp['hist' + strgfeat][l, :, i, m] = histogram(dicttemp['cnts'][l][i, indxmodlpntscomp[l], m], gdat.binscnts[i, :])[0]
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expo' and spectype[l] != 'expo'):
-                        bins = getattr(gdat, 'bins' + strgfeat)
+                        bins = getattr(gdat, strgmodl + 'bins' + strgfeat)
                         dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat][l][indxmodlpntscomp[l]], bins)[0]
                 
             #### two dimensional
@@ -5314,8 +5329,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 for a, strgfrst in enumerate(liststrgfeatodim[l]):
                     for b, strgseco in enumerate(liststrgfeatodim[l]):
                         if a < b:
-                            binsfrst = getattr(gdat, 'bins' + strgfrst)
-                            binsseco = getattr(gdat, 'bins' + strgseco)
+                            binsfrst = getattr(gdat, strgmodl + 'bins' + strgfrst)
+                            binsseco = getattr(gdat, strgmodl + 'bins' + strgseco)
                             dicttemp['hist' + strgfrst + strgseco][l, :, :] = histogram2d(dicttemp[strgfrst][l][indxmodlpntscomp[l]], \
                                                                                                         dicttemp[strgseco][l][indxmodlpntscomp[l]], [binsfrst, binsseco])[0]
                             setattr(gdatobjt, strg + 'hist' + strgfrst + strgseco, dicttemp['hist' + strgfrst + strgseco])
@@ -5329,10 +5344,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
                         maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                         bins = getattr(gdat, strgmodl + 'bins' + strgfeat)
-                        delt = getattr(gdat, 'delt' + strgfeat)
+                        delt = getattr(gdat, strgmodl + 'delt' + strgfeat)
                         
-                        xdat = getattr(gdat, strgmodl + 'mean' + strgfeat)
-                        deltprio = getattr(gdat, strgmodl + 'delt' + strgfeat)
+                        xdat = getattr(gdat, strgmodl + 'mean' + strgfeat + 'prio')
+                        deltprio = getattr(gdat, strgmodl + 'delt' + strgfeat + 'prio')
                         
                         booltemp = False
                         if strgfeat == 'gang' and spatdisttype[l] == 'gang' or strgfeat == 'bgal' and spatdisttype[l] == 'disc': 
@@ -5389,9 +5404,20 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         ### PS indices to compare with the reference catalog
         if strg == 'this' and numbtrap > 0 and gdat.trueinfo:
             
-            if gdat.elemtype == 'lens' and gdat.trueinfo and gdat.datatype == 'mock':
+            if gdat.elemtype == 'lens' and gdat.datatype == 'mock':
                 gdatmodi.thisdeflsingresi = gdatmodi.thisdeflsing - gdat.truedeflsing
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
+                
+                print 'gdatmodi.thisdeflsingresi'
+                summgene(gdatmodi.thisdeflsingresi)
+                print 'gdat.truedeflsing'
+                summgene(gdat.truedeflsing)
+                print 'gdatmodi.thisdeflresi'
+                summgene(gdatmodi.thisdeflresi)
+                print 'gdat.truedeflr'
+                summgene(gdat.truedefl)
+                print
+
                 gdatmodi.thisdeflcomp = 1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / sqrt(sum(gdat.truedefl**2, axis=2))
            
     # correlate the current catalog sample with the reference catalog
