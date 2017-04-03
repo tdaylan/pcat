@@ -5363,7 +5363,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         if spatdisttype[l] == 'unif' and (strgfeat == 'lgal' or strgfeat == 'bgal') or spatdisttype[l] == 'disc' and strgfeat == 'lgal': 
                             pdfn = 1. / 2. / gdat.maxmgang + zeros_like(xdat)
                             booltemp = True
-                        if strgfeat == 'flux' and fluxdisttype[l] == 'powr':
+                        if strgfeat == 'defs' or strgfeat == 'flux' and fluxdisttype[l] == 'powr':
                             slop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgfeat + 'distslop')[l]]
                             pdfn = pdfn_powr(xdat, minm, maxm, slop)
                             booltemp = True
@@ -5371,7 +5371,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             fluxdistnorm = sampvarb[indxfixpfluxdistnorm[l, :]]
                             pdfn = pdfn_bind(xdat, minm, maxm, bins, fluxdistnorm)
                             booltemp = True
-                        elif strgfeat == 'sind' or strgfeat == 'curv' and spectype[l] == 'curv' or strgfeat == 'expo' and spectype[l] == 'expo':
+                        elif strgfeat == 'sind' or strgfeat == 'curv' and spectype[l] == 'curv' or strgfeat == 'expo' and spectype[l] == 'expo' or strgfeat == 'asca' or \
+                                                                                                                                strgfeat == 'acut':
                             # this does not work for mismodeling
                             meanvarb = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgfeat + 'distmean')[l]]
                             stdv = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgfeat + 'diststdv')[l]]
@@ -5381,6 +5382,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                                 pdfn = pdfn_gaus(xdat, meanvarb, stdv)
                             booltemp = True
                         
+                        print 'strgfeat'
+                        print strgfeat
+                        print 
                         if booltemp:
                             dicttemp['hist' + strgfeat + 'prio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
         
