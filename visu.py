@@ -1214,7 +1214,7 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
     lablydat = '$%s^{samp}$%s' % (gdat.lablfeat[strgfeat], gdat.lablfeatunit[strgfeat])
     axis.set_xlabel(lablxdat)
     axis.set_ylabel(lablydat)
-    if indx.size > 0:
+    if indx.size > 0 and gdat.dictglob['scal' + strgfeat + 'plot'] == 'logt':
         if not plotdiff:
             axis.set_yscale('log')
         axis.set_xscale('log')

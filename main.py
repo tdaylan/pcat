@@ -633,7 +633,7 @@ def init( \
     minmdefs = 1e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
-    minmnobj = 1e0
+    minmnobj = 5e0
     setp_true(gdat, 'minmnobj', minmnobj)
     
     if gdat.elemtype == 'lght':
@@ -645,7 +645,7 @@ def init( \
             maxmflux = 100.
         setp_true(gdat, 'maxmflux', maxmflux)
     
-    maxmnobj = 1e4
+    maxmnobj = 5e2
     setp_true(gdat, 'maxmnobj', maxmnobj)
     
     maxmdefs = 5e-2 / gdat.anglfact
