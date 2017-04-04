@@ -1903,10 +1903,10 @@ def plot_3fgl_thrs(gdat):
 
 def make_anim(gdat):
     
-    for nameextn in ['assc', 'histodim', 'histtdim', 'scattdim']:
+    for nameextn in ['', 'assc/', 'histodim/', 'histtdim/', 'scattdim/']:
         
-        pathframextn = gdat.pathplot + gdat.namesampdist + '/fram/' + nameextn + '/'
-        pathanimextn = gdat.pathplot + gdat.namesampdist + '/anim/' + nameextn + '/'
+        pathframextn = gdat.pathplot + gdat.namesampdist + '/fram/' + nameextn
+        pathanimextn = gdat.pathplot + gdat.namesampdist + '/anim/' + nameextn
 
         listfile = fnmatch.filter(os.listdir(pathframextn), '*_swep*.pdf')
         listfiletemp = []

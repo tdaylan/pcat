@@ -1664,14 +1664,16 @@ def proc_post(gdat, prio=False):
 
     ## construct a condensed catalog of elements
     if gdat.condcatl:
+        
         if gdat.verbtype > 0:
             print 'Constructing a condensed catalog...'
             timeinit = gdat.functime()
+        
         retr_condcatl(gdat)
     
-    if gdat.verbtype > 0:
-        timefinl = gdat.functime()
-        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+        if gdat.verbtype > 0:
+            timefinl = gdat.functime()
+            print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # construct lists of samples for each proposal type
     gdat.listindxsamptotlaccpprop = []

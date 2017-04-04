@@ -5196,6 +5196,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             deflsing = zeros((gdat.numbpixl, 2, gdat.numbdeflsingplot))
             numbdeflsing = min(gdat.numbdeflpntsplot, numbpntsconc) + 2
             for k in range(numbdeflsing):
+                
+                print 'k'
+                print k
+                
                 if k == 0:
                     deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
                 elif k == 1:
@@ -5210,14 +5214,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
                     
-                    print 'k'
-                    print k
-                    print 'dicttemp[defssort][k-2]'
-                    print dicttemp['defssort'][k-2]
-                    print
-
                     deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgalsort'][k-2], dicttemp['bgalsort'][k-2], dicttemp['defssort'][k-2], 0., 0., \
                                                                                       asca=dicttemp['ascasort'][k-2], acut=dicttemp['acutsort'][k-2], indxpixltemp=indxpixltemp)
+                    
+                    print 'dicttemp[defssort][k-2]'
+                    print dicttemp['defssort'][k-2]
+                print 'deflsing[:, :, k]'
+                summgene(deflsing[:, :, k])
+                print
+
             deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
 
             ### convergence
@@ -5451,7 +5456,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 summgene(gdatmodi.thisdeflsingresi)
                 print 'gdatmodi.thisdeflresi'
                 summgene(gdatmodi.thisdeflresi)
-                print
+                #if strg == 'this' and gdat.inittype == 'refr' and amax(gdatmodi.thisdeflsingresi) > 0.:
+                #    raise Exception('')
 
                 gdatmodi.thisdeflcomp = 1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / sqrt(sum(gdat.truedefl**2, axis=2))
            
