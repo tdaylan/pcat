@@ -2371,8 +2371,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.minmacut = 0.4 / gdat.anglfact
     gdat.maxmacut = 0.8 / gdat.anglfact
     
-    gdat.minmdeltllik = -1.
-    gdat.maxmdeltllik = 4.
+    gdat.minmdeltllik = 1e-1
+    gdat.maxmdeltllik = 1e4
     gdat.minmdiss = 0.
     gdat.maxmdiss = 3. * gdat.maxmgang
     gdat.minmdots = 1e-7
@@ -2461,7 +2461,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.dictglob['fact' + strgfeat + 'plot'] = 1.
         setattr(gdat, 'numb' + strgfeat + 'plot', 20)
         
-        if strgfeat == 'flux' or strgfeat == 'defs' or strgfeat == 'expo' or strgfeat == 'cnts' or strgfeat == 'dots' or strgfeat == 'mcut' or strgfeat == 'nobj':
+        if strgfeat == 'flux' or strgfeat == 'defs' or strgfeat == 'expo' or strgfeat == 'cnts' or \
+                        strgfeat == 'dots' or strgfeat == 'mcut' or strgfeat == 'nobj' or strgfeat == 'deltllik':
             gdat.dictglob['scal' + strgfeat + 'plot'] = 'logt'
         else:
             gdat.dictglob['scal' + strgfeat + 'plot'] = 'self'
@@ -5291,7 +5292,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     #nextllik = retr_llik_mult(gdat, modlcnts)
                     nextllik = retr_llik_depr(gdat, modlcnts)
                     nextlliktotl = sum(nextllik)
-                    dicttemp['deltllik'][l][k] = arcsinh(lliktotl - nextlliktotl) / log(10.)
+                    dicttemp['deltllik'][l][k] = lliktotl - nextlliktotl
                  
             if gdat.elemtype == 'lens':
                 #### distance to the source
