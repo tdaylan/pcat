@@ -2372,7 +2372,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmacut = 0.8 / gdat.anglfact
     
     gdat.minmdeltllik = 1e-1
-    gdat.maxmdeltllik = 1e4
+    gdat.maxmdeltllik = 1e3
     gdat.minmdiss = 0.
     gdat.maxmdiss = 3. * gdat.maxmgang
     gdat.minmdots = 1e-7

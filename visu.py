@@ -980,7 +980,14 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             axis.scatter(exprvarbfrst, exprvarbseco, alpha=0.3, color='r', label=gdat.nameexpr, s=sizelarg)
         except:
             pass
-
+    
+    if strgfrst == 'deltllik' or strgseco == 'deltllik':
+        for pval in [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]:
+            deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gdat.fittnumbcomp[l])
+            if strgfrst == 'deltllik':
+                axis.axvline(deltlliksigm, ls='--', color='black', alpha=0.2) 
+            if strgseco == 'deltllik':
+                axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     scalfrst = gdat.dictglob['scal' + strgfrst + 'plot']
     scalseco = gdat.dictglob['scal' + strgseco + 'plot']
     if scalfrst == 'logt':
