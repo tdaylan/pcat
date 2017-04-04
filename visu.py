@@ -1054,10 +1054,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
                 binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
 
-            if scalxaxi == 'logt':
-                xdattemp = binsxdat[:-1]
-            else:
-                xdattemp = xdat - deltxdat / 2.
+            xdattemp = binsxdat[:-1] + deltxdat / 2.
             
     if strg == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgydat, errr=True) * factydat
