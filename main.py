@@ -196,12 +196,10 @@ def init( \
    
     if gdat.inittype == None:
         if gdat.datatype == 'mock':
-            if gdat.elemtype == 'lght':
-                gdat.inittype = 'refr'
+            if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
+                gdat.inittype = 'rand'
             if gdat.elemtype == 'lens':
                 gdat.inittype = 'pert'
-            if gdat.elemtype == 'clus':
-                gdat.inittype = 'refr'
         else:
             gdat.inittype = 'rand'
 
@@ -1770,6 +1768,13 @@ def proc_post(gdat, prio=False):
         gdat.timeprocnorm = 0.
     else:
         gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcr
+    
+    # write an output file to the disc, indicating that the run has been executed successfully
+    filecomp = open(gdat.pathoutpthis + 'comp.txt', 'w')
+    filecomp.write('PCAT has run successfully.\n')
+    filecomp.close()
+    
+    # start the timer
 
     if gdat.verbtype > 0:
         for k in gdat.indxproc:
