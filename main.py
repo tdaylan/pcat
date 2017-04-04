@@ -12,7 +12,7 @@ def init( \
 
          # diagnostics
          # temp
-         diagmode=True, \
+         diagmode=False, \
          emptsamp=False, \
 
          # sampler
