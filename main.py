@@ -1865,7 +1865,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 0.1
+        fudgstdv = 1e-2
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep

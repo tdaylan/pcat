@@ -5197,8 +5197,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             numbdeflsing = min(gdat.numbdeflpntsplot, numbpntsconc) + 2
             for k in range(numbdeflsing):
                 
-                print 'k'
-                print k
+                if False:
+                    print 'k'
+                    print k
                 
                 if k == 0:
                     deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
@@ -5217,11 +5218,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgalsort'][k-2], dicttemp['bgalsort'][k-2], dicttemp['defssort'][k-2], 0., 0., \
                                                                                       asca=dicttemp['ascasort'][k-2], acut=dicttemp['acutsort'][k-2], indxpixltemp=indxpixltemp)
                     
-                    print 'dicttemp[defssort][k-2]'
-                    print dicttemp['defssort'][k-2]
-                print 'deflsing[:, :, k]'
-                summgene(deflsing[:, :, k])
-                print
+                    if False:
+                        print 'dicttemp[defssort][k-2]'
+                        print dicttemp['defssort'][k-2]
+                if False:
+                    print 'deflsing[:, :, k]'
+                    summgene(deflsing[:, :, k])
+                    print
 
             deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
 
