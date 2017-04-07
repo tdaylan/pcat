@@ -2236,7 +2236,8 @@ def setpinit(gdat, boolinitsetp=False):
             os.system('mkdir -p %s' % valu)
  
     # plotting
-    gdat.minmdatacnts = 0.5
+    # temp
+    gdat.minmdatacnts = 0.01 * gdat.maxmdatacnts
 
     gdat.legdsampdist = 'Posterior'
     gdat.legdsamp = 'Sample'
@@ -2512,7 +2513,7 @@ def setpinit(gdat, boolinitsetp=False):
     # temp
     gdat.numbangl = 100
     if gdat.exprtype == 'sdyn':
-        gdat.maxmangl = 3.
+        gdat.maxmangl = 1.
     if gdat.exprtype == 'ferm':
         gdat.maxmangl = 17. / gdat.anglfact
     if gdat.exprtype == 'chan':
