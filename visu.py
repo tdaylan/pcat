@@ -54,7 +54,7 @@ def plot_samp(gdat, gdatmodi, strg):
 
         # PS spectra
         if gdat.numbener > 1 and gdat.elemtype == 'lght':
-            specplot = getattr(gdatobjt, strgmodl + 'specplot')
+            specplot = getattr(gdatobjt, strg + 'specplot')
             for l in indxpopl:
                 listxdat = []
                 listplottype = []
@@ -533,15 +533,15 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ### covariance
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixp] * gdat.fittfactfixpplot[None, gdat.indxfixp], gdat.fittlablfixptotl[gdat.indxfixp], \
-                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixp] * gdat.fittfactfixpplot[gdat.indxfixp])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], gdat.fittlablfixptotl[gdat.fittindxfixp], \
+                                                                                          truepara=gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
-            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixp] * gdat.fittfactfixpplot[None, gdat.indxfixp], \
-                                gdat.fittlablfixptotl[gdat.indxfixp], truepara=gdat.fittcorrfixp[gdat.indxfixp] * gdat.fittfactfixpplot[gdat.indxfixp])
+            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], \
+                                gdat.fittlablfixptotl[gdat.fittindxfixp], truepara=gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp])
     
     ### grouped covariance plots
     if gdat.verbtype > 0:

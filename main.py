@@ -741,7 +741,7 @@ def init( \
                     print 'Received custom input for ' + strg[4:]
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
-
+   
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -1084,7 +1084,8 @@ def init( \
     ## unit sample vector
     gdat.truesamp = zeros(gdat.truenumbpara)
     gdat.truefixp = zeros(gdat.truenumbfixp) + nan
-    gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
+    if gdat.truenumbtrap > 0:
+        gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
    
     for strgfeat in gdat.fittliststrgfeattotl:
         try:
@@ -1095,16 +1096,17 @@ def init( \
 
     if gdat.datatype == 'mock':
         
-        gdat.trueindxpntsfull = []
         if gdat.truenumbtrap > 0:
-            for l in gdat.trueindxpopl:
-                gdat.trueindxpntsfull.append(range(gdat.truenumbpnts[l]))
-        else:
             gdat.trueindxpntsfull = []
+            if gdat.truenumbtrap > 0:
+                for l in gdat.trueindxpopl:
+                    gdat.trueindxpntsfull.append(range(gdat.truenumbpnts[l]))
+            else:
+                gdat.trueindxpntsfull = []
 
-        gdat.trueindxsampcomp = retr_indxsampcomp(gdat, gdat.trueindxpntsfull, 'true')
-        
-        gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbpnts]
+            gdat.trueindxsampcomp = retr_indxsampcomp(gdat, gdat.trueindxpntsfull, 'true')
+            
+            gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbpnts]
 
         gdat.truesampvarb = empty(gdat.truenumbpara)
         gdat.truesamp = rand(gdat.truenumbpara)
@@ -1136,13 +1138,12 @@ def init( \
             gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
         
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
-        gdat.truesamp[gdat.trueindxfixpnumbpnts] = gdat.truesampvarb[gdat.trueindxfixpnumbpnts]
-        
-        gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
-        gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
-        
-        # sample element components from the true metamodel
         if gdat.truenumbtrap > 0:
+            gdat.truesamp[gdat.trueindxfixpnumbpnts] = gdat.truesampvarb[gdat.trueindxfixpnumbpnts]
+            gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
+            gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
+        
+            # sample element components from the true metamodel
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
     if 'gaus' in gdat.fittspatdisttype:
@@ -1859,7 +1860,7 @@ def optihess(gdat, gdatmodi):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 1.
+        fudgstdv = 1e-1
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
@@ -1893,6 +1894,18 @@ def optihess(gdat, gdatmodi):
                 if n in gdat.indxfixpprop or n in indxsamptranprop:
                     indxstdpseco = gdat.indxstdppara[n]
                     if k == n:
+                        
+                        if True:
+                            print 'k'
+                            print k
+                            print 'n'
+                            print n
+                            print 'gdat.fittnamepara[k]'
+                            print gdat.fittnamepara[k]
+                            print 'indxstdpfrst'
+                            print indxstdpfrst
+                            print 'indxstdpseco'
+                            print indxstdpseco
                        
                         for a in [0, 2]:
                             # evaluate the posterior
@@ -1900,17 +1913,7 @@ def optihess(gdat, gdatmodi):
 
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
-                        if False:
-                            print 'k'
-                            print k
-                            print 'gdat.fittnamepara[k]'
-                            print gdat.fittnamepara[k]
-                            print 'n'
-                            print n
-                            print 'indxstdpfrst'
-                            print indxstdpfrst
-                            print 'indxstdpseco'
-                            print indxstdpseco
+                        if True:
                             print 'deltparastep'
                             print deltparastep
                             print 'deltlpos'
@@ -1918,8 +1921,8 @@ def optihess(gdat, gdatmodi):
                             print 'gdatmodi.hess[indxstdpfrst, indxstdpseco]'
                             print gdatmodi.hess[indxstdpfrst, indxstdpseco]
                             print
-                            if gdatmodi.hess[indxstdpfrst, indxstdpseco] == 0.:
-                                raise Exception('')
+                            #if gdatmodi.hess[indxstdpfrst, indxstdpseco] == 0.:
+                            #    raise Exception('')
 
                         if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
                             stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
@@ -1960,7 +1963,7 @@ def optihess(gdat, gdatmodi):
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     
-    if False:
+    if True:
         print 'gdatmodi.hess'
         print gdatmodi.hess
         print 'gdatmodi.stdvstdpmatr'
@@ -1989,15 +1992,8 @@ def optihess(gdat, gdatmodi):
     
     gdatmodi.stdvstdp = gdatmodi.stdvstdpmatr[gdat.indxstdp, gdat.indxstdp]
     
-    # temp
-    gdatmodi.stdvstdp[0:2] *= gdat.fittnumbpara
-    
     if gdat.makeplot:
         
-        # temp
-        #if gdat.numbproc > 1:
-        #    lock.acquire()
-    
         xdat = gdat.indxstdp
         ydat = gdatmodi.stdvstdp
         pathopti = getattr(gdat, 'path' + gdat.namesampdist + 'opti')
@@ -2437,15 +2433,16 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Process %d is in queue for making a frame.' % gdatmodi.indxprocwork
             
-            # temp
+            proc_samp(gdat, gdatmodi, 'this')
+            
             if gdat.numbproc > 1:
                 gdatmodi.lock.acquire()
             
             if gdat.verbtype > 0:
                 print 'Process %d started making a frame.' % gdatmodi.indxprocwork
             
-            proc_samp(gdat, gdatmodi, 'this')
             plot_samp(gdat, gdatmodi, 'this')
+            
             if gdat.verbtype > 0:
                 print 'Process %d finished making a frame.' % gdatmodi.indxprocwork
         
@@ -2559,12 +2556,16 @@ def work(pathoutpthis, lock, indxprocwork):
                     indxswepintv = arange(minm, maxm)
                     for k in gdat.indxproptype:
                         numb = where(workdict['listindxproptype'][indxswepintv] == k)[0].size
+                        if gdat.propwithsing and k in gdat.indxstdp:
+                            strgstdvstdp = '%.3g' % gdat.stdvstdp[k]
+                        else:
+                            strgstdvstdp = ''
                         if numb > 0:
                             fact =  100. / float(numb)
                             accp = fact * where(logical_and(workdict['listaccp'][indxswepintv], workdict['listindxproptype'][indxswepintv] == k))[0].size
-                            print '%30s %30s' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (out of %5d)' % (accp, numb))
+                            print '%30s %40s %10s' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (out of %5d)' % (accp, numb), strgstdvstdp)
                         else:
-                            print '%30s %30s' % (gdat.legdproptype[k], 'N/A')
+                            print '%30s %40s %10s' % (gdat.legdproptype[k], 'N/A', strgstdvstdp)
                         
                     print 'Number of elements:'
                     print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts].astype(int)
