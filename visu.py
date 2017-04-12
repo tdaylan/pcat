@@ -54,17 +54,22 @@ def plot_samp(gdat, gdatmodi, strg):
 
         # PS spectra
         if gdat.numbener > 1 and gdat.elemtype == 'lght':
+            specplot = getattr(gdatobjt, strgmodl + 'specplot')
             for l in indxpopl:
                 listxdat = []
                 listplottype = []
                 listydat = []
                 for k in range(numbpnts[l]):
-                    specplot = getattr(gdatobjt, strgmodl + 'specplot')[l][:, k]
+                    specplottemp = specplot[l]
+                    if strgmodl == 'true':
+                        specplottemp = specplottemp[0, :, k]
+                    else:
+                        specplottemp = specplottemp[:, k]
                     if gdat.enerdiff:
-                        specplot *= gdat.meanenerplot**2
+                        specplottemp *= gdat.meanenerplot**2
                     listplottype.append('line')
                     listxdat.append(gdat.meanenerplot)
-                    listydat.append(specplot)
+                    listydat.append(specplottemp)
                 
                 path = pathtemp + 'specpop%d%s.pdf' % (l, strgswep)
                 tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, plottype=listplottype, \
@@ -74,14 +79,18 @@ def plot_samp(gdat, gdatmodi, strg):
         if gdat.elemtype == 'lens':
             xdat = gdat.binsangl[1:] * gdat.anglfact
             lablxdat = gdat.lablfeattotl['gang']
+            deflprof = getattr(gdatobjt, strg + 'deflprof')
             for l in indxpopl:
                 listydat = []
                 listvlinfrst = []
                 listvlinseco = []
 
                 for k in arange(numbpnts[l]):
-                    deflprof = getattr(gdatobjt, strg + 'deflprof')
-                    listydat.append(deflprof[l][k] * gdat.anglfact)
+                    if strgmodl == 'true':
+                        deflproftemp = deflprof[l][0, :, :]
+                    else:
+                        deflproftemp = deflprof[l]
+                    listydat.append(deflproftemp[:, k] * gdat.anglfact)
                     listvlinfrst.append(sampvarb[indxsampcomp['asca'][l][k]] * gdat.anglfact) 
                     listvlinseco.append(sampvarb[indxsampcomp['acut'][l][k]] * gdat.anglfact)
                     
