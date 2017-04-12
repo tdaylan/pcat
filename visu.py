@@ -369,10 +369,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     while cntr < gdat.numbproptype:
         thisnumbplot = min(numbplotfram, gdat.numbproptype - cntr)
         sizefigryaxi = max(thisnumbplot * gdat.plotsize / 4., gdat.plotsize / 2.)
-        print 'thisnumbplot'
-        print thisnumbplot
-        print 'sizefigryaxi'
-        print sizefigryaxi
         figr, axgr = plt.subplots(thisnumbplot, 1, figsize=(gdat.plotsize, sizefigryaxi), sharex='all')
         if thisnumbplot == 1:
             axgr = [axgr]
@@ -380,7 +376,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             histtotl = axis.hist(gdat.listindxsamptotl[n+cntr], bins=binstimemcmc)[0]
             histaccp = axis.hist(gdat.listindxsamptotlaccp[n+cntr], bins=binstimemcmc)[0]
             # temp
-            #axis.set_ylabel('%s' % gdat.lablproptype[n+cntr])
+            axis.set_ylabel('%s' % gdat.lablproptype[n+cntr])
             if n + cntr == gdat.numbproptype - 1:
                 axis.set_xlabel('$i_{samp}$')
             maxm = amax(histtotl)
@@ -537,15 +533,15 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ### covariance
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixpprop] * gdat.fittfactfixpplot[None, gdat.indxfixpprop], gdat.fittlablfixp[gdat.indxfixpprop], \
-                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.fittfactfixpplot[gdat.indxfixpprop])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.indxfixp] * gdat.fittfactfixpplot[None, gdat.indxfixp], gdat.fittlablfixptotl[gdat.indxfixp], \
+                                                                                          truepara=gdat.fittcorrfixp[gdat.indxfixp] * gdat.fittfactfixpplot[gdat.indxfixp])
     
     #### individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
-            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixpprop] * gdat.fittfactfixpplot[None, gdat.indxfixpprop], \
-                                gdat.fittlablfixp[gdat.indxfixpprop], truepara=gdat.fittcorrfixp[gdat.indxfixpprop] * gdat.fittfactfixpplot[gdat.indxfixpprop])
+            tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.indxfixp] * gdat.fittfactfixpplot[None, gdat.indxfixp], \
+                                gdat.fittlablfixptotl[gdat.indxfixp], truepara=gdat.fittcorrfixp[gdat.indxfixp] * gdat.fittfactfixpplot[gdat.indxfixp])
     
     ### grouped covariance plots
     if gdat.verbtype > 0:
@@ -553,7 +549,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### hyperparameters
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr], gdat.fittlablfixp[gdat.fittindxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixphypr])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -561,21 +557,21 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### PSF
     if gdat.proppsfp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'psfp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixppsfp], gdat.fittlablfixp[gdat.fittindxfixppsfp], \
-                                                                            truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixppsfp] * gdat.fittfactfixpplot[None, gdat.fittindxfixppsfp], gdat.fittlablfixptotl[gdat.fittindxfixppsfp], \
+                                          truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
     if gdat.verbtype > 0:
         print 'Background parameters...'
     
     #### backgrounds
     if gdat.propbacp:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'bacp'
-        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixp[gdat.fittindxfixpbacp], \
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixptotl[gdat.fittindxfixpbacp], \
                                                                                                         truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixpbacp])
         if gdat.fittnumbback == 2 and gdat.fittspecback == [None, None]:
             for i in gdat.indxener:
                 indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
-                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixp[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
+                tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixptotl[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
     
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'
@@ -638,6 +634,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
 
         pathbase = getattr(gdat, 'path' + gdat.namesampdist + 'finldelt%s' % strg)
         path = pathbase + 'delt%s' % strg
+        print 'hey'
+        print 'getattr(gdat, listdelt + strg + totlflat)'
+        print getattr(gdat, 'listdelt' + strg + 'totlflat')
+        summgene(getattr(gdat, 'listdelt' + strg + 'totlflat'))
+
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat'), labldelt)
         if gdat.numbproc > 1:
             for k in gdat.indxproc:
@@ -952,9 +953,22 @@ def plot_brgt(gdat, gdatmodi, strg):
     
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatbrgt')
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
+
+
+def savefigr(gdat, gdatmodi, figr, path):
     
+    #if gdatmodi != None and gdat.numbproc > 1:
+    #    gdatmodi.lock.acquire()
+    #    print 'Process %d acquiring the lock...' % gdatmodi.indxprocwork 
+    
+    plt.savefig(path)
+    
+    #if gdatmodi != None and gdat.numbproc > 1:
+    #    gdatmodi.lock.release()
+    #    print 'Process %d releasing the lock...' % gdatmodi.indxprocwork 
+        
 
 def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, strgmome='medi'):
     
@@ -1035,7 +1049,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     else:
         strgmometemp = ''
     path = retr_plotpath(gdat, gdatmodi, strg, '%s%s%s%spop%d' % (strgmometemp, strgplottype, strgfrst, strgseco, l), nameinte=strgplottype + 'tdim/')
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
 
@@ -1209,7 +1223,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
 
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, strgydat, nameinte=nameinte)
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
 
@@ -1278,7 +1292,7 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
     else:
         strg = ''
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatassc' + strgfeat + '%spop%d' % (strg, l), nameinte='assc/')
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
 
@@ -1323,7 +1337,7 @@ def plot_scatpixl(gdat, gdatmodi, strg):
             
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, 'scatpixl')
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
     
@@ -2218,7 +2232,7 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1,
                   gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], scale_units='xy', angles='xy', scale=1)
     supr_fram(gdat, gdatmodi, strg, axis)
     #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
 
@@ -2253,6 +2267,6 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
     supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
 
     plt.tight_layout()
-    figr.savefig(path)
+    savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     

@@ -42,7 +42,7 @@ def init( \
          loadvaripara=False, \
          
          propcova=True, \
-         propwithsing=False, \
+         propwithsing=True, \
          pertmodleval=None, \
          optihess=None, \
          optillik=False, \
@@ -70,7 +70,7 @@ def init( \
          asscmetrtype='dist', \
 
          # plotting
-         numbswepplot=2000, \
+         numbswepplot=None, \
          makeplot=True, \
          makeplotfram=True, \
          numbframpost=None, \
@@ -116,7 +116,7 @@ def init( \
          bindprio=False, \
          maxmgangdata=None, \
         
-         checprio=True, \
+         checprio=False, \
 
          # proposals
          stdvprophypr=0.01, \
@@ -449,6 +449,10 @@ def init( \
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 10
 
+    # number of sweeps between frame plots
+    if gdat.numbswepplot == None:
+        gdat.numbswepplot = max(gdat.numbswep / 50, 2000)
+
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
         gdat.factthin = int(ceil(1e-3 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
@@ -513,15 +517,12 @@ def init( \
 
     ### background
     #### template
-    if gdat.elemtype == 'lght':
-        if gdat.exprtype == 'ferm':
-            back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-        elif gdat.exprtype == 'chan':
-            back = [array([1.3e1, 4.]), 1e1]
-        else:
-            back = [1.]
-    if gdat.elemtype == 'lens':
-        back = [1e-7]
+    if gdat.exprtype == 'ferm':
+        back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+    elif gdat.exprtype == 'chan':
+        back = [array([1.3e1, 4.]), 1e1]
+    else:
+        back = [1.]
     if gdat.elemtype == 'clus':
         back = [1.]
     setp_true(gdat, 'back', back)
@@ -610,7 +611,11 @@ def init( \
     setp_truedefa(gdat, 'psff', [0., 1.], ener=True, evtt=True)
  
     ### normalization
-    setp_truedefa(gdat, 'bacp', [0.5, 2.], ener=True, back=True)
+    if gdat.exprtype == 'hubb':
+        bacp = [1e-8, 1e-6]
+    else:
+        bacp = [1e-1, 1e1]
+    setp_truedefa(gdat, 'bacp', bacp, ener=True, back=True)
 
     ## hyperparameters
     setp_truedefa(gdat, 'meanpnts', [0.1, 1e3], popl=True)
@@ -737,10 +742,6 @@ def init( \
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
 
-    print 'gdat.fittminmdefs'
-    print gdat.fittminmdefs
-    print
-
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -807,7 +808,11 @@ def init( \
         setp_true(gdat, 'expodistmeanpop1', 2., popl=True)
         setp_true(gdat, 'expodiststdvpop1', 0.2, popl=True)
     
-    setp_true(gdat, 'bacp', 1., ener=True, back=True)
+    if gdat.exprtype == 'hubb':
+        bacp = 1e-7
+    else:
+        bacp = 1.
+    setp_true(gdat, 'bacp', bacp, ener=True, back=True)
     
     if gdat.elemtype == 'lens':
         setp_true(gdat, 'beinhost', 1.5 / gdat.anglfact)
@@ -1830,7 +1835,7 @@ def worktrac(pathoutpthis, lock, indxprocwork):
         raise Exception("".join(traceback.format_exception(*sys.exc_info())))
 
 
-def optihess(gdat, gdatmodi, indxprocwork):
+def optihess(gdat, gdatmodi):
     
     if gdat.verbtype > 0:
         print 'Calculating the Fisher information...'
@@ -1950,7 +1955,7 @@ def optihess(gdat, gdatmodi, indxprocwork):
                         print 'Proposal scale estimate went infinite for %s...' % gdat.fittnamepara[k]
 
         if gdat.verbtype > 0:
-            gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.fittnumbpara, gdatmodi.cntrparasave, indxprocwork=indxprocwork)
+            gdatmodi.cntrparasave = tdpy.util.show_prog(k, gdat.fittnumbpara, gdatmodi.cntrparasave, indxprocwork=gdatmodi.indxprocwork)
 
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
@@ -1989,13 +1994,14 @@ def optihess(gdat, gdatmodi, indxprocwork):
     
     if gdat.makeplot:
         
-        if gdat.numbproc > 1:
-            lock.acquire()
+        # temp
+        #if gdat.numbproc > 1:
+        #    lock.acquire()
     
         xdat = gdat.indxstdp
         ydat = gdatmodi.stdvstdp
         pathopti = getattr(gdat, 'path' + gdat.namesampdist + 'opti')
-        path = pathopti + 'stdv%d.pdf' % indxprocwork
+        path = pathopti + 'stdv%d.pdf' % gdatmodi.indxprocwork
         tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist', limtydat=[amin(ydat) / 2., 2. * amax(ydat)])
         
         for strgcomp in gdat.fittliststrgcomptotl:
@@ -2020,8 +2026,8 @@ def optihess(gdat, gdatmodi, indxprocwork):
             tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                              lablydat=r'$\sigma_{%s}$' % gdat.lablfeat[strgcomp], plottype=['scat', 'line'])
 
-        if gdat.numbproc > 1:
-            lock.release()
+        #if gdat.numbproc > 1:
+        #    lock.release()
     
     gdatmodi.cntrswep = 0
 
@@ -2063,7 +2069,9 @@ def work(pathoutpthis, lock, indxprocwork):
     
     # empty object to hold chain-specific variables that will be modified by the chain
     gdatmodi = tdpy.util.gdatstrt()
-  
+    gdatmodi.lock = lock
+    gdatmodi.indxprocwork = indxprocwork
+
     # construct the initial state
     if gdat.verbtype > 0:
         print 'Initializing the sampler state...'
@@ -2124,7 +2132,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         comp = getattr(gdat, 'true' + strgcomp)[l]
                         minm = getattr(gdat, 'fittminm' + strgcomp)
                         maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                        bins = getattr(gdat, 'fittbins' + strgcomp)
+                        bins = getattr(gdat, 'bins' + strgcomp)
                         if gdat.fittlistscalcomp[l][k] == 'self':
                             fact = getattr(gdat, 'fittfact' + strgcomp)
                             compunit = cdfn_self(comp, minm, fact)
@@ -2260,7 +2268,7 @@ def work(pathoutpthis, lock, indxprocwork):
             else:
                 booltemp = True
             if booltemp:
-                optihess(gdat, gdatmodi, indxprocwork)
+                optihess(gdat, gdatmodi)
                 gdatmodi.optidone = True
             
         if gdatmodi.optidone:
@@ -2279,7 +2287,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print '-' * 10
             print 'Sweep %d' % gdatmodi.cntrswep
 
-        thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
+        thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
                                                                                                           and gdat.makeplotfram and gdat.makeplot and not gdat.opti
         # choose a proposal type
         initchro(gdat, gdatmodi, 'type')
@@ -2427,19 +2435,22 @@ def work(pathoutpthis, lock, indxprocwork):
             initchro(gdat, gdatmodi, 'plot')
             
             if gdat.verbtype > 0:
-                print 'Process %d is in queue for making a frame.' % indxprocwork
+                print 'Process %d is in queue for making a frame.' % gdatmodi.indxprocwork
+            
+            # temp
             if gdat.numbproc > 1:
-                lock.acquire()
+                gdatmodi.lock.acquire()
+            
             if gdat.verbtype > 0:
-                print 'Process %d started making a frame.' % indxprocwork
+                print 'Process %d started making a frame.' % gdatmodi.indxprocwork
             
             proc_samp(gdat, gdatmodi, 'this')
             plot_samp(gdat, gdatmodi, 'this')
             if gdat.verbtype > 0:
-                print 'Process %d finished making a frame.' % indxprocwork
+                print 'Process %d finished making a frame.' % gdatmodi.indxprocwork
         
             if gdat.numbproc > 1:
-                lock.release()
+                gdatmodi.lock.release()
         
             stopchro(gdat, gdatmodi, 'plot')
     
@@ -2614,6 +2625,6 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
     
-    path = gdat.pathoutpthis + 'gdatmodi%04d' % indxprocwork
+    path = gdat.pathoutpthis + 'gdatmodi%04d' % gdatmodi.indxprocwork
     writfile(gdatmodi, path) 
     

@@ -2453,6 +2453,18 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock':
         setp_fixp(gdat, strgmodl='true')
     
+    for strgmodl in gdat.liststrgmodl:
+        namefixp = getattr(gdat, strgmodl + 'namefixp')
+        lablfixp = getattr(gdat, strgmodl + 'lablfixp')
+        lablfixpunit = getattr(gdat, strgmodl + 'lablfixpunit')
+        lablfixptotl = []
+        for k in getattr(gdat, strgmodl + 'indxfixp'):
+            if lablunit == '':
+                lablfixptotl.append('$%s$' % labl)
+            else:
+                lablfixptotl.append('$%s$ [%s]' % (labl, lablunit))
+        setattr(gdat, strgmodl + 'lablfixptotl', lablfixptotl)
+
     gdat.liststrgfeatconc = deepcopy(gdat.fittliststrgcomptotl)
     if gdat.elemtype == 'lght':
         gdat.liststrgfeatconc.remove('flux')
@@ -3203,7 +3215,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.propwithsing:
             for k in gdat.indxstdp:    
                 gdat.indxproptypewith = cntr.incr()
-                gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W_{%d}}$' % k)
+                gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}_{%d}$' % k)
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[where(gdat.indxstdppara == k)[0][0]])
                 gdat.nameproptype = append(gdat.nameproptype, gdat.namestdp[k])
         else:    
@@ -3238,6 +3250,10 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.legdproptype = append(gdat.legdproptype, 'Merge')
                 gdat.nameproptype = append(gdat.nameproptype, 'merg')
     
+    print 'gdat.lablproptype'
+    print gdat.lablproptype
+    print
+
     gdat.numbproptype = gdat.nameproptype.size
     gdat.indxproptype = arange(gdat.numbproptype)
     
@@ -3888,6 +3904,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if namefixp[k].startswith('gangdistscalp'):
                 lablfixp[k] = r'$\gamma_{\theta%s}$' % strgpoplcomm
                 scalfixp[k] = 'self'
+                lablfixpunit[k] = gdat.lablgangunit
             
             if namefixp[k].startswith('spatdistconsp'):
                 lablfixp[k] = r'$\gamma_{c%s}$' % strgpoplcomm
@@ -3896,6 +3913,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if namefixp[k].startswith('bgaldistscalp'):
                 lablfixp[k] = r'$\gamma_{b%s}$' % strgpoplcomm
                 scalfixp[k] = 'self'
+                lablfixpunit[k] = gdat.lablgangunit
             
             if namefixp[k][4:].startswith('distslopp'):
                 lablfixp[k] = r'$\alpha_{%s}$' % strgpopl
@@ -3924,26 +3942,36 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if namefixp[k].startswith('expodistmean'):
                 lablfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablexpo)
                 scalfixp[k] = 'logt'
+                lablfixpunit[k] = gdat.lablenerunit
             
             if namefixp[k].startswith('expodiststdv'):
                 lablfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablexpo)
                 scalfixp[k] = 'logt'
+                lablfixpunit[k] = gdat.lablenerunit
             
             if namefixp[k].startswith('ascadistmean'):
                 lablfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablasca)
                 scalfixp[k] = 'logt'
+                factfixpplot[k] = gdat.anglfact
+                lablfixpunit[k] = gdat.lablgangunit
             
             if namefixp[k].startswith('ascadiststdv'):
                 lablfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablasca)
                 scalfixp[k] = 'logt'
+                factfixpplot[k] = gdat.anglfact
+                lablfixpunit[k] = gdat.lablgangunit
             
             if namefixp[k].startswith('acutdistmean'):
                 lablfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablacut)
                 scalfixp[k] = 'logt'
+                factfixpplot[k] = gdat.anglfact
+                lablfixpunit[k] = gdat.lablgangunit
             
             if namefixp[k].startswith('acutdiststdv'):
                 lablfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablacut)
                 scalfixp[k] = 'logt'
+                factfixpplot[k] = gdat.anglfact
+                lablfixpunit[k] = gdat.lablgangunit
             
         if strg[:-1].endswith('evt'):
             
@@ -3968,6 +3996,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if strgvarb.startswith('sig'):
                 strgvarbtemp = '\sigma'
                 factfixpplot[k] = gdat.anglfact
+                lablfixpunit[k] = gdat.lablgangunit
             if strgvarb.startswith('gam'):
                 strgvarbtemp = '\gamma'
             if strgvarb.startswith('psff'):
@@ -4022,6 +4051,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             
             namefixp[k] = name
             lablfixp[k] = '$A_{%s%s}$' % (strgbacktemp, strgenertemp)
+            lablfixpunit[k] = gdat.lablfluxsoldunit
             scalfixp[k] = 'logt'
         
         if gdat.elemtype == 'lens':
@@ -4030,20 +4060,24 @@ def setp_fixp(gdat, strgmodl='fitt'):
                     lablfixp[k] = '$l_s$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'bgalsour':
                     lablfixp[k] = '$b_s$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb.startswith('specsour'):
                     if gdat.numbener > 1:
                         lablfixp[k] = '$f_{s,%s}$' % strg[-1]
                     else:
                         lablfixp[k] = '$f_s$'
                     scalfixp[k] = 'logt'
+                    lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizesour':
                     lablfixp[k] = '$a_s$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'ellpsour':
                     lablfixp[k] = r'$\epsilon_s$'
                     scalfixp[k] = 'self'
@@ -4054,23 +4088,29 @@ def setp_fixp(gdat, strgmodl='fitt'):
                     lablfixp[k] = '$l_h$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'bgalhost':
                     lablfixp[k] = '$b_h$'
                     scalfixp[k] = 'self'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb.startswith('spechost'):
                     if gdat.numbener > 1:
                         lablfixp[k] = '$f_{h,%s}$' % strg[-1]
                     else:
                         lablfixp[k] = '$f_h$'
                     scalfixp[k] = 'logt'
+                    lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizehost':
                     lablfixp[k] = '$a_h$'
                     scalfixp[k] = 'logt'
+                    factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'beinhost':
                     lablfixp[k] = r'$\theta_{E,h}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
+                    lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'ellphost':
                     lablfixp[k] = r'$\epsilon_h$'
                     scalfixp[k] = 'self'
@@ -4105,10 +4145,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
             maxmfixp[k] = meanfixp[k] + 3. * stdvfixp[k]
         if scalfixp[k] == 'eerr':
             cdfnminmfixp[k], cdfndifffixp[k] = retr_eerrnorm(minmfixp[k], maxmfixp[k], meanfixp[k], stdvfixp[k])
-        if strgvarb.startswith('sig'):
-            lablfixpunit[k] = lablfixp[k] + ' [%s]' % getattr(gdat, 'lablgangunit')
-        else:
-            lablfixpunit[k] = lablfixp[k]
    
     # background templates
     listlablcompfrac = deepcopy(nameback)
@@ -4125,10 +4161,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
         listlablcompfracspec.append('Total Model')
     numblablcompfrac = len(listlablcompfrac)
     numblablcompfracspec = len(listlablcompfracspec)
-
-
-    
-
 
     namepara = zeros(int(numbpara), dtype=object)
     namepara = zeros(numbpara, dtype=object)
@@ -4517,7 +4549,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 
     # temp
     if strg == 'post' and gdat.condcatl:
-        indxprvlhigh = where(gdat.prvl > 0.2)[0]
+        indxprvlhigh = where(gdat.prvl > 0.02)[0]
         numbprvlhigh = indxprvlhigh.size
         lgal = zeros(numbprvlhigh)
         bgal = zeros(numbprvlhigh)
