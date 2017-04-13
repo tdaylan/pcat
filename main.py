@@ -28,6 +28,8 @@ def init( \
          # evaluate the likelihood inside circles around elements
          evalcirc=None, \
         
+         shrtfram=False, \
+
          numbspatdims=2, \
          
          # model type
@@ -49,6 +51,8 @@ def init( \
          optiprop=False, \
          regulevi=False, \
          
+         intreval=False, \
+
          strgexprflux=None, \
          strgcatl=None, \
          anglassc=None, \
@@ -451,7 +455,7 @@ def init( \
 
     # number of sweeps between frame plots
     if gdat.numbswepplot == None:
-        gdat.numbswepplot = max(gdat.numbswep / 50, 2000)
+        gdat.numbswepplot = max(gdat.numbswep / 20, 5000)
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -960,7 +964,10 @@ def init( \
     for namevarbscal in gdat.listnamevarbscal:
         minm = getattr(gdat, 'minm' + namevarbscal)
         maxm = getattr(gdat, 'maxm' + namevarbscal)
-        scal = getattr(gdat, 'fittscal' + namevarbscal)
+        if namevarbscal in gdat.fittnamefixp:
+            scal = getattr(gdat, 'fittscal' + namevarbscal)
+        else:
+            scal = getattr(gdat, 'scal' + namevarbscal)
         retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=scal)
     
     # create the PCAT folders
@@ -1171,6 +1178,9 @@ def init( \
         proc_samp(gdat, None, 'true', raww=True)
         proc_samp(gdat, None, 'true')
             
+        if gdat.intreval:
+            plot_genemaps(gdat, None, 'true', 'modlcnts', strgcbar='datacnts', thisindxener=0, thisindxevtt=0, intreval=True)
+
         if gdat.makeplot:
             plot_samp(gdat, None, 'true')
         
@@ -1577,10 +1587,6 @@ def proc_post(gdat, prio=False):
     for k, namefixp in enumerate(gdat.fittnamefixp):
         setattr(gdat, 'list' + namefixp, gdat.listfixp[:, k])
     
-    # temp
-    #if gdat.elemtype == 'lens':
-    #    gdat.listfracsubh = gdat.listfracsubh.flatten()
-    
     if gdat.checprio:
         for namevarbscal in gdat.listnamevarbscal:
             binsvarbscal = getattr(gdat, 'bins' + namevarbscal)
@@ -1702,7 +1708,7 @@ def proc_post(gdat, prio=False):
             errrtemp = []
             stdvtemp = []
             numbelem = len(listtemp[0])
-
+            
             for k in range(numbelem):
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
@@ -1860,7 +1866,7 @@ def optihess(gdat, gdatmodi):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 1e-1
+        fudgstdv = 0.1
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep
@@ -1895,7 +1901,7 @@ def optihess(gdat, gdatmodi):
                     indxstdpseco = gdat.indxstdppara[n]
                     if k == n:
                         
-                        if True:
+                        if False:
                             print 'k'
                             print k
                             print 'n'
@@ -1913,7 +1919,7 @@ def optihess(gdat, gdatmodi):
 
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
-                        if True:
+                        if False:
                             print 'deltparastep'
                             print deltparastep
                             print 'deltlpos'
@@ -1963,7 +1969,7 @@ def optihess(gdat, gdatmodi):
     #gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = linalg.inv(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     gdatmodi.stdvstdpmatr[:gdat.numbstdpfixp, :gdat.numbstdpfixp] = 1. / sqrt(gdatmodi.hess[:gdat.numbstdpfixp, :gdat.numbstdpfixp])
     
-    if True:
+    if False:
         print 'gdatmodi.hess'
         print gdatmodi.hess
         print 'gdatmodi.stdvstdpmatr'
@@ -2003,10 +2009,11 @@ def optihess(gdat, gdatmodi):
         for strgcomp in gdat.fittliststrgcomptotl:
             path = pathopti + 'stdv' + strgcomp + '.pdf'
             factplot = gdat.dictglob['fact' + strgcomp + 'plot']
-            meanplot = getattr(gdat, 'mean' + strgcomp)
+            meanplot = getattr(gdat, 'mean' + gdat.namecompsign)
             minm = getattr(gdat, 'minm' + gdat.namecompsign)
             factsignplot = gdat.dictglob['fact' + gdat.namecompsign + 'plot']
             xdat = [gdatmodi.dictmodi['stdv' + strgcomp + 'indv' + gdat.namecompsign] * factsignplot, meanplot * factsignplot]
+            
             if strgcomp == gdat.namecompsign:
                 ydat = [gdatmodi.dictmodi['stdv' + strgcomp + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)] / (meanplot / minm)**2.]
             else:

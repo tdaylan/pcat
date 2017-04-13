@@ -1,6 +1,6 @@
 # plotting
 import matplotlib as mpl
-mpl.use('agg')
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -9,6 +9,7 @@ import random as randommod
 import numpy as np
 from numpy import *
 from numpy.random import *
+from matplotlib.widgets import Slider, Button, RadioButtons
 
 # scipy
 import scipy as sp
