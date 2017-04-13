@@ -1961,12 +1961,25 @@ def retr_condcatl(gdat):
         if gdat.verbtype > 1:
             print 'indxelemassc'
             print indxelemassc
-
+        
         # count number of associations
         numbassc = zeros(numbelem, dtype=int) - 1
         for p in range(len(indxelemleft)):
             numbassc[indxelemleft[p]] = where(listdist[indxelemleft[p], indxelemleft] < distthrs)[0].size
         
+        prvlmaxmesti = amax(numbassc) / float(gdat.numbsamptotl)
+        if cntr % 10 == 0:
+            print 'cntr'
+            print cntr
+            print 'amax(numbassc)'
+            print amax(numbassc)
+            print 'prvlmaxmesti'
+            print prvlmaxmesti
+
+        if prvlmaxmesti < gdat.prvlthrs:
+            print 'Exiting...'
+            break
+
         # determine the element with the highest number of neighbors
         indxelemcntr = argmax(numbassc)
         indxsamptotlcntr = indxtupl[indxelemcntr][0]
@@ -2121,15 +2134,15 @@ def retr_condcatl(gdat):
     gdat.histprvl = histogram(gdat.prvl, bins=gdat.binsprvl)[0]
     if gdat.makeplot:
         pathcond = getattr(gdat, 'path' + gdat.namesampdist + 'finlcond')
-        path = pathcond + 'histdist'
-        listtemp = copy(listdist).flatten()
-        listtemp = listtemp[where(listtemp != 1e20)[0]]
-        tdpy.mcmc.plot_hist(path, listtemp, r'$\xi$')
-        
-        path = pathcond + 'histprvl'
-        tdpy.mcmc.plot_hist(path, gdat.prvl, r'$p$')
-    
-    gdat.indxprvlhigh = where(gdat.prvl > 0.1)[0]
+        for k, strgcomp in enumerate(gdat.liststrgcomptotl):
+            path = pathcond + 'histdist' + strgcomp 
+            listtemp = copy(listdist[:, :, k]).flatten()
+            listtemp = listtemp[where(listtemp != 1e20)[0]]
+            tdpy.mcmc.plot_hist(path, listtemp, r'$Delta$ ' + getattr(gdat, 'labl' + strgcomp))
+            path = pathcond + 'histprvl'
+            tdpy.mcmc.plot_hist(path, gdat.prvl, r'$p$')
+    gdat.prvlthrs = 0.01 
+    gdat.indxprvlhigh = where(gdat.prvl > gdat.prvlthrs)[0]
     gdat.numbprvlhigh = gdat.indxprvlhigh.size
 
 
