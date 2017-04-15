@@ -633,7 +633,7 @@ def init( \
     if gdat.elemtype == 'lens':
         meanpnts = [0.1, 100]
     if gdat.elemtype == 'lght':
-        meanpnts = [0.1, 400]
+        meanpnts = [1., 1000]
     setp_truedefa(gdat, 'meanpnts', meanpnts, popl=True)
     
     ### element parameter boundaries
@@ -758,25 +758,6 @@ def init( \
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
     
-    # temp
-    #print 'fittmaxmnumbpnts'
-    #print gdat.fittmaxmnumbpnts
-    #print 'fittminmnumbpnts'
-    #print gdat.fittminmnumbpnts
-    #print 'fittminmdefs'
-    #print gdat.fittminmdefs
-    #print 'truemaxmnumbpnts'
-    #print gdat.truemaxmnumbpnts
-    #print 'trueminmnumbpnts'
-    #print gdat.trueminmnumbpnts
-    #print 'trueminmdefs'
-    #print gdat.trueminmdefs
-    #print 'truenumbpnts'
-    #print gdat.truenumbpnts
-    #print 'fittnumbpnts'
-    #print gdat.fittnumbpnts
-    #raise Exception('h')
-
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
