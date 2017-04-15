@@ -322,7 +322,7 @@ def init( \
     
     if gdat.evalcirc == None:
         if gdat.elemtype == 'lght':
-            gdat.evalcirc = 'psfn'
+            gdat.evalcirc = 'locl'
         else:
             gdat.evalcirc = 'full'
 
@@ -641,7 +641,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-3 / gdat.anglfact
+    minmdefs = 3e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -1051,8 +1051,9 @@ def init( \
         if not isfinite(gdat.exprspec).all():
             raise Exception('exprspec is not finite.')
         
-        if gdat.exprnumbpnts > 0:
-            gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
+        # temp
+        #if gdat.exprnumbpnts > 0:
+        #    gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
 
     # generate true data
     if gdat.datatype == 'mock':
@@ -1862,7 +1863,7 @@ def optihess(gdat, gdatmodi):
     # temp
     deltparastep = 1e-4
 
-    maxmstdv = 0.1
+    maxmstdv = 10.
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
