@@ -470,13 +470,21 @@ def init( \
 
     ## generative model
     # set mock sample vector indices
-    setp_true(gdat, 'numbpnts', array([50]))
+    if gdat.elemtype == 'lens':
+        numbpnts = array([30])
+    if gdat.elemtype == 'lght':
+        numbpnts = array([100])
+    setp_true(gdat, 'numbpnts', numbpnts)
     gdat.truenumbpopl = gdat.truenumbpnts.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
     setp_true(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
+    #if gdat.elemtype == 'lens':
+    #    maxmnumbpnts = array([1000])
+    #if gdat.elemtype == 'lght':
+    #    maxmnumbpnts = array([200])
     setp_true(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1000)
-    
+     
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
         setattr(gdat, 'truemaxmnumbpntspop%d' % l, gdat.truemaxmnumbpnts[l])
@@ -622,7 +630,11 @@ def init( \
     setp_truedefa(gdat, 'bacp', bacp, ener=True, back=True)
 
     ## hyperparameters
-    setp_truedefa(gdat, 'meanpnts', [0.1, 1e3], popl=True)
+    if gdat.elemtype == 'lens':
+        meanpnts = [0.1, 100]
+    if gdat.elemtype == 'lght':
+        meanpnts = [0.1, 400]
+    setp_truedefa(gdat, 'meanpnts', meanpnts, popl=True)
     
     ### element parameter boundaries
     #### spatial
@@ -745,7 +757,26 @@ def init( \
                     print 'Received custom input for ' + strg[4:]
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
-   
+    
+    # temp
+    #print 'fittmaxmnumbpnts'
+    #print gdat.fittmaxmnumbpnts
+    #print 'fittminmnumbpnts'
+    #print gdat.fittminmnumbpnts
+    #print 'fittminmdefs'
+    #print gdat.fittminmdefs
+    #print 'truemaxmnumbpnts'
+    #print gdat.truemaxmnumbpnts
+    #print 'trueminmnumbpnts'
+    #print gdat.trueminmnumbpnts
+    #print 'trueminmdefs'
+    #print gdat.trueminmdefs
+    #print 'truenumbpnts'
+    #print gdat.truenumbpnts
+    #print 'fittnumbpnts'
+    #print gdat.fittnumbpnts
+    #raise Exception('h')
+
     # get the time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
