@@ -1014,15 +1014,16 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Greys', label=labl)
             plt.colorbar(imag)
         else:
-            varbfrst = zeros(gdat.numbprvlhigh)
-            varbseco = zeros(gdat.numbprvlhigh)
-            cntr = 0
-            for r in gdat.indxelemcond:
-                if r in gdat.indxprvlhigh:
-                    varbfrst[cntr] = gdat.dictglob['postelemcond'][r][strgfrst][l] * gdat.dictglob['fact' + strgfrst + 'plot']
-                    varbseco[cntr] = gdat.dictglob['postelemcond'][r][strgseco][l] * gdat.dictglob['fact' + strgseco + 'plot']
-                    cntr += 1
-            axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='black', label=gdat.legdsamp)
+            if gdat.condcatl:
+                varbfrst = zeros(gdat.numbprvlhigh)
+                varbseco = zeros(gdat.numbprvlhigh)
+                cntr = 0
+                for r in gdat.indxelemcond:
+                    if r in gdat.indxprvlhigh:
+                        varbfrst[cntr] = gdat.dictglob['postelemcond'][r][strgfrst][l] * gdat.dictglob['fact' + strgfrst + 'plot']
+                        varbseco[cntr] = gdat.dictglob['postelemcond'][r][strgseco][l] * gdat.dictglob['fact' + strgseco + 'plot']
+                        cntr += 1
+                axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='black', label=gdat.legdsamp)
 
     if strg == 'this':
         if strgplottype == 'hist':
