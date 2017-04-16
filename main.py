@@ -451,7 +451,7 @@ def init( \
 
     # number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = gdat.numbswep / 10
+        gdat.numbburn = gdat.numbswep / 5
 
     # number of sweeps between frame plots
     if gdat.numbswepplot == None:
