@@ -471,7 +471,7 @@ def init( \
     ## generative model
     # set mock sample vector indices
     if gdat.elemtype == 'lens':
-        numbpnts = array([30])
+        numbpnts = array([20])
     if gdat.elemtype == 'lght':
         numbpnts = array([100])
     setp_true(gdat, 'numbpnts', numbpnts)
@@ -948,8 +948,8 @@ def init( \
     gdat.scalmagn = 'asnh'
     gdat.cmapmagn = 'BrBG'
     
-    gdat.minmdeflcomp = 1e-7
-    gdat.maxmdeflcomp = 1e-4
+    gdat.minmdeflcomp = 0.01
+    gdat.maxmdeflcomp = 10.
     gdat.scaldeflcomp = 'logt'
     gdat.cmapdeflcomp = 'Oranges'
     
@@ -2570,7 +2570,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 minm = max(0, gdatmodi.cntrswep - 5000)
                 maxm = gdatmodi.cntrswep + 1
                 if maxm > minm:
-                    fact = 100. / float(maxm - minm)
                     print 'Sweep number %d' % gdatmodi.cntrswep
                     print '%3d%% completed.' % gdatmodi.nextpercswep
                     indxswepintv = arange(minm, maxm)
@@ -2619,20 +2618,37 @@ def work(pathoutpthis, lock, indxprocwork):
         
         # update the sweep counter
         if gdat.opti:
-            if gdat.verbtype > 0:
-                print 'Proposal optimization step %d' % gdatmodi.cntroptiprop
-                print 'gdatmodi.thisstdvstdp'
-                print gdatmodi.thisstdvstdp
-    
-            if gdat.optiprop:
-                if gdatmodi.thisaccpprob[gdatmodi.cntrstdpmodi] > 0.75:
-                    gdatmodi.thisstdvstdp[gdatmodi.cntrstdpmodi] = gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi]
-                gdatmodi.cntrstdpmodi += 1
-                if gdatmodi.cntrstdpmodi == gdat.numbstdp:
-                    gdatmodi.cntrstdpmodi = 0
+            #if gdat.verbtype > 0:
+            #    print 'Proposal optimization step %d' % gdatmodi.cntroptiprop
+            #    print gdatmodi.thisstdvstdp
+            #if gdat.optiprop:
+            #    if gdatmodi.thisaccpprob[gdatmodi.cntrstdpmodi] > 0.75:
+            #        gdatmodi.thisstdvstdp[gdatmodi.cntrstdpmodi] = gdatmodi.nextstdvstdp[gdatmodi.cntrstdpmodi]
+            #    gdatmodi.cntrstdpmodi += 1
+            #    if gdatmodi.cntrstdpmodi == gdat.numbstdp:
+            #        gdatmodi.cntrstdpmodi = 0
 
             if gdatmodi.thisaccp and gdat.optillik:
                 gdatmodi.listllikopti.append(gdatmodi.nextlliktotl)
+
+            if gdat.optiprop and gdatmodi.cntrswep % gdat.numbswepoptiprop and gdatmodi.cntrswep != 0 and gdatmodi.cntrswep < gdatmodi.numbburn:
+                minm = gdatmodi.cntrswep + 1 - gdat.numbswepoptiprop
+                maxm = gdatmodi.cntrswep + 1
+                indxswepintv = arange(minm, maxm)
+                gdatmodi.accpcumu = zeros(gdat.numbstdp)
+                gdatmodi.optifact = zeros(gdat.numbstdp) - 1.
+                for k in gdat.indxstdp:
+                    numb = where(workdict['listindxproptype'][indxswepintv] == k)[0].size
+                    if numb > 0:
+                        fact =  100. / float(numb)
+                        gdatmodi.accpcumu[k] = fact * where(logical_and(workdict['listaccp'][indxswepintv], workdict['listindxproptype'][indxswepintv] == k))[0].size
+                        gdatmodi.optifact[k] = 2.**(gdatmodi.accpcumu[k] - 0.25)
+                        gdatmodi.thisstdvstdp[k] *= gdatmodi.optifact[k]
+                if gdat.verbtype > 0:
+                    print 'Proposal scale adaptation step number %d' % (gdatmodi.cntrswep / gdat.numbswepoptiprop)
+                    print 'Sweep number %d' % gdatmodi.cntrswep
+                    print '%20s %20s %20s' % ('name', 'factor', 'new scale')
+                    print '%20s %20.3g %20.3g' % (gdat.namestdp[k], gdatmodi.optifact[k], gdatmodi.thisstdvstdp[k])
 
             gdatmodi.cntroptiprop += 1
         else:

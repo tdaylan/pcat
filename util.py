@@ -2272,6 +2272,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.legdsamp = 'Sample'
     gdat.legdmedi = 'Median'
     gdat.legdstdv = 'Std. dev.'
+    
+    # optimization period
+    gdat.numbswepoptiprop = 10 * gdat.fittnumbpara
 
     # p value contours 
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
@@ -5737,8 +5740,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     summgene(gdatmodi.thisdeflresi)
                 #if strg == 'this' and gdat.inittype == 'refr' and amax(gdatmodi.thisdeflsingresi) > 0.:
                 #    raise Exception('')
-
-                gdatmodi.thisdeflcomp = 1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / sqrt(sum(gdat.truedefl**2, axis=2))
+                print 'gdatmodi.thisdefl'
+                summgene(gdatmodi.thisdefl)
+                print 'gdat.truedefl'
+                summgene(gdat.truedefl)
+                print
+                gdatmodi.thisdeflcomp = 180. / pi * sqrt((1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / \
+                                            sqrt(sum(gdat.truedefl**2, axis=2))) / 2.)
     
     # correlate the catalog sample with the reference catalog
     # temp

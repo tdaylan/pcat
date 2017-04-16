@@ -251,15 +251,14 @@ def plot_samp(gdat, gdatmodi, strg):
                     elif k == 1:
                         multfact = 1.
                     elif k >= 2:
-                        multfact = 1e2
-                        
+                        multfact = 1.
                     plot_defl(gdat, gdatmodi, strg, indxdefl=k, multfact=multfact)
                 
                 # residual deflection field
                 if strg != 'true':
-                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=1e2)
+                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=1.)
                     for k in range(gdat.numbdeflsingplot):
-                        plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=1e2)
+                        plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=1.)
     
             if strg != 'true':
                 for i in gdat.indxener:
