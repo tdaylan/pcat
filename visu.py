@@ -2078,18 +2078,19 @@ def plot_init(gdat):
                 xdat = gdat.binsangl[1:] * gdat.anglfact
                 lablxdat = gdat.lablfeattotl['gang']
                 
-                listdeflscal = array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1]) / gdat.anglfact
-                listanglscal = array([0.05, 0.05, 0.1, 0.05, 0.05, 0.05]) / gdat.anglfact
-                listanglcutf = array([0.3, 0.3, 0.3, 1., 2., 0.]) / gdat.anglfact
-                listasym = [False, False, False, False, False, True]
+                listdeflscal = array([1e-2, 1e-2, 1e-2]) / gdat.anglfact
+                listanglscal = array([0.2, 0.4, 0.2]) / gdat.anglfact
+                listanglcutf = array([0.6, 0.6, 1.2]) / gdat.anglfact
+                listasym = [False, False, False]
                 listydat = []
                 for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
                     listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
                 
-                listydat.append(xdat * 0. + 0.05)
+                listydat.append(xdat * 0. + 1.5)
                 
                 path = gdat.pathinitintr + 'deflcutf.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', drawdiag=True)
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
+                                                                                                                         limtxdat=[1e-2, 2.], drawdiag=True, limtydat=[1e-2, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -2098,10 +2099,11 @@ def plot_init(gdat):
                 listydat = []
                 listlegd = []
                 for spec, size, indx in zip(listspec, listsize, listindx):
-                    listydat.append(retr_sersprof(spec, gdat.binsangl, size, indx=indx))
+                    listydat.append(retr_sersprof(spec, gdat.binsangl, size, indx=indx) * gdat.anglfact**2 / (4. * pi)**2)
                     listlegd.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
                 path = gdat.pathinitintr + 'sersprof.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, listlegd=listlegd, listhlin=1e-7)
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, \
+                                                                 listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
             
                 minmredshost = 0.01
                 maxmredshost = 0.4

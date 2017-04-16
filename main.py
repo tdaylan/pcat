@@ -631,7 +631,7 @@ def init( \
 
     ## hyperparameters
     if gdat.elemtype == 'lens':
-        meanpnts = [0.1, 100]
+        meanpnts = [0.1, 100.]
     if gdat.elemtype == 'lght':
         meanpnts = [1., 1000]
     setp_truedefa(gdat, 'meanpnts', meanpnts, popl=True)
@@ -1246,6 +1246,9 @@ def init( \
     # list of variables for which the posterior is calculated at each sweep
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
+    # temp
+    #gdat.liststrgvarbarryswep = []
+    
     if gdat.probbrde < 1.:
         gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'jcbnfact', 'combfact']
     
@@ -1268,7 +1271,10 @@ def init( \
             gdat.liststrgvarbarrysamp.append(strg[4:])
         if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnkern':
             gdat.liststrgvarblistsamp.append(strg[4:])
-    
+   
+    # temp
+    #gdat.liststrgvarbarrysamp += ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
+    #                                                                                                  'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
    
     setp_indxswepsave(gdat)
@@ -1479,11 +1485,22 @@ def proc_post(gdat, prio=False):
     #if gdat.trueinfo:
     #    gdat.liststrgchan += ['featassc']
 
+    print 'gdat.indxproc'
+    print gdat.indxproc
     for strg in gdat.liststrgvarbarry:
+        print 'strg'
+        print strg
         for k in gdat.indxproc:
+            print 'k'
+            print k
             if k == 0:
                 shap = getattr(listgdatmodi[k], 'list' + strg).shape
+                print 'shap'
+                print shap
                 shap = [shap[0], gdat.numbproc] + list(shap[1:])
+                print 'shap'
+                print shap
+                print
                 temp = zeros(shap) - 1
             if len(shap) > 2:
                 temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strg)

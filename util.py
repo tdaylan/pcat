@@ -5738,13 +5738,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     summgene(gdatmodi.thisdeflsingresi)
                     print 'gdatmodi.thisdeflresi'
                     summgene(gdatmodi.thisdeflresi)
-                #if strg == 'this' and gdat.inittype == 'refr' and amax(gdatmodi.thisdeflsingresi) > 0.:
-                #    raise Exception('')
-                print 'gdatmodi.thisdefl'
-                summgene(gdatmodi.thisdefl)
-                print 'gdat.truedefl'
-                summgene(gdat.truedefl)
-                print
+                
                 gdatmodi.thisdeflcomp = 180. / pi * sqrt((1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / \
                                             sqrt(sum(gdat.truedefl**2, axis=2))) / 2.)
     
