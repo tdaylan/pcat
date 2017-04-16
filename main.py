@@ -441,7 +441,7 @@ def init( \
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
-            gdat.numbproc = 10
+            gdat.numbproc = 20
         else:
             gdat.numbproc = 1
     
