@@ -2090,11 +2090,11 @@ def plot_init(gdat):
                 
                 path = gdat.pathinitintr + 'deflcutf.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
-                                                                                                                         limtxdat=[1e-2, 2.], drawdiag=True, limtydat=[1e-2, 2.])
+                                                                                                                         limtxdat=[1e-3, 2.], drawdiag=True, limtydat=[1e-3, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
-                listsize = array([0.5, 1., 1., 1.]) / gdat.anglfact
+                listsize = array([0.3, 1., 1., 1.]) / gdat.anglfact
                 listindx = array([4., 2., 4., 10.])
                 listydat = []
                 listlegd = []
