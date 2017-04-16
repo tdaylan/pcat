@@ -5717,7 +5717,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdatmodi.thisdeflsingresi = gdatmodi.thisdeflsing - gdat.truedeflsing
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
                 
-                if False:
+                if True:
                     print 'gdat.truelgal'
                     print gdat.truelgal
                     print 'lgal'
@@ -5738,6 +5738,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     summgene(gdatmodi.thisdeflsingresi)
                     print 'gdatmodi.thisdeflresi'
                     summgene(gdatmodi.thisdeflresi)
+                    print
                 
                 gdatmodi.thisdeflcomp = 180. / pi * sqrt((1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / \
                                             sqrt(sum(gdat.truedefl**2, axis=2))) / 2.)

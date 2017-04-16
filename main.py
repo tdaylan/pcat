@@ -653,7 +653,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-3 / gdat.anglfact
+    minmdefs = 3e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -671,7 +671,7 @@ def init( \
     maxmnobj = 5e2
     setp_true(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 5e-2 / gdat.anglfact
+    maxmdefs = 3e-2 / gdat.anglfact
     setp_true(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -1244,7 +1244,7 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
+    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     # temp
     #gdat.liststrgvarbarryswep = []
@@ -1485,22 +1485,11 @@ def proc_post(gdat, prio=False):
     #if gdat.trueinfo:
     #    gdat.liststrgchan += ['featassc']
 
-    print 'gdat.indxproc'
-    print gdat.indxproc
     for strg in gdat.liststrgvarbarry:
-        print 'strg'
-        print strg
         for k in gdat.indxproc:
-            print 'k'
-            print k
             if k == 0:
                 shap = getattr(listgdatmodi[k], 'list' + strg).shape
-                print 'shap'
-                print shap
                 shap = [shap[0], gdat.numbproc] + list(shap[1:])
-                print 'shap'
-                print shap
-                print
                 temp = zeros(shap) - 1
             if len(shap) > 2:
                 temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strg)
@@ -2230,7 +2219,8 @@ def work(pathoutpthis, lock, indxprocwork):
     # initialize the worker sampler
     gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thisdeltlliktotl = zeros(1)
-    gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
+    # temp
+    #gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
     gdatmodi.thisaccpprob = zeros(1)
     gdatmodi.thischro = zeros(gdat.numbchro)
     gdatmodi.thisaccp = zeros(1, dtype=bool)
@@ -2575,8 +2565,10 @@ def work(pathoutpthis, lock, indxprocwork):
         stopchro(gdat, gdatmodi, 'totl')
         
         workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.thisaccpprob[0]
-        if gdatmodi.propwith:
-            workdict['liststdvsamp'][gdatmodi.cntrswep, :] = gdatmodi.thisstdvsamp
+        
+        # temp
+        #if gdatmodi.propwith:
+        #    workdict['liststdvsamp'][gdatmodi.cntrswep, :] = gdatmodi.thisstdvsamp
 
         # log the progress
         if gdat.verbtype > 0:
@@ -2609,14 +2601,15 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'chro'
                     for name, valu in gdat.indxchro.iteritems():
                         print '%s: %.3g msec' % (name, gdatmodi.thischro[valu] * 1e3)
-                    
-                    if not gdat.propwithsing:
-                        corrstdv = mean((workdict['liststdvsamp'][indxswepintv, :] - mean(workdict['liststdvsamp'][indxswepintv, :], axis=0)) * \
-                                                                      (workdict['listaccpprob'][indxswepintv, 0] - mean(workdict['listaccpprob'][indxswepintv, 0]))[:, None], axis=0)
-                        corrstdv /= std(workdict['liststdvsamp'][indxswepintv, :], axis=0) * std(workdict['listaccpprob'][indxswepintv, 0])
-                        print 'Acceptance correlations: '
-                        for k in gdat.indxstdp:
-                            print '%20s: %.3g ' % (gdat.fittnamepara[k], corrstdv[k])
+                   
+                    # temp
+                    #if not gdat.propwithsing:
+                    #    corrstdv = mean((workdict['liststdvsamp'][indxswepintv, :] - mean(workdict['liststdvsamp'][indxswepintv, :], axis=0)) * \
+                    #                                                  (workdict['listaccpprob'][indxswepintv, 0] - mean(workdict['listaccpprob'][indxswepintv, 0]))[:, None], axis=0)
+                    #    corrstdv /= std(workdict['liststdvsamp'][indxswepintv, :], axis=0) * std(workdict['listaccpprob'][indxswepintv, 0])
+                    #    print 'Acceptance correlations: '
+                    #    for k in gdat.indxstdp:
+                    #        print '%20s: %.3g ' % (gdat.fittnamepara[k], corrstdv[k])
                     print 
 
         if gdat.verbtype > 1:

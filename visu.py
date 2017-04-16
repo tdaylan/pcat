@@ -2253,7 +2253,15 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1,
     strgvarb += strgcomp
     
     defl = retr_fromgdat(gdat, gdatmodi, strg, strgvarb)
-   
+    
+    print 'strgvarb'
+    print strgvarb
+    print 'indxdefl'
+    print indxdefl
+    print 'defl'
+    summgene(defl)
+    print 
+
     defl *= multfact
 
     strgplot = strg + strgvarb
