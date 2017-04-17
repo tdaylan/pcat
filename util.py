@@ -5717,7 +5717,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdatmodi.thisdeflsingresi = gdatmodi.thisdeflsing - gdat.truedeflsing
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
                 
-                if True:
+                if False:
                     print 'proc_samp'
                     print 'gdat.truelgal'
                     print gdat.truelgal

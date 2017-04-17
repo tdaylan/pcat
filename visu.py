@@ -2262,17 +2262,6 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1,
         defl = defl[:, :, :, indxdefl]
         strgplot += '%04d' % indxdefl
 
-    print 'plot_defl'
-    print 'strgvarb'
-    print strgvarb
-    print 'indxdefl'
-    print indxdefl
-    print 'multfact'
-    print multfact
-    print 'defl'
-    summgene(defl)
-    print 
-
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxpoplplot=thisindxpopl)
     make_catllabl(gdat, strg, axis)
     draw_frambndr(gdat, axis)
