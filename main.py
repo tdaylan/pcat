@@ -1540,7 +1540,7 @@ def proc_post(gdat, prio=False):
             for k in gdat.indxproc:
                 listtemp.append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
         setattr(gdat, 'list' + strgvarb, listtemp)
-
+    
     ## list of other parameters to be flattened
     gdat.liststrgvarbarryflat = deepcopy(gdat.liststrgvarbarry)
     for strg in ['deltlliktotl', 'memoresi']:
@@ -2247,6 +2247,7 @@ def work(pathoutpthis, lock, indxprocwork):
         else:
             shap = [gdat.numbsamp] + list(valu.shape)
         workdict['list' + strgvarb] = zeros(shap)
+    
     for strgvarb in gdat.liststrgvarblistsamp:
         workdict['list' + strgvarb] = []
     
@@ -2311,7 +2312,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print 'Sweep %d' % gdatmodi.cntrswep
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                                                   and gdatmodi.cntrswep > gdat.numburn and gdat.makeplotfram and gdat.makeplot and not gdat.opti
+                                                                                   and gdatmodi.cntrswep > gdat.numbburn and gdat.makeplotfram and gdat.makeplot and not gdat.opti
         # choose a proposal type
         initchro(gdat, gdatmodi, 'type')
         retr_thisindxprop(gdat, gdatmodi)
@@ -2668,7 +2669,7 @@ def work(pathoutpthis, lock, indxprocwork):
     for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblistsamp:
         valu = workdict['list' + strgvarb]
         setattr(gdatmodi, 'list' + strgvarb, valu)
-
+    
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
     
