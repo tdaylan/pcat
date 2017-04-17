@@ -2369,7 +2369,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablacut = r'\theta_c'
     gdat.lablacutunit = gdat.lablgangunit
     
-    gdat.lablmcut = r'M_c'
+    gdat.lablmcut = r'M_{c,a}'
     gdat.lablmcutunit = r'$M_{\odot}$'
     
     gdat.lablspec = gdat.lablflux

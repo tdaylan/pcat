@@ -1339,9 +1339,11 @@ def init( \
 
     # run the sampler
     worksamp(gdat, lock)
-    
-    # post process the samples
+
     proc_post(gdat)
+    #if not os.fork():
+    #    # post process the samples
+    #    proc_post(gdat)
 
     if gdat.verbtype > 0:
         print 'The ensemble of catalogs is at ' + pathcatl

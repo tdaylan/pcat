@@ -2172,11 +2172,11 @@ def plot_init(gdat):
                 
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 fracacutasca = logspace(-1., 2., 20)
-                mcut = 1e7 * retr_mcutfrommscl(fracacutasca)
+                mcut = 1e8 * retr_mcutfrommscl(fracacutasca)
                 axis.loglog(fracacutasca, mcut)
-                axis.set_xlabel(gdat.lablacuttotl)
+                axis.set_xlabel(r'$\tau_a$')
                 axis.set_ylabel(gdat.lablmcuttotl)
-                axis.axhline(1e7, ls='--')
+                axis.axhline(1e8, ls='--')
                 path = gdat.pathinitintr + 'mcut.pdf'
                 plt.tight_layout()
                 figr.savefig(path)
