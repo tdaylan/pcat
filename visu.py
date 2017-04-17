@@ -247,18 +247,18 @@ def plot_samp(gdat, gdatmodi, strg):
                 # deflection field due to individual lenses
                 for k in range(gdat.numbdeflsingplot):  
                     if k == 0:
-                        multfact = 1e-1
+                        multfact = 0.1
                     elif k == 1:
                         multfact = 1.
                     elif k >= 2:
-                        multfact = 1.
+                        multfact = 10.
                     plot_defl(gdat, gdatmodi, strg, indxdefl=k, multfact=multfact)
                 
                 # residual deflection field
                 if strg != 'true':
-                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=1.)
+                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
                     for k in range(gdat.numbdeflsingplot):
-                        plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=1.)
+                        plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
     
             if strg != 'true':
                 for i in gdat.indxener:
@@ -2086,11 +2086,11 @@ def plot_init(gdat):
                 for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
                     listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
                 
-                listydat.append(xdat * 0. + 1.5)
+                #listydat.append(xdat * 0. + 1.5)
                 
                 path = gdat.pathinitintr + 'deflcutf.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
-                                                                                                                         limtxdat=[1e-3, 2.], drawdiag=True, limtydat=[1e-3, 2.])
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')#, \
+                                                                                                                         #limtxdat=[1e-3, 2.], limtydat=[1e-3, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -2254,14 +2254,6 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1,
     
     defl = retr_fromgdat(gdat, gdatmodi, strg, strgvarb)
     
-    print 'strgvarb'
-    print strgvarb
-    print 'indxdefl'
-    print indxdefl
-    print 'defl'
-    summgene(defl)
-    print 
-
     defl *= multfact
 
     strgplot = strg + strgvarb
@@ -2269,6 +2261,17 @@ def plot_defl(gdat, gdatmodi, strg, strgcomp='', indxdefl=None, thisindxpopl=-1,
     if indxdefl != None:
         defl = defl[:, :, :, indxdefl]
         strgplot += '%04d' % indxdefl
+
+    print 'plot_defl'
+    print 'strgvarb'
+    print strgvarb
+    print 'indxdefl'
+    print indxdefl
+    print 'multfact'
+    print multfact
+    print 'defl'
+    summgene(defl)
+    print 
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxpoplplot=thisindxpopl)
     make_catllabl(gdat, strg, axis)

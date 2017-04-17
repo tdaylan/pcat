@@ -3441,7 +3441,7 @@ def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, stdv=False, errr=False):
     else:
         varb = getattr(gdat, strg + strgvarb)
 
-    return varb
+    return copy(varb)
 
 
 def retr_indxsamp(gdat, strgmodl='fitt'):
@@ -5718,6 +5718,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
                 
                 if True:
+                    print 'proc_samp'
                     print 'gdat.truelgal'
                     print gdat.truelgal
                     print 'lgal'
@@ -5730,14 +5731,19 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     summgene(gdat.truedeflsing)
                     print 'gdat.truedefl'
                     summgene(gdat.truedefl)
-                    print 'gdatmodi.thisdeflsing'
-                    summgene(gdatmodi.thisdeflsing)
                     print 'gdatmodi.thisdefl'
                     summgene(gdatmodi.thisdefl)
-                    print 'gdatmodi.thisdeflsingresi'
-                    summgene(gdatmodi.thisdeflsingresi)
                     print 'gdatmodi.thisdeflresi'
                     summgene(gdatmodi.thisdeflresi)
+                    for k in range(gdat.numbdeflsingplot):
+                        print 'k'
+                        print k
+                        print 'gdatmodi.thisdeflsing'
+                        summgene(gdatmodi.thisdeflsing[:, :, :, k])
+                        print 'gdatmodi.thisdeflsingresi'
+                        summgene(gdatmodi.thisdeflsingresi[:, :, :, k])
+                    print
+                    print
                     print
                 
                 gdatmodi.thisdeflcomp = 180. / pi * sqrt((1. - sum(gdatmodi.thisdefl * gdat.truedefl, axis=2) / sqrt(sum(gdatmodi.thisdefl**2, axis=2)) / \
