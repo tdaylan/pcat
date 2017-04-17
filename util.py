@@ -2433,7 +2433,7 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, 'maxmcmplpop%d' % l, 1.)
         setattr(gdat, 'scalcmplpop%d' % l, 'self')
 
-    gdat.minmdeltllik = 1e-1
+    gdat.minmdeltllik = 1.
     gdat.maxmdeltllik = 1e3
     gdat.minmdiss = 0.
     gdat.maxmdiss = 3. * gdat.maxmgang

@@ -2311,7 +2311,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print 'Sweep %d' % gdatmodi.cntrswep
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                                                                          and gdat.makeplotfram and gdat.makeplot and not gdat.opti
+                                                                                   and gdatmodi.cntrswep > gdat.numburn and gdat.makeplotfram and gdat.makeplot and not gdat.opti
         # choose a proposal type
         initchro(gdat, gdatmodi, 'type')
         retr_thisindxprop(gdat, gdatmodi)
