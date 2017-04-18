@@ -1357,7 +1357,8 @@ def init( \
 def workopti(gdat, lock):
 
     inittypesave = gdat.inittype 
-    gdat.inittype = 'refr'
+    # temp
+    #gdat.inittype = 'refr'
 
     # estimate the covariance
     gdat.opti = gdat.optiprop or gdat.optillik or gdat.optihess

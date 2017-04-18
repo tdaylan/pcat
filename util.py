@@ -688,7 +688,8 @@ def retr_mrkrsize(gdat, sign):
     
     minm = getattr(gdat, 'minm' + gdat.namecompsign) 
     maxm = getattr(gdat, 'maxm' + gdat.namecompsign) 
-    mrkrsize = (log(sign) - log(minm)) / (log(maxm) - log(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
+    #mrkrsize = (log(sign) - log(minm)) / (log(maxm) - log(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
+    mrkrsize = (sqrt(sign) - sqrt(minm)) / (sqrt(maxm) - sqrt(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
     
     return mrkrsize
 
@@ -2346,7 +2347,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.lablfluxunit = r'erg cm$^{-2}$ s$^{-1}$ $\AA^{-1}$'
         gdat.lablfluxsoldunit = r'erg cm$^{-2}$ s$^{-1}$ $\AA^{-1}$ sr$^{-1}$'
     
-    gdat.lablfluxsold = 'f_{src}'
+    gdat.lablfluxsold = 'f'
     gdat.lablnobjunit = ''
     
     for l in gdat.trueindxpopl:
@@ -5764,7 +5765,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
         for l in gdat.trueindxpopl:
             for strgfeat in liststrgfeatodim[l]:
-                featassc[strgfeat][l] = zeros(gdat.truenumbpnts[l]) + nan
+                featassc[strgfeat][l] = zeros(gdat.truenumbpnts[l])
                 indxmodlpnts = zeros(gdat.truenumbpnts[l], dtype=int) - 1
                 numbassc = zeros(gdat.truenumbpnts[l])
                 metrassc = zeros(gdat.truenumbpnts[l]) + 3 * gdat.maxmgang
