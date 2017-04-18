@@ -9,6 +9,7 @@ def plot_samp(gdat, gdatmodi, strg):
     if gdat.shrtfram:
         if strg != 'true':
             plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=0, thisindxevtt=0)
+            plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=0, thisindxevtt=0)
     else:    
         if strg == 'true':
             strgmodl = strg
@@ -523,18 +524,19 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     for name in gdat.listnamevarbscal:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + name
         corr = getattr(gdat, 'corr' + name)
+        factplot = getattr(gdat, 'fact' + name + 'plot')
         if corr == None:
             truepara = None
         else:
-            truepara = getattr(gdat, 'corr' + name) * getattr(gdat, 'fact' + name + 'plot')
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name), getattr(gdat, 'labl' + name), truepara=truepara)
-    
+            truepara = getattr(gdat, 'corr' + name) * factplot
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara)
+        
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
         for namevarbscal in gdat.listnamevarbscal:
             titl = '$D_{KL} = %.3g$' % getattr(gdat, 'infototl' + namevarbscal)
             xdat = getattr(gdat, 'mean' + namevarbscal) * getattr(gdat, 'fact' + namevarbscal + 'plot')
-            lablxdat = getattr(gdat, 'labl' + namevarbscal)
+            lablxdat = getattr(gdat, 'labl' + namevarbscal + 'totl')
             
             path = gdat.pathinfo + 'info' + namevarbscal
             ydat = getattr(gdat, 'info' + namevarbscal)
@@ -2132,16 +2134,16 @@ def plot_init(gdat):
                             minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
                             maxmmass[n, k] = log10(factmcutfromdefs * gdat.maxmdefs)
                 
-                valulevl = linspace(7., 9., 20)
+                valulevl = linspace(7.5, 9., 10)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=7, vmax=9)
+                #imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=7, vmax=9)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
                 axis.clabel(cont, inline=1, fontsize=10)
-                axis.set_xlabel('$z_h$')
-                axis.set_ylabel('$z_s$')
+                axis.set_xlabel('$z_{hst}$')
+                axis.set_ylabel('$z_{src}$')
                 axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
                 path = gdat.pathinitintr + 'massredsminm.pdf'
-                plt.colorbar(imag) 
+                #plt.colorbar(imag) 
                 plt.tight_layout()
                 figr.savefig(path)
                 plt.close(figr)

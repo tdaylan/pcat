@@ -24,7 +24,10 @@ def init( \
          seedstat=None, \
          indxevttincl=None, \
          indxenerincl=None, \
-       
+         
+         burntmpr=False, \
+         #burntmpr=True, \
+
          # evaluate the likelihood inside circles around elements
          evalcirc=None, \
         
@@ -46,7 +49,7 @@ def init( \
          propcova=True, \
          propwithsing=True, \
          pertmodleval=None, \
-         optihess=None, \
+         optihess=True, \
          optillik=False, \
          optiprop=False, \
          regulevi=False, \
@@ -114,7 +117,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=0., \
+         priofactdoff=1., \
          # temp
          margfactmodl=1., \
          bindprio=False, \
@@ -203,13 +206,7 @@ def init( \
             gdat.indxevttincl = arange(1)
    
     if gdat.inittype == None:
-        if gdat.datatype == 'mock':
-            if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
-                gdat.inittype = 'rand'
-            if gdat.elemtype == 'lens':
-                gdat.inittype = 'pert'
-        else:
-            gdat.inittype = 'rand'
+        gdat.inittype = 'rand'
 
     if gdat.elemtype == 'lens':
         gdat.hubbexpofact = 1.63050e-19
@@ -354,9 +351,6 @@ def init( \
     if gdat.pathbase[-1] != '/':
         gdat.pathbase += '/'
     
-    if gdat.optihess == None:
-        gdat.optihess = True
-    
     # paths
     gdat.pathdata = gdat.pathbase + 'data/'
     gdat.pathdataopti = gdat.pathdata + 'opti/'
@@ -452,6 +446,9 @@ def init( \
     # number of burned sweeps
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 5
+    
+    gdat.factburntmpr = 0.75
+    gdat.numbburntmpr = gdat.factburntmpr * gdat.numbburn
 
     # number of sweeps between frame plots
     if gdat.numbswepplot == None:
@@ -717,10 +714,19 @@ def init( \
         setp_truedefa(gdat, 'acutdiststdv', [0.01 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
     
     ## lensing
-    setp_truedefa(gdat, 'lgalsour', [-gdat.truemaxmgang, gdat.truemaxmgang])
-    setp_truedefa(gdat, 'bgalsour', [-gdat.truemaxmgang, gdat.truemaxmgang])
-    setp_truedefa(gdat, 'lgalhost', [-gdat.truemaxmgang, gdat.truemaxmgang])
-    setp_truedefa(gdat, 'bgalhost', [-gdat.truemaxmgang, gdat.truemaxmgang])
+    typelimt='meanstdv'
+    # temp
+    #setp_truedefa(gdat, 'lgalsour', [-gdat.truemaxmgang, gdat.truemaxmgang])
+    #setp_truedefa(gdat, 'bgalsour', [-gdat.truemaxmgang, gdat.truemaxmgang])
+    #setp_truedefa(gdat, 'lgalhost', [-gdat.truemaxmgang, gdat.truemaxmgang])
+    #setp_truedefa(gdat, 'bgalhost', [-gdat.truemaxmgang, gdat.truemaxmgang])
+    
+    gdat.stdvhostsour = 0.1 / gdat.anglfact
+    setp_truedefa(gdat, 'lgalsour', [0., gdat.stdvhostsour], typelimt='meanstdv')
+    setp_truedefa(gdat, 'bgalsour', [0., gdat.stdvhostsour], typelimt='meanstdv')
+    setp_truedefa(gdat, 'lgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv')
+    setp_truedefa(gdat, 'bgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv')
+    
     for i in gdat.indxener:
         setp_truedefa(gdat, 'specsourene%d' % i, array([1e-20, 1e-16]))
     setp_truedefa(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
@@ -980,6 +986,7 @@ def init( \
             scal = getattr(gdat, 'fittscal' + namevarbscal)
         else:
             scal = getattr(gdat, 'scal' + namevarbscal)
+        
         retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=scal)
     
     # create the PCAT folders
@@ -2024,6 +2031,13 @@ def optihess(gdat, gdatmodi):
         
         xdat = gdat.indxstdp
         ydat = gdatmodi.stdvstdp
+        
+        print 'gdatmodi.stdvstdp'
+        print gdatmodi.stdvstdp
+        print 'gdat.namesampdist'
+        print gdat.namesampdist
+        print
+
         pathopti = getattr(gdat, 'path' + gdat.namesampdist + 'opti')
         path = pathopti + 'stdv%d.pdf' % gdatmodi.indxprocwork
         tdpy.util.plot_gene(path, xdat, ydat, scalydat='logt', lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist', limtydat=[amin(ydat) / 2., 2. * amax(ydat)])
@@ -2081,6 +2095,13 @@ def worksamp(gdat, lock):
         pool.join()
 
 
+def samp_randnumbpnts(gdat, gdatmodi, l):
+    
+    gdatmodi.thissamp[l] = poisson(gdatmodi.thissampvarb[gdat.fittindxfixpmeanpnts[l]])
+    gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbpnts[l], gdatmodi.thissamp[l])
+    gdatmodi.thissamp[l] = max(gdat.fittminmnumbpnts[l], gdatmodi.thissamp[l])
+
+
 def work(pathoutpthis, lock, indxprocwork):
 
     path = pathoutpthis + 'gdatinit'
@@ -2105,34 +2126,24 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thissamp = rand(gdat.fittnumbpara)
     gdatmodi.thissampvarb = zeros(gdat.fittnumbpara)
     
-    ## Fixed-dimensional parameters
-    for k, namefixp in enumerate(gdat.fittnamefixp):
-        if gdat.inittype == 'rand':
-            if k in gdat.fittindxfixpnumbpnts:
-                gdatmodi.thissamp[gdat.fittindxfixp[k]] = choice(arange(gdat.fittminmnumbpnts, gdat.fittmaxmnumbpnts[k] + 1))
-            else:
-                gdatmodi.thissamp[gdat.fittindxfixp[k]] = rand()
-        else:
-            if gdat.datatype == 'mock':
-                if k in gdat.fittindxfixpnumbpnts and (gdat.truefixp[k] < gdat.fittminmnumbpnts[k] or gdat.truefixp[k] > gdat.fittmaxmnumbpnts[k]):
-                    gdatmodi.thissamp[k] = choice(arange(gdat.fittminmnumbpnts, gdat.fittmaxmnumbpnts[k] + 1))
-                else:  
-                    indxtrue = where(gdat.truenamefixp == namefixp)[0]
-                    if indxtrue.size > 0:
-                        gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[indxtrue], indxtrue)
-                    else:
-                        gdatmodi.thissamp[k] = rand()
-                if (gdatmodi.thissamp[k] > 1 or gdatmodi.thissamp[k] < 0) and not k in gdat.fittindxfixpnumbpnts:
-                    raise Exception('')
+    if gdat.elemtype == 'lens' and gdat.inittype == 'rand':
+        gdatmodi.thissamp[gdat.fittindxfixplgalhost] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixpbgalhost] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
+    
+    if gdat.datatype == 'inpt' and gdat.inittype != 'rand':
+        raise Exception('')
 
-            if gdat.datatype == 'inpt':
-                if k in gdat.fittindxfixppsfp:
-                    gdatmodi.thissamp[gdat.fittindxfixp[k]] = cdfn_fixp(gdat, 'true', gdat.exprpsfp[k-gdat.fittindxfixppsfpinit], k)
-                elif k in gdat.fittindxfixp:
-                    varb = getattr(gdat, 'true' + gdat.fittnamepara[k])
-                    gdatmodi.thissamp[gdat.fittindxfixp[k]] = cdfn_fixp(gdat, 'true', varb, k)
-        
+    ## Fixed-dimensional parameters
+    if gdat.inittype == 'refr' or gdat.inittype == 'pert':
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[k], k)
         gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+
+    if gdat.inittype == 'rand' or gdat.inittype == 'pert':
+        for l in gdat.fittindxpopl:
+            samp_randnumbpnts(gdat, gdatmodi, l)
     
     ## lists of occupied and empty transdimensional parameters
     gdatmodi.thisindxpntsfull = []
@@ -2144,12 +2155,9 @@ def work(pathoutpthis, lock, indxprocwork):
     
     gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxpntsfull, 'fitt')
     
+    ## element parameters
     if gdat.fittnumbtrap > 0:
         
-        for l in gdat.fittindxpopl:
-            gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
-        
-        ## element parameters
         if gdat.inittype == 'refr':
             for l in gdat.fittindxpopl:
                 for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
@@ -2177,10 +2185,9 @@ def work(pathoutpthis, lock, indxprocwork):
                         compunit = rand(gdat.truenumbpnts[l])
                     gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
                 
-        if gdat.inittype == 'pert':
+        else:
             for l in gdat.fittindxpopl:
-                for k in range(gdatmodi.thisindxsampcomp['comp'][l].size):
-                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
+                gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
         
     if gdat.verbtype > 1:
         print 'thissamp'
@@ -2315,7 +2322,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print 'Sweep %d' % gdatmodi.cntrswep
 
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                                                   and gdatmodi.cntrswep > gdat.numbburn and gdat.makeplotfram and gdat.makeplot and not gdat.opti
+                                                                                   and gdat.makeplotfram and gdat.makeplot and not gdat.opti
         # choose a proposal type
         initchro(gdat, gdatmodi, 'type')
         retr_thisindxprop(gdat, gdatmodi)
@@ -2336,6 +2343,17 @@ def work(pathoutpthis, lock, indxprocwork):
             print
         
         stopchro(gdat, gdatmodi, 'type')
+
+        if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
+            fact = (gdatmodi.cntrswep + 1.) / gdat.numbburntmpr
+            #gdatmodi.thistmprfactdeltllik = fact
+            gdatmodi.thistmprfactdeltllik = 1.
+            gdatmodi.thistmprfactstdv = 1.#100.# * fact**(-0.5)
+            gdatmodi.thistmprlposelem = -1000. * (1. - fact) * concatenate(gdatmodi.thisindxsampcomp['comp']).size
+        else:
+            gdatmodi.thistmprfactdeltllik = 1.
+            gdatmodi.thistmprfactstdv = 1.
+            gdatmodi.thistmprlposelem = 0. 
 
         # propose the next sample
         initchro(gdat, gdatmodi, 'prop')
@@ -2523,10 +2541,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.nextlpritotl - gdatmodi.thislpritotl
                 print 'gdatmodi.thislpautotl'
                 print gdatmodi.thislpautotl
-                print 
+                print
             
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thisdeltlliktotl + gdatmodi.nextlpritotl - gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
+                                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
                                                                                                                                 gdatmodi.thisjcbnfact + gdatmodi.thiscombfact)
             
         else:
@@ -2577,7 +2596,7 @@ def work(pathoutpthis, lock, indxprocwork):
         # log the progress
         if gdat.verbtype > 0:
             gdatmodi.nextpercswep = 10 * int(10. * gdatmodi.cntrswep / gdat.numbswep) 
-            if gdatmodi.nextpercswep > gdatmodi.percswepsave:
+            if gdatmodi.nextpercswep > gdatmodi.percswepsave or thismakefram:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
                 
                 minm = max(0, gdatmodi.cntrswep - 5000)
@@ -2585,6 +2604,9 @@ def work(pathoutpthis, lock, indxprocwork):
                 if maxm > minm:
                     print 'Sweep number %d' % gdatmodi.cntrswep
                     print '%3d%% completed.' % gdatmodi.nextpercswep
+                    if gdat.burntmpr:
+                        print 'factdeltllik'
+                        print gdatmodi.thistmprfactdeltllik
                     indxswepintv = arange(minm, maxm)
                     for k in gdat.indxproptype:
                         numb = where(workdict['listindxproptype'][indxswepintv] == k)[0].size

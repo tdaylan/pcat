@@ -1154,8 +1154,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 break
         stdvstdp = gdatmodi.nextstdvstdp
     else:
-        stdvstdp = gdat.stdvstdp
-    
+        stdvstdp = gdat.stdvstdp * gdatmodi.thistmprfactstdv
+
     if gdatmodi.propwith:
         
         if gdat.propwithsing:
@@ -2293,14 +2293,12 @@ def setpinit(gdat, boolinitsetp=False):
     ## labels and scales for variables
     if gdat.elemtype == 'lens':
         gdat.lablfracsubh = '$f_{sub}$'
-        # temp
-        #gdat.factfracsubhplot = 1.
 
         gdat.lablmasssubhtotl = '$M_{sub}$'
-        #gdat.factmasssubhtotlplot = 1.
+        gdat.scalmasssubhtotl = 'logt'
         
         gdat.lablmasshostbein = '$M_{h,E}$'
-        #gdat.factmasshostbeinplot = 1.
+        gdat.scalmasshosttotl = 'logt'
     
     gdat.scalmaxmnumbpnts = 'logt'
     gdat.scalmedilliktotl = 'logt'
@@ -2352,6 +2350,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     for l in gdat.trueindxpopl:
         setattr(gdat, 'lablcmplpop%d' % l, '$c_{%d}$' % l)
+        setattr(gdat, 'lablfdispop%d' % l, '$f_{%d}$' % l)
 
     gdat.lablprvl = '$p$'
     
@@ -2388,14 +2387,14 @@ def setpinit(gdat, boolinitsetp=False):
     
     dicttemp = deepcopy(gdat.__dict__)
     for name, valu in dicttemp.iteritems():
-        if name.startswith('labl') and name.endswith('unit'):
-            name = name[4:-4]
+        if name.startswith('labl'):
+            name = name[4:]
             labl = getattr(gdat, 'labl' + name)
-            lablunit = getattr(gdat, 'labl' + name + 'unit')
-            if lablunit == '':
-                setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
-            else:
+            try:
+                lablunit = getattr(gdat, 'labl' + name + 'unit')
                 setattr(gdat, 'labl' + name + 'totl', '$%s$ [%s]' % (labl, lablunit))
+            except:
+                setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
     
     ## legends
     if gdat.elemtype == 'lght':
@@ -2492,7 +2491,9 @@ def setpinit(gdat, boolinitsetp=False):
             else:
                 lablfixptotl[k] = '%s [%s]' % (lablfixp[k], lablfixpunit[k])
         setattr(gdat, strgmodl + 'lablfixptotl', lablfixptotl)
-    
+        for k, name in enumerate(namefixp):
+            setattr(gdat, 'labl' + namefixp[k] + 'totl', lablfixptotl[k])
+
     gdat.liststrgfeatconc = deepcopy(gdat.fittliststrgcomptotl)
     if gdat.elemtype == 'lght':
         gdat.liststrgfeatconc.remove('flux')
@@ -3126,7 +3127,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxstdp = arange(gdat.numbstdp)
     gdat.indxstdpfixp = arange(gdat.numbfixpprop)
     gdat.indxstdpcomp = setdiff1d(gdat.indxstdp, gdat.indxstdpfixp)
-    
     gdat.indxparaprop = gdat.indxfixpprop
 
     # proposal scale indices for each parameter
@@ -3145,11 +3145,22 @@ def setpinit(gdat, boolinitsetp=False):
                 if k in indxsampcomp[strgcomp][l]:
                     gdat.indxstdppara[k] = getattr(gdat, 'indxstdp' + strgcomp)
 
+    # for the fitting model, define proposal type indices
+    dicttemptemp = deepcopy(gdat.__dict__) 
+    for name, valu in dicttemptemp.iteritems():
+        if name.startswith('fittindxfixp') and name != 'fittindxfixp':
+            indxfixp = valu
+            indxstdp = gdat.indxstdppara[indxfixp]
+            setattr(gdat, 'indxstdp' + name[12:], indxstdp)
+    
     # proposal scale
     if gdat.elemtype == 'lens':
-        gdat.stdvstdp = 5e-5 + zeros(gdat.numbstdp)
-        #gdat.stdvstdp[gdat.indxfixphypr+gdat.numbpopl] = 5e-2
-        gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
+        gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+        gdat.stdvstdp[gdat.indxstdplgalhost] = 1e-3
+        gdat.stdvstdp[gdat.indxstdplgalhost] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpbeinhost] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpspechost] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
@@ -3265,7 +3276,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}$')
             gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
             gdat.nameproptype = append(gdat.nameproptype, 'with')
-    
+        
         gdat.indxproptypebrth = cntr.incr()
         gdat.indxproptypedeth = cntr.incr()
         if gdat.probtran > 0.:
@@ -4099,71 +4110,71 @@ def setp_fixp(gdat, strgmodl='fitt'):
         if gdat.elemtype == 'lens':
             if k in getattr(gdat, strgmodl + 'indxfixplenp'):
                 if strgvarb == 'lgalsour':
-                    lablfixp[k] = '$l_s$'
-                    scalfixp[k] = 'self'
+                    lablfixp[k] = '$l_{src}$'
+                    scalfixp[k] = 'gaus'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'bgalsour':
-                    lablfixp[k] = '$b_s$'
-                    scalfixp[k] = 'self'
+                    lablfixp[k] = '$b_{src}$'
+                    scalfixp[k] = 'gaus'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb.startswith('specsour'):
                     if gdat.numbener > 1:
-                        lablfixp[k] = '$f_{s,%s}$' % strg[-1]
+                        lablfixp[k] = '$f_{src,%s}$' % strg[-1]
                     else:
-                        lablfixp[k] = '$f_s$'
+                        lablfixp[k] = '$f_{src}$'
                     scalfixp[k] = 'logt'
                     lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizesour':
-                    lablfixp[k] = '$a_s$'
+                    lablfixp[k] = '$a_{src}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'ellpsour':
-                    lablfixp[k] = r'$\epsilon_s$'
+                    lablfixp[k] = r'$\epsilon_{src}$'
                     scalfixp[k] = 'self'
                 if strgvarb == 'anglsour':
-                    lablfixp[k] = r'$\phi_s$'
+                    lablfixp[k] = r'$\phi_{src}$'
                     scalfixp[k] = 'self'
                 if strgvarb == 'lgalhost':
-                    lablfixp[k] = '$l_h$'
-                    scalfixp[k] = 'self'
+                    lablfixp[k] = '$l_{hst}$'
+                    scalfixp[k] = 'gaus'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'bgalhost':
-                    lablfixp[k] = '$b_h$'
-                    scalfixp[k] = 'self'
+                    lablfixp[k] = '$b_{hst}$'
+                    scalfixp[k] = 'gaus'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb.startswith('spechost'):
                     if gdat.numbener > 1:
-                        lablfixp[k] = '$f_{h,%s}$' % strg[-1]
+                        lablfixp[k] = '$f_{hst,%s}$' % strg[-1]
                     else:
-                        lablfixp[k] = '$f_h$'
+                        lablfixp[k] = '$f_{hst}$'
                     scalfixp[k] = 'logt'
                     lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizehost':
-                    lablfixp[k] = '$a_h$'
+                    lablfixp[k] = '$a_{hst}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'beinhost':
-                    lablfixp[k] = r'$\theta_{E,h}$'
+                    lablfixp[k] = r'$\theta_{E,hst}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
                 if strgvarb == 'ellphost':
-                    lablfixp[k] = r'$\epsilon_h$'
+                    lablfixp[k] = r'$\epsilon_{hst}$'
                     scalfixp[k] = 'self'
                 if strgvarb == 'anglhost':
-                    lablfixp[k] = r'$\phi_h$'
+                    lablfixp[k] = r'$\phi_{hst}$'
                     scalfixp[k] = 'self'
                 if strgvarb == 'sherhost':
-                    lablfixp[k] = r'$\gamma_e$'
+                    lablfixp[k] = r'$\gamma_{ext}$'
                     scalfixp[k] = 'self'
                 if strgvarb == 'sanghost':
-                    lablfixp[k] = r'$\phi_{\gamma}$'
+                    lablfixp[k] = r'$\phi_{ext}$'
                     scalfixp[k] = 'self'
         
         if scalfixp[k] == 'pois' or scalfixp[k] == 'self' or scalfixp[k] == 'logt' or scalfixp[k] == 'atan':
@@ -4844,7 +4855,11 @@ def retr_lpripowrdist(gdat, gdatmodi, strgmodl, comp, strgcomp, sampvarb, l):
     distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
     minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
     maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
-    lpri = sum(log(pdfn_powr(comp, minm, maxm, distslop)))
+    
+    # temp
+    fact = (log(comp) - log(minm)) / (log(maxm) - log(minm))
+
+    lpri = sum(fact * log(pdfn_powr(comp, minm, maxm, distslop)))
 
     return lpri
 
@@ -5151,6 +5166,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     retr_deflelem_jitt(gdat.deflelem, gdat.indxpixl, gdat.lgalgrid, gdat.bgalgrid, numbpntsconc, dicttemp['lgalconc'], dicttemp['bgalconc'], \
                                                                 dicttemp['defsconc'], dicttemp['ascaconc'], dicttemp['acutconc'])
                 else:
+
                     if gdat.propwithsing and gdat.pertmodleval and strg == 'next':
                         
                         if False:
