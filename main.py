@@ -650,7 +650,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 3e-3 / gdat.anglfact
+    minmdefs = 1e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
