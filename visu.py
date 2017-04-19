@@ -530,7 +530,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             truepara = None
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara, scal=scal)
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara, scalpara=scal)
         
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
