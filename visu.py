@@ -573,7 +573,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     
     #### hyperparameters
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixphypr])
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
+                                                truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[gdat.fittindxfixphypr] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
