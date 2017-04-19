@@ -2297,7 +2297,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.lablmasssubhtotl = '$M_{sub}$'
         gdat.scalmasssubhtotl = 'logt'
         
-        gdat.lablmasshostbein = '$M_{h,E}$'
+        gdat.lablmasshostbein = '$M_{E,hst}$'
         gdat.scalmasshosttotl = 'logt'
     
     gdat.scalmaxmnumbpnts = 'logt'
@@ -2387,14 +2387,20 @@ def setpinit(gdat, boolinitsetp=False):
     
     dicttemp = deepcopy(gdat.__dict__)
     for name, valu in dicttemp.iteritems():
-        if name.startswith('labl'):
+        if name.startswith('labl') and not name.endswith('unit'):
             name = name[4:]
             labl = getattr(gdat, 'labl' + name)
             try:
                 lablunit = getattr(gdat, 'labl' + name + 'unit')
-                setattr(gdat, 'labl' + name + 'totl', '$%s$ [%s]' % (labl, lablunit))
+                if labl.startswith('$'):
+                    setattr(gdat, 'labl' + name + 'totl', '%s [%s]' % (labl, lablunit))
+                else:
+                    setattr(gdat, 'labl' + name + 'totl', '$%s$ [%s]' % (labl, lablunit))
             except:
-                setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
+                if labl.startswith('$'):
+                    setattr(gdat, 'labl' + name + 'totl', '%s' % labl)
+                else:
+                    setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
     
     ## legends
     if gdat.elemtype == 'lght':
@@ -2436,7 +2442,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.minmdeltllik = 1.
     gdat.maxmdeltllik = 1e3
     gdat.minmdiss = 0.
-    gdat.maxmdiss = 3. * gdat.maxmgang
+    gdat.maxmdiss = gdat.maxmgang * sqrt(2.)
     gdat.minmdots = 1e-7
     gdat.maxmdots = 1e-5
 
@@ -2484,6 +2490,7 @@ def setpinit(gdat, boolinitsetp=False):
         lablfixp = getattr(gdat, strgmodl + 'lablfixp')
         lablfixpunit = getattr(gdat, strgmodl + 'lablfixpunit')
         numbfixp = getattr(gdat, strgmodl + 'numbfixp')
+        scalfixp = getattr(gdat, strgmodl + 'scalfixp')
         lablfixptotl = empty(numbfixp, dtype=object)
         for k in getattr(gdat, strgmodl + 'indxfixp'):
             if lablfixpunit[k] == '':
@@ -2493,6 +2500,7 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, strgmodl + 'lablfixptotl', lablfixptotl)
         for k, name in enumerate(namefixp):
             setattr(gdat, 'labl' + namefixp[k] + 'totl', lablfixptotl[k])
+            setattr(gdat, 'scal' + namefixp[k], scalfixp[k])
 
     gdat.liststrgfeatconc = deepcopy(gdat.fittliststrgcomptotl)
     if gdat.elemtype == 'lght':
@@ -2510,6 +2518,12 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
     
+    print 'hey'
+    for name in gdat.listnamevarbscal:
+        print name
+        print getattr(gdat, 'scal' + name)
+        print
+
     # plotting factors for scalar variables
     for name in gdat.listnamevarbscal:
         if name in gdat.fittnamefixp:
@@ -4127,7 +4141,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
                     scalfixp[k] = 'logt'
                     lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizesour':
-                    lablfixp[k] = '$a_{src}$'
+                    lablfixp[k] = '$R_{e,src}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
@@ -4155,7 +4169,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
                     scalfixp[k] = 'logt'
                     lablfixpunit[k] = gdat.lablfluxunit
                 if strgvarb == 'sizehost':
-                    lablfixp[k] = '$a_{hst}$'
+                    lablfixp[k] = '$R_{e,hst}$'
                     scalfixp[k] = 'logt'
                     factfixpplot[k] = gdat.anglfact
                     lablfixpunit[k] = gdat.lablgangunit
@@ -4857,7 +4871,8 @@ def retr_lpripowrdist(gdat, gdatmodi, strgmodl, comp, strgcomp, sampvarb, l):
     maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
     
     # temp
-    fact = (log(comp) - log(minm)) / (log(maxm) - log(minm))
+    #fact = (log(comp) - log(minm)) / (log(maxm) - log(minm))
+    fact = 1.
 
     lpri = sum(fact * log(pdfn_powr(comp, minm, maxm, distslop)))
 

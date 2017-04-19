@@ -524,12 +524,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     for name in gdat.listnamevarbscal:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + name
         corr = getattr(gdat, 'corr' + name)
+        scal = getattr(gdat, 'scal' + name) 
         factplot = getattr(gdat, 'fact' + name + 'plot')
         if corr == None:
             truepara = None
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara)
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara, scal=scal)
         
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
@@ -2033,19 +2034,10 @@ def make_anim(gdat):
                 
                 indxfilelowr = int(ceil(numbfile * float(gdat.numbburn) / gdat.numbswep))
                 
-                print 'numbfile'
-                print numbfile
-                print 'indxfilelowr'
-                print indxfilelowr
-
                 if indxfilelowr < numbfile:
                     indxfileanim = arange(indxfilelowr, numbfile)
                 else:
                     continue
-                    
-                print 'indxfileanim'
-                print indxfileanim
-                print
 
                 if gdat.verbtype > 0:
                     print 'Making %s animation...' % name

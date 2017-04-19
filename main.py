@@ -476,11 +476,11 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
     setp_true(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
-    #if gdat.elemtype == 'lens':
-    #    maxmnumbpnts = array([1000])
-    #if gdat.elemtype == 'lght':
-    #    maxmnumbpnts = array([200])
-    setp_true(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1000)
+    if gdat.elemtype == 'lght':
+        maxmnumbpnts = 400
+    if gdat.elemtype == 'lens':
+        maxmnumbpnts = 100
+    setp_true(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
      
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
@@ -650,7 +650,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-3 / gdat.anglfact
+    minmdefs = 6e-4 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -668,7 +668,7 @@ def init( \
     maxmnobj = 5e2
     setp_true(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 1e-2 / gdat.anglfact
+    maxmdefs = 6e-3 / gdat.anglfact
     setp_true(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -2157,7 +2157,6 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## element parameters
     if gdat.fittnumbtrap > 0:
-        
         if gdat.inittype == 'refr':
             for l in gdat.fittindxpopl:
                 for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
@@ -2178,6 +2177,11 @@ def work(pathoutpthis, lock, indxprocwork):
                         if gdat.fittlistscalcomp[l][k] == 'gaus':
                             distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
                             diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
+                            print 'distmean'
+                            print distmean
+                            print 'diststdv'
+                            print diststdv
+                            print
                             compunit = cdfn_gaus(comp, distmean, diststdv)
                     except:
                         if gdat.verbtype > 0:
