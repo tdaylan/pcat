@@ -924,25 +924,25 @@ def init( \
                         limt = fittlimt
                     setattr(gdat, strglimt + namevarb, limt)
 
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.scallpdfspatpriointp = 'linr'
+    gdat.cmaplpdfspatpriointp = 'PuBu'
+    
     # color bars
-    gdat.maxmllikmaps = 0.
     gdat.minmllikmaps = -1e2
+    gdat.maxmllikmaps = 0.
     gdat.scalllikmaps = 'linr'
     gdat.cmapllikmaps = 'YlGn'
+    
+    gdat.scalexpomaps = 'logt'
+    gdat.cmapexpomaps = 'OrRd'
     
     gdat.scaldatacnts = 'logt'
     gdat.cmapdatacnts = 'Greys'
     
     gdat.scalresicnts = 'asnh'
     gdat.cmapresicnts = 'RdBu'
-    
-    gdat.scalexpomaps = 'logt'
-    gdat.cmapexpomaps = 'OrRd'
-    
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
-    gdat.scallpdfspatpriointp = 'linr'
-    gdat.cmaplpdfspatpriointp = 'PuBu'
     
     gdat.minmconv = 1e-4
     gdat.maxmconv = 10.
@@ -959,7 +959,17 @@ def init( \
     gdat.scaldeflcomp = 'logt'
     gdat.cmapdeflcomp = 'Oranges'
     
-    liststrgcbar = ['llikmaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'expomaps']
+    gdat.minmconvelemresi = -0.1
+    gdat.maxmconvelemresi = 0.1
+    gdat.scalconvelemresi = 'asnh'
+    gdat.cmapconvelemresi = 'PiYG'
+    
+    gdat.minmmagnresi = -10.
+    gdat.maxmmagnresi = 10.
+    gdat.scalmagnresi = 'asnh'
+    gdat.cmapmagnresi = 'PRGn'
+    
+    liststrgcbar = ['llikmaps', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'convelemresi', 'magnresi']
     for strgcbar in liststrgcbar:
         retr_ticklabl(gdat, strgcbar)
     

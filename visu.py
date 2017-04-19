@@ -260,6 +260,9 @@ def plot_samp(gdat, gdatmodi, strg):
                     plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
                     for k in range(gdat.numbdeflsingplot):
                         plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
+                    
+                    plot_genemaps(gdat, gdatmodi, strg, 'convelemresi', tdim=True, stdv=stdv)
+                    plot_genemaps(gdat, gdatmodi, strg, 'magnresi', tdim=True, stdv=stdv)
     
             if strg != 'true':
                 for i in gdat.indxener:
@@ -572,9 +575,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         print 'Hyperparameters...'
     
     #### hyperparameters
-    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
-                                                truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[gdat.fittindxfixphypr] for k in gdat.fittindxfixphypr])
+    # temp
+    #path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
+    #tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
+    #                                            truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[gdat.fittindxfixphypr[k]] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -1456,10 +1460,10 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
+def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
     
-    if strgfeatsign != None:
-        numbparaplot = getattr(gdat, 'numb' + strgfeatsign + 'plot')
+    if strgfeat != None:
+        numbparaplot = getattr(gdat, 'numb' + strgfeat + 'plot')
     else:
         numbparaplot = 1
 
@@ -1473,10 +1477,10 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
         else:
             numbrows = 2
     
-    if strgfeatsign != None:
-        indxfeat = gdat.fittliststrgfeatsign[indxpopltemp].index(strgfeatsign)
+    if strgfeat != None:
+        indxfeatsign = gdat.fittliststrgfeatsign[indxpopltemp].index(strgfeat)
     else:
-        indxfeat = arange(len(gdat.fittliststrgfeat))
+        indxfeatsign = arange(len(gdat.fittliststrgfeatsign))
 
     figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize), sharex='all', sharey='all')
     if numbrows == 1:
@@ -1485,7 +1489,7 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
         if numbcols == 1:
             axrw = [axrw]
         for b, axis in enumerate(axrw):
-            if strgfeatsign != None:
+            if strgfeat != None:
                 h = a * 2 + b
                 if strgbins == 'full':
                     indxlowr = h
@@ -1500,7 +1504,7 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
                     else:
                         indxlowr = 2 * h
                         indxuppr = numbparaplot
-                temp = sum(gdat.pntsprob[indxpopltemp][:, :, indxlowr:indxuppr, indxfeat], 2).T
+                temp = sum(gdat.pntsprob[indxpopltemp][:, :, indxlowr:indxuppr, indxfeatsign], 2).T
             else:
                 temp = sum(sum(gdat.pntsprob[indxpopltemp], 2), 2).T
                 
@@ -1509,23 +1513,36 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
             else:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi)
                 
-            if strgfeatsign != None:
-                bins = getattr(gdat, 'bins' + strgfeatsign)
+            if strgfeat != None:
+                bins = getattr(gdat, 'bins' + strgfeat)
             
             # superimpose true PS
-            # temp
-            try:
-                if strgfeatsign != None:
-                    truefeat = getattr(gdat, 'true' + strgfeatsign)[indxpopltemp] 
+            if gdat.trueinfo:
+                
+                print 'strgfeat'
+                print strgfeat
+                
+                if strgfeat != None:
+                    truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp] 
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
+                    
+                    print 'truefeat'
+                    print truefeat
+                
                 else:
-                    indxpnts = arange(gdat.trueflux[indxpopltemp].size)
+                    indxpnts = arange(gdat.truenumbpnts[indxpopltemp].size)
+                
+                print 'indxpnts'
+                print indxpnts
+                
+                truecompsign = getattr(gdat, 'true' + gdat.namecompsign)[indxpopltemp]
+                
+                print 'truecompsign'
+                print truecompsign
 
-                mrkrsize = retr_mrkrsize(gdat, gdat.trueflux[indxpopltemp][indxpnts])
+                mrkrsize = retr_mrkrsize(gdat, truecompsign[0, indxpnts])
                 axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
-            except:
-                pass
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.lablfeattotl['lgal'])
@@ -1539,13 +1556,13 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
             draw_frambndr(gdat, axis)
             
             if strgbins != 'cumu':
-                lablfeat = gdat.lablfeat[strgfeatsign]
-                factfeat = gdat.dictglob['fact' + strgfeatsign + 'plot']
+                lablfeat = gdat.lablfeat[strgfeat]
+                factfeat = gdat.dictglob['fact' + strgfeat + 'plot']
                 titl = tdpy.util.mexp(factfeat * bins[indxlowr]) + ' < $%s$ < ' % lablfeat + tdpy.util.mexp(factfeat * bins[indxuppr])
                 axis.set_title(titl)
     
-    if strgfeatsign != None:
-        lablfeattotl = gdat.lablfeattotl[strgfeatsign]
+    if strgfeat != None:
+        lablfeattotl = gdat.lablfeattotl[strgfeat]
         plt.figtext(0.5, 0.95, '%s' % lablfeattotl, ha='center', va='center')
     axiscomm = figr.add_axes([0.87, 0.2, 0.02, 0.6])
     cbar = figr.colorbar(imag, cax=axiscomm)
@@ -1554,7 +1571,7 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeatsign=None):
     if strgbins == 'cumu':
         strgtemp = ''
     else:
-        strgtemp = strgfeatsign
+        strgtemp = strgfeat
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'postbindmaps%s%s%d' % (strgbins, strgtemp, indxpopltemp) + '.pdf'
     figr.savefig(path)
     plt.close(figr)

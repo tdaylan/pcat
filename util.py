@@ -2518,12 +2518,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
     
-    print 'hey'
-    for name in gdat.listnamevarbscal:
-        print name
-        print getattr(gdat, 'scal' + name)
-        print
-
     # plotting factors for scalar variables
     for name in gdat.listnamevarbscal:
         if name in gdat.fittnamefixp:
@@ -2736,8 +2730,8 @@ def setpinit(gdat, boolinitsetp=False):
 
     # lensing problem setup
     ## number of deflection components to plot
-    gdat.numbdeflpntsplot = 3
-    gdat.numbdeflsingplot = gdat.numbdeflpntsplot + 2
+    gdat.numbdeflpntsplot = 2
+    gdat.numbdeflsingplot = gdat.numbdeflpntsplot + 3
 
     # input data
     gdat.pathinpt = gdat.pathdata + 'inpt/'
@@ -5474,6 +5468,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
             deflsing = zeros((gdat.numbpixl, 2, gdat.numbdeflsingplot))
             numbdeflsing = min(gdat.numbdeflpntsplot, numbpntsconc) + 2
+            if numbpntsconc > 0:
+                numbdeflsing += 1
             for k in range(numbdeflsing):
                 
                 if False:
@@ -5481,9 +5477,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     print k
                 
                 if k == 0:
-                    deflsing[:, :, k] = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
+                    deflhost = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
+                    deflsing[:, :, k] = deflhost
                 elif k == 1:
                     deflsing[:, :, k] = deflextr
+                elif k == 2:
+                    deflsing[:, :, k] = defl.reshape((gdat.numbpixl, 2)) - deflextr - deflhost
                 else:
                     if gdat.evalcirc == 'full':
                         indxpixltemp = gdat.indxpixl
@@ -5494,17 +5493,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         if isinstance(indxpixltemp, int):
                             indxpixltemp = gdat.indxpixl
                     
-                    deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgalsort'][k-2], dicttemp['bgalsort'][k-2], dicttemp['defssort'][k-2], 0., 0., \
-                                                                                      asca=dicttemp['ascasort'][k-2], acut=dicttemp['acutsort'][k-2], indxpixltemp=indxpixltemp)
+                    deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgalsort'][k-3], dicttemp['bgalsort'][k-3], dicttemp['defssort'][k-3], 0., 0., \
+                                                                                      asca=dicttemp['ascasort'][k-3], acut=dicttemp['acutsort'][k-3], indxpixltemp=indxpixltemp)
                     
-                    if False:
-                        print 'dicttemp[defssort][k-2]'
-                        print dicttemp['defssort'][k-2]
-                if False:
-                    print 'deflsing[:, :, k]'
-                    summgene(deflsing[:, :, k])
-                    print
-
             deflsing = deflsing.reshape((gdat.numbsidecart, gdat.numbsidecart, 2, gdat.numbdeflsingplot))
 
             ### convergence
@@ -5616,13 +5607,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 for l in range(numbpopl):
                     grad = dstack((gradient(lensfluxmean, gdat.sizepixl, axis=0), gradient(lensfluxmean, gdat.sizepixl, axis=1)))
                     dicttemp['dots'][l] = empty(numbpnts[l])
-                    deflsing = zeros((gdat.numbpixl, 2, numbpnts[l]))
+                    deflsubh = zeros((gdat.numbpixl, 2, numbpnts[l]))
                     for k in range(numbpnts[l]):
-                        deflsing[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['defs'][l][k], 0., 0., \
+                        deflsubh[indxpixltemp, :, k] = retr_defl(gdat, dicttemp['lgal'][l][k], dicttemp['bgal'][l][k], dicttemp['defs'][l][k], 0., 0., \
                                                                                       asca=dicttemp['asca'][l][k], acut=dicttemp['acut'][l][k], indxpixltemp=indxpixltemp)
-                        deflsingtemp = deflsing[:, :, k].reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
-                        dotstemp = sum(grad * deflsingtemp, 2)
-                        #fact = sqrt(grad[:, :, 0]**2 + grad[:, :, 1]**2) * sqrt(deflsingtemp[:, :, 0]**2 + deflsingtemp[:, :, 1]**2)
+                        deflsubhtemp = deflsubh[:, :, k].reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
+                        dotstemp = sum(grad * deflsubhtemp, 2)
+                        #fact = sqrt(grad[:, :, 0]**2 + grad[:, :, 1]**2) * sqrt(deflsubhtemp[:, :, 0]**2 + deflsubhtemp[:, :, 1]**2)
                         #indxfact = where(fact > 0.)
                         #dicttemp['dots'][l][k] = mean(dotstemp[indxfact] / fact[indxfact])
                         dicttemp['dots'][l][k] = sum(fabs(dotstemp))
@@ -5748,6 +5739,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             if gdat.elemtype == 'lens' and gdat.datatype == 'mock':
                 gdatmodi.thisdeflsingresi = gdatmodi.thisdeflsing - gdat.truedeflsing
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
+                gdatmodi.thisconvelemresi = gdatmodi.thisconvelem - gdat.trueconvelem
+                gdatmodi.thismagnresi = gdatmodi.thismagn - gdat.truemagn
                 
                 if False:
                     print 'proc_samp'
