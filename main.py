@@ -938,7 +938,7 @@ def init( \
     gdat.minmperc = 0.
     gdat.maxmperc = 1e2
     gdat.scalperc = 'asnh'
-    gdat.cmapperc = 'coolwarm'
+    gdat.cmapperc = 'afmhot'
     
     gdat.minmpercresi = -1e2
     gdat.maxmpercresi = 1e2
