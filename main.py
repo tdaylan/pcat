@@ -2160,7 +2160,7 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[k], k)
-        gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+            gdatmodi.thissampvarb[k] = gdat.truesampvarb[k]#icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
     if gdat.inittype == 'rand' or gdat.inittype == 'pert':
         for l in gdat.fittindxpopl:
