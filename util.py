@@ -5441,11 +5441,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             #setattr(gdatobjt, strg + 'fluxbrgtassc', fluxbrgtassc)
 
         if gdat.elemtype == 'lens':
+            modlcntsuncv = retr_cntsmaps(gdat, modlfluxuncv, cart=True)
             lenscnts = retr_cntsmaps(gdat, lensflux, cart=True)
             hostcntsmaps = retr_cntsmaps(gdat, hostfluxmaps, cart=True)
             
             setattr(gdatobjt, strg + 'psfnkern', psfnkern)
-            setattr(gdatobjt, strg + 'modlfluxuncv', modlfluxuncv)
+            setattr(gdatobjt, strg + 'modlcntsuncv', modlcntsuncv)
             setattr(gdatobjt, strg + 'lenscnts', lenscnts)
             setattr(gdatobjt, strg + 'hostcntsmaps', hostcntsmaps)
 

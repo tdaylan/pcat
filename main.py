@@ -930,9 +930,9 @@ def init( \
     gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
-    gdat.minmllikmaps = -1e2
+    gdat.minmllikmaps = -10.
     gdat.maxmllikmaps = 0.
-    gdat.scalllikmaps = 'linr'
+    gdat.scalllikmaps = 'asnh'
     gdat.cmapllikmaps = 'YlGn'
     
     gdat.minmperc = 0.
@@ -1916,7 +1916,7 @@ def optihess(gdat, gdatmodi):
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
-        fudgstdv = 0.1
+        fudgstdv = 0.5
     diffparaodim = zeros(3)
     diffparaodim[0] = -deltparastep
     diffparaodim[2] = deltparastep

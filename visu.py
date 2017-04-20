@@ -223,7 +223,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 for i in gdat.indxener:
                     plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
                     plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
-                    plot_genemaps(gdat, gdatmodi, strg, 'modlfluxuncv', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
+                    plot_genemaps(gdat, gdatmodi, strg, 'modlcntsuncv', strgcbar='datacnts', thisindxener=i, tdim=True, stdv=stdv)
                 if strg != 'true':
                     plot_genemaps(gdat, gdatmodi, strg, 'deflcomp', tdim=True, stdv=stdv)
             for i in gdat.indxener:
@@ -261,10 +261,9 @@ def plot_samp(gdat, gdatmodi, strg):
                     for k in range(gdat.numbdeflsingplot):
                         plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
                     
-                    plot_genemaps(gdat, gdatmodi, strg, 'convelemresi', tdim=True, stdv=stdv)
-                    plot_genemaps(gdat, gdatmodi, strg, 'magnresi', tdim=True, stdv=stdv)
-        
                     for stdv in listbool:
+                        plot_genemaps(gdat, gdatmodi, strg, 'convelemresi', tdim=True, stdv=stdv)
+                        plot_genemaps(gdat, gdatmodi, strg, 'magnresi', tdim=True, stdv=stdv)
                         plot_genemaps(gdat, gdatmodi, strg, 'convelempercresi', strgcbar='perc', tdim=True, stdv=stdv)
                         plot_genemaps(gdat, gdatmodi, strg, 'magnpercresi', strgcbar='perc', tdim=True, stdv=stdv)
     
