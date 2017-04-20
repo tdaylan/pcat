@@ -924,16 +924,26 @@ def init( \
                         limt = fittlimt
                     setattr(gdat, strglimt + namevarb, limt)
 
+    # color bars
     gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
     gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
     gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
-    # color bars
     gdat.minmllikmaps = -1e2
     gdat.maxmllikmaps = 0.
     gdat.scalllikmaps = 'linr'
     gdat.cmapllikmaps = 'YlGn'
+    
+    gdat.minmperc = 0.
+    gdat.maxmperc = 1e2
+    gdat.scalperc = 'asnh'
+    gdat.cmapperc = 'coolwarm'
+    
+    gdat.minmpercresi = -1e2
+    gdat.maxmpercresi = 1e2
+    gdat.scalpercresi = 'asnh'
+    gdat.cmappercresi = 'coolwarm'
     
     gdat.scalexpomaps = 'logt'
     gdat.cmapexpomaps = 'OrRd'
@@ -969,7 +979,7 @@ def init( \
     gdat.scalmagnresi = 'asnh'
     gdat.cmapmagnresi = 'PRGn'
     
-    liststrgcbar = ['llikmaps', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'convelemresi', 'magnresi']
+    liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'convelemresi', 'magnresi']
     for strgcbar in liststrgcbar:
         retr_ticklabl(gdat, strgcbar)
     
@@ -1436,6 +1446,7 @@ def initarry( \
     for k in range(numbiter):
         for strgvarb, valu in dictvarbvari.iteritems():
             dictvarb[strgvarb] = valu[k]
+        dictvarb['strgcnfg'] = inspect.stack()[1][3] + '_%04d' % k
         gdat = init(**dictvarb)
         for strgvarb in liststrgvarboutp:
             print 'strgvarb'

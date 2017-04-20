@@ -2447,7 +2447,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmdots = 1e-5
 
     gdat.minmmcut = 5e7
-    gdat.maxmmcut = 1e10
+    gdat.maxmmcut = 5e9
     
     gdat.minmbein = 0.
     gdat.maxmbein = 1. / gdat.anglfact
@@ -5741,6 +5741,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 gdatmodi.thisdeflresi = gdatmodi.thisdefl - gdat.truedefl
                 gdatmodi.thisconvelemresi = gdatmodi.thisconvelem - gdat.trueconvelem
                 gdatmodi.thismagnresi = gdatmodi.thismagn - gdat.truemagn
+                gdatmodi.thisconvelempercresi = 100. * fabs(gdatmodi.thisconvelemresi / gdat.trueconvelem)
+                gdatmodi.thismagnpercresi = 100. * fabs(gdatmodi.thismagnresi / gdat.truemagn)
                 
                 if False:
                     print 'proc_samp'

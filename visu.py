@@ -263,6 +263,10 @@ def plot_samp(gdat, gdatmodi, strg):
                     
                     plot_genemaps(gdat, gdatmodi, strg, 'convelemresi', tdim=True, stdv=stdv)
                     plot_genemaps(gdat, gdatmodi, strg, 'magnresi', tdim=True, stdv=stdv)
+        
+                    for stdv in listbool:
+                        plot_genemaps(gdat, gdatmodi, strg, 'convelempercresi', strgcbar='perc', tdim=True, stdv=stdv)
+                        plot_genemaps(gdat, gdatmodi, strg, 'magnpercresi', strgcbar='perc', tdim=True, stdv=stdv)
     
             if strg != 'true':
                 for i in gdat.indxener:
@@ -575,10 +579,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         print 'Hyperparameters...'
     
     #### hyperparameters
-    # temp
-    #path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    #tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
-    #                                            truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[gdat.fittindxfixphypr[k]] for k in gdat.fittindxfixphypr])
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
+    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
+                                                                                       truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -1519,29 +1522,17 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
             # superimpose true PS
             if gdat.trueinfo:
                 
-                print 'strgfeat'
-                print strgfeat
-                
                 if strgfeat != None:
-                    truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp] 
+                    truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp][0, :] 
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
                     
-                    print 'truefeat'
-                    print truefeat
-                
                 else:
-                    indxpnts = arange(gdat.truenumbpnts[indxpopltemp].size)
-                
-                print 'indxpnts'
-                print indxpnts
+                    indxpnts = arange(gdat.truenumbpnts[indxpopltemp])
                 
                 truecompsign = getattr(gdat, 'true' + gdat.namecompsign)[indxpopltemp]
                 
-                print 'truecompsign'
-                print truecompsign
-
                 mrkrsize = retr_mrkrsize(gdat, truecompsign[0, indxpnts])
-                axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][indxpnts], \
+                axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][0, indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][0, indxpnts], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
             if a == numbrows - 1:
