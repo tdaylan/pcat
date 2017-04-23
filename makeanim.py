@@ -54,7 +54,8 @@ for pathruns in listpathruns:
                         if not os.path.exists(namegiff):
                             print 'Run: %s, pdf: ' % (pathruns, namesampdist)
                             print 'Making %s animation...' % name
-                            os.system(cmnd)
+                            print
+                            #os.system(cmnd)
                         else:
                             pass
                             #print '%s already exists.' % namegiff
