@@ -16,7 +16,7 @@ def init( \
          emptsamp=False, \
 
          # sampler
-         numbswep=None, \
+         numbswep=1000000, \
          numbburn=None, \
          factthin=None, \
         
@@ -453,10 +453,6 @@ def init( \
         else:
             gdat.numbproc = 1
     
-    # number of total sweeps
-    if gdat.numbswep == None:
-        gdat.numbswep = 100000
-
     # number of burned sweeps
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 5
