@@ -124,7 +124,7 @@ def init( \
          priofactdoff=0., \
          
          # lensing
-         dotnpowr=3., \
+         dotnpowr=0., \
 
          # temp
          margfactmodl=1., \
