@@ -20,7 +20,7 @@ def init( \
          numbburn=None, \
          factthin=None, \
         
-         condcatl=True, \
+         condcatl=False, \
          seedstat=None, \
          indxevttincl=None, \
          indxenerincl=None, \
