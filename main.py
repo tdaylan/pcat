@@ -643,7 +643,7 @@ def init( \
 
     ## hyperparameters
     if gdat.elemtype == 'lens':
-        meanpnts = [0.1, 100.]
+        meanpnts = [0.1, 21.]
     if gdat.elemtype == 'lght':
         meanpnts = [1., 1000]
     setp_truedefa(gdat, 'meanpnts', meanpnts, popl=True)
@@ -665,7 +665,7 @@ def init( \
             minmflux = 0.1
         setp_true(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-3 / gdat.anglfact
+    minmdefs = 2e-3 / gdat.anglfact
     setp_true(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -683,7 +683,7 @@ def init( \
     maxmnobj = 5e2
     setp_true(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 1e-2 / gdat.anglfact
+    maxmdefs = 2e-2 / gdat.anglfact
     setp_true(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -1448,7 +1448,7 @@ def workopti(gdat, lock):
 def initarry( \
              dictvarbvari, \
              dictvarb, \
-             sameseed=False, \
+             sameseed=True, \
              makeplotarry=False, \
              liststrgvarboutp=None, \
              listlablinpt=None, \

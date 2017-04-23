@@ -1918,11 +1918,11 @@ def retr_condcatl(gdat):
     
     # construct lists of samples for each proposal type
 
-    listdist = [[] for k in range(numbstks)]
     listdisttemp = [[] for k in range(numbstks)]
     indxstksrows = [[] for k in range(numbstks)]
     indxstkscols = [[] for k in range(numbstks)]
-    for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):
+    thisperc = 0
+    for k in gdat.fittindxcomptotl:
         for n in range(numbstks):
             dist = fabs(arrystks[n, k] - arrystks[:, k])
             indxstks = where(dist < gdat.distthrs[k])[0]
@@ -1931,11 +1931,26 @@ def retr_condcatl(gdat):
                     listdisttemp[k].append(dist[j])
                     indxstksrows[k].append(n)
                     indxstkscols[k].append(j)
+            
+            nextperc = floor(100. * float(k * numbstks + n) / numbstks / gdat.fittnumbcomptotl)
+            if nextperc > thisperc:
+                thisperc = nextperc
+                print '%3d%% completed.' % thisperc
+        
         listdisttemp[k] = array(listdisttemp[k])
         indxstksrows[k] = array(indxstksrows[k])
         indxstkscols[k] = array(indxstkscols[k])
-
+    
+    print 'hey'
+    listdist = [[] for k in range(numbstks)]
     for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):
+        print 'listdisttemp[k]'
+        print listdisttemp[k].size
+        print 'indxstksrows[k]'
+        print indxstksrows[k].size
+        print 'indxstkscols[k]'
+        print indxstkscols[k].size
+        print
         listdist[k] = scipy.sparse.csr_matrix((listdisttemp[k], (indxstksrows[k], indxstkscols[k])), shape=(numbstks, numbstks))
     
     listindxstkspair = []
@@ -1969,7 +1984,7 @@ def retr_condcatl(gdat):
         numbdist = zeros(numbstks, dtype=int) - 1
         for p in range(len(indxstksleft)):
             indxstksdist = arange(numbstks)
-            for k in range(gdat.fittnumbcomptotl):
+            for k in gdat.fittindxcomptotl:
                 indxindx = where(listdist[k][indxstksleft[p], :] < gdat.distthrs[k])[0]
                 indxstksdist = intersect1d(indxstksdist, indxstkscols[k][indxindx])
             numbdist[indxstksleft[p]] = indxstksdist.size
@@ -2027,7 +2042,7 @@ def retr_condcatl(gdat):
                 
                 if indxstkstemp.size > 0:
                     totl = zeros_like(indxstkstemp)
-                    for k in range(gdat.fittnumbcomptotl):
+                    for k in gdat.fittindxcomptotl:
                         temp = listdist[k][indxstkscntr, indxstkstemp].toarray()[0]
                         totl = totl + temp**2
 
@@ -2044,7 +2059,7 @@ def retr_condcatl(gdat):
                         print indxstksthis
                 
                     thisbool = True
-                    for k in range(gdat.fittnumbcomptotl):
+                    for k in gdat.fittindxcomptotl:
                         if listdist[k][indxstkscntr, indxstksthis] > gdat.distthrs[k]:
                             thisbool = False
 
@@ -2127,9 +2142,13 @@ def retr_condcatl(gdat):
             gdat.dictglob['poststkscond'][r][strgfeat][0] = median(arry)
             gdat.dictglob['poststkscond'][r][strgfeat][1] = percentile(arry, 16.)
             gdat.dictglob['poststkscond'][r][strgfeat][2] = percentile(arry, 84.)
+    
 
     gdat.numbstkscond = len(gdat.dictglob['liststkscond'])
-    
+    print 'gdat.numbstkscond'
+    print gdat.numbstkscond
+    print
+
     if gdat.verbtype > 1:
         print 'gdat.dictglob[liststkscond]'
         for r in range(len(gdat.dictglob['liststkscond'])):
@@ -3390,9 +3409,6 @@ def setpfinl(gdat, boolinitsetp=False):
                 #temp /= amax(temp)
                 gdat.fittpdfnspatpriotemp[k, n] = temp**gdat.dotnpowr
 
-        print 'gdat.fittpdfnspatpriotemp'
-        summgene(gdat.fittpdfnspatpriotemp)
-
         gdat.fittlpdfspatprio, gdat.fittlpdfspatprioobjt = retr_spatprio(gdat, gdat.fittpdfnspatpriotemp)
         gdat.fittlpdfspatpriointp = gdat.fittlpdfspatprioobjt(gdat.bgalcart, gdat.lgalcart)
         
@@ -3706,6 +3722,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     ## element parameters
     liststrgcomptotl = retr_listconc(liststrgcomp)
     numbcomptotl = len(liststrgcomptotl)
+    indxcomptotl = arange(numbcomptotl)
 
     ## element parameters
     liststrgfeatpriototl = retr_listconc(liststrgfeatprio)
@@ -4480,21 +4497,21 @@ def init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=None, indxevttplot=No
     figr, axis = plt.subplots(figsize=(gdat.sizeimag, gdat.sizeimag))
     
     if indxenerplot == None:
-        strgener = 'N'
+        strgener = ''
     else:
-        strgener = '%d' % gdat.indxenerincl[indxenerplot]
+        strgener = 'ene%d' % gdat.indxenerincl[indxenerplot]
     
     if indxevttplot == None:
-        strgevtt = 'N'
+        strgevtt = ''
     elif indxevttplot == -1:
-        strgevtt = 'A'
+        strgevtt = 'evtA'
     else:
-        strgevtt = '%d' % gdat.indxevttincl[indxevttplot]
+        strgevtt = 'evt%d' % gdat.indxevttincl[indxevttplot]
     
     if indxpoplplot == -1:
-        strgpopl = 'A'
+        strgpopl = 'popA'
     else:
-        strgpopl = '%d' % indxpoplplot
+        strgpopl = 'pop%d' % indxpoplplot
 
     if gdatmodi == None:
         strgswep = ''
@@ -5169,7 +5186,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         lpri[1+numbpopl+l] = sum(log(pdfn_expo(gang, gdat.maxmgang, sampvarb[indxfixpgangdistscal[l]]))) 
                         lpri[1+2*numbpopl+l] = -numbpnts[l] * log(2. * pi) 
                     elif spatdisttype[l] == 'gaus' or spatdisttype[l] == 'grad':
-                        lpri[1+numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['bgal'][l], dicttemp['lgal'][l], grid=False)) 
+                        lpri[1+numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['bgal'][l], dicttemp['lgal'][l], grid=False))
+                    
                 elif strgcomp == 'bgal':
                     continue 
                 else: 
