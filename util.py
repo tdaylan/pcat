@@ -3385,11 +3385,22 @@ def setpfinl(gdat, boolinitsetp=False):
             for n in range(gdat.numbsidecart + 1):
                 # temp
                 temp = retr_dots(gdat, gdat.truelenscnts[0, :, :, 0], gdat.binslgalcart[k], gdat.binsbgalcart[n], 1., \
-                                                                                        gdat.trueascadistmeanpop0, gdat.trueacutdistmeanpop0, gdat.indxpixl)
+                                                                                        gdat.trueascadistmeanpop0, gdat.trueacutdistmeanpop0, gdat.indxpixl, absv=True)
+
                 #temp /= amax(temp)
                 gdat.fittpdfnspatpriotemp[k, n] = temp**gdat.dotnpowr
+
+        print 'gdat.fittpdfnspatpriotemp'
+        summgene(gdat.fittpdfnspatpriotemp)
+
         gdat.fittlpdfspatprio, gdat.fittlpdfspatprioobjt = retr_spatprio(gdat, gdat.fittpdfnspatpriotemp)
         gdat.fittlpdfspatpriointp = gdat.fittlpdfspatprioobjt(gdat.bgalcart, gdat.lgalcart)
+        
+        print 'gdat.dotnpowr'
+        print gdat.dotnpowr
+        print 'gdat.fittlpdfspatpriointp'
+        summgene(gdat.fittlpdfspatpriointp)
+        print
 
     # plot settings
     ## upper limit of histograms
@@ -4997,6 +5008,8 @@ def retr_spatprio(gdat, pdfnspatpriotemp, spatdistcons=None):
 
     summ = traptdim(gdat, pdfnspatprio)
     pdfnspatprio /= summ
+    print 'pdfnspatprio'
+    summgene(pdfnspatprio)
     lpdfspatprio = log(pdfnspatprio)
     lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binsbgalcart, gdat.binslgalcart, lpdfspatprio)
     
@@ -5932,19 +5945,20 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             cmpl[l] = array([float(len(gdatmodi.trueindxpntsasschits[l])) / gdat.truenumbpnts[l]])
             fdis[l] = array([float(indxfittpntsfals[l].size) / numbpnts[l]])
             
-            print 'gdatmodi.trueindxpntsasschits[l]'
-            print gdatmodi.trueindxpntsasschits[l]
-            print 'gdat.truenumbpnts[l]'
-            print gdat.truenumbpnts[l]
-            print 'cmpl'
-            print cmpl
-            print 'indxfittpntsfals[l]'
-            print indxfittpntsfals[l]
-            print 'numbpnts[l]'
-            print numbpnts[l]
-            print 'fdis'
-            print fdis
-            print
+            if False:
+                print 'gdatmodi.trueindxpntsasschits[l]'
+                print gdatmodi.trueindxpntsasschits[l]
+                print 'gdat.truenumbpnts[l]'
+                print gdat.truenumbpnts[l]
+                print 'cmpl'
+                print cmpl
+                print 'indxfittpntsfals[l]'
+                print indxfittpntsfals[l]
+                print 'numbpnts[l]'
+                print numbpnts[l]
+                print 'fdis'
+                print fdis
+                print
 
         for l in gdat.trueindxpopl:
             setattr(gdatmodi, 'thiscmplpop%d' % l, cmpl[l])

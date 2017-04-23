@@ -1252,11 +1252,6 @@ def init( \
         if gdat.seedstat != None:
             seed()
    
-    if gdat.mockonly:
-        if gdat.verbtype > 0:
-            print 'Mock dataset is generated. Quitting...'
-        return
-
     if gdat.datatype == 'inpt':
         retr_datatick(gdat)
     
@@ -1266,6 +1261,11 @@ def init( \
     # final setup
     setpfinl(gdat, True) 
     
+    if gdat.mockonly:
+        if gdat.verbtype > 0:
+            print 'Mock dataset is generated. Quitting...'
+        return
+
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
