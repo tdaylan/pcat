@@ -32,6 +32,10 @@ def init( \
          evalcirc=None, \
         
          shrtfram=False, \
+        
+         dotsprio=False, \
+        
+         mockonly=False, \
 
          numbspatdims=2, \
          
@@ -68,7 +72,7 @@ def init( \
          
          numbproc=None, \
          liketype='pois', \
-         exprtype='ferm', \
+         exprtype=None, \
          lgalcntr=0., \
          bgalcntr=0., \
          maxmangl=None, \
@@ -117,7 +121,11 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=1., \
+         priofactdoff=0., \
+         
+         # lensing
+         dotnpowr=3., \
+
          # temp
          margfactmodl=1., \
          bindprio=False, \
@@ -187,7 +195,13 @@ def init( \
         gdat.datatype = 'mock'
     else:
         gdat.datatype = 'inpt'
-  
+    
+    if gdat.exprtype == None:
+        if gdat.elemtype == 'lght':
+            gdat.exprtype = 'ferm'
+        if gdat.elemtype == 'lens':
+            gdat.exprtype = 'hubb'
+
     if gdat.pertmodleval == None:
         gdat.pertmodleval = gdat.propwithsing
 
@@ -206,7 +220,7 @@ def init( \
             gdat.indxevttincl = arange(1)
    
     if gdat.inittype == None:
-        gdat.inittype = 'rand'
+        gdat.inittype = 'pert'
 
     if gdat.elemtype == 'lens':
         gdat.hubbexpofact = 1.63050e-19
@@ -488,6 +502,7 @@ def init( \
         
     ### element parameter distributions
     setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
+    setp_true(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
     setp_true(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_true(gdat, 'defsdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_true(gdat, 'nobjdisttype', ['powr' for l in gdat.trueindxpopl])
@@ -750,6 +765,13 @@ def init( \
     gdat.truefactbgal = gdat.truemaxmbgal - gdat.trueminmbgal
     gdat.trueminmaang = -pi
     gdat.truemaxmaang = pi
+   
+    # fitting model defaults
+    try:
+        gdat.fittspatdisttype
+    except:
+        if gdat.elemtype == 'lens':
+            gdat.fittspatdisttype = ['grad']
     
     # copy the true model to the inference model if the inference model parameter has not been specified
     temp = deepcopy(gdat.__dict__)
@@ -925,8 +947,8 @@ def init( \
                     setattr(gdat, strglimt + namevarb, limt)
 
     # color bars
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 2.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 2.
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 20.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 20.
     gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
@@ -1128,6 +1150,9 @@ def init( \
     gdat.truenumbpopl = gdat.truenumbpnts.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
+    if gdat.datatype == 'mock':
+        gdat.limtpntshist = [0.5, 10**ceil(log10(max(gdat.truemaxmnumbpntstotl, gdat.fittmaxmnumbpntstotl)))]
+    
     ## unit sample vector
     gdat.truesamp = zeros(gdat.truenumbpara)
     gdat.truefixp = zeros(gdat.truenumbfixp) + nan
@@ -1193,6 +1218,7 @@ def init( \
             # sample element components from the true metamodel
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
+    gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
     if 'gaus' in gdat.fittspatdisttype:
         if gdat.lgalprio == None or gdat.bgalprio == None:
             gdat.lgalprio = concatenate((gdat.truelgal))
@@ -1201,7 +1227,6 @@ def init( \
     
         # spatial template for the catalog prior
         # temp -- this should move outside the if
-        gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
         gdat.pdfnspatpriotemp = zeros((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
         for k in range(gdat.numbspatprio):
             gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
@@ -1226,7 +1251,12 @@ def init( \
         
         if gdat.seedstat != None:
             seed()
-    
+   
+    if gdat.mockonly:
+        if gdat.verbtype > 0:
+            print 'Mock dataset is generated. Quitting...'
+        return
+
     if gdat.datatype == 'inpt':
         retr_datatick(gdat)
     
@@ -1416,12 +1446,12 @@ def workopti(gdat, lock):
 
 
 def initarry( \
-             liststrgvarboutp, \
              dictvarbvari, \
              dictvarb, \
              sameseed=False, \
-             listlablinpt=None, \
              makeplotarry=False, \
+             liststrgvarboutp=None, \
+             listlablinpt=None, \
             ):
     
     if sameseed:
@@ -1435,10 +1465,11 @@ def initarry( \
         numbiter = len(valu)
         break
 
-    numboutp = len(liststrgvarboutp)
-    dictoutp = dict()
-    for strgvarb in liststrgvarboutp:
-        dictoutp[strgvarb] = empty(numbiter)
+    if liststrgvarboutp != None:
+        numboutp = len(liststrgvarboutp)
+        dictoutp = dict()
+        for strgvarb in liststrgvarboutp:
+            dictoutp[strgvarb] = empty(numbiter)
     
     dictvarb['seedstat'] = seedstat
     dictvarb['strgcnfg'] = strgcnfg
@@ -1448,17 +1479,15 @@ def initarry( \
             dictvarb[strgvarb] = valu[k]
         dictvarb['strgcnfg'] = inspect.stack()[1][3] + '_%04d' % k
         gdat = init(**dictvarb)
-        for strgvarb in liststrgvarboutp:
-            print 'strgvarb'
-            print strgvarb
-            print 'getattr(gdat, strgvarb)'
-            print getattr(gdat, strgvarb)
-            dictoutp[strgvarb][k] = getattr(gdat, strgvarb)
-        
-        print 'dictoutp'
-        print dictoutp
-        print 
 
+        if liststrgvarboutp != None:
+            for strgvarb in liststrgvarboutp:
+                print 'strgvarb'
+                print strgvarb
+                print 'getattr(gdat, strgvarb)'
+                print getattr(gdat, strgvarb)
+                dictoutp[strgvarb][k] = getattr(gdat, strgvarb)
+        
     if makeplotarry:
         
         strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -2198,11 +2227,6 @@ def work(pathoutpthis, lock, indxprocwork):
                         if gdat.fittlistscalcomp[l][k] == 'gaus':
                             distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
                             diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
-                            print 'distmean'
-                            print distmean
-                            print 'diststdv'
-                            print diststdv
-                            print
                             compunit = cdfn_gaus(comp, distmean, diststdv)
                     except:
                         if gdat.verbtype > 0:

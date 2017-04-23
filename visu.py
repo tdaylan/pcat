@@ -207,6 +207,9 @@ def plot_samp(gdat, gdatmodi, strg):
                             plot_genemaps(gdat, gdatmodi, strg, 'datacnts', thisindxener=i, thisindxevtt=m, thisindxpopl=l)
         
         # temp
+        if 'grad' in spatdisttype and strg == 'this':
+            plot_genemaps(gdat, gdatmodi, 'fitt', 'lpdfspatpriointp', tdim=True)
+            
         if 'gaus' in spatdisttype:
             plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
     
@@ -1027,10 +1030,10 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
                 varbfrst = zeros(gdat.numbprvlhigh)
                 varbseco = zeros(gdat.numbprvlhigh)
                 cntr = 0
-                for r in gdat.indxelemcond:
+                for r in gdat.indxstkscond:
                     if r in gdat.indxprvlhigh:
-                        varbfrst[cntr] = gdat.dictglob['postelemcond'][r][strgfrst][l] * gdat.dictglob['fact' + strgfrst + 'plot']
-                        varbseco[cntr] = gdat.dictglob['postelemcond'][r][strgseco][l] * gdat.dictglob['fact' + strgseco + 'plot']
+                        varbfrst[cntr] = gdat.dictglob['poststkscond'][r][strgfrst][l] * gdat.dictglob['fact' + strgfrst + 'plot']
+                        varbseco[cntr] = gdat.dictglob['poststkscond'][r][strgseco][l] * gdat.dictglob['fact' + strgseco + 'plot']
                         cntr += 1
                 axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='black', label=gdat.legdsamp)
 

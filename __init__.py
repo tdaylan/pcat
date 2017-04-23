@@ -18,6 +18,7 @@ from scipy.special import erfinv, erf
 from scipy.stats import poisson as pss
 import scipy.ndimage
 import scipy.ndimage.filters
+import scipy.sparse
 
 # jit
 from numba import jit
