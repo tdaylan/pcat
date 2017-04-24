@@ -3,13 +3,14 @@ from PyPDF2 import PdfFileMerger
 
 pdfs = ['file1.pdf', 'file2.pdf', 'file3.pdf', 'file4.pdf']
 
+nameplot = 'gmrbmaps_00.pdf'
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listpathruns = fnmatch.filter(os.listdir(pathimag), '20*')
 numbruns = len(listpathruns)
 listpath = []
 for k in range(numbruns):
     for namesampdist in ['prio', 'post']:
-        pathgmrb = pathimag + listpathruns[k] + '/' + namesampdist + '/finl/diag/gmrbmaps_00.pdf'
+        pathgmrb = pathimag + listpathruns[k] + '/' + namesampdist + '/finl/diag/' + nameplot
         listpath.append(pathgmrb)
 
 merger = PdfFileMerger()
@@ -19,5 +20,5 @@ for path in listpath:
         print path
         merger.append(path)
 
-#merger.write("result.pdf")
+#merger.write(pathimag + nameplot)
 
