@@ -11,7 +11,10 @@ for pathruns in listpathruns:
             
             pathframextn = pathimag + pathruns + '/' + namesampdist + '/fram/' + nameextn
             pathanimextn = pathimag + pathruns + '/' + namesampdist + '/anim/' + nameextn
-    
+        
+            print 'pathframextn'
+            print pathframextn
+
             try:
                 listfile = fnmatch.filter(os.listdir(pathframextn), '*_swep*.pdf')
                 listfiletemp = []

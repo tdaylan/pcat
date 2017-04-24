@@ -21,7 +21,7 @@ merger = PdfFileMerger()
 
 cmnd = 'mkdir -p ' + pathimag + nameplot
 print cmnd
-#os.system(cmnd)
+os.system(cmnd)
 for path, rtag, namesampdist in zip(listpath, listrtag, listnamesampdist):
     cmnd = 'cp ' + path + ' ' + pathimag + nameplot + '/' + rtag + '_' + namesampdist + '.pdf'
     print cmnd
