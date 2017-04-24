@@ -55,7 +55,7 @@ for pathruns in listpathruns:
                             print 'Run: %s, pdf: ' % (pathruns, namesampdist)
                             print 'Making %s animation...' % name
                             print
-                            #os.system(cmnd)
+                            os.system(cmnd)
                         else:
                             pass
                             #print '%s already exists.' % namegiff
