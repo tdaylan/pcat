@@ -20,5 +20,5 @@ for path in listpath:
         print path
         merger.append(path)
 
-#merger.write(pathimag + nameplot)
+merger.write(pathimag + nameplot)
 
