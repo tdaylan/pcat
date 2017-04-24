@@ -5198,6 +5198,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if listscalcomp[l][k] == 'gaus':
                         lpri[1+(k+1)*numbpopl+l] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dicttemp[strgcomp][l], strgcomp, sampvarb, l)
             
+        if strg == 'this':
+            gdatmodi.thislpripena = lpri[0]
+        
         if strg == 'next' and gdatmodi.proptran:
             
             gdatmodi.thislpau = zeros(gdat.numblpau)

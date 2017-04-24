@@ -121,7 +121,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=0., \
+         priofactdoff=1., \
          
          # lensing
          dotnpowr=0., \
@@ -187,6 +187,13 @@ def init( \
         pf.writeto(gdat, gdat.stdvstdp, clobber=True)
 
     # preliminary setup
+    ## time stamp
+    gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
+    
+    # name of the configuration function
+    if gdat.strgcnfg == None:
+        gdat.strgcnfg = inspect.stack()[1][3]
+        
     gdat.numbbind = 4
     gdat.indxbind = arange(gdat.numbbind)
 
@@ -449,7 +456,7 @@ def init( \
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
-            gdat.numbproc = 20
+            gdat.numbproc = 10
         else:
             gdat.numbproc = 1
     
@@ -489,7 +496,7 @@ def init( \
     if gdat.elemtype == 'lght':
         maxmnumbpnts = 400
     if gdat.elemtype == 'lens':
-        maxmnumbpnts = 100
+        maxmnumbpnts = 50
     setp_true(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
      
     for l in gdat.trueindxpopl:
@@ -639,7 +646,7 @@ def init( \
 
     ## hyperparameters
     if gdat.elemtype == 'lens':
-        meanpnts = [0.1, 21.]
+        meanpnts = [0.1, 100.]
     if gdat.elemtype == 'lght':
         meanpnts = [1., 1000]
     setp_truedefa(gdat, 'meanpnts', meanpnts, popl=True)
@@ -782,13 +789,6 @@ def init( \
             except:
                 setattr(gdat, 'fitt' + strg[4:], getattr(gdat, strg))
     
-    # get the time stamp
-    gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
-    
-    # check the call stack for the name of the configuration function
-    if gdat.strgcnfg == None:
-        gdat.strgcnfg = inspect.stack()[1][3]
-        
     # check inputs
     if gdat.numbburn > gdat.numbswep:
         raise Exception('Bad number of burn-in sweeps.')
@@ -943,8 +943,8 @@ def init( \
                     setattr(gdat, strglimt + namevarb, limt)
 
     # color bars
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 20.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 20.
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 10.
     gdat.scallpdfspatpriointp = 'linr'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
@@ -1034,6 +1034,8 @@ def init( \
     pathcatllite = gdat.pathoutpthis + 'catllite.fits'  
     pathcatl = gdat.pathoutpthis + 'catl.fits'  
     
+    sys.stdout = logg(gdat)
+
     if gdat.verbtype > 0:
         sizetotl = 0.
         for root, dirs, listfile in os.walk(gdat.pathoutp):
@@ -1853,6 +1855,23 @@ def proc_post(gdat, prio=False):
         print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdat.timerealtotl, gdat.timeproctotl)
 
 
+class logg(object):
+    
+    def __init__(self, gdat):
+        self.terminal = sys.stdout
+        gdat.pathstdo = gdat.pathoutpthis + 'stdo.txt'
+        self.log = open(gdat.pathstdo, 'a')
+        pathlink = gdat.pathplot + 'stdo.txt'
+        os.system('ln -s %s %s' % (gdat.pathstdo, pathlink))
+    
+    def write(self, strg):
+        self.terminal.write(strg)
+        self.log.write(strg)  
+
+    def flush(self):
+        pass
+
+
 def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
 
     numbpert = indxparapert.size 
@@ -2668,6 +2687,8 @@ def work(pathoutpthis, lock, indxprocwork):
                         
                     print 'Number of elements:'
                     print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts].astype(int)
+                    print 'Log-prior penalization term: '
+                    print gdatmodi.thislpripena
                     print 'Chronometers: '
                     print 'chro'
                     for name, valu in gdat.indxchro.iteritems():
