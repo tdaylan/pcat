@@ -24,7 +24,7 @@ for pathruns in listpathruns:
             
             listname = list(set(listfiletemp))
     
-            for name in listname:
+            for name in randommod.shuffle(listname):
                 
                 if not name.startswith('datacnts'):
                     continue
