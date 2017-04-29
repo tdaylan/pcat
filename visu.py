@@ -540,7 +540,12 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             truepara = None
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, getattr(gdat, 'labl' + name + 'totl'), truepara=truepara, scalpara=scal)
+        
+        labltotl = getattr(gdat, 'labl' + name + 'totl')
+        print 'labltotl'
+        print labltotl
+
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, labltotl, truepara=truepara, scalpara=scal)
         
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
@@ -567,6 +572,14 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
     truepara = gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp]
+    print 'truepara'
+    print truepara
+    print 'gdat.fittlablfixptotl[gdat.fittindxfixp]'
+    print gdat.fittlablfixptotl[gdat.fittindxfixp]
+    print 'gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp]'
+    print gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp]
+    print
+
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], gdat.fittlablfixptotl[gdat.fittindxfixp], \
                                                                                           truepara=truepara)
     
