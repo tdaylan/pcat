@@ -981,7 +981,7 @@ def init( \
         retr_ticklabl(gdat, strgcbar)
     
     # construct the bins for element features
-    for strgmodl in ['fitt', 'true']:
+    for strgmodl in gdat.liststrgmodl:
         liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
         liststrgfeatpriototl = getattr(gdat, strgmodl + 'liststrgfeatpriototl')
         for strgfeat in liststrgfeattotl:
@@ -1096,7 +1096,7 @@ def init( \
         if gdat.truenumbpnts == None:
             gdat.truenumbpnts = empty(gdat.numbpopl, dtype=int)
             if gdat.truenumbtrap > 0:
-                for l in gdat.indxpopl:
+                for l in gdat.trueindxpopl:
                     gdat.truenumbpnts[l] = random_integers(0, gdat.maxmnumbpnts[l])
     
     else:
@@ -1105,11 +1105,12 @@ def init( \
             gdat.truebgal = [gdat.exprbgal]
             gdat.truenumbpnts = array([gdat.exprlgal.size])
             gdat.trueflux = [gdat.exprflux]
+            gdat.truespec = [gdat.exprspec]
             gdat.truesind = [gdat.exprsind]
     
             gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
             gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
-            for l in gdat.indxpopl: 
+            for l in gdat.trueindxpopl: 
                 gdat.trueminmflux = min(gdat.trueminmflux, amin(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
                 gdat.truemaxmflux = max(gdat.truemaxmflux, amax(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
             
@@ -1151,7 +1152,7 @@ def init( \
 
         for k in gdat.trueindxfixp:
             
-            if k in gdat.trueindxfixpnumbpnts or k in gdat.trueindxfixpmeanpnts:
+            if gdat.truenumbtrap > 0 and (k in gdat.trueindxfixpnumbpnts or k in gdat.trueindxfixpmeanpnts):
                 continue
 
             # assume the true PSF
@@ -1286,8 +1287,9 @@ def init( \
     gdatmodifudi = tdpy.util.gdatstrt()
     gdatmodifudi.thischro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
+    if gdat.fittnumbtrap > 0:
+        gdatmodifudi.thissamp[gdat.fittindxfixpnumbpnts] = 1
     gdatmodifudi.thisindxpntsfull = [[] for l in gdat.fittindxpopl]
-    gdatmodifudi.thissamp[gdat.fittindxfixpnumbpnts] = 1
     for l in gdat.fittindxpopl:
         gdatmodifudi.thisindxpntsfull[l].append(0)
     gdatmodifudi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodifudi.thisindxpntsfull, 'fitt')
