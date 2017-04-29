@@ -806,7 +806,7 @@ def updt_samp(gdat, gdatmodi):
 def retr_listpair(gdat, lgal, bgal):
     
     if gdat.verbtype > 1:
-        print 'Finding PS pairs inside the linking length...'
+        print 'Finding element pairs inside the linking length...'
     
     listpair = []
     for k in range(lgal.size):
@@ -1277,7 +1277,7 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         gdatmodi.indxsamptran = []
         cntr = 0
         for a in range(numbiter):
-            # find an empty slot in the PS list
+            # find an empty slot in the element list
             for k in range(gdat.fittmaxmnumbpnts[gdatmodi.indxpoplmodi]):
                 if not k in gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi]:
                     indxpntsbrth = k
@@ -1285,14 +1285,14 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 if cntr == numbiter:
                     break
        
-            # sample indices to add the new PS
+            # sample indices to add the new element
             gdatmodi.indxsamptran.append(retr_indxsamppnts(gdat, gdatmodi.indxpoplmodi, array([indxpntsbrth])))
         
         # sample auxiliary variables
         gdatmodi.auxipara = rand(numbcompmodi)
         gdatmodi.nextsamp[gdatmodi.indxsamptran[0]] = gdatmodi.auxipara
                 
-        # change the number of PS
+        # change the number of element
         gdatmodi.nextsamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] + 1
         gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].append(indxpntsbrth)
     
@@ -1302,21 +1302,21 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         if thisindxpnts != None:
             dethindxindxpnts = thisindxpnts
         else:
-            # occupied PS index to be killed
+            # occupied element index to be killed
             dethindxindxpnts = choice(arange(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
             
-        # PS index to be killed
+        # element index to be killed
         indxpntsdeth = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][dethindxindxpnts]
     
-        # sample indices to add the new PS
+        # sample indices to add the new element
         gdatmodi.indxsamptran = []
         gdatmodi.indxsamptran.append(gdat.fittindxsampcompinit + gdat.fittnumbtrapcuml[gdatmodi.indxpoplmodi] + indxpntsdeth * gdat.fittnumbcomp[gdatmodi.indxpoplmodi] + \
                                                                                                                                     gdat.fittindxcomp[gdatmodi.indxpoplmodi])
     
-        # remove the PS from the occupied PS list
+        # remove the element from the occupied element list
         gdatmodi.nextindxpntsfull[gdatmodi.indxpoplmodi].remove(indxpntsdeth)
     
-        # change the number of PS
+        # change the number of element
         gdatmodi.nextsamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
         gdatmodi.nextsampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] = gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]] - 1
                   
@@ -1365,7 +1365,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         gdatmodi.amplfrst = gdatmodi.auxipara[0] * gdatmodi.amplpare
         gdatmodi.spltlgalfrst = thislgal + (1. - gdatmodi.auxipara[0]) * gdatmodi.auxipara[1]
         gdatmodi.spltbgalfrst = thisbgal + (1. - gdatmodi.auxipara[0]) * gdatmodi.auxipara[2]
-        gdatmodi.spltsindfrst = thisspep
         
         gdatmodi.amplseco = (1. - gdatmodi.auxipara[0]) * gdatmodi.amplpare
         gdatmodi.spltlgalseco = thislgal - gdatmodi.auxipara[0] * gdatmodi.auxipara[1] * cos(gdatmodi.auxipara[2])
@@ -1452,37 +1451,38 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             # sample a pair
             indxpairtemp = choice(arange(gdatmodi.thisnumbpair))
 
-            # determine PS indices to be merged
+            # determine element indices to be merged
             mergindxindxpntsfrst = gdatmodi.thislistpair[indxpairtemp][0]
             mergindxindxpntsseco = gdatmodi.thislistpair[indxpairtemp][1]
   
-            ## first PS index to be merged
+            ## first element index to be merged
             gdatmodi.mergindxfrst = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsfrst]
 
-            ## second PS index to be merged
+            ## second element index to be merged
             gdatmodi.mergindxseco = gdatmodi.thisindxpntsfull[gdatmodi.indxpoplmodi][mergindxindxpntsseco]
 
             # determine indices of the modified elements in the sample vector
-            ## first PS
+            ## first element
             # temp -- this would not work for multiple populations !
             gdatmodi.indxsampfrst = gdat.fittindxsampcompinit + gdat.fittnumbcomp[gdatmodi.indxpoplmodi] * gdatmodi.mergindxfrst
             indxfinlfrst = gdatmodi.indxsampfrst + gdat.fittnumbcomp[gdatmodi.indxpoplmodi]
             
-            ## second PS
+            ## second element
             gdatmodi.indxsampseco = gdat.fittindxsampcompinit + gdat.fittnumbcomp[gdatmodi.indxpoplmodi] * gdatmodi.mergindxseco
             indxfinlseco = gdatmodi.indxsampseco + gdat.fittnumbcomp[gdatmodi.indxpoplmodi]
 
             # indices of the sample vector elements to be modified
             gdatmodi.indxsampmodi = arange(gdatmodi.indxsampfrst, indxfinlfrst)
 
-            # indices of the PS to be merged
+            # indices of the element to be merged
             mergindxpnts = sort(array([gdatmodi.mergindxfrst, gdatmodi.mergindxseco], dtype=int))
 
-            # PS parameters to be merged
-            ## first PS
+            # parameters of the elements to be merged
             for strgcomp in gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]:
+                ## first
                 comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi][mergindxindxpntsfrst]]
                 setattr(gdatmodi, strgcomp + 'frst', comp)
+                ## second
                 comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi][mergindxindxpntsseco]]
                 setattr(gdatmodi, strgcomp + 'seco', comp)
 
@@ -1490,35 +1490,31 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             gdatmodi.amplseco = getattr(gdatmodi, gdat.namecompampl + 'seco')
 
             # auxiliary parameters
-            auxifrac = gdatmodi.amplfrst / (gdatmodi.amplfrst + gdatmodi.amplseco) 
-            auxilgal = gdatmodi.lgalseco - gdatmodi.lgalfrst
-            auxibgal = gdatmodi.bgalseco - gdatmodi.bgalfrst
-            auxispep = gdatmodi.amplseco
+            gdatmodi.auxifrac = gdatmodi.amplfrst / (gdatmodi.amplfrst + gdatmodi.amplseco) 
+            gdatmodi.auxilgal = gdatmodi.lgalseco - gdatmodi.lgalfrst
+            gdatmodi.auxibgal = gdatmodi.bgalseco - gdatmodi.bgalfrst
+            for k, strgcomp in enumerate(gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]):
+                if k > 2:
+                    setattr(gdatmodi, 'auxi' + strgcomp, strgcomp + 'seco')
 
-            # temp
-            gdatmodi.auxipara = zeros(gdat.fittnumbcomp[gdatmodi.indxpoplmodi])
-            gdatmodi.auxipara[0] = auxifrac
-            gdatmodi.auxipara[1] = auxiradi
-            gdatmodi.auxipara[2] = auxiangl
-            gdatmodi.auxipara[3:] = gdatmodi.spepseco
-            
-            # merged PS
-            gdatmodi.fluxpare = gdatmodi.fluxfrst + gdatmodi.fluxseco
-            if gdatmodi.fluxpare > gdat.maxmflux:
+            # merged element
+            gdatmodi.amplpare = gdatmodi.amplfrst + gdatmodi.amplseco
+            if gdatmodi.amplpare > getattr(gdat, 'maxm' + gdat.namecompampl):
                 gdatmodi.boolreje = True
             gdatmodi.lgalpare = gdatmodi.lgalfrst + (1. - auxifrac) * (gdatmodi.lgalseco - gdatmodi.lgalfrst)
             gdatmodi.bgalpare = gdatmodi.bgalfrst + (1. - auxifrac) * (gdatmodi.bgalseco - gdatmodi.bgalfrst)
-            gdatmodi.speppare = gdatmodi.spepfrst
-            gdatmodi.specpare = retr_spec(gdat, gdatmodi.fluxpare, spep=gdatmodi.speppare, spectype=gdat.spectype[gdatmodi.indxpoplmodi])
+            gdatmodi.amplpare = retr_spec(gdat, gdatmodi.fluxpare, spep=gdatmodi.speppare, spectype=gdat.spectype[gdatmodi.indxpoplmodi])
+            for k, strgcomp in enumerate(gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]):
+                if k > 2:
+                    setattr(gdatmodi, strgcomp + 'pare', strgcomp + 'frst')
 
-            # determine the unit variables for the merged PS
+            # determine the unit variables for the merged element
             gdatmodi.nextsamp[gdatmodi.indxsampfrst] = cdfn_self(gdatmodi.lgalpare, -gdat.maxmgang, 2. * gdat.maxmgang)
             gdatmodi.nextsamp[gdatmodi.indxsampfrst+1] = cdfn_self(gdatmodi.bgalpare, -gdat.maxmgang, 2. * gdat.maxmgang)
             gdatmodi.nextsamp[gdatmodi.indxsampfrst+2] = cdfn_flux_powr(gdatmodi.fluxpare, gdat.minmflux, gdat.maxmflux, \
                                                                                         gdatmodi.thissampvarb[gdat.fittindxfixpfluxdistslop[gdatmodi.indxpoplmodi]])
             gdatmodi.nextsamp[gdatmodi.indxsampfrst+3] = gdatmodi.thissamp[gdatmodi.thisindxsampspep[gdatmodi.indxpoplmodi][mergindxindxpntsfrst, :]]
 
-            # PSs to be added to the PS flux map
             # calculate the proposed list of pairs
             if gdat.verbtype > 1:
                 print 'mergindxfrst: ', gdatmodi.mergindxfrst
@@ -1532,16 +1528,13 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 print 'merglgalfrst: ', gdat.anglfact * gdatmodi.lgalfrst
                 print 'mergbgalfrst: ', gdat.anglfact * gdatmodi.bgalfrst
                 print 'mergfluxfrst: ', gdatmodi.fluxfrst
-                print 'mergspepfrst: ', gdatmodi.spepfrst
                 print 'merglgalseco: ', gdat.anglfact * gdatmodi.lgalseco
                 print 'mergbgalseco: ', gdat.anglfact * gdatmodi.bgalseco
                 print 'mergfluxseco: ', gdatmodi.fluxseco
-                print 'mergspepseco: ', gdatmodi.spepseco
                 print 'merglgalpare: ', gdat.anglfact * gdatmodi.lgalpare
                 print 'mergbgalpare: ', gdat.anglfact * gdatmodi.bgalpare
                 print 'mergspecpare: ', gdatmodi.specpare
                 print 'mergfluxpare: ', gdatmodi.fluxpare
-                print 'mergspeppare: ', gdatmodi.speppare
                 print 'auxipara[0]: ', gdatmodi.auxipara[0]
                 print 'auxipara[1]: ', gdat.anglfact * gdatmodi.auxipara[1]
                 print 'auxipara[2]: ', gdatmodi.auxipara[2]
@@ -2771,7 +2764,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.legdtruesour = gdat.legdtrue + ' sour'
    
     # temp
-    # PS indices in each population
+    # element indices in each population
     #gdat.indxpntspopl = []
     #for l in gdat.indxpopl:
     #    gdat.indxpntspopl.append(arange(sum(gdat.maxmnumbpnts[:l]), sum(gdat.maxmnumbpnts[:l+1])))
@@ -3111,7 +3104,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.binsprox = logspace(log10(gdat.fittminmflux), log10(gdat.fittmaxmflux), gdat.numbprox + 1)
         
         if gdat.evalcirc == 'locl':
-            # determine the maximum angle at which the PS flux map will be computed
+            # determine the maximum angle at which the contribution of the element will be computed
             gdat.maxmangleval = empty(gdat.numbprox)
             for h in gdat.indxprox:
                 if gdat.specfraceval == 0:
