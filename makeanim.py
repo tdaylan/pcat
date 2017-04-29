@@ -23,10 +23,14 @@ for pathruns in listpathruns:
                 listfiletemp.extend((thisfile.split('_')[0]).rsplit('/', 1))
             
             listname = list(set(listfiletemp))
-    
-            for name in randommod.shuffle(listname):
+            if len(listname) == 0:
+                continue
+            
+            shuffle(listname)
+
+            for name in listname:
                 
-                if not name.startswith('datacnts'):
+                if not (name.startswith('datacnts') or name.startswith('histdefspop0')):
                     continue
 
                 strgtemp = '%s*_swep*.pdf' % name
