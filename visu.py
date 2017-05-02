@@ -23,6 +23,8 @@ def plot_samp(gdat, gdatmodi, strg):
         numbtrap = getattr(gdat, strgmodl + 'numbtrap')
         sampvarb = getattr(gdatobjt, strg + 'sampvarb')
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
+        numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
+        numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
         if numbtrap > 0:
             spatdisttype = getattr(gdat, strgmodl + 'spatdisttype')
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
@@ -31,8 +33,8 @@ def plot_samp(gdat, gdatmodi, strg):
             numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strg != 'post':
-                indxpntsfull = list(getattr(gdatobjt, strg + 'indxpntsfull'))
-                indxsampcomp = retr_indxsampcomp(gdat, indxpntsfull, strgmodl)
+                indxelemfull = list(getattr(gdatobjt, strg + 'indxelemfull'))
+                indxsampcomp = retr_indxsampcomp(gdat, indxelemfull, strgmodl)
             
         if gdatmodi != None:
             strgswep = '_%09d' % gdatmodi.cntrswep
@@ -54,18 +56,20 @@ def plot_samp(gdat, gdatmodi, strg):
         
             # completeness
             if strg != 'true':
-                for l in gdat.trueindxpopl:
-                    lablydat = getattr(gdat, 'lablcmplpop%d' % l)
-                    indxydat = [l, slice(None)]
-                    strgindxydat = 'pop%d' % l
-                    for strgfeat in gdat.trueliststrgfeatodim[l]:
-                        if strgfeat in gdat.fittliststrgfeatodim[l]:
-                            factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
-                            lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
-                            scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
-                            limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                            plot_gene(gdat, gdatmodi, strg, 'cmpl' + strgfeat, 'mean' + strgfeat, lablxaxi=lablxdat, lablyaxi=lablydat, factxdat=factxdat, \
-                                              scalxaxi=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, omittrue=True)
+                for strgclas in ['cmpl', 'fdis']:   
+                    nameinte = strgclas + '/'
+                    for l in gdat.trueindxpopl:
+                        lablydat = getattr(gdat, 'labl' + strgclas + 'pop%d' % l)
+                        indxydat = [l, slice(None)]
+                        strgindxydat = 'pop%d' % l
+                        for strgfeat in gdat.trueliststrgfeatodim[l]:
+                            if strgfeat in gdat.fittliststrgfeatodim[l]:
+                                factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
+                                lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
+                                scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
+                                limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                                plot_gene(gdat, gdatmodi, strg, strgclas + strgfeat, 'mean' + strgfeat, lablxaxi=lablxdat, lablyaxi=lablydat, factxdat=factxdat, errr=True, \
+                                          scalxaxi=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, omittrue=True, nameinte=nameinte)
                 
             # element features projected onto the data axes
             if strg == 'this' or strg  == 'true' and gdat.datatype == 'mock':
@@ -138,7 +142,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         lablxaxi = gdat.lablgangtotl
                         limtydat= array([1e-3, 1e3]) * gdat.anglfact**2
                         plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindxydat=strgindxydat, scalyaxi='logt', \
-                                                                                    factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$', limtydat=limtydat)
+                                                                                       factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$', limtydat=limtydat)
                         if gdat.fittoaxitype or gdat.trueoaxitype:
                             plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindxydat=strgindxydat, \
                                                                                             factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$f(\phi)$')
@@ -156,8 +160,16 @@ def plot_samp(gdat, gdatmodi, strg):
             for l in indxpopl:
                 if strg != 'true' and gdat.trueinfo:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
-                        plot_scatassc(gdat, l, gdatmodi, strgfeat)
-                        plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=True)
+                        if gdat.datatype == 'mock':
+                            plot_scatassc(gdat, l, gdatmodi, strgfeat)
+                            plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=True)
+                        else:
+                            # temp
+                            try:
+                                plot_scatassc(gdat, l, gdatmodi, strgfeat)
+                                plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=True)
+                            except:
+                                pass
                 for a, strgfrst in enumerate(liststrgfeatcorr[l]):
                     for b, strgseco in enumerate(liststrgfeatcorr[l]):
                         if a < b:
@@ -187,8 +199,8 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             listname = ['hist' + strgfeat]
                         for name in listname:
-                            plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, \
-                                              scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, histodim=True)
+                            plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, histodim=True, \
+                                              scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
                
         # temp -- restrict compfrac and other plots to indxmodlpntscomp
         plot_compfrac(gdat, gdatmodi, strg)
@@ -243,12 +255,13 @@ def plot_samp(gdat, gdatmodi, strg):
             
         if gdat.elemtype == 'lens':
             plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', limtydat=[1e-1, 1e2], scalxaxi='logt', scalyaxi='logt')
-            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, \
+                                                                                                                                            histodim=True)
             if numbtrap > 0:
                 plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{sub}(k)$', \
                                                                                                                     limtydat=[1e-5, 1e-1], scalxaxi='logt', scalyaxi='logt')
                 plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxaxi=r'$\alpha$ [arcsec]', \
-                                                                                                                    lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+                                                                                                         lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
     
         if gdat.elemtype == 'lens':
     
@@ -256,7 +269,7 @@ def plot_samp(gdat, gdatmodi, strg):
             plot_defl(gdat, gdatmodi, strg, multfact=0.1)
             
             # deflection field due to individual lenses
-            for k in range(gdat.numbdeflsingplot):  
+            for k in range(numbdeflsingplot):  
                 if k == 0:
                     multfact = 0.1
                 elif k == 1:
@@ -268,7 +281,7 @@ def plot_samp(gdat, gdatmodi, strg):
             # residual deflection field
             if strg != 'true':
                 plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
-                for k in range(gdat.numbdeflsingplot):
+                for k in range(numbdeflsingplot):
                     plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
                 
                 for stdv in listbool:
@@ -440,7 +453,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         gdat.indxsamptotlfram = arange(gdat.numbframpost) * (gdat.indxsamptotl - gdat.indxsamptotl % gdat.numbframpost) / gdat.numbframpost
         for n in gdat.indxsamptotlfram:
             gdatmodi.cntrswep = n
-            gdatmodi.thisindxpntsfull = deepcopy(gdat.listindxpntsfull[n])
+            gdatmodi.thisindxelemfull = deepcopy(gdat.listindxelemfull[n])
             gdatmodi.thissampvarb = copy(gdat.listsampvarb[n, :])
             proc_samp(gdat, gdatmodi, 'this')
             plot_samp(gdat, gdatmodi, 'this')
@@ -450,10 +463,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         if gdat.verbtype > 0:
             print 'Split and merge related plots...'
     
-        indxsampsplttotl = where(gdat.listindxprop == gdat.indxpropsplt)[0]
-        indxsampsplt = intersect1d(where(gdat.listindxprop == gdat.indxpropsplt)[0], where(gdat.listaccpprop)[0])
-        indxsampmergtotl = where(gdat.listindxprop == gdat.indxpropmerg)[0]
-        indxsampmerg = intersect1d(where(gdat.listindxprop == gdat.indxpropmerg)[0], where(gdat.listaccpprop)[0])
+        indxsampsplttotl = where(gdat.listindxproptype == gdat.indxproptypesplt)[0]
+        indxsampsplt = intersect1d(where(gdat.listindxproptype == gdat.indxproptypesplt)[0], where(gdat.listaccpprop)[0])
+        indxsampmergtotl = where(gdat.listindxproptype == gdat.indxproptypemerg)[0]
+        indxsampmerg = intersect1d(where(gdat.listindxproptype == gdat.indxproptypemerg)[0], where(gdat.listaccpprop)[0])
         indxsampspmr = union1d(indxsampsplt, indxsampmerg)
         indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
         if indxsampspmrtotl.size > 0:
@@ -542,8 +555,16 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             truepara = getattr(gdat, 'corr' + name) * factplot
         
         labltotl = getattr(gdat, 'labl' + name + 'totl')
+        
+        print 'name'
+        print name
+        print 'truepara'
+        print truepara
         print 'labltotl'
         print labltotl
+        print 'scal'
+        print scal
+        print
 
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, labltotl, truepara=truepara, scalpara=scal)
         
@@ -572,14 +593,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     #### overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
     truepara = gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp]
-    print 'truepara'
-    print truepara
-    print 'gdat.fittlablfixptotl[gdat.fittindxfixp]'
-    print gdat.fittlablfixptotl[gdat.fittindxfixp]
-    print 'gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp]'
-    print gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp]
-    print
-
     tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], gdat.fittlablfixptotl[gdat.fittindxfixp], \
                                                                                           truepara=truepara)
     
@@ -594,10 +607,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     if gdat.verbtype > 0:
         print 'Hyperparameters...'
     
-    #### hyperparameters
-    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
-    tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
-                                                                                       truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixphypr])
+    if gdat.fittnumbtrap > 0:
+        #### hyperparameters
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
+        tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
+                                                                                           truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixphypr])
     
     if gdat.verbtype > 0:
         print 'PSF parameters...'
@@ -726,7 +740,6 @@ def plot_chro(gdat):
     indxchro = array([0, 1, 2, 4])
     binstime = logspace(log10(amin(gdat.listchro[where(gdat.listchro > 0)])), log10(amax(gdat.listchro[:, indxchro])), 50)
 
-    gdat.listlegdchro = ['Total', 'Type', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Process', 'Posterior', 'Prior']
     figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
     #listcolr = ['b', 'g', 'r', 'm', 'orange', 'cyan', 'yellow', 'black']
     #for k in range(gdat.numbchro):
@@ -759,10 +772,7 @@ def plot_chro(gdat):
     
         for k in range(gdat.numbchro):
             chro = gdat.listchro[where(gdat.listchro[:, k] > 0)[0], k]
-            try:
-                axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
-            except:
-                pass
+            axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
             axcl[k].set_xlim([amin(binstime), amax(binstime)])
             axcl[k].set_ylim([0.5, None])
             axcl[k].set_ylabel(listlabl[k])
@@ -1125,8 +1135,8 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
                 axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     
 
-def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, \
-                     scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, omittrue=False, \
+def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, errr=False, \
+                     scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
                      lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False):
    
     if strg == 'true':
@@ -1135,7 +1145,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         strgmodl = 'fitt'
 
     if scal == None:
-        
         if scalxaxi == None:
             scalxaxi = 'linr'
         if scalyaxi == None:
@@ -1198,8 +1207,17 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         if histodim:
             axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5)
         else:
-            axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
-
+            if errr:
+                yerr = retr_fromgdat(gdat, gdatmodi, strg, strgydat, errr=True) * factydat
+                if indxydat != None:
+                    yerr = yerr[[slice(None)] + indxydat]
+                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='b', label=gdat.legdsamp, lw=1, capsize=10)
+                for caps in listcaps:
+                    caps.set_markeredgewidth(1)
+            else:
+                axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
+    
+    # reference
     try:
         if strgxdat[4:] == strgydat[:4]:
             strgtemp = strgydat[:4]
@@ -1212,6 +1230,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     except:
         pass
     
+    # true
     if gdat.datatype == 'mock' and not omittrue:
         ydat = getattr(gdat, 'true' + strgydat)
         if indxydat != None:
@@ -1220,13 +1239,15 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdtrue, alpha=0.5)
         else:
             axis.plot(xdat, ydat, color='g', label=gdat.legdtrue, alpha=0.5)
-
+    
+    # axis scales
     if scalxaxi == 'logt':
         axis.set_xscale('log')
     if scalyaxi == 'logt':
         if where(ydat > 0.)[0].size > 0:
             axis.set_yscale('log')
     
+    # axis labels
     axis.set_xlabel(lablxaxi)
     axis.set_ylabel(lablyaxi)
 
@@ -1276,12 +1297,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         
     make_legd(axis, offs=offslegd)
     
-    
-    if histodim:
-        nameinte = 'histodim/'
-    else:
-        nameinte = ''
-
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, strgydat, nameinte=nameinte)
     savefigr(gdat, gdatmodi, figr, path)
@@ -1308,7 +1323,7 @@ def plot_scatassc(gdat, l, gdatmodi, strgfeat, plotdiff=False):
         ydat = getattr(gdatmodi, 'this' + strgfeat + 'assc')[l]
 
     factplot = getattr(gdat, 'fact' + strgfeat + 'plot')
-        
+    
     xdat *= factplot
     xerr *= factplot
     if plotdiff:
@@ -1746,11 +1761,9 @@ def plot_mosa(gdat):
                             n = indxsampmosa[numbcols*a+b]
                             gdatmodi.thissampvarb = gdat.listsampvarb[n, :].flatten()
                             gdatmodi.thissamp = gdat.listsamp[n, :].flatten()
-                            gdatmodi.thisindxpntsfull = gdat.listindxpntsfull[n]
                             
                             if gdat.fittnumbtrap > 0:
-                                # temp
-                                #gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxpntsfull, gdat.spectype)
+                                gdatmodi.thisindxelemfull = gdat.listindxelemfull[n]
                                 proc_samp(gdat, gdatmodi, 'this')
 
                             if a == numbrows - 1:

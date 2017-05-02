@@ -27,6 +27,7 @@ for pathruns in listpathruns:
                 continue
             
             shuffle(listname)
+            
 
             for name in listname:
                 
@@ -69,8 +70,4 @@ for pathruns in listpathruns:
                         os.system(cmnd)
                     else:
                         pass
-                        #print '%s already exists.' % namegiff
-            #except:
-            #    pass
-                #print 'failed for %s' % pathframextn
 
