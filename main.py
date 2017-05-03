@@ -517,7 +517,7 @@ def init( \
 
     # number of sweeps between frame plots
     if gdat.numbswepplot == None:
-        gdat.numbswepplot = max(gdat.numbswep / 10, 50000)
+        gdat.numbswepplot = max(gdat.numbswep / 10, 100000)
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
