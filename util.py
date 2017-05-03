@@ -2055,6 +2055,10 @@ def retr_condcatl(gdat):
     for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):
         gdat.distthrs[k] = gdat.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)]
     
+    if gdat.verbtype > 0:
+        print 'gdat.distthrs'
+        print gdat.distthrs
+
     # construct lists of samples for each proposal type
     listdisttemp = [[] for k in range(gdat.fittnumbcomptotl)]
     indxstksrows = [[] for k in range(gdat.fittnumbcomptotl)]
@@ -2122,7 +2126,20 @@ def retr_condcatl(gdat):
         for p in range(len(indxstksleft)):
             indxstksdist = arange(numbstks)
             for k in gdat.fittindxcomptotl:
-                indxindx = where(listdist[k][indxstksleft[p], :] < gdat.distthrs[k])[0]
+                print 'p'
+                print p
+                print 'k'
+                print k
+                print 'indxstksleft[p]'
+                print indxstksleft[p]
+                print 'listdist[k][indxstksleft[p], :]'
+                summgene(listdist[k][indxstksleft[p], :].toarray())
+                indxindx = where(listdist[k][indxstksleft[p], :].toarray() < gdat.distthrs[k])[0]
+                print 'indxindx'
+                print indxindx
+                print 'indxstkscols'
+                print indxstkscols
+                print 
                 indxstksdist = intersect1d(indxstksdist, indxstkscols[k][indxindx])
             numbdist[indxstksleft[p]] = indxstksdist.size
             

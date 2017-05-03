@@ -16,7 +16,7 @@ def init( \
          emptsamp=False, \
 
          # sampler
-         numbswep=500000, \
+         numbswep=1000000, \
          numbburn=None, \
          factthin=None, \
         
