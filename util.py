@@ -461,9 +461,9 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     gdatmodi.propsplt = False
     gdatmodi.propmerg = False
     
-    gdatmodi.thisjcbnfact = 0.
+    gdatmodi.thisljcbfact = 0.
     gdatmodi.thislpautotl = 0. 
-    gdatmodi.thiscombfact = 0.
+    gdatmodi.thislcomfact = 0.
    
     # index of the population in which a transdimensional proposal will be made
     if thisindxpopl == None:
@@ -856,14 +856,35 @@ def retr_listpair(gdat, lgal, bgal):
     listpair = []
     for k in range(lgal.size):
         # temp -- linking uses the Cartesian approximation, which is accurate enough for splits and merges inside a small circle
-        indxpnts = k + 1 + where(sqrt((bgal[k+1:] - bgal[k])**2 + (lgal[k+1:] - lgal[k])**2) < gdat.radispmr)[0]
+        #indxpnts = k + 1 + where(sqrt((bgal[k+1:] - bgal[k])**2 + (lgal[k+1:] - lgal[k])**2) < gdat.radispmr)[0]
+        indxpnts = k + 1 + where((fabs(bgal[k+1:] - bgal[k]) < gdat.radispmr) & (fabs(lgal[k+1:] - lgal[k]) < gdat.radispmr))[0]
         for n in range(indxpnts.size):
             listpair.append([k, indxpnts[n]])
     
+    if gdat.verbtype > 1:
+        numbpair = len(listpair)
+        print '%d pairs found.' % numbpair
+
     if gdat.diagmode:
         boolgood = True
         for n in range(len(listpair)):
-            if sqrt((lgal[listpair[n][0]] - lgal[listpair[n][1]])**2 + (bgal[listpair[n][0]] - bgal[listpair[n][1]])**2) >= gdat.radispmr:
+            dist = sqrt((lgal[listpair[n][0]] - lgal[listpair[n][1]])**2 + (bgal[listpair[n][0]] - bgal[listpair[n][1]])**2)
+            
+            if gdat.verbtype > 1:
+                print 'n'
+                print n
+                print 'lgal[listpair[n][0]]'
+                print lgal[listpair[n][0]] * gdat.anglfact
+                print 'lgal[listpair[n][1]]'
+                print lgal[listpair[n][1]] * gdat.anglfact
+                print 'bgal[listpair[n][0]]'
+                print bgal[listpair[n][0]] * gdat.anglfact
+                print 'bgal[listpair[n][1]]'
+                print bgal[listpair[n][1]] * gdat.anglfact
+                print 'dist'
+                print dist * gdat.anglfact
+
+            if dist >= gdat.radispmr:
                 boolgood = False
         if not boolgood:
             Exception('Inappropriate list of pairs')
@@ -1412,6 +1433,26 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         if fabs(gdatmodi.compfrst[0]) > gdat.maxmgang or fabs(gdatmodi.compseco[0]) > gdat.maxmgang or \
                                       fabs(gdatmodi.compfrst[1]) > gdat.maxmgang or fabs(gdatmodi.compseco[1]) > gdat.maxmgang or \
                                       gdatmodi.compfrst[2] < getattr(gdat, 'fittminm' + gdat.namecompampl) or gdatmodi.compseco[2] < getattr(gdat, 'fittminm' + gdat.namecompampl):
+            if gdat.verbtype > 1:
+                print 'Proposal rejected due to component falling outside the prior.'
+                print 'gdat.maxmgang'
+                print gdat.maxmgang * gdat.anglfact
+                print 'gdatmodi.compfrst[0]'
+                print gdatmodi.compfrst[0] * gdat.anglfact
+                print 'gdatmodi.compfrst[1]'
+                print gdatmodi.compfrst[1] * gdat.anglfact
+                print 'gdatmodi.compseco[0]'
+                print gdatmodi.compseco[0] * gdat.anglfact
+                print 'gdatmodi.compseco[1]'
+                print gdatmodi.compseco[1] * gdat.anglfact
+                print 'getattr(gdat, fittminm + gdat.namecompampl)'
+                print getattr(gdat, 'fittminm' + gdat.namecompampl)
+                print 'gdatmodi.compfrst[2]'
+                print gdatmodi.compfrst[2]
+                print 'gdatmodi.compseco[2]'
+                print gdatmodi.compseco[2]
+                print
+
             gdatmodi.thisaccpprio = False
 
         # calculate the list of pairs
@@ -1423,6 +1464,14 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                                                                     setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][gdatmodi.indxpoplmodi]], gdatmodi.lgalpare)))
             bgal = concatenate((array([gdatmodi.compfrst[1], gdatmodi.compseco[1]]), \
                                                                     setdiff1d(gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][gdatmodi.indxpoplmodi]], gdatmodi.bgalpare)))
+            
+            if gdat.verbtype > 1:
+                print 'Element positions prior to calculating the pair list for the reverse move of a split'
+                print 'lgal'
+                print lgal * gdat.anglfact
+                print 'bgal'
+                print bgal * gdat.anglfact
+
             gdatmodi.nextlistpair = retr_listpair(gdat, lgal, bgal)
             gdatmodi.nextnumbpair = len(gdatmodi.nextlistpair)
 
@@ -1445,6 +1494,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         # check if merge will be proposed
         if gdatmodi.thisnumbpair == 0:
             gdatmodi.thisaccpprio = False
+            if gdat.verbtype > 1:
+                print 'Proposal rejected due to not finding a pair to merge.'
         else:
 
             # sample a pair
@@ -1498,6 +1549,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             gdatmodi.amplpare = gdatmodi.compfrst[2] + gdatmodi.compseco[2]
             if gdatmodi.amplpare > getattr(gdat, 'maxm' + gdat.namecompampl):
                 gdatmodi.thisaccpprio = False
+                if gdat.verbtype > 1:
+                    print 'Proposal rejected due to falling outside the prior.'
             gdatmodi.lgalpare = gdatmodi.compfrst[0] + (1. - gdatmodi.auxipara[0]) * (gdatmodi.compseco[0] - gdatmodi.compfrst[0])
             gdatmodi.bgalpare = gdatmodi.compfrst[1] + (1. - gdatmodi.auxipara[0]) * (gdatmodi.compseco[1] - gdatmodi.compfrst[1])
             for k, strgcomp in enumerate(gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]):
@@ -1572,11 +1625,26 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         gdatmodi.indxsampchec = gdat.indxfixpprop
         gdatmodi.indxsampmodi = gdat.indxfixpprop
     
+    # reject the sample if proposal is outside the prior
+    indxchecfail = where((gdatmodi.nextsamp[gdatmodi.indxsampchec] < 0.) | (gdatmodi.nextsamp[gdatmodi.indxsampchec] > 1.))[0]
+    if indxchecfail.size > 0:
+        if gdat.verbtype > 1:
+            for k in range(20):
+                print 'Proposal rejected due to proposal outside the prior during the common check'
+            print 'indxchecfail'
+            print indxchecfail
+            print
+        gdatmodi.thisaccpprio = False
+    
     if gdat.verbtype > 1:
         print 'gdatmodi.thisindxelemfull'
         print gdatmodi.thisindxelemfull
         print 'gdatmodi.nextindxelemfull'
         print gdatmodi.nextindxelemfull
+        print 'gdatmodi.thisaccpprio'
+        print gdatmodi.thisaccpprio
+        print 'gdatmodi.indxsampchec'
+        print gdatmodi.indxsampchec
         if not gdatmodi.propfixp and not (gdatmodi.propmerg and not gdatmodi.thisaccpprio):
             print 'gdatmodi.indxelemmodi'
             print gdatmodi.indxelemmodi
@@ -1587,18 +1655,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             for indxsamptran in gdatmodi.indxsamptran:
                 print indxsamptran
 
-    # reject the sample if proposal is outside the prior
-    indxchecfail = where((gdatmodi.nextsamp[gdatmodi.indxsampchec] < 0.) | (gdatmodi.nextsamp[gdatmodi.indxsampchec] > 1.))[0]
-    if indxchecfail.size > 0:
-        if gdat.verbtype > 1:
-            for k in range(20):
-                print 'Proposal rejected due to proposal outside the prior'
-            print 'indxchecfail'
-            print indxchecfail
-            print
-        gdatmodi.thisaccpprio = False
-        print 'gdatmodi.thisaccpprio'
-    
     if gdatmodi.propwith:
         gdatmodi.nextindxsampcomp = gdatmodi.thisindxsampcomp
     else:
@@ -1664,18 +1720,18 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
     if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisaccpprio:
         
         ## Jacobian
-        jcbnfacttemp = log(gdatmodi.amplpare * fabs(gdatmodi.auxipara[1] * (sin(gdatmodi.auxipara[2]) * cos(gdatmodi.auxipara[2]) + cos(gdatmodi.auxipara[2])**2)))
+        ljcbfacttemp = log(gdatmodi.amplpare * fabs(gdatmodi.auxipara[1] * (sin(gdatmodi.auxipara[2]) * cos(gdatmodi.auxipara[2]) + cos(gdatmodi.auxipara[2])**2)))
         if gdatmodi.propsplt:
-            gdatmodi.thisjcbnfact = jcbnfacttemp
+            gdatmodi.thisljcbfact = ljcbfacttemp
         else:
-            gdatmodi.thisjcbnfact = -jcbnfacttemp
+            gdatmodi.thisljcbfact = -ljcbfacttemp
         
         ## combinatorial factor
         thisnumbpnts = gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]]
         if gdatmodi.propsplt:
-            gdatmodi.thiscombfact = log(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2 / gdatmodi.nextnumbpair)
+            gdatmodi.thislcomfact = log(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2 / gdatmodi.nextnumbpair)
         else:
-            gdatmodi.thiscombfact = log(gdatmodi.thisnumbpair / gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2)
+            gdatmodi.thislcomfact = log(gdatmodi.thisnumbpair / gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]]**2)
    
 
 def retr_propcompscal(gdat, gdatmodi, stdvstdp, l, strgcomp, indxelemfull=slice(None)):
@@ -2000,10 +2056,9 @@ def retr_condcatl(gdat):
         gdat.distthrs[k] = gdat.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)]
     
     # construct lists of samples for each proposal type
-
-    listdisttemp = [[] for k in range(numbstks)]
-    indxstksrows = [[] for k in range(numbstks)]
-    indxstkscols = [[] for k in range(numbstks)]
+    listdisttemp = [[] for k in range(gdat.fittnumbcomptotl)]
+    indxstksrows = [[] for k in range(gdat.fittnumbcomptotl)]
+    indxstkscols = [[] for k in range(gdat.fittnumbcomptotl)]
     thisperc = 0
     for k in gdat.fittindxcomptotl:
         for n in range(numbstks):
@@ -2024,7 +2079,7 @@ def retr_condcatl(gdat):
         indxstksrows[k] = array(indxstksrows[k])
         indxstkscols[k] = array(indxstkscols[k])
     
-    listdist = [[] for k in range(numbstks)]
+    listdist = [[] for k in range(gdat.fittnumbcomptotl)]
     for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):
         listdist[k] = scipy.sparse.csr_matrix((listdisttemp[k], (indxstksrows[k], indxstkscols[k])), shape=(numbstks, numbstks))
     
@@ -5016,13 +5071,6 @@ def writfile(gdattemp, path):
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
-            if attr == 'thispsfnintp' or attr == 'nextpsfnintp':
-                continue
-            if 'psf' in attr:
-                print 'attr'
-                print attr
-                print 'valu'
-                print valu
             setattr(gdattemptemp, attr, valu)
     
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -5458,7 +5506,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     psfnintp.append(interp1d_pick(gdat.binsangl, psfn[:, :, :, p], axis=1))
             else:
                 psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
-            setattr(gdatobjt, strg + 'psfnintp', psfnintp)
+            # temp
+            # setattr(gdatobjt, strg + 'psfnintp', psfnintp)
         
         if gdat.elemtype == 'lens':
 

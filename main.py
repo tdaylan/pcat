@@ -16,7 +16,7 @@ def init( \
          emptsamp=False, \
 
          # sampler
-         numbswep=1000000, \
+         numbswep=500000, \
          numbburn=None, \
          factthin=None, \
         
@@ -32,6 +32,10 @@ def init( \
          # evaluate the likelihood inside circles around elements
          evalcirc=None, \
         
+         truelgalimps=None, \
+         truebgalimps=None, \
+         truefluximps=None, \
+         truedefsimps=None, \
          shrtfram=False, \
         
          dotsprio=False, \
@@ -83,6 +87,7 @@ def init( \
          pixltype=None, \
         
          trueampldisttype=None, \
+         fittampldisttype=None, \
 
          asscmetrtype='dist', \
 
@@ -127,7 +132,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=1., \
+         priofactdoff=0., \
          
          # lensing
          dotnpowr=0., \
@@ -230,7 +235,7 @@ def init( \
             gdat.exprtype = 'ferm'
         if gdat.elemtype == 'lens':
             gdat.exprtype = 'hubb'
-
+    
     if gdat.pertmodleval == None:
         gdat.pertmodleval = gdat.propwithsing
 
@@ -344,6 +349,9 @@ def init( \
     if gdat.trueampldisttype == None:
         gdat.trueampldisttype = 'powr'
     
+    if gdat.fittampldisttype == None:
+        gdat.fittampldisttype = 'powr'
+    
     ## experiment defaults
     if gdat.binsenerfull == None:
         if gdat.exprtype == 'ferm':
@@ -400,8 +408,13 @@ def init( \
             gdat.nameexpr = 'Gaia'
     
     if gdat.radispmr == None:
-        # temp
-        gdat.radispmr = 0.2 / gdat.anglfact
+        if gdat.elemtype == 'lght':
+            if gdat.exprtype == 'ferm':
+                gdat.radispmr = 1. / gdat.anglfact
+            if gdat.exprtype == 'chan':
+                gdat.radispmr = 1. / gdat.anglfact
+        if gdat.elemtype == 'lens':
+            gdat.radispmr = 0.2 / gdat.anglfact
    
     if gdat.pathbase[-1] != '/':
         gdat.pathbase += '/'
@@ -538,7 +551,6 @@ def init( \
         setattr(gdat, 'truemaxmnumbpntspop%d' % l, gdat.truemaxmnumbpnts[l])
         
     ### element parameter distributions
-    setp_namevarbvalu(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
     setp_namevarbvalu(gdat, 'spatdisttype', ['unif' for l in gdat.trueindxpopl])
     setp_namevarbvalu(gdat, 'fluxdisttype', ['powr' for l in gdat.trueindxpopl])
     setp_namevarbvalu(gdat, 'defsdisttype', ['powr' for l in gdat.trueindxpopl])
@@ -679,10 +691,7 @@ def init( \
     setp_namevarblimt(gdat, 'bacp', bacp, ener=True, back=True)
 
     ## hyperparameters
-    if gdat.elemtype == 'lens':
-        meanpnts = [0.1, 100.]
-    if gdat.elemtype == 'lght':
-        meanpnts = [1., 1000]
+    meanpnts = [0.1, 1000.]
     setp_namevarblimt(gdat, 'meanpnts', meanpnts, popl=True)
     
     ### element parameter boundaries
@@ -1201,6 +1210,15 @@ def init( \
             # sample element components from the true metamodel
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
+    if gdat.truelgalimps != None:
+        gdat.truesampvarb[gdat.trueindxsampcomp['lgal'][0]] = gdat.truelgalimps
+    if gdat.truebgalimps != None:
+        gdat.truesampvarb[gdat.trueindxsampcomp['bgal'][0]] = gdat.truebgalimps
+    if gdat.truefluximps != None:
+        gdat.truesampvarb[gdat.trueindxsampcomp['flux'][0]] = gdat.truefluximps
+    if gdat.truedefsimps != None:
+        gdat.truesampvarb[gdat.trueindxsampcomp['defs'][0]] = gdat.truedefsimps
+
     gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
     if 'gaus' in gdat.fittspatdisttype:
         if gdat.lgalprio == None or gdat.bgalprio == None:
@@ -1290,7 +1308,7 @@ def init( \
     #gdat.liststrgvarbarryswep = []
     
     if gdat.probbrde < 1.:
-        gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'jcbnfact', 'combfact']
+        gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'ljcbfact', 'lcomfact']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
@@ -2292,8 +2310,8 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.fittmaxmnumbcomp)
     gdatmodi.thisnumbpair = zeros(1, dtype=int)
-    gdatmodi.thisjcbnfact = zeros(1)
-    gdatmodi.thiscombfact = zeros(1)
+    gdatmodi.thisljcbfact = zeros(1)
+    gdatmodi.thislcomfact = zeros(1)
     gdatmodi.thislpau = zeros(gdat.numblpau)
     gdatmodi.thislfctprop = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
@@ -2534,9 +2552,17 @@ def work(pathoutpthis, lock, indxprocwork):
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
             
-            for strgvarb in gdat.liststrgvarblistsamp:  
+            for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
-            
+                if strgvarb == 'psfnintp':
+                    print 'strgvarb'
+                    print strgvarb
+                    print 'getattr(gdatmodi, this + strgvarb)'
+                    print getattr(gdatmodi, 'this' + strgvarb)
+                    print 'workdict[list + strgvarb]'
+                    print workdict['list' + strgvarb]
+                    print
+                 
             stopchro(gdat, gdatmodi, 'save')
 
         # plot the current sample
@@ -2612,7 +2638,7 @@ def work(pathoutpthis, lock, indxprocwork):
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
                                                                                 gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
-                                                                                                                                gdatmodi.thisjcbnfact + gdatmodi.thiscombfact)
+                                                                                                                                gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.

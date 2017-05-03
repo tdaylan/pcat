@@ -467,53 +467,28 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         indxsampsplt = intersect1d(where(gdat.listindxproptype == gdat.indxproptypesplt)[0], where(gdat.listaccpprop)[0])
         indxsampmergtotl = where(gdat.listindxproptype == gdat.indxproptypemerg)[0]
         indxsampmerg = intersect1d(where(gdat.listindxproptype == gdat.indxproptypemerg)[0], where(gdat.listaccpprop)[0])
-        indxsampspmr = union1d(indxsampsplt, indxsampmerg)
-        indxsampspmrtotl = union1d(indxsampsplttotl, indxsampmergtotl)
+        indxsampspmrtotl = concatenate((indxsampsplttotl, indxsampmergtotl))
         if indxsampspmrtotl.size > 0:
     
             ## labels and names
-            listlabl = ['$u_f$', '$u_r$', r'$u_\phi$', '$u_s$', '$N_{pair}$', \
-                                            r'$\alpha_c\alpha_j$', r'$\alpha_P\alpha_c\alpha_j$', r'$\alpha_c$', r'$\alpha_j$', r'$\alpha_L$', r'$\alpha_P$']
-            listname = ['fracauxi', 'radiauxi', 'anglauxi', 'sindauxi', 'numbpair', 'laccfact', 'laccfacttotl', 'combfact', 'jcbnfct']
+            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', '$N_{pair}$', r'$\log\alpha_j$', r'$\log\alpha_c$']
+            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'numbpair', 'ljcbfact', 'lcomfact']
             
             ## variables
-            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listauxipara[:, 3], gdat.listnumbpair, \
-                                             exp(gdat.listlaccfact), exp(gdat.listlaccfact + gdat.listdeltlpri), gdat.listcombfact, \
-                                             gdat.listjcbnfact]
+            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listnumbpair, \
+                                                                                                                                  gdat.listljcbfact, gdat.listlcomfact]
            
-            # rescale the Jacobian and the prior fraction to make them dimensionless
-            listvarb[5][indxsampsplttotl] /= gdat.minmflux
-            listvarb[5][indxsampmergtotl] *= gdat.minmflux
-            listvarb[8][indxsampsplttotl] /= gdat.minmflux
-            listvarb[8][indxsampmergtotl] *= gdat.minmflux
-            listvarb[10][indxsampsplttotl] *= gdat.minmflux
-            listvarb[10][indxsampmergtotl] /= gdat.minmflux
-    
             for k in range(len(listlabl)):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 maxm = amax(listvarb[k][indxsampspmrtotl])
-                
-                if k <= 4:
-                    indxsampspmrtemp = indxsampspmrtotl
-                    indxsampsplttemp = indxsampsplttotl
-                else:
-                    indxsampspmrtemp = indxsampspmr
-                    indxsampsplttemp = indxsampsplt
-                
-                if k >= 5:
-                    axis.set_xscale('log')
-                    minm = amin(listvarb[k][indxsampspmrtemp][where(listvarb[k][indxsampspmrtemp] > 0.)])
-                    bins = logspace(log10(minm), log10(maxm), 40)
-                else:
-                    minm = amin(listvarb[k][indxsampspmrtemp])
-                    bins = linspace(minm, maxm, 40)
+                minm = amin(listvarb[k][indxsampspmrtotl])
+                bins = linspace(minm, maxm, 40)
               
-                try:
-                    axis.hist(listvarb[k][indxsampsplttemp], bins=bins, label='Split', alpha=gdat.alphmrkr)
-                    axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge', alpha=gdat.alphmrkr)
-                except:
-                    if gdat.verbtype > 0:
-                        print 'Skipping split merge diagnostic plot...'
+                axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split', alpha=gdat.alphmrkr, color='m')
+                axis.hist(listvarb[k][indxsampmergtotl], bins=bins, label='Merge', alpha=gdat.alphmrkr, color='y')
+                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split/Accepted', alpha=gdat.alphmrkr, color='m', lw=10)
+                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge/Accepted', alpha=gdat.alphmrkr, color='y', lw=10)
+                
                 axis.set_ylabel('$N_{samp}$')
                 axis.set_xlabel(listlabl[k])
     
@@ -555,17 +530,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             truepara = getattr(gdat, 'corr' + name) * factplot
         
         labltotl = getattr(gdat, 'labl' + name + 'totl')
-        
-        print 'name'
-        print name
-        print 'truepara'
-        print truepara
-        print 'labltotl'
-        print labltotl
-        print 'scal'
-        print scal
-        print
-
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + name) * factplot, labltotl, truepara=truepara, scalpara=scal)
         
     if gdat.checprio and not prio:
