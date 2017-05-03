@@ -5343,7 +5343,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if indx.size > 0:
                         print 'Asca went negative'
                         sampvarb[indxsampcomp['asca'][l]][indx] = 1e-3 * gdat.anglfact
-                        raise Exception('')
+                        #raise Exception('')
 
         if gdat.elemtype == 'lght':
             for l in range(numbpopl):
