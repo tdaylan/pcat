@@ -2060,12 +2060,14 @@ def retr_condcatl(gdat):
     indxstksrows = [[] for k in range(gdat.fittnumbcomptotl)]
     indxstkscols = [[] for k in range(gdat.fittnumbcomptotl)]
     thisperc = 0
+    cntr = 0
     for k in gdat.fittindxcomptotl:
         for n in range(numbstks):
             dist = fabs(arrystks[n, k] - arrystks[:, k])
             indxstks = where(dist < gdat.distthrs[k])[0]
             if indxstks.size > 0:
                 for j in indxstks:
+                    cntr += 1
                     listdisttemp[k].append(dist[j])
                     indxstksrows[k].append(n)
                     indxstkscols[k].append(j)
@@ -2074,10 +2076,15 @@ def retr_condcatl(gdat):
             if nextperc > thisperc:
                 thisperc = nextperc
                 print '%3d%% completed.' % thisperc
+            if cntr > 1e6:
+                break
         
         listdisttemp[k] = array(listdisttemp[k])
         indxstksrows[k] = array(indxstksrows[k])
         indxstkscols[k] = array(indxstkscols[k])
+
+        if cntr > 1e6:
+            break
     
     listdist = [[] for k in range(gdat.fittnumbcomptotl)]
     for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):

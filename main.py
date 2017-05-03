@@ -132,7 +132,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=0., \
+         priofactdoff=1., \
          
          # lensing
          dotnpowr=0., \

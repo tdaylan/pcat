@@ -1184,12 +1184,22 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     # reference
     try:
         if strgxdat[4:] == strgydat[:4]:
+            print 'plot_gene'
+            print 'gdat.exprlgal'
+            print gdat.exprlgal
             strgtemp = strgydat[:4]
             bins = copy(getattr(gdat, 'bins' + strgtemp))
             varb = copy(getattr(gdat, 'expr' + strgtemp))
             if strgtemp == 'lgal' or strgtemp == 'bgal':
             	bins *= gdat.anglfact
             	varb *= gdat.anglfact
+            print 'gdat.exprlgal'
+            print gdat.exprlgal
+            print 'gdat.exprbgal'
+            print gdat.exprbgal
+            print 'strgydat'
+            print strgydat
+            print
             axis.hist(varb, bins, label=gdat.strgcatl, alpha=0.5, color='r')
     except:
         pass
