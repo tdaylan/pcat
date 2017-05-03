@@ -20,7 +20,7 @@ def init( \
          numbburn=None, \
          factthin=None, \
         
-         condcatl=True, \
+         condcatl=False, \
          seedstat=None, \
          randseedelem=False, \
          indxevttincl=None, \
@@ -86,8 +86,8 @@ def init( \
          maxmangl=None, \
          pixltype=None, \
         
-         trueampldisttype=None, \
          fittampldisttype=None, \
+         fittstdvdefsslop=0.5, \
 
          asscmetrtype='dist', \
 
@@ -127,7 +127,7 @@ def init( \
          indxevttfull=None, \
          binsenerfull=None, \
          asymfluxprop=False, \
-         psfninfoprio=None, \
+         psfninfoprio=True, \
          ## spectral
 
          # prior
@@ -346,10 +346,9 @@ def init( \
         else:
             gdat.lablbgal = r'\theta_2'
 
-    if gdat.trueampldisttype == None:
-        gdat.trueampldisttype = 'powr'
+    gdat.trueampldisttype = 'powr'
     
-    if gdat.fittampldisttype == None:
+    if gdat.fittampldisttype != None:
         gdat.fittampldisttype = 'powr'
     
     ## experiment defaults
@@ -572,12 +571,6 @@ def init( \
     if gdat.exprtype == 'sdyn':
         gdat.exprpsfntype = 'singgaus'
     
-    if gdat.psfninfoprio == None:
-        if gdat.exprtype == 'ferm':
-            gdat.psfninfoprio = True
-        else:
-            gdat.psfninfoprio = False
-
     psfntype = gdat.exprpsfntype
     setp_namevarbvalu(gdat, 'psfntype', psfntype)
     
@@ -633,29 +626,39 @@ def init( \
     
     retr_indxsamp(gdat, strgmodl='true')
     
+    print 'gdat.exprpsfp'
+    print gdat.exprpsfp
+    print
+
     ### PSF parameters
     if gdat.psfninfoprio:
         for i in gdat.indxener:
             for m in gdat.indxevtt:
-                if gdat.truepsfntype == 'doubking' or gdat.truepsfntype == 'doubgaus' or gdat.truepsfntype == 'gausking':
-                    meanpsff = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener]
-                    stdvpsff = meanpsff * 0.1
-                    setp_namevarblimt(gdat, 'psffene%devt%d' % (i, m), [meanpsff, stdvpsff], typelimt='meanstdv')
-                meansigc = gdat.exprpsfp[i * gdat.truenumbpsfptotl + m * gdat.truenumbpsfptotl * gdat.numbener + 1]
+                meansigc = gdat.exprpsfp[i * gdat.truenumbpsfptotl + m * gdat.truenumbpsfptotl * gdat.numbener]
                 stdvsigc = meansigc * 0.1
                 setp_namevarblimt(gdat, 'sigcene%devt%d' % (i, m), [meansigc, stdvsigc], typelimt='meanstdv')
-                if gdat.truepsfntype == 'doubking' or gdat.truepsfntype == 'singking':
-                    meangamc = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 2]
+                print 'meansigc'
+                print meansigc
+                if gdat.truepsfntype == 'doubking':
+                    meangamc = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 1]
                     stdvgamc = meangamc * 0.1
                     setp_namevarblimt(gdat, 'gamcene%devt%d' % (i, m), [meangamc, stdvgamc], typelimt='meanstdv')
-                if gdat.truepsfntype == 'doubking' or gdat.truepsfntype == 'doubgaus' or gdat.truepsfntype == 'gausking':
-                    meansigt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 3]
+                    meansigt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 2]
                     stdvsigt = meansigt * 0.1
                     setp_namevarblimt(gdat, 'sigtene%devt%d' % (i, m), [meansigt, stdvsigt], typelimt='meanstdv')
-                if gdat.truepsfntype == 'doubking' or gdat.truepsfntype == 'gausking':
-                    meangamt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 4]
+                    meangamt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 3]
                     stdvgamt = meangamt * 0.1
                     setp_namevarblimt(gdat, 'gamtene%devt%d' % (i, m), [meangamt, stdvgamt], typelimt='meanstdv')
+                    meanpsff = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 4]
+                    stdvpsff = meanpsff * 0.1
+                    setp_namevarblimt(gdat, 'psffene%devt%d' % (i, m), [meanpsff, stdvpsff], typelimt='meanstdv')
+                elif gdat.trueoaxitype:
+                    meanonor = gdat.exprpsfp[i * 3 + m * 3 * gdat.numbener + 1]
+                    stdvonor = meanonor * 0.1
+                    setp_namevarblimt(gdat, 'onorene%devt%d' % (i, m), [meanonor, stdvonor], typelimt='meanstdv')
+                    meanoind = gdat.exprpsfp[i * 3 + m * 3 * gdat.numbener + 2]
+                    stdvoind = meanoind * 0.1
+                    setp_namevarblimt(gdat, 'oindene%devt%d' % (i, m), [meanoind, stdvoind], typelimt='meanstdv')
     else:
         if gdat.exprtype == 'sdyn':
             minmsigm = 0.1 / gdat.anglfact
@@ -743,9 +746,12 @@ def init( \
     if gdat.elemtype == 'lght':
         setp_namevarblimt(gdat, 'fluxdistslop', [1., 4.], popl=True)
     if gdat.elemtype == 'lens':
-        setp_namevarblimt(gdat, 'defsdistslop', [1.9, 0.2], popl=True, typelimt='meanstdv')
+        if gdat.fittstdvdefsdistslop != 'none':
+            setp_namevarblimt(gdat, 'defsdistslop', [1.9, gdat.fittstdvdefsdistslop], popl=True, typelimt='meanstdv')
+        else:
+            setp_namevarblimt(gdat, 'defsdistslop', [1., 3.], popl=True)
     if gdat.elemtype == 'clus':
-        setp_namevarblimt(gdat, 'nobjdistslop', [1., 4.], popl=True)
+        setp_namevarblimt(gdat, 'nobjdistslop', [1., 3.], popl=True)
     
     ### spectral index
     if gdat.elemtype == 'lght' and gdat.numbener > 1:
@@ -2600,15 +2606,6 @@ def work(pathoutpthis, lock, indxprocwork):
                     gdatmodi.thisaccppsfn = False
                     print 'gdatmodi.nextsampvarb'
                     print gdatmodi.nextsampvarb
-                    print 'gdatmodi.nextsampvarb[gdat.indxfixppsfp]'
-                    print gdatmodi.nextsampvarb[gdat.indxfixppsfp]
-                    print 'gdatmodi.propbrth'
-                    print gdatmodi.propbrth
-            elif gdat.psfntype == 'doubgaus':
-                if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[2]]:
-                    gdatmodi.thisaccppsfn = False
-                    for k in range(20):
-                        print 'Proposal rejected due to PSF'
                     print 'gdatmodi.nextsampvarb[gdat.indxfixppsfp]'
                     print gdatmodi.nextsampvarb[gdat.indxfixppsfp]
                     print 'gdatmodi.propbrth'

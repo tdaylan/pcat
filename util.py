@@ -786,7 +786,7 @@ def retr_fermpsfn(gdat):
     fermscal = zeros((gdat.numbevtt, numbpsfpscal))
     fermform = zeros((gdat.numbener, gdat.numbevtt, numbpsfpform))
     
-    parastrg = ['ntail', 'score', 'gcore', 'stail', 'gtail']
+    parastrg = ['score', 'gcore', 'stail', 'gtail', 'ntail']
     for m in gdat.indxevtt:
         if gdat.fermreco == 8:
             irfn = pf.getdata(path, 1 + 3 * gdat.indxevttincl[m])
@@ -806,7 +806,7 @@ def retr_fermpsfn(gdat):
     # convert N_tail to f_core
     for m in gdat.indxevtt:
         for i in gdat.indxener:
-            fermform[i, m, 0] = 1. / (1. + fermform[i, m, 0] * fermform[i, m, 3]**2 / fermform[i, m, 1]**2)
+            fermform[i, m, 4] = 1. / (1. + fermform[i, m, 4] * fermform[i, m, 2]**2 / fermform[i, m, 0]**2)
 
     # store the fermi PSF parameters
     gdat.exprpsfp = zeros(gdat.numbener * gdat.numbevtt * numbpsfpform)
@@ -2127,7 +2127,8 @@ def retr_condcatl(gdat):
             indxstksdist = arange(numbstks)
             for k in gdat.fittindxcomptotl:
                 indxindx = where(listdist[k][indxstksleft[p], :].toarray() < gdat.distthrs[k])[0]
-                indxstksdist = intersect1d(indxstksdist, indxstkscols[k][indxindx])
+                if indxindx.size > 0:
+                    indxstksdist = intersect1d(indxstksdist, indxstkscols[k][indxindx])
             numbdist[indxstksleft[p]] = indxstksdist.size
             
         prvlmaxmesti = amax(numbdist) / float(gdat.numbsamptotl)
@@ -4311,10 +4312,10 @@ def setp_fixp(gdat, strgmodl='fitt'):
             
             if namefixp[k][4:].startswith('distslopp'):
                 lablfixp[k] = r'$\beta_{%s}$' % strgpopl
-                if gdat.elemtype == 'lens':
+                if gdat.elemtype == 'lens' and gdat.fittstdvdefsdistslop != 'none':
                     scalfixp[k] = 'gaus'
                 else:
-                    scalfixp[k] = 'atan'
+                    scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('sinddistmean'):
                 lablfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablsind)
@@ -4326,7 +4327,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             
             if namefixp[k].startswith('curvdistmean'):
                 lablfixp[k] = r'$\lambda_{%s%s}$' % (strgpoplcomm, gdat.lablcurv)
-                scalfixp[k] = 'atan'
+                scalfixp[k] = 'logt'
             
             if namefixp[k].startswith('curvdiststdv'):
                 lablfixp[k] = r'$\sigma_{%s%s}$' % (strgpoplcomm, gdat.lablcurv)
@@ -4377,13 +4378,13 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 if strgvarb.startswith('sig'):
                     scalfixp[k] = 'logt'
                 if strgvarb.startswith('gam'):
-                    scalfixp[k] = 'atan'
+                    scalfixp[k] = 'logt'
                 if strgvarb.startswith('psff'):
-                    scalfixp[k] = 'atan'
+                    scalfixp[k] = 'self'
                 if strgvarb.startswith('onor'):
                     scalfixp[k] = 'logt'
                 if strgvarb.startswith('oind'):
-                    scalfixp[k] = 'atan'
+                    scalfixp[k] = 'logt'
             
             # strings for PSF parameters
             if strgvarb.startswith('sig'):
