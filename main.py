@@ -67,6 +67,9 @@ def init( \
          regulevi=False, \
          
          intreval=False, \
+    
+        
+         truestdvdefsdistslop=0.5, \
 
          strgexprflux=None, \
          strgcatl=None, \
@@ -87,7 +90,6 @@ def init( \
          pixltype=None, \
         
          fittampldisttype=None, \
-         fittstdvdefsslop=0.5, \
 
          asscmetrtype='dist', \
 
@@ -746,8 +748,8 @@ def init( \
     if gdat.elemtype == 'lght':
         setp_namevarblimt(gdat, 'fluxdistslop', [1., 4.], popl=True)
     if gdat.elemtype == 'lens':
-        if gdat.fittstdvdefsdistslop != 'none':
-            setp_namevarblimt(gdat, 'defsdistslop', [1.9, gdat.fittstdvdefsdistslop], popl=True, typelimt='meanstdv')
+        if gdat.truestdvdefsdistslop != 'none':
+            setp_namevarblimt(gdat, 'defsdistslop', [1.9, gdat.truestdvdefsdistslop], popl=True, typelimt='meanstdv')
         else:
             setp_namevarblimt(gdat, 'defsdistslop', [1., 3.], popl=True)
     if gdat.elemtype == 'clus':
