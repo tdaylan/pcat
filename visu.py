@@ -1251,7 +1251,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 ydatsupr = getattr(gdattemp, strg + strgydat + 'prio')[indxydat]
                 axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
 
-    if strgydat.startswith('hist') and indxydat != None and strgydat[4:] in liststrgfeattotl[indxydat[0]]:
+    if strgydat.startswith('hist') and indxydat != None and strgydat[4:] == 'deltllik':
         plot_sigmcont(gdat, axis, indxydat[0], strgfrst=strgxdat[4:])
     
     if indxydat != None:

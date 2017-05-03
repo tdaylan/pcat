@@ -2126,34 +2126,19 @@ def retr_condcatl(gdat):
         for p in range(len(indxstksleft)):
             indxstksdist = arange(numbstks)
             for k in gdat.fittindxcomptotl:
-                print 'p'
-                print p
-                print 'k'
-                print k
-                print 'indxstksleft[p]'
-                print indxstksleft[p]
-                print 'listdist[k][indxstksleft[p], :]'
-                summgene(listdist[k][indxstksleft[p], :].toarray())
                 indxindx = where(listdist[k][indxstksleft[p], :].toarray() < gdat.distthrs[k])[0]
-                print 'indxindx'
-                print indxindx
-                print 'indxstkscols'
-                print indxstkscols
-                print 
                 indxstksdist = intersect1d(indxstksdist, indxstkscols[k][indxindx])
             numbdist[indxstksleft[p]] = indxstksdist.size
             
         prvlmaxmesti = amax(numbdist) / float(gdat.numbsamptotl)
         
-        if True or cntr % 10 == 0:
+        if False and gdat.verbtype > 0 and cntr % 10 == 0:
             print 'cntr'
             print cntr
             print 'numbdist'
             print numbdist
             print 'gdat.numbsamptotl'
             print gdat.numbsamptotl
-            print 'prvlmaxmesti'
-            print prvlmaxmesti
 
         if prvlmaxmesti < gdat.prvlthrs:
             print 'Exiting...'
@@ -2299,9 +2284,6 @@ def retr_condcatl(gdat):
     
 
     gdat.numbstkscond = len(gdat.dictglob['liststkscond'])
-    print 'gdat.numbstkscond'
-    print gdat.numbstkscond
-    print
 
     if gdat.verbtype > 1:
         print 'gdat.dictglob[liststkscond]'
@@ -2320,8 +2302,6 @@ def retr_condcatl(gdat):
     for r in gdat.indxstkscond:
         gdat.prvl[r] = len(gdat.dictglob['liststkscond'][r]['deltllik'])
     gdat.prvl /= gdat.numbsamptotl
-    print 'gdat.prvl'
-    print gdat.prvl
     gdat.minmprvl = 0.
     gdat.maxmprvl = 1.
     retr_axis(gdat, 'prvl', gdat.minmprvl, gdat.maxmprvl, 10)
@@ -2332,14 +2312,12 @@ def retr_condcatl(gdat):
             path = pathcond + 'histdist' + strgcomp 
             listtemp = copy(listdist[k]).flatten()
             listtemp = listtemp[where(listtemp != 1e20)[0]]
-            tdpy.mcmc.plot_hist(path, listtemp, r'$Delta$ ' + getattr(gdat, 'labl' + strgcomp))
+            tdpy.mcmc.plot_hist(path, listtemp, r'$\Delta \tilde{' + getattr(gdat, 'labl' + strgcomp) + '}$')
             path = pathcond + 'histprvl'
             tdpy.mcmc.plot_hist(path, gdat.prvl, r'$p$')
-    gdat.prvlthrs = 0.01 
+    gdat.prvlthrs = 0.1 
     gdat.indxprvlhigh = where(gdat.prvl > gdat.prvlthrs)[0]
     gdat.numbprvlhigh = gdat.indxprvlhigh.size
-    print 'gdat.numbprvlhigh'
-    print gdat.numbprvlhigh
 
 
 def retr_conv(gdat, defl):
