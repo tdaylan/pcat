@@ -3418,11 +3418,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             # temp
             if gdat.propdist:
-                print 'gdat.fittindxfixpdist'
-                print gdat.fittindxfixpdist
-                print 'gdat.stdvstdp'
-                print gdat.stdvstdp
-                print
                 gdat.stdvstdp[gdat.fittindxfixpdist+gdat.fittnumbpopl] = 1e-2
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
             gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
