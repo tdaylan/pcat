@@ -517,7 +517,7 @@ def init( \
 
     # number of sweeps between frame plots
     if gdat.numbswepplot == None:
-        gdat.numbswepplot = max(gdat.numbswep / 20, 5000)
+        gdat.numbswepplot = max(gdat.numbswep / 10, 50000)
 
     # factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
@@ -628,10 +628,6 @@ def init( \
     
     retr_indxsamp(gdat, strgmodl='true')
     
-    print 'gdat.exprpsfp'
-    print gdat.exprpsfp
-    print
-
     ### PSF parameters
     if gdat.psfninfoprio:
         for i in gdat.indxener:
@@ -639,8 +635,6 @@ def init( \
                 meansigc = gdat.exprpsfp[i * gdat.truenumbpsfptotl + m * gdat.truenumbpsfptotl * gdat.numbener]
                 stdvsigc = meansigc * 0.1
                 setp_namevarblimt(gdat, 'sigcene%devt%d' % (i, m), [meansigc, stdvsigc], typelimt='meanstdv')
-                print 'meansigc'
-                print meansigc
                 if gdat.truepsfntype == 'doubking':
                     meangamc = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 1]
                     stdvgamc = meangamc * 0.1

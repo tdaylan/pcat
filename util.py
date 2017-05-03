@@ -4592,8 +4592,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
                         minm = min(minmtemp, minm)
                         maxm = max(maxmtemp, maxm)
             else:
-                print 'name'
-                print name
                 minm = getattr(gdat, strgmodl + 'mean' + name) - numbstdvgaus * getattr(gdat, strgmodl + 'stdv' + name)
                 maxm = getattr(gdat, strgmodl + 'mean' + name) + numbstdvgaus * getattr(gdat, strgmodl + 'stdv' + name)
 
