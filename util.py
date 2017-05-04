@@ -5171,17 +5171,11 @@ def retr_defl_jitt(indxpixl, lgalgrid, bgalgrid, lgal, bgal, bein, ellp, angl, r
         lgalrttr = cos(angl) * lgaltran - sin(angl) * bgaltran
         bgalrttr = sin(angl) * lgaltran + cos(angl) * bgaltran
         
-        if ellp > 1e-4:
-            factflat = (1. - ellp)**2
-            factrcor = sqrt(factflat * (rcor**2 + lgalrttr**2) + bgalrttr**2)
-            facteccc = sqrt(1. - factflat)
-            factbein = (bein * (1. - ellp) / facteccc)
-            defllgalrttr = factbein *  arctan(facteccc * lgalrttr / (factrcor + rcor))
-            deflbgalrttr = factbein * arctanh(facteccc * bgalrttr / (factrcor + factflat * rcor))
-        else:
-            rint = sqrt(lgalrttr**2 + bgalrttr**2 + rcor**2)
-            defllgalrttr = bein * lgalrttr / (rint + rcor) 
-            deflbgalrttr = bein * bgalrttr / (rint + rcor)
+        axisrati = 1. - ellp
+        facteccc = sqrt(1. - axisrati**2)
+        factrcor = sqrt(axisrati**2 * lgalrttr**2 + bgalrttr**2)
+        defllgalrttr = bein * sqrt(axisrati) / facteccc *  arctan(facteccc * lgalrttr / factrcor)
+        deflbgalrttr = bein * sqrt(axisrati) / facteccc * arctanh(facteccc * bgalrttr / factrcor)
         
         # totate back vector to original basis
         defllgal = cos(angl) * defllgalrttr + sin(angl) * deflbgalrttr

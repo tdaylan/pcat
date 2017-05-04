@@ -541,11 +541,7 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
     setp_namevarbvalu(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
-    if gdat.elemtype == 'lght':
-        maxmnumbpnts = 400
-    if gdat.elemtype == 'lens':
-        maxmnumbpnts = 50
-    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
+    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 2000)
      
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
@@ -710,7 +706,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 2e-3 / gdat.anglfact
+    minmdefs = 4e-3 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -2687,6 +2683,9 @@ def work(pathoutpthis, lock, indxprocwork):
                 minm = max(0, gdatmodi.cntrswep - 5000)
                 maxm = gdatmodi.cntrswep + 1
                 if maxm > minm:
+                    
+                    proc_samp(gdat, gdatmodi, 'this')
+                    
                     print
                     print '--------------'
                     print 'Sweep number %d' % gdatmodi.cntrswep
