@@ -706,7 +706,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 4e-3 / gdat.anglfact
+    minmdefs = 2e-3 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
