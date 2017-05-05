@@ -1798,6 +1798,10 @@ def plot_grap(plottype='igal', verbtype=0):
         listcolr = ['olive', 'black', 'black', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'black', 'olive', 'magenta', 'magenta', \
                                                                                                                                         'magenta', 'magenta', 'magenta']
 
+    if plottype == 'lensseco':
+        listcolr = ['olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', \
+                                                                                                                                        'magenta', 'magenta', 'magenta']
+
     grap.add_edges_from([ \
                          ('meanpnts', 'numbpnts'), \
                          ('modl','data'), \
@@ -1817,19 +1821,17 @@ def plot_grap(plottype='igal', verbtype=0):
                              ('numbpnts', 'sind'), \
                              ('sind','modl'), \
                             ])
-    if plottype == 'lens' or plottype == 'lensprim':
+    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
         grap.add_edges_from([ \
                              ('lenp', 'modl'), \
                              ('defsdistslop', 'defs'), \
                              ('defs', 'modl'), \
                              ('numbpnts','defs'), \
                             ])
-    if plottype == 'lensprim':
+    if plottype == 'lensprim' or plottype == 'lensseco':
         grap.add_edges_from([ \
-                             ('ascadistslop', 'asca'), \
                              ('asca', 'modl'), \
                              ('numbpnts','asca'), \
-                             ('acutdistslop', 'acut'), \
                              ('acut', 'modl'), \
                              ('numbpnts','acut'), \
                             ])
@@ -1852,17 +1854,14 @@ def plot_grap(plottype='igal', verbtype=0):
     labl['numbpnts'] = '$N$'
     
     if plottype == 'igal':
-        labl['ampldistslop'] = r'$\vec{\alpha}$'
+        labl['ampldistslop'] = r'$\vec{\beta}$'
         labl['meanpnts'] = r'$\vec{\mu}$'
     else:
         labl['meanpnts'] = r'$\mu$'
     if plottype == 'chan' or plottype == 'ngal':
-        labl['ampldistslop'] = r'$\alpha$'
-    if plottype == 'lens' or plottype == 'lensprim':
-        labl['defsdistslop'] = r'$\alpha_{\alpha_s}$'
-    if plottype == 'lensprim':
-        labl['ascadistslop'] = r'$\lambda_{\theta_s}$'
-        labl['acutdistslop'] = r'$\lambda_{\theta_c}$'
+        labl['ampldistslop'] = r'$\beta$'
+    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+        labl['defsdistslop'] = r'$\beta$'
     
     if plottype == 'igal':
         labl['expodistslop'] = r'$\vec{\tau_{E_c}}$'
@@ -1872,7 +1871,7 @@ def plot_grap(plottype='igal', verbtype=0):
     
     if plottype == 'igal':
         labl['spatdistslop'] = r'$\vec{\gamma}$'
-    if plottype == 'lens' or plottype == 'lensprim':
+    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
         labl['lenp'] = r'$\vec{\chi}$'
     labl['psfp'] = r'$\vec{\eta}$'
     labl['bacp'] = r'$\vec{A}$'
@@ -1883,7 +1882,7 @@ def plot_grap(plottype='igal', verbtype=0):
         labl['ampl'] = r'$\vec{f}$'
     else:
         labl['defs'] = r'$\vec{\alpha_s}$'
-    if plottype == 'lensprim':
+    if plottype == 'lensprim' or plottype == 'lensseco':
         labl['asca'] = r'$\vec{\theta_s}$'
         labl['acut'] = r'$\vec{\theta_c}$'
         
@@ -1901,7 +1900,7 @@ def plot_grap(plottype='igal', verbtype=0):
         posi['numbpnts'] = array([0., 0.075])
         posi['meanpnts'] = array([0., 0.15])
         posi['ampldistslop'] = array([0.2, 0.15])
-    if plottype == 'lens' or plottype == 'lensprim':
+    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
         posi['numbpnts'] = array([-0.1, 0.075])
         posi['meanpnts'] = array([-0.1, 0.15])
         posi['defsdistslop'] = array([0.1, 0.15])
@@ -1921,7 +1920,7 @@ def plot_grap(plottype='igal', verbtype=0):
         posi['psfp'] = array([0.3, -0.0])
         posi['bacp'] = array([0.5, -0.0])
         posi['lenp'] = array([0.7, -0.0])
-    if plottype == 'lensprim':
+    if plottype == 'lensprim' or plottype == 'lensseco':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.9, -0.0])
         posi['lenp'] = array([1.1, -0.0])
@@ -1932,9 +1931,9 @@ def plot_grap(plottype='igal', verbtype=0):
         posi['ampl'] = array([0.1, -0.0])
     if plottype == 'igal':
         posi['expo'] = array([0.5, -0.0])
-    if plottype == 'lensprim' or plottype == 'lens':
+    if plottype == 'lensprim' or plottype == 'lens' or plottype == 'lensseco':
         posi['defs'] = array([0.1, -0.0])
-    if plottype == 'lensprim':
+    if plottype == 'lensprim' or plottype == 'lensseco':
         posi['asca'] = array([0.3, -0.0])
         posi['acut'] = array([0.5, -0.0])
     posi['modl'] = array([0., -0.075])
@@ -1965,13 +1964,14 @@ def plot_grap(plottype='igal', verbtype=0):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
-    if plottype == 'lens' or plottype == 'lensprim':
+    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'defsdistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lenp'], node_color='y', node_size=size)
     if plottype == 'lens':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs'], node_color='g', node_size=size)
     if plottype == 'lensprim':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['ascadistslop', 'acutdistslop'], node_color='r', node_size=size)
+    if plottype == 'lensprim' or plottype == 'lensseco':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs', 'asca', 'acut'], node_color='g', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'
@@ -1984,6 +1984,7 @@ def plot_grap(plottype='igal', verbtype=0):
 #plot_grap(plottype='ngal', verbtype=1)
 #plot_grap(plottype='lens', verbtype=1)
 #plot_grap(plottype='lensprim', verbtype=1)
+#plot_grap(plottype='lensseco', verbtype=1)
 #plot_grap(plottype='chan', verbtype=1)
 
 
@@ -2052,8 +2053,7 @@ def plot_init(gdat):
                 #listydat.append(xdat * 0. + 1.5)
                 
                 path = gdat.pathinitintr + 'deflcutf.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha$ [$^{\prime\prime}$]')#, \
-                                                                                                                         #limtxdat=[1e-3, 2.], limtydat=[1e-3, 2.])
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha_a$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
