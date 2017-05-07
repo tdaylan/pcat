@@ -765,11 +765,11 @@ def init( \
     
     if gdat.elemtype == 'lens':
         if gdat.variasca:
-            ### scale angular distance
-            setp_namevarblimt(gdat, 'ascadistmean', [0.1 / gdat.anglfact, 0.3 / gdat.anglfact], popl=True)
+            ### projected scale radius
+            setp_namevarblimt(gdat, 'ascadistmean', [0.02 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
             setp_namevarblimt(gdat, 'ascadiststdv', [0.01 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
         if gdat.variacut:
-            ### cutoff angular distance
+            ### projected cutoff radius
             setp_namevarblimt(gdat, 'acutdistmean', [0.4 / gdat.anglfact, 0.8 / gdat.anglfact], popl=True)
             setp_namevarblimt(gdat, 'acutdiststdv', [0.01 / gdat.anglfact, 0.08 / gdat.anglfact], popl=True)
     
@@ -851,9 +851,9 @@ def init( \
     if gdat.elemtype == 'clus':
         setp_namevarbvalu(gdat, 'nobjdistslop', 1.9, popl=True)
 
-    setp_namevarbvalu(gdat, 'ascadistmean', 0.2 / gdat.anglfact, popl=True)
+    setp_namevarbvalu(gdat, 'ascadistmean', 0.05 / gdat.anglfact, popl=True)
     setp_namevarbvalu(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
-    setp_namevarbvalu(gdat, 'acutdistmean', 0.6 / gdat.anglfact, popl=True)
+    setp_namevarbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=True)
     setp_namevarbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
         
     if gdat.numbener > 1:

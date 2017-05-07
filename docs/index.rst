@@ -171,9 +171,6 @@ The prior spatial distribution is the sum of a certain number of Gaussians and a
 + ``'powr'``
 Power law between ``minmflux`` and ``maxmflux`` with the slope ``fluxdistslop``.
 
-+ ``'bind'``
-Power law
-Piecewise power law between ``minmflux`` and ``maxmflux`` with the slopes ``fluxdistslopbinX``, where X is the piece index.
 
 - Spectral index distribution
 

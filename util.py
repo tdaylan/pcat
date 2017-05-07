@@ -2464,8 +2464,8 @@ def setpinit(gdat, boolinitsetp=False):
             os.system('mkdir -p %s' % valu)
  
     if gdat.elemtype == 'lens':
-        gdat.ascaglob = 0.2 / gdat.anglfact
-        gdat.acutglob = 0.6 / gdat.anglfact
+        gdat.ascaglob = 0.05 / gdat.anglfact
+        gdat.acutglob = 1. / gdat.anglfact
     
     gdat.cutfdefs = 3e-3 / gdat.anglfact
 
@@ -5234,8 +5234,6 @@ def retr_spatprio(gdat, pdfnspatpriotemp, spatdistcons=None):
 
     summ = traptdim(gdat, pdfnspatprio)
     pdfnspatprio /= summ
-    print 'pdfnspatprio'
-    summgene(pdfnspatprio)
     lpdfspatprio = log(pdfnspatprio)
     lpdfspatprioobjt = sp.interpolate.RectBivariateSpline(gdat.binsbgalcart, gdat.binslgalcart, lpdfspatprio)
     
@@ -5351,6 +5349,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     else:
         numbpntsconc = 0
     
+    if gdat.verbtype > 1:
+        for l in indxpopl:
+            for strgcomp in liststrgcomp[l]:
+                print strgcomp
+                print dicttemp[strgcomp][l]
+        print
+
     # log-prior
     initchro(gdat, gdatmodi, 'lpri')
 

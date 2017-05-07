@@ -2042,18 +2042,20 @@ def plot_init(gdat):
                 xdat = gdat.binsangl[1:] * gdat.anglfact
                 lablxdat = gdat.lablgangtotl
                 
-                listdeflscal = array([1e-2, 1e-2, 1e-2]) / gdat.anglfact
-                listanglscal = array([0.2, 0.4, 0.2]) / gdat.anglfact
-                listanglcutf = array([0.6, 0.6, 1.2]) / gdat.anglfact
-                listasym = [False, False, False]
+                listdeflscal = array([1e-2, 1e-2, 1e-2, 1e-2]) / gdat.anglfact
+                listanglscal = array([0.05, 0.1, 0.05, 0.05]) / gdat.anglfact
+                listanglcutf = array([1.,    1.,  10.,   1.]) / gdat.anglfact
+                listasym = [False, False, False, True]
                 listydat = []
                 for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
                     listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
                 
                 #listydat.append(xdat * 0. + 1.5)
                 
-                path = gdat.pathinitintr + 'deflcutf.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=r'$\alpha_a$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2])
+                for scalxdat in ['self', 'logt']:
+                    path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
+                    tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
+                                                                                lablydat=r'$\alpha_a$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2], limtxdat=[None, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -2080,8 +2082,8 @@ def plot_init(gdat):
                 for k in range(numbreds):
                     gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
                 
-                asca = 0.2 / gdat.anglfact 
-                acut = 0.6 / gdat.anglfact 
+                asca = gdat.ascaglob / gdat.anglfact 
+                acut = gdat.acutglob / gdat.anglfact 
     
                 minmmass = zeros((numbreds + 1, numbreds + 1))
                 maxmmass = zeros((numbreds + 1, numbreds + 1))
