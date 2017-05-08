@@ -731,12 +731,11 @@ def cdfn_comp(gdat, gdatmodi, comp, init=True):
     return cdfn
 
 
-def retr_mrkrsize(gdat, sign):
+def retr_mrkrsize(gdat, compampl):
     
-    minm = getattr(gdat, 'minm' + gdat.namefeatsign) 
-    maxm = getattr(gdat, 'maxm' + gdat.namefeatsign) 
-    #mrkrsize = (log(sign) - log(minm)) / (log(maxm) - log(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
-    mrkrsize = (sqrt(sign) - sqrt(minm)) / (sqrt(maxm) - sqrt(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
+    minm = getattr(gdat, 'minm' + gdat.namecompampl) 
+    maxm = getattr(gdat, 'maxm' + gdat.namecompampl) 
+    mrkrsize = (sqrt(compampl) - sqrt(minm)) / (sqrt(maxm) - sqrt(minm)) * (gdat.maxmmrkrsize - gdat.minmmrkrsize) + gdat.minmmrkrsize
     
     return mrkrsize
 
@@ -1731,19 +1730,19 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
 
 def retr_propcompscal(gdat, gdatmodi, stdvstdp, l, strgcomp, indxelemfull=slice(None)):
     
-    thiscompsign = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatsign][l][indxelemfull]]
-    nextcompsign = gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatsign][l][indxelemfull]]
-    minmcompsign = getattr(gdat, 'minm' + gdat.namefeatsign)
+    thiscompampl = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+    nextcompampl = gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+    minmcompampl = getattr(gdat, 'minm' + gdat.namecompampl)
     stdvstdpcomp = stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)]
-    thiscompunit = gdatmodi.thissamp[gdatmodi.thisindxsampcomp[gdat.namefeatsign][l][indxelemfull]]
-    nextcompunit = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[gdat.namefeatsign][l][indxelemfull]]
-    if strgcomp == gdat.namefeatsign:
-        # temp -- this only works if compsign is powr distributed
-        gdatmodi.thisstdv = stdvstdpcomp / (thiscompsign / minmcompsign)**2.
-        gdatmodi.nextstdv = stdvstdpcomp / (nextcompsign / minmcompsign)**2.
+    thiscompunit = gdatmodi.thissamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+    nextcompunit = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+    if strgcomp == gdat.namecompampl:
+        # temp -- this only works if compampl is powr distributed
+        gdatmodi.thisstdv = stdvstdpcomp / (thiscompampl / minmcompampl)**2.
+        gdatmodi.nextstdv = stdvstdpcomp / (nextcompampl / minmcompampl)**2.
         gdatmodi.thislfctasym += sum(0.5 * (nextcompunit - thiscompunit)**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
     else:
-        gdatmodi.thisstdv = stdvstdpcomp / (minimum(thiscompsign, nextcompsign) / minmcompsign)**0.5
+        gdatmodi.thisstdv = stdvstdpcomp / (minimum(thiscompampl, nextcompampl) / minmcompampl)**0.5
 
     return gdatmodi.thisstdv
 
@@ -4870,7 +4869,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         for l in listindxpoplplot:
         
             if gdat.truenumbtrap > 0:
-                mrkrsize = retr_mrkrsize(gdat, getattr(gdat, 'true' + gdat.namefeatsign)[l][0, :])
+                mrkrsize = retr_mrkrsize(gdat, getattr(gdat, 'true' + gdat.namecompampl)[l][0, :])
                 lgal = copy(gdat.truelgal[l][0, :])
                 bgal = copy(gdat.truebgal[l][0, :])
                 numbpnts = int(gdat.truenumbpnts[l])
@@ -4912,7 +4911,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
     for l in listindxpoplplot:
         if gdatmodi != None:
             if gdat.fittnumbtrap > 0:
-                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatsign][l]])
+                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l]])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l]]
                 axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b')
@@ -4935,15 +4934,15 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
     if strg == 'post' and gdat.condcatl:
         lgal = zeros(gdat.numbprvlhigh)
         bgal = zeros(gdat.numbprvlhigh)
-        sign = zeros(gdat.numbprvlhigh)
+        ampl = zeros(gdat.numbprvlhigh)
         cntr = 0
         for r in gdat.indxstkscond:
             if r in gdat.indxprvlhigh:
                 lgal[cntr] = gdat.dictglob['poststkscond'][r]['lgal'][0]
                 bgal[cntr] = gdat.dictglob['poststkscond'][r]['bgal'][0]
-                sign[cntr] = gdat.dictglob['poststkscond'][r][gdat.namefeatsign][0]
+                ampl[cntr] = gdat.dictglob['poststkscond'][r][gdat.namecompampl][0]
                 cntr += 1
-        mrkrsize = retr_mrkrsize(gdat, sign)
+        mrkrsize = retr_mrkrsize(gdat, ampl)
         axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', linewidth=2, color='black')
         if False:
             for r in gdat.indxstkscond:
