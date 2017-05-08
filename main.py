@@ -413,7 +413,7 @@ def init( \
             if gdat.exprtype == 'ferm':
                 gdat.radispmr = 1. / gdat.anglfact
             if gdat.exprtype == 'chan':
-                gdat.radispmr = 1. / gdat.anglfact
+                gdat.radispmr = 0.5 / gdat.anglfact
         if gdat.elemtype == 'lens':
             gdat.radispmr = 0.2 / gdat.anglfact
    
@@ -1300,7 +1300,7 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
+    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     # temp
     #gdat.liststrgvarbarryswep = []
@@ -1333,7 +1333,7 @@ def init( \
             gdat.liststrgvarblistsamp.append(strg[4:])
    
     # temp
-    #gdat.liststrgvarbarrysamp += ['memoresi', 'lpri', 'lfctprop', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
+    #gdat.liststrgvarbarrysamp += ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
     #                                                                                                  'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
    
@@ -2311,7 +2311,7 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thisljcbfact = zeros(1)
     gdatmodi.thislcomfact = zeros(1)
     gdatmodi.thislpau = zeros(gdat.numblpau)
-    gdatmodi.thislfctprop = zeros(1)
+    gdatmodi.thislfctasym = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
     
     # process the initial sample, define the variables to be processed in each sample
@@ -2622,11 +2622,19 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.nextlpritotl - gdatmodi.thislpritotl
                 print 'gdatmodi.thislpautotl'
                 print gdatmodi.thislpautotl
+                print 'gdatmodi.thislfctasym'
+                print gdatmodi.thislfctasym
+                print 'gdatmodi.thislcomfact'
+                print gdatmodi.thislcomfact
+                print 'gdatmodi.thisljcbfact'
+                print gdatmodi.thisljcbfact
+                print 'gdatmodi.thistmprlposelem'
+                print gdatmodi.thistmprlposelem
                 print
             
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
-                                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctprop + \
+                                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
                                                                                                                                 gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
             
         else:

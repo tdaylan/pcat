@@ -342,9 +342,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
             if (gdat.listlpau[:, k] != 0.).any():
                 path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-        if (gdat.listlfctprop[:, 0] != 0.).any():
+        if (gdat.listlfctasym[:, 0] != 0.).any():
             path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
-            tdpy.mcmc.plot_trac(path, gdat.listlfctprop[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
+            tdpy.mcmc.plot_trac(path, gdat.listlfctasym[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
     
     # Gelman-Rubin test
     pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
@@ -650,12 +650,16 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + strg
         titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strg + 'flat'), labl, titl)
-        if strg == 'llik':
-            varbdraw = [gdat.maxmllik]
-            labldraw = ['Maximum likelihood Sample']
-        else:
-            varbdraw = None
-            labldraw = None
+        varbdraw = [gdat.maxmllik]
+        labldraw = ['Maximum likelihood Sample']
+        if gdat.datatype == 'mock':
+            varbdraw += [gdat.truellik]
+            labldraw += ['True model']
+        print 'labldraw'
+        print labldraw
+        print 'varbdraw'
+        print varbdraw
+        print
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
 
         pathbase = getattr(gdat, 'path' + gdat.namesampdist + 'finldelt%s' % strg)

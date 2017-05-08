@@ -1,0 +1,24 @@
+20170506_204103_pcat_lens_mock_syst_0000_1000000/   
+variation in asca and acut turned off
+high significance
+
+20170506_213505_pcat_lens_mock_syst_0000_1000000/
+variation in asca and acut turned off
+and
+inittype='refr'
+low significance
+
+20170507_000608_pcat_lens_mock_syst_0000_1000000/
+variation in asca and acut turned off
+and
+inittype='refr'
+medium significance
+
+20170507_080746_pcat_lens_mock_syst_0000_1000000
+variation in asca and acut turned off
+and
+inittype='refr'
+parsimony prior is turned off
+medium significance
+
+
