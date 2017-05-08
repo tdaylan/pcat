@@ -194,7 +194,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         limtydat = gdat.limtpntshist
                     
                         # for true model, also plot the significant elements only
-                        if strgmodl == 'true' and (strgfeat == gdat.namefeatsign or strgfeat == gdat.namecompampl):
+                        if strgmodl == 'true' and strgfeat == gdat.namefeatsign:
                             listname = ['hist' + strgfeat, 'hist' + strgfeat + 'sign']
                         else:
                             listname = ['hist' + strgfeat]
