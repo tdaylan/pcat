@@ -211,7 +211,7 @@ def init( \
     if gdat.elemtype == 'lght':
         gdat.namefeatsign = 'flux'
     if gdat.elemtype == 'lens':
-        gdat.namefeatsign = 'defs'
+        gdat.namefeatsign = 'dots'
     if gdat.elemtype == 'clus':
         gdat.namefeatsign = 'nobj'
     
@@ -2721,6 +2721,8 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thisfactmpr
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
+                    print 'gdatmodi.thislpritotl'
+                    print gdatmodi.thislpritotl
                     if gdat.fittnumbtrap > 0:
                         print 'Number of elements:'
                         print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts].astype(int)

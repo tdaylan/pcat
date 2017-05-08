@@ -634,53 +634,47 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     gdat.listlliktotl = sum(gdat.listllik, axis=(1, 2, 3))
     gdat.listlpritotl = sum(gdat.listlpri, axis=1)
 
-    for strg in ['llik']:
+    for strg in ['lpri', 'llik']:
 
         if strg == 'lpri':
-            labltemp = '\ln P(x)'
+            labltemp = '\ln P(M)'
         if strg == 'llik':
-            labltemp = '\ln P(D|x)'
-        
-        setattr(gdat, 'list' + strg + 'flat', getattr(gdat, 'list' + strg + 'totl').flatten())
-        setattr(gdat, 'listdelt' + strg + 'totlflat', getattr(gdat, 'listdelt' + strg + 'totl').flatten())
-        
+            labltemp = '\ln P(D|M)'
         labl = r'$%s$' % labltemp
-        labldelt = r'$\Delta%s$' % labltemp
 
+        setattr(gdat, 'list' + strg + 'flat', getattr(gdat, 'list' + strg + 'totl').flatten())
+        
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + strg
         titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strg + 'flat'), labl, titl)
-        varbdraw = [gdat.maxmllik]
-        labldraw = ['Maximum likelihood Sample']
+        varbdraw = []
+        labldraw = []
+        colrdraw = []
         if gdat.datatype == 'mock':
-            varbdraw += [gdat.truellik]
+            varbdraw += [getattr(gdat, 'true' + strg + 'totl')]
             labldraw += ['True model']
-        print 'labldraw'
-        print labldraw
-        print 'varbdraw'
-        print varbdraw
-        print
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw)
-
-        pathbase = getattr(gdat, 'path' + gdat.namesampdist + 'finldelt%s' % strg)
-        path = pathbase + 'delt%s' % strg
-        print 'hey'
-        print 'getattr(gdat, listdelt + strg + totlflat)'
-        print getattr(gdat, 'listdelt' + strg + 'totlflat')
-        summgene(getattr(gdat, 'listdelt' + strg + 'totlflat'))
-
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat'), labldelt)
-        if gdat.numbproc > 1:
-            for k in gdat.indxproc:
-                path = pathbase + 'delt%s_proc%04d' % (strg, k)
-                tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totl')[:, k], labldelt, titl='Process %d' % k)
-        for n in gdat.indxproptype:
-            path = pathbase + 'delt%s_%s' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])
-            path = pathbase + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
-            path = pathbase + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
-            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
+            colrdraw += ['g']
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strg + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw, colrdraw=colrdraw)
+    
+        if strg == 'llik':
+            labldelt = r'$\Delta%s$' % labltemp
+            setattr(gdat, 'listdelt' + strg + 'totlflat', getattr(gdat, 'listdelt' + strg + 'totl').flatten())
+            pathbase = getattr(gdat, 'path' + gdat.namesampdist + 'finldelt%s' % strg)
+            path = pathbase + 'delt%s' % strg
+    
+            tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat'), labldelt)
+            
+            if gdat.numbproc > 1:
+                for k in gdat.indxproc:
+                    path = pathbase + 'delt%s_proc%04d' % (strg, k)
+                    tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totl')[:, k], labldelt, titl='Process %d' % k)
+            for n in gdat.indxproptype:
+                path = pathbase + 'delt%s_%s' % (strg, gdat.nameproptype[n])
+                tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])
+                path = pathbase + 'delt%s_%s_accp' % (strg, gdat.nameproptype[n])
+                tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
+                path = pathbase + 'delt%s_%s_reje' % (strg, gdat.nameproptype[n])
+                tdpy.mcmc.plot_trac(path, getattr(gdat, 'listdelt' + strg + 'totlflat')[gdat.listindxsamptotlreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
         
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
