@@ -194,10 +194,12 @@ def plot_samp(gdat, gdatmodi, strg):
                         limtydat = gdat.limtpntshist
                     
                         # for true model, also plot the significant elements only
-                        if strgmodl == 'true' and strgfeat == gdat.namefeatsign:
-                            listname = ['hist' + strgfeat, 'hist' + strgfeat + 'sign']
-                        else:
-                            listname = ['hist' + strgfeat]
+                        # temp
+                        #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
+                        #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
+                        #else:
+                        #    listname = ['hist' + strgfeat]
+                        listname = ['hist' + strgfeat]
                         for name in listname:
                             plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, histodim=True, \
                                               scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')

@@ -26,6 +26,7 @@ def init( \
          indxevttincl=None, \
          indxenerincl=None, \
          
+         listnamefeatsele=None, \
          burntmpr=False, \
          #burntmpr=True, \
 
@@ -38,7 +39,7 @@ def init( \
          truedefsimps=None, \
          shrtfram=False, \
         
-         dotsprio=False, \
+         relnprio=False, \
         
          mockonly=False, \
         
@@ -90,7 +91,8 @@ def init( \
          pixltype=None, \
         
          fittampldisttype=None, \
-
+        
+         allwfixdtrue=True, \
          asscmetrtype='dist', \
 
          # plotting
@@ -137,7 +139,7 @@ def init( \
          priofactdoff=1., \
          
          # lensing
-         dotnpowr=0., \
+         relnpowr=0., \
 
          # temp
          margfactmodl=1., \
@@ -211,7 +213,7 @@ def init( \
     if gdat.elemtype == 'lght':
         gdat.namefeatsign = 'flux'
     if gdat.elemtype == 'lens':
-        gdat.namefeatsign = 'dots'
+        gdat.namefeatsign = 'rele'
     if gdat.elemtype == 'clus':
         gdat.namefeatsign = 'nobj'
     
@@ -275,7 +277,7 @@ def init( \
             gdat.indxevttfull = arange(4)
         else:
             gdat.indxevttfull = arange(1)
-
+    
     if gdat.exprtype == 'ferm':
         gdat.lablenerunit = 'GeV'
     if gdat.exprtype == 'chan':
@@ -288,6 +290,12 @@ def init( \
             gdat.pixltype = 'heal'
         else:
             gdat.pixltype = 'cart'
+    
+    if gdat.listnamefeatsele == None:
+        if gdat.elemtype == 'lght':
+            gdat.listnamefeatsele = ['flux']
+        if gdat.elemtype == 'lens':
+            gdat.listnamefeatsele = ['defs', 'mcut', 'rele']
     
     if gdat.proplenp == None:
         if gdat.elemtype == 'lens':
@@ -385,6 +393,11 @@ def init( \
             gdat.evalcirc = 'locl'
         else:
             gdat.evalcirc = 'full'
+
+    if gdat.elemtype == 'lght':
+        gdat.listnamesele = ['pars']
+    if gdat.elemtype == 'lens':
+        gdat.listnamesele = ['pars', 'nrel']
 
     ## Lensing
     if gdat.anglassc == None:
@@ -701,7 +714,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             minmflux = 3e-11
         if gdat.exprtype == 'chan':
-            minmflux = 1e-8
+            minmflux = 1e-9
         if gdat.exprtype == 'sdyn':
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
@@ -841,49 +854,50 @@ def init( \
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
 
-    setp_namevarbvalu(gdat, 'spatdistcons', 1e-3, popl=True)
-    setp_namevarbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
-    setp_namevarbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
-    if gdat.elemtype == 'lght':
-        setp_namevarbvalu(gdat, 'fluxdistslop', 2.2, popl=True)
-    if gdat.elemtype == 'lens':
-        setp_namevarbvalu(gdat, 'defsdistslop', 1.9, popl=True)
-    if gdat.elemtype == 'clus':
-        setp_namevarbvalu(gdat, 'nobjdistslop', 1.9, popl=True)
+    if gdat.allwfixdtrue:
+        setp_namevarbvalu(gdat, 'spatdistcons', 1e-3, popl=True)
+        setp_namevarbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
+        setp_namevarbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
+        if gdat.elemtype == 'lght':
+            setp_namevarbvalu(gdat, 'fluxdistslop', 2.2, popl=True)
+        if gdat.elemtype == 'lens':
+            setp_namevarbvalu(gdat, 'defsdistslop', 1.9, popl=True)
+        if gdat.elemtype == 'clus':
+            setp_namevarbvalu(gdat, 'nobjdistslop', 1.9, popl=True)
 
-    setp_namevarbvalu(gdat, 'ascadistmean', 0.05 / gdat.anglfact, popl=True)
-    setp_namevarbvalu(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
-    setp_namevarbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=True)
-    setp_namevarbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
+        setp_namevarbvalu(gdat, 'ascadistmean', 0.05 / gdat.anglfact, popl=True)
+        setp_namevarbvalu(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
+        setp_namevarbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=True)
+        setp_namevarbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
+            
+        if gdat.numbener > 1:
+            if gdat.exprtype == 'ferm':
+                sinddistmean = 2.15
+            if gdat.exprtype == 'chan':
+                sinddistmean = 1.
+            setp_namevarbvalu(gdat, 'sinddistmean', sinddistmean, popl=True)
+            setp_namevarbvalu(gdat, 'sinddiststdv', 0.5, popl=True)
+            
+            setp_namevarbvalu(gdat, 'curvdistmean', 2., popl=True)
+            setp_namevarbvalu(gdat, 'curvdiststdv', 0.2, popl=True)
+            
+            setp_namevarbvalu(gdat, 'expodistmeanpop1', 2., popl=True)
+            setp_namevarbvalu(gdat, 'expodiststdvpop1', 0.2, popl=True)
         
-    if gdat.numbener > 1:
-        if gdat.exprtype == 'ferm':
-            sinddistmean = 2.15
-        if gdat.exprtype == 'chan':
-            sinddistmean = 1.
-        setp_namevarbvalu(gdat, 'sinddistmean', sinddistmean, popl=True)
-        setp_namevarbvalu(gdat, 'sinddiststdv', 0.5, popl=True)
+        if gdat.exprtype == 'hubb':
+            bacp = 1e-7
+        else:
+            bacp = 1.
+        setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
         
-        setp_namevarbvalu(gdat, 'curvdistmean', 2., popl=True)
-        setp_namevarbvalu(gdat, 'curvdiststdv', 0.2, popl=True)
-        
-        setp_namevarbvalu(gdat, 'expodistmeanpop1', 2., popl=True)
-        setp_namevarbvalu(gdat, 'expodiststdvpop1', 0.2, popl=True)
-    
-    if gdat.exprtype == 'hubb':
-        bacp = 1e-7
-    else:
-        bacp = 1.
-    setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
-    
-    if gdat.elemtype == 'lens':
-        setp_namevarbvalu(gdat, 'beinhost', 1.5 / gdat.anglfact)
-        setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
-        setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
-        for i in gdat.indxener:
-            setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-19)
-            setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-18)
-        setp_namevarbvalu(gdat, 'sanghost', pi / 2.)
+        if gdat.elemtype == 'lens':
+            setp_namevarbvalu(gdat, 'beinhost', 1.5 / gdat.anglfact)
+            setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
+            setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
+            for i in gdat.indxener:
+                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-19)
+                setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-18)
+            setp_namevarbvalu(gdat, 'sanghost', pi / 2.)
    
     if gdat.defa:
         return gdat
@@ -936,8 +950,10 @@ def init( \
                     limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'fittmaxm' + namevarb))
                 setattr(gdat, strglimt + namevarb, limt)
 
-    setattr(gdat, 'minm' + gdat.namefeatsign + 'sign', getattr(gdat, 'minm' + gdat.namefeatsign))
-    setattr(gdat, 'maxm' + gdat.namefeatsign + 'sign', getattr(gdat, 'maxm' + gdat.namefeatsign))
+    for namesele in gdat.listnamesele:
+        for namefeat in gdat.listnamefeatsele:
+            setattr(gdat, 'minm' + namefeat + namesele, getattr(gdat, 'minm' + namefeat))
+            setattr(gdat, 'maxm' + namefeat + namesele, getattr(gdat, 'maxm' + namefeat))
     
     # color bars
     gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
@@ -1301,7 +1317,7 @@ def init( \
     
     # list of variables for which the posterior is calculated at each sweep
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
-                                                                    'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
+                                                                    'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
     # temp
     #gdat.liststrgvarbarryswep = []
     
@@ -2187,6 +2203,8 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.verbtype > 0:
         print 'Initializing the sampler state...'
   
+    gdatmodi.thisamplpert = zeros(1)
+
     ## unit sample vector
     gdatmodi.thissamp = rand(gdat.fittnumbpara)
     gdatmodi.thissampvarb = zeros(gdat.fittnumbpara)
@@ -2703,17 +2721,69 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thistmprfactdeltllik
                     indxswepintv = arange(minm, maxm)
                     for k in gdat.indxproptype:
-                        numbtotl = where(workdict['listindxproptype'][indxswepintv] == k)[0].size
+                        print 'workdict[listindxproptype][indxswepintv]'
+                        print workdict['listindxproptype'][indxswepintv]
+                        boolproptype = workdict['listindxproptype'][indxswepintv] == k
+                        boolaccp = workdict['listaccp'][indxswepintv] == 1
+                        if gdat.indxproptype[k] in gdat.indxproptypecomp:
+                            numbtotl = empty(gdat.numbbinsplot, dtype=int)
+                            for a in gdat.indxbinsplot: 
+                                binsampl = getattr(gdat, 'bins' + gdat.namecompampl)
+                                boolbins = binsampl[a] < gdatmodi.thisamplpert < binsampl[a+1]
+                                numbtotl[a] = where(boolproptype & boolbins)[0].size
+                        else:
+                            numbtotl = where(boolproptype)[0].size
+
                         if gdat.propwithsing and k in gdat.indxstdp:
                             strgstdvstdp = '%.3g' % gdat.stdvstdp[k]
                         else:
                             strgstdvstdp = ''
-                        if numbtotl > 0:
-                            numbaccp = where(logical_and(workdict['listaccp'][indxswepintv], workdict['listindxproptype'][indxswepintv] == k))[0].size
-                            percaccp = 100. / float(numbtotl) * numbaccp
-                            print '%30s %40s %10s' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % (percaccp, numbaccp, numbtotl), strgstdvstdp)
+                        
+                        if gdat.indxproptype[k] in gdat.indxproptypecomp:
+                            numbaccp = empty(gdat.numbbinsplot, dtype=int)
+                            for a in gdat.indxbinsplot: 
+                                binsampl = getattr(gdat, 'bins' + gdat.namecompampl)
+                                boolbins = binsampl[a] < gdatmodi.thisamplpert < binsampl[a+1]
+                                print 'boolaccp'
+                                print boolaccp
+                                print 'boolproptype'
+                                print boolproptype
+                                print 'boolbins'
+                                print boolbins
+
+                                numbaccp[a] = where(boolaccp & boolproptype & boolbins)[0].size
+                            indx = where(numbtotl > 0)[0]
+                            percaccp = zeros(gdat.numbbinsplot)
+                            if indx.size > 0:
+                                print 'numbtotl'
+                                print numbtotl
+                                print 'indx'
+                                print indx
+                                print 'numbtotl[indx].astype(float)'
+                                print numbtotl[indx].astype(float)
+                                print
+                                percaccp[indx] = 100. / numbtotl[indx].astype(float) * numbaccp
                         else:
-                            print '%30s %40s %10s' % (gdat.legdproptype[k], 'N/A', strgstdvstdp)
+                            numbaccp = where(boolaccp & boolproptype)[0].size
+                            percaccp = 0.
+                            if numbtotl > 0:
+                                percaccp = 100. / float(numbtotl) * numbaccp
+                        
+                        if gdat.indxproptype[k] in gdat.indxproptypecomp:
+                            for a in gdat.indxbinsplot: 
+                                print '%30s %40s %10s' % ('%s-%d' % (gdat.legdproptype[k], a), 'acceptance rate: %3d%% (%5d out of %5d)' % \
+                                                                                                            (percaccp[k], numbaccp[k], numbtotl[k]), strgstdvstdp)
+                        else:
+                            print 'percaccp'
+                            print percaccp
+                            print 'numbaccp'
+                            print numbaccp
+                            print 'numbtotl'
+                            print numbtotl
+                            print 'strgstdvstdp'
+                            print strgstdvstdp
+                            print
+                            print '%30s %40s %10s' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % (percaccp, numbaccp, numbtotl), strgstdvstdp)
                         
                     if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
                         print 'Tempered burn-in'
