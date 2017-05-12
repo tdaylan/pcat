@@ -2669,10 +2669,11 @@ def setpinit(gdat, boolinitsetp=False):
 
     gdat.minmfracsubh = 0.
     gdat.maxmfracsubh = 0.3
-    gdat.minmfracsubhcorr = 0.
-    gdat.maxmfracsubhcorr = 0.3
     gdat.scalfracsubh = 'self'
-    gdat.scalfracsubhcorr = 'self'
+    # temp -- automize this
+    gdat.minmfracsubhcorr = gdat.minmfracsubh
+    gdat.maxmfracsubhcorr = gdat.maxmfracsubh
+    gdat.scalfracsubhcorr = gdat.scalfracsubh
     
     gdat.minmmasshostbein = 1e10
     gdat.maxmmasshostbein = 1e14
@@ -2752,7 +2753,17 @@ def setpinit(gdat, boolinitsetp=False):
         for l in gdat.fittindxpopl:
             gdat.listnamevarbscal += ['fdispop%d' % l]
         if gdat.elemtype == 'lens':
-            gdat.listnamevarbscal += ['fracsubh', 'fracsubhcorr', 'masssubhtotl']
+            gdat.listnamevarbscal += ['fracsubh', 'masssubhtotl']
+            print 'gdat.priofactdoff'
+            print gdat.priofactdoff
+            print '(gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == logt).any()'
+            print (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any()
+            print '(gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == logt)'
+            print (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt')
+            print
+
+            if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
+                gdat.listnamevarbscal += ['fracsubhcorr']
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
     
@@ -4076,6 +4087,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
             if strg[8:].startswith('meanpntsp'):
                 dicttemp['indxfixpmeanpnts'].append(valu)
         dicttemp['indxfixpnumbpnts'] = array(dicttemp['indxfixpnumbpnts'])
+        dicttemp['indxfixpmeanpnts'] = array(dicttemp['indxfixpmeanpnts'])
     
         dicttemp['indxfixpdist'] = []
         for strg, valu in dicttemp.iteritems():
@@ -4328,7 +4340,8 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 
             if namefixp[k].startswith('meanpnts'):
                 lablfixp[k] = r'$\mu_{%s}$' % strgpopl
-                scalfixp[k] = 'logt'
+                #scalfixp[k] = 'logt'
+                scalfixp[k] = 'self'
     
             if namefixp[k].startswith('gangdistscalp'):
                 lablfixp[k] = r'$\gamma_{\theta%s}$' % strgpoplcomm
@@ -6164,17 +6177,18 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             # more derived parameters
             if gdat.elemtype == 'lens':
                 if numbtrap > 0:
-                    if strgmodl != 'true':
-                        # temp
-                        indx = where(sum(gdat.truehistmcut, axis=0) > 0)[0]
-                        histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
-                        for l in indxpopl:
-                            histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dicttemp['histmcut'][l, indx] / gdat.truehistmcut[l, indx]
-                        fracsubhcorr = ones(gdat.numbbinsplot)
-                        fracsubhcorr[indx] = array([sum(gdat.truehistmcutpars[:, indx] * dicttemp['histmcut'][:, indx] / \
-                                                                                        gdat.truehistmcut[:, indx] * gdat.meanmcut[indx]) / masshostbein])
-                        setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
-                        setattr(gdatobjt, strg + 'fracsubhcorr', fracsubhcorr)
+                    if strgmodl != 'true': 
+                        if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
+                            # temp
+                            indx = where(sum(gdat.truehistmcut, axis=0) > 0)[0]
+                            histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
+                            for l in indxpopl:
+                                histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dicttemp['histmcut'][l, indx] / gdat.truehistmcut[l, indx]
+                            fracsubhcorr = ones(gdat.numbbinsplot)
+                            fracsubhcorr[indx] = array([sum(gdat.truehistmcutpars[:, indx] * dicttemp['histmcut'][:, indx] / \
+                                                                                            gdat.truehistmcut[:, indx] * gdat.meanmcut[indx]) / masshostbein])
+                            setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
+                            setattr(gdatobjt, strg + 'fracsubhcorr', fracsubhcorr)
 
             liststrgfeat = getattr(gdat, strgmodl + 'liststrgfeat')
             ## copy element features to the global object
