@@ -26,7 +26,6 @@ def plot_samp(gdat, gdatmodi, strg):
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
         numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
         if numbtrap > 0:
-            spatdisttype = getattr(gdat, strgmodl + 'spatdisttype')
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
             spectype = getattr(gdat, strgmodl + 'spectype')
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -184,7 +183,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     indxydat = [l, slice(None)]
                     strgindxydat = 'pop%d' % l
     
-                    for strgfeat in liststrgfeatodim[l]:
+                    for strgfeat in liststrgfeatodim[l] + gdat.liststrgfeatplot:
                         
                         scalxaxi = getattr(gdat, 'scal' + strgfeat + 'plot')
                         factxaxi = getattr(gdat, 'fact' + strgfeat + 'plot')
@@ -225,11 +224,14 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # temp
         if numbtrap > 0:
-            if 'grad' in spatdisttype and strg == 'this':
-                plot_genemaps(gdat, gdatmodi, 'fitt', 'lpdfspatpriointp', tdim=True)
-        
-            if 'gaus' in spatdisttype:
-                plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
+            for l in indxpopl:
+                liststrgfeatmodu = getattr(gdat, strgmodl + 'liststrgfeatmodu')
+                liststrgpdfnmodu = getattr(gdat, strgmodl + 'liststrgpdfnmodu')
+                for strgfeat, strgpdfn in zip(liststrgfeatmodu[l], liststrgpdfnmodu[l]):
+                    if strgpdfn == 'tmplreln':
+                        plot_genemaps(gdat, gdatmodi, 'fitt', 'lpdfspatpriointp', tdim=True)
+                    if strgpdfn == 'tmplgaum':
+                        plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
     
         if strg == 'post':
             listbool = [False, True]
@@ -488,8 +490,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
               
                 axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split', alpha=gdat.alphmrkr, color='m')
                 axis.hist(listvarb[k][indxsampmergtotl], bins=bins, label='Merge', alpha=gdat.alphmrkr, color='y')
-                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split/Accepted', alpha=gdat.alphmrkr, color='m', lw=10)
-                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge/Accepted', alpha=gdat.alphmrkr, color='y', lw=10)
+                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split/Accepted', alpha=gdat.alphmrkr, edgecolor='m', lw=20, facecolor='none')
+                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge/Accepted', alpha=gdat.alphmrkr, edgecolor='y', lw=20, facecolor='none')
                 
                 axis.set_ylabel('$N_{samp}$')
                 axis.set_xlabel(listlabl[k])
@@ -1007,6 +1009,9 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strg == 'post':
         labl = gdat.legdsampdist + ' ' + legdmome
+        print 'plot_elemtdim in post'
+        print 'strgplottype'
+        print strgplottype
         if strgplottype == 'hist':
             varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco)[l, :, :]
             varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
@@ -1185,36 +1190,43 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     try:
         if strgydat.startswith('hist'):
             strgtemp = strgydat[:4]
-            print 'plot_gene'
-            print 'strgxdat'
-            print strgxdat
-            print 'strgydat'
-            print strgydat
-            print 'strgtemp'
-            print strgtemp
+
             bins = copy(getattr(gdat, 'bins' + strgtemp))
             varb = copy(getattr(gdat, 'expr' + strgtemp))
             if strgtemp == 'lgal' or strgtemp == 'bgal':
             	bins *= gdat.anglfact
             	varb *= gdat.anglfact
-            print 'bins'
-            print bins
-            print 'varb'
-            print varb
-            print
+            
+            if gdat.strgcnfg == 'pcat_chan_inpt':
+                print 'plot_gene'
+                print 'strgxdat'
+                print strgxdat
+                print 'strgydat'
+                print strgydat
+                print 'strgtemp'
+                print strgtemp
+                print 'bins'
+                print bins
+                print 'varb'
+                print varb
+                print
             axis.hist(varb, bins, label=gdat.strgcatl, alpha=0.5, color='r')
     except:
         pass
     
     # true
     if gdat.datatype == 'mock' and not omittrue:
-        ydat = getattr(gdat, 'true' + strgydat)
-        if indxydat != None:
-            ydat = ydat[indxydat]
-        if histodim:
-            axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdtrue, alpha=0.5)
-        else:
-            axis.plot(xdat, ydat, color='g', label=gdat.legdtrue, alpha=0.5)
+        try:
+            ydat = getattr(gdat, 'true' + strgydat)
+            if indxydat != None:
+                ydat = ydat[indxydat]
+            if histodim:
+                axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdtrue, alpha=0.5)
+            else:
+                axis.plot(xdat, ydat, color='g', label=gdat.legdtrue, alpha=0.5)
+        except:
+            if gdat.verbtype > 0:
+                print 'Skipping truth plot for %s...' % strgydat
     
     # axis scales
     if scalxaxi == 'logt':
@@ -1760,7 +1772,7 @@ def plot_mosa(gdat):
                     cbar = figr.colorbar(imag, cax=axiscomm)
                     cbar.set_ticks(gdat.tickdatacnts)
                     cbar.set_ticklabels(gdat.labldatacnts)
-                    plt.subplots_adjust(left=0.1, top=.91, hspace=0.01, wspace=0.05, bottom=0.09)
+                    plt.subplots_adjust(left=0.1, top=.91, hspace=0.03, wspace=0.06, bottom=0.09)
                     if l == 1:
                         strg = ''
                     else:
