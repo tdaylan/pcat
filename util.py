@@ -2754,13 +2754,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.listnamevarbscal += ['fdispop%d' % l]
         if gdat.elemtype == 'lens':
             gdat.listnamevarbscal += ['fracsubh', 'masssubhtotl']
-            print 'gdat.priofactdoff'
-            print gdat.priofactdoff
-            print '(gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == logt).any()'
-            print (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any()
-            print '(gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == logt)'
-            print (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt')
-            print
 
             if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
                 gdat.listnamevarbscal += ['fracsubhcorr']
@@ -4340,8 +4333,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 
             if namefixp[k].startswith('meanpnts'):
                 lablfixp[k] = r'$\mu_{%s}$' % strgpopl
-                #scalfixp[k] = 'logt'
-                scalfixp[k] = 'self'
+                scalfixp[k] = 'logt'
     
             if namefixp[k].startswith('gangdistscalp'):
                 lablfixp[k] = r'$\gamma_{\theta%s}$' % strgpoplcomm
@@ -6294,10 +6286,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     cmplfeat = empty((gdat.truenumbpopl, gdat.numbbinsplot))
                     errrcmplfeat = empty((2, gdat.truenumbpopl, gdat.numbbinsplot))
                     truehistfeat = getattr(gdat, 'truehist' + strgfeat)
+                    truefeat = getattr(gdat, 'true' + strgfeat)
                     for l in gdat.trueindxpopl:
                         indx = where(isfinite(featassc[strgfeat][l]))[0]
                         bins = getattr(gdat, 'bins' + strgfeat)
-                        histfeatassc = histogram(dicttemp[strgfeat][l][indxfittpntsassc[l]], bins=bins)[0]
+                        histfeatassc = histogram(truefeat[l][0, gdatmodi.trueindxpntsasschits], bins=bins)[0]
                         if truehistfeat != None:
                             cmplfeat[l, :] = histfeatassc / truehistfeat[l, :]
                             errrcmplfeat[:, l, :] = (cmplfeat[l, :] / sqrt(maximum(ones(gdat.numbbinsplot), truehistfeat[l, :])))[None, :]
