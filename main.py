@@ -698,7 +698,10 @@ def init( \
     setp_namevarblimt(gdat, 'bacp', bacp, ener=True, back=True)
 
     ## hyperparameters
-    meanpnts = [0.1, 1000.]
+    if gdat.elemtype == 'lght':
+        meanpnts = [0.1, 1000.]
+    if gdat.elemtype == 'lens':
+        meanpnts = [0.1, 100.]
     setp_namevarblimt(gdat, 'meanpnts', meanpnts, popl=True)
     
     ### element parameter boundaries
