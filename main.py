@@ -22,7 +22,7 @@ def init( \
         
          showmoreaccp=False, \
 
-         condcatl=True, \
+         condcatl=False, \
          seedstat=None, \
          randseedelem=False, \
          indxevttincl=None, \
