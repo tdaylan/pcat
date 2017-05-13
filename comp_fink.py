@@ -1,23 +1,26 @@
 from __init__ import *
 
 listnameplot = [ \
-                'post/finl/varbscal/numbpntspop0_trac', \
-                'post/finl/varbscal/fixp_grid0000', \
-                'post/finl/varbscal/fixp_grid0001', \
-                'post/finl/varbscal/fixp_grid0002', \
-                'post/finl/varbscal/fixp_grid0003', \
-                'post/finl/varbscal/fixp_grid0003', \
-                'post/finl/mediconvelemevtApopA', \
-                'post/finl/diag/gmrbmaps_00', \
-                'post/finl/histodim/histdefspop0', \
-                'post/finl/histodim/histdeltllikpop0', \
-                'post/finl/histodim/histdotspop0', \
-                'post/finl/histodim/histdotnpop0', \
-                'post/finl/histodim/histdotmpop0', \
-                'post/finl/histodim/histdotvpop0', \
-                'post/finl/histodim/histmcutpop0', \
-                'post/finl/cmpl/cmpldotspop0', \
-                #'post/finl/cmpl/cmpldefspop0', \
+                'post/anim/datacntsene0evt0popA.gif', \
+                'post/anim/histdefspop0.gif', \
+                'post/anim/histmcutpop0.gif', \
+                'post/finl/varbscal/numbpntspop0_trac.pdf', \
+                'post/finl/varbscal/fixp_grid0000.pdf', \
+                'post/finl/varbscal/fixp_grid0001.pdf', \
+                'post/finl/varbscal/fixp_grid0002.pdf', \
+                'post/finl/varbscal/fixp_grid0003.pdf', \
+                'post/finl/varbscal/fixp_grid0003.pdf', \
+                'post/finl/mediconvelemevtApopA.pdf', \
+                'post/finl/diag/gmrbmaps_00.pdf', \
+                'post/finl/histodim/histdefspop0.pdf', \
+                'post/finl/histodim/histdeltllikpop0.pdf', \
+                'post/finl/histodim/histdotspop0.pdf', \
+                'post/finl/histodim/histdotnpop0.pdf', \
+                'post/finl/histodim/histdotmpop0.pdf', \
+                'post/finl/histodim/histdotvpop0.pdf', \
+                'post/finl/histodim/histmcutpop0.pdf', \
+                'post/finl/cmpl/cmpldotspop0.pdf', \
+                #'post/finl/cmpl/cmpldefspop0.pdf', \
                ]
 
 listlinegold = [ \
@@ -61,7 +64,7 @@ print 'compfink initialized...'
 
 for nameplot in listnameplot:   
     
-    nameplotshrt = nameplot.split('/')[-1]
+    nameplotshrt = nameplot[:-4].split('/')[-1]
     cmnd = 'mkdir -p ' + pathimag + 'compfink/' + nameplotshrt + '/'
     os.system(cmnd)
     cmnd = 'mkdir -p ' + pathimag + 'compgold/' + nameplotshrt + '/'
@@ -73,8 +76,8 @@ for nameplot in listnameplot:
             strgtemp = 'gold'
         else:
             strgtemp = 'fink'
-        namedest = pathimag + 'comp' + strgtemp + '/' + nameplotshrt + '/' + line + '.pdf'
+        namedest = pathimag + 'comp' + strgtemp + '/' + nameplotshrt + '/' + line + nameplot[-4:]
         if not os.path.isfile(namedest):
-            cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink2/www/tansu/link/pcat/imag/' + line + '/' + nameplot + '.pdf ' + namedest 
+            cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink2/www/tansu/link/pcat/imag/' + line + '/' + nameplot + ' ' + namedest 
             os.system(cmnd)
 

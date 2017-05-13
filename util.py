@@ -5838,7 +5838,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 masssubh = factmcutfromdefs * dicttemp['defs'][0]
                 masssubhtotl = array([sum(masssubh)])
                 fracsubh = masssubhtotl / masshostbein
-                
+
                 setattr(gdatobjt, strg + 'masssubhtotl', masssubhtotl)
                 setattr(gdatobjt, strg + 'fracsubh', fracsubh)
                 

@@ -21,6 +21,8 @@ def init( \
          factthin=None, \
         
          showmoreaccp=False, \
+        
+         evoltype='samp', \
 
          condcatl=False, \
          seedstat=None, \
@@ -1429,7 +1431,7 @@ def init( \
 
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
-        
+    
     workopti(gdat, lock)
 
     # run the sampler
@@ -2662,14 +2664,14 @@ def work(pathoutpthis, lock, indxprocwork):
 
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
-                                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
-                                                                                                                                gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
+                                                                            gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
+                                                                                                                            gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.
     
         # accept or reject the proposal
-        if gdat.optillik:
+        if gdat.optillik or gdat.evoltype == 'maxmllik':
             booltemp = gdatmodi.thisaccpprop and gdatmodi.thisdeltlliktotl > 0.
         else:
             booltemp = gdatmodi.thisaccpprob[0] >= rand()
