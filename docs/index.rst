@@ -55,7 +55,7 @@ Compared to mainstream Bayesian inference methods, PCAT has a series of desirabl
 Transdimensionality
 +++++++++++++++++++
 
-PCAT takes steps across models by proposing to add elements whose parameters are drawn from the prior, or to kill randomly chosen elements, while respecting detailed balance in the metamodel.
+PCAT takes steps across models by proposing to add elements whose parameters are drawn from the prior, or to kill randomly chosen elements, while respecting detailed balance in the metamodel. Apart from these elementary transdimensional operations, it can also optionally propose splits and merges of elements to efficiently sample typical across-model covariances. 
 
 
 Hierarchical priors
@@ -267,7 +267,7 @@ Last, ``finl`` paths are the folders that hold the posterior and prior distribut
 
 - ``cond`` Condensed catalog related plots
 - ``deltllik`` Log-likelihood difference for all proposals
-- ``lpri`` Log-lprior and other terms in the acceptance ratio for all proposals
+- ``lpri`` Log-prior and other terms in the acceptance ratio for all proposals
 - ``spmr`` Split and merge related plots
 - ``varbscal`` Marginal and joint distributions of all quantities, i.e., model parameters and derived variables.
 - ``varbscalproc`` Same as above, but individually for each chain.
@@ -314,7 +314,7 @@ Field              Explanation
 
 ``samp``           Scaled parameter vector (uniformly distributed with respect to the prior)
 
-``deltllikpopl``   Delta loglikelihood of the :math:`l^{th}` population
+``deltllikpopl``   Delta log-likelihood of the :math:`l^{th}` population
 
 ``lgalpopl``       Horizontal coordinates of the :math:`l^{th}` population
 
