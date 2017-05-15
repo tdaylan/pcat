@@ -285,9 +285,26 @@ In overall, the output folder contains the following files:
 
 The list of arguments to ``pcat.main.init()``.
 
+
+- ``comp.txt``
+
+A small text file produced at the very end of the run to indicate that the run was completed successfully.
+
+
+- ``pcat.h5``
+
+HDF5 file containing the proposal scale optimization data.
+
+
 - ``pcat.h5``
 
 HDF5 file containing samples from the hypothesis space, with the following fields:
+
+
+- ``stdo.txt``
+
+The log of the standard output collected during the run.
+
 
 =================  ==========================================================================
 Field              Explanation
