@@ -270,7 +270,7 @@ Last, ``finl`` paths are the folders that hold the posterior and prior distribut
 - ``lpri`` Log-lprior and other terms in the acceptance ratio for all proposals
 - ``spmr`` Split and merge related plots
 - ``varbscal`` Marginal and joint distributions of all quantities, i.e., model parameters and derived variables.
-- ``varbscalproc`` Marginal and joint distributions of all quantities, i.e., model parameters and derived variables, for each chain.
+- ``varbscalproc`` Same as above, but individually for each chain.
 
 
 .. _sectchan:
@@ -291,19 +291,20 @@ The list of arguments to ``pcat.main.init()``.
 A small text file produced at the very end of the run to indicate that the run was completed successfully.
 
 
-- ``pcat.h5``
+- ``opti.h5``
 
 HDF5 file containing the proposal scale optimization data.
+
+
+- ``stdo.txt``
+
+The log of the standard output collected during the run.
 
 
 - ``pcat.h5``
 
 HDF5 file containing samples from the hypothesis space, with the following fields:
 
-
-- ``stdo.txt``
-
-The log of the standard output collected during the run.
 
 
 =================  ==========================================================================
