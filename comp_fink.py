@@ -4,7 +4,9 @@ listnameplot = [ \
                 'post/anim/datacntsene0evt0popA.gif', \
                 'post/anim/histdefspop0.gif', \
                 'post/anim/histmcutpop0.gif', \
+                'post/finl/varbscal/lgalsour_trac.pdf', \
                 'post/finl/varbscal/numbpntspop0_trac.pdf', \
+                'post/finl/varbscal/fracsubh_trac.pdf', \
                 'post/finl/varbscal/fixp_grid0000.pdf', \
                 'post/finl/varbscal/fixp_grid0001.pdf', \
                 'post/finl/varbscal/fixp_grid0002.pdf', \
@@ -14,51 +16,55 @@ listnameplot = [ \
                 'post/finl/diag/gmrbmaps_00.pdf', \
                 'post/finl/histodim/histdefspop0.pdf', \
                 'post/finl/histodim/histdeltllikpop0.pdf', \
-                'post/finl/histodim/histdotspop0.pdf', \
-                'post/finl/histodim/histdotnpop0.pdf', \
-                'post/finl/histodim/histdotmpop0.pdf', \
-                'post/finl/histodim/histdotvpop0.pdf', \
+                'post/finl/histodim/histrelepop0.pdf', \
+                'post/finl/histodim/histrelnpop0.pdf', \
+                'post/finl/histodim/histreldpop0.pdf', \
+                'post/finl/histodim/histrelcpop0.pdf', \
                 'post/finl/histodim/histmcutpop0.pdf', \
+                'post/finl/llik_hist.pdf', \
+                'post/finl/llik_trac.pdf', \
+                'post/finl/histdefl.pdf', \
+                'post/finl/histdeflelem.pdf', \
+                'post/finl/mosapop0ene0evtt0.pdf', \
+                'post/finl/medideflcompevtApopA.pdf', \
+                'post/finl/medimagnresievtApopA.pdf', \
+                'post/finl/medimagnpercresievtApopA.pdf', \
+                'post/finl/postdeflsing0000popA.pdf', \
+                'post/finl/postdeflsing0001popA.pdf', \
+                'post/finl/postdeflsing0002popA.pdf', \
+                'post/finl/postdeflsing0003popA.pdf', \
+                'post/finl/postdeflsingresi0000popA.pdf', \
+                'post/finl/postdeflsingresi0001popA.pdf', \
+                'post/finl/postdeflsingresi0002popA.pdf', \
+                'post/finl/postdeflsingresi0003popA.pdf', \
                 'post/finl/cmpl/cmpldotspop0.pdf', \
                 #'post/finl/cmpl/cmpldefspop0.pdf', \
                ]
 
 listlinegold = [ \
-                '20170507_042916_pcat_lens_mock_syst_0002_1000000', \
-                '20170507_000608_pcat_lens_mock_syst_0000_1000000', \
-                '20170506_213505_pcat_lens_mock_syst_0000_1000000', \
-                '20170505_175125_pcat_lens_mock_syst_0004_3000000', \
-                '20170505_131822_pcat_lens_mock_syst_0003_1000000', \
-                '20170505_095109_pcat_lens_mock_syst_0002_1000000', \
-                '20170505_084900_pcat_lens_mock_syst_0002_1000000', \
-                '20170504_115457_pcat_lens_mock_perf_0004_1000000', \
-                '20170504_071247_pcat_lens_mock_syst_0002_1000000', \
-                '20170504_061256_pcat_lens_mock_test_0002_1000000', \
-                '20170503_024654_pcat_lens_mock_test_0001_5000000', \
-                '20170503_010057_pcat_lens_mock_test_0000_5000000', \
-                '20170430_073947_pcat_lens_mock_perf_0005_1000000', \
-                '20170430_040715_pcat_lens_mock_perf_0004_1000000', \
-                '20170430_000620_pcat_lens_mock_perf_0003_1000000', \
-                '20170429_205836_pcat_lens_mock_syst_0002_1000000', \
-                '20170429_173210_pcat_lens_mock_syst_0001_1000000', \
-                '20170429_122508_pcat_lens_mock_syst_0000_1000000', \
-                '20170425_115304_pcat_lens_mock_syst_0002_2000000', \
-                '20170429_020452_pcat_lens_mock_perf_0000_5000000', \
-                '20170425_083905_pcat_lens_mock_dotn_0002_2000000', \
-                '20170425_003054_pcat_lens_mock_syst_0001_2000000', \
-                '20170424_223720_pcat_lens_mock_doff_0001_2000000', \
+                '20170512_233907_pcat_lens_mock_syst_0000_1000000', \
+                '20170513_060229_pcat_lens_mock_syst_0001_1000000', \
+                '20170513_125003_pcat_lens_mock_syst_0002_1000000', \
+                '20170513_181822_pcat_lens_mock_syst_0003_1000000', \
                ]
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
+
+#cmnd = 'ssh tansu@fink2.rc.fas.harvard:ls /n/fink1/tansu/data/pcat/imag/ | xargs -n 1 basename > /n/fink1/tansu/data/pcat/imag/listfink.txt'
+#os.system(cmnd)
+cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/listfink.txt %s' % pathimag
+os.system(cmnd)
 pathlist = pathimag + 'listfink.txt'
 
-#pathgold = pathimag + 'compgold/'
-#os.system('rm -rf ' + pathgold)
+pathgold = pathimag + 'compgold/'
+os.system('rm -rf ' + pathgold)
 
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
     listline = [x.strip() for x in listline] 
 
-listline = fnmatch.filter(listline, '20*')
+#strgsrch = '20*'
+strgsrch = '2017051*'
+listline = fnmatch.filter(listline, strgsrch)
 
 print 'compfink initialized...'
 

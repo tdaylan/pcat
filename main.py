@@ -809,12 +809,12 @@ def init( \
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-16]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellpsour', [0., 0.3])
+    setp_namevarblimt(gdat, 'ellpsour', [0., 0.2])
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-16]))
     setp_namevarblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_namevarblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellphost', [0., 0.5])
+    setp_namevarblimt(gdat, 'ellphost', [0., 0.2])
     setp_namevarblimt(gdat, 'sherhost', [0., 0.3])
     setp_namevarblimt(gdat, 'anglsour', [0., pi])
     setp_namevarblimt(gdat, 'anglhost', [0., pi])
@@ -1366,9 +1366,10 @@ def init( \
     for strg, valu in gdatmodifudi.__dict__.iteritems():
         if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep and isinstance(valu, ndarray):
             gdat.liststrgvarbarrysamp.append(strg[4:])
-        if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnkern':
+        if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnkern' and \
+                                                                                    strg != 'thistrueindxpntsasscmiss' and strg != 'thistrueindxpntsasschits':
             gdat.liststrgvarblistsamp.append(strg[4:])
-   
+    
     # temp
     #gdat.liststrgvarbarrysamp += ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', 'stdvsamp', \
     #                                                                                                  'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype']
@@ -1652,6 +1653,15 @@ def proc_post(gdat, prio=False):
         shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
     
+    print 'gdat.maxmllikproc[k]'
+    print gdat.maxmllikproc[k]
+    print
+    print 'gdat.listlliktotl'
+    summgene(gdat.listlliktotl)
+    indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
+    gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
+    gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
+
     # add execution times to the chain output
     gdat.timereal = zeros(gdat.numbproc)
     gdat.timeproc = zeros(gdat.numbproc)
