@@ -303,7 +303,7 @@ The log of the standard output collected during the run.
 
 - ``pcat.h5``
 
-HDF5 file containing samples from the hypothesis space, with the following fields:
+HDF5 file containing samples from the metamodel, with the following fields:
 
 
 
@@ -376,7 +376,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
 
 .. function:: pcat.main.init(...)
 
-    Given an observed dataset, sample from the hypothesis space.
+    Given an observed dataset, sample from the metamodel.
 
     **Sampler settings**
 
