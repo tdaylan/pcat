@@ -225,29 +225,55 @@ Furthermore, PCAT offers extensive routines to visualize the output chain. The o
 
 Plots
 +++++
-If not explicitly disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are generated at predetermined times during the sampling and others are made in the postprocessing after all chains have run. The plot path, ``pathbase/imag/rtag``, has the following structure:
+If not explicitly disabled by the user, PCAT produces plots in every stage of a run. Some plots are produced in the initial setup, frame plots are generated at predetermined times during the sampling and others are made in the postprocessing after all chains have run. The plot path, ``pathbase/imag/rtag``, has the following subfolders:
 
 - ``init`` Problem setup
 - ``prio`` Plots regarding the sampling of the prior
 - ``post`` Plots regarding the sampling of the posterior
 - ``info`` Information gain
 
-.. _note:
+.. note::
 
-    Note that running the sampler on the prior probability distribution is optional and serves two purposes:
+    Running the sampler on the prior probability distribution is optional and serves two purposes:
     
     - diagnostic check that the imposed prior makes sense
     - to calculate the KL divergence on all metamodel parameters and derived quantities
 
-In turn, each of ``prio`` and ``post`` contain the following folders:
+    If sampling from the prior is disabled (default behaviour), then ``prio`` and ``info`` folders will be empty.
+
+
+In turn, both ``prio`` and ``post`` contain the following subfolders:
 
 - ``opti`` Proposal scale optimization
-- ``fram`` Frame plots, giving snapshots of the MCMC state
-- ``finl`` Posterior distribution of model parameters and derived quantities
+- ``fram`` Frame plots, giving snapshots of the MCMC state during the sampling
 - ``anim`` GIF animations made from the frame plots in ``fram`` that are produced during sampling.
-
-
+- ``finl`` Posterior distribution of model parameters and derived quantities
 - ``diag`` Diagnostic plots
+
+``fram`` and ``post`` paths organize the plots into subfolders:
+
+- ``assc`` Associations of the sample elements with the reference catalog
+- ``cmpl`` Completeness as a function of reference element features
+- ``fdis`` False discovery rate as a function of model element features
+- ``histodim`` One dimensional histograms of element features
+- ``histtdim`` Two dimensional histograms of pairs of element features
+- ``scattdim`` Scatter plots of pairs of element features
+
+
+.. note::
+    A reference sample is defined as a sample that is overplotted on the samples from the posterior of the metamodel across all plots. These overplots always use the color green. If the data is simulated, the true metamodel automatically becomes the reference sample. If the data is supplied by the user, the reference sample is also expected from the user, and is optional.
+    
+Finally, ``diag`` paths are the folders that hold the posterior and prior distributions. They offer additional subfolders:
+
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+- ``cond`` Condensed catalog related plots
+
+
 
 .. _sectchan:
 
