@@ -252,7 +252,7 @@ In turn, both ``prio`` and ``post`` contain the following subfolders:
 
 ``fram`` and ``post`` paths organize the plots into subfolders:
 
-- ``assc`` Associations of the sample elements with the reference catalog
+- ``assc`` Associations of the sample elements with the reference element
 - ``cmpl`` Completeness as a function of reference element features
 - ``fdis`` False discovery rate as a function of model element features
 - ``histodim`` One dimensional histograms of element features
@@ -261,18 +261,16 @@ In turn, both ``prio`` and ``post`` contain the following subfolders:
 
 
 .. note::
-    A reference sample is defined as a sample that is overplotted on the samples from the posterior of the metamodel across all plots. These overplots always use the color green. If the data is simulated, the true metamodel automatically becomes the reference sample. If the data is supplied by the user, the reference sample is also expected from the user, and is optional.
+    A reference sample is defined as a sample that is overplotted on the metamodel samples. Reference samples always use the green color. If the data is simulated, the true metamodel automatically becomes the reference sample. If the data is supplied by the user, the reference sample is also expected from the user, and is optional.
     
-Finally, ``diag`` paths are the folders that hold the posterior and prior distributions. They offer additional subfolders:
+Last, ``finl`` paths are the folders that hold the posterior and prior distributions. They offer additional subfolders:
 
 - ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-- ``cond`` Condensed catalog related plots
-
+- ``deltllik`` Log-likelihood difference for all proposals
+- ``lpri`` Log-lprior and other terms in the acceptance ratio for all proposals
+- ``spmr`` Split and merge related plots
+- ``varbscal`` Marginal and joint distributions of all quantities, i.e., model parameters and derived variables.
+- ``varbscalproc`` Marginal and joint distributions of all quantities, i.e., model parameters and derived variables, for each chain.
 
 
 .. _sectchan:
@@ -413,19 +411,19 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type pathbase: str
 
 
-    **Associations with the reference catalog**
+    **Associations with the reference elements**
  
-    :param anglassc: Radius of the circle within which sample catalog elements can be associated with the elements in the reference catalog.
+    :param anglassc: Radius of the circle within which sample catalog elements can be associated with the elements in the reference elements.
     
     :type anglassc: float
 
 
-    :param margfactcomp: The ratio of the side of the square in which the sample elements are associated with the reference catalog, to the size of the image.
+    :param margfactcomp: The ratio of the side of the square in which the sample elements are associated with the reference elements, to the size of the image.
 
     :type margfactcomp: float
 
 
-    :param nameexpr: A string that describes the provided reference catalog to be shown in the plot legends.
+    :param nameexpr: A string that describes the provided reference element to be shown in the plot legends.
 
     :type nameexpr: str
     
@@ -471,7 +469,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type strgexprflux: str
 
 
-    :param strgcatl: A descriptive name for the provided reference catalog to be shown in the plot legends.
+    :param strgcatl: A descriptive name for the provided reference elements to be shown in the plot legends.
 
     :type strgcatl: str
 
@@ -508,7 +506,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type exprtype: str
 
 
-    :param lgalcntr: Galactic longitude of the image center. ``lgalcntr`` and ``bgalcntr`` are used to rotate the observed data, exposure and background maps as well as the provided reference catalog to the center of the ROI. They are only effective when pixelization is HealPix, i.e, ``pixltype='heal'``.
+    :param lgalcntr: Galactic longitude of the image center. ``lgalcntr`` and ``bgalcntr`` are used to rotate the observed data, exposure and background maps as well as the provided reference elements to the center of the ROI. They are only effective when pixelization is HealPix, i.e, ``pixltype='heal'``.
 
     :type lgalcntr: float
 
@@ -555,7 +553,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type satumaps: bool
 
 
-    :param exprinfo: Overplot the provided reference catalog on the output plots.
+    :param exprinfo: Overplot the provided reference elements on the output plots.
 
     :type exprinfo: bool
 
@@ -565,7 +563,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type makeanim: bool
 
 
-    :param anotcatl: Anotate the catalog members on the plots, if an annotation text is provided along with the reference catalog. (Default: ``False``)
+    :param anotcatl: Anotate the catalog members on the plots, if an annotation text is provided along with the reference element. (Default: ``False``)
 
     :type anotcatl: bool
 
@@ -575,7 +573,7 @@ All user interaction with PCAT is accomplished through the ``pcat.main.init()`` 
     :type strgbinsener: str
 
 
-    :param asscmetrtype: Type of metric used to associate the sample catalogs with the reference catalog
+    :param asscmetrtype: Type of metric used to associate the sample catalogs with the reference element
 
     :type asscmetrtype: str
 
