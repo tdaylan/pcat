@@ -43,6 +43,8 @@ def init( \
          truedefsimps=None, \
          shrtfram=False, \
         
+         plotlpri=True, \
+         plotelemcorr=True, \
          relnprio=False, \
         
          mockonly=False, \
@@ -809,13 +811,13 @@ def init( \
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-16]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellpsour', [0., 0.2])
+    setp_namevarblimt(gdat, 'ellpsour', [0., 0.1])
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-16]))
     setp_namevarblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_namevarblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellphost', [0., 0.2])
-    setp_namevarblimt(gdat, 'sherhost', [0., 0.3])
+    setp_namevarblimt(gdat, 'ellphost', [0., 0.1])
+    setp_namevarblimt(gdat, 'sherhost', [0., 0.1])
     setp_namevarblimt(gdat, 'anglsour', [0., pi])
     setp_namevarblimt(gdat, 'anglhost', [0., pi])
     setp_namevarblimt(gdat, 'sanghost', [0., pi])
@@ -830,6 +832,8 @@ def init( \
     gdat.trueminmaang = -pi
     gdat.truemaxmaang = pi
    
+    setp_namevarbvalu(gdat, 'scalmeanpnts', 'logt')
+
     # copy the true model to the inference model if the inference model parameter has not been specified
     temp = deepcopy(gdat.__dict__)
     for strg, valu in temp.iteritems():
@@ -960,7 +964,7 @@ def init( \
     # color bars
     gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
     gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 10.
-    gdat.scallpdfspatpriointp = 'linr'
+    gdat.scallpdfspatpriointp = 'self'
     gdat.cmaplpdfspatpriointp = 'PuBu'
     
     gdat.minmllikmaps = -10.
@@ -987,34 +991,54 @@ def init( \
     gdat.scalresicnts = 'asnh'
     gdat.cmapresicnts = 'RdBu'
     
-    gdat.minmconv = 1e-4
+    gdat.minmconv = 1e-2
     gdat.maxmconv = 10.
     gdat.scalconv = 'logt'
     gdat.cmapconv = 'Purples'
+    
+    gdat.minmconvelem = 1e-4
+    gdat.maxmconvelem = 1e-1
+    gdat.scalconvelem = 'logt'
+    gdat.cmapconvelem = 'Purples'
     
     gdat.minmmagn = -1e2
     gdat.maxmmagn = 1e2
     gdat.scalmagn = 'asnh'
     gdat.cmapmagn = 'BrBG'
     
-    gdat.minmdeflcomp = 0.01
-    gdat.maxmdeflcomp = 10.
-    gdat.scaldeflcomp = 'logt'
-    gdat.cmapdeflcomp = 'Oranges'
+    gdat.minmresideflperc = -100.
+    gdat.maxmresideflperc = 100.
+    gdat.scalresideflperc = 'asnh'
+    gdat.cmapresideflperc = 'Oranges'
     
-    gdat.minmconvelemresi = -0.1
-    gdat.maxmconvelemresi = 0.1
-    gdat.scalconvelemresi = 'asnh'
-    gdat.cmapconvelemresi = 'PiYG'
+    gdat.minmresiconvelem = -0.1
+    gdat.maxmresiconvelem = 0.1
+    gdat.scalresiconvelem = 'asnh'
+    gdat.cmapresiconvelem = 'PiYG'
     
-    gdat.minmmagnresi = -10.
-    gdat.maxmmagnresi = 10.
-    gdat.scalmagnresi = 'asnh'
-    gdat.cmapmagnresi = 'PRGn'
+    gdat.minmresiconvelemperc = -100.
+    gdat.maxmresiconvelemperc = 100.
+    gdat.scalresiconvelemperc = 'asnh'
+    gdat.cmapresiconvelemperc = 'PiYG'
     
-    liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'convelemresi', 'magnresi']
-    for strgcbar in liststrgcbar:
-        retr_ticklabl(gdat, strgcbar)
+    gdat.minmresimagn = -10.
+    gdat.maxmresimagn = 10.
+    gdat.scalresimagn = 'asnh'
+    gdat.cmapresimagn = 'PRGn'
+    
+    gdat.minmresimagnperc = -100.
+    gdat.maxmresimagnperc = 100.
+    gdat.scalresimagnperc = 'asnh'
+    gdat.cmapresimagnperc = 'PRGn'
+    
+    gdatdictcopy = deepcopy(gdat.__dict__)
+    for strg, valu in gdatdictcopy.iteritems():
+        if strg.startswith('cmap') and strg[4:] != 'datacnts' and strg[4:] != 'resicnts':
+            retr_ticklabl(gdat, strg[4:])
+            
+    #liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'resiconvelem', 'resimagn']
+    #for strgcbar in liststrgcbar:
+    #    retr_ticklabl(gdat, strgcbar)
 
     gdat.liststrglimt = ['minm', 'maxm']
     for strgmodl in gdat.liststrgmodl:
@@ -1129,6 +1153,11 @@ def init( \
         #if gdat.exprnumbpnts > 0:
         #    gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
 
+    # local kernel evaluation plot
+    if gdat.makeplot:
+        if gdat.evalcirc != 'full':
+            plot_eval(gdat)
+    
     # generate true data
     if gdat.datatype == 'mock':
         
@@ -1165,7 +1194,7 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
     if gdat.datatype == 'mock':
-        gdat.limtpntshist = [0.5, 10**ceil(log10(max(gdat.truemaxmnumbpntstotl, gdat.fittmaxmnumbpntstotl)))]
+        gdat.limtpntshist = [0.5, 10**ceil(log10(2. * sum(gdat.truenumbpnts)))]
     
     ## unit sample vector
     gdat.truesamp = zeros(gdat.truenumbpara)
@@ -1293,6 +1322,10 @@ def init( \
     
     if gdat.makeplot and gdat.makeplotinit:
         plot_init(gdat)
+
+    # temp
+    if gdat.strgcnfg == 'pcat_ferm_mock_ngal' and (gdat.maxmangleval == zeros(3) + 15. / gdat.anglfact).all():
+        raise Exception('')
 
     # final setup
     setpfinl(gdat, True) 
@@ -1653,14 +1686,12 @@ def proc_post(gdat, prio=False):
         shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
     
-    print 'gdat.maxmllikproc[k]'
-    print gdat.maxmllikproc[k]
-    print
-    print 'gdat.listlliktotl'
-    summgene(gdat.listlliktotl)
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
     gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
+    gdat.mlikfixp = gdat.mliksampvarb[gdat.fittindxfixp]
+    for k, namefixp in enumerate(gdat.fittnamefixp):
+        setattr(gdat, 'mlik' + namefixp, gdat.mlikfixp[k])
 
     # add execution times to the chain output
     gdat.timereal = zeros(gdat.numbproc)
@@ -2819,6 +2850,8 @@ def work(pathoutpthis, lock, indxprocwork):
                         for name, valu in gdat.indxchro.iteritems():
                             if valu == k:
                                 print '%s: %.3g msec' % (name, gdatmodi.thischro[k] * 1e3)
+                                if name == 'llik':
+                                    print '%.3g per pixel' % (gdatmodi.thischro[k] * 1e3 / amin(gdat.numbpixlprox))
                    
                     # temp
                     #if not gdat.propwithsing:
