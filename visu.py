@@ -2105,20 +2105,18 @@ def plot_init(gdat):
                 xdat = gdat.binsangl[1:] * gdat.anglfact
                 lablxdat = gdat.lablgangtotl
                 
-                listdeflscal = array([1e-2, 1e-2, 1e-2, 1e-2]) / gdat.anglfact
-                listanglscal = array([0.05, 0.1, 0.05, 0.05]) / gdat.anglfact
-                listanglcutf = array([1.,    1.,  10.,   1.]) / gdat.anglfact
-                listasym = [False, False, False, True]
+                listdeflscal = array([4e-2, 4e-2, 4e-2]) / gdat.anglfact
+                listanglscal = array([0.05, 0.1, 0.05]) / gdat.anglfact
+                listanglcutf = array([1.,    1.,  10.]) / gdat.anglfact
+                listasym = [False, False, False]
                 listydat = []
                 for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
                     listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
                 
-                #listydat.append(xdat * 0. + 1.5)
-                
                 for scalxdat in ['self', 'logt']:
                     path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
                     tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
-                                                                                lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2], limtxdat=[None, 2.])
+                                                                                lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -2145,8 +2143,8 @@ def plot_init(gdat):
                 for k in range(numbreds):
                     gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
                 
-                asca = gdat.ascaglob / gdat.anglfact 
-                acut = gdat.acutglob / gdat.anglfact 
+                asca = 0.1 / gdat.anglfact
+                acut = 1. / gdat.anglfact
     
                 minmmass = zeros((numbreds + 1, numbreds + 1))
                 maxmmass = zeros((numbreds + 1, numbreds + 1))
@@ -2159,17 +2157,15 @@ def plot_init(gdat):
                             factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adishost, adishostsour, asca, acut)
                             minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
                             maxmmass[n, k] = log10(factmcutfromdefs * gdat.maxmdefs)
-                
+               
                 valulevl = linspace(7.5, 9., 10)
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                #imag = axis.imshow(minmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=7, vmax=9)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=10)
-                axis.set_xlabel('$z_{hst}$')
-                axis.set_ylabel('$z_{src}$')
+                axis.clabel(cont, inline=1, fontsize=10, fmt='%.3g')
+                axis.set_xlabel(r'$z_{\rm{hst}}$')
+                axis.set_ylabel(r'$z_{\rm{src}}$')
                 axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
                 path = gdat.pathinitintr + 'massredsminm.pdf'
-                #plt.colorbar(imag) 
                 plt.tight_layout()
                 figr.savefig(path)
                 plt.close(figr)

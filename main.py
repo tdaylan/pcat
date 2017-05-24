@@ -300,7 +300,7 @@ def init( \
     
     if gdat.strgexpo == None:
         if gdat.elemtype == 'lens':
-            gdat.strgexpo = 2.2e3 / gdat.hubbexpofact
+            gdat.strgexpo = 1e3 / gdat.hubbexpofact
         else:
             gdat.strgexpo = 1.
 
@@ -725,7 +725,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 2e-3 / gdat.anglfact
+    minmdefs = 4e-3 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 5e0
@@ -1314,8 +1314,8 @@ def init( \
         if gdat.makeplot and gdat.makeplotinit:
             plot_samp(gdat, None, 'true')
         
-        if gdat.seedstat != None:
-            seed()
+        #if gdat.seedstat != None:
+        #    seed()
    
     if gdat.datatype == 'inpt':
         retr_datatick(gdat)
@@ -1343,6 +1343,12 @@ def init( \
     for args in listargs:
         fileargs.write('%s = %s\n' % (args, listargsvals[args]))
     fileargs.close()
+    
+    # write the numpy RNG state to file
+    with open(gdat.pathoutpthis + 'stat.p', 'wb') as thisfile:
+        print 'get_state()'
+        print get_state()
+    	cPickle.dump(get_state(), thisfile)
     
     # start the timer
     gdat.timerealtotl = time.time()

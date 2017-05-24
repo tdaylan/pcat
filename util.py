@@ -2301,14 +2301,15 @@ def retr_factmcutfromdefs(gdat, adissour, adishost, adishostsour, asca, acut):
     critmden = retr_critmden(gdat, adissour, adishost, adishostsour)
     
     fracacutasca = acut / asca
-    factmcutfromdefs = pi * adishost**2 * critmden * asca / (1. - log(2.)) * retr_mcutfrommscl(fracacutasca)
-        
+    
+    factmcutfromdefs = pi * adishost**2 * critmden * asca * retr_mcutfrommscl(fracacutasca)
+
     return factmcutfromdefs
 
 
 def retr_mcut(gdat, defs, asca, acut):
     
-    mscl = defs * pi * gdat.adishost**2 * gdat.critmden * asca / (1. - log(2.))
+    mscl = defs * pi * gdat.adishost**2 * gdat.critmden * asca
     fracacutasca = acut / asca
     mcut = mscl * retr_mcutfrommscl(fracacutasca)
     
@@ -2513,10 +2514,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablacut = r'\theta_c'
     gdat.lablacutunit = gdat.lablgangunit
     
-    gdat.lablmcut = r'M_{c,a}'
+    gdat.lablmcut = r'M_{c,n}'
     gdat.lablmcutunit = r'$M_{\odot}$'
     
-    gdat.lablmcutcorr = r'\bar{M}_{c,a}'
+    gdat.lablmcutcorr = r'\bar{M}_{c,n}'
     gdat.lablmcutcorrunit = r'$M_{\odot}$'
     
     gdat.lablspec = gdat.lablflux
@@ -2524,17 +2525,17 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablspecplot = gdat.lablflux
     gdat.lablspecplotunit = gdat.lablfluxunit
     gdat.lablcnts = 'C'
-    gdat.labldeltllik = r'\Delta_a \ln \mathcal{L}'
+    gdat.labldeltllik = r'\Delta_n \ln \mathcal{L}'
     gdat.labldiss = r'\theta_{sa}'
     gdat.labldissunit = gdat.lablgangunit
     
-    gdat.lablrele = r'\langle|\vec{\alpha}_a \cdot \vec{\nabla} k_m| \rangle'
+    gdat.lablrele = r'\langle|\vec{\alpha}_n \cdot \vec{\nabla} k_m| \rangle'
     
-    gdat.lablrelc = r'\langle\vec{\alpha}_a \cdot \vec{\nabla} k_m \rangle'
+    gdat.lablrelc = r'\langle\vec{\alpha}_n \cdot \vec{\nabla} k_m \rangle'
     
-    gdat.lablreld = r'\langle|\vec{\alpha}_a \cdot \vec{\nabla} k_d| \rangle'
+    gdat.lablreld = r'\langle|\vec{\alpha}_n \cdot \vec{\nabla} k_d| \rangle'
     
-    gdat.lablreln = r'\langle \Delta \theta_{pix} |\hat{\alpha}_a \cdot \vec{\nabla} k_m| / \alpha_{s,a} \rangle'
+    gdat.lablreln = r'\langle \Delta \theta_{pix} |\hat{\alpha}_n \cdot \vec{\nabla} k_m| / \alpha_{s,n} \rangle'
     
     # define the labels for the selection features
     for namefeat in gdat.listnamefeatsele:
@@ -2805,10 +2806,6 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         gdat.critmden = retr_critmden(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         
-        print 'gdat.critmden'
-        print gdat.critmden
-        print
-
         retr_axis(gdat, 'mcut', gdat.minmmcut, gdat.maxmmcut, gdat.numbbinsplot)
         retr_axis(gdat, 'bein', gdat.minmbein, gdat.maxmbein, gdat.numbbinsplot)
 
@@ -4750,7 +4747,7 @@ def init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=None, indxevttplot=No
     else:
         strgswep = '_swep%09d' % gdatmodi.cntrswep
     
-    nameplot = '%s%s%s%s%s.pdf' % (strgplot, strgener, strgevtt, strgpopl, strgswep)
+    nameplot = '%s%s%s%s%s' % (strgplot, strgener, strgevtt, strgpopl, strgswep)
    
     path = retr_plotpath(gdat, gdatmodi, strg, nameplot)
     
