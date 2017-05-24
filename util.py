@@ -2805,6 +2805,10 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.massfrombein = retr_massfrombein(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         gdat.critmden = retr_critmden(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour)
         
+        print 'gdat.critmden'
+        print gdat.critmden
+        print
+
         retr_axis(gdat, 'mcut', gdat.minmmcut, gdat.maxmmcut, gdat.numbbinsplot)
         retr_axis(gdat, 'bein', gdat.minmbein, gdat.maxmbein, gdat.numbbinsplot)
 
@@ -6401,7 +6405,7 @@ def retr_sersprof(spec, angl, sizehalf, indx=4):
 
     # surface brightness at the half-light radius
     # temp -- this only works for indx == 4!
-    sbrthalf = spec / 7.2 / pi / size**2
+    sbrthalf = spec / 7.2 / pi / sizehalf**2
 
     # surface brightness profile
     sersprof = sbrthalf * exp(-factsers * ((angl / sizehalf)**(1. / indx) - 1.))
