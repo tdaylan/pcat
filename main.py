@@ -809,11 +809,11 @@ def init( \
     setp_namevarblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv')
     
     for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-16]))
+        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-15]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellpsour', [0., 0.1])
     for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-16]))
+        setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-15]))
     setp_namevarblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_namevarblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellphost', [0., 0.1])
@@ -896,8 +896,8 @@ def init( \
             setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
             for i in gdat.indxener:
-                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-19)
-                setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-18)
+                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
+                setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-17)
             setp_namevarbvalu(gdat, 'sanghost', pi / 2.)
    
     if gdat.defa:
@@ -1008,27 +1008,27 @@ def init( \
     
     gdat.minmresideflperc = -100.
     gdat.maxmresideflperc = 100.
-    gdat.scalresideflperc = 'asnh'
+    gdat.scalresideflperc = 'self'
     gdat.cmapresideflperc = 'Oranges'
     
     gdat.minmresiconvelem = -0.1
     gdat.maxmresiconvelem = 0.1
-    gdat.scalresiconvelem = 'asnh'
+    gdat.scalresiconvelem = 'self'
     gdat.cmapresiconvelem = 'PiYG'
     
     gdat.minmresiconvelemperc = -100.
     gdat.maxmresiconvelemperc = 100.
-    gdat.scalresiconvelemperc = 'asnh'
+    gdat.scalresiconvelemperc = 'self'
     gdat.cmapresiconvelemperc = 'PiYG'
     
     gdat.minmresimagn = -10.
     gdat.maxmresimagn = 10.
-    gdat.scalresimagn = 'asnh'
+    gdat.scalresimagn = 'self'
     gdat.cmapresimagn = 'PRGn'
     
     gdat.minmresimagnperc = -100.
     gdat.maxmresimagnperc = 100.
-    gdat.scalresimagnperc = 'asnh'
+    gdat.scalresimagnperc = 'self'
     gdat.cmapresimagnperc = 'PRGn'
     
     gdatdictcopy = deepcopy(gdat.__dict__)

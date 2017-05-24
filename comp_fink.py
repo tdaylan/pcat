@@ -42,10 +42,8 @@ listnameplot = [ \
                ]
 
 listlinegold = [ \
-                '20170512_233907_pcat_lens_mock_syst_0000_1000000', \
-                '20170513_060229_pcat_lens_mock_syst_0001_1000000', \
-                '20170513_125003_pcat_lens_mock_syst_0002_1000000', \
-                '20170513_181822_pcat_lens_mock_syst_0003_1000000', \
+                '20170522_020917_pcat_lens_mock_syst_0001_5000000', \
+                '20170521_232045_pcat_lens_mock_syst_0000_5000000', \
                ]
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
@@ -63,7 +61,7 @@ with open(pathlist) as thisfile:
     listline = [x.strip() for x in listline] 
 
 #strgsrch = '20*'
-strgsrch = '2017051*'
+strgsrch = '2017052*'
 listline = fnmatch.filter(listline, strgsrch)
 
 print 'compfink initialized...'

@@ -2118,7 +2118,7 @@ def plot_init(gdat):
                 for scalxdat in ['self', 'logt']:
                     path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
                     tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
-                                                                                lablydat=r'$\alpha_a$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2], limtxdat=[None, 2.])
+                                                                                lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1e-2], limtxdat=[None, 2.])
                 
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -2178,7 +2178,7 @@ def plot_init(gdat):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=9., vmax=11.)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, maxmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=10)
+                axis.clabel(cont, inline=1, fontsize=10, fmt='%.3g')
                 axis.set_xlabel('$z_{hst}$')
                 axis.set_ylabel('$z_{src}$')
                 axis.set_title(r'$M_{c,max}$ [$M_{\odot}$]')
@@ -2203,7 +2203,7 @@ def plot_init(gdat):
                 fracacutasca = logspace(-1., 2., 20)
                 mcut = 1e8 * retr_mcutfrommscl(fracacutasca)
                 axis.loglog(fracacutasca, mcut)
-                axis.set_xlabel(r'$\tau_a$')
+                axis.set_xlabel(r'$\tau_n$')
                 axis.set_ylabel(gdat.lablmcuttotl)
                 axis.axhline(1e8, ls='--')
                 path = gdat.pathinitintr + 'mcut.pdf'

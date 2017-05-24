@@ -5138,15 +5138,17 @@ def retr_deflcutf(angl, defs, asca, acut, asym=False):
 
     fracanglasca = angl / asca
     
+    deflcutf = defs / fracanglasca
+    
+    # second term in the NFW deflection profile
     fact = ones_like(fracanglasca)
     indxlowr = where(fracanglasca < 1.)[0]
     indxuppr = where(fracanglasca > 1.)[0]
     fact[indxlowr] = arccosh(1. / fracanglasca[indxlowr]) / sqrt(1. - fracanglasca[indxlowr]**2)
     fact[indxuppr] = arccos(1. / fracanglasca[indxuppr]) / sqrt(fracanglasca[indxuppr]**2 - 1.)
     
-    deflcutf = defs / fracanglasca / (1. - log(2.))
     if asym:
-        deflcutf *= fact + log(fracanglasca / 2.)
+        deflcutf *= log(fracanglasca / 2.) + fact
     else:
         fracacutasca = acut / asca
         factcutf = fracacutasca**2 / (fracacutasca**2 + 1)**2 * ((fracacutasca**2 + 1. + 2. * (fracanglasca**2 - 1.)) * fact + \
@@ -5201,8 +5203,8 @@ def retr_defl_jitt(indxpixl, lgalgrid, bgalgrid, lgal, bgal, bein, ellp, angl, r
         axisrati = 1. - ellp
         facteccc = sqrt(1. - axisrati**2)
         factrcor = sqrt(axisrati**2 * lgalrttr**2 + bgalrttr**2)
-        defllgalrttr = bein / facteccc *  arctan(facteccc * lgalrttr / factrcor)
-        deflbgalrttr = bein / facteccc * arctanh(facteccc * bgalrttr / factrcor)
+        defllgalrttr = bein * axisrati / facteccc *  arctan(facteccc * lgalrttr / factrcor)
+        deflbgalrttr = bein * axisrati / facteccc * arctanh(facteccc * bgalrttr / factrcor)
         
         # totate back vector to original basis
         defllgal = cos(angl) * defllgalrttr + sin(angl) * deflbgalrttr
@@ -6392,9 +6394,17 @@ def retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl):
     return mapssers
 
 
-def retr_sersprof(spec, angl, size, indx=4):
+def retr_sersprof(spec, angl, sizehalf, indx=4):
    
-    sersprof = spec / pi / size**2 * exp(-(1.992 * indx - 0.3271) * ((angl / size)**(1. / indx) - 1.))
+    # this approximation works for 0.5  < indx < 10
+    factsers = 1.9992 * indx - 0.3271
+
+    # surface brightness at the half-light radius
+    # temp -- this only works for indx == 4!
+    sbrthalf = spec / 7.2 / pi / size**2
+
+    # surface brightness profile
+    sersprof = sbrthalf * exp(-factsers * ((angl / sizehalf)**(1. / indx) - 1.))
      
     return sersprof
 
