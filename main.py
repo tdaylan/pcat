@@ -832,7 +832,7 @@ def init( \
     gdat.trueminmaang = -pi
     gdat.truemaxmaang = pi
    
-    setp_namevarbvalu(gdat, 'scalmeanpnts', 'logt')
+    setp_namevarbvalu(gdat, 'scalmeanpnts', 'self')
 
     # copy the true model to the inference model if the inference model parameter has not been specified
     temp = deepcopy(gdat.__dict__)
