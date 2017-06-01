@@ -217,7 +217,7 @@ def init( \
     
     ## number of sweeps between frame plots
     if gdat.numbswepplot == None:
-        gdat.numbswepplot = max(gdat.numbswep / 10, 100000)
+        gdat.numbswepplot = max(gdat.numbswep / 20, 100000)
 
     ## number of processes
     gdat.strgproc = os.uname()[1]
@@ -229,7 +229,7 @@ def init( \
     
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(1e-3 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(1e-2 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
     if gdat.verbtype > 0:
         print 'PCAT v0.1 started at %s' % gdat.strgtimestmp
