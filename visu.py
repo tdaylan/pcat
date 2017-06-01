@@ -594,7 +594,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
         mlik = getattr(gdat, 'mlik' + name) * factplot
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
-        
+       
+        # temp
+        if gdat.strgcnfg.startswith('pcat_tgas'):
+            continue
+
         for nameseco in gdat.listnamevarbscal:
             pathjoin = path + name + nameseco
             scalseco = getattr(gdat, 'scal' + nameseco) 

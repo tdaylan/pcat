@@ -1726,8 +1726,9 @@ def proc_post(gdat, prio=False):
     ## other parameters
     print 'gdat.liststrgvarbarryflat'
     print gdat.liststrgvarbarryflat
-    print 'gdat.listcmplpop0'
-    summgene(gdat.listcmplpop0)
+    if gdat.exprinfo:
+        print 'gdat.listcmplpop0'
+        summgene(gdat.listcmplpop0)
     for strg in gdat.liststrgvarbarryflat:
         print 'strg'
         print strg
@@ -1735,16 +1736,16 @@ def proc_post(gdat, prio=False):
         if inpt.shape[2:] == 1:
             shap = [inpt.shape[0] * inpt.shape[1]]
         else:
-            #shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
-            shap = [inpt.shape[0] * inpt.shape[1], inpt.shape[2:]]
+            shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
         print 'liststrg'
         summgene(getattr(gdat, 'list' + strg))
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
         print 'liststrg'
         summgene(getattr(gdat, 'list' + strg))
         print
-    print 'gdat.listcmplpop0'
-    summgene(gdat.listcmplpop0)
+    if gdat.exprinfo:
+        print 'gdat.listcmplpop0'
+        summgene(gdat.listcmplpop0)
     print
 
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
