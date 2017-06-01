@@ -53,7 +53,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 if gdat.elemtype == 'lght':
                     plot_brgt(gdat, gdatmodi, strg)
         
-            # completeness
+            # completeness and false discovery rate
             if strg != 'true':
                 for strgclas in ['cmpl', 'fdis']:   
                     nameinte = strgclas + '/'
@@ -64,6 +64,12 @@ def plot_samp(gdat, gdatmodi, strg):
                         for strgfeat in gdat.trueliststrgfeatodim[l]:
                             if strgfeat in gdat.fittliststrgfeatodim[l]:
                                 if not (gdat.datatype == 'inpt' and getattr(gdat, 'expr' + strgfeat) == None):
+                                    print 'strgfeat'
+                                    print strgfeat
+                                    print 'getattr(gdat, expr + strgfeat)'
+                                    print getattr(gdat, 'expr' + strgfeat)
+                                    print
+
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
@@ -576,19 +582,44 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     ### trace and marginal distribution of each parameter
     for name in gdat.listnamevarbscal:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + name
-        corr = getattr(gdat, 'corr' + name)
         scal = getattr(gdat, 'scal' + name) 
         factplot = getattr(gdat, 'fact' + name + 'plot')
+        corr = getattr(gdat, 'corr' + name)
         if corr == None:
             truepara = None
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
-        
         labltotl = getattr(gdat, 'labl' + name + 'totl')
         listvarb = getattr(gdat, 'list' + name) * factplot
         mlik = getattr(gdat, 'mlik' + name) * factplot
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
+        
+        for nameseco in gdat.listnamevarbscal:
+            pathjoin = path + name + nameseco
+            scalseco = getattr(gdat, 'scal' + nameseco) 
+            factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')
+            corrseco = getattr(gdat, 'corr' + nameseco)
+            if corrseco == None:
+                trueparaseco = None
+            else:
+                trueparaseco = getattr(gdat, 'corr' + nameseco) * factplotseco
+            labltotlseco = getattr(gdat, 'labl' + nameseco + 'totl')
+            listvarbseco = getattr(gdat, 'list' + nameseco) * factplotseco
+            mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
+            
+            print 'name'
+            print name
+            print 'nameseco'
+            print nameseco
+            print 'listvarb'
+            summgene(listvarb)
+            print 'listvarbseco'
+            summgene(listvarbseco)
+            print
+            listjoin = vstack((listvarb, listvarbseco)).T
+            tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
+                                                                                                                                  join=True, varbdraw=[mlik, mlikseco])
         
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
@@ -656,7 +687,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
                 indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixptotl[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
-    
+        
+        
     if gdat.verbtype > 0:
         print 'Transdimensional parameters...'
     

@@ -254,10 +254,12 @@ def init( \
         gdat.namefeatsign = 'nobj'
     
     # feature used to model the amplitude of elements
-    if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
+    if gdat.elemtype == 'lght':
         gdat.namecompampl = gdat.namefeatsign
     if gdat.elemtype == 'lens':
         gdat.namecompampl = 'defs'
+    if gdat.elemtype == 'clus':
+        gdat.namecompampl = gdat.namefeatsign
     gdat.fittindxcompampl = 2
 
     # defaults
@@ -328,6 +330,8 @@ def init( \
             gdat.listnamefeatsele = ['flux']
         if gdat.elemtype == 'lens':
             gdat.listnamefeatsele = ['defs', 'mcut', 'rele']
+        if gdat.elemtype == 'clus':
+            gdat.listnamefeatsele = ['nobj']
     
     if gdat.proplenp == None:
         if gdat.elemtype == 'lens':
@@ -425,6 +429,8 @@ def init( \
         gdat.listnamesele = ['pars']
     if gdat.elemtype == 'lens':
         gdat.listnamesele = ['pars', 'nrel']
+    if gdat.elemtype == 'clus':
+        gdat.listnamesele = ['pars']
 
     ## Lensing
     if gdat.anglassc == None:
@@ -552,9 +558,11 @@ def init( \
 
     ## generative model
     # set mock sample vector indices
+    if gdat.elemtype == 'lght':
+        numbpnts = array([100])
     if gdat.elemtype == 'lens':
         numbpnts = array([20])
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'clus':
         numbpnts = array([100])
     setp_namevarbvalu(gdat, 'numbpnts', numbpnts)
     gdat.truenumbpopl = gdat.truenumbpnts.size
@@ -597,11 +605,12 @@ def init( \
 
     ### background
     #### template
-    if gdat.exprtype == 'ferm':
-        back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-    elif gdat.exprtype == 'chan':
-        back = [array([1.3e1, 4.]), 1e1]
-    else:
+    if gdat.elemtype == 'lght':
+        if gdat.exprtype == 'ferm':
+            back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+        if gdat.exprtype == 'chan':
+            back = [array([1.3e1, 4.]), 1e1]
+    if gdat.elemtype == 'lens':
         back = [1.]
     if gdat.elemtype == 'clus':
         back = [1.]
@@ -706,6 +715,8 @@ def init( \
         meanpnts = [0.1, 1000.]
     if gdat.elemtype == 'lens':
         meanpnts = [0.1, 100.]
+    if gdat.elemtype == 'clus':
+        meanpnts = [0.1, 100.]
     setp_namevarblimt(gdat, 'meanpnts', meanpnts, popl=True)
     
     ### element parameter boundaries
@@ -779,6 +790,8 @@ def init( \
         setp_namevarblimt(gdat, 'sinddiststdv', [0.3, 2.], popl=True)
         setp_namevarblimt(gdat, 'curvdistmean', [-1., 1.], popl=True)
         setp_namevarblimt(gdat, 'curvdiststdv', [0.1, 1.], popl=True)
+        gdat.trueminmexpo = 0.5
+        gdat.truemaxmexpo = 10.
         setp_namevarblimt(gdat, 'expodistmean', [1., 8.], popl=True)
         setp_namevarblimt(gdat, 'expodiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl=True)
     
@@ -864,7 +877,7 @@ def init( \
         if gdat.elemtype == 'lens':
             setp_namevarbvalu(gdat, 'defsdistslop', 1.9, popl=True)
         if gdat.elemtype == 'clus':
-            setp_namevarbvalu(gdat, 'nobjdistslop', 1.9, popl=True)
+            setp_namevarbvalu(gdat, 'nobjdistslop', 2., popl=True)
 
         setp_namevarbvalu(gdat, 'ascadistmean', 0.05 / gdat.anglfact, popl=True)
         setp_namevarbvalu(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=True)
@@ -1105,53 +1118,84 @@ def init( \
     
     gdat.trueinfo = gdat.exprinfo or gdat.datatype == 'mock'
 
-    # rotate element coordinates to the ROI center
+    # external catalog
+    ## ensure that all experimental element features are defined, at least with a None
+    for strgfeat in gdat.fittliststrgfeattotl:
+        try:
+            exprfeat = getattr(gdat, 'expr' + strgfeat)
+        except:
+            exprfeat = None
+        setattr(gdat, 'expr' + strgfeat, exprfeat)
+    
+    ## rotate element coordinates to the ROI center
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
         rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='ZYX')
         gdat.exprbgal[0, :], gdat.exprlgal[0, :] = rttr(pi / 2. - gdat.exprbgal[0, :], gdat.exprlgal[0, :])
         gdat.exprbgal[0, :] = pi / 2. - gdat.exprbgal[0, :]
 
-    # external reference catalog
-    if gdat.exprinfo:
-        
-        # find entries inside the ROI
-        gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal) < gdat.maxmgangdata) & (fabs(gdat.exprbgal) < gdat.maxmgangdata))[0]
-
-        for strgfeat in gdat.fittliststrgfeattotl:
-            try:
-                feat = getattr(gdat, 'expr' + strgfeat)
-            except:
-                feat = None
-            
-            setattr(gdat, 'expr' + strgfeat + 'totl', feat)
-            if feat == None:
-                setattr(gdat, 'expr' + strgfeat, None)
-            else:
-                setattr(gdat, 'expr' + strgfeat, feat[..., gdat.indxexprpntsrofi])
-        
-        gdat.exprnumbpnts = gdat.exprlgal.size
-        # reorder elements with respect to flux
-        indxpnts = argsort(gdat.exprspec[0, gdat.indxenerfluxdist[0], :])[::-1]
-        
-        gdat.exprflux = gdat.exprspec[:, gdat.indxenerfluxdist[0], :]
-        
-        gdat.exprlgal = gdat.exprlgal[:, indxpnts]
-        gdat.exprbgal = gdat.exprbgal[:, indxpnts]
-        for k in range(3):
-            gdat.exprspec[k, :, :] = gdat.exprspec[k, :, indxpnts].T
-        gdat.exprflux = gdat.exprflux[:, indxpnts]
-        if gdat.numbener > 1:
-            gdat.exprsind = gdat.exprsind[:, indxpnts]
-
+    ## preprocess experimental element features
+    if gdat.exprlgal != None and gdat.exprbgal != None:
         gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
+    if gdat.elemtype == 'lght':
+        if gdat.exprspec != None:
+            gdat.exprflux = gdat.exprspec[:, gdat.indxenerfluxdist[0], :]
+    
+    ## check that all experimental element features are finite
+    for strgfeat in gdat.fittliststrgfeattotl:
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        if exprfeat != None:
+            if not isfinite(exprfeat).all():
+                raise Exception('Provided experimental catalog is not finite.')
         
-        if not isfinite(gdat.exprspec).all():
-            raise Exception('exprspec is not finite.')
+    ## element feature indices ordered with respect to the amplitude variable
+    exprfeatampl = getattr(gdat, 'expr' + gdat.namecompampl)
+    indxpnts = argsort(exprfeatampl)[::-1]
+    for strgfeat in gdat.fittliststrgfeattotl:
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        if exprfeat != None:
+            exprfeat = exprfeat[..., indxpnts]
+            setattr(gdat, 'expr' + strgfeat, exprfeat)
+            
+    ## define the experimental element features inside the ROI
+    ### save the total experimental element features
+    for strgfeat in gdat.fittliststrgfeattotl:
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        setattr(gdat, 'expr' + strgfeat + 'totl', exprfeat)
+    
+    if gdat.exprlgal != None and gdat.exprbgal != None:
+        gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal[0, :]) < gdat.maxmgangdata) & (fabs(gdat.exprbgal[0, :]) < gdat.maxmgangdata))[0]
+        for strgfeat in gdat.fittliststrgfeattotl:
+            exprfeat = getattr(gdat, 'expr' + strgfeat)
+            if exprfeat != None:
+                setattr(gdat, 'expr' + strgfeat, exprfeat[..., gdat.indxexprpntsrofi])
         
-        # temp
-        #if gdat.exprnumbpnts > 0:
-        #    gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
+    ## put the experimental element features in population lists
+    for strgfeat in gdat.fittliststrgfeattotl:
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        if exprfeat != None:
+            setattr(gdat, 'expr' + strgfeat, [exprfeat])
+            exprfeattotl = getattr(gdat, 'expr' + strgfeat + 'totl')
+            setattr(gdat, 'expr' + strgfeat + 'totl', [exprfeattotl])
+    
+        print 'exprfeat'
+        print exprfeat
+        print
+
+
+    ## number of experimental elements
+    gdat.exprinfo = False
+    for strgfeat in gdat.fittliststrgfeattotl:
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        if exprfeat != None:    
+            gdat.exprinfo = True
+    
+    if gdat.exprlgal != None:
+        gdat.truenumbpnts = gdat.exprlgal.size
+    
+    # temp
+    #if gdat.exprnumbpnts > 0:
+    #    gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
 
     # local kernel evaluation plot
     if gdat.makeplot:
@@ -1175,21 +1219,6 @@ def init( \
                 for l in gdat.trueindxpopl:
                     gdat.truenumbpnts[l] = random_integers(0, gdat.maxmnumbpnts[l])
     
-    else:
-        if gdat.exprinfo:
-            gdat.truelgal = [gdat.exprlgal]
-            gdat.truebgal = [gdat.exprbgal]
-            gdat.truenumbpnts = array([gdat.exprlgal.shape[1]])
-            gdat.trueflux = [gdat.exprflux]
-            gdat.truespec = [gdat.exprspec]
-            gdat.truesind = [gdat.exprsind]
-    
-            gdat.trueminmflux = amin(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
-            gdat.truemaxmflux = amax(gdat.truespec[0][0, gdat.indxenerfluxdist[0], :])
-            for l in gdat.trueindxpopl: 
-                gdat.trueminmflux = min(gdat.trueminmflux, amin(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
-                gdat.truemaxmflux = max(gdat.truemaxmflux, amax(gdat.truespec[l][0, gdat.indxenerfluxdist[0], :]))
-            
     gdat.truenumbpopl = gdat.truenumbpnts.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
@@ -1201,13 +1230,24 @@ def init( \
     gdat.truefixp = zeros(gdat.truenumbfixp) + nan
     if gdat.truenumbtrap > 0:
         gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
-   
+  
+    # bin experimental element features
     for strgfeat in gdat.fittliststrgfeattotl:
-        try:
-            hist = histogram(getattr(gdat, 'expr' + strgfeat), getattr(gdat, 'bins' + strgfeat + 'plot'))[0]
-            setattr(gdat, 'expr' + strgfeat + 'hist', hist)
-        except:
-            pass
+        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        # temp -- this takes all reference elements inside the ROI
+        if exprfeat != None: 
+            hist = empty((1, gdat.numbbinsplot))
+            hist[0, :] = histogram(exprfeat[0], getattr(gdat, 'bins' + strgfeat))[0]
+        else:
+            hist = None
+        setattr(gdat, 'exprhist' + strgfeat, hist)
+    
+    if gdat.datatype == 'inpt':
+        for strgfeat in gdat.fittliststrgfeattotl:
+            exprfeat = getattr(gdat, 'expr' + strgfeat)
+            exprfeathist = getattr(gdat, 'exprhist' + strgfeat)
+            setattr(gdat, 'true' + strgfeat, exprfeat)
+            setattr(gdat, 'truehist' + strgfeat, exprfeathist)
 
     if gdat.datatype == 'mock':
         
@@ -1346,8 +1386,6 @@ def init( \
     
     # write the numpy RNG state to file
     with open(gdat.pathoutpthis + 'stat.p', 'wb') as thisfile:
-        print 'get_state()'
-        print get_state()
     	cPickle.dump(get_state(), thisfile)
     
     # start the timer
@@ -1670,7 +1708,6 @@ def proc_post(gdat, prio=False):
     ## element indices
     for strgvarb in gdat.liststrgvarblistsamp:
         setattr(gdat, 'list' + strgvarb, [])
-
     # temp
     for strgvarb in gdat.liststrgvarblistsamp:
         listtemp = []
@@ -1687,11 +1724,29 @@ def proc_post(gdat, prio=False):
     gdat.listsampvarbproc = copy(gdat.listsampvarb)
 
     ## other parameters
+    print 'gdat.liststrgvarbarryflat'
+    print gdat.liststrgvarbarryflat
+    print 'gdat.listcmplpop0'
+    summgene(gdat.listcmplpop0)
     for strg in gdat.liststrgvarbarryflat:
+        print 'strg'
+        print strg
         inpt = getattr(gdat, 'list' + strg)
-        shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
+        if inpt.shape[2:] == 1:
+            shap = [inpt.shape[0] * inpt.shape[1]]
+        else:
+            #shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
+            shap = [inpt.shape[0] * inpt.shape[1], inpt.shape[2:]]
+        print 'liststrg'
+        summgene(getattr(gdat, 'list' + strg))
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
-    
+        print 'liststrg'
+        summgene(getattr(gdat, 'list' + strg))
+        print
+    print 'gdat.listcmplpop0'
+    summgene(gdat.listcmplpop0)
+    print
+
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
     gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
@@ -1750,6 +1805,13 @@ def proc_post(gdat, prio=False):
     gdat.listfixp = gdat.listsampvarb[:, gdat.fittindxfixp]
     for k, namefixp in enumerate(gdat.fittnamefixp):
         setattr(gdat, 'list' + namefixp, gdat.listfixp[:, k])
+    
+    print 'gdat.listsampvarb'
+    summgene(gdat.listsampvarb)
+    print 'gdat.listfixp'
+    summgene(gdat.listfixp)
+    print 'gdat.listnumbpntspop0'
+    summgene(gdat.listnumbpntspop0)
     
     if gdat.checprio:
         for namevarbscal in gdat.listnamevarbscal:
@@ -2630,7 +2692,17 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
-            
+                
+                # temp
+                if gdat.strgcnfg == 'pcat_chan_mock' and strgvarb == 'cmplpop0':
+                    print 'fillinf the sample list'
+                    print 'strgvarb'
+                    print strgvarb
+                    print 'workdict[list + strgvarb]'
+                    print workdict['list' + strgvarb]
+                    summgene(workdict['list' + strgvarb])
+                    print 
+    
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
                  
