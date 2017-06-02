@@ -294,6 +294,10 @@ def plot_samp(gdat, gdatmodi, strg):
                         plot_genemaps(gdat, gdatmodi, strg, 'lpdfspatpriointp', tdim=True)
     
         if gdat.elemtype == 'lens':
+            if strgmodl == 'true':
+                for i in gdat.indxener:
+                    plot_genemaps(gdat, gdatmodi, strg, 's2nr', thisindxener=i)
+                
             plot_genemaps(gdat, gdatmodi, strg, 'magn', tdim=True)
             plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
             if numbtrap > 0:
@@ -351,12 +355,11 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resimagnperc', tdim=True)
     
 
-def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, prio=False):
+def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     
     if writ:
         gdat = tdpy.util.gdatstrt()
         gdat.verbtype = verbtype
-        gdat.makeanim = makeanim
 
         if gdat.verbtype > 0:
             print 'Reading %s...' % pathpcat
@@ -780,7 +783,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, makeanim=False, writ=True, p
     plt.close(figr)
 
     # animate the frame plots
-    if False and gdat.makeanim:
+    if gdat.makeanim:
         make_anim(gdat)
 
     timetotlfinl = gdat.functime()

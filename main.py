@@ -84,7 +84,7 @@ def init( \
          
          lgalprio=None, \
          bgalprio=None, \
-
+         minmdatacnts=None, \
          strgexpo=None, \
          
          numbproc=None, \
@@ -108,7 +108,7 @@ def init( \
          numbframpost=None, \
          makeplotintr=False, \
          scalmaps='asnh', \
-         makeanim=True, \
+         makeanim=False, \
          strgenerfull=None, \
          strgexprname=None, \
          strganglunit=None, \
@@ -229,14 +229,24 @@ def init( \
     
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(1e-2 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(2e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+    
+    # samples to be saved
+    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    gdat.indxsamp = arange(gdat.numbsamp)
+    
+    # samples to be saved from all chains
+    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
+    gdat.indxsamptotl = arange(gdat.numbsamptotl)
+    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
     
     if gdat.verbtype > 0:
         print 'PCAT v0.1 started at %s' % gdat.strgtimestmp
         print 'Configuration %s' % gdat.strgcnfg
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
-
+        print 'The resulting chain will contain %d samples per chain and %d samples in total.' % (gdat.numbsamp, gdat.numbsamptotl)
+    
     # feature to be used to sort elements
     if gdat.elemtype == 'lght':
         gdat.namefeatsort = 'flux'
@@ -739,7 +749,7 @@ def init( \
     minmdefs = 4e-3 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
-    minmnobj = 5e0
+    minmnobj = 1e1
     setp_namevarbvalu(gdat, 'minmnobj', minmnobj)
     
     setp_namevarblimt(gdat, 'curv', [-1., 1.])
@@ -753,7 +763,7 @@ def init( \
             maxmflux = 100.
         setp_namevarbvalu(gdat, 'maxmflux', maxmflux)
     
-    maxmnobj = 5e2
+    maxmnobj = 1e3
     setp_namevarbvalu(gdat, 'maxmnobj', maxmnobj)
     
     maxmdefs = 2e-2 / gdat.anglfact
@@ -1014,6 +1024,11 @@ def init( \
     gdat.scalconvelem = 'logt'
     gdat.cmapconvelem = 'Purples'
     
+    gdat.minms2nr = 0.
+    gdat.maxms2nr = 10.
+    gdat.scals2nr = 'asnh'
+    gdat.cmaps2nr = 'magma'
+    
     gdat.minmmagn = -1e2
     gdat.maxmmagn = 1e2
     gdat.scalmagn = 'asnh'
@@ -1191,7 +1206,7 @@ def init( \
             gdat.exprinfo = True
     
     if gdat.exprlgal != None:
-        gdat.truenumbpnts = gdat.exprlgal.size
+        gdat.truenumbpnts = array([gdat.exprlgal[0].size])
     
     # temp
     #if gdat.exprnumbpnts > 0:
@@ -1971,7 +1986,7 @@ def proc_post(gdat, prio=False):
     # temp
     if False:
         if gdat.makeplot:
-            plot_post(pathcatl=pathcatl, verbtype=gdat.verbtype, makeanim=gdat.makeanim, prio=prio)
+            plot_post(pathcatl=pathcatl, verbtype=gdat.verbtype, prio=prio)
     else:
         if gdat.makeplot:
             plot_post(gdat=gdat, writ=False, prio=prio)

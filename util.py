@@ -2335,15 +2335,6 @@ def setpinit(gdat, boolinitsetp=False):
         cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
         cliblens.retr_deflsubh()
 
-    # samples to be saved
-    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
-    gdat.indxsamp = arange(gdat.numbsamp)
-    
-    # samples to be saved from all chains
-    gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
-    gdat.indxsamptotl = arange(gdat.numbsamptotl)
-    gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
-    
     # run tag
     gdat.rtag = retr_rtag(gdat)
     
@@ -3413,7 +3404,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
             gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
         if gdat.exprtype == 'sdyn':
-            gdat.stdvstdp = 1e-3 + zeros(gdat.numbstdp)
+            gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
 
     ## input data
     if gdat.datatype == 'inpt':
@@ -3731,7 +3722,8 @@ def retr_datatick(gdat):
 
     # data count limits
     gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2))
-    gdat.minmdatacnts = 0.01 * gdat.maxmdatacnts
+    if gdat.minmdatacnts == None:
+        gdat.minmdatacnts = 0.01 * gdat.maxmdatacnts
     gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
     gdat.minmresicnts = -gdat.maxmresicnts
 
@@ -4913,8 +4905,10 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     print 'lgal'
                     summgene(lgal)
                     print 'gdat.truelgal'
-                    print gdat.truelgal
+                    summgene(gdat.truelgal[0])
                     print
+                    print
+
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
                                                                                                                                 marker='s', linewidth=2, color='g')
                     
@@ -5623,7 +5617,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             # total emission
             backfluxcart = getattr(gdat, strgmodl + 'backfluxcart')
             modlfluxuncv = lensflux + bacp * backfluxcart[0] + hostfluxmaps
-            
+           
             # convolve the lensed image with the PSF
             # temp
             # modlflux = modlfluxuncv.reshape((gdat.numbener, gdat.numbpixl, 1))
@@ -5799,6 +5793,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             setattr(gdatobjt, strg + 'lenscnts', lenscnts)
             setattr(gdatobjt, strg + 'hostcntsmaps', hostcntsmaps)
 
+            if strgmodl == 'true':
+                s2nr = lenscnts.reshape((gdat.numbener, gdat.numbpixl, gdat.numbener)) / sqrt(modlcnts)
+                setattr(gdatobjt, strg + 's2nr', s2nr)
+            
             masshostbein = array([gdat.massfrombein * beinhost**2])
             setattr(gdatobjt, strg + 'masshostbein', masshostbein)
             if numbtrap > 0:
@@ -6360,17 +6358,19 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         errrcmplfeat = None
                     setattr(gdatobjt, strg + 'cmpl' + strgfeat, cmplfeat)
                     setattr(gdatobjt, strg + 'errrcmpl' + strgfeat, errrcmplfeat)
-                    
-                    print 'Calculating completeness'
-                    print 'strgfeat'
-                    print strgfeat
-                    print 'getattr(gdat, true + strgfeat)'
-                    print getattr(gdat, 'true' + strgfeat)
-                    print 'cmplfeat'
-                    print cmplfeat
-                    print 'errrcmplfeat'
-                    print errrcmplfeat
-                    print 
+                   
+                    # temp
+                    if gdat.strgcnfg != 'pcat_tgas_mock':
+                        print 'Calculating completeness'
+                        print 'strgfeat'
+                        print strgfeat
+                        print 'getattr(gdat, true + strgfeat)'
+                        print getattr(gdat, 'true' + strgfeat)
+                        print 'cmplfeat'
+                        print cmplfeat
+                        print 'errrcmplfeat'
+                        print errrcmplfeat
+                        print 
 
                 # false discovery rate
                 for strgfeat in liststrgfeatodimtotl:
