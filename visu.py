@@ -619,12 +619,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
             print name
             print 'nameseco'
             print nameseco
-            print 'listvarb'
-            summgene(listvarb)
-            print 'listvarbseco'
-            summgene(listvarbseco)
-            print
             listjoin = vstack((listvarb, listvarbseco)).T
+            print '[truepara, trueparaseco]'
+            print [truepara, trueparaseco]
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
         

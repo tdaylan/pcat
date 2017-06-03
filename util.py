@@ -1005,7 +1005,13 @@ def retr_fermdata(gdat):
     gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
     gdat.exprcurv = fgl3['beta']
     gdat.exprexpo = fgl3['Cutoff'] * 1e-3
-   
+    
+    print 'gdat.exprexpo'
+    print gdat.exprexpo
+    print 'gdat.exprcurv'
+    print gdat.exprcurv
+    gdat.exprexpo[where(logical_not(isfinite(gdat.exprexpo)))] = 0.
+
     indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0, gdat.indxenerfluxdist[0], :] > gdat.minmflux))[0]
     
     #indxtimevari = where(gdat.exprspec[0, gdat.indxenerfluxdist[0], :] > gdat.minmflux)[0]
@@ -6023,14 +6029,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 
             # temp
             if strgmodl == 'true' and gdat.verbtype > 0:
-                for strgfeat in liststrgfeattotl:
-                    minm = getattr(gdat, 'minm' + strgfeat)
-                    maxm = getattr(gdat, 'maxm' + strgfeat)
-                    if strgfeat == 'gang':
-                        minm *= gdat.anglfact
-                        maxm *= gdat.anglfact
-                        dicttemp[strgfeat][l] *= gdat.anglfact
-                    for l in indxpopl:
+                for l in indxpopl:
+                    for strgfeat in liststrgfeat[l]:
+                        minm = getattr(gdat, 'minm' + strgfeat)
+                        maxm = getattr(gdat, 'maxm' + strgfeat)
                         if where(minm > dicttemp[strgfeat][l])[0].size > 0 or where(maxm < dicttemp[strgfeat][l])[0].size > 0:
                             print 'Warning: element feature outside the plot limits.'
                             print 'Feature: '
@@ -6341,15 +6343,20 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 for strgfeat in liststrgfeatodimtotl:
                     truefeat = getattr(gdat, 'true' + strgfeat)
                     if truefeat != None:
-                        print 'truefeat'
-                        print truefeat
                         truehistfeat = getattr(gdat, 'truehist' + strgfeat)
                         cmplfeat = empty((gdat.truenumbpopl, gdat.numbbinsplot))
                         errrcmplfeat = empty((2, gdat.truenumbpopl, gdat.numbbinsplot))
                         for l in gdat.trueindxpopl:
                             indx = where(isfinite(featassc[strgfeat][l]))[0]
                             bins = getattr(gdat, 'bins' + strgfeat)
-                            histfeatassc = histogram(truefeat[l][0, trueindxpntsasschits], bins=bins)[0]
+                            print 'strgfeat'
+                            print strgfeat
+                            print 'truefeat[l]'
+                            print truefeat[l]
+                            print 'trueindxpntsasschits'
+                            print trueindxpntsasschits
+
+                            histfeatassc = histogram(truefeat[l][0, trueindxpntsasschits[l]], bins=bins)[0]
                             if truehistfeat != None:
                                 cmplfeat[l, :] = histfeatassc / truehistfeat[l, :]
                                 errrcmplfeat[:, l, :] = (cmplfeat[l, :] / sqrt(maximum(ones(gdat.numbbinsplot), truehistfeat[l, :])))[None, :]
@@ -6359,19 +6366,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     setattr(gdatobjt, strg + 'cmpl' + strgfeat, cmplfeat)
                     setattr(gdatobjt, strg + 'errrcmpl' + strgfeat, errrcmplfeat)
                    
-                    # temp
-                    if gdat.strgcnfg != 'pcat_tgas_mock':
-                        print 'Calculating completeness'
-                        print 'strgfeat'
-                        print strgfeat
-                        print 'getattr(gdat, true + strgfeat)'
-                        print getattr(gdat, 'true' + strgfeat)
-                        print 'cmplfeat'
-                        print cmplfeat
-                        print 'errrcmplfeat'
-                        print errrcmplfeat
-                        print 
-
                 # false discovery rate
                 for strgfeat in liststrgfeatodimtotl:
                     fdisfeat = empty((gdat.fittnumbpopl, gdat.numbbinsplot))

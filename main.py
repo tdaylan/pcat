@@ -1205,7 +1205,7 @@ def init( \
         if exprfeat != None:    
             gdat.exprinfo = True
     
-    if gdat.exprlgal != None:
+    if gdat.exprlgal != None and gdat.datatype == 'inpt':
         gdat.truenumbpnts = array([gdat.exprlgal[0].size])
     
     # temp
@@ -1263,6 +1263,11 @@ def init( \
             exprfeathist = getattr(gdat, 'exprhist' + strgfeat)
             setattr(gdat, 'true' + strgfeat, exprfeat)
             setattr(gdat, 'truehist' + strgfeat, exprfeathist)
+    
+    print 'gdat.exprlgal'
+    print gdat.exprlgal
+    print 'gdat.truelgal'
+    print gdat.truelgal
 
     if gdat.datatype == 'mock':
         
@@ -1319,6 +1324,8 @@ def init( \
                     gdat.truesamp[gdat.trueindxsampcomp['comp'][l]] = rand(gdat.trueindxsampcomp['comp'][l].size)
    
             # sample element components from the true metamodel
+            print 'gdat.truenumbpnts'
+            print gdat.truenumbpnts
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
     if gdat.truelgalimps != None:
@@ -1745,23 +1752,34 @@ def proc_post(gdat, prio=False):
         print 'gdat.listcmplpop0'
         summgene(gdat.listcmplpop0)
     for strg in gdat.liststrgvarbarryflat:
+        
+        inpt = getattr(gdat, 'list' + strg)
+        
         print 'strg'
         print strg
-        inpt = getattr(gdat, 'list' + strg)
-        if inpt.shape[2:] == 1:
+        print 'inpt'
+        summgene(inpt)
+        print 'inpt.shape'
+        print inpt.shape
+        print 'inpt.shape[2:]'
+        print inpt.shape[2:]
+        print
+
+        if inpt.shape[2:] == (1,):
             shap = [inpt.shape[0] * inpt.shape[1]]
         else:
             shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
+        
+        print 'shap'
+        print shap
         print 'liststrg'
         summgene(getattr(gdat, 'list' + strg))
+        
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
+        
         print 'liststrg'
         summgene(getattr(gdat, 'list' + strg))
         print
-    if gdat.exprinfo:
-        print 'gdat.listcmplpop0'
-        summgene(gdat.listcmplpop0)
-    print
 
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
