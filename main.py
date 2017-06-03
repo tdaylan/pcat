@@ -1165,7 +1165,7 @@ def init( \
         
     ## element feature indices ordered with respect to the amplitude variable
     exprfeatampl = getattr(gdat, 'expr' + gdat.namecompampl)
-    indxpnts = argsort(exprfeatampl)[::-1]
+    indxpnts = argsort(exprfeatampl[0, :])[::-1]
     for strgfeat in gdat.fittliststrgfeattotl:
         exprfeat = getattr(gdat, 'expr' + strgfeat)
         if exprfeat != None:
@@ -1185,6 +1185,7 @@ def init( \
             if exprfeat != None:
                 setattr(gdat, 'expr' + strgfeat, exprfeat[..., gdat.indxexprpntsrofi])
         
+    
     ## put the experimental element features in population lists
     for strgfeat in gdat.fittliststrgfeattotl:
         exprfeat = getattr(gdat, 'expr' + strgfeat)
@@ -1193,11 +1194,6 @@ def init( \
             exprfeattotl = getattr(gdat, 'expr' + strgfeat + 'totl')
             setattr(gdat, 'expr' + strgfeat + 'totl', [exprfeattotl])
     
-        print 'exprfeat'
-        print exprfeat
-        print
-
-
     ## number of experimental elements
     gdat.exprinfo = False
     for strgfeat in gdat.fittliststrgfeattotl:
@@ -1206,7 +1202,7 @@ def init( \
             gdat.exprinfo = True
     
     if gdat.exprlgal != None and gdat.datatype == 'inpt':
-        gdat.truenumbpnts = array([gdat.exprlgal[0].size])
+        gdat.truenumbpnts = array([gdat.exprlgal[0].shape[1]])
     
     # temp
     #if gdat.exprnumbpnts > 0:
@@ -1264,11 +1260,6 @@ def init( \
             setattr(gdat, 'true' + strgfeat, exprfeat)
             setattr(gdat, 'truehist' + strgfeat, exprfeathist)
     
-    print 'gdat.exprlgal'
-    print gdat.exprlgal
-    print 'gdat.truelgal'
-    print gdat.truelgal
-
     if gdat.datatype == 'mock':
         
         if gdat.truenumbtrap > 0:

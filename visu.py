@@ -598,10 +598,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
-        # temp
-        if gdat.strgcnfg.startswith('pcat_tgas'):
-            continue
-
         for nameseco in gdat.listnamevarbscal:
             pathjoin = path + name + nameseco
             scalseco = getattr(gdat, 'scal' + nameseco) 
@@ -615,13 +611,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
             listvarbseco = getattr(gdat, 'list' + nameseco) * factplotseco
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
-            print 'name'
-            print name
-            print 'nameseco'
-            print nameseco
             listjoin = vstack((listvarb, listvarbseco)).T
-            print '[truepara, trueparaseco]'
-            print [truepara, trueparaseco]
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
         

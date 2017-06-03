@@ -942,6 +942,8 @@ def retr_chandata(gdat):
 
     gdat.exprbgal = lgalchan
     gdat.exprlgal = bgalchan
+    print 'lgalchan'
+    summgene(lgalchan)
 
     gdat.exprspec = zeros((3, 2, gdat.exprlgal.size))
     gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
@@ -962,6 +964,8 @@ def retr_chandata(gdat):
     gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
     if gdat.numbener > 1:
         gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
+    print 'gdat.exprlgal'
+    summgene(gdat.exprlgal)
 
 
 def retr_fermdata(gdat):
@@ -6346,16 +6350,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         truehistfeat = getattr(gdat, 'truehist' + strgfeat)
                         cmplfeat = empty((gdat.truenumbpopl, gdat.numbbinsplot))
                         errrcmplfeat = empty((2, gdat.truenumbpopl, gdat.numbbinsplot))
+                    
                         for l in gdat.trueindxpopl:
+                            if not strgfeat in liststrgfeatodim[l]:
+                                continue
                             indx = where(isfinite(featassc[strgfeat][l]))[0]
                             bins = getattr(gdat, 'bins' + strgfeat)
-                            print 'strgfeat'
-                            print strgfeat
-                            print 'truefeat[l]'
-                            print truefeat[l]
-                            print 'trueindxpntsasschits'
-                            print trueindxpntsasschits
-
                             histfeatassc = histogram(truefeat[l][0, trueindxpntsasschits[l]], bins=bins)[0]
                             if truehistfeat != None:
                                 cmplfeat[l, :] = histfeatassc / truehistfeat[l, :]
@@ -6371,6 +6371,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     fdisfeat = empty((gdat.fittnumbpopl, gdat.numbbinsplot))
                     errrfdisfeat = empty((2, gdat.fittnumbpopl, gdat.numbbinsplot))
                     for l in gdat.fittindxpopl:
+                        if not strgfeat in liststrgfeatodim[l]:
+                            continue
                         indx = where(isfinite(featassc[strgfeat][l]))[0]
                         bins = getattr(gdat, 'bins' + strgfeat)
                         histfeatfals = histogram(dicttemp[strgfeat][l][indxfittpntsfals[l]], bins=bins)[0]
