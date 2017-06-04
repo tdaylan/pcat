@@ -1811,13 +1811,6 @@ def proc_post(gdat, prio=False):
     for k, namefixp in enumerate(gdat.fittnamefixp):
         setattr(gdat, 'list' + namefixp, gdat.listfixp[:, k])
     
-    print 'gdat.listsampvarb'
-    summgene(gdat.listsampvarb)
-    print 'gdat.listfixp'
-    summgene(gdat.listfixp)
-    print 'gdat.listnumbpntspop0'
-    summgene(gdat.listnumbpntspop0)
-    
     if gdat.checprio:
         for namevarbscal in gdat.listnamevarbscal:
             binsvarbscal = getattr(gdat, 'bins' + namevarbscal)
@@ -2698,16 +2691,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
                 
-                # temp
-                if gdat.strgcnfg == 'pcat_chan_mock' and strgvarb == 'cmplpop0':
-                    print 'fillinf the sample list'
-                    print 'strgvarb'
-                    print strgvarb
-                    print 'workdict[list + strgvarb]'
-                    print workdict['list' + strgvarb]
-                    summgene(workdict['list' + strgvarb])
-                    print 
-    
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
                  

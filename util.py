@@ -6140,22 +6140,22 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         if booltemp:
                             dicttemp['hist' + strgfeat + 'prio'][l, :] = meanpnts[l] * pdfn * deltprio * delt[0] / deltprio[0]
         
-            # more derived parameters
-            if gdat.elemtype == 'lens':
-                if numbtrap > 0:
-                    if strgmodl != 'true': 
-                        if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
-                            # temp
-                            indx = where(sum(gdat.truehistmcut, axis=0) > 0)[0]
-                            histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
-                            for l in indxpopl:
-                                histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dicttemp['histmcut'][l, indx] / gdat.truehistmcut[l, indx]
-                            fracsubhcorr = ones(gdat.numbbinsplot)
-                            fracsubhcorr[indx] = array([sum(gdat.truehistmcutpars[:, indx] * dicttemp['histmcut'][:, indx] / \
-                                                                                            gdat.truehistmcut[:, indx] * gdat.meanmcut[indx]) / masshostbein])
-                            setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
-                            setattr(gdatobjt, strg + 'fracsubhcorr', fracsubhcorr)
-                
+        # more derived parameters
+        if gdat.elemtype == 'lens':
+            if numbtrap > 0:
+                if strgmodl != 'true': 
+                    if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
+                        # temp
+                        indx = where(sum(gdat.truehistmcut, axis=0) > 0)[0]
+                        histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
+                        for l in indxpopl:
+                            histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dicttemp['histmcut'][l, indx] / gdat.truehistmcut[l, indx]
+                        fracsubhcorr = ones(gdat.numbbinsplot)
+                        fracsubhcorr[indx] = array([sum(gdat.truehistmcutpars[:, indx] * dicttemp['histmcut'][:, indx] / \
+                                                                                        gdat.truehistmcut[:, indx] * gdat.meanmcut[indx]) / masshostbein])
+                        setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
+                        setattr(gdatobjt, strg + 'fracsubhcorr', fracsubhcorr)
+            
                 ## total truncated mass of the subhalo as a cross check
                 if gdat.variasca:
                     asca = dicttemp['asca'][0]
@@ -6168,52 +6168,53 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 factmcutfromdefs = retr_factmcutfromdefs(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour, asca, acut) 
                 masssubh = array([sum(factmcutfromdefs * dicttemp['defs'][0])])
 
-                ## calculate the host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
-                angl = sqrt((gdat.meanlgalcartmesh - lgalhost)**2 + (gdat.meanlgalcartmesh - bgalhost)**2)
-                
-                if gdat.elemtype == 'lens':
-                    listnamevarbmass = []
-                    listnamevarbmassscal = ['masshosttotl']
-                    listnametemp = ['delt', 'intg']
-                    listnamevarbmassvect = []
-                    for strgtemp in listnametemp:
-                        listnamevarbmassvect.append('masshost' + strgtemp)
-                        listnamevarbmassscal.append('masshost' + strgtemp + 'bein')
-                    if numbtrap > 0:
-                        listnamevarbmassscal.append('masssubhtotl')
-                        listnamevarbmassscal.append('fracsubhtotl')
-                        for strgtemp in listnametemp:
-                            listnamevarbmassvect.append('masssubh' + strgtemp)
-                            listnamevarbmassvect.append('fracsubh' + strgtemp)
-                            listnamevarbmassscal.append('masssubh' + strgtemp + 'bein')
-                            listnamevarbmassscal.append('fracsubh' + strgtemp + 'bein')
-
-                # find the host, subhalo masses and subhalo mass fraction as a function of halo-centric radius
-                for name in listnamevarbmassvect:
-                    dicttemp[name] = zeros(gdat.numbanglhalf)
-                    for k in gdat.indxanglhalf:
-                        if name[4:8] == 'host':
-                            convtemp = conv
-                        if name[4:8] == 'subh':
-                            convtemp = convelem
-                        
-                        if name.endswith('delt'):
-                            indxpixl = where((gdat.binsanglhalf[k] < angl) & (angl < gdat.binsanglhalf[k+1]))
-                            dicttemp[name][k] = sum(convtemp[indxpixl]) * gdat.critmden * gdat.apix * gdat.adishost**2# / 2. / pi * gdat.deltanglhalf[k]
-                        if name.endswith('intg'):
-                            indxpixl = where(angl < gdat.meananglhalf[k])
-                            dicttemp[name][k] = sum(convtemp[indxpixl]) * gdat.critmden * gdat.apix * gdat.adishost**2# * indxpixl[0].size
-                        
-                        if name[:4] == 'frac':
-                            if dicttemp['masshost' + name[8:]][k] != 0.:
-                                dicttemp['fracsubh' + name[8:]][k] = dicttemp['masssubh' + name[8:]][k] / dicttemp['masshost' + name[8:]][k]
-                    setattr(gdatobjt, strg + name, dicttemp[name])
-                
-                # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
-                for name in listnamevarbmassvect:
-                    dicttemp[name + 'bein'] = interp(beinhost, gdat.meananglhalf, dicttemp[name])
-                    setattr(gdatobjt, strg + name + 'bein', array([dicttemp[name + 'bein']]))
+            ## calculate the host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
+            angl = sqrt((gdat.meanlgalcartmesh - lgalhost)**2 + (gdat.meanlgalcartmesh - bgalhost)**2)
             
+            if gdat.elemtype == 'lens':
+                listnamevarbmass = []
+                listnamevarbmassscal = ['masshosttotl']
+                listnametemp = ['delt', 'intg']
+                listnamevarbmassvect = []
+                for strgtemp in listnametemp:
+                    listnamevarbmassvect.append('masshost' + strgtemp)
+                    listnamevarbmassscal.append('masshost' + strgtemp + 'bein')
+                if numbtrap > 0:
+                    listnamevarbmassscal.append('masssubhtotl')
+                    listnamevarbmassscal.append('fracsubhtotl')
+                    for strgtemp in listnametemp:
+                        listnamevarbmassvect.append('masssubh' + strgtemp)
+                        listnamevarbmassvect.append('fracsubh' + strgtemp)
+                        listnamevarbmassscal.append('masssubh' + strgtemp + 'bein')
+                        listnamevarbmassscal.append('fracsubh' + strgtemp + 'bein')
+
+            # find the host, subhalo masses and subhalo mass fraction as a function of halo-centric radius
+            for name in listnamevarbmassvect:
+                dicttemp[name] = zeros(gdat.numbanglhalf)
+                for k in gdat.indxanglhalf:
+                    if name[4:8] == 'host':
+                        convtemp = conv
+                    if name[4:8] == 'subh':
+                        convtemp = convelem
+                    
+                    if name.endswith('delt'):
+                        indxpixl = where((gdat.binsanglhalf[k] < angl) & (angl < gdat.binsanglhalf[k+1]))
+                        dicttemp[name][k] = sum(convtemp[indxpixl]) * gdat.critmden * gdat.apix * gdat.adishost**2# / 2. / pi * gdat.deltanglhalf[k]
+                    if name.endswith('intg'):
+                        indxpixl = where(angl < gdat.meananglhalf[k])
+                        dicttemp[name][k] = sum(convtemp[indxpixl]) * gdat.critmden * gdat.apix * gdat.adishost**2# * indxpixl[0].size
+                    
+                    if name[:4] == 'frac':
+                        if dicttemp['masshost' + name[8:]][k] != 0.:
+                            dicttemp['fracsubh' + name[8:]][k] = dicttemp['masssubh' + name[8:]][k] / dicttemp['masshost' + name[8:]][k]
+                setattr(gdatobjt, strg + name, dicttemp[name])
+            
+            # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
+            for name in listnamevarbmassvect:
+                dicttemp[name + 'bein'] = interp(beinhost, gdat.meananglhalf, dicttemp[name])
+                setattr(gdatobjt, strg + name + 'bein', array([dicttemp[name + 'bein']]))
+            
+        if numbtrap > 0:
             liststrgfeat = getattr(gdat, strgmodl + 'liststrgfeat')
             ## copy element features to the global object
             for strgfeat in liststrgfeattotl:
@@ -6316,13 +6317,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 setattr(gdatobjt, strg + 'trueindxpntsasscmiss', trueindxpntsasscmiss)
                 setattr(gdatobjt, strg + 'trueindxpntsasschits', trueindxpntsasschits)
                 
-                # temp
-                if gdat.strgcnfg == 'pcat_chan_mock':
-                    print 'cmpl[l]'
-                    print cmpl[l]
-                    summgene(cmpl[l])
-                    print
-    
                 for l in gdat.trueindxpopl:
                     setattr(gdatobjt, strg + 'cmplpop%d' % l, cmpl[l])
                 
