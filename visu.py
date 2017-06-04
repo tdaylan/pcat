@@ -399,7 +399,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
                 if (gdat.listlpau[:, k] != 0.).any():
                     path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                     tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-            if (gdat.listlfctasym[:, 0] != 0.).any():
+            if (gdat.listlfctasym != 0.).any():
                 path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlfctasym[gdat.listindxsamptotl[n], 0], '$q_{lfct}$', logthist=True)
     

@@ -2554,11 +2554,11 @@ def work(pathoutpthis, lock, indxprocwork):
         stopchro(gdat, gdatmodi, 'type')
 
         if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
-            gdatmodi.thisfactmpr = ((gdatmodi.cntrswep + 1.) / gdat.numbburntmpr)**4
-            #gdatmodi.thistmprfactdeltllik = gdatmodi.thisfactmpr
-            gdatmodi.thistmprfactdeltllik = gdatmodi.thisfactmpr
-            gdatmodi.thistmprfactstdv = 1.#gdatmodi.thisfactmpr
-            #gdatmodi.thistmprlposelem = -1000. * (1. - gdatmodi.thisfactmpr) * concatenate(gdatmodi.thisindxsampcomp['comp']).size
+            gdatmodi.thisfacttmpr = ((gdatmodi.cntrswep + 1.) / gdat.numbburntmpr)**4
+            #gdatmodi.thistmprfactdeltllik = gdatmodi.thisfacttmpr
+            gdatmodi.thistmprfactdeltllik = gdatmodi.thisfacttmpr
+            gdatmodi.thistmprfactstdv = 1. / gdatmodi.thisfacttmpr
+            #gdatmodi.thistmprlposelem = -1000. * (1. - gdatmodi.thisfacttmpr) * concatenate(gdatmodi.thisindxsampcomp['comp']).size
             gdatmodi.thistmprlposelem = 0.
         else:
             gdatmodi.thistmprfactdeltllik = 1.
@@ -2881,8 +2881,8 @@ def work(pathoutpthis, lock, indxprocwork):
                         
                     if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
                         print 'Tempered burn-in'
-                        print 'gdatmodi.thisfactmpr'
-                        print gdatmodi.thisfactmpr
+                        print 'gdatmodi.thisfacttmpr'
+                        print gdatmodi.thisfacttmpr
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
                     print 'gdatmodi.thislpritotl'
