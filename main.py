@@ -1753,7 +1753,8 @@ def proc_post(gdat, prio=False):
         
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
-    gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
+    if gdat.fittnumbtrap > 0:
+        gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
     gdat.mlikfixp = gdat.mliksampvarb[gdat.fittindxfixp]
     for k, namefixp in enumerate(gdat.fittnamefixp):
         setattr(gdat, 'mlik' + namefixp, gdat.mlikfixp[k])

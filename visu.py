@@ -64,12 +64,6 @@ def plot_samp(gdat, gdatmodi, strg):
                         for strgfeat in gdat.trueliststrgfeatodim[l]:
                             if strgfeat in gdat.fittliststrgfeatodim[l]:
                                 if not (gdat.datatype == 'inpt' and getattr(gdat, 'expr' + strgfeat) == None):
-                                    print 'strgfeat'
-                                    print strgfeat
-                                    print 'getattr(gdat, expr + strgfeat)'
-                                    print getattr(gdat, 'expr' + strgfeat)
-                                    print
-
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')

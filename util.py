@@ -3091,16 +3091,6 @@ def setpinit(gdat, boolinitsetp=False):
        
         setattr(gdat, strgmodl + 'backflux', backflux)
     
-
-    print 'gdat.expo'
-    summgene(gdat.expo)
-    print 'backflux[0]'
-    summgene(gdat.fittbackflux[0])
-    print 'exprdataflux'
-    summgene(gdat.exprdataflux)
-    print 
-
-
     # only include desired energy and PSF class bins 
     gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     if gdat.correxpo:
@@ -3427,16 +3417,6 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         gdat.datacnts = retr_cntsmaps(gdat, gdat.exprdataflux)
     
-    print 'gdat.exprdataflux'
-    summgene(gdat.exprdataflux)
-    print 'apix'
-    print gdat.apix
-    print 'gdat.expo'
-    summgene(gdat.expo)
-    print 'datacnts'
-    summgene(gdat.datacnts)
-    print
-
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
         gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
@@ -4927,14 +4907,6 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     ## associations
                     ### missed
                     indx = gdatmodi.thistrueindxpntsasscmiss[l]
-                    print 'indx'
-                    print indx
-                    print 'lgal'
-                    summgene(lgal)
-                    print 'gdat.truelgal'
-                    summgene(gdat.truelgal[0])
-                    print
-                    print
 
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
                                                                                                                                 marker='s', linewidth=2, color='g')
