@@ -343,7 +343,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_defl(gdat, gdatmodi, strg, indxdefl=k, multfact=multfact)
             
             # residual deflection field
-            if strg != 'true':
+            if strg != 'true' and gdat.datatype == 'mock':
                 plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
                 for k in range(numbdeflsingplot):
                     plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
@@ -2283,8 +2283,7 @@ def plot_init(gdat):
                 figr.savefig(path)
                 plt.close(figr)
     
-            if gdat.elemtype == 'lens':
-                
+            if gdat.elemtype == 'lens' and gdat.datatype == 'mock':
                 figr, axis, path = init_figr(gdat, None, 'modlcntsraww', 'true', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.truemodlcntsraww, '', 'datacnts', thisindxener=i, thisindxevtt=m, tdim=True)
                 make_cbar(gdat, axis, imag, 0, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)

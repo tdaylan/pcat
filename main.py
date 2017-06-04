@@ -354,6 +354,8 @@ def init( \
             gdat.strgexprname = 'Chandra'
         if gdat.exprtype == 'ferm':
             gdat.strgexprname = 'Fermi-LAT'
+        if gdat.exprtype == 'hubb':
+            gdat.strgexprname = 'HST'
         if gdat.exprtype == 'sche':
             gdat.strgexprname = 'XXXXX'
         if gdat.exprtype == 'sdyn':
@@ -1165,12 +1167,13 @@ def init( \
         
     ## element feature indices ordered with respect to the amplitude variable
     exprfeatampl = getattr(gdat, 'expr' + gdat.namecompampl)
-    indxpnts = argsort(exprfeatampl[0, :])[::-1]
-    for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
-        if exprfeat != None:
-            exprfeat = exprfeat[..., indxpnts]
-            setattr(gdat, 'expr' + strgfeat, exprfeat)
+    if exprfeatampl != None:
+        indxpnts = argsort(exprfeatampl[0, :])[::-1]
+        for strgfeat in gdat.fittliststrgfeattotl:
+            exprfeat = getattr(gdat, 'expr' + strgfeat)
+            if exprfeat != None:
+                exprfeat = exprfeat[..., indxpnts]
+                setattr(gdat, 'expr' + strgfeat, exprfeat)
             
     ## define the experimental element features inside the ROI
     ### save the total experimental element features

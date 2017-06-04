@@ -925,7 +925,6 @@ def retr_chandata(gdat):
     path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     listhdun = ap.io.fits.open(path)
     wcso = ap.wcs.WCS(listhdun[0].header)
-   
     skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
@@ -2852,9 +2851,7 @@ def setpinit(gdat, boolinitsetp=False):
     ## text
     if gdat.datatype == 'mock':
         gdat.legdtrue = 'True'
-        gdat.legdtrue = 'True'
     if gdat.datatype == 'inpt':
-        gdat.legdtrue = gdat.strgcatl
         gdat.legdtrue = gdat.strgcatl
 
     gdat.legdtruemiss = gdat.legdtrue + ' miss'
@@ -3094,6 +3091,16 @@ def setpinit(gdat, boolinitsetp=False):
        
         setattr(gdat, strgmodl + 'backflux', backflux)
     
+
+    print 'gdat.expo'
+    summgene(gdat.expo)
+    print 'backflux[0]'
+    summgene(gdat.fittbackflux[0])
+    print 'exprdataflux'
+    summgene(gdat.exprdataflux)
+    print 
+
+
     # only include desired energy and PSF class bins 
     gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     if gdat.correxpo:
@@ -3420,6 +3427,16 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         gdat.datacnts = retr_cntsmaps(gdat, gdat.exprdataflux)
     
+    print 'gdat.exprdataflux'
+    summgene(gdat.exprdataflux)
+    print 'apix'
+    print gdat.apix
+    print 'gdat.expo'
+    summgene(gdat.expo)
+    print 'datacnts'
+    summgene(gdat.datacnts)
+    print
+
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
         gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
