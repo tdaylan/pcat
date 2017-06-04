@@ -717,7 +717,7 @@ def init( \
  
     ### normalization
     if gdat.exprtype == 'hubb':
-        bacp = [1e-8, 1e-6]
+        bacp = [1e-10, 1e-6]
     else:
         bacp = [1e-1, 1e1]
     setp_namevarblimt(gdat, 'bacp', bacp, ener=True, back=True)
@@ -880,7 +880,7 @@ def init( \
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
 
-    if gdat.allwfixdtrue:
+    if gdat.allwfixdtrue and gdat.datatype == 'mock':
         setp_namevarbvalu(gdat, 'spatdistcons', 1e-3, popl=True)
         setp_namevarbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
         setp_namevarbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=True)
@@ -1740,41 +1740,17 @@ def proc_post(gdat, prio=False):
     gdat.listsampvarbproc = copy(gdat.listsampvarb)
 
     ## other parameters
-    print 'gdat.liststrgvarbarryflat'
-    print gdat.liststrgvarbarryflat
-    if gdat.exprinfo:
-        print 'gdat.listcmplpop0'
-        summgene(gdat.listcmplpop0)
     for strg in gdat.liststrgvarbarryflat:
         
         inpt = getattr(gdat, 'list' + strg)
         
-        print 'strg'
-        print strg
-        print 'inpt'
-        summgene(inpt)
-        print 'inpt.shape'
-        print inpt.shape
-        print 'inpt.shape[2:]'
-        print inpt.shape[2:]
-        print
-
         if inpt.shape[2:] == (1,):
             shap = [inpt.shape[0] * inpt.shape[1]]
         else:
             shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
         
-        print 'shap'
-        print shap
-        print 'liststrg'
-        summgene(getattr(gdat, 'list' + strg))
-        
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
         
-        print 'liststrg'
-        summgene(getattr(gdat, 'list' + strg))
-        print
-
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
     gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]

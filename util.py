@@ -5920,7 +5920,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     
         if gdat.elemtype == 'lens':
             lensfluxmean = mean(sum(lensflux, 3), 0)
-            
+            deflmgtd = sqrt(sum(defl**2, axis=2))
+            gradlenscnts = retr_gradmaps(gdat, lenscnts[0, :, :, 0]) * gdat.sizepixl
+            gradlenscntsmgtd = sqrt(sum(gradlenscnts**2, axis=2))
+            gradlenscnts *= gdat.sizepixl
+            indx = where(fabs(gradlenscnts) > 1. * gdat.sizepixl)
+            gradlenscnts[indx] = sign(gradlenscnts[indx]) * 1. * gdat.sizepixl
+            setattr(gdatobjt, strg + 'deflmgtd', deflmgtd)
+            setattr(gdatobjt, strg + 'gradlenscnts', gradlenscnts)
+            setattr(gdatobjt, strg + 'gradlenscntsmgtd', gradlenscntsmgtd)
+
         ## element related
         if numbtrap > 0:
             
@@ -5959,6 +5968,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         lensflux = retr_mapssers(gdat, gdat.lgalgridcart - defltemp[:, :, 0], gdat.bgalgridcart - defltemp[:, :, 1], \
                                                                                                             lgalsour, bgalsour, specsour, sizesour, ellpsour, anglsour)
                         modlfluxuncv = lensflux + bacp * backfluxcart[0] + hostfluxmaps
+                        
                         modlflux = empty_like(gdat.expo)
                         for i in gdat.indxener:
                             modlflux[i, :, 0] = convolve_fft(modlfluxuncv[i, :, :, 0], psfnkern[i]).flatten()
@@ -5986,17 +5996,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     dicttemp['specplot'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expo'][l], spectype[l], plot=True)
                 
             if gdat.elemtype == 'lens':
-                deflmgtd = sqrt(sum(defl**2, axis=2))
-                gradlenscnts = retr_gradmaps(gdat, lenscnts[0, :, :, 0]) * gdat.sizepixl
-                gradlenscntsmgtd = sqrt(sum(gradlenscnts**2, axis=2))
-                gradlenscnts *= gdat.sizepixl
-                indx = where(fabs(gradlenscnts) > 1. * gdat.sizepixl)
-                gradlenscnts[indx] = sign(gradlenscnts[indx]) * 1. * gdat.sizepixl
-
-                setattr(gdatobjt, strg + 'deflmgtd', deflmgtd)
-                setattr(gdatobjt, strg + 'gradlenscnts', gradlenscnts)
-                setattr(gdatobjt, strg + 'gradlenscntsmgtd', gradlenscntsmgtd)
-
+                
                 #### distance to the source
                 for l in range(numbpopl):
                     dicttemp['diss'][l] = retr_angldist(gdat, dicttemp['lgal'][l],  dicttemp['bgal'][l], lgalsour, bgalsour)
