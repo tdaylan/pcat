@@ -3394,10 +3394,28 @@ def setpinit(gdat, boolinitsetp=False):
     # proposal scale
     if gdat.elemtype == 'lens':
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
-        gdat.stdvstdp[gdat.indxstdplgalhost] = 1e-3
-        gdat.stdvstdp[gdat.indxstdplgalhost] = 1e-3
+
+        gdat.stdvstdp[gdat.indxstdpsigcene0evt0] = 3e-2
+        gdat.stdvstdp[gdat.indxstdpbacpbac0ene0] = 1e-3
+        
+        gdat.stdvstdp[gdat.indxstdplgalsour] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpbgalsour] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpspecsourene0] = 1e-2
+        gdat.stdvstdp[gdat.indxstdpellpsour] = 1e-1
+        gdat.stdvstdp[gdat.indxstdpanglsour] = 1e-1
+        
+        gdat.stdvstdp[gdat.indxstdplgalhost] = 3e-4
+        gdat.stdvstdp[gdat.indxstdpbgalhost] = 3e-4
+        gdat.stdvstdp[gdat.indxstdpspechostene0] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpsizehost] = 3e-3
         gdat.stdvstdp[gdat.indxstdpbeinhost] = 1e-3
-        gdat.stdvstdp[gdat.indxstdpspechost] = 1e-3
+        gdat.stdvstdp[gdat.indxstdpellphost] = 1e-2
+        gdat.stdvstdp[gdat.indxstdpanglhost] = 1e-2
+        gdat.stdvstdp[gdat.indxstdpserihost] = 1e-2
+        
+        gdat.stdvstdp[gdat.indxstdpsherextr] = 1e-1
+        gdat.stdvstdp[gdat.indxstdpsangextr] = 3e-2
+        
         gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
         if gdat.exprtype == 'ferm':
@@ -4170,12 +4188,12 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
         dicttemp['indxfixpellphost'] = cntr.incr()
         dicttemp['indxfixpanglhost'] = cntr.incr()
         dicttemp['indxfixpserihost'] = cntr.incr()
-        dicttemp['indxfixpsherhost'] = cntr.incr()
-        dicttemp['indxfixpsanghost'] = cntr.incr()
+        dicttemp['indxfixpsherextr'] = cntr.incr()
+        dicttemp['indxfixpsangextr'] = cntr.incr()
         dicttemp['indxfixpsour'] = []
 
         liststrgsour = ['lgalsour', 'bgalsour', 'specsour', 'sizesour', 'ellpsour', 'anglsour']
-        liststrghost = ['lgalhost', 'bgalhost', 'spechost', 'sizehost', 'beinhost', 'ellphost', 'anglhost', 'serihost', 'sherhost', 'sanghost']
+        liststrghost = ['lgalhost', 'bgalhost', 'spechost', 'sizehost', 'beinhost', 'ellphost', 'anglhost', 'serihost', 'sherextr', 'sangextr']
         for strg, valu in dicttemp.iteritems():
             
             if strg == 'indxfixpfluxdistnorm' or isinstance(valu, list) or isinstance(valu, ndarray):
@@ -4530,10 +4548,10 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 if strgvarb == 'serihost':
                     lablfixp[k] = r'$n_{\rm{S,hst}}$'
                     scalfixp[k] = 'self'
-                if strgvarb == 'sherhost':
+                if strgvarb == 'sherextr':
                     lablfixp[k] = r'$\gamma_{ext}$'
                     scalfixp[k] = 'self'
-                if strgvarb == 'sanghost':
+                if strgvarb == 'sangextr':
                     lablfixp[k] = r'$\phi_{ext}$'
                     scalfixp[k] = 'self'
         
@@ -5544,16 +5562,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             anglhost = sampvarb[getattr(gdat, strgmodl + 'indxfixpanglhost')]
             serihost = sampvarb[getattr(gdat, strgmodl + 'indxfixpserihost')]
             if raww:
-                sherhost = 0.
+                sherextr = 0.
             else:
-                sherhost = sampvarb[getattr(gdat, strgmodl + 'indxfixpsherhost')]
-            sanghost = sampvarb[getattr(gdat, strgmodl + 'indxfixpsanghost')]
+                sherextr = sampvarb[getattr(gdat, strgmodl + 'indxfixpsherextr')]
+            sangextr = sampvarb[getattr(gdat, strgmodl + 'indxfixpsangextr')]
            
             ## host halo deflection
             defl = retr_defl(gdat, lgalhost, bgalhost, beinhost, ellphost, anglhost)
             
             ## external shear
-            deflextr = retr_deflextr(gdat, sherhost, sanghost)
+            deflextr = retr_deflextr(gdat, sherextr, sangextr)
             defl += deflextr
         
             ## PSF kernel
@@ -5752,14 +5770,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     if fast:
         return
     
-    if gdat.savestat and strg == 'this':
-        path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
-        if gdat.verbtype > 0:
-            print 'Saving the state to %s...' % path
-        thisfile = h5py.File(path, 'w')
-        thisfile.create_dataset('thissampvarb', data=gdatmodi.thissampvarb)
-        thisfile.close()
-
     ## tertiary variables that are not needed for likelihood evaluation
     if strg != 'next':
         

@@ -594,6 +594,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
+            if name == nameseco:
+                continue
             pathjoin = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscaljoin') + name + nameseco
             scalseco = getattr(gdat, 'scal' + nameseco) 
             factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')

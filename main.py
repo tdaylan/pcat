@@ -840,17 +840,17 @@ def init( \
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-15]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellpsour', [0., 0.1])
+    setp_namevarblimt(gdat, 'ellpsour', [0., 0.5])
     for i in gdat.indxener:
         setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-15]))
     setp_namevarblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_namevarblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
-    setp_namevarblimt(gdat, 'ellphost', [0., 0.1])
-    setp_namevarblimt(gdat, 'sherhost', [0., 0.1])
+    setp_namevarblimt(gdat, 'ellphost', [0., 0.5])
+    setp_namevarblimt(gdat, 'sherextr', [0., 0.1])
     setp_namevarblimt(gdat, 'anglsour', [0., pi])
     setp_namevarblimt(gdat, 'anglhost', [0., pi])
     setp_namevarblimt(gdat, 'serihost', [1., 8.])
-    setp_namevarblimt(gdat, 'sanghost', [0., pi])
+    setp_namevarblimt(gdat, 'sangextr', [0., pi])
     
     gdat.trueminmlgal = -gdat.fittmaxmgang
     gdat.truemaxmlgal = gdat.fittmaxmgang
@@ -928,7 +928,7 @@ def init( \
             for i in gdat.indxener:
                 setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
                 setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-16)
-            setp_namevarbvalu(gdat, 'sanghost', pi / 2.)
+            setp_namevarbvalu(gdat, 'sangextr', pi / 2.)
             setp_namevarbvalu(gdat, 'serihost', 4.)
    
     if gdat.defa:
@@ -2345,13 +2345,19 @@ def work(pathoutpthis, lock, indxprocwork):
     # apply imposed initial state
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
+        if gdat.recostat:
+            try:
+                getattr(gdat, 'init' + namefixp)
+                boolfail = True
+            except:
+                boolfail = False
+            if boolfail:
+                raise Exception('Conflicting initial state arguments detected!')
+                
         try:
             initvalu = getattr(gdat, 'init' + namefixp)
             gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
             
-            if gdat.recostat:
-                raise Exception('Conflicting initial state arguments detected!')
-
             if gdat.verbtype > 0:
                 print 'Received initial condition for %s: %.3g' % (namefixp, initvalu)
             print
@@ -2726,6 +2732,14 @@ def work(pathoutpthis, lock, indxprocwork):
            
             initchro(gdat, gdatmodi, 'save')
         
+            if gdat.savestat:
+                path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
+                if gdat.verbtype > 0:
+                    print 'Saving the state to %s...' % path
+                thisfile = h5py.File(path, 'w')
+                thisfile.create_dataset('thissampvarb', data=gdatmodi.thissampvarb)
+                thisfile.close()
+
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
             
@@ -2885,10 +2899,6 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thistmprfactdeltllik
                     indxswepintv = arange(minm, maxm)
                     
-                    print 'gdat.indxproptype'
-                    print gdat.indxproptype
-                    print
-
                     for k in gdat.indxproptype:
                         boolproptype = workdict['listindxproptype'][indxswepintv, 0] == k
                         boolaccp = workdict['listaccp'][indxswepintv, 0] == 1
