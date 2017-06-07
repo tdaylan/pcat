@@ -578,7 +578,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     ## scalar variables
     ### trace and marginal distribution of each parameter
     for name in gdat.listnamevarbscal:
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + name
         scal = getattr(gdat, 'scal' + name) 
         factplot = getattr(gdat, 'fact' + name + 'plot')
         corr = getattr(gdat, 'corr' + name)
@@ -589,11 +588,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
         labltotl = getattr(gdat, 'labl' + name + 'totl')
         listvarb = getattr(gdat, 'list' + name) * factplot
         mlik = getattr(gdat, 'mlik' + name) * factplot
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscaltrac') + name
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalhist') + name
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
-            pathjoin = path + name + nameseco
+            pathjoin = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscaljoin') + name + nameseco
             scalseco = getattr(gdat, 'scal' + nameseco) 
             factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')
             corrseco = getattr(gdat, 'corr' + nameseco)
@@ -632,7 +633,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     
     ### covariance
     #### overall
-    path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'fixp'
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'fixp'
     truepara = gdat.fittcorrfixp * gdat.fittfactfixpplot
     mlikpara = gdat.mlikfixp * gdat.fittfactfixpplot
     tdpy.mcmc.plot_grid(path, gdat.listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, varbdraw=mlikpara)
@@ -650,7 +651,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     
     if gdat.fittnumbtrap > 0:
         #### hyperparameters
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'hypr'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'hypr'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
                                                                                            truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixphypr])
     
@@ -659,7 +660,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     
     #### PSF
     if gdat.proppsfp:
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'psfp'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'psfp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixppsfp] * gdat.fittfactfixpplot[None, gdat.fittindxfixppsfp], gdat.fittlablfixptotl[gdat.fittindxfixppsfp], \
                                           truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
     if gdat.verbtype > 0:
@@ -667,13 +668,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     
     #### backgrounds
     if gdat.propbacp:
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'bacp'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixptotl[gdat.fittindxfixpbacp], \
                                                                                                         truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixpbacp])
         if gdat.fittnumbback == 2 and gdat.fittspecback == [None, None]:
             for i in gdat.indxener:
                 indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
-                path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscal') + 'bacpene%d' % i
+                path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixptotl[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
         
         
@@ -688,9 +689,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
         numbtrapgood = indxtrapgood.size
         numbtrapplot = min(10, numbtrapgood)
         indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsamp'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsamp'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'listsampvarb'
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsampvarb'
         tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
 
     if gdat.verbtype > 0:
@@ -2249,7 +2250,7 @@ def plot_init(gdat):
                 figr.savefig(path)
                 plt.close(figr)
             
-            for strgmodl in ['fitt', 'true']:
+            for strgmodl in gdat.liststrgmodl:
                 numbback = getattr(gdat, strgmodl + 'numbback')
                 indxback = getattr(gdat, strgmodl + 'indxback')
                 backcnts = getattr(gdat, strgmodl + 'backcnts')
@@ -2330,38 +2331,54 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
             strgtemp = ''
         strgplot = strgtemp + strgvarb
     
+    figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl, intreval=intreval)
+    
     maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype)
-    
-    figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl)
-    
     imag = retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
-    
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     make_catllabl(gdat, strg, axis)
     supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
 
-    def sliders_on_changed(val):
-        gdat.truesampvarb[gdat.trueindxfixplgalhost] = val
-        proc_samp(gdat, None, 'true')
-        maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype)
-        imag = retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
-        supr_fram(gdat, None, strg, axis, thisindxpopl)
-        plt.draw()
-    
     # Add two sliders for tweaking the parameters
     if intreval:
         print 'Interactive session began...'
-        axis_color = 'lightgoldenrodyellow'
-        initvalu = gdat.truesampvarb[gdat.trueindxfixplgalhost]
-        freq_slider_ax = figr.add_axes([0.1, 0.02, 0.25, 0.03], axisbg=axis_color)
-        freq_slider = Slider(freq_slider_ax, gdat.labllgalhost, -1. / gdat.anglfact, 1. / gdat.anglfact, valinit=initvalu)
-        freq_slider.on_changed(sliders_on_changed)
-        plt.show(block=False)
+        
+        freq_slider = []
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
+
+            initvalu = gdatmodi.thissampvarb[indxfixp]
+            labl = getattr(gdat, 'labl' + namefixp)
+            minm = getattr(gdat, 'minm' + namefixp)
+            maxm = getattr(gdat, 'maxm' + namefixp)
+            freq_slider_ax = figr.add_axes([0.08, 0.04 + 0.05 * k, 0.2, 0.04])
+            freq_slider.append(Slider(freq_slider_ax, labl, minm, maxm, valinit=initvalu))
+        def sliders_on_changed(val):
+            print 'Slider changed.'
+            for k, namefixp in enumerate(gdat.fittnamefixp):
+                print namefixp
+                print freq_slider[k].val
+                gdatmodi.thissampvarb[k] = freq_slider[k].val
+            print
+            proc_samp(gdat, gdatmodi, 'this')
+            maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype)
+            retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim, imag=imag)
+            for ptch in axis.get_children():
+                if isinstance(ptch, mpl.patches.Circle) or isinstance(ptch, mpl.collections.PathCollection):#isinstance(ptch, mpl.lines.Line2D):
+                    ptch.remove()
+            supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
+            plt.show(block=False)
+
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            freq_slider[k].on_changed(sliders_on_changed)
+
+        plt.show()
+       
         inpt = raw_input("Press enter to continue...")
         plt.close()
-        print 'Interactive session ended...' 
+        raise Exception('Interactive session ended...')
     else:
         plt.tight_layout()
         savefigr(gdat, gdatmodi, figr, path)
