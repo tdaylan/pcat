@@ -2570,6 +2570,14 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
     
+    print 'gdat.lablgalunit'
+    print gdat.labllgalunit
+    print 'gdat.lablgal'
+    print gdat.labllgal
+    print 'gdat.lablgaltotl'
+    print gdat.labllgaltotl
+    print 
+
     ## legends
     if gdat.elemtype == 'lght':
         gdat.strgelem = 'PS'
@@ -4866,7 +4874,7 @@ def make_cbar(gdat, axis, imag, indxenerplot=None, tick=None, labl=None):
 def make_catllabl(gdat, strg, axis):
     
     # transdimensional elements
-    if strg == 'post' or strg == 'this':
+    if strg == 'post' and gdat.condcatl or strg == 'this':
         if strg == 'post':
             colr = 'black'
             labl = 'Condensed Model %s' % gdat.strgelem
@@ -6442,26 +6450,22 @@ def retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
     bgalrttr = sin(angl) * (lgalgrid - lgal) + cos(angl) * (bgalgrid - bgal) 
 
     angl = sqrt(lgalrttr[None, :, :, None]**2 + bgalrttr[None, :, :, None]**2)
-    mapssers = retr_sersprof(spec[:, None, None, None], angl, size, seri)
+    mapssers = retr_sersprof(gdat, spec[:, None, None, None], angl, size, seri)
 
     return mapssers
 
 
-def retr_sersprof(spec, angl, sizehalf, indx):
+def retr_sersprof(gdat, spec, angl, sizehalf, indx):
     
-    # this approximation works for 0.5  < indx < 10
-    factsers = 1.9992 * indx - 0.3271
+    # interpolate pixel-convolved Sersic surface brightness
+    shapinpt = angl.shape
+    inpt = empty(list(shapinpt) + [3])
+    inpt[..., 0] = angl
+    inpt[..., 1] = sizehalf
+    inpt[..., 2] = indx
+    sbrtprof = spec * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)
 
-    # surface brightness at the half-light radius
-    # temp -- this only works for indx == 4!
-    #sbrthalf = spec / 7.2 / pi / sizehalf**2
-    #sbrthalf = spec / 2. / pi * factsers**(sersindx*2) / indx / sp.special.gamma(2. * indx)
-    sbrthalf = spec / 2. / pi / exp(factsers) * factsers**(2*indx) / indx / sp.special.gamma(2. * indx) / sizehalf**2
-    
-    # surface brightness profile
-    sersprof = sbrthalf * exp(-factsers * ((angl / sizehalf)**(1. / indx) - 1.))
-     
-    return sersprof
+    return sbrtprof
 
 
 

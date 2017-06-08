@@ -31,7 +31,7 @@ for pathruns in listpathruns:
 
             for name in listname:
                 
-                if not (name.startswith('datacnts') or name.startswith('histdefspop0')):
+                if not (name.startswith('thisdatacnts') or name.startswith('thishistdefspop0')):
                     continue
 
                 strgtemp = '%s*_swep*.pdf' % name

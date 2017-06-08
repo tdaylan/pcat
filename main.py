@@ -112,7 +112,7 @@ def init( \
          numbframpost=None, \
          makeplotintr=False, \
          scalmaps='asnh', \
-         makeanim=False, \
+         makeanim=True, \
          strgenerfull=None, \
          strgexprname=None, \
          strganglunit=None, \
@@ -227,7 +227,10 @@ def init( \
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
-            gdat.numbproc = 10
+            
+            # temp
+            gdat.numbproc = 1
+
         else:
             gdat.numbproc = 1
     
@@ -941,6 +944,7 @@ def init( \
     # initial setup
     setpinit(gdat, True) 
     
+    # intermediate setup
     if gdat.listspecrefrplot == None:
         if gdat.exprtype == 'chan':
             gdat.listenerrefrplot = []
@@ -951,7 +955,6 @@ def init( \
                 gdat.listenerrefrplot.append(loadtxt(path, delimiter=',')[:, 0])
                 gdat.listspecrefrplot.append(loadtxt(path, delimiter=',')[:, 1])
 
-    # intermediate setup
     if gdat.numbener > 1:
         gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
         if gdat.enerfluxdist == 0.:
@@ -992,6 +995,64 @@ def init( \
                     limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'fittmaxm' + namevarb))
                 setattr(gdat, strglimt + namevarb, limt)
 
+    if gdat.elemtype == 'lens':
+        # construct pixel-convolved Sersic surface brightness template
+        gdat.factsersusam = 40
+        maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
+        gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
+        gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
+        retr_axis(gdat, 'lgalsers', 0., maxmlgal, gdat.numblgalsers)
+        retr_axis(gdat, 'lgalsersusam', -gdat.sizepixl / 2., maxmlgal + gdat.sizepixl, gdat.numblgalsersusam)
+        retr_axis(gdat, 'bgalsersusam', -gdat.sizepixl / 2., gdat.sizepixl / 2., gdat.factsersusam)
+        
+        gdat.numbhalfsers = 20
+        gdat.numbindxsers = 20
+        minm = amin(array([gdat.minmsizehost, gdat.minmsizesour]))
+        maxm = amax(array([gdat.maxmsizehost, gdat.maxmsizesour]))
+        retr_axis(gdat, 'halfsers', minm, maxm, gdat.numbhalfsers)
+        minm = gdat.minmserihost
+        maxm = gdat.maxmserihost
+        retr_axis(gdat, 'indxsers', minm, maxm, gdat.numbindxsers)
+        
+        gdat.binslgalsersusammesh, gdat.binsbgalsersusammesh = meshgrid(gdat.binslgalsersusam, gdat.binsbgalsersusam, indexing='ij')
+        gdat.binsradisersusam = sqrt(gdat.binslgalsersusammesh**2 + gdat.binsbgalsersusammesh**2)
+         
+        gdat.sersprofcntr = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+        gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+        
+        for n in range(gdat.numbindxsers + 1):
+            
+            ## this approximation works for 0.5  < indx < 10
+            factsers = 1.9992 * gdat.binsindxsers[n] - 0.3271
+        
+            for k in range(gdat.numbhalfsers + 1):
+                
+                ## surface brightness profile at the half-light radius for a 1 erg cm^-2 s^-1 A^-1 source
+                sbrthalf= 1. / 2. / pi / exp(factsers) * factsers**(2*gdat.binsindxsers[n]) / gdat.binsindxsers[n] / \
+                                                                                                    sp.special.gamma(2. * gdat.binsindxsers[n]) / gdat.binshalfsers[k]**2
+                
+                ## surface brightness profile
+                profusam = sbrthalf * exp(-factsers * ((gdat.binsradisersusam / gdat.binshalfsers[k])**(1. / gdat.binsindxsers[n]) - 1.))
+                
+                ## take the pixel average
+                indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
+                indxbgaluppr = gdat.factsersusam * (gdat.numblgalsers + 3) / 2
+                for a in range(gdat.numblgalsers):
+                    indxlgallowr = gdat.factsersusam * a
+                    indxlgaluppr = gdat.factsersusam * (a + 1) + 1
+                    gdat.sersprofcntr[a, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, 0]
+                    gdat.sersprof[a, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, :])
+        
+        temp, indx = unique(gdat.binslgalsers, return_index=True)
+        gdat.binslgalsers = gdat.binslgalsers[indx]
+        gdat.sersprof = gdat.sersprof[indx, :, :]
+        gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
+
+        indx = argsort(gdat.binslgalsers)
+        gdat.binslgalsers = gdat.binslgalsers[indx]
+        gdat.sersprof = gdat.sersprof[indx, :, :]
+        gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
+    
     # color bars
     gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
     gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 10.
@@ -1613,6 +1674,7 @@ def initarry( \
     dictvarb['seedstat'] = seedstat
     dictvarb['randseedelem'] = randseedelem
     dictvarb['strgcnfg'] = strgcnfg
+    dictvarb['makeanim'] = False
     
     listgdat = []
     for k in range(numbiter):
@@ -2366,7 +2428,11 @@ def work(pathoutpthis, lock, indxprocwork):
 
     ## by the saved state of another run
     if gdat.recostat:
-        path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
+        if isinstance(gdat.recostat, str):
+            strgcnfg = gdat.recostat
+        else:
+            strgcnfg = gdat.strgcnfg
+        path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
         if gdat.verbtype > 0:
             print 'Initializing with the state from %s...' % path
         thisfile = h5py.File(path, 'r')
