@@ -1009,10 +1009,6 @@ def retr_fermdata(gdat):
     gdat.exprcurv = fgl3['beta']
     gdat.exprexpo = fgl3['Cutoff'] * 1e-3
     
-    print 'gdat.exprexpo'
-    print gdat.exprexpo
-    print 'gdat.exprcurv'
-    print gdat.exprcurv
     gdat.exprexpo[where(logical_not(isfinite(gdat.exprexpo)))] = 0.
 
     indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0, gdat.indxenerfluxdist[0], :] > gdat.minmflux))[0]
