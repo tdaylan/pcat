@@ -373,7 +373,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     gdat.strgbest = 'ML'
   
     # prior components
-    if gdat.plotlpri:
+    if gdat.makeplotlpri:
         gdat.indxlpri = arange(gdat.numblpri)
         gdat.indxlpau = arange(gdat.numblpau)
         indxbadd = where(isfinite(gdat.listlpri) == False)
@@ -768,7 +768,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
 
     # animate the frame plots
     if gdat.makeanim:
-        make_anim(gdat)
+        make_anim(gdat.strgcnfg, full=True)
 
     timetotlfinl = gdat.functime()
     if gdat.verbtype > 0:
@@ -1719,6 +1719,16 @@ def plot_datacntshist(gdat):
     
 def plot_intr(gdat):
     
+    if gdat.verbtype > 0:
+        print 'Making PCAT introductory plots...'
+
+    plot_grap(verbtype=1)
+    plot_grap(plottype='ngal', verbtype=1)
+    plot_grap(plottype='lens', verbtype=1)
+    plot_grap(plottype='lensprim', verbtype=1)
+    plot_grap(plottype='lensseco', verbtype=1)
+    plot_grap(plottype='chan', verbtype=1)
+    
     with plt.xkcd():
 
         from matplotlib import patheffects
@@ -2066,14 +2076,6 @@ def plot_grap(plottype='igal', verbtype=0):
     plt.close(figr)
 
 
-#plot_grap(verbtype=1)
-#plot_grap(plottype='ngal', verbtype=1)
-#plot_grap(plottype='lens', verbtype=1)
-#plot_grap(plottype='lensprim', verbtype=1)
-#plot_grap(plottype='lensseco', verbtype=1)
-#plot_grap(plottype='chan', verbtype=1)
-
-
 def plot_3fgl_thrs(gdat):
 
     path = os.environ["PCAT_DATA_PATH"] + '/detthresh_P7v15source_4years_PL22.fits'
@@ -2109,12 +2111,15 @@ def plot_init(gdat):
         
     # make initial plots
     if gdat.makeplot:
+        
+        # ferm
         #plot_3fgl_thrs(gdat)
+        #if gdat.exprtype == 'ferm':
+        #    plot_fgl3(gdat)
+        
         plot_datacntshist(gdat)
         if gdat.evalcirc != 'full':
             plot_indxprox(gdat)
-        #if gdat.exprtype == 'ferm':
-        #    plot_fgl3(gdat)
         if gdat.evalcirc != 'full' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
             plot_eval(gdat)
         
@@ -2140,7 +2145,17 @@ def plot_init(gdat):
                     path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
                     tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
                                                                                 lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
-                
+               
+                # pixel-convoltuion of the Sersic profile
+                xdat = gdat.binslgalsers * gdat.anglfact
+                for n in range(gdat.numbindxsers + 1):
+                    for k in range(gdat.numbhalfsers + 1):
+                        path = gdat.pathinitintr + 'sersprofconv%04d%04d.pdf' % (gdat.binshalfsers[n], gdat.binsindxsers[k])
+                        tdpy.util.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, \
+                                                                                                                                                        limtydat=[1e-8, 1e010])
+                        path = gdat.pathinitintr + 'sersprofcntr%04d%04d.pdf' % (gdat.binshalfsers[n], gdat.binsindxsers[k])
+                        tdpy.util.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl)
+               
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
                 listsize = array([0.3, 1., 1., 1.]) / gdat.anglfact
@@ -2148,7 +2163,7 @@ def plot_init(gdat):
                 listydat = []
                 listlegd = []
                 for spec, size, indx in zip(listspec, listsize, listindx):
-                    listydat.append(retr_sersprof(spec, gdat.binsangl, size, indx=indx) * gdat.anglfact**2 / (4. * pi)**2)
+                    listydat.append(retr_sersprof(gdat, spec, gdat.binsangl, size, indx=indx) * gdat.anglfact**2 / (4. * pi)**2)
                     listlegd.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
                 path = gdat.pathinitintr + 'sersprof.pdf'
                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, \
@@ -2351,10 +2366,10 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
         for k, namefixp in enumerate(gdat.fittnamefixp):
             indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
 
-            initvalu = gdatmodi.thissampvarb[indxfixp]
+            initvalu = gdatmodi.thissampvarb[indxfixp] * gdat.fittfactfixpplot[k]
             labl = getattr(gdat, 'labl' + namefixp)
-            minm = getattr(gdat, 'minm' + namefixp)
-            maxm = getattr(gdat, 'maxm' + namefixp)
+            minm = getattr(gdat, 'minm' + namefixp) * gdat.fittfactfixpplot[k]
+            maxm = getattr(gdat, 'maxm' + namefixp) * gdat.fittfactfixpplot[k]
             freq_slider_ax = figr.add_axes([0.08, 0.04 + 0.05 * k, 0.2, 0.04])
             freq_slider.append(Slider(freq_slider_ax, labl, minm, maxm, valinit=initvalu))
         def sliders_on_changed(val):
@@ -2362,7 +2377,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
             for k, namefixp in enumerate(gdat.fittnamefixp):
                 print namefixp
                 print freq_slider[k].val
-                gdatmodi.thissampvarb[k] = freq_slider[k].val
+                gdatmodi.thissampvarb[k] = freq_slider[k].val / gdat.fittfactfixpplot[k]
             print
             proc_samp(gdat, gdatmodi, 'this')
             maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype)

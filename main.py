@@ -15,7 +15,7 @@ def init( \
          diagmode=False, \
          emptsamp=False, \
 
-         # sampler
+         # chain setup
          numbswep=1000000, \
          numbburn=None, \
          factthin=None, \
@@ -23,9 +23,11 @@ def init( \
          showmoreaccp=False, \
         
          evoltype='samp', \
-
+        
+         # output
+         ## condensed catalog
          condcatl=False, \
-         seedstat=None, \
+         
          randseedelem=False, \
          indxevttincl=None, \
          indxenerincl=None, \
@@ -34,9 +36,6 @@ def init( \
          burntmpr=False, \
          #burntmpr=True, \
     
-         savestat=False, \
-         recostat=False, \
-
          # evaluate the likelihood inside circles around elements
          evalcirc=None, \
         
@@ -46,41 +45,62 @@ def init( \
          truedefsimps=None, \
          shrtfram=False, \
         
-         plotlpri=True, \
          plotelemcorr=True, \
          relnprio=False, \
         
-         mockonly=False, \
-        
+         # elements
+         ## vary projected scale radius
          variasca=True, \
+         ## vary projected cutoff radius
          variacut=True, \
-
+        
+         # metamodel settings
+         ## number of spatial dimensions
          numbspatdims=2, \
          
          # model type
          elemtype='lght', \
-    
+         
+         # name of the configuration
          strgcnfg=None, \
 
-         # initialization type
+         ## numpy RNG seed
+         seedstat=None, \
+    
+         # initialization
+         ## initialization type
          inittype=None, \
          
-         procrtag=None, \
          loadvaripara=False, \
          
+         # save the state of the MCMC
+         savestat=False, \
+         # recover the state from a previous run
+         recostat=False, \
+
+         # proposals
          propcova=True, \
          propwithsing=True, \
          pertmodleval=None, \
+         # Hessian estimation
          optihess=True, \
          optillik=False, \
          optiprop=False, \
          regulevi=False, \
          
+         # modes of operation
+         ## plot results from a previous chain
+         procrtag=None, \
+         ## interactive
          intrevalmodlcnts=False, \
          intrevalresicnts=False, \
-        
-         truestdvdefsdistslop=0.5, \
+         ## only generate and plot mock data
+         mockonly=False, \
+         ## perform an additional run sampling from the prior
+         checprio=False, \
 
+        
+        
          strgexprflux=None, \
          strgcatl=None, \
          anglassc=None, \
@@ -100,15 +120,19 @@ def init( \
          pixltype=None, \
         
          fittampldisttype=None, \
+         truestdvdefsdistslop=0.5, \
         
          allwfixdtrue=True, \
          asscmetrtype='dist', \
 
          # plotting
          numbswepplot=None, \
+         
          makeplot=True, \
          makeplotinit=True, \
          makeplotfram=True, \
+         makeplotlpri=True, \
+         
          numbframpost=None, \
          makeplotintr=False, \
          scalmaps='asnh', \
@@ -155,8 +179,6 @@ def init( \
          margfactmodl=1., \
          maxmgangdata=None, \
         
-         checprio=False, \
-
          # proposals
          stdvprophypr=0.01, \
          stdvproppsfp=0.1, \
@@ -841,7 +863,7 @@ def init( \
     #setp_namevarblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv')
     
     for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-20, 1e-15]))
+        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-22, 1e-18]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellpsour', [0., 0.5])
     for i in gdat.indxener:
@@ -929,7 +951,7 @@ def init( \
             setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
             for i in gdat.indxener:
-                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
+                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-19)
                 setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-16)
             setp_namevarbvalu(gdat, 'sangextr', pi / 2.)
             setp_namevarbvalu(gdat, 'serihost', 4.)
@@ -1385,8 +1407,6 @@ def init( \
                     gdat.truesamp[gdat.trueindxsampcomp['comp'][l]] = rand(gdat.trueindxsampcomp['comp'][l].size)
    
             # sample element components from the true metamodel
-            print 'gdat.truenumbpnts'
-            print gdat.truenumbpnts
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
     if gdat.truelgalimps != None:
@@ -1997,9 +2017,9 @@ def proc_post(gdat, prio=False):
             meditemp = []
             errrtemp = []
             stdvtemp = []
-            numbelem = len(listtemp[0])
+            numb = len(listtemp[0])
             
-            for k in range(numbelem):
+            for k in range(numb):
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
                 for n in gdat.indxsamptotl:
