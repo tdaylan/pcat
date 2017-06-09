@@ -2612,7 +2612,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmrelc = 1.
 
     gdat.minmmcut = 1e7
-    gdat.maxmmcut = 5e9
+    gdat.maxmmcut = 8e8
     gdat.minmmcutcorr = gdat.minmmcut
     gdat.maxmmcutcorr = gdat.maxmmcut
 
@@ -4323,7 +4323,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 scalfixp[k] = 'pois'
                 
             if namefixp[k].startswith('meanpnts'):
-                lablfixp[k] = r'$\mu_{%s}$' % strgpopl
+                lablfixp[k] = r'$\mu_{%s%s}$' % (nameelem, strgpoplcomm)
                 scalfixp[k] = scalmeanpnts
     
             if namefixp[k].startswith('gangdistscalp'):

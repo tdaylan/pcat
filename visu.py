@@ -1947,7 +1947,11 @@ def plot_grap(plottype='igal', verbtype=0):
                             ])
         
     labl = {}
-    labl['numbpnts'] = '$N$'
+    if plottype.startswith('lens'):
+        nameelem = 'sub'
+    else:
+        nameelem = 'pts'
+    labl['numbpnts'] = '$N_{%s}$' % nameelem
     
     if plottype == 'igal':
         labl['ampldistslop'] = r'$\vec{\beta}$'

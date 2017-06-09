@@ -863,7 +863,7 @@ def init( \
     #setp_namevarblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv')
     
     for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-22, 1e-18]))
+        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-22, 1e-17]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellpsour', [0., 0.5])
     for i in gdat.indxener:
@@ -951,7 +951,7 @@ def init( \
             setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
             for i in gdat.indxener:
-                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-19)
+                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
                 setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-16)
             setp_namevarbvalu(gdat, 'sangextr', pi / 2.)
             setp_namevarbvalu(gdat, 'serihost', 4.)
@@ -1326,7 +1326,7 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
     if gdat.datatype == 'mock':
-        gdat.limtpntshist = [0.5, 10**ceil(log10(2. * sum(gdat.truenumbpnts)))]
+        gdat.limtpntshist = [0.5, sum(gdat.truenumbpnts) / 2.]
     
     ## unit sample vector
     gdat.truesamp = zeros(gdat.truenumbpara)
