@@ -1724,10 +1724,10 @@ def plot_intr(gdat):
 
     plot_grap(verbtype=1)
     plot_grap(plottype='ngal', verbtype=1)
-    plot_grap(plottype='lens', verbtype=1)
-    plot_grap(plottype='lensprim', verbtype=1)
+    #plot_grap(plottype='lens', verbtype=1)
+    #plot_grap(plottype='lensprim', verbtype=1)
     plot_grap(plottype='lensseco', verbtype=1)
-    plot_grap(plottype='chan', verbtype=1)
+    #plot_grap(plottype='chan', verbtype=1)
     
     with plt.xkcd():
 
@@ -1948,24 +1948,24 @@ def plot_grap(plottype='igal', verbtype=0):
         
     labl = {}
     if plottype.startswith('lens'):
-        nameelem = 'sub'
+        nameelem = r'\rm{sub}'
     else:
-        nameelem = 'pts'
+        nameelem = r'\rm{pts}'
     labl['numbpnts'] = '$N_{%s}$' % nameelem
     
     if plottype == 'igal':
         labl['ampldistslop'] = r'$\vec{\beta}$'
-        labl['meanpnts'] = r'$\vec{\mu}$'
+        labl['meanpnts'] = r'$\vec{\mu}_{%s}$' % nameelem
     else:
-        labl['meanpnts'] = r'$\mu$'
+        labl['meanpnts'] = r'$\mu_{%s}$' % nameelem
     if plottype == 'chan' or plottype == 'ngal':
         labl['ampldistslop'] = r'$\beta$'
     if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
         labl['defsdistslop'] = r'$\beta$'
     
     if plottype == 'igal':
-        labl['expodistslop'] = r'$\vec{\tau_{E_c}}$'
-        labl['sinddistslop'] = r'$\vec{\tau_s}$'
+        labl['expodistslop'] = r'$\vec{\tau_\rm{E}}$'
+        labl['sinddistslop'] = r'$\vec{\tau_\rm{s}}$'
     if plottype == 'chan':
         labl['sinddistslop'] = r'$\beta$'
     
@@ -1981,13 +1981,13 @@ def plot_grap(plottype='igal', verbtype=0):
         labl['sind'] = r'$\vec{s}$'
         labl['ampl'] = r'$\vec{f}$'
     else:
-        labl['defs'] = r'$\vec{\alpha_s}$'
+        labl['defs'] = r'$\vec{\alpha_\rm{s}}$'
     if plottype == 'lensprim' or plottype == 'lensseco':
-        labl['asca'] = r'$\vec{\theta_s}$'
-        labl['acut'] = r'$\vec{\theta_c}$'
+        labl['asca'] = r'$\vec{\theta_\rm{s}}$'
+        labl['acut'] = r'$\vec{\theta_\rm{c}}$'
         
     if plottype == 'igal':
-        labl['expo'] = r'$\vec{E_c}$'
+        labl['expo'] = r'$\vec{E_{\rm{c}}}$'
     labl['modl'] = r'$\mathcal{M}$'
     labl['data'] = r'$\mathcal{D}$'
     
@@ -2048,7 +2048,7 @@ def plot_grap(plottype='igal', verbtype=0):
                 print 'unequal'
         print
 
-    size = 500
+    size = 1000
     nx.draw(grap, posi, labels=labl, ax=axis, edgelist=[], nodelist=[])
     nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)

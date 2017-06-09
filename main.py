@@ -341,7 +341,7 @@ def init( \
     
     if gdat.strgexpo == None:
         if gdat.elemtype == 'lens':
-            gdat.strgexpo = 1e3 / gdat.hubbexpofact
+            gdat.strgexpo = 1000. / gdat.hubbexpofact
         else:
             gdat.strgexpo = 1.
 
@@ -777,7 +777,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 4e-3 / gdat.anglfact
+    minmdefs = 1e-2 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e1
@@ -797,7 +797,7 @@ def init( \
     maxmnobj = 1e3
     setp_namevarbvalu(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 2e-2 / gdat.anglfact
+    maxmdefs = 1e-1 / gdat.anglfact
     setp_namevarbvalu(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -941,7 +941,7 @@ def init( \
             setp_namevarbvalu(gdat, 'expodiststdvpop1', 0.2, popl=True)
         
         if gdat.exprtype == 'hubb':
-            bacp = 1e-7
+            bacp = 2e-7
         else:
             bacp = 1.
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
@@ -950,9 +950,11 @@ def init( \
             setp_namevarbvalu(gdat, 'beinhost', 1.5 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
+            setp_namevarbvalu(gdat, 'ellpsour', 0.2)
             for i in gdat.indxener:
                 setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
                 setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-16)
+            setp_namevarbvalu(gdat, 'ellphost', 0.2)
             setp_namevarbvalu(gdat, 'sangextr', pi / 2.)
             setp_namevarbvalu(gdat, 'serihost', 4.)
    

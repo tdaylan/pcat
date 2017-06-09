@@ -2611,8 +2611,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.minmrelc = 0.01
     gdat.maxmrelc = 1.
 
-    gdat.minmmcut = 1e7
-    gdat.maxmmcut = 8e8
+    gdat.minmmcut = 3e7
+    gdat.maxmmcut = 2e9
     gdat.minmmcutcorr = gdat.minmmcut
     gdat.maxmmcutcorr = gdat.maxmmcut
 
@@ -3741,7 +3741,7 @@ def retr_datatick(gdat):
     # data count limits
     gdat.maxmdatacnts = amax(sum(gdat.datacnts, 2))
     if gdat.minmdatacnts == None:
-        gdat.minmdatacnts = 0.01 * gdat.maxmdatacnts
+        gdat.minmdatacnts = 5e-3 * gdat.maxmdatacnts
     gdat.maxmresicnts = ceil(gdat.maxmdatacnts * 0.1)
     gdat.minmresicnts = -gdat.maxmresicnts
 
@@ -3771,8 +3771,11 @@ def retr_ticklabl(gdat, strgcbar):
             bins[k] = sinh(tick[k])
         elif scal == 'logt':
             bins[k] = 10**(tick[k])
-        #labl[k] = '%.3g' % bins[k]
-        labl[k] = '%.0f' % bins[k]
+
+        if amax(bins) > 1e3:
+            labl[k] = '%d' % bins[k]
+        else:
+            labl[k] = '%.3g' % bins[k]
 
     setattr(gdat, 'bins' + strgcbar, bins)
     setattr(gdat, 'tick' + strgcbar, tick)
