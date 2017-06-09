@@ -1669,6 +1669,7 @@ def initarry( \
              dictvarbvari, \
              dictvarb, \
              sameseed=True, \
+             indxruns=None, \
              randseedelem=False, \
              makeplotarry=False, \
              liststrgvarboutp=None, \
@@ -1700,6 +1701,10 @@ def initarry( \
     
     listgdat = []
     for k in range(numbiter):
+        
+        if indxruns != None:
+            if k != indxruns:
+                continue
         for strgvarb, valu in dictvarbvari.iteritems():
             dictvarb[strgvarb] = valu[k]
         dictvarb['strgcnfg'] = inspect.stack()[1][3] + '_%04d' % k
