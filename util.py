@@ -4944,16 +4944,16 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                
                 ## host
                 axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalhost], \
-                                                                            #alpha=gdat.alphpnts, \
-                                                                            alpha=0.1, \
+                                                                            alpha=gdat.alphpnts, \
+                                                                            #alpha=0.1, \
                                                                             label=gdat.legdtruehits, s=300, marker='D', linewidth=2, color='g')
                 axis.add_patch(plt.Circle((gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalhost]), \
                                                                                 gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbeinhost], edgecolor='g', facecolor='none', lw=2))
                 
                 ## source
                 axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalsour], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalsour], \
-                                                                            alpha=0.1, \
-                                                                            #alpha=gdat.alphpnts, \
+                                                                            #alpha=0.1, \
+                                                                            alpha=gdat.alphpnts, \
                                                                             label=gdat.legdtruehits, s=300, marker='>', linewidth=2, color='g')
             
     # model catalog
@@ -4975,8 +4975,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 lgalsour = gdatmodi.thissampvarb[gdat.fittindxfixplgalsour]
                 bgalsour = gdatmodi.thissampvarb[gdat.fittindxfixpbgalsour]
                 axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, \
-                                                                      alpha=0.1, \
-                                                                      #alpha=gdat.alphpnts, \
+                                                                      #alpha=0.1, \
+                                                                      alpha=gdat.alphpnts, \
                                                                       label='Model Source', s=300, marker='<', linewidth=2, color='b')
     
                 ## host
@@ -4984,8 +4984,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 bgalhost = gdatmodi.thissampvarb[gdat.fittindxfixpbgalhost]
                 beinhost = gdatmodi.thissampvarb[gdat.fittindxfixpbeinhost]
                 axis.scatter(gdat.anglfact * lgalhost, gdat.anglfact * bgalhost, \
-                                                                      alpha=0.1, \
-                                                                      #alpha=gdat.alphpnts, \
+                                                                      #alpha=0.1, \
+                                                                      alpha=gdat.alphpnts, \
                                                                       label='Model Host', s=300, marker='s', linewidth=2, color='b')
                 axis.add_patch(plt.Circle((gdat.anglfact * lgalhost, gdat.anglfact * bgalhost), gdat.anglfact * beinhost, edgecolor='b', facecolor='none', lw=2, ls='--'))
                 
