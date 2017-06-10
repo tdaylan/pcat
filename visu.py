@@ -578,26 +578,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsamp'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsampvarb'
-        print 'indxtrapplot'
-        print indxtrapplot
-        print 'gdat.fittfactplotpara'
-        print gdat.fittfactplotpara[:, None]
-        print 'gdat.fittfactplotpara[indxtrapplot]'
-        print gdat.fittfactplotpara[indxtrapplot]
-        print '[gdat.fittlablpara[k] for k in indxtrapplot]'
-        print [gdat.fittlablpara[k] for k in indxtrapplot]
-        print 'gdat.fittlablpara'
-        print gdat.fittlablpara
-        for k in indxtrapplot:
-            print 'k'
-            print k
-            print 'gdat.listsampvarb[:, k]'
-            print gdat.listsampvarb[:, k]
-            print 'gdat.fittfactplotpara[k]'
-            print gdat.fittfactplotpara[k]
-            print 'gdat.listsampvarb[:, k] * gdat.fittfactplotpara[k]'
-            print gdat.listsampvarb[:, k] * gdat.fittfactplotpara[k]
-            print
         tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot] * gdat.fittfactplotpara[indxtrapplot], [gdat.fittlablpara[k] for k in indxtrapplot])
 
     ## scalar variables

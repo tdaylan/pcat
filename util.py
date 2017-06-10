@@ -2430,7 +2430,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
 
     ## number of bins in histogram plots
-    gdat.numbbinsplot = 20
+    gdat.numbbinsplot = 10
     gdat.indxbinsplot = arange(gdat.numbbinsplot)
     
     ## number of bins in hyperprior plots

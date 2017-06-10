@@ -623,7 +623,7 @@ def init( \
     if gdat.elemtype == 'lght':
         numbpnts = array([100])
     if gdat.elemtype == 'lens':
-        numbpnts = array([20])
+        numbpnts = array([15])
     if gdat.elemtype == 'clus':
         numbpnts = array([100])
     setp_namevarbvalu(gdat, 'numbpnts', numbpnts)
