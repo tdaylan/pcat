@@ -349,21 +349,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resimagnperc', tdim=True)
     
 
-def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
-    
-    if writ:
-        gdat = tdpy.util.gdatstrt()
-        gdat.verbtype = verbtype
-
-        if gdat.verbtype > 0:
-            print 'Reading %s...' % pathpcat
-
-        # read PCAT output file
-        shel = shelve.open(pathpcat)
-        for keyy in shel:
-            if keyy == 'gdat':
-                gdat = shel[keyy]
-        shel.close()
+def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     
     if gdat.verbtype > 0:
         print 'Producing postprocessing plots...'
@@ -374,6 +360,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
   
     # prior components
     if gdat.makeplotlpri:
+        if gdat.verbtype > 0:
+            print 'Plotting the prior distribution...'
+
         gdat.indxlpri = arange(gdat.numblpri)
         gdat.indxlpau = arange(gdat.numblpau)
         indxbadd = where(isfinite(gdat.listlpri) == False)
@@ -575,6 +564,42 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
     
+    ## randomly selected trandimensional parameters
+    if gdat.fittnumbtrap > 0:
+        if gdat.verbtype > 0:
+            print 'Transdimensional parameters...'
+    
+        # choose the parameters based on persistence
+        stdvlistsamptran = std(gdat.listsamp[:, gdat.fittindxsamptrap], axis=0)
+        indxtrapgood = where(stdvlistsamptran > 0.)[0]
+        numbtrapgood = indxtrapgood.size
+        numbtrapplot = min(10, numbtrapgood)
+        indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsamp'
+        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsampvarb'
+        print 'indxtrapplot'
+        print indxtrapplot
+        print 'gdat.fittfactplotpara'
+        print gdat.fittfactplotpara[:, None]
+        print 'gdat.fittfactplotpara[indxtrapplot]'
+        print gdat.fittfactplotpara[indxtrapplot]
+        print '[gdat.fittlablpara[k] for k in indxtrapplot]'
+        print [gdat.fittlablpara[k] for k in indxtrapplot]
+        print 'gdat.fittlablpara'
+        print gdat.fittlablpara
+        for k in indxtrapplot:
+            print 'k'
+            print k
+            print 'gdat.listsampvarb[:, k]'
+            print gdat.listsampvarb[:, k]
+            print 'gdat.fittfactplotpara[k]'
+            print gdat.fittfactplotpara[k]
+            print 'gdat.listsampvarb[:, k] * gdat.fittfactplotpara[k]'
+            print gdat.listsampvarb[:, k] * gdat.fittfactplotpara[k]
+            print
+        tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot] * gdat.fittfactplotpara[indxtrapplot], [gdat.fittlablpara[k] for k in indxtrapplot])
+
     ## scalar variables
     ### trace and marginal distribution of each parameter
     for name in gdat.listnamevarbscal:
@@ -634,20 +659,20 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
         print 'Fixed dimensional parameter covariance...'
     
     ### covariance
-    #### overall
+    ## overall
     path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'fixp'
     truepara = gdat.fittcorrfixp * gdat.fittfactfixpplot
     mlikpara = gdat.mlikfixp * gdat.fittfactfixpplot
     tdpy.mcmc.plot_grid(path, gdat.listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, varbdraw=mlikpara)
     
-    #### individual processes
+    ## individual processes
     if gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalproc') + 'proc%04d' % k
             tdpy.mcmc.plot_grid(path, gdat.listsampvarbproc[:, k, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], \
                                 gdat.fittlablfixptotl[gdat.fittindxfixp], truepara=gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp])
     
-    ### grouped covariance plots
+    ## grouped covariance plots
     if gdat.verbtype > 0:
         print 'Hyperparameters...'
     
@@ -679,23 +704,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, writ=True, prio=False):
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'bacpene%d' % i
                 tdpy.mcmc.plot_grid(path, gdat.listfixp[:, indx], gdat.fittlablfixptotl[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
         
-        
-    if gdat.verbtype > 0:
-        print 'Transdimensional parameters...'
-    
-    ## randomly selected trandimensional parameters
-    if gdat.fittnumbtrap > 0:
-        # choose the parameters based on persistence
-        stdvlistsamptran = std(gdat.listsamp[:, gdat.fittindxsamptrap], axis=0)
-        indxtrapgood = where(stdvlistsamptran > 0.)[0]
-        numbtrapgood = indxtrapgood.size
-        numbtrapplot = min(10, numbtrapgood)
-        indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsamp'
-        tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsampvarb'
-        tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-
     if gdat.verbtype > 0:
         print 'Binned transdimensional parameters...'
    

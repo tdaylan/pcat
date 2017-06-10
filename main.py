@@ -31,7 +31,10 @@ def init( \
          randseedelem=False, \
          indxevttincl=None, \
          indxenerincl=None, \
-         
+        
+         mask=None, \
+         masktype='sqre', \
+
          listnamefeatsele=None, \
          burntmpr=False, \
          #burntmpr=True, \
@@ -90,7 +93,7 @@ def init( \
          
          # modes of operation
          ## plot results from a previous chain
-         procrtag=None, \
+         rtagredo=None, \
          ## interactive
          intrevalmodlcnts=False, \
          intrevalresicnts=False, \
@@ -131,6 +134,7 @@ def init( \
          makeplot=True, \
          makeplotinit=True, \
          makeplotfram=True, \
+         makeplotpost=True, \
          makeplotlpri=True, \
          
          numbframpost=None, \
@@ -224,11 +228,17 @@ def init( \
     for strg, valu in args.iteritems():
         setattr(gdat, strg, valu)
 
-    if gdat.procrtag != None:
-        path = gdat.pathdata + gdat.procrtag + '/outp.fits'
-        gdat = pf.getdata(path, 1)
-        pf.writeto(gdat, gdat.stdvstdp, clobber=True)
-
+    # PCAT folders
+    if gdat.pathbase[-1] != '/':
+        gdat.pathbase += '/'
+    gdat.pathdata = gdat.pathbase + 'data/'
+    gdat.pathdataopti = gdat.pathdata + 'opti/'
+    gdat.pathimag = gdat.pathbase + 'imag/'
+    gdat.pathoutp = gdat.pathdata + 'outp/'
+    
+    # run tag
+    gdat.strgswep = '%d' % (gdat.numbswep)
+    
     # preliminary setup
     ## time stamp
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -249,13 +259,32 @@ def init( \
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
-            
-            # temp
-            gdat.numbproc = 20
-
+            gdat.numbproc = 10
         else:
             gdat.numbproc = 1
     
+    # string describing the number of sweeps
+    gdat.strgnumbswep = '%d' % gdat.numbswep
+    
+    # output paths
+    gdat.rtag = gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.strgnumbswep
+    gdat.pathoutpthis = gdat.pathoutp + gdat.rtag + '/'
+    
+    # plot previous run tag
+    if gdat.rtagredo != None:
+        gdat.pathoutpredo = gdat.pathoutp + gdat.rtagredo + '/'
+        path = gdat.pathoutpredo + 'gdatfinl'
+        if gdat.verbtype > 0:
+            print 'PCAT started in retro-mode.'
+            print 'Reading %s...' % path
+        gdat = readfile(path) 
+        plot_post(gdat)
+        return
+
+    ## catalog output
+    # create output folder for the run
+    os.system('mkdir -p %s' % gdat.pathoutpthis)
+
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
         gdat.factthin = int(ceil(2e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
@@ -504,14 +533,6 @@ def init( \
         if gdat.elemtype == 'lens':
             gdat.radispmr = 0.2 / gdat.anglfact
    
-    if gdat.pathbase[-1] != '/':
-        gdat.pathbase += '/'
-    
-    # paths
-    gdat.pathdata = gdat.pathbase + 'data/'
-    gdat.pathdataopti = gdat.pathdata + 'opti/'
-    gdat.pathimag = gdat.pathbase + 'imag/'
-
     if gdat.exprtype == 'sdyn':
         gdat.enerbins = False
     else:
@@ -797,7 +818,7 @@ def init( \
     maxmnobj = 1e3
     setp_namevarbvalu(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 1e-1 / gdat.anglfact
+    maxmdefs = 10. / gdat.anglfact
     setp_namevarbvalu(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -1021,7 +1042,7 @@ def init( \
 
     if gdat.elemtype == 'lens':
         # construct pixel-convolved Sersic surface brightness template
-        gdat.factsersusam = 40
+        gdat.factsersusam = 10
         maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
         gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
         gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
@@ -1197,13 +1218,6 @@ def init( \
             scal = getattr(gdat, 'scal' + namevarbscal)
         
         retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=scal)
-    
-    # create the PCAT folders
-    gdat.pathoutp = gdat.pathdata + 'outp/'
-    gdat.pathoutpthis = gdat.pathoutp + gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.rtag + '/'
-    os.system('mkdir -p %s' % gdat.pathoutpthis)
-    pathcatllite = gdat.pathoutpthis + 'catllite.fits'  
-    pathcatl = gdat.pathoutpthis + 'catl.fits'  
     
     sys.stdout = logg(gdat)
 
@@ -1462,16 +1476,14 @@ def init( \
     if gdat.datatype == 'inpt':
         retr_datatick(gdat)
     
+    # initial plots
     if gdat.makeplot and gdat.makeplotinit:
         plot_init(gdat)
-
-    # temp
-    if gdat.strgcnfg == 'pcat_ferm_mock_ngal' and (gdat.maxmangleval == zeros(3) + 15. / gdat.anglfact).all():
-        raise Exception('')
 
     # final setup
     setpfinl(gdat, True) 
     
+    # exit before running the sampler
     if gdat.mockonly:
         if gdat.verbtype > 0:
             print 'Mock dataset is generated. Quitting...'
@@ -1495,15 +1507,6 @@ def init( \
     gdat.timeproctotl = time.clock()
    
     if gdat.verbtype > 1:
-        if gdat.elemtype == 'lght':
-            print 'minmflux'
-            print gdat.minmflux
-            print 'maxmflux'
-            print gdat.maxmflux
-            print 'minmcnts'
-            print gdat.minmcnts
-            print 'maxmcnts'
-            print gdat.maxmcnts
         if gdat.evalcirc != 'full':
             print 'maxmangleval'
             print gdat.anglfact * gdat.maxmangleval, ' [%s]' % gdat.strganglunit
@@ -1578,9 +1581,6 @@ def init( \
         #    else:
         #        setattr(gdat, strgvarbsave + 'saveprio', varb)
            
-        ## change the variables
-        #gdat.stdvstdp[:] = 1e-2
-
         ## perform sampling
         worksamp(gdat, lock)
         
@@ -1617,13 +1617,11 @@ def init( \
     # run the sampler
     worksamp(gdat, lock)
 
+    # post process the samples
     proc_post(gdat)
-    #if not os.fork():
-    #    # post process the samples
-    #    proc_post(gdat)
 
     if gdat.verbtype > 0:
-        print 'The ensemble of catalogs is at ' + pathcatl
+        print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
         if gdat.makeplot:
             print 'The plots are at ' + gdat.pathplot
         print 'PCAT has run successfully. Returning to the OS...'
@@ -2054,16 +2052,18 @@ def proc_post(gdat, prio=False):
     gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
     gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
    
-    path = gdat.pathoutpthis + 'pcat.h5'
-    writoutp(gdat, path)
+    gdat.pathpcat = gdat.pathoutpthis + 'pcat'
+    writoutp(gdat, gdat.pathpcat)
     os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
-    # temp
-    if False:
-        if gdat.makeplot:
-            plot_post(pathcatl=pathcatl, verbtype=gdat.verbtype, prio=prio)
-    else:
-        if gdat.makeplot:
-            plot_post(gdat=gdat, writ=False, prio=prio)
+   
+    # write the final gdat object
+    path = gdat.pathoutpthis + 'gdatfinl'
+    if gdat.verbtype > 0:
+        print 'Writing the global object to %s...' % path
+    writfile(gdat, path) 
+    
+    if gdat.makeplot and gdat.makeplotpost:
+        plot_post(gdat, prio=prio)
 
     gdat.timerealtotl = time.time() - gdat.timerealtotl
     gdat.timeproctotl = time.clock() - gdat.timeproctotl
@@ -2432,27 +2432,6 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
     
     # apply imposed initial state
-    ## by individual values for parameters
-    for k, namefixp in enumerate(gdat.fittnamefixp):
-        if gdat.recostat:
-            try:
-                getattr(gdat, 'init' + namefixp)
-                boolfail = True
-            except:
-                boolfail = False
-            if boolfail:
-                raise Exception('Conflicting initial state arguments detected!')
-                
-        try:
-            initvalu = getattr(gdat, 'init' + namefixp)
-            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
-            
-            if gdat.verbtype > 0:
-                print 'Received initial condition for %s: %.3g' % (namefixp, initvalu)
-            print
-        except:
-            pass
-
     ## by the saved state of another run
     if gdat.recostat:
         if isinstance(gdat.recostat, str):
@@ -2473,6 +2452,27 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Initialization from the saved state failed.' 
             raise
+
+    ## by individual values for parameters
+    for k, namefixp in enumerate(gdat.fittnamefixp):
+        if gdat.recostat:
+            try:
+                getattr(gdat, 'init' + namefixp)
+                boolfail = True
+            except:
+                boolfail = False
+            if boolfail:
+                print Exception('Conflicting initial state arguments detected, init keyword takes precedence.')
+                
+        try:
+            initvalu = getattr(gdat, 'init' + namefixp)
+            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
+            
+            if gdat.verbtype > 0:
+                print 'Received initial condition for %s: %.3g' % (namefixp, initvalu)
+            print
+        except:
+            pass
 
     if gdat.datatype == 'inpt' and gdat.inittype != 'rand':
         raise Exception('')
@@ -2667,7 +2667,7 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.emptsamp:
             continue
 
-        initchro(gdat, gdatmodi, 'totl')
+        initchro(gdat, gdatmodi, 'next', 'totl')
         
         if gdat.verbtype > 1:
             print
@@ -2677,7 +2677,7 @@ def work(pathoutpthis, lock, indxprocwork):
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
                                                                                    and gdat.makeplotfram and gdat.makeplot and not gdat.opti
         # choose a proposal type
-        initchro(gdat, gdatmodi, 'type')
+        initchro(gdat, gdatmodi, 'next', 'type')
         retr_thisindxprop(gdat, gdatmodi)
         
         if gdat.verbtype > 1:        
@@ -2695,7 +2695,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print gdatmodi.thislliktotl + gdatmodi.thislpritotl
             print
         
-        stopchro(gdat, gdatmodi, 'type')
+        stopchro(gdat, gdatmodi, 'next', 'type')
 
         if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
             gdatmodi.thisfacttmpr = ((gdatmodi.cntrswep + 1.) / gdat.numbburntmpr)**4
@@ -2710,11 +2710,11 @@ def work(pathoutpthis, lock, indxprocwork):
             gdatmodi.thistmprlposelem = 0. 
 
         # propose the next sample
-        initchro(gdat, gdatmodi, 'prop')
+        initchro(gdat, gdatmodi, 'next', 'prop')
         
         retr_prop(gdat, gdatmodi)
         
-        stopchro(gdat, gdatmodi, 'prop')
+        stopchro(gdat, gdatmodi, 'next', 'prop')
        
         if gdat.verbtype > 1:
             show_samp(gdat, gdatmodi)
@@ -2722,7 +2722,7 @@ def work(pathoutpthis, lock, indxprocwork):
         # diagnostics
         if gdat.diagmode:
             
-            initchro(gdat, gdatmodi, 'diag')
+            initchro(gdat, gdatmodi, 'next', 'diag')
             
             indxsampbadd = where((gdatmodi.thissamp[gdat.fittnumbpopl:] > 1.) | (gdatmodi.thissamp[gdat.fittnumbpopl:] < 0.))[0] + 1
             if indxsampbadd.size > 0:
@@ -2818,12 +2818,12 @@ def work(pathoutpthis, lock, indxprocwork):
                         print
                         raise Exception('A component of an element went outside the prior range.')
         
-            stopchro(gdat, gdatmodi, 'diag')
+            stopchro(gdat, gdatmodi, 'next', 'diag')
     
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
            
-            initchro(gdat, gdatmodi, 'save')
+            initchro(gdat, gdatmodi, 'next', 'save')
         
             if gdat.savestat:
                 path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
@@ -2846,12 +2846,12 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
                  
-            stopchro(gdat, gdatmodi, 'save')
+            stopchro(gdat, gdatmodi, 'next', 'save')
 
         # plot the current sample
         if thismakefram:
             
-            initchro(gdat, gdatmodi, 'plot')
+            initchro(gdat, gdatmodi, 'next', 'plot')
             
             if gdat.verbtype > 0:
                 print 'Process %d is in queue for making a frame.' % gdatmodi.indxprocwork
@@ -2872,7 +2872,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.numbproc > 1:
                 gdatmodi.lock.release()
         
-            stopchro(gdat, gdatmodi, 'plot')
+            stopchro(gdat, gdatmodi, 'next', 'plot')
     
         # temp
         if False and gdat.elemtype == 'lght':
@@ -2963,7 +2963,7 @@ def work(pathoutpthis, lock, indxprocwork):
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
         
         # save the execution time for the sweep
-        stopchro(gdat, gdatmodi, 'totl')
+        stopchro(gdat, gdatmodi, 'next', 'totl')
         
         workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.thisaccpprob[0]
         
