@@ -369,9 +369,12 @@ def init( \
         gdat.hubbexpofact = 1.63050e-19
     
     if gdat.strgexpo == None:
-        if gdat.elemtype == 'lens':
+        if gdat.elemtype == 'lght':
+            if gdat.exprtype == 'ferm':
+                strgexpo = 'fermexpo_cmp0_ngal.fits'
+        elif gdat.elemtype == 'lens':
             gdat.strgexpo = 1000. / gdat.hubbexpofact
-        else:
+        elif gdat.elemtype == 'clus':
             gdat.strgexpo = 1.
 
     if gdat.indxevttfull == None:
