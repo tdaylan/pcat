@@ -52,10 +52,10 @@ pathlist = pathimag + 'listfink.txt'
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
     listline = [x.strip() for x in listline] 
-strgsrch = '2017052*'
+strgsrch = '20170609*'
 listline = fnmatch.filter(listline, strgsrch)
 
-namerefr = '20170524_161457_pcat_lens_mock_syst_0000_10000'
+namerefr = '20170609_050550_pcat_lens_mock_syst_0000_2000000'
 pathrefr = os.environ["PCAT_DATA_PATH"] + '/imag/' + namerefr + '/'
 if not os.path.isdir(pathrefr):
     print 'Copying reference run to the local directory...'

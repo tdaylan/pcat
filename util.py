@@ -527,7 +527,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
         else:
             gdatmodi.thisindxproptype = gdat.indxproptypewith
         gdatmodi.propwith = True
-        gdatmodi.proppsfnkern = gdat.evalpsfnkern and gdatmodi.indxsampmodi in gdat.fittindxfixppsfp
+        gdatmodi.proppsfnkern = not gdat.evalpsfnkern and (gdatmodi.indxsampmodi in gdat.fittindxfixppsfp)
         if gdat.elemtype == 'lens':
             gdatmodi.prophost = gdatmodi.indxsampmodi in gdat.fittindxfixphost
     
