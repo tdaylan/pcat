@@ -6519,22 +6519,38 @@ def retr_mapssers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
     bgalrttr = sin(angl) * (lgalgrid - lgal) + cos(angl) * (bgalgrid - bgal) 
 
     angl = sqrt(lgalrttr[None, :, :, None]**2 + bgalrttr[None, :, :, None]**2)
-    mapssers = retr_sersprof(gdat, spec[:, None, None, None], angl, size, seri)
 
+    # interpolate pixel-convolved Sersic surface brightness
+    if gdat.serstype == 'intp':
+        shapinpt = angl.shape 
+        inpt = empty(list(shapinpt) + [3])
+        inpt[..., 0] = angl
+        inpt[..., 1] = size
+        inpt[..., 2] = seri
+        mapssers = spec[:, None, None, None] * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)
+    
+    # evaluate directly de Vaucouleurs
+    if gdat.serstype == 'vauc':
+        mapssers = spec[:, None, None, None] * retr_sbrtsers(angl, size)
+    
     return mapssers
 
 
-def retr_sersprof(gdat, spec, angl, sizehalf, indx):
-    
-    # interpolate pixel-convolved Sersic surface brightness
-    shapinpt = angl.shape
-    inpt = empty(list(shapinpt) + [3])
-    inpt[..., 0] = angl
-    inpt[..., 1] = sizehalf
-    inpt[..., 2] = indx
-    sbrtprof = spec * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)
+def retr_sbrtsers(angl, halfsers, indxsers=4.):
 
-    return sbrtprof
+    ## this approximation works for 0.5  < indx < 10
+    factsers = 1.9992 * indxsers - 0.3271
+    
+    ## surface brightness profile at the half-light radius for a 1 erg cm^-2 s^-1 A^-1 source
+    if indxsers == 4.:
+        sbrthalf = 7.2 * pi / halfsers**2
+    else:
+        sbrthalf= 1. / 2. / pi / exp(factsers) * factsers**(2 * indxsers) / indxsers / sp.special.gamma(2. * indxsers) / halfsers**2
+                
+    ## surface brightness profile
+    sbrtsers = sbrthalf * exp(-factsers * ((angl / halfsers)**(1. / indxsers) - 1.))
+    
+    return sbrtsers
 
 
 def make_anim(strgsrch, full=False):

@@ -51,6 +51,9 @@ def init( \
          plotelemcorr=True, \
          relnprio=False, \
         
+         # Sersic model type
+         serstype='vauc', \
+
          # elements
          ## vary projected scale radius
          variasca=True, \
@@ -73,7 +76,7 @@ def init( \
          # initialization
          ## initialization type
          inittype=None, \
-         
+        
          loadvaripara=False, \
          
          # save the state of the MCMC
@@ -626,7 +629,7 @@ def init( \
     if gdat.elemtype == 'lght':
         numbpnts = array([100])
     if gdat.elemtype == 'lens':
-        numbpnts = array([15])
+        numbpnts = array([37])
     if gdat.elemtype == 'clus':
         numbpnts = array([100])
     setp_namevarbvalu(gdat, 'numbpnts', numbpnts)
@@ -801,7 +804,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 1e-2 / gdat.anglfact
+    minmdefs = 0.005 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e1
@@ -1069,19 +1072,10 @@ def init( \
         gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
         
         for n in range(gdat.numbindxsers + 1):
-            
-            ## this approximation works for 0.5  < indx < 10
-            factsers = 1.9992 * gdat.binsindxsers[n] - 0.3271
-        
             for k in range(gdat.numbhalfsers + 1):
                 
-                ## surface brightness profile at the half-light radius for a 1 erg cm^-2 s^-1 A^-1 source
-                sbrthalf= 1. / 2. / pi / exp(factsers) * factsers**(2*gdat.binsindxsers[n]) / gdat.binsindxsers[n] / \
-                                                                                                    sp.special.gamma(2. * gdat.binsindxsers[n]) / gdat.binshalfsers[k]**2
-                
-                ## surface brightness profile
-                profusam = sbrthalf * exp(-factsers * ((gdat.binsradisersusam / gdat.binshalfsers[k])**(1. / gdat.binsindxsers[n]) - 1.))
-                
+                profusam = retr_sbrtsers(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
+
                 ## take the pixel average
                 indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
                 indxbgaluppr = gdat.factsersusam * (gdat.numblgalsers + 3) / 2
