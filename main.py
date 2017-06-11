@@ -1551,7 +1551,7 @@ def init( \
     for strg, valu in gdatmodifudi.__dict__.iteritems():
         if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep and isinstance(valu, ndarray):
             gdat.liststrgvarbarrysamp.append(strg[4:])
-        if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnkern' and \
+        if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
                                                                                     strg != 'thistrueindxpntsasscmiss' and strg != 'thistrueindxpntsasschits':
             gdat.liststrgvarblistsamp.append(strg[4:])
     

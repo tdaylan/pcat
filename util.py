@@ -466,7 +466,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     gdatmodi.thislcomfact = 0.
    
     gdatmodi.prophost = False
-    gdatmodi.proppsfnkern = False
+    gdatmodi.proppsfnconv = False
     
     # index of the population in which a transdimensional proposal will be made
     if thisindxpopl == None:
@@ -527,7 +527,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
         else:
             gdatmodi.thisindxproptype = gdat.indxproptypewith
         gdatmodi.propwith = True
-        gdatmodi.proppsfnkern = not gdat.evalpsfnkern and (gdatmodi.indxsampmodi in gdat.fittindxfixppsfp)
+        gdatmodi.proppsfnconv = gdat.evalpsfnconv and (gdatmodi.indxsampmodi in gdat.fittindxfixppsfp)
         if gdat.elemtype == 'lens':
             gdatmodi.prophost = gdatmodi.indxsampmodi in gdat.fittindxfixphost
     
@@ -814,8 +814,10 @@ def updt_samp(gdat, gdatmodi):
     # update the log-likelihood
     gdatmodi.thislliktotl = copy(gdatmodi.nextlliktotl)
    
-    if gdatmodi.proppsfnkern:
-        gdatmodi.thispsfnkern = copy(gdatmodi.nextpsfnkern)
+    if gdatmodi.proppsfnconv:
+        gdatmodi.thispsfnconv = []
+        for i in gdat.indxener:
+            gdatmodi.thispsfnconv.append(AiryDisk2DKernel(gdatmodi.nextpsfp[i] / gdat.sizepixl))
     
     if gdat.elemtype == 'lens':
         if gdatmodi.prophost:
@@ -2891,7 +2893,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.listnamechro += ['lghtpntsprep', 'lghtpntseval', 'lghtmodl']
     if gdat.elemtype == 'lens':
-        gdat.listnamechro += ['deflzero', 'deflhost', 'deflextr', 'deflelem', 'psfnkern', 'lensflux', 'hostflux', 'modlfluxuncv', 'modlflux']
+        gdat.listnamechro += ['deflzero', 'deflhost', 'deflextr', 'deflelem', 'psfnconv', 'lensflux', 'hostflux', 'modlfluxuncv', 'modlflux']
     gdat.listnamechro += ['expo', 'llikcalc']
     
     gdat.listlegdchro = ['Total', 'Type', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Process', 'Prior', 'Posterior']
@@ -3202,11 +3204,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.calcerrr = False
    
     if gdat.elemtype == 'lens':
-        gdat.evalpsfnkern = False
+        gdat.evalpsfnconv = True
     else:
-        gdat.evalpsfnkern = True
+        gdat.evalpsfnconv = False
 
-    if gdat.evalpsfnkern:
+    if not gdat.evalpsfnconv:
         gdat.exprpsfn = retr_psfn(gdat, gdat.exprpsfp, gdat.indxener, gdat.binsangl, gdat.exprpsfntype, gdat.binsoaxi, gdat.exproaxitype)
     
     if gdat.evalcirc != 'full':
@@ -5160,6 +5162,11 @@ def writfile(gdattemp, path):
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
+            print 'attr'
+            print attr
+            print 'calu'
+            print valu
+            print
             setattr(gdattemptemp, attr, valu)
     
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -5383,7 +5390,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         liststrgcomp = getattr(gdat, strgmodl + 'liststrgcomp')
         listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
         liststrgcomptotl = getattr(gdat, strgmodl + 'liststrgcomptotl')
-        if gdat.evalpsfnkern:
+        if not gdat.evalpsfnconv:
             oaxitype = getattr(gdat, strgmodl + 'oaxitype')
     
     # grab the sample vector
@@ -5617,15 +5624,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             stopchro(gdat, gdatmodi, strg, 'deflextr')
         
             ## PSF kernel
-            initchro(gdat, gdatmodi, strg, 'psfnkern')
-            if strg == 'next' and not gdatmodi.proppsfnkern:
-                psfnkern = gdatmodi.thispsfnkern
+            initchro(gdat, gdatmodi, strg, 'psfnconv')
+            if strg == 'next' and not gdatmodi.proppsfnconv:
+                psfnconv = gdatmodi.thispsfnconv
             else:
-                psfnkern = []
+                psfnconv = []
                 for i in gdat.indxener:
-                    psfnkern.append(AiryDisk2DKernel(psfp[i] / gdat.sizepixl))
-                setattr(gdatobjt, strg + 'psfnkern', psfnkern)
-            stopchro(gdat, gdatmodi, strg, 'psfnkern')
+                    psfnconv.append(AiryDisk2DKernel(psfp[i] / gdat.sizepixl))
+                setattr(gdatobjt, strg + 'psfp', psfp)
+            stopchro(gdat, gdatmodi, strg, 'psfnconv')
             
         if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
             ## PSF off-axis factor
@@ -5716,7 +5723,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             initchro(gdat, gdatmodi, strg, 'modlflux')
             modlflux = empty_like(gdat.expo)
             for i in gdat.indxener:
-                modlflux[i, :, 0] = convolve_fft(modlfluxuncv[i, :, :, 0], psfnkern[i]).flatten()
+                modlflux[i, :, 0] = convolve_fft(modlfluxuncv[i, :, :, 0], psfnconv[i]).flatten()
             setattr(gdatobjt, strg + 'defl', defl)
             stopchro(gdat, gdatmodi, strg, 'modlflux')
             
@@ -5880,7 +5887,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             lenscnts = retr_cntsmaps(gdat, lensflux, cart=True)
             hostcntsmaps = retr_cntsmaps(gdat, hostfluxmaps, cart=True)
             
-            setattr(gdatobjt, strg + 'psfnkern', psfnkern)
+            setattr(gdatobjt, strg + 'psfnconv', psfnconv)
             setattr(gdatobjt, strg + 'modlcntsuncv', modlcntsuncv)
             setattr(gdatobjt, strg + 'lenscnts', lenscnts)
             setattr(gdatobjt, strg + 'hostcntsmaps', hostcntsmaps)
@@ -6036,7 +6043,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         
                         modlflux = empty_like(gdat.expo)
                         for i in gdat.indxener:
-                            modlflux[i, :, 0] = convolve_fft(modlfluxuncv[i, :, :, 0], psfnkern[i]).flatten()
+                            modlflux[i, :, 0] = convolve_fft(modlfluxuncv[i, :, :, 0], psfnconv[i]).flatten()
                     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
                         pntsfluxtemp = copy(pntsflux)
 
