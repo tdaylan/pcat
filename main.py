@@ -489,7 +489,7 @@ def init( \
         if gdat.exprtype == 'sdss':
             gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
         elif gdat.exprtype == 'hubb':
-            gdat.strgenerfull = ['F606W']
+            gdat.strgenerfull = ['F814W']
         elif gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
             gdat.strgenerfull = []
             for i in gdat.indxenerfull:
@@ -806,6 +806,8 @@ def init( \
     
     minmdefs = 0.005 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
+    minmdefs = 0.01 / gdat.anglfact
+    setp_namevarbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
     
     minmnobj = 1e1
     setp_namevarbvalu(gdat, 'minmnobj', minmnobj)
@@ -824,7 +826,7 @@ def init( \
     maxmnobj = 1e3
     setp_namevarbvalu(gdat, 'maxmnobj', maxmnobj)
     
-    maxmdefs = 10. / gdat.anglfact
+    maxmdefs = 1. / gdat.anglfact
     setp_namevarbvalu(gdat, 'maxmdefs', maxmdefs)
    
     # parameter defaults
@@ -1041,9 +1043,9 @@ def init( \
                 limt = getattr(gdat, strglimt + namevarb)
             except:
                 if strglimt == 'minm':
-                    limt = minimum(getattr(gdat, 'fittminm' + namevarb), getattr(gdat, 'fittminm' + namevarb))
+                    limt = minimum(getattr(gdat, 'fittminm' + namevarb), getattr(gdat, 'trueminm' + namevarb))
                 else:
-                    limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'fittmaxm' + namevarb))
+                    limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'truemaxm' + namevarb))
                 setattr(gdat, strglimt + namevarb, limt)
 
     if gdat.elemtype == 'lens':
@@ -2056,10 +2058,11 @@ def proc_post(gdat, prio=False):
     os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
    
     # write the final gdat object
-    path = gdat.pathoutpthis + 'gdatfinl'
-    if gdat.verbtype > 0:
-        print 'Writing the global object to %s...' % path
-    writfile(gdat, path) 
+    if False:
+        path = gdat.pathoutpthis + 'gdatfinl'
+        if gdat.verbtype > 0:
+            print 'Writing the global object to %s...' % path
+        writfile(gdat, path) 
     
     if gdat.makeplot and gdat.makeplotpost:
         plot_post(gdat, prio=prio)

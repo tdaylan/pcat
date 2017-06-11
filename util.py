@@ -6139,6 +6139,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             print 'Feature maximum'
                             print amax(dicttemp[strgfeat][l])
                             print
+                            if strgfeat == gdat.namecompampl:
+                                raise Exception('')
 
             ### distribution of element parameters and features
             #### find the indices of the model PSs that are in the comparison area
