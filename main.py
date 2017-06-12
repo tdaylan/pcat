@@ -804,7 +804,7 @@ def init( \
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
     
-    minmdefs = 0.005 / gdat.anglfact
+    minmdefs = 0.003 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs)
     minmdefs = 0.01 / gdat.anglfact
     setp_namevarbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
