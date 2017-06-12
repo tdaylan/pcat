@@ -461,6 +461,10 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     gdatmodi.propsplt = False
     gdatmodi.propmerg = False
     
+    # temp
+    gdatmodi.propmeanpnts = False
+    gdatmodi.propdefsdist = False
+    
     gdatmodi.thisljcbfact = 0.
     gdatmodi.thislpautotl = 0. 
     gdatmodi.thislcomfact = 0.
@@ -523,6 +527,13 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             else:
                 gdatmodi.thisindxsampfull = gdat.indxfixpprop
             gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
+            
+            # temp
+            if gdatmodi.indxsampmodi == 1:
+                gdatmodi.propmeanpnts = True
+            if gdatmodi.indxsampmodi == 2:
+                gdatmodi.propdefsdist = True
+
             gdatmodi.thisindxproptype = gdat.indxstdppara[gdatmodi.indxsampmodi]
         else:
             gdatmodi.thisindxproptype = gdat.indxproptypewith
@@ -1265,7 +1276,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             if gdatmodi.propfixp:
                 gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_fixp(gdat, 'fitt', gdatmodi.nextsamp[gdatmodi.indxsampmodi], gdatmodi.indxsampmodi)
            
-            if gdat.fittnumbtrap > 0 and gdatmodi.indxsampmodi in gdat.fittindxfixpdist:
+            # temp
+            if gdat.fittnumbtrap > 0 and gdatmodi.propdefsdist:
                 gdatmodi.propdist = True
                 # temp
                 # this should check whether rescaling is necessary
@@ -5471,7 +5483,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             
             for k, (strgfeat, pdfnfeat) in enumerate(zip(liststrgfeatprio[l], liststrgpdfnprio[l])):
                 
-                if pdfnfeat == 'tmpl':
+                if False and pdfnfeat == 'tmpl':
 
                     if pdfnfeat.endswith('cons'):
                         pdfnspatpriotemp = getattr(gdat, strgmodl + 'pdfnspatpriotemp')
@@ -5488,7 +5500,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     else:
                         lpdfspatprioobjt = gdat.fittlpdfspatprioobjt
                 
-                if pdfnfeat == 'self':
+                if False and pdfnfeat == 'self':
                     minmfeat = getattr(gdat, 'minm' + strgfeat)
                     maxmfeat = getattr(gdat, 'maxm' + strgfeat)
                     # temp -- this may be sped up a bit
@@ -5507,15 +5519,24 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         lpri[1+numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['bgal'][l], dicttemp['lgal'][l], grid=False))
                
                 # temp -- this should not be here
-                #if pdfnfeat == 'powrslop':
-                #    lpri[1+(k+1)*numbpopl+l] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
-                if pdfnfeat == 'gausmeanstdv':
-                    lpri[1+(k+1)*numbpopl+l] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
+                if pdfnfeat == 'powrslop':
+                    lpri[1+(k+1)*numbpopl+l] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
+                #if pdfnfeat == 'gausmeanstdv':
+                #    lpri[1+(k+1)*numbpopl+l] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
             
         if strg == 'this':
             gdatmodi.thislpripena = lpri[0]
-        
-        if strg == 'next' and gdatmodi.proptran:
+       
+        # temp
+        if strg == 'next':
+            gdatmodi.deltlpri = 0.
+            gdatmodi.thislpau = zeros(gdat.numblpau)
+            if gdatmodi.propmeanpnts or gdatmodi.propdefsdist:
+                gdatmodi.deltlpri = sum(lpri) - gdatmodi.thislpritotl
+            else:
+                gdatmodi.deltlpri = 0.
+        # temp
+        if False and strg == 'next' and gdatmodi.proptran:
             
             gdatmodi.thislpau = zeros(gdat.numblpau)
             
@@ -5541,7 +5562,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if listscalcomp[gdatmodi.indxpoplmodi][k] == 'gaus':
                         gdatmodi.thislpau[k] = retr_lprigausdist(gdat, gdatmodi, strgmodl, sampvarbtemp[gdatmodi.indxsamptran[0][k]], \
                                                                                            strgcomp, gdatmodi.thissampvarb, gdatmodi.indxpoplmodi)
-                
             if gdatmodi.propsplt or gdatmodi.propmerg:
             
                 for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi]):
@@ -5569,6 +5589,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 print lpri
 
             gdatmodi.thislpautotl = sum(gdatmodi.thislpau)
+            
+            if gdatmodi.proptran:
+                gdatmodi.deltlpri = gdatmodi.thislpautotl + sum(lpri)
+            
     
     lpritotl = sum(lpri)
     

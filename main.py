@@ -1336,7 +1336,7 @@ def init( \
             gdat.truenumbpnts = empty(gdat.numbpopl, dtype=int)
             if gdat.truenumbtrap > 0:
                 for l in gdat.trueindxpopl:
-                    gdat.truenumbpnts[l] = random_integers(0, gdat.maxmnumbpnts[l])
+                    gdat.truenumbpnts[l] = random_integers(0, gdat.truemaxmnumbpnts[l])
     
     gdat.truenumbpopl = gdat.truenumbpnts.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
@@ -2213,7 +2213,7 @@ def optihess(gdat, gdatmodi):
     # temp
     deltparastep = 1e-4
 
-    maxmstdv = 10.
+    maxmstdv = 0.1
     if gdat.exprtype == 'ferm':
         fudgstdv = 0.5
     else:
@@ -2340,7 +2340,8 @@ def optihess(gdat, gdatmodi):
             print
             #raise Exception('')
 
-        gdatmodi.stdvstdpmatr[indx] = maxmstdv
+        #gdatmodi.stdvstdpmatr[indx] = maxmstdv
+        gdatmodi.stdvstdpmatr[indx] = gdat.stdvstdp[getattr(gdat, 'indxstdp' + gdat.namestdp[indx[0][k]])]
             
     for strg in gdat.fittliststrgcomptotl:
         gdatmodi.dictmodi['stdv' + strg + 'indv'] = array(gdatmodi.dictmodi['stdv' + strg + 'indv'])
@@ -2941,9 +2942,10 @@ def work(pathoutpthis, lock, indxprocwork):
             #    raise Exception('')
 
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
-                                                                            gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
-                                                                                                                            gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
+            #gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
+            #                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
+            #                                                                                                                gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.deltlpri)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.
