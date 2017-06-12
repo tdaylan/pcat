@@ -782,7 +782,7 @@ def init( \
     if gdat.elemtype == 'lght':
         meanpnts = [0.1, 1000.]
     if gdat.elemtype == 'lens':
-        meanpnts = [0.1, 100.]
+        meanpnts = [0.1, 1000.]
     if gdat.elemtype == 'clus':
         meanpnts = [0.1, 100.]
     setp_namevarblimt(gdat, 'meanpnts', meanpnts, popl=True)
