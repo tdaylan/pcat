@@ -1257,10 +1257,10 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 
             ## propose a step in a parameter
             if gdatmodi.propfixp:
-                stdvpara = stdvstdp[gdat.indxstdppara[gdatmodi.indxsampmodi]]
+                gdatmodi.thisstdvpara = stdvstdp[gdat.indxstdppara[gdatmodi.indxsampmodi]]
             else:
-                stdvpara = retr_propcompscal(gdat, gdatmodi, stdvstdp, gdatmodi.indxpoplmodi, gdatmodi.thisstrgcomp, indxelemfull=gdatmodi.indxelemfullmodi[0])
-            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, stdvpara)
+                retr_propcompscal(gdat, gdatmodi, stdvstdp, gdatmodi.indxpoplmodi, gdatmodi.thisstrgcomp, indxelemfull=gdatmodi.indxelemfullmodi[0])
+            retr_gaus(gdat, gdatmodi, gdatmodi.indxsampmodi, gdatmodi.thisstdvpara)
             
             if gdatmodi.propfixp:
                 gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_fixp(gdat, 'fitt', gdatmodi.nextsamp[gdatmodi.indxsampmodi], gdatmodi.indxsampmodi)
@@ -1297,8 +1297,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             if gdat.propcomp:
                 for l in gdat.fittindxpopl:
                     for strgcomp in gdat.fittliststrgcomp[l]:
-                        stdvpara = retr_propcompscal(gdat, gdatmodi, stdvstdp, l, strgcomp)
-                        retr_gaus(gdat, gdatmodi, gdatmodi.thisindxsampcomp[strgcomp][l], stdvpara)
+                        retr_propcompscal(gdat, gdatmodi, stdvstdp, l, strgcomp)
+                        retr_gaus(gdat, gdatmodi, gdatmodi.thisindxsampcomp[strgcomp][l], gdatmodi.thisstdvpara)
 
     else:
         # number of unit sample vector elements to be modified
@@ -1723,21 +1723,22 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
 
 def retr_propcompscal(gdat, gdatmodi, stdvstdp, l, strgcomp, indxelemfull=slice(None)):
     
-    thiscompampl = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
-    nextcompampl = gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
-    minmcompampl = getattr(gdat, 'minm' + gdat.namecompampl)
     stdvstdpcomp = stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)]
-    thiscompunit = gdatmodi.thissamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
-    nextcompunit = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
-    if strgcomp == gdat.namecompampl:
-        # temp -- this only works if compampl is powr distributed
-        gdatmodi.thisstdv = stdvstdpcomp / (thiscompampl / minmcompampl)**2.
-        gdatmodi.nextstdv = stdvstdpcomp / (nextcompampl / minmcompampl)**2.
-        gdatmodi.thislfctasym += sum(0.5 * (nextcompunit - thiscompunit)**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
+    if False:
+        thiscompampl = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+        nextcompampl = gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+        minmcompampl = getattr(gdat, 'minm' + gdat.namecompampl)
+        thiscompunit = gdatmodi.thissamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+        nextcompunit = gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[gdat.namecompampl][l][indxelemfull]]
+        if strgcomp == gdat.namecompampl:
+            # temp -- this only works if compampl is powr distributed
+            gdatmodi.thisstdvpara = stdvstdpcomp / (thiscompampl / minmcompampl)**2.
+            gdatmodi.nextstdv = stdvstdpcomp / (nextcompampl / minmcompampl)**2.
+            gdatmodi.thislfctasym += sum(0.5 * (nextcompunit - thiscompunit)**2 * (1. / gdatmodi.thisstdv**2 - 1. / gdatmodi.nextstdv**2))
+        else:
+            gdatmodi.thisstdvpara = stdvstdpcomp / (minimum(thiscompampl, nextcompampl) / minmcompampl)**0.5
     else:
-        gdatmodi.thisstdv = stdvstdpcomp / (minimum(thiscompampl, nextcompampl) / minmcompampl)**0.5
-
-    return gdatmodi.thisstdv
+        gdatmodi.thisstdvpara = stdvstdpcomp
 
 
 def show_dbug(gdat, gdatmodi):
@@ -3402,6 +3403,9 @@ def setpinit(gdat, boolinitsetp=False):
     # proposal scale
     if gdat.elemtype == 'lens':
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
+
+        gdat.stdvstdp[gdat.indxstdpmeanpntspop0] = 1e-1
+        gdat.stdvstdp[gdat.indxstdpdefsdistsloppop0] = 1e-1
 
         gdat.stdvstdp[gdat.indxstdpsigcene0evt0] = 3e-2
         gdat.stdvstdp[gdat.indxstdpbacpbac0ene0] = 1e-3
@@ -5162,11 +5166,6 @@ def writfile(gdattemp, path):
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
-            print 'attr'
-            print attr
-            print 'calu'
-            print valu
-            print
             setattr(gdattemptemp, attr, valu)
     
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -5506,9 +5505,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         lpri[1+2*numbpopl+l] = -numbpnts[l] * log(2. * pi) 
                     elif strgpdfn == 'tmpl':
                         lpri[1+numbpopl+l] = sum(lpdfspatprioobjt(dicttemp['bgal'][l], dicttemp['lgal'][l], grid=False))
-                
-                if pdfnfeat == 'powrslop':
-                    lpri[1+(k+1)*numbpopl+l] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
+               
+                # temp -- this should not be here
+                #if pdfnfeat == 'powrslop':
+                #    lpri[1+(k+1)*numbpopl+l] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
                 if pdfnfeat == 'gausmeanstdv':
                     lpri[1+(k+1)*numbpopl+l] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dicttemp[strgfeat][l], strgfeat, sampvarb, l)
             

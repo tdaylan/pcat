@@ -359,7 +359,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     gdat.strgbest = 'ML'
   
     # prior components
-    if gdat.makeplotlpri:
+    if gdat.diagmode:
         if gdat.verbtype > 0:
             print 'Plotting the prior distribution...'
 

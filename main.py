@@ -138,7 +138,6 @@ def init( \
          makeplotinit=True, \
          makeplotfram=True, \
          makeplotpost=True, \
-         makeplotlpri=True, \
          
          numbframpost=None, \
          makeplotintr=False, \
