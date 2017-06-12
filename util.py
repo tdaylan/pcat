@@ -5234,12 +5234,16 @@ def initchro(gdat, gdatmodi, strg, name):
 
     if strg == 'next':
         gdatmodi.thischro[gdat.indxchro[name]] = gdat.functime()
+    if strg == 'gene':
+        gdatmodi.thischro[name] = gdat.functime()
     
 
 def stopchro(gdat, gdatmodi, strg, name):
     
     if strg == 'next':
         gdatmodi.thischro[gdat.indxchro[name]] = gdat.functime() - gdatmodi.thischro[gdat.indxchro[name]]
+    if strg == 'gene':
+        gdatmodi.thischro[name] = gdat.functime() - gdatmodi.thischro[name]
 
 
 def retr_defl(gdat, *listargs, **dictargskeyw):
@@ -6545,7 +6549,7 @@ def retr_sbrtsers(angl, halfsers, indxsers=4.):
     
     ## surface brightness profile at the half-light radius for a 1 erg cm^-2 s^-1 A^-1 source
     if indxsers == 4.:
-        sbrthalf = 7.2 * pi / halfsers**2
+        sbrthalf = 1. / 7.2 / pi / halfsers**2
     else:
         sbrthalf= 1. / 2. / pi / exp(factsers) * factsers**(2 * indxsers) / indxsers / sp.special.gamma(2. * indxsers) / halfsers**2
                 

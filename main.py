@@ -375,9 +375,9 @@ def init( \
         if gdat.elemtype == 'lght':
             if gdat.exprtype == 'ferm':
                 strgexpo = 'fermexpo_cmp0_ngal.fits'
-        elif gdat.elemtype == 'lens':
+        if gdat.elemtype == 'lens':
             gdat.strgexpo = 1000. / gdat.hubbexpofact
-        elif gdat.elemtype == 'clus':
+        if gdat.elemtype == 'clus':
             gdat.strgexpo = 1.
 
     if gdat.indxevttfull == None:
@@ -1752,22 +1752,30 @@ def initarry( \
 def proc_post(gdat, prio=False):
 
     if gdat.verbtype > 0:
-        print 'Accumulating samples from all processes...'
+        print 'Post processing'
         timeinit = gdat.functime()
    
     # read the chains
+    if gdat.verbtype > 0:
+        print 'Reading chains from disk...'
+        timeinit = gdat.functime()
     listgdatmodi = []
     for k in gdat.indxproc:
         path = gdat.pathoutpthis + 'gdatmodi%04d' % k
         listgdatmodi.append(readfile(path))
         os.system('rm -rf %s*' % path)
     os.system('rm -rf %s' % gdat.pathoutpthis + 'gdatinit*')
-
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
+    
     # aggregate samples from the chains
+    if gdat.verbtype > 0:
+        print 'Accumulating samples from all processes...'
+        timeinit = gdat.functime()
     ## list of parameters to be gathered
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
-    
     for strg in gdat.liststrgvarbarry:
         for k in gdat.indxproc:
             if k == 0:
@@ -1779,7 +1787,7 @@ def proc_post(gdat, prio=False):
             else:
                 temp[:, k] = getattr(listgdatmodi[k], 'list' + strg)
         setattr(gdat, 'list' + strg, temp)
-   
+    ## maximum likelihood sample 
     gdat.maxmllikproc = empty(gdat.numbproc)
     gdat.indxswepmaxmllikproc = empty(gdat.numbproc, dtype=int)
     gdat.sampvarbmaxmllikproc = empty((gdat.numbproc, gdat.fittnumbpara))
@@ -1787,18 +1795,17 @@ def proc_post(gdat, prio=False):
         gdat.maxmllikproc[k] = listgdatmodi[k].maxmllikswep
         gdat.indxswepmaxmllikproc[k] = listgdatmodi[k].indxswepmaxmllik
         gdat.sampvarbmaxmllikproc[k] = listgdatmodi[k].sampvarbmaxmllik
-    
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # Gelman-Rubin test
     if gdat.numbproc > 1:
-        gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
-        gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         if gdat.verbtype > 0:
             print 'Computing the Gelman-Rubin TS...'
             timeinit = gdat.functime()
+        gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
+        gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for k in gdat.fittindxfixp:
             gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, gdat.fittindxfixp[k]])
             if not isfinite(gdat.gmrbfixp[k]):
