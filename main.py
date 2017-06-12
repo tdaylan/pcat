@@ -2003,6 +2003,9 @@ def proc_post(gdat, prio=False):
         gdat.listindxsamptotlreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
     
     ## spatial mean of maps
+    if gdat.verbtype > 0:
+        print 'Computing spatial means of maps...'
+        timeinit = gdat.functime()
     gdat.liststrgmean = ['modlcnts']
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.liststrgmean.append('pntsflux')
@@ -2014,9 +2017,14 @@ def proc_post(gdat, prio=False):
         for n in gdat.indxsamptotl:
             temp[n, :] = sum(sum(tempinpt[n, :, :, :] * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
         setattr(gdat, 'list' + strg + 'mean', temp)
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # compute credible intervals
-    # temp
+    if gdat.verbtype > 0:
+        print 'Computing credible intervals...'
+        timeinit = gdat.functime()
     for strgchan in gdat.liststrgchan:
         listtemp = getattr(gdat, 'list' + strgchan)
         if isinstance(listtemp, list):
@@ -2055,6 +2063,9 @@ def proc_post(gdat, prio=False):
         setattr(gdat, 'medi' + strgchan, meditemp)
         setattr(gdat, 'errr' + strgchan, errrtemp)
         setattr(gdat, 'stdv' + strgchan, stdvtemp)
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
     
     # memory usage
     gdat.meanmemoresi = mean(gdat.listmemoresi, 1)

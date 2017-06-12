@@ -4622,7 +4622,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
         listlablcomp.append(zeros(numbcomp[l], dtype=object))
         for k, namecomp in enumerate(liststrgcomp[l]):
             listfactplotcomp[l][k] = getattr(gdat, 'fact' + namecomp + 'plot')
-            listlablcomp[l][k] = getattr(gdat, 'labl' + namecomp)
+            listlablcomp[l][k] = getattr(gdat, 'labl' + namecomp + 'totl')
 
     if strgmodl == 'fitt':
         for k in indxfixp:

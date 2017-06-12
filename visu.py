@@ -575,6 +575,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         numbtrapgood = indxtrapgood.size
         numbtrapplot = min(10, numbtrapgood)
         indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
+
+        path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listelemfrst'
+        tdpy.mcmc.plot_grid(path, gdat.listsampvarb[:, gdat.fittindxsamptrap[:3]] * gdat.fittfactplotpara[gdat.fittindxsamptrap[:3]], \
+                                                                                            [gdat.fittlablpara[k] for k in gdat.fittindxsamptrap[:3]])
+
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsamp'
         tdpy.mcmc.plot_grid(path, gdat.listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'listsampvarb'
