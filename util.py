@@ -4996,7 +4996,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = gdatmodi.thistrueindxpntsasscmiss[l]
 
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
-                                                                                                                                marker='s', linewidth=2, color='g', mew=4)
+                                                                                                                                marker='s', linewidth=2, color='g', lw=4)
                     
                     ### hit
                     indx = gdatmodi.thistrueindxpntsasschits[l]
@@ -5005,7 +5005,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = arange(lgal.size)
                 
                 axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
-                                                                                        label=gdat.legdtruehits, marker='x', linewidth=2, color='g', mew=4)
+                                                                                        label=gdat.legdtruehits, marker='x', linewidth=2, color='g', lw=4)
             
             if gdat.elemtype == 'lens':
                
@@ -5034,7 +5034,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l]])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l]]
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b', mew=4)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b', lw=4)
 
             if gdat.elemtype == 'lens':
                 
@@ -5069,12 +5069,12 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 ampl[cntr] = gdat.dictglob['poststkscond'][r][gdat.namecompampl][0]
                 cntr += 1
         mrkrsize = retr_mrkrsize(gdat, ampl)
-        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', mew=4)
+        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', lw=4)
         if False:
             for r in gdat.indxstkscond:
                 lgal = array([gdat.dictglob['liststkscond'][r]['lgal']])
                 bgal = array([gdat.dictglob['liststkscond'][r]['bgal']])
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1, mew=4)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1, lw=4)
 
 
 def retr_levi(listllik):

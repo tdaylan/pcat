@@ -1676,7 +1676,8 @@ def initarry( \
     dictvarb['seedstat'] = seedstat
     dictvarb['randseedelem'] = randseedelem
     dictvarb['strgcnfg'] = strgcnfg
-    dictvarb['makeanim'] = False
+    if indxruns == None:
+        dictvarb['makeanim'] = False
     
     listgdat = []
     for k in range(numbiter):
