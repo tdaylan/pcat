@@ -2641,10 +2641,12 @@ def setpinit(gdat, boolinitsetp=False):
     # scalar variables
     gdat.minmdeflprof = 1e-3 / gdat.anglfact
     gdat.maxmdeflprof = 0.1 / gdat.anglfact
-
-    gdat.minmfracsubh = 0.
-    gdat.maxmfracsubh = 0.3
-    gdat.scalfracsubh = 'self'
+    
+    if gdat.priofactdoff > 0.:
+        gdat.minmfracsubh = 0.
+        gdat.maxmfracsubh = 0.3
+        gdat.scalfracsubh = 'self'
+    
     # temp -- automize this
     gdat.minmfracsubhcorr = gdat.minmfracsubh
     gdat.maxmfracsubhcorr = gdat.maxmfracsubh
@@ -4744,18 +4746,33 @@ def setp_namevarblimt(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False,
             except:
                 setattr(gdat, strgmodl + 'maxm' + strgvarb, listvalu[1])
         else:
+            
             try:
                 meanpara = getattr(gdat, strgmodl + 'mean' + strgvarb)
                 if meanpara == None:
                     raise
             except:
-                setattr(gdat, strgmodl + 'mean' + strgvarb, listvalu[0])
+                meanpara = listvalu[0]
+                setattr(gdat, strgmodl + 'mean' + strgvarb, meanpara)
+            
             try:
                 stdvpara = getattr(gdat, strgmodl + 'stdv' + strgvarb)
                 if stdvpara == None:
                     raise
             except:
-                setattr(gdat, strgmodl + 'stdv' + strgvarb, listvalu[1])
+                stdvpara = listvalu[1]
+                setattr(gdat, strgmodl + 'stdv' + strgvarb, stdvpara)
+
+            # set minimum and maximum for Gaussian distributed variables
+            try:
+                getattr(gdat, strgmodl + 'minm' + strgvarb)
+            except:
+                setattr(gdat, strgmodl + 'minm' + strgvarb, meanpara - stdvpara * 5)
+ 
+            try:
+                getattr(gdat, strgmodl + 'maxm' + strgvarb)
+            except:
+                setattr(gdat, strgmodl + 'maxm' + strgvarb, meanpara + stdvpara * 5)
  
 
 def intp_sinc(gdat, lgal, bgal):
