@@ -1345,7 +1345,14 @@ def init( \
     gdat.truefixp = zeros(gdat.truenumbfixp) + nan
     if gdat.truenumbtrap > 0:
         gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
-  
+
+    # temp
+    if gdat.elemtype == 'lens' and gdat.inittype == 'rand':
+        gdatmodi.thissamp[gdat.fittindxfixplgalhost] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixpbgalhost] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
+        gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
+
     # bin experimental element features
     for strgfeat in gdat.fittliststrgfeattotl:
         exprfeat = getattr(gdat, 'expr' + strgfeat)
@@ -1399,6 +1406,13 @@ def init( \
                 # randomly sample the rest of the mock model parameters
                 if not isfinite(gdat.truefixp[k]):
                     gdat.truefixp[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
+
+        # temp
+        if gdat.elemtype == 'lens':
+            gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.truemaxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.truemaxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.truemaxmgang * randn()
+            gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
 
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
         if gdat.truenumbtrap > 0:

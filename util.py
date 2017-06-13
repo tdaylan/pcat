@@ -3313,16 +3313,17 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.numbpixlprox = gdat.numbpixl
 
-    ## marker size
-    gdat.minmmrkrsize = 100
-    gdat.maxmmrkrsize = 500
-    
     ## ROI
     gdat.exttrofi = array([gdat.minmlgaldata, gdat.maxmlgaldata, gdat.minmbgaldata, gdat.maxmbgaldata])
     gdat.exttrofi *= gdat.anglfact 
     gdat.frambndrdata = gdat.maxmgangdata * gdat.anglfact
     gdat.frambndrmodl = gdat.maxmgang * gdat.anglfact
 
+    ## marker size
+    gdat.minmmrkrsize = 100
+    gdat.maxmmrkrsize = 500
+    ## marker line width
+    gdat.mrkrlinewdth = 3
     ## marker opacity
     gdat.alphmrkr = 0.5
     gdat.alphpnts = 1.
@@ -4939,28 +4940,29 @@ def make_catllabl(gdat, strg, axis):
         else:
             colr = 'b'
             labl = 'Sample Model %s' % gdat.strgelem
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, label=labl, marker='+', linewidth=2, color=colr)
+        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+                                                                                            label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
         
     if gdat.trueinfo:
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label=gdat.legdtruehits, marker='x', linewidth=2, color='g')
+                                                                                                label=gdat.legdtruehits, marker='x', lw=gdat.mrkrlinewdth, color='g')
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, facecolor='none', \
-                                                                                                    label=gdat.legdtruemiss, marker='s', linewidth=2, color='g')
+                                                                                                label=gdat.legdtruemiss, marker='s', lw=gdat.mrkrlinewdth, color='g')
     
     # fixed-dimensional objects
     if gdat.elemtype == 'lens':
         if strg == 'this':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='Model Source', marker='<', linewidth=2, color='b')
+                                                                                                label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
     
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='Model Host', marker='s', linewidth=2, color='b')
+                                                                                                label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
         if gdat.trueinfo:
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='%s Source' % gdat.legdtrue, marker='>', linewidth=2, color='g')
+                                                                                                label='%s Source' % gdat.legdtrue, marker='>', lw=gdat.mrkrlinewdth, color='g')
         
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
-                                                                                                label='%s Host' % gdat.legdtrue, marker='D', linewidth=2, color='g')
+                                                                                                label='%s Host' % gdat.legdtrue, marker='D', lw=gdat.mrkrlinewdth, color='g')
     
 
     temphand, temp = axis.get_legend_handles_labels()
@@ -4996,7 +4998,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = gdatmodi.thistrueindxpntsasscmiss[l]
 
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
-                                                                                                                                marker='s', linewidth=2, color='g', lw=4)
+                                                                                                                             marker='s', lw=gdat.mrkrlinewdth, color='g')
                     
                     ### hit
                     indx = gdatmodi.thistrueindxpntsasschits[l]
@@ -5005,7 +5007,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = arange(lgal.size)
                 
                 axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
-                                                                                        label=gdat.legdtruehits, marker='x', linewidth=2, color='g', lw=4)
+                                                                                        label=gdat.legdtruehits, marker='x', lw=gdat.mrkrlinewdth, color='g')
             
             if gdat.elemtype == 'lens':
                
@@ -5013,15 +5015,16 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalhost], \
                                                                             #alpha=gdat.alphpnts, \
                                                                             alpha=0.7, \
-                                                                            label=gdat.legdtruehits, s=300, marker='D', linewidth=2, color='g')
+                                                                            label=gdat.legdtruehits, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
                 axis.add_patch(plt.Circle((gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalhost]), \
-                                                                                gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbeinhost], edgecolor='g', facecolor='none', lw=2))
+                                                                                gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbeinhost], \
+                                                                                edgecolor='g', facecolor='none', lw=gdat.mrkrlinewdth))
                 
                 ## source
                 axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalsour], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalsour], \
                                                                             alpha=0.7, \
                                                                             #alpha=gdat.alphpnts, \
-                                                                            label=gdat.legdtruehits, s=300, marker='>', linewidth=2, color='g')
+                                                                            label=gdat.legdtruehits, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
             
     # model catalog
     if indxpoplplot == -1:
@@ -5034,7 +5037,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l]])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l]]
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b', lw=4)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
 
             if gdat.elemtype == 'lens':
                 
@@ -5044,7 +5047,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, \
                                                                       alpha=0.7, \
                                                                       #alpha=gdat.alphpnts, \
-                                                                      label='Model Source', s=300, marker='<', linewidth=2, color='b')
+                                                                      label='Model Source', s=300, marker='<', lw=gdat.mrkrlinewdth, color='b')
     
                 ## host
                 lgalhost = gdatmodi.thissampvarb[gdat.fittindxfixplgalhost]
@@ -5053,8 +5056,9 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 axis.scatter(gdat.anglfact * lgalhost, gdat.anglfact * bgalhost, \
                                                                       alpha=0.7, \
                                                                       #alpha=gdat.alphpnts, \
-                                                                      label='Model Host', s=300, marker='s', linewidth=2, color='b')
-                axis.add_patch(plt.Circle((gdat.anglfact * lgalhost, gdat.anglfact * bgalhost), gdat.anglfact * beinhost, edgecolor='b', facecolor='none', lw=2, ls='--'))
+                                                                      label='Model Host', s=300, marker='s', lw=gdat.mrkrlinewdth, color='b')
+                axis.add_patch(plt.Circle((gdat.anglfact * lgalhost, gdat.anglfact * bgalhost), gdat.anglfact * beinhost, edgecolor='b', facecolor='none', \
+                                                                                                                                        lw=gdat.mrkrlinewdth, ls='--'))
                 
     # temp
     if strg == 'post' and gdat.condcatl:
@@ -5069,12 +5073,12 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 ampl[cntr] = gdat.dictglob['poststkscond'][r][gdat.namecompampl][0]
                 cntr += 1
         mrkrsize = retr_mrkrsize(gdat, ampl)
-        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', lw=4)
+        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', lw=gdat.mrkrlinewdth)
         if False:
             for r in gdat.indxstkscond:
                 lgal = array([gdat.dictglob['liststkscond'][r]['lgal']])
                 bgal = array([gdat.dictglob['liststkscond'][r]['bgal']])
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1, lw=4)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', color='black', alpha=0.1, lw=gdat.mrkrlinewdth)
 
 
 def retr_levi(listllik):
