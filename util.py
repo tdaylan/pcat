@@ -453,6 +453,8 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     gdatmodi.thisaccppsfn = True
     gdatmodi.thisaccpprio = True
     
+    gdatmodi.thisdeltlpri = 0.
+
     # initialize the Boolean flag indicating the type of transdimensional proposal
     gdatmodi.propfixp = False
     gdatmodi.propwith = False
@@ -2642,9 +2644,13 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.minmdeflprof = 1e-3 / gdat.anglfact
     gdat.maxmdeflprof = 0.1 / gdat.anglfact
     
+    gdat.minmfracsubh = 0.
+    gdat.maxmfracsubh = 0.3
+    gdat.scalfracsubh = 'self'
+
     if gdat.priofactdoff > 0.:
         gdat.minmfracsubhcorr = 0.
-        gdat.maxmfracsubhcorr = 0.3
+        gdat.maxmfracsubhcorr = 1.
         gdat.scalfracsubhcorr = 'self'
     
     gdat.minmmasshost = 1e10
@@ -3413,8 +3419,9 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'lens':
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
 
-        gdat.stdvstdp[gdat.indxstdpmeanpntspop0] = 1e-1
-        gdat.stdvstdp[gdat.indxstdpdefsdistsloppop0] = 1e-1
+        if gdat.fittnumbtrap > 0:
+            gdat.stdvstdp[gdat.indxstdpmeanpntspop0] = 1e-1
+            gdat.stdvstdp[gdat.indxstdpdefsdistsloppop0] = 1e-1
 
         gdat.stdvstdp[gdat.indxstdpsigcene0evt0] = 3e-2
         gdat.stdvstdp[gdat.indxstdpbacpbac0ene0] = 1e-3
@@ -5187,10 +5194,32 @@ def writfile(gdattemp, path):
     
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
+        
+        print 'attr'
+        print attr
+        print type(valu)
+        
+        #gdattemptemp = tdpy.util.gdatstrt()
+        
         if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
             filearry.create_dataset(attr, data=valu)
         else:
             setattr(gdattemptemp, attr, valu)
+
+        #filepick = open(path + '.p', 'wb')
+        #cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
+        #filepick.close()
+        
+        #filepick = open(path + '.p', 'rb')
+        #gdattemptemp = cPickle.load(filepick)
+        #filepick.close()
+        
+        #if type(valu)filearry.create_dataset(attr, data=valu, dtype=h5py.special_dtype(vlen=valu.dtype))
+        #filearry.create_dataset(attr, data=valu, dtype=h5py.special_dtype(vlen=valu.dtype))
+        #if isinstance(valu, None):
+        #if valu == None:
+        #else:
+        #filearry.create_dataset(attr, data=valu)
     
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
     filepick.close()
@@ -5541,12 +5570,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
        
         # temp
         if strg == 'next':
-            gdatmodi.deltlpri = 0.
+            gdatmodi.thisdeltlpri = 0.
             gdatmodi.thislpau = zeros(gdat.numblpau)
             if gdatmodi.propmeanpnts or gdatmodi.propdefsdist:
-                gdatmodi.deltlpri = sum(lpri) - gdatmodi.thislpritotl
+                gdatmodi.thisdeltlpri = sum(lpri) - gdatmodi.thislpritotl
             else:
-                gdatmodi.deltlpri = 0.
+                gdatmodi.thisdeltlpri = 0.
         # temp
         if False and strg == 'next' and gdatmodi.proptran:
             
@@ -5603,7 +5632,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             gdatmodi.thislpautotl = sum(gdatmodi.thislpau)
             
             if gdatmodi.proptran:
-                gdatmodi.deltlpri = gdatmodi.thislpautotl + sum(lpri)
+                gdatmodi.thisdeltlpri = gdatmodi.thislpautotl + sum(lpri)
             
     
     lpritotl = sum(lpri)
@@ -6213,6 +6242,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         if strgfeat[:-4] in gdat.listnamefeatsele and strgmodl == 'true':
                             indx = intersect1d(getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:]), indxmodlpntscomp[l])
+                            print 'indx'
+                            print indx
+                            print 'l'
+                            print l
                             dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat[:-4]][l][indx], bins)[0]
                         else:
                             # temp

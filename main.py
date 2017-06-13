@@ -2053,7 +2053,7 @@ def proc_post(gdat, prio=False):
     os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
    
     # write the final gdat object
-    if False:
+    if True:
         path = gdat.pathoutpthis + 'gdatfinl'
         if gdat.verbtype > 0:
             print 'Writing the global object to %s...' % path
@@ -2661,7 +2661,8 @@ def work(pathoutpthis, lock, indxprocwork):
             break
 
         if gdat.emptsamp:
-            continue
+            print 'Empty sampling. Sample number %d' % gdatmodi.cntrswep
+            break
 
         initchro(gdat, gdatmodi, 'next', 'totl')
         
@@ -2869,7 +2870,7 @@ def work(pathoutpthis, lock, indxprocwork):
             stopchro(gdat, gdatmodi, 'next', 'plot')
     
         if gdat.elemtype == 'lght':
-            if gdat.psfntype == 'doubking':
+            if gdat.fittpsfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[3]]:
                     for k in range(20):
                         print 'Proposal rejected due to PSF'
@@ -2915,7 +2916,7 @@ def work(pathoutpthis, lock, indxprocwork):
             #gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
             #                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
             #                                                                                                                gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.deltlpri)
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.thisdeltlpri)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.
