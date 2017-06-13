@@ -3314,7 +3314,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.numbpixlprox = gdat.numbpixl
 
     ## marker size
-    gdat.minmmrkrsize = 50
+    gdat.minmmrkrsize = 100
     gdat.maxmmrkrsize = 500
     
     ## ROI
@@ -4996,7 +4996,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = gdatmodi.thistrueindxpntsasscmiss[l]
 
                     axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
-                                                                                                                                marker='s', linewidth=2, color='g')
+                                                                                                                                marker='s', linewidth=2, color='g', mew=4)
                     
                     ### hit
                     indx = gdatmodi.thistrueindxpntsasschits[l]
@@ -5005,7 +5005,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     indx = arange(lgal.size)
                 
                 axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
-                                                                                        label=gdat.legdtruehits, marker='x', linewidth=2, color='g')
+                                                                                        label=gdat.legdtruehits, marker='x', linewidth=2, color='g', mew=4)
             
             if gdat.elemtype == 'lens':
                
@@ -5034,7 +5034,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l]])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l]]
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b')
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', linewidth=2, color='b', mew=4)
 
             if gdat.elemtype == 'lens':
                 
@@ -5069,12 +5069,12 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 ampl[cntr] = gdat.dictglob['poststkscond'][r][gdat.namecompampl][0]
                 cntr += 1
         mrkrsize = retr_mrkrsize(gdat, ampl)
-        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', linewidth=2, color='black')
+        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', mew=4)
         if False:
             for r in gdat.indxstkscond:
                 lgal = array([gdat.dictglob['liststkscond'][r]['lgal']])
                 bgal = array([gdat.dictglob['liststkscond'][r]['bgal']])
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', linewidth=2, color='black', alpha=0.1, mew=4)
 
 
 def retr_levi(listllik):
@@ -5176,17 +5176,6 @@ def readfile(path):
     return gdattemptemp
 
 
-def readoutp(path):
-    
-    thisfile = h5py.File(path, 'r')
-    gdattemp = tdpy.util.gdatstrt()
-    for attr in thisfile:
-        setattr(gdattemp, attr, thisfile[attr]) 
-    thisfile.close()
-
-    return gdattemp
-
-
 def writfile(gdattemp, path):
     
     filepick = open(path + '.p', 'wb')
@@ -5195,15 +5184,20 @@ def writfile(gdattemp, path):
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
         
-        print 'attr'
-        print attr
-        print type(valu)
         
         #gdattemptemp = tdpy.util.gdatstrt()
         
-        if isinstance(valu, ndarray) and valu.dtype != dtype('O'):
+        if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
+                    isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
             filearry.create_dataset(attr, data=valu)
         else:
+            
+            print attr
+            print type(valu)
+            print
+            if attr == 'gdat':
+                print type(valu).__name__
+                raise Exception('')
             setattr(gdattemptemp, attr, valu)
 
         #filepick = open(path + '.p', 'wb')
@@ -5225,6 +5219,17 @@ def writfile(gdattemp, path):
     filepick.close()
     filearry.close()
    
+
+def readoutp(path):
+    
+    thisfile = h5py.File(path, 'r')
+    gdattemp = tdpy.util.gdatstrt()
+    for attr in thisfile:
+        setattr(gdattemp, attr, thisfile[attr]) 
+    thisfile.close()
+
+    return gdattemp
+
 
 def writoutp(gdat, path):
 

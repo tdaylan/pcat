@@ -222,7 +222,7 @@ def init( \
     # construct the global object 
     gdat = tdpy.util.gdatstrt()
     for attr, valu in locals().iteritems():
-        if '__' not in attr:
+        if '__' not in attr and attr != 'gdat':
             setattr(gdat, attr, valu)
     
     # copy all provided inputs to the global object
