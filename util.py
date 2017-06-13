@@ -2643,14 +2643,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmdeflprof = 0.1 / gdat.anglfact
     
     if gdat.priofactdoff > 0.:
-        gdat.minmfracsubh = 0.
-        gdat.maxmfracsubh = 0.3
-        gdat.scalfracsubh = 'self'
-    
-    # temp -- automize this
-    gdat.minmfracsubhcorr = gdat.minmfracsubh
-    gdat.maxmfracsubhcorr = gdat.maxmfracsubh
-    gdat.scalfracsubhcorr = gdat.scalfracsubh
+        gdat.minmfracsubhcorr = 0.
+        gdat.maxmfracsubhcorr = 0.3
+        gdat.scalfracsubhcorr = 'self'
     
     gdat.minmmasshost = 1e10
     gdat.maxmmasshost = 1e13
