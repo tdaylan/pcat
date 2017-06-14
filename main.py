@@ -1545,9 +1545,6 @@ def init( \
                                                                                     strg != 'thistrueindxpntsasscmiss' and strg != 'thistrueindxpntsasschits':
             gdat.liststrgvarblistsamp.append(strg[4:])
     
-    # dummy definitions
-    gdatmodi.nextpntsflux = empty_like(gdatmodi.thispntsflux)
-    
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
    
     setp_indxswepsave(gdat)
@@ -2603,6 +2600,9 @@ def work(pathoutpthis, lock, indxprocwork):
     
     # process the initial sample, define the variables to be processed in each sample
     proc_samp(gdat, gdatmodi, 'this')
+    
+    # dummy definitions
+    gdatmodi.nextpntsflux = empty_like(gdatmodi.thispntsflux)
     
     # enter interactive mode
     if gdat.intrevalmodlcnts:
