@@ -1609,6 +1609,10 @@ def init( \
 
     # post process the samples
     proc_post(gdat)
+    
+    # make animations
+    if gdat.makeanim:
+        make_anim(gdat.rtag)
 
     if gdat.verbtype > 0:
         print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
