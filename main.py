@@ -2883,14 +2883,14 @@ def work(pathoutpthis, lock, indxprocwork):
     
         if gdat.elemtype == 'lght':
             if gdat.fittpsfntype == 'doubking':
-                if gdatmodi.nextsampvarb[gdat.indxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.indxfixppsfp[3]]:
+                if gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[3]]:
                     for k in range(20):
                         print 'Proposal rejected due to PSF'
                     gdatmodi.thisaccppsfn = False
                     print 'gdatmodi.nextsampvarb'
                     print gdatmodi.nextsampvarb
-                    print 'gdatmodi.nextsampvarb[gdat.indxfixppsfp]'
-                    print gdatmodi.nextsampvarb[gdat.indxfixppsfp]
+                    print 'gdatmodi.nextsampvarb[gdat.fittindxfixppsfp]'
+                    print gdatmodi.nextsampvarb[gdat.fittindxfixppsfp]
                     print 'gdatmodi.propbrth'
                     print gdatmodi.propbrth
        
