@@ -929,7 +929,7 @@ def init( \
     # check inputs
     if gdat.numbburn > gdat.numbswep:
         raise Exception('Bad number of burn-in sweeps.')
-    if gdat.factthin > gdat.numbswep - gdat.numbburn:
+    if gdat.factthin > gdat.numbswep - gdat.numbburn or gdat.factthin < 1:
         raise Exception('Bad thinning factor.')
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
@@ -2606,7 +2606,8 @@ def work(pathoutpthis, lock, indxprocwork):
     proc_samp(gdat, gdatmodi, 'this')
     
     # dummy definitions
-    gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
+    if gdat.elemtype == 'lght':
+        gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
     
     # enter interactive mode
     if gdat.intrevalmodlcnts:
