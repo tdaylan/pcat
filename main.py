@@ -1346,13 +1346,6 @@ def init( \
     if gdat.truenumbtrap > 0:
         gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
 
-    # temp
-    if gdat.elemtype == 'lens' and gdat.inittype == 'rand':
-        gdatmodi.thissamp[gdat.fittindxfixplgalhost] = 0.5
-        gdatmodi.thissamp[gdat.fittindxfixpbgalhost] = 0.5
-        gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
-        gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
-
     # bin experimental element features
     for strgfeat in gdat.fittliststrgfeattotl:
         exprfeat = getattr(gdat, 'expr' + strgfeat)
@@ -1407,7 +1400,7 @@ def init( \
                 if not isfinite(gdat.truefixp[k]):
                     gdat.truefixp[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
 
-        # temp
+        # temp -- this is needed for the paper
         if gdat.elemtype == 'lens':
             gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.truemaxmgang * randn()
             gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.truemaxmgang * randn()
@@ -2492,9 +2485,10 @@ def work(pathoutpthis, lock, indxprocwork):
     ## Fixed-dimensional parameters
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
-            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'true', gdat.truefixp[k], k)
-            gdatmodi.thissampvarb[k] = gdat.truesampvarb[k]#icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
-    
+            # temp - this should take into account parameters that exists in one but not the other
+            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[k], k)
+            gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+
     if gdat.fittnumbtrap > 0:
         if gdat.inittype == 'rand' or gdat.inittype == 'pert':
             for l in gdat.fittindxpopl:
