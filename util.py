@@ -6250,7 +6250,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expo' and spectype[l] != 'expo'):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         if strgfeat[:-4] in gdat.listnamefeatsele and strgmodl == 'true':
+                            print 'l'
+                            print l
+                            print 'indxmodlpntscomp'
+                            print indxmodlpntscomp
+                            print 'getattr(gdat, strgmodl + indxelem + strgfeat[-4:])'
+                            print getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])
                             indx = intersect1d(getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:]), indxmodlpntscomp[l])
+                            print 'indx'
+                            print indx
+                            print
                             dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat[:-4]][l][indx], bins)[0]
                         else:
                             # temp

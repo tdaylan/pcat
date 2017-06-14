@@ -288,7 +288,7 @@ def init( \
 
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(2e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(0.01 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
     # samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
@@ -2602,7 +2602,7 @@ def work(pathoutpthis, lock, indxprocwork):
     proc_samp(gdat, gdatmodi, 'this')
     
     # dummy definitions
-    gdatmodi.nextpntsflux = empty_like(gdatmodi.thispntsflux)
+    gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
     
     # enter interactive mode
     if gdat.intrevalmodlcnts:
