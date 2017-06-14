@@ -1484,7 +1484,7 @@ def init( \
         if gdat.verbtype > 0:
             print 'Mock dataset is generated. Quitting...'
         return gdat
-
+    
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -1544,6 +1544,9 @@ def init( \
         if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
                                                                                     strg != 'thistrueindxpntsasscmiss' and strg != 'thistrueindxpntsasschits':
             gdat.liststrgvarblistsamp.append(strg[4:])
+    
+    # dummy definitions
+    gdatmodi.nextpntsflux = empty_like(gdatmodi.thispntsflux)
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
    
