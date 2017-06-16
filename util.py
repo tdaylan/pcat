@@ -3430,6 +3430,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvstdp[gdat.indxstdplgalsour] = 1e-3
         gdat.stdvstdp[gdat.indxstdpbgalsour] = 1e-3
         gdat.stdvstdp[gdat.indxstdpspecsourene0] = 1e-2
+        gdat.stdvstdp[gdat.indxstdpsizesour] = 1e-1
         gdat.stdvstdp[gdat.indxstdpellpsour] = 1e-1
         gdat.stdvstdp[gdat.indxstdpanglsour] = 1e-1
         
@@ -6253,14 +6254,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             print 'l'
                             print l
                             print 'indxmodlpntscomp'
-                            print indxmodlpntscomp
+                            print indxmodlpntscomp[l]
                             print 'getattr(gdat, strgmodl + indxelem + strgfeat[-4:])'
-                            print getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])
-                            indx = intersect1d(getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:]), indxmodlpntscomp[l])
+                            print getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])[l]
+                            indx = intersect1d(getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])[l], indxmodlpntscomp[l])
                             print 'indx'
                             print indx
                             print
-                            dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat[:-4]][l][indx], bins)[0]
+                            if indx.size > 0:
+                                dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat[:-4]][l][indx], bins)[0]
                         else:
                             # temp
                             try:
