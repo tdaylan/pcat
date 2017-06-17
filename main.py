@@ -288,7 +288,7 @@ def init( \
 
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(0.01 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(2e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
     # samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
@@ -2047,11 +2047,18 @@ def proc_post(gdat, prio=False):
             meditemp = posttemp[0, ...]
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
             stdvtemp = std(posttemp, axis=0)
+            if strgchan in gdat.listnamevarbcpos:
+                cpostemp = empty(listtemp.shape)
+                for n in gdat.indxsamptotl:
+                    cpostemp[n, ...] = tdpy.util.retr_postvarb(listtemp[:n])
 
         setattr(gdat, 'post' + strgchan, posttemp)
         setattr(gdat, 'medi' + strgchan, meditemp)
         setattr(gdat, 'errr' + strgchan, errrtemp)
         setattr(gdat, 'stdv' + strgchan, stdvtemp)
+        if strgchan in gdat.listnamevarbcpos:
+            setattr(gdat, 'cpos' + strgchan, cpostemp)
+            
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)

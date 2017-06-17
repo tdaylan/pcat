@@ -391,7 +391,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             if (gdat.listlfctasym != 0.).any():
                 path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlfctasym[gdat.listindxsamptotl[n]], '$q_{lfct}$', logthist=True)
-    
+
     # Gelman-Rubin test
     pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
     if gdat.numbproc > 1:

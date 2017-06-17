@@ -465,8 +465,9 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     
     # temp
     gdatmodi.propmeanpnts = False
-    gdatmodi.propdefsdist = False
-    
+    gdatmodi.propdist = False
+    gdatmodi.prophypr = False
+
     gdatmodi.thisljcbfact = 0.
     gdatmodi.thislpautotl = 0. 
     gdatmodi.thislcomfact = 0.
@@ -531,10 +532,11 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
             
             # temp
-            if gdatmodi.indxsampmodi == 1:
-                gdatmodi.propmeanpnts = True
-            if gdatmodi.indxsampmodi == 2:
-                gdatmodi.propdefsdist = True
+            if gdat.fittnumbtrap > 0:
+                if gdatmodi.indxsampmodi in gdat.fittindxfixpmeanpnts:
+                    gdatmodi.propmeanpnts = True
+                if gdatmodi.indxsampmodi in gdat.fittindxfixpdist:
+                    gdatmodi.propdist = True
 
             gdatmodi.thisindxproptype = gdat.indxstdppara[gdatmodi.indxsampmodi]
         else:
@@ -545,6 +547,8 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             gdatmodi.prophost = gdatmodi.indxsampmodi in gdat.fittindxfixphost
     
     gdatmodi.proptran = gdatmodi.propbrth or gdatmodi.propdeth or gdatmodi.propsplt or gdatmodi.propmerg
+    
+    gdatmodi.prophypr = gdatmodi.propmeanpnts or gdatmodi.propdist
     
     if gdat.verbtype > 1:
         print 
@@ -1279,16 +1283,13 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 gdatmodi.nextsampvarb[gdatmodi.indxsampmodi] = icdf_fixp(gdat, 'fitt', gdatmodi.nextsamp[gdatmodi.indxsampmodi], gdatmodi.indxsampmodi)
            
             # temp
-            if gdat.fittnumbtrap > 0 and gdatmodi.propdefsdist:
-                gdatmodi.propdist = True
+            if gdat.fittnumbtrap > 0 and gdatmodi.propdist:
                 # temp
                 # this should check whether rescaling is necessary
                 gdatmodi.thisstrgcomp = gdat.fittnamepara[gdatmodi.indxsampmodi][-16:-12]
 
                 ### rescale the element components due to the hyperparameter step
                 rscl_elem(gdat, gdatmodi, gdatmodi.indxsampmodi)
-            else:
-                gdatmodi.propdist = False
             
             if not gdatmodi.propfixp:
                 indxpopl = [gdatmodi.indxpoplmodi]
@@ -2420,6 +2421,14 @@ def setpinit(gdat, boolinitsetp=False):
         if attr.startswith('path'):
             os.system('mkdir -p %s' % valu)
  
+    # temp
+    ## names of the variables for which cumulative posteriors will be plotted
+    #if gdat.numbswep >= 1e6 and gdat.elemtype == 'lens':
+    #    gdat.listnamevarbcpos = ['convelem']
+    #else:
+    #    gdat.listnamevarbcpos = []
+    gdat.listnamevarbcpos = ['convelem']
+
     if gdat.elemtype == 'lens':
         gdat.ascaglob = 0.05 / gdat.anglfact
         gdat.acutglob = 1. / gdat.anglfact
@@ -3353,7 +3362,7 @@ def setpinit(gdat, boolinitsetp=False):
         
         if thisbool:
             gdat.indxfixpprop.append(getattr(gdat, 'fittindxfixp' + strg))
-    gdat.propfixp = gdat.propmeanpnts or gdat.propdist or gdat.propbacp or gdat.proppsfp or gdat.proplenp
+    gdat.propfixp = gdat.propmeanpnts or gdat.propbacp or gdat.proppsfp or gdat.proplenp
     if not gdat.propfixp and not gdat.propcomp:
         raise Exception('Either a fixed dimensional parameter or an element component must be perturbed.')
     gdat.indxfixpprop = array(gdat.indxfixpprop) 
@@ -3456,9 +3465,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdpflux] = 1e-3
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            # temp
-            if gdat.propdist:
-                gdat.stdvstdp[gdat.fittindxfixpdist+gdat.fittnumbpopl] = 1e-2
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-4
             gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
         if gdat.exprtype == 'sdyn':
@@ -3811,6 +3817,10 @@ def retr_ticklabl(gdat, strgcbar):
             bins[k] = sinh(tick[k])
         elif scal == 'logt':
             bins[k] = 10**(tick[k])
+
+        # avoid very small, but nonzero central values in the residual count color maps
+        if strgcbar == 'resicnts' and bins[k] < 1e-5:
+            bins[k] = 0.
 
         if amax(bins) > 1e3:
             labl[k] = '%d' % bins[k]
@@ -4492,11 +4502,13 @@ def setp_fixp(gdat, strgmodl='fitt'):
         
         if strgvarb.startswith('bacp'):
             
+            # find the sample vector index of the first background parameter
             try:
                 indxfixpbacpinit
             except:
                 indxfixpbacpinit = k
             
+            # index of the background parameter
             c = indxbackbacp[k-indxfixpbacpinit]
 
             name = 'bacpbac%d' % c
@@ -4519,7 +4531,11 @@ def setp_fixp(gdat, strgmodl='fitt'):
             namefixp[k] = name
             lablfixp[k] = '$A_{%s%s}$' % (strgbacktemp, strgenertemp)
             lablfixpunit[k] = gdat.lablfluxsoldunit
-            scalfixp[k] = 'logt'
+            
+            try:
+                scalfixp[k] = getattr(gdat, strgmodl + 'scal' + name)
+            except:
+                scalfixp[k] = 'logt'
         
         if gdat.elemtype == 'lens':
             if k in getattr(gdat, strgmodl + 'indxfixplenp'):
@@ -5189,37 +5205,12 @@ def writfile(gdattemp, path):
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
         
-        
-        #gdattemptemp = tdpy.util.gdatstrt()
-        
         if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
-                    isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
+                                                        isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
             filearry.create_dataset(attr, data=valu)
         else:
-            
-            print attr
-            print type(valu)
-            print
-            if attr == 'gdat':
-                print type(valu).__name__
-                raise Exception('')
             setattr(gdattemptemp, attr, valu)
 
-        #filepick = open(path + '.p', 'wb')
-        #cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
-        #filepick.close()
-        
-        #filepick = open(path + '.p', 'rb')
-        #gdattemptemp = cPickle.load(filepick)
-        #filepick.close()
-        
-        #if type(valu)filearry.create_dataset(attr, data=valu, dtype=h5py.special_dtype(vlen=valu.dtype))
-        #filearry.create_dataset(attr, data=valu, dtype=h5py.special_dtype(vlen=valu.dtype))
-        #if isinstance(valu, None):
-        #if valu == None:
-        #else:
-        #filearry.create_dataset(attr, data=valu)
-    
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
     filepick.close()
     filearry.close()
@@ -5582,7 +5573,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         if strg == 'next':
             gdatmodi.thisdeltlpri = 0.
             gdatmodi.thislpau = zeros(gdat.numblpau)
-            if gdatmodi.propmeanpnts or gdatmodi.propdefsdist:
+            # temp -- generalize this to explicit prior evaluations in the parameters 
+            if gdatmodi.prophypr:
                 gdatmodi.thisdeltlpri = sum(lpri) - gdatmodi.thislpritotl
             else:
                 gdatmodi.thisdeltlpri = 0.
