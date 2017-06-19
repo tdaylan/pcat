@@ -1656,6 +1656,8 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
             print 'gdatmodi.nextindxelemfull'
             print gdatmodi.nextindxelemfull
             if not gdatmodi.propfixp and not (gdatmodi.propmerg and not gdatmodi.thisaccpprio):
+                print 'gdatmodi.indxpoplmodi'
+                print gdatmodi.indxpoplmodi
                 print 'gdatmodi.indxelemmodi'
                 print gdatmodi.indxelemmodi
                 print 'gdatmodi.indxelemfullmodi'
@@ -5493,8 +5495,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         #raise Exception('')
 
         if gdat.elemtype == 'lght':
+            print 'dicttemp[spec]'
             for l in range(numbpopl):
                 dicttemp['spec'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expo'][l], spectype=spectype[l])
+                print 'l'
+                print l
+                print dicttemp['spec'][l]
+            print
         
         for strgfeat in gdat.liststrgfeatconc:
             if strgfeat == 'spec':
@@ -5824,6 +5831,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if gdat.elemtype == 'lght':
                         dicttemp['speceval'] = retr_spec(gdat, dicttemp['fluxeval'], dicttemp['sindeval'], dicttemp['curveval'], \
                                                                                                                 dicttemp['expoeval'], spectype[gdatmodi.indxpoplmodi])
+                        print 'dicttemp[speceval]'
+                        print dicttemp['speceval']
+                        print
             else:
                 pntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
                 numbelemeval = numbpntsconc
