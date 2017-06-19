@@ -477,8 +477,6 @@ def init( \
             gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
             #gdat.binsenerfull = array([0.5, 2., 8.])
    
-    gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
-
     # energy band string
     if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
@@ -489,6 +487,8 @@ def init( \
             gdat.strgenerfull = []
             for i in gdat.indxenerfull:
                 gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
+
+    gdat.indxenerfull = arange(gdat.strgenerfull.size - 1)
 
     if gdat.evalcirc == None:
         if gdat.elemtype == 'lght':
