@@ -488,7 +488,7 @@ def init( \
             for i in gdat.indxenerfull:
                 gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
 
-    gdat.indxenerfull = arange(gdat.strgenerfull.size - 1)
+    gdat.indxenerfull = arange(len(gdat.strgenerfull) - 1)
 
     if gdat.evalcirc == None:
         if gdat.elemtype == 'lght':
