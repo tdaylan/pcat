@@ -746,7 +746,13 @@ def retr_sdsspsfn(gdat):
 
 def retr_chanpsfn(gdat):
 
-    gdat.exprpsfp = array([0.35 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.e-1, 2.])
+    # temp
+    #gdat.exprpsfp = array([0.35 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.e-1, 2.])
+    gdat.exprpsfp = array([0.25 / gdat.anglfact, 2.0e-1, 1.9, \
+                           0.30 / gdat.anglfact, 1.0e-1, 2.0, \
+                           0.40 / gdat.anglfact, 1.0e-1, 2.0, \
+                           0.60 / gdat.anglfact, 1.0e-1, 2.0, \
+                           0.70 / gdat.anglfact, 1.0e-1, 2.0])
     gdat.exproaxitype = True
    
 

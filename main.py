@@ -350,7 +350,9 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.indxenerincl = arange(1, 4)
         elif gdat.exprtype == 'chan':
-            gdat.indxenerincl = arange(2)
+            # temp
+            #gdat.indxenerincl = arange(2)
+            gdat.indxenerincl = arange(5)
         else:
             gdat.indxenerincl = arange(1)
     
@@ -471,17 +473,12 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
         elif gdat.exprtype == 'chan':
-            gdat.binsenerfull = array([0.5, 2., 8.])
+            # temp
+            gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
+            #gdat.binsenerfull = array([0.5, 2., 8.])
    
-    # energy bin indices
-    if gdat.indxenerfull == None:
-        if gdat.exprtype == 'ferm':
-            gdat.indxenerfull = arange(5)
-        elif gdat.exprtype == 'chan':
-            gdat.indxenerfull = arange(2)
-        else:   
-            gdat.indxenerfull = arange(1)
-   
+    gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
+
     # energy band string
     if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
@@ -674,7 +671,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
-            back = [array([1.3e1, 4.]), 1e1]
+            back = [ones(gdat.numbener), 1.]
     if gdat.elemtype == 'lens':
         back = [1.]
     if gdat.elemtype == 'clus':
@@ -683,7 +680,9 @@ def init( \
    
     #### spectra for the background
     if gdat.exprtype == 'chan':
-        specback = [None, array([1., 1.3])[gdat.indxenerincl]]
+        # temp
+        #specback = [None, array([1., 1.3])[gdat.indxenerincl]]
+        specback = [None, ones(gdat.numbenerfull)[gdat.indxenerincl]]
     else:
         specback = [None, None]
     setp_namevarbvalu(gdat, 'specback', specback)
