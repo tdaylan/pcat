@@ -468,6 +468,16 @@ def init( \
         else:
             gdat.lablbgal = r'\theta_2'
 
+    if gdat.exprtype == 'sdyn':
+        gdat.enerbins = False
+    else:
+        gdat.enerbins = True
+    
+    if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
+        gdat.enerdiff = True
+    if gdat.exprtype == 'hubb' or gdat.exprtype == 'sdyn':
+        gdat.enerdiff = False
+    
     ## experiment defaults
     if gdat.binsenerfull == None:
         if gdat.exprtype == 'ferm':
@@ -476,6 +486,8 @@ def init( \
             # temp
             gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
             #gdat.binsenerfull = array([0.5, 2., 8.])
+    
+    if gdat.enerdiff:
         gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
    
     # energy band string
@@ -534,16 +546,6 @@ def init( \
         if gdat.elemtype == 'lens':
             gdat.radispmr = 0.2 / gdat.anglfact
    
-    if gdat.exprtype == 'sdyn':
-        gdat.enerbins = False
-    else:
-        gdat.enerbins = True
-    
-    if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
-        gdat.enerdiff = True
-    if gdat.exprtype == 'hubb' or gdat.exprtype == 'sdyn':
-        gdat.enerdiff = False
-    
     ## PSF class
     if gdat.indxevttincl != None:
         gdat.evttbins = True
