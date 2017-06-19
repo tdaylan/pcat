@@ -476,6 +476,7 @@ def init( \
             # temp
             gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
             #gdat.binsenerfull = array([0.5, 2., 8.])
+        gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
    
     # energy band string
     if gdat.strgenerfull == None:
