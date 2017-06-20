@@ -9,19 +9,18 @@ def init( \
          # user interaction
          verbtype=1, \
          pathbase=os.environ["PCAT_DATA_PATH"], \
+         showmoreaccp=False, \
 
          # diagnostics
          diagmode=False, \
          emptsamp=False, \
 
+         evoltype='samp', \
+        
          # chain setup
          numbswep=1000000, \
          numbburn=None, \
          factthin=None, \
-        
-         showmoreaccp=False, \
-        
-         evoltype='samp', \
         
          # output
          ## condensed catalog
@@ -50,28 +49,32 @@ def init( \
          plotelemcorr=True, \
          relnprio=False, \
         
-         # Sersic model type
-         serstype='vauc', \
-
          # elements
          ## vary projected scale radius
          variasca=True, \
          ## vary projected cutoff radius
          variacut=True, \
         
+         # name of the configuration
+         strgcnfg=None, \
+
+         # numpy RNG seed
+         seedstat=None, \
+    
          # metamodel settings
          ## number of spatial dimensions
          numbspatdims=2, \
          
-         # model type
+         ## element type
          elemtype='lght', \
-         
-         # name of the configuration
-         strgcnfg=None, \
+        
+         ## PSF evaluation type
+         kernevaltype='ulip', \
 
-         ## numpy RNG seed
-         seedstat=None, \
-    
+         ## lens specific
+         ### Sersic type
+         serstype='vauc', \
+
          # initialization
          ## initialization type
          inittype=None, \
@@ -104,8 +107,6 @@ def init( \
          ## perform an additional run sampling from the prior
          checprio=False, \
 
-        
-        
          strgexprflux=None, \
          strgcatl=None, \
          anglassc=None, \
@@ -1095,81 +1096,6 @@ def init( \
             gdat.binslgalsers = gdat.binslgalsers[indx]
             gdat.sersprof = gdat.sersprof[indx, :, :]
             gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
-    
-    # color bars
-    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
-    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 10.
-    gdat.scallpdfspatpriointp = 'self'
-    gdat.cmaplpdfspatpriointp = 'PuBu'
-    
-    gdat.minmllikmaps = -10.
-    gdat.maxmllikmaps = 0.
-    gdat.scalllikmaps = 'asnh'
-    gdat.cmapllikmaps = 'YlGn'
-    
-    gdat.minmperc = 0.
-    gdat.maxmperc = 1e2
-    gdat.scalperc = 'asnh'
-    gdat.cmapperc = 'afmhot'
-    
-    gdat.minmpercresi = -1e2
-    gdat.maxmpercresi = 1e2
-    gdat.scalpercresi = 'asnh'
-    gdat.cmappercresi = 'coolwarm'
-    
-    gdat.scalexpomaps = 'logt'
-    gdat.cmapexpomaps = 'OrRd'
-    
-    gdat.scaldatacnts = 'logt'
-    gdat.cmapdatacnts = 'Greys'
-    
-    gdat.scalresicnts = 'asnh'
-    gdat.cmapresicnts = 'RdBu'
-    
-    gdat.minmconv = 1e-2
-    gdat.maxmconv = 10.
-    gdat.scalconv = 'logt'
-    gdat.cmapconv = 'Purples'
-    
-    gdat.minmconvelem = 1e-4
-    gdat.maxmconvelem = 1e-1
-    gdat.scalconvelem = 'logt'
-    gdat.cmapconvelem = 'Purples'
-    
-    gdat.minms2nr = 0.
-    gdat.maxms2nr = 10.
-    gdat.scals2nr = 'asnh'
-    gdat.cmaps2nr = 'magma'
-    
-    gdat.minmmagn = -1e2
-    gdat.maxmmagn = 1e2
-    gdat.scalmagn = 'asnh'
-    gdat.cmapmagn = 'BrBG'
-    
-    gdat.minmresideflperc = -100.
-    gdat.maxmresideflperc = 100.
-    gdat.scalresideflperc = 'self'
-    gdat.cmapresideflperc = 'Oranges'
-    
-    gdat.minmresiconvelem = -0.1
-    gdat.maxmresiconvelem = 0.1
-    gdat.scalresiconvelem = 'self'
-    gdat.cmapresiconvelem = 'PiYG'
-    
-    gdat.minmresiconvelemperc = -100.
-    gdat.maxmresiconvelemperc = 100.
-    gdat.scalresiconvelemperc = 'self'
-    gdat.cmapresiconvelemperc = 'PiYG'
-    
-    gdat.minmresimagn = -10.
-    gdat.maxmresimagn = 10.
-    gdat.scalresimagn = 'self'
-    gdat.cmapresimagn = 'PRGn'
-    
-    gdat.minmresimagnperc = -100.
-    gdat.maxmresimagnperc = 100.
-    gdat.scalresimagnperc = 'self'
-    gdat.cmapresimagnperc = 'PRGn'
     
     gdatdictcopy = deepcopy(gdat.__dict__)
     for strg, valu in gdatdictcopy.iteritems():
@@ -2761,6 +2687,9 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if gdatmodi.propwith and gdatmodi.thislpautotl != 0.:
                 raise Exception('Auxiliary variable PDF should is not zero during a within-model proposal.')
+            
+            if not isfinite(gdatmodi.thislliktotl):
+                raise Exception('Log-likelihood is infinite!')
 
             gdatmodi.thislpostotl = gdatmodi.thislliktotl + gdatmodi.thislpritotl
             if False and gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:

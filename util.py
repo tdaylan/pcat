@@ -53,139 +53,7 @@ def retr_psfnwdth(gdat, psfn, frac):
     return wdth
 
 
-def retr_spec(gdat, flux, sind, curv, expo, spectype, plot=False):
-    
-    if gdat.numbener == 1:
-        spec = flux[None, :]
-    else:
-        if plot:
-            meanener = gdat.meanenerplot
-        else:
-            meanener = gdat.meanener
-
-        if spectype == 'powr':
-            spec = flux[None, :] * (meanener / gdat.enerfluxdist)[:, None]**(-sind[None, :])
-        if spectype == 'curv':
-            spec = flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
-        if spectype == 'expo':
-            spec = flux[None, :] * (meanener / gdat.enerfluxdist)[:, None]**(-sind[None, :]) * exp(-(meanener - gdat.enerfluxdist)[:, None] / expo[None, :])
-    
-    return spec
-
-
-def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
-    
-    numbtrapcuml = getattr(gdat, strgmodl + 'numbtrapcuml')
-    numbcomp = getattr(gdat, strgmodl + 'numbcomp')
-    indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-    indxcomp = getattr(gdat, strgmodl + 'indxcomp')
-    spectype = getattr(gdat, strgmodl + 'spectype')
-    indxsampcompinit = getattr(gdat, strgmodl + 'indxsampcompinit')
-    liststrgcomptotl = getattr(gdat, strgmodl + 'liststrgcomptotl')
-    
-    indxsampcomp = dict()
-    for strgcomp in liststrgcomptotl:
-        indxsampcomp[strgcomp] = [[] for l in indxpopl]
-
-    indxsampcomp['comp'] = []
-    for l in indxpopl:
-        indxsamptemp = indxsampcompinit + numbtrapcuml[l] + array(indxelemfull[l], dtype=int) * numbcomp[l]
-        indxsampcomp['lgal'][l] = indxsamptemp
-        indxsampcomp['bgal'][l] = indxsamptemp + 1
-        if gdat.elemtype == 'lght':
-            indxsampcomp['flux'][l] = indxsamptemp + 2
-            if gdat.numbener > 1:
-                indxsampcomp['sind'][l] = indxsamptemp + 3
-                if spectype[l] == 'curv':
-                    indxsampcomp['curv'][l] = indxsamptemp + 4
-                if spectype[l] == 'expo':
-                    indxsampcomp['expo'][l] = indxsamptemp + 4
-        if gdat.elemtype == 'lens':
-            indxsampcomp['defs'][l] = indxsamptemp + 2
-            if gdat.variasca:
-                indxsampcomp['asca'][l] = indxsamptemp + 3
-            if gdat.variacut:
-                indxsampcomp['acut'][l] = indxsamptemp + 4
-        if gdat.elemtype == 'clus':
-            indxsampcomp['nobj'][l] = indxsamptemp + 2
-        indxsampcomp['comp'].append(repeat(indxsamptemp, numbcomp[l]) + tile(indxcomp[l], len(indxelemfull[l])))
-             
-    return indxsampcomp
-
-
-def retr_plotpath(gdat, gdatmodi, strg, strgplot, nameinte=''):
-    
-    if strg == 'true' or strg == '':
-        path = gdat.pathinit + nameinte + strgplot + '.pdf'
-    elif strg == 'post' or strg == 'mlik':
-        path = gdat.pathplot + gdat.namesampdist + '/finl/' + nameinte + strg + strgplot + '.pdf'
-    elif strg == 'this':
-        path = gdat.pathplot + gdat.namesampdist + '/fram/' + nameinte + strg + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
-    
-    return path
-
-
-def retr_pntsfluxtotl(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
-
-    pntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-    
-    numbpnts = lgal.size
-    for k in range(numbpnts):
-        indxpixleval = retr_indxpixleval(gdat, lgal[k], bgal[k], spec[gdat.indxenerfluxdist[0], k], evalcirc)
-        pntsflux[:, indxpixleval, :] += retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval)
-    
-
-def retr_indxpixleval(gdat, lgal, bgal, ampl, evalcirc):
-    
-    if not isscalar(lgal):
-        lgal = lgal[0]
-        bgal = bgal[0]
-        ampl = ampl[0]
-     
-    if evalcirc == 'locl':  
-        indxpixlpnts = retr_indxpixl(gdat, bgal, lgal)
-        indxfluxproxtemp = digitize(ampl, gdat.binsprox) - 1
-
-        indxpixleval = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
-        
-        if isinstance(indxpixleval, int):
-            indxpixleval = gdat.indxpixl
-    else:
-        indxpixleval = gdat.indxpixl
-    
-    return indxpixleval
-
-
-def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
-    
-    # calculate the distance to all pixels from each point source
-    dist = retr_angldistunit(gdat, lgal, bgal, indxpixleval)
-   
-    # interpolate the PSF onto the pixels
-    if oaxitype:
-        indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
-        psfntemp = psfnintp[indxoaxitemp](dist)
-    else:
-        psfntemp = psfnintp(dist)
-    
-    # scale by the PS spectrum
-    pntsflux = spec[:, None, None] * psfntemp
-                
-    return pntsflux
-
-
-def retr_mapslght(gdat, bacp, pntsflux, tempindx):
-    
-    modlflux = pntsflux[tempindx]
-    for c in gdat.fittindxback:
-        if gdat.fittspecback[c] != None:
-            norm = gdat.fittspecback[c] * bacp[gdat.fittindxbacpback[c]]
-        else:
-            norm = bacp[gdat.fittindxbacpback[c]]
-        modlflux += norm[:, None, None] * gdat.fittbackflux[c][tempindx]        
-
-    return modlflux
-
+## custom random variables, pdfs, cdfs and icdfs
 
 def cdfn_powr(flux, minm, maxm, slop):
         
@@ -211,18 +79,6 @@ def icdf_powr(unit, minm, maxm, slop):
 def icdf_igam(xdat, slop, cutf):
     
     icdf = sp.stats.invgamma.ppf(xdat, slop - 1., scale=cutf)
-    
-    if not isfinite(icdf).all():
-        print 'icdf_igam'
-        print 'icdf'
-        print icdf
-        print 'slop'
-        print slop
-        print 'cutf'
-        print cutf
-        print 'xdat'
-        print xdat
-        print
     
     return icdf
 
@@ -448,6 +304,140 @@ def icdf_fixp(gdat, strgmodl, fixpunit, thisindxfixp):
     return fixp
 
 
+def retr_probpois(data, modl):
+    
+    lprb = data * log(modl) - modl - sp.special.gammaln(data + 1)
+    
+    return lprb
+    
+        
+def retr_sampvarb(gdat, strgmodl, samp, indxsampcomp=None):
+    
+    sampvarb = zeros_like(samp)
+    indxfixp = getattr(gdat, strgmodl + 'indxfixp')
+    
+    for k in indxfixp:
+        sampvarb[k] = icdf_fixp(gdat, strgmodl, samp[k], k)
+    
+    if indxsampcomp != None:
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+        liststrgcomp = getattr(gdat, strgmodl + 'liststrgcomp')
+        listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
+        retr_sampvarbcomp(gdat, strgmodl, indxsampcomp, indxpopl, liststrgcomp, listscalcomp, samp, sampvarb)
+
+    return sampvarb
+    
+
+def retr_sampvarbcomp(gdat, strgmodl, indxsampcomp, indxpopl, liststrgcomp, listscalcomp, samp, sampvarb, indxelemfull=slice(None)):
+    
+    for l in indxpopl:
+        for k, strgcomp in enumerate(liststrgcomp[l]):
+            
+            if listscalcomp[l][k] == 'self' or listscalcomp[l][k] == 'dexp' or listscalcomp[l][k] == 'expo' or listscalcomp[l][k] == 'powrslop':
+                minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
+                if listscalcomp[l][k] == 'powrslop':
+                    maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
+                    distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
+                    sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_powr(samp[indxsampcomp[strgcomp][l][indxelemfull]], minm, maxm, distslop)
+                else:
+                    fact = getattr(gdat, strgmodl + 'fact' + strgcomp)
+                    sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_self(samp[indxsampcomp[strgcomp][l][indxelemfull]], minm, fact)
+            if listscalcomp[l][k] == 'igam':
+                distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
+                cutf = getattr(gdat, 'cutf' + strgcomp)
+
+                sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_igam(samp[indxsampcomp[strgcomp][l][indxelemfull]], distslop, cutf)
+            if listscalcomp[l][k] == 'gaus':
+                distmean = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distmean')[l]]
+                diststdv = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'diststdv')[l]]
+                sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_gaus(samp[indxsampcomp[strgcomp][l][indxelemfull]], distmean, diststdv)
+
+
+def cdfn_comp(gdat, gdatmodi, comp, init=True):
+    
+    listscalcomp = gdat.fittlistscalcomp[gdatmodi.indxpoplmodi]
+    cdfn = empty(gdat.fittnumbcomp[gdatmodi.indxpoplmodi])
+    for k, strgcomp in enumerate(gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]):
+        
+        if init and k > 2:
+            break
+            
+        if listscalcomp[k] == 'self' or listscalcomp[k] == 'dexp' or listscalcomp[k] == 'expo' or listscalcomp[k] == 'powrslop':
+            minm = getattr(gdat, 'fittminm' + strgcomp)
+            if listscalcomp[k] == 'powrslop':
+                maxm = getattr(gdat, 'fittmaxm' + strgcomp)
+                distslop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[gdatmodi.indxpoplmodi]]
+                cdfn[k] = cdfn_powr(comp[k], minm, maxm, distslop)
+            else:
+                fact = getattr(gdat, 'fittfact' + strgcomp)
+                cdfn[k] = cdfn_self(comp[k], minm, fact)
+        if listscalcomp[k] == 'igam':
+            distslop = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[gdatmodi.indxpoplmodi]]
+            cutf = getattr(gdat, 'cutf' + strgcomp)
+            cdfn[k] = cdfn_igam(comp[k], distslop, cutf)
+        if listscalcomp[k] == 'gaus':
+            distmean = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[gdatmodi.indxpoplmodi]]
+            diststdv = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[gdatmodi.indxpoplmodi]]
+            cdfn[k] = cdfn_gaus(comp[k], distmean, diststdv)
+    
+    return cdfn
+
+
+## proposals
+### decode the transdimensional element list
+def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
+    
+    numbtrapcuml = getattr(gdat, strgmodl + 'numbtrapcuml')
+    numbcomp = getattr(gdat, strgmodl + 'numbcomp')
+    indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+    indxcomp = getattr(gdat, strgmodl + 'indxcomp')
+    spectype = getattr(gdat, strgmodl + 'spectype')
+    indxsampcompinit = getattr(gdat, strgmodl + 'indxsampcompinit')
+    liststrgcomptotl = getattr(gdat, strgmodl + 'liststrgcomptotl')
+    
+    indxsampcomp = dict()
+    for strgcomp in liststrgcomptotl:
+        indxsampcomp[strgcomp] = [[] for l in indxpopl]
+
+    indxsampcomp['comp'] = []
+    for l in indxpopl:
+        indxsamptemp = indxsampcompinit + numbtrapcuml[l] + array(indxelemfull[l], dtype=int) * numbcomp[l]
+        indxsampcomp['lgal'][l] = indxsamptemp
+        indxsampcomp['bgal'][l] = indxsamptemp + 1
+        if gdat.elemtype == 'lght':
+            indxsampcomp['flux'][l] = indxsamptemp + 2
+            if gdat.numbener > 1:
+                indxsampcomp['sind'][l] = indxsamptemp + 3
+                if spectype[l] == 'curv':
+                    indxsampcomp['curv'][l] = indxsamptemp + 4
+                if spectype[l] == 'expo':
+                    indxsampcomp['expo'][l] = indxsamptemp + 4
+        if gdat.elemtype == 'lens':
+            indxsampcomp['defs'][l] = indxsamptemp + 2
+            if gdat.variasca:
+                indxsampcomp['asca'][l] = indxsamptemp + 3
+            if gdat.variacut:
+                indxsampcomp['acut'][l] = indxsamptemp + 4
+        if gdat.elemtype == 'clus':
+            indxsampcomp['nobj'][l] = indxsamptemp + 2
+        indxsampcomp['comp'].append(repeat(indxsamptemp, numbcomp[l]) + tile(indxcomp[l], len(indxelemfull[l])))
+             
+    return indxsampcomp
+
+
+### update the current state with a Gaussian draw with potential tail
+def retr_gaus(gdat, gdatmodi, indxparamodi, stdvpara):
+    
+    numbparamodi = indxparamodi.size
+    stdvtemp = normal(size=numbparamodi) * stdvpara
+    if rand() < gdat.fracproprand:
+        stdvtemp[choice(indxparamodi)] += randn()
+    
+    gdatmodi.nextsamp[indxparamodi] = gdatmodi.thissamp[indxparamodi] + stdvtemp
+    gdatmodi.nextsamp[indxparamodi] = gdatmodi.nextsamp[indxparamodi] % 1.
+
+       
+### draw proposal type
 def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False):
 
     gdatmodi.thisaccppsfn = True
@@ -575,6 +565,171 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
             raise Exception('')
 
 
+### update sampler state
+def updt_samp(gdat, gdatmodi):
+   
+    if gdat.verbtype > 1:
+        print 'updt_samp()'
+
+    # update the sample and the unit sample vectors
+    gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
+    gdatmodi.thissamp[gdatmodi.indxsampmodi] = gdatmodi.nextsamp[gdatmodi.indxsampmodi]
+    
+    # update the log-prior -- needed for diagnostics
+    gdatmodi.thislpri = copy(gdatmodi.nextlpri)
+        
+    # update the log-prior sum
+    gdatmodi.thislpritotl = copy(gdatmodi.nextlpritotl)
+        
+    # update the log-likelihood
+    gdatmodi.thislliktotl = copy(gdatmodi.nextlliktotl)
+   
+    if gdatmodi.proppsfnconv:
+        gdatmodi.thispsfnconv = []
+        for i in gdat.indxener:
+            gdatmodi.thispsfnconv.append(AiryDisk2DKernel(gdatmodi.nextpsfp[i] / gdat.sizepixl))
+    
+    if gdat.elemtype == 'lens':
+        if gdatmodi.prophost:
+            gdatmodi.thisdeflhost = copy(gdatmodi.nextdeflhost)
+            gdatmodi.thishostfluxmaps = copy(gdatmodi.nexthostfluxmaps)
+
+    if gdat.fittnumbtrap > 0:
+        gdatmodi.thisindxelemfull = deepcopy(gdatmodi.nextindxelemfull)
+        gdatmodi.thisindxsampcomp = deepcopy(gdatmodi.nextindxsampcomp)
+    
+        if gdat.calcllik and gdat.propwithsing:
+            if gdat.elemtype == 'lght':
+                gdatmodi.thispntsflux = copy(gdatmodi.nextpntsflux)
+            if gdat.elemtype == 'lens':
+                gdatmodi.thisdeflelem = copy(gdatmodi.nextdeflelem)
+
+
+## model evaluation
+
+### find the spectra of sources
+def retr_spec(gdat, flux, sind, curv, expo, spectype, plot=False):
+    
+    if gdat.numbener == 1:
+        spec = flux[None, :]
+    else:
+        if plot:
+            meanener = gdat.meanenerplot
+        else:
+            meanener = gdat.meanener
+
+        if spectype == 'powr':
+            spec = flux[None, :] * (meanener / gdat.enerfluxdist)[:, None]**(-sind[None, :])
+        if spectype == 'curv':
+            spec = flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
+        if spectype == 'expo':
+            spec = flux[None, :] * (meanener / gdat.enerfluxdist)[:, None]**(-sind[None, :]) * exp(-(meanener - gdat.enerfluxdist)[:, None] / expo[None, :])
+    
+    return spec
+
+
+### find the surface brightness due to one point source
+def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
+    
+    # calculate the distance to all pixels from each point source
+    dist = retr_angldistunit(gdat, lgal, bgal, indxpixleval)
+   
+    # interpolate the PSF onto the pixels
+    if gdat.kernevaltype == 'ulip':
+        if oaxitype:
+            indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
+            print 'dist'
+            summgene(dist * gdat.anglfact)
+            print 'indxoaxitemp'
+            print indxoaxitemp
+            print 
+            psfntemp = psfnintp[indxoaxitemp](dist)
+        else:
+            psfntemp = psfnintp(dist)
+    if gdat.kernevaltype == 'bspx':
+        pass
+
+    # scale by the PS spectrum
+    pntsflux = spec[:, None, None] * psfntemp
+                
+    return pntsflux
+
+
+### find the total surface brightness due to all point sources
+def retr_pntsfluxtotl(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
+
+    pntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    
+    numbpnts = lgal.size
+    for k in range(numbpnts):
+        indxpixleval = retr_indxpixleval(gdat, lgal[k], bgal[k], spec[gdat.indxenerfluxdist[0], k], evalcirc)
+        pntsflux[:, indxpixleval, :] += retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval)
+    
+
+### find the total surface brightness due to all emission components
+def retr_mapslght(gdat, bacp, pntsflux, tempindx):
+    
+    modlflux = pntsflux[tempindx]
+    for c in gdat.fittindxback:
+        if gdat.fittspecback[c] != None:
+            norm = gdat.fittspecback[c] * bacp[gdat.fittindxbacpback[c]]
+        else:
+            norm = bacp[gdat.fittindxbacpback[c]]
+        modlflux += norm[:, None, None] * gdat.fittbackflux[c][tempindx]        
+
+    return modlflux
+
+
+### find the set of pixels in proximity to a position on the map
+def retr_indxpixleval(gdat, lgal, bgal, ampl, evalcirc):
+    
+    if not isscalar(lgal):
+        lgal = lgal[0]
+        bgal = bgal[0]
+        ampl = ampl[0]
+     
+    if evalcirc == 'locl':  
+        indxpixlpnts = retr_indxpixl(gdat, bgal, lgal)
+        indxfluxproxtemp = digitize(ampl, gdat.binsprox) - 1
+        print 'indxfluxproxtemp'
+        print indxfluxproxtemp
+        print 'gdat.indxpixlprox'
+        print len(gdat.indxpixlprox)
+        print 'gdat.indxpixlprox[0]'
+        print len(gdat.indxpixlprox[0])
+        print 'indxpixlpnts'
+        print indxpixlpnts
+        print
+        indxpixleval = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
+        
+        if isinstance(indxpixleval, int):
+            indxpixleval = gdat.indxpixl
+    else:
+        indxpixleval = gdat.indxpixl
+    
+    return indxpixleval
+
+
+### find the distance between two points on the map
+def retr_angldistunit(gdat, lgal, bgal, indxpixleval, retranglcosi=False):
+   
+    if gdat.pixltype == 'heal':
+        xaxi, yaxi, zaxi = retr_unit(lgal, bgal)
+        anglcosi = gdat.xaxigrid[indxpixleval] * xaxi + gdat.yaxigrid[indxpixleval] * yaxi + gdat.zaxigrid[indxpixleval] * zaxi
+        
+        if retranglcosi:
+            return anglcosi
+        else:
+            angldist = arccos(anglcosi)
+            return angldist
+    
+    else:
+        angldist = sqrt((lgal - gdat.lgalgrid[indxpixleval])**2 + (bgal - gdat.bgalgrid[indxpixleval])**2)
+        
+        return angldist
+    
+
+### find the pixel index of a point on the map
 def retr_indxpixl(gdat, bgal, lgal):
 
     if gdat.pixltype == 'heal':
@@ -606,20 +761,14 @@ def retr_indxpixl(gdat, bgal, lgal):
             indxbgcr[where(indxbgcr >= gdat.numbsidecart)] = gdat.numbsidecart - 1
             
         indxpixl = indxlgcr * gdat.numbsidecart + indxbgcr
+    
+    # convert to an index of non-zero exposure pixels
+    indxpixl = gdat.indxpixlroficnvt[indxpixl]
 
     return indxpixl
 
 
-def retr_elpsfrac(elpsaxis):
-    
-    distnorm = sum(((listsamp - gdat.elpscntr[None, :]) / elpsaxis[None, :])**2, axis=1)
-    indxsampregu = where(distnorm < 1.)[0]
-    thissampfrac = indxsampregu.size / gdat.numbsamp
-    vari = (thissampfrac / 0.05 - 1.)**2
-    
-    return vari
-
-
+## obtain count maps
 def retr_cntsmaps(gdat, fluxmaps, cart=False):
 
     if cart:
@@ -634,95 +783,31 @@ def retr_cntsmaps(gdat, fluxmaps, cart=False):
     return cntsmaps
 
 
-def retr_probpois(data, modl):
+def retr_elpsfrac(elpsaxis):
     
-    lprb = data * log(modl) - modl - sp.special.gammaln(data + 1)
+    distnorm = sum(((listsamp - gdat.elpscntr[None, :]) / elpsaxis[None, :])**2, axis=1)
+    indxsampregu = where(distnorm < 1.)[0]
+    thissampfrac = indxsampregu.size / gdat.numbsamp
+    vari = (thissampfrac / 0.05 - 1.)**2
     
-    if False:
-        print 'retr_probpois'
-        print 'data'
-        print data
-        print 'modl'
-        print modl
-        print 'lprb'
-        print lprb
-        print
-
-    return lprb
-    
-        
-def retr_sampvarb(gdat, strgmodl, samp, indxsampcomp=None):
-    
-    sampvarb = zeros_like(samp)
-    indxfixp = getattr(gdat, strgmodl + 'indxfixp')
-    
-    for k in indxfixp:
-        sampvarb[k] = icdf_fixp(gdat, strgmodl, samp[k], k)
-    
-    if indxsampcomp != None:
-        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-        liststrgcomp = getattr(gdat, strgmodl + 'liststrgcomp')
-        listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
-        retr_sampvarbcomp(gdat, strgmodl, indxsampcomp, indxpopl, liststrgcomp, listscalcomp, samp, sampvarb)
-
-    return sampvarb
-    
-
-def retr_sampvarbcomp(gdat, strgmodl, indxsampcomp, indxpopl, liststrgcomp, listscalcomp, samp, sampvarb, indxelemfull=slice(None)):
-    
-    for l in indxpopl:
-        for k, strgcomp in enumerate(liststrgcomp[l]):
-            
-            if listscalcomp[l][k] == 'self' or listscalcomp[l][k] == 'dexp' or listscalcomp[l][k] == 'expo' or listscalcomp[l][k] == 'powrslop':
-                minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
-                if listscalcomp[l][k] == 'powrslop':
-                    maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
-                    distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
-                    sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_powr(samp[indxsampcomp[strgcomp][l][indxelemfull]], minm, maxm, distslop)
-                else:
-                    fact = getattr(gdat, strgmodl + 'fact' + strgcomp)
-                    sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_self(samp[indxsampcomp[strgcomp][l][indxelemfull]], minm, fact)
-            if listscalcomp[l][k] == 'igam':
-                distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
-                cutf = getattr(gdat, 'cutf' + strgcomp)
-
-                sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_igam(samp[indxsampcomp[strgcomp][l][indxelemfull]], distslop, cutf)
-            if listscalcomp[l][k] == 'gaus':
-                distmean = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distmean')[l]]
-                diststdv = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'diststdv')[l]]
-                sampvarb[indxsampcomp[strgcomp][l][indxelemfull]] = icdf_gaus(samp[indxsampcomp[strgcomp][l][indxelemfull]], distmean, diststdv)
+    return vari
 
 
-def cdfn_comp(gdat, gdatmodi, comp, init=True):
+## plotting
+### construct path for plots
+def retr_plotpath(gdat, gdatmodi, strg, strgplot, nameinte=''):
     
-    listscalcomp = gdat.fittlistscalcomp[gdatmodi.indxpoplmodi]
-    cdfn = empty(gdat.fittnumbcomp[gdatmodi.indxpoplmodi])
-    for k, strgcomp in enumerate(gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]):
-        
-        if init and k > 2:
-            break
-            
-        if listscalcomp[k] == 'self' or listscalcomp[k] == 'dexp' or listscalcomp[k] == 'expo' or listscalcomp[k] == 'powrslop':
-            minm = getattr(gdat, 'fittminm' + strgcomp)
-            if listscalcomp[k] == 'powrslop':
-                maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                distslop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[gdatmodi.indxpoplmodi]]
-                cdfn[k] = cdfn_powr(comp[k], minm, maxm, distslop)
-            else:
-                fact = getattr(gdat, 'fittfact' + strgcomp)
-                cdfn[k] = cdfn_self(comp[k], minm, fact)
-        if listscalcomp[k] == 'igam':
-            distslop = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[gdatmodi.indxpoplmodi]]
-            cutf = getattr(gdat, 'cutf' + strgcomp)
-            cdfn[k] = cdfn_igam(comp[k], distslop, cutf)
-        if listscalcomp[k] == 'gaus':
-            distmean = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[gdatmodi.indxpoplmodi]]
-            diststdv = gdatmodi.sampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[gdatmodi.indxpoplmodi]]
-            cdfn[k] = cdfn_gaus(comp[k], distmean, diststdv)
+    if strg == 'true' or strg == '':
+        path = gdat.pathinit + nameinte + strgplot + '.pdf'
+    elif strg == 'post' or strg == 'mlik':
+        path = gdat.pathplot + gdat.namesampdist + '/finl/' + nameinte + strg + strgplot + '.pdf'
+    elif strg == 'this':
+        path = gdat.pathplot + gdat.namesampdist + '/fram/' + nameinte + strg + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
     
-    return cdfn
+    return path
 
 
+### determine the marker size
 def retr_mrkrsize(gdat, compampl):
     
     minm = getattr(gdat, 'minm' + gdat.namecompampl) 
@@ -731,6 +816,8 @@ def retr_mrkrsize(gdat, compampl):
     
     return mrkrsize
 
+
+## experiment specific
 
 def retr_hubbpsfn(gdat):
 
@@ -819,191 +906,109 @@ def retr_fermpsfn(gdat):
             gdat.exprpsfp[indxfermpsfptemp] = fermform[:, m, k]
     
 
-def updt_samp(gdat, gdatmodi):
-   
-    if gdat.verbtype > 1:
-        print 'updt_samp()'
-
-    # update the sample and the unit sample vectors
-    gdatmodi.thissampvarb[gdatmodi.indxsampmodi] = gdatmodi.nextsampvarb[gdatmodi.indxsampmodi]
-    gdatmodi.thissamp[gdatmodi.indxsampmodi] = gdatmodi.nextsamp[gdatmodi.indxsampmodi]
-    
-    # update the log-prior -- needed for diagnostics
-    gdatmodi.thislpri = copy(gdatmodi.nextlpri)
-        
-    # update the log-prior sum
-    gdatmodi.thislpritotl = copy(gdatmodi.nextlpritotl)
-        
-    # update the log-likelihood
-    gdatmodi.thislliktotl = copy(gdatmodi.nextlliktotl)
-   
-    if gdatmodi.proppsfnconv:
-        gdatmodi.thispsfnconv = []
-        for i in gdat.indxener:
-            gdatmodi.thispsfnconv.append(AiryDisk2DKernel(gdatmodi.nextpsfp[i] / gdat.sizepixl))
-    
-    if gdat.elemtype == 'lens':
-        if gdatmodi.prophost:
-            gdatmodi.thisdeflhost = copy(gdatmodi.nextdeflhost)
-            gdatmodi.thishostfluxmaps = copy(gdatmodi.nexthostfluxmaps)
-
-    if gdat.fittnumbtrap > 0:
-        gdatmodi.thisindxelemfull = deepcopy(gdatmodi.nextindxelemfull)
-        gdatmodi.thisindxsampcomp = deepcopy(gdatmodi.nextindxsampcomp)
-    
-        if gdat.calcllik and gdat.propwithsing:
-            if gdat.elemtype == 'lght':
-                gdatmodi.thispntsflux = copy(gdatmodi.nextpntsflux)
-            if gdat.elemtype == 'lens':
-                gdatmodi.thisdeflelem = copy(gdatmodi.nextdeflelem)
-
-
-def retr_listpair(gdat, lgal, bgal):
-    
-    if gdat.verbtype > 1:
-        print 'Finding element pairs inside the linking length...'
-    
-    listpair = []
-    for k in range(lgal.size):
-        # temp -- linking uses the Cartesian approximation, which is accurate enough for splits and merges inside a small circle
-        #indxpnts = k + 1 + where(sqrt((bgal[k+1:] - bgal[k])**2 + (lgal[k+1:] - lgal[k])**2) < gdat.radispmr)[0]
-        indxpnts = k + 1 + where((fabs(bgal[k+1:] - bgal[k]) < gdat.radispmr) & (fabs(lgal[k+1:] - lgal[k]) < gdat.radispmr))[0]
-        for n in range(indxpnts.size):
-            listpair.append([k, indxpnts[n]])
-    
-    if gdat.verbtype > 1:
-        numbpair = len(listpair)
-        print '%d pairs found.' % numbpair
-
-    if gdat.diagmode:
-        boolgood = True
-        for n in range(len(listpair)):
-            dist = sqrt((lgal[listpair[n][0]] - lgal[listpair[n][1]])**2 + (bgal[listpair[n][0]] - bgal[listpair[n][1]])**2)
-            
-            if gdat.verbtype > 1:
-                print 'n'
-                print n
-                print 'lgal[listpair[n][0]]'
-                print lgal[listpair[n][0]] * gdat.anglfact
-                print 'lgal[listpair[n][1]]'
-                print lgal[listpair[n][1]] * gdat.anglfact
-                print 'bgal[listpair[n][0]]'
-                print bgal[listpair[n][0]] * gdat.anglfact
-                print 'bgal[listpair[n][1]]'
-                print bgal[listpair[n][1]] * gdat.anglfact
-                print 'dist'
-                print dist * gdat.anglfact
-
-            if dist >= gdat.radispmr:
-                boolgood = False
-        if not boolgood:
-            Exception('Inappropriate list of pairs')
-
-    return listpair
-
-
 def retr_chandata(gdat):
-
-    with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
-        G_long = [] #deg
-        G_lat = [] #deg
-        id_number = []
-        off_angle = [] # arcmin
-        flux_cnts = [] # for xray band
-        soft_cnts = [] # 0.5-2
-        hard_cnts = [] # 2-8
-        c_offset = [] #angular offset between xray and optical/NIR components in arcse
-        C_mag = [] # full optical mag?
-        W_mag = [] # 600-700 nm
-        GD_mag = [] # 750-1000 nm from GOODS-S z-band
-        G_mag = [] # 750-1000 nm from GEMS z-band
-        M_mag = [] # 2-3 micron
-        S_mag = [] # 3-4 micron
-        flux_erg_full = [] # erg/(s*cm^2)
-        flux_erg_soft = []
-        flux_erg_hard = []
-        Otype = [] # AGN/Galaxy/Star
-        for line in thisfile:
-            line = line.split()
-            G_long.append(line[0])
-            G_lat.append(line[1])
-            id_number.append(line[2])
-            off_angle.append(line[3])
-            flux_cnts.append(line[4])
-            soft_cnts.append(line[5])
-            hard_cnts.append(line[6])
-            c_offset.append(line[7])
-            C_mag.append(line[8])
-            W_mag.append(line[9])
-            GD_mag.append(line[10])
-            G_mag.append(line[11])
-            M_mag.append(line[12])
-            S_mag.append(line[13])
-            flux_erg_full.append(line[14])
-            flux_erg_soft.append(line[15])
-            flux_erg_hard.append(line[16])
-            Otype.append(line[17])
-        lgalchan = (asarray(G_long)).astype(float)
-        bgalchan = (asarray(G_lat)).astype(float)
-        #oaxichan = (asarray(off_angle)).astype(float)
-        cntschan = (asarray(flux_cnts)).astype(float)
-        cntschansoft = (asarray(soft_cnts)).astype(float)
-        cntschanhard = (asarray(hard_cnts)).astype(float)
-        #offschan = (asarray(c_offset)).astype(float)
-        #cmagchan = (asarray(C_mag)).astype(float)
-        #wmagchan = (asarray(W_mag)).astype(float)
-        #dmagchan = (asarray(GD_mag)).astype(float)
-        #gmagchan = (asarray(G_mag)).astype(float)
-        #mmagchan = (asarray(M_mag)).astype(float)
-        #smagchan = (asarray(S_mag)).astype(float)
-        #fluxchanfull = (asarray(flux_erg_full)).astype(float)
-        fluxchansoft = (asarray(flux_erg_soft)).astype(float)
-        fluxchanhard = (asarray(flux_erg_hard)).astype(float)
-        #objttypechan = (asarray(Otype))
-
-    path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
-    listhdun = ap.io.fits.open(path)
-    wcso = ap.wcs.WCS(listhdun[0].header)
-    skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
-    rascchan = skycobjt.fk5.ra.degree
-    declchan = skycobjt.fk5.dec.degree
-
-    indxpixllgal = 1490
-    indxpixlbgal = 1510
-
-    # temp 0 or 1 makes a difference!
-    lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
-    lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
-    bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
-    lgalchan *= gdat.sizepixl
-    bgalchan *= gdat.sizepixl
-
-    gdat.exprbgal = lgalchan
-    gdat.exprlgal = bgalchan
-    print 'lgalchan'
-    summgene(lgalchan)
-
-    gdat.exprspec = zeros((3, 2, gdat.exprlgal.size))
-    gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
-    gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e9 / 16.
-    # temp
-    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
-    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
-
-    # temp
-    gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
-
-    if gdat.numbener > 1:
-        gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
-        gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
     
-    # temp
-    gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
-    gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
-    if gdat.numbener > 1:
-        gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
-    print 'gdat.exprlgal'
-    summgene(gdat.exprlgal)
+    if gdat.numbener == 2:
+        with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
+            G_long = [] #deg
+            G_lat = [] #deg
+            id_number = []
+            off_angle = [] # arcmin
+            flux_cnts = [] # for xray band
+            soft_cnts = [] # 0.5-2
+            hard_cnts = [] # 2-8
+            c_offset = [] #angular offset between xray and optical/NIR components in arcse
+            C_mag = [] # full optical mag?
+            W_mag = [] # 600-700 nm
+            GD_mag = [] # 750-1000 nm from GOODS-S z-band
+            G_mag = [] # 750-1000 nm from GEMS z-band
+            M_mag = [] # 2-3 micron
+            S_mag = [] # 3-4 micron
+            flux_erg_full = [] # erg/(s*cm^2)
+            flux_erg_soft = []
+            flux_erg_hard = []
+            Otype = [] # AGN/Galaxy/Star
+            for line in thisfile:
+                line = line.split()
+                G_long.append(line[0])
+                G_lat.append(line[1])
+                id_number.append(line[2])
+                off_angle.append(line[3])
+                flux_cnts.append(line[4])
+                soft_cnts.append(line[5])
+                hard_cnts.append(line[6])
+                c_offset.append(line[7])
+                C_mag.append(line[8])
+                W_mag.append(line[9])
+                GD_mag.append(line[10])
+                G_mag.append(line[11])
+                M_mag.append(line[12])
+                S_mag.append(line[13])
+                flux_erg_full.append(line[14])
+                flux_erg_soft.append(line[15])
+                flux_erg_hard.append(line[16])
+                Otype.append(line[17])
+            lgalchan = (asarray(G_long)).astype(float)
+            bgalchan = (asarray(G_lat)).astype(float)
+            #oaxichan = (asarray(off_angle)).astype(float)
+            cntschan = (asarray(flux_cnts)).astype(float)
+            cntschansoft = (asarray(soft_cnts)).astype(float)
+            cntschanhard = (asarray(hard_cnts)).astype(float)
+            #offschan = (asarray(c_offset)).astype(float)
+            #cmagchan = (asarray(C_mag)).astype(float)
+            #wmagchan = (asarray(W_mag)).astype(float)
+            #dmagchan = (asarray(GD_mag)).astype(float)
+            #gmagchan = (asarray(G_mag)).astype(float)
+            #mmagchan = (asarray(M_mag)).astype(float)
+            #smagchan = (asarray(S_mag)).astype(float)
+            #fluxchanfull = (asarray(flux_erg_full)).astype(float)
+            fluxchansoft = (asarray(flux_erg_soft)).astype(float)
+            fluxchanhard = (asarray(flux_erg_hard)).astype(float)
+            #objttypechan = (asarray(Otype))
+    
+        path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
+        listhdun = ap.io.fits.open(path)
+        wcso = ap.wcs.WCS(listhdun[0].header)
+        skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
+        rascchan = skycobjt.fk5.ra.degree
+        declchan = skycobjt.fk5.dec.degree
+    
+        indxpixllgal = 1490
+        indxpixlbgal = 1510
+    
+        # temp 0 or 1 makes a difference!
+        lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
+        lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
+        bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
+        lgalchan *= gdat.sizepixl
+        bgalchan *= gdat.sizepixl
+    
+        gdat.exprbgal = lgalchan
+        gdat.exprlgal = bgalchan
+        print 'lgalchan'
+        summgene(lgalchan)
+    
+        gdat.exprspec = zeros((3, 2, gdat.exprlgal.size))
+        gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
+        gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e9 / 16.
+        # temp
+        gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
+        gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
+    
+        # temp
+        gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
+    
+        if gdat.numbener > 1:
+            gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
+            gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
+        
+        # temp
+        gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
+        gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
+        if gdat.numbener > 1:
+            gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
+        print 'gdat.exprlgal'
+        summgene(gdat.exprlgal)
 
 
 def retr_fermdata(gdat):
@@ -1061,34 +1066,35 @@ def retr_fermdata(gdat):
     #gdat.exprspec = gdat.exprspec[:, :, indxtimevari]
 
 
-def retr_gaus(gdat, gdatmodi, indxparamodi, stdvpara):
+### find the list of pairs for splits and merges
+def retr_listpair(gdat, lgal, bgal):
     
-    numbparamodi = indxparamodi.size
-    stdvtemp = normal(size=numbparamodi) * stdvpara
-    if rand() < gdat.fracproprand:
-        stdvtemp[choice(indxparamodi)] += randn()
+    if gdat.verbtype > 1:
+        print 'Finding element pairs inside the linking length...'
     
-    gdatmodi.nextsamp[indxparamodi] = gdatmodi.thissamp[indxparamodi] + stdvtemp
-    gdatmodi.nextsamp[indxparamodi] = gdatmodi.nextsamp[indxparamodi] % 1.
+    listpair = []
+    for k in range(lgal.size):
+        # temp -- linking uses the Cartesian approximation, which is accurate enough for splits and merges inside a small circle
+        #indxpnts = k + 1 + where(sqrt((bgal[k+1:] - bgal[k])**2 + (lgal[k+1:] - lgal[k])**2) < gdat.radispmr)[0]
+        indxpnts = k + 1 + where((fabs(bgal[k+1:] - bgal[k]) < gdat.radispmr) & (fabs(lgal[k+1:] - lgal[k]) < gdat.radispmr))[0]
+        for n in range(indxpnts.size):
+            listpair.append([k, indxpnts[n]])
+    
+    if gdat.verbtype > 1:
+        numbpair = len(listpair)
+        print '%d pairs found.' % numbpair
 
-       
-def retr_angldistunit(gdat, lgal, bgal, indxpixleval, retranglcosi=False):
-   
-    if gdat.pixltype == 'heal':
-        xaxi, yaxi, zaxi = retr_unit(lgal, bgal)
-        anglcosi = gdat.xaxigrid[indxpixleval] * xaxi + gdat.yaxigrid[indxpixleval] * yaxi + gdat.zaxigrid[indxpixleval] * zaxi
-        
-        if retranglcosi:
-            return anglcosi
-        else:
-            angldist = arccos(anglcosi)
-            return angldist
-    
-    else:
-        angldist = sqrt((lgal - gdat.lgalgrid[indxpixleval])**2 + (bgal - gdat.bgalgrid[indxpixleval])**2)
-        
-        return angldist
-    
+    if gdat.diagmode:
+        boolgood = True
+        for n in range(len(listpair)):
+            dist = sqrt((lgal[listpair[n][0]] - lgal[listpair[n][1]])**2 + (bgal[listpair[n][0]] - bgal[listpair[n][1]])**2)
+            if dist >= gdat.radispmr:
+                boolgood = False
+        if not boolgood:
+            Exception('Inappropriate list of pairs')
+
+    return listpair
+
 
 def retr_singgaus(scaldevi, sigc):
     
@@ -2982,6 +2988,8 @@ def setpinit(gdat, boolinitsetp=False):
         
         path = gdat.pathinpt + gdat.strgexprflux
         gdat.exprdataflux = pf.getdata(path)
+        print 'gdat.exprdataflux'
+        summgene(gdat.exprdataflux)
         if gdat.pixltype == 'heal':
             if gdat.exprdataflux.ndim != 3:
                 raise Exception('exprdataflux should be a 3D numpy array if pixelization is HealPix.')
@@ -3086,7 +3094,7 @@ def setpinit(gdat, boolinitsetp=False):
                 if gdat.pixltype == 'cart':
                     gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
             if gdat.datatype == 'inpt':
-                gdat.expo = gdat.strgexpo * ones_like(gdat.exprdataflux)
+                gdat.expo = gdat.strgexpo * ones_like((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
         else:
             path = gdat.pathinpt + gdat.strgexpo
             gdat.expo = pf.getdata(path)
@@ -3126,45 +3134,37 @@ def setpinit(gdat, boolinitsetp=False):
                     backfluxtemp = backfluxtemp.reshape((backfluxtemp.shape[0], -1, backfluxtemp.shape[-1]))
 
             backflux.append(backfluxtemp)
+            
+            if amin(backflux[c]) <= 0.:
+                raise Exception('Background templates must be positive.')
        
         setattr(gdat, strgmodl + 'backflux', backflux)
     
     # only include desired energy and PSF class bins 
     gdat.indxcubeincl = meshgrid(gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
+    ## exposure
     if gdat.correxpo:
         gdat.expo = gdat.expo[gdat.indxcubeincl]
-    
+    ## backgrounds
     for strgmodl in gdat.liststrgmodl:
         backflux = getattr(gdat, strgmodl + 'backflux')
         for c in getattr(gdat, strgmodl + 'indxback'):
             backflux[c] = backflux[c][gdat.indxcubeincl]
-            if amin(backflux[c]) <= 0.:
-                raise Exception('Background templates must be positive.')
         setattr(gdat, strgmodl + 'backflux', backflux)
-  
+    
+    if gdat.datatype == 'inpt':
+        gdat.exprdataflux = gdat.exprdataflux[gdat.indxcubeincl]
+        gdat.datacnts = retr_cntsmaps(gdat, gdat.exprdataflux)
+    
+    # obtain cartesian versions of the maps
     if gdat.pixltype == 'cart':
-        
+        gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
         for strgmodl in gdat.liststrgmodl:
             backfluxcart = []
             backflux = getattr(gdat, strgmodl + 'backflux')
             for c in getattr(gdat, strgmodl + 'indxback'):
                 backfluxcart.append(backflux[c].reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt)))
             setattr(gdat, strgmodl + 'backfluxcart', backfluxcart)
-
-        gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
-
-    if gdat.datatype == 'inpt':
-        gdat.exprdataflux = gdat.exprdataflux[gdat.indxcubeincl]
-    
-    # exclude voxels with vanishing exposure
-    if gdat.correxpo:
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[i, :, m] > 0.)[0])
-    gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
-    gdat.numbpixl = gdat.indxpixlrofi.size
-    gdat.indxpixl = arange(gdat.numbpixl)
-    gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
     
     # mask the exposure map
     if gdat.mask != None:
@@ -3173,11 +3173,148 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.expo[:, indxpixlmask, :] = 0.
 
     # plotting
+    ## ROI
+    gdat.exttrofi = array([gdat.minmlgaldata, gdat.maxmlgaldata, gdat.minmbgaldata, gdat.maxmbgaldata])
+    gdat.exttrofi *= gdat.anglfact 
+    gdat.frambndrdata = gdat.maxmgangdata * gdat.anglfact
+    gdat.frambndrmodl = gdat.maxmgang * gdat.anglfact
+
+    ## marker size
+    gdat.minmmrkrsize = 100
+    gdat.maxmmrkrsize = 500
+    ## marker line width
+    gdat.mrkrlinewdth = 3
+    ## marker opacity
+    gdat.alphmrkr = 0.5
+    gdat.alphpnts = 1.
+    gdat.alphmaps = 1.
+    
+    # number of colorbar ticks in the maps
+    gdat.numbtickcbar = 11
+    
+    ## color bars
+    gdat.minmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) - 10.
+    gdat.maxmlpdfspatpriointp = log(1. / 2. / gdat.maxmgang) + 10.
+    gdat.scallpdfspatpriointp = 'self'
+    gdat.cmaplpdfspatpriointp = 'PuBu'
+    
+    gdat.minmllikmaps = -10.
+    gdat.maxmllikmaps = 0.
+    gdat.scalllikmaps = 'asnh'
+    gdat.cmapllikmaps = 'YlGn'
+    
+    gdat.minmperc = 0.
+    gdat.maxmperc = 1e2
+    gdat.scalperc = 'asnh'
+    gdat.cmapperc = 'afmhot'
+    
+    gdat.minmpercresi = -1e2
+    gdat.maxmpercresi = 1e2
+    gdat.scalpercresi = 'asnh'
+    gdat.cmappercresi = 'coolwarm'
+    
+    gdat.scalexpomaps = 'logt'
+    gdat.cmapexpomaps = 'OrRd'
+    
+    gdat.scaldatacnts = 'logt'
+    gdat.cmapdatacnts = 'Greys'
+    
+    gdat.scalresicnts = 'asnh'
+    gdat.cmapresicnts = 'RdBu'
+    
+    gdat.minmconv = 1e-2
+    gdat.maxmconv = 10.
+    gdat.scalconv = 'logt'
+    gdat.cmapconv = 'Purples'
+    
+    gdat.minmconvelem = 1e-4
+    gdat.maxmconvelem = 1e-1
+    gdat.scalconvelem = 'logt'
+    gdat.cmapconvelem = 'Purples'
+    
+    gdat.minms2nr = 0.
+    gdat.maxms2nr = 10.
+    gdat.scals2nr = 'asnh'
+    gdat.cmaps2nr = 'magma'
+    
+    gdat.minmmagn = -1e2
+    gdat.maxmmagn = 1e2
+    gdat.scalmagn = 'asnh'
+    gdat.cmapmagn = 'BrBG'
+    
+    gdat.minmresideflperc = -100.
+    gdat.maxmresideflperc = 100.
+    gdat.scalresideflperc = 'self'
+    gdat.cmapresideflperc = 'Oranges'
+    
+    gdat.minmresiconvelem = -0.1
+    gdat.maxmresiconvelem = 0.1
+    gdat.scalresiconvelem = 'self'
+    gdat.cmapresiconvelem = 'PiYG'
+    
+    gdat.minmresiconvelemperc = -100.
+    gdat.maxmresiconvelemperc = 100.
+    gdat.scalresiconvelemperc = 'self'
+    gdat.cmapresiconvelemperc = 'PiYG'
+    
+    gdat.minmresimagn = -10.
+    gdat.maxmresimagn = 10.
+    gdat.scalresimagn = 'self'
+    gdat.cmapresimagn = 'PRGn'
+    
+    gdat.minmresimagnperc = -100.
+    gdat.maxmresimagnperc = 100.
+    gdat.scalresimagnperc = 'self'
+    gdat.cmapresimagnperc = 'PRGn'
+    
     gdat.minmexpomaps = amin(gdat.expo)
     gdat.maxmexpomaps = amax(gdat.expo)
 
     gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
     gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
+    
+    # exclude voxels with vanishing exposure
+    if gdat.correxpo:
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[i, :, m] > 0.)[0])
+    
+    if gdat.verbtype > 0:
+        print 'Calculating lookup table for zero-exposure pixels...'
+
+    cntr = 0
+    gdat.indxpixlroficnvt = full(gdat.numbpixlfull, -1)
+    for j in gdat.indxpixlfull:
+        if j in gdat.indxpixlrofi:
+            gdat.indxpixlroficnvt[j] = cntr
+            cntr += 1
+
+    gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
+    gdat.numbpixl = gdat.indxpixlrofi.size
+    gdat.indxpixl = arange(gdat.numbpixl)
+    gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+    ## exposure
+    if gdat.correxpo:
+        gdat.expofull = copy(gdat.expo)
+        gdat.expo = gdat.expo[gdat.indxcuberofi]
+    ## backgrounds
+    for strgmodl in gdat.liststrgmodl:
+        backflux = getattr(gdat, strgmodl + 'backflux')
+        for c in getattr(gdat, strgmodl + 'indxback'):
+            backflux[c] = backflux[c][gdat.indxcuberofi]
+        setattr(gdat, strgmodl + 'backflux', backflux)
+
+    # calculate background count maps
+    if gdat.correxpo:
+        for strgmodl in gdat.liststrgmodl:
+            backcnts = []
+            backcntstotl = zeros_like(gdat.expo)
+            for c in getattr(gdat, strgmodl + 'indxback'):
+                backcntstemp = retr_cntsmaps(gdat, backflux[c])
+                backcnts.append(backcntstemp)
+                backcntstotl[:] += backcntstemp 
+            setattr(gdat, strgmodl + 'backcnts', backcnts)
+            setattr(gdat, strgmodl + 'backcntstotl', backcntstotl)
     
     # store pixels as unit vectors
     gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
@@ -3193,8 +3330,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.pixlcnvt = cPickle.load(fobj)
             fobj.close()
         else:
-            gdat.pixlcnvt = zeros(gdat.numbpixlfull, dtype=int) - 1
-
+            gdat.pixlcnvt = zeros(gdat.numbpixl, dtype=int) - 1
             numbpixlmarg = gdat.indxpixlrofimarg.size
             for k in range(numbpixlmarg):
                 dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.indxpixl)
@@ -3203,34 +3339,6 @@ def setpinit(gdat, boolinitsetp=False):
             cPickle.dump(gdat.pixlcnvt, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
    
-    if gdat.datatype == 'inpt':
-        gdat.exprdataflux = gdat.exprdataflux[gdat.indxcuberofi]
-   
-    if gdat.correxpo:
-        gdat.expofull = copy(gdat.expo)
-        gdat.expo = gdat.expo[gdat.indxcuberofi]
-    
-    for strgmodl in gdat.liststrgmodl:
-        backflux = getattr(gdat, strgmodl + 'backflux')
-        for c in getattr(gdat, strgmodl + 'indxback'):
-            backflux[c] = backflux[c][gdat.indxcuberofi]
-        setattr(gdat, strgmodl + 'backflux', backflux)
-
-    # temp
-    #if gdat.elemtype == 'lens':
-    #    gdat.backfluxlens = gdat.backflux[0][0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart))
-    
-    if gdat.correxpo:
-        for strgmodl in gdat.liststrgmodl:
-            backcnts = []
-            backcntstotl = zeros_like(gdat.expo)
-            for c in getattr(gdat, strgmodl + 'indxback'):
-                backcntstemp = retr_cntsmaps(gdat, backflux[c])
-                backcnts.append(backcntstemp)
-                backcntstotl[:] += backcntstemp 
-            setattr(gdat, strgmodl + 'backcnts', backcnts)
-            setattr(gdat, strgmodl + 'backcntstotl', backcntstotl)
-    
     if gdat.evalcirc != 'full' and gdat.numbpixl * gdat.fittmaxmnumbpntstotl < 1e5:
         gdat.calcerrr = True
     else:
@@ -3316,7 +3424,7 @@ def setpinit(gdat, boolinitsetp=False):
                     if indxpixlproxtemp.size > 1e4:
                         indxpixlproxtemp = -1
                     gdat.indxpixlprox[h].append(indxpixlproxtemp)
-                cntrsave = tdpy.util.show_prog(j, gdat.indxpixl.size, cntrsave)
+                cntrsave = tdpy.util.show_prog(j, gdat.numbpixl, cntrsave)
             fobj = open(path, 'wb')
             cPickle.dump(gdat.indxpixlprox, fobj, protocol=cPickle.HIGHEST_PROTOCOL)
             fobj.close()
@@ -3330,25 +3438,6 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.numbpixlprox = gdat.numbpixl
 
-    ## ROI
-    gdat.exttrofi = array([gdat.minmlgaldata, gdat.maxmlgaldata, gdat.minmbgaldata, gdat.maxmbgaldata])
-    gdat.exttrofi *= gdat.anglfact 
-    gdat.frambndrdata = gdat.maxmgangdata * gdat.anglfact
-    gdat.frambndrmodl = gdat.maxmgang * gdat.anglfact
-
-    ## marker size
-    gdat.minmmrkrsize = 100
-    gdat.maxmmrkrsize = 500
-    ## marker line width
-    gdat.mrkrlinewdth = 3
-    ## marker opacity
-    gdat.alphmrkr = 0.5
-    gdat.alphpnts = 1.
-    gdat.alphmaps = 1.
-    
-    # number of colorbar ticks in the maps
-    gdat.numbtickcbar = 11
-    
     # turn off relevant proposal types
     gdat.indxfixpprop = []
     for k, strg in enumerate(gdat.fittnamefixp):
@@ -3479,9 +3568,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
 
     ## input data
-    if gdat.datatype == 'inpt':
-        gdat.datacnts = retr_cntsmaps(gdat, gdat.exprdataflux)
-    
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.limsangl = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
         gdat.limspsfn = [[[] for m in gdat.indxevtt] for i in gdat.indxener]
@@ -3625,13 +3711,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbproptype = gdat.nameproptype.size
     gdat.indxproptype = arange(gdat.numbproptype)
                     
-    # data structures for JIT
-    gdat.deflelem = zeros((gdat.numbpixl, 2))
-
-    if gdat.datatype != 'mock':
+    if gdat.datatype == 'inpt':
         proc_datacnts(gdat)
     
-   
+
 def setpfinl(gdat, boolinitsetp=False):
     
     if gdat.datatype == 'mock':
@@ -3678,19 +3761,24 @@ def setpfinl(gdat, boolinitsetp=False):
         setattr(gdat, strgmodl + 'lpdfprioobjt', lpdfprioobjt)
         setattr(gdat, strgmodl + 'lpdfpriointp', lpdfpriointp)
         
+    # data structures for JIT
+    gdat.deflelem = zeros((gdat.numbpixl, 2))
+
     # plot settings
     ## upper limit of histograms
     if gdat.datatype == 'inpt':
         gdat.limtpntshist = [0.5, 10**ceil(log10(gdat.fittmaxmnumbpntstotl))]
     
-    # get count data
-    if gdat.pixltype == 'cart':
-        # temp
-        gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacnts[0, :, 0].reshape((gdat.numbsidecart, gdat.numbsidecart)))
-
     gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
     if gdat.enerdiff:
         gdat.datafluxmean /= gdat.deltener
+
+    # find the pixels at which data count maps have local maxima
+    if gdat.pixltype == 'cart':
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                # temp
+                gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacntscart[i, :, m])
 
     # sanity checks
     # temp
@@ -4930,7 +5018,20 @@ def retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=None, thisindxevtt=
     if gdat.pixltype == 'cart' or tdim:
         shap = [gdat.numbsidecart] + list(maps.shape)
         shap[1] = gdat.numbsidecart
-        maps = maps.reshape(shap).swapaxes(0, 1)
+        
+        shapflat = list(maps.shape)
+        shapflat[0] = gdat.numbpixlfull
+        mapstemp = zeros(shapflat)
+        print 'maps'
+        summgene(maps)
+        print 'gdat.indxpixlrofi'
+        summgene(gdat.indxpixlrofi)
+        print 'mapstemp'
+        summgene(mapstemp)
+        mapstemp[gdat.indxpixlrofi, ...] = maps
+        maps = mapstemp.reshape(shap).swapaxes(0, 1)
+        
+        #maps = maps.reshape(shap).swapaxes(0, 1)
    
     # rescale the map
     if scal == 'asnh':
@@ -5727,17 +5828,47 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         
             psfntype = getattr(gdat, strgmodl + 'psfntype')
             
-            psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
-            
-            if oaxitype:
-                psfnintp = []
-                for p in gdat.indxoaxi:
-                    psfnintp.append(interp1d_pick(gdat.binsangl, psfn[:, :, :, p], axis=1))
-            else:
-                psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
-            # temp
-            # setattr(gdatobjt, strg + 'psfnintp', psfnintp)
-        
+            if gdat.kernevaltype == 'ulip':
+                psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
+                if oaxitype:
+                    psfnintp = []
+                    for p in gdat.indxoaxi:
+                        psfnintp.append(interp1d_pick(gdat.binsangl, psfn[:, :, :, p], axis=1))
+                else:
+                    psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
+
+            if gdat.kernevaltype == 'bspx':
+                
+                psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsanglcart.flatten(), psfntype, gdat.binsoaxi, oaxitype)
+                
+                # side length of the upsampled kernel
+                gdat.numbsidekernusam = 100
+                # side length of the original kernel
+                gdat.numbsidekern = gdat.numbsidekernusam / factkernusam 
+                gdat.indxsidekern = arange(gdat.numbsidekern)
+
+        		# pad by one row and one column
+        		#psf = zeros((gdat.numbsidekernusam+1, gdat.numbsidekernusam+1))
+        		#psf[0:gdat.numbsidekernusam, 0:gdat.numbsidekernusam] = psf0
+				
+        		# make design matrix for each factkernusam x factkernusam region
+                nx = factkernusam + 1
+                y, x = mgrid[0:nx, 0:nx] / float(factkernusam)
+                x = x.flatten()
+                y = y.flatten()
+                print 'x'
+                print x
+                kernmatrdesi = array([full(nx*nx, 1), x, y, x*x, x*y, y*y, x*x*x, x*x*y, x*y*y, y*y*y]).T
+        		
+                # output array of coefficients
+                psfnintp = empty((gdat.numbsidekern, gdat.numbsidekern, kernmatrdesi.shape[1]))
+
+        		# solve p = kernmatrdesi psfnintp for psfnintp
+                for iy in gdat.indxsidekern:
+                    for ix in gdat.indxsidekern:
+        		        p = psf[iy*factkernusam:(iy+1)*factkernusam+1, ix*factkernusam:(ix+1)*factkernusam+1].flatten()
+        		        psfnintp[iy, ix, :] = dot(linalg.inv(dot(kernmatrdesi.T, kernmatrdesi)), dot(kernmatrdesi.T, p))
+
         if gdat.elemtype == 'lens':
 
             ## subhalos
@@ -5835,7 +5966,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         print dicttemp['speceval']
                         print
             else:
-                pntsflux = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                pntsflux = zeros_like(gdat.expo)
                 numbelemeval = numbpntsconc
                 for namecomp in gdat.listnamefeateval:
                     dicttemp[namecomp + 'eval'] = dicttemp[namecomp + 'conc']
@@ -6468,7 +6599,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             
             # correlate the catalog sample with the reference catalog
             # temp
-            if strg != 'true' and gdat.trueinfo:
+            if strg != 'true' and gdat.trueinfo and gdat.truelgal != None and gdat.truebgal != None:
                 trueindxpntsasscmiss = [[] for l in gdat.trueindxpopl]
                 trueindxpntsasschits = [[] for l in gdat.trueindxpopl]
                 featassc = dict()
@@ -6478,7 +6609,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 indxfittpntsassc = [[] for l in gdat.trueindxpopl]
                 indxfittpntsfals = [[] for l in gdat.trueindxpopl]
                 fdis = [[] for l in gdat.trueindxpopl]
-
+                
                 for l in gdat.trueindxpopl:
                     indxmodlpnts = zeros(gdat.truenumbpnts[l], dtype=int) - 1
                     numbassc = zeros(gdat.truenumbpnts[l])
@@ -6577,12 +6708,26 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
 def proc_datacnts(gdat):
 
-    if gdat.pixltype == 'cart':
-        gdat.datacntscart = gdat.datacnts.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
     gdat.datafluxmean = sum(sum(gdat.datacnts, 1), 1) / sum(sum(gdat.expo, 1), 1) / gdat.apix
     if gdat.enerdiff:
         gdat.datafluxmean /= gdat.deltener
 
+    # only include desired energy and PSF class bins 
+    ## data counts
+    #gdat.datacnts = gdat.datacnts[gdat.indxcubeincl]
+    
+    # exclude voxels with vanishing exposure
+    ## data counts
+    if gdat.datatype == 'inpt':
+        gdat.datacnts = gdat.datacnts[gdat.indxcuberofi]
+    
+    # obtain cartesian versions of the maps
+    if gdat.pixltype == 'cart':
+        ## data counts
+        datacntscarttemp = zeros((gdat.numbener, gdat.numbpixlfull, gdat.numbevtt))
+        datacntscarttemp[:, gdat.indxpixlrofi, :] = gdat.datacnts
+        gdat.datacntscart = datacntscarttemp.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
+   
 
 def retr_info(pdfnpost, pdfnprio):
     

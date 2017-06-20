@@ -1483,20 +1483,20 @@ def plot_indxprox(gdat):
     numbbins = 40
     numbfluxprox = len(gdat.indxpixlprox)
     bins = empty((gdat.numbprox, numbbins + 1))
-    indxpixlproxsize = empty((numbfluxprox, gdat.numbpixl))
+    indxpixlproxsize = empty((numbfluxprox, gdat.numbpixlfull))
     for h in range(gdat.numbprox):
-        for j in gdat.indxpixl:
+        for j in gdat.indxpixlfull:
             try:
                 indxpixlproxsize[h, j] = gdat.indxpixlprox[h][j].size
             except:
-                indxpixlproxsize[h, j] = gdat.numbpixl
+                indxpixlproxsize[h, j] = gdat.numbpixlfull
         bins[h, :] = logspace(log10(amin(indxpixlproxsize[h, :])), log10(amax(indxpixlproxsize[h, :])), numbbins + 1)
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for h in range(gdat.numbprox):
         axis.hist(indxpixlproxsize[h, :], bins=bins[h, :], log=True, label='Flux bin %d' % h, alpha=gdat.alphmrkr)
     axis.set_xscale('log')
-    axis.axvline(gdat.numbpixl, label='ROI', ls='--')
+    axis.axvline(gdat.numbpixlfull, label='ROI', ls='--')
     axis.set_xlabel('Number of pixels')
     axis.set_ylabel("Number of tables")
     make_legd(axis)
