@@ -763,7 +763,7 @@ def retr_indxpixl(gdat, bgal, lgal):
         indxpixl = indxlgcr * gdat.numbsidecart + indxbgcr
     
     # convert to an index of non-zero exposure pixels
-    indxpixl = gdat.indxpixlroficnvt[indxpixl]
+    #indxpixl = gdat.indxpixlroficnvt[indxpixl]
 
     return indxpixl
 
@@ -2988,8 +2988,6 @@ def setpinit(gdat, boolinitsetp=False):
         
         path = gdat.pathinpt + gdat.strgexprflux
         gdat.exprdataflux = pf.getdata(path)
-        print 'gdat.exprdataflux'
-        summgene(gdat.exprdataflux)
         if gdat.pixltype == 'heal':
             if gdat.exprdataflux.ndim != 3:
                 raise Exception('exprdataflux should be a 3D numpy array if pixelization is HealPix.')
