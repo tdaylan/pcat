@@ -3092,8 +3092,8 @@ def setpinit(gdat, boolinitsetp=False):
                 if gdat.pixltype == 'cart':
                     gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
             if gdat.datatype == 'inpt':
-                gdat.expo = gdat.strgexpo * ones_like((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
-        else:
+                gdat.expo = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+        else: 
             path = gdat.pathinpt + gdat.strgexpo
             gdat.expo = pf.getdata(path)
             if amin(gdat.expo) == amax(gdat.expo):
