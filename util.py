@@ -638,11 +638,14 @@ def retr_pntsflux(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
     if gdat.kernevaltype == 'ulip':
         if oaxitype:
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
-            print 'dist'
-            summgene(dist * gdat.anglfact)
-            print 'indxoaxitemp'
-            print indxoaxitemp
-            print 
+            
+            if False:
+                print 'dist'
+                summgene(dist * gdat.anglfact)
+                print 'indxoaxitemp'
+                print indxoaxitemp
+                print 
+            
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
             psfntemp = psfnintp(dist)
@@ -691,15 +694,18 @@ def retr_indxpixleval(gdat, lgal, bgal, ampl, evalcirc):
     if evalcirc == 'locl':  
         indxpixlpnts = retr_indxpixl(gdat, bgal, lgal)
         indxfluxproxtemp = digitize(ampl, gdat.binsprox) - 1
-        print 'indxfluxproxtemp'
-        print indxfluxproxtemp
-        print 'gdat.indxpixlprox'
-        print len(gdat.indxpixlprox)
-        print 'gdat.indxpixlprox[0]'
-        print len(gdat.indxpixlprox[0])
-        print 'indxpixlpnts'
-        print indxpixlpnts
-        print
+
+        if False:
+            print 'indxfluxproxtemp'
+            print indxfluxproxtemp
+            print 'gdat.indxpixlprox'
+            print len(gdat.indxpixlprox)
+            print 'gdat.indxpixlprox[0]'
+            print len(gdat.indxpixlprox[0])
+            print 'indxpixlpnts'
+            print indxpixlpnts
+            print
+        
         indxpixleval = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
         
         if isinstance(indxpixleval, int):
@@ -1681,12 +1687,6 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi)
     
-    if gdat.diagmode:
-        for strgcomp in gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]:
-            if gdatmodi.propbrth and (gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi]] != \
-                                            gdatmodi.nextsampvarb[gdatmodi.thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi]]).any():
-                raise Exception('')
-
     if gdat.propwithsing and not gdatmodi.propfixp:
         gdatmodi.dicttemp = dict()
         for namecomp in gdat.fittliststrgcomp[gdatmodi.indxpoplmodi]:
@@ -5594,13 +5594,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         #raise Exception('')
 
         if gdat.elemtype == 'lght':
-            print 'dicttemp[spec]'
             for l in range(numbpopl):
                 dicttemp['spec'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expo'][l], spectype=spectype[l])
-                print 'l'
-                print l
-                print dicttemp['spec'][l]
-            print
         
         for strgfeat in gdat.liststrgfeatconc:
             if strgfeat == 'spec':
@@ -5960,9 +5955,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     if gdat.elemtype == 'lght':
                         dicttemp['speceval'] = retr_spec(gdat, dicttemp['fluxeval'], dicttemp['sindeval'], dicttemp['curveval'], \
                                                                                                                 dicttemp['expoeval'], spectype[gdatmodi.indxpoplmodi])
-                        print 'dicttemp[speceval]'
-                        print dicttemp['speceval']
-                        print
             else:
                 pntsflux = zeros_like(gdat.expo)
                 numbelemeval = numbpntsconc
@@ -5981,6 +5973,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     varbevalextd = dicttemp['nobjeval'][None, k]
                 indxpixleval = retr_indxpixleval(gdat, dicttemp['lgaleval'][k], dicttemp['bgaleval'][k], varbeval, gdat.evalcirc)
                 pntsflux[:, indxpixleval, :] += retr_pntsflux(gdat, dicttemp['lgaleval'][k], dicttemp['bgaleval'][k], varbevalextd, psfnintp, oaxitype, indxpixleval)
+
             setattr(gdatobjt, strg + 'pntsflux', pntsflux)
             stopchro(gdat, gdatmodi, strg, 'lghtpntseval')
 
@@ -6025,8 +6018,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         stopchro(gdat, gdatmodi, strg, 'llikcalc')
         
         if gdat.diagmode:
-            if not (modlcnts > 0.).all():
-                raise Exception('Model prediction is not positive-definite.')
+            for varb in [modlflux, modlcnts]:
+                frac = amin(varb) / mean(varb)
+                if frac < -1e-10:
+                    print 'frac'
+                    print frac
+                    summgene(varb)
+                    raise Exception('Model prediction is not positive-definite.')
 
             if not isfinite(llik).all():
                 raise Exception('Likelihood is not finite.')

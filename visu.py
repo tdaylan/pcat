@@ -1713,18 +1713,18 @@ def plot_datacntshist(gdat):
     figr.savefig(gdat.pathinit + 'datacntshist.pdf')
     plt.close(figr)
     
-    
+
 def plot_intr(gdat):
     
     if gdat.verbtype > 0:
         print 'Making PCAT introductory plots...'
 
-    plot_grap(verbtype=1)
-    plot_grap(plottype='ngal', verbtype=1)
-    #plot_grap(plottype='lens', verbtype=1)
-    #plot_grap(plottype='lensprim', verbtype=1)
-    plot_grap(plottype='lensseco', verbtype=1)
-    #plot_grap(plottype='chan', verbtype=1)
+    plot_grap(plottype='lght0000', verbtype=1)
+    plot_grap(plottype='lght0001', verbtype=1)
+    plot_grap(plottype='lght0002', verbtype=1)
+    plot_grap(plottype='lght0003', verbtype=1)
+    plot_grap(plottype='lens0000', verbtype=1)
+    plot_grap(plottype='lens0001', verbtype=1)
     
     with plt.xkcd():
 
@@ -1870,28 +1870,28 @@ def plot_mosa(gdat):
             print 'Skipping the mosaic plot...'
 
 
-def plot_grap(plottype='igal', verbtype=0):
+def plot_grap(plottype, verbtype=0):
         
     figr, axis = plt.subplots(figsize=(6, 6))
 
     grap = nx.DiGraph()
-    if plottype == 'ngal':
+    if plottype == 'lght0000':
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
 
-    if plottype == 'igal':
-        listcolr = ['black', 'black', 'black', 'olive', 'black', 'black', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', \
-                                                                                                    'magenta', 'magenta', 'magenta', 'magenta', 'magenta']
-    if plottype == 'chan':
-        listcolr = ['black', 'black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+    if plottype == 'lght0001':
+        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
 
-    if plottype == 'lens':
+    if plottype == 'lght0002':
+        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', 'magenta', \
+                                                                                                    'magenta', 'magenta', 'magenta', 'magenta', 'black']
+    if plottype == 'lght0003':
+        listcolr = ['black', 'black', 'black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', \
+                                                                                                    'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+    
+    if plottype == 'lens0000':
         listcolr = ['olive', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', 'magenta']
 
-    if plottype == 'lensprim':
-        listcolr = ['olive', 'black', 'black', 'olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'black', 'olive', 'magenta', 'magenta', \
-                                                                                                                                        'magenta', 'magenta', 'magenta']
-
-    if plottype == 'lensseco':
+    if plottype == 'lens0001':
         listcolr = ['olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', \
                                                                                                                                         'magenta', 'magenta', 'magenta']
 
@@ -1906,7 +1906,7 @@ def plot_grap(plottype='igal', verbtype=0):
                          ('numbpnts','bgal'), \
                         ])
     
-    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+    if plottype.startswith('lght'):
         grap.add_edges_from([ \
                              ('ampldistslop', 'ampl'), \
                              ('ampl', 'modl'), \
@@ -1914,14 +1914,16 @@ def plot_grap(plottype='igal', verbtype=0):
                              ('numbpnts', 'sind'), \
                              ('sind','modl'), \
                             ])
-    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+    
+    if plottype.startswith('lens'):
         grap.add_edges_from([ \
                              ('lenp', 'modl'), \
                              ('defsdistslop', 'defs'), \
                              ('defs', 'modl'), \
                              ('numbpnts','defs'), \
                             ])
-    if plottype == 'lensprim' or plottype == 'lensseco':
+    
+    if plottype == 'lens0001':
         grap.add_edges_from([ \
                              ('asca', 'modl'), \
                              ('numbpnts','asca'), \
@@ -1929,18 +1931,21 @@ def plot_grap(plottype='igal', verbtype=0):
                              ('numbpnts','acut'), \
                             ])
     
-    if plottype == 'igal' or plottype == 'chan':
+    if plottype == 'lght0001' or plottype == 'lght0002':
         grap.add_edges_from([ \
-                             ('sinddistslop', 'sind'), \
-                             ('expodistslop', 'expo'), \
+                             ('sinddistmean', 'sind'), \
                             ])
     
-    if plottype == 'igal':
+    if plottype == 'lght0002':
         grap.add_edges_from([ \
                              ('numbpnts', 'expo'), \
                              ('expo', 'modl'), \
-                             ('spatdistslop', 'lgal'), \
-                             ('spatdistslop', 'bgal'), \
+                            ])
+    
+    if plottype == 'lght0003':
+        grap.add_edges_from([ \
+                             ('spatdistcons', 'lgal'), \
+                             ('spatdistcons', 'bgal'), \
                             ])
         
     labl = {}
@@ -1948,89 +1953,85 @@ def plot_grap(plottype='igal', verbtype=0):
         nameelem = r'\rm{sub}'
     else:
         nameelem = r'\rm{pts}'
-    labl['numbpnts'] = '$N_{%s}$' % nameelem
-    
-    if plottype == 'igal':
-        labl['ampldistslop'] = r'$\vec{\beta}$'
+    if plottype.startswith('lght') and (plottype == 'lght0001' or plottype == 'lght0002'):
+        labl['numbpnts'] = r'$\vec{N}_{%s}$' % nameelem
         labl['meanpnts'] = r'$\vec{\mu}_{%s}$' % nameelem
     else:
+        labl['numbpnts'] = '$N_{%s}$' % nameelem
         labl['meanpnts'] = r'$\mu_{%s}$' % nameelem
-    if plottype == 'chan' or plottype == 'ngal':
-        labl['ampldistslop'] = r'$\beta$'
-    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+    
+    if plottype.startswith('lght'):
+        if plottype == 'lght0000' or plottype == 'lght0003':
+            labl['ampldistslop'] = r'$\alpha$'
+        else:
+            labl['ampldistslop'] = r'$\vec{\alpha}$'
+    if plottype.startswith('lens'):
         labl['defsdistslop'] = r'$\beta$'
     
-    if plottype == 'igal':
-        labl['expodistslop'] = r'$\vec{\tau_\rm{E}}$'
-        labl['sinddistslop'] = r'$\vec{\tau_\rm{s}}$'
-    if plottype == 'chan':
-        labl['sinddistslop'] = r'$\beta$'
+    if plottype == 'lght0001' or plottype == 'lght0002':
+        labl['sinddistmean'] = r'$\vec{\beta}$'
     
-    if plottype == 'igal':
-        labl['spatdistslop'] = r'$\vec{\gamma}$'
-    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype == 'lght0003':
+        labl['spatdistcons'] = r'$\gamma$'
+    if plottype.startswith('lens'):
         labl['lenp'] = r'$\vec{\chi}$'
     labl['psfp'] = r'$\vec{\eta}$'
     labl['bacp'] = r'$\vec{A}$'
     labl['lgal'] = r'$\vec{\theta_1}$'
     labl['bgal'] = r'$\vec{\theta_2}$'
-    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+    if plottype.startswith('lght'):
         labl['sind'] = r'$\vec{s}$'
         labl['ampl'] = r'$\vec{f}$'
     else:
-        labl['defs'] = r'$\vec{\alpha_\rm{s}}$'
-    if plottype == 'lensprim' or plottype == 'lensseco':
-        labl['asca'] = r'$\vec{\theta_\rm{s}}$'
-        labl['acut'] = r'$\vec{\theta_\rm{c}}$'
+        labl['defs'] = r'$\vec{\alpha_{\rm{s}}}$'
+    if plottype == 'lens0001':
+        labl['asca'] = r'$\vec{\theta_{\rm{s}}}$'
+        labl['acut'] = r'$\vec{\theta_{\rm{c}}}$'
         
-    if plottype == 'igal':
+    if plottype == 'lght0002':
         labl['expo'] = r'$\vec{E_{\rm{c}}}$'
     labl['modl'] = r'$\mathcal{M}$'
     labl['data'] = r'$\mathcal{D}$'
     
     posi = nx.circular_layout(grap)
-    posi['sinddistslop'] = array([0.4, 0.15])
-    if plottype == 'igal':
-        posi['expodistslop'] = array([0.6, 0.15])
-        posi['spatdistslop'] = array([-0.2, 0.15])
-    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
+    posi['sinddistmean'] = array([0.4, 0.15])
+    if plottype == 'lght0003':
+        posi['spatdistcons'] = array([-0.2, 0.15])
+    if plottype.startswith('lght'):
         posi['numbpnts'] = array([0., 0.075])
         posi['meanpnts'] = array([0., 0.15])
         posi['ampldistslop'] = array([0.2, 0.15])
-    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype.startswith('lens'):
         posi['numbpnts'] = array([-0.1, 0.075])
         posi['meanpnts'] = array([-0.1, 0.15])
         posi['defsdistslop'] = array([0.1, 0.15])
-    if plottype == 'lensprim':
-        posi['ascadistslop'] = array([0.3, 0.15])
-        posi['acutdistslop'] = array([0.5, 0.15])
-    if plottype == 'igal':
-        posi['psfp'] = array([0.9, -0.0])
-        posi['bacp'] = array([0.7, -0.0])
-    if plottype == 'ngal':
-        posi['psfp'] = array([0.7, -0.0])
-        posi['bacp'] = array([0.5, -0.0])
-    if plottype == 'chan':
-        posi['psfp'] = array([0.7, -0.0])
-        posi['bacp'] = array([0.5, -0.0])
-    if plottype == 'lens':
+    
+    if plottype.startswith('lght'):
+        if plottype == 'lght0002':
+            posi['psfp'] = array([0.9, -0.0])
+            posi['bacp'] = array([0.7, -0.0])
+        else:
+            posi['psfp'] = array([0.7, -0.0])
+            posi['bacp'] = array([0.5, -0.0])
+    if plottype == 'lens0000':
         posi['psfp'] = array([0.3, -0.0])
         posi['bacp'] = array([0.5, -0.0])
         posi['lenp'] = array([0.7, -0.0])
-    if plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype == 'lens0001':
         posi['psfp'] = array([0.7, -0.0])
         posi['bacp'] = array([0.9, -0.0])
         posi['lenp'] = array([1.1, -0.0])
     posi['lgal'] = array([-0.3, -0.0])
     posi['bgal'] = array([-0.1, -0.0])
-    if plottype == 'igal' or plottype == 'ngal' or plottype == 'chan':
-        posi['sind'] = array([0.3, -0.0])
+    if plottype.startswith('lght'):
         posi['ampl'] = array([0.1, -0.0])
-    if plottype == 'igal':
+        posi['sind'] = array([0.3, -0.0])
+    if plottype == 'lght0002':
         posi['expo'] = array([0.5, -0.0])
-    if plottype == 'lensprim' or plottype == 'lens' or plottype == 'lensseco':
+
+    if plottype.startswith('lens'):
         posi['defs'] = array([0.1, -0.0])
-    if plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype == 'lens0001':
         posi['asca'] = array([0.3, -0.0])
         posi['acut'] = array([0.5, -0.0])
     posi['modl'] = array([0., -0.075])
@@ -2050,25 +2051,22 @@ def plot_grap(plottype='igal', verbtype=0):
     nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
-    if plottype == 'igal':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'spatdistslop', 'ampldistslop', 'sinddistslop', 'expodistslop'], \
-                                                                                                                                                node_color='r', node_size=size)
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind', 'expo'], node_color='g', node_size=size)
-    if plottype == 'chan':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop', 'sinddistslop'], node_color='r', node_size=size)
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
-    if plottype == 'ngal':
+    if plottype.startswith('lght'):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
+    if plottype == 'lght0001' or plottype == 'lght0002':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['sinddistmean'], node_color='r', node_size=size)
+    if plottype == 'lght0002':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['expo'], node_color='g', node_size=size)
+    if plottype == 'lght0003':
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['spatdistcons'], node_color='r', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
-    if plottype == 'lens' or plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype.startswith('lens'):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'defsdistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lenp'], node_color='y', node_size=size)
-    if plottype == 'lens':
+    if plottype == 'lens0000':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs'], node_color='g', node_size=size)
-    if plottype == 'lensprim':
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['ascadistslop', 'acutdistslop'], node_color='r', node_size=size)
-    if plottype == 'lensprim' or plottype == 'lensseco':
+    if plottype == 'lens0001':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs', 'asca', 'acut'], node_color='g', node_size=size)
     
     pathplot = os.environ["PCAT_DATA_PATH"] + '/imag/'

@@ -91,7 +91,7 @@ def init( \
          propwithsing=True, \
          pertmodleval=None, \
          # Hessian estimation
-         optihess=True, \
+         optihess=False, \
          optillik=False, \
          optiprop=False, \
          regulevi=False, \
@@ -2375,6 +2375,18 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
         gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
     
+    if gdat.fittnumbtrap > 0:
+        if gdat.inittype == 'rand' or gdat.inittype == 'pert':
+            for l in gdat.fittindxpopl:
+                samp_randnumbpnts(gdat, gdatmodi, l)
+    
+    ## Fixed-dimensional parameters
+    if gdat.inittype == 'refr' or gdat.inittype == 'pert':
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            # temp - this should take into account parameters that exists in one but not the other
+            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[k], k)
+            gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+    
     # apply imposed initial state
     ## by the saved state of another run
     if gdat.recostat:
@@ -2410,6 +2422,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 
         try:
             initvalu = getattr(gdat, 'init' + namefixp)
+            print 'initvalu'
+            print initvalu
+            print 'k'
+            print k
+
             gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
             
             if gdat.verbtype > 0:
@@ -2421,17 +2438,13 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.datatype == 'inpt' and gdat.inittype != 'rand':
         raise Exception('')
 
-    ## Fixed-dimensional parameters
-    if gdat.inittype == 'refr' or gdat.inittype == 'pert':
-        for k, namefixp in enumerate(gdat.fittnamefixp):
-            # temp - this should take into account parameters that exists in one but not the other
-            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[k], k)
-            gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+    print 'gdatmodi.thissamp'
+    print gdatmodi.thissamp
+    print 'gdatmodi.thissampvarb'
+    print gdatmodi.thissampvarb
+    print 
 
     if gdat.fittnumbtrap > 0:
-        if gdat.inittype == 'rand' or gdat.inittype == 'pert':
-            for l in gdat.fittindxpopl:
-                samp_randnumbpnts(gdat, gdatmodi, l)
     
         ## lists of occupied and empty transdimensional parameters
         gdatmodi.thisindxelemfull = []
@@ -2710,10 +2723,13 @@ def work(pathoutpthis, lock, indxprocwork):
                         raise Exception('Sample vector is not finite.')
             
             if gdat.elemtype == 'lght':
-                if amin(gdatmodi.thispntsflux) < 0.:
-                    raise Exception('thispntsflux went negative.')
-                if amin(gdatmodi.nextpntsflux) < 0.:
-                    raise Exception('nextpntsflux went negative.')
+                frac = amin(gdatmodi.thispntsflux) / mean(gdatmodi.thispntsflux)
+                if frac > 1e-10:
+                    raise Exception('thispntsflux went negative by %.3g percent.' % (100. * frac))
+
+                frac = amin(gdatmodi.nextpntsflux) / mean(gdatmodi.nextpntsflux)
+                if frac > 1e-10:
+                    raise Exception('nextpntsflux went negative by %.3g percent.' % (100. * frac))
 
             # check the population index
             try:
@@ -2852,8 +2868,8 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 1:
                 print 'gdatmodi.thisdeltlliktotl'
                 print gdatmodi.thisdeltlliktotl
-                print 'gdatmodi.deltlpritotl'
-                print gdatmodi.nextlpritotl - gdatmodi.thislpritotl
+                print 'gdatmodi.thisdeltlpri'
+                print gdatmodi.thisdeltlpri
                 print 'gdatmodi.thislpautotl'
                 print gdatmodi.thislpautotl
                 print 'gdatmodi.thislfctasym'
