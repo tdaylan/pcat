@@ -964,6 +964,9 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
             if specconvunit[0] == 'e2en':
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
+            if specconvunit[0] == 'totl':
+                ydat *= gdat.meanener**2
+                yerr *= gdat.meanener**2
             axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsdenspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])

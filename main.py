@@ -397,11 +397,12 @@ def init( \
         gdat.lablenerunit = ''
     
     gdat.ergskevv = 1.6e-9
-    if gdat.elemtype == 'lght':
-        if gdat.exprtype == 'ferm':
-            gdat.listspecconvunit = [['e2ne', 1.]]
-        if gdat.exprtype == 'chan':
-            gdat.listspecconvunit = [['e2ne', 1.], ['e2ne', gdat.ergskevv], ['totl', gdat.ergskevv, 0.5, 2.], ['totl', gdat.ergskevv, 2., 10.], ['totl', gdat.ergskevv, 0.5, 10.]]
+    if gdat.exprtype == 'ferm':
+        gdat.listspecconvunit = [['e2ne', 1.]]
+    if gdat.exprtype == 'chan':
+        gdat.listspecconvunit = [['e2ne', 1.], ['e2ne', gdat.ergskevv], ['totl', gdat.ergskevv, 0.5, 2.], ['totl', gdat.ergskevv, 2., 10.], ['totl', gdat.ergskevv, 0.5, 10.]]
+    if gdat.exprtype == 'hubb':
+        gdat.listspecconvunit = [['band', 1.]]
     
     if gdat.pixltype == None:
         if gdat.exprtype == 'ferm':
