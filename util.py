@@ -2380,6 +2380,13 @@ def setpinit(gdat, boolinitsetp=False):
         cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
         cliblens.retr_deflsubh()
 
+    if gdat.elemtype == 'lght':
+        gdat.lablelemextn = r'\rm{pts}'
+    if gdat.elemtype == 'lens':
+        gdat.lablelemextn = r'\rm{sub}'
+    if gdat.elemtype == 'clus':
+        gdat.lablelemextn = r'\rm{cls}'
+    
     gdat.liststrgmodl = ['fitt']
     if gdat.datatype == 'mock':
         gdat.liststrgmodl += ['true']
@@ -4459,18 +4466,13 @@ def setp_fixp(gdat, strgmodl='fitt'):
             else:
                 strgpopl = '%s' % strg[-1]
                 strgpoplcomm = ',%s' % strg[-1]
-            if gdat.elemtype == 'lght':
-                nameelem = r'\rm{pts}'
-            if gdat.elemtype == 'lens':
-                nameelem = r'\rm{sub}'
-            if gdat.elemtype == 'clus':
-                nameelem = r'\rm{cls}'
+
             if namefixp[k].startswith('numbpnts'):
-                lablfixp[k] = '$N_{%s%s}$' % (nameelem, strgpoplcomm)
+                lablfixp[k] = '$N_{%s%s}$' % (gdat.lablelemextn, strgpoplcomm)
                 scalfixp[k] = 'pois'
                 
             if namefixp[k].startswith('meanpnts'):
-                lablfixp[k] = r'$\mu_{%s%s}$' % (nameelem, strgpoplcomm)
+                lablfixp[k] = r'$\mu_{%s%s}$' % (gdat.lablelemextn, strgpoplcomm)
                 scalfixp[k] = scalmeanpnts
     
             if namefixp[k].startswith('gangdistscalp'):
@@ -4727,20 +4729,20 @@ def setp_fixp(gdat, strgmodl='fitt'):
             cdfnminmfixp[k], cdfndifffixp[k] = retr_eerrnorm(minmfixp[k], maxmfixp[k], meanfixp[k], stdvfixp[k])
    
     # background templates
-    listlablcompfrac = deepcopy(nameback)
+    listlablsden = deepcopy(nameback)
     if gdat.elemtype == 'lght':
-        listlablcompfrac.append('PS')
+        listlablsden.append('PS')
     if gdat.elemtype == 'lens':
-        listlablcompfrac.append('Source')
-        listlablcompfrac.append('Host')
+        listlablsden.append('Source')
+        listlablsden.append('Host')
     if gdat.elemtype == 'clus':
-        listlablcompfrac.append('Uniform')
-    listlablcompfracspec = deepcopy(listlablcompfrac)
-    listlablcompfracspec += ['Data']
-    if len(listlablcompfrac) > 1:
-        listlablcompfracspec.append('Total Model')
-    numblablcompfrac = len(listlablcompfrac)
-    numblablcompfracspec = len(listlablcompfracspec)
+        listlablsden.append('Uniform')
+    listlablsdenspec = deepcopy(listlablsden)
+    listlablsdenspec += ['Data']
+    if len(listlablsden) > 1:
+        listlablsdenspec.append('Total Model')
+    numblablsden = len(listlablsden)
+    numblablsdenspec = len(listlablsdenspec)
 
     namepara = zeros(numbpara, dtype=object)
     lablpara = zeros(numbpara, dtype=object)
@@ -5102,7 +5104,7 @@ def make_catllabl(gdat, strg, axis):
 def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
 
     # true catalog
-    if gdat.trueinfo:
+    if gdat.truelgal != None and gdat.truebgal != None:
         if indxpoplplot == -1:
             listindxpoplplot = gdat.trueindxpopl
         else:

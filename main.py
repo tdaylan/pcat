@@ -372,6 +372,8 @@ def init( \
     if gdat.elemtype == 'lens':
         gdat.hubbexpofact = 1.63050e-19
     
+    gdat.sdenunit = 'degr'
+
     if gdat.strgexpo == None:
         if gdat.elemtype == 'lght':
             if gdat.exprtype == 'ferm':
@@ -390,10 +392,17 @@ def init( \
     if gdat.exprtype == 'ferm':
         gdat.lablenerunit = 'GeV'
     if gdat.exprtype == 'chan':
-        gdat.lablenerunit = 'KeV'
+        gdat.lablenerunit = 'keV'
     if gdat.exprtype == 'sdyn':
         gdat.lablenerunit = ''
-
+    
+    gdat.ergskevv = 1.6e-9
+    if gdat.elemtype == 'lght':
+        if gdat.exprtype == 'ferm':
+            gdat.listspecconvunit = [['e2ne', 1.]]
+        if gdat.exprtype == 'chan':
+            gdat.listspecconvunit = [['e2ne', 1.], ['e2ne', gdat.ergskevv], ['totl', gdat.ergskevv, 0.5, 2.], ['totl', gdat.ergskevv, 2., 10.], ['totl', gdat.ergskevv, 0.5, 10.]]
+    
     if gdat.pixltype == None:
         if gdat.exprtype == 'ferm':
             gdat.pixltype = 'heal'
@@ -3013,7 +3022,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thissampvarb[indxfixp]
                         print 'Log-prior penalization term: '
                         print gdatmodi.thislpripena
-                        if gdat.trueinfo:
+                        if gdat.truelgal != None and gdat.truebgal != None:
                             print 'Completeness'
                             print gdatmodi.thiscmplpop0
                             print 'Completeness binned in significance parameter'

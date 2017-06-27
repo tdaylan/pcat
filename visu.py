@@ -117,10 +117,11 @@ def plot_samp(gdat, gdatmodi, strg):
                                 listxdat.append(gdat.meanenerplot)
                                 listydat.append(specplottemp)
                             
-                            path = pathtemp + strg + 'specpop%d%s.pdf' % (l, strgswep)
-                            tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, \
-                                  plottype=listplottype, \
-                                  limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfluxunit, limtydat=[amin(gdat.minmspec), amax(gdat.maxmspec)])
+                            for specconvunit in gdat.listspecconvunit:
+                                path = pathtemp + strg + 'specpop%d%s%s.pdf' % (l, specconvunit[0], strgswep)
+                                tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, \
+                                                           plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfluxunit, \
+                                                           limtydat=[amin(gdat.minmspec), amax(gdat.maxmspec)])
                 
                 if gdat.elemtype == 'lens':
                     if not (strg == 'post' and not gdat.condcatl):
@@ -252,13 +253,36 @@ def plot_samp(gdat, gdatmodi, strg):
                         #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
                         #else:
                         #    listname = ['hist' + strgfeat]
+
                         listname = ['hist' + strgfeat]
                         for name in listname:
-                            plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, lablyaxi=r'$N$', factxdat=factxaxi, histodim=True, \
-                                              scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
+                            listyaxitype = ['totl', 'sden']
+                            for yaxitype in listyaxitype:
+                                
+                                # plot the surface density of elements only for the amplitude feature
+                                if strgfeat != gdat.namecompampl:
+                                    continue
+        
+                                ## plot the surface density of elements
+                                if yaxitype == 'sden':
+                                    if gdat.sdenunit == 'degr':
+                                        factyaxi = (pi / 180.)**2 / gdat.anglfact**2
+                                        lablyaxi = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
+                                    if gdat.sdenunit == 'ster':
+                                        factyaxi = 1. / gdat.anglfact**2
+                                        lablyaxi = r'$\Sigma_{%s}$ [sr$^{-2}$]' % gdat.lablelemextn
+                                ## plot the total number of elements
+                                if yaxitype == 'totl':
+                                    factyaxi = 1.
+                                    lablyaxi = r'$N_{%s}$' % gdat.strgelem
+                                
+                                plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, \
+                                                  lablyaxi=lablyaxi, factxdat=factxaxi, histodim=True, factydat=factyaxi, yaxitype=yaxitype, \
+                                                  scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
                
-        # temp -- restrict compfrac and other plots to indxmodlpntscomp
-        plot_compfrac(gdat, gdatmodi, strg)
+        # temp -- restrict other plots to indxmodlpntscomp
+        for specconvunit in gdat.listspecconvunit:
+            plot_sden(gdat, gdatmodi, strg, specconvunit)
         
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
@@ -820,7 +844,7 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def plot_compfrac(gdat, gdatmodi, strg):
+def plot_sden(gdat, gdatmodi, strg, specconvunit):
     
     if strg == 'true':
         strgmodl = strg
@@ -833,11 +857,11 @@ def plot_compfrac(gdat, gdatmodi, strg):
     indxfixpbacp = getattr(gdat, strgmodl + 'indxfixpbacp')
     backfluxmean = getattr(gdat, strgmodl + 'backfluxmean')
     indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
-    numblablcompfrac = getattr(gdat, strgmodl + 'numblablcompfrac')
-    numblablcompfracspec = getattr(gdat, strgmodl + 'numblablcompfracspec')
+    numblablsden = getattr(gdat, strgmodl + 'numblablsden')
+    numblablsdenspec = getattr(gdat, strgmodl + 'numblablsdenspec')
 
-    listydat = zeros((numblablcompfracspec, gdat.numbener))
-    listyerr = zeros((2, numblablcompfracspec, gdat.numbener))
+    listydat = zeros((numblablsdenspec, gdat.numbener))
+    listyerr = zeros((2, numblablsdenspec, gdat.numbener))
    
     cntr = 0
         
@@ -853,7 +877,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
         if strg == 'post':
             temp = retr_varb(gdat, gdatmodi, strg, 'sampvarb', indx=[indxfixpbacp[indxbacpback[c]]], perc='errr')
             if specback[c] != None:
-                norm = temp * specback[c]
+                norm = temp[:, None] * specback[c]
             else:
                 norm = temp
             listyerr[:, cntr, :] = norm * backfluxmean[None, c, :]
@@ -891,9 +915,9 @@ def plot_compfrac(gdat, gdatmodi, strg):
     cntr += 1
     
     ## total model
-    if numblablcompfrac > 1:
+    if numblablsden > 1:
         if specback[c] != None:
-            norm = temp * specback[c]
+            norm = temp[:, None] * specback[c]
         else:
             norm = temp
         listydat[cntr, :] = sum(listydat[:cntrdata, :], 0)
@@ -904,7 +928,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
     # plot energy spectra of the data, background model components and total background
     if gdat.numbener > 1:
         
-        listlablcompfracspec = getattr(gdat, strgmodl + 'listlablcompfracspec')
+        listlablsdenspec = getattr(gdat, strgmodl + 'listlablsdenspec')
 
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         
@@ -916,7 +940,7 @@ def plot_compfrac(gdat, gdatmodi, strg):
                 axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], color='m')
 
         xdat = gdat.meanener
-        for k in range(numblablcompfracspec):
+        for k in range(numblablsdenspec):
             if k == cntrdata:
                 colr = 'black'
                 linestyl = '-'
@@ -936,28 +960,29 @@ def plot_compfrac(gdat, gdatmodi, strg):
                     mrkr = 'o'
             ydat = listydat[k, :]
             yerr = listyerr[:, k, :]
-            if gdat.enerdiff:
+            
+            if specconvunit[0] == 'e2en':
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
-            axis.errorbar(xdat, ydat, yerr=yerr, label=listlablcompfracspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
+            axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsdenspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
         try:
-            gdat.ylimcompfracspec
+            gdat.ylimsdenspec
         except:
-            gdat.ylimcompfracspec = axis.get_ylim()
+            gdat.ylimsdenspec = axis.get_ylim()
         axis.set_ylim([1e-4 * amax(gdat.datafluxmean), 1e1 * amax(gdat.datafluxmean)])
         axis.set_yscale('log')
         axis.set_xlabel('$E$ [%s]' % gdat.strgenerunit)
         axis.set_xscale('log')
-        axis.set_ylabel('$E^2dN/dAdtd\Omega dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
+        axis.set_ylabel('$E^2 \Sigma dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
         make_legd(axis, numbcols=3)
         
         if gdat.exprtype == 'chan':
             axis.set_ylim([None, 1e4])
 
         plt.tight_layout()
-        path = retr_plotpath(gdat, gdatmodi, strg, 'compfracspec')
+        path = retr_plotpath(gdat, gdatmodi, strg, 'sdenspec')
         figr.savefig(path)
         plt.close(figr)
     
@@ -1171,7 +1196,7 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
 
 def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, plottype='none', \
                      scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
-                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False):
+                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, yaxitype='totl'):
    
     if strg == 'true':
         strgmodl = strg
@@ -1218,7 +1243,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
 
             xdattemp = binsxdat[:-1] + deltxdat / 2.
-    
+   
     if strg == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgydat, mometype='errr') * factydat
         
@@ -1355,6 +1380,9 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
     
+    if yaxitype != 'totl':
+        strgydat += yaxitype
+
     make_legd(axis, offs=offslegd)
     
     plt.tight_layout()
