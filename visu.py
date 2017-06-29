@@ -68,9 +68,9 @@ def plot_samp(gdat, gdatmodi, strg):
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                                     limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                                    plot_gene(gdat, gdatmodi, strg, strgclas + strgfeat, 'mean' + strgfeat, lablxaxi=lablxdat, \
-                                              lablyaxi=lablydat, factxdat=factxdat, plottype='errr', \
-                                              scalxaxi=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, \
+                                    plot_gene(gdat, gdatmodi, strg, strgclas + strgfeat, 'mean' + strgfeat, lablxdat=lablxdat, \
+                                              lablydat=lablydat, factxdat=factxdat, plottype='errr', \
+                                              scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, \
                                               strgindxydat=strgindxydat, omittrue=True, nameinte=nameinte)
                 
             # element features projected onto the data axes
@@ -104,24 +104,43 @@ def plot_samp(gdat, gdatmodi, strg):
                         for l in indxpopl:
                             listxdat = []
                             listplottype = []
-                            listydat = []
                             for k in range(numbpnts[l]):
-                                specplottemp = specplot[l]
-                                if strgmodl == 'true':
-                                    specplottemp = specplottemp[0, :, k]
-                                else:
-                                    specplottemp = specplottemp[:, k]
-                                if gdat.enerdiff:
-                                    specplottemp *= gdat.meanenerplot**2
-                                listplottype.append('line')
                                 listxdat.append(gdat.meanenerplot)
-                                listydat.append(specplottemp)
+                                listplottype.append('line')
                             
                             for specconvunit in gdat.listspecconvunit:
-                                path = pathtemp + strg + 'specpop%d%s%s.pdf' % (l, specconvunit[0], strgswep)
+                                listydat = []
+                                for k in range(numbpnts[l]):
+                                    specplottemp = specplot[l]
+                                    if strgmodl == 'true':
+                                        specplottemp = copy(specplottemp[0, :, k])
+                                    else:
+                                        specplottemp = copy(specplottemp[:, k])
+                                    if specconvunit[0] == 'ene1':
+                                        specplottemp *= gdat.meanenerplot
+                                    if specconvunit[0] == 'ene2':
+                                        specplottemp *= gdat.meanenerplot**2
+                                    if specconvunit[0] == 'ene3':
+                                        # temp
+                                        pass
+                                    listydat.append(specplottemp)
+                                
+                                factydat = specconvunit[1]
+                                lablydat = getattr(gdat, 'lablflux' + specconvunit[1] + specconvunit[0] + 'totl')
+                                if specconvunit[1] == gdat.nameenerunit:
+                                    factydat = 1.
+                                else:
+                                    factydat = getattr(gdat, 'fact' + specconvunit[1] + gdat.nameenerunit)
+                                strgtemp = specconvunit[0] + specconvunit[1]
+                                if specconvunit[0] == 'ene3':
+                                    strgtemp += specconvunit[2]
+                                path = pathtemp + strg + 'specpop%d%s%s.pdf' % (l, strgtemp, strgswep)
+                                for ydat in listydat:
+                                    ydat *= factydat
+                                limtydat = [amin(gdat.minmspec) * factydat, amax(gdat.maxmspec) * factydat]
                                 tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, \
-                                                           plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat='$E^2dN/dE$ [%s]' % gdat.lablfluxunit, \
-                                                           limtydat=[amin(gdat.minmspec), amax(gdat.maxmspec)])
+                                                           plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat=lablydat, \
+                                                           limtydat=limtydat)
                 
                 if gdat.elemtype == 'lens':
                     if not (strg == 'post' and not gdat.condcatl):
@@ -193,13 +212,13 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             indxydat = [i, slice(None), m]
                         strgindxydat = '%d%d' % (i, m)
-                        lablxaxi = gdat.lablgangtotl
+                        lablxdat = gdat.lablgangtotl
                         limtydat= array([1e-3, 1e3]) * gdat.anglfact**2
-                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindxydat=strgindxydat, scalyaxi='logt', \
-                                                                                       factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$\mathcal{P}$', limtydat=limtydat)
+                        plot_gene(gdat, gdatmodi, strg, 'psfn', 'binsangl', indxydat=indxydat, strgindxydat=strgindxydat, scalydat='logt', \
+                                                                                       factxdat=gdat.anglfact, lablxdat=lablxdat, lablydat=r'$\mathcal{P}$', limtydat=limtydat)
                         if gdat.fittoaxitype or gdat.trueoaxitype:
                             plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindxydat=strgindxydat, \
-                                                                                            factxdat=gdat.anglfact, lablxaxi=lablxaxi, lablyaxi=r'$f(\phi)$')
+                                                                                            factxdat=gdat.anglfact, lablxdat=lablxdat, lablydat=r'$f(\phi)$')
     
                 # number of background counts per PSF
                 if False:
@@ -240,10 +259,10 @@ def plot_samp(gdat, gdatmodi, strg):
     
                     for strgfeat in liststrgfeatodim[l] + gdat.liststrgfeatplot:
                         
-                        scalxaxi = getattr(gdat, 'scal' + strgfeat + 'plot')
-                        factxaxi = getattr(gdat, 'fact' + strgfeat + 'plot')
-                        lablxaxi = getattr(gdat, 'labl' + strgfeat + 'totl')
-                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxaxi, getattr(gdat, 'maxm' + strgfeat) * factxaxi]
+                        scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
+                        factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
+                        lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
+                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
                         
                         limtydat = gdat.limtpntshist
                     
@@ -256,29 +275,29 @@ def plot_samp(gdat, gdatmodi, strg):
 
                         listname = ['hist' + strgfeat]
                         for name in listname:
-                            listyaxitype = ['totl', 'sden']
-                            for yaxitype in listyaxitype:
+                            listydattype = ['totl', 'sden']
+                            for ydattype in listydattype:
                                 
                                 # plot the surface density of elements only for the amplitude feature
-                                if strgfeat != gdat.namecompampl:
+                                if strgfeat != gdat.namecompampl and ydattype == 'sden':
                                     continue
         
                                 ## plot the surface density of elements
-                                if yaxitype == 'sden':
+                                if ydattype == 'sden':
                                     if gdat.sdenunit == 'degr':
-                                        factyaxi = (pi / 180.)**2 / gdat.anglfact**2
-                                        lablyaxi = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
+                                        factydat = (pi / 180.)**2 / gdat.anglfact**2
+                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
                                     if gdat.sdenunit == 'ster':
-                                        factyaxi = 1. / gdat.anglfact**2
-                                        lablyaxi = r'$\Sigma_{%s}$ [sr$^{-2}$]' % gdat.lablelemextn
+                                        factydat = 1. / gdat.anglfact**2
+                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % gdat.lablelemextn
                                 ## plot the total number of elements
-                                if yaxitype == 'totl':
-                                    factyaxi = 1.
-                                    lablyaxi = r'$N_{%s}$' % gdat.strgelem
+                                if ydattype == 'totl':
+                                    factydat = 1.
+                                    lablydat = r'$N_{%s}$' % gdat.lablelemextn
                                 
-                                plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalyaxi='logt', lablxaxi=lablxaxi, \
-                                                  lablyaxi=lablyaxi, factxdat=factxaxi, histodim=True, factydat=factyaxi, yaxitype=yaxitype, \
-                                                  scalxaxi=scalxaxi, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
+                                plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
+                                                  lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
+                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
                
         # temp -- restrict other plots to indxmodlpntscomp
         for specconvunit in gdat.listspecconvunit:
@@ -333,14 +352,14 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
             
         if gdat.elemtype == 'lens':
-            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P(k)$', limtydat=[1e-1, 1e2], scalxaxi='logt', scalyaxi='logt')
-            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxaxi=r'$\alpha$ [arcsec]', lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, \
+            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P(k)$', limtydat=[1e-1, 1e2], scalxdat='logt', scalydat='logt')
+            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
                                                                                                                                             histodim=True)
             if numbtrap > 0:
-                plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxaxi='$k$ [1/kpc]', lablyaxi='$P_{sub}(k)$', \
-                                                                                                                    limtydat=[1e-5, 1e-1], scalxaxi='logt', scalyaxi='logt')
-                plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxaxi=r'$\alpha$ [arcsec]', \
-                                                                                                         lablyaxi=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+                plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
+                                                                                                                    limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
+                plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
+                                                                                                         lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
     
         if gdat.elemtype == 'lens':
     
@@ -477,8 +496,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     cntr = 0
     while cntr < gdat.numbproptype:
         thisnumbplot = min(numbplotfram, gdat.numbproptype - cntr)
-        sizefigryaxi = max(thisnumbplot * gdat.plotsize / 4., gdat.plotsize / 2.)
-        figr, axgr = plt.subplots(thisnumbplot, 1, figsize=(gdat.plotsize, sizefigryaxi), sharex='all')
+        sizefigrydat = max(thisnumbplot * gdat.plotsize / 4., gdat.plotsize / 2.)
+        figr, axgr = plt.subplots(thisnumbplot, 1, figsize=(gdat.plotsize, sizefigrydat), sharex='all')
         if thisnumbplot == 1:
             axgr = [axgr]
         for n, axis in enumerate(axgr):
@@ -961,12 +980,34 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
             ydat = listydat[k, :]
             yerr = listyerr[:, k, :]
             
-            if specconvunit[0] == 'e2en':
+            if specconvunit[0] == 'ene1':
+                ydat *= gdat.meanener
+                yerr *= gdat.meanener
+            
+            if specconvunit[0] == 'ene2':
                 ydat *= gdat.meanener**2
                 yerr *= gdat.meanener**2
-            if specconvunit[0] == 'totl':
-                ydat *= gdat.meanener**2
-                yerr *= gdat.meanener**2
+
+            if specconvunit[0] == 'ene3':
+                # temp
+                pass
+                #indxenerintv = where((gdat.meanener < specconvunit[4]) & (gdat.meanener > specconvunit[3]))[0]
+                #ener = concatenate((array([specconvunit[3]]), gdat.meanener[indxenerintv], array([specconvunit[4]])))
+                #
+                #for k in range(3):
+                #    if k == 0:
+                #        ydattemp = 
+                #    ydatminmener = interp(specconvunit[3], gdat.meanener, ydat)
+                #    ydatmaxmener = interp(specconvunit[4], gdat.meanener, ydat)
+                #    ydat = concatenate((array([ydatminmener]), ydat[indxenerintv], array([ydatmaxmener])))
+                #    ydat = trapz(ydat, gdat.meanener)
+                #
+                #yerrminmener = interp(specconvunit[3], gdat.meanener, yerr, axis=1)
+                #yerrmaxmener = interp(specconvunit[4], gdat.meanener, yerr, axis=1)
+                #ydat = stack((array([yerrminmener]), ydat[indxenerintv], array([yerrmaxmener])))
+                #
+                #
+                #yerr = trapz(yerr, gdat.meanener)
             axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsdenspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
     
         axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
@@ -1198,8 +1239,8 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
     
 
 def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, plottype='none', \
-                     scal=None, scalxaxi=None, scalyaxi=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
-                     lablxaxi='', lablyaxi='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, yaxitype='totl'):
+                     scal=None, scalxdat=None, scalydat=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
+                     lablxdat='', lablydat='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, ydattype='totl'):
    
     if strg == 'true':
         strgmodl = strg
@@ -1207,13 +1248,13 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         strgmodl = 'fitt'
 
     if scal == None:
-        if scalxaxi == None:
-            scalxaxi = 'linr'
-        if scalyaxi == None:
-            scalyaxi = 'linr'
+        if scalxdat == None:
+            scalxdat = 'linr'
+        if scalydat == None:
+            scalydat = 'linr'
     else:
-        scalxaxi = scal
-        scalyaxi = scal
+        scalxdat = scal
+        scalydat = scal
 
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     
@@ -1329,15 +1370,15 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 print 'Skipping truth plot for %s...' % strgydat
     
     # axis scales
-    if scalxaxi == 'logt':
+    if scalxdat == 'logt':
         axis.set_xscale('log')
-    if scalyaxi == 'logt':
+    if scalydat == 'logt':
         if where(ydat > 0.)[0].size > 0:
             axis.set_yscale('log')
     
     # axis labels
-    axis.set_xlabel(lablxaxi)
-    axis.set_ylabel(lablyaxi)
+    axis.set_xlabel(lablxdat)
+    axis.set_ylabel(lablydat)
 
     # superimpose prior on the feature
     liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
@@ -1383,8 +1424,8 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
     
-    if yaxitype != 'totl':
-        strgydat += yaxitype
+    if ydattype != 'totl':
+        strgydat += ydattype
 
     make_legd(axis, offs=offslegd)
     
@@ -1448,10 +1489,10 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
             axis.set_yscale('log')
         axis.set_xscale('log')
     if plotdiff:
-        limsyaxi = array([-100., 100.])
+        limsydat = array([-100., 100.])
     else:
-        limsyaxi = factplot * array([minmplot, maxmplot])
-    axis.set_ylim(limsyaxi)
+        limsydat = factplot * array([minmplot, maxmplot])
+    axis.set_ylim(limsydat)
     axis.set_xlim([factplot * minmplot, factplot * maxmplot])
    
     plt.tight_layout()
@@ -2283,7 +2324,7 @@ def plot_init(gdat):
                 figr, axis, path = init_figr(gdat, None, 'datacntspeak', '', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.datacnts, '', 'datacnts', thisindxener=i, thisindxevtt=m)
                 make_cbar(gdat, axis, imag, i, tick=gdat.tickdatacnts, labl=gdat.labldatacnts)
-                axis.scatter(gdat.anglfact * gdat.meanlgalcart[gdat.indxxaximaxm], gdat.anglfact * gdat.meanbgalcart[gdat.indxyaximaxm], alpha=0.6, s=20, edgecolor='none')
+                axis.scatter(gdat.anglfact * gdat.meanlgalcart[gdat.indxxdatmaxm], gdat.anglfact * gdat.meanbgalcart[gdat.indxydatmaxm], alpha=0.6, s=20, edgecolor='none')
                 
                 plt.tight_layout()
                 figr.savefig(path)

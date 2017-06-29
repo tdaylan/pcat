@@ -720,8 +720,8 @@ def retr_indxpixleval(gdat, lgal, bgal, ampl, evalcirc):
 def retr_angldistunit(gdat, lgal, bgal, indxpixleval, retranglcosi=False):
    
     if gdat.pixltype == 'heal':
-        xaxi, yaxi, zaxi = retr_unit(lgal, bgal)
-        anglcosi = gdat.xaxigrid[indxpixleval] * xaxi + gdat.yaxigrid[indxpixleval] * yaxi + gdat.zaxigrid[indxpixleval] * zaxi
+        xdat, ydat, zaxi = retr_unit(lgal, bgal)
+        anglcosi = gdat.xdatgrid[indxpixleval] * xdat + gdat.ydatgrid[indxpixleval] * ydat + gdat.zaxigrid[indxpixleval] * zaxi
         
         if retranglcosi:
             return anglcosi
@@ -1894,11 +1894,11 @@ def retr_axis(gdat, strgvarb, minm=None, maxm=None, numb=None, bins=None, scal='
 
 def retr_unit(lgal, bgal):
 
-    xaxi = cos(bgal) * cos(lgal)
-    yaxi = -cos(bgal) * sin(lgal)
+    xdat = cos(bgal) * cos(lgal)
+    ydat = -cos(bgal) * sin(lgal)
     zaxi = sin(bgal)
 
-    return xaxi, yaxi, zaxi
+    return xdat, ydat, zaxi
 
 
 def retr_psec(gdat, conv):
@@ -2534,22 +2534,66 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablflux = 'f'
     gdat.lablnobj = 'p'
     
+    gdat.lablsbrt = r'\Sigma'
+    
     gdat.labldeflprof = r'\alpha_a'
     gdat.labldeflprofunit = u'$^{\prime\prime}$'
     
+    gdat.strgenerkevv = 'keV'
+    gdat.strgenergevv = 'GeV'
+    gdat.strgenerergs = 'erg'
+
     gdat.labldefsunit = u'$^{\prime\prime}$'
-    if gdat.exprtype == 'ferm':
-        gdat.lablfluxunit = 'cm$^{-2}$ s$^{-1}$ GeV$^{-1}$'
-        gdat.lablfluxsoldunit = 'cm$^{-2}$ s$^{-1}$ GeV$^{-1} sr$^{-1}$'
-    if gdat.exprtype == 'chan':
-        gdat.lablfluxunit = 'cm$^{-2}$ s$^{-1}$ KeV$^{-1}$'
-        gdat.lablfluxsoldunit = 'cm$^{-2}$ s$^{-1}$ KeV$^{-1} sr$^{-1}$'
-    if gdat.exprtype == 'hubb':
-        gdat.lablfluxunit = r'erg cm$^{-2}$ s$^{-1}$ $\AA^{-1}$'
-        gdat.lablfluxsoldunit = r'erg cm$^{-2}$ s$^{-1}$ $\AA^{-1}$ sr$^{-1}$'
-    
-    gdat.lablfluxsold = 'f'
-    
+    gdat.lablprat = 'cm$^{-2}$ s$^{-1}$'
+    for nameenerscaltype in ['ene0', 'ene1', 'ene2', 'ene3']:
+        
+        for labltemptemp in ['flux', 'sbrt']:
+            labltemp = getattr(gdat, 'labl' + labltemptemp)
+
+            # define the label
+            if nameenerscaltype == 'ene0':
+                strgenerscal = '%s' % labltemp
+            if nameenerscaltype == 'ene1':
+                strgenerscal = 'E%s' % labltemp
+            if nameenerscaltype == 'ene2':
+                strgenerscal = 'E^2%s' % labltemp
+            if nameenerscaltype == 'ene3':
+                strgenerscal = '%s' % labltemp
+            labl = '%s' % strgenerscal
+            setattr(gdat, 'labl' + labltemptemp + nameenerscaltype, labl)
+
+            for nameenerunit in ['gevv', 'ergs', 'kevv']:
+                
+                strgenerunit = getattr(gdat, 'strgener' + nameenerunit)
+
+                if nameenerscaltype == 'ene0':
+                    strgenerscalunit = '%s$^{-1}$' % strgenerunit
+                if nameenerscaltype == 'ene1':
+                    strgenerscalunit = '' 
+                if nameenerscaltype == 'ene2':
+                    strgenerscalunit = '%s' % strgenerunit
+                if nameenerscaltype == 'ene3':
+                    strgenerscalunit = '%s' % strgenerunit
+                
+                # define the label unit
+                lablunit = '%s %s' % (strgenerscalunit, gdat.lablprat)
+                if labltemptemp == 'flux':
+                    setattr(gdat, 'lablflux' + nameenerunit + nameenerscaltype + 'unit', '%s %s' % (strgenerscalunit, gdat.lablprat))
+                else:
+                    for strgsold in ['ster', 'degr']:
+                        if strgsold == 'ster':
+                            valu = '%s %s sr$^{-1}$' % (strgenerscalunit, gdat.lablprat)
+                        if strgsold == 'degr':
+                            valu = '%s %s deg$^{-2}$' % (strgenerscalunit, gdat.lablprat)
+                        setattr(gdat, 'lablsbrt' + nameenerunit + strgsold + 'unit', valu)
+
+                # define the total label
+                if labltemptemp == 'flux':
+                    setattr(gdat, 'lablflux' + nameenerunit + nameenerscaltype + 'totl', '$%s$ [%s]' % (labl, lablunit))
+                else:
+                    for strgsold in ['ster', 'degr']:
+                        setattr(gdat, 'lablsbrt' + nameenerunit + nameenerscaltype + 'totl', '$%s$ [%s]' % (labl, lablunit))
+
     for l in gdat.trueindxpopl:
         setattr(gdat, 'lablcmplpop%d' % l, '$c_{%d}$' % l)
         setattr(gdat, 'lablfdispop%d' % l, '$f_{%d}$' % l)
@@ -3322,7 +3366,7 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, strgmodl + 'backcntstotl', backcntstotl)
     
     # store pixels as unit vectors
-    gdat.xaxigrid, gdat.yaxigrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
+    gdat.xdatgrid, gdat.ydatgrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
    
     # construct a lookup table for converting HealPix pixels to ROI pixels
     if gdat.pixltype == 'heal':
@@ -3783,7 +3827,7 @@ def setpfinl(gdat, boolinitsetp=False):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 # temp
-                gdat.indxxaximaxm, gdat.indxyaximaxm = tdpy.util.retr_indximagmaxm(gdat.datacntscart[i, :, m])
+                gdat.indxxdatmaxm, gdat.indxydatmaxm = tdpy.util.retr_indximagmaxm(gdat.datacntscart[i, :, m])
 
     # sanity checks
     # temp
@@ -4626,7 +4670,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             
             namefixp[k] = name
             lablfixp[k] = '$A_{%s%s}$' % (strgbacktemp, strgenertemp)
-            lablfixpunit[k] = gdat.lablfluxsoldunit
+            lablfixpunit[k] = gdat.lablsbrtunit
             
             try:
                 scalfixp[k] = getattr(gdat, strgmodl + 'scal' + name)
@@ -6388,16 +6432,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expo' and spectype[l] != 'expo'):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         if strgfeat[:-4] in gdat.listnamefeatsele and strgmodl == 'true':
-                            print 'l'
-                            print l
-                            print 'indxmodlpntscomp'
-                            print indxmodlpntscomp[l]
-                            print 'getattr(gdat, strgmodl + indxelem + strgfeat[-4:])'
-                            print getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])[l]
                             indx = intersect1d(getattr(gdat, strgmodl + 'indxelem' + strgfeat[-4:])[l], indxmodlpntscomp[l])
-                            print 'indx'
-                            print indx
-                            print
                             if indx.size > 0:
                                 dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat[:-4]][l][indx], bins)[0]
                         else:

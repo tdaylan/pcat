@@ -396,13 +396,19 @@ def init( \
     if gdat.exprtype == 'sdyn':
         gdat.lablenerunit = ''
     
-    gdat.ergskevv = 1.6e-9
+    gdat.factergskevv = 1.6e-9
     if gdat.exprtype == 'ferm':
-        gdat.listspecconvunit = [['e2ne', 1.]]
+        gdat.listspecconvunit = [['ene2', 1.]]
     if gdat.exprtype == 'chan':
-        gdat.listspecconvunit = [['e2ne', 1.], ['e2ne', gdat.ergskevv], ['totl', gdat.ergskevv, 0.5, 2.], ['totl', gdat.ergskevv, 2., 10.], ['totl', gdat.ergskevv, 0.5, 10.]]
+        gdat.listspecconvunit = [['ene0', 'kevv'], ['ene2', 'kevv'], ['ene2', 'ergs'], ['ene3', 'ergs', '0520', 0.5,  2.], \
+                                                                                       ['ene3', 'ergs', '0210',  2., 10.], \
+                                                                                       ['ene3', 'ergs', '0510', 0.5, 10.], \
+                                                                                       ['ene3', 'ergs', '0208',  2.,  8.], \
+                                                                                       ['ene3', 'ergs', '0508', 0.5,  8.], \
+                                                                                       ['ene3', 'ergs', '0207',  2.,  7.], \
+                                                                                       ['ene3', 'ergs', '0507', 0.5,  7.]]
     if gdat.exprtype == 'hubb':
-        gdat.listspecconvunit = [['band', 1.]]
+        gdat.listspecconvunit = [['ene3', 1.]]
     
     if gdat.pixltype == None:
         if gdat.exprtype == 'ferm':
@@ -478,6 +484,17 @@ def init( \
             gdat.lablbgal = r'E_k'
         else:
             gdat.lablbgal = r'\theta_2'
+
+    if gdat.strgenerunit == None:
+        if gdat.exprtype == 'ferm':
+            gdat.strgenerunit = 'GeV'
+            gdat.nameenerunit = 'gevv'
+        if gdat.exprtype == 'chan':
+            gdat.strgenerunit = 'keV'
+            gdat.nameenerunit = 'kevv'
+        if gdat.exprtype == 'sdyn':
+            gdat.strgenerunit = ''
+            gdat.nameenerunit = ''
 
     if gdat.exprtype == 'sdyn':
         gdat.enerbins = False
