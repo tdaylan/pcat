@@ -763,10 +763,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + strg
         titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.info, gdat.levi)
-        print 'strg'
-        print strg
-        print getattr(gdat, 'list' + strg + 'flat')
-        print
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strg + 'flat'), labl, titl)
         varbdraw = []
         labldraw = []

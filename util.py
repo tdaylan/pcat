@@ -672,14 +672,30 @@ def retr_pntsfluxtotl(gdat, lgal, bgal, spec, psfnintp, oaxitype, evalcirc):
 ### find the total surface brightness due to all emission components
 def retr_mapslght(gdat, bacp, pntsflux, tempindx):
     
+    if gdat.verbtype > 1:
+        print 'retr_mapslght'
+        print 'pntsflux'
+        summgene(pntsflux)
+    
     modlflux = pntsflux[tempindx]
     for c in gdat.fittindxback:
         if gdat.fittspecback[c] != None:
             norm = gdat.fittspecback[c] * bacp[gdat.fittindxbacpback[c]]
         else:
             norm = bacp[gdat.fittindxbacpback[c]]
-        modlflux += norm[:, None, None] * gdat.fittbackflux[c][tempindx]        
-
+        backflux = norm[:, None, None] * gdat.fittbackflux[c][tempindx]
+        modlflux += backflux
+        if gdat.verbtype > 1:
+            print 'c'
+            print c
+            print 'backflux'
+            summgene(backflux)
+    
+    if gdat.verbtype > 1:
+        print 'modlflux'
+        summgene(modlflux)
+        print
+    
     return modlflux
 
 
@@ -3322,6 +3338,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lgalgrid = gdat.lgalgrid[gdat.indxpixlrofi]
     gdat.bgalgrid = gdat.bgalgrid[gdat.indxpixlrofi]
     
+    # temp
+    gdat.expo[where(gdat.expo < 1e-50)] = 1e-50
+
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for i in gdat.indxener:
@@ -3964,7 +3983,7 @@ def retr_ticklabl(gdat, strgcbar):
             bins[k] = 10**(tick[k])
 
         # avoid very small, but nonzero central values in the residual count color maps
-        if strgcbar == 'resicnts' and bins[k] < 1e-5:
+        if strgcbar == 'resicnts' and fabs(bins[k]) < 1e-5:
             bins[k] = 0.
 
         if amax(bins) > 1e3:
@@ -6056,13 +6075,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
        
             proc_datacnts(gdat)
         
-        ### log-likelihood
-        initchro(gdat, gdatmodi, strg, 'llikcalc')
-        #llik = retr_llik_mult(gdat, modlcnts)
-        llik = retr_llik_depr(gdat, modlcnts)
-        lliktotl = sum(llik)
-        stopchro(gdat, gdatmodi, strg, 'llikcalc')
-        
         if gdat.diagmode:
             for varb in [modlflux, modlcnts]:
                 frac = amin(varb) / mean(varb)
@@ -6072,6 +6084,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     summgene(varb)
                     raise Exception('Model prediction is not positive-definite.')
 
+        ### log-likelihood
+        initchro(gdat, gdatmodi, strg, 'llikcalc')
+        #llik = retr_llik_mult(gdat, modlcnts)
+        llik = retr_llik_depr(gdat, modlcnts)
+        lliktotl = sum(llik)
+        stopchro(gdat, gdatmodi, strg, 'llikcalc')
+        
+        if gdat.diagmode:
             if not isfinite(llik).all():
                 raise Exception('Likelihood is not finite.')
 
@@ -6440,6 +6460,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             try:
                                 dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp[strgfeat][l][indxmodlpntscomp[l]], bins)[0]
                             except:
+                                print 'hey'
+                                print 'histograming failed'
                                 print 'strgfeat'
                                 print strgfeat
                                 summgene(dicttemp[strgfeat][l][indxmodlpntscomp[l]])

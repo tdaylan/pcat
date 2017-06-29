@@ -289,7 +289,7 @@ def init( \
 
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(2e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(1e-2 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
     # samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
@@ -398,7 +398,7 @@ def init( \
     
     gdat.factergskevv = 1.6e-9
     if gdat.exprtype == 'ferm':
-        gdat.listspecconvunit = [['ene2', 1.]]
+        gdat.listspecconvunit = [['ene2', 'gevv']]
     if gdat.exprtype == 'chan':
         gdat.listspecconvunit = [['ene0', 'kevv'], ['ene2', 'kevv'], ['ene2', 'ergs'], ['ene3', 'ergs', '0520', 0.5,  2.], \
                                                                                        ['ene3', 'ergs', '0210',  2., 10.], \
@@ -408,7 +408,7 @@ def init( \
                                                                                        ['ene3', 'ergs', '0207',  2.,  7.], \
                                                                                        ['ene3', 'ergs', '0507', 0.5,  7.]]
     if gdat.exprtype == 'hubb':
-        gdat.listspecconvunit = [['ene3', 1.]]
+        gdat.listspecconvunit = [['ene3', 'ergs']]
     
     if gdat.pixltype == None:
         if gdat.exprtype == 'ferm':
@@ -799,10 +799,12 @@ def init( \
     setp_namevarblimt(gdat, 'psff', [0., 1.], ener=True, evtt=True)
  
     ### normalization
+    if gdat.exprtype == 'ferm':
+        bacp = [1e-10, 1e-6]
+    if gdat.exprtype == 'chan':
+        bacp = [1e-1, 1e1]
     if gdat.exprtype == 'hubb':
         bacp = [1e-10, 1e-6]
-    else:
-        bacp = [1e-1, 1e1]
     setp_namevarblimt(gdat, 'bacp', bacp, ener=True, back=True)
 
     ## hyperparameters
@@ -994,10 +996,12 @@ def init( \
             setp_namevarbvalu(gdat, 'expodistmeanpop1', 2., popl=True)
             setp_namevarbvalu(gdat, 'expodiststdvpop1', 0.2, popl=True)
         
+        if gdat.exprtype == 'ferm':
+            bacp = 2e-7
+        if gdat.exprtype == 'chan':
+            bacp = 1e0
         if gdat.exprtype == 'hubb':
             bacp = 2e-7
-        else:
-            bacp = 1.
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
         
         if gdat.elemtype == 'lens':
