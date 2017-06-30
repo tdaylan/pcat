@@ -285,7 +285,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 ## plot the surface density of elements
                                 if ydattype == 'sden':
                                     if gdat.sdenunit == 'degr':
-                                        factydat = (pi / 180.)**2 / gdat.anglfact**2
+                                        factydat = (pi / 180.)**2 * gdat.anglfact**2
                                         lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
                                     if gdat.sdenunit == 'ster':
                                         factydat = 1. / gdat.anglfact**2
@@ -295,6 +295,18 @@ def plot_samp(gdat, gdatmodi, strg):
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % gdat.lablelemextn
                                 
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'ydattype'
+                                print ydattype
+                                print 'gdat.sdenunit'
+                                print gdat.sdenunit
+                                print 'name'
+                                print name
+                                print 'factydat'
+                                print factydat
+                                print
+
                                 plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
@@ -335,15 +347,17 @@ def plot_samp(gdat, gdatmodi, strg):
                 for i in gdat.indxener:
                     plot_genemaps(gdat, gdatmodi, strg, 's2nr', thisindxener=i)
                 
-            plot_genemaps(gdat, gdatmodi, strg, 'magn', tdim=True)
-            plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
-            if numbtrap > 0:
-                plot_genemaps(gdat, gdatmodi, strg, 'convelem', tdim=True)
             for i in gdat.indxener:
                 plot_genemaps(gdat, gdatmodi, strg, 'hostcntsmaps', strgcbar='datacnts', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'gradlenscntsmgtd', strgcbar='datacnts', thisindxener=i, tdim=True)
                 plot_genemaps(gdat, gdatmodi, strg, 'modlcntsuncv', strgcbar='datacnts', thisindxener=i, tdim=True)
+            if gdat.lensmodltype != 'none':
+                plot_genemaps(gdat, gdatmodi, strg, 'magn', tdim=True)
+                plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
+                if numbtrap > 0:
+                    plot_genemaps(gdat, gdatmodi, strg, 'convelem', tdim=True)
+                for i in gdat.indxener:
+                    plot_genemaps(gdat, gdatmodi, strg, 'lenscnts', strgcbar='datacnts', thisindxener=i, tdim=True)
+                    plot_genemaps(gdat, gdatmodi, strg, 'gradlenscntsmgtd', strgcbar='datacnts', thisindxener=i, tdim=True)
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 if strg != 'true':
@@ -352,44 +366,43 @@ def plot_samp(gdat, gdatmodi, strg):
                 plot_genemaps(gdat, gdatmodi, strg, 'resicnts', thisindxener=i, thisindxevtt=m)
             
         if gdat.elemtype == 'lens':
-            plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P(k)$', limtydat=[1e-1, 1e2], scalxdat='logt', scalydat='logt')
-            plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
-                                                                                                                                            histodim=True)
-            if numbtrap > 0:
-                plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
-                                                                                                                    limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
-                plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
-                                                                                                         lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
-    
-        if gdat.elemtype == 'lens':
-    
-            # gradient of the lens emission
-            plot_defl(gdat, gdatmodi, strg, 'gradlenscnts')
-            
-            # overall deflection field
-            plot_defl(gdat, gdatmodi, strg, multfact=0.1)
-            
-            # deflection field due to individual lenses
-            for k in range(numbdeflsingplot):  
-                if k == 0:
-                    multfact = 0.1
-                elif k == 1:
-                    multfact = 1.
-                elif k >= 2:
-                    multfact = 10.
-                plot_defl(gdat, gdatmodi, strg, indxdefl=k, multfact=multfact)
-            
-            # residual deflection field
-            if strg != 'true' and gdat.datatype == 'mock':
-                plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
-                for k in range(numbdeflsingplot):
-                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
-                
+            if gdat.lensmodltype != 'none':
+                plot_gene(gdat, gdatmodi, strg, 'convpsecodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P(k)$', limtydat=[1e-1, 1e2], scalxdat='logt', scalydat='logt')
+                plot_gene(gdat, gdatmodi, strg, 'histdefl', 'meandefl', scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
+                                                                                                                                                            histodim=True)
                 if numbtrap > 0:
-                    plot_genemaps(gdat, gdatmodi, strg, 'resiconvelem', tdim=True)
-                    plot_genemaps(gdat, gdatmodi, strg, 'resiconvelemperc', tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'resimagn', tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'resimagnperc', tdim=True)
+                    plot_gene(gdat, gdatmodi, strg, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
+                                                                                                                        limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
+                    plot_gene(gdat, gdatmodi, strg, 'histdeflelem', 'meandeflelem', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
+                                                                                                             lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+    
+                # gradient of the lens emission
+                plot_defl(gdat, gdatmodi, strg, 'gradlenscnts')
+                
+                # overall deflection field
+                plot_defl(gdat, gdatmodi, strg, multfact=0.1)
+                
+                # deflection field due to individual lenses
+                for k in range(numbdeflsingplot):  
+                    if k == 0:
+                        multfact = 0.1
+                    elif k == 1:
+                        multfact = 1.
+                    elif k >= 2:
+                        multfact = 10.
+                    plot_defl(gdat, gdatmodi, strg, indxdefl=k, multfact=multfact)
+                
+                # residual deflection field
+                if strg != 'true' and gdat.datatype == 'mock':
+                    plot_defl(gdat, gdatmodi, strg, strgcomp='resi', multfact=100.)
+                    for k in range(numbdeflsingplot):
+                        plot_defl(gdat, gdatmodi, strg, strgcomp='resi', indxdefl=k, multfact=100.)
+                    
+                    if numbtrap > 0:
+                        plot_genemaps(gdat, gdatmodi, strg, 'resiconvelem', tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strg, 'resiconvelemperc', tdim=True)
+                    plot_genemaps(gdat, gdatmodi, strg, 'resimagn', tdim=True)
+                    plot_genemaps(gdat, gdatmodi, strg, 'resimagnperc', tdim=True)
     
 
 def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
@@ -726,7 +739,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'bacp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixptotl[gdat.fittindxfixpbacp], \
                                                                                                         truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixpbacp])
-        if gdat.fittnumbback == 2 and gdat.fittspecback == [None, None]:
+        if gdat.fittnumbback == 2 and gdat.fittspecback == [False, False]:
             for i in gdat.indxener:
                 indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
                 path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'bacpene%d' % i
@@ -866,6 +879,7 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
     else:
         strgmodl = 'fitt'
     
+    back = getattr(gdat, strgmodl + 'back')
     specback = getattr(gdat, strgmodl + 'specback')
     indxback = getattr(gdat, strgmodl + 'indxback')
     maxmgang = getattr(gdat, strgmodl + 'maxmgang')
@@ -883,16 +897,16 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
     ## background templates
     for c in indxback:
         temp = retr_varb(gdat, gdatmodi, strg, 'sampvarb', indx=[indxfixpbacp[indxbacpback[c]]])
-        if specback[c] != None:
-            norm = temp * specback[c]
+        if specback[c]:
+            norm = temp * back[c]
         else:
             norm = temp
         listydat[cntr, :] = norm * backfluxmean[c, :]
 
         if strg == 'post':
             temp = retr_varb(gdat, gdatmodi, strg, 'sampvarb', indx=[indxfixpbacp[indxbacpback[c]]], perc='errr')
-            if specback[c] != None:
-                norm = temp[:, None] * specback[c]
+            if specback[c]:
+                norm = temp[:, None] * back[c]
             else:
                 norm = temp
             listyerr[:, cntr, :] = norm * backfluxmean[None, c, :]
@@ -931,8 +945,8 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
     
     ## total model
     if numblablsden > 1:
-        if specback[c] != None:
-            norm = temp[:, None] * specback[c]
+        if specback[c]:
+            norm = temp[:, None] * back[c]
         else:
             norm = temp
         listydat[cntr, :] = sum(listydat[:cntrdata, :], 0)
@@ -1354,7 +1368,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     # true
     if gdat.datatype == 'mock' and not omittrue:
         try:
-            ydat = getattr(gdat, 'true' + strgydat)
+            ydat = getattr(gdat, 'true' + strgydat) * factydat
             if indxydat != None:
                 ydat = ydat[indxydat]
             if histodim:

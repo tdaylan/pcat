@@ -68,6 +68,9 @@ def init( \
          ## element type
          elemtype='lght', \
         
+         ## lens model
+         lensmodltype=None, \
+
          ## PSF evaluation type
          kernevaltype='ulip', \
 
@@ -430,6 +433,12 @@ def init( \
         else:
             gdat.proplenp = False
 
+    if gdat.lensmodltype == None:
+        if gdat.elemtype == 'lens':
+            gdat.lensmodltype = 'nomi'
+        else:
+            gdat.lensmodltype = 'none'
+
     if gdat.strgexprname == None:
         if gdat.exprtype == 'chan':
             gdat.strgexprname = 'Chandra'
@@ -495,6 +504,9 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.strgenerunit = ''
             gdat.nameenerunit = ''
+        if gdat.exprtype == 'hubb':
+            gdat.strgenerunit = 'erg'
+            gdat.nameenerunit = 'ergs'
 
     if gdat.exprtype == 'sdyn':
         gdat.enerbins = False
@@ -601,6 +613,7 @@ def init( \
         if gdat.enerdiff:
             gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
             gdat.meanener = sqrt(gdat.binsener[1:] * gdat.binsener[:-1])
+            gdat.meanenerfull = sqrt(gdat.binsenerfull[1:] * gdat.binsenerfull[:-1])
             gdat.deltener = gdat.binsener[1:] - gdat.binsener[:-1]
             gdat.minmener = gdat.binsener[0]
             gdat.maxmener = gdat.binsener[-1]
@@ -614,6 +627,8 @@ def init( \
             gdat.indxenerfull = gdat.binsenerfull.size - 1
     else:
         gdat.numbenerfull = 1
+    if gdat.numbener > 1:
+        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
     gdat.indxener = arange(gdat.numbener, dtype=int)
        
     ### spatial extent of the data
@@ -702,7 +717,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
-            back = [ones(gdat.numbener), 1.]
+            back = [1., (gdat.meanenerfull / gdat.enerfluxdist)[gdat.indxenerincl]**0]
     if gdat.elemtype == 'lens':
         back = [1.]
     if gdat.elemtype == 'clus':
@@ -711,11 +726,9 @@ def init( \
    
     #### spectra for the background
     if gdat.exprtype == 'chan':
-        # temp
-        #specback = [None, array([1., 1.3])[gdat.indxenerincl]]
-        specback = [None, ones(gdat.numbenerfull)[gdat.indxenerincl]]
+        specback = [False, True]
     else:
-        specback = [None, None]
+        specback = [False, False]
     setp_namevarbvalu(gdat, 'specback', specback)
     
     #### label
@@ -800,7 +813,7 @@ def init( \
  
     ### normalization
     if gdat.exprtype == 'ferm':
-        bacp = [1e-10, 1e-6]
+        bacp = [1e-8, 1e-6]
     if gdat.exprtype == 'chan':
         bacp = [1e-1, 1e1]
     if gdat.exprtype == 'hubb':
@@ -1038,7 +1051,6 @@ def init( \
                 gdat.listspecrefrplot.append(loadtxt(path, delimiter=',')[:, 1])
 
     if gdat.numbener > 1:
-        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
         if gdat.enerfluxdist == 0.:
             raise Exception('Pivot energy cannot be zero.')
         # temp
@@ -1322,6 +1334,13 @@ def init( \
             exprfeathist = getattr(gdat, 'exprhist' + strgfeat)
             setattr(gdat, 'true' + strgfeat, exprfeat)
             setattr(gdat, 'truehist' + strgfeat, exprfeathist)
+    
+    if gdat.fittnumbtrap > 0:
+        if gdat.datatype == 'mock' or gdat.truelgal != None and gdat.truebgal != None:
+            for l in gdat.trueindxpopl:
+                gdat.listnamevarbscal += ['cmplpop%d' % l]
+            for l in gdat.fittindxpopl:
+                gdat.listnamevarbscal += ['fdispop%d' % l]
     
     if gdat.datatype == 'mock':
         

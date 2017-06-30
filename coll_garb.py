@@ -2,7 +2,12 @@ from __init__ import *
 
 pathchec = os.environ["PCAT_DATA_PATH"] + '/data/outp/comp.txt'
 
-for strgextn in ['/imag/', '/data/outp/']:
+if len(sys.argv) == 2 and sys.argv[1] == 'data':
+    liststrgextn = ['/data/outp/']
+else:
+    liststrgextn = ['/imag/', '/data/outp/']
+
+for strgextn in liststrgextn:
 
     path = os.environ["PCAT_DATA_PATH"] + strgextn
 
