@@ -3974,7 +3974,7 @@ def retr_ticklabl(gdat, strgcbar):
             tick[k] = 10**(tickscal[k])
 
         # avoid very small, but nonzero central values in the residual count color maps
-        if strgcbar == 'resicnts' and fabs(tick[k]) < 1e-5:
+        if strgcbar == 'cntpresi' and fabs(tick[k]) < 1e-5:
             tick[k] = 0.
 
         if amax(tick) > 1e3:
@@ -4005,6 +4005,8 @@ def retr_ticklabl(gdat, strgcbar):
     print
 
     setattr(gdat, 'tick' + strgcbar, tickscal)
+    setattr(gdat, 'minmscal' + strgcbar, minmscal)
+    setattr(gdat, 'maxmscal' + strgcbar, maxmscal)
     setattr(gdat, 'labl' + strgcbar, labl)
     
 
@@ -5098,8 +5100,8 @@ def retr_scat(gdat, axis, maps, thisindxener, thisindxevtt):
 
 def retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=None, thisindxevtt=-1, tdim=False, imag=None):
     
-    vmin = getattr(gdat, 'minm' + strgcbar)
-    vmax = getattr(gdat, 'maxm' + strgcbar)
+    vmin = getattr(gdat, 'minmscal' + strgcbar)
+    vmax = getattr(gdat, 'maxmscal' + strgcbar)
     cmap = getattr(gdat, 'cmap' + strgcbar) 
     scal = getattr(gdat, 'scal' + strgcbar) 
 
@@ -5136,12 +5138,17 @@ def retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=None, thisindxevtt=
         maps = mapstemp.reshape(shap).swapaxes(0, 1)
         
         #maps = maps.reshape(shap).swapaxes(0, 1)
-   
+    
+    print 'retr_imag()'
+    print 'maps'
+    summgene(maps)
     # rescale the map
     if scal == 'asnh':
         maps = arcsinh(maps)
     if scal == 'logt':
         maps = log10(maps)
+    print 'maps'
+    summgene(maps)
     if imag == None:
         imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
         return imag
@@ -6481,7 +6488,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 #### radial and angular coordinates
                 dicttemp['gang'][l] = retr_gang(dicttemp['lgal'][l], dicttemp['bgal'][l])
                 dicttemp['aang'][l] = retr_aang(dicttemp['lgal'][l], dicttemp['bgal'][l])
-                
+               
                 if gdat.elemtype == 'lght':
                     #### number of expected counts
                     dicttemp['cnts'][l] = retr_cntspnts(gdat, dicttemp['lgal'][l], dicttemp['bgal'][l], dicttemp['spec'][l])
@@ -6808,13 +6815,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         if strg != 'true' and gdat.trueinfo:
             
             if gdat.elemtype == 'lens' and gdat.datatype == 'mock':
-                deflresising = deflsing - gdat.truedeflsing
+                deflsingresi = deflsing - gdat.truedeflsing
                 deflresi = defl - gdat.truedefl
                 deflmgtdresi = sqrt(sum(deflresi**2, axis=2))
                 deflresiperc = 100. * deflmgtdresi / gdat.truedeflmgtd[:, :, None]
-                deflresisingmgtd = sqrt(sum(deflresising**2, axis=2))
-                deflresisingperc = 100. * deflresisingmgtd / gdat.truedeflsingmgtd
-                setattr(gdatobjt, strg + 'deflresising', deflresising)
+                deflsingresimgtd = sqrt(sum(deflsingresi**2, axis=2))
+                deflsingresiperc = 100. * deflsingresimgtd / gdat.truedeflsingmgtd
+                setattr(gdatobjt, strg + 'deflsingresi', deflsingresi)
                 setattr(gdatobjt, strg + 'deflresi', deflresi)
                 setattr(gdatobjt, strg + 'deflmgtdresi', deflmgtdresi)
                 if numbtrap > 0:

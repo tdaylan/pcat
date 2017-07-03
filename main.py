@@ -24,7 +24,7 @@ def init( \
         
          # output
          ## condensed catalog
-         condcatl=False, \
+         condcatl=True, \
          
          randseedelem=False, \
          indxevttincl=None, \
