@@ -68,10 +68,15 @@ def init( \
          ## element type
          elemtype='lght', \
         
+         hostemistype=None, \
+
          ## lens model
          lensmodltype=None, \
 
          ## PSF evaluation type
+         psfnevaltype=None, \
+
+         ## kernel evaluation type
          kernevaltype='ulip', \
 
          ## lens specific
@@ -103,8 +108,8 @@ def init( \
          ## plot results from a previous chain
          rtagredo=None, \
          ## interactive
-         intrevalmodlcnts=False, \
-         intrevalresicnts=False, \
+         intrevalcntpmodl=False, \
+         intrevalcntpresi=False, \
          ## only generate and plot mock data
          mockonly=False, \
          ## perform an additional run sampling from the prior
@@ -117,7 +122,7 @@ def init( \
          
          lgalprio=None, \
          bgalprio=None, \
-         minmdatacnts=None, \
+         minmcntpdata=None, \
          strgexpo=None, \
          
          numbproc=None, \
@@ -353,12 +358,10 @@ def init( \
     if gdat.indxenerincl == None:
         if gdat.exprtype == 'ferm':
             gdat.indxenerincl = arange(1, 4)
-        elif gdat.exprtype == 'chan':
-            # temp
-            #gdat.indxenerincl = arange(2)
+        if gdat.exprtype == 'chan':
             gdat.indxenerincl = arange(5)
-        else:
-            gdat.indxenerincl = arange(1)
+        if gdat.exprtype == 'hubb':
+            gdat.indxenerincl = arange(2)
     
     if gdat.indxevttincl == None:
         if gdat.exprtype == 'ferm':
@@ -433,11 +436,23 @@ def init( \
         else:
             gdat.proplenp = False
 
+    if gdat.hostemistype == None:
+        if gdat.elemtype == 'lens':
+            gdat.hostemistype = 'sers'
+        else:
+            gdat.hostemistype = 'none'
+
     if gdat.lensmodltype == None:
         if gdat.elemtype == 'lens':
             gdat.lensmodltype = 'nomi'
         else:
             gdat.lensmodltype = 'none'
+
+    if gdat.psfnevaltype == None:
+        if gdat.elemtype == 'lens':
+            gdat.psfnevaltype = 'conv'
+        else:
+            gdat.psfnevaltype = 'kern'
 
     if gdat.strgexprname == None:
         if gdat.exprtype == 'chan':
@@ -522,10 +537,13 @@ def init( \
     if gdat.binsenerfull == None:
         if gdat.exprtype == 'ferm':
             gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
-        elif gdat.exprtype == 'chan':
+        if gdat.exprtype == 'chan':
             # temp
             gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
             #gdat.binsenerfull = array([0.5, 2., 8.])
+        if gdat.exprtype == 'hubb':
+            # temp
+            gdat.binsenerfull = array([500., 750, 1000.])
     
     if gdat.enerdiff:
         gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
@@ -535,7 +553,7 @@ def init( \
         if gdat.exprtype == 'sdss':
             gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
         elif gdat.exprtype == 'hubb':
-            gdat.strgenerfull = ['F814W']
+            gdat.strgenerfull = ['F606W', 'F814W']
         elif gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
             gdat.strgenerfull = []
             for i in gdat.indxenerfull:
@@ -600,17 +618,20 @@ def init( \
         gdat.indxevttincl = array([0])
     gdat.indxevtt = arange(gdat.numbevtt)
 
+    # temp
+    gdat.enerbinsadje = True
+
     ## energy
     gdat.numbener = gdat.indxenerincl.size
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
     gdat.indxenerinclbins[0:-1] = gdat.indxenerincl
     gdat.indxenerinclbins[-1] = gdat.indxenerincl[-1] + 1
-    gdat.indxenerfluxdist = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
+    gdat.indxenerpivt = ceil(array([gdat.numbener]) / 2.).astype(int) - 1
     if gdat.enerbins:
         gdat.numbenerplot = 100
         gdat.numbenerfull = len(gdat.strgenerfull)
         gdat.strgener = [gdat.strgenerfull[k] for k in gdat.indxenerincl]
-        if gdat.enerdiff:
+        if gdat.enerbinsadje:
             gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
             gdat.meanener = sqrt(gdat.binsener[1:] * gdat.binsener[:-1])
             gdat.meanenerfull = sqrt(gdat.binsenerfull[1:] * gdat.binsenerfull[:-1])
@@ -628,7 +649,7 @@ def init( \
     else:
         gdat.numbenerfull = 1
     if gdat.numbener > 1:
-        gdat.enerfluxdist = gdat.meanener[gdat.indxenerfluxdist]
+        gdat.enerpivt = gdat.meanener[gdat.indxenerpivt]
     gdat.indxener = arange(gdat.numbener, dtype=int)
        
     ### spatial extent of the data
@@ -715,16 +736,16 @@ def init( \
     #### template
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'ferm':
-            back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
-            back = [1., (gdat.meanenerfull / gdat.enerfluxdist)[gdat.indxenerincl]**0]
+            backtype = [1., (gdat.meanenerfull / gdat.enerpivt)[gdat.indxenerincl]**0]
     if gdat.elemtype == 'lens':
-        back = [1.]
+        backtype = [1.]
     if gdat.elemtype == 'clus':
-        back = [1.]
-    setp_namevarbvalu(gdat, 'back', back)
+        backtype = [1.]
+    setp_namevarbvalu(gdat, 'backtype', backtype)
    
-    #### spectra for the background
+    #### boolean flag background
     if gdat.exprtype == 'chan':
         specback = [False, True]
     else:
@@ -902,10 +923,10 @@ def init( \
         setp_namevarblimt(gdat, 'sinddiststdv', [0.3, 2.], popl=True)
         setp_namevarblimt(gdat, 'curvdistmean', [-1., 1.], popl=True)
         setp_namevarblimt(gdat, 'curvdiststdv', [0.1, 1.], popl=True)
-        gdat.trueminmexpo = 0.5
-        gdat.truemaxmexpo = 10.
-        setp_namevarblimt(gdat, 'expodistmean', [1., 8.], popl=True)
-        setp_namevarblimt(gdat, 'expodiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl=True)
+        gdat.trueminmexpc = 0.5
+        gdat.truemaxmexpc = 10.
+        setp_namevarblimt(gdat, 'expcdistmean', [1., 8.], popl=True)
+        setp_namevarblimt(gdat, 'expcdiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl=True)
     
     ### maximum horizontal/vertical distance of the elements from the image center
     gdat.fittmaxmgang = gdat.maxmgangdata * gdat.margfactmodl
@@ -936,12 +957,12 @@ def init( \
     setp_namevarblimt(gdat, 'lgalhost', [-gdat.truemaxmlgal, gdat.truemaxmlgal], strgmodl='fitt')
     setp_namevarblimt(gdat, 'bgalhost', [-gdat.truemaxmbgal, gdat.truemaxmbgal], strgmodl='fitt')
     
-    for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'specsourene%d' % i, array([1e-22, 1e-17]))
+    setp_namevarblimt(gdat, 'fluxsour', array([1e-22, 1e-17]))
+    setp_namevarblimt(gdat, 'sindsour', array([0., 4.]))
     setp_namevarblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellpsour', [0., 0.5])
-    for i in gdat.indxener:
-        setp_namevarblimt(gdat, 'spechostene%d' % i, array([1e-20, 1e-15]))
+    setp_namevarblimt(gdat, 'fluxhost', array([1e-20, 1e-15]))
+    setp_namevarblimt(gdat, 'sindhost', array([0., 4.]))
     setp_namevarblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact])
     setp_namevarblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact])
     setp_namevarblimt(gdat, 'ellphost', [0., 0.5])
@@ -995,7 +1016,7 @@ def init( \
         setp_namevarbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=True)
         setp_namevarbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=True)
             
-        if gdat.numbener > 1:
+        if gdat.numbener > 1 and gdat.elemtype == 'lght':
             if gdat.exprtype == 'ferm':
                 sinddistmean = 2.15
             if gdat.exprtype == 'chan':
@@ -1006,8 +1027,8 @@ def init( \
             setp_namevarbvalu(gdat, 'curvdistmean', 2., popl=True)
             setp_namevarbvalu(gdat, 'curvdiststdv', 0.2, popl=True)
             
-            setp_namevarbvalu(gdat, 'expodistmeanpop1', 2., popl=True)
-            setp_namevarbvalu(gdat, 'expodiststdvpop1', 0.2, popl=True)
+            setp_namevarbvalu(gdat, 'expcdistmeanpop1', 2., popl=True)
+            setp_namevarbvalu(gdat, 'expcdiststdvpop1', 0.2, popl=True)
         
         if gdat.exprtype == 'ferm':
             bacp = 2e-7
@@ -1022,9 +1043,10 @@ def init( \
             setp_namevarbvalu(gdat, 'sizesour', 0.3 / gdat.anglfact)
             setp_namevarbvalu(gdat, 'sizehost', 1. / gdat.anglfact)
             setp_namevarbvalu(gdat, 'ellpsour', 0.2)
-            for i in gdat.indxener:
-                setp_namevarbvalu(gdat, 'specsourene%d' % i, 1e-18)
-                setp_namevarbvalu(gdat, 'spechostene%d' % i, 1e-16)
+            setp_namevarbvalu(gdat, 'fluxsour', 1e-18)
+            setp_namevarbvalu(gdat, 'sindsour', 1.5)
+            setp_namevarbvalu(gdat, 'fluxhost', 1e-16)
+            setp_namevarbvalu(gdat, 'sindhost', 2.5)
             setp_namevarbvalu(gdat, 'ellphost', 0.2)
             setp_namevarbvalu(gdat, 'sangextr', pi / 2.)
             setp_namevarbvalu(gdat, 'serihost', 4.)
@@ -1050,12 +1072,12 @@ def init( \
                 gdat.listenerrefrplot.append(loadtxt(path, delimiter=',')[:, 0])
                 gdat.listspecrefrplot.append(loadtxt(path, delimiter=',')[:, 1])
 
-    if gdat.numbener > 1:
-        if gdat.enerfluxdist == 0.:
+    if gdat.elemtype == 'lght' and gdat.numbener > 1:
+        if gdat.enerpivt == 0.:
             raise Exception('Pivot energy cannot be zero.')
         # temp
-        gdat.factspecener = (gdat.meanener / gdat.enerfluxdist)**(-sqrt(amin(gdat.fittminmsinddistmeanpop0) * amax(gdat.fittmaxmsinddistmeanpop0)))
-        gdat.enerexpofact = gdat.enerfluxdist - gdat.meanener
+        gdat.factspecener = (gdat.meanener / gdat.enerpivt)**(-sqrt(amin(gdat.fittminmsinddistmeanpop0) * amax(gdat.fittmaxmsinddistmeanpop0)))
+        gdat.enerexpcfact = gdat.enerpivt - gdat.meanener
     else:
         gdat.factspecener = array([1.])
  
@@ -1103,8 +1125,14 @@ def init( \
             
             gdat.numbhalfsers = 20
             gdat.numbindxsers = 20
-            minm = amin(array([gdat.minmsizehost, gdat.minmsizesour]))
-            maxm = amax(array([gdat.maxmsizehost, gdat.maxmsizesour]))
+            
+            if gdat.lensmodltype != 'none':
+                minm = amin(array([gdat.minmsizehost, gdat.minmsizesour]))
+                maxm = amax(array([gdat.maxmsizehost, gdat.maxmsizesour]))
+            else:
+                minm = gdat.minmsizehost
+                maxm = gdat.maxmsizehost
+                
             retr_axis(gdat, 'halfsers', minm, maxm, gdat.numbhalfsers)
             minm = gdat.minmserihost
             maxm = gdat.maxmserihost
@@ -1119,7 +1147,7 @@ def init( \
             for n in range(gdat.numbindxsers + 1):
                 for k in range(gdat.numbhalfsers + 1):
                     
-                    profusam = retr_sbrtsers(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
+                    profusam = retr_sbrtsersnorm(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
     
                     ## take the pixel average
                     indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
@@ -1142,10 +1170,10 @@ def init( \
     
     gdatdictcopy = deepcopy(gdat.__dict__)
     for strg, valu in gdatdictcopy.iteritems():
-        if strg.startswith('cmap') and strg[4:] != 'datacnts' and strg[4:] != 'resicnts':
+        if strg.startswith('cmap') and strg[4:] != 'cntpdata' and strg[4:] != 'cntpresi':
             retr_ticklabl(gdat, strg[4:])
             
-    #liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expomaps', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'resiconvelem', 'resimagn']
+    #liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expo', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'resiconvelem', 'resimagn']
     #for strgcbar in liststrgcbar:
     #    retr_ticklabl(gdat, strgcbar)
 
@@ -1228,7 +1256,7 @@ def init( \
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
     if gdat.elemtype == 'lght':
         if gdat.exprspec != None:
-            gdat.exprflux = gdat.exprspec[:, gdat.indxenerfluxdist[0], :]
+            gdat.exprflux = gdat.exprspec[:, gdat.indxenerpivt[0], :]
     
     ## check that all experimental element features are finite
     for strgfeat in gdat.fittliststrgfeattotl:
@@ -1783,7 +1811,7 @@ def proc_post(gdat, prio=False):
         for i in gdat.indxener:
             for j in gdat.indxpixl:
                 for m in gdat.indxevtt:
-                    gdat.gmrbstat[i, j, m] = tdpy.mcmc.gmrb_test(gdat.listmodlcnts[:, :, i, j, m])
+                    gdat.gmrbstat[i, j, m] = tdpy.mcmc.gmrb_test(gdat.listcntpmodl[:, :, i, j, m])
         if gdat.verbtype > 0:
             timefinl = gdat.functime()
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
@@ -1817,6 +1845,7 @@ def proc_post(gdat, prio=False):
         setattr(gdat, 'list' + strg, inpt.reshape(shap))
         
     indxsamptotlmlik = argmax(sum(sum(sum(gdat.listllik, 3), 2), 1))
+    gdat.mliksamp = gdat.listsamp[indxsamptotlmlik, :]
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
     if gdat.fittnumbtrap > 0:
         gdat.mlikindxelemfull = gdat.listindxelemfull[indxsamptotlmlik]
@@ -1832,7 +1861,7 @@ def proc_post(gdat, prio=False):
         gdat.timeproc[k] = listgdatmodi[k].timeproc
     
     # correct the likelihoods for the constant data dependent factorial
-    llikoffs = sum(sp.special.gammaln(gdat.datacnts + 1))
+    llikoffs = sum(sp.special.gammaln(gdat.cntpdata + 1))
     gdat.listlliktotl -= llikoffs
     gdat.maxmllikproc -= llikoffs
     
@@ -1937,7 +1966,7 @@ def proc_post(gdat, prio=False):
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
    
-    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listmodlcnts)
+    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listcntpmodl)
 
     if gdat.verbtype > 0:
         if gdat.timeatcr == 0.:
@@ -1973,9 +2002,9 @@ def proc_post(gdat, prio=False):
     if gdat.verbtype > 0:
         print 'Computing spatial means of maps...'
         timeinit = gdat.functime()
-    gdat.liststrgmean = ['modlcnts']
+    gdat.liststrgmean = ['cntpmodl']
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
-        gdat.liststrgmean.append('pntsflux')
+        gdat.liststrgmean.append('sbrtpnts')
     for strg in gdat.liststrgmean:
         tempinpt = getattr(gdat, 'list' + strg)
         shap = tempinpt.shape
@@ -1992,8 +2021,11 @@ def proc_post(gdat, prio=False):
     if gdat.verbtype > 0:
         print 'Computing credible intervals...'
         timeinit = gdat.functime()
+    
     for strgchan in gdat.liststrgchan:
+        
         listtemp = getattr(gdat, 'list' + strgchan)
+        
         if isinstance(listtemp, list):
 
             # ensure that transdimensional lists are not included
@@ -2008,6 +2040,8 @@ def proc_post(gdat, prio=False):
             numb = len(listtemp[0])
             
             for k in range(numb):
+                if isinstance(listtemp[0][k], list):
+                    continue
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
                 for n in gdat.indxsamptotl:
@@ -2029,6 +2063,13 @@ def proc_post(gdat, prio=False):
                 cpostemp = empty(listtemp.shape)
                 for n in gdat.indxsamptotl:
                     cpostemp[n, ...] = tdpy.util.retr_postvarb(listtemp[:n])
+            if strgchan == 'sbrthost' or strgchan == 'sbrthostmean':
+                print strgchan
+                print 'listtemp'
+                summgene(listtemp)
+                print 'errrtemp'
+                summgene(errrtemp)
+                print
 
         setattr(gdat, 'post' + strgchan, posttemp)
         setattr(gdat, 'medi' + strgchan, meditemp)
@@ -2036,7 +2077,13 @@ def proc_post(gdat, prio=False):
         setattr(gdat, 'stdv' + strgchan, stdvtemp)
         if strgchan in gdat.listnamevarbcpos:
             setattr(gdat, 'cpos' + strgchan, cpostemp)
-            
+    
+    if gdat.hostemistype != 'none':
+        print 'gdat.errrsbrthostmean'
+        print gdat.errrsbrthostmean
+        summgene(gdat.errrsbrthostmean)
+        print
+
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
@@ -2115,13 +2162,14 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         deltlpos = 0.
     
     else:
-        # rescale
+        # temp
         gdatmodi.nextsamp = copy(gdatmodi.thissamp)
         gdatmodi.nextsampvarb = zeros_like(gdatmodi.thissamp) 
        
         if gdat.fittnumbtrap > 0:
             for k in gdat.fittindxfixpdist:
                 gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+            # rescale element features
             for k in range(numbpert):
                 rscl_elem(gdat, gdatmodi, indxparapert[k])
         
@@ -2422,8 +2470,9 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.elemtype == 'lens' and gdat.inittype == 'rand':
         gdatmodi.thissamp[gdat.fittindxfixplgalhost] = 0.5
         gdatmodi.thissamp[gdat.fittindxfixpbgalhost] = 0.5
-        gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
-        gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
+        if gdat.lensmodltype != 'none':
+            gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
+            gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
     
     if gdat.fittnumbtrap > 0:
         if gdat.inittype == 'rand' or gdat.inittype == 'pert':
@@ -2582,6 +2631,8 @@ def work(pathoutpthis, lock, indxprocwork):
             raise Exception('Inappropriate number of samples.')
 
     # initialize the worker sampler
+    ## prepare gdatmodi
+    prep_gdatmodi(gdat, gdatmodi)
     gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thisdeltlliktotl = zeros(1)
     gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
@@ -2605,13 +2656,13 @@ def work(pathoutpthis, lock, indxprocwork):
     
     # dummy definitions
     if gdat.elemtype == 'lght':
-        gdatmodi.nextpntsflux = zeros_like(gdatmodi.thispntsflux)
+        gdatmodi.nextsbrtpnts = zeros_like(gdatmodi.thissbrtpnts)
     
     # enter interactive mode
-    if gdat.intrevalmodlcnts:
-        plot_genemaps(gdat, gdatmodi, 'this', 'modlcnts', strgcbar='datacnts', thisindxener=0, thisindxevtt=0, intreval=True)
-    if gdat.intrevalresicnts:
-        plot_genemaps(gdat, gdatmodi, 'this', 'resicnts', thisindxener=0, thisindxevtt=0, intreval=True)
+    if gdat.intrevalcntpmodl:
+        plot_genemaps(gdat, gdatmodi, 'this', 'cntpmodl', strgcbar='cntpdata', thisindxener=0, thisindxevtt=0, intreval=True)
+    if gdat.intrevalcntpresi:
+        plot_genemaps(gdat, gdatmodi, 'this', 'cntpresi', thisindxener=0, thisindxevtt=0, intreval=True)
 
     workdict = {}
     for strgvarb in gdat.liststrgvarbarry:
@@ -2773,13 +2824,17 @@ def work(pathoutpthis, lock, indxprocwork):
                         raise Exception('Sample vector is not finite.')
             
             if gdat.elemtype == 'lght':
-                frac = amin(gdatmodi.thispntsflux) / mean(gdatmodi.thispntsflux)
+                frac = amin(gdatmodi.thissbrtpnts) / mean(gdatmodi.thissbrtpnts)
                 if frac > 1e-10:
-                    raise Exception('thispntsflux went negative by %.3g percent.' % (100. * frac))
+                    print 'thissbrtpnts went negative by %.3g percent.' % (100. * frac)
+                if frac > 1e-2:
+                    raise Exception('thissbrtpnts went negative by %.3g percent.' % (100. * frac))
 
-                frac = amin(gdatmodi.nextpntsflux) / mean(gdatmodi.nextpntsflux)
+                frac = amin(gdatmodi.nextsbrtpnts) / mean(gdatmodi.nextsbrtpnts)
                 if frac > 1e-10:
-                    raise Exception('nextpntsflux went negative by %.3g percent.' % (100. * frac))
+                    print 'nextsbrtpnts went negative by %.3g percent.' % (100. * frac)
+                if frac > 1e-2:
+                    raise Exception('nextsbrtpnts went negative by %.3g percent.' % (100. * frac))
 
             # check the population index
             try:
@@ -2788,7 +2843,7 @@ def work(pathoutpthis, lock, indxprocwork):
             except:
                 pass
             
-            if (gdatmodi.thismodlcnts <= 0.).any() or not (isfinite(gdatmodi.thismodlcnts)).all():
+            if (gdatmodi.thiscntpmodl <= 0.).any() or not (isfinite(gdatmodi.thiscntpmodl)).all():
                 raise Exception('Current flux model is not positive')
             if gdatmodi.cntrswep > 0:
                 if isnan(gdatmodi.thislpri).any():
@@ -3074,7 +3129,7 @@ def work(pathoutpthis, lock, indxprocwork):
                             print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsign)
 
                     print 'Mean residual'
-                    print mean(gdatmodi.thisresicnts)
+                    print mean(gdatmodi.thiscntpresi)
 
                     print 'Chronometers: '
                     print 'chro'
