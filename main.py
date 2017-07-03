@@ -75,7 +75,8 @@ def init( \
 
          ## PSF evaluation type
          psfnevaltype=None, \
-
+         trueoaxitype=False, \
+         fittoaxitype=False, \
          ## kernel evaluation type
          kernevaltype='ulip', \
 
@@ -725,13 +726,6 @@ def init( \
     psfntype = gdat.exprpsfntype
     setp_namevarbvalu(gdat, 'psfntype', psfntype)
     
-    #### off-axis profile
-    if gdat.exprtype == 'chan':
-        oaxitype = True
-    else:
-        oaxitype = False
-    setp_namevarbvalu(gdat, 'oaxitype', oaxitype)
-
     ### background
     #### template
     if gdat.elemtype == 'lght':

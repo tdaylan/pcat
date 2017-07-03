@@ -1698,7 +1698,8 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
                 bins = getattr(gdat, 'bins' + strgfeat)
             
             # superimpose true PS
-            if gdat.trueinfo:
+            truesign = getattr(gdat, 'true' + gdat.namefeatsign)
+            if gdat.truelgal != None and gdat.truelgal != None and truesign != None:
                 
                 if strgfeat != None:
                     truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp][0, :] 
@@ -2369,6 +2370,11 @@ def plot_init(gdat):
                     path = gdat.pathinit + 'histexpoene%d.pdf' % i
                     print 'gdat.histexpototl[i, :]'
                     print gdat.histexpototl[i, :]
+                    print 'gdat.meanexpo'
+                    print gdat.meanexpo
+                    print 'gdat.binsexpo'
+                    print gdat.binsexpo
+                    print
                     tdpy.util.plot_gene(path, gdat.meanexpo, gdat.histexpototl[i, :], scalxdat='logt', lablxdat=gdat.lablexpototl, \
                                                                                                     lablydat=gdat.lablnumbpixl, limtxdat=gdat.limtexpo, plottype='hist')
                 

@@ -842,13 +842,20 @@ def retr_sdsspsfn(gdat):
 def retr_chanpsfn(gdat):
 
     # temp
+    gdat.exprpsfp = array([0.25, 0.3, 0.4, 0.6, 0.7]) / gdat.anglfact
+    gdat.exproaxitype = False
+    #gdat.exprpsfp = array([0.25 / gdat.anglfact, 
+    #                       0.30 / gdat.anglfacti\
+    #                       0.40 / gdat.anglfacti\
+    #                       0.60 / gdat.anglfacti\
+    #                       0.70 / gdat.anglfacti
     #gdat.exprpsfp = array([0.35 / gdat.anglfact, 2e-1, 1.9, 0.5 / gdat.anglfact, 1.e-1, 2.])
-    gdat.exprpsfp = array([0.25 / gdat.anglfact, 2.0e-1, 1.9, \
-                           0.30 / gdat.anglfact, 1.0e-1, 2.0, \
-                           0.40 / gdat.anglfact, 1.0e-1, 2.0, \
-                           0.60 / gdat.anglfact, 1.0e-1, 2.0, \
-                           0.70 / gdat.anglfact, 1.0e-1, 2.0])
-    gdat.exproaxitype = True
+    #gdat.exprpsfp = array([0.25 / gdat.anglfact, 2.0e-1, 1.9, \
+    #                       0.30 / gdat.anglfact, 1.0e-1, 2.0, \
+    #                       0.40 / gdat.anglfact, 1.0e-1, 2.0, \
+    #                       0.60 / gdat.anglfact, 1.0e-1, 2.0, \
+    #                       0.70 / gdat.anglfact, 1.0e-1, 2.0])
+    #gdat.exproaxitype = True
    
 
 def retr_sdynpsfn(gdat):
@@ -2223,13 +2230,19 @@ def retr_condcatl(gdat):
                 temp = temp[indxsamptotlcntr][indxpoplcntr][indxpntscntr]
                 gdat.dictglob['liststkscond'][r][strgfeat].append(temp)
     
+
+    print 'heeeeey'
     for r in range(len(gdat.dictglob['liststkscond'])): 
+        print 'r'
+        print r
         for strgfeat in gdat.fittliststrgfeatodimtotl:
+            print 'strgfeat'
+            print strgfeat
+
             arry = array(gdat.dictglob['liststkscond'][r][strgfeat])
             gdat.dictglob['poststkscond'][r][strgfeat][0] = median(arry)
             gdat.dictglob['poststkscond'][r][strgfeat][1] = percentile(arry, 16.)
             gdat.dictglob['poststkscond'][r][strgfeat][2] = percentile(arry, 84.)
-    
 
     gdat.numbstkscond = len(gdat.dictglob['liststkscond'])
 
