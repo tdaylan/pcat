@@ -78,7 +78,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                               strgindxydat=strgindxydat, omittrue=True, nameinte=nameinte)
                 
             # transdimensional element features projected onto the data axes
-            if gdat.datatype == 'mock' and not (strg == 'post' and not gdat.condcatl):
+            if not (strg == 'post' and not gdat.condcatl):
                 
                 alph = 0.1
                 if strg == 'this':
@@ -129,7 +129,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 listydat.append(specplottemp)
                             
                             factydat = specconvunit[1]
-                            lablydat = getattr(gdat, 'lablflux' + specconvunit[1] + specconvunit[0] + 'totl')
+                            lablydat = getattr(gdat, 'lablflux' + specconvunit[0] + specconvunit[1] + 'totl')
                             if specconvunit[1] == gdat.nameenerunit:
                                 factydat = 1.
                             else:
@@ -224,14 +224,14 @@ def plot_samp(gdat, gdatmodi, strg):
                             plot_gene(gdat, gdatmodi, strg, 'factoaxi', 'binsoaxi', indxydat=[i, m, slice(None)], strgindxydat=strgindxydat, \
                                                                                             factxdat=gdat.anglfact, lablxdat=lablxdat, lablydat=r'$f(\phi)$')
     
-                # number of background counts per PSF
+                # number of background counts inside PSF FWHM
+                # temp
                 if False:
                     for i in gdat.indxener:
-                        path = gdat.pathplot + 'cntsbackfwhmflux%d_%09d.pdf' % (i, gdatmodi.cntrswep)
-                        tdpy.util.plot_maps(path, sum(gdatmodi.thiscntsbackfwhm, 2)[i, :], pixltype=gdat.pixltype, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, \
-                                                                                                    minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                                    minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            
+                        for m in gdat.indxevtt:
+                            strgindxydat = '%d%d' % (i, m)
+                            plot_gene(gdat, gdatmodi, strg, 'cntsbackfwhm', 'meancnts', indxydat=[i, m], strgindxydat=strgindxydat, \
+                                                                                                                    lablxdat=gdat.lablcnts, lablydat=gdat.lablcntsbackfwhm)
     
             # element feature correlations
             for l in indxpopl:
@@ -311,18 +311,18 @@ def plot_samp(gdat, gdatmodi, strg):
                 if numbback > 1:
                     plot_genemaps(gdat, gdatmodi, strg, 'cntpbacktotl', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m)
         
-        # temp -- restrict other plots to indxmodlpntscomp
+        # temp -- restrict other plots to indxmodlelemcomp
         for specconvunit in gdat.listspecconvunit:
-            plot_sden(gdat, gdatmodi, strg, specconvunit)
+            plot_sbrt(gdat, gdatmodi, strg, specconvunit)
         
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
                 plot_scatpixl(gdat, gdatmodi, strg)
        
-        if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and gdat.calcerrr:
+        if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and gdat.calcerrr and numbtrap > 0:
             if strg != 'true':
                 for i in gdat.indxener:
-                    plot_genemaps(gdat, gdatmodi, strg, 'errrcnts', strgcbar='cntpresi', thisindxener=i)
+                    plot_genemaps(gdat, gdatmodi, strg, 'cntperrr', strgcbar='cntpresi', thisindxener=i)
         
         for i in gdat.indxener:
             for m in gdat.indxevtt:
@@ -874,7 +874,7 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def plot_sden(gdat, gdatmodi, strg, specconvunit):
+def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
     
     if strg == 'true':
         strgmodl = strg
@@ -882,98 +882,112 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
         strgmodl = 'fitt'
     
     backtype = getattr(gdat, strgmodl + 'backtype')
+    numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     specback = getattr(gdat, strgmodl + 'specback')
     indxback = getattr(gdat, strgmodl + 'indxback')
     maxmgang = getattr(gdat, strgmodl + 'maxmgang')
     indxfixpbacp = getattr(gdat, strgmodl + 'indxfixpbacp')
-    sbrtbackmean = getattr(gdat, strgmodl + 'sbrtbackmean')
     indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
-    numblablsden = getattr(gdat, strgmodl + 'numblablsden')
-    numblablsdenspec = getattr(gdat, strgmodl + 'numblablsdenspec')
+    numblablsbrt = getattr(gdat, strgmodl + 'numblablsbrt')
+    numblablsbrtspec = getattr(gdat, strgmodl + 'numblablsbrtspec')
     
     for b, namespatmean in enumerate(gdat.listnamespatmean):
     
-        listydat = zeros((numblablsdenspec, gdat.numbener))
-        listyerr = zeros((2, numblablsdenspec, gdat.numbener))
+        listydat = zeros((numblablsbrtspec, gdat.numbener))
+        listyerr = zeros((2, numblablsbrtspec, gdat.numbener))
    
         cntr = 0
-            
-        ## background templates
+        indxvarb = [b, slice(None)]
+        indxerrr = [slice(None), b, slice(None)]
+
         for c in indxback:
-            temp = retr_fromgdat(gdat, gdatmodi, strg, 'sampvarb', indxvarb=[indxfixpbacp[indxbacpback[c]]])
-            if specback[c]:
-                norm = temp * backtype[c]
-            else:
-                norm = temp
-            listydat[cntr, :] = norm * sbrtbackmean[c, :]
-
+            listydat[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxvarb)
             if strg == 'post':
-                temp = retr_fromgdat(gdat, gdatmodi, strg, 'sampvarb', indxvarb=[indxfixpbacp[indxbacpback[c]]], mometype='errr')
-                if specback[c]:
-                    norm = temp[:, None] * backtype[c]
-                else:
-                    norm = temp
-                listyerr[:, cntr, :] = norm * sbrtbackmean[None, c, :]
-
-            if gdat.elemtype == 'lens':
-                listydat[cntr, :] *= 4. * maxmgang**2
-            
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxerrr, mometype='errr')
             cntr += 1
         
-        ## PS
-        if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
-            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean')
+        if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxerrr, mometype='errr')
             cntr += 1
         
         if gdat.hostemistype != 'none':
-            # temp -- indxfixpspec**** should be multidimensional
-            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean')
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxerrr, mometype='errr')
             cntr += 1
         
         if gdat.lensmodltype != 'none':
-            # temp -- indxfixpspec**** should be multidimensional
-            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean')
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxerrr, mometype='errr')
             cntr += 1
                 
         cntrdata = cntr
 
         ## data
-        listydat[cntr, :] = gdat.sbrtdatamean[b]
+        listydat[cntr, :] = gdat.sbrtdatamean[b, :]
         cntr += 1
         
+        print 'gdat.sbrtdatamean[b]'
+        print gdat.sbrtdatamean[b]
+        print 'specconvunit'
+        print specconvunit
+        print 
+
         ## total model
-        if numblablsden > 1:
-            if specback[c]:
-                norm = temp[:, None] * backtype[c]
-            else:
-                norm = temp
-            listydat[cntr, :] = sum(listydat[:cntrdata, :], 0)
+        if numblablsbrt > 1:
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean')
             if strg == 'post':
-                listyerr[:, cntr, :] = mean(listydat[:cntrdata, :], 0)
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean', mometype='errr')
             cntr += 1
 
         # plot energy spectra of the data, background model components and total background
         if gdat.numbener > 1:
             
-            listlablsdenspec = getattr(gdat, strgmodl + 'listlablsdenspec')
+            listlablsbrtspec = getattr(gdat, strgmodl + 'listlablsbrtspec')
 
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             
             listmrkr = [(2 + k/2, 1 + k % 2, 0) for k in range(16)]
 
+            # determine the energy scaling factor
+            if specconvunit[0] == 'ene0':
+                factener = 1.
+            if specconvunit[0] == 'ene1':
+                factener = gdat.meanener
+            if specconvunit[0] == 'ene2':
+                factener = gdat.meanener**2
+            if specconvunit[0] == 'ene3':
+                # temp
+                pass
+                factener = 1.
+                #indxenerintv = where((gdat.meanener < specconvunit[4]) & (gdat.meanener > specconvunit[3]))[0]
+                #ener = concatenate((array([specconvunit[3]]), gdat.meanener[indxenerintv], array([specconvunit[4]])))
+                #
+                #for k in range(3):
+                #    if k == 0:
+                #        ydattemp = 
+                #    ydatminmener = interp(specconvunit[3], gdat.meanener, ydat)
+                #    ydatmaxmener = interp(specconvunit[4], gdat.meanener, ydat)
+                #    ydat = concatenate((array([ydatminmener]), ydat[indxenerintv], array([ydatmaxmener])))
+                #    ydat = trapz(ydat, gdat.meanener)
+                #
+                #yerrminmener = interp(specconvunit[3], gdat.meanener, yerr, axis=1)
+                #yerrmaxmener = interp(specconvunit[4], gdat.meanener, yerr, axis=1)
+                #ydat = stack((array([yerrminmener]), ydat[indxenerintv], array([yerrmaxmener])))
+                #
+                #
+                #yerr = trapz(yerr, gdat.meanener)
+
             # plot reference spectra
             if gdat.listspecrefrplot != None:
                 for k in range(len(gdat.listspecrefrplot)):
-                    axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k], label=gdat.listlablrefrplot[k], color='m')
+                    axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k] * factener, label=gdat.listlablrefrplot[k], color='m')
 
             xdat = gdat.meanener
-            for k in range(numblablsdenspec):
+            for k in range(numblablsbrtspec):
                 if k == cntrdata:
                     colr = 'black'
                     linestyl = '-'
@@ -991,56 +1005,33 @@ def plot_sden(gdat, gdatmodi, strg, specconvunit):
                         colr = 'black'
                         linestyl = ''
                         mrkr = 'o'
+                
                 ydat = listydat[k, :]
                 yerr = listyerr[:, k, :]
                 
-                if specconvunit[0] == 'ene1':
-                    ydat *= gdat.meanener
-                    yerr *= gdat.meanener
+                ydat *= factener
+                yerr *= factener
                 
-                if specconvunit[0] == 'ene2':
-                    ydat *= gdat.meanener**2
-                    yerr *= gdat.meanener**2
-
-                if specconvunit[0] == 'ene3':
-                    # temp
-                    pass
-                    #indxenerintv = where((gdat.meanener < specconvunit[4]) & (gdat.meanener > specconvunit[3]))[0]
-                    #ener = concatenate((array([specconvunit[3]]), gdat.meanener[indxenerintv], array([specconvunit[4]])))
-                    #
-                    #for k in range(3):
-                    #    if k == 0:
-                    #        ydattemp = 
-                    #    ydatminmener = interp(specconvunit[3], gdat.meanener, ydat)
-                    #    ydatmaxmener = interp(specconvunit[4], gdat.meanener, ydat)
-                    #    ydat = concatenate((array([ydatminmener]), ydat[indxenerintv], array([ydatmaxmener])))
-                    #    ydat = trapz(ydat, gdat.meanener)
-                    #
-                    #yerrminmener = interp(specconvunit[3], gdat.meanener, yerr, axis=1)
-                    #yerrmaxmener = interp(specconvunit[4], gdat.meanener, yerr, axis=1)
-                    #ydat = stack((array([yerrminmener]), ydat[indxenerintv], array([yerrmaxmener])))
-                    #
-                    #
-                    #yerr = trapz(yerr, gdat.meanener)
-                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsdenspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
+                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
             try:
                 gdat.ylimsdenspec
             except:
                 gdat.ylimsdenspec = axis.get_ylim()
-            axis.set_ylim([1e-4 * amax(gdat.sbrtdatamean), 1e1 * amax(gdat.sbrtdatamean)])
+            axis.set_ylim([1e-4 * amax(gdat.sbrtdatamean[b]), 1e1 * amax(gdat.sbrtdatamean[b])])
             axis.set_yscale('log')
-            axis.set_xlabel('$E$ [%s]' % gdat.strgenerunit)
+            axis.set_xlabel(gdat.lablenertotl)
             axis.set_xscale('log')
-            axis.set_ylabel('$E^2 \Sigma dE$ [%s/cm$^2$/s/sr]' % gdat.strgenerunit)
+            labl = getattr(gdat, 'lablsbrt' + specconvunit[0] + specconvunit[1] + 'stertotl')
+            axis.set_ylabel(labl)
             make_legd(axis, numbcols=3)
             
             if gdat.exprtype == 'chan':
                 axis.set_ylim([None, 1e4])
 
             plt.tight_layout()
-            path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s' % namespatmean)
+            path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s%s' % (namespatmean, specconvunit[0]))
             figr.savefig(path)
             plt.close(figr)
     
@@ -1519,7 +1510,7 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
 
 def make_legd(axis, offs=None, loca=1, numbcols=1):
     
-    legd = axis.legend(fancybox=True, frameon=True, bbox_to_anchor=offs, bbox_transform=axis.transAxes, ncol=numbcols, loc=loca)
+    legd = axis.legend(fancybox=True, frameon=True, bbox_to_anchor=offs, bbox_transform=axis.transAxes, ncol=numbcols, loc=loca, labelspacing=1, handlelength=2)
     
     legd.get_frame().set_fill(True)
     legd.get_frame().set_facecolor('white')
@@ -1852,7 +1843,6 @@ def plot_eval(gdat):
         psfntemp = copy(gdat.exprpsfn[0, :, 0, 0])
     else:
         psfntemp = copy(gdat.exprpsfn[0, :, 0])
-    psfntemp /= amax(psfntemp)
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for k in range(gdat.numbprox + 1):
         if k == 0 or k == gdat.numbprox:
@@ -1897,7 +1887,7 @@ def plot_mosa(gdat):
     gdatmodi.thischro = zeros(gdat.numbchro)
 
     # data structure to hold the indices of model PS to be compared to the reference catalog 
-    gdatmodi.indxmodlpntscomp = [[] for l in gdat.fittindxpopl]
+    gdatmodi.indxmodlelemcomp = [[] for l in gdat.fittindxpopl]
     
     numbrows = 3
     numbcols = 2
@@ -2347,37 +2337,25 @@ def plot_init(gdat):
                 
                 gdat.lablnumbpixl = r'$N_{\rm{pix}}$'
                 
-                gdat.expototl = sum(gdat.expo, axis=2)
-                gdat.expototlmean = mean(gdat.expototl, axis=1)
-                
                 gdat.limtexpo = [gdat.minmexpo, gdat.maxmexpo]
 
                 path = gdat.pathinit + 'expototlmean.pdf'
-                print 'gdat.meanener'
-                print gdat.meanener
-                print 'gdat.expototlmean'
-                print gdat.expototlmean
-                print 'gdat.limtexpo'
-                print gdat.limtexpo
-                print 'gdat.meanexpo'
-                print gdat.meanexpo
                 tdpy.util.plot_gene(path, gdat.meanener, gdat.expototlmean, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
                                                                                                 lablydat=gdat.lablexpototl, limtydat=gdat.limtexpo)
                 
                 gdat.histexpototl = empty((gdat.numbener, gdat.numbtickcbar - 1))
                 for i in gdat.indxener:
-                    gdat.histexpototl[i, :] = histogram(gdat.expototl[i, :], gdat.binsexpo)[0]
+                    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                    axis.hist(gdat.expototl[i, :], gdat.binsexpo)
+                    axis.set_xlabel(gdat.lablexpototl)
+                    axis.set_ylabel(gdat.lablnumbpixl)
+                    axis.set_xscale('log')
+                    axis.set_yscale('log')
+                    plt.tight_layout()
                     path = gdat.pathinit + 'histexpoene%d.pdf' % i
-                    print 'gdat.histexpototl[i, :]'
-                    print gdat.histexpototl[i, :]
-                    print 'gdat.meanexpo'
-                    print gdat.meanexpo
-                    print 'gdat.binsexpo'
-                    print gdat.binsexpo
-                    print
-                    tdpy.util.plot_gene(path, gdat.meanexpo, gdat.histexpototl[i, :], scalxdat='logt', lablxdat=gdat.lablexpototl, \
-                                                                                                    lablydat=gdat.lablnumbpixl, limtxdat=gdat.limtexpo, plottype='hist')
-                
+                    figr.savefig(path)
+                    plt.close(figr)
+
                     for m in gdat.indxevtt:
                         figr, axis, path = init_figr(gdat, None, 'expo', '', indxenerplot=i, indxevttplot=m)
                         imag = retr_imag(gdat, axis, gdat.expo, '', 'expo', thisindxener=i, thisindxevtt=m)
@@ -2455,17 +2433,10 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl, intreval=intreval)
     
-    print 'strgvarb'
-    print strgvarb
     maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype, indxvarb=indxmaps)
     imag = retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
-    print 'tick'
-    print tick
-    print 'labl'
-    print labl
-    print
 
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     make_catllabl(gdat, strg, axis)

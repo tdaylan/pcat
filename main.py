@@ -732,7 +732,10 @@ def init( \
         if gdat.exprtype == 'ferm':
             backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
-            backtype = [1., (gdat.meanenerfull / gdat.enerpivt)[gdat.indxenerincl]**0]
+            backtype = [1., 10. * (gdat.meanenerfull / gdat.enerpivt)[gdat.indxenerincl]**1]
+            backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
+            backtype = [1., backtypetemp]
+            gdat.truescalbacpbac0 = 'gaus'
     if gdat.elemtype == 'lens':
         backtype = [1.]
     if gdat.elemtype == 'clus':
@@ -909,9 +912,9 @@ def init( \
             gdat.trueminmsind = 1.
             gdat.truemaxmsind = 3.
         if gdat.exprtype == 'chan':
-            gdat.trueminmsind = 0.5
-            gdat.truemaxmsind = 2.5
-            sind = [0.1, 3.]
+            gdat.trueminmsind = 0.4
+            gdat.truemaxmsind = 2.4
+            sind = [0.4, 2.4]
         setp_namevarblimt(gdat, 'sinddistmean', sind, popl=True)
         #### standard deviations should not be too small
         setp_namevarblimt(gdat, 'sinddiststdv', [0.3, 2.], popl=True)
@@ -1056,15 +1059,20 @@ def init( \
     setpinit(gdat, True) 
     
     # intermediate setup
+
+    ## reference spectra
     if gdat.listspecrefrplot == None:
         if gdat.exprtype == 'chan':
             gdat.listenerrefrplot = []
-            gdat.listspecrefrplot = []
+            gdat.listsbrtrefrplot = []
             gdat.listlablrefrplot = ['CDFS', 'HEAO', 'XMM', 'ROSAT']
             for strgfile in ['cdfs', 'heao', 'xmmm', 'rost']:
                 path = gdat.pathinpt + '%s.csv' % strgfile
-                gdat.listenerrefrplot.append(loadtxt(path, delimiter=',')[:, 0])
-                gdat.listspecrefrplot.append(loadtxt(path, delimiter=',')[:, 1])
+                enerrefrplot = loadtxt(path, delimiter=',')[:, 0]
+                sbrtrefrplot = loadtxt(path, delimiter=',')[:, 1]
+                sbrtrefrplot /= enerrefrplot**2
+                gdat.listenerrefrplot.append(enerrefrplot)
+                gdat.listsbrtrefrplot.append(sbrtrefrplot)
 
     if gdat.elemtype == 'lght' and gdat.numbener > 1:
         if gdat.enerpivt == 0.:
@@ -2055,7 +2063,13 @@ def proc_post(gdat, prio=False):
             stdvtemp = std(posttemp, axis=0)
             if strgchan in gdat.listnamevarbcpos:
                 cpostemp = empty(listtemp.shape)
+                print 'listtemp'
+                summgene(listtemp)
+                print 'strgchan'
+                print strgchan
                 for n in gdat.indxsamptotl:
+                    print 'n'
+                    print n
                     cpostemp[n, ...] = tdpy.util.retr_postvarb(listtemp[:n])
             if strgchan == 'sbrthost' or strgchan == 'sbrthostmean':
                 print strgchan
@@ -2531,12 +2545,6 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.datatype == 'inpt' and gdat.inittype != 'rand':
         raise Exception('')
 
-    print 'gdatmodi.thissamp'
-    print gdatmodi.thissamp
-    print 'gdatmodi.thissampvarb'
-    print gdatmodi.thissampvarb
-    print 
-
     if gdat.fittnumbtrap > 0:
     
         ## lists of occupied and empty transdimensional parameters
@@ -2649,7 +2657,7 @@ def work(pathoutpthis, lock, indxprocwork):
     proc_samp(gdat, gdatmodi, 'this')
     
     # dummy definitions
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
         gdatmodi.nextsbrtpnts = zeros_like(gdatmodi.thissbrtpnts)
     
     # enter interactive mode
@@ -2817,7 +2825,7 @@ def work(pathoutpthis, lock, indxprocwork):
                             print varb[k]
                         raise Exception('Sample vector is not finite.')
             
-            if gdat.elemtype == 'lght':
+            if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
                 frac = amin(gdatmodi.thissbrtpnts) / mean(gdatmodi.thissbrtpnts)
                 if frac > 1e-10:
                     print 'thissbrtpnts went negative by %.3g percent.' % (100. * frac)
@@ -2845,43 +2853,43 @@ def work(pathoutpthis, lock, indxprocwork):
                 if not isfinite(gdatmodi.thisdeltlliktotl):
                     raise Exception('Delta log-likelihood is not finite.')
 
-            for l in gdat.fittindxpopl:
-                if gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]] != len(gdatmodi.thisindxelemfull[l]):
-                    print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]'
-                    print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]
-                    print 'gdatmodi.thisindxelemfull'
-                    print gdatmodi.thisindxelemfull
-                    raise Exception('Number of elements is inconsistent with the element index list.')
+            if gdat.fittnumbtrap > 0:
+                for l in gdat.fittindxpopl:
+                    if gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]] != len(gdatmodi.thisindxelemfull[l]):
+                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]'
+                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]
+                        print 'gdatmodi.thisindxelemfull'
+                        print gdatmodi.thisindxelemfull
+                        raise Exception('Number of elements is inconsistent with the element index list.')
 
-                if gdat.fittnumbtrap > 0:
                     if gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[l]] != len(gdatmodi.thisindxelemfull[l]):
                         raise Exception('Number of elements is inconsistent across data structures.')
-                
-                for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
-                    if gdat.fittlistscalcomp[l][k] == 'gaus' or gdat.fittlistscalcomp[l][k] == 'igam':
-                        continue
-                    comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]]
-                    minm = getattr(gdat, 'fittminm' + strgcomp)
-                    maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                    indxtemp = where((comp < minm) | (comp > maxm))[0]
-                    if indxtemp.size > 0:
-                        print 'l'
-                        print l
-                        print 'strgcomp'
-                        print strgcomp
-                        print 
-                        print 'minm'
-                        print minm
-                        print 'maxm'
-                        print maxm
-                        print 'indxtemp'
-                        print indxtemp
-                        print 'comp'
-                        print comp
-                        print 'comp[indxtemp]'
-                        print comp[indxtemp]
-                        print
-                        raise Exception('A component of an element went outside the prior range.')
+                    
+                    for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+                        if gdat.fittlistscalcomp[l][k] == 'gaus' or gdat.fittlistscalcomp[l][k] == 'igam':
+                            continue
+                        comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]]
+                        minm = getattr(gdat, 'fittminm' + strgcomp)
+                        maxm = getattr(gdat, 'fittmaxm' + strgcomp)
+                        indxtemp = where((comp < minm) | (comp > maxm))[0]
+                        if indxtemp.size > 0:
+                            print 'l'
+                            print l
+                            print 'strgcomp'
+                            print strgcomp
+                            print 
+                            print 'minm'
+                            print minm
+                            print 'maxm'
+                            print maxm
+                            print 'indxtemp'
+                            print indxtemp
+                            print 'comp'
+                            print comp
+                            print 'comp[indxtemp]'
+                            print comp[indxtemp]
+                            print
+                            raise Exception('A component of an element went outside the prior range.')
         
             stopchro(gdat, gdatmodi, 'next', 'diag')
     
