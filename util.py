@@ -3387,9 +3387,10 @@ def setpinit(gdat, boolinitsetp=False):
     ## meshed indcices for the four-dimensional background data structures
     for strgmodl in gdat.liststrgmodl:
         indxback = getattr(gdat, strgmodl + 'indxback')
+        indxtessback = []
         for c in indxback:  
-            indxtessback = meshgrid(array([c]), gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
-            setattr(gdat, strgmodl + 'indxtessback', indxtessback)
+            indxtessback.append(meshgrid(array([c]), gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij'))
+        setattr(gdat, strgmodl + 'indxtessback', indxtessback)
         indxtess = meshgrid(indxback, gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
         setattr(gdat, strgmodl + 'indxtess', indxtess)
 
@@ -3402,19 +3403,7 @@ def setpinit(gdat, boolinitsetp=False):
         indxback = getattr(gdat, strgmodl + 'indxback')
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
         indxtessrofi = meshgrid(indxback, gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
-        print 'indxtessincl[0]'
-        summgene(indxtessincl[0])
-        print 'indxtessincl[1]'
-        summgene(indxtessincl[1])
-        print 'indxtessincl[2]'
-        summgene(indxtessincl[2])
-        print 'indxtessincl[3]'
-        summgene(indxtessincl[3])
-        print 'indxtessincl[4]'
-        summgene(indxtessincl[4])
-        print 'sbrtbacknorm'
-        summgene(sbrtbacknorm)
-        sbrtbacknorm = sbrtbacknorm[indxtessincl]
+        sbrtbacknorm = sbrtbacknorm[indxtessrofi]
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
                 
     gdat.expototl = sum(gdat.expo, axis=2)
@@ -6162,12 +6151,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             stopchro(gdat, gdatmodi, strg, 'lghtpntseval')
                 
         ### background surface brightness
+        numbback = getattr(gdat, strgmodl + 'numbback')
         indxback = getattr(gdat, strgmodl + 'indxback')
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
         indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
         indxtessback = getattr(gdat, strgmodl + 'indxtessback')
         specback = getattr(gdat, strgmodl + 'specback')
-        sbrtback = []
+        sbrtback = empty((numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for c in indxback:
             if specback[c]:
                 sbrtback[c, ...] = sbrtbacknorm[indxtessback[c]] * bacp[indxbacpback[c]]
@@ -6344,10 +6334,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         ### count maps
         #### background 
         if gdat.correxpo:
-            cntpback = empty_like((gdat.numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+            cntpback = empty((numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
             cntpbacktotl = zeros_like(gdat.expo)
             for c in indxback:
-                cntpback[c, ...] = retr_cntp(gdat, sbrtback[c])
+                cntpback[c, ...] = retr_cntp(gdat, sbrtback[c, ...])
                 cntpbacktotl += cntpback[c, ...] 
             setattr(gdatobjt, strg + 'cntpback', cntpback)
             setattr(gdatobjt, strg + 'cntpbacktotl', cntpbacktotl)
@@ -6363,7 +6353,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             setattr(gdatobjt, strg + 'fwhm', fwhm)
             
 	    	### mean PS surface brightness
-            sbrtpntsmean = sum(sum(sbrtpnts * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
+            sbrtpntsmean = retr_spatmean(gdat, sbrtpnts)
             setattr(gdatobjt, strg + 'sbrtpntsmean', sbrtpntsmean)
 
             if gdat.calcerrr and gdat.fittnumbtrap > 0:
@@ -6386,11 +6376,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         if gdat.hostemistype != 'none':
             cntphost = retr_cntp(gdat, sbrthost, cart=True)
             setattr(gdatobjt, strg + 'cntphost', cntphost)
-            print 'sbrthost'
-            summgene(sbrthost)
-            sbrthostmean = sum(sum(sbrthost * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
-            print 'sbrthostmean'
-            summgene(sbrthostmean)
+            sbrthostmean = retr_spatmean(gdat, sbrthost)
             setattr(gdatobjt, strg + 'sbrthostmean', sbrthostmean)
             
         if gdat.psfnevaltype == 'conv':
@@ -6407,7 +6393,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 s2nr = cntplens / sqrt(cntpmodl)
                 setattr(gdatobjt, strg + 's2nr', s2nr)
             
-            sbrtlensmean = sum(sum(sbrtlens * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
+            sbrtlensmean = retr_spatmean(gdat, sbrtlens)
             setattr(gdatobjt, strg + 'sbrtlensmean', sbrtlensmean)
             
             masshostbein = array([gdat.massfrombein * beinhost**2])

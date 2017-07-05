@@ -930,12 +930,6 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         listydat[cntr, :] = gdat.sbrtdatamean[b, :]
         cntr += 1
         
-        print 'gdat.sbrtdatamean[b]'
-        print gdat.sbrtdatamean[b]
-        print 'specconvunit'
-        print specconvunit
-        print 
-
         ## total model
         if numblablsbrt > 1:
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean')

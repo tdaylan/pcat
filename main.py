@@ -2000,25 +2000,6 @@ def proc_post(gdat, prio=False):
         gdat.listindxsamptotlaccpprop.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(gdat.listaccpprop)[0]))
         gdat.listindxsamptotlreje.append(intersect1d(where(gdat.listindxproptype == gdat.indxproptype[n])[0], where(logical_not(gdat.listaccp))[0]))
     
-    ## spatial mean of maps
-    if gdat.verbtype > 0:
-        print 'Computing spatial means of maps...'
-        timeinit = gdat.functime()
-    gdat.liststrgmean = ['cntpmodl']
-    if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
-        gdat.liststrgmean.append('sbrtpnts')
-    for strg in gdat.liststrgmean:
-        tempinpt = getattr(gdat, 'list' + strg)
-        shap = tempinpt.shape
-        shap = [gdat.numbsamptotl, gdat.numbener]
-        temp = empty(shap)
-        for n in gdat.indxsamptotl:
-            temp[n, :] = sum(sum(tempinpt[n, :, :, :] * gdat.expo, 2), 1) / sum(sum(gdat.expo, 2), 1)
-        setattr(gdat, 'list' + strg + 'mean', temp)
-    if gdat.verbtype > 0:
-        timefinl = gdat.functime()
-        print 'Done in %.3g seconds.' % (timefinl - timeinit)
-
     # compute credible intervals
     if gdat.verbtype > 0:
         print 'Computing credible intervals...'
