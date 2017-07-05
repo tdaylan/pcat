@@ -6200,7 +6200,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             if gdat.lensmodltype != 'none':
                 print 'sbrthost'
                 summgene(sbrthost)
-            if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
+            if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
                 print 'sbrtpnts'
                 summgene(sbrtpnts)
             for c in indxback:
