@@ -901,7 +901,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         indxerrr = [slice(None), b, slice(None)]
 
         for c in indxback:
-            listydat[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxvarb)
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxvarb)
             if strg == 'post':
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxerrr, mometype='errr')
             cntr += 1

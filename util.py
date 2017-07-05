@@ -3190,7 +3190,8 @@ def setpinit(gdat, boolinitsetp=False):
     for strgmodl in gdat.liststrgmodl:
         indxback = getattr(gdat, strgmodl + 'indxback')
         backtype = getattr(gdat, strgmodl + 'backtype')
-        sbrtbacknorm = []
+        numbback = getattr(gdat, strgmodl + 'numbback')
+        sbrtbacknorm = empty((numbback, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
         for c in indxback:
             if isinstance(backtype[c], float):
                 if gdat.pixltype == 'heal':
@@ -3216,9 +3217,9 @@ def setpinit(gdat, boolinitsetp=False):
             
                     sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], -1, sbrtbacknormtemp.shape[-1]))
 
-            sbrtbacknorm.append(sbrtbacknormtemp)
+            sbrtbacknorm[c, ...] = sbrtbacknormtemp
             
-            if amin(sbrtbacknorm[c]) <= 0.:
+            if amin(sbrtbacknorm[c, ...]) <= 0.:
                 raise Exception('Background templates must be positive.')
        
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
@@ -3231,8 +3232,9 @@ def setpinit(gdat, boolinitsetp=False):
     ## backgrounds
     for strgmodl in gdat.liststrgmodl:
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
-        for c in getattr(gdat, strgmodl + 'indxback'):
-            sbrtbacknorm[c] = sbrtbacknorm[c][gdat.indxcubeincl]
+        indxback = getattr(gdat, strgmodl + 'indxback')
+        indxtessincl = meshgrid(indxback, gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
+        sbrtbacknorm = sbrtbacknorm[indxtessincl]
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
     
     if gdat.datatype == 'inpt':
@@ -3240,14 +3242,14 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.cntpdata = retr_cntp(gdat, gdat.exprsbrtdata)
     
     # obtain cartesian versions of the maps
-    if gdat.pixltype == 'cart':
-        gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
-        for strgmodl in gdat.liststrgmodl:
-            sbrtbacknormcart = []
-            sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
-            for c in getattr(gdat, strgmodl + 'indxback'):
-                sbrtbacknormcart.append(sbrtbacknorm[c].reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt)))
-            setattr(gdat, strgmodl + 'sbrtbacknormcart', sbrtbacknormcart)
+    #if gdat.pixltype == 'cart':
+    #    gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
+    #    for strgmodl in gdat.liststrgmodl:
+    #        sbrtbacknormcart = []
+    #        sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
+    #        for c in getattr(gdat, strgmodl + 'indxback'):
+    #            sbrtbacknormcart.append(sbrtbacknorm[c].reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt)))
+    #        setattr(gdat, strgmodl + 'sbrtbacknormcart', sbrtbacknormcart)
     
     # mask the exposure map
     if gdat.mask != None:
@@ -3381,15 +3383,38 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbpixl = gdat.indxpixlrofi.size
     gdat.indxpixl = arange(gdat.numbpixl)
     gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+   
+    ## meshed indcices for the four-dimensional background data structures
+    for strgmodl in gdat.liststrgmodl:
+        indxback = getattr(gdat, strgmodl + 'indxback')
+        for c in indxback:  
+            indxtessback = meshgrid(array([c]), gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+            setattr(gdat, strgmodl + 'indxtessback', indxtessback)
+        indxtess = meshgrid(indxback, gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+        setattr(gdat, strgmodl + 'indxtess', indxtess)
+
     ## exposure
     if gdat.correxpo:
         gdat.expofull = copy(gdat.expo)
         gdat.expo = gdat.expo[gdat.indxcuberofi]
     ## backgrounds
     for strgmodl in gdat.liststrgmodl:
+        indxback = getattr(gdat, strgmodl + 'indxback')
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
-        for c in getattr(gdat, strgmodl + 'indxback'):
-            sbrtbacknorm[c] = sbrtbacknorm[c][gdat.indxcuberofi]
+        indxtessrofi = meshgrid(indxback, gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
+        print 'indxtessincl[0]'
+        summgene(indxtessincl[0])
+        print 'indxtessincl[1]'
+        summgene(indxtessincl[1])
+        print 'indxtessincl[2]'
+        summgene(indxtessincl[2])
+        print 'indxtessincl[3]'
+        summgene(indxtessincl[3])
+        print 'indxtessincl[4]'
+        summgene(indxtessincl[4])
+        print 'sbrtbacknorm'
+        summgene(sbrtbacknorm)
+        sbrtbacknorm = sbrtbacknorm[indxtessincl]
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
                 
     gdat.expototl = sum(gdat.expo, axis=2)
@@ -4073,6 +4098,10 @@ def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype='medi', indxvarb=None
         if mometype == 'errr':
             varb = varb[[slice(None)] + indxvarb]
         else:
+            print 'indxvarb'
+            print indxvarb
+            print 'varb'
+            summgene(varb)
             varb = varb[indxvarb]
 
     return copy(varb)
@@ -6136,14 +6165,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         indxback = getattr(gdat, strgmodl + 'indxback')
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
         indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
+        indxtessback = getattr(gdat, strgmodl + 'indxtessback')
         specback = getattr(gdat, strgmodl + 'specback')
         sbrtback = []
         for c in indxback:
             if specback[c]:
-                sbrtbacktemp = sbrtbacknorm[c][gdat.indxcube] * bacp[indxbacpback[c]]
+                sbrtback[c, ...] = sbrtbacknorm[indxtessback[c]] * bacp[indxbacpback[c]]
             else:
-                sbrtbacktemp = sbrtbacknorm[c][gdat.indxcube] * bacp[indxbacpback[c]][:, None, None]
-            sbrtback.append(sbrtbacktemp)
+                sbrtback[c, ...] = sbrtbacknorm[indxtessback[c]] * bacp[indxbacpback[c]][:, None, None]
             setattr(gdatobjt, strg + 'sbrtback', sbrtback)
 
         # evaluate host galaxy surface brightness
@@ -6315,12 +6344,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         ### count maps
         #### background 
         if gdat.correxpo:
-            cntpback = []
+            cntpback = empty_like((gdat.numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
             cntpbacktotl = zeros_like(gdat.expo)
             for c in indxback:
-                cntpbacktemp = retr_cntp(gdat, sbrtback[c])
-                cntpback.append(cntpbacktemp)
-                cntpbacktotl[:] += cntpbacktemp 
+                cntpback[c, ...] = retr_cntp(gdat, sbrtback[c])
+                cntpbacktotl += cntpback[c, ...] 
             setattr(gdatobjt, strg + 'cntpback', cntpback)
             setattr(gdatobjt, strg + 'cntpbacktotl', cntpbacktotl)
     
