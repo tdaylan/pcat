@@ -652,7 +652,7 @@ def init( \
     if gdat.numbener > 1:
         gdat.enerpivt = gdat.meanener[gdat.indxenerpivt]
     gdat.indxener = arange(gdat.numbener, dtype=int)
-       
+            
     ### spatial extent of the data
     if gdat.maxmgangdata == None:
         if gdat.exprtype == 'chan':
@@ -735,13 +735,20 @@ def init( \
             backtype = [1., 10. * (gdat.meanenerfull / gdat.enerpivt)[gdat.indxenerincl]**1]
             backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
             backtype = [1., backtypetemp]
-            gdat.truescalbacpbac0 = 'gaus'
+            gdat.truescalbacpbac1 = 'gaus'
+            gdat.truemeanbacpbac1 = 15.5
+            gdat.truestdvbacpbac1 = 0.05 * 15.5
+
     if gdat.elemtype == 'lens':
         backtype = [1.]
     if gdat.elemtype == 'clus':
         backtype = [1.]
     setp_namevarbvalu(gdat, 'backtype', backtype)
    
+    if gdat.exprtype == 'chan':
+       print 'gdat.truebacktype[1] * gdat.meanener**2'
+       print gdat.truebacktype[1] * gdat.meanener**2
+       
     #### boolean flag background
     if gdat.exprtype == 'chan':
         specback = [False, True]
@@ -831,7 +838,7 @@ def init( \
  
     ### normalization
     if gdat.exprtype == 'ferm':
-        bacp = [1e-3, 1e-2]
+        bacp = [1e-6, 1e-2]
     if gdat.exprtype == 'chan':
         bacp = [1e-1, 1e1]
     if gdat.exprtype == 'hubb':
@@ -2482,20 +2489,18 @@ def work(pathoutpthis, lock, indxprocwork):
             strgcnfg = gdat.recostat
         else:
             strgcnfg = gdat.strgcnfg
-        path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
         if gdat.verbtype > 0:
             print 'Initializing with the state from %s...' % path
+        path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
         thisfile = h5py.File(path, 'r')
-        gdatmodi.thissampvarb = thisfile['thissampvarb'][()]
+        gdatmodi.thissamp = thisfile['thissamp'][()]
         thisfile.close()
     
-        try:
-            for k, namefixp in enumerate(gdat.fittnamefixp):
-                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdatmodi.thissampvarb[k], k)
-        except:
-            if gdat.verbtype > 0:
-                print 'Initialization from the saved state failed.' 
-            raise
+        if gdat.fittnumbtrap > 0:
+            path = gdat.pathoutp + 'stat_' + strgcnfg + '.p'
+            filepick = open(path, 'rb')
+            gdatmodi.thisindxelemfull = cPickle.load(filepick)
+            filepick.close()
 
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -2884,8 +2889,14 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdat.verbtype > 0:
                     print 'Saving the state to %s...' % path
                 thisfile = h5py.File(path, 'w')
-                thisfile.create_dataset('thissampvarb', data=gdatmodi.thissampvarb)
+                thisfile.create_dataset('thissamp', data=gdatmodi.thissamp)
                 thisfile.close()
+                
+                if gdat.fittnumbtrap > 0:
+                    path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.p'
+                    filepick = open(path, 'wb')
+                    cPickle.dump(gdatmodi.thisindxelemfull, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
+                    filepick.close()
 
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')

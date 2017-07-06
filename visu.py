@@ -978,6 +978,11 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 for k in range(len(gdat.listspecrefrplot)):
                     axis.plot(gdat.listenerrefrplot[k], gdat.listspecrefrplot[k] * factener, label=gdat.listlablrefrplot[k], color='m')
 
+            if specconvunit[1] == gdat.nameenerunit:
+                factydat = 1.
+            else:
+                factydat = getattr(gdat, 'fact' + specconvunit[1] + gdat.nameenerunit)
+            
             xdat = gdat.meanener
             for k in range(numblablsbrtspec):
                 if k == cntrdata:
@@ -1004,10 +1009,6 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 ydat *= factener
                 yerr *= factener
                 
-                if specconvunit[1] == gdat.nameenerunit:
-                    factydat = 1.
-                else:
-                    factydat = getattr(gdat, 'fact' + specconvunit[1] + gdat.nameenerunit)
                 ydat *= factydat
                 yerr *= factydat
 
@@ -1018,7 +1019,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 gdat.ylimsdenspec
             except:
                 gdat.ylimsdenspec = axis.get_ylim()
-            axis.set_ylim([1e-4 * amax(gdat.sbrtdatamean[b]), 1e1 * amax(gdat.sbrtdatamean[b])])
+            axis.set_ylim([1e-4 * amax(gdat.sbrtdatamean[b]) * factydat, 1e1 * amax(gdat.sbrtdatamean[b]) * factydat])
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)
             axis.set_xscale('log')

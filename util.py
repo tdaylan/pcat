@@ -1008,12 +1008,8 @@ def retr_chandata(gdat):
     
     # temp 0 or 1 makes a difference!
     lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
-    print 'lgalchan'
-    print lgalchan
-    print 'bgalchan'
-    print bgalchan
-    lgalchan -= indxpixllgal
-    bgalchan -= indxpixlbgal
+    lgalchan -= indxpixllgal + gdat.numbsidecart / 2
+    bgalchan -= indxpixlbgal + gdat.numbsidecart / 2
     lgalchan *= gdat.sizepixl
     bgalchan *= gdat.sizepixl
     
@@ -3092,21 +3088,21 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         
         path = gdat.pathinpt + gdat.strgexprflux
-        gdat.exprsbrtdata = pf.getdata(path)
+        gdat.sbrtdata = pf.getdata(path)
         if gdat.pixltype == 'heal':
-            if gdat.exprsbrtdata.ndim != 3:
+            if gdat.sbrtdata.ndim != 3:
                 raise Exception('exprsbrtdata should be a 3D numpy array if pixelization is HealPix.')
         else:
-            if gdat.exprsbrtdata.ndim != 4:
+            if gdat.sbrtdata.ndim != 4:
                 raise Exception('exprsbrtdata should be a 4D numpy array if pixelization is Cartesian.')
         
         if gdat.pixltype == 'cart':
-            gdat.numbsidecart = gdat.exprsbrtdata.shape[1]
-            gdat.exprsbrtdata = gdat.exprsbrtdata.reshape((gdat.exprsbrtdata.shape[0], gdat.numbsidecart**2, gdat.exprsbrtdata.shape[3]))
+            gdat.numbsidecart = gdat.sbrtdata.shape[1]
+            gdat.sbrtdata = gdat.sbrtdata.reshape((gdat.sbrtdata.shape[0], gdat.numbsidecart**2, gdat.sbrtdata.shape[3]))
     
-        gdat.numbenerfull = gdat.exprsbrtdata.shape[0]
-        gdat.numbpixlfull = gdat.exprsbrtdata.shape[1]
-        gdat.numbevttfull = gdat.exprsbrtdata.shape[2]
+        gdat.numbenerfull = gdat.sbrtdata.shape[0]
+        gdat.numbpixlfull = gdat.sbrtdata.shape[1]
+        gdat.numbevttfull = gdat.sbrtdata.shape[2]
         gdat.indxenerfull = arange(gdat.numbenerfull)
         gdat.indxevttfull = arange(gdat.numbevttfull)
         
@@ -3258,9 +3254,9 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
     
     if gdat.datatype == 'inpt':
-        gdat.exprsbrtdata = gdat.exprsbrtdata[gdat.indxcubeincl]
-        gdat.cntpdata = retr_cntp(gdat, gdat.exprsbrtdata)
-    
+        gdat.sbrtdata = gdat.sbrtdata[gdat.indxcubeincl]
+        gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata)
+
     # obtain cartesian versions of the maps
     #if gdat.pixltype == 'cart':
     #    gdat.expocart = gdat.expo.reshape((gdat.numbener, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevtt))
@@ -3291,7 +3287,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.mrkrlinewdth = 3
     ## marker opacity
     gdat.alphmrkr = 0.5
-    gdat.alphpnts = 1.
+    gdat.alphelem = 0.3
     gdat.alphmaps = 1.
     
     # number of colorbar ticks in the maps
@@ -4790,7 +4786,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 indxfixpbacpinit = k
             
             # index of the background parameter
-            c = indxbackbacp[k-indxfixpbacpinit]
+            c = int(strgvarb[7])#indxbackbacp[k-indxfixpbacpinit]
 
             name = 'bacpbac%d' % c
             
@@ -4815,6 +4811,8 @@ def setp_fixp(gdat, strgmodl='fitt'):
             
             try:
                 scalfixp[k] = getattr(gdat, strgmodl + 'scal' + name)
+                if gdat.verbtype > 0:
+                    print 'Received custom scaling for %s' % name
             except:
                 scalfixp[k] = 'logt'
         
@@ -5247,28 +5245,28 @@ def make_catllabl(gdat, strg, axis):
         else:
             colr = 'b'
             labl = 'Sample Model %s' % gdat.strgelem
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                             label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
         
     if gdat.truelgal != None and gdat.truebgal != None:
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label=gdat.legdtruehits, marker='x', lw=gdat.mrkrlinewdth, color='g')
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, facecolor='none', \
+        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                                 label=gdat.legdtruemiss, marker='s', lw=gdat.mrkrlinewdth, color='g')
     
     # fixed-dimensional objects
     if gdat.elemtype == 'lens':
         if strg == 'this':
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
     
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
         if gdat.trueinfo:
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='%s Source' % gdat.legdtrue, marker='>', lw=gdat.mrkrlinewdth, color='g')
         
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphpnts, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='%s Host' % gdat.legdtrue, marker='D', lw=gdat.mrkrlinewdth, color='g')
     
 
@@ -5302,20 +5300,20 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
             if gdatmodi != None:
                 ### missed
                 indx = gdatmodi.thistrueindxpntsasscmiss[l]
-                axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, label=gdat.legdtruemiss, facecolor='none', \
+                axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.legdtruemiss, facecolor='none', \
                                                                                                                          marker='s', lw=gdat.mrkrlinewdth, color='g')
                 ### hit
                 indx = gdatmodi.thistrueindxpntsasschits[l]
             else:
                 indx = arange(lgal.size)
             
-            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphpnts, \
+            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, \
                                                                                     label=gdat.legdtruehits, marker='x', lw=gdat.mrkrlinewdth, color='g')
             
     ## host galaxy position
     if gdat.hostemistype != 'none':
         axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalhost], \
-                                                                    #alpha=gdat.alphpnts, \
+                                                                    #alpha=gdat.alphelem, \
                                                                     alpha=0.7, \
                                                                     label=gdat.legdtruehits, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
     if gdat.lensmodltype != 'none':
@@ -5327,7 +5325,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         ## source galaxy position
         axis.scatter(gdat.anglfact * gdat.truefixp[gdat.trueindxfixplgalsour], gdat.anglfact * gdat.truefixp[gdat.trueindxfixpbgalsour], \
                                                                     alpha=0.7, \
-                                                                    #alpha=gdat.alphpnts, \
+                                                                    #alpha=gdat.alphelem, \
                                                                         label=gdat.legdtruehits, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
             
     # model catalog
@@ -5341,7 +5339,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namecompampl][l]])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l]]
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphpnts, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
 
             ## source
             if gdat.lensmodltype != 'none':
@@ -5349,7 +5347,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 bgalsour = gdatmodi.thissampvarb[gdat.fittindxfixpbgalsour]
                 axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, \
                                                                       alpha=0.7, \
-                                                                      #alpha=gdat.alphpnts, \
+                                                                      #alpha=gdat.alphelem, \
                                                                       label='Model Source', s=300, marker='<', lw=gdat.mrkrlinewdth, color='b')
     
             if gdat.hostemistype != 'none':
@@ -5358,7 +5356,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                 bgalhost = gdatmodi.thissampvarb[gdat.fittindxfixpbgalhost]
                 axis.scatter(gdat.anglfact * lgalhost, gdat.anglfact * bgalhost, \
                                                                       alpha=0.7, \
-                                                                      #alpha=gdat.alphpnts, \
+                                                                      #alpha=gdat.alphelem, \
                                                                       label='Model Host', s=300, marker='s', lw=gdat.mrkrlinewdth, color='b')
                 if gdat.lensmodltype != 'none':
                     beinhost = gdatmodi.thissampvarb[gdat.fittindxfixpbeinhost]
@@ -6173,6 +6171,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
         indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
         indxtessback = getattr(gdat, strgmodl + 'indxtessback')
+        # temp
+        #smthback = getattr(gdat, strgmodl + 'smthback')
         specback = getattr(gdat, strgmodl + 'specback')
         sbrtback = empty((numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for c in indxback:
@@ -6180,8 +6180,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 sbrtback[c, ...] = sbrtbacknorm[indxtessback[c]] * bacp[indxbacpback[c]]
             else:
                 sbrtback[c, ...] = sbrtbacknorm[indxtessback[c]] * bacp[indxbacpback[c]][:, None, None]
+            # temp
+            #if smthback[c]:
+            #    if gdat.pixltype == 'heal':
+            #        sbrtback[c, i, :, m] = 
             setattr(gdatobjt, strg + 'sbrtback', sbrtback)
-
+        
         # evaluate host galaxy surface brightness
         if gdat.hostemistype != 'none':
             initchro(gdat, gdatmodi, strg, 'sbrthost')
@@ -7027,6 +7031,17 @@ def proc_cntpdata(gdat):
     ## spatial average
     gdat.sbrtdatamean = retr_spatmean(gdat, gdat.cntpdata, boolcntp=True)
     
+    if gdat.exprtype == 'pcat_chan_inot':
+        print 'gdat.sbrtdatamean'
+        print gdat.sbrtdatamean
+        print 'gdat.expototlmean'
+        print gdat.expototlmean
+        print 'gdat.sbrtdatamean * gdat.expototlmean'
+        print gdat.expototlmean * gdat.sbrtdatamean
+        print 'mean(gdat.cntpdata[:, :, 0], axis=1)'
+        print mean(gdat.cntpdata[:, :, 0], axis=1)
+        print
+
     gdat.sbrtdatabrod = sum(sum(gdat.cntpdata, axis=2), axis=0)
 
     # obtain cartesian versions of the maps
