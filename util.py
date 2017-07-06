@@ -923,107 +923,125 @@ def retr_fermpsfn(gdat):
 
 def retr_chandata(gdat):
     
+    with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
+        G_long = [] #deg
+        G_lat = [] #deg
+        id_number = []
+        off_angle = [] # arcmin
+        flux_cnts = [] # for xray band
+        soft_cnts = [] # 0.5-2
+        hard_cnts = [] # 2-8
+        c_offset = [] #angular offset between xray and optical/NIR components in arcse
+        C_mag = [] # full optical mag?
+        W_mag = [] # 600-700 nm
+        GD_mag = [] # 750-1000 nm from GOODS-S z-band
+        G_mag = [] # 750-1000 nm from GEMS z-band
+        M_mag = [] # 2-3 micron
+        S_mag = [] # 3-4 micron
+        flux_erg_full = [] # erg/(s*cm^2)
+        flux_erg_soft = []
+        flux_erg_hard = []
+        Otype = [] # AGN/Galaxy/Star
+        for line in thisfile:
+            line = line.split()
+            G_long.append(line[0])
+            G_lat.append(line[1])
+            id_number.append(line[2])
+            off_angle.append(line[3])
+            flux_cnts.append(line[4])
+            soft_cnts.append(line[5])
+            hard_cnts.append(line[6])
+            c_offset.append(line[7])
+            C_mag.append(line[8])
+            W_mag.append(line[9])
+            GD_mag.append(line[10])
+            G_mag.append(line[11])
+            M_mag.append(line[12])
+            S_mag.append(line[13])
+            flux_erg_full.append(line[14])
+            flux_erg_soft.append(line[15])
+            flux_erg_hard.append(line[16])
+            Otype.append(line[17])
+        lgalchan = (asarray(G_long)).astype(float)
+        bgalchan = (asarray(G_lat)).astype(float)
+        #oaxichan = (asarray(off_angle)).astype(float)
+        cntschan = (asarray(flux_cnts)).astype(float)
+        cntschansoft = (asarray(soft_cnts)).astype(float)
+        cntschanhard = (asarray(hard_cnts)).astype(float)
+        #offschan = (asarray(c_offset)).astype(float)
+        #cmagchan = (asarray(C_mag)).astype(float)
+        #wmagchan = (asarray(W_mag)).astype(float)
+        #dmagchan = (asarray(GD_mag)).astype(float)
+        #gmagchan = (asarray(G_mag)).astype(float)
+        #mmagchan = (asarray(M_mag)).astype(float)
+        #smagchan = (asarray(S_mag)).astype(float)
+        #fluxchanfull = (asarray(flux_erg_full)).astype(float)
+        fluxchansoft = (asarray(flux_erg_soft)).astype(float)
+        fluxchanhard = (asarray(flux_erg_hard)).astype(float)
+        #objttypechan = (asarray(Otype))
+    
     if gdat.numbener == 2:
-        with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
-            G_long = [] #deg
-            G_lat = [] #deg
-            id_number = []
-            off_angle = [] # arcmin
-            flux_cnts = [] # for xray band
-            soft_cnts = [] # 0.5-2
-            hard_cnts = [] # 2-8
-            c_offset = [] #angular offset between xray and optical/NIR components in arcse
-            C_mag = [] # full optical mag?
-            W_mag = [] # 600-700 nm
-            GD_mag = [] # 750-1000 nm from GOODS-S z-band
-            G_mag = [] # 750-1000 nm from GEMS z-band
-            M_mag = [] # 2-3 micron
-            S_mag = [] # 3-4 micron
-            flux_erg_full = [] # erg/(s*cm^2)
-            flux_erg_soft = []
-            flux_erg_hard = []
-            Otype = [] # AGN/Galaxy/Star
-            for line in thisfile:
-                line = line.split()
-                G_long.append(line[0])
-                G_lat.append(line[1])
-                id_number.append(line[2])
-                off_angle.append(line[3])
-                flux_cnts.append(line[4])
-                soft_cnts.append(line[5])
-                hard_cnts.append(line[6])
-                c_offset.append(line[7])
-                C_mag.append(line[8])
-                W_mag.append(line[9])
-                GD_mag.append(line[10])
-                G_mag.append(line[11])
-                M_mag.append(line[12])
-                S_mag.append(line[13])
-                flux_erg_full.append(line[14])
-                flux_erg_soft.append(line[15])
-                flux_erg_hard.append(line[16])
-                Otype.append(line[17])
-            lgalchan = (asarray(G_long)).astype(float)
-            bgalchan = (asarray(G_lat)).astype(float)
-            #oaxichan = (asarray(off_angle)).astype(float)
-            cntschan = (asarray(flux_cnts)).astype(float)
-            cntschansoft = (asarray(soft_cnts)).astype(float)
-            cntschanhard = (asarray(hard_cnts)).astype(float)
-            #offschan = (asarray(c_offset)).astype(float)
-            #cmagchan = (asarray(C_mag)).astype(float)
-            #wmagchan = (asarray(W_mag)).astype(float)
-            #dmagchan = (asarray(GD_mag)).astype(float)
-            #gmagchan = (asarray(G_mag)).astype(float)
-            #mmagchan = (asarray(M_mag)).astype(float)
-            #smagchan = (asarray(S_mag)).astype(float)
-            #fluxchanfull = (asarray(flux_erg_full)).astype(float)
-            fluxchansoft = (asarray(flux_erg_soft)).astype(float)
-            fluxchanhard = (asarray(flux_erg_hard)).astype(float)
-            #objttypechan = (asarray(Otype))
-    
         path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
-        listhdun = ap.io.fits.open(path)
-        wcso = ap.wcs.WCS(listhdun[0].header)
-        skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
-        rascchan = skycobjt.fk5.ra.degree
-        declchan = skycobjt.fk5.dec.degree
+    else:
+        path = gdat.pathinpt + '0.50-0.91_thresh.img'
+        
+    listhdun = ap.io.fits.open(path)
+    wcso = ap.wcs.WCS(listhdun[0].header)
+    skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
+    rascchan = skycobjt.fk5.ra.degree
+    declchan = skycobjt.fk5.dec.degree
     
-        indxpixllgal = 1490
-        indxpixlbgal = 1510
+    if gdat.numbener == 2:
+        if gdat.numbsidecart == 300:
+            indxpixllgal = 1430
+            indxpixlbgal = 1490
+        if gdat.numbsidecart == 1000:
+            indxpixllgal = 1080
+            indxpixlbgal = 1140
+    if gdat.numbener == 5:
+        if gdat.numbsidecart == 300:
+            indxpixllgal = 2430
+            indxpixlbgal = 2495
+        if gdat.numbsidecart == 1000:
+            indxpixllgal = 2080
+            indxpixlbgal = 2145
     
-        # temp 0 or 1 makes a difference!
-        lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
-        lgalchan -= gdat.numbsidecart / 2 + indxpixllgal
-        bgalchan -= gdat.numbsidecart / 2 + indxpixlbgal
-        lgalchan *= gdat.sizepixl
-        bgalchan *= gdat.sizepixl
+    # temp 0 or 1 makes a difference!
+    lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
+    print 'lgalchan'
+    print lgalchan
+    print 'bgalchan'
+    print bgalchan
+    lgalchan -= indxpixllgal
+    bgalchan -= indxpixlbgal
+    lgalchan *= gdat.sizepixl
+    bgalchan *= gdat.sizepixl
     
-        gdat.exprbgal = lgalchan
-        gdat.exprlgal = bgalchan
-        print 'lgalchan'
-        summgene(lgalchan)
+    gdat.exprbgal = lgalchan
+    gdat.exprlgal = bgalchan
     
+    # temp
+    gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
+    gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
+    
+    if gdat.numbener == 2:
         gdat.exprspec = zeros((3, 2, gdat.exprlgal.size))
         gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
         gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e9 / 16.
         # temp
         gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
         gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
-    
+        
         # temp
         gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
     
         if gdat.numbener > 1:
             gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
             gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
-        
+    
         # temp
-        gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
-        gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
         if gdat.numbener > 1:
             gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
-        print 'gdat.exprlgal'
-        summgene(gdat.exprlgal)
 
 
 def retr_fermdata(gdat):
@@ -1180,9 +1198,12 @@ def show_samp(gdat, gdatmodi):
         else:
             name = ''
 
-        gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.thisindxsampcomp['comp'])))
-        if k in concatenate(gdatmodi.thisindxsampcomp['lgal']):
-            print
+        if gdat.fittnumbtrap > 0:
+            gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(gdatmodi.thisindxsampcomp['comp'])))
+            if k in concatenate(gdatmodi.thisindxsampcomp['lgal']):
+                print
+        else:
+            gdatmodi.indxparaprop = gdat.indxfixpprop
         try:
             strgboolmodi = '%s' % (k in gdatmodi.indxsampmodi)
         except:
@@ -2608,22 +2629,21 @@ def setpinit(gdat, boolinitsetp=False):
                     strgenerscalunit = '%s' % strgenerunit
                 
                 # define the label unit
-                if labltemptemp == 'flux':
-                    lablunit = '%s %s' % (strgenerscalunit, gdat.lablprat)
-                    setattr(gdat, 'lablflux' + nameenerscaltype + nameenerunit + 'unit', lablunit)
-                else:
-                    for namesoldunit in ['ster', 'degr']:
+                for namesoldunit in ['ster', 'degr']:
+                    if labltemptemp == 'flux':
+                        lablunit = '%s %s' % (strgenerscalunit, gdat.lablprat)
+                        setattr(gdat, 'lablflux' + nameenerscaltype + nameenerunit + 'unit', lablunit)
+                    else:
                         if namesoldunit == 'ster':
                             lablunit = '%s %s sr$^{-1}$' % (strgenerscalunit, gdat.lablprat)
                         if namesoldunit == 'degr':
                             lablunit = '%s %s deg$^{-2}$' % (strgenerscalunit, gdat.lablprat)
                         setattr(gdat, 'lablsbrt' + nameenerscaltype + nameenerunit + namesoldunit + 'unit', lablunit)
 
-                # define the total label
-                if labltemptemp == 'flux':
-                    setattr(gdat, 'lablflux' + nameenerscaltype + nameenerunit + 'totl', '$%s$ [%s]' % (labl, lablunit))
-                else:
-                    for namesoldunit in ['ster', 'degr']:
+                    # define the total label
+                    if labltemptemp == 'flux':
+                        setattr(gdat, 'lablflux' + nameenerscaltype + nameenerunit + 'totl', '$%s$ [%s]' % (labl, lablunit))
+                    else:
                         setattr(gdat, 'lablsbrt' + nameenerscaltype + nameenerunit + namesoldunit + 'totl', '$%s$ [%s]' % (labl, lablunit))
     gdat.lablfluxunit = getattr(gdat, 'lablfluxene0' + gdat.nameenerunit + 'unit')
     gdat.lablsbrtunit = getattr(gdat, 'lablsbrtene0' + gdat.nameenerunit + 'sterunit')
@@ -3083,7 +3103,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.pixltype == 'cart':
             gdat.numbsidecart = gdat.exprsbrtdata.shape[1]
             gdat.exprsbrtdata = gdat.exprsbrtdata.reshape((gdat.exprsbrtdata.shape[0], gdat.numbsidecart**2, gdat.exprsbrtdata.shape[3]))
-
+    
         gdat.numbenerfull = gdat.exprsbrtdata.shape[0]
         gdat.numbpixlfull = gdat.exprsbrtdata.shape[1]
         gdat.numbevttfull = gdat.exprsbrtdata.shape[2]
@@ -3660,12 +3680,9 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
         if gdat.exprtype == 'ferm':
-            gdat.stdvstdp = 4e-5 + zeros(gdat.numbstdp)
+            gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             if gdat.fittnumbtrap > 1:
-                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanpnts]] = 1e-3
-                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpdist]] = 1e-3
-                gdat.stdvstdp[gdat.indxstdpcomp] = 1e-3
-                gdat.stdvstdp[gdat.indxstdpflux] = 1e-3
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanpnts]] = 1e-2
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
@@ -4087,10 +4104,6 @@ def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype='medi', indxvarb=None
         if mometype == 'errr':
             varb = varb[[slice(None)] + indxvarb]
         else:
-            print 'indxvarb'
-            print indxvarb
-            print 'varb'
-            summgene(varb)
             varb = varb[indxvarb]
 
     return copy(varb)
@@ -5278,7 +5291,11 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
         else:
             listindxpoplplot = [indxpoplplot]
         for l in listindxpoplplot:
-            mrkrsize = retr_mrkrsize(gdat, getattr(gdat, 'true' + gdat.namecompampl)[l][0, :])
+            trueampl = getattr(gdat, 'true' + gdat.namecompampl)
+            if trueampl == None:
+                mrkrsize = full(gdat.truenumbpnts[l], 5.)
+            else:
+                mrkrsize = retr_mrkrsize(gdat, trueampl[l][0, :])
             lgal = copy(gdat.truelgal[l][0, :])
             bgal = copy(gdat.truebgal[l][0, :])
             numbpnts = int(gdat.truenumbpnts[l])
@@ -7010,6 +7027,8 @@ def proc_cntpdata(gdat):
     ## spatial average
     gdat.sbrtdatamean = retr_spatmean(gdat, gdat.cntpdata, boolcntp=True)
     
+    gdat.sbrtdatabrod = sum(sum(gdat.cntpdata, axis=2), axis=0)
+
     # obtain cartesian versions of the maps
     if gdat.pixltype == 'cart':
         ## data counts

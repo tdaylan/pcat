@@ -128,7 +128,6 @@ def plot_samp(gdat, gdatmodi, strg):
                                     pass
                                 listydat.append(specplottemp)
                             
-                            factydat = specconvunit[1]
                             lablydat = getattr(gdat, 'lablflux' + specconvunit[0] + specconvunit[1] + 'totl')
                             if specconvunit[1] == gdat.nameenerunit:
                                 factydat = 1.
@@ -898,30 +897,29 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
    
         cntr = 0
         indxvarb = [b, slice(None)]
-        indxerrr = [slice(None), b, slice(None)]
 
         for c in indxback:
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxerrr, mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtback%04dmean' % c, indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
         if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxerrr, mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
         if gdat.hostemistype != 'none':
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxerrr, mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
         if gdat.lensmodltype != 'none':
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb)
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxerrr, mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
                 
         cntrdata = cntr
@@ -934,7 +932,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         if numblablsbrt > 1:
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean')
             if strg == 'post':
-                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean', mometype='errr')
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtmodlmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
 
         # plot energy spectra of the data, background model components and total background
@@ -1006,6 +1004,13 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 ydat *= factener
                 yerr *= factener
                 
+                if specconvunit[1] == gdat.nameenerunit:
+                    factydat = 1.
+                else:
+                    factydat = getattr(gdat, 'fact' + specconvunit[1] + gdat.nameenerunit)
+                ydat *= factydat
+                yerr *= factydat
+
                 axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
@@ -1025,7 +1030,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 axis.set_ylim([None, 1e4])
 
             plt.tight_layout()
-            path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s%s' % (namespatmean, specconvunit[0]))
+            path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s%s%s' % (namespatmean, specconvunit[0], specconvunit[1]))
             figr.savefig(path)
             plt.close(figr)
     

@@ -831,7 +831,7 @@ def init( \
  
     ### normalization
     if gdat.exprtype == 'ferm':
-        bacp = [1e-8, 1e-6]
+        bacp = [1e-3, 1e-2]
     if gdat.exprtype == 'chan':
         bacp = [1e-1, 1e1]
     if gdat.exprtype == 'hubb':
@@ -1030,7 +1030,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             bacp = 2e-7
         if gdat.exprtype == 'chan':
-            bacp = 1e0
+            bacp = 15.5
         if gdat.exprtype == 'hubb':
             bacp = 2e-7
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
