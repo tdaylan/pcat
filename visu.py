@@ -1027,9 +1027,6 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
             axis.set_ylabel(labl)
             make_legd(axis, numbcols=3)
             
-            if gdat.exprtype == 'chan':
-                axis.set_ylim([None, 1e4])
-
             plt.tight_layout()
             path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s%s%s' % (namespatmean, specconvunit[0], specconvunit[1]))
             figr.savefig(path)

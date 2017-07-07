@@ -185,7 +185,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=0., \
+         priofactdoff=1., \
          
          # lensing
          fittrelnpowr=0., \
@@ -2489,19 +2489,13 @@ def work(pathoutpthis, lock, indxprocwork):
             strgcnfg = gdat.recostat
         else:
             strgcnfg = gdat.strgcnfg
+        path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
         if gdat.verbtype > 0:
             print 'Initializing with the state from %s...' % path
-        path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
         thisfile = h5py.File(path, 'r')
         gdatmodi.thissamp = thisfile['thissamp'][()]
         thisfile.close()
     
-        if gdat.fittnumbtrap > 0:
-            path = gdat.pathoutp + 'stat_' + strgcnfg + '.p'
-            filepick = open(path, 'rb')
-            gdatmodi.thisindxelemfull = cPickle.load(filepick)
-            filepick.close()
-
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if gdat.recostat:
@@ -2532,52 +2526,56 @@ def work(pathoutpthis, lock, indxprocwork):
         raise Exception('')
 
     if gdat.fittnumbtrap > 0:
-    
-        ## lists of occupied and empty transdimensional parameters
-        gdatmodi.thisindxelemfull = []
-        if gdat.fittnumbtrap > 0:
-            for l in gdat.fittindxpopl:
-                gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
+        if gdat.recostat:
+            path = gdat.pathoutp + 'stat_' + strgcnfg + '.p'
+            filepick = open(path, 'rb')
+            gdatmodi.thisindxelemfull = cPickle.load(filepick)
+            filepick.close()
+            gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
         else:
+            ## lists of occupied and empty transdimensional parameters
             gdatmodi.thisindxelemfull = []
-        
-        gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
-        
-        ## element parameters
-        if gdat.fittnumbtrap > 0:
-            if gdat.inittype == 'refr':
+            if gdat.fittnumbtrap > 0:
                 for l in gdat.fittindxpopl:
-                    for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
-                        try:
-                            comp = getattr(gdat, 'true' + strgcomp)[l]
-                            minm = getattr(gdat, 'fittminm' + strgcomp)
-                            maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                            bins = getattr(gdat, 'bins' + strgcomp)
-                            if gdat.fittlistscalcomp[l][k] == 'self':
-                                fact = getattr(gdat, 'fittfact' + strgcomp)
-                                compunit = cdfn_self(comp, minm, fact)
-                            if gdat.fittlistscalcomp[l][k] == 'powrslop' or gdat.fittlistscalcomp[l][k] == 'igam':
-                                slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
-                                if gdat.fittlistscalcomp[l][k] == 'powrslop':
-                                    compunit = cdfn_powr(comp, minm, maxm, slop)
-                                if gdat.fittlistscalcomp[l][k] == 'igam':
-                                    cutf = getattr(gdat, 'cutf' + strgcomp)
-                                    compunit = cdfn_igam(comp, slop, cutf)
-                            if gdat.fittlistscalcomp[l][k] == 'gaus':
-                                distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
-                                diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
-                                compunit = cdfn_gaus(comp, distmean, diststdv)
-                        except:
-                            if gdat.verbtype > 0:
-                                print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
-                            compunit = rand(gdat.truenumbpnts[l])
-                        gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
-                    
+                    gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
             else:
-                for l in gdat.fittindxpopl:
-                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
-    else:
-        gdatmodi.thisindxsampcomp = None
+                gdatmodi.thisindxelemfull = []
+            
+            gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
+            
+            ## element parameters
+            if gdat.fittnumbtrap > 0:
+                if gdat.inittype == 'refr':
+                    for l in gdat.fittindxpopl:
+                        for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+                            try:
+                                comp = getattr(gdat, 'true' + strgcomp)[l]
+                                minm = getattr(gdat, 'fittminm' + strgcomp)
+                                maxm = getattr(gdat, 'fittmaxm' + strgcomp)
+                                bins = getattr(gdat, 'bins' + strgcomp)
+                                if gdat.fittlistscalcomp[l][k] == 'self':
+                                    fact = getattr(gdat, 'fittfact' + strgcomp)
+                                    compunit = cdfn_self(comp, minm, fact)
+                                if gdat.fittlistscalcomp[l][k] == 'powrslop' or gdat.fittlistscalcomp[l][k] == 'igam':
+                                    slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
+                                    if gdat.fittlistscalcomp[l][k] == 'powrslop':
+                                        compunit = cdfn_powr(comp, minm, maxm, slop)
+                                    if gdat.fittlistscalcomp[l][k] == 'igam':
+                                        cutf = getattr(gdat, 'cutf' + strgcomp)
+                                        compunit = cdfn_igam(comp, slop, cutf)
+                                if gdat.fittlistscalcomp[l][k] == 'gaus':
+                                    distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
+                                    diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
+                                    compunit = cdfn_gaus(comp, distmean, diststdv)
+                            except:
+                                if gdat.verbtype > 0:
+                                    print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
+                                compunit = rand(gdat.truenumbpnts[l])
+                            gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
+                        
+                else:
+                    for l in gdat.fittindxpopl:
+                        gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
 
     if gdat.verbtype > 1:
         print 'thissamp'
