@@ -2493,7 +2493,24 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.verbtype > 0:
             print 'Initializing with the state from %s...' % path
         thisfile = h5py.File(path, 'r')
-        gdatmodi.thissamp = thisfile['thissamp'][()]
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            for attr in thisfile:
+                if namefixp == attr:
+                    gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr], k)
+        gdatmodi.thisindxelemfull = []
+        if gdat.fittnumbtrap > 0:
+            for l in gdat.fittindxpopl:
+                gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
+            gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
+            for strgcomp in gdat.fittliststrgcomptotl:
+                initcomp = []
+                for l in gdat.fittindxpopl:
+                    namefiel = '%s%04%04d' % (strgcomp, l, k)
+                    for attr in thisfile:
+                        if namefiel == attr:
+                            initcomp[l][k] = thisfile[namefiel]
+                setattr(gdat, 'init' + strgcomp, initcomp)
+            initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
     
     ## by individual values for parameters
@@ -2501,12 +2518,9 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.recostat:
             try:
                 getattr(gdat, 'init' + namefixp)
-                boolfail = True
+                print 'Conflicting initial state arguments detected, init keyword takes precedence.'
             except:
-                boolfail = False
-            if boolfail:
-                print Exception('Conflicting initial state arguments detected, init keyword takes precedence.')
-                
+                pass
         try:
             initvalu = getattr(gdat, 'init' + namefixp)
             print 'initvalu'
@@ -2544,38 +2558,11 @@ def work(pathoutpthis, lock, indxprocwork):
             gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
             
             ## element parameters
-            if gdat.fittnumbtrap > 0:
-                if gdat.inittype == 'refr':
-                    for l in gdat.fittindxpopl:
-                        for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
-                            try:
-                                comp = getattr(gdat, 'true' + strgcomp)[l]
-                                minm = getattr(gdat, 'fittminm' + strgcomp)
-                                maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                                bins = getattr(gdat, 'bins' + strgcomp)
-                                if gdat.fittlistscalcomp[l][k] == 'self':
-                                    fact = getattr(gdat, 'fittfact' + strgcomp)
-                                    compunit = cdfn_self(comp, minm, fact)
-                                if gdat.fittlistscalcomp[l][k] == 'powrslop' or gdat.fittlistscalcomp[l][k] == 'igam':
-                                    slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
-                                    if gdat.fittlistscalcomp[l][k] == 'powrslop':
-                                        compunit = cdfn_powr(comp, minm, maxm, slop)
-                                    if gdat.fittlistscalcomp[l][k] == 'igam':
-                                        cutf = getattr(gdat, 'cutf' + strgcomp)
-                                        compunit = cdfn_igam(comp, slop, cutf)
-                                if gdat.fittlistscalcomp[l][k] == 'gaus':
-                                    distmean = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
-                                    diststdv = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
-                                    compunit = cdfn_gaus(comp, distmean, diststdv)
-                            except:
-                                if gdat.verbtype > 0:
-                                    print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
-                                compunit = rand(gdat.truenumbpnts[l])
-                            gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
-                        
-                else:
-                    for l in gdat.fittindxpopl:
-                        gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
+            if gdat.fittnumbtrap > 0 and gdat.inittype == 'refr':
+                initcompfromrefr(gdat, gdatmodi, 'true')
+            else:
+                for l in gdat.fittindxpopl:
+                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
 
     if gdat.verbtype > 1:
         print 'thissamp'
@@ -2618,7 +2605,11 @@ def work(pathoutpthis, lock, indxprocwork):
 
     # initialize the worker sampler
     ## prepare gdatmodi
-    prep_gdatmodi(gdat, gdatmodi)
+    gdatmodi.thislliktotl = 0.
+    gdatmodi.thissbrtpnts = zeros_like(gdat.expo)
+    gdatmodi.thissbrthost = zeros_like(gdat.expo)
+    gdatmodi.thisllik = zeros_like(gdat.expo)
+    prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
     gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thisdeltlliktotl = zeros(1)
     gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
@@ -2733,9 +2724,6 @@ def work(pathoutpthis, lock, indxprocwork):
             print
             print '-----'
             print 'Proposing...'
-            if gdatmodi.cntrswep > 0 and gdat.diagmode:
-                print 'gdatmodi.thislpostotlprev'
-                print gdatmodi.thislpostotlprev
             print 'thislliktotl'
             print gdatmodi.thislliktotl
             print 'thislpritotl'
@@ -2790,15 +2778,16 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if not isfinite(gdatmodi.thislliktotl):
                 raise Exception('Log-likelihood is infinite!')
-
-            gdatmodi.thislpostotl = gdatmodi.thislliktotl + gdatmodi.thislpritotl
-            if False and gdatmodi.thislpostotl - gdatmodi.thislpostotlprev < -30.:
-                print 'gdatmodi.thislpostotl'
-                print gdatmodi.thislpostotl
-                print 'gdatmodi.thislpostotlprev'
-                print gdatmodi.thislpostotlprev
+    
+            if gdatmodi.cntrswep == 0:
+                gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
+            if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -30.:
+                print 'gdatmodi.thislliktotl'
+                print gdatmodi.thislliktotl
+                print 'gdatmodi.thislliktotlprev'
+                print gdatmodi.thislliktotlprev
                 raise Exception('loglikelihood drop is very unlikely!')
-            gdatmodi.thislpostotlprev = gdatmodi.thislpostotl
+            gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
                 for strgvarb in ['samp', 'sampvarb']:
@@ -2887,15 +2876,19 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdat.verbtype > 0:
                     print 'Saving the state to %s...' % path
                 thisfile = h5py.File(path, 'w')
-                thisfile.create_dataset('thissamp', data=gdatmodi.thissamp)
+                for k, namefixp in enumerate(gdat.fittnamefixp):
+                    indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
+                    valu = gdatmodi.thissampvarb[indxfixp]
+                    thisfile.create_dataset(namefixp, data=valu)
+                if gdat.fittnumbtrap > 0:
+                    for l in gdat.fittindxpopl:
+                        for strgcomp in gdat.fittliststrgcomp[l]:
+                            comp = gdatmodi.thisindxsampcomp[strgcomp][l]
+                            for k in arange(comp.size):
+                                name = strgcomp + '%04d%04d' % (l, k)
+                                thisfile.create_dataset(name, data=comp[k])
                 thisfile.close()
                 
-                if gdat.fittnumbtrap > 0:
-                    path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.p'
-                    filepick = open(path, 'wb')
-                    cPickle.dump(gdatmodi.thisindxelemfull, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
-                    filepick.close()
-
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
             
@@ -2956,7 +2949,6 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if gdat.calcllik:
                 proc_samp(gdat, gdatmodi, 'next')
-                gdatmodi.thisdeltlliktotl = gdatmodi.nextlliktotl - gdatmodi.thislliktotl
 
             else:
                 proc_samp(gdat, gdatmodi, 'next', lprionly=True)
