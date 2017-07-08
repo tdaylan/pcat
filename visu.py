@@ -2380,25 +2380,17 @@ def plot_defl(gdat, gdatmodi, strg, strgvarb='defl', strgcomp='', indxdefl=None,
     
     defl *= multfact
     
-    print 'defl'
-    summgene(defl)
     if indxener != None:
         defl = defl[indxener, :, :, indxevtt, :]
-    print 'defl'
-    summgene(defl)
 
     if indxdefl != None:
         defl = defl[:, :, :, indxdefl]
         strgvarb += '%04d' % indxdefl
-    print 'defl'
-    summgene(defl)
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgvarb, strg, indxpoplplot=thisindxpopl)
     make_catllabl(gdat, strg, axis)
     draw_frambndr(gdat, axis)
   
-    print 'defl'
-    summgene(defl)
     defllgal = defl[:, :, 0]
     deflbgal = defl[:, :, 1]
     fact = 4

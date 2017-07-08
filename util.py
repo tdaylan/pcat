@@ -1237,9 +1237,12 @@ def retr_aang(lgal, bgal):
     return aang
 
 
-def show_samp(gdat, gdatmodi):
+def show_samp(gdat, gdatmodi, thisonly=False):
     
-    print '%5s %22s %14s %14s %14s %14s %14s %14s %10s' % ('index', 'name', 'thissamp', 'nextsamp', 'thissampvarb', 'nextsampvarb', 'diffsampvarb', 'prop', 'indxstdp')
+    if thisonly:
+        print '%5s %22s %14s %14s %14s %14s %14s %14s %10s' % ('index', 'name', 'thissamp', 'nextsamp', 'thissampvarb', 'nextsampvarb', 'diffsampvarb', 'prop', 'indxstdp')
+    else:
+        print '%5s %22s %14s %14s' % ('index', 'name', 'thissamp', 'thissampvarb')
     for k in gdat.fittindxpara:
         if k == gdat.fittnumbfixp:
             print
@@ -1258,8 +1261,11 @@ def show_samp(gdat, gdatmodi):
             strgboolmodi = '%s' % (k in gdatmodi.indxsampmodi)
         except:
             strgboolmodi = ''
-        print '%5d %22s %14.4g %14.4g %14.4g %14.4g %14.4g %14s %10d' % (k, name, getattr(gdatmodi, 'thissamp')[k], getattr(gdatmodi, 'nextsamp')[k], gdatmodi.thissampvarb[k], \
+        if thisonly:
+            print '%5d %22s %14.4g %14.4g %14.4g %14.4g %14.4g %14s %10d' % (k, name, getattr(gdatmodi, 'thissamp')[k], getattr(gdatmodi, 'nextsamp')[k], gdatmodi.thissampvarb[k], \
                                                gdatmodi.nextsampvarb[k], gdatmodi.nextsampvarb[k] - gdatmodi.thissampvarb[k], strgboolmodi, gdat.indxstdppara[k])
+        else:
+            print '%5d %22s %14.4g %14.4g' % (k, name, getattr(gdatmodi, 'thissamp')[k], gdatmodi.thissampvarb[k])
     
 
 def show_samplong(gdat, gdatmodi):
@@ -7176,22 +7182,15 @@ def retr_sbrtsers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
         inpt[..., 0] = angl
         inpt[..., 1] = size
         inpt[..., 2] = seri
-        sbrtsers = spec[:, 0, None, None] * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)
+        print 'spec'
+        summgene(spec)
+        sbrtsers = spec[:, 0, None, None] * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)[None, :, None]
     
     # evaluate directly de Vaucouleurs
     if gdat.serstype == 'vauc':
+        sbrtsers = swapaxes(spec[:, 0, None, None] * retr_sbrtsersnorm(angl, size)[None, :, None], 1, 2)
         sbrtsers = spec[:, 0, None, None] * retr_sbrtsersnorm(angl, size)[None, :, None]
     
-    print 'spec'
-    summgene(spec)
-    print 'spec[:, 0, None, None]'
-    summgene(spec[:, 0, None, None])
-    print 'retr_sbrtsersnorm(angl, size)[None, :, None]'
-    summgene(retr_sbrtsersnorm(angl, size)[None, :, None])
-    print 'sbrtsers'
-    summgene(sbrtsers)
-    print
-
     return sbrtsers
 
 

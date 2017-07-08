@@ -2496,9 +2496,10 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             for attr in thisfile:
                 if namefixp == attr:
-                    print attr
-                    print thisfile[attr][()]
-                    print
+                    if True:
+                        print attr
+                        print thisfile[attr][()]
+                        print
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
         gdatmodi.thisindxelemfull = []
         if gdat.fittnumbtrap > 0:
@@ -2514,6 +2515,11 @@ def work(pathoutpthis, lock, indxprocwork):
                         for attr in thisfile:
                             if namefiel == attr:
                                 initcomp[l][k] = thisfile[namefiel][()]
+                                if True:
+                                    print namefiel
+                                    print l, k
+                                    print initcomp[l][k]
+                                    print
                 setattr(gdat, 'init' + strgcomp, initcomp)
             initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
@@ -2564,13 +2570,8 @@ def work(pathoutpthis, lock, indxprocwork):
                     gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
 
     if gdat.verbtype > 1:
-        print 'thissamp'
-        if gdat.fittnumbtrap > 0:
-            for k in gdat.fittindxpara:
-                if k in concatenate(gdatmodi.thisindxsampcomp['lgal']):
-                    print
-                print '%15f' % gdatmodi.thissamp[k]
-
+        show_samp(gdat, gdatmodi, thisonly=True)
+    
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] <= 0.)[0] + gdat.fittnumbpopl
     indxsampbadduppr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] >= 1.)[0] + gdat.fittnumbpopl
@@ -2584,7 +2585,8 @@ def work(pathoutpthis, lock, indxprocwork):
         raise Exception('Initial unit sample vector went outside the unit interval...')
     
     ## sample vector
-    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+    if gdat.fittnumbtrap > 0:
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
     if gdat.verbtype > 1:
         if gdat.fittnumbtrap > 0:
@@ -2629,6 +2631,10 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thislfctasym = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
     
+    # log the initial state
+    if gdat.verbtype > 1:
+        tdpy.util.show_memo(gdatmodi, 'gdatmodi')
+
     # process the initial sample, define the variables to be processed in each sample
     proc_samp(gdat, gdatmodi, 'this')
     
@@ -2667,10 +2673,6 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.listllikopti = []
     if gdat.optiprop:
         gdatmodi.cntrstdpmodi = 0
-
-    # log the initial state
-    if gdat.verbtype > 1:
-        tdpy.util.show_memo(gdatmodi, 'gdatmodi')
 
     if gdat.verbtype > 0:
         print 'Sampling...'
@@ -2881,6 +2883,9 @@ def work(pathoutpthis, lock, indxprocwork):
                     indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
                     valu = gdatmodi.thissampvarb[indxfixp]
                     thisfile.create_dataset(namefixp, data=valu)
+                    if True:
+                        print namefixp
+                        print valu
                 if gdat.fittnumbtrap > 0:
                     for l in gdat.fittindxpopl:
                         for strgcomp in gdat.fittliststrgcomp[l]:
@@ -2888,6 +2893,9 @@ def work(pathoutpthis, lock, indxprocwork):
                             for k in arange(comp.size):
                                 name = strgcomp + '%04d%04d' % (l, k)
                                 thisfile.create_dataset(name, data=comp[k])
+                                if True:
+                                    print name
+                                    print comp[k]
                 thisfile.close()
                 
             # preprocess the current sample to calculate variables that are not updated
