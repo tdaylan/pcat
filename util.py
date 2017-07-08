@@ -439,7 +439,7 @@ def retr_gaus(gdat, gdatmodi, indxparamodi, stdvpara):
        
 ### draw proposal type
 def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False):
-
+    
     gdatmodi.thisaccppsfn = True
     gdatmodi.thisaccpprio = True
     
@@ -555,8 +555,9 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     gdatmodi.evalllikpert = gdat.lensmodltype == 'none' and (not gdatmodi.propfixp or gdatmodi.proppsfp)
     
     if gdat.verbtype > 1:
-        print 
-        print 'retr_thisindxprop()'
+        print 'retr_thisindxprop():'
+        print 'gdatmodi.thisindxelemfull'
+        print gdatmodi.thisindxelemfull
         print 'propwith'
         print gdatmodi.propwith
         print 'propbrth'
@@ -567,7 +568,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
         print gdatmodi.propsplt
         print 'propmerg'
         print gdatmodi.propmerg
-        print 'indxpoplmodi'
+        print 'gdatmodi.indxpoplmodi'
         print gdatmodi.indxpoplmodi
         print 'gdatmodi.evalllikpert'
         print gdatmodi.evalllikpert
@@ -648,11 +649,10 @@ def updt_samp(gdat, gdatmodi):
 
 def initcompfromrefr(gdat, gdatmodi, namerefr):
     
-    minm = getattr(gdat, 'fittminm' + strgcomp)
-    maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-    bins = getattr(gdat, 'fittbins' + strgcomp)
     for l in gdat.fittindxpopl:
         for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+            minm = getattr(gdat, 'fittminm' + strgcomp)
+            maxm = getattr(gdat, 'fittmaxm' + strgcomp)
             comp = getattr(gdat, namerefr + strgcomp)[l]
             try:
                 if gdat.fittlistscalcomp[l][k] == 'self':
@@ -1449,6 +1449,9 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         # element index to be killed
         gdatmodi.indxelemmodi = []
         gdatmodi.indxelemfullmodi = []
+        if gdat.verbtype > 1:
+            print 'dethindxindxpnts'
+            print dethindxindxpnts
         gdatmodi.indxelemmodi.append(gdatmodi.thisindxelemfull[gdatmodi.indxpoplmodi][dethindxindxpnts])
         gdatmodi.indxelemfullmodi.append(dethindxindxpnts)
         # parameter indices to be killed
@@ -6274,12 +6277,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     spechost = array([[fluxhost]])
                 sbrthost = retr_sbrtsers(gdat, gdat.lgalgrid, gdat.bgalgrid, lgalhost, bgalhost, spechost, sizehost, ellphost, anglhost, serihost)
                 setattr(gdatobjt, strg + 'sbrthost', sbrthost)
-            print 'strg'
-            print strg
-            print 'sbrthost'
-            summgene(sbrthost)
-            print
-
             stopchro(gdat, gdatmodi, strg, 'sbrthost')
         
         # add up the total model surface brightness
@@ -6481,10 +6478,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
         if gdat.hostemistype != 'none':
             cntphost = retr_cntp(gdat, sbrthost)
-            print 'sbrthost'
-            summgene(sbrthost)
-            print 'cntphost'
-            summgene(cntphost)
             setattr(gdatobjt, strg + 'cntphost', cntphost)
             sbrthostmean = retr_spatmean(gdat, sbrthost)
             setattr(gdatobjt, strg + 'sbrthostmean', sbrthostmean)
@@ -6633,11 +6626,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 print 'deltllik calculation'
             gdatmoditemp = tdpy.util.gdatstrt()
             
-            prep_gdatmodi(gdat, gdatmoditemp, gdatobjt, strg)
-            
             for l in range(numbpopl):
                 dicttemp['deltllik'][l] = zeros(numbpnts[l])
                 for k in range(numbpnts[l]):
+                    prep_gdatmodi(gdat, gdatmoditemp, gdatobjt, strg)
                     retr_thisindxprop(gdat, gdatmoditemp, deth=True)
                     retr_prop(gdat, gdatmoditemp, thisindxpnts=k)
                     proc_samp(gdat, gdatmoditemp, 'next')
@@ -7190,6 +7182,16 @@ def retr_sbrtsers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
     if gdat.serstype == 'vauc':
         sbrtsers = spec[:, 0, None, None] * retr_sbrtsersnorm(angl, size)[None, :, None]
     
+    print 'spec'
+    summgene(spec)
+    print 'spec[:, 0, None, None]'
+    summgene(spec[:, 0, None, None])
+    print 'retr_sbrtsersnorm(angl, size)[None, :, None]'
+    summgene(retr_sbrtsersnorm(angl, size)[None, :, None])
+    print 'sbrtsers'
+    summgene(sbrtsers)
+    print
+
     return sbrtsers
 
 
@@ -7220,11 +7222,23 @@ def copytdgu(varb):
 
 def prep_gdatmodi(gdat, gdatmodi, gdatobjt, strg):
     
+    if gdat.verbtype > 1:
+        print 'prep_gdatmodi()'
+
     gdatmodi.thischro = zeros(gdat.numbchro)
     gdatmodi.thistmprfactstdv = 1.
     for namevarbstat in gdat.listnamevarbstat:
         temp = copytdgu(getattr(gdatobjt, strg + namevarbstat))
         setattr(gdatmodi, 'this' + namevarbstat, temp)
+    
+        if gdat.verbtype > 1:
+            print 'copying %s...' % namevarbstat
+            print temp
+
+    #if strg == 'true':
+    #    for namevarbstat in gdat.listnamevarbstat:
+    #        temp = copytdgu(getattr(gdatobjt, strg + namevarbstat))
+    #        setattr(gdatmodi, 'this' + namevarbstat, temp)
     
 
 def make_anim(strgsrch, full=False):

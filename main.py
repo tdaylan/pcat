@@ -2496,16 +2496,19 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             for attr in thisfile:
                 if namefixp == attr:
-                    gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr], k)
+                    print attr
+                    print thisfile[attr][()]
+                    print
+                    gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
         gdatmodi.thisindxelemfull = []
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
                 gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
             gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
             for strgcomp in gdat.fittliststrgcomptotl:
-                initcomp = []
+                initcomp = [[] for l in gdat.fittindxpopl]
                 for l in gdat.fittindxpopl:
-                    namefiel = '%s%04%04d' % (strgcomp, l, k)
+                    namefiel = '%s%04d%04d' % (strgcomp, l, k)
                     for attr in thisfile:
                         if namefiel == attr:
                             initcomp[l][k] = thisfile[namefiel]
@@ -2540,13 +2543,7 @@ def work(pathoutpthis, lock, indxprocwork):
         raise Exception('')
 
     if gdat.fittnumbtrap > 0:
-        if gdat.recostat:
-            path = gdat.pathoutp + 'stat_' + strgcnfg + '.p'
-            filepick = open(path, 'rb')
-            gdatmodi.thisindxelemfull = cPickle.load(filepick)
-            filepick.close()
-            gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
-        else:
+        if not gdat.recostat:
             ## lists of occupied and empty transdimensional parameters
             gdatmodi.thisindxelemfull = []
             if gdat.fittnumbtrap > 0:
@@ -2608,8 +2605,10 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thislliktotl = 0.
     gdatmodi.thissbrtpnts = zeros_like(gdat.expo)
     gdatmodi.thissbrthost = zeros_like(gdat.expo)
+    gdatmodi.thisdeflhost = zeros_like(gdat.expo)
+    gdatmodi.thispsfnconv = zeros_like(gdat.expo)
     gdatmodi.thisllik = zeros_like(gdat.expo)
-    prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
+    #prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
     gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thisdeltlliktotl = zeros(1)
     gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
