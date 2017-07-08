@@ -2050,22 +2050,9 @@ def proc_post(gdat, prio=False):
             errrtemp = tdpy.util.retr_errrvarb(posttemp)
             stdvtemp = std(posttemp, axis=0)
             if strgchan in gdat.listnamevarbcpos:
-                cpostemp = empty(listtemp.shape)
-                print 'listtemp'
-                summgene(listtemp)
-                print 'strgchan'
-                print strgchan
+                cpostemp = empty([listtemp.shape[0]] + [3] + list(listtemp.shape[1:]))
                 for n in gdat.indxsamptotl:
-                    print 'n'
-                    print n
-                    cpostemp[n, ...] = tdpy.util.retr_postvarb(listtemp[:n])
-            if strgchan == 'sbrthost' or strgchan == 'sbrthostmean':
-                print strgchan
-                print 'listtemp'
-                summgene(listtemp)
-                print 'errrtemp'
-                summgene(errrtemp)
-                print
+                    cpostemp[n, ...] = tdpy.util.retr_postvarb(listtemp[:n+1, ...])
 
         setattr(gdat, 'post' + strgchan, posttemp)
         setattr(gdat, 'medi' + strgchan, meditemp)
@@ -2074,12 +2061,6 @@ def proc_post(gdat, prio=False):
         if strgchan in gdat.listnamevarbcpos:
             setattr(gdat, 'cpos' + strgchan, cpostemp)
     
-    if gdat.hostemistype != 'none':
-        print 'gdat.errrsbrthostmean'
-        print gdat.errrsbrthostmean
-        summgene(gdat.errrsbrthostmean)
-        print
-
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
@@ -2496,10 +2477,6 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             for attr in thisfile:
                 if namefixp == attr:
-                    if True:
-                        print attr
-                        print thisfile[attr][()]
-                        print
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
         gdatmodi.thisindxelemfull = []
         if gdat.fittnumbtrap > 0:
@@ -2515,11 +2492,6 @@ def work(pathoutpthis, lock, indxprocwork):
                         for attr in thisfile:
                             if namefiel == attr:
                                 initcomp[l][k] = thisfile[namefiel][()]
-                                if True:
-                                    print namefiel
-                                    print l, k
-                                    print initcomp[l][k]
-                                    print
                 setattr(gdat, 'init' + strgcomp, initcomp)
             initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
@@ -2546,9 +2518,6 @@ def work(pathoutpthis, lock, indxprocwork):
             print
         except:
             pass
-
-    if gdat.datatype == 'inpt' and gdat.inittype != 'rand':
-        raise Exception('')
 
     if gdat.fittnumbtrap > 0:
         if not gdat.recostat:

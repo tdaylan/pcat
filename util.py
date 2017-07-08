@@ -673,7 +673,7 @@ def initcompfromrefr(gdat, gdatmodi, namerefr):
                 if gdat.verbtype > 0:
                     print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
                 compunit = rand(gdat.truenumbpnts[l])
-                gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
+            gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
 
 
 ## model evaluation
@@ -7230,10 +7230,6 @@ def prep_gdatmodi(gdat, gdatmodi, gdatobjt, strg):
         temp = copytdgu(getattr(gdatobjt, strg + namevarbstat))
         setattr(gdatmodi, 'this' + namevarbstat, temp)
     
-        if gdat.verbtype > 1:
-            print 'copying %s...' % namevarbstat
-            print temp
-
     #if strg == 'true':
     #    for namevarbstat in gdat.listnamevarbstat:
     #        temp = copytdgu(getattr(gdatobjt, strg + namevarbstat))
