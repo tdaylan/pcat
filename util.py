@@ -1239,7 +1239,7 @@ def retr_aang(lgal, bgal):
 
 def show_samp(gdat, gdatmodi, thisonly=False):
     
-    if thisonly:
+    if not thisonly:
         print '%5s %22s %14s %14s %14s %14s %14s %14s %10s' % ('index', 'name', 'thissamp', 'nextsamp', 'thissampvarb', 'nextsampvarb', 'diffsampvarb', 'prop', 'indxstdp')
     else:
         print '%5s %22s %14s %14s' % ('index', 'name', 'thissamp', 'thissampvarb')
@@ -1261,7 +1261,7 @@ def show_samp(gdat, gdatmodi, thisonly=False):
             strgboolmodi = '%s' % (k in gdatmodi.indxsampmodi)
         except:
             strgboolmodi = ''
-        if thisonly:
+        if not thisonly:
             print '%5d %22s %14.4g %14.4g %14.4g %14.4g %14.4g %14s %10d' % (k, name, getattr(gdatmodi, 'thissamp')[k], getattr(gdatmodi, 'nextsamp')[k], gdatmodi.thissampvarb[k], \
                                                gdatmodi.nextsampvarb[k], gdatmodi.nextsampvarb[k] - gdatmodi.thissampvarb[k], strgboolmodi, gdat.indxstdppara[k])
         else:
