@@ -2508,10 +2508,12 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgcomp in gdat.fittliststrgcomptotl:
                 initcomp = [[] for l in gdat.fittindxpopl]
                 for l in gdat.fittindxpopl:
-                    namefiel = '%s%04d%04d' % (strgcomp, l, k)
-                    for attr in thisfile:
-                        if namefiel == attr:
-                            initcomp[l][k] = thisfile[namefiel]
+                    initcomp[l] = empty(len(gdatmodi.thisindxelemfull[l]))
+                    for k in range(len(gdatmodi.thisindxelemfull[l])):
+                        namefiel = '%s%04d%04d' % (strgcomp, l, k)
+                        for attr in thisfile:
+                            if namefiel == attr:
+                                initcomp[l][k] = thisfile[namefiel][()]
                 setattr(gdat, 'init' + strgcomp, initcomp)
             initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
@@ -2882,7 +2884,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdat.fittnumbtrap > 0:
                     for l in gdat.fittindxpopl:
                         for strgcomp in gdat.fittliststrgcomp[l]:
-                            comp = gdatmodi.thisindxsampcomp[strgcomp][l]
+                            comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]]
                             for k in arange(comp.size):
                                 name = strgcomp + '%04d%04d' % (l, k)
                                 thisfile.create_dataset(name, data=comp[k])
