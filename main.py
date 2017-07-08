@@ -2569,9 +2569,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 for l in gdat.fittindxpopl:
                     gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
 
-    if gdat.verbtype > 1:
-        show_samp(gdat, gdatmodi, thisonly=True)
-    
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] <= 0.)[0] + gdat.fittnumbpopl
     indxsampbadduppr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] >= 1.)[0] + gdat.fittnumbpopl
@@ -2589,12 +2586,7 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
     if gdat.verbtype > 1:
-        if gdat.fittnumbtrap > 0:
-            print 'thissamp, thissampvarb'
-            for k in gdat.fittindxpara:
-                if k in concatenate(gdatmodi.thisindxsampcomp['lgal']):
-                    print
-                print '%15f %15f' % (gdatmodi.thissamp[k], gdatmodi.thissampvarb[k])
+        show_samp(gdat, gdatmodi, thisonly=True)
     
     ## sample index
     gdatmodi.cntrswep = 0
