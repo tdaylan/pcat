@@ -6300,23 +6300,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             sbrtmodl += sbrtback[c, :, :, :]
         stopchro(gdat, gdatmodi, strg, 'sbrtmodl')
         
-        # log
-        if gdat.verbtype > 1:
-            if gdat.lensmodltype != 'none':
-                print 'sbrthost'
-                summgene(sbrthost)
-            if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
-                print 'sbrtpnts'
-                summgene(sbrtpnts)
-            for c in indxback:
-                print 'c'
-                print c
-                print 'sbrtback[c]'
-                summgene(sbrtback[c])
-            print 'sbrtmodl'
-            summgene(sbrtmodl)
-            print
-            
         # convolve the model surface brightness with the PSF
         if gdat.psfnevaltype == 'conv':
             initchro(gdat, gdatmodi, strg, 'sbrtmodlconv')
