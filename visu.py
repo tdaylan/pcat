@@ -182,7 +182,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein')]
                         lablydat = getattr(gdat, 'lablmass' + namecalc + 'totl')
 
-                        path = pathtemp + strg + 'mass%s%s.pdf' % (namecalc, strgswep)
+                        path = retr_plotpath(gdat, gdatmodi, strg, 'mass%s%s.pdf' % (namecalc, strgswep))
                         listydat = [retr_fromgdat(gdat, gdatmodi, strg, 'masshost' + namecalc), \
                                                         retr_fromgdat(gdat, gdatmodi, strg, 'masssubh' + namecalc)]
                         if strg == 'post':
@@ -197,7 +197,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         limtydat = [1e-3, 0.1]
                         lablydat = getattr(gdat, 'lablfracsubh' + namecalc + 'totl')
 
-                        path = pathtemp + strg + 'fracsubh%s%s.pdf' % (namecalc, strgswep)
+                        path = retr_plotpath(gdat, gdatmodi, strg, 'fracsubh%s%s.pdf' % (namecalc, strgswep))
                         listydat = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc)
                         if strg == 'post':
                             listyerr = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc, mometype='errr')
