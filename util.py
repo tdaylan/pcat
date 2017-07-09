@@ -552,12 +552,13 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     
     gdatmodi.prophypr = gdatmodi.propmeanpnts or gdatmodi.propdist
     
-    gdatmodi.evalllikpert = gdat.lensmodltype == 'none' and (not gdatmodi.propfixp or gdatmodi.proppsfp)
+    gdatmodi.evalllikpert = (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and (not gdatmodi.propfixp or gdatmodi.proppsfp)
     
     if gdat.verbtype > 1:
         print 'retr_thisindxprop():'
-        print 'gdatmodi.thisindxelemfull'
-        print gdatmodi.thisindxelemfull
+        if gdat.fittnumbtrap > 0:
+            print 'gdatmodi.thisindxelemfull'
+            print gdatmodi.thisindxelemfull
         print 'propwith'
         print gdatmodi.propwith
         print 'propbrth'
@@ -1761,11 +1762,12 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
                 print gdatmodi.indxelemmodi
                 print 'gdatmodi.indxelemfullmodi'
                 print gdatmodi.indxelemfullmodi
-
-    if gdatmodi.propwith:
-        gdatmodi.nextindxsampcomp = gdatmodi.thisindxsampcomp
-    else:
-        gdatmodi.nextindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.nextindxelemfull, 'fitt')
+    
+    if gdat.fittnumbtrap > 0:
+        if gdatmodi.propwith:
+            gdatmodi.nextindxsampcomp = gdatmodi.thisindxsampcomp
+        else:
+            gdatmodi.nextindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.nextindxelemfull, 'fitt')
     
     # temp -- this is inefficient for propwithsing proposals
     if gdatmodi.thisaccpprio and (gdatmodi.propbrth or gdatmodi.propsplt or gdatmodi.propwith and not gdat.propwithsing):
@@ -5435,7 +5437,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                                                                                                                                          lw=gdat.mrkrlinewdth, ls='--'))
                 
     # temp
-    if strg == 'post' and gdat.condcatl:
+    if strg == 'post' and gdat.condcatl and gdat.fittnumbtrap > 0:
         lgal = zeros(gdat.numbprvlhigh)
         bgal = zeros(gdat.numbprvlhigh)
         ampl = zeros(gdat.numbprvlhigh)

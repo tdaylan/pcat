@@ -1035,7 +1035,7 @@ def init( \
             setp_namevarbvalu(gdat, 'expcdiststdvpop1', 0.2, popl=True)
         
         if gdat.exprtype == 'ferm':
-            bacp = 2e-7
+            bacp = 1e-4
         if gdat.exprtype == 'chan':
             bacp = 15.5
         if gdat.exprtype == 'hubb':
@@ -1984,7 +1984,7 @@ def proc_post(gdat, prio=False):
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     ## construct a condensed catalog of elements
-    if gdat.condcatl:
+    if gdat.condcatl and gdat.fittnumbtrap > 0:
         
         if gdat.verbtype > 0:
             print 'Constructing a condensed catalog...'
@@ -2552,7 +2552,10 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## sample vector
     if gdat.fittnumbtrap > 0:
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+        indxsampcomp = gdatmodi.thisindxsampcomp
+    else:
+        indxsampcomp = None
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
     
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
