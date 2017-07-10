@@ -191,7 +191,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             listyerr = None
                         tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, \
-                                                                                                colr=colr, lablydat=lablydat, listlinestyl=['-', '--'])
+                                                                                                lablydat=lablydat, listlinestyl=['-', '--'])
 
                         # subhalo mass fraction
                         limtydat = [1e-3, 0.1]
@@ -203,8 +203,7 @@ def plot_samp(gdat, gdatmodi, strg):
                             listyerr = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc, mometype='errr')
                         else:
                             listyerr = None
-                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, \
-                                                                                                                                  colr=colr, lablydat=lablydat)
+                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, lablydat=lablydat)
 
             if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
                 ## PSF radial profile
@@ -1450,11 +1449,16 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     binsplot = getattr(gdat, 'bins' + strgfeat)
     factplot = getattr(gdat, 'fact' + strgfeat + 'plot')
     
-    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', indxvarb=l)
+    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', indxlist=l)
     yerr = zeros((2, ydat.size))
-    if strg == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', mometype='errr', indxvarb=l)
     
+    if strg == 'post':
+        print 'l'
+        print l
+        print 'strgfeat'
+        print strgfeat
+        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', mometype='errr', indxlist=l)
+
     xdat *= factplot
     xerr *= factplot
     if plotdiff:
@@ -2422,7 +2426,7 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strg, indxenerplot=thisindxener, indxevttplot=thisindxevtt, indxpoplplot=thisindxpopl, intreval=intreval)
     
-    maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype, indxvarb=indxmaps)
+    maps = retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype=mometype, indxlist=indxmaps)
     imag = retr_imag(gdat, axis, maps, strg, strgcbar, thisindxener=thisindxener, thisindxevtt=thisindxevtt, tdim=tdim)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 

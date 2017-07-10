@@ -2478,6 +2478,9 @@ def work(pathoutpthis, lock, indxprocwork):
             for attr in thisfile:
                 if namefixp == attr:
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
+                    if True:
+                        print attr
+                        print thisfile[attr][()]
         gdatmodi.thisindxelemfull = []
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
@@ -2492,9 +2495,15 @@ def work(pathoutpthis, lock, indxprocwork):
                         for attr in thisfile:
                             if namefiel == attr:
                                 initcomp[l][k] = thisfile[namefiel][()]
+                                if True:
+                                    print namefiel
+                                    print thisfile[namefiel]
                 setattr(gdat, 'init' + strgcomp, initcomp)
             initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
+    
+        # temp
+        show_samp(gdat, gdatmodi, thisonly=True)
     
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -2839,9 +2848,14 @@ def work(pathoutpthis, lock, indxprocwork):
             initchro(gdat, gdatmodi, 'next', 'save')
         
             if gdat.savestat:
+    
                 path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
                 if gdat.verbtype > 0:
                     print 'Saving the state to %s...' % path
+        
+                # temp
+                show_samp(gdat, gdatmodi, thisonly=True)
+    
                 thisfile = h5py.File(path, 'w')
                 for k, namefixp in enumerate(gdat.fittnamefixp):
                     indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
@@ -2944,11 +2958,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.thistmprlposelem
                 print
             
-            # temp
             # evaluate the acceptance probability
-            #gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextlpritotl - \
-            #                                                                gdatmodi.thislpritotl + gdatmodi.thislpautotl + gdatmodi.thislfctasym + \
-            #                                                                                                                gdatmodi.thisljcbfact + gdatmodi.thislcomfact)
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.thisdeltlpri)
             
         else:

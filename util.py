@@ -2486,7 +2486,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'clus':
         gdat.lablelemextn = r'\rm{cls}'
     
-    gdat.listnamevarbstat = ['samp', 'sampvarb', 'indxelemfull', 'indxsampcomp', 'lliktotl', 'llik']
+    gdat.listnamevarbstat = ['samp', 'sampvarb', 'indxelemfull', 'indxsampcomp', 'lliktotl', 'llik', 'lpritotl']
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.listnamevarbstat += ['sbrtpnts']
     if gdat.hostemistype != 'none':
@@ -2598,6 +2598,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbstdvspepdist = 3.
     ### minima and maxima for spectral parameters
     gdat.numbstdv = 3.
+    
+    gdat.lablfracsubhcorr = r'$\xi$'
     
     ## labels and scales for variables
     if gdat.elemtype == 'lens':
@@ -4154,7 +4156,7 @@ def retr_ticklabl(gdat, strgcbar):
     setattr(gdat, 'labl' + strgcbar, labl)
     
 
-def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype='medi', indxvarb=None):
+def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype='medi', indxvarb=None, indxlist=None):
     
     if strgvarb == 'cntpdata':
         varb = gdat.cntpdata
@@ -4169,6 +4171,9 @@ def retr_fromgdat(gdat, gdatmodi, strg, strgvarb, mometype='medi', indxvarb=None
         if strg == 'post':
             varb = getattr(gdat, mometype + strgvarb)
     
+    if indxlist != None:
+        varb = varb[indxlist]
+
     if indxvarb != None:
         if mometype == 'errr':
             varb = varb[[slice(None)] + indxvarb]
@@ -7167,8 +7172,6 @@ def retr_sbrtsers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
         inpt[..., 0] = angl
         inpt[..., 1] = size
         inpt[..., 2] = seri
-        print 'spec'
-        summgene(spec)
         sbrtsers = spec[:, 0, None, None] * sp.interpolate.interpn((gdat.binslgalsers, gdat.binshalfsers, gdat.binsindxsers), gdat.sersprof, inpt)[None, :, None]
     
     # evaluate directly de Vaucouleurs
