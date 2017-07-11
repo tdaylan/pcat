@@ -102,8 +102,8 @@ def plot_samp(gdat, gdatmodi, strg):
                     if strg == 'post':
                         specplot = [empty((gdat.numbenerplot, gdat.numbstkscond))]
                         for r in gdat.indxstkscond:
-                            print 'gdat.dictglob[poststkscond][r][specplot][0, :]'
-                            summgene(gdat.dictglob['poststkscond'][r]['specplot'][0, :])
+                            print 'gdat.dictglob[poststkscond][r][specplot]'
+                            summgene(gdat.dictglob['poststkscond'][r]['specplot'])
 
                             specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:

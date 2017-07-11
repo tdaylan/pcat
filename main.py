@@ -2563,11 +2563,6 @@ def work(pathoutpthis, lock, indxprocwork):
         indxsampcomp = None
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
     
-    # temp
-    print 'gdatmodi.thislliktotl'
-    print gdatmodi.thislliktotl
-    show_samp(gdat, gdatmodi, thisonly=True)
-    
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
     
@@ -2612,6 +2607,11 @@ def work(pathoutpthis, lock, indxprocwork):
 
     # process the initial sample, define the variables to be processed in each sample
     proc_samp(gdat, gdatmodi, 'this')
+    
+    # temp
+    print 'gdatmodi.thislliktotl'
+    print gdatmodi.thislliktotl
+    show_samp(gdat, gdatmodi, thisonly=True)
     
     # dummy definitions
     if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
@@ -2869,13 +2869,13 @@ def work(pathoutpthis, lock, indxprocwork):
                                 thisfile.create_dataset(name, data=comp[k])
                 thisfile.close()
             
+            # preprocess the current sample to calculate variables that are not updated
+            proc_samp(gdat, gdatmodi, 'this')
+            
             # temp
             print 'gdatmodi.thislliktotl'
             print gdatmodi.thislliktotl
             show_samp(gdat, gdatmodi, thisonly=True)
-            
-            # preprocess the current sample to calculate variables that are not updated
-            proc_samp(gdat, gdatmodi, 'this')
             
             indxsampsave = gdat.indxsampsave[gdatmodi.cntrswep]
             
