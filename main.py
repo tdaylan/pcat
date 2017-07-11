@@ -1037,7 +1037,8 @@ def init( \
         if gdat.exprtype == 'ferm':
             bacp = 1e-4
         if gdat.exprtype == 'chan':
-            bacp = 15.5
+            bacp = 1.
+            setp_namevarbvalu(gdat, 'bacpbac1', 15.5)
         if gdat.exprtype == 'hubb':
             bacp = 2e-7
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
@@ -2478,14 +2479,16 @@ def work(pathoutpthis, lock, indxprocwork):
             for attr in thisfile:
                 if namefixp == attr:
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
-                    if True:
-                        print attr
-                        print thisfile[attr][()]
-        gdatmodi.thisindxelemfull = []
         if gdat.fittnumbtrap > 0:
+            gdatmodi.thisindxelemfull = []
             for l in gdat.fittindxpopl:
                 gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
             gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
+            indxsampcomp = gdatmodi.thisindxsampcomp
+        else:
+            indxsampcomp = None
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+        if gdat.fittnumbtrap > 0:
             for strgcomp in gdat.fittliststrgcomptotl:
                 initcomp = [[] for l in gdat.fittindxpopl]
                 for l in gdat.fittindxpopl:
@@ -2495,16 +2498,10 @@ def work(pathoutpthis, lock, indxprocwork):
                         for attr in thisfile:
                             if namefiel == attr:
                                 initcomp[l][k] = thisfile[namefiel][()]
-                                if True:
-                                    print namefiel
-                                    print thisfile[namefiel]
                 setattr(gdat, 'init' + strgcomp, initcomp)
             initcompfromrefr(gdat, gdatmodi, 'init')
         thisfile.close()
-    
-        # temp
-        show_samp(gdat, gdatmodi, thisonly=True)
-    
+
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if gdat.recostat:
@@ -2565,6 +2562,11 @@ def work(pathoutpthis, lock, indxprocwork):
     else:
         indxsampcomp = None
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
+    
+    # temp
+    print 'gdatmodi.thislliktotl'
+    print gdatmodi.thislliktotl
+    show_samp(gdat, gdatmodi, thisonly=True)
     
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
@@ -2853,17 +2855,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdat.verbtype > 0:
                     print 'Saving the state to %s...' % path
         
-                # temp
-                show_samp(gdat, gdatmodi, thisonly=True)
-    
                 thisfile = h5py.File(path, 'w')
                 for k, namefixp in enumerate(gdat.fittnamefixp):
                     indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
                     valu = gdatmodi.thissampvarb[indxfixp]
                     thisfile.create_dataset(namefixp, data=valu)
-                    if True:
-                        print namefixp
-                        print valu
                 if gdat.fittnumbtrap > 0:
                     for l in gdat.fittindxpopl:
                         for strgcomp in gdat.fittliststrgcomp[l]:
@@ -2871,11 +2867,13 @@ def work(pathoutpthis, lock, indxprocwork):
                             for k in arange(comp.size):
                                 name = strgcomp + '%04d%04d' % (l, k)
                                 thisfile.create_dataset(name, data=comp[k])
-                                if True:
-                                    print name
-                                    print comp[k]
                 thisfile.close()
-                
+            
+            # temp
+            print 'gdatmodi.thislliktotl'
+            print gdatmodi.thislliktotl
+            show_samp(gdat, gdatmodi, thisonly=True)
+            
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
             

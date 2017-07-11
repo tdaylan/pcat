@@ -2337,12 +2337,14 @@ def retr_condcatl(gdat):
         for strgfeat in gdat.fittliststrgfeattotl:
             print 'strgfeat'
             print strgfeat
-            arry = stack(gdat.dictglob['liststkscond'][r][strgfeat])
+            print 'gdat.dictglob[liststkscond][r][strgfeat]'
+            print gdat.dictglob['liststkscond'][r][strgfeat]
+            arry = stack(gdat.dictglob['liststkscond'][r][strgfeat], axis=0)
             print 'arry'
             summgene(arry)
             print 'zeros((3, list(arry.shape[1:])))'
-            summgene(zeros((3, list(arry.shape[1:]))))
-            gdat.dictglob['poststkscond'][r][strgfeat] = zeros((3, list(arry.shape[1:])))
+            summgene(zeros(([3] + list(arry.shape[1:]))))
+            gdat.dictglob['poststkscond'][r][strgfeat] = zeros(([3] + list(arry.shape[1:])))
             print 'pass'
             gdat.dictglob['poststkscond'][r][strgfeat][0, ...] = median(arry, axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat][1, ...] = percentile(arry, 16., axis=0)

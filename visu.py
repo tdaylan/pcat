@@ -29,7 +29,9 @@ def plot_samp(gdat, gdatmodi, strg):
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
             spectype = getattr(gdat, strgmodl + 'spectype')
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-            numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
+            
+            if strg != 'post':
+                numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strg != 'post':
                 indxelemfull = list(getattr(gdatobjt, strg + 'indxelemfull'))
@@ -98,23 +100,27 @@ def plot_samp(gdat, gdatmodi, strg):
                     
                     # PS spectra
                     if strg == 'post':
-                        specplot = [empty((gdat.numbener, gdat.numbstkscond)) for l in indxpopl]
-                        for l in indxpopl:
-                            for r in gdat.indxstkscond:
-                                specplot[l][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][l]
+                        specplot = [empty((gdat.numbenerplot, gdat.numbstkscond))]
+                        for r in gdat.indxstkscond:
+                            print 'gdat.dictglob[poststkscond][r][specplot][0, :]'
+                            summgene(gdat.dictglob['poststkscond'][r]['specplot'][0, :])
+
+                            specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:
                         specplot = getattr(gdatobjt, strg + 'specplot')
-                    for l in indxpopl:
+                    for l in range(len(specplot)):
                         listxdat = []
                         listplottype = []
-                        for k in range(numbpnts[l]):
+                        for k in range(specplot[l].shape[1]):
                             listxdat.append(gdat.meanenerplot)
                             listplottype.append('line')
                         
                         for specconvunit in gdat.listspecconvunit:
                             listydat = []
-                            for k in range(numbpnts[l]):
+                            for k in range(specplot[l].shape[-1]):
                                 specplottemp = specplot[l]
+                                print 'specplottemp'
+                                summgene(specplottemp)
                                 if strgmodl == 'true':
                                     specplottemp = copy(specplottemp[0, :, k])
                                 else:
