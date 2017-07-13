@@ -7268,13 +7268,9 @@ def make_anim(strgsrch, full=False):
                     continue
                 
                 shuffle(listname)
-                
     
                 for name in listname:
                     
-                    if not full and not (name.startswith('thiscntpdata') or name.startswith('thishistdefspop0')):
-                        continue
-    
                     strgtemp = '%s*_swep*.pdf' % name
                     listfile = fnmatch.filter(os.listdir(pathframextn), strgtemp)
                     numbfile = len(listfile)
