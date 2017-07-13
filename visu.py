@@ -119,8 +119,6 @@ def plot_samp(gdat, gdatmodi, strg):
                             listydat = []
                             for k in range(specplot[l].shape[-1]):
                                 specplottemp = specplot[l]
-                                print 'specplottemp'
-                                summgene(specplottemp)
                                 if strgmodl == 'true':
                                     specplottemp = copy(specplottemp[0, :, k])
                                 else:
@@ -1020,11 +1018,9 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
-            try:
-                gdat.ylimsdenspec
-            except:
-                gdat.ylimsdenspec = axis.get_ylim()
-            axis.set_ylim([1e-4 * amax(gdat.sbrtdatamean[b]) * factydat, 1e1 * amax(gdat.sbrtdatamean[b]) * factydat])
+
+            limtydat = array([1e-4 * amin(listydat[cntrdata, :] * factener), 1e1 * amax(listydat[cntrdata, :] * factener)]) * factydat
+            axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)
             axis.set_xscale('log')
