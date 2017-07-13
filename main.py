@@ -2461,8 +2461,10 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             # temp - this should take into account parameters that exists in one but not the other
-            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[k], k)
-            gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+            if namefixp == gdat.truenamefixp[k]:
+                indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
+                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[indxfixptrue], k)
+                gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
     
     # apply imposed initial state
     ## by the saved state of another run
@@ -2488,6 +2490,7 @@ def work(pathoutpthis, lock, indxprocwork):
         else:
             indxsampcomp = None
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+    
         if gdat.fittnumbtrap > 0:
             for strgcomp in gdat.fittliststrgcomptotl:
                 initcomp = [[] for l in gdat.fittindxpopl]
@@ -2607,11 +2610,6 @@ def work(pathoutpthis, lock, indxprocwork):
 
     # process the initial sample, define the variables to be processed in each sample
     proc_samp(gdat, gdatmodi, 'this')
-    
-    # temp
-    print 'gdatmodi.thislliktotl'
-    print gdatmodi.thislliktotl
-    show_samp(gdat, gdatmodi, thisonly=True)
     
     # dummy definitions
     if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
@@ -2856,7 +2854,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'Saving the state to %s...' % path
         
                 thisfile = h5py.File(path, 'w')
-                for k, namefixp in enumerate(gdat.fittnamefixp):
+                for namefixp in gdat.fittnamefixp:
                     indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
                     valu = gdatmodi.thissampvarb[indxfixp]
                     thisfile.create_dataset(namefixp, data=valu)
@@ -2871,11 +2869,6 @@ def work(pathoutpthis, lock, indxprocwork):
             
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
-            
-            # temp
-            print 'gdatmodi.thislliktotl'
-            print gdatmodi.thislliktotl
-            show_samp(gdat, gdatmodi, thisonly=True)
             
             indxsampsave = gdat.indxsampsave[gdatmodi.cntrswep]
             

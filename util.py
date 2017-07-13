@@ -552,7 +552,7 @@ def retr_thisindxprop(gdat, gdatmodi, thisindxpopl=None, brth=False, deth=False)
     
     gdatmodi.prophypr = gdatmodi.propmeanpnts or gdatmodi.propdist
     
-    gdatmodi.evalllikpert = (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and (not gdatmodi.propfixp or gdatmodi.proppsfp)
+    gdatmodi.evalllikpert = (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and (not gdatmodi.propfixp or gdatmodi.proppsfp and gdat.fittnumbtrap > 0)
     
     if gdat.verbtype > 1:
         print 'retr_thisindxprop():'
@@ -1244,6 +1244,7 @@ def show_samp(gdat, gdatmodi, thisonly=False):
         print '%5s %22s %14s %14s %14s %14s %14s %14s %10s' % ('index', 'name', 'thissamp', 'nextsamp', 'thissampvarb', 'nextsampvarb', 'diffsampvarb', 'prop', 'indxstdp')
     else:
         print '%5s %22s %14s %14s' % ('index', 'name', 'thissamp', 'thissampvarb')
+    
     for k in gdat.fittindxpara:
         if k == gdat.fittnumbfixp:
             print
@@ -2335,20 +2336,25 @@ def retr_condcatl(gdat):
         print 'r'
         print r
         for strgfeat in gdat.fittliststrgfeattotl:
-            print 'strgfeat'
-            print strgfeat
-            print 'gdat.dictglob[liststkscond][r][strgfeat]'
-            print gdat.dictglob['liststkscond'][r][strgfeat]
             arry = stack(gdat.dictglob['liststkscond'][r][strgfeat], axis=0)
-            print 'arry'
-            summgene(arry)
-            print 'zeros((3, list(arry.shape[1:])))'
-            summgene(zeros(([3] + list(arry.shape[1:]))))
             gdat.dictglob['poststkscond'][r][strgfeat] = zeros(([3] + list(arry.shape[1:])))
-            print 'pass'
             gdat.dictglob['poststkscond'][r][strgfeat][0, ...] = median(arry, axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat][1, ...] = percentile(arry, 16., axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat][2, ...] = percentile(arry, 84., axis=0)
+            
+            print 'strgfeat'
+            print strgfeat
+            print 'gdat.dictglob[liststkscond][r][strgfeat]'
+            summgene(gdat.dictglob['liststkscond'][r][strgfeat])
+            print 'arry'
+            summgene(arry)
+            print 'gdat.dictglob[poststkscond][r][strgfeat]'
+            summgene(gdat.dictglob['poststkscond'][r][strgfeat])
+            print 
+            
+
+    if gdat.strgcnfg == 'pcat_ferm_mock_igal':
+        raise Exception('')
 
     gdat.numbstkscond = len(gdat.dictglob['liststkscond'])
 
@@ -3747,8 +3753,9 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanpnts]] = 1e-2
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
-            gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
+            if gdat.fittnumbtrap > 1:
+                gdat.stdvstdp[gdat.indxstdpcomp] = 1e-2
+                gdat.stdvstdp[gdat.indxstdpflux] = 1e-2
         if gdat.exprtype == 'sdyn':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
 
@@ -4542,6 +4549,14 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
                 indx = cntr.incr()
                 dicttemp['indxfixpbacpbac%dene%d' % (c, i)] = indx
                 dicttemp['indxfixpbacp'].append(indx)
+                
+    if False:
+        for attr, valu in dicttemp.iteritems():
+            if attr.startswith('indxfixpbac'):
+                print attr
+                print valu
+                print
+
     dicttemp['indxfixpbacp'] = array(dicttemp['indxfixpbacp'])
     dicttemp['indxfixphost'] = []
     dicttemp['indxfixpsour'] = []
@@ -4716,9 +4731,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             continue
 
         strgvarb = strgvarb[8:]
-        
         namefixp[k] = strgvarb
-
         if strg[:-1].endswith('pop'):
             
             if numbpopl == 1:
@@ -4885,7 +4898,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             else:
                 strgbacktemp = ''
             
-            namefixp[k] = name
+            #namefixp[k] = name
             lablfixp[k] = '$A_{%s%s}$' % (strgbacktemp, strgenertemp)
             lablfixpunit[k] = gdat.lablsbrtunit
             
@@ -6648,7 +6661,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 #### spectra
                 for l in indxpopl:
                     dicttemp['specplot'][l] = retr_spec(gdat, dicttemp['flux'][l], dicttemp['sind'][l], dicttemp['curv'][l], dicttemp['expc'][l], spectype[l], plot=True)
-                
+                    
             if gdat.elemtype == 'lens':
                 
                 #### distance to the source
