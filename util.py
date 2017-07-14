@@ -2347,8 +2347,8 @@ def retr_condcatl(gdat):
             
             print 'strgfeat'
             print strgfeat
-            print 'gdat.dictglob[liststkscond][r][strgfeat]'
-            summgene(gdat.dictglob['liststkscond'][r][strgfeat])
+            print 'gdat.dictglob[liststkscond][r][strgfeat][0]'
+            summgene(gdat.dictglob['liststkscond'][r][strgfeat][0])
             print 'arry'
             summgene(arry)
             print 'gdat.dictglob[poststkscond][r][strgfeat]'
@@ -3322,11 +3322,10 @@ def setpinit(gdat, boolinitsetp=False):
                     sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], -1, sbrtbacknormtemp.shape[-1]))
 
             sbrtbacknorm[c, ...] = sbrtbacknormtemp
-            
+           
+            # determine spatially uniform background templates
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
-                    print 'std(sbrtbacknorm[c, i, :, m])'
-                    print std(sbrtbacknorm[c, i, :, m])
                     if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
                         unifback[c] = False
 
@@ -6664,11 +6663,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 
             #### delta log-likelihood
             if gdat.verbtype > 1:
-                print 'deltllik calculation'
+                print
+                print 'Calculating log-likelihood differences when removing elements from the model.'
             gdatmoditemp = tdpy.util.gdatstrt()
             
             for l in range(numbpopl):
                 dicttemp['deltllik'][l] = zeros(numbpnts[l])
+                if gdat.verbtype > 1:
+                    print 'l'
+                    print l
                 for k in range(numbpnts[l]):
                     prep_gdatmodi(gdat, gdatmoditemp, gdatobjt, strg)
                     retr_thisindxprop(gdat, gdatmoditemp, deth=True)
@@ -6676,15 +6679,17 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     proc_samp(gdat, gdatmoditemp, 'next')
                     dicttemp['deltllik'][l][k] = lliktotl - gdatmoditemp.nextlliktotl
                     if gdat.verbtype > 1:
-                        print 'l'
-                        print l
                         print 'k'
                         print k
                         print 'lliktotl'
                         print lliktotl
                         print 'gdatmoditemp.nextlliktotl'
                         print gdatmoditemp.nextlliktotl
+                        print
+                if gdat.verbtype > 1:
+                    print
             if gdat.verbtype > 1:
+                print 'deltllik calculation ended.'
                 print
 
             if gdat.elemtype == 'lght':

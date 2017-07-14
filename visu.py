@@ -295,10 +295,10 @@ def plot_samp(gdat, gdatmodi, strg):
                                 ## plot the surface density of elements
                                 if ydattype == 'sden':
                                     if gdat.sdenunit == 'degr':
-                                        factydat = (pi / 180.)**2 * gdat.anglfact**2
+                                        factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
                                         lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
                                     if gdat.sdenunit == 'ster':
-                                        factydat = 1. / gdat.anglfact**2
+                                        factydat = 1. / (2. * gdat.maxmgang)**2
                                         lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % gdat.lablelemextn
                                 ## plot the total number of elements
                                 if ydattype == 'totl':
