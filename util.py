@@ -1072,27 +1072,30 @@ def retr_chandata(gdat):
     gdat.exprlgal = bgalchan
     
     # temp
+    gdat.exprspec = zeros((3, gdat.numbener, gdat.exprlgal.size))
     gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
     gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
     
     if gdat.numbener == 2:
-        gdat.exprspec = zeros((3, 2, gdat.exprlgal.size))
         gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
         gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e9 / 16.
-        # temp
-        gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
-        gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
-        
-        # temp
-        gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
+    else:
+        gdat.exprspec[0, :, :] = fluxchansoft[None, :] * 0.624e9
+
+    # temp
+    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
+    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
     
-        if gdat.numbener > 1:
-            gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(gdat.meanener[1] / gdat.meanener[0])
-            gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
+    # temp
+    gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
     
-        # temp
-        if gdat.numbener > 1:
-            gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
+    if gdat.numbener > 1:
+        gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.))
+        gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
+    
+    # temp
+    if gdat.numbener > 1:
+        gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
 
 
 def retr_fermdata(gdat):
@@ -2423,11 +2426,11 @@ def setp_indxswepsave(gdat):
 def retr_cntspnts(gdat, lgal, bgal, spec):
     
     indxpixltemp = retr_indxpixl(gdat, bgal, lgal)
-    cnts = zeros((gdat.numbener, lgal.size, gdat.numbevtt))
+    cnts = zeros((gdat.numbener, lgal.size))
     for k in range(lgal.size):
-        cnts[:, k, :] += spec[:, k, None] * gdat.expo[:, indxpixltemp[k], :]
+        cnts[:, k] += spec[:, k] * gdat.expototl[:, indxpixltemp[k]]
     if gdat.enerdiff:
-        cnts *= gdat.deltener[:, None, None]
+        cnts *= gdat.deltener[:, None]
     
     return cnts
 
@@ -2513,7 +2516,7 @@ def setpinit(gdat, boolinitsetp=False):
     # temp
     if gdat.elemtype == 'lght':
         gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
-        gdat.liststrgfeatplot = []
+        gdat.liststrgfeatplot = ['cnts']
     if gdat.elemtype == 'lens':
         gdat.listnamefeateval = []
         gdat.liststrgfeatplot = []
@@ -2781,11 +2784,23 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     setattr(gdat, 'labl' + name + 'totl', '$%s$ [%s]' % (labl, lablunit))
             except:
-                setattr(gdat, 'labl' + name + 'unit', '')
+                lablunit = ''
+                setattr(gdat, 'labl' + name + 'unit', lablunit)
                 if labl.startswith('$'):
                     setattr(gdat, 'labl' + name + 'totl', '%s' % labl)
                 else:
                     setattr(gdat, 'labl' + name + 'totl', '$%s$' % labl)
+    
+            for strgextn in ['ref', 'sam']:
+                if strgextn == 'ref':
+                    nameextn = 'refr'
+                if strgextn == 'sam':
+                    nameextn = 'samp'
+                lablxdat = '$%s^{%s}$%s' % (labl, strgextn, lablunit)
+                if lablunit == '':
+                    setattr(gdat, 'labl' + name + nameextn, '%s$^{%s}$ [%s]' % (labl, strgextn, lablunit))
+                else:
+                    setattr(gdat, 'labl' + name + nameextn, '$%s^{%s}$' % (labl, strgextn))
     
     ## legends
     if gdat.elemtype == 'lght':
@@ -3042,7 +3057,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.exprtype == 'ferm':
             gdat.maxmangl = 15. / gdat.anglfact
         if gdat.exprtype == 'chan':
-            gdat.maxmangl = 10. / gdat.anglfact
+            gdat.maxmangl = 8. / gdat.anglfact
         if gdat.exprtype == 'hubb':
             gdat.maxmangl = 1. / gdat.anglfact
     retr_axis(gdat, 'anglhalf', 0., gdat.maxmgangdata, gdat.numbanglhalf)
@@ -3280,6 +3295,7 @@ def setpinit(gdat, boolinitsetp=False):
         backtype = getattr(gdat, strgmodl + 'backtype')
         numbback = getattr(gdat, strgmodl + 'numbback')
         sbrtbacknorm = empty((numbback, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+        unifback = ones(numbback, dtype=bool)
         for c in indxback:
             if isinstance(backtype[c], float):
                 if gdat.pixltype == 'heal':
@@ -3307,9 +3323,17 @@ def setpinit(gdat, boolinitsetp=False):
 
             sbrtbacknorm[c, ...] = sbrtbacknormtemp
             
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    print 'std(sbrtbacknorm[c, i, :, m])'
+                    print std(sbrtbacknorm[c, i, :, m])
+                    if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
+                        unifback[c] = False
+
             if amin(sbrtbacknorm[c, ...]) <= 0.:
                 raise Exception('Background templates must be positive.')
        
+        setattr(gdat, strgmodl + 'unifback', unifback)
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
     
     # only include desired energy and PSF class bins 
@@ -4685,6 +4709,12 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
 
 def setp_fixp(gdat, strgmodl='fitt'):
     
+    if gdat.verbtype > 0:
+        if strgmodl == 'true':
+            strgtemp = 'true'
+        if strgmodl == 'fitt':
+            strgtemp = 'fitting'
+        print 'Building the %s model...' % strgtemp
     listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
     liststrgcomp = getattr(gdat, strgmodl + 'liststrgcomp')
     numbcomp = getattr(gdat, strgmodl + 'numbcomp')
@@ -4905,7 +4935,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             try:
                 scalfixp[k] = getattr(gdat, strgmodl + 'scal' + name)
                 if gdat.verbtype > 0:
-                    print 'Received custom scaling for %s' % name
+                    print 'Received custom scaling for %s: %s' % (name, scalfixp[k])
             except:
                 scalfixp[k] = 'logt'
         
@@ -6752,7 +6782,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 if strgfeat == 'spec':
                     temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener))
                 elif strgfeat == 'cnts':
-                    temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener, gdat.numbevtt))
+                    temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener))
                 else:
                     temp = zeros((numbpopl, gdat.numbbinsplot))
                 dicttemp['hist' + strgfeat] = temp
@@ -6766,7 +6796,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     elif strgfeat == 'cnts':
                         for i in gdat.indxener:
                             for m in gdat.indxevtt:
-                                dicttemp['hist' + strgfeat][l, :, i, m] = histogram(dicttemp['cnts'][l][i, listindxmodlelemfilt[0][l], m], gdat.binscnts)[0]
+                                dicttemp['hist' + strgfeat][l, :, i] = histogram(dicttemp['cnts'][l][i, listindxmodlelemfilt[0][l]], gdat.binscnts)[0]
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expc' and spectype[l] != 'expc'):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         if strgfeat[:-4] in gdat.listnamefeatsele and strgmodl == 'true':

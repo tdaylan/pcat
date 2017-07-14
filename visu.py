@@ -38,6 +38,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 indxsampcomp = retr_indxsampcomp(gdat, indxelemfull, strgmodl)
         numbback = getattr(gdat, strgmodl + 'numbback')
         indxback = getattr(gdat, strgmodl + 'indxback')
+        unifback = getattr(gdat, strgmodl + 'unifback')
         cntpback = getattr(gdatobjt, strg + 'cntpback')
         cntpbacktotl = getattr(gdatobjt, strg + 'cntpbacktotl')
             
@@ -259,19 +260,22 @@ def plot_samp(gdat, gdatmodi, strg):
     
             # element feature histograms
             if not (strg == 'true' and gdat.datatype == 'inpt'):
+                limtydat = gdat.limtpntshist
                 for l in indxpopl:
-                    indxydat = [l, slice(None)]
                     strgindxydat = 'pop%d' % l
     
                     for strgfeat in liststrgfeatodim[l] + gdat.liststrgfeatplot:
+                        
+                        if strgfeat in gdat.liststrgfeatplot:
+                            indxydat = [l, slice(None), gdat.indxenerpivt[0]]
+                        else:
+                            indxydat = [l, slice(None)]
                         
                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                         factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                         limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
                         
-                        limtydat = gdat.limtpntshist
-                    
                         # for true model, also plot the significant elements only
                         # temp
                         #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
@@ -300,7 +304,6 @@ def plot_samp(gdat, gdatmodi, strg):
                                 if ydattype == 'totl':
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % gdat.lablelemextn
-                                
                                 plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
@@ -309,9 +312,11 @@ def plot_samp(gdat, gdatmodi, strg):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 for c in indxback:
-                    plot_genemaps(gdat, gdatmodi, strg, 'cntpback', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m, indxmaps=c)
+                    if not unifback[c]:
+                        plot_genemaps(gdat, gdatmodi, strg, 'cntpback', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m, indxmaps=c)
                 if numbback > 1:
-                    plot_genemaps(gdat, gdatmodi, strg, 'cntpbacktotl', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m)
+                    if not unifback.all():
+                        plot_genemaps(gdat, gdatmodi, strg, 'cntpbacktotl', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m)
         
         # temp -- restrict other plots to indxmodlelemcomp
         for specconvunit in gdat.listspecconvunit:
@@ -988,26 +993,21 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
             
             xdat = gdat.meanener
             for k in range(numblablsbrtspec):
+                mrkr = listmrkr[k]
                 if k == cntrdata:
                     colr = 'black'
                     linestyl = '-'
-                    mrkr = None
                 else:
+                    linestyl = '--'
                     if strg == 'true':
                         colr = 'g'
-                        linestyl = '-.'
-                        mrkr = listmrkr[k]
                     elif strg == 'this':
                         colr = 'b'
-                        linestyl = '-.'
-                        mrkr = listmrkr[k]
                     elif strg == 'post':
                         colr = 'black'
-                        linestyl = ''
-                        mrkr = 'o'
                 
-                ydat = listydat[k, :]
-                yerr = listyerr[:, k, :]
+                ydat = copy(listydat[k, :])
+                yerr = copy(listyerr[:, k, :])
                 
                 ydat *= factener
                 yerr *= factener
@@ -1015,7 +1015,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 ydat *= factydat
                 yerr *= factydat
 
-                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
+                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=5)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 
@@ -1277,6 +1277,9 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     if indxydat != None:
         ydat = ydat[indxydat]
     
+    # temp
+    xerr = zeros((2, xdat.size))
+    
     if tdim:
         axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     else:
@@ -1305,7 +1308,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             ##  other
             labl = gdat.legdsampdist + ' distribution'
         
-        temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
+        temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
         for caps in listcaps:
             caps.set_markeredgewidth(1)
 
@@ -1324,7 +1327,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
 
                 if indxydat != None:
                     yerr = yerr[[slice(None)] + indxydat]
-                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
+                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
                 for caps in listcaps:
                     caps.set_markeredgewidth(1)
             else:
@@ -1423,7 +1426,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     else:
         axis.set_xlim([amin(xdat), amax(xdat)])
     if limtydat != None:
-        axis.set_ylim(limtydat)
+        axis.set_ylim([limtydat[0] * factydat, limtydat[1] * factydat])
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
     
@@ -1440,7 +1443,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
 
 def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     
-    figr, axis = plt.subplots(1, 1, figsize=(gdat.plotsize * gdat.numbener, gdat.plotsize))
+    figr, axis = plt.subplots(1, 1, figsize=(gdat.plotsize, gdat.plotsize))
 
     # prepare data to be plotted
     xdat = copy(getattr(gdat, 'true' + strgfeat)[l][0, :])
@@ -1484,10 +1487,8 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     else:
         axis.plot(factplot * binsplot, factplot * binsplot, ls='--', alpha=gdat.alphmrkr, color='black')
     
-    lablfeat = getattr(gdat, 'labl' + strgfeat)
-    lablfeatunit = getattr(gdat, 'labl' + strgfeat + 'unit')
-    lablxdat = r'$%s^{%s}$%s' % (lablfeat, gdat.strgcatl, lablfeatunit)
-    lablydat = '$%s^{samp}$%s' % (lablfeat, lablfeatunit)
+    lablxdat = getattr(gdat, 'labl' + strgfeat + 'refr')
+    lablydat = getattr(gdat, 'labl' + strgfeat + 'samp')
     axis.set_xlabel(lablxdat)
     axis.set_ylabel(lablydat)
     if indx.size > 0 and getattr(gdat, 'scal' + strgfeat + 'plot') == 'logt':
@@ -1694,17 +1695,12 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
             # superimpose true PS
             truesign = getattr(gdat, 'true' + gdat.namefeatsign)
             if gdat.truelgal != None and gdat.truelgal != None and truesign != None:
-                
                 if strgfeat != None:
                     truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp][0, :] 
                     indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
-                    
                 else:
                     indxpnts = arange(gdat.truenumbpnts[indxpopltemp])
-                
-                truecompsign = getattr(gdat, 'true' + gdat.namefeatsign)[indxpopltemp]
-                
-                mrkrsize = retr_mrkrsize(gdat, truecompsign[0, indxpnts])
+                mrkrsize = retr_mrkrsize(gdat, truesign[indxpopltemp][0, indxpnts])
                 axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][0, indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][0, indxpnts], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
@@ -1867,14 +1863,15 @@ def plot_eval(gdat):
     axis.set_yscale('log')
     axis.set_xlabel(gdat.lablgangtotl)
     axis.set_ylabel(gdat.lablsbrttotl)
-
-    limt = gdat.specfraceval * amax(gdat.binsprox[0] * psfntemp)
-    axis.set_ylim([1e-3 * limt, None])
-    maxmangltemp = interp(1e-1 * limt, gdat.binsprox[k] * psfntemp[::-1], gdat.binsangl[::-1] * gdat.anglfact)
     
-    if limt > 0:
+    limt = gdat.specfraceval * amax(gdat.binsprox[0] * psfntemp)
+
+    if limt != 0.:
         axis.axhline(limt, color='red', ls=':', label='Flux floor')
-    axis.set_xlim([None, maxmangltemp])
+    
+    #axis.set_ylim([1e-3 * limt, None])
+    #maxmangltemp = interp(1e-1 * limt, gdat.binsprox[k] * psfntemp[::-1], gdat.binsangl[::-1] * gdat.anglfact)
+    #axis.set_xlim([None, maxmangltemp])
     
     make_legd(axis)
 

@@ -699,7 +699,7 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
     setp_namevarbvalu(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
-    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 2000)
+    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 100)
      
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
@@ -737,7 +737,7 @@ def init( \
             backtype = [1., backtypetemp]
             gdat.truescalbacpbac1 = 'gaus'
             gdat.truemeanbacpbac1 = 15.5
-            gdat.truestdvbacpbac1 = 0.05 * 15.5
+            gdat.truestdvbacpbac1 = 1e-8 * 15.5
 
     if gdat.elemtype == 'lens':
         backtype = [1.]
