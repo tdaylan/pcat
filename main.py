@@ -780,6 +780,8 @@ def init( \
         nameback.append(r'Particle')
     setp_namevarbvalu(gdat, 'nameback', nameback)
     
+    setpprem(gdat)
+
     retr_indxsamp(gdat, strgmodl='true')
     
     ### PSF parameters

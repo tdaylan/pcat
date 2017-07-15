@@ -2484,6 +2484,20 @@ def retr_negalogt(varb):
     return negalogt
 
 
+def setpprem(gdat):
+
+    # temp
+    if gdat.elemtype == 'lght':
+        gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
+        gdat.liststrgfeatplot = ['cnts']
+    if gdat.elemtype == 'lens':
+        gdat.listnamefeateval = []
+        gdat.liststrgfeatplot = []
+    if gdat.elemtype == 'clus':
+        gdat.listnamefeateval = ['lgal', 'bgal', 'nobj']
+        gdat.liststrgfeatplot = []
+    
+
 def setpinit(gdat, boolinitsetp=False):
 
     if False and gdat.elemtype == 'lens' and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
@@ -2513,17 +2527,6 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock':
         gdat.liststrgmodl += ['true']
     
-    # temp
-    if gdat.elemtype == 'lght':
-        gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
-        gdat.liststrgfeatplot = ['cnts']
-    if gdat.elemtype == 'lens':
-        gdat.listnamefeateval = []
-        gdat.liststrgfeatplot = []
-    if gdat.elemtype == 'clus':
-        gdat.listnamefeateval = ['lgal', 'bgal', 'nobj']
-        gdat.liststrgfeatplot = []
-
     # paths
     ## data
     gdat.pathpixlcnvt = gdat.pathdata + 'pixlcnvt/'
@@ -2609,8 +2612,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.numbstdvspepdist = 3.
     ### minima and maxima for spectral parameters
     gdat.numbstdv = 3.
-    
-    gdat.lablfracsubhcorr = r'$\xi$'
     
     ## labels and scales for variables
     if gdat.elemtype == 'lens':
@@ -2862,11 +2863,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmfracsubh = 0.3
     gdat.scalfracsubh = 'self'
 
-    if gdat.priofactdoff > 0.:
-        gdat.minmfracsubhcorr = 0.
-        gdat.maxmfracsubhcorr = 1.
-        gdat.scalfracsubhcorr = 'self'
-    
     gdat.minmmasshost = 1e10
     gdat.maxmmasshost = 1e13
     gdat.scalmasshost = 'self'
@@ -2973,8 +2969,6 @@ def setpinit(gdat, boolinitsetp=False):
                     setattr(gdat, 'maxmmasssubh' + strgtemp + 'bein', gdat.maxmmasssubh)
                     setattr(gdat, 'minmfracsubh' + strgtemp + 'bein', gdat.minmfracsubh)
                     setattr(gdat, 'maxmfracsubh' + strgtemp + 'bein', gdat.maxmfracsubh)
-                if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanpnts] == 'logt').any():
-                    gdat.listnamevarbscal += ['fracsubhcorr']
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
     
@@ -4331,7 +4325,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     liststrgfeatcorr = [[] for l in indxpopl]
     if gdat.plotelemcorr:
         for l in indxpopl:
-            for strgfeat in liststrgfeatodim[l]:
+            for strgfeat in liststrgfeatodim[l] + gdat.liststrgfeatplot:
                 liststrgfeatcorr[l].append(strgfeat)
     
     # defaults
@@ -6899,11 +6893,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
                         for l in indxpopl:
                             histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dicttemp['histmcut'][l, indx] / gdat.truehistmcut[l, indx]
-                        fracsubhcorr = ones(gdat.numbbinsplot)
-                        fracsubhcorr[indx] = array([sum(gdat.truehistmcutpars[:, indx] * dicttemp['histmcut'][:, indx] / \
-                                                                                        gdat.truehistmcut[:, indx] * gdat.meanmcut[indx]) / masshostbein])
                         setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
-                        setattr(gdatobjt, strg + 'fracsubhcorr', fracsubhcorr)
             
                 ## total truncated mass of the subhalo as a cross check
                 if gdat.variasca:
