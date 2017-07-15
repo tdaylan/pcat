@@ -6839,6 +6839,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             
                 for l in range(numbpopl):
                     if strgfeat in liststrgfeatprio[l]:
+                        print 'strgfeat'
+                        print strgfeat
                         strgpdfn = liststrgpdfnprio[l][liststrgfeatprio[l].index(strgfeat)]
                         minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
                         maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
