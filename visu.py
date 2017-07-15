@@ -1015,7 +1015,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 ydat *= factydat
                 yerr *= factydat
 
-                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=5)
+                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 
@@ -1308,7 +1308,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             ##  other
             labl = gdat.legdsampdist + ' distribution'
         
-        temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
+        temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=15, color='black', label=labl, lw=1, capsize=10)
         for caps in listcaps:
             caps.set_markeredgewidth(1)
 
@@ -1327,7 +1327,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
 
                 if indxydat != None:
                     yerr = yerr[[slice(None)] + indxydat]
-                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
+                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=15, color='b', label=legd, lw=1, capsize=10)
                 for caps in listcaps:
                     caps.set_markeredgewidth(1)
             else:
@@ -1479,7 +1479,7 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     else:
         indx = where(ydat > 0.)[0]
     if indx.size > 0:
-        axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
+        axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=15, color='black')
         
     # temp -- plot associations inside the comparison area
     if plotdiff:

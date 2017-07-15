@@ -1045,21 +1045,15 @@ def retr_chandata(gdat):
     skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
-    
+   
     if gdat.numbener == 2:
         if gdat.numbsidecart == 300:
-            indxpixllgal = 1430
-            indxpixlbgal = 1490
-        if gdat.numbsidecart == 1000:
-            indxpixllgal = 1080
-            indxpixlbgal = 1140
+            indxpixllgal = 1490
+            indxpixlbgal = 1430
     if gdat.numbener == 5:
         if gdat.numbsidecart == 300:
             indxpixllgal = 2430
             indxpixlbgal = 2495
-        if gdat.numbsidecart == 1000:
-            indxpixllgal = 2080
-            indxpixlbgal = 2145
     
     # temp 0 or 1 makes a difference!
     lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
@@ -2431,7 +2425,8 @@ def retr_cntspnts(gdat, lgal, bgal, spec):
         cnts[:, k] += spec[:, k] * gdat.expototl[:, indxpixltemp[k]]
     if gdat.enerdiff:
         cnts *= gdat.deltener[:, None]
-    
+    cnts = sum(cnts, axis=0)
+
     return cnts
 
 
@@ -2489,7 +2484,7 @@ def setpprem(gdat):
     # temp
     if gdat.elemtype == 'lght':
         gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
-        gdat.liststrgfeatplot = ['cnts']
+        gdat.liststrgfeatplot = []
     if gdat.elemtype == 'lens':
         gdat.listnamefeateval = []
         gdat.liststrgfeatplot = []
@@ -4313,6 +4308,8 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     for l in indxpopl:
         liststrgfeatodim[l] = deepcopy(liststrgcomp[l])
         liststrgfeatodim[l] += ['deltllik', 'gang', 'aang']
+        if gdat.elemtype == 'lght':
+            liststrgfeatodim[l] += ['cnts']
         if gdat.elemtype == 'lens':
             liststrgfeatodim[l] += ['mcut', 'diss', 'rele', 'reln', 'reld', 'relc']
         # temp
@@ -4363,7 +4360,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
 
     for l in indxpopl:
         if gdat.elemtype == 'lght':
-            liststrgfeat[l] += ['cnts', 'spec', 'specplot']
+            liststrgfeat[l] += ['spec', 'specplot']
         if gdat.elemtype == 'lens':
             liststrgfeat[l] += ['deflprof']
     
@@ -6780,8 +6777,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             for strgfeat in liststrgfeattotl:
                 if strgfeat == 'spec':
                     temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener))
-                elif strgfeat == 'cnts':
-                    temp = zeros((numbpopl, gdat.numbbinsplot, gdat.numbener))
                 else:
                     temp = zeros((numbpopl, gdat.numbbinsplot))
                 dicttemp['hist' + strgfeat] = temp
@@ -6793,9 +6788,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         for i in gdat.indxener:
                             dicttemp['hist' + strgfeat][l, :, i] = histogram(dicttemp['spec'][l][i, listindxmodlelemfilt[0][l]], gdat.binsspec)[0]
                     elif strgfeat == 'cnts':
-                        for i in gdat.indxener:
-                            for m in gdat.indxevtt:
-                                dicttemp['hist' + strgfeat][l, :, i] = histogram(dicttemp['cnts'][l][i, listindxmodlelemfilt[0][l]], gdat.binscnts)[0]
+                        dicttemp['hist' + strgfeat][l, :] = histogram(dicttemp['cnts'][l][listindxmodlelemfilt[0][l]], gdat.binscnts)[0]
                     elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expc' and spectype[l] != 'expc'):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         if strgfeat[:-4] in gdat.listnamefeatsele and strgmodl == 'true':
@@ -6839,8 +6832,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             
                 for l in range(numbpopl):
                     if strgfeat in liststrgfeatprio[l]:
-                        print 'strgfeat'
-                        print strgfeat
                         strgpdfn = liststrgpdfnprio[l][liststrgfeatprio[l].index(strgfeat)]
                         minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
                         maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)

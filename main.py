@@ -129,6 +129,7 @@ def init( \
          numbproc=None, \
          liketype='pois', \
          exprtype=None, \
+         anlytype=None, \
          lgalcntr=0., \
          bgalcntr=0., \
          maxmangl=None, \
@@ -353,6 +354,12 @@ def init( \
         if gdat.elemtype == 'lens':
             gdat.exprtype = 'hubb'
     
+    if gdat.anlytype == None:
+        if gdat.exprtype == 'chan':
+            gdat.anlytype = 'home'
+        else:
+            gdat.anlytype = 'nomi'
+    
     if gdat.pertmodleval == None:
         gdat.pertmodleval = gdat.propwithsing
 
@@ -360,7 +367,10 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.indxenerincl = arange(1, 4)
         if gdat.exprtype == 'chan':
-            gdat.indxenerincl = arange(5)
+            if gdat.anlytype == 'home':
+                gdat.indxenerincl = arange(5)
+            if gdat.anlytype == 'extr4msc':
+                gdat.indxenerincl = arange(2)
         if gdat.exprtype == 'hubb':
             gdat.indxenerincl = arange(2)
     
@@ -539,9 +549,10 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
         if gdat.exprtype == 'chan':
-            # temp
-            gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
-            #gdat.binsenerfull = array([0.5, 2., 8.])
+            if gdat.anlytype == 'home':
+                gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
+            if gdat.anlytype == 'extr4msc':
+                gdat.binsenerfull = array([0.5, 2., 8.])
         if gdat.exprtype == 'hubb':
             # temp
             gdat.binsenerfull = array([500., 750, 1000.])
@@ -732,12 +743,16 @@ def init( \
         if gdat.exprtype == 'ferm':
             backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
-            backtype = [1., 10. * (gdat.meanenerfull / gdat.enerpivt)[gdat.indxenerincl]**1]
-            backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
-            backtype = [1., backtypetemp]
             gdat.truescalbacpbac1 = 'gaus'
-            gdat.truemeanbacpbac1 = 15.5
-            gdat.truestdvbacpbac1 = 1e-8 * 15.5
+            if gdat.anlytype == 'home':
+                backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
+                gdat.truemeanbacpbac1 = 15.5
+            if gdat.anlytype == 'extr4msc':
+                # temp
+                backtypetemp = array([1., 0.5])
+                gdat.truemeanbacpbac1 = 30.
+            gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
+            backtype = [1., backtypetemp]
 
     if gdat.elemtype == 'lens':
         backtype = [1.]
@@ -745,10 +760,6 @@ def init( \
         backtype = [1.]
     setp_namevarbvalu(gdat, 'backtype', backtype)
    
-    if gdat.exprtype == 'chan':
-       print 'gdat.truebacktype[1] * gdat.meanener**2'
-       print gdat.truebacktype[1] * gdat.meanener**2
-       
     #### boolean flag background
     if gdat.exprtype == 'chan':
         specback = [False, True]
@@ -842,7 +853,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         bacp = [1e-6, 1e-2]
     if gdat.exprtype == 'chan':
-        bacp = [1e-1, 1e1]
+        bacp = [1e-1, 1e2]
     if gdat.exprtype == 'hubb':
         bacp = [1e-10, 1e-6]
     setp_namevarblimt(gdat, 'bacp', bacp, ener=True, back=True)
