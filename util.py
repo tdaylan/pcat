@@ -1046,14 +1046,15 @@ def retr_chandata(gdat):
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
    
-    if gdat.numbener == 2:
-        if gdat.numbsidecart == 300:
+    if gdat.numbsidecart == 300:
+        if gdat.anlytype.startswith('extr'):
             indxpixllgal = 1490
             indxpixlbgal = 1430
-    if gdat.numbener == 5:
-        if gdat.numbsidecart == 300:
+        if gdat.anlytype.startswith('home'):
             indxpixllgal = 2430
             indxpixlbgal = 2495
+    else:
+        raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
     # temp 0 or 1 makes a difference!
     lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
@@ -1062,13 +1063,17 @@ def retr_chandata(gdat):
     lgalchan *= gdat.sizepixl
     bgalchan *= gdat.sizepixl
     
-    gdat.exprbgal = lgalchan
-    gdat.exprlgal = bgalchan
+    gdat.exprbgal = [lgalchan]
+    gdat.exprlgal = [bgalchan]
     
     # temp
-    gdat.exprspec = zeros((3, gdat.numbener, gdat.exprlgal.size))
-    gdat.exprlgal = tile(gdat.exprlgal, (3, 1)) 
-    gdat.exprbgal = tile(gdat.exprbgal, (3, 1)) 
+    gdat.exprspec = [zeros((3, gdat.numbener, gdat.exprlgal.size))]
+    gdat.numbrefr  = 1
+    gdat.indxrefr = arange(gdat.numbrefr)
+
+    for q in gdat.indxrefr:
+        gdat.exprlgal[q] = tile(gdat.exprlgal[q], (3, 1)) 
+        gdat.exprbgal[q] = tile(gdat.exprbgal[q], (3, 1)) 
     
     if gdat.numbener == 2:
         gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
@@ -1094,17 +1099,20 @@ def retr_chandata(gdat):
 
 def retr_fermdata(gdat):
     
+    gdat.numbrefr  = 1
+    
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
     fgl3 = pf.getdata(path)
    
-    gdat.exprlgal = deg2rad(fgl3['glon'])
-    gdat.exprlgal = ((gdat.exprlgal - pi) % (2. * pi)) - pi
-    gdat.exprbgal = deg2rad(fgl3['glat'])
+    gdat.exprlgal = [deg2rad(fgl3['glon'])]
+    gdat.exprlgal = ((gdat.exprlgal[0] - pi) % (2. * pi)) - pi
+    gdat.exprbgal = [deg2rad(fgl3['glat'])]
     
-    gdat.truenumbpntsfull = gdat.exprlgal.size
+    gdat.truenumbpntsfull = gdat.exprlgal[0].size
 
-    gdat.exprlgal = tile(gdat.exprlgal, (3, 1))
-    gdat.exprbgal = tile(gdat.exprbgal, (3, 1))
+    for q in gdat.indxrefr:
+        gdat.exprlgal[q] = tile(gdat.exprlgal[q], (3, 1)) 
+        gdat.exprbgal[q] = tile(gdat.exprbgal[q], (3, 1)) 
     
     gdat.exprspec = empty((3, gdat.numbener, gdat.truenumbpntsfull))
     gdat.exprspec[0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
@@ -1139,7 +1147,6 @@ def retr_fermdata(gdat):
     indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0, gdat.indxenerpivt[0], :] > gdat.minmflux))[0]
     
     #indxtimevari = where(gdat.exprspec[0, gdat.indxenerpivt[0], :] > gdat.minmflux)[0]
-    #gdat.exprlgal = gdat.exprlgal[:, indxtimevari]
     #gdat.exprbgal = gdat.exprbgal[:, indxtimevari]
     #gdat.exprsind = gdat.exprsind[:, indxtimevari]
     #gdat.exprcurv = gdat.exprcurv[:, indxtimevari]
@@ -3318,8 +3325,16 @@ def setpinit(gdat, boolinitsetp=False):
                     if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
                         unifback[c] = False
 
-            if amin(sbrtbacknorm[c, ...]) <= 0.:
-                raise Exception('Background templates must be positive.')
+            if amin(sbrtbacknorm[c, ...]) < 0.:
+                booltemp = False
+                raise Exception('Background templates must be positive-definite everywhere.')
+        
+        boolzero = True
+        for c in indxback:
+            if amin(sbrtbacknorm[c, ...]) > 0.:
+                boolzero = False
+        if boolzero:
+            raise Exception('At least one background template must be positive everywhere.')
        
         setattr(gdat, strgmodl + 'unifback', unifback)
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)

@@ -748,9 +748,8 @@ def init( \
                 backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
                 gdat.truemeanbacpbac1 = 15.5
             if gdat.anlytype == 'extr4msc':
-                # temp
-                backtypetemp = array([1., 0.5])
-                gdat.truemeanbacpbac1 = 30.
+                backtypetemp = 'chanfluxbackextr4msc0300.fits'
+                gdat.truemeanbacpbac1 = 1.
             gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
             backtype = [1., backtypetemp]
 
@@ -2861,8 +2860,12 @@ def work(pathoutpthis, lock, indxprocwork):
             initchro(gdat, gdatmodi, 'next', 'save')
         
             if gdat.savestat:
-    
-                path = gdat.pathoutp + 'stat_' + gdat.strgcnfg + '.h5'
+                
+                if isinstance(gdat.savestat, str):
+                    strgcnfg = gdat.savestat
+                else:
+                    strgcnfg = gdat.strgcnfg
+                path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
                 if gdat.verbtype > 0:
                     print 'Saving the state to %s...' % path
         
