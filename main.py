@@ -1311,20 +1311,12 @@ def init( \
         for q in gdat.indxrefr:
             gdat.indxexprpntsrofi.append(where((fabs(gdat.exprlgal[q][0, :]) < gdat.maxmgangdata) & (fabs(gdat.exprbgal[q][0, :]) < gdat.maxmgangdata))[0])
         for strgfeat in gdat.fittliststrgfeattotl:
-            exprfeatprim = []
             exprfeat = getattr(gdat, 'expr' + strgfeat)
             if exprfeat != None:
+                exprfeatprim = []
                 for q in gdat.indxrefr:
                     exprfeatprim.append(exprfeat[q][..., gdat.indxexprpntsrofi[q]])
-            setattr(gdat, 'expr' + strgfeat, exprfeatprim)
-    
-    ## put the experimental element features in population lists
-    for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
-        if exprfeat != None:
-            setattr(gdat, 'expr' + strgfeat, exprfeat)
-            exprfeattotl = getattr(gdat, 'expr' + strgfeat + 'totl')
-            setattr(gdat, 'expr' + strgfeat + 'totl', exprfeattotl)
+                setattr(gdat, 'expr' + strgfeat, exprfeatprim)
     
     ## number of experimental elements
     gdat.exprinfo = False
@@ -1380,10 +1372,6 @@ def init( \
         # temp -- this takes all reference elements inside the ROI
         if exprfeat != None: 
             hist = empty((1, gdat.numbbinsplot))
-            print 'strgfeat'
-            print strgfeat
-            print 'exprfeat'
-            print exprfeat
             hist[0, :] = histogram(exprfeat[0], getattr(gdat, 'bins' + strgfeat))[0]
         else:
             hist = None
