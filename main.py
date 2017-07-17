@@ -710,7 +710,16 @@ def init( \
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
     setp_namevarbvalu(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
-    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 100)
+    if gdat.elemtype == 'lght':
+        if gdat.exprtype == 'chan':
+            maxmnumbpnts = array([200])
+        if gdat.exprtype == 'ferm':
+            maxmnumbpnts = array([100])
+    if gdat.elemtype == 'lens':
+        maxmnumbpnts = array([25])
+    if gdat.elemtype == 'clus':
+        maxmnumbpnts = array([100])
+    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
      
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
@@ -750,8 +759,8 @@ def init( \
             if gdat.anlytype.startswith('extr'):
                 backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
                 gdat.truemeanbacpbac1 = 1.
+                gdat.initbacpbac1 = gdat.truemeanbacpbac1
             gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
-            gdat.initbacpbac1 = gdat.truemeanbacpbac1
             backtype = [1., backtypetemp]
 
     if gdat.elemtype == 'lens':
@@ -2146,8 +2155,9 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         indx = arange(gdat.fittnumbpopl, gdat.fittnumbpara)
     else:
         indx = arange(gdat.fittnumbpara)
-    if where(gdatmodi.thissamp[indx] < 0.)[0].size > 0 or where(gdatmodi.thissamp[indx] > 1.)[0].size > 0:
-        print 'Parameter went outside prior bounds when perturbing...'
+    indxbadd = where((gdatmodi.thissamp[indx] < 0.) | (gdatmodi.thissamp[indx] > 1.))[0]
+    if indxbadd.size > 0:
+        print '%s went outside prior bounds when perturbing...' % gdat.fittnamepara[indxbadd]
         deltlpos = 0.
     
     else:

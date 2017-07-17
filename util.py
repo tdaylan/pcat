@@ -978,6 +978,9 @@ def retr_fermpsfn(gdat):
 
 def retr_chandata(gdat):
     
+    'ECDFS_Cross_ID_Hsu2014.txt'
+
+    
     with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
         G_long = [] #deg
         G_lat = [] #deg
@@ -1034,7 +1037,8 @@ def retr_chandata(gdat):
         fluxchansoft = (asarray(flux_erg_soft)).astype(float)
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
-    
+   
+
     if gdat.numbener == 2:
         path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     else:

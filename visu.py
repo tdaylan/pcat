@@ -145,6 +145,12 @@ def plot_samp(gdat, gdatmodi, strg):
                             for ydat in listydat:
                                 ydat *= factydat
                             limtydat = [amin(gdat.minmspec) * factydat, amax(gdat.maxmspec) * factydat]
+                            if gdat.strgcnfg == 'pcat_chan_mock_delt':
+                                print 'listxdat'
+                                print listxdat
+                                print 'listydat'
+                                print listydat
+                                print 
                             tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, \
                                                        plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat=lablydat, \
                                                        limtydat=limtydat)
