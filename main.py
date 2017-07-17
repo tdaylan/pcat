@@ -367,9 +367,9 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.indxenerincl = arange(1, 4)
         if gdat.exprtype == 'chan':
-            if gdat.anlytype == 'home':
+            if gdat.anlytype.startswith('home'):
                 gdat.indxenerincl = arange(5)
-            if gdat.anlytype == 'extr4msc':
+            if gdat.anlytype.startswith('extr'):
                 gdat.indxenerincl = arange(2)
         if gdat.exprtype == 'hubb':
             gdat.indxenerincl = arange(2)
@@ -549,9 +549,9 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
         if gdat.exprtype == 'chan':
-            if gdat.anlytype == 'home':
+            if gdat.anlytype.startswith('home'):
                 gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
-            if gdat.anlytype == 'extr4msc':
+            if gdat.anlytype.startswith('extr'):
                 gdat.binsenerfull = array([0.5, 2., 8.])
         if gdat.exprtype == 'hubb':
             # temp
@@ -744,13 +744,14 @@ def init( \
             backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
             gdat.truescalbacpbac1 = 'gaus'
-            if gdat.anlytype == 'home':
+            if gdat.anlytype.startswith('home'):
                 backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
                 gdat.truemeanbacpbac1 = 15.5
-            if gdat.anlytype == 'extr4msc':
-                backtypetemp = 'chanfluxbackextr4msc0300.fits'
+            if gdat.anlytype.startswith('extr'):
+                backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
                 gdat.truemeanbacpbac1 = 1.
             gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
+            gdat.initbacpbac1 = gdat.truemeanbacpbac1
             backtype = [1., backtypetemp]
 
     if gdat.elemtype == 'lens':
@@ -1278,7 +1279,7 @@ def init( \
         gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
     if gdat.elemtype == 'lght':
         if gdat.exprspec != None:
-            gdat.exprflux = gdat.exprspec[:, gdat.indxenerpivt[0], :]
+            gdat.exprflux = [gdat.exprspec[0][:, gdat.indxenerpivt[0], :]]
     
     ## check that all experimental element features are finite
     for strgfeat in gdat.fittliststrgfeattotl:
@@ -1290,12 +1291,14 @@ def init( \
     ## element feature indices ordered with respect to the amplitude variable
     exprfeatampl = getattr(gdat, 'expr' + gdat.namecompampl)
     if exprfeatampl != None:
-        indxpnts = argsort(exprfeatampl[0, :])[::-1]
-        for strgfeat in gdat.fittliststrgfeattotl:
-            exprfeat = getattr(gdat, 'expr' + strgfeat)
-            if exprfeat != None:
-                exprfeat = exprfeat[..., indxpnts]
-                setattr(gdat, 'expr' + strgfeat, exprfeat)
+        exprfeat = deepcopy(exprfeatampl)
+        for q in gdat.indxrefr:
+            indxpnts = argsort(exprfeatampl[q][0, :])[::-1]
+            for strgfeat in gdat.fittliststrgfeattotl:
+                exprfeattemp = getattr(gdat, 'expr' + strgfeat)
+                if exprfeattemp != None:
+                    exprfeat[q] = exprfeat[q][..., indxpnts]
+        setattr(gdat, 'expr' + strgfeat, exprfeat)
             
     ## define the experimental element features inside the ROI
     ### save the total experimental element features
@@ -1304,20 +1307,24 @@ def init( \
         setattr(gdat, 'expr' + strgfeat + 'totl', exprfeat)
     
     if gdat.exprlgal != None and gdat.exprbgal != None:
-        gdat.indxexprpntsrofi = where((fabs(gdat.exprlgal[0, :]) < gdat.maxmgangdata) & (fabs(gdat.exprbgal[0, :]) < gdat.maxmgangdata))[0]
+        gdat.indxexprpntsrofi = []
+        for q in gdat.indxrefr:
+            gdat.indxexprpntsrofi.append(where((fabs(gdat.exprlgal[q][0, :]) < gdat.maxmgangdata) & (fabs(gdat.exprbgal[q][0, :]) < gdat.maxmgangdata))[0])
         for strgfeat in gdat.fittliststrgfeattotl:
+            exprfeatprim = []
             exprfeat = getattr(gdat, 'expr' + strgfeat)
             if exprfeat != None:
-                setattr(gdat, 'expr' + strgfeat, exprfeat[..., gdat.indxexprpntsrofi])
-        
+                for q in gdat.indxrefr:
+                    exprfeatprim.append(exprfeat[q][..., gdat.indxexprpntsrofi[q]])
+            setattr(gdat, 'expr' + strgfeat, exprfeatprim)
     
     ## put the experimental element features in population lists
     for strgfeat in gdat.fittliststrgfeattotl:
         exprfeat = getattr(gdat, 'expr' + strgfeat)
         if exprfeat != None:
-            setattr(gdat, 'expr' + strgfeat, [exprfeat])
+            setattr(gdat, 'expr' + strgfeat, exprfeat)
             exprfeattotl = getattr(gdat, 'expr' + strgfeat + 'totl')
-            setattr(gdat, 'expr' + strgfeat + 'totl', [exprfeattotl])
+            setattr(gdat, 'expr' + strgfeat + 'totl', exprfeattotl)
     
     ## number of experimental elements
     gdat.exprinfo = False
@@ -1373,6 +1380,10 @@ def init( \
         # temp -- this takes all reference elements inside the ROI
         if exprfeat != None: 
             hist = empty((1, gdat.numbbinsplot))
+            print 'strgfeat'
+            print strgfeat
+            print 'exprfeat'
+            print exprfeat
             hist[0, :] = histogram(exprfeat[0], getattr(gdat, 'bins' + strgfeat))[0]
         else:
             hist = None

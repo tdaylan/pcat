@@ -1067,7 +1067,7 @@ def retr_chandata(gdat):
     gdat.exprlgal = [bgalchan]
     
     # temp
-    gdat.exprspec = [zeros((3, gdat.numbener, gdat.exprlgal.size))]
+    gdat.exprspec = [zeros((3, gdat.numbener, gdat.exprlgal[0].size))]
     gdat.numbrefr  = 1
     gdat.indxrefr = arange(gdat.numbrefr)
 
@@ -1076,36 +1076,39 @@ def retr_chandata(gdat):
         gdat.exprbgal[q] = tile(gdat.exprbgal[q], (3, 1)) 
     
     if gdat.numbener == 2:
-        gdat.exprspec[0, 0, :] = fluxchansoft * 0.624e9
-        gdat.exprspec[0, 1, :] = fluxchanhard * 0.624e9 / 16.
+        gdat.exprspec[0][0, 0, :] = fluxchansoft * 0.624e9
+        gdat.exprspec[0][0, 1, :] = fluxchanhard * 0.624e9 / 16.
     else:
-        gdat.exprspec[0, :, :] = fluxchansoft[None, :] * 0.624e9
+        gdat.exprspec[0][0, :, :] = fluxchansoft[None, :] * 0.624e9
 
     # temp
-    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :]
-    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :]
+    gdat.exprspec[0][1, :, :] = gdat.exprspec[0][0, :, :]
+    gdat.exprspec[0][2, :, :] = gdat.exprspec[0][0, :, :]
     
     # temp
-    gdat.exprspec[where(gdat.exprspec < 0.)] = 0.
-    
+    gdat.exprspec[0][where(gdat.exprspec[0] < 0.)] = 0.
+   
+    gdat.exprsind = []
     if gdat.numbener > 1:
-        gdat.exprsind = -log(gdat.exprspec[0, 1, :] / gdat.exprspec[0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.))
-        gdat.exprsind[where(logical_not(isfinite(gdat.exprsind)))[0]] = 2.
+        gdat.exprsind.append(-log(gdat.exprspec[0][0, 1, :] / gdat.exprspec[0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.)))
+        gdat.exprsind[0][where(logical_not(isfinite(gdat.exprsind[0])))[0]] = 2.
     
     # temp
     if gdat.numbener > 1:
-        gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
+        gdat.exprsind[0] = tile(gdat.exprsind[0], (3, 1)) 
 
 
 def retr_fermdata(gdat):
     
     gdat.numbrefr  = 1
     
+    gdat.indxrefr = arange(gdat.numbrefr)
+
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
     fgl3 = pf.getdata(path)
    
     gdat.exprlgal = [deg2rad(fgl3['glon'])]
-    gdat.exprlgal = ((gdat.exprlgal[0] - pi) % (2. * pi)) - pi
+    gdat.exprlgal[0] = ((gdat.exprlgal[0] - pi) % (2. * pi)) - pi
     gdat.exprbgal = [deg2rad(fgl3['glat'])]
     
     gdat.truenumbpntsfull = gdat.exprlgal[0].size
@@ -1114,16 +1117,16 @@ def retr_fermdata(gdat):
         gdat.exprlgal[q] = tile(gdat.exprlgal[q], (3, 1)) 
         gdat.exprbgal[q] = tile(gdat.exprbgal[q], (3, 1)) 
     
-    gdat.exprspec = empty((3, gdat.numbener, gdat.truenumbpntsfull))
-    gdat.exprspec[0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
+    gdat.exprspec = [empty((3, gdat.numbener, gdat.truenumbpntsfull))]
+    gdat.exprspec[0][0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
                                                                                             fgl3['Flux10000_100000']))[gdat.indxenerincl, :] / gdat.deltener[:, None]
     
 
     fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], \
                                                         fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.deltener[:, None, None] 
-    gdat.exprspec[1, :, :] = gdat.exprspec[0, :, :] + fgl3specstdvtemp[:, :, 0]
-    gdat.exprspec[2, :, :] = gdat.exprspec[0, :, :] + fgl3specstdvtemp[:, :, 1]
-    gdat.exprspec[where(isfinite(gdat.exprspec) == False)] = 0.
+    gdat.exprspec[0][1, :, :] = gdat.exprspec[0][0, :, :] + fgl3specstdvtemp[:, :, 0]
+    gdat.exprspec[0][2, :, :] = gdat.exprspec[0][0, :, :] + fgl3specstdvtemp[:, :, 1]
+    gdat.exprspec[0][where(isfinite(gdat.exprspec[0]) == False)] = 0.
    
     fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
     fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng']) # [rad]
@@ -1137,21 +1140,24 @@ def retr_fermdata(gdat):
     fgl3timevari = fgl3['Variability_Index']
 
     fgl3spectype = fgl3['SpectrumType']
-    gdat.exprsind = fgl3['Spectral_Index']
-    gdat.exprsind = tile(gdat.exprsind, (3, 1)) 
-    gdat.exprcurv = fgl3['beta']
-    gdat.exprexpc = fgl3['Cutoff'] * 1e-3
+    gdat.exprsind = [fgl3['Spectral_Index']]
+    gdat.exprcurv = [fgl3['beta']]
+    gdat.exprexpc = [fgl3['Cutoff'] * 1e-3]
     
-    gdat.exprexpc[where(logical_not(isfinite(gdat.exprexpc)))] = 0.
+    gdat.exprsind[0] = tile(gdat.exprsind[0], (3, 1)) 
+    gdat.exprcurv[0] = tile(gdat.exprcurv[0], (3, 1)) 
+    gdat.exprexpc[0] = tile(gdat.exprexpc[0], (3, 1)) 
+    
+    gdat.exprexpc[0][where(logical_not(isfinite(gdat.exprexpc[0])))] = 0.
 
-    indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0, gdat.indxenerpivt[0], :] > gdat.minmflux))[0]
+    indxtimevari = where((fgl3timevari < 100.) & (gdat.exprspec[0][0, gdat.indxenerpivt[0], :] > gdat.minmflux))[0]
     
-    #indxtimevari = where(gdat.exprspec[0, gdat.indxenerpivt[0], :] > gdat.minmflux)[0]
+    #indxtimevari = where(gdat.exprspec[0][0, gdat.indxenerpivt[0], :] > gdat.minmflux)[0]
     #gdat.exprbgal = gdat.exprbgal[:, indxtimevari]
     #gdat.exprsind = gdat.exprsind[:, indxtimevari]
     #gdat.exprcurv = gdat.exprcurv[:, indxtimevari]
     #gdat.exprexpc = gdat.exprexpc[:, indxtimevari]
-    #gdat.exprspec = gdat.exprspec[:, :, indxtimevari]
+    #gdat.exprspec[0] = gdat.exprspec[0][:, :, indxtimevari]
 
 
 ### find the list of pairs for splits and merges
