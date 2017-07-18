@@ -978,8 +978,10 @@ def retr_fermpsfn(gdat):
 
 def retr_chandata(gdat):
     
+    gdat.numbrefr  = 1
+    gdat.indxrefr = arange(gdat.numbrefr)
+    
     'ECDFS_Cross_ID_Hsu2014.txt'
-
     
     with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
         G_long = [] #deg
@@ -1022,7 +1024,6 @@ def retr_chandata(gdat):
             Otype.append(line[17])
         lgalchan = (asarray(G_long)).astype(float)
         bgalchan = (asarray(G_lat)).astype(float)
-        #oaxichan = (asarray(off_angle)).astype(float)
         cntschan = (asarray(flux_cnts)).astype(float)
         cntschansoft = (asarray(soft_cnts)).astype(float)
         cntschanhard = (asarray(hard_cnts)).astype(float)
@@ -1037,19 +1038,19 @@ def retr_chandata(gdat):
         fluxchansoft = (asarray(flux_erg_soft)).astype(float)
         fluxchanhard = (asarray(flux_erg_hard)).astype(float)
         #objttypechan = (asarray(Otype))
-   
 
     if gdat.numbener == 2:
         path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     else:
         path = gdat.pathinpt + '0.50-0.91_thresh.img'
-        
+    
+    # rotate reference elements to the spatial coordinate system of PCAT
     listhdun = ap.io.fits.open(path)
     wcso = ap.wcs.WCS(listhdun[0].header)
     skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
-   
+  
     if gdat.numbsidecart == 300:
         if gdat.anlytype.startswith('extr'):
             indxpixllgal = 1490
@@ -1060,20 +1061,18 @@ def retr_chandata(gdat):
     else:
         raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
-    # temp 0 or 1 makes a difference!
     lgalchan, bgalchan = wcso.wcs_world2pix(rascchan, declchan, 0)
     lgalchan -= indxpixllgal + gdat.numbsidecart / 2
     bgalchan -= indxpixlbgal + gdat.numbsidecart / 2
     lgalchan *= gdat.sizepixl
     bgalchan *= gdat.sizepixl
     
+    # this twist is intentional
     gdat.exprbgal = [lgalchan]
     gdat.exprlgal = [bgalchan]
     
     # temp
     gdat.exprspec = [zeros((3, gdat.numbener, gdat.exprlgal[0].size))]
-    gdat.numbrefr  = 1
-    gdat.indxrefr = arange(gdat.numbrefr)
 
     for q in gdat.indxrefr:
         gdat.exprlgal[q] = tile(gdat.exprlgal[q], (3, 1)) 
