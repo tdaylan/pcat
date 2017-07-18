@@ -112,12 +112,14 @@ def plot_samp(gdat, gdatmodi, strg):
                     for l in range(len(specplot)):
                         listxdat = []
                         listplottype = []
-                        for k in range(specplot[l].shape[1]):
+
+                        for k in range(specplot[l].shape[-1]):
                             listxdat.append(gdat.meanenerplot)
                             listplottype.append('line')
                         
                         for specconvunit in gdat.listspecconvunit:
                             listydat = []
+                            
                             for k in range(specplot[l].shape[-1]):
                                 specplottemp = specplot[l]
                                 if strgmodl == 'true':
@@ -145,12 +147,6 @@ def plot_samp(gdat, gdatmodi, strg):
                             for ydat in listydat:
                                 ydat *= factydat
                             limtydat = [amin(gdat.minmspec) * factydat, amax(gdat.maxmspec) * factydat]
-                            if gdat.strgcnfg == 'pcat_chan_mock_delt':
-                                print 'listxdat'
-                                print listxdat
-                                print 'listydat'
-                                print listydat
-                                print 
                             tdpy.util.plot_gene(path, listxdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, colr=colr, alph=alph, \
                                                        plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat=lablydat, \
                                                        limtydat=limtydat)

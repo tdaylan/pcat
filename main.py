@@ -2356,10 +2356,8 @@ def optihess(gdat, gdatmodi):
     for k in range(indx[0].size):
         if indx[0][k] == indx[1][k]:
             print 'Bad estimation of the proposal scale'
-            print 'gdat.namestdp[indx[k]]'
             print gdat.namestdp[indx[0][k]]
             print
-            #raise Exception('')
 
         #gdatmodi.stdvstdpmatr[indx] = maxmstdv
         gdatmodi.stdvstdpmatr[indx] = gdat.stdvstdp[getattr(gdat, 'indxstdp' + gdat.namestdp[indx[0][k]])]
@@ -2510,6 +2508,9 @@ def work(pathoutpthis, lock, indxprocwork):
             indxsampcomp = gdatmodi.thisindxsampcomp
         else:
             indxsampcomp = None
+        if gdat.verbtype > 0:
+            print 'Number of elements'
+            print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
         if gdat.fittnumbtrap > 0:
@@ -2573,13 +2574,13 @@ def work(pathoutpthis, lock, indxprocwork):
     indxsampbadduppr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] >= 1.)[0] + gdat.fittnumbpopl
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
-        print 'indxsampbadd'
-        print indxsampbadd
+        print 'Initial value caused unit sample vector to go outside the unit interval...'
+        print 'gdat.fittnamepara[indxsampbadd]'
         print gdat.fittnamepara[indxsampbadd]
         print 'gdatmodi.thissamp'
-        print gdatmodi.thissamp[:, None]
-        raise Exception('Initial unit sample vector went outside the unit interval...')
-    
+        print gdatmodi.thissamp[indxsampbadd, None]
+        gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
+     
     ## sample vector
     if gdat.fittnumbtrap > 0:
         indxsampcomp = gdatmodi.thisindxsampcomp

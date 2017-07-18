@@ -1466,8 +1466,11 @@ def retr_prop(gdat, gdatmodi, thisindxpnts=None):
         gdatmodi.numbelemeval = 1
         
         # occupied element index to be killed
-        dethindxindxpnts = choice(arange(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
-        
+        if thisindxpnts == None:
+            dethindxindxpnts = choice(arange(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[gdatmodi.indxpoplmodi]], dtype=int))
+        else:
+            dethindxindxpnts = thisindxpnts
+
         # element index to be killed
         gdatmodi.indxelemmodi = []
         gdatmodi.indxelemfullmodi = []
@@ -2061,7 +2064,16 @@ def retr_condcatl(gdat):
     if gdat.verbtype > 1:
         print 'gdat.listindxelemfull'
         print gdat.listindxelemfull
-
+    
+    for n in gdat.indxsamptotl:
+        print 'n'
+        print n
+        for l in gdat.fittindxpopl:
+            print 'l'
+            print l
+            print 'gdat.listindxelemfull[n][l]'
+            print gdat.listindxelemfull[n][l]
+    
     # setup
     ## number of stacked samples
     numbstks = 0
@@ -2313,6 +2325,14 @@ def retr_condcatl(gdat):
             indxpoplcntr = indxtupl[indxstksassc[r][k]][1]
             indxpntscntr = indxtupl[indxstksassc[r][k]][2]
             
+            print 'indxtupl'
+            print indxtupl
+            print 'indxtupl[indxstksassc[r][k]]'
+            print indxtupl[indxstksassc[r][k]]
+            print 'indxpoplcntr'
+            print indxpoplcntr
+            print 
+
             if gdat.verbtype > 1:
                 print 'indxsamptotlcntr'
                 print indxsamptotlcntr
@@ -2322,8 +2342,6 @@ def retr_condcatl(gdat):
                 print indxpntscntr
                 print
             
-            print 'indxtupl'
-            print indxtupl
             for strgfeat in gdat.fittliststrgfeattotl:
                 temp = getattr(gdat, 'list' + strgfeat)
                 
@@ -2333,18 +2351,15 @@ def retr_condcatl(gdat):
                 print 'temp[indxsamptotlcntr]'
                 print temp[indxsamptotlcntr]
                 
-                print 'indxpoplcntr'
-                print indxpoplcntr
                 print 'temp[indxsamptotlcntr][indxpoplcntr]'
                 print temp[indxsamptotlcntr][indxpoplcntr]
 
-            
                 print 'indxpntscntr'
                 print indxpntscntr
                 print
-
-                temp = temp[indxsamptotlcntr][indxpoplcntr][indxpntscntr]
-                gdat.dictglob['liststkscond'][r][strgfeat].append(temp)
+                if temp[indxsamptotlcntr][indxpoplcntr]:
+                    temp = temp[indxsamptotlcntr][indxpoplcntr][indxpntscntr]
+                    gdat.dictglob['liststkscond'][r][strgfeat].append(temp)
 
     for r in range(len(gdat.dictglob['liststkscond'])): 
         print 'r'
@@ -7025,6 +7040,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     featassc[strgfeat] = [[] for l in gdat.trueindxpopl]
                 cmpl = [[] for l in gdat.trueindxpopl]
                 indxfittpntsassc = [[] for l in gdat.trueindxpopl]
+                
                 indxfittpntsfals = [[] for l in gdat.trueindxpopl]
                 fdis = [[] for l in gdat.trueindxpopl]
                 
@@ -7067,10 +7083,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     featassc[strgfeat][l][temp] = dicttemp[strgfeat][l][indxmodlelem[temp]]
 
                     indxfittpntsassc[l] = unique(indxmodlelem[where(indxmodlelem > -1)])
-                    indxfittpntsfals[l] = setdiff1d(arange(numbpnts[l]), indxfittpntsassc[l])
                     
-                    cmpl[l] = array([float(len(trueindxpntsasschits[l])) / gdat.truenumbpnts[l]])
-                    fdis[l] = array([float(indxfittpntsfals[l].size) / numbpnts[l]])
+                    if numbpnts[l] > 0:
+                        indxfittpntsfals[l] = setdiff1d(arange(numbpnts[l]), indxfittpntsassc[l])
+                    
+                    if gdat.truenumbpnts[l] > 0:
+                        cmpl[l] = array([float(len(trueindxpntsasschits[l])) / gdat.truenumbpnts[l]])
+                    fdis[l] = array([0])
+                    if numbpnts[l] > 0:
+                        fdis[l] = array([float(indxfittpntsfals[l].size) / numbpnts[l]])
                     
                 setattr(gdatobjt, strg + 'trueindxpntsasscmiss', trueindxpntsasscmiss)
                 setattr(gdatobjt, strg + 'trueindxpntsasschits', trueindxpntsasschits)
