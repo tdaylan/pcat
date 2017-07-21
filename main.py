@@ -74,7 +74,6 @@ def init( \
          lensmodltype=None, \
 
          ## PSF evaluation type
-         psfnevaltype=None, \
          trueoaxitype=False, \
          fittoaxitype=False, \
          ## kernel evaluation type
@@ -447,24 +446,19 @@ def init( \
         else:
             gdat.proplenp = False
 
-    if gdat.hostemistype == None:
+    if hostemistype == None:
         if gdat.elemtype == 'lens':
-            gdat.hostemistype = 'sers'
+            hostemistype = 'sers'
         else:
-            gdat.hostemistype = 'none'
+            hostemistype = 'none'
+    setp_namevarbvalu(gdat, 'hostemistype', hostemistype)
 
-    if gdat.lensmodltype == None:
-        if gdat.elemtype == 'lens':
-            gdat.lensmodltype = 'nomi'
-        else:
-            gdat.lensmodltype = 'none'
-
-    if gdat.psfnevaltype == None:
-        if gdat.elemtype == 'lens':
-            gdat.psfnevaltype = 'conv'
-        else:
-            gdat.psfnevaltype = 'kern'
-
+    if gdat.elemtype == 'lens':
+        lensmodltype = 'nomi'
+    else:
+        lensmodltype = 'none'
+    setp_namevarbvalu(gdat, 'lensmodltype', lensmodltype)
+    
     if gdat.strgexprname == None:
         if gdat.exprtype == 'chan':
             gdat.strgexprname = 'Chandra'
@@ -720,7 +714,7 @@ def init( \
     if gdat.elemtype == 'clus':
         maxmnumbpnts = array([100])
     setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
-     
+    
     for l in gdat.trueindxpopl:
         setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
         setattr(gdat, 'truemaxmnumbpntspop%d' % l, gdat.truemaxmnumbpnts[l])
@@ -804,60 +798,6 @@ def init( \
 
     retr_indxsamp(gdat, strgmodl='true')
     
-    ### PSF parameters
-    if gdat.psfninfoprio:
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                meansigc = gdat.exprpsfp[i * gdat.truenumbpsfptotl + m * gdat.truenumbpsfptotl * gdat.numbener]
-                stdvsigc = meansigc * 0.1
-                setp_namevarblimt(gdat, 'sigcene%devt%d' % (i, m), [meansigc, stdvsigc], typelimt='meanstdv')
-                if gdat.truepsfntype == 'doubking':
-                    meangamc = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 1]
-                    stdvgamc = meangamc * 0.1
-                    setp_namevarblimt(gdat, 'gamcene%devt%d' % (i, m), [meangamc, stdvgamc], typelimt='meanstdv')
-                    meansigt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 2]
-                    stdvsigt = meansigt * 0.1
-                    setp_namevarblimt(gdat, 'sigtene%devt%d' % (i, m), [meansigt, stdvsigt], typelimt='meanstdv')
-                    meangamt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 3]
-                    stdvgamt = meangamt * 0.1
-                    setp_namevarblimt(gdat, 'gamtene%devt%d' % (i, m), [meangamt, stdvgamt], typelimt='meanstdv')
-                    meanpsff = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 4]
-                    stdvpsff = meanpsff * 0.1
-                    setp_namevarblimt(gdat, 'psffene%devt%d' % (i, m), [meanpsff, stdvpsff], typelimt='meanstdv')
-                elif gdat.trueoaxitype:
-                    meanonor = gdat.exprpsfp[i * 3 + m * 3 * gdat.numbener + 1]
-                    stdvonor = meanonor * 0.1
-                    setp_namevarblimt(gdat, 'onorene%devt%d' % (i, m), [meanonor, stdvonor], typelimt='meanstdv')
-                    meanoind = gdat.exprpsfp[i * 3 + m * 3 * gdat.numbener + 2]
-                    stdvoind = meanoind * 0.1
-                    setp_namevarblimt(gdat, 'oindene%devt%d' % (i, m), [meanoind, stdvoind], typelimt='meanstdv')
-    else:
-        if gdat.exprtype == 'sdyn':
-            minmsigm = 0.1 / gdat.anglfact
-            maxmsigm = 0.2 / gdat.anglfact
-        if gdat.exprtype == 'ferm':
-            minmsigm = 0.1
-            maxmsigm = 10.
-        if gdat.exprtype == 'hubb':
-            minmsigm = 0.01 / gdat.anglfact
-            maxmsigm = 0.1 / gdat.anglfact
-        if gdat.exprtype == 'chan':
-            minmsigm = 0.1 / gdat.anglfact
-            maxmsigm = 2. / gdat.anglfact
-        minmgamm = 1.5
-        maxmgamm = 20.
-        minmonor = 0.01
-        maxmonor = 1.
-        minmoind = 1.5
-        maxmoind = 2.5
-        setp_namevarblimt(gdat, 'sigc', [minmsigm, maxmsigm], ener=True, evtt=True)
-        setp_namevarblimt(gdat, 'sigt', [minmsigm, maxmsigm], ener=True, evtt=True)
-        setp_namevarblimt(gdat, 'gamc', [minmgamm, maxmgamm], ener=True, evtt=True)
-        setp_namevarblimt(gdat, 'gamt', [minmgamm, maxmgamm], ener=True, evtt=True)
-        setp_namevarblimt(gdat, 'onor', [minmonor, maxmonor], ener=True, evtt=True)
-        setp_namevarblimt(gdat, 'oind', [minmoind, maxmoind], ener=True, evtt=True)
-    setp_namevarblimt(gdat, 'psff', [0., 1.], ener=True, evtt=True)
- 
     ### normalization
     if gdat.exprtype == 'ferm':
         bacp = [1e-6, 1e-2]
@@ -1004,7 +944,7 @@ def init( \
     gdat.truemaxmaang = pi
    
     setp_namevarbvalu(gdat, 'scalmeanpnts', 'self')
-
+    
     # copy the true model to the inference model if the inference model parameter has not been specified
     temp = deepcopy(gdat.__dict__)
     for strg, valu in temp.iteritems():
@@ -1025,7 +965,7 @@ def init( \
         raise Exception('Bad thinning factor.')
     if gdat.pixltype == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')
-
+    
     if gdat.allwfixdtrue and gdat.datatype == 'mock':
         setp_namevarbvalu(gdat, 'spatdistcons', 1e-3, popl=True)
         setp_namevarbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=True)
@@ -1158,7 +1098,7 @@ def init( \
             gdat.numbhalfsers = 20
             gdat.numbindxsers = 20
             
-            if gdat.lensmodltype != 'none':
+            if gdat.fittlensmodltype != 'none' or gdat.truelensmodltype != 'none':
                 minm = amin(array([gdat.minmsizehost, gdat.minmsizesour]))
                 maxm = amax(array([gdat.maxmsizehost, gdat.maxmsizesour]))
             else:
@@ -2173,7 +2113,11 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
                 rscl_elem(gdat, gdatmodi, indxparapert[k])
         
         gdatmodi.thissamp = copy(gdatmodi.nextsamp)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+        if gdat.fittnumbtrap > 0:
+            indxsampcomp = gdatmodi.thisindxsampcomp
+        else:
+            indxsampcomp = None
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
 
         proc_samp(gdat, gdatmodi, 'this', fast=True)
    
@@ -2467,7 +2411,7 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.elemtype == 'lens' and gdat.inittype == 'rand':
         gdatmodi.thissamp[gdat.fittindxfixplgalhost] = 0.5
         gdatmodi.thissamp[gdat.fittindxfixpbgalhost] = 0.5
-        if gdat.lensmodltype != 'none':
+        if gdat.fittlensmodltype != 'none':
             gdatmodi.thissamp[gdat.fittindxfixplgalsour] = 0.5
             gdatmodi.thissamp[gdat.fittindxfixpbgalsour] = 0.5
     
@@ -2508,10 +2452,10 @@ def work(pathoutpthis, lock, indxprocwork):
             indxsampcomp = gdatmodi.thisindxsampcomp
         else:
             indxsampcomp = None
-        if gdat.verbtype > 0:
-            print 'Number of elements'
-            print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+        
+        if (gdatmodi.thissamp == 0).all():
+            raise Exception('Bad initialization.')
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
     
         if gdat.fittnumbtrap > 0:
             for strgcomp in gdat.fittliststrgcomptotl:
@@ -2934,7 +2878,7 @@ def work(pathoutpthis, lock, indxprocwork):
         
             stopchro(gdat, gdatmodi, 'next', 'plot')
     
-        if gdat.elemtype == 'lght':
+        if gdat.elemtype == 'lght' and gdat.fittpsfnevaltype != 'none':
             if gdat.fittpsfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[3]]:
                     for k in range(20):

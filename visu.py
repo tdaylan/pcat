@@ -38,6 +38,8 @@ def plot_samp(gdat, gdatmodi, strg):
                 indxsampcomp = retr_indxsampcomp(gdat, indxelemfull, strgmodl)
         numbback = getattr(gdat, strgmodl + 'numbback')
         indxback = getattr(gdat, strgmodl + 'indxback')
+        convdiff = getattr(gdat, strgmodl + 'convdiff')
+        listnamediff = getattr(gdat, strgmodl + 'listnamediff')
         unifback = getattr(gdat, strgmodl + 'unifback')
         cntpback = getattr(gdatobjt, strg + 'cntpback')
         cntpbacktotl = getattr(gdatobjt, strg + 'cntpbacktotl')
@@ -358,7 +360,10 @@ def plot_samp(gdat, gdatmodi, strg):
                 
             for i in gdat.indxener:
                 plot_genemaps(gdat, gdatmodi, strg, 'cntphost', strgcbar='cntpdata', thisindxener=i, tdim=True)
-                plot_genemaps(gdat, gdatmodi, strg, 'cntpmodluncv', strgcbar='cntpdata', thisindxener=i, tdim=True)
+                for k, name in enumerate(listnamediff):
+                    if convdiff[k]:
+                        plot_genemaps(gdat, gdatmodi, strg, 'cntp' + name, strgcbar='cntpdata', thisindxener=i, tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strg, 'cntp' + name + 'conv', strgcbar='cntpdata', thisindxener=i, tdim=True)
             if gdat.lensmodltype != 'none':
                 plot_genemaps(gdat, gdatmodi, strg, 'magn', tdim=True)
                 plot_genemaps(gdat, gdatmodi, strg, 'conv', tdim=True)
