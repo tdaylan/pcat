@@ -4249,6 +4249,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
             booltemp = False
             raise Exception('Background templates must be positive-definite everywhere.')
     
+    boolzero = True
     for c in indxback:
         if amin(sbrtbacknorm[c, ...]) > 0.:
             boolzero = False
@@ -4545,7 +4546,6 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
         else:
             convdiff[k] = True
 
-    boolzero = True
     # checks
     if psfnevaltype == 'none' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
         raise Exception('PSF must be evaluated if there are point sources or clusters.')
