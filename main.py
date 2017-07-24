@@ -91,8 +91,9 @@ def init( \
          
          # save the state of the MCMC
          savestat=False, \
+         namesavestat=None, \
          # recover the state from a previous run
-         recostat=False, \
+         namerecostat=None, \
 
          # proposals
          propcova=True, \
@@ -446,11 +447,10 @@ def init( \
         else:
             gdat.proplenp = False
 
-    if hostemistype == None:
-        if gdat.elemtype == 'lens':
-            hostemistype = 'sers'
-        else:
-            hostemistype = 'none'
+    if gdat.elemtype == 'lens':
+        hostemistype = 'sers'
+    else:
+        hostemistype = 'none'
     setp_namevarbvalu(gdat, 'hostemistype', hostemistype)
 
     if gdat.elemtype == 'lens':
@@ -2374,13 +2374,6 @@ def worksamp(gdat, lock):
         pool.join()
 
 
-def samp_randnumbpnts(gdat, gdatmodi, l):
-    
-    gdatmodi.thissamp[l] = poisson(gdatmodi.thissampvarb[gdat.fittindxfixpmeanpnts[l]])
-    gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbpnts[l], gdatmodi.thissamp[l])
-    gdatmodi.thissamp[l] = max(gdat.fittminmnumbpnts[l], gdatmodi.thissamp[l])
-
-
 def work(pathoutpthis, lock, indxprocwork):
 
     path = pathoutpthis + 'gdatinit'
@@ -2418,22 +2411,28 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.fittnumbtrap > 0:
         if gdat.inittype == 'rand' or gdat.inittype == 'pert':
             for l in gdat.fittindxpopl:
-                samp_randnumbpnts(gdat, gdatmodi, l)
+                gdatmodi.thissamp[l] = poisson(gdatmodi.thissampvarb[gdat.fittindxfixpmeanpnts[l]])
+                gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbpnts[l], gdatmodi.thissamp[l])
+                gdatmodi.thissamp[l] = max(gdat.fittminmnumbpnts[l], gdatmodi.thissamp[l])
+    
+    if gdat.fittnumbtrap > 0:
+        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]'
+        print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
     
     ## Fixed-dimensional parameters
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             # temp - this should take into account parameters that exists in one but not the other
-            if namefixp == gdat.truenamefixp[k]:
+            if namefixp == gdat.truenamefixp[k] and not (gdat.inittype == 'pert' and namefixp.startswith('numbpnts')):
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
     
     # apply imposed initial state
     ## by the saved state of another run
-    if gdat.recostat:
-        if isinstance(gdat.recostat, str):
-            strgcnfg = gdat.recostat
+    if gdat.inittype == 'reco':
+        if gdat.namerecostat != None:
+            strgcnfg = gdat.namerecostat
         else:
             strgcnfg = gdat.strgcnfg
         path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
@@ -2473,7 +2472,7 @@ def work(pathoutpthis, lock, indxprocwork):
 
     ## by individual values for parameters
     for k, namefixp in enumerate(gdat.fittnamefixp):
-        if gdat.recostat:
+        if gdat.inittype == 'reco':
             try:
                 getattr(gdat, 'init' + namefixp)
                 print 'Conflicting initial state arguments detected, init keyword takes precedence.'
@@ -2493,25 +2492,24 @@ def work(pathoutpthis, lock, indxprocwork):
             print
         except:
             pass
-
+    
+    ## element parameters
     if gdat.fittnumbtrap > 0:
-        if not gdat.recostat:
-            ## lists of occupied and empty transdimensional parameters
-            gdatmodi.thisindxelemfull = []
-            if gdat.fittnumbtrap > 0:
-                for l in gdat.fittindxpopl:
-                    gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
-            else:
-                gdatmodi.thisindxelemfull = []
+        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]'
+        print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
+
+        ## lists of occupied and empty transdimensional parameters
+        gdatmodi.thisindxelemfull = []
+        for l in gdat.fittindxpopl:
+            gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
             
-            gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
+        gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
             
-            ## element parameters
-            if gdat.fittnumbtrap > 0 and gdat.inittype == 'refr':
-                initcompfromrefr(gdat, gdatmodi, 'true')
-            else:
-                for l in gdat.fittindxpopl:
-                    gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
+        if gdat.inittype == 'refr':
+            initcompfromrefr(gdat, gdatmodi, 'true')
+        #else:
+        #    for l in gdat.fittindxpopl:
+        #        gdatmodi.thissamp[gdatmodi.thisindxsampcomp['comp'][l]] = rand(gdatmodi.thisindxsampcomp['comp'][l].size)
 
     # check the initial unit sample vector for bad entries
     indxsampbaddlowr = where(gdatmodi.thissamp[gdat.fittnumbpopl:] <= 0.)[0] + gdat.fittnumbpopl
@@ -2815,8 +2813,8 @@ def work(pathoutpthis, lock, indxprocwork):
         
             if gdat.savestat:
                 
-                if isinstance(gdat.savestat, str):
-                    strgcnfg = gdat.savestat
+                if gdat.namesavestat != None:
+                    strgcnfg = gdat.namesavestat
                 else:
                     strgcnfg = gdat.strgcnfg
                 path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'

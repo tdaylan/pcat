@@ -105,9 +105,6 @@ def plot_samp(gdat, gdatmodi, strg):
                     if strg == 'post':
                         specplot = [empty((gdat.numbenerplot, gdat.numbstkscond))]
                         for r in gdat.indxstkscond:
-                            print 'gdat.dictglob[poststkscond][r][specplot]'
-                            summgene(gdat.dictglob['poststkscond'][r]['specplot'])
-
                             specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:
                         specplot = getattr(gdatobjt, strg + 'specplot')
@@ -154,12 +151,19 @@ def plot_samp(gdat, gdatmodi, strg):
                                                        limtydat=limtydat)
                 
                 if gdat.elemtype == 'lens':
+
                     ## deflection profiles
                     if gdat.variasca and gdat.variacut:
                         xdat = gdat.meanangl * gdat.anglfact
                         lablxdat = gdat.lablgangtotl
-                        deflprof = retr_fromgdat(gdat, gdatmodi, strg, 'deflprof')
-                        for l in indxpopl:
+                        if strg == 'post':
+                            deflprof = [empty((gdat.numbangl, gdat.numbstkscond))]
+                            for r in gdat.indxstkscond:
+                                deflprof[0][:, r] = gdat.dictglob['poststkscond'][r]['deflprof'][0, :]
+                        else:
+                            deflprof = getattr(gdatobjt, strg + 'deflprof')
+
+                        for l in range(len(deflprof)):
                             listydat = []
                             listvlinfrst = []
                             listvlinseco = []
@@ -900,7 +904,8 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
     specback = getattr(gdat, strgmodl + 'specback')
     indxback = getattr(gdat, strgmodl + 'indxback')
     maxmgang = getattr(gdat, strgmodl + 'maxmgang')
-    indxfixpbacp = getattr(gdat, strgmodl + 'indxfixpbacp')
+    hostemistype = getattr(gdat, strgmodl + 'hostemistype')
+    lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
     indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
     numblablsbrt = getattr(gdat, strgmodl + 'numblablsbrt')
     numblablsbrtspec = getattr(gdat, strgmodl + 'numblablsbrtspec')
@@ -925,13 +930,13 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
-        if gdat.hostemistype != 'none':
+        if hostemistype != 'none':
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxvarb)
             if strg == 'post':
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrthostmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
-        if gdat.lensmodltype != 'none':
+        if lensmodltype != 'none':
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb)
             if strg == 'post':
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
@@ -1026,7 +1031,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 
-            limtydat = array([1e-4 * amin(listydat[cntrdata, :] * factener), 1e1 * amax(listydat[cntrdata, :] * factener)]) * factydat
+            limtydat = array([1e-3 * amin(listydat[cntrdata, :] * factener), 1e2 * amax(listydat[cntrdata, :] * factener)]) * factydat
             axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)
@@ -2371,7 +2376,7 @@ def plot_init(gdat):
                         figr.savefig(path)
                         plt.close(figr)
             
-            if gdat.lensmodltype != 'none' and gdat.datatype == 'mock':
+            if gdat.truelensmodltype != 'none' and gdat.datatype == 'mock':
                 figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'true', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, '', 'cntpdata', thisindxener=i, thisindxevtt=m, tdim=True)
                 make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
