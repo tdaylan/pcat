@@ -729,7 +729,7 @@ def init( \
     if gdat.exprtype == 'ferm':
         gdat.exprpsfntype = 'doubking'
     if gdat.exprtype == 'chan':
-        gdat.exprpsfntype = 'singgaus'
+        gdat.exprpsfntype = 'singking'
     if gdat.exprtype == 'sdss':
         gdat.exprpsfntype = 'singgaus'
     if gdat.exprtype == 'hubb':
@@ -748,8 +748,9 @@ def init( \
         if gdat.exprtype == 'chan':
             gdat.truescalbacpbac1 = 'gaus'
             if gdat.anlytype.startswith('home'):
-                backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
-                gdat.truemeanbacpbac1 = 15.5
+                #backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
+                backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 15.98
+                gdat.truemeanbacpbac1 = backtypetemp[2]
             if gdat.anlytype.startswith('extr'):
                 backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
                 gdat.truemeanbacpbac1 = 1.
@@ -1000,7 +1001,7 @@ def init( \
             bacp = 1e-4
         if gdat.exprtype == 'chan':
             bacp = 1.
-            setp_namevarbvalu(gdat, 'bacpbac1', 15.5)
+            setp_namevarbvalu(gdat, 'bacpbac1', gdat.truemeanbacpbac1[2])
         if gdat.exprtype == 'hubb':
             bacp = 2e-7
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)

@@ -900,7 +900,12 @@ def retr_sdsspsfn(gdat):
 def retr_chanpsfn(gdat):
 
     # temp
-    gdat.exprpsfp = array([0.25, 0.3, 0.4, 0.6, 0.7]) / gdat.anglfact
+    #gdat.exprpsfp = array([0.25, 0.3, 0.4, 0.6, 0.7]) / gdat.anglfact
+    if gdat.numbener == 5:
+        gdat.exprpsfp = array([0.424, 2.75, 0.424, 2.59, 0.440, 2.47, 0.457, 2.45, 0.529, 3.72]) / gdat.anglfact
+    if gdat.numbener == 2:
+        gdat.exprpsfp = array([0.427, 2.57, 0.449, 2.49]) / gdat.anglfact
+
     gdat.exproaxitype = False
     #gdat.exprpsfp = array([0.25 / gdat.anglfact, 
     #                       0.30 / gdat.anglfacti\
@@ -1931,6 +1936,14 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
         else:
             sigc = sigc[:, None, :]
         psfn = retr_singgaus(scalangl, sigc)
+    
+    elif psfntype == 'singking':
+        sigc = psfp[indxpsfpinit]
+        gamc = psfp[indxpsfpinit+1]
+        sigc = sigc[:, None, :]
+        gamc = gamc[:, None, :]
+        
+        psfn = retr_singking(scalangl, sigc, gamc)
     
     elif psfntype == 'doubking':
         sigc = psfp[indxpsfpinit]
@@ -4275,20 +4288,21 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
                     meansigc = gdat.exprpsfp[i * numbpsfptotl + m * numbpsfptotl * gdat.numbener]
                     stdvsigc = meansigc * 0.1
                     setp_namevarblimt(gdat, 'sigcene%devt%d' % (i, m), [meansigc, stdvsigc], typelimt='meanstdv', strgmodl=strgmodl)
-                    if gdat.truepsfntype == 'doubking':
+                    if psfntype == 'doubking' or psfntype == 'singking':
                         meangamc = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 1]
                         stdvgamc = meangamc * 0.1
                         setp_namevarblimt(gdat, 'gamcene%devt%d' % (i, m), [meangamc, stdvgamc], typelimt='meanstdv', strgmodl=strgmodl)
-                        meansigt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 2]
-                        stdvsigt = meansigt * 0.1
-                        setp_namevarblimt(gdat, 'sigtene%devt%d' % (i, m), [meansigt, stdvsigt], typelimt='meanstdv', strgmodl=strgmodl)
-                        meangamt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 3]
-                        stdvgamt = meangamt * 0.1
-                        setp_namevarblimt(gdat, 'gamtene%devt%d' % (i, m), [meangamt, stdvgamt], typelimt='meanstdv', strgmodl=strgmodl)
-                        meanpsff = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 4]
-                        stdvpsff = meanpsff * 0.1
-                        setp_namevarblimt(gdat, 'psffene%devt%d' % (i, m), [meanpsff, stdvpsff], typelimt='meanstdv', strgmodl=strgmodl)
-                    elif gdat.trueoaxitype:
+                        if psfntype == 'doubking':
+                            meansigt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 2]
+                            stdvsigt = meansigt * 0.1
+                            setp_namevarblimt(gdat, 'sigtene%devt%d' % (i, m), [meansigt, stdvsigt], typelimt='meanstdv', strgmodl=strgmodl)
+                            meangamt = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 3]
+                            stdvgamt = meangamt * 0.1
+                            setp_namevarblimt(gdat, 'gamtene%devt%d' % (i, m), [meangamt, stdvgamt], typelimt='meanstdv', strgmodl=strgmodl)
+                            meanpsff = gdat.exprpsfp[i * 5 + m * 5 * gdat.numbener + 4]
+                            stdvpsff = meanpsff * 0.1
+                            setp_namevarblimt(gdat, 'psffene%devt%d' % (i, m), [meanpsff, stdvpsff], typelimt='meanstdv', strgmodl=strgmodl)
+                    elif oaxitype:
                         meanonor = gdat.exprpsfp[i * 3 + m * 3 * gdat.numbener + 1]
                         stdvonor = meanonor * 0.1
                         setp_namevarblimt(gdat, 'onorene%devt%d' % (i, m), [meanonor, stdvonor], typelimt='meanstdv', strgmodl=strgmodl)
