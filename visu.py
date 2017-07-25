@@ -158,8 +158,12 @@ def plot_samp(gdat, gdatmodi, strg):
                         lablxdat = gdat.lablgangtotl
                         if strg == 'post':
                             deflprof = [empty((gdat.numbangl, gdat.numbstkscond))]
+                            asca = [empty(gdat.numbstkscond)]
+                            acut = [empty(gdat.numbstkscond)]
                             for r in gdat.indxstkscond:
                                 deflprof[0][:, r] = gdat.dictglob['poststkscond'][r]['deflprof'][0, :]
+                                asca[0][r] = gdat.dictglob['poststkscond'][r]['asca'][0]
+                                acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
                         else:
                             deflprof = getattr(gdatobjt, strg + 'deflprof')
 
@@ -168,14 +172,14 @@ def plot_samp(gdat, gdatmodi, strg):
                             listvlinfrst = []
                             listvlinseco = []
     
-                            for k in arange(numbpnts[l]):
+                            for k in range(deflprof[l].shape[-1]):
                                 if strgmodl == 'true':
                                     deflproftemp = deflprof[l][0, :, :]
                                 else:
                                     deflproftemp = deflprof[l]
                                 listydat.append(deflproftemp[:, k] * gdat.anglfact)
-                                listvlinfrst.append(sampvarb[indxsampcomp['asca'][l][k]] * gdat.anglfact) 
-                                listvlinseco.append(sampvarb[indxsampcomp['acut'][l][k]] * gdat.anglfact)
+                                listvlinfrst.append(asca[l][k] * gdat.anglfact) 
+                                listvlinseco.append(acut[l][k] * gdat.anglfact)
                                 
                             listydat.append(xdat * 0. + gdat.anglfact * sampvarb[getattr(gdat, strgmodl + 'indxfixpbeinhost')])
                             path = pathtemp + strg + 'deflsubhpop%d%s.pdf' % (l, strgswep)

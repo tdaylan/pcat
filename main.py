@@ -116,7 +116,7 @@ def init( \
          ## perform an additional run sampling from the prior
          checprio=False, \
 
-         strgexprflux=None, \
+         strgexprsbrt=None, \
          strgcatl=None, \
          anglassc=None, \
          nameexpr=None, \
@@ -222,7 +222,7 @@ def init( \
 
          radispmr=None, \
 
-         numbsidecart=100, \
+         numbsidecart=None, \
          numbsideheal=256, \
          numbdatasamp=100, \
 
@@ -266,7 +266,7 @@ def init( \
     ## number of sweeps between frame plots
     if gdat.numbswepplot == None:
         gdat.numbswepplot = max(gdat.numbswep / 20, 100000)
-
+    
     ## number of processes
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
@@ -343,11 +343,15 @@ def init( \
     gdat.fittindxcompampl = 2
 
     # defaults
-    if gdat.strgexprflux == None:
+    if gdat.strgexprsbrt == None:
         gdat.datatype = 'mock'
     else:
         gdat.datatype = 'inpt'
     
+    if gdat.numbsidecart == None:
+        if gdat.datatype == 'mock':
+            gdat.numbsidecart = 100
+
     if gdat.exprtype == None:
         if gdat.elemtype == 'lght':
             gdat.exprtype = 'ferm'
@@ -1001,7 +1005,7 @@ def init( \
             bacp = 1e-4
         if gdat.exprtype == 'chan':
             bacp = 1.
-            setp_namevarbvalu(gdat, 'bacpbac1', gdat.truemeanbacpbac1[2])
+            setp_namevarbvalu(gdat, 'bacpbac1', gdat.truemeanbacpbac1)
         if gdat.exprtype == 'hubb':
             bacp = 2e-7
         setp_namevarbvalu(gdat, 'bacp', bacp, ener=True, back=True)
