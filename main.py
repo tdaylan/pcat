@@ -698,30 +698,30 @@ def init( \
     ## generative model
     # set mock sample vector indices
     if gdat.elemtype == 'lght':
-        numbpnts = array([100])
+        numbelem = array([100])
     if gdat.elemtype == 'lens':
-        numbpnts = array([25])
+        numbelem = array([25])
     if gdat.elemtype == 'clus':
-        numbpnts = array([100])
-    setp_namevarbvalu(gdat, 'numbpnts', numbpnts)
-    gdat.truenumbpopl = gdat.truenumbpnts.size
+        numbelem = array([100])
+    setp_namevarbvalu(gdat, 'numbelem', numbelem)
+    gdat.truenumbpopl = gdat.truenumbelem.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
-    setp_namevarbvalu(gdat, 'minmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + 1)
+    setp_namevarbvalu(gdat, 'minmnumbelem', zeros(gdat.truenumbpopl, dtype=int) + 1)
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'chan':
-            maxmnumbpnts = array([200])
+            maxmnumbelem = array([200])
         if gdat.exprtype == 'ferm':
-            maxmnumbpnts = array([100])
+            maxmnumbelem = array([100])
     if gdat.elemtype == 'lens':
-        maxmnumbpnts = array([300])
+        maxmnumbelem = array([300])
     if gdat.elemtype == 'clus':
-        maxmnumbpnts = array([100])
-    setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
+        maxmnumbelem = array([100])
+    setp_namevarbvalu(gdat, 'maxmnumbelem', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbelem)
     
     for l in gdat.trueindxpopl:
-        setattr(gdat, 'trueminmnumbpntspop%d' % l, gdat.trueminmnumbpnts[l])
-        setattr(gdat, 'truemaxmnumbpntspop%d' % l, gdat.truemaxmnumbpnts[l])
+        setattr(gdat, 'trueminmnumbelempop%d' % l, gdat.trueminmnumbelem[l])
+        setattr(gdat, 'truemaxmnumbelempop%d' % l, gdat.truemaxmnumbelem[l])
         
     ### element parameter distributions
     setp_namevarbvalu(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
@@ -801,17 +801,20 @@ def init( \
     
     setpprem(gdat)
 
-    retr_indxsamp(gdat, strgmodl='true')
-    
     # reference elements
-    gdat.exprinfo = False
+    gdat.refrinfo = False
     if gdat.exprtype == 'ferm':
         retr_fermdata(gdat)
-        gdat.exprinfo = True
+        gdat.refrinfo = True
     if gdat.exprtype == 'chan':
         retr_chandata(gdat)
-        gdat.exprinfo = True
-    gdat.trueinfo = gdat.exprinfo or gdat.datatype == 'mock'
+        gdat.refrinfo = True
+
+    gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
+    gdat.listnamefeatrefronly = [[] for q in gdat.indxrefr]
+    gdat.trueinfo = gdat.refrinfo or gdat.datatype == 'mock'
+    
+    retr_indxsamp(gdat, strgmodl='true')
     
     ### normalization
     if gdat.exprtype == 'ferm':
@@ -1215,75 +1218,80 @@ def init( \
     ## ensure that all experimental element features are defined, at least with a None
     for strgfeat in gdat.fittliststrgfeattotl:
         try:
-            exprfeat = getattr(gdat, 'expr' + strgfeat)
+            refrfeat = getattr(gdat, 'refr' + strgfeat)
         except:
-            exprfeat = None
-        setattr(gdat, 'expr' + strgfeat, exprfeat)
+            refrfeat = None
+        setattr(gdat, 'refr' + strgfeat, refrfeat)
+    
+    if gdat.refrlgal != None:
+        gdat.numbrefrpnts = zeros(gdat.numbrefr)
+        for q in gdat.indxrefr:
+            gdat.numbrefrpnts[q] = gdat.refrlgal[q].size
     
     ## rotate element coordinates to the ROI center
     if gdat.lgalcntr != 0. or gdat.bgalcntr != 0.:
         rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.lgalcntr), rad2deg(gdat.bgalcntr), 0.], deg=True, eulertype='ZYX')
-        gdat.exprbgal[0, :], gdat.exprlgal[0, :] = rttr(pi / 2. - gdat.exprbgal[0, :], gdat.exprlgal[0, :])
-        gdat.exprbgal[0, :] = pi / 2. - gdat.exprbgal[0, :]
+        gdat.refrbgal[0, :], gdat.refrlgal[0, :] = rttr(pi / 2. - gdat.refrbgal[0, :], gdat.refrlgal[0, :])
+        gdat.refrbgal[0, :] = pi / 2. - gdat.refrbgal[0, :]
 
     ## preprocess experimental element features
-    if gdat.exprlgal != None and gdat.exprbgal != None:
-        gdat.exprgang = retr_gang(gdat.exprlgal, gdat.exprbgal)
-        gdat.expraang = retr_aang(gdat.exprlgal, gdat.exprbgal)
+    if gdat.refrlgal != None and gdat.refrbgal != None:
+        gdat.refrgang = retr_gang(gdat.refrlgal, gdat.refrbgal)
+        gdat.refraang = retr_aang(gdat.refrlgal, gdat.refrbgal)
     if gdat.elemtype == 'lght':
-        if gdat.exprspec != None:
-            gdat.exprflux = [gdat.exprspec[0][:, gdat.indxenerpivt[0], :]]
+        if gdat.refrspec != None:
+            gdat.refrflux = [gdat.refrspec[0][:, gdat.indxenerpivt[0], :]]
     
     ## check that all experimental element features are finite
     for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
-        if exprfeat != None:
-            if not isfinite(exprfeat).all():
+        refrfeat = getattr(gdat, 'refr' + strgfeat)
+        if refrfeat != None:
+            if not isfinite(refrfeat).all():
                 raise Exception('Provided experimental catalog is not finite.')
         
     ## element feature indices ordered with respect to the amplitude variable
-    exprfeatampl = getattr(gdat, 'expr' + gdat.namecompampl)
-    if exprfeatampl != None:
-        exprfeat = deepcopy(exprfeatampl)
+    refrfeatampl = getattr(gdat, 'refr' + gdat.namecompampl)
+    if refrfeatampl != None:
+        refrfeat = deepcopy(refrfeatampl)
         for q in gdat.indxrefr:
-            indxpnts = argsort(exprfeatampl[q][0, :])[::-1]
+            indxelem = argsort(refrfeatampl[q][0, :])[::-1]
             for strgfeat in gdat.fittliststrgfeattotl:
-                exprfeattemp = getattr(gdat, 'expr' + strgfeat)
-                if exprfeattemp != None:
-                    exprfeat[q] = exprfeat[q][..., indxpnts]
-        setattr(gdat, 'expr' + strgfeat, exprfeat)
+                refrfeattemp = getattr(gdat, 'refr' + strgfeat)
+                if refrfeattemp != None:
+                    refrfeat[q] = refrfeat[q][..., indxelem]
+        setattr(gdat, 'refr' + strgfeat, refrfeat)
             
     ## define the experimental element features inside the ROI
     ### save the total experimental element features
     for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
-        setattr(gdat, 'expr' + strgfeat + 'totl', exprfeat)
+        refrfeat = getattr(gdat, 'refr' + strgfeat)
+        setattr(gdat, 'refr' + strgfeat + 'totl', refrfeat)
     
-    if gdat.exprlgal != None and gdat.exprbgal != None:
-        gdat.indxexprpntsrofi = []
+    if gdat.refrlgal != None and gdat.refrbgal != None:
+        gdat.indxrefrpntsrofi = []
         for q in gdat.indxrefr:
-            gdat.indxexprpntsrofi.append(where((fabs(gdat.exprlgal[q][0, :]) < gdat.maxmgangdata) & (fabs(gdat.exprbgal[q][0, :]) < gdat.maxmgangdata))[0])
+            gdat.indxrefrpntsrofi.append(where((fabs(gdat.refrlgal[q][0, :]) < gdat.maxmgangdata) & (fabs(gdat.refrbgal[q][0, :]) < gdat.maxmgangdata))[0])
         for strgfeat in gdat.fittliststrgfeattotl:
-            exprfeat = getattr(gdat, 'expr' + strgfeat)
-            if exprfeat != None:
-                exprfeatprim = []
+            refrfeat = getattr(gdat, 'refr' + strgfeat)
+            if refrfeat != None:
+                refrfeatprim = []
                 for q in gdat.indxrefr:
-                    exprfeatprim.append(exprfeat[q][..., gdat.indxexprpntsrofi[q]])
-                setattr(gdat, 'expr' + strgfeat, exprfeatprim)
+                    refrfeatprim.append(refrfeat[q][..., gdat.indxrefrpntsrofi[q]])
+                setattr(gdat, 'refr' + strgfeat, refrfeatprim)
     
     ## number of experimental elements
-    gdat.exprinfo = False
+    gdat.refrinfo = False
     for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
-        if exprfeat != None:    
-            gdat.exprinfo = True
+        refrfeat = getattr(gdat, 'refr' + strgfeat)
+        if refrfeat != None:    
+            gdat.refrinfo = True
     
-    if gdat.exprlgal != None and gdat.datatype == 'inpt':
-        gdat.truenumbpnts = array([gdat.exprlgal[0].shape[1]])
+    if gdat.refrlgal != None and gdat.datatype == 'inpt':
+        gdat.refrnumbelem = array([gdat.refrlgal[0].shape[1]])
     
     # temp
-    #if gdat.exprnumbpnts > 0:
-    #    gdat.exprfluxbrgt, gdat.exprfluxbrgtassc = retr_fluxbrgt(gdat, gdat.exprlgal, gdat.exprbgal, gdat.exprflux[0, :])
+    #if gdat.refrnumbelem > 0:
+    #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
 
     # local kernel evaluation plot
     if gdat.makeplot:
@@ -1301,41 +1309,41 @@ def init( \
                 print 'Setting the seed for the RNG...'
             set_state(gdat.seedstat)
 
-        if gdat.truenumbpnts == None:
-            gdat.truenumbpnts = empty(gdat.numbpopl, dtype=int)
+        if gdat.truenumbelem == None:
+            gdat.truenumbelem = empty(gdat.numbpopl, dtype=int)
             if gdat.truenumbtrap > 0:
                 for l in gdat.trueindxpopl:
-                    gdat.truenumbpnts[l] = random_integers(0, gdat.truemaxmnumbpnts[l])
+                    gdat.truenumbelem[l] = random_integers(0, gdat.truemaxmnumbelem[l])
     
-    gdat.truenumbpopl = gdat.truenumbpnts.size
+    gdat.truenumbpopl = gdat.truenumbelem.size
     gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
     if gdat.datatype == 'mock':
-        gdat.limtpntshist = [0.5, sum(gdat.truenumbpnts) / 2.]
+        gdat.limtpntshist = [0.5, sum(gdat.truenumbelem) / 2.]
     
     ## unit sample vector
     gdat.truesamp = zeros(gdat.truenumbpara)
     gdat.truefixp = zeros(gdat.truenumbfixp) + nan
     if gdat.truenumbtrap > 0:
-        gdat.truefixp[gdat.trueindxfixpnumbpnts] = gdat.truenumbpnts
+        gdat.truefixp[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
 
     # bin experimental element features
     for strgfeat in gdat.fittliststrgfeattotl:
-        exprfeat = getattr(gdat, 'expr' + strgfeat)
+        refrfeat = getattr(gdat, 'refr' + strgfeat)
         # temp -- this takes all reference elements inside the ROI
-        if exprfeat != None: 
+        if refrfeat != None: 
             hist = empty((1, gdat.numbbinsplot))
-            hist[0, :] = histogram(exprfeat[0], getattr(gdat, 'bins' + strgfeat))[0]
+            hist[0, :] = histogram(refrfeat[0], getattr(gdat, 'bins' + strgfeat))[0]
         else:
             hist = None
-        setattr(gdat, 'exprhist' + strgfeat, hist)
+        setattr(gdat, 'refrhist' + strgfeat, hist)
     
     if gdat.datatype == 'inpt':
         for strgfeat in gdat.fittliststrgfeattotl:
-            exprfeat = getattr(gdat, 'expr' + strgfeat)
-            exprfeathist = getattr(gdat, 'exprhist' + strgfeat)
-            setattr(gdat, 'true' + strgfeat, exprfeat)
-            setattr(gdat, 'truehist' + strgfeat, exprfeathist)
+            refrfeat = getattr(gdat, 'refr' + strgfeat)
+            refrfeathist = getattr(gdat, 'refrhist' + strgfeat)
+            setattr(gdat, 'true' + strgfeat, refrfeat)
+            setattr(gdat, 'truehist' + strgfeat, refrfeathist)
     
     if gdat.fittnumbtrap > 0:
         if gdat.datatype == 'mock' or gdat.truelgal != None and gdat.truebgal != None:
@@ -1350,20 +1358,20 @@ def init( \
             gdat.trueindxelemfull = []
             if gdat.truenumbtrap > 0:
                 for l in gdat.trueindxpopl:
-                    gdat.trueindxelemfull.append(range(gdat.truenumbpnts[l]))
+                    gdat.trueindxelemfull.append(range(gdat.truenumbelem[l]))
             else:
                 gdat.trueindxelemfull = []
 
             gdat.trueindxsampcomp = retr_indxsampcomp(gdat, gdat.trueindxelemfull, 'true')
             
-            gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbpnts]
+            gdat.truefixp[gdat.trueindxfixpmeanpnts] = gdat.truefixp[gdat.trueindxfixpnumbelem]
 
         gdat.truesampvarb = empty(gdat.truenumbpara)
         gdat.truesamp = rand(gdat.truenumbpara)
 
         for k in gdat.trueindxfixp:
             
-            if gdat.truenumbtrap > 0 and (k in gdat.trueindxfixpnumbpnts or k in gdat.trueindxfixpmeanpnts):
+            if gdat.truenumbtrap > 0 and (k in gdat.trueindxfixpnumbelem or k in gdat.trueindxfixpmeanpnts):
                 continue
 
             # assume the true PSF
@@ -1389,9 +1397,9 @@ def init( \
 
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
         if gdat.truenumbtrap > 0:
-            gdat.truesamp[gdat.trueindxfixpnumbpnts] = gdat.truesampvarb[gdat.trueindxfixpnumbpnts]
-            gdat.truenumbpntstotl = sum(gdat.truefixp[gdat.trueindxfixpnumbpnts])
-            gdat.trueindxpntstotl = arange(gdat.truenumbpntstotl)
+            gdat.truesamp[gdat.trueindxfixpnumbelem] = gdat.truesampvarb[gdat.trueindxfixpnumbelem]
+            gdat.truenumbelemtotl = sum(gdat.truefixp[gdat.trueindxfixpnumbelem])
+            gdat.trueindxelemtotl = arange(gdat.truenumbelemtotl)
         
             if gdat.randseedelem:
                 seed()
@@ -1434,8 +1442,8 @@ def init( \
    
     # temp
     for l in gdat.trueindxpopl:
-        setattr(gdat, 'truenumbpntspop%d' % l, gdat.truenumbpnts[l])
-        setattr(gdat, 'truemeanpntspop%d' % l, gdat.truenumbpnts[l])
+        setattr(gdat, 'truenumbelempop%d' % l, gdat.truenumbelem[l])
+        setattr(gdat, 'truemeanpntspop%d' % l, gdat.truenumbelem[l])
     
     if gdat.datatype == 'mock':
         
@@ -1507,7 +1515,7 @@ def init( \
     gdatmodifudi.thischro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
     if gdat.fittnumbtrap > 0:
-        gdatmodifudi.thissamp[gdat.fittindxfixpnumbpnts] = 1
+        gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem] = 1
         gdatmodifudi.thisindxelemfull = [[] for l in gdat.fittindxpopl]
         for l in gdat.fittindxpopl:
             gdatmodifudi.thisindxelemfull[l].append(0)
@@ -1522,7 +1530,7 @@ def init( \
         if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep and isinstance(valu, ndarray):
             gdat.liststrgvarbarrysamp.append(strg[4:])
         if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
-                                                                                    strg != 'thistrueindxpntsasscmiss' and strg != 'thistrueindxpntsasschits':
+                                                                                    strg != 'thistrueindxelemasscmiss' and strg != 'thistrueindxelemasschits':
             gdat.liststrgvarblistsamp.append(strg[4:])
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
@@ -2255,15 +2263,15 @@ def optihess(gdat, gdatmodi):
                                 stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                                 
                                 cntr = 0
-                                indxpnts = (k - gdat.fittindxsampcompinit)
+                                indxelem = (k - gdat.fittindxsampcompinit)
                                 for strg in gdat.fittliststrgcomptotl:
                                     if k in concatenate(gdatmodi.thisindxsampcomp[strg]):
                                         indxsampampl = k + gdat.fittindxcompampl - cntr
                                         amplfact = gdatmodi.thissampvarb[indxsampampl] / getattr(gdat, 'minm' + gdat.namecompampl)
                                         if strg == gdat.namecompampl:
-                                            gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts])
+                                            gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem])
                                         else:
-                                            gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts])
+                                            gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem])
                                         gdatmodi.dictmodi['stdv' + strg + 'indv'].append(stdv)
                                         gdatmodi.dictmodi['stdv' + strg + 'indv' + gdat.namecompampl].append(gdatmodi.thissampvarb[indxsampampl])
 
@@ -2416,14 +2424,14 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.inittype == 'rand' or gdat.inittype == 'pert':
             for l in gdat.fittindxpopl:
                 gdatmodi.thissamp[l] = poisson(gdatmodi.thissampvarb[gdat.fittindxfixpmeanpnts[l]])
-                gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbpnts[l], gdatmodi.thissamp[l])
-                gdatmodi.thissamp[l] = max(gdat.fittminmnumbpnts[l], gdatmodi.thissamp[l])
+                gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbelem[l], gdatmodi.thissamp[l])
+                gdatmodi.thissamp[l] = max(gdat.fittminmnumbelem[l], gdatmodi.thissamp[l])
     
     ## Fixed-dimensional parameters
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             # temp - this should take into account parameters that exists in one but not the other
-            if namefixp == gdat.truenamefixp[k] and not (gdat.inittype == 'pert' and namefixp.startswith('numbpnts')):
+            if namefixp == gdat.truenamefixp[k] and not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')):
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
@@ -2446,7 +2454,7 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.fittnumbtrap > 0:
             gdatmodi.thisindxelemfull = []
             for l in gdat.fittindxpopl:
-                gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
+                gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l]].astype(int)))
             gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
             indxsampcomp = gdatmodi.thisindxsampcomp
         else:
@@ -2495,13 +2503,13 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## element parameters
     if gdat.fittnumbtrap > 0:
-        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]'
-        print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
+        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
+        print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
 
         ## lists of occupied and empty transdimensional parameters
         gdatmodi.thisindxelemfull = []
         for l in gdat.fittindxpopl:
-            gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]].astype(int)))
+            gdatmodi.thisindxelemfull.append(range(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l]].astype(int)))
             
         gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
             
@@ -2768,14 +2776,14 @@ def work(pathoutpthis, lock, indxprocwork):
 
             if gdat.fittnumbtrap > 0:
                 for l in gdat.fittindxpopl:
-                    if gdatmodi.thissamp[gdat.fittindxfixpnumbpnts[l]] != len(gdatmodi.thisindxelemfull[l]):
-                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]'
-                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts]
+                    if gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l]] != len(gdatmodi.thisindxelemfull[l]):
+                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]'
+                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]
                         print 'gdatmodi.thisindxelemfull'
                         print gdatmodi.thisindxelemfull
                         raise Exception('Number of elements is inconsistent with the element index list.')
 
-                    if gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts[l]] != len(gdatmodi.thisindxelemfull[l]):
+                    if gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]] != len(gdatmodi.thisindxelemfull[l]):
                         raise Exception('Number of elements is inconsistent across data structures.')
                     
                     for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
@@ -3036,7 +3044,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     print gdatmodi.thislpritotl
                     if gdat.fittnumbtrap > 0:
                         print 'Number of elements:'
-                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbpnts].astype(int)
+                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem].astype(int)
                         print 'Mean number of elements:'
                         print gdatmodi.thissampvarb[gdat.fittindxfixpmeanpnts]
                         print 'Log-slope of the amplitude parameter distribution, population 0:'

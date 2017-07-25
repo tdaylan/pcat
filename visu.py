@@ -31,7 +31,7 @@ def plot_samp(gdat, gdatmodi, strg):
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
             
             if strg != 'post':
-                numbpnts = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbpnts')].astype(int)
+                numbelem = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbelem')].astype(int)
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strg != 'post':
                 indxelemfull = list(getattr(gdatobjt, strg + 'indxelemfull'))
@@ -72,7 +72,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         strgindxydat = 'pop%d' % l
                         for strgfeat in gdat.trueliststrgfeatodim[l]:
                             if strgfeat in gdat.fittliststrgfeatodim[l]:
-                                if not (gdat.datatype == 'inpt' and getattr(gdat, 'expr' + strgfeat) == None):
+                                if not (gdat.datatype == 'inpt' and getattr(gdat, 'refr' + strgfeat) == None):
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
@@ -1216,15 +1216,15 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     # experimental
     if gdat.datatype == 'mock':
         try:
-            exprvarbfrsttotl = getattr(gdat, 'expr' + strgfrst + 'totl')[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            exprvarbsecototl = getattr(gdat, 'expr' + strgseco + 'totl')[l] * getattr(gdat, 'fact' + strgseco + 'plot')
-            axis.scatter(exprvarbfrsttotl, exprvarbsecototl, alpha=0.05, color='r', label=gdat.nameexpr + ' All', s=sizesmll)
+            refrvarbfrsttotl = getattr(gdat, 'refr' + strgfrst + 'totl')[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            refrvarbsecototl = getattr(gdat, 'refr' + strgseco + 'totl')[l] * getattr(gdat, 'fact' + strgseco + 'plot')
+            axis.scatter(refrvarbfrsttotl, refrvarbsecototl, alpha=0.05, color='r', label=gdat.namerefr + ' All', s=sizesmll)
         except:
             pass
         try:
-            exprvarbfrst = getattr(gdat, 'expr' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            exprvarbseco = getattr(gdat, 'expr' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
-            axis.scatter(exprvarbfrst, exprvarbseco, alpha=0.3, color='r', label=gdat.nameexpr, s=sizelarg)
+            refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            refrvarbseco = getattr(gdat, 'refr' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
+            axis.scatter(refrvarbfrst, refrvarbseco, alpha=0.3, color='r', label=gdat.namerefr, s=sizelarg)
         except:
             pass
 
@@ -1365,7 +1365,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             strgtemp = strgydat[:4]
 
             bins = copy(getattr(gdat, 'bins' + strgtemp))
-            varb = copy(getattr(gdat, 'expr' + strgtemp))
+            varb = copy(getattr(gdat, 'refr' + strgtemp))
             if strgtemp == 'lgal' or strgtemp == 'bgal':
             	bins *= gdat.anglfact
             	varb *= gdat.anglfact
@@ -1719,11 +1719,11 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
             if gdat.truelgal != None and gdat.truelgal != None and truesign != None:
                 if strgfeat != None:
                     truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp][0, :] 
-                    indxpnts = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
+                    indxelem = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
                 else:
-                    indxpnts = arange(gdat.truenumbpnts[indxpopltemp])
-                mrkrsize = retr_mrkrsize(gdat, truesign[indxpopltemp][0, indxpnts])
-                axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][0, indxpnts], gdat.anglfact * gdat.truebgal[indxpopltemp][0, indxpnts], \
+                    indxelem = arange(gdat.truenumbelem[indxpopltemp])
+                mrkrsize = retr_mrkrsize(gdat, truesign[indxpopltemp][0, indxelem])
+                axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][0, indxelem], gdat.anglfact * gdat.truebgal[indxpopltemp][0, indxelem], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
             if a == numbrows - 1:
@@ -1993,22 +1993,22 @@ def plot_grap(plottype, verbtype=0):
                                                                                                                                         'magenta', 'magenta', 'magenta']
 
     grap.add_edges_from([ \
-                         ('meanpnts', 'numbpnts'), \
+                         ('meanpnts', 'numbelem'), \
                          ('modl','data'), \
                          ('psfp', 'modl'), \
                          ('bacp', 'modl'), \
                          ('lgal','modl'), \
                          ('bgal','modl'), \
-                         ('numbpnts','lgal'), \
-                         ('numbpnts','bgal'), \
+                         ('numbelem','lgal'), \
+                         ('numbelem','bgal'), \
                         ])
     
     if plottype.startswith('lght'):
         grap.add_edges_from([ \
                              ('ampldistslop', 'ampl'), \
                              ('ampl', 'modl'), \
-                             ('numbpnts','ampl'), \
-                             ('numbpnts', 'sind'), \
+                             ('numbelem','ampl'), \
+                             ('numbelem', 'sind'), \
                              ('sind','modl'), \
                             ])
     
@@ -2017,15 +2017,15 @@ def plot_grap(plottype, verbtype=0):
                              ('lenp', 'modl'), \
                              ('defsdistslop', 'defs'), \
                              ('defs', 'modl'), \
-                             ('numbpnts','defs'), \
+                             ('numbelem','defs'), \
                             ])
     
     if plottype == 'lens0001':
         grap.add_edges_from([ \
                              ('asca', 'modl'), \
-                             ('numbpnts','asca'), \
+                             ('numbelem','asca'), \
                              ('acut', 'modl'), \
-                             ('numbpnts','acut'), \
+                             ('numbelem','acut'), \
                             ])
     
     if plottype == 'lght0001' or plottype == 'lght0002':
@@ -2035,7 +2035,7 @@ def plot_grap(plottype, verbtype=0):
     
     if plottype == 'lght0002':
         grap.add_edges_from([ \
-                             ('numbpnts', 'expc'), \
+                             ('numbelem', 'expc'), \
                              ('expc', 'modl'), \
                             ])
     
@@ -2051,10 +2051,10 @@ def plot_grap(plottype, verbtype=0):
     else:
         nameelem = r'\rm{pts}'
     if plottype.startswith('lght') and (plottype == 'lght0001' or plottype == 'lght0002'):
-        labl['numbpnts'] = r'$\vec{N}_{%s}$' % nameelem
+        labl['numbelem'] = r'$\vec{N}_{%s}$' % nameelem
         labl['meanpnts'] = r'$\vec{\mu}_{%s}$' % nameelem
     else:
-        labl['numbpnts'] = '$N_{%s}$' % nameelem
+        labl['numbelem'] = '$N_{%s}$' % nameelem
         labl['meanpnts'] = r'$\mu_{%s}$' % nameelem
     
     if plottype.startswith('lght'):
@@ -2095,11 +2095,11 @@ def plot_grap(plottype, verbtype=0):
     if plottype == 'lght0003':
         posi['spatdistcons'] = array([-0.2, 0.15])
     if plottype.startswith('lght'):
-        posi['numbpnts'] = array([0., 0.075])
+        posi['numbelem'] = array([0., 0.075])
         posi['meanpnts'] = array([0., 0.15])
         posi['ampldistslop'] = array([0.2, 0.15])
     if plottype.startswith('lens'):
-        posi['numbpnts'] = array([-0.1, 0.075])
+        posi['numbelem'] = array([-0.1, 0.075])
         posi['meanpnts'] = array([-0.1, 0.15])
         posi['defsdistslop'] = array([0.1, 0.15])
     
@@ -2147,7 +2147,7 @@ def plot_grap(plottype, verbtype=0):
     nx.draw(grap, posi, labels=labl, ax=axis, edgelist=[], nodelist=[])
     nx.draw_networkx_edges(grap, posi, ax=axis, labels=labl, edge_color=listcolr)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
-    nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbpnts'], node_color='b', node_size=size)
+    nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbelem'], node_color='b', node_size=size)
     if plottype.startswith('lght'):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
