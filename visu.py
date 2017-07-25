@@ -166,6 +166,8 @@ def plot_samp(gdat, gdatmodi, strg):
                                 acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
                         else:
                             deflprof = getattr(gdatobjt, strg + 'deflprof')
+                            asca = getattr(gdatobjt, strg + 'asca')
+                            acut = getattr(gdatobjt, strg + 'acut')
 
                         for l in range(len(deflprof)):
                             listydat = []

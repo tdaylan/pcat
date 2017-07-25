@@ -2371,50 +2371,17 @@ def retr_condcatl(gdat):
             for strgfeat in gdat.fittliststrgfeattotl:
                 temp = getattr(gdat, 'list' + strgfeat)
                 if temp[indxsamptotlcntr][indxpoplcntr].size > 0:
-                    
-                    print 'indxsamptotlcntr'
-                    print indxsamptotlcntr
-                    print 'indxpoplcntr'
-                    print indxpoplcntr
-                    print 'indxpntscntr'
-                    print indxpntscntr
-                    print 'temp'
-                    print len(temp)
-                    print 'temp[indxsamptotlcntr]'
-                    print len(temp[indxsamptotlcntr])
-                    print 'temp[indxsamptotlcntr][indxpoplcntr]'
-                    print len(temp[indxsamptotlcntr][indxpoplcntr])
-                    print 'type(temp[indxsamptotlcntr][indxpoplcntr])'
-                    print type(temp[indxsamptotlcntr][indxpoplcntr])
-                    print 'temp[indxsamptotlcntr][indxpoplcntr][indxpntscntr]'
-                    print temp[indxsamptotlcntr][indxpoplcntr][indxpntscntr].shape
-                    print 'strgfeat'
-                    print strgfeat
-                    if strgfeat == 'spec':
-                        print 'temp'
-                        print temp
-                    print
-
                     temp = temp[indxsamptotlcntr][indxpoplcntr][..., indxpntscntr]
                     gdat.dictglob['liststkscond'][r][strgfeat].append(temp)
 
     for r in range(len(gdat.dictglob['liststkscond'])):
-        print 'r'
-        print r
         for strgfeat in gdat.fittliststrgfeattotl:
-            print 'strgfeat'
-            print strgfeat
-            print 'gdat.dictglob[liststkscond][r][strgfeat]'
-            print gdat.dictglob['liststkscond'][r][strgfeat]
             arry = stack(gdat.dictglob['liststkscond'][r][strgfeat], axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat] = zeros(([3] + list(arry.shape[1:])))
             gdat.dictglob['poststkscond'][r][strgfeat][0, ...] = median(arry, axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat][1, ...] = percentile(arry, 16., axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat][2, ...] = percentile(arry, 84., axis=0)
             
-    if gdat.strgcnfg == 'pcat_ferm_mock_igal':
-        raise Exception('')
-
     gdat.numbstkscond = len(gdat.dictglob['liststkscond'])
 
     if gdat.verbtype > 1:
@@ -3534,7 +3501,13 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.pixltype == 'heal':
             sbrtbackhealfull = copy(sbrtbacknorm[meshgrid(indxback, gdat.indxener, gdat.indxpixlfull, gdat.indxevtt, indexing='ij')])
             setattr(gdat, strgmodl + 'sbrtbackhealfull', sbrtbackhealfull)
-        
+            for c in indxback:
+                for i in gdat.indxener:
+                    for m in gdat.indxevtt:
+                        print 'cim'
+                        print c, i, m
+                        print 'sbrtbackhealfull[c, i, :, m]'
+                        summgene(sbrtbackhealfull[c, i, :, m])
         indxtessrofi = meshgrid(indxback, gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
         sbrtbacknorm = sbrtbacknorm[indxtessrofi]
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
@@ -6564,9 +6537,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         print 'sbrtbackhealfull[c, i, :, m]'
                         summgene(sbrtbackhealfull[c, i, :, m])
 
-                sbrtdiff['back%04d' % c] = sbrtbackhealfull[c, :, :, :]
+                sbrtdiff['back%04d' % c] = copy(sbrtbackhealfull[c, :, :, :])
             else:
-                sbrtdiff['back%04d' % c] = swapaxes(sbrtbacknorm[c, :, indxpixleval, :], 0, 1)
+                sbrtdiff['back%04d' % c] = copy(swapaxes(sbrtbacknorm[c, :, indxpixleval, :], 0, 1))
             if specback[c]:
                 sbrtdiff['back%04d' % c] *= bacp[indxbacpback[c]]
             else:

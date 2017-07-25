@@ -767,7 +767,11 @@ def init( \
     if gdat.elemtype == 'clus':
         backtype = [1.]
     setp_namevarbvalu(gdat, 'backtype', backtype)
-   
+    
+    print 'gdat.truebacktype'
+    print gdat.truebacktype
+    print
+
     #### boolean flag background
     if gdat.exprtype == 'chan':
         specback = [False, True]
