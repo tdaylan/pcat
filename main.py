@@ -2420,10 +2420,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.thissamp[l] = min(gdat.fittmaxmnumbpnts[l], gdatmodi.thissamp[l])
                 gdatmodi.thissamp[l] = max(gdat.fittminmnumbpnts[l], gdatmodi.thissamp[l])
     
-    if gdat.fittnumbtrap > 0:
-        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]'
-        print gdatmodi.thissamp[gdat.fittindxfixpnumbpnts]
-    
     ## Fixed-dimensional parameters
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
