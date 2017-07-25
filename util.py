@@ -986,7 +986,7 @@ def retr_psfnferm(gdat):
 
 def retr_chandata(gdat):
     
-    gdat.numbrefr  = 1
+    gdat.numbrefr = 1
     gdat.indxrefr = arange(gdat.numbrefr)
     
     gdat.dictrefr = []
@@ -6959,7 +6959,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
         if numbtrap > 0:
             ### derived quantities
-            for l in range(numbpopl):
+            for l in indxpopl:
                 #### radial and angular coordinates
                 dicttemp['gang'][l] = retr_gang(dicttemp['lgal'][l], dicttemp['bgal'][l])
                 dicttemp['aang'][l] = retr_aang(dicttemp['lgal'][l], dicttemp['bgal'][l])
@@ -6968,7 +6968,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     #### number of expected counts
                     dicttemp['cnts'][l] = retr_cntspnts(gdat, dicttemp['lgal'][l], dicttemp['bgal'][l], dicttemp['spec'][l])
             
+                print 'heeeey'
                 for q in gdat.indxrefr:
+                    print 'q'
+                    print q
                     for name in gdat.listnamefeatrefronly[q]:
                         dicttemp[name][l] = zeros(numbelem) - 1
                         print 'name'
@@ -7107,16 +7110,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             else:
                                 indxelemrefrasschits[l].append(k)
 
-                        indxelemfittassc[l] = unique(indxfittelem[where(indxfittelem > -1)])
+                        indxelemfittasschits[l] = unique(indxfittelem[where(indxfittelem > -1)])
                         
                         if numbelem[l] > 0:
-                            indxelemfittfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittassc[l])
+                            indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasscfals[l])
                         
                         if gdat.refrnumbelem[q] > 0:
                             cmpl[l] = array([float(len(indxelemrefrasschits[l])) / gdat.refrnumbelem[q]])
                         fdis[l] = array([0])
                         if numbelem[l] > 0:
-                            fdis[l] = array([float(indxelemfittfals[l].size) / numbelem[l]])
+                            fdis[l] = array([float(indxelemfittasscfals[l].size) / numbelem[l]])
                         
                     setattr(gdatobjt, strg + 'indxelemrefrasscmiss', indxelemrefrasscmiss)
                     setattr(gdatobjt, strg + 'indxelemrefrasschits', indxelemrefrasschits)
@@ -7135,8 +7138,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     if refrfeat != None:
                         refrhistfeat = getattr(gdat, 'refrhist' + strgfeat)
-                        cmplfeat = empty((gdat.refrnumbpopl, gdat.numbbinsplot))
-                        errrcmplfeat = empty((2, gdat.refrnumbpopl, gdat.numbbinsplot))
+                        cmplfeat = empty((gdat.numbrefr, gdat.numbbinsplot))
+                        errrcmplfeat = empty((2, gdat.numbrefr, gdat.numbbinsplot))
                     
                         for q in gdat.indxrefr:
                             if not strgfeat in liststrgfeatodim[q]:
@@ -7162,7 +7165,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             continue
                         indx = where(isfinite(featrefrassc[strgfeat][l]))[0]
                         bins = getattr(gdat, 'bins' + strgfeat)
-                        histfeatfals = histogram(dicttemp[strgfeat][l][indxelemfittfals[l]], bins=bins)[0]
+                        histfeatfals = histogram(dicttemp[strgfeat][l][indxelemfittasscfals[l]], bins=bins)[0]
                         fitthistfeat = getattr(gdatobjt, strg + 'hist' + strgfeat)
                         fdisfeat[l, :] = histfeatfals / fitthistfeat[l, :]
                         errrfdisfeat[:, l, :] = (fdisfeat[l, :] / sqrt(maximum(ones(gdat.numbbinsplot), fitthistfeat[l, :])))[None, :]
