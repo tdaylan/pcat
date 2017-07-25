@@ -82,23 +82,23 @@ def plot_samp(gdat, gdatmodi, strg):
                                               scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, \
                                               strgindxydat=strgindxydat, omittrue=True, nameinte=nameinte)
                 
+            alph = 0.1
+            if strg == 'this':
+                pathtemp = gdat.pathplot + gdat.namesampdist + '/fram/'
+                colr = 'b'
+            elif strg == 'mlik':
+                pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
+                colr = 'r'
+            elif strg == 'true':
+                pathtemp = gdat.pathinit
+                colr = 'g'
+            elif strg == 'post':
+                pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
+                colr = 'black'
+    
             # transdimensional element features projected onto the data axes
             if not (strg == 'post' and not gdat.condcatl):
                 
-                alph = 0.1
-                if strg == 'this':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/fram/'
-                    colr = 'b'
-                elif strg == 'mlik':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
-                    colr = 'r'
-                elif strg == 'true':
-                    pathtemp = gdat.pathinit
-                    colr = 'g'
-                elif strg == 'post':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
-                    colr = 'black'
-    
                 if gdat.numbener > 1 and gdat.elemtype == 'lght':
                     
                     # PS spectra
@@ -174,16 +174,24 @@ def plot_samp(gdat, gdatmodi, strg):
                             listvlinfrst = []
                             listvlinseco = []
     
+                            if strgmodl == 'true':
+                                deflproftemp = deflprof[l][0, :, :]
+                            else:
+                                deflproftemp = deflprof[l]
                             for k in range(deflprof[l].shape[-1]):
-                                if strgmodl == 'true':
-                                    deflproftemp = deflprof[l][0, :, :]
-                                else:
-                                    deflproftemp = deflprof[l]
                                 listydat.append(deflproftemp[:, k] * gdat.anglfact)
-                                listvlinfrst.append(asca[l][k] * gdat.anglfact) 
-                                listvlinseco.append(acut[l][k] * gdat.anglfact)
-                                
-                            listydat.append(xdat * 0. + gdat.anglfact * sampvarb[getattr(gdat, strgmodl + 'indxfixpbeinhost')])
+                                if strg == 'true':
+                                    ascatemp = asca[l][0, k]
+                                    acuttemp = acut[l][0, k]
+                                else:
+                                    ascatemp = asca[l][k]
+                                    acuttemp = acut[l][k]
+                                listvlinfrst.append(ascatemp * gdat.anglfact) 
+                                listvlinseco.append(acuttemp * gdat.anglfact)
+                            
+                            indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
+                            beinhost = retr_fromgdat(gdat, gdatmodi, strg, 'sampvarb', indxvarb=indxfixpbeinhost)
+                            listydat.append(xdat * 0. + gdat.anglfact * beinhost)
                             path = pathtemp + strg + 'deflsubhpop%d%s.pdf' % (l, strgswep)
                             limtydat = [1e-3, 1.]
                             limtxdat = [1e-3, 1.]
@@ -210,7 +218,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         else:
                             listyerr = None
                         tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, \
-                                                                                                lablydat=lablydat, listlinestyl=['-', '--'])
+                                                                                                lablydat=lablydat, listlinestyl=['-', '--'], colr=colr)
 
                         # subhalo mass fraction
                         limtydat = [1e-3, 0.1]
@@ -222,7 +230,7 @@ def plot_samp(gdat, gdatmodi, strg):
                             listyerr = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc, mometype='errr')
                         else:
                             listyerr = None
-                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, lablydat=lablydat)
+                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, lablydat=lablydat, colr=colr)
 
             if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
                 ## PSF radial profile
@@ -1476,10 +1484,6 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     yerr = zeros((2, ydat.size))
     
     if strg == 'post':
-        print 'l'
-        print l
-        print 'strgfeat'
-        print strgfeat
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', mometype='errr', indxlist=l)
 
     xdat *= factplot
@@ -1857,9 +1861,9 @@ def plot_intr(gdat):
 def plot_eval(gdat):
 
     if gdat.exproaxitype:
-        psfntemp = copy(gdat.exprpsfn[0, :, 0, 0])
+        psfntemp = copy(gdat.psfnexpr[0, :, 0, 0])
     else:
-        psfntemp = copy(gdat.exprpsfn[0, :, 0])
+        psfntemp = copy(gdat.psfnexpr[0, :, 0])
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     for k in range(gdat.numbprox + 1):
         if k == 0 or k == gdat.numbprox:

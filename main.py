@@ -675,15 +675,15 @@ def init( \
     
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
-        retr_fermpsfn(gdat)
+        retr_psfnferm(gdat)
     if gdat.exprtype == 'chan':
-        retr_chanpsfn(gdat)
+        retr_psfnchan(gdat)
     if gdat.exprtype == 'sdss':
-        retr_sdsspsfn(gdat)
+        retr_psfnsdss(gdat)
     if gdat.exprtype == 'hubb':
-        retr_hubbpsfn(gdat)
+        retr_psfnhubb(gdat)
     if gdat.exprtype == 'sdyn':
-        retr_sdynpsfn(gdat)
+        retr_psfnsdyn(gdat)
    
     gdat.factburntmpr = 0.75
     gdat.numbburntmpr = gdat.factburntmpr * gdat.numbburn
@@ -731,17 +731,17 @@ def init( \
     ### PSF model
     #### angular profile
     if gdat.exprtype == 'ferm':
-        gdat.exprpsfntype = 'doubking'
+        gdat.psfntypeexpr = 'doubking'
     if gdat.exprtype == 'chan':
-        gdat.exprpsfntype = 'singking'
+        gdat.psfntypeexpr = 'singking'
     if gdat.exprtype == 'sdss':
-        gdat.exprpsfntype = 'singgaus'
+        gdat.psfntypeexpr = 'singgaus'
     if gdat.exprtype == 'hubb':
-        gdat.exprpsfntype = 'singgaus'
+        gdat.psfntypeexpr = 'singgaus'
     if gdat.exprtype == 'sdyn':
-        gdat.exprpsfntype = 'singgaus'
+        gdat.psfntypeexpr = 'singgaus'
     
-    psfntype = gdat.exprpsfntype
+    psfntype = gdat.psfntypeexpr
     setp_namevarbvalu(gdat, 'psfntype', psfntype)
     
     ### background
@@ -803,9 +803,19 @@ def init( \
 
     retr_indxsamp(gdat, strgmodl='true')
     
+    # reference elements
+    gdat.exprinfo = False
+    if gdat.exprtype == 'ferm':
+        retr_fermdata(gdat)
+        gdat.exprinfo = True
+    if gdat.exprtype == 'chan':
+        retr_chandata(gdat)
+        gdat.exprinfo = True
+    gdat.trueinfo = gdat.exprinfo or gdat.datatype == 'mock'
+    
     ### normalization
     if gdat.exprtype == 'ferm':
-        bacp = [1e-6, 1e-2]
+        bacp = [1e-8, 1e-2]
     if gdat.exprtype == 'chan':
         bacp = [1e-1, 1e2]
     if gdat.exprtype == 'hubb':
@@ -1201,17 +1211,6 @@ def init( \
         if sizetotl > 10.:
             print 'Warning: PCAT data path size is %d GB' % sizetotl
 
-    # experimental information
-    gdat.exprinfo = False
-    if gdat.exprtype == 'ferm':
-        retr_fermdata(gdat)
-        gdat.exprinfo = True
-    if gdat.exprtype == 'chan':
-        retr_chandata(gdat)
-        gdat.exprinfo = True
-    
-    gdat.trueinfo = gdat.exprinfo or gdat.datatype == 'mock'
-
     # external catalog
     ## ensure that all experimental element features are defined, at least with a None
     for strgfeat in gdat.fittliststrgfeattotl:
@@ -1369,7 +1368,7 @@ def init( \
 
             # assume the true PSF
             if k in gdat.trueindxfixppsfp:
-                gdat.truefixp[k] = gdat.exprpsfp[k-gdat.trueindxfixppsfp[0]]
+                gdat.truefixp[k] = gdat.psfpexpr[k-gdat.trueindxfixppsfp[0]]
             else:
                 ## read input mock model parameters
                 try:
