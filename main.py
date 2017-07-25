@@ -714,7 +714,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             maxmnumbpnts = array([100])
     if gdat.elemtype == 'lens':
-        maxmnumbpnts = array([25])
+        maxmnumbpnts = array([300])
     if gdat.elemtype == 'clus':
         maxmnumbpnts = array([100])
     setp_namevarbvalu(gdat, 'maxmnumbpnts', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbpnts)
