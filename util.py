@@ -3501,13 +3501,6 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.pixltype == 'heal':
             sbrtbackhealfull = copy(sbrtbacknorm[meshgrid(indxback, gdat.indxener, gdat.indxpixlfull, gdat.indxevtt, indexing='ij')])
             setattr(gdat, strgmodl + 'sbrtbackhealfull', sbrtbackhealfull)
-            for c in indxback:
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        print 'cim'
-                        print c, i, m
-                        print 'sbrtbackhealfull[c, i, :, m]'
-                        summgene(sbrtbackhealfull[c, i, :, m])
         indxtessrofi = meshgrid(indxback, gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
         sbrtbacknorm = sbrtbacknorm[indxtessrofi]
         setattr(gdat, strgmodl + 'sbrtbacknorm', sbrtbacknorm)
@@ -6027,10 +6020,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     
     if psfnevaltype != 'none':
         psfp = sampvarb[getattr(gdat, strgmodl + 'indxfixppsfp')]
-    print 'psfnevaltype'
-    print psfnevaltype
-    print 'psfp'
-    print psfp
 
     bacp = sampvarb[getattr(gdat, strgmodl + 'indxfixpbacp')]
     
@@ -6100,14 +6089,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         meanpnts = sampvarb[indxfixpmeanpnts]
         
         for l in gdat.fittindxpopl:
-            print 'numbtrap'
-            print numbtrap
-            print 'numbcomp'
-            print numbcomp
-            print 'numbpnts'
-            print numbpnts
-            print 'gdat.numblpri'
-            print gdat.numblpri
 
             lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbpnts[l]
             lpri[1+0*numbpopl+l] = retr_probpois(numbpnts[l], meanpnts[l])
@@ -6526,17 +6507,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         unifback = getattr(gdat, strgmodl + 'unifback')
         sbrtback = empty((numbback, gdat.numbener, indxpixleval.size, gdat.numbevtt))
         for c in indxback:
-            print 'c'
-            print c
             if gdat.pixltype == 'heal' and (psfnevaltype == 'full' or psfnevaltype == 'conv') and not unifback[c]:
                 sbrtbackhealfull = getattr(gdat, strgmodl + 'sbrtbackhealfull')
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        print 'i, m'
-                        print i, m
-                        print 'sbrtbackhealfull[c, i, :, m]'
-                        summgene(sbrtbackhealfull[c, i, :, m])
-
                 sbrtdiff['back%04d' % c] = copy(sbrtbackhealfull[c, :, :, :])
             else:
                 sbrtdiff['back%04d' % c] = copy(swapaxes(sbrtbacknorm[c, :, indxpixleval, :], 0, 1))
@@ -6544,16 +6516,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 sbrtdiff['back%04d' % c] *= bacp[indxbacpback[c]]
             else:
                 sbrtdiff['back%04d' % c] *= bacp[indxbacpback[c]][:, None, None]
-            
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
-                    print 'i, m'
-                    print i, m
-                    print 'sbrtbacknorm[c, i, :, m]'
-                    summgene(sbrtbacknorm[c, i, :, m])
-                    print 'sbrtdiff[back%04d % c][i, :, m]'
-                    summgene(sbrtdiff['back%04d' % c][i, :, m])
-            print 
 
         # evaluate host galaxy surface brightness
         if hostemistype != 'none':
@@ -6593,19 +6555,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 setattr(gdatobjt, strg + 'sbrt' + name + 'conv', sbrtdiffconv[name])
             else:
                 sbrtdiffconv[name] = sbrtdiff[name]
-            
-            print name
-            print 'convdiff[k]'
-            print convdiff[k]
-            print 
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
-                    print 'im'
-                    print i,m
-                    print 'sbrtdiffconv[name][i, :, m]'
-                    summgene(sbrtdiffconv[name][i, :, m])
             setattr(gdatobjt, strg + 'sbrt' + name, sbrtdiff[name])
-        print
 
         stopchro(gdat, gdatmodi, strg, 'sbrtdiffconv')
         
