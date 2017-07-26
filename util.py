@@ -6553,6 +6553,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
             setattr(gdatobjt, strg + 'defl', defl)
             
+        initchro(gdat, gdatmodi, strg, 'sbrtdiffconv')
         ### background surface brightness
         numbback = getattr(gdat, strgmodl + 'numbback')
         indxback = getattr(gdat, strgmodl + 'indxback')
@@ -6574,6 +6575,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 sbrtdiff['back%04d' % c] *= bacp[indxbacpback[c]]
             else:
                 sbrtdiff['back%04d' % c] *= bacp[indxbacpback[c]][:, None, None]
+        stopchro(gdat, gdatmodi, strg, 'sbrtdiffconv')
 
         # evaluate host galaxy surface brightness
         if hostemistype != 'none':
@@ -6596,7 +6598,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
         # construct the model diffuse surface brightness
         initchro(gdat, gdatmodi, strg, 'sbrtmodl')
         # convolve the model surface brightness with the PSF
-        initchro(gdat, gdatmodi, strg, 'sbrtdiffconv')
         sbrtdiffconv = dict()
         for k, name in enumerate(listnamediff):
             if convdiff[k] and (psfnevaltype == 'full' or psfnevaltype == 'conv'):
@@ -6616,7 +6617,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
             else:
                 sbrtdiffconv[name] = sbrtdiff[name]
             setattr(gdatobjt, strg + 'sbrt' + name, sbrtdiff[name])
-        stopchro(gdat, gdatmodi, strg, 'sbrtdiffconv')
         
         ## initialize with the must-have background
         sbrtmodl = copy(sbrtdiff['back0000'])
@@ -7322,9 +7322,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                         
                         # collect the associated element features
                         indx = where(indxfittelem >= 0)[0]
-                        if indx.size > 0:
-                            for strgfeat in liststrgfeatodim[l]:
-                                featrefrassc[strgfeat][l] = zeros(gdat.refrnumbelem[q])
+                        for strgfeat in liststrgfeatodim[l]:
+                            featrefrassc[strgfeat][l] = zeros(gdat.refrnumbelem[q])
+                            if indx.size > 0:
                                 featrefrassc[strgfeat][l][indx] = dicttemp[strgfeat][l][indxfittelem[indx]]
                         
                         # divide associations into subgroups
@@ -7362,6 +7362,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     if refrfeat != None:
                         refrhistfeat = getattr(gdat, 'refrhist' + strgfeat)
+                        print 'refrhistfeat'
+                        print refrhistfeat
+                        print
+
                         cmplfeat = empty((gdat.numbrefr, gdat.numbbinsplot))
                         errrcmplfeat = empty((2, gdat.numbrefr, gdat.numbbinsplot))
                     
@@ -7371,6 +7375,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                             indx = where(isfinite(featrefrassc[strgfeat][q]))[0]
                             bins = getattr(gdat, 'bins' + strgfeat)
                             histfeatrefrassc = histogram(refrfeat[q][0, indxelemrefrasschits[q]], bins=bins)[0]
+                            print 'histfeatrefrassc'
+                            print histfeatrefrassc
+                            print 'refrfeat[q][0, indxelemrefrasschits[q]]'
+                            print refrfeat[q][0, indxelemrefrasschits[q]]
+
                             if refrhistfeat != None:
                                 cmplfeat[q, :] = histfeatrefrassc / refrhistfeat[q, :]
                                 errrcmplfeat[:, q, :] = (cmplfeat[q, :] / sqrt(maximum(ones(gdat.numbbinsplot), refrhistfeat[q, :])))[None, :]

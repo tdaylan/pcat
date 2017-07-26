@@ -1491,7 +1491,7 @@ def plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=False):
     
     if strg == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'assc', mometype='errr', indxlist=l)
-
+    
     xdat *= factplot
     xerr *= factplot
     if plotdiff:
