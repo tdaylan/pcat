@@ -1170,6 +1170,8 @@ def retr_fermdata(gdat):
     gdat.listnamerefr = ['ac15']
     gdat.numbrefr  = 1
     
+    setattr(gdat, 'lablcurvac15', '%s_{3FGL}' % gdat.lablcurv)
+    setattr(gdat, 'lablexpcac15', 'E_{c,3FGL}')
     gdat.indxrefr = arange(gdat.numbrefr)
 
     for name in gdat.listnamerefr:
@@ -2539,6 +2541,9 @@ def retr_negalogt(varb):
 
 def setpprem(gdat):
 
+    gdat.lablcurv = r'\kappa'
+    gdat.lablexpc = r'E_{c}'
+    
     # temp
     if gdat.elemtype == 'lght':
         gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
@@ -2825,8 +2830,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablprvl = '$p$'
     
     gdat.lablsind = 's'
-    gdat.lablcurv = r'\kappa'
-    gdat.lablexpc = r'E_{c}'
     gdat.lablexpcunit = gdat.strgenerunit
     
     gdat.labllliktotl = r'\mathcal{L}'
@@ -4512,11 +4515,6 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     if strgmodl == 'true':
         gdat.listnamefeatrefr = liststrgfeatodim
 
-    print 'gdat.listnamefeatrefr'
-    print gdat.listnamefeatrefr
-    print 'gdat.listnamefeatrefronly'
-    print gdat.listnamefeatrefronly
-
     # defaults
     liststrgpdfnmodu = [[] for l in indxpopl]
     liststrgfeatmodu = [[] for l in indxpopl]
@@ -5578,7 +5576,7 @@ def make_catllabl(gdat, strg, axis):
     
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
-        if gdat.trueinfo:
+        if gdat.datatype == 'mock':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                                 label='%s Source' % gdat.legdtrue, marker='>', lw=gdat.mrkrlinewdth, color='g')
         
@@ -6937,9 +6935,19 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
 
         ## element related
         if numbtrap > 0:
+            if gdat.datatype == 'mock' and strg == 'true':
+                print 'gdat.refrlgal'
+                print gdat.refrlgal
+                gdat.refrlgal = []
+                gdat.refrbgal = []
+                for l in gdat.trueindxpopl:
+                    gdat.refrlgal.append(tile(dicttemp['lgal'][l], [3] + list(ones(dicttemp['lgal'][l].ndim, dtype=int))))
+                    gdat.refrbgal.append(tile(dicttemp['bgal'][l], [3] + list(ones(dicttemp['bgal'][l].ndim, dtype=int))))
+                gdat.refrnumbelem = gdat.truenumbelem
+    
             # correlate the catalog sample with the reference catalog
             # temp
-            if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None:
+            if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None and not (strg == 'true' and gdat.datatype == 'mock'):
                 indxelemrefrasschits = [[] for q in gdat.indxrefr]
                 indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
                 
@@ -6948,6 +6956,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                 
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
+                        
                         indxfittelem = zeros(gdat.refrnumbelem[q], dtype=int) - 1
                         numbassc = zeros(gdat.refrnumbelem[q])
                         metrassc = zeros(gdat.refrnumbelem[q]) + 3 * gdat.maxmgang
@@ -6967,7 +6976,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                                 metrassc[refrindxelemtemp[0]] = metr[0]
                                 indxfittelem[refrindxelemtemp[0]] = k
                     
-
         if numbtrap > 0:
             ### derived quantities
             for l in indxpopl:
@@ -7258,7 +7266,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
                     setattr(gdatobjt, strg + name + 'bein', array([dicttemp[name + 'bein']]))
             
         if numbtrap > 0:
-            liststrgfeat = getattr(gdat, strgmodl + 'liststrgfeat')
             ## copy element features to the global object
             for strgfeat in liststrgfeattotl:
                 feat = [[] for l in indxpopl]
@@ -7302,7 +7309,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False, lprionly=False):
     
         if numbtrap > 0:
             # correlate the catalog sample with the reference catalog
-            if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None:
+            if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None and not (strg == 'true' and gdat.datatype == 'mock'):
                 cmpl = [[] for q in gdat.indxrefr]
                 fdis = [[] for l in gdat.fittindxpopl]
                 

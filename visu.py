@@ -111,6 +111,10 @@ def plot_samp(gdat, gdatmodi, strg):
                     for l in range(len(specplot)):
                         listxdat = []
                         listplottype = []
+                        
+                        print 'specplot'
+                        print specplot
+                        print 
 
                         for k in range(specplot[l].shape[-1]):
                             listxdat.append(gdat.meanenerplot)
@@ -260,7 +264,7 @@ def plot_samp(gdat, gdatmodi, strg):
     
             # element feature correlations
             for l in indxpopl:
-                if strg != 'true' and gdat.trueinfo:
+                if strg != 'true' and gdat.refrinfo:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
                         if gdat.datatype == 'mock':
                             plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)
@@ -1175,6 +1179,8 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strg == 'post':
         labl = gdat.legdsampdist + ' ' + legdmome
+        print 'labl'
+        print labl
         if strgplottype == 'hist':
             varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco)[l, :, :]
             varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
@@ -1205,7 +1211,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     
     # true
-    if gdat.trueinfo:
+    if gdat.datatype == 'mock':
         try:
             truevarbfrst = getattr(gdat, 'true' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
             truevarbseco = getattr(gdat, 'true' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
@@ -1236,7 +1242,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
         axis.set_xscale('log')
     if scalseco == 'logt':
         axis.set_yscale('log')
-
+    
     axis.set_xlabel(getattr(gdat, 'labl' + strgfrst + 'totl'))
     axis.set_ylabel(getattr(gdat, 'labl' + strgseco + 'totl'))
     limtfrst = getattr(gdat, 'limt' + strgfrst + 'plot')

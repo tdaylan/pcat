@@ -802,19 +802,15 @@ def init( \
     setpprem(gdat)
 
     # reference elements
-    gdat.refrinfo = False
     gdat.numbrefr = gdat.truenumbpopl
     gdat.indxrefr = gdat.trueindxpopl
     if gdat.exprtype == 'ferm':
         retr_fermdata(gdat)
-        gdat.refrinfo = True
     if gdat.exprtype == 'chan':
         retr_chandata(gdat)
-        gdat.refrinfo = True
-
+    
     gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
     gdat.listnamefeatrefronly = [[] for q in gdat.indxrefr]
-    gdat.trueinfo = gdat.refrinfo or gdat.datatype == 'mock'
     
     retr_indxsamp(gdat, strgmodl='true')
     
@@ -1287,6 +1283,7 @@ def init( \
         refrfeat = getattr(gdat, 'refr' + strgfeat)
         if refrfeat != None:    
             gdat.refrinfo = True
+    gdat.refrinfo = gdat.refrinfo or gdat.datatype == 'mock'
     
     if gdat.refrlgal != None and gdat.datatype == 'inpt':
         gdat.refrnumbelem = array([gdat.refrlgal[0].shape[1]])
@@ -2505,8 +2502,6 @@ def work(pathoutpthis, lock, indxprocwork):
     
     ## element parameters
     if gdat.fittnumbtrap > 0:
-        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
-        print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
 
         ## lists of occupied and empty transdimensional parameters
         gdatmodi.thisindxelemfull = []
