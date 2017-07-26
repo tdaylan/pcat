@@ -803,6 +803,8 @@ def init( \
 
     # reference elements
     gdat.refrinfo = False
+    gdat.numbrefr = gdat.truenumbpopl
+    gdat.indxrefr = gdat.trueindxpopl
     if gdat.exprtype == 'ferm':
         retr_fermdata(gdat)
         gdat.refrinfo = True
@@ -1346,7 +1348,7 @@ def init( \
             setattr(gdat, 'truehist' + strgfeat, refrfeathist)
     
     if gdat.fittnumbtrap > 0:
-        if gdat.datatype == 'mock' or gdat.truelgal != None and gdat.truebgal != None:
+        if gdat.datatype == 'mock' or gdat.refrlgal != None and gdat.refrbgal != None:
             for l in gdat.trueindxpopl:
                 gdat.listnamevarbscal += ['cmplpop%d' % l]
             for l in gdat.fittindxpopl:
@@ -3052,7 +3054,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thissampvarb[indxfixp]
                         print 'Log-prior penalization term: '
                         print gdatmodi.thislpripena
-                        if gdat.truelgal != None and gdat.truebgal != None:
+                        if gdat.refrlgal != None and gdat.refrbgal != None:
                             print 'Completeness'
                             print gdatmodi.thiscmplpop0
                             print 'Completeness binned in significance parameter'
