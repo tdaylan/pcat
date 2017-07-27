@@ -112,10 +112,6 @@ def plot_samp(gdat, gdatmodi, strg):
                         listxdat = []
                         listplottype = []
                         
-                        print 'specplot'
-                        print specplot
-                        print 
-
                         for k in range(specplot[l].shape[-1]):
                             listxdat.append(gdat.meanenerplot)
                             listplottype.append('line')
@@ -267,12 +263,12 @@ def plot_samp(gdat, gdatmodi, strg):
                 if strg != 'true' and gdat.refrinfo:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
                         if gdat.datatype == 'mock':
-                            plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)
+                            #plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)
                             plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=True)
                         else:
                             # temp
                             try:
-                                plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)
+                                #plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)
                                 plot_scatassc(gdat, gdatmodi, strg, l, strgfeat, plotdiff=True)
                             except:
                                 pass
@@ -1136,7 +1132,7 @@ def plot_brgt(gdat, gdatmodi, strg):
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
     if gdat.truefluxbrgt.size > 0:
-        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.legdtrue)
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.legdrefr)
     axis.set_xscale('log')
     axis.set_yscale('log')
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
@@ -1179,8 +1175,6 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strg == 'post':
         labl = gdat.legdsampdist + ' ' + legdmome
-        print 'labl'
-        print labl
         if strgplottype == 'hist':
             varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco)[l, :, :]
             varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
@@ -1215,7 +1209,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
         try:
             truevarbfrst = getattr(gdat, 'true' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
             truevarbseco = getattr(gdat, 'true' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
-            axis.scatter(truevarbfrst, truevarbseco, alpha=gdat.alphmrkr, color='g', label=gdat.legdtrue, s=sizelarg)
+            axis.scatter(truevarbfrst, truevarbseco, alpha=gdat.alphmrkr, color='g', label=gdat.legdrefr, s=sizelarg)
         except:
             pass
 
@@ -1400,9 +1394,9 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             if indxydat != None:
                 ydat = ydat[indxydat]
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdtrue, alpha=0.5)
+                axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdrefr, alpha=0.5)
             else:
-                axis.plot(xdat, ydat, color='g', label=gdat.legdtrue, alpha=0.5)
+                axis.plot(xdat, ydat, color='g', label=gdat.legdrefr, alpha=0.5)
         except:
             if gdat.verbtype > 0:
                 print 'Skipping truth plot for %s...' % strgydat
@@ -1720,17 +1714,18 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
             if strgfeat != None:
                 bins = getattr(gdat, 'bins' + strgfeat)
             
-            # superimpose true PS
-            truesign = getattr(gdat, 'true' + gdat.namefeatsign)
-            if gdat.truelgal != None and gdat.truelgal != None and truesign != None:
-                if strgfeat != None:
-                    truefeat = getattr(gdat, 'true' + strgfeat)[indxpopltemp][0, :] 
-                    indxelem = where((bins[indxlowr] < truefeat) & (truefeat < bins[indxuppr]))[0]
-                else:
-                    indxelem = arange(gdat.truenumbelem[indxpopltemp])
-                mrkrsize = retr_mrkrsize(gdat, truesign[indxpopltemp][0, indxelem])
-                axis.scatter(gdat.anglfact * gdat.truelgal[indxpopltemp][0, indxelem], gdat.anglfact * gdat.truebgal[indxpopltemp][0, indxelem], \
-                                                                                        s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
+            # superimpose reference elements
+            refrsign = getattr(gdat, 'refr' + gdat.namefeatsign)
+            if gdat.refrlgal != None and gdat.refrlgal != None and refrsign != None:
+                for q in gdat.indxrefr:
+                    if strgfeat != None:
+                        refrfeat = getattr(gdat, 'refr' + strgfeat)[q][0, :] 
+                        indxelem = where((bins[indxlowr] < refrfeat) & (refrfeat < bins[indxuppr]))[0]
+                    else:
+                        indxelem = arange(gdat.refrnumbelem[q])
+                    mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem])
+                    axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
+                                                                                            s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.labllgaltotl)
@@ -1999,7 +1994,7 @@ def plot_grap(plottype, verbtype=0):
                                                                                                                                         'magenta', 'magenta', 'magenta']
 
     grap.add_edges_from([ \
-                         ('meanpnts', 'numbelem'), \
+                         ('meanelem', 'numbelem'), \
                          ('modl','data'), \
                          ('psfp', 'modl'), \
                          ('bacp', 'modl'), \
@@ -2058,10 +2053,10 @@ def plot_grap(plottype, verbtype=0):
         nameelem = r'\rm{pts}'
     if plottype.startswith('lght') and (plottype == 'lght0001' or plottype == 'lght0002'):
         labl['numbelem'] = r'$\vec{N}_{%s}$' % nameelem
-        labl['meanpnts'] = r'$\vec{\mu}_{%s}$' % nameelem
+        labl['meanelem'] = r'$\vec{\mu}_{%s}$' % nameelem
     else:
         labl['numbelem'] = '$N_{%s}$' % nameelem
-        labl['meanpnts'] = r'$\mu_{%s}$' % nameelem
+        labl['meanelem'] = r'$\mu_{%s}$' % nameelem
     
     if plottype.startswith('lght'):
         if plottype == 'lght0000' or plottype == 'lght0003':
@@ -2102,11 +2097,11 @@ def plot_grap(plottype, verbtype=0):
         posi['spatdistcons'] = array([-0.2, 0.15])
     if plottype.startswith('lght'):
         posi['numbelem'] = array([0., 0.075])
-        posi['meanpnts'] = array([0., 0.15])
+        posi['meanelem'] = array([0., 0.15])
         posi['ampldistslop'] = array([0.2, 0.15])
     if plottype.startswith('lens'):
         posi['numbelem'] = array([-0.1, 0.075])
-        posi['meanpnts'] = array([-0.1, 0.15])
+        posi['meanelem'] = array([-0.1, 0.15])
         posi['defsdistslop'] = array([0.1, 0.15])
     
     if plottype.startswith('lght'):
@@ -2155,7 +2150,7 @@ def plot_grap(plottype, verbtype=0):
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['modl', 'data'], node_color='grey', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['numbelem'], node_color='b', node_size=size)
     if plottype.startswith('lght'):
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'ampldistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanelem', 'ampldistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'ampl', 'sind'], node_color='g', node_size=size)
     if plottype == 'lght0001' or plottype == 'lght0002':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['sinddistmean'], node_color='r', node_size=size)
@@ -2165,7 +2160,7 @@ def plot_grap(plottype, verbtype=0):
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['spatdistcons'], node_color='r', node_size=size)
     nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['psfp', 'bacp'], node_color='y', node_size=size)
     if plottype.startswith('lens'):
-        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanpnts', 'defsdistslop'], node_color='r', node_size=size)
+        nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['meanelem', 'defsdistslop'], node_color='r', node_size=size)
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lenp'], node_color='y', node_size=size)
     if plottype == 'lens0000':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['lgal', 'bgal', 'defs'], node_color='g', node_size=size)
