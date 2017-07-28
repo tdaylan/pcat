@@ -376,8 +376,8 @@ def init( \
             if gdat.anlytype.startswith('extr'):
                 gdat.indxenerincl = arange(2)
         if gdat.exprtype == 'hubb':
-            #gdat.indxenerincl = array([1])
-            gdat.indxenerincl = array([0, 1])
+            gdat.indxenerincl = array([1])
+            #gdat.indxenerincl = array([0, 1])
     
     if gdat.indxevttincl == None:
         if gdat.exprtype == 'ferm':

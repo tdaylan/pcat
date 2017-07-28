@@ -6797,8 +6797,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             summgene(cntpmodl)
             print 'indxpixleval'
             summgene(indxpixleval)
-            print 'lliktemp[:, indxpixleval, :]'
-            summgene(lliktemp[:, indxpixleval, :])
+            print 'lliktemp'
+            summgene(lliktemp)
             print
 
         stopchro(gdat, gdatmodi, strg, 'llikcalc')
@@ -6909,19 +6909,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             cntpback = empty((numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
             cntpbacktotl = zeros_like(gdat.expo)
             for c in indxback:
-                print 'fact'
-                print fact
-
                 for name in listnamediff:
                     if name == 'back%04d' % c:
-                        print 'sbrtdiffconv[name]'
-                        summgene(sbrtdiffconv[name])
-                        if specback[indxbacktemp]:
+                        if specback[c]:
                             sbrt = sbrtdiffconv[name] * bacp[indxbacpback[c]]
                         else:
                             sbrt = sbrtdiffconv[name] * bacp[indxbacpback[c]][:, None, None]
-                print 'sbrt'
-                summgene(sbrt)
                 cntpback[c, ...] = retr_cntp(gdat, sbrt)
                 cntpbacktotl += cntpback[c, ...] 
             setattr(gdatobjt, strg + 'cntpback', cntpback)
