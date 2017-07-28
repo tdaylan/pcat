@@ -4319,7 +4319,8 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
             if c == 1:
                 sbrtbacknorm[c, :, :, :] = 1.
                 sbrtbacknorm[c, :, :, 2:4] = sbrtbacknormtemp
-        #sbrtbacknorm[c, ...] = sbrtbacknormtemp
+        else:
+            sbrtbacknorm[c, ...] = sbrtbacknormtemp
        
         # determine spatially uniform background templates
         for i in gdat.indxener:
