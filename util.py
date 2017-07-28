@@ -3164,7 +3164,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.exprtype == 'ferm':
             # temp
             #gdat.maxmangl = 15. / gdat.anglfact
-            gdat.maxmangl = 30. / gdat.anglfact
+            gdat.maxmangl = 100. / gdat.anglfact
         if gdat.exprtype == 'chan':
             gdat.maxmangl = 8. / gdat.anglfact
         if gdat.exprtype == 'hubb':
@@ -3186,10 +3186,16 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.sizeimag = 1.3 * gdat.plotsize
     ## text
     if gdat.datatype == 'mock':
-        gdat.legdrefr = ['True']
+        gdat.legdrefr = ['True' for l in gdat.trueindxpopl]
     gdat.legdrefrmiss = []
     gdat.legdrefrhits = []
     for q in gdat.indxrefr:
+        print 'q'
+        print q
+        print 'gdat.indxrefr'
+        print gdat.indxrefr
+        print 'gdat.legdrefr'
+        print gdat.legdrefr
         gdat.legdrefrmiss.append(gdat.legdrefr[q] + ' miss')
         gdat.legdrefrhits.append(gdat.legdrefr[q] + ' hit')
     if gdat.datatype == 'mock':
@@ -6903,10 +6909,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             cntpback = empty((numbback, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
             cntpbacktotl = zeros_like(gdat.expo)
             for c in indxback:
-                if specback[indxbacktemp]:
-                    fact = bacp[indxbacpback[c]]
-                else:
-                    fact = bacp[indxbacpback[c]][:, None, None]
                 print 'fact'
                 print fact
 
@@ -6914,7 +6916,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     if name == 'back%04d' % c:
                         print 'sbrtdiffconv[name]'
                         summgene(sbrtdiffconv[name])
-                        sbrt = sbrtdiffconv[name] * fact
+                        if specback[indxbacktemp]:
+                            sbrt = sbrtdiffconv[name] * bacp[indxbacpback[c]]
+                        else:
+                            sbrt = sbrtdiffconv[name] * bacp[indxbacpback[c]][:, None, None]
                 print 'sbrt'
                 summgene(sbrt)
                 cntpback[c, ...] = retr_cntp(gdat, sbrt)
