@@ -3162,7 +3162,9 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.exprtype == 'sdyn':
             gdat.maxmangl = 1.
         if gdat.exprtype == 'ferm':
-            gdat.maxmangl = 15. / gdat.anglfact
+            # temp
+            #gdat.maxmangl = 15. / gdat.anglfact
+            gdat.maxmangl = 30. / gdat.anglfact
         if gdat.exprtype == 'chan':
             gdat.maxmangl = 8. / gdat.anglfact
         if gdat.exprtype == 'hubb':
@@ -6905,15 +6907,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     fact = bacp[indxbacpback[c]]
                 else:
                     fact = bacp[indxbacpback[c]][:, None, None]
+                print 'fact'
+                print fact
+
                 for name in listnamediff:
                     if name == 'back%04d' % c:
+                        print 'sbrtdiffconv[name]'
+                        summgene(sbrtdiffconv[name])
                         sbrt = sbrtdiffconv[name] * fact
                 print 'sbrt'
                 summgene(sbrt)
-                print 'retr_cntp(gdat, sbrt)'
-                summgene(retr_cntp(gdat, sbrt))
-                print 'cntpback'
-                summgene(cntpback)
                 cntpback[c, ...] = retr_cntp(gdat, sbrt)
                 cntpbacktotl += cntpback[c, ...] 
             setattr(gdatobjt, strg + 'cntpback', cntpback)
