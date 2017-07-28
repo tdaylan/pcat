@@ -5623,16 +5623,16 @@ def make_catllabl(gdat, strg, axis):
     # fixed-dimensional objects
     if gdat.elemtype == 'lens':
         if strg == 'this':
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
     
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
         if gdat.datatype == 'mock':
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='%s Source' % gdat.legdrefr[q], marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
         
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='%s Host' % gdat.legdrefr[q], marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
     temphand, temp = axis.get_legend_handles_labels()
@@ -5718,18 +5718,16 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
             if lensmodltype != 'none':
                 lgalsour = gdatmodi.thissampvarb[gdat.fittindxfixplgalsour]
                 bgalsour = gdatmodi.thissampvarb[gdat.fittindxfixpbgalsour]
-                axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, \
-                                                                      alpha=0.7, \
-                                                                      #alpha=gdat.alphelem, \
+                axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, facecolor='none', \
+                                                                      alpha=gdat.alphelem, \
                                                                       label='Model Source', s=300, marker='<', lw=gdat.mrkrlinewdth, color='b')
     
             if hostemistype != 'none':
                 ## host
                 lgalhost = gdatmodi.thissampvarb[gdat.fittindxfixplgalhost]
                 bgalhost = gdatmodi.thissampvarb[gdat.fittindxfixpbgalhost]
-                axis.scatter(gdat.anglfact * lgalhost, gdat.anglfact * bgalhost, \
-                                                                      alpha=0.7, \
-                                                                      #alpha=gdat.alphelem, \
+                axis.scatter(gdat.anglfact * lgalhost, gdat.anglfact * bgalhost, facecolor='none', \
+                                                                      alpha=gdat.alphelem, \
                                                                       label='Model Host', s=300, marker='s', lw=gdat.mrkrlinewdth, color='b')
                 if lensmodltype != 'none':
                     beinhost = gdatmodi.thissampvarb[gdat.fittindxfixpbeinhost]

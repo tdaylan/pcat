@@ -1394,11 +1394,11 @@ def init( \
                     gdat.truefixp[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
 
         # temp -- this is needed for the paper
-        if gdat.elemtype == 'lens':
-            gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.truemaxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.truemaxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.truemaxmgang * randn()
-            gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
+        #if gdat.elemtype == 'lens':
+        #    gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.truemaxmgang * randn()
+        #    gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.truemaxmgang * randn()
+        #    gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.truemaxmgang * randn()
+        #    gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
 
         gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
         if gdat.truenumbtrap > 0:
