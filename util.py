@@ -2578,12 +2578,11 @@ def setpprem(gdat):
             gdat.numbsidecart = gdat.sbrtdata.shape[1]
             gdat.sbrtdata = gdat.sbrtdata.reshape((gdat.sbrtdata.shape[0], gdat.numbsidecart**2, gdat.sbrtdata.shape[3]))
     
-
         # temp
-        if gdat.strgcnfg == 'pcat_ferm_inpt_igal':
-            gdat.sbrtdata[:, :, 0] = gdat.sbrtdata[:, :, 2]
-            gdat.sbrtdata[:, :, 1] = gdat.sbrtdata[:, :, 3]
-            gdat.sbrtdata = gdat.sbrtdata[:, :, 0:2]
+        #if gdat.strgcnfg.startswith('pcat_ferm'):
+        #    gdat.sbrtdata[:, :, 0] = gdat.sbrtdata[:, :, 2]
+        #    gdat.sbrtdata[:, :, 1] = gdat.sbrtdata[:, :, 3]
+        #    gdat.sbrtdata = gdat.sbrtdata[:, :, 0:2]
 
         gdat.numbenerfull = gdat.sbrtdata.shape[0]
         gdat.numbpixlfull = gdat.sbrtdata.shape[1]
@@ -3190,12 +3189,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.legdrefrmiss = []
     gdat.legdrefrhits = []
     for q in gdat.indxrefr:
-        print 'q'
-        print q
-        print 'gdat.indxrefr'
-        print gdat.indxrefr
-        print 'gdat.legdrefr'
-        print gdat.legdrefr
         gdat.legdrefrmiss.append(gdat.legdrefr[q] + ' miss')
         gdat.legdrefrhits.append(gdat.legdrefr[q] + ' hit')
     if gdat.datatype == 'mock':
@@ -3908,17 +3901,6 @@ def setpinit(gdat, boolinitsetp=False):
             
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.exprfwhm = 2. * retr_psfnwdth(gdat, gdat.psfnexpr, 0.5)
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
-                print 'im'
-                print i, m
-                print 'gdat.exprfwhm[i, m]'
-                print gdat.exprfwhm[i, m] * 180. / pi
-                print 'gdat.psfnexpr[i, :10, m]'
-                print gdat.psfnexpr[i, :10, m]
-                print 'gdat.binsangl'
-                print gdat.binsangl[:10]
-                print
         gdat.stdvspatprio = amax(gdat.exprfwhm)
     if gdat.elemtype == 'lens':
         gdat.stdvspatprio = amax(gdat.psfpexpr)
@@ -4332,7 +4314,12 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
         
                 sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], -1, sbrtbacknormtemp.shape[-1]))
 
-        sbrtbacknorm[c, ...] = sbrtbacknormtemp
+        # temp
+        if gdat.strgcnfg.startswith('pcat_ferm'):
+            if c == 1:
+                sbrtbacknorm[c, :, :, :] = 1.
+                sbrtbacknorm[c, :, :, 2:4] = sbrtbacknormtemp
+        #sbrtbacknorm[c, ...] = sbrtbacknormtemp
        
         # determine spatially uniform background templates
         for i in gdat.indxener:

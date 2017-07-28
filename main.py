@@ -579,11 +579,11 @@ def init( \
     ## Lensing
     if gdat.anglassc == None:
         if gdat.exprtype == 'ferm':
-            gdat.anglassc = 0.5 / gdat.anglfact
+            gdat.anglassc = 4.5 / gdat.anglfact
         if gdat.exprtype == 'hubb':
             gdat.anglassc = 0.15 / gdat.anglfact
         if gdat.exprtype == 'chan' or gdat.exprtype == 'sdss':
-            gdat.anglassc = 0.5 / gdat.anglfact
+            gdat.anglassc = 1.5 / gdat.anglfact
     
     if gdat.nameexpr == None:
         if gdat.exprtype == 'ferm':
@@ -709,7 +709,7 @@ def init( \
         if gdat.exprtype == 'chan':
             maxmnumbelem = array([200])
         if gdat.exprtype == 'ferm':
-            maxmnumbelem = array([100])
+            maxmnumbelem = array([400])
     if gdat.elemtype == 'lens':
         maxmnumbelem = array([300])
     if gdat.elemtype == 'clus':
