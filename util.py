@@ -5613,28 +5613,28 @@ def make_catllabl(gdat, strg, axis):
         axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                             label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
         
-    if gdat.refrlgal != None and gdat.refrbgal != None:
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label=gdat.legdrefrhits, marker='x', lw=gdat.mrkrlinewdth, color='g')
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                                                label=gdat.legdrefrmiss, marker='s', lw=gdat.mrkrlinewdth, color='g')
+    for q in gdat.indxrefr:
+        if gdat.refrlgal[q] != None and gdat.refrbgal[q] != None:
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+                                                                                      label=gdat.legdrefrhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
+                                                                                      label=gdat.legdrefrmiss[q], marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
     # fixed-dimensional objects
     if gdat.elemtype == 'lens':
         if strg == 'this':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
+                                                                                 label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
     
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
+                                                                                 label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
         if gdat.datatype == 'mock':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label='%s Source' % gdat.legdrefr, marker='>', lw=gdat.mrkrlinewdth, color='g')
+                                                                                 label='%s Source' % gdat.legdrefr[q], marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
         
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label='%s Host' % gdat.legdrefr, marker='D', lw=gdat.mrkrlinewdth, color='g')
+                                                                                 label='%s Host' % gdat.legdrefr[q], marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
-
     temphand, temp = axis.get_legend_handles_labels()
     numblabl = len(temp)
     
