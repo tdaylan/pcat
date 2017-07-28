@@ -3677,6 +3677,8 @@ def setpinit(gdat, boolinitsetp=False):
                     indxpixlproxtemp = where(dist < gdat.maxmangleval[h])[0]
                     if indxpixlproxtemp.size > 1e4:
                         indxpixlproxtemp = -1
+                        if gdat.maxmangl < sqrt(2.) * gdat.maxmgang:
+                            raise Exception('Angular axis used to interpolate the PSF should be longer.')
                     gdat.indxpixlprox[h].append(indxpixlproxtemp)
                 cntrsave = tdpy.util.show_prog(j, gdat.numbpixl, cntrsave)
             fobj = open(path, 'wb')
