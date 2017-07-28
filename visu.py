@@ -1132,7 +1132,7 @@ def plot_brgt(gdat, gdatmodi, strg):
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
     if gdat.truefluxbrgt.size > 0:
-        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color='g', label=gdat.legdrefr)
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0])
     axis.set_xscale('log')
     axis.set_yscale('log')
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
@@ -1204,17 +1204,17 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             varbseco = getattr(gdatmodi, 'this' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     
-    # true
-    if gdat.datatype == 'mock':
+    # reference elements
+    for q in gdat.indxrefr:
         try:
-            truevarbfrst = getattr(gdat, 'true' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            truevarbseco = getattr(gdat, 'true' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
-            axis.scatter(truevarbfrst, truevarbseco, alpha=gdat.alphmrkr, color='g', label=gdat.legdrefr, s=sizelarg)
+            refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[q] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            refrvarbseco = getattr(gdat, 'refr' + strgseco)[q] * getattr(gdat, 'fact' + strgseco + 'plot')
+            axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
         except:
             pass
 
     # experimental
-    if gdat.datatype == 'mock':
+    if False and gdat.datatype == 'mock':
         try:
             refrvarbfrsttotl = getattr(gdat, 'refr' + strgfrst + 'totl')[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
             refrvarbsecototl = getattr(gdat, 'refr' + strgseco + 'totl')[l] * getattr(gdat, 'fact' + strgseco + 'plot')
@@ -1363,27 +1363,10 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     try:
         if strgydat.startswith('hist'):
             strgtemp = strgydat[:4]
-
-            bins = copy(getattr(gdat, 'bins' + strgtemp))
-            varb = copy(getattr(gdat, 'refr' + strgtemp))
-            if strgtemp == 'lgal' or strgtemp == 'bgal':
-            	bins *= gdat.anglfact
-            	varb *= gdat.anglfact
-            
-            if gdat.strgcnfg == 'pcat_chan_inpt':
-                print 'plot_gene'
-                print 'strgxdat'
-                print strgxdat
-                print 'strgydat'
-                print strgydat
-                print 'strgtemp'
-                print strgtemp
-                print 'bins'
-                print bins
-                print 'varb'
-                print varb
-                print
-            axis.hist(varb, bins, label=gdat.strgcatl, alpha=0.5, color='r')
+            bins = copy(getattr(gdat, 'bins' + strgtemp)) * factydat
+            varb = copy(getattr(gdat, 'refr' + strgtemp)) * factydat
+            for q in gdat.indxrefr:
+                axis.hist(varb, bins, label=gdat.legdrefr[q], alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q])
     except:
         pass
     
@@ -1394,9 +1377,9 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             if indxydat != None:
                 ydat = ydat[indxydat]
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color='g', label=gdat.legdrefr, alpha=0.5)
+                axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0], alpha=gdat.alphmrkr)
             else:
-                axis.plot(xdat, ydat, color='g', label=gdat.legdrefr, alpha=0.5)
+                axis.plot(xdat, ydat, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0], alpha=gdat.alphmrkr)
         except:
             if gdat.verbtype > 0:
                 print 'Skipping truth plot for %s...' % strgydat

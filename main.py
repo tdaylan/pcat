@@ -17,6 +17,9 @@ def init( \
 
          evoltype='samp', \
         
+         killexpo=False, \
+         sqzeprop=False, \
+
          # chain setup
          numbswep=1000000, \
          numbburn=None, \
@@ -115,7 +118,6 @@ def init( \
          checprio=False, \
 
          strgexprsbrt=None, \
-         strgcatl=None, \
          anglassc=None, \
          nameexpr=None, \
          
@@ -374,7 +376,8 @@ def init( \
             if gdat.anlytype.startswith('extr'):
                 gdat.indxenerincl = arange(2)
         if gdat.exprtype == 'hubb':
-            gdat.indxenerincl = arange(2)
+            #gdat.indxenerincl = array([1])
+            gdat.indxenerincl = array([0, 1])
     
     if gdat.indxevttincl == None:
         if gdat.exprtype == 'ferm':
@@ -472,15 +475,6 @@ def init( \
             gdat.strgexprname = 'XXXXX'
         if gdat.exprtype == 'sdyn':
             gdat.strgexprname = 'TGAS-RAVE'
-    
-    if gdat.strgcatl == None:
-        if gdat.datatype == 'mock':
-            gdat.strgcatl = 'true'
-        else:
-            if gdat.exprtype == 'ferm':
-                gdat.strgcatl = '3FGL'
-            else:
-                gdat.strgcatl = gdat.strgexprname
     
     if gdat.lablgangunit == None:
         if gdat.exprtype == 'ferm':
@@ -674,6 +668,11 @@ def init( \
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
         retr_psfnferm(gdat)
+
+        #angltemp = pi * linspace(0., 10., 100) / 180.
+        #psfn = retr_psfnferm(meanener, angltemp)
+        #fwhm = retr_fwhm(psfn, angl) 
+
     if gdat.exprtype == 'chan':
         retr_psfnchan(gdat)
     if gdat.exprtype == 'sdss':
