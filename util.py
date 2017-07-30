@@ -7061,7 +7061,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
                 for q in gdat.indxrefr:
                     if gdat.refrnumbelem[q] > 0:
-                        indxelemrefrasscmiss[l] = setdiff1d(arange(gdat.refrnumbelem[q]), indxelemrefrasschits[l])
+                        indxelemrefrasscmiss[q] = setdiff1d(arange(gdat.refrnumbelem[q]), indxelemrefrasschits[q])
                 
                 # indices of the fitting model elements not associated with the reference elements
                 indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
@@ -7080,8 +7080,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         print q
                         print 'l'
                         print l
-                        print 'indxfittelem'
-                        print indxfittelem
                         print 'indxelemrefrasschits'
                         print indxelemrefrasschits
                         print 'indxelemrefrasscmiss'
