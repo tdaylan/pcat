@@ -65,7 +65,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     plot_brgt(gdat, gdatmodi, strg)
         
             # completeness and false discovery rate
-            if strg != 'true':
+            if strg != 'true' and gdat.allwrefr:
                 for strgclas in ['cmpl', 'fdis']:   
                     nameinte = strgclas + '/'
                     for l in gdat.trueindxpopl:
@@ -262,7 +262,7 @@ def plot_samp(gdat, gdatmodi, strg):
     
             # element feature correlations
             for l in indxpopl:
-                if strg != 'true' and gdat.refrinfo:
+                if strg != 'true' and gdat.refrinfo and gdat.allwrefr:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
                         if gdat.datatype == 'mock':
                             #plot_scatassc(gdat, gdatmodi, strg, l, strgfeat)

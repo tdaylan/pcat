@@ -7062,7 +7062,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
                 featrefrassc = dict()
                 for q in gdat.indxrefr:
-                    for strgfeat in listnamerefrfeat:
+                    for strgfeat in gdat.listnamefeatrefr[q]:
                         featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
@@ -7100,7 +7100,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             print 'dicttemp[name][l]'
                             print dicttemp[name][l]
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)[q]
-                            dicttemp[name][l] = zeros(numbpnts[l])
+                            dicttemp[name][l] = zeros(numbelem[l])
                             dicttemp[name][l][indxelemfittasscfals[l]] = refrfeat[0, indxelemrefrasschits[q]]
                         
                         # collect the associated fitting element feature for each reference element
