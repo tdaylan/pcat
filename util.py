@@ -1117,14 +1117,14 @@ def retr_chandata(gdat):
     skycobjt = ap.coordinates.SkyCoord("galactic", l=lgalchan, b=bgalchan, unit='deg')
     rascchan = skycobjt.fk5.ra.degree
     declchan = skycobjt.fk5.dec.degree
-  
+
     if gdat.numbsidecart == 300:
         if gdat.anlytype.startswith('extr'):
             indxpixllgal = 1490
             indxpixlbgal = 1430
         if gdat.anlytype.startswith('home'):
-            indxpixllgal = 2430
-            indxpixlbgal = 2495
+            indxpixllgal = 150
+            indxpixlbgal = 150
     else:
         raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
@@ -7041,8 +7041,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 indxelemfittasschits = [[] for l in gdat.fittindxpopl]
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
-                        indxelemmatr = empty((gdat.refrnumbelem[q], numbelem[l]), dtype=int)
-                        matrdist = empty((gdat.refrnumnelem[q], numbelem[l]))
+                        indxelemfittmatr = empty((gdat.refrnumbelem[q], numbelem[l]), dtype=int)
+                        indxelemrefrmatr = empty((gdat.refrnumbelem[q], numbelem[l]), dtype=int)
+                        matrdist = empty((gdat.refrnumbelem[q], numbelem[l]))
                         for k in range(numbelem[l]):
                             # construct a matrix of angular distances between reference and fitting elements
                             matrdist[:, k] = retr_angldist(gdat, gdat.refrlgal[q][0, :], gdat.refrbgal[q][0, :], dicttemp['lgal'][l][k], dicttemp['bgal'][l][k])
@@ -7051,7 +7052,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         matrdist = matrdist.flatten()
                         indxelemrefrmatr = indxelemrefrmatr.flatten()
                         indxelemfittmatr = indxelemfittmatr.flatten()
-                        indxmatrsort = sort(matrdist)
+                        indxmatrsort = argsort(matrdist)
                         matrdist = matrdist[indxmatrsort]
                         indxelemrefrasschits[q] = indxelemrefrmatr[indxmatrsort]
                         indxelemfittasschits[l] = indxelemfittmatr[indxmatrsort]
