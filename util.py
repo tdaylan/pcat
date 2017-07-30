@@ -7106,6 +7106,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         # collect the associated fitting element feature for each reference element
                         for strgfeat in liststrgfeatodim[l]:
                             featrefrassc[strgfeat][q] = zeros(gdat.refrnumbelem[q])
+                            print 'indxelemfittasschits[l]'
+                            print indxelemfittasschits[l]
+                            print 'indxelemrefrasschits[q]'
+                            print indxelemrefrasschits[q]
                             featrefrassc[strgfeat][q][indxelemrefrasschits[q]] = dicttemp[strgfeat][l][indxelemfittasschits[l]]
                             
             ### derived quantities
