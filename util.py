@@ -7037,29 +7037,37 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
             # correlate the fitting model elements with the reference elements
             if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None and not (strg == 'true' and gdat.datatype == 'mock'):
-                indxfittelem = [zeros(gdat.refrnumbelem[q], dtype=int) - 1 for q in gdat.indxrefr]
-                numbassc = [zeros(gdat.refrnumbelem[q]) for q in gdat.indxrefr]
-                metrassc = [zeros(gdat.refrnumbelem[q]) + 3 * gdat.maxmgang for q in gdat.indxrefr]
+                indxelemrefrasschits = [[] for q in gdat.indxrefr]
+                indxelemfittasschits = [[] for l in gdat.fittindxpopl]
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
+                        indxelemmatr = empty((gdat.refrnumbnelem[q], numbelem[l]), dtype=int)
+                        matrdist = empty((gdat.refrnumbnelem[q], numbelem[l]))
                         for k in range(numbelem[l]):
-                            # determine which reference elements satisfy the match criterion
-                            metr = retr_angldist(gdat, gdat.refrlgal[q][0, :], gdat.refrbgal[q][0, :], dicttemp['lgal'][l][k], dicttemp['bgal'][l][k])
-                            indxelemrefrtemp = where(metr < gdat.anglassc)[0]
-                            if indxelemrefrtemp.size > 0:
-                                # if there are multiple associated reference elements, sort them
-                                indx = argsort(metr[indxelemrefrtemp])
-                                metr = metr[indxelemrefrtemp][indx]
-                                indxelemrefrtemp = indxelemrefrtemp[indx]
-                                # store the index of the model PS
-                                numbassc[q][indxelemrefrtemp[0]] += 1
-                                metrassc[q][indxelemrefrtemp[0]] = metr[0]
-                                indxfittelem[q][indxelemrefrtemp[0]] = k
-                    
-                indxelemrefrasschits = [[] for q in gdat.indxrefr]
+                            # construct a matrix of angular distances between reference and fitting elements
+                            matrdist[:, k] = retr_angldist(gdat, gdat.refrlgal[q][0, :], gdat.refrbgal[q][0, :], dicttemp['lgal'][l][k], dicttemp['bgal'][l][k])
+                            indxelemrefrmatr[:, k] = arange(gdat.refrnumbnelem[q])
+                            indxelemfittmatr[:, k] = k
+                        matrdist = matrdist.flatten()
+                        indxelemrefrmatr = indxelemrefrmatr.flatten()
+                        indxelemfittmatr = indxelemfittmatr.flatten()
+                        indxmatrsort = sort(matrdist)
+                        matrdist = matrdist[indxmatrsort]
+                        indxelemrefrasschits[q] = indxelemrefrmatr[indxmatrsort]
+                        indxelemfittasschits[l] = indxelemfittmatr[indxmatrsort]
+
+                # indices of the reference elements not associated with the fitting model elements
                 indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
-                indxelemfittasschits = [[] for l in gdat.fittindxpopl]
+                for q in gdat.indxrefr:
+                    if gdat.refrnumbelem[q] > 0:
+                        indxelemrefrasscmiss[l] = setdiff1d(arange(gdat.refrnumbelem[q]), indxelemrefrasschits[l])
+                
+                # indices of the fitting model elements not associated with the reference elements
                 indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
+                for l in gdat.fittindxpopl:
+                    if numbelem[l] > 0:
+                        indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
+                
                 featrefrassc = dict()
                 for q in gdat.indxrefr:
                     for strgfeat in gdat.listnamefeatrefr[q]:
@@ -7067,16 +7075,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
            
-                        # indices of the reference elements associated with the fitting model elements
-                        for k in range(gdat.refrnumbelem[q]):
-                            if numbassc[q][k] == 0:
-                                indxelemrefrasscmiss[l].append(k)
-                            else:
-                                indxelemrefrasschits[l].append(k)
-                        # indices of the fitting model elements associated with the reference elements
-                        indxelemfittasschits[l] = unique(indxfittelem[q][where(indxfittelem[q] > -1)])
-                        if numbelem[l] > 0:
-                            indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
                         print 'q'
                         print q
                         print 'l'
