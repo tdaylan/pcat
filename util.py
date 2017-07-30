@@ -2628,8 +2628,6 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.listnamevarbstat += ['sbrt' + name + 'conv']
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
         gdat.listnamevarbstat += ['sbrtpnts']
-    if gdat.fitthostemistype != 'none':
-        gdat.listnamevarbstat += ['sbrthost']
     if gdat.fittlensmodltype != 'none':
         gdat.listnamevarbstat += ['deflhost']
     if gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full':
@@ -6611,30 +6609,19 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         
         # evaluate host galaxy surface brightness
         if hostemistype != 'none':
-            if gdat.verbtype > 1:
-                print 'Host galaxy surface brightness evaluation...'
-
             initchro(gdat, gdatmodi, strg, 'sbrthost')
-            if strg == 'next' and not gdatmodi.prophost:
-                # retrieve state variable
-                sbrtdiff['host'] = gdatmodi.thissbrthost
-                
+            if not strg == 'next' or gdatmodi.prophost:
                 if gdat.verbtype > 1:
-                    print 'Retrieving host emission from the state vector...'
-            else:
+                    print 'Host galaxy surface brightness evaluation...'
                 if gdat.numbener > 1:
                     spechost = retr_spec(gdat, array([fluxhost]), array([sindhost]))
                 else:
                     spechost = array([[fluxhost]])
                 sbrtdiff['host'] = retr_sbrtsers(gdat, gdat.lgalgrid, gdat.bgalgrid, lgalhost, bgalhost, spechost, sizehost, ellphost, anglhost, serihost)
                 setattr(gdatobjt, strg + 'sbrthost', sbrtdiff['host'])
-                
-                if gdat.verbtype > 1:
-                    print 'Recalculating unconvolved host emission...'
             if gdat.verbtype > 1:
                 print 'sbrtdiff[host]'
                 summgene(sbrtdiff['host'])
-
             stopchro(gdat, gdatmodi, strg, 'sbrthost')
         
         # construct the model diffuse surface brightness
