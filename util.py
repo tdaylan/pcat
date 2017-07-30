@@ -7041,12 +7041,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 indxelemfittasschits = [[] for l in gdat.fittindxpopl]
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
-                        indxelemmatr = empty((gdat.refrnumbnelem[q], numbelem[l]), dtype=int)
-                        matrdist = empty((gdat.refrnumbnelem[q], numbelem[l]))
+                        indxelemmatr = empty((gdat.refrnumbelem[q], numbelem[l]), dtype=int)
+                        matrdist = empty((gdat.refrnumnelem[q], numbelem[l]))
                         for k in range(numbelem[l]):
                             # construct a matrix of angular distances between reference and fitting elements
                             matrdist[:, k] = retr_angldist(gdat, gdat.refrlgal[q][0, :], gdat.refrbgal[q][0, :], dicttemp['lgal'][l][k], dicttemp['bgal'][l][k])
-                            indxelemrefrmatr[:, k] = arange(gdat.refrnumbnelem[q])
+                            indxelemrefrmatr[:, k] = arange(gdat.refrnumbelem[q])
                             indxelemfittmatr[:, k] = k
                         matrdist = matrdist.flatten()
                         indxelemrefrmatr = indxelemrefrmatr.flatten()
