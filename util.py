@@ -5600,14 +5600,6 @@ def make_catllabl(gdat, strg, axis):
                                                                                             label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
         
     for q in gdat.indxrefr:
-        print 'gdat.refrlgal'
-        print gdat.refrlgal
-        print 'gdat.refrbgal'
-        print gdat.refrbgal
-        print 'gdat.listcolrrefr'
-        print gdat.listcolrrefr
-        print  'gdat.legdrefrhits'
-        print gdat.legdrefrhits
         if gdat.refrlgal[q] != None and gdat.refrbgal[q] != None:
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                       label=gdat.legdrefrhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
@@ -7097,6 +7089,12 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             name = namefeatrefr + gdat.listnamerefr[q]
                             
                             # collect the associated element features
+                            print 'indxelemrefrasschits'
+                            print indxelemrefrasschits
+                            print 'getattr(gdat, refr + namefeatrefr)[q]'
+                            summgene(getattr(gdat, 'refr' + namefeatrefr)[q])
+                            print 'dicttemp[name][l]'
+                            summgene(dicttemp[name][l])
                             dicttemp[name][l] = getattr(gdat, 'refr' + namefeatrefr)[q][indxelemrefrasschits[q]]
                             dicttemp[name][l][indxelemfittasscfals[l]] = -1.
                             indx = where(indxfittelem >= 0)[0]

@@ -801,9 +801,9 @@ def init( \
     # reference elements
     if gdat.datatype == 'mock':
         gdat.numbrefr = gdat.truenumbpopl
-        gdat.listnamerefr = ['mock'] 
+        gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
         gdat.indxrefr = arange(gdat.numbrefr)
-        gdat.listcolrrefr = ['g']
+        gdat.listcolrrefr = ['g' for l in gdat.trueindxpopl]
     else:
         gdat.numbrefr = 0
         gdat.listnamerefr = [] 
