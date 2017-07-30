@@ -7037,8 +7037,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
             # correlate the fitting model elements with the reference elements
             if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None and not (strg == 'true' and gdat.datatype == 'mock'):
-                indxelemrefrasschits = [[] for q in gdat.indxrefr]
-                indxelemfittasschits = [[] for l in gdat.fittindxpopl]
+                indxelemrefrasschits = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
+                indxelemfittasschits = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
                         indxelemfittmatr = empty((gdat.refrnumbelem[q], numbelem[l]), dtype=int)
@@ -7052,22 +7052,29 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         matrdist = matrdist.flatten()
                         indxelemrefrmatr = indxelemrefrmatr.flatten()
                         indxelemfittmatr = indxelemfittmatr.flatten()
+
+                        # take only angular separations smaller than some threshold
+                        indxmatrthrs = where(matrdist < gdat.anglassc)[0]
+                        matrdist = matrdist[indxmatrthrs]
+                        indxelemrefrmatr = indxelemrefrmatr[indxmatrthrs]
+                        indxelemfittmatr = indxelemfittmatr[indxmatrthrs]
+
+                        # sort the remaining associations with respect to distance
                         indxmatrsort = argsort(matrdist)
                         matrdist = matrdist[indxmatrsort]
-                        indxelemrefrasschits[q] = indxelemrefrmatr[indxmatrsort]
-                        indxelemfittasschits[l] = indxelemfittmatr[indxmatrsort]
+                        indxelemrefrasschits[q][l] = indxelemrefrmatr[indxmatrsort]
+                        indxelemfittasschits[q][l] = indxelemfittmatr[indxmatrsort]
 
-                # indices of the reference elements not associated with the fitting model elements
-                indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
+                indxelemrefrasscmiss = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
+                indxelemfittasscfals = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
                 for q in gdat.indxrefr:
-                    if gdat.refrnumbelem[q] > 0:
-                        indxelemrefrasscmiss[q] = setdiff1d(arange(gdat.refrnumbelem[q]), indxelemrefrasschits[q])
-                
-                # indices of the fitting model elements not associated with the reference elements
-                indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
-                for l in gdat.fittindxpopl:
-                    if numbelem[l] > 0:
-                        indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
+                    for l in gdat.fittindxpopl:
+                        # indices of the reference elements not associated with the fitting model elements
+                        if gdat.refrnumbelem[q] > 0:
+                            indxelemrefrasscmiss[q][l] = setdiff1d(arange(gdat.refrnumbelem[q]), indxelemrefrasschits[q][l])
+                        # indices of the fitting model elements not associated with the reference elements
+                        if numbelem[l] > 0:
+                            indxelemfittasscfals[q][l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[q][l])
                 
                 featrefrassc = dict()
                 for q in gdat.indxrefr:
@@ -7103,16 +7110,16 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             print dicttemp[name][l]
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)[q]
                             dicttemp[name][l] = zeros(numbelem[l])
-                            dicttemp[name][l][indxelemfittasscfals[l]] = refrfeat[0, indxelemrefrasschits[q]]
+                            dicttemp[name][l][indxelemfittasscfals[q][l]] = refrfeat[0, indxelemrefrasschits[q][l]]
                         
                         # collect the associated fitting element feature for each reference element
                         for strgfeat in liststrgfeatodim[l]:
                             featrefrassc[strgfeat][q] = zeros(gdat.refrnumbelem[q])
-                            print 'indxelemfittasschits[l]'
-                            print indxelemfittasschits[l]
-                            print 'indxelemrefrasschits[q]'
-                            print indxelemrefrasschits[q]
-                            featrefrassc[strgfeat][q][indxelemrefrasschits[q]] = dicttemp[strgfeat][l][indxelemfittasschits[l]]
+                            print 'indxelemfittasschits[q][l]'
+                            print indxelemfittasschits[q][l]
+                            print 'indxelemrefrasschits[q][l]'
+                            print indxelemrefrasschits[q][l]
+                            featrefrassc[strgfeat][q][indxelemrefrasschits[q][l]] = dicttemp[strgfeat][l][indxelemfittasschits[q][l]]
                             
             ### derived quantities
             for l in indxpopl:
