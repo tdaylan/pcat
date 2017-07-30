@@ -6122,6 +6122,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
         numbelem = sampvarb[indxfixpnumbelem].astype(int)
         
+        print 'strgfeatdefa'
+        print strgfeatdefa
         for strgfeat in liststrgfeatdefa:
             dicttemp[strgfeat] = [[] for l in range(numbpopl)]
         for l in indxpopl:
@@ -7094,6 +7096,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             print 'getattr(gdat, refr + namefeatrefr)[q]'
                             summgene(getattr(gdat, 'refr' + namefeatrefr)[q])
                             print 'dicttemp[name][l]'
+                            print dicttemp[name][l]
                             summgene(dicttemp[name][l])
                             dicttemp[name][l] = getattr(gdat, 'refr' + namefeatrefr)[q][indxelemrefrasschits[q]]
                             dicttemp[name][l][indxelemfittasscfals[l]] = -1.
@@ -7481,7 +7484,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             bins = getattr(gdat, 'bins' + strgfeat)
                             histfeatrefrassc = histogram(refrfeat[q][0, indxelemrefrasschits[q]], bins=bins)[0]
                             
-                            if False:
+                            if True:
                                 print 'strg'
                                 print strg
                                 print 'strgfeat'
