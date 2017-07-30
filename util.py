@@ -5600,6 +5600,14 @@ def make_catllabl(gdat, strg, axis):
                                                                                             label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
         
     for q in gdat.indxrefr:
+        print 'gdat.refrlgal'
+        print gdat.refrlgal
+        print 'gdat.refrbgal'
+        print gdat.refrbgal
+        print 'gdat.listcolrrefr'
+        print gdat.listcolrrefr
+        print  'gdat.legdrefrhits'
+        print gdat.legdrefrhits
         if gdat.refrlgal[q] != None and gdat.refrbgal[q] != None:
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                       label=gdat.legdrefrhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
@@ -7035,22 +7043,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     gdat.refrbgal.append(tile(dicttemp['bgal'][l], [3] + list(ones(dicttemp['bgal'][l].ndim, dtype=int))))
                 gdat.refrnumbelem = gdat.truenumbelem
     
-            # correlate the catalog sample with the reference catalog
-            # temp
+            # correlate the fitting model elements with the reference elements
             if gdat.refrinfo and gdat.refrlgal != None and gdat.refrbgal != None and not (strg == 'true' and gdat.datatype == 'mock'):
-                indxelemrefrasschits = [[] for q in gdat.indxrefr]
-                indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
-                
-                indxelemfittasschits = [[] for l in gdat.fittindxpopl]
-                indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
-                
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
-                        
                         indxfittelem = zeros(gdat.refrnumbelem[q], dtype=int) - 1
                         numbassc = zeros(gdat.refrnumbelem[q])
                         metrassc = zeros(gdat.refrnumbelem[q]) + 3 * gdat.maxmgang
-
                         for k in range(numbelem[l]):
                             # determine which reference elements satisfy the match criterion
                             metr = retr_angldist(gdat, gdat.refrlgal[q][0, :], gdat.refrbgal[q][0, :], dicttemp['lgal'][l][k], dicttemp['bgal'][l][k])
@@ -7060,13 +7059,52 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 indx = argsort(metr[refrindxelemtemp])
                                 metr = metr[refrindxelemtemp][indx]
                                 refrindxelemtemp = refrindxelemtemp[indx]
-                                
                                 # store the index of the model PS
                                 numbassc[refrindxelemtemp[0]] += 1
                                 metrassc[refrindxelemtemp[0]] = metr[0]
                                 indxfittelem[refrindxelemtemp[0]] = k
                     
-        if numbtrap > 0:
+                indxelemrefrasschits = [[] for q in gdat.indxrefr]
+                indxelemrefrasscmiss = [[] for q in gdat.indxrefr]
+                indxelemfittasschits = [[] for l in gdat.fittindxpopl]
+                indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
+                featrefrassc = dict()
+                for strgfeat in liststrgfeatodimtotl:
+                    featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
+                for l in gdat.fittindxpopl:
+                    for q in gdat.indxrefr:
+           
+                        # indices of the reference elements associated with the fitting model elements
+                        for k in range(gdat.refrnumbelem[q]):
+                            if numbassc[k] == 0:
+                                indxelemrefrasscmiss[l].append(k)
+                            else:
+                                indxelemrefrasschits[l].append(k)
+                            
+                        # indices of the fitting model elements associated with the reference elements
+                        print 'q'
+                        print q
+                        print 'indxfittelem'
+                        print indxfittelem
+                        print 'l'
+                        print l
+                        print 
+                        indxelemfittasschits[l] = unique(indxfittelem[where(indxfittelem > -1)])
+                        if numbelem[l] > 0:
+                            indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
+                        
+                        for namefeatrefr in gdat.listnamefeatrefronly[q]:
+                            name = namefeatrefr + gdat.listnamerefr[q]
+                            
+                            # collect the associated element features
+                            dicttemp[name][l] = getattr(gdat, 'refr' + namefeatrefr)[q][indxelemrefrasschits[q]]
+                            dicttemp[name][l][indxelemfittasscfals[l]] = -1.
+                            indx = where(indxfittelem >= 0)[0]
+                            for strgfeat in liststrgfeatodim[l]:
+                                featrefrassc[strgfeat][l] = zeros(gdat.refrnumbelem[q])
+                                if indx.size > 0:
+                                    featrefrassc[strgfeat][l][indx] = dicttemp[strgfeat][l][indxfittelem[indx]]
+                            
             ### derived quantities
             for l in indxpopl:
                 #### radial and angular coordinates
@@ -7076,13 +7114,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 if gdat.elemtype == 'lght':
                     #### number of expected counts
                     dicttemp['cnts'][l] = retr_cntspnts(gdat, dicttemp['lgal'][l], dicttemp['bgal'][l], dicttemp['spec'][l])
-            
-                for q in gdat.indxrefr:
-                    for namefeatrefr in gdat.listnamefeatrefronly[q]:
-                        name = namefeatrefr + gdat.listnamerefr[q]
-                        dicttemp[name][l] = zeros(numbelem) - 1
-                        dicttemp[name][l][indxelemfittasschits[l]] = getattr(gdat, 'refr' + namefeatrefr)[q][indxelemrefrasschits[q]]
-            
+                
             #### delta log-likelihood
             for l in indxpopl:
                 dicttemp['deltllik'][l] = zeros(numbelem[l])
@@ -7408,31 +7440,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 cmpl = [[] for q in gdat.indxrefr]
                 fdis = [[] for l in gdat.fittindxpopl]
                 
-                featrefrassc = dict()
-                for strgfeat in liststrgfeatodimtotl:
-                    featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
-                
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
-                        
-                        # collect the associated element features
-                        indx = where(indxfittelem >= 0)[0]
-                        for strgfeat in liststrgfeatodim[l]:
-                            featrefrassc[strgfeat][l] = zeros(gdat.refrnumbelem[q])
-                            if indx.size > 0:
-                                featrefrassc[strgfeat][l][indx] = dicttemp[strgfeat][l][indxfittelem[indx]]
-                        
-                        # divide associations into subgroups
-                        for k in range(gdat.refrnumbelem[q]):
-                            if numbassc[k] == 0:
-                                indxelemrefrasscmiss[l].append(k)
-                            else:
-                                indxelemrefrasschits[l].append(k)
-
-                        indxelemfittasschits[l] = unique(indxfittelem[where(indxfittelem > -1)])
-                        
-                        if numbelem[l] > 0:
-                            indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
                         
                         if gdat.refrnumbelem[q] > 0:
                             cmpl[l] = array([float(len(indxelemrefrasschits[l])) / gdat.refrnumbelem[q]])
