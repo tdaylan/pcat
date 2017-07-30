@@ -58,6 +58,8 @@ def init( \
         
          # name of the configuration
          strgcnfg=None, \
+        
+         allwrefr=True, \
 
          # numpy RNG seed
          seedstat=None, \
@@ -799,19 +801,21 @@ def init( \
     setpprem(gdat)
 
     # reference elements
-    if gdat.datatype == 'mock':
-        gdat.numbrefr = gdat.truenumbpopl
-        gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
-        gdat.indxrefr = arange(gdat.numbrefr)
-        gdat.listcolrrefr = ['g' for l in gdat.trueindxpopl]
-    else:
-        gdat.numbrefr = 0
-        gdat.listnamerefr = [] 
-        if gdat.exprtype == 'ferm':
-            retr_fermdata(gdat)
-        if gdat.exprtype == 'chan':
-            retr_chandata(gdat)
-        gdat.listcolrrefr = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
+    gdat.numbrefr = 0
+    gdat.indxrefr = arange(0)
+    gdat.listnamerefr = [] 
+    if gdat.allwrefr:
+        if gdat.datatype == 'mock':
+            gdat.numbrefr = gdat.truenumbpopl
+            gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
+            gdat.indxrefr = arange(gdat.numbrefr)
+            gdat.listcolrrefr = ['g' for l in gdat.trueindxpopl]
+        else:
+            if gdat.exprtype == 'ferm':
+                retr_fermdata(gdat)
+            if gdat.exprtype == 'chan':
+                retr_chandata(gdat)
+            gdat.listcolrrefr = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
     
     gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
     gdat.listnamefeatrefronly = [[] for q in gdat.indxrefr]

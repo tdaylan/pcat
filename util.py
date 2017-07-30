@@ -6122,8 +6122,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
         numbelem = sampvarb[indxfixpnumbelem].astype(int)
         
-        print 'liststrgfeatdefa'
-        print liststrgfeatdefa
         for strgfeat in liststrgfeatdefa:
             dicttemp[strgfeat] = [[] for l in range(numbpopl)]
         for l in indxpopl:
@@ -7054,8 +7052,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 metr = metr[indxelemrefrtemp][indx]
                                 indxelemrefrtemp = indxelemrefrtemp[indx]
                                 # store the index of the model PS
-                                numbassc[indxelemrefrtemp[0]] += 1
-                                metrassc[indxelemrefrtemp[0]] = metr[0]
+                                numbassc[q][indxelemrefrtemp[0]] += 1
+                                metrassc[q][indxelemrefrtemp[0]] = metr[0]
                                 indxfittelem[q][indxelemrefrtemp[0]] = k
                     
                 indxelemrefrasschits = [[] for q in gdat.indxrefr]
@@ -7063,14 +7061,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 indxelemfittasschits = [[] for l in gdat.fittindxpopl]
                 indxelemfittasscfals = [[] for l in gdat.fittindxpopl]
                 featrefrassc = dict()
-                for strgfeat in liststrgfeatodimtotl:
-                    featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
+                for q in gdat.indxrefr:
+                    for strgfeat in listnamerefrfeat:
+                        featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
            
                         # indices of the reference elements associated with the fitting model elements
                         for k in range(gdat.refrnumbelem[q]):
-                            if numbassc[k] == 0:
+                            if numbassc[q][k] == 0:
                                 indxelemrefrasscmiss[l].append(k)
                             else:
                                 indxelemrefrasschits[l].append(k)
@@ -7089,7 +7088,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         print 'indxelemrefrasschits'
                         print indxelemrefrasschits
                         
-                        # collect the associated element features
+                        # collect the associated reference element feature for each fitting element 
                         for namefeatrefr in gdat.listnamefeatrefronly[q]:
                             name = namefeatrefr + gdat.listnamerefr[q]
                             print 'namefeatrefr'
@@ -7100,13 +7099,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             summgene(getattr(gdat, 'refr' + namefeatrefr)[q])
                             print 'dicttemp[name][l]'
                             print dicttemp[name][l]
-                            dicttemp[name][l] = getattr(gdat, 'refr' + namefeatrefr)[q][0, indxelemrefrasschits[q]]
-                            dicttemp[name][l][indxelemfittasscfals[l]] = -1.
-                            indx = where(indxfittelem[q] >= 0)[0]
-                            for strgfeat in liststrgfeatodim[l]:
-                                featrefrassc[strgfeat][l] = zeros(gdat.refrnumbelem[q])
-                                if indx.size > 0:
-                                    featrefrassc[strgfeat][l][indx] = dicttemp[strgfeat][l][indxfittelem[q][indx]]
+                            refrfeat = getattr(gdat, 'refr' + namefeatrefr)[q]
+                            dicttemp[name][l] = zeros(numbpnts[l])
+                            dicttemp[name][l][indxelemfittasscfals[l]] = refrfeat[0, indxelemrefrasschits[q]]
+                        
+                        # collect the associated fitting element feature for each reference element
+                        for strgfeat in liststrgfeatodim[l]:
+                            featrefrassc[strgfeat][q] = zeros(gdat.refrnumbelem[q])
+                            featrefrassc[strgfeat][q][indxelemrefrasschits[q]] = dicttemp[strgfeat][l][indxelemfittasschits[l]]
                             
             ### derived quantities
             for l in indxpopl:
