@@ -7,8 +7,10 @@ from util import *
 def plot_samp(gdat, gdatmodi, strg):
    
     if gdat.shrtfram and strg == 'this':
-        plot_genemaps(gdat, gdatmodi, strg, 'cntpdata', thisindxener=0, thisindxevtt=0)
-        plot_genemaps(gdat, gdatmodi, strg, 'cntpresi', thisindxener=0, thisindxevtt=0)
+        for i in gdat.indxener:
+            for m in gdat.indxevtt:
+                plot_genemaps(gdat, gdatmodi, strg, 'cntpdata', thisindxener=i, thisindxevtt=m)
+                plot_genemaps(gdat, gdatmodi, strg, 'cntpresi', thisindxener=i, thisindxevtt=m)
     else:    
         if strg == 'true':
             strgmodl = strg

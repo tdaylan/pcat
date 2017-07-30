@@ -6376,7 +6376,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 psfnconv = []
                 # temp
                 if gdat.pixltype == 'heal':
-                    pass
+                    psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
+                    fwhm = retr_fwhm(psfn, gdat.binsangl)
+                
                 if gdat.pixltype == 'cart':
                     for i in gdat.indxener:
                         psfnconv.append(AiryDisk2DKernel(psfp[i] / gdat.sizepixl))
