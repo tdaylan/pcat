@@ -7073,20 +7073,25 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 indxelemrefrasscmiss[l].append(k)
                             else:
                                 indxelemrefrasschits[l].append(k)
-                            
                         # indices of the fitting model elements associated with the reference elements
-                        print 'q'
-                        print q
-                        print 'indxfittelem'
-                        print indxfittelem
-                        print 'l'
-                        print l
-                        print 
                         indxelemfittasschits[l] = unique(indxfittelem[q][where(indxfittelem[q] > -1)])
                         if numbelem[l] > 0:
                             indxelemfittasscfals[l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[l])
+                        print 'q'
+                        print q
+                        print 'l'
+                        print l
+                        print 'indxfittelem'
+                        print indxfittelem
                         print 'indxelemrefrasschits'
                         print indxelemrefrasschits
+                        print 'indxelemrefrasscmiss'
+                        print indxelemrefrasscmiss
+                        print 'indxelemfittasschits'
+                        print indxelemfittasschits
+                        print 'indxelemfittasscfals'
+                        print indxelemfittasscfals
+                        print 
                         
                         # collect the associated reference element feature for each fitting element 
                         for namefeatrefr in gdat.listnamefeatrefronly[q]:
