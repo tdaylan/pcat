@@ -68,21 +68,20 @@ def plot_samp(gdat, gdatmodi, strg):
             if strg != 'true' and gdat.allwrefr:
                 for strgclas in ['cmpl', 'fdis']:   
                     nameinte = strgclas + '/'
-                    for l in gdat.trueindxpopl:
-                        lablydat = getattr(gdat, 'labl' + strgclas + 'pop%d' % l)
-                        indxydat = [l, slice(None)]
-                        strgindxydat = 'pop%d' % l
-                        for strgfeat in gdat.trueliststrgfeatodim[l]:
-                            if strgfeat in gdat.fittliststrgfeatodim[l]:
+                    for q in gdat.indxrefr:
+                        for l in gdat.fittindxpopl:
+                            lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%d' % (q, l))
+                            strgindxydat = 'ref%dpop%d' % (q, l)
+                            for strgfeat in gdat.listnamefeatrefr[q]:
                                 if not (gdat.datatype == 'inpt' and getattr(gdat, 'refr' + strgfeat) == None):
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                                     limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                                    plot_gene(gdat, gdatmodi, strg, strgclas + strgfeat, 'mean' + strgfeat, lablxdat=lablxdat, \
+                                    plot_gene(gdat, gdatmodi, strg, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
                                               lablydat=lablydat, factxdat=factxdat, plottype='errr', \
-                                              scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, indxydat=indxydat, \
-                                              strgindxydat=strgindxydat, omittrue=True, nameinte=nameinte)
+                                              scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
+                                              omittrue=True, nameinte=nameinte)
                 
             alph = 0.1
             if strg == 'this':
@@ -109,20 +108,20 @@ def plot_samp(gdat, gdatmodi, strg):
                         for r in gdat.indxstkscond:
                             specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:
-                        specplot = getattr(gdatobjt, strg + 'specplot')
-                    for l in range(len(specplot)):
+                        feat = getattr(gdatobjt, strg + 'feat')
+                    for l in range(len(feat)):
                         listxdat = []
                         listplottype = []
                         
-                        for k in range(specplot[l].shape[-1]):
+                        for k in range(feat[l]['specplot'].shape[-1]):
                             listxdat.append(gdat.meanenerplot)
                             listplottype.append('line')
                         
                         for specconvunit in gdat.listspecconvunit:
                             listydat = []
                             
-                            for k in range(specplot[l].shape[-1]):
-                                specplottemp = specplot[l]
+                            for k in range(feat[l]['specplot'].shape[-1]):
+                                specplottemp = feat[l]['specplot']
                                 if strgmodl == 'true':
                                     specplottemp = copy(specplottemp[0, :, k])
                                 else:
@@ -307,7 +306,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         #else:
                         #    listname = ['hist' + strgfeat]
 
-                        listname = ['hist' + strgfeat]
+                        listname = ['hist' + strgfeat + 'pop%d' % l]
                         for name in listname:
                             listydattype = ['totl', 'sden']
                             for ydattype in listydattype:
@@ -330,7 +329,9 @@ def plot_samp(gdat, gdatmodi, strg):
                                     lablydat = r'$N_{%s}$' % gdat.lablelemextn
                                 plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
-                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, indxydat=indxydat, strgindxydat=strgindxydat, nameinte='histodim/')
+                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
+                                                  #indxydat=indxydat, strgindxydat=strgindxydat, \
+                                                  nameinte='histodim/')
                
         # backgrounds
         for i in gdat.indxener:
@@ -1199,18 +1200,18 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
         if strgplottype == 'hist':
             meanfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
             meanseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
-            hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco)[l, :, :]
+            hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco + 'pop%d' % l)
             imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphmrkr)
         else:
-            varbfrst = getattr(gdatmodi, 'this' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            varbseco = getattr(gdatmodi, 'this' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')
+            varbfrst = getattr(gdatmodi, 'thisfeat')[l][strgfrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            varbseco = getattr(gdatmodi, 'thisfeat')[l][strgseco] * getattr(gdat, 'fact' + strgseco + 'plot')
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     
     # reference elements
     for q in gdat.indxrefr:
         try:
-            refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[q] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            refrvarbseco = getattr(gdat, 'refr' + strgseco)[q] * getattr(gdat, 'fact' + strgseco + 'plot')
+            refrvarbfrst = getattr(gdat, 'refrfeat')[q][strgfrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            refrvarbseco = getattr(gdat, 'refrfeat')[q][strgseco] * getattr(gdat, 'fact' + strgseco + 'plot')
             axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
         except:
             pass

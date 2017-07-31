@@ -75,6 +75,8 @@ def init( \
 
          ## lens model
          lensmodltype=None, \
+        
+         penalpridiff=False, \
 
          ## PSF evaluation type
          trueoaxitype=False, \
@@ -2469,18 +2471,8 @@ def work(pathoutpthis, lock, indxprocwork):
         
         thisfile = h5py.File(path, 'r')
         for attr in thisfile:
-            print 'attr'
-            print attr
-            print 'thisfile[attr][()]'
-            print thisfile[attr][()]
             for k, namefixp in enumerate(gdat.fittnamefixp):
                 if namefixp == attr:
-                    print 'k'
-                    print k
-                    print 'cdfn_fixp(gdat, fitt, thisfile[attr][()], k)'
-                    print cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
-                    print
-
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
         if gdat.fittnumbtrap > 0:
             gdatmodi.thisindxelemfull = []
@@ -2549,8 +2541,6 @@ def work(pathoutpthis, lock, indxprocwork):
         indxsampcomp = gdatmodi.thisindxsampcomp
     else:
         indxsampcomp = None
-    print 'indxsampcomp'
-    print indxsampcomp
 
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
     
@@ -3066,13 +3056,23 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thislpripena
                         if gdat.refrlgal != None and gdat.refrbgal != None:
                             print 'Completeness'
-                            print gdatmodi.thiscmplpop0
-                            print 'Completeness binned in significance parameter'
-                            print getattr(gdatmodi, 'thiscmpl' + gdat.namefeatsign)
+                            for q in gdat.indxrefr:
+                                for l in gdat.fittindxpopl:
+                                    namevarb = 'ref%dpop%d' % (q, l)
+                                    print 'Reference %d, Population %d' % (q, l)
+                                    print 'Total'
+                                    print getattr(gdatmodi, 'thiscmpl' + namevarb)
+                                    print 'Binned in significance feature'
+                                    print getattr(gdatmodi, 'thiscmpl' + gdat.namefeatsign + namevarb)
                             print 'False discovery rate'
-                            print gdatmodi.thisfdispop0
-                            print 'False discovery rate binned in significance parameter'
-                            print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsign)
+                            for q in gdat.indxrefr:
+                                for l in gdat.fittindxpopl:
+                                    namevarb = 'ref%dpop%d' % (q, l)
+                                    print 'Reference %d, Population %d' % (q, l)
+                                    print 'Total'
+                                    print getattr(gdatmodi, 'thisfdis' + namevarb)
+                                    print 'Binned in significance feature'
+                                    print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsign + namearb)
 
                     print 'Mean residual'
                     print mean(gdatmodi.thiscntpresi)
