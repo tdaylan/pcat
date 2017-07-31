@@ -5744,14 +5744,15 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     if gdatmodi != None and numbtrap > 0:
                         ### hit
                         indx = gdatmodi.thisindxelemrefrasschits[q][l]
-                        axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.legdrefrmiss, \
+                        if indx.size > 0:
+                            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.legdrefrmiss, \
                                                                                                                       marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
                         ### missed
                         indx = gdatmodi.thisindxelemrefrasscmiss[q][l]
                     else:
                         indx = arange(lgal.size)
-                    
-                    axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, facecolor='none', \
+                    if indx.size > 0: 
+                        axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, facecolor='none', \
                                                                                             label=gdat.legdrefrhits, marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
             
     ## host galaxy position
@@ -6792,7 +6793,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
                     fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
                     sigm = fwhm / 2.355
-                    psecodimdatapntsprio = exp(-2. * gdat.meanmpolodim[None, :, None] / (2. * pi / sigm[:, None, :]))
+                    psecodimdatapntsprio = exp(-2. * gdat.meanmpolodim[None, :, None] / (1. / sigm[:, None, :]))
                     lpridiff = 0.
                     for i in gdat.indxener:
                         for m in gdat.indxevtt:

@@ -834,6 +834,7 @@ def init( \
     ### normalization
     if gdat.exprtype == 'ferm':
         if gdat.anlytype == 'deco':
+            setp_namevarbvalu(gdat, 'bacp', 1., ener=True, back=True, strgmodl='init')
             bacp = [0.5, 2.]
         else:   
             bacp = [1e-9, 1e-1]
