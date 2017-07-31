@@ -1363,9 +1363,9 @@ def init( \
     if gdat.fittnumbtrap > 0:
         if gdat.refrlgal != None and gdat.refrbgal != None:
             for l in gdat.trueindxpopl:
-                gdat.listnamevarbscal += ['cmplpop%d' % l]
+                gdat.listnamevarbscal += ['cmplref%dpop%d' % (q, l)]
             for l in gdat.fittindxpopl:
-                gdat.listnamevarbscal += ['fdispop%d' % l]
+                gdat.listnamevarbscal += ['fdisref%dpop%d' % (q, l)]
     
     # temp -- should be removed
     #gdat.truenumbpopl = gdat.truenumbelem.size
