@@ -1356,6 +1356,13 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
 
                 if indxydat != None:
                     yerr = yerr[[slice(None)] + indxydat]
+                print 'yerr'
+                summgene(yerr)
+                print 'ydat'
+                summgene(ydat)
+                print 'indxydat'
+                print indxydat
+
                 temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
                 for caps in listcaps:
                     caps.set_markeredgewidth(1)

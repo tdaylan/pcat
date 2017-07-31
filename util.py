@@ -1004,6 +1004,7 @@ def retr_chandata(gdat):
     for name in gdat.listnamerefr:
         setattr(gdat, 'minmotyp' + name, 0.)
         setattr(gdat, 'maxmotyp' + name, 1.)
+    setattr(gdat, 'factotypplot', 1.)
     
     if False and gdat.strgcnfg == 'pcat_chan_inpt_home4msc':
         print 'ECDFS_Cross_ID_Hsu2014'
@@ -7510,7 +7511,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             if strg == 'this':
                 strgtemp = strg
             setattr(gdatobjt, strgtemp + 'feat', feat)
-
+            for strgfeat in liststrgfeattotl:
+                setattr(gdatobjt, strgtemp + strgfeat, [feat[l][strgfeat] for l in indxpopl])
+                
             #if strg == 'this':
             #    for q in gdat.indxrefr:
             #        feat = [[] for l in indxpopl]
@@ -7589,7 +7592,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 histfeatrefrassc = histogram(refrfeat[q][0, indxelemrefrasschits[q][l]], bins=bins)[0]
                                 if refrhistfeat != None:
                                     cmplfeat = histfeatrefrassc / refrhistfeat[q, :]
-                                    errrcmplfeat = (cmplfeat / sqrt(maximum(ones(gdat.numbbinsplot), refrhistfeat[q, :])))[None, :]
+                                    errrcmplfeat[:, :] = (cmplfeat / sqrt(maximum(ones(gdat.numbbinsplot), refrhistfeat[q, :])))[None, :]
                                     if gdat.diagmode:
                                         if where((cmplfeat > 1.) | (cmplfeat < 0.))[0].size > 0:
                                             raise Exception('')
@@ -7609,7 +7612,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 histfeatfals = histogram(dictelem[l][strgfeat][indxelemfittasscfals[q][l]], bins=bins)[0]
                                 fitthistfeat = getattr(gdatobjt, strg + 'hist' + strgfeat + 'pop%d' % l)
                                 fdisfeat = histfeatfals / fitthistfeat
-                                errrfdisfeat = (fdisfeat / sqrt(maximum(ones(gdat.numbbinsplot), fitthistfeat)))[None, :]
+                                errrfdisfeat[:, :] = (fdisfeat / sqrt(maximum(ones(gdat.numbbinsplot), fitthistfeat)))[None, :]
                                 if gdat.diagmode:
                                     if where((fdisfeat > 1.) | (fdisfeat < 0.))[0].size > 0:
                                         raise Exception('')
