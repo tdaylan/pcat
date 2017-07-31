@@ -73,7 +73,9 @@ def plot_samp(gdat, gdatmodi, strg):
                             lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%d' % (q, l))
                             strgindxydat = 'ref%dpop%d' % (q, l)
                             for strgfeat in gdat.listnamefeatrefr[q]:
-                                if not (gdat.datatype == 'inpt' and getattr(gdat, 'refr' + strgfeat) == None):
+                                print 'gdat.listnamefeatrefr'
+                                print gdat.listnamefeatrefr
+                                if not (gdat.datatype == 'inpt' and getattr(gdat, 'refr' + strgfeat) == None) or strgfeat == 'spec':
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
@@ -108,20 +110,20 @@ def plot_samp(gdat, gdatmodi, strg):
                         for r in gdat.indxstkscond:
                             specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:
-                        feat = getattr(gdatobjt, strg + 'feat')
-                    for l in range(len(feat)):
+                        specplot = getattr(gdatobjt, strg + 'specplot')
+                    for l in range(len(specplot)):
                         listxdat = []
                         listplottype = []
                         
-                        for k in range(feat[l]['specplot'].shape[-1]):
+                        for k in range(specplot[l].shape[-1]):
                             listxdat.append(gdat.meanenerplot)
                             listplottype.append('line')
                         
                         for specconvunit in gdat.listspecconvunit:
                             listydat = []
                             
-                            for k in range(feat[l]['specplot'].shape[-1]):
-                                specplottemp = feat[l]['specplot']
+                            for k in range(specplot[l].shape[-1]):
+                                specplottemp = specplot[l]
                                 if strgmodl == 'true':
                                     specplottemp = copy(specplottemp[0, :, k])
                                 else:
@@ -975,7 +977,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         # plot energy spectra of the data, background model components and total background
         if gdat.numbener > 1:
             
-            listlablsbrtspec = getattr(gdat, strgmodl + 'listlablsbrtspec')
+            listlegdsbrtspec = getattr(gdat, strgmodl + 'listlegdsbrtspec')
 
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             
@@ -1044,7 +1046,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
                 ydat *= factydat
                 yerr *= factydat
 
-                axis.errorbar(xdat, ydat, yerr=yerr, label=listlablsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
+                axis.errorbar(xdat, ydat, yerr=yerr, label=listlegdsbrtspec[k], color=colr, marker=mrkr, ls=linestyl, markersize=15)
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 

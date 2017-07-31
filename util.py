@@ -4605,12 +4605,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     for q in gdat.indxrefr: 
                         nametemp = name[4:] + gdat.listnamerefr[q]
                         if not nametemp in gdat.listnamefeatrefr[q]:
-                            gdat.listnamefeatrefr[q].append(name[4:])
+                            gdat.listnamefeatrefr[q].append(nametemp)
                         for l in indxpopl:
                             if not name[4:] in liststrgfeatodim[l] and name[4:] != 'spec' and name[4:] != 'deflprof' and name[4:] != 'specplot':
                                 liststrgfeatodim[l].append(nametemp)
                                 if not name[4:] in gdat.listnamefeatrefronly[q][l]:
-                                    gdat.listnamefeatrefronly[q][l].append(name[4:])
+                                    gdat.listnamefeatrefronly[q][l].append(nametemp)
 
         if strgmodl == 'true':
             gdat.listnamefeatrefr = liststrgfeatodim
@@ -5015,6 +5015,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     numbpara = getattr(gdat, strgmodl + 'numbpara')
     nameback = getattr(gdat, strgmodl + 'nameback')
+    legdback = getattr(gdat, strgmodl + 'legdback')
 
     numbpopl = getattr(gdat, strgmodl + 'numbpopl')
     psfntype = getattr(gdat, strgmodl + 'psfntype')
@@ -5327,20 +5328,20 @@ def setp_fixp(gdat, strgmodl='fitt'):
             cdfnminmfixp[k], cdfndifffixp[k] = retr_eerrnorm(minmfixp[k], maxmfixp[k], meanfixp[k], stdvfixp[k])
    
     # background templates
-    listlablsbrt = deepcopy(nameback)
+    listlegdsbrt = deepcopy(legdback)
     if gdat.elemtype == 'lght':
-        listlablsbrt.append('PS')
+        listlegdsbrt.append('PS')
     if gdat.elemtype == 'lens':
-        listlablsbrt.append('Source')
-        listlablsbrt.append('Host')
+        listlegdsbrt.append('Source')
+        listlegdsbrt.append('Host')
     if gdat.elemtype == 'clus':
-        listlablsbrt.append('Uniform')
-    listlablsbrtspec = deepcopy(listlablsbrt)
-    listlablsbrtspec += ['Data']
-    if len(listlablsbrt) > 1:
-        listlablsbrtspec.append('Total Model')
-    numblablsbrt = len(listlablsbrt)
-    numblablsbrtspec = len(listlablsbrtspec)
+        listlegdsbrt.append('Uniform')
+    listlegdsbrtspec = deepcopy(listlegdsbrt)
+    listlegdsbrtspec += ['Data']
+    if len(listlegdsbrt) > 1:
+        listlegdsbrtspec.append('Total Model')
+    numblablsbrt = len(listlegdsbrt)
+    numblablsbrtspec = len(listlegdsbrtspec)
 
     namepara = zeros(numbpara, dtype=object)
     lablpara = zeros(numbpara, dtype=object)
@@ -7510,18 +7511,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 strgtemp = 'refr'
             if strg == 'this':
                 strgtemp = strg
-            setattr(gdatobjt, strgtemp + 'feat', feat)
+            #setattr(gdatobjt, strgtemp + 'feat', feat)
             for strgfeat in liststrgfeattotl:
-                setattr(gdatobjt, strgtemp + strgfeat, [feat[l][strgfeat] for l in indxpopl])
+                if strgfeat in feat[l]:
+                    setattr(gdatobjt, strgtemp + strgfeat, [feat[l][strgfeat] for l in indxpopl])
                 
-            #if strg == 'this':
-            #    for q in gdat.indxrefr:
-            #        feat = [[] for l in indxpopl]
-            #        for l in indxpopl:
-            #            if strgfeat in gdat.listnamefeatrefronly[q][l]:
-            #                feat[l] = dictelem[l][strgfeat + gdat.listnamerefr[q]]
-            #        setattr(gdatobjt, strg + strgfeat + gdat.listnamerefr[q], feat)
-                    
         ### Exculusive comparison with the true state
         if strg != 'true' and gdat.datatype == 'mock':
             
