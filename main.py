@@ -833,7 +833,10 @@ def init( \
     
     ### normalization
     if gdat.exprtype == 'ferm':
-        bacp = [1e-9, 1e-1]
+        if gdat.anlytype == 'deco':
+            bacp = [0.5, 2.]
+        else:   
+            bacp = [1e-9, 1e-1]
     if gdat.exprtype == 'chan':
         bacp = [1e-1, 1e2]
     if gdat.exprtype == 'hubb':
@@ -3072,7 +3075,7 @@ def work(pathoutpthis, lock, indxprocwork):
                                     print 'Total'
                                     print getattr(gdatmodi, 'thisfdis' + namevarb)
                                     print 'Binned in significance feature'
-                                    print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsign + namearb)
+                                    print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsign + namevarb)
 
                     print 'Mean residual'
                     print mean(gdatmodi.thiscntpresi)
