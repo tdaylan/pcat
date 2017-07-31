@@ -6505,9 +6505,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     print 'Correcting the PS sbrt...'
                     print 'sbrtpnts'
                     summgene(sbrtpnts)
-                    for i in gdat.indxener:
-                        for m in gdat.indxevtt:
-                            sbrtpnts[i, where(sbrtpnts[i, indxpixleval, m] <= 0.)[0], m] = 1e-100
+                    sbrtpnts[where(sbrtpnts <= 1e-100)] = 1e-100
                     print 'sbrtpnts'
                     summgene(sbrtpnts)
 
