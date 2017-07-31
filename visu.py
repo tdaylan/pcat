@@ -978,7 +978,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
 
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             
-            listmrkr = [(2 + k/2, 1 + k % 2, 0) for k in range(16)]
+            listmrkr = ['o', '>', 's', 'p', 'h', '*', 'p', 'x']
 
             # determine the energy scaling factor
             if specconvunit[0] == 'ene0':

@@ -136,7 +136,7 @@ def init( \
          bgalcntr=0., \
          maxmangl=None, \
          pixltype=None, \
-        
+         forccart=False, \
          fittampldisttype=None, \
          truestdvdefsdistslop=0.5, \
         
@@ -711,7 +711,7 @@ def init( \
         if gdat.exprtype == 'chan':
             maxmnumbelem = array([200])
         if gdat.exprtype == 'ferm':
-            maxmnumbelem = array([400])
+            maxmnumbelem = array([100])
     if gdat.elemtype == 'lens':
         maxmnumbelem = array([300])
     if gdat.elemtype == 'clus':
@@ -791,11 +791,19 @@ def init( \
     setp_namevarbvalu(gdat, 'strgback', strgback)
     
     #### legend
-    nameback = ['Isotropic']
+    legdback = ['Isotropic']
     if gdat.exprtype == 'ferm':
-        nameback.append(r'FDM')
+        legdback.append(r'FDM')
     if gdat.exprtype == 'chan':
-        nameback.append(r'Particle')
+        legdback.append(r'Particle')
+    setp_namevarbvalu(gdat, 'legdback', legdback)
+    
+    #### legend
+    nameback = ['isot']
+    if gdat.exprtype == 'ferm':
+        nameback.append('fdfm')
+    if gdat.exprtype == 'chan':
+        nameback.append('part')
     setp_namevarbvalu(gdat, 'nameback', nameback)
     
     setpprem(gdat)
@@ -2754,15 +2762,11 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
                 frac = amin(gdatmodi.thissbrtpnts) / mean(gdatmodi.thissbrtpnts)
-                if frac > 1e-10:
-                    print 'thissbrtpnts went negative by %.3g percent.' % (100. * frac)
-                if frac > 1e-2:
+                if frac > 1e-3:
                     raise Exception('thissbrtpnts went negative by %.3g percent.' % (100. * frac))
 
                 frac = amin(gdatmodi.nextsbrtpnts) / mean(gdatmodi.nextsbrtpnts)
-                if frac > 1e-10:
-                    print 'nextsbrtpnts went negative by %.3g percent.' % (100. * frac)
-                if frac > 1e-2:
+                if frac > 1e-3:
                     raise Exception('nextsbrtpnts went negative by %.3g percent.' % (100. * frac))
 
             # check the population index

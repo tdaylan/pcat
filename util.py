@@ -2562,22 +2562,37 @@ def setpprem(gdat):
         gdat.listnamefeateval = ['lgal', 'bgal', 'nobj']
         gdat.liststrgfeatplot = []
     
+    # axes
+    gdat.minmlgaldata = -gdat.maxmgangdata
+    gdat.maxmlgaldata = gdat.maxmgangdata
+    gdat.minmbgaldata = -gdat.maxmgangdata
+    gdat.maxmbgaldata = gdat.maxmgangdata
+    
     # input data
     gdat.pathinpt = gdat.pathdata + 'inpt/'
     if gdat.datatype == 'inpt':
         path = gdat.pathinpt + gdat.strgexprsbrt
         gdat.sbrtdata = pf.getdata(path)
-        if gdat.pixltype == 'heal':
-            if gdat.sbrtdata.ndim != 3:
-                raise Exception('exprsbrtdata should be a 3D numpy array if pixelization is HealPix.')
-        else:
+        if gdat.pixltype == 'cart' and not gdat.forccart:
             if gdat.sbrtdata.ndim != 4:
                 raise Exception('exprsbrtdata should be a 4D numpy array if pixelization is Cartesian.')
+        else:
+            if gdat.sbrtdata.ndim != 3:
+                raise Exception('exprsbrtdata should be a 3D numpy array if pixelization is HealPix.')
         
         if gdat.pixltype == 'cart':
-            gdat.numbsidecart = gdat.sbrtdata.shape[1]
+            if gdat.forccart:
+                gdat.sbrtdatatemp = empty((gdat.sbrtdata.shape[0], gdat.numbsidecart, gdat.numbsidecart, gdat.sbrtdata.shape[2]))
+                for i in arange(gdat.sbrtdata.shape[0]):
+                    for m in arange(gdat.sbrtdata.shape[2]):
+                        gdat.sbrtdatatemp[i, :, :, m] = tdpy.util.retr_cart(gdat.sbrtdata[i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                                                    minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                                                    minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
+                gdat.sbrtdata = gdat.sbrtdatatemp
+            else:
+                gdat.numbsidecart = gdat.sbrtdata.shape[1]
             gdat.sbrtdata = gdat.sbrtdata.reshape((gdat.sbrtdata.shape[0], gdat.numbsidecart**2, gdat.sbrtdata.shape[3]))
-    
+        
         # temp
         #if gdat.strgcnfg.startswith('pcat_ferm'):
         #    gdat.sbrtdata[:, :, 0] = gdat.sbrtdata[:, :, 2]
@@ -2587,13 +2602,14 @@ def setpprem(gdat):
         gdat.numbenerfull = gdat.sbrtdata.shape[0]
         gdat.numbpixlfull = gdat.sbrtdata.shape[1]
         gdat.numbevttfull = gdat.sbrtdata.shape[2]
-        gdat.indxenerfull = arange(gdat.numbenerfull)
-        gdat.indxevttfull = arange(gdat.numbevttfull)
         
         if gdat.pixltype == 'heal':
             # temp
             gdat.numbsidecart = 100
             gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
+        
+    gdat.indxenerfull = arange(gdat.numbenerfull)
+    gdat.indxevttfull = arange(gdat.numbevttfull)
     
     # pixelization
     if gdat.pixltype == 'cart':
@@ -3254,11 +3270,6 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.strgfunctime == 'time':
         gdat.functime = time.time
 
-    # axes
-    gdat.minmlgaldata = -gdat.maxmgangdata
-    gdat.maxmlgaldata = gdat.maxmgangdata
-    gdat.minmbgaldata = -gdat.maxmgangdata
-    gdat.maxmbgaldata = gdat.maxmgangdata
     ## longitude
     gdat.numblgalpntsprob = gdat.numbsidepntsprob
     gdat.numbbgalpntsprob = gdat.numbsidepntsprob
@@ -3365,7 +3376,16 @@ def setpinit(gdat, boolinitsetp=False):
                 raise Exception('Bad input exposure map.')
             if gdat.pixltype == 'cart':
                 gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
-    
+   
+                if gdat.forccart:
+                    gdat.expotemp = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                    for i in gdat.indxenerfull:
+                        for m in gdat.indxevttfull:
+                            gdat.expotemp[i, :, :, m] = tdpy.util.retr_cart(gdat.expo[i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                                                             minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                                                             minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
+                    gdat.expo = gdat.expotemp
+
     if gdat.killexpo:
         gdat.expo *= 1e-90
 
@@ -3822,9 +3842,15 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+            
             for i in gdat.indxener:
-                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac0ene%d' % i)]] = 5e-3
-                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac1ene%d' % i)]] = 5e-4
+                indxback = where(gdat.fittnameback == 'isot')[0]
+                if indxback.size > 0:
+                    gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac%dene%d' % (indxback[0], i))]] = 5e-3
+            for i in gdat.indxener:
+                indxback = where(gdat.fittnameback == 'fdfm')[0]
+                if indxback.size > 0:
+                    gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac%dene%d' % (indxback[0], i))]] = 5e-4
             if gdat.fittnumbtrap > 1:
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 1e-2
         if gdat.exprtype == 'chan':
@@ -4288,7 +4314,9 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     sbrtbacknorm = empty((numbback, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
     unifback = ones(numbback, dtype=bool)
     for c in indxback:
-        if isinstance(backtype[c], float):
+        if backtype[c] == 'data':
+            sbrtbacknormtemp = copy(gdat.sbrtdata)
+        elif isinstance(backtype[c], float):
             if gdat.pixltype == 'heal':
                 sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c]
             if gdat.pixltype == 'cart':
@@ -4303,6 +4331,15 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
             sbrtbacknormtemp = pf.getdata(path)
             
             if gdat.pixltype == 'cart':
+                if gdat.forccart:
+                    sbrtbacknormtemptemp = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                    for i in gdat.indxenerfull:
+                        for m in gdat.indxevttfull:
+                            sbrtbacknormtemptemp[i, :, :, m] = tdpy.util.retr_cart(sbrtbacknormtemp[i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                                                             minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                                                             minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
+                    sbrtbacknormtemp = sbrtbacknormtemptemp
+
                 if sbrtbacknormtemp.shape[1] != gdat.numbsidecart:
                     print 'gdat.numbsidecart'
                     print gdat.numbsidecart
@@ -4313,16 +4350,15 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
                 sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], -1, sbrtbacknormtemp.shape[-1]))
 
         # temp
-        if gdat.strgcnfg.startswith('pcat_ferm'):
-            if c == 1:
-                sbrtbacknorm[c, :, :, :] = 1.
-                sbrtbacknorm[c, :, :, 2:4] = sbrtbacknormtemp
+        if gdat.strgcnfg.startswith('pcat_ferm') and sbrtbacknormtemp.shape[-1] == 2:
+            sbrtbacknorm[c, :, :, :] = 1.
+            sbrtbacknorm[c, :, :, 2:4] = sbrtbacknormtemp
         else:
             sbrtbacknorm[c, ...] = sbrtbacknormtemp
        
         # determine spatially uniform background templates
-        for i in gdat.indxener:
-            for m in gdat.indxevtt:
+        for i in gdat.indxenerfull:
+            for m in gdat.indxevttfull:
                 if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
                     unifback[c] = False
 
@@ -4332,7 +4368,7 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
     
     boolzero = True
     for c in indxback:
-        if amin(sbrtbacknorm[c, ...]) > 0.:
+        if amin(sbrtbacknorm[c, ...]) > 0. or backtype[c] == 'data':
             boolzero = False
     if boolzero:
         raise Exception('At least one background template must be positive everywhere.')
@@ -4548,7 +4584,10 @@ def retr_indxsamp(gdat, strgmodl='fitt'):
                             liststrgfeatodim[l].append(nametemp)
                             if not nametemp in gdat.listnamefeatrefronly[q]:
                                 gdat.listnamefeatrefronly[q].append(name[4:])
-    
+
+        print 'gdat.listnamefeatrefronly'
+        print gdat.listnamefeatrefronly
+
     if strgmodl == 'true':
         gdat.listnamefeatrefr = liststrgfeatodim
 
@@ -5658,11 +5697,11 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxpoplplot=-1):
                     numbelem = int(gdat.refrnumbelem[q])
                     if gdatmodi != None and numbtrap > 0:
                         ### hit
-                        indx = gdatmodi.thisindxelemrefrasschits[q]
+                        indx = gdatmodi.thisindxelemrefrasschits[q][l]
                         axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.legdrefrmiss, \
                                                                                                                       marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
                         ### missed
-                        indx = gdatmodi.thisindxelemrefrasscmiss[q]
+                        indx = gdatmodi.thisindxelemrefrasscmiss[q][l]
                     else:
                         indx = arange(lgal.size)
                     
@@ -6372,11 +6411,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 psfnconv = gdatmodi.thispsfnconv
             else:
                 psfnconv = []
-                # temp
-                if gdat.pixltype == 'heal':
-                    psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
-                    fwhm = retr_fwhm(psfn, gdat.binsangl)
-                
                 if gdat.pixltype == 'cart':
                     for i in gdat.indxener:
                         psfnconv.append(AiryDisk2DKernel(psfp[i] / gdat.sizepixl))
@@ -6641,29 +6675,44 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 if gdat.verbtype > 1:
                     print 'Retrieving diffuse component from the state vector...'
             else:
-                # temp
+                
                 if name.startswith('back'):
                     indxbacktemp = int(name[4:])
-                    if False and gdat.pixltype == 'heal' and (psfnevaltype == 'full' or psfnevaltype == 'conv') and not unifback[c]:
+                    if gdat.pixltype == 'heal' and (psfnevaltype == 'full' or psfnevaltype == 'conv') and not unifback[indxbacktemp]:
                         sbrtdiff[name] = getattr(gdat, strgmodl + 'sbrtbackhealfull')[indxbacktemp, :, :, :]
+                        print 'taking the full map...'
                     else:
-                        #sbrtdiff[name] = swapaxes(sbrtbacknorm[indxbacktemp, :, :, :], 0, 1)
                         sbrtdiff[name] = sbrtbacknorm[indxbacktemp, :, :, :]
+                
                 if convdiff[k] and (psfnevaltype == 'full' or psfnevaltype == 'conv') and gdat.lensmodltype != 'none':
                     #sbrtdiffconv[name] = empty((gdat.numbener, indxpixleval.size, gdat.numbevtt))
                     sbrtdiffconv[name] = empty_like(gdat.expo)#((gdat.numbener, indxpixleval.size, gdat.numbevtt))
                     # temp -- change this to modified energy and event class bins
+                    if gdat.pixltype == 'heal':
+                        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
+                        fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
                     for i in gdat.indxener:
                         for m in gdat.indxevtt:
                             if gdat.pixltype == 'cart':
                                 sbrtdiffconv[name][i, :, m] = convolve_fft(sbrtdiff[name][i, :, m].reshape((gdat.numbsidecart, gdat.numbsidecart)), psfnconv[i]).flatten()
                             if gdat.pixltype == 'heal':
                                 # temp
-                                #sbrtdiffconv[name][i, :, m] = sbrtdiff[name][i, gdat.indxpixlrofi, m][indxpixleval]
-                                sbrtdiffconv[name][i, :, m] = sbrtdiff[name][i, :, m]#[indxpixleval]
-                                #numbpsfptotl = 5
-                                #indxpsfp = i * numbpsfptotl + m * numbpsfptotl * gdat.numbener
-                                #sbrtdiffconv[name][i, :, m] = hp.smoothing(sbrtdiff[name][i, :, m], fwhm=2.35*psfp[indxpsfp])[indxpixleval]
+                                #sbrtdiffconv[name][i, :, m] = sbrtdiff[name][i, :, m]
+                                print 'smoothing...'
+                                print 'fwhm'
+                                summgene(fwhm)
+                                print 'name'
+                                print name
+                                print 'sbrtdiff[name]'
+                                summgene(sbrtdiff[name])
+                                print 'sbrtdiff[name][i, :, m]'
+                                summgene(sbrtdiff[name][i, :, m])
+                                #print 'hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm)'
+                                #summgene(hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm))
+                                #print 'hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm)[indxpixleval]'
+                                #summgene(hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm)[indxpixleval])
+                                sbrtdiffconv[name][i, :, m] = hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
+                                sbrtdiffconv[name][i, :, m][where(sbrtdiffconv[name][i, :, m] <= 1e-50)] = 1e-50
                     setattr(gdatobjt, strg + 'sbrt' + name + 'conv', sbrtdiffconv[name])
                     if gdat.verbtype > 1:
                         print 'Convolving...'
@@ -6898,18 +6947,30 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         cntpdiffconv = dict()
         cntpdiff = dict()
         for k, name in enumerate(listnamediff):
+            
+            indxpixltemp = gdat.indxpixl
             if name.startswith('back'):
                 indxbacktemp = int(name[4:])
                 if specback[indxbacktemp]:
                     fact = bacp[indxbacpback[indxbacktemp]]
                 else:
                     fact = bacp[indxbacpback[indxbacktemp]][:, None, None]
+                if gdat.pixltype == 'heal' and not unifback[indxbacktemp] and (psfnevaltype == 'full' or psfnevaltype == 'conv'):
+                    indxpixltemp = gdat.indxpixlrofi
             else:
                 fact = 1.
-            cntpdiff[name] = retr_cntp(gdat, sbrtdiff[name] * fact)
+            print 'name'
+            print name
+            print 'sbrtdiff[name]'
+            summgene(sbrtdiff[name])
+            print 'sbrtdiff[name][indxpixltemp]'
+            summgene(sbrtdiff[name][:, indxpixltemp, :])
+            print 'indxpixltemp'
+            summgene(indxpixltemp)
+            cntpdiff[name] = retr_cntp(gdat, sbrtdiff[name][:, indxpixltemp, :] * fact)
             setattr(gdatobjt, strg + 'cntp' + name, cntpdiff[name])
             
-            sbrtmean = retr_spatmean(gdat, sbrtdiff[name] * fact)
+            sbrtmean = retr_spatmean(gdat, sbrtdiff[name][:, indxpixltemp, :] * fact)
             setattr(gdatobjt, strg + 'sbrt' + name + 'mean', sbrtmean)
             
             if psfnevaltype == 'conv' and convdiff[k]:
@@ -7054,7 +7115,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         indxelemfittmatr = indxelemfittmatr.flatten()
 
                         # take only angular separations smaller than some threshold
-                        indxmatrthrs = where(matrdist < gdat.anglassc)[0]
+                        indxmatrthrs = where(matrdist < gdat.anglassc)
                         matrdist = matrdist[indxmatrthrs]
                         indxelemrefrmatr = indxelemrefrmatr[indxmatrthrs]
                         indxelemfittmatr = indxelemfittmatr[indxmatrthrs]
@@ -7062,8 +7123,17 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         # sort the remaining associations with respect to distance
                         indxmatrsort = argsort(matrdist)
                         matrdist = matrdist[indxmatrsort]
-                        indxelemrefrasschits[q][l] = indxelemrefrmatr[indxmatrsort]
-                        indxelemfittasschits[q][l] = indxelemfittmatr[indxmatrsort]
+                        indxelemrefrmatr = indxelemrefrmatr[indxmatrsort]
+                        indxelemfittmatr = indxelemfittmatr[indxmatrsort]
+                        
+                        for c in range(matrdist.size):
+                            if indxelemrefrmatr[c] in indxelemrefrasschits[q][l] or indxelemfittmatr[c] in indxelemfittasschits[q][l]:
+                                continue
+                            indxelemrefrasschits[q][l].append(indxelemrefrmatr[c])
+                            indxelemfittasschits[q][l].append(indxelemfittmatr[c])
+                        
+                        indxelemrefrasschits[q][l] = array(indxelemrefrasschits[q][l])
+                        indxelemfittasschits[q][l] = array(indxelemfittasschits[q][l])
 
                 indxelemrefrasscmiss = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
                 indxelemfittasscfals = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
@@ -7076,10 +7146,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         if numbelem[l] > 0:
                             indxelemfittasscfals[q][l] = setdiff1d(arange(numbelem[l]), indxelemfittasschits[q][l])
                 
-                featrefrassc = dict()
-                for q in gdat.indxrefr:
-                    for strgfeat in gdat.listnamefeatrefr[q]:
-                        featrefrassc[strgfeat] = [[] for q in gdat.indxrefr]
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
            
@@ -7109,18 +7175,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             print 'dicttemp[name][l]'
                             print dicttemp[name][l]
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)[q]
+                            print 'refrfeat'
+                            print refrfeat
                             dicttemp[name][l] = zeros(numbelem[l])
                             dicttemp[name][l][indxelemfittasscfals[q][l]] = refrfeat[0, indxelemrefrasschits[q][l]]
                         
-                        # collect the associated fitting element feature for each reference element
-                        for strgfeat in liststrgfeatodim[l]:
-                            featrefrassc[strgfeat][q] = zeros(gdat.refrnumbelem[q])
-                            print 'indxelemfittasschits[q][l]'
-                            print indxelemfittasschits[q][l]
-                            print 'indxelemrefrasschits[q][l]'
-                            print indxelemrefrasschits[q][l]
-                            featrefrassc[strgfeat][q][indxelemrefrasschits[q][l]] = dicttemp[strgfeat][l][indxelemfittasschits[q][l]]
-                            
             ### derived quantities
             for l in indxpopl:
                 #### radial and angular coordinates
@@ -7458,21 +7517,19 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
-                        
                         if gdat.refrnumbelem[q] > 0:
-                            cmpl[l] = array([float(len(indxelemrefrasschits[l])) / gdat.refrnumbelem[q]])
+                            cmpl[q] = array([float(len(indxelemrefrasschits[q][l])) / gdat.refrnumbelem[q]])
                             if gdat.diagmode:
-                                if cmpl[l] > 1. or cmpl[l] < 0.:
+                                if cmpl[q] > 1. or cmpl[q] < 0.:
                                     raise Exception('')
 
                         fdis[l] = array([0])
                         if numbelem[l] > 0:
-                            fdis[l] = array([float(indxelemfittasscfals[l].size) / numbelem[l]])
+                            fdis[l] = array([float(indxelemfittasscfals[q][l].size) / numbelem[l]])
                             if gdat.diagmode:
                                 if fdis[l] > 1. or fdis[l] < 0.:
                                     raise Exception('')
 
-                        
                     setattr(gdatobjt, strg + 'indxelemrefrasscmiss', indxelemrefrasscmiss)
                     setattr(gdatobjt, strg + 'indxelemrefrasschits', indxelemrefrasschits)
                 
@@ -7482,51 +7539,42 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 for q in gdat.indxrefr:
                     setattr(gdatobjt, strg + 'fdispop%d' % q, fdis[q])
                 
-                for strgfeat in liststrgfeatodimtotl:
-                    setattr(gdatobjt, strg + strgfeat + 'assc', featrefrassc[strgfeat])
-
-                # completeness
-                for strgfeat in liststrgfeatodimtotl:
-                    refrfeat = getattr(gdat, 'refr' + strgfeat)
-                    if refrfeat != None:
-                        refrhistfeat = getattr(gdat, 'refrhist' + strgfeat)
-                        cmplfeat = empty((gdat.numbrefr, gdat.numbbinsplot))
-                        errrcmplfeat = empty((2, gdat.numbrefr, gdat.numbbinsplot))
-                        for q in gdat.indxrefr:
-                            if not strgfeat in liststrgfeatodim[q]:
+                # collect the associated fitting element feature for each reference element
+                featrefrassc = [[[] for l in indxpopl] for q in gdat.indxrefr]
+                for q in gdat.indxrefr:
+                    for l in gdat.fittindxpopl:
+                        featrefrassc[q][l] = dict()
+                        for strgfeat in gdat.listnamefeatrefr[q]:
+                            if strgfeat.endswith('pars') or strgfeat.endswith('nrel') or not strgfeat in liststrgfeat[l]:
                                 continue
-                            indx = where(isfinite(featrefrassc[strgfeat][q]))[0]
-                            bins = getattr(gdat, 'bins' + strgfeat)
-                            histfeatrefrassc = histogram(refrfeat[q][0, indxelemrefrasschits[q]], bins=bins)[0]
+                            featrefrassc[q][l][strgfeat] = zeros(gdat.refrnumbelem[q]) 
                             
-                            if True:
-                                print 'strg'
-                                print strg
-                                print 'strgfeat'
-                                print strgfeat
-                                print 'refrfeat'
-                                print refrfeat
-                                print 'refrhistfeat'
-                                print refrhistfeat
-                                print
-                                print 'q'
-                                print q
-                                print 'indxelemrefrasschits[q]'
-                                print indxelemrefrasschits[q]
-                                print 'histfeatrefrassc'
-                                print histfeatrefrassc
-                                print 'refrfeat[q]'
-                                print refrfeat[q]
-                                print 'refrfeat[q][0, :]'
-                                print refrfeat[q][0, :]
-                                print 'refrfeat[q][0, indxelemrefrasschits[q]]'
-                                print refrfeat[q][0, indxelemrefrasschits[q]]
+                            print 'strgfeat'
+                            print strgfeat
+                            print 'dicttemp[strgfeat]'
+                            print dicttemp[strgfeat]
 
+                            featrefrassc[q][l][strgfeat][indxelemrefrasschits[q][l]] = dicttemp[strgfeat][l][indxelemfittasschits[q][l]]
+                            setattr(gdatobjt, strg + strgfeat + 'asscref%dpop%d' % (q, l), featrefrassc[q][l][strgfeat])
+                
+                # completeness
+                cmplfeat = empty((gdat.numbrefr, gdat.fittnumbpopl, gdat.numbbinsplot))
+                errrcmplfeat = empty((2, gdat.numbrefr, gdat.fittnumbpopl, gdat.numbbinsplot))
+                for q in gdat.indxrefr:
+                    for l in gdat.fittindxpopl:
+                        for strgfeat in liststrgfeatodim[l]:
+                            refrfeat = getattr(gdat, 'refr' + strgfeat)
+                            if refrfeat == None or not strgfeat in liststrgfeatodim[q]:
+                                continue
+                            refrhistfeat = getattr(gdat, 'refrhist' + strgfeat)
+                            indx = where(isfinite(featrefrassc[q][l][strgfeat]))[0]
+                            bins = getattr(gdat, 'bins' + strgfeat)
+                            histfeatrefrassc = histogram(refrfeat[q][0, indxelemrefrasschits[q][l]], bins=bins)[0]
                             if refrhistfeat != None:
-                                cmplfeat[q, :] = histfeatrefrassc / refrhistfeat[q, :]
-                                errrcmplfeat[:, q, :] = (cmplfeat[q, :] / sqrt(maximum(ones(gdat.numbbinsplot), refrhistfeat[q, :])))[None, :]
+                                cmplfeat[q, l, :] = histfeatrefrassc / refrhistfeat[q, :]
+                                errrcmplfeat[:, q, l, :] = (cmplfeat[q, l, :] / sqrt(maximum(ones(gdat.numbbinsplot), refrhistfeat[q, :])))[None, :]
                                 if gdat.diagmode:
-                                    if where((cmplfeat[q, :] > 1.) | (cmplfeat[q, :] < 0.))[0].size > 0:
+                                    if where((cmplfeat[q, l, :] > 1.) | (cmplfeat[q, l, :] < 0.))[0].size > 0:
                                         raise Exception('')
 
                     else:
@@ -7536,24 +7584,26 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     setattr(gdatobjt, strg + 'errrcmpl' + strgfeat, errrcmplfeat)
                    
                 # false discovery rate
-                for strgfeat in liststrgfeatodimtotl:
-                    fdisfeat = empty((gdat.fittnumbpopl, gdat.numbbinsplot))
-                    errrfdisfeat = empty((2, gdat.fittnumbpopl, gdat.numbbinsplot))
+                fdisfeat = empty((gdat.numbrefr, gdat.fittnumbpopl, gdat.numbbinsplot))
+                errrfdisfeat = empty((2, gdat.numbrefr, gdat.fittnumbpopl, gdat.numbbinsplot))
+                for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
-                        if not strgfeat in liststrgfeatodim[l]:
-                            continue
-                        indx = where(isfinite(featrefrassc[strgfeat][l]))[0]
-                        bins = getattr(gdat, 'bins' + strgfeat)
-                        histfeatfals = histogram(dicttemp[strgfeat][l][indxelemfittasscfals[l]], bins=bins)[0]
-                        fitthistfeat = getattr(gdatobjt, strg + 'hist' + strgfeat)
-                        fdisfeat[l, :] = histfeatfals / fitthistfeat[l, :]
-                        errrfdisfeat[:, l, :] = (fdisfeat[l, :] / sqrt(maximum(ones(gdat.numbbinsplot), fitthistfeat[l, :])))[None, :]
-                        if gdat.diagmode:
-                            if where((fdisfeat[l, :] > 1.) | (fdisfeat[l, :] < 0.))[0].size > 0:
-                                raise Exception('')
-
-                    setattr(gdatobjt, strg + 'fdis' + strgfeat, fdisfeat)
-                    setattr(gdatobjt, strg + 'errrfdis' + strgfeat, errrfdisfeat)
+                        for strgfeat in liststrgfeatodim[l]:
+                            print 'gdat.listnamefeatrefronly'
+                            print gdat.listnamefeatrefronly
+                            if not strgfeat in liststrgfeatodim[l] or strgfeat in gdat.listnamefeatrefronly[q]:
+                                continue
+                            indx = where(isfinite(featrefrassc[q][l][strgfeat]))[0]
+                            bins = getattr(gdat, 'bins' + strgfeat)
+                            histfeatfals = histogram(dicttemp[strgfeat][l][indxelemfittasscfals[q][l]], bins=bins)[0]
+                            fitthistfeat = getattr(gdatobjt, strg + 'hist' + strgfeat)
+                            fdisfeat[q, l, :] = histfeatfals / fitthistfeat[l, :]
+                            errrfdisfeat[:, q, l, :] = (fdisfeat[q, l, :] / sqrt(maximum(ones(gdat.numbbinsplot), fitthistfeat[l, :])))[None, :]
+                            if gdat.diagmode:
+                                if where((fdisfeat[q, l, :] > 1.) | (fdisfeat[q, l, :] < 0.))[0].size > 0:
+                                    raise Exception('')
+                        setattr(gdatobjt, strg + 'fdis' + strgfeat, fdisfeat)
+                        setattr(gdatobjt, strg + 'errrfdis' + strgfeat, errrfdisfeat)
 
             # temp
             if strgmodl == 'true' and gdat.verbtype > 0:
