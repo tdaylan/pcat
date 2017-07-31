@@ -3073,6 +3073,9 @@ def setpinit(gdat, boolinitsetp=False):
     # construct the fitting model
     setp_fixp(gdat)
     
+    print 'gdat.fittindxpopl'
+    print gdat.fittindxpopl
+
     for l in gdat.fittindxpopl:
         setattr(gdat, 'minmfdispop%d' % l, 0.)
         setattr(gdat, 'maxmfdispop%d' % l, 1.)
@@ -7457,10 +7460,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 if strgmodl != 'true': 
                     if gdat.priofactdoff != 0. or (gdat.fittnamefixp[gdat.fittindxfixpmeanelem] == 'logt').any():
                         # temp
-                        indx = where(sum(gdat.truehistmcut, axis=0) > 0)[0]
+                        indx = where(sum(gdat.refrhistmcut, axis=0) > 0)[0]
                         histmcutcorr = empty((numbpopl, gdat.numbbinsplot))
                         for l in indxpopl:
-                            histmcutcorr[l, indx] = gdat.truehistmcutpars[l, indx] * dictelem[l]['histmcut'][indx] / gdat.truehistmcut[l, indx]
+                            histmcutcorr[l, indx] = gdat.refrhistmcutpars[l, indx] * dictelem[l]['histmcut'][indx] / gdat.refrhistmcut[l, indx]
                         setattr(gdatobjt, strg + 'histmcutcorr', histmcutcorr)
             
                 ## total truncated mass of the subhalo as a cross check
@@ -7599,17 +7602,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 # collect the associated fitting element feature for each reference element
                 featrefrassc = [[[] for l in indxpopl] for q in gdat.indxrefr]
                 for q in gdat.indxrefr:
-                    print 'q'
-                    print q
                     for l in gdat.fittindxpopl:
-                        print 'l'
-                        print l
                         featrefrassc[q][l] = dict()
-                        print 'gdat.listnamefeatrefr'
-                        print gdat.listnamefeatrefr
                         for strgfeat in gdat.listnamefeatrefr[q]:
-                            print 'strgfeat'
-                            print strgfeat
                             if strgfeat.endswith('pars') or strgfeat.endswith('nrel') or not strgfeat in liststrgfeat[l]:
                                 continue
                             if isinstance(dictelem[l][strgfeat], ndarray) and dictelem[l][strgfeat].ndim > 1:
@@ -7617,40 +7612,9 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             featrefrassc[q][l][strgfeat] = zeros(gdat.refrnumbelem[q]) 
                             
                             if len(indxelemrefrasschits[q][l]) > 0 and len(dictelem[l][strgfeat]) > 0:
-                                
-                                if True:
-                                    print 'indxelemfittasschits[q][l]'
-                                    print indxelemfittasschits[q][l]
-                                    print 'indxelemrefrasschits[q][l]'
-                                    print indxelemrefrasschits[q][l]
-                                    print 'gdat.refrnumbelem'
-                                    print gdat.refrnumbelem
-                                    print 'featrefrassc[q][l][strgfeat]'
-                                    print featrefrassc[q][l][strgfeat]
-                                    print 'dictelem[l][strgfeat]'
-                                    print dictelem[l][strgfeat]
-                                    print 'strgfeat' 
-                                    print strgfeat
-                                 
                                 featrefrassc[q][l][strgfeat][indxelemrefrasschits[q][l]] = dictelem[l][strgfeat][indxelemfittasschits[q][l]]
-                            print 'strgfeat'
-                            print strgfeat
-                            print 
-                            print 
-                            print 
-                            print 
                             setattr(gdatobjt, strg + strgfeat + 'asscref%dpop%d' % (q, l), featrefrassc[q][l][strgfeat])
-                            if strg == 'this':
-                                name = strg + strgfeat + 'asscref%dpop%d' % (q, l)
-                                print 'name'
-                                print name
-                                print 'getattr(gdatmodi, name)'
-                                print getattr(gdatmodi, name)
                 
-                if strg == 'this':
-                    print gdatmodi.thislgalasscref2pop0
-                    raise Exception('')
-
                 # completeness
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
@@ -7691,8 +7655,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 if gdat.diagmode:
                                     if where((fdisfeat > 1.) | (fdisfeat < 0.))[0].size > 0:
                                         raise Exception('')
-                            print 'strgfeat'
-                            print strgfeat
                             setattr(gdatobjt, strg + 'fdis' + strgfeat + 'ref%dpop%d' % (q, l), fdisfeat)
                             setattr(gdatobjt, strg + 'errrfdis' + strgfeat + 'ref%dpop%d' % (q, l), errrfdisfeat)
 
