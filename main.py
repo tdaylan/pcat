@@ -825,10 +825,9 @@ def init( \
                 retr_chandata(gdat)
             gdat.listcolrrefr = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
     
-    gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
-    gdat.listnamefeatrefronly = [[] for q in gdat.indxrefr]
-    
-    retr_indxsamp(gdat, strgmodl='true')
+    retr_indxsamp(gdat, strgmodl='true', init=True)
+    if gdat.datatype == 'mock':
+        retr_indxsamp(gdat, strgmodl='true')
     
     ### normalization
     if gdat.exprtype == 'ferm':
@@ -1110,10 +1109,13 @@ def init( \
             try:
                 limt = getattr(gdat, strglimt + namevarb)
             except:
-                if strglimt == 'minm':
-                    limt = minimum(getattr(gdat, 'fittminm' + namevarb), getattr(gdat, 'trueminm' + namevarb))
+                if gdat.datatype == 'mock':
+                    if strglimt == 'minm':
+                        limt = minimum(getattr(gdat, 'fittminm' + namevarb), getattr(gdat, 'trueminm' + namevarb))
+                    else:
+                        limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'truemaxm' + namevarb))
                 else:
-                    limt = maximum(getattr(gdat, 'fittmaxm' + namevarb), getattr(gdat, 'truemaxm' + namevarb))
+                    limt = getattr(gdat, 'fitt' + strglimt + namevarb)
                 setattr(gdat, strglimt + namevarb, limt)
 
     if gdat.elemtype == 'lens':
@@ -1360,16 +1362,16 @@ def init( \
             for l in gdat.fittindxpopl:
                 gdat.listnamevarbscal += ['fdispop%d' % l]
     
-    gdat.truenumbpopl = gdat.truenumbelem.size
-    gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
+    # temp -- should be removed
+    #gdat.truenumbpopl = gdat.truenumbelem.size
+    #gdat.trueindxpopl = arange(gdat.truenumbpopl, dtype=int)
     
-    ## unit sample vector
-    gdat.truesamp = zeros(gdat.truenumbpara)
-    gdat.truefixp = zeros(gdat.truenumbfixp) + nan
-    if gdat.truenumbtrap > 0:
-        gdat.truefixp[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
-
     if gdat.datatype == 'mock':
+        ## unit sample vector
+        gdat.truesamp = zeros(gdat.truenumbpara)
+        gdat.truefixp = zeros(gdat.truenumbfixp) + nan
+        if gdat.truenumbtrap > 0:
+            gdat.truefixp[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
         
         if gdat.truenumbtrap > 0:
             gdat.trueindxelemfull = []
