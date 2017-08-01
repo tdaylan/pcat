@@ -2572,7 +2572,7 @@ def setpprem(gdat):
     gdat.factcurvplot = 1.
     gdat.factexpcplot = 1.
         
-    gdat.ordrexpa = 5
+    gdat.ordrexpa = 10
     gdat.numbexpasing = gdat.ordrexpa**2
     gdat.numbexpa = gdat.numbexpasing * 4
     gdat.indxexpa = arange(gdat.numbexpa)

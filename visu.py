@@ -338,6 +338,8 @@ def plot_samp(gdat, gdatmodi, strg):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 for c in indxback:
+                    if backtype[c].startswith('mpol'):
+                        continue
                     if not unifback[c]:
                         plot_genemaps(gdat, gdatmodi, strg, 'cntpback', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m, indxmaps=c)
                 if numbback > 1:
