@@ -4360,6 +4360,16 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if backtype[c] == 'data':
                 sbrtbacknormtemp = copy(gdat.sbrtdata)
                 sbrtbacknormtemp[where(sbrtbacknormtemp == 0.)] = 1e-100
+            elif isinstance(backtype[c], float):
+                if gdat.pixltype == 'heal':
+                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c]
+                if gdat.pixltype == 'cart':
+                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + backtype[c]
+            elif isinstance(backtype[c], ndarray) and backtype[c].ndim == 1:
+                if gdat.pixltype == 'heal':
+                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c][:, None, None]
+                if gdat.pixltype == 'cart':
+                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + backtype[c][:, None, None]
             elif backtype[c].startswith('mpol'):
                 indxexpa = int(backtype[c][4:])
                 indxexpaxdat = (indxexpa / 4) % gdat.ordrexpa
@@ -4395,16 +4405,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     for m in gdat.indxevttfull:
                         sbrtbacknormtemptemp[i, :, m] = sbrtbacknormtemp.flatten()
                 sbrtbacknormtemp = sbrtbacknormtemptemp
-            elif isinstance(backtype[c], float):
-                if gdat.pixltype == 'heal':
-                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c]
-                if gdat.pixltype == 'cart':
-                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + backtype[c]
-            elif isinstance(backtype[c], ndarray) and backtype[c].ndim == 1:
-                if gdat.pixltype == 'heal':
-                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c][:, None, None]
-                if gdat.pixltype == 'cart':
-                    sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull)) + backtype[c][:, None, None]
             else:
                 path = gdat.pathinpt + backtype[c]
                 sbrtbacknormtemp = pf.getdata(path)
@@ -4441,7 +4441,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
                         unifback[c] = False
 
-            if amin(sbrtbacknorm[c, ...]) < 0. and not backtype[c].startswith('mpol'):
+            if amin(sbrtbacknorm[c, ...]) < 0. and isinstance(backtype[c], str) and not backtype[c].startswith('mpol'):
                 booltemp = False
                 raise Exception('Background templates must be positive-definite everywhere.')
         
@@ -4449,7 +4449,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         for c in indxback:
             if amin(sbrtbacknorm[c, ...]) > 0. or backtype[c] == 'data':
                 boolzero = False
-        if boolzero and not backtype[0].startswith('mpol'):
+        if boolzero and isinstance(backtype[0], str) and not backtype[0].startswith('mpol'):
             raise Exception('At least one background template must be positive everywhere.')
        
         if 'data' in backtype and len(backtype) != 1:
@@ -6714,7 +6714,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             sbrtmodl += sbrtpnts[indxcube]
         stopchro(gdat, gdatmodi, strg, 'sbrtmodl')
         
-        if backtype[0].startswith('mpol'):
+        if isinstance(backtype[0], str) and backtype[0].startswith('mpol'):
             sbrtmodl[where(sbrtmodl < 1e-50)] = 1e-50
 
         ### count map
