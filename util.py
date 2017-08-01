@@ -2981,11 +2981,11 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.maxmspecplot = gdat.maxmspec
     
     for q in gdat.indxrefr:
-        setattr(gdat, 'minmcmplpop%d' % q, 0.)
-        setattr(gdat, 'maxmcmplpop%d' % q, 1.)
-        setattr(gdat, 'corrcmplpop%d' % q, 1.)
-        setattr(gdat, 'factcmplpop%dplot' % q, 1.)
-        setattr(gdat, 'scalcmplpop%d' % q, 'self')
+        setattr(gdat, 'minmcmplref%dpop%d' % (q, l), 0.)
+        setattr(gdat, 'maxmcmplref%dpop%d' % (q, l), 1.)
+        setattr(gdat, 'corrcmplref%dpop%d' % (q, l), 1.)
+        setattr(gdat, 'factcmplref%dpop%dplot' % (q, l), 1.)
+        setattr(gdat, 'scalcmplref%dpop%d' % (q, l), 'self')
 
     gdat.minmdeltllik = 1.
     gdat.maxmdeltllik = 1e3
@@ -3073,18 +3073,13 @@ def setpinit(gdat, boolinitsetp=False):
     # construct the fitting model
     setp_fixp(gdat)
     
-    print 'gdat.fittindxpopl'
-    print gdat.fittindxpopl
-
     for l in gdat.fittindxpopl:
-        setattr(gdat, 'minmfdispop%d' % l, 0.)
-        setattr(gdat, 'maxmfdispop%d' % l, 1.)
-        setattr(gdat, 'corrfdispop%d' % l, 1.)
-        setattr(gdat, 'factfdispop%dplot' % l, 1.)
-        setattr(gdat, 'scalfdispop%d' % l, 'self')
-    
-    for l in gdat.fittindxpopl:
-        setattr(gdat, 'lablfdispop%d' % l, '$f_{%d}$' % l)
+        setattr(gdat, 'minmfdisref%dpop%d' % (q, l), 0.)
+        setattr(gdat, 'maxmfdisref%dpop%d' % (q, l), 1.)
+        setattr(gdat, 'corrfdisref%dpop%d' % (q, l), 1.)
+        setattr(gdat, 'factfdisref%dpop%dplot' % (q, l), 1.)
+        setattr(gdat, 'scalfdisref%dpop%d' % (q, l), 'self')
+        setattr(gdat, 'lablfdisref%dpop%d' % (q, l), '$f_{%d%d}$' % (q, l))
 
     if gdat.datatype == 'mock':
         setp_fixp(gdat, strgmodl='true')
