@@ -729,6 +729,13 @@ def init( \
     
     gdat.calcllik = True
     
+    setpprem(gdat)
+
+    gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
+    gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
+    gdat.meanlgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
+    gdat.meanbgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
+    
     ### PSF model
     #### angular profile
     if gdat.exprtype == 'ferm':
@@ -749,7 +756,10 @@ def init( \
     #### template
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'ferm':
-            backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+            if gdat.anlytype == 'expa':
+                backtype = ['mpol%04d' % k for k in gdat.indxexpa]
+            else:
+                backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
         if gdat.exprtype == 'chan':
             gdat.truescalbacpbac1 = 'gaus'
             if gdat.anlytype.startswith('home'):
@@ -773,7 +783,7 @@ def init( \
     if gdat.exprtype == 'chan':
         specback = [False, True]
     else:
-        specback = [False, False]
+        specback = [False for k in range(len(backtype))]
     setp_namevarbvalu(gdat, 'specback', specback)
     
     #### label
@@ -808,8 +818,6 @@ def init( \
         nameback.append('part')
     setp_namevarbvalu(gdat, 'nameback', nameback)
     
-    setpprem(gdat)
-
     # reference elements
     gdat.numbrefr = 0
     gdat.indxrefr = arange(0)
@@ -2754,11 +2762,11 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
                 frac = amin(gdatmodi.thissbrtpnts) / mean(gdatmodi.thissbrtpnts)
-                if frac > 1e-3:
+                if frac < -1e-3:
                     raise Exception('thissbrtpnts went negative by %.3g percent.' % (100. * frac))
 
                 frac = amin(gdatmodi.nextsbrtpnts) / mean(gdatmodi.nextsbrtpnts)
-                if frac > 1e-3:
+                if frac < -1e-3:
                     raise Exception('nextsbrtpnts went negative by %.3g percent.' % (100. * frac))
 
             # check the population index
@@ -2886,7 +2894,8 @@ def work(pathoutpthis, lock, indxprocwork):
         
             stopchro(gdat, gdatmodi, 'next', 'plot')
     
-        if gdat.elemtype == 'lght' and gdat.fittpsfnevaltype != 'none':
+        # temp
+        if False and gdat.elemtype == 'lght' and gdat.fittpsfnevaltype != 'none':
             if gdat.fittpsfntype == 'doubking':
                 if gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[3]]:
                     for k in range(20):

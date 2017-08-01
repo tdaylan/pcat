@@ -2571,7 +2571,12 @@ def setpprem(gdat):
     gdat.scalexpcplot = 'self'
     gdat.factcurvplot = 1.
     gdat.factexpcplot = 1.
-    
+        
+    gdat.ordrexpa = 5
+    gdat.numbexpasing = gdat.ordrexpa**2
+    gdat.numbexpa = gdat.numbexpasing * 4
+    gdat.indxexpa = arange(gdat.numbexpa)
+
     # temp
     if gdat.elemtype == 'lght':
         gdat.listnamefeateval = ['lgal', 'bgal', 'spec']
@@ -3314,10 +3319,6 @@ def setpinit(gdat, boolinitsetp=False):
     # lensing problem setup
     ## number of deflection components to plot
 
-    gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
-    gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
-    gdat.meanlgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
-    gdat.meanbgalcart = (gdat.binsbgalcart[0:-1] + gdat.binsbgalcart[1:]) / 2.
     gdat.binslgalcartmesh, gdat.binsbgalcartmesh = meshgrid(gdat.binslgalcart, gdat.binsbgalcart)
     gdat.meanlgalcartmesh, gdat.meanbgalcartmesh = meshgrid(gdat.meanlgalcart, gdat.meanbgalcart)
     if gdat.pixltype == 'cart':
@@ -4359,6 +4360,41 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if backtype[c] == 'data':
                 sbrtbacknormtemp = copy(gdat.sbrtdata)
                 sbrtbacknormtemp[where(sbrtbacknormtemp == 0.)] = 1e-100
+            elif backtype[c].startswith('mpol'):
+                indxexpa = int(backtype[c][4:])
+                indxexpaxdat = (indxexpa / 4) % gdat.ordrexpa
+                indxexpaydat = (indxexpa / 4) // gdat.ordrexpa
+                if indxexpa < gdat.numbexpasing:
+                    termfrst = sin(2. * pi * indxexpaxdat * gdat.meanlgalcart / gdat.maxmgangdata)
+                    termseco = sin(2. * pi * indxexpaydat * gdat.meanbgalcart / gdat.maxmgangdata)
+                elif indxexpa < 2. * gdat.numbexpasing:
+                    termfrst = sin(2. * pi * indxexpaxdat * gdat.meanlgalcart / gdat.maxmgangdata)
+                    termseco = cos(2. * pi * indxexpaydat * gdat.meanbgalcart / gdat.maxmgangdata)
+                elif indxexpa < 3. * gdat.numbexpasing:
+                    termfrst = cos(2. * pi * indxexpaxdat * gdat.meanlgalcart / gdat.maxmgangdata)
+                    termseco = sin(2. * pi * indxexpaydat * gdat.meanbgalcart / gdat.maxmgangdata)
+                else:
+                    termfrst = cos(2. * pi * indxexpaxdat * gdat.meanlgalcart / gdat.maxmgangdata)
+                    termseco = cos(2. * pi * indxexpaydat * gdat.meanbgalcart / gdat.maxmgangdata)
+                sbrtbacknormtemp = termfrst[None, :] * termseco[:, None]
+                print 'gdat.meanlgalcart'
+                summgene(gdat.meanlgalcart)
+                print 'gdat.meanbgalcart'
+                summgene(gdat.meanbgalcart)
+                print 'termfrst'
+                summgene(termfrst)
+                print 'termseco'
+                summgene(termseco)
+                print 'termfrst[None, :] * termseco[: None]'
+                summgene(termfrst[None, :] * termseco[: None])
+                print 'sbrtbacknormtemp'
+                summgene(sbrtbacknormtemp)
+                print 
+                sbrtbacknormtemptemp = empty((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
+                for i in gdat.indxenerfull:
+                    for m in gdat.indxevttfull:
+                        sbrtbacknormtemptemp[i, :, m] = sbrtbacknormtemp.flatten()
+                sbrtbacknormtemp = sbrtbacknormtemptemp
             elif isinstance(backtype[c], float):
                 if gdat.pixltype == 'heal':
                     sbrtbacknormtemp = zeros((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull)) + backtype[c]
@@ -4405,7 +4441,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     if std(sbrtbacknorm[c, i, :, m]) > 1e-6:
                         unifback[c] = False
 
-            if amin(sbrtbacknorm[c, ...]) < 0.:
+            if amin(sbrtbacknorm[c, ...]) < 0. and not backtype[c].startswith('mpol'):
                 booltemp = False
                 raise Exception('Background templates must be positive-definite everywhere.')
         
@@ -4413,7 +4449,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         for c in indxback:
             if amin(sbrtbacknorm[c, ...]) > 0. or backtype[c] == 'data':
                 boolzero = False
-        if boolzero:
+        if boolzero and not backtype[0].startswith('mpol'):
             raise Exception('At least one background template must be positive everywhere.')
        
         if 'data' in backtype and len(backtype) != 1:
@@ -6677,7 +6713,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0 and backtype[0] != 'data':
             sbrtmodl += sbrtpnts[indxcube]
         stopchro(gdat, gdatmodi, strg, 'sbrtmodl')
-            
+        
+        if backtype[0].startswith('mpol'):
+            sbrtmodl[where(sbrtmodl < 1e-50)] = 1e-50
+
         ### count map
         initchro(gdat, gdatmodi, strg, 'expo')
         cntpmodl = retr_cntp(gdat, sbrtmodl, indxpixlmean=indxpixleval)

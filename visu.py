@@ -39,6 +39,7 @@ def plot_samp(gdat, gdatmodi, strg):
                 indxelemfull = list(getattr(gdatobjt, strg + 'indxelemfull'))
                 indxsampcomp = retr_indxsampcomp(gdat, indxelemfull, strgmodl)
         numbback = getattr(gdat, strgmodl + 'numbback')
+        backtype = getattr(gdat, strgmodl + 'backtype')
         indxback = getattr(gdat, strgmodl + 'indxback')
         convdiff = getattr(gdat, strgmodl + 'convdiff')
         listnamediff = getattr(gdat, strgmodl + 'listnamediff')
@@ -345,7 +346,8 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # temp -- restrict other plots to indxmodlelemcomp
         for specconvunit in gdat.listspecconvunit:
-            plot_sbrt(gdat, gdatmodi, strg, specconvunit)
+            if not backtype[0].startswith('mpol'):
+                plot_sbrt(gdat, gdatmodi, strg, specconvunit)
         
         for i in gdat.indxener:
             for m in gdat.indxevttplot:
