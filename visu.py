@@ -1216,15 +1216,6 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco + 'pop%d' % l)
             imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphmrkr)
         else:
-            print 'l'
-            print l
-            print 'getattr(gdatmodi, this + strgseco)'
-            print getattr(gdatmodi, 'this' + strgseco)
-            print type(getattr(gdatmodi, 'this' + strgseco))
-            print 'strgseco'
-            print strgseco
-            print 'strgfrst'
-            print strgfrst
             try:
                 varbfrst = getattr(gdatmodi, 'this' + strgfrst)[l] * getattr(gdat, 'fact' + strgfrst + 'plot')
                 varbseco = getattr(gdatmodi, 'this' + strgseco)[l] * getattr(gdat, 'fact' + strgseco + 'plot')

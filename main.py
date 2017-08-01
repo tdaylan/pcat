@@ -1726,14 +1726,6 @@ def initarry( \
                 axis.plot(varbvari, varboutp)
                 axis.set_xticklabels(listlablinpt)
                 axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
-                print 'strgvarbvari'
-                print strgvarbvari
-                print 'getattr(gdat, scal + strgvarbvari)'
-                print getattr(gdat, 'scal' + strgvarbvari)
-                print 'strgvarboutp'
-                print strgvarboutp
-                print 'getattr(gdat, scal + strgvarboutp)'
-                print getattr(gdat, 'scal' + strgvarboutp)
                 if getattr(gdat, 'scal' + strgvarbvari) == 'logt':
                     axis.set_xscale('log')
                 if getattr(gdat, 'scal' + strgvarboutp) == 'logt':

@@ -6498,13 +6498,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                
                 # when the only background template is the data-PS residual, correct the PS template for numerical noise
                 if backtype[0] == 'data':
-                    print 'Correcting the PS sbrt...'
-                    print 'sbrtpnts'
-                    summgene(sbrtpnts)
                     sbrtpnts[where(sbrtpnts <= 1e-100)] = 1e-100
-                    print 'sbrtpnts'
-                    summgene(sbrtpnts)
-
                 setattr(gdatobjt, strg + 'sbrtpnts', sbrtpnts)
 
                 if gdat.diagmode:
@@ -6680,7 +6674,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 summgene(sbrtmodl)
                 
         ## add point source emission
-        if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
+        if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0 and backtype[0] != 'data':
             sbrtmodl += sbrtpnts[indxcube]
         stopchro(gdat, gdatmodi, strg, 'sbrtmodl')
             
@@ -6788,7 +6782,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                     psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
                     fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
                     sigm = fwhm / 2.355
-                    psecodimdatapntsprio = exp(-2. * gdat.meanmpolodim[None, :, None] / (1. / sigm[:, None, :]))
+                    psecodimdatapntsprio = exp(-2. * gdat.meanmpolodim[None, :, None] / (0.1 / sigm[:, None, :]))
                     lpridiff = 0.
                     for i in gdat.indxener:
                         for m in gdat.indxevtt:
