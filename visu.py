@@ -338,7 +338,7 @@ def plot_samp(gdat, gdatmodi, strg):
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 for c in indxback:
-                    if backtype[c].startswith('mpol'):
+                    if isinstance(backtype[c], str) and backtype[c].startswith('mpol'):
                         continue
                     if not unifback[c]:
                         plot_genemaps(gdat, gdatmodi, strg, 'cntpback', strgcbar='cntpdata', thisindxener=i, thisindxevtt=m, indxmaps=c)
@@ -348,7 +348,7 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # temp -- restrict other plots to indxmodlelemcomp
         for specconvunit in gdat.listspecconvunit:
-            if not backtype[0].startswith('mpol'):
+            if isinstance(backtype[0], str) and not backtype[0].startswith('mpol'):
                 plot_sbrt(gdat, gdatmodi, strg, specconvunit)
         
         for i in gdat.indxener:
