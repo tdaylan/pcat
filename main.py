@@ -1538,9 +1538,6 @@ def init( \
     gdatmodifudi.thischro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
     
-    print 'gdat.fittindxpopl'
-    print gdat.fittindxpopl
-
     if gdat.fittnumbtrap > 0:
         gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem] = 1
         gdatmodifudi.thisindxelemfull = [[] for l in gdat.fittindxpopl]
