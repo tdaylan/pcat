@@ -838,7 +838,11 @@ def init( \
     retr_indxsamp(gdat, strgmodl='true', init=True)
     if gdat.datatype == 'mock':
         retr_indxsamp(gdat, strgmodl='true')
-        gdat.listnamefeatrefr = gdat.trueliststrgfeatodim
+        gdat.listnamefeatrefr = [[] for l in gdat.trueindxpopl]
+        for l in gdat.trueindxpopl:
+            for strgfeat in gdat.trueliststrgfeat[l]:
+                if not strgfeat.endswith('pars') and not strgfeat.endswith('nrel'):
+                    gdat.listnamefeatrefr[l].append(strgfeat)
     
     ### normalization
     if gdat.exprtype == 'ferm':
@@ -2837,7 +2841,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 
                 booltemp = True
                 if os.path.isfile(path):
-                    thisfilecheck = h5py.File(path, 'r')
+                    thisfilechec = h5py.File(path, 'r')
                     if thisfilechec['lliktotl'] > gdatmodi.thislliktotl:
                         booltemp = False
                     thisfilechec.close()
