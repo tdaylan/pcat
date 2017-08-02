@@ -450,6 +450,42 @@ def init( \
         if gdat.elemtype == 'clus':
             gdat.listnamefeatsele = ['nobj']
     
+    ### background
+    #### template
+    if gdat.elemtype == 'lght':
+        if gdat.exprtype == 'ferm':
+            if gdat.anlytype == 'expa':
+                backtype = ['mpol%04d' % k for k in gdat.indxexpa]
+            else:
+                backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
+        if gdat.exprtype == 'chan':
+            gdat.truescalbacpbac1 = 'gaus'
+            if gdat.anlytype.startswith('home'):
+                #backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
+                backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 15.98
+                gdat.truemeanbacpbac1 = backtypetemp[2]
+            if gdat.anlytype.startswith('extr'):
+                backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
+                gdat.truemeanbacpbac1 = 1.
+                gdat.initbacpbac1 = gdat.truemeanbacpbac1
+            gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
+            backtype = [1., backtypetemp]
+
+    if gdat.elemtype == 'lens':
+        backtype = [1.]
+    if gdat.elemtype == 'clus':
+        backtype = [1.]
+    setp_namevarbvalu(gdat, 'backtype', backtype)
+    
+    #### boolean flag background
+    if gdat.exprtype == 'chan':
+        specback = [False, True]
+    else:
+        specback = [False for k in range(len(backtype))]
+    setp_namevarbvalu(gdat, 'specback', specback)
+    
+    setpprem(gdat)
+    
     if gdat.proplenp == None:
         if gdat.elemtype == 'lens':
             gdat.proplenp = True
@@ -551,9 +587,6 @@ def init( \
             # temp
             gdat.binsenerfull = array([500., 750, 1000.])
     
-    if gdat.enerdiff:
-        gdat.indxenerfull = arange(gdat.binsenerfull.size - 1)
-   
     # energy band string
     if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
@@ -562,7 +595,7 @@ def init( \
             gdat.strgenerfull = ['F606W', 'F814W']
         elif gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
             gdat.strgenerfull = []
-            for i in gdat.indxenerfull:
+            for i in range(len(gdat.binsenerfull) - 1):
                 gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
 
     gdat.indxenerfull = arange(len(gdat.strgenerfull) - 1)
@@ -651,7 +684,6 @@ def init( \
                     numbbins = gdat.numbenerplot
                 retr_axis(gdat, 'ener' + strg, gdat.minmener, gdat.maxmener, numbbins)
 
-            gdat.indxenerfull = gdat.binsenerfull.size - 1
     else:
         gdat.numbenerfull = 1
     if gdat.numbener > 1:
@@ -705,10 +737,12 @@ def init( \
     if gdat.elemtype == 'clus':
         numbelem = array([100])
     setp_namevarbvalu(gdat, 'numbelem', numbelem)
-    gdat.truenumbpopl = gdat.truenumbelem.size
-    gdat.trueindxpopl = arange(gdat.truenumbpopl)
     
-    setp_namevarbvalu(gdat, 'minmnumbelem', zeros(gdat.truenumbpopl, dtype=int) + 1)
+    if gdat.datatype == 'mock':
+        minmnumbelem = zeros(gdat.truenumbpopl, dtype=int) + 1
+    else:
+        minmnumbelem = zeros(gdat.fittnumbpopl, dtype=int) + 1
+    setp_namevarbvalu(gdat, 'minmnumbelem', minmnumbelem)
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'chan':
             maxmnumbelem = array([200])
@@ -718,19 +752,17 @@ def init( \
         maxmnumbelem = array([300])
     if gdat.elemtype == 'clus':
         maxmnumbelem = array([100])
-    setp_namevarbvalu(gdat, 'maxmnumbelem', zeros(gdat.truenumbpopl, dtype=int) + maxmnumbelem)
+    setp_namevarbvalu(gdat, 'maxmnumbelem', maxmnumbelem)
     
-    for l in gdat.trueindxpopl:
-        setattr(gdat, 'trueminmnumbelempop%d' % l, gdat.trueminmnumbelem[l])
-        setattr(gdat, 'truemaxmnumbelempop%d' % l, gdat.truemaxmnumbelem[l])
-        
     ### element parameter distributions
-    setp_namevarbvalu(gdat, 'spectype', ['powr' for l in gdat.trueindxpopl])
+    if gdat.datatype == 'mock':
+        spectype = ['powr' for l in gdat.trueindxpopl]
+    else:
+        spectype = ['powr' for l in gdat.fittindxpopl]
+    setp_namevarbvalu(gdat, 'spectype', spectype)
     
     gdat.calcllik = True
     
-    setpprem(gdat)
-
     gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
     gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
     gdat.meanlgalcart = (gdat.binslgalcart[0:-1] + gdat.binslgalcart[1:]) / 2.
@@ -751,40 +783,6 @@ def init( \
     
     psfntype = gdat.psfntypeexpr
     setp_namevarbvalu(gdat, 'psfntype', psfntype)
-    
-    ### background
-    #### template
-    if gdat.elemtype == 'lght':
-        if gdat.exprtype == 'ferm':
-            if gdat.anlytype == 'expa':
-                backtype = ['mpol%04d' % k for k in gdat.indxexpa]
-            else:
-                backtype = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-        if gdat.exprtype == 'chan':
-            gdat.truescalbacpbac1 = 'gaus'
-            if gdat.anlytype.startswith('home'):
-                #backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
-                backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 15.98
-                gdat.truemeanbacpbac1 = backtypetemp[2]
-            if gdat.anlytype.startswith('extr'):
-                backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
-                gdat.truemeanbacpbac1 = 1.
-                gdat.initbacpbac1 = gdat.truemeanbacpbac1
-            gdat.truestdvbacpbac1 = 1e-8 * gdat.truemeanbacpbac1
-            backtype = [1., backtypetemp]
-
-    if gdat.elemtype == 'lens':
-        backtype = [1.]
-    if gdat.elemtype == 'clus':
-        backtype = [1.]
-    setp_namevarbvalu(gdat, 'backtype', backtype)
-    
-    #### boolean flag background
-    if gdat.exprtype == 'chan':
-        specback = [False, True]
-    else:
-        specback = [False for k in range(len(backtype))]
-    setp_namevarbvalu(gdat, 'specback', specback)
     
     #### label
     lablback = [r'$\mathcal{I}$']
@@ -835,12 +833,13 @@ def init( \
                 retr_chandata(gdat)
             gdat.listcolrrefr = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
     
-    retr_indxsamp(gdat, strgmodl='true', init=True)
+    gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
+    gdat.listnamefeatrefrodim = [[] for q in gdat.indxrefr]
     if gdat.datatype == 'mock':
+        retr_indxsamp(gdat, strgmodl='true', init=True)
         retr_indxsamp(gdat, strgmodl='true')
-        gdat.listnamefeatrefr = [[] for l in gdat.trueindxpopl]
         for l in gdat.trueindxpopl:
-            for strgfeat in gdat.trueliststrgfeat[l]:
+            for strgfeat in gdat.trueliststrgfeatodim[l]:
                 if not strgfeat.endswith('pars') and not strgfeat.endswith('nrel'):
                     gdat.listnamefeatrefr[l].append(strgfeat)
     

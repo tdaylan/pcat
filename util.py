@@ -1184,14 +1184,14 @@ def retr_chandata(gdat):
 
 def retr_fermdata(gdat):
     
-    gdat.listnamerefr += ['ac15']
-    gdat.numbrefr += 1
+    gdat.listnamerefr += ['ac15', 'ma05']
+    gdat.numbrefr += 2
+    gdat.indxrefr = arange(gdat.numbrefr)
     
-    gdat.legdrefr = ['Acero+2015']
+    gdat.legdrefr = ['Acero+2015', 'Manchester+2005']
 
     setattr(gdat, 'lablcurvac15', '%s_{3FGL}' % gdat.lablcurv)
     setattr(gdat, 'lablexpcac15', 'E_{c,3FGL}')
-    gdat.indxrefr = arange(gdat.numbrefr)
 
     gdat.minmcurv = -1.
     gdat.maxmcurv = 1.
@@ -1202,7 +1202,8 @@ def retr_fermdata(gdat):
         setattr(gdat, 'maxmcurv' + name, 1.)
         setattr(gdat, 'minmexpc' + name, 0.1)
         setattr(gdat, 'maxmexpc' + name, 10.)
-    
+   
+    # Acero+2015
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
     fgl3 = pf.getdata(path)
    
@@ -1212,15 +1213,10 @@ def retr_fermdata(gdat):
     
     gdat.truenumbelemfull = gdat.refrlgal[0].size
 
-    for q in gdat.indxrefr:
-        gdat.refrlgal[q] = tile(gdat.refrlgal[q], (3, 1)) 
-        gdat.refrbgal[q] = tile(gdat.refrbgal[q], (3, 1)) 
-    
     gdat.refrspec = [empty((3, gdat.numbener, gdat.truenumbelemfull))]
     gdat.refrspec[0][0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
                                                                                             fgl3['Flux10000_100000']))[gdat.indxenerincl, :] / gdat.deltener[:, None]
     
-
     fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], \
                                                         fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.deltener[:, None, None] 
     gdat.refrspec[0][1, :, :] = gdat.refrspec[0][0, :, :] + fgl3specstdvtemp[:, :, 0]
@@ -1260,6 +1256,47 @@ def retr_fermdata(gdat):
     #gdat.refrexpc = gdat.refrexpc[:, indxtimevari]
     #gdat.refrspec[0] = gdat.refrspec[0][:, :, indxtimevari]
 
+    # Manchester+2005
+    path = gdat.pathdata + 'inpt/Manchester2005.fits'
+    data = pf.getdata(path)
+   
+    gdat.refrlgal.append(deg2rad(fgl3['glon']))
+    gdat.refrlgal[1] = ((gdat.refrlgal[1] - pi) % (2. * pi)) - pi
+    gdat.refrbgal.append(deg2rad(fgl3['glat']))
+   
+    gdat.refrper0 = [[] for q in gdat.indxrefr]
+    gdat.refrper1 = [[] for q in gdat.indxrefr]
+    gdat.refrflux0400 = [[] for q in gdat.indxrefr]
+    gdat.refrper0[1] = data['P0']
+    gdat.refrper1[1] = data['P1']
+    gdat.refrflux0400[1] = data['S400']
+    #gdat.refrdism = [data['DM']]
+    #gdat.refrdlos = [data['Dist']]
+    
+    setattr(gdat, 'lablper0', 'P_0')
+    setattr(gdat, 'minmper0', 1e-4)
+    setattr(gdat, 'maxmper0', 1e1)
+    setattr(gdat, 'factper0plot', 1.)
+    setattr(gdat, 'scalper0plot', 'logt')
+    
+    setattr(gdat, 'lablper1', 'P_1')
+    setattr(gdat, 'minmper1', 1e-20)
+    setattr(gdat, 'maxmper1', 1e-10)
+    setattr(gdat, 'factper1plot', 1.)
+    setattr(gdat, 'scalper1plot', 'logt')
+    
+    setattr(gdat, 'lablflux0400', 'S_{400}')
+    setattr(gdat, 'minmflux0400', 1e-10)
+    setattr(gdat, 'maxmflux0400', 1e10)
+    setattr(gdat, 'factflux0400plot', 1.)
+    setattr(gdat, 'scalflux0400plot', 'logt')
+    
+    for name in ['per0', 'per1', 'flux0400']:
+        setattr(gdat, 'refr' + name, [tile(getattr(gdat, 'refr' + name)[0], (3, 1))])
+    for q in gdat.indxrefr:
+        gdat.refrlgal[q] = tile(gdat.refrlgal[q], (3, 1)) 
+        gdat.refrbgal[q] = tile(gdat.refrbgal[q], (3, 1)) 
+    
 
 ### find the list of pairs for splits and merges
 def retr_listpair(gdat, lgal, bgal):
@@ -2565,6 +2602,9 @@ def retr_negalogt(varb):
 
 def setpprem(gdat):
 
+    # set up the indices of the fitting model
+    retr_indxsamp(gdat, init=True)
+    
     gdat.lablcurv = r'\kappa'
     gdat.lablexpc = r'E_{c}'
     
@@ -2635,9 +2675,9 @@ def setpprem(gdat):
             gdat.numbsidecart = 100
             gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
         
-    gdat.indxenerfull = arange(gdat.numbenerfull)
-    gdat.indxevttfull = arange(gdat.numbevttfull)
-    
+    print 'gdat.indxenerfull'
+    print gdat.indxenerfull
+
     # pixelization
     if gdat.pixltype == 'cart':
         gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
@@ -2665,12 +2705,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'clus':
         gdat.lablelemextn = r'\rm{cls}'
     
-    # set up the indices of the fitting model
-    retr_indxsamp(gdat, init=True)
-    
     gdat.listnamefeatrefronly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
-    if gdat.datatype == 'inpt':
-        gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
     
     # set up the indices of the fitting model
     retr_indxsamp(gdat)
@@ -3106,6 +3141,15 @@ def setpinit(gdat, boolinitsetp=False):
         for k, name in enumerate(namefixp):
             setattr(gdat, 'labl' + namefixp[k] + 'totl', lablfixptotl[k])
             setattr(gdat, 'scal' + namefixp[k], scalfixp[k])
+    
+    if gdat.elemtype == 'lght' and gdat.exprtype == 'ferm' and gdat.maxmgangdata == 20. / gdat.anglfact:
+        path = gdat.pathinpt + 'sbrt0018.png'
+        gdat.sbrt0018 = sp.ndimage.imread(path, flatten=True)
+        gdat.sbrt0018 -= amin(gdat.sbrt0018)
+        gdat.sbrt0018 /= amax(gdat.sbrt0018)
+        binslgaltemp = linspace(-gdat.maxmgangdata, gdat.maxmgangdata, gdat.sbrt0018.shape[1])
+        binsbgaltemp = linspace(-gdat.maxmgangdata, gdat.maxmgangdata, gdat.sbrt0018.shape[0])
+        gdat.sbrt0018objt = sp.interpolate.RectBivariateSpline(binsbgaltemp, binslgaltemp, gdat.sbrt0018)
 
     gdat.liststrgfeatconc = deepcopy(gdat.fittliststrgcomptotl)
     if gdat.elemtype == 'lght':
@@ -3114,7 +3158,12 @@ def setpinit(gdat, boolinitsetp=False):
 
     # list of scalar variable names
     gdat.listnamevarbscal = list(gdat.fittnamefixp)
-    if gdat.fittlensmodltype != 'none' or gdat.truelensmodltype != 'none':
+    booltemp = False
+    for strgmodl in gdat.liststrgmodl:
+        lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
+        if lensmodltype:
+            booltemp = True
+    if booltemp:
         for strgtemp in ['delt', 'intg']:
             gdat.listnamevarbscal += ['masshost' + strgtemp + 'bein']
             setattr(gdat, 'minmmasshost' + strgtemp + 'bein', gdat.minmmasshost)
@@ -3991,7 +4040,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}$')
         gdat.legdproptype = append(gdat.legdproptype, 'Within-model')
         gdat.nameproptype = append(gdat.nameproptype, 'with')
-    
+   
+    print 'gdat.truenumbelem'
+    print gdat.truenumbelem
+    print 'gdat.indxrefr'
+    print gdat.indxrefr
     ### filters
     #### filter for reference elements
     gdat.listnametruefilt = ['']
@@ -4336,9 +4389,11 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
     dicttemp = {}
     if init:
         # transdimensional element populations
-        numbpopl = getattr(gdat, strgmodl + 'numbpopl')
-        indxpopl = arange(numbpopl, dtype=int) 
         
+        maxmnumbelem = getattr(gdat, strgmodl + 'maxmnumbelem')
+        numbpopl = maxmnumbelem.size
+        indxpopl = arange(numbpopl)
+
         numbback = len(getattr(gdat, strgmodl + 'backtype'))
         indxback = arange(numbback)
     
@@ -4348,7 +4403,13 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         indxback = getattr(gdat, strgmodl + 'indxback')
         hostemistype = getattr(gdat, strgmodl + 'hostemistype')
         maxmnumbelem = getattr(gdat, strgmodl + 'maxmnumbelem') 
+    
+        #for l in trueindxpopl:
+        #    setattr(gdat, 'true
+        #    minmnumbelempop%d' % l, gdat.trueminmnumbelem[l])
+        #setattr(gdat, 'truemaxmnumbelempop%d' % l, gdat.truemaxmnumbelem[l])
         
+    
         # construct background surface brightness templates from the user input
         lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
         backtype = getattr(gdat, strgmodl + 'backtype')
@@ -4434,6 +4495,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             else:
                 sbrtbacknorm[c, ...] = sbrtbacknormtemp
             
+            print 'gdat.indxenerfull'
+            print gdat.indxenerfull
+
             # determine spatially uniform background templates
             for i in gdat.indxenerfull:
                 for m in gdat.indxevttfull:
@@ -4641,6 +4705,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             liststrgfeatodim[l] += ['deltllik', 'gang', 'aang']
             if gdat.elemtype == 'lght':
                 liststrgfeatodim[l] += ['cnts']
+                if gdat.exprtype == 'ferm':
+                    liststrgfeatodim[l] + ['sbrt0018']
             if gdat.elemtype == 'lens':
                 liststrgfeatodim[l] += ['mcut', 'diss', 'rele', 'reln', 'reld', 'relc']
             # temp
@@ -5467,18 +5533,20 @@ def setp_fixp(gdat, strgmodl='fitt'):
             setattr(gdat, strgmodl + strg, valu)
 
 
-def setp_namevarbsing(gdat, strgvarb, popl, ener, evtt, back):
+def setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back):
     
     liststrgvarb = []
     if popl:
-        for q in gdat.trueindxpopl:
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+        for q in indxpopl:
             liststrgvarb.append(strgvarb + 'pop%d' % q)
     elif ener and evtt:
         for i in gdat.indxener:
             for m in gdat.indxevtt:
                 liststrgvarb.append(strgvarb + 'ene%devt%d' % (i, m))
     elif ener and back:
-        for c in gdat.trueindxback:
+        indxback = getattr(gdat, strgmodl + 'indxback')
+        for c in indxback:
             liststrgvarb.append(strgvarb + 'bac%d' % c)
             for i in gdat.indxener:
                 liststrgvarb.append(strgvarb + 'bac%dene%d' % (c, i))
@@ -5491,9 +5559,15 @@ def setp_namevarbsing(gdat, strgvarb, popl, ener, evtt, back):
     return liststrgvarb
 
 
-def setp_namevarbvalu(gdat, strgvarb, valu, popl=False, ener=False, evtt=False, back=False, strgmodl='true'):
+def setp_namevarbvalu(gdat, strgvarb, valu, popl=False, ener=False, evtt=False, back=False, strgmodl=None):
     
-    liststrgvarb = setp_namevarbsing(gdat, strgvarb, popl, ener, evtt, back)
+    if strgmodl == None:
+        if gdat.datatype == 'mock':
+            strgmodl = 'true'
+        else:
+            strgmodl = 'fitt'
+
+    liststrgvarb = setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back)
     
     for strgvarb in liststrgvarb:
         try:
@@ -5504,9 +5578,15 @@ def setp_namevarbvalu(gdat, strgvarb, valu, popl=False, ener=False, evtt=False, 
             setattr(gdat, strgmodl + strgvarb, valu)
  
 
-def setp_namevarblimt(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ener=False, evtt=False, back=False, strgmodl='true'):
+def setp_namevarblimt(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl=False, ener=False, evtt=False, back=False, strgmodl=None):
     
-    liststrgvarb = setp_namevarbsing(gdat, strgvarb, popl, ener, evtt, back)
+    if strgmodl == None:
+        if gdat.datatype == 'mock':
+            strgmodl = 'true'
+        else:
+            strgmodl = 'fitt'
+
+    liststrgvarb = setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back)
 
     for strgvarb in liststrgvarb:
 
@@ -7329,7 +7409,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 #### spectra
                 for l in indxpopl:
                     dictelem[l]['specplot'] = retr_spec(gdat, dictelem[l]['flux'], dictelem[l]['sind'], dictelem[l]['curv'], dictelem[l]['expc'], spectype[l], plot=True)
-                    
+     
+            if gdat.elemtype == 'lght':
+                if gdat.exprtype == 'ferm':
+                    dictelem[l]['sbrt0018'] = lpdfprioobjt(dictelem[l]['bgal'], dictelem[l]['lgal'])
+
             if gdat.elemtype == 'lens':
                 
                 #### distance to the source
