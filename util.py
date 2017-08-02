@@ -2665,12 +2665,12 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'clus':
         gdat.lablelemextn = r'\rm{cls}'
     
-
     # set up the indices of the fitting model
     retr_indxsamp(gdat, init=True)
     
-    gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
     gdat.listnamefeatrefronly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
+    if gdat.datatype == 'inpt':
+        gdat.listnamefeatrefr = [[] for q in gdat.indxrefr]
     
     # set up the indices of the fitting model
     retr_indxsamp(gdat)
@@ -3209,9 +3209,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.exprtype == 'sdyn':
             gdat.maxmangl = 1.
         if gdat.exprtype == 'ferm':
-            # temp
-            #gdat.maxmangl = 15. / gdat.anglfact
-            gdat.maxmangl = 100. / gdat.anglfact
+            gdat.maxmangl = 15. / gdat.anglfact
         if gdat.exprtype == 'chan':
             gdat.maxmangl = 8. / gdat.anglfact
         if gdat.exprtype == 'hubb':
@@ -4666,8 +4664,19 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                                 if not name[4:] in gdat.listnamefeatrefronly[q][l]:
                                     gdat.listnamefeatrefronly[q][l].append(name[4:])
 
-        if strgmodl == 'true':
-            gdat.listnamefeatrefr = liststrgfeatodim
+        if strgmodl == 'fitt':
+            # temp
+            for name, varb in gdat.__dict__.iteritems():
+                if name.startswith('refr') and name != 'refrinfo':
+                    for q in gdat.indxrefr: 
+                        nametemp = name[4:] + gdat.listnamerefr[q]
+                        if not nametemp in gdat.listnamefeatrefr[q]:
+                            gdat.listnamefeatrefr[q].append(name[4:])
+                        for l in indxpopl:
+                            if not name[4:] in liststrgfeatodim[l] and name[4:] != 'spec' and name[4:] != 'deflprof' and name[4:] != 'specplot':
+                                liststrgfeatodim[l].append(name[4:])
+                                if not name[4:] in gdat.listnamefeatrefronly[q][l]:
+                                    gdat.listnamefeatrefronly[q][l].append(name[4:])
 
         # defaults
         liststrgpdfnmodu = [[] for l in indxpopl]
@@ -7654,6 +7663,14 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             print name
                             print
                 
+                print 'gdat.indxrefr'
+                print gdat.indxrefr
+                print 'gdat.fittindxpopl'
+                print gdat.fittindxpopl
+                print 'gdat.listnamefeatrefr'
+                print gdat.listnamefeatrefr
+                print 'heeeeeeeeeey'
+
                 # completeness
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
