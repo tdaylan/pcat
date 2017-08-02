@@ -1120,7 +1120,8 @@ def retr_chandata(gdat):
     if gdat.numbener == 2:
         path = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     else:
-        path = gdat.pathinpt + '0.50-0.91_thresh.img'
+        #path = gdat.pathinpt + '0.50-0.91_thresh.img'
+        path = gdat.pathinpt + '0.5-0.91028_thresh.img'
     
     # rotate reference elements to the spatial coordinate system of PCAT
     listhdun = ap.io.fits.open(path)
@@ -6663,6 +6664,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 indx = where(sbrtdiffconv[name][i, :, m] < 1e-6)
                                 sbrtdiffconv[name][i, indx, m] = 1e-6
                             if gdat.pixltype == 'heal':
+                                print 'strg'
+                                print strg
+                                print 'psfnevaltype'
+                                print psfnevaltype
+
                                 sbrtdiffconv[name][i, :, m] = hp.smoothing(sbrtdiff[name][i, :, m], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
                                 sbrtdiffconv[name][i, :, m][where(sbrtdiffconv[name][i, :, m] <= 1e-50)] = 1e-50
                     if gdat.verbtype > 1:
@@ -7640,7 +7646,13 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             
                             if len(indxelemrefrasschits[q][l]) > 0 and len(dictelem[l][strgfeat]) > 0:
                                 featrefrassc[q][l][strgfeat][indxelemrefrasschits[q][l]] = dictelem[l][strgfeat][indxelemfittasschits[q][l]]
-                            setattr(gdatobjt, strg + strgfeat + 'asscref%dpop%d' % (q, l), featrefrassc[q][l][strgfeat])
+                            
+                            name = strg + strgfeat + 'asscref%dpop%d' % (q, l)
+                            setattr(gdatobjt, name, featrefrassc[q][l][strgfeat])
+                                
+                            print 'name'
+                            print name
+                            print
                 
                 # completeness
                 for q in gdat.indxrefr:

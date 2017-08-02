@@ -2833,22 +2833,31 @@ def work(pathoutpthis, lock, indxprocwork):
                 else:
                     strgcnfg = gdat.strgcnfg
                 path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
-                if gdat.verbtype > 0:
-                    print 'Saving the state to %s...' % path
+
+                if os.path.isfile(path):
+                    thisfilecheck = h5py.File(path, 'r')
+                    if thisfilechec['lliktotl'] < gdatmodi.thislliktotl:
+                        if gdat.verbtype > 0:
+                            print 'Saving the state to %s...' % path
         
-                thisfile = h5py.File(path, 'w')
-                for namefixp in gdat.fittnamefixp:
-                    indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
-                    valu = gdatmodi.thissampvarb[indxfixp]
-                    thisfile.create_dataset(namefixp, data=valu)
-                if gdat.fittnumbtrap > 0:
-                    for l in gdat.fittindxpopl:
-                        for strgcomp in gdat.fittliststrgcomp[l]:
-                            comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]]
-                            for k in arange(comp.size):
-                                name = strgcomp + '%04d%04d' % (l, k)
-                                thisfile.create_dataset(name, data=comp[k])
-                thisfile.close()
+                        thisfile = h5py.File(path, 'w')
+                        thisfile.create_dataset('lliktotl', data=gdatmodi.thislliktotl)
+                        for namefixp in gdat.fittnamefixp:
+                            indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
+                            valu = gdatmodi.thissampvarb[indxfixp]
+                            thisfile.create_dataset(namefixp, data=valu)
+                        if gdat.fittnumbtrap > 0:
+                            for l in gdat.fittindxpopl:
+                                for strgcomp in gdat.fittliststrgcomp[l]:
+                                    comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l]]
+                                    for k in arange(comp.size):
+                                        name = strgcomp + '%04d%04d' % (l, k)
+                                        thisfile.create_dataset(name, data=comp[k])
+                        thisfile.close()
+                    else:
+                        if gdat.verbtype > 0:
+                            print 'Not saving the state to %s because loglikelihood is lower...' % path
+                    thisfilechec.close()
             
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this')
