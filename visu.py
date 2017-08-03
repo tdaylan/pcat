@@ -313,7 +313,7 @@ def plot_samp(gdat, gdatmodi, strg):
                             for ydattype in listydattype:
                                 
                                 # plot the surface density of elements only for the amplitude feature
-                                if strgfeat != gdat.namecompampl and ydattype == 'sden':
+                                if strgfeat != gdat.namefeatampl and ydattype == 'sden':
                                     continue
         
                                 ## plot the surface density of elements
