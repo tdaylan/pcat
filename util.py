@@ -991,7 +991,7 @@ def retr_psfnferm(gdat):
             gdat.psfpexpr[indxfermpsfptemp] = fermform[:, m, k]
     
 
-def retr_chandata(gdat):
+def retr_refrchaninit(gdat):
     
     gdat.numbrefr += 1
     gdat.indxrefr = arange(gdat.numbrefr)
@@ -1002,8 +1002,7 @@ def retr_chandata(gdat):
     
     gdat.legdrefr = ['Xue+2011']
     
-    gdat.listnamefeatampl = ['flux']
-    
+    gdat.listnamefeatamplrefr += ['flux']
     gdat.listnamerefr += ['xu11']
     
     setattr(gdat, 'lablotyp', 'O')
@@ -1043,6 +1042,8 @@ def retr_chandata(gdat):
 # [HSN2014]   CANDELS_ID  CANDELS_RA   CANDELS_DEC   MUSYC_ID   MUSYC_RA    MUSYC_DEC    TENIS_ID   TENIS_RA    TENIS_DEC    SIMPLE_ID   SIMPLE_RA   SIMPLE_DEC   R13_ID R13_RA      R13_DEC      R13_PosErr   X11_ID X11_RA      X11_DEC      X11_PosErr   L05_ID L05_RA   L05_DEC   L05_PosErr   V06_ID V06_RA   V06_DEC   V06_PosErr   xflag  post   
 
 
+def retr_refrchanfinl(gdat):
+    
     with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
         
         pathfile = gdat.pathinpt + 'Xue2011.fits'
@@ -1184,19 +1185,19 @@ def retr_chandata(gdat):
         gdat.refrsind[0] = tile(gdat.refrsind[0], (3, 1)) 
 
 
-def retr_fermdata(gdat):
+def retr_refrferminit(gdat):
     
     gdat.listnamerefr += ['ac15', 'ma05']
-    gdat.numbrefr += 2
     gdat.indxrefr = arange(gdat.numbrefr)
     
     gdat.legdrefr = ['Acero+2015', 'Manchester+2005']
 
-    gdat.listnamefeatampl = ['flux', 'flux0400']
+    gdat.listnamefeatamplrefr[0] = 'flux'
+    gdat.listnamefeatamplrefr[1] = 'flux0400'
     
     setattr(gdat, 'lablcurvac15', '%s_{3FGL}' % gdat.lablcurv)
     setattr(gdat, 'lablexpcac15', 'E_{c,3FGL}')
-
+    
     gdat.minmcurv = -1.
     gdat.maxmcurv = 1.
     gdat.minmexpc = 0.1
@@ -1207,13 +1208,19 @@ def retr_fermdata(gdat):
         setattr(gdat, 'minmexpc' + name, 0.1)
         setattr(gdat, 'maxmexpc' + name, 10.)
    
+    gdat.refrliststrgfeat[0] += ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expc']
+    gdat.refrliststrgfeat[1] += ['lgal', 'bgal', 'flux0400', 'per0', 'per1']
+
+
+def retr_refrfermfinl(gdat):
+    
     # Acero+2015
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
     fgl3 = pf.getdata(path)
-   
-    gdat.refrlgal = [deg2rad(fgl3['glon'])]
+    
+    gdat.refrlgal[0] = deg2rad(fgl3['glon'])
     gdat.refrlgal[0] = ((gdat.refrlgal[0] - pi) % (2. * pi)) - pi
-    gdat.refrbgal = [deg2rad(fgl3['glat'])]
+    gdat.refrbgal[0] = deg2rad(fgl3['glat'])
     
     gdat.truenumbelemfull = gdat.refrlgal[0].size
 
@@ -1227,7 +1234,7 @@ def retr_fermdata(gdat):
     gdat.refrspec[0][2, :, :] = gdat.refrspec[0][0, :, :] + fgl3specstdvtemp[:, :, 1]
     gdat.refrspec[0][where(isfinite(gdat.refrspec[0]) == False)] = 0.
     
-    gdat.refrflux = [gdat.refrspec[0][:, gdat.indxenerpivt[0], :]]
+    gdat.refrflux[0] = gdat.refrspec[0][:, gdat.indxenerpivt[0], :]
     fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
     fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng']) # [rad]
     fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
@@ -1240,10 +1247,10 @@ def retr_fermdata(gdat):
     fgl3timevari = fgl3['Variability_Index']
 
     fgl3spectype = fgl3['SpectrumType']
-    gdat.refrsind = [fgl3['Spectral_Index']]
-    gdat.refrcurv = [fgl3['beta']]
+    gdat.refrsind[0] = fgl3['Spectral_Index']
+    gdat.refrcurv[0] = fgl3['beta']
     gdat.refrcurv[0][where(logical_not(isfinite(gdat.refrcurv[0])))] = -10.
-    gdat.refrexpc = [fgl3['Cutoff'] * 1e-3]
+    gdat.refrexpc[0] = fgl3['Cutoff'] * 1e-3
     
     gdat.refrsind[0] = tile(gdat.refrsind[0], (3, 1)) 
     gdat.refrcurv[0] = tile(gdat.refrcurv[0], (3, 1)) 
@@ -1264,18 +1271,15 @@ def retr_fermdata(gdat):
     path = gdat.pathdata + 'inpt/Manchester2005.fits'
     data = pf.getdata(path)
    
-    gdat.refrlgal.append(deg2rad(fgl3['glon']))
+    gdat.refrlgal[1] = deg2rad(data['glon'])
     gdat.refrlgal[1] = ((gdat.refrlgal[1] - pi) % (2. * pi)) - pi
-    gdat.refrbgal.append(deg2rad(fgl3['glat']))
-   
-    gdat.refrper0 = [[] for q in gdat.indxrefr]
-    gdat.refrper1 = [[] for q in gdat.indxrefr]
-    gdat.refrflux0400 = [[] for q in gdat.indxrefr]
+    gdat.refrbgal[1] = deg2rad(data['glat'])
+    
     gdat.refrper0[1] = data['P0']
     gdat.refrper1[1] = data['P1']
     gdat.refrflux0400[1] = data['S400']
-    #gdat.refrdism = [data['DM']]
-    #gdat.refrdlos = [data['Dist']]
+    #gdat.refrdism[1] = data['DM']
+    #gdat.refrdlos[1] = data['Dist']
     
     setattr(gdat, 'lablper0', 'P_0')
     setattr(gdat, 'minmper0', 1e-4)
@@ -1296,7 +1300,12 @@ def retr_fermdata(gdat):
     setattr(gdat, 'scalflux0400plot', 'logt')
     
     for name in ['per0', 'per1', 'flux0400']:
-        setattr(gdat, 'refr' + name, [tile(getattr(gdat, 'refr' + name)[0], (3, 1))])
+        refrtile = [[] for q in gdat.indxrefr]
+        refrfeat = getattr(gdat, 'refr' + name)
+        for q in gdat.indxrefr:
+            if len(refrfeat[q]) > 0:
+                refrtile[q] = tile(refrfeat[q], (3, 1))
+        setattr(gdat, 'refr' + name, refrtile)
     for q in gdat.indxrefr:
         gdat.refrlgal[q] = tile(gdat.refrlgal[q], (3, 1)) 
         gdat.refrbgal[q] = tile(gdat.refrbgal[q], (3, 1)) 
@@ -2707,7 +2716,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.elemtype == 'clus':
         gdat.lablelemextn = r'\rm{cls}'
     
-    gdat.listnamefeatrefronly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
+    gdat.refrliststrgfeatonly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
     
     # set up the indices of the fitting model
     retr_indxsamp(gdat)
@@ -3096,7 +3105,6 @@ def setpinit(gdat, boolinitsetp=False):
     for strgmodl in gdat.liststrgmodl:
         liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
         for strgfeat in liststrgfeattotl + gdat.liststrgfeatplot:
-            
             if strgfeat.startswith('defs') or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or \
                                                                                                         strgfeat == 'diss' or strgfeat == 'asca' or strgfeat == 'acut':
                 setattr(gdat, 'fact' + strgfeat + 'plot', gdat.anglfact)
@@ -4090,6 +4098,11 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.sbrtpntstemp = empty_like(gdat.expo)
 
+    # plot settings
+    ## upper limit of histograms
+    if gdat.datatype == 'inpt':
+        gdat.limtpntshist = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
+   
 
 def setpfinl(gdat, boolinitsetp=False):
     
@@ -4101,10 +4114,6 @@ def setpfinl(gdat, boolinitsetp=False):
         indxtrueelemfilt = [[] for q in gdat.indxrefr]
         if nametruefilt == '':
             for q in gdat.indxrefr:
-                print 'gdat.refrnumbelem'
-                print gdat.refrnumbelem
-                print 'gdat.indxrefr'
-                print gdat.indxrefr
                 indxtrueelemfilt[q] = arange(gdat.refrnumbelem[q])
         gdat.listindxtrueelemfilt.append(indxtrueelemfilt)
 
@@ -4155,11 +4164,6 @@ def setpfinl(gdat, boolinitsetp=False):
     # data structures for JIT
     gdat.deflelem = zeros((gdat.numbpixl, 2))
 
-    # plot settings
-    ## upper limit of histograms
-    if gdat.datatype == 'inpt':
-        gdat.limtpntshist = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
-   
     ## spatial average
     gdat.sbrtdatamean = retr_spatmean(gdat, gdat.cntpdata, boolcntp=True)
     
@@ -4714,35 +4718,18 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 for namefeat in gdat.listnamefeatsele:
                     for namesele in gdat.listnamesele:
                         liststrgfeatodim[l] += [namefeat + namesele]
-        
+
         # add reference element features that are not available in the PCAT element model
         if strgmodl == 'fitt':
             # temp
             for name, varb in gdat.__dict__.iteritems():
-                if name.startswith('refr') and name != 'refrinfo':
+                if name.startswith('refr') and name != 'refrinfo' and name != 'refrnumbelem' and not name.startswith('refrliststrgfeat'):
                     for q in gdat.indxrefr: 
-                        nametemp = name[4:] + gdat.listnamerefr[q]
-                        if not nametemp in gdat.listnamefeatrefr[q]:
-                            gdat.listnamefeatrefr[q].append(name[4:])
                         for l in indxpopl:
                             if not name[4:] in liststrgfeatodim[l] and name[4:] != 'spec' and name[4:] != 'deflprof' and name[4:] != 'specplot':
                                 liststrgfeatodim[l].append(name[4:])
-                                if not name[4:] in gdat.listnamefeatrefronly[q][l]:
-                                    gdat.listnamefeatrefronly[q][l].append(name[4:])
-
-        if strgmodl == 'fitt':
-            # temp
-            for name, varb in gdat.__dict__.iteritems():
-                if name.startswith('refr') and name != 'refrinfo':
-                    for q in gdat.indxrefr: 
-                        nametemp = name[4:] + gdat.listnamerefr[q]
-                        if not nametemp in gdat.listnamefeatrefr[q]:
-                            gdat.listnamefeatrefr[q].append(name[4:])
-                        for l in indxpopl:
-                            if not name[4:] in liststrgfeatodim[l] and name[4:] != 'spec' and name[4:] != 'deflprof' and name[4:] != 'specplot':
-                                liststrgfeatodim[l].append(name[4:])
-                                if not name[4:] in gdat.listnamefeatrefronly[q][l]:
-                                    gdat.listnamefeatrefronly[q][l].append(name[4:])
+                                if not name[4:] in gdat.refrliststrgfeatonly[q][l]:
+                                    gdat.refrliststrgfeatonly[q][l].append(name[4:])
 
         # defaults
         liststrgpdfnmodu = [[] for l in indxpopl]
@@ -4812,7 +4799,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         liststrgcomptotl = retr_listconc(liststrgcomp)
         numbcomptotl = len(liststrgcomptotl)
         indxcomptotl = arange(numbcomptotl)
-
+    
         ## element parameters
         liststrgfeatpriototl = retr_listconc(liststrgfeatprio)
         liststrgfeattotl = retr_listconc(liststrgfeat)
@@ -6271,7 +6258,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
 
     # common dictionary
     dicttemp = {}
-           
+    
     # temp
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     if numbtrap > 0:
@@ -6803,8 +6790,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         ### count map
         initchro(gdat, gdatmodi, strg, 'expo')
         cntpmodl = retr_cntp(gdat, sbrtmodl, indxpixlmean=indxpixleval)
-        
         setattr(gdatobjt, strg + 'cntpmodl', cntpmodl)
+
         stopchro(gdat, gdatmodi, strg, 'expo')
 
         # mock data specific
@@ -7044,9 +7031,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
     stopchro(gdat, gdatmodi, strg, 'lpri')
     
-    if not gdat.calcllik:
-        return
-    else:
+    if gdat.calcllik:
         lpostotl = lpritotl + lliktotl
         setattr(gdatobjt, strg + 'lpostotl', lpostotl) 
     
@@ -7167,7 +7152,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
             if psfnevaltype == 'conv' and convdiff[k]:
                 cntpdiffconv[name] = retr_cntp(gdat, sbrtdiffconv[name] * fact)
                 setattr(gdatobjt, strg + 'cntp' + name + 'conv', cntpdiffconv[name])
-                
+        
         if lensmodltype != 'none':
             
             if strgmodl == 'true':
@@ -7344,7 +7329,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 for l in gdat.fittindxpopl:
                     for q in gdat.indxrefr:
                         # collect the associated reference element feature for each fitting element 
-                        for namefeatrefr in gdat.listnamefeatrefronly[q][l]:
+                        for namefeatrefr in gdat.refrliststrgfeatonly[q][l]:
                             name = namefeatrefr + gdat.listnamerefr[q]
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)
                             dictelem[l][strgfeat + gdat.listnamerefr[q]] = zeros(numbelem[l])
@@ -7728,7 +7713,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
                         featrefrassc[q][l] = dict()
-                        for strgfeat in gdat.listnamefeatrefr[q]:
+                        for strgfeat in gdat.refrliststrgfeat[q]:
                             if strgfeat.endswith('pars') or strgfeat.endswith('nrel') or not strgfeat in liststrgfeat[l]:
                                 continue
                             if isinstance(dictelem[l][strgfeat], ndarray) and dictelem[l][strgfeat].ndim > 1:
@@ -7770,7 +7755,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         for strgfeat in liststrgfeatodim[l]:
                             fdisfeat = zeros(gdat.numbbinsplot)
                             errrfdisfeat = zeros((2, gdat.numbbinsplot))
-                            if not strgfeat in liststrgfeatodim[l] or strgfeat in gdat.listnamefeatrefronly[q][l]:
+                            if not strgfeat in liststrgfeatodim[l] or strgfeat in gdat.refrliststrgfeatonly[q][l]:
                                 continue
                             bins = getattr(gdat, 'bins' + strgfeat)
                             if len(indxelemfittasscfals[q][l]) > 0 and len(dictelem[l][strgfeat]) > 0:
@@ -7783,7 +7768,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                         raise Exception('')
                             setattr(gdatobjt, strg + 'fdis' + strgfeat + 'ref%dpop%d' % (q, l), fdisfeat)
                             setattr(gdatobjt, strg + 'errrfdis' + strgfeat + 'ref%dpop%d' % (q, l), errrfdisfeat)
-
+          
             # temp
             if strgmodl == 'true' and gdat.verbtype > 0:
                 for l in indxpopl:

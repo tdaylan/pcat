@@ -73,8 +73,9 @@ def plot_samp(gdat, gdatmodi, strg):
                         for l in gdat.fittindxpopl:
                             lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%d' % (q, l))
                             strgindxydat = 'ref%dpop%d' % (q, l)
-                            for strgfeat in gdat.listnamefeatrefr[q]:
-                                if not (gdat.datatype == 'inpt' and getattr(gdat, 'refr' + strgfeat) == None or strgfeat == 'spec' or strgfeat in gdat.listnamefeatrefronly[q][l]):
+                            for strgfeat in gdat.refrliststrgfeat[q]:
+                                if not strgfeat == 'spec' and not strgfeat in gdat.refrliststrgfeatonly[q][l] and \
+                                                                    not (gdat.datatype == 'mock' and (strgfeat.endswith('pars') or strgfeat.endswith('nrel'))):
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                     scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
