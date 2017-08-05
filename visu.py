@@ -74,7 +74,7 @@ def plot_samp(gdat, gdatmodi, strg):
                             lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%d' % (q, l))
                             strgindxydat = 'ref%dpop%d' % (q, l)
                             for strgfeat in gdat.refrliststrgfeat[q]:
-                                if not strgfeat == 'spec' and not strgfeat in gdat.refrliststrgfeatonly[q][l] and \
+                                if not strgfeat.startswith('spec') and not strgfeat in gdat.refrliststrgfeatonly[q][l] and \
                                                                     not (gdat.datatype == 'mock' and (strgfeat.endswith('pars') or strgfeat.endswith('nrel'))):
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                     lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
@@ -1230,14 +1230,15 @@ def plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco, str
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     
     # reference elements
-    for q in gdat.indxrefr:
-        try:
-            refrvarbfrst = getattr(gdat, 'refrfeat')[q][strgfrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            refrvarbseco = getattr(gdat, 'refrfeat')[q][strgseco] * getattr(gdat, 'fact' + strgseco + 'plot')
-        except:
-            refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
-            refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
-        axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
+    if gdat.allwrefr:
+        for q in gdat.indxrefr:
+            try:
+                refrvarbfrst = getattr(gdat, 'refrfeat')[q][strgfrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
+                refrvarbseco = getattr(gdat, 'refrfeat')[q][strgseco] * getattr(gdat, 'fact' + strgseco + 'plot')
+            except:
+                refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
+                refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
+            axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, l, strgfrst=strgfrst, strgseco=strgseco)
     
@@ -1267,6 +1268,10 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
     
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
+            print 'gdat.fittnumbcomp'
+            print gdat.fittnumbcomp
+            print 'l'
+            print l
             deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gdat.fittnumbcomp[l])
             if strgfrst == 'deltllik':
                 axis.axvline(deltlliksigm, ls='--', color='black', alpha=0.2) 
@@ -1713,9 +1718,10 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
                         indxelem = where((bins[indxlowr] < refrfeat) & (refrfeat < bins[indxuppr]))[0]
                     else:
                         indxelem = arange(gdat.refrnumbelem[q])
-                    mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem])
-                    axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
-                                                                                            s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
+                    if len(refrsign[q]) > 0:
+                        mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem])
+                        axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
+                                                                                                s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.labllgaltotl)
@@ -2377,7 +2383,7 @@ def plot_init(gdat):
                         figr.savefig(path)
                         plt.close(figr)
             
-            if gdat.truelensmodltype != 'none' and gdat.datatype == 'mock':
+            if gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
                 figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'true', indxenerplot=i, indxevttplot=m)
                 imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, '', 'cntpdata', thisindxener=i, thisindxevtt=m, tdim=True)
                 make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
@@ -2445,7 +2451,8 @@ def plot_genemaps(gdat, gdatmodi, strg, strgvarb, strgcbar=None, thisindxener=No
 
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
     make_catllabl(gdat, strg, axis)
-    supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
+    if gdat.suprelem:
+        supr_fram(gdat, gdatmodi, strg, axis, thisindxpopl)
 
     # Add two sliders for tweaking the parameters
     if intreval:
