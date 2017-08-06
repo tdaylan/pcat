@@ -2990,6 +2990,8 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdat.forcsavestat:
                     booltemp = True
                 if booltemp:
+                    if gdatmodi.indxprocwork > 0:
+                        continue
                     if gdat.verbtype > 0:
                         print 'Saving the state to %s...' % path
         
