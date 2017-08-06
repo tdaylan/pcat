@@ -7009,8 +7009,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 #if pdfnfeat == 'gausmeanstdv':
                 #    lpri[2+(k+1)*numbpopl+l] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dictelem[l][strgfeat], strgfeat, sampvarb, l)
             
-        if strg == 'this':
-            gdatmodi.thislpripena = lpri[0]
+        setattr(gdatobjt, strg + 'lpripena', lpri[0])
         
         # temp
         if strg == 'next':
