@@ -7842,7 +7842,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                     indxgood = where(refrhistfeat != 0.)[0]
                                     if indxgood.size > 0:
                                         cmplfeat[indxgood] = histfeatrefrassc[indxgood].astype(float) / refrhistfeat[indxgood]
-                                        if True:
+                                        if False:
                                             print 'strgfeat'
                                             print strgfeat
                                             print 'histfeatrefrassc[indxgood]'
@@ -7874,7 +7874,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                     indxgood = where(fitthistfeat != 0.)[0]
                                     if indxgood.size > 0:
                                         fdisfeat[indxgood] = histfeatfals[indxgood].astype(float) / fitthistfeat[indxgood]
-                                        if True:
+                                        if False:
                                             print 'strgfeat'
                                             print strgfeat
                                             print 'histfeatfals[indxgood]'
