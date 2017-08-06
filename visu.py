@@ -74,6 +74,8 @@ def plot_samp(gdat, gdatmodi, strg):
                             lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%d' % (q, l))
                             strgindxydat = 'ref%dpop%d' % (q, l)
                             for strgfeat in gdat.refrliststrgfeat[q]:
+                                if strgclas == 'fdis' and not strgfeat in liststrgfeatodim[l]:
+                                    continue
                                 if not strgfeat.startswith('spec') and not strgfeat in gdat.refrliststrgfeatonly[q][l] and \
                                                                     not (gdat.datatype == 'mock' and (strgfeat.endswith('pars') or strgfeat.endswith('nrel'))):
                                     factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
@@ -265,21 +267,17 @@ def plot_samp(gdat, gdatmodi, strg):
             for l in indxpopl:
                 if strg != 'true' and gdat.refrinfo and gdat.allwrefr:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
-                        if gdat.datatype == 'mock':
-                            #plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat)
-                            plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, plotdiff=True)
-                        else:
-                            # temp
-                            try:
-                                #plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat)
-                                plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, plotdiff=True)
-                            except:
-                                pass
+                        if not strgfeat in gdat.refrliststrgfeat[q][l]:
+                            continue
+                        plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat)
+                        plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, plotdiff=True)
                 for a, strgfrst in enumerate(liststrgfeatcorr[l]):
                     for b, strgseco in enumerate(liststrgfeatcorr[l]):
                         if a < b:
                             for strgplottype in ['hist', 'scat']:
                                 if strgmodl == 'true' and strgplottype == 'hist':
+                                    continue
+                                if not gdat.condcatl and strgplottype == 'scat':
                                     continue
                                 plot_elemtdim(gdat, gdatmodi, strg, l, strgplottype, strgfrst, strgseco)
     
@@ -349,7 +347,7 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # temp -- restrict other plots to indxmodlelemcomp
         for specconvunit in gdat.listspecconvunit:
-            if isinstance(backtype[0], str) and not backtype[0].startswith('mpol'):
+            if not (isinstance(backtype[0], str) and backtype[0].startswith('mpol')):
                 plot_sbrt(gdat, gdatmodi, strg, specconvunit)
         
         for i in gdat.indxener:
@@ -944,7 +942,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
     
         listydat = zeros((numblablsbrtspec, gdat.numbener))
         listyerr = zeros((2, numblablsbrtspec, gdat.numbener))
-   
+        
         cntr = 0
         indxvarb = [b, slice(None)]
 
@@ -958,6 +956,11 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
             listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb)
             if strg == 'post':
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntsmean', indxvarb=indxvarb, mometype='errr')
+            cntr += 1
+        
+            listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntssubtmean', indxvarb=indxvarb)
+            if strg == 'post':
+                listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtpntssubtmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
         if hostemistype != 'none':
@@ -1268,10 +1271,6 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
     
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
-            print 'gdat.fittnumbcomp'
-            print gdat.fittnumbcomp
-            print 'l'
-            print l
             deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gdat.fittnumbcomp[l])
             if strgfrst == 'deltllik':
                 axis.axvline(deltlliksigm, ls='--', color='black', alpha=0.2) 
@@ -1371,31 +1370,34 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             else:
                 axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
     
-    # reference
+    # reference histogram
     try:
-        if strgydat.startswith('hist'):
-            strgtemp = strgydat[:4]
-            bins = copy(getattr(gdat, 'bins' + strgtemp)) * factydat
-            varb = copy(getattr(gdat, 'refr' + strgtemp)) * factydat
+        if not omittrue:
             for q in gdat.indxrefr:
-                axis.hist(varb, bins, label=gdat.legdrefr[q], alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q])
+                print 'hey'
+                print 'gdat.refrhistlgalref0'
+                print gdat.refrhistlgalref0
+                if strgydat.startswith('psfn'):
+                    ydattemp = getattr(gdat, 'psfnexpr')
+                    print 'hey'
+                    print 'indxydat'
+                    print indxydat
+                    print 'ydattemp'
+                    summgene(ydattemp)
+                    ydattemp = ydattemp[indxydat]
+                else:
+                    print 'refr + strgydat[:8] + ref%d'
+                    print 'refr' + strgydat[:8] + 'ref%d'
+                    ydattemp = getattr(gdat, 'refr' + strgydat[:8] + 'ref%d' % q)
+                ydat = ydattemp * factydat
+                if indxydat != None:
+                    ydat = ydat[indxydat]
+                if histodim:
+                    axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
+                else:
+                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
     except:
-        pass
-    
-    # true
-    if gdat.datatype == 'mock' and not omittrue:
-        try:
-            ydat = getattr(gdat, 'true' + strgydat) * factydat
-            if indxydat != None:
-                ydat = ydat[indxydat]
-            if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0], alpha=gdat.alphmrkr)
-            else:
-                axis.plot(xdat, ydat, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0], alpha=gdat.alphmrkr)
-        except:
-            if gdat.verbtype > 0:
-                print 'Skipping truth plot for %s...' % strgydat
-    
+        print 'Reference overplotting failed for %s' % strgydat
     # axis scales
     if scalxdat == 'logt':
         axis.set_xscale('log')
@@ -1451,11 +1453,18 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
     
+    print 'strgydat'
+    print strgydat
+    
     if ydattype != 'totl':
         strgydat += ydattype
 
-    make_legd(axis, offs=offslegd)
-    
+    # temp
+    try:
+        make_legd(axis, offs=offslegd)
+    except:
+        pass
+
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strg, strgydat, nameinte=nameinte)
     savefigr(gdat, gdatmodi, figr, path)
@@ -1710,17 +1719,18 @@ def plot_postbindmaps(gdat, indxpopltemp, strgbins, strgfeat=None):
                 bins = getattr(gdat, 'bins' + strgfeat)
             
             # superimpose reference elements
+
             refrsign = getattr(gdat, 'refr' + gdat.namefeatsign)
-            if gdat.refrlgal != None and gdat.refrlgal != None and refrsign != None:
-                for q in gdat.indxrefr:
+            for q in gdat.indxrefr:
+                if len(refrsign[q]) > 0:
                     if strgfeat != None:
                         refrfeat = getattr(gdat, 'refr' + strgfeat)[q][0, :] 
                         indxelem = where((bins[indxlowr] < refrfeat) & (refrfeat < bins[indxuppr]))[0]
                     else:
                         indxelem = arange(gdat.refrnumbelem[q])
-                    if len(refrsign[q]) > 0:
-                        mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem])
-                        axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
+                    
+                    mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem], gdat.namefeatsign)
+                    axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
                                                                                                 s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color='g')
 
             if a == numbrows - 1:
