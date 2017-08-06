@@ -3685,7 +3685,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.pixlcnvt = cPickle.load(fobj)
             fobj.close()
         else:
-            gdat.pixlcnvt = zeros(gdat.numbpixl, dtype=int) - 1
+            gdat.pixlcnvt = zeros(gdat.numbpixlfull, dtype=int) - 1
             numbpixlmarg = gdat.indxpixlrofimarg.size
             for k in range(numbpixlmarg):
                 dist = retr_angldistunit(gdat, lgalheal[gdat.indxpixlrofimarg[k]], bgalheal[gdat.indxpixlrofimarg[k]], gdat.indxpixl)
@@ -3938,7 +3938,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             for i in gdat.indxener:
                 for c in gdat.fittindxback:
-                    gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac%dene%d' % (c, i))]] = 0.05
+                    gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac%dene%d' % (c, i))]] = 1e-3
             indxback = gdat.fittnameback.index('fdfm')
             for i in gdat.indxener:
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpbac%dene%d' % (indxback, i))]] = 5e-4
