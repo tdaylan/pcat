@@ -808,38 +808,13 @@ def init( \
     psfntype = gdat.psfntypeexpr
     setp_namevarbvalu(gdat, 'psfntype', psfntype)
     
-    #### label
-    lablback = [r'$\mathcal{I}$']
+    #### background names
+    listnameback = ['isot']
     if gdat.exprtype == 'ferm':
-        lablback.append(r'$\mathcal{D}$')
+        listnameback.append('fdfm')
     if gdat.exprtype == 'chan':
-        lablback.append(r'$\mathcal{I}_p$')
-    setp_namevarbvalu(gdat, 'lablback', lablback)
-    
-    #### name
-    strgback = ['fluxisot']
-    if gdat.exprtype == 'ferm':
-        strgback.append('fluxfdfm')
-    if gdat.exprtype == 'chan':
-        strgback.append('fluxpart')
-    setp_namevarbvalu(gdat, 'strgback', strgback)
-    
-    #### legend
-    legdback = ['Isotropic']
-    if gdat.exprtype == 'ferm':
-        legdback.append(r'FDM')
-        legdback.append(r'NFW')
-    if gdat.exprtype == 'chan':
-        legdback.append(r'Particle')
-    setp_namevarbvalu(gdat, 'legdback', legdback)
-    
-    #### legend
-    nameback = ['isot']
-    if gdat.exprtype == 'ferm':
-        nameback.append('fdfm')
-    if gdat.exprtype == 'chan':
-        nameback.append('part')
-    setp_namevarbvalu(gdat, 'nameback', nameback)
+        listnameback.append('part')
+    setp_namevarbvalu(gdat, 'listnameback', listnameback)
     
     # reference elements
     gdat.numbrefr = 0
@@ -902,12 +877,21 @@ def init( \
             setp_namevarbvalu(gdat, 'bacp', 1., ener='full', back='full', strgmodl='init')
             bacp = [0.5, 2.]
         else:   
-            bacp = [1e-14, 1e-3]
-    if gdat.exprtype == 'chan':
-        bacp = [1e-1, 1e2]
-    if gdat.exprtype == 'hubb':
-        bacp = [1e-10, 1e-6]
-    setp_namevarblimt(gdat, 'bacp', bacp, ener='full', back='full')
+            setp_namevarblimt(gdat, 'bacp', [1e-7, 1e-2], ener=0, back=0)
+            setp_namevarblimt(gdat, 'bacp', [1e-9, 1e-3], ener=1, back=0)
+            setp_namevarblimt(gdat, 'bacp', [1e-10, 1e-4], ener=2, back=0)
+            setp_namevarblimt(gdat, 'bacp', [1e-6, 1e-2], ener=0, back=1)
+            setp_namevarblimt(gdat, 'bacp', [1e-7, 1e-3], ener=1, back=1)
+            setp_namevarblimt(gdat, 'bacp', [1e-8, 1e-4], ener=2, back=1)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=0, back=2)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=1, back=2)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=2, back=2)
+    else:
+        if gdat.exprtype == 'chan':
+            bacp = [1e-1, 1e2]
+        if gdat.exprtype == 'hubb':
+            bacp = [1e-10, 1e-6]
+        setp_namevarblimt(gdat, 'bacp', bacp, ener='full', back='full')
     
     ## hyperparameters
     if gdat.elemtype == 'lght':
@@ -928,7 +912,7 @@ def init( \
    
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'ferm':
-            minmflux = 3e-11
+            minmflux = 3e-10
         if gdat.exprtype == 'chan':
             minmflux = 1e-9
         if gdat.exprtype == 'sdyn':
@@ -947,7 +931,7 @@ def init( \
 
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'ferm':
-            maxmflux = 1e-7
+            maxmflux = 1e-6
         if gdat.exprtype == 'chan':
             maxmflux = 1e-6
         if gdat.exprtype == 'sdyn':
@@ -1125,11 +1109,6 @@ def init( \
             setp_namevarbvalu(gdat, 'bacp', 3e-6, ener=2, back=1)
             setp_namevarbvalu(gdat, 'bacp', 3e-7, ener=3, back=1)
             setp_namevarbvalu(gdat, 'bacp', 3e-8, ener=4, back=1)
-
-            print 'hey'
-            print 'gdat.truebacpbac0ene0'
-            print gdat.truebacpbac0ene0
-            print
 
         else:
             if gdat.exprtype == 'chan':
@@ -1374,14 +1353,17 @@ def init( \
                     print 'len(refrfeat[q])'
                     print len(refrfeat[q])
                     if len(refrfeat[q]) > 0:
+                        print 'refrfeat[q].shape'
+                        print refrfeat[q].shape
                         refrfeatrofi[q] = refrfeat[q][..., gdat.indxrefrpntsrofi[q]]
-                    print 'refrfeatrofi[q]'
-                    print refrfeatrofi[q]
+                        print 'refrfeatrofi[q].shape'
+                        print refrfeatrofi[q].shape
                 setattr(gdat, 'refr' + strgfeat, refrfeatrofi)
         
             # temp -- generalize to refrlgal[q] == []
             gdat.refrnumbelem = array([gdat.refrlgal[q].shape[1] for q in gdat.indxrefr])
-        
+            gdat.refrnumbelemtotl = sum(gdat.refrnumbelem) 
+
     # temp
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
@@ -1517,17 +1499,25 @@ def init( \
                     gdat.listnamevarbscal += ['cmplref%dpop%d' % (q, l)]
                     gdat.listnamevarbscal += ['fdisref%dpop%d' % (q, l)]
     
+        # plot settings
+        ## upper limit of histograms
+        if gdat.allwrefr:
+            gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
+        else:
+            gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
+            #if gdat.datatype == 'mock':
+            #    gdat.limtydathistfeat = [0.5, sum(gdat.truenumbelem) / 2.]
+            #if gdat.datatype == 'inpt':
+
     if gdat.datatype == 'mock':
-        gdat.limtpntshist = [0.5, sum(gdat.truenumbelem) / 2.]
-    
         if gdat.elemtype == 'lens':
             proc_samp(gdat, None, 'true', raww=True)
         proc_samp(gdat, None, 'true')
-            
+        
         if gdat.makeplot and gdat.makeplotinit:
             plot_samp(gdat, None, 'true')
         
-    if gdat.allwrefr:
+    if gdat.allwrefr and not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
         ## check that all reference element features are finite
         for q in gdat.indxrefr:
             for strgfeat in gdat.refrliststrgfeat[q]:
@@ -3094,7 +3084,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print
             
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.thisdeltlpri)
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.thisdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.thisdeltlpri + gdatmodi.thislcomfact)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.
@@ -3211,6 +3201,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'gdatmodi.thislpritotl'
                     print gdatmodi.thislpritotl
                     print 'Backgrounds'
+                    print gdatmodi.thissamp[gdat.fittindxfixpbacp]
                     print gdatmodi.thissampvarb[gdat.fittindxfixpbacp]
                     if gdat.fittnumbtrap > 0:
                         print 'Number of elements:'
@@ -3221,7 +3212,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         indxfixp = getattr(gdat, 'fittindxfixp' + gdat.namefeatampl + 'distsloppop0')
                         print gdatmodi.thissampvarb[indxfixp]
                         print 'Log-prior penalization term: '
-                        print gdatmodi.thislpripena
+                        print gdatmodi.thislpri[0]
                         if gdat.allwrefr:
                             print 'Completeness'
                             for q in gdat.indxrefr:

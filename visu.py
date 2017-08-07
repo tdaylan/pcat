@@ -283,7 +283,7 @@ def plot_samp(gdat, gdatmodi, strg):
     
             # element feature histograms
             if not (strg == 'true' and gdat.datatype == 'inpt'):
-                limtydat = gdat.limtpntshist
+                limtydat = gdat.limtydathistfeat
                 for l in indxpopl:
                     strgindxydat = 'pop%d' % l
     
@@ -995,7 +995,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
 
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             
-            listmrkr = ['o', '>', 's', 'p', 'h', '*', 'p', 'x']
+            listmrkr = ['o', '>', 's', 'h', '*', 'p', 'x']
 
             # determine the energy scaling factor
             if specconvunit[0] == 'ene0':
@@ -1064,14 +1064,14 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 
-            limtydat = array([1e-3 * amin(listydat[cntrdata, :] * factener), 1e2 * amax(listydat[cntrdata, :] * factener)]) * factydat
+            limtydat = array([1e-3 * amin(listydat[cntrdata, :] * factener), 1e4 * amax(listydat[cntrdata, :] * factener)]) * factydat
             axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)
             axis.set_xscale('log')
             labl = getattr(gdat, 'lablsbrt' + specconvunit[0] + specconvunit[1] + 'stertotl')
             axis.set_ylabel(labl)
-            make_legd(axis, numbcols=3)
+            make_legd(axis, numbcols=2)
             
             plt.tight_layout()
             path = retr_plotpath(gdat, gdatmodi, strg, 'sdenmean%s%s%s' % (namespatmean, specconvunit[0], specconvunit[1]))
@@ -1372,7 +1372,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     
     # reference histogram
     try:
-        if not omittrue:
+        if not omittrue and gdat.allwrefr:
             for q in gdat.indxrefr:
                 print 'hey'
                 print 'gdat.refrhistlgalref0'
