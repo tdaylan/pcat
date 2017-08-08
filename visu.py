@@ -267,10 +267,11 @@ def plot_samp(gdat, gdatmodi, strg):
             for l in indxpopl:
                 if strg != 'true' and gdat.refrinfo and gdat.allwrefr:
                     for strgfeat in gdat.fittliststrgfeatodim[l]:
-                        if not strgfeat in gdat.refrliststrgfeat[q][l]:
-                            continue
-                        plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat)
-                        plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, plotdiff=True)
+                        for q in gdat.indxrefr:
+                            if not strgfeat in gdat.refrliststrgfeat[q][l]:
+                                continue
+                            plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat)
+                            plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, plotdiff=True)
                 for a, strgfrst in enumerate(liststrgfeatcorr[l]):
                     for b, strgseco in enumerate(liststrgfeatcorr[l]):
                         if a < b:
@@ -327,6 +328,17 @@ def plot_samp(gdat, gdatmodi, strg):
                                 if ydattype == 'totl':
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % gdat.lablelemextn
+                                print 'strg'
+                                print strg
+                                print 'factydat'
+                                print factydat
+                                print 'name'
+                                print name
+                                print 'ydattype'
+                                print ydattype
+                                print 'strgfeat'
+                                print strgfeat
+                                print
                                 plot_gene(gdat, gdatmodi, strg, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
@@ -1064,7 +1076,7 @@ def plot_sbrt(gdat, gdatmodi, strg, specconvunit):
         
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
 
-            limtydat = array([1e-3 * amin(listydat[cntrdata, :] * factener), 1e4 * amax(listydat[cntrdata, :] * factener)]) * factydat
+            limtydat = array([1e-4 * amin(listydat[cntrdata, :] * factener), 1e3 * amax(listydat[cntrdata, :] * factener)]) * factydat
             axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)
@@ -1388,7 +1400,7 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 else:
                     print 'refr + strgydat[:8] + ref%d'
                     print 'refr' + strgydat[:8] + 'ref%d'
-                    ydattemp = getattr(gdat, 'refr' + strgydat[:8] + 'ref%d' % q)
+                    ydattemp = getattr(gdat, 'refr' + strgydat[:-4] + 'ref%d' % q)
                 ydat = ydattemp * factydat
                 if indxydat != None:
                     ydat = ydat[indxydat]
@@ -1413,27 +1425,28 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
     liststrgfeatprio = getattr(gdat, strgmodl + 'liststrgfeatprio')
     
-    if strgydat.startswith('hist') and indxydat != None and strgydat[4:] in liststrgfeatprio[indxydat[0]]:
-        xdatprio = getattr(gdat, strgmodl + strgxdat + 'prio') * factxdat
-        if strg == 'true' or strg == 'post':
-            gdattemp = gdat
-        else:
-            gdattemp = gdatmodi
-    
-        if gdat.datatype == 'mock' and not omittrue:
-            truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
-            trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio')[indxydat] * factydat
-            axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
-        
-        if strg != 'true':
-            if strg == 'post':
-                ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio')[indxydat] * factydat
-                yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio')[[slice(None)] + indxydat] * factydat
-                labl = gdat.legdsampdist + ' hyper-distribution'
-                tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
+    if strgydat.startswith('hist'):
+        if strgydat[4:-4] in liststrgfeatprio[int(strgydat[-1])]:
+            xdatprio = getattr(gdat, strgmodl + strgxdat + 'prio') * factxdat
+            if strg == 'true' or strg == 'post':
+                gdattemp = gdat
             else:
-                ydatsupr = getattr(gdattemp, strg + strgydat + 'prio')[indxydat] * factydat
-                axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
+                gdattemp = gdatmodi
+    
+            if gdat.datatype == 'mock' and not omittrue:
+                truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
+                trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
+                axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
+            
+            if strg != 'true':
+                if strg == 'post':
+                    ydatsupr = getattr(gdattemp, 'medi' + strgydat + 'prio') * factydat
+                    yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio') * factydat
+                    labl = gdat.legdsampdist + ' hyper-distribution'
+                    tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
+                else:
+                    ydatsupr = getattr(gdattemp, strg + strgydat + 'prio') * factydat
+                    axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
 
     if strgydat.startswith('hist') and indxydat != None and strgydat[4:] == 'deltllik':
         plot_sigmcont(gdat, axis, indxydat[0], strgfrst=strgxdat[4:])
@@ -1452,9 +1465,6 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
         axis.set_ylim([limtydat[0] * factydat, limtydat[1] * factydat])
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
-    
-    print 'strgydat'
-    print strgydat
     
     if ydattype != 'totl':
         strgydat += ydattype

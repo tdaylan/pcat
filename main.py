@@ -143,6 +143,7 @@ def init( \
          forccart=False, \
          fittampldisttype=None, \
          truestdvdefsdistslop=0.5, \
+         truestdvfluxdistslop=0.1, \
         
          allwfixdtrue=True, \
          asscmetrtype='dist', \
@@ -676,7 +677,7 @@ def init( \
     ## Lensing
     if gdat.anglassc == None:
         if gdat.exprtype == 'ferm':
-            gdat.anglassc = 4.5 / gdat.anglfact
+            gdat.anglassc = 1. / gdat.anglfact
         if gdat.exprtype == 'hubb':
             gdat.anglassc = 0.15 / gdat.anglfact
         if gdat.exprtype == 'chan' or gdat.exprtype == 'sdss':
@@ -883,9 +884,9 @@ def init( \
             setp_namevarblimt(gdat, 'bacp', [1e-6, 1e-2], ener=0, back=1)
             setp_namevarblimt(gdat, 'bacp', [1e-7, 1e-3], ener=1, back=1)
             setp_namevarblimt(gdat, 'bacp', [1e-8, 1e-4], ener=2, back=1)
-            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=0, back=2)
-            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=1, back=2)
-            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-10], ener=2, back=2)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-8], ener=0, back=2)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-8], ener=1, back=2)
+            setp_namevarblimt(gdat, 'bacp', [1e-11, 1e-8], ener=2, back=2)
     else:
         if gdat.exprtype == 'chan':
             bacp = [1e-1, 1e2]
@@ -912,7 +913,7 @@ def init( \
    
     if gdat.elemtype == 'lght':
         if gdat.exprtype == 'ferm':
-            minmflux = 3e-10
+            minmflux = 3e-9
         if gdat.exprtype == 'chan':
             minmflux = 1e-9
         if gdat.exprtype == 'sdyn':
@@ -950,16 +951,23 @@ def init( \
     setp_namevarblimt(gdat, 'gangdistscal', [1. / gdat.anglfact, 10. / gdat.anglfact], popl='full')
     setp_namevarblimt(gdat, 'spatdistcons', [1e-4, 1e-2], popl='full')
     setp_namevarblimt(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl='full')
+    
+    stdvdistslop = 0.5
     if gdat.elemtype == 'lght':
-        setp_namevarblimt(gdat, 'fluxdistslop', [1., 4.], popl='full')
-
+        namevarb = 'flux'
+        valuvarb = 2.
     if gdat.elemtype == 'lens':
-        if gdat.truestdvdefsdistslop != 'none':
-            setp_namevarblimt(gdat, 'defsdistslop', [1.9, gdat.truestdvdefsdistslop], popl='full', typelimt='meanstdv')
-        else:
-            setp_namevarblimt(gdat, 'defsdistslop', [1., 3.], popl='full')
+        namevarb = 'defs'
+        valuvarb = 1.9
     if gdat.elemtype == 'clus':
-        setp_namevarblimt(gdat, 'nobjdistslop', [1., 3.], popl='full')
+        namevarb = 'nobj'
+        valuvarb = 2.
+    setp_namevarbvalu(gdat, 'mean' + namevarb + 'distslop', valuvarb)
+    setp_namevarbvalu(gdat, 'stdv' + namevarb + 'distslop', stdvdistslop)
+    if stdvdistslop != 'none':
+        setp_namevarblimt(gdat, namevarb + 'distslop', [valuvarb, stdvdistslop], popl='full', typelimt='meanstdv')
+    else:
+        setp_namevarblimt(gdat, namevarb + 'distslop', [0., 4.], popl='full')
     
     ### spectral index
     if gdat.elemtype == 'lght' and gdat.numbener > 1:
@@ -967,10 +975,10 @@ def init( \
             sind = [1., 3.]
             minmsind = 1.
             maxmsind = 3.
-            minmsind0001 = -2.
-            maxmsind0001 = 5.
-            minmsind0002 = -2.
-            maxmsind0002 = 5.
+            minmsind0001 = -5.
+            maxmsind0001 = 10.
+            minmsind0002 = -5.
+            maxmsind0002 = 10.
             setp_namevarblimt(gdat, 'sind0001', [minmsind0001, maxmsind0001])
             setp_namevarblimt(gdat, 'sind0002', [minmsind0002, maxmsind0002])
         if gdat.exprtype == 'chan':
@@ -1099,16 +1107,17 @@ def init( \
             setp_namevarbvalu(gdat, 'expcdiststdvpop1', 0.2, popl='full')
         
         if gdat.exprtype == 'ferm':
-            setp_namevarbvalu(gdat, 'bacp', 1e-4, ener=0, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=1, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 1e-6, ener=2, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 1e-7, ener=3, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 1e-8, ener=4, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 3e-4, ener=0, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 3e-5, ener=1, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 3e-6, ener=2, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 3e-7, ener=3, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 3e-8, ener=4, back=1)
+
+            #setp_namevarbvalu(gdat, 'bacp', 5e-6, ener=0, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 5e-6, ener=1, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 2e-8, ener=2, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 2e-9, ener=3, back=0)
+            #setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=4, back=0)
+            #setp_namevarbvalu(gdat, 'bacp', 7e-7, ener=0, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 1e-4, ener=1, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=2, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 7e-7, ener=3, back=1)
+            #setp_namevarbvalu(gdat, 'bacp', 3e-8, ener=4, back=1)
 
         else:
             if gdat.exprtype == 'chan':
@@ -1556,7 +1565,7 @@ def init( \
                 refrfeat = getattr(gdat, 'refr' + strgfeat)
                 if len(refrfeat[q]) > 0:
                     bins = getattr(gdat, 'bins' + strgfeat)
-                    hist = histogram(refrfeat[q], bins)[0]
+                    hist = histogram(refrfeat[q][0, :], bins)[0]
                     setattr(gdat, 'refrhist' + strgfeat + 'ref%d' % q, hist)
     
         if gdat.datatype == 'inpt':
