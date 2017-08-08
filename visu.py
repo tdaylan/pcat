@@ -328,6 +328,10 @@ def plot_samp(gdat, gdatmodi, strg):
                                 if ydattype == 'totl':
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % gdat.lablelemextn
+                                
+                                print
+                                print
+                                print 'hereeee'
                                 print 'strg'
                                 print strg
                                 print 'factydat'
@@ -1321,11 +1325,18 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
     
+    print 'plot_gene'
+    print 'ydat'
+    print ydat
+
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
         ydat = ydat[indxydat]
     
+    print 'ydat'
+    print ydat
+
     # temp
     xerr = zeros((2, xdat.size))
     

@@ -1109,14 +1109,14 @@ def init( \
         if gdat.exprtype == 'ferm':
 
             #setp_namevarbvalu(gdat, 'bacp', 5e-6, ener=0, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 5e-6, ener=1, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 2e-8, ener=2, back=0)
-            setp_namevarbvalu(gdat, 'bacp', 2e-9, ener=3, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 5e-6, ener=0, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 2e-8, ener=1, back=0)
+            setp_namevarbvalu(gdat, 'bacp', 2e-9, ener=2, back=0)
             #setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=4, back=0)
             #setp_namevarbvalu(gdat, 'bacp', 7e-7, ener=0, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 1e-4, ener=1, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=2, back=1)
-            setp_namevarbvalu(gdat, 'bacp', 7e-7, ener=3, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 1e-4, ener=0, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 1e-5, ener=1, back=1)
+            setp_namevarbvalu(gdat, 'bacp', 7e-7, ener=2, back=1)
             #setp_namevarbvalu(gdat, 'bacp', 3e-8, ener=4, back=1)
 
         else:
