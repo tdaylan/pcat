@@ -66,12 +66,17 @@ def plot_samp(gdat, gdatmodi, strg):
         # plots
         ## histograms of the number of counts per pixel
         for d in gdat.indxregi:
-            for i in gdat.indxener:
-                for m in gdat.indxevtt:
-                    for nameecom in listnameecomtotl:
-                        name = 'histcntp' + nameecom + 'reg%dene%devt%d' % (d, i, m)
-                        plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, \
+            for m in gdat.indxevtt: 
+                for nameecom in listnameecomtotl:
+                    if gdat.numbpixl > 1:
+                        for i in gdat.indxener:
+                            name = 'histcntp' + nameecom + 'reg%dene%devt%d' % (d, i, m)
+                            plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl])
+                    else:
+                        name = 'histcntp' + nameecom + 'reg%devt%d' % (d, m)
+                        plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, \
+                                                                                                lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl])
 
         ## highest amplitude element
         # temp
@@ -228,32 +233,35 @@ def plot_samp(gdat, gdatmodi, strg):
                     lablxdat = gdat.lablanglfromhosttotl
                     for namecalc in ['delt', 'intg']:
                         
-                        # host and subhalo masses
-                        limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein')]
-                        lablydat = getattr(gdat, 'lablmass' + namecalc + 'totl')
+                        for d in gdat.indxregi:
+                            strgregi = 'reg%d' % d
+                            # host and subhalo masses
+                            limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein' + strgregi)]
+                            lablydat = getattr(gdat, 'lablmass' + namecalc + strgregi + 'totl')
 
-                        path = retr_plotpath(gdat, gdatmodi, strg, 'mass%s%s.pdf' % (namecalc, strgswep))
-                        listydat = [retr_fromgdat(gdat, gdatmodi, strg, 'masshost' + namecalc), \
-                                                        retr_fromgdat(gdat, gdatmodi, strg, 'masssubh' + namecalc)]
-                        if strg == 'post':
-                            listyerr = [retr_fromgdat(gdat, gdatmodi, strg, 'masshost' + namecalc, mometype='errr'), \
-                                                        retr_fromgdat(gdat, gdatmodi, strg, 'masssubh' + namecalc, mometype='errr')]
-                        else:
-                            listyerr = None
-                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, \
-                                                                                                lablydat=lablydat, listlinestyl=['-', '--'], colr=colr)
+                            path = retr_plotpath(gdat, gdatmodi, strg, 'mass%s%s%s.pdf' % (namecalc, strgregi, strgswep))
+                            masshost = retr_fromgdat(gdat, gdatmodi, strg, 'masshost%s%s' % (namecalc, strgregi))
+                            masssubh = retr_fromgdat(gdat, gdatmodi, strg, 'masssubh%s%s' % (namecalc, strgregi))
+                            listydat = [masshost, masssubh]
+                            if strg == 'post':
+                                masshosterrr = retr_fromgdat(gdat, gdatmodi, strg, 'masshost%s%s' % (namecalc, strgregi), mometype='errr')
+                                masssubherrr = retr_fromgdat(gdat, gdatmodi, strg, 'masssubh%s%s' % (namecalc, strgregi), mometype='errr')
+                                listyerr = [masshosterrr, masssubherrr]
+                            else:
+                                listyerr = None
+                            tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, \
+                                                                                                    lablydat=lablydat, listlinestyl=['-', '--'], colr=colr)
 
-                        # subhalo mass fraction
-                        limtydat = [1e-3, 0.1]
-                        lablydat = getattr(gdat, 'lablfracsubh' + namecalc + 'totl')
-
-                        path = retr_plotpath(gdat, gdatmodi, strg, 'fracsubh%s%s.pdf' % (namecalc, strgswep))
-                        listydat = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc)
-                        if strg == 'post':
-                            listyerr = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh' + namecalc, mometype='errr')
-                        else:
-                            listyerr = None
-                        tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, lablydat=lablydat, colr=colr)
+                            # subhalo mass fraction
+                            limtydat = [1e-3, 0.1]
+                            lablydat = getattr(gdat, 'lablfracsubh' + namecalc + strgregi + 'totl')
+                            path = retr_plotpath(gdat, gdatmodi, strg, 'fracsubh%s%s%s.pdf' % (namecalc, strgregi, strgswep))
+                            listydat = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh%s%s' % (namecalc, strgregi))
+                            if strg == 'post':
+                                listyerr = retr_fromgdat(gdat, gdatmodi, strg, 'fracsubh%s%s' % (namecalc, strgregi), mometype='errr')
+                            else:
+                                listyerr = None
+                            tdpy.util.plot_gene(path, xdat, listydat, yerr=listyerr, scalydat='logt', lablxdat=lablxdat, limtydat=limtydat, lablydat=lablydat, colr=colr)
 
             if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
                 ## PSF radial profile
@@ -287,8 +295,15 @@ def plot_samp(gdat, gdatmodi, strg):
                     if strg != 'true' and gdat.refrinfo and gdat.allwrefr:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'gdat.refrliststrgfeat[q][l]'
+                                print gdat.refrliststrgfeat[q][l]
                                 if not strgfeat in gdat.refrliststrgfeat[q][l]:
                                     continue
+                                print 'teeeey'
+                                print
+
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d)
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d, plotdiff=True)
                     for a, strgfrst in enumerate(liststrgfeatcorr[l]):
@@ -366,10 +381,13 @@ def plot_samp(gdat, gdatmodi, strg):
         
         # data and model count scatter
         for d in gdat.indxregi:
-            for i in gdat.indxener:
-                for m in gdat.indxevttplot:
-                    plot_scatcntp(gdat, gdatmodi, strg, d, i, m)
-       
+            for m in gdat.indxevttplot:
+                if gdat.numbpixl > 1:
+                    for i in gdat.indxener:
+                        plot_scatcntp(gdat, gdatmodi, strg, d, m, indxenerplot=i)
+                else:
+                    plot_scatcntp(gdat, gdatmodi, strg, d, m)
+
         # temp -- restrict other plots to indxmodlelemcomp
         if gdat.enerbins:
             for specconvunit in gdat.listspecconvunit:
@@ -725,8 +743,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         print 'A mosaic of samples...'
     
     ## mosaic of images of posterior catalogs
-    for d in gdat.indxregi:
-        plot_mosa(gdat, d)
+    if gdat.numbpixl > 1:
+        for d in gdat.indxregi:
+            plot_mosa(gdat, d)
     
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
@@ -785,11 +804,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             listvarbseco = getattr(gdat, 'list' + nameseco) * factplotseco
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
-            print 'name'
-            print name
-            print 'nameseco'
-            print nameseco
             listjoin = vstack((listvarb, listvarbseco)).T
+
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
         
@@ -842,7 +858,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         print 'PSF parameters...'
     
     #### PSF
-    if gdat.proppsfp:
+    if gdat.proppsfp and gdat.numbpixl > 1:
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalcova') + 'psfp'
         tdpy.mcmc.plot_grid(path, gdat.listfixp[:, gdat.fittindxfixppsfp] * gdat.fittfactfixpplot[None, gdat.fittindxfixppsfp], gdat.fittlablfixptotl[gdat.fittindxfixppsfp], \
                                           truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
@@ -864,14 +880,14 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         print 'Binned transdimensional parameters...'
    
     # stacked posteiors binned in position and flux
-    if gdat.fittnumbtrap > 0:
+    if gdat.fittnumbtrap > 0 and gdat.numbpixl > 1:
         liststrgbins = ['quad', 'full']
         for d in gdat.indxregi:
             for l in gdat.fittindxpopl:
                 plot_posthistlgalbgalelemstkd(gdat, d, l, 'cumu')
                 for strgbins in liststrgbins:
                     for strgfeatsign in gdat.fittliststrgfeatsign[l]:
-                        plot_posthistlgalbgalelemstkd(gdat, l, strgbins, strgfeatsign)
+                        plot_posthistlgalbgalelemstkd(gdat, d, l, strgbins, strgfeatsign)
 
     if gdat.verbtype > 0:
         print 'Prior and likelihood...'
@@ -1441,26 +1457,19 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     # reference histogram
     if not omittrue and gdat.allwrefr:
         for q in gdat.indxrefr:
+            
             if strgydat.startswith('psfn'):
                 name = 'psfnexpr'
             else:
                 if strgydat[-4:-1] == 'pop':
                     name = 'refr' + strgydat[:-4] + 'ref%d' % q
-                    if not strgydat[:-8] in gdat.refrliststrgfeat:
-                        continue
                 else:
                     name = 'refr' + strgydat
+            if not hasattr(gdat, name):
+                continue
             
             ydattemp = getattr(gdat, name)
             ydat = ydattemp * factydat
-            
-            if False:
-                print 'strgydat'
-                print strgydat
-                print 'name'
-                print name
-                print 'ydattemp'
-                print ydattemp
             
             if indxydat != None:
                 ydat = ydat[indxydat]
@@ -1475,7 +1484,10 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     continue
     
     if strgydat.startswith('histcntp'):
-        ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
+        if gdat.numbpixl > 1:
+            ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
+        else:
+            ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-8:])
         axis.plot(xdat, ydat, color='black', label='Data', alpha=gdat.alphmrkr)
                 
     # axis scales
@@ -1516,7 +1528,12 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     else:
                         ydatsupr = getattr(gdattemp, strg + strgydat + 'prio') * factydat
                         axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
-
+    
+    print 'strgydat'
+    print strgydat
+    print 'indxydat'
+    print indxydat
+    print
     if strgydat.startswith('hist') and indxydat != None and strgydat[4:] == 'deltllik':
         plot_sigmcont(gdat, axis, indxydat[0], strgfrst=strgxdat[4:])
     
@@ -1584,6 +1601,17 @@ def plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, indxregiplot, plotdiff=F
     else:
         indx = where(ydat > 0.)[0]
     if indx.size > 0:
+        print 'xdat'
+        print xdat
+        print 'ydat'
+        print ydat
+        print 'indx'
+        print indx
+        print 'strgfeat'
+        print strgfeat
+        print 'yerr'
+        print yerr
+        print
         axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
     # temp -- plot associations inside the comparison area
@@ -1625,11 +1653,19 @@ def make_legd(axis, offs=None, loca=1, numbcols=1):
     legd.get_frame().set_facecolor('white')
 
 
-def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxenerplot, indxevttplot):
+def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxevttplot, indxenerplot=None):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    ydat = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl')[indxregiplot, indxenerplot, :, indxevttplot]
-    axis.scatter(gdat.cntpdata[indxregiplot, indxenerplot, :, indxevttplot], ydat, alpha=gdat.alphmrkr)
+    ydat = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl')
+    if indxenerplot == None:
+        xdat = gdat.cntpdata[indxregiplot, :, :, indxevttplot].flatten()
+        ydat = ydat[indxregiplot, :, :, indxevttplot].flatten()
+        nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
+    else:
+        xdat = gdat.cntpdata[indxregiplot, indxenerplot, :, indxevttplot]
+        ydat = ydat[indxregiplot, indxenerplot, :, indxevttplot]
+        nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
+    axis.scatter(xdat, ydat, alpha=gdat.alphmrkr)
     gdat.limtcntpdata = [gdat.binscntpdata[0], gdat.binscntpdata[-1]]
     axis.set_xlim(gdat.limtcntpdata)
     axis.set_ylim(gdat.limtcntpdata)
@@ -1638,7 +1674,8 @@ def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxenerplot, indxevttplot
     axis.set_xscale('log')
     axis.set_yscale('log')
     plt.tight_layout()
-    path = retr_plotpath(gdat, gdatmodi, strg, 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot))
+
+    path = retr_plotpath(gdat, gdatmodi, strg, nameplot)
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
@@ -1781,18 +1818,18 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
             # superimpose reference elements
 
             if gdat.allwrefr:
-                refrsign = getattr(gdat, 'refr' + gdat.namefeatsign)
                 for q in gdat.indxrefr:
-                    if len(refrsign[q]) > 0:
-                        if strgfeat != None:
-                            refrfeat = getattr(gdat, 'refr' + strgfeat)[q][0, :] 
-                            indxelem = where((bins[indxlowr] < refrfeat) & (refrfeat < bins[indxuppr]))[0]
-                        else:
-                            indxelem = arange(gdat.refrnumbelem[q])
-                        
-                        mrkrsize = retr_mrkrsize(gdat, refrsign[q][0, indxelem], gdat.namefeatsign)
-                        axis.scatter(gdat.anglfact * gdat.refrlgal[q][0, indxelem], gdat.anglfact * gdat.refrbgal[q][0, indxelem], \
-                                                                                                    s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.listcolrrefr[q])
+                    if strgfeat in gdat.refrliststrgfeat[q]:
+                        refrsign = getattr(gdat, 'refr' + strgfeat)[indxregiplot][q]
+                        if len(refrsign) > 0:
+                            if strgfeat != None:
+                                indxelem = where((bins[indxlowr] < refrsign[0, :]) & (refrsign[0, :] < bins[indxuppr]))[0]
+                            else:
+                                indxelem = arange(gdat.refrnumbelem[q])
+                            
+                            mrkrsize = retr_mrkrsize(gdat, refrsign[0, indxelem], strgfeat)
+                            axis.scatter(gdat.anglfact * gdat.refrlgal[indxregiplot][q][0, indxelem], gdat.anglfact * gdat.refrbgal[indxregiplot][q][0, indxelem], \
+                                                                                        s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.listcolrrefr[q])
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.labllgaltotl)
@@ -2411,20 +2448,32 @@ def plot_init(gdat):
                 tdpy.util.plot_gene(path, gdat.meanener, gdat.expototlmean[d, :], scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
                                                                                                 lablydat=gdat.lablexpototl, limtydat=gdat.limtexpo)
             
-            gdat.histexpototl = empty((gdat.numbener, gdat.numbtickcbar - 1))
-            for i in gdat.indxener:
+            if gdat.numbpixl > 1:
+                for i in gdat.indxener:
+                    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                    axis.hist(gdat.expototl[d, i, :], gdat.binsexpo)
+                    axis.set_xlabel(gdat.lablexpototl)
+                    axis.set_ylabel(gdat.lablnumbpixl)
+                    axis.set_xscale('log')
+                    axis.set_yscale('log')
+                    plt.tight_layout()
+                    path = gdat.pathinit + 'histexporeg%dene%d.pdf' % (d, i)
+                    figr.savefig(path)
+                    plt.close(figr)
+            else:
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.hist(gdat.expototl[d, i, :], gdat.binsexpo)
+                axis.hist(gdat.expototl[d, :, :].flatten(), gdat.binsexpo)
                 axis.set_xlabel(gdat.lablexpototl)
                 axis.set_ylabel(gdat.lablnumbpixl)
                 axis.set_xscale('log')
                 axis.set_yscale('log')
                 plt.tight_layout()
-                path = gdat.pathinit + 'histexporeg%dene%d.pdf' % (d, i)
+                path = gdat.pathinit + 'histexporeg%d.pdf' % d
                 figr.savefig(path)
                 plt.close(figr)
                 
-                if gdat.numbpixl > 1:
+            if gdat.numbpixl > 1:
+                for i in gdat.indxener:
                     for m in gdat.indxevtt:
                         figr, axis, path = init_figr(gdat, None, 'expo', '', d, i, m, -1)
                         imag = retr_imag(gdat, axis, gdat.expo, '', 'expo', d, i, m)
