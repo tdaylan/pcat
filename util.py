@@ -316,8 +316,19 @@ def retr_sampvarb(gdat, strgmodl, samp, indxsampcomp=None):
     sampvarb = zeros_like(samp)
     indxfixp = getattr(gdat, strgmodl + 'indxfixp')
     
+    print 'strgmodl'
+    print strgmodl
     for k in indxfixp:
         sampvarb[k] = icdf_fixp(gdat, strgmodl, samp[k], k)
+        print 'k'
+        print k
+        print 'gdat.fittnamefixp[k]'
+        print gdat.fittnamefixp[k]
+        print 'samp[k]'
+        print samp[k]
+        print 'sampvarb[k]'
+        print sampvarb[k]
+        print 
     
     if indxsampcomp != None:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -762,15 +773,7 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sind0001=None, sind00
             meanener = gdat.meanener
 
         if spectype == 'gaus':
-            print 'flux'
-            print flux
-            print 'edis'
-            print edis
-            print 'elin'
-            print elin
             spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
-            print 'spec'
-            print spec
         if spectype == 'powr':
             spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
         if spectype == 'colr':
@@ -1079,10 +1082,10 @@ def retr_refrchaninit(gdat):
     for q in gdat.indxrefr:
         gdat.dictrefr.append(dict())
     
-    gdat.legdrefr = ['Xue+2011', 'Xue+2011 Supp.']
+    gdat.legdrefr = ['Xue+2011']
     
     gdat.listnamefeatamplrefr += ['flux']
-    gdat.listnamerefr += ['xu11', 'supp']
+    gdat.listnamerefr += ['xu11']
     
     setattr(gdat, 'lablotyp', 'O')
     setattr(gdat, 'minmotyp', 0.)
@@ -1105,7 +1108,7 @@ def retr_refrchaninit(gdat):
                 declcand =line[2]
        
     gdat.refrliststrgfeat[0] += ['lgal', 'bgal', 'flux', 'sind', 'otyp']
-    gdat.refrliststrgfeat[1] += ['lgal', 'bgal', 'flux', 'sind', 'otyp']
+    #gdat.refrliststrgfeat[1] += ['lgal', 'bgal', 'flux', 'sind', 'otyp']
 
 # col1: Sequential number adopted in this work (Hsu et al. 2014)
 # col2-4: ID, R.A.(J2000) and Dec.(J2000) from the CANDELS catalog (Guo et al. 2013).
@@ -1236,6 +1239,9 @@ def retr_refrchanfinl(gdat):
     gdat.refrlgal[0][0] = bgalchan
     gdat.refrotyp[0][0] = objttypechan
     
+    print 'gdat.refrlgal'
+    print gdat.refrlgal
+
     # temp
     for d in gdat.indxrefr:
         for q in gdat.indxrefr:
@@ -1243,7 +1249,7 @@ def retr_refrchanfinl(gdat):
             gdat.refrbgal[d][q] = tile(gdat.refrbgal[d][q], (3, 1)) 
             gdat.refrotyp[d][q] = tile(gdat.refrotyp[d][q], (3, 1)) 
     
-    gdat.refrspec = [[zeros((3, gdat.numbener, gdat.refrlgal[0].size))]]
+    gdat.refrspec = [[zeros((3, gdat.numbener, gdat.refrlgal[0][0].size))]]
     if gdat.numbener == 2:
         gdat.refrspec[0][0][0, 0, :] = fluxchansoft * 0.624e9
         gdat.refrspec[0][0][0, 1, :] = fluxchanhard * 0.624e9 / 16.
@@ -1255,16 +1261,16 @@ def retr_refrchanfinl(gdat):
     gdat.refrspec[0][0][2, :, :] = gdat.refrspec[0][0][0, :, :]
     
     # temp
-    gdat.refrspec[0][where(gdat.refrspec[0] < 0.)] = 0.
+    gdat.refrspec[0][0][where(gdat.refrspec[0][0] < 0.)] = 0.
    
     gdat.refrsind = []
     if gdat.numbener > 1:
-        gdat.refrsind.append(-log(gdat.refrspec[0][0, 1, :] / gdat.refrspec[0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.)))
-        gdat.refrsind[0][where(logical_not(isfinite(gdat.refrsind[0])))[0]] = 2.
+        gdat.refrsind.append(-log(gdat.refrspec[0][0][0, 1, :] / gdat.refrspec[0][0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.)))
+        gdat.refrsind[0][0][where(logical_not(isfinite(gdat.refrsind[0][0])))[0]] = 2.
     
     # temp
     if gdat.numbener > 1:
-        gdat.refrsind[0] = tile(gdat.refrsind[0], (3, 1)) 
+        gdat.refrsind[0][0] = tile(gdat.refrsind[0][0], (3, 1)) 
 
 
 def retr_refrferminit(gdat):
@@ -2711,7 +2717,7 @@ def setpprem(gdat):
     gdat.indxregi = arange(gdat.numbregi)
 
     # temp
-    gdat.edis = 0.1
+    gdat.edis = 0.1 / 2.35
 
     gdat.lablcurv = r'\kappa'
     gdat.lablexpc = r'E_{c}'
@@ -2888,7 +2894,7 @@ def setpinit(gdat, boolinitsetp=False):
         for nameseco in ['histodim', 'histtdim', 'assc', 'scattdim', 'cmpl', 'fdis']:
             for namethrd in ['init', 'fram', 'finl', 'anim']:
                 if namethrd == 'init':
-                    if nameseco == 'assc' or nameseco == 'histtdim':
+                    if nameseco == 'assc' or nameseco == 'histtdim' or nameseco == 'fdis' or nameseco == 'cmpl':
                         continue
                     setattr(gdat, 'path' + namethrd + nameseco, gdat.pathplot + 'init/' + nameseco + '/')
                 else:
@@ -4174,6 +4180,8 @@ def setpinit(gdat, boolinitsetp=False):
     #### filter for model elements
     gdat.listnamefilt = []
     if gdat.numbpixl > 1:
+        gdat.listnamefilt += ['spat']
+    else:
         gdat.listnamefilt += ['']
     if gdat.priofactdoff <= 1.:
         gdat.listnamefilt += ['deltllik']
@@ -4810,7 +4818,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         liststrgfeatodim = [[] for l in indxpopl]
         for l in indxpopl:
             liststrgfeatodim[l] = deepcopy(liststrgcomp[l])
-            liststrgfeatodim[l] += ['deltllik', 'gang', 'aang']
+            liststrgfeatodim[l] += ['deltllik']
+            if gdat.numbpixlfull > 1:
+                liststrgfeatodim[l] += ['gang', 'aang']
             if gdat.elemtype == 'lght':
                 liststrgfeatodim[l] += ['cnts']
                 if gdat.exprtype == 'ferm':
@@ -6432,6 +6442,10 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         liststrgcomptotl = getattr(gdat, strgmodl + 'liststrgcomptotl')
         oaxitype = getattr(gdat, strgmodl + 'oaxitype')
     
+        if gdat.verbtype > 1:
+            print 'spectype'
+            print spectype
+    
     backtype = getattr(gdat, strgmodl + 'backtype')
     psfntype = getattr(gdat, strgmodl + 'psfntype')
     convdiff = getattr(gdat, strgmodl + 'convdiff')
@@ -6531,9 +6545,6 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     else:
         numbelemconc = 0
 
-    if gdat.verbtype > 1:
-        print 'spectype'
-        print spectype
     ### loglikelihood
     initchro(gdat, gdatmodi, strg, 'llik')
 
@@ -7531,7 +7542,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                         gdat.refrbgal[d][l] = tile(dictelem[d][l]['bgal'], [3] + list(ones(dictelem[d][l]['bgal'].ndim, dtype=int)))
     
             # correlate the fitting model elements with the reference elements
-            if gdat.refrinfo and not (strg == 'true' and gdat.datatype == 'mock'):
+            if gdat.refrinfo and not (strg == 'true' and gdat.datatype == 'mock') and gdat.asscrefr:
                 indxelemrefrasschits = [[[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr] for d in gdat.indxregi]
                 indxelemfittasschits = [[[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr] for d in gdat.indxregi]
                 for d in gdat.indxregi:
@@ -7736,7 +7747,15 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                             histcntp = histogram(cntp[nameecom][d, i, :, m], bins=gdat.binscntpdata)[0]
                             setattr(gdatobjt, strg + 'histcntp' + nameecom + 'reg%dene%devt%d' % (d, i, m), histcntp)
                     else:
+                        
                         histcntp = histogram(cntp[nameecom][d, :, 0, m], bins=gdat.binscntpdata)[0]
+                        
+                        print 'nameecom'
+                        print nameecom
+                        print 'histcntp'
+                        summgene(histcntp)
+                        print
+
                         setattr(gdatobjt, strg + 'histcntp' + nameecom + 'reg%devt%d' % (d, m), histcntp)
 
         if lensmodltype != 'none':
@@ -7831,6 +7850,8 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                 for k, namefilt in enumerate(gdat.listnamefilt):
                     for l in indxpopl:
                         if namefilt == '':
+                            listindxelemfilt[k][d][l] = arange(numbelem[d, l])
+                        if namefilt == 'spat':
                             listindxelemfilt[k][d][l] = where((fabs(dictelem[d][l]['lgal']) < gdat.maxmgangdata) & (fabs(dictelem[d][l]['bgal']) < gdat.maxmgangdata))[0]
                         if namefilt == 'pars':
                             listindxelemfilt[k][d][l] = where(dictelem[d][l]['deltllik'] > 0.5 * numbcomp[l])[0]
@@ -7864,9 +7885,29 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                 #if indx.size > 0:
                                 #    dictelem[d][l]['hist' + strgfeat] = histogram(dictelem[d][l][strgfeat[:-4]][indx], bins)[0]
                             else:
+                                print 'tey'
+                                print 'strg'
+                                print strg
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'dictelem[d][l][strgfeat]'
+                                print 'len(listindxelemfilt[0][d][l])'
+                                print len(listindxelemfilt[0][d][l])
                                 if len(dictelem[d][l][strgfeat]) > 0 and len(listindxelemfilt[0][d][l]) > 0:
                                     # temp
                                     try:
+                                        print 'strgfeat'
+                                        print strgfeat
+                                        print 'dictelem[d][l][strgfeat]'
+                                        print dictelem[d][l][strgfeat]
+                                        print 'dictelem[d][l][strgfeat][listindxelemfilt[0][d][l]]'
+                                        print dictelem[d][l][strgfeat][listindxelemfilt[0][d][l]]
+                                        print 'bins'
+                                        print bins
+                                        print 'histogram(dictelem[d][l][strgfeat][listindxelemfilt[0][d][l]], bins)[0]'
+                                        print histogram(dictelem[d][l][strgfeat][listindxelemfilt[0][d][l]], bins)[0]
+                                        print
+
                                         dictelem[d][l]['hist' + strgfeat] = histogram(dictelem[d][l][strgfeat][listindxelemfilt[0][d][l]], bins)[0]
                                     except:
                                         print 'hey'
@@ -7881,6 +7922,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
                                         print bins
                                         print
                                         raise Exception('')
+                                print
                 
                     #### two dimensional
                     for a, strgfrst in enumerate(liststrgfeatcorr[l]):
@@ -8114,7 +8156,7 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
         if numbtrap > 0:
             if gdat.allwrefr:
                 # correlate the catalog sample with the reference catalog
-                if gdat.refrinfo and not (strg == 'true' and gdat.datatype == 'mock'):
+                if gdat.refrinfo and not (strg == 'true' and gdat.datatype == 'mock') and gdat.asscrefr:
                     for d in gdat.indxregi:
                         for q in gdat.indxrefr:
                             for l in gdat.fittindxpopl:
@@ -8246,6 +8288,14 @@ def proc_cntpdata(gdat):
             if gdat.numbpixl > 1:
                 for i in gdat.indxener: 
                     histcntp = histogram(gdat.cntpdata[d, i, :, m], bins=gdat.binscntpdata)[0]
+                    
+                    print 'proc_cntpdata'
+                    print 'histcntp'
+                    summgene(histcntp)
+                    print 'dmi'
+                    print d, m, i
+                    print
+
                     setattr(gdat, 'histcntpdatareg%dene%devt%d' % (d, i, m), histcntp)
             else:
                 histcntp = histogram(gdat.cntpdata[d, :, 0, m], bins=gdat.binscntpdata)[0]

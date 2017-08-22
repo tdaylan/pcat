@@ -86,7 +86,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     plot_brgt(gdat, gdatmodi, strg)
         
             # completeness and false discovery rate
-            if strg != 'true' and gdat.allwrefr:
+            if strg != 'true' and gdat.allwrefr and gdat.asscrefr:
                 for strgclas in ['cmpl', 'fdis']:   
                     nameinte = strgclas + '/'
                     for d in gdat.indxregi:
@@ -292,7 +292,7 @@ def plot_samp(gdat, gdatmodi, strg):
             # element feature correlations
             for d in gdat.indxregi:
                 for l in indxpopl:
-                    if strg != 'true' and gdat.refrinfo and gdat.allwrefr:
+                    if strg != 'true' and gdat.refrinfo and gdat.allwrefr and gdat.asscrefr:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
                                 print 'strgfeat'
@@ -312,7 +312,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 for strgplottype in ['hist', 'scat']:
                                     if strgmodl == 'true' and strgplottype == 'hist':
                                         continue
-                                    if not gdat.condcatl and strgplottype == 'scat':
+                                    if strgmodl == 'post' and not gdat.condcatl and strgplottype == 'scat':
                                         continue
                                     plot_elemtdim(gdat, gdatmodi, strg, d, l, strgplottype, strgfrst, strgseco)
     
@@ -338,7 +338,10 @@ def plot_samp(gdat, gdatmodi, strg):
 
                         listname = ['hist' + strgfeat + 'reg%dpop%d' % (d, l)]
                         for name in listname:
-                            listydattype = ['totl', 'sden']
+                            if gdat.numbpixl > 1:
+                                listydattype = ['totl', 'sden']
+                            else:
+                                listydattype = ['totl']
                             for ydattype in listydattype:
                                 
                                 # plot the surface density of elements only for the amplitude feature
@@ -805,6 +808,17 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
             listjoin = vstack((listvarb, listvarbseco)).T
+    
+            # temp -- this comes up in lens_syst
+            print 'name'
+            print name
+            print 'listvarb'
+            summgene(listvarb)
+            print 'nameseco'
+            print nameseco
+            print 'listvarbseco'
+            summgene(listvarbseco)
+            print
 
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
@@ -1393,11 +1407,23 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
     
+    print 'strgydat'
+    print strgydat
+    print 'ydat'
+    print ydat
+    print
+
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
         ydat = ydat[indxydat]
     
+    print 'strgydat'
+    print strgydat
+    print 'ydat'
+    print ydat
+    print
+
     # temp
     xerr = zeros((2, xdat.size))
     
@@ -1465,12 +1491,18 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     name = 'refr' + strgydat[:-4] + 'ref%d' % q
                 else:
                     name = 'refr' + strgydat
+            
+            print 'tey'
+            print 'name'
+            print name
             if not hasattr(gdat, name):
                 continue
-            
+            print 'mey'
+
             ydattemp = getattr(gdat, name)
             ydat = ydattemp * factydat
-            
+            print 'ydat'
+            print ydat
             if indxydat != None:
                 ydat = ydat[indxydat]
             
@@ -1483,6 +1515,11 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
                     continue
     
+    print
+    print
+    print
+    print
+
     if strgydat.startswith('histcntp'):
         if gdat.numbpixl > 1:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
@@ -1528,15 +1565,10 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     else:
                         ydatsupr = getattr(gdattemp, strg + strgydat + 'prio') * factydat
                         axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
-    
-    print 'strgydat'
-    print strgydat
-    print 'indxydat'
-    print indxydat
-    print
-    if strgydat.startswith('hist') and indxydat != None and strgydat[4:] == 'deltllik':
-        plot_sigmcont(gdat, axis, indxydat[0], strgfrst=strgxdat[4:])
-    
+   
+    if strgydat.startswith('hist') and strgydat[4:-8] == 'deltllik':
+        plot_sigmcont(gdat, axis, int(strgydat[-1]), strgfrst=strgxdat[4:])
+   
     if indxydat != None:
         strgydat += strgindxydat
     

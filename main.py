@@ -22,6 +22,8 @@ def init( \
          sqzeprop=False, \
          explprop=False, \
         
+         asscrefr=True, \
+
          # chain setup
          numbswep=1000000, \
          numbburn=None, \
@@ -846,7 +848,7 @@ def init( \
         if gdat.exprtype == 'ferm':
             gdat.numbrefr = 2
         if gdat.exprtype == 'chan':
-            gdat.numbrefr = 2
+            gdat.numbrefr = 1
 
     gdat.indxrefr = arange(gdat.numbrefr)
     gdat.listnamefeatamplrefr = [[] for q in gdat.indxrefr]
@@ -854,10 +856,6 @@ def init( \
     gdat.refrliststrgfeat = [[] for q in gdat.indxrefr]
     gdat.refrliststrgfeatodim = [[] for q in gdat.indxrefr]
     gdat.refrinfo = False
-    print 'gdat.numbrefr'
-    print gdat.numbrefr
-    print 'gdat.indxrefr'
-    print gdat.indxrefr
     if gdat.allwrefr:
         if gdat.datatype == 'mock':
             gdat.refrinfo = True
@@ -872,18 +870,9 @@ def init( \
             if gdat.exprtype == 'chan':
                 gdat.refrinfo = True
                 retr_refrchaninit(gdat)
-            print 'gdat.numbrefr'
-            print gdat.numbrefr
-            print 'gdat.indxrefr'
-            print gdat.indxrefr
-        
             gdat.refrliststrgfeattotl = retr_listconc(gdat.refrliststrgfeat)
             
             for q in gdat.indxrefr:
-                print 'gdat.refrliststrgfeat'
-                print gdat.refrliststrgfeat
-                print 'q'
-                print q
                 if 'lgal' in gdat.refrliststrgfeat[q] and 'bgal' in gdat.refrliststrgfeat[q]:
                     gdat.refrliststrgfeat[q] += ['gang', 'aang']
                 for strgfeat in gdat.refrliststrgfeat[q]:
@@ -979,7 +968,10 @@ def init( \
         if gdat.exprtype == 'ferm':
             minmflux = 3e-9
         if gdat.exprtype == 'chan':
-            minmflux = 1e-9
+            if gdat.anlytype == 'spec':
+                minmflux = 1e-9
+            else:
+                minmflux = 1e-9
         if gdat.exprtype == 'sdyn':
             minmflux = 0.1
         setp_namevarbvalu(gdat, 'minmflux', minmflux)
@@ -2576,9 +2568,7 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.fittnumbtrap > 0:
         for d in gdat.indxregi:
             for l in gdat.fittindxpopl:
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[d, l]] = poisson(gdatmodi.thissampvarb[gdat.fittindxfixpmeanelem[l]])
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[d, l]] = min(gdat.fittmaxmnumbelem[d, l], gdatmodi.thissamp[l])
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[d, l]] = max(gdat.fittminmnumbelem[d, l], gdatmodi.thissamp[l])
+                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[d, l]] = random_integers(gdat.fittminmnumbelem[d, l], gdat.fittmaxmnumbelem[d, l])
     
     ## Fixed-dimensional parameters
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
@@ -3281,7 +3271,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thissampvarb[indxfixp]
                         print 'Log-prior penalization term: '
                         print gdatmodi.thislpri[0]
-                        if gdat.allwrefr:
+                        if gdat.allwrefr and gdat.asscrefr:
                             print 'Completeness'
                             for d in gdat.indxregi:
                                 for q in gdat.indxrefr:
