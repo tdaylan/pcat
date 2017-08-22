@@ -1395,7 +1395,7 @@ def init( \
             setattr(gdat, 'limt' + strgfeat + 'plot', limt)
 
     if gdat.fittnumbtrap > 0:
-        if gdat.allwrefr:
+        if gdat.allwrefr and gdat.asscrefr:
             for d in gdat.indxregi:
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
