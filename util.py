@@ -1249,7 +1249,7 @@ def retr_refrchanfinl(gdat):
             gdat.refrbgal[d][q] = tile(gdat.refrbgal[d][q], (3, 1)) 
             gdat.refrotyp[d][q] = tile(gdat.refrotyp[d][q], (3, 1)) 
     
-    gdat.refrspec = [[zeros((3, gdat.numbener, gdat.refrlgal[0][0].size))]]
+    gdat.refrspec = [[zeros((3, gdat.numbener, gdat.refrlgal[0][0].shape[1]))]]
     if gdat.numbener == 2:
         gdat.refrspec[0][0][0, 0, :] = fluxchansoft * 0.624e9
         gdat.refrspec[0][0][0, 1, :] = fluxchanhard * 0.624e9 / 16.
@@ -3398,9 +3398,16 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.allwrefr:
         if gdat.datatype == 'mock':
             if gdat.truelegdpopl != None:
+                # user-defined true population legend
                 gdat.legdrefr = gdat.truelegdpopl
             else:
-                gdat.legdrefr = ['True Pop. %d' % l for l in gdat.trueindxpopl]
+                # default true population legend
+                gdat.legdrefr = []
+                for l in gdat.trueindxpopl:
+                    if gdat.truenumbpopl == 1:
+                        gdat.legdrefr.append('True')
+                    else:
+                        gdat.legdrefr.append('True Pop. %d' % l)
         gdat.legdrefrmiss = []
         gdat.legdrefrhits = []
         for q in gdat.indxrefr:
@@ -7392,6 +7399,11 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
     ## tertiary variables that are not needed for evolving the chain
     if strg != 'next':
+        
+        if strg == 'this':
+            numbelemtotl = sum(numbelem)
+            setattr(gdatobjt, strg + 'numbelem', numbelem)
+            setattr(gdatobjt, strg + 'numbelemtotl', numbelemtotl)
        
         ## load necessary variables
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
@@ -7533,6 +7545,31 @@ def proc_samp(gdat, gdatmodi, strg, raww=False, fast=False):
     
         ## element related
         if numbtrap > 0:
+            
+            print 'tey'
+            if gdat.numbpixl == 1:
+                print 'tey'
+                for d in gdat.indxregi:
+                    print 'tey'
+                    for l in indxpopl:
+                        print 'tey'
+                        print 'strg'
+                        print strg
+                        print 'dictelem'
+                        print dictelem
+                        print 'numbelem'
+                        print numbelem
+                        for k in range(numbelem[d, l]):
+                            print 'tey'
+                            print strg
+                            print
+                            setattr(gdatobjt, strg + 'speclinereg%dpop%d%04d' % (d, l, k), dictelem[d][l]['spec'][:, k])
+            
+            print 'sampvarb'
+            print sampvarb
+            print 'gdat.truetruespeclinereg0pop00000' 
+            print gdat.truespeclinereg0pop00000
+
             if gdat.datatype == 'mock' and strg == 'true' and gdat.numbpixl > 1:
                 gdat.refrlgal = [[[] for l in gdat.trueindxpopl] for d in gdat.indxregi]
                 gdat.refrbgal = [[[] for l in gdat.trueindxpopl] for d in gdat.indxregi]

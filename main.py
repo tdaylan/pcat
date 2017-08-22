@@ -1501,9 +1501,11 @@ def init( \
     if gdat.datatype == 'mock':
         ## unit sample vector
         gdat.truesamp = zeros(gdat.truenumbpara)
-        gdat.truefixp = zeros(gdat.truenumbfixp) + nan
+        gdat.truesampvarb = zeros(gdat.truenumbpara) + nan
         if gdat.truenumbtrap > 0:
-            gdat.truefixp[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
+            gdat.truesampvarb[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
+            print 'gdat.truesampvarb'
+            print gdat.truesampvarb
         
         if gdat.truenumbtrap > 0:
             if gdat.truenumbtrap > 0:
@@ -1514,9 +1516,7 @@ def init( \
                 gdat.trueindxsampcomp = retr_indxsampcomp(gdat, gdat.trueindxelemfull, 'true')
             else:
                 gdat.trueindxelemfull = []
-            gdat.truefixp[gdat.trueindxfixpmeanelem] = gdat.truefixp[gdat.trueindxfixpnumbelem]
 
-        gdat.truesampvarb = empty(gdat.truenumbpara)
         gdat.truesamp = rand(gdat.truenumbpara)
 
         for k in gdat.trueindxfixp:
@@ -1526,17 +1526,17 @@ def init( \
 
             # assume the true PSF
             if gdat.numbpixl > 1 and k in gdat.trueindxfixppsfp:
-                gdat.truefixp[k] = gdat.psfpexpr[k-gdat.trueindxfixppsfp[0]]
+                gdat.truesampvarb[k] = gdat.psfpexpr[k-gdat.trueindxfixppsfp[0]]
             else:
                 ## read input mock model parameters
                 try:
-                    gdat.truefixp[k] = getattr(gdat, 'true' + gdat.truenamefixp[k])
+                    gdat.truesampvarb[k] = getattr(gdat, 'true' + gdat.truenamefixp[k])
                 except:
                     pass
                 
                 # randomly sample the rest of the mock model parameters
-                if not isfinite(gdat.truefixp[k]):
-                    gdat.truefixp[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
+                if not isfinite(gdat.truesampvarb[k]):
+                    gdat.truesampvarb[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
 
         # temp -- this is needed for the paper
         #if gdat.elemtype == 'lens':
@@ -1545,13 +1545,7 @@ def init( \
         #    gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.truemaxmgang * randn()
         #    gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
 
-        gdat.truesampvarb[gdat.trueindxfixp] = gdat.truefixp
         if gdat.truenumbtrap > 0:
-            # temp
-            #gdat.truesamp[gdat.trueindxfixpnumbelem] = gdat.truesampvarb[gdat.trueindxfixpnumbelem]
-            
-            gdat.truenumbelemtotl = sum(gdat.truefixp[gdat.trueindxfixpnumbelem])
-            gdat.trueindxelemtotl = arange(gdat.truenumbelemtotl)
         
             if gdat.randseedelem:
                 seed()
@@ -1559,6 +1553,12 @@ def init( \
                     gdat.truesamp[gdat.trueindxsampcomp['comp'][l]] = rand(gdat.trueindxsampcomp['comp'][l].size)
    
             # sample element components from the true metamodel
+            print 'gdat.truesamp'
+            print gdat.truesamp
+            print 'gdat.truesampvarb'
+            print gdat.truesampvarb
+            print 'gdat.trueindxsampcomp'
+            print gdat.trueindxsampcomp
             retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.indxregi, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
     gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
@@ -1582,8 +1582,11 @@ def init( \
                         gdat.pdfnspatpriotemp[:] += 1. / sqrt(2. * pi) / gdat.stdvspatprio * exp(-0.5 * (gdat.binslgalcartmesh - gdat.lgalprio[k])**2 / gdat.stdvspatprio**2) * \
                                                                                                     exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
                     gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
-   
+    
     if gdat.datatype == 'mock':
+        
+        gdat.truenumbelemtotl = sum(gdat.truenumbelem)
+
         # temp
         gdatdictcopy = deepcopy(gdat.__dict__)
         for name, valu in gdatdictcopy.iteritems():
@@ -2575,7 +2578,7 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
-                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truefixp[indxfixptrue], k)
+                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
     ## element parameters
@@ -2767,8 +2770,8 @@ def work(pathoutpthis, lock, indxprocwork):
     if gdat.strgcnfg == 'pcat_ferm_mock_igal_popl':
         print 'gdatmodi.thissampvarb'
         print gdatmodi.thissampvarb[:, None]
-        print 'gdat.truefixp'
-        print gdat.truefixp[:, None]
+        print 'gdat.truesampvarb'
+        print gdat.truesampvarb[:, None]
         print 'gdat.truelgal'
         print gdat.truelgal[0][0][0, :]
         print gdat.truelgal[0][1][0, :]
@@ -3061,6 +3064,11 @@ def work(pathoutpthis, lock, indxprocwork):
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
+                print 'strgvarb'
+                print strgvarb
+                print 'valu'
+                summgene(valu)
+                print
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
                 
             for strgvarb in gdat.liststrgvarblistsamp:

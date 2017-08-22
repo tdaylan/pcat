@@ -71,12 +71,12 @@ def plot_samp(gdat, gdatmodi, strg):
                     if gdat.numbpixl > 1:
                         for i in gdat.indxener:
                             name = 'histcntp' + nameecom + 'reg%dene%devt%d' % (d, i, m)
-                            plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, \
+                            plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl])
                     else:
                         name = 'histcntp' + nameecom + 'reg%devt%d' % (d, m)
-                        plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, \
-                                                                                                lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl])
+                        plot_gene(gdat, gdatmodi, strg, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
+                                                                                                lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbener])
 
         ## highest amplitude element
         # temp
@@ -790,6 +790,13 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscaltrac') + name
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalhist') + name
+        
+        print 'name'
+        print name
+        print 'listvarb'
+        summgene(listvarb)
+        print
+
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
@@ -1025,6 +1032,11 @@ def plot_sbrt(gdat, gdatmodi, strg, indxregiplot, specconvunit):
     else:
         strgmodl = 'fitt'
     
+    if gdatmodi != None:
+        gdatobjt = gdatmodi
+    else:
+        gdatobjt = gdat
+        
     backtype = getattr(gdat, strgmodl + 'backtype')
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     specback = getattr(gdat, strgmodl + 'specback')
@@ -1036,11 +1048,20 @@ def plot_sbrt(gdat, gdatmodi, strg, indxregiplot, specconvunit):
     numblablsbrt = getattr(gdat, strgmodl + 'numblablsbrt')
     numblablsbrtspec = getattr(gdat, strgmodl + 'numblablsbrtspec')
     
+    if gdat.numbpixl == 1:
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+    
     for b, namespatmean in enumerate(gdat.listnamespatmean):
     
-        listydat = zeros((numblablsbrtspec, gdat.numbener))
-        listyerr = zeros((2, numblablsbrtspec, gdat.numbener))
-        
+        if gdat.numbpixl > 1 or strg == 'post':
+            listydat = zeros((numblablsbrtspec, gdat.numbener))
+            listyerr = zeros((2, numblablsbrtspec, gdat.numbener))
+        else:
+            numbelem = getattr(gdatobjt, strg + 'numbelem')
+            numbelemtotl = sum(numbelem)
+            listydat = zeros((numblablsbrtspec + numbelemtotl, gdat.numbener))
+            listyerr = zeros((2, numblablsbrtspec + numbelemtotl, gdat.numbener))
+            
         cntr = 0
         indxvarb = [b, indxregiplot, slice(None)]
 
@@ -1073,6 +1094,15 @@ def plot_sbrt(gdat, gdatmodi, strg, indxregiplot, specconvunit):
                 listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
             cntr += 1
         
+        if gdat.numbpixl == 1 and strg != 'post':
+            for d in gdat.indxregi:
+                for l in indxpopl:
+                    for k in range(numbelem[d,l ]):
+                        listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'speclinereg%dpop%d%04d' % (d, l, k))
+                        #if strg == 'post':
+                        #    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
+                        cntr += 1
+            
         cntrdata = cntr
 
         ## data
@@ -1322,10 +1352,9 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
             hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco + 'reg%dpop%d' % (indxregiplot, indxpoplplot))
             imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphmrkr)
         else:
-            try:
-                varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxpoplplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
-                varbseco = getattr(gdatmodi, 'this' + strgseco)[indxpoplplot] * getattr(gdat, 'fact' + strgseco + 'plot')
-            except:
+            varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxregiplot][indxpoplplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            varbseco = getattr(gdatmodi, 'this' + strgseco)[indxregiplot][indxpoplplot] * getattr(gdat, 'fact' + strgseco + 'plot')
+            if len(varbfrst) == 0 or len(varbseco) == 0:
                 varbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                 varbseco = array([limtseco[0] * factplotseco * 0.1])
             axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
@@ -1333,10 +1362,9 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
     # reference elements
     if gdat.allwrefr:
         for q in gdat.indxrefr:
-            try:
-                refrvarbfrst = getattr(gdat, 'refrfeat')[indxregiplot][q][strgfrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
-                refrvarbseco = getattr(gdat, 'refrfeat')[indxregiplot][q][strgseco] * getattr(gdat, 'fact' + strgseco + 'plot')
-            except:
+            refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[indxregiplot][q] * getattr(gdat, 'fact' + strgfrst + 'plot')
+            refrvarbseco = getattr(gdat, 'refr' + strgseco)[indxregiplot][q] * getattr(gdat, 'fact' + strgseco + 'plot')
+            if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                 refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                 refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
             axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
@@ -1521,6 +1549,13 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
     print
 
     if strgydat.startswith('histcntp'):
+        print 'meeeeeey'
+        print 'ydat'
+        summgene(ydat)
+        print
+        print
+
+
         if gdat.numbpixl > 1:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
         else:
@@ -1689,6 +1724,10 @@ def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxevttplot, indxenerplot
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     ydat = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl')
+    if strg == 'post':
+        yerr = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl', mometype='errr')
+    else:
+        yerr = zeros((2, ydat.size))
     if indxenerplot == None:
         xdat = gdat.cntpdata[indxregiplot, :, :, indxevttplot].flatten()
         ydat = ydat[indxregiplot, :, :, indxevttplot].flatten()
@@ -1697,7 +1736,15 @@ def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxevttplot, indxenerplot
         xdat = gdat.cntpdata[indxregiplot, indxenerplot, :, indxevttplot]
         ydat = ydat[indxregiplot, indxenerplot, :, indxevttplot]
         nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
-    axis.scatter(xdat, ydat, alpha=gdat.alphmrkr)
+    if strg == 'post':
+        colr = 'black'
+    else:
+        colr = 'b'
+    #axis.scatter(xdat, ydat, yerr=yerr, alpha=gdat.alphmrkr, color=colr)
+    if strg == 'post':
+        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='black', capsize=10)
+    else:
+        axis.plot(xdat, ydat, marker='o', ls='', markersize=5, color='b')
     gdat.limtcntpdata = [gdat.binscntpdata[0], gdat.binscntpdata[-1]]
     axis.set_xlim(gdat.limtcntpdata)
     axis.set_ylim(gdat.limtcntpdata)
