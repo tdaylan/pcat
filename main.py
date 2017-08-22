@@ -540,23 +540,23 @@ def init( \
             backtype = [[1e2, 2.], backtypetemp]
         else:
             backtype = [1., backtypetemp]
-        
-        if gdat.anlytype.startswith('extr'):
-            meanbacpbac1 = 1.
-        else:
-            meanbacpbac1 = backtypetemp[0]
-        
-        gdat.initbacpbac1 = meanbacpbac1
-        setp_namevarbvalu(gdat, 'bacpbac1', 'gaus')
-        stdvbacpbac1 = 1e-8 * meanbacpbac1
-        setp_namevarblimt(gdat, 'bacpbac1', [meanbacpbac1, stdvbacpbac1], typelimt='meanstdv')
     if gdat.elemtype == 'lens':
         backtype = [1.]
     if gdat.elemtype == 'clus':
         backtype = [1.]
     setp_namevarbvalu(gdat, 'backtype', backtype)
-    
+        
     setpprem(gdat)
+    
+    if gdat.exprtype == 'chan':
+        if gdat.anlytype.startswith('extr'):
+            meanbacpbac1 = 1.
+        else:
+            meanbacpbac1 = backtypetemp[0]
+        gdat.initbacpbac1 = meanbacpbac1
+        setp_namevarbvalu(gdat, 'scalbacp', 'gaus', back=1, regi='full')
+        stdvbacpbac1 = 1e-2 * meanbacpbac1
+        setp_namevarblimt(gdat, 'bacp', [meanbacpbac1, stdvbacpbac1], back=1, regi='full', typelimt='meanstdv')
     
     if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan':
         gdat.enerdiff = True
@@ -946,12 +946,12 @@ def init( \
             setp_namevarblimt(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
     
         # particle background
-        if gdat.exprtype == 'chan':
-            if gdat.anlytype == 'spec':
-                bacp = [1e-8, 1e-6]
-            else:
-                bacp = [1e-1, 1e2]
-            setp_namevarblimt(gdat, 'bacp', bacp, back=1, regi='full')
+        #if gdat.exprtype == 'chan':
+        #    if gdat.anlytype == 'spec':
+        #        bacp = [1e-8, 1e-6]
+        #    else:
+        #        bacp = [1e-1, 1e2]
+        #    setp_namevarblimt(gdat, 'bacp', bacp, back=1, regi='full')
         
     ### element parameter boundaries
     #### spatial
@@ -1026,12 +1026,6 @@ def init( \
     else:
         setp_namevarblimt(gdat, gdat.namefeatampl + 'distslop', [minmdistslop, maxmdistslop], popl='full')
     
-    #print 'gdat.fittminmnobjdistslop'
-    #print gdat.fittminmnobjdistslop
-    #print 'gdat.fittmaxmnobjdistslop'
-    #print gdat.fittmaxmnobjdistslop
-    #print 
-    
     ### spectral index
     if gdat.elemtype == 'lght' and gdat.numbener > 1:
         if gdat.exprtype == 'ferm':
@@ -1077,6 +1071,10 @@ def init( \
     else:
         numbelem = array([100])
     setp_namevarbvalu(gdat, 'numbelem', numbelem, popl='full', regi='full')
+    print 'gdat.truenumbelemreg0pop0'
+    print gdat.truenumbelemreg0pop0
+    print 
+
     # temp -- add poisson
     #gdat.truenumbelem = empty(gdat.truenumbpopl, dtype=int)
     #if gdat.truenumbtrap > 0:
@@ -1160,6 +1158,8 @@ def init( \
         setp_namevarbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl='full')
         if gdat.elemtype == 'lght':
             setp_namevarbvalu(gdat, 'fluxdistslop', 2.2, popl='full')
+        if gdat.elemtype == 'line':
+            setp_namevarbvalu(gdat, 'fluxdistslop', 2., popl='full')
         if gdat.elemtype == 'lens':
             setp_namevarbvalu(gdat, 'defsdistslop', 1.9, popl='full')
         if gdat.elemtype == 'clus':
@@ -1198,6 +1198,7 @@ def init( \
             #setp_namevarbvalu(gdat, 'bacp', 3e-8, ener=4, back=1, regi='full')
 
         else:
+            # sky background
             if gdat.exprtype == 'chan':
                 if gdat.anlytype == 'spec':
                     bacp = 10.
@@ -1206,8 +1207,10 @@ def init( \
             if gdat.exprtype == 'hubb':
                 bacp = 2e-7
             setp_namevarbvalu(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
+
+            # particle background
             if gdat.exprtype == 'chan':
-                bacp = 1.
+                bacp = backtypetemp[0]
                 setp_namevarbvalu(gdat, 'bacp', bacp, back=1, regi='full')
         
         if gdat.elemtype == 'lens':
@@ -1497,15 +1500,14 @@ def init( \
             if gdat.verbtype > 0:
                 print 'Setting the seed for the RNG...'
             set_state(gdat.seedstat)
-
+    
     if gdat.datatype == 'mock':
         ## unit sample vector
         gdat.truesamp = zeros(gdat.truenumbpara)
-        gdat.truesampvarb = zeros(gdat.truenumbpara) + nan
+        gdat.truesampvarb = zeros(gdat.truenumbpara)
         if gdat.truenumbtrap > 0:
             gdat.truesampvarb[gdat.trueindxfixpnumbelem] = gdat.truenumbelem
-            print 'gdat.truesampvarb'
-            print gdat.truesampvarb
+            gdat.truesampvarb[gdat.trueindxfixpmeanelem] = mean(gdat.truenumbelem, axis=0)
         
         if gdat.truenumbtrap > 0:
             if gdat.truenumbtrap > 0:
@@ -1518,8 +1520,11 @@ def init( \
                 gdat.trueindxelemfull = []
 
         gdat.truesamp = rand(gdat.truenumbpara)
-
-        for k in gdat.trueindxfixp:
+        if gdat.truenumbtrap > 0 and gdat.randseedelem:
+            seed()
+            gdat.truesamp[gdat.indxparatrap] = rand(gdat.truenumbtrap)
+        
+        for k in gdat.trueindxpara:
             
             if gdat.truenumbtrap > 0 and (k in gdat.trueindxfixpnumbelem or k in gdat.trueindxfixpmeanelem):
                 continue
@@ -1530,37 +1535,31 @@ def init( \
             else:
                 ## read input mock model parameters
                 try:
-                    gdat.truesampvarb[k] = getattr(gdat, 'true' + gdat.truenamefixp[k])
+                    # impose user-defined true parameter
+                    gdat.truesampvarb[k] = getattr(gdat, 'true' + gdat.truenamepara[k])
+                    if gdat.verbtype > 1:
+                        print 'Imposing true parameter:'
+                        print gdat.truenamepara[k]
                 except:
-                    pass
-                
-                # randomly sample the rest of the mock model parameters
-                if not isfinite(gdat.truesampvarb[k]):
-                    gdat.truesampvarb[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
-
-        # temp -- this is needed for the paper
-        #if gdat.elemtype == 'lens':
-        #    gdat.truefixp[gdat.trueindxfixplgalsour] = 0.04 * gdat.truemaxmgang * randn()
-        #    gdat.truefixp[gdat.trueindxfixpbgalsour] = 0.04 * gdat.truemaxmgang * randn()
-        #    gdat.truefixp[gdat.trueindxfixplgalhost] = 0.04 * gdat.truemaxmgang * randn()
-        #    gdat.truefixp[gdat.trueindxfixpbgalhost] = 0.04 * gdat.truemaxmgang * randn()
-
-        if gdat.truenumbtrap > 0:
-        
-            if gdat.randseedelem:
-                seed()
-                for l in gdat.trueindxpopl:
-                    gdat.truesamp[gdat.trueindxsampcomp['comp'][l]] = rand(gdat.trueindxsampcomp['comp'][l].size)
+                    # randomly sample the rest of the mock model parameters
+                    if k < gdat.truenumbfixp:
+                        gdat.truesampvarb[k] = icdf_fixp(gdat, 'true', gdat.truesamp[k], k)
+                    else:
+                        d = int(gdat.truenamepara[k][-9])
+                        l = int(gdat.truenamepara[k][-5])
+                        for g in gdat.trueindxcomp[l]:
+                            gdat.truesampvarb[k] = icdf_trap(gdat, 'true', gdat.truesamp[k], gdat.truesampvarb, gdat.truelistscalcomp[l][g], gdat.trueliststrgcomp[l][g], d, l)
    
-            # sample element components from the true metamodel
-            print 'gdat.truesamp'
-            print gdat.truesamp
-            print 'gdat.truesampvarb'
-            print gdat.truesampvarb
-            print 'gdat.trueindxsampcomp'
-            print gdat.trueindxsampcomp
-            retr_sampvarbcomp(gdat, 'true', gdat.trueindxsampcomp, gdat.indxregi, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
+        #if gdat.truenumbtrap > 0:
+        #    # sample element components from the true metamodel
+        #    retr_sampvarbtrap(gdat, 'true', gdat.trueindxsampcomp, gdat.indxregi, gdat.trueindxpopl, gdat.trueliststrgcomp, gdat.truelistscalcomp, gdat.truesamp, gdat.truesampvarb)
     
+    # temp
+    print ''
+    for k in range(gdat.truenumbpara):
+        print '%20s %.10g' % (gdat.truenamepara[k], gdat.truesampvarb[k])
+    #raise Exception('')
+
     gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
     
     for strgmodl in gdat.liststrgmodl:
@@ -2713,7 +2712,7 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[indxsampbadd, None]
         gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
-     
+
     ## sample vector
     if gdat.fittnumbtrap > 0:
         indxsampcomp = gdatmodi.thisindxsampcomp
@@ -2767,17 +2766,6 @@ def work(pathoutpthis, lock, indxprocwork):
     # process the initial sample, define the variables to be processed in each sample
     proc_samp(gdat, gdatmodi, 'this')
     
-    if gdat.strgcnfg == 'pcat_ferm_mock_igal_popl':
-        print 'gdatmodi.thissampvarb'
-        print gdatmodi.thissampvarb[:, None]
-        print 'gdat.truesampvarb'
-        print gdat.truesampvarb[:, None]
-        print 'gdat.truelgal'
-        print gdat.truelgal[0][0][0, :]
-        print gdat.truelgal[0][1][0, :]
-        print gdat.truelgal[0][2][0, :]
-        #raise Exception('')
-
     # dummy definitions
     if gdat.elemtype == 'lght' and gdat.fittnumbtrap > 0:
         gdatmodi.nextsbrtpnts = zeros_like(gdatmodi.thissbrtpnts)
@@ -3064,11 +3052,6 @@ def work(pathoutpthis, lock, indxprocwork):
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
-                print 'strgvarb'
-                print strgvarb
-                print 'valu'
-                summgene(valu)
-                print
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
                 
             for strgvarb in gdat.liststrgvarblistsamp:

@@ -95,6 +95,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 lablydat = getattr(gdat, 'labl' + strgclas + 'reg%dref%dpop%d' % (d, q, l))
                                 strgindxydat = 'reg%dref%dpop%d' % (d, q, l)
                                 for strgfeat in gdat.refrliststrgfeat[q]:
+                                    
                                     if strgclas == 'fdis' and not strgfeat in liststrgfeatodim[l]:
                                         continue
                                     if not strgfeat.startswith('spec') and not strgfeat.startswith('defl') and not strgfeat in gdat.refrliststrgfeatonly[q][l] and \
@@ -107,7 +108,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                                   lablydat=lablydat, factxdat=factxdat, plottype='errr', \
                                                   scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
                                                   omittrue=True, nameinte=nameinte)
-                
+
             alph = 0.1
             if strg == 'this':
                 pathtemp = gdat.pathplot + gdat.namesampdist + '/fram/'
@@ -295,15 +296,8 @@ def plot_samp(gdat, gdatmodi, strg):
                     if strg != 'true' and gdat.refrinfo and gdat.allwrefr and gdat.asscrefr:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
-                                print 'strgfeat'
-                                print strgfeat
-                                print 'gdat.refrliststrgfeat[q][l]'
-                                print gdat.refrliststrgfeat[q][l]
-                                if not strgfeat in gdat.refrliststrgfeat[q][l]:
+                                if not strgfeat in gdat.refrliststrgfeat[q]:
                                     continue
-                                print 'teeeey'
-                                print
-
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d)
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d, plotdiff=True)
                     for a, strgfrst in enumerate(liststrgfeatcorr[l]):
@@ -791,6 +785,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalhist') + name
         
+        # problem with masssubhdeltbeinreg0
         print 'name'
         print name
         print 'listvarb'
@@ -1097,8 +1092,12 @@ def plot_sbrt(gdat, gdatmodi, strg, indxregiplot, specconvunit):
         if gdat.numbpixl == 1 and strg != 'post':
             for d in gdat.indxregi:
                 for l in indxpopl:
-                    for k in range(numbelem[d,l ]):
-                        listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'speclinereg%dpop%d%04d' % (d, l, k))
+                    for k in range(numbelem[d, l]):
+                        if strg == 'true':
+                            listydat[cntr, :] = getattr(gdatobjt, strg + 'spec')[d][l][0, :, k]
+                        else:
+                            listydat[cntr, :] = getattr(gdatobjt, strg + 'spec')[d][l][:, k]
+                            #listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'speclinereg%dpop%d%04d' % (d, l, k))
                         #if strg == 'post':
                         #    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strg, 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
                         cntr += 1
@@ -1435,23 +1434,11 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
             xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strg, strgydat) * factydat
     
-    print 'strgydat'
-    print strgydat
-    print 'ydat'
-    print ydat
-    print
-
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
         ydat = ydat[indxydat]
     
-    print 'strgydat'
-    print strgydat
-    print 'ydat'
-    print ydat
-    print
-
     # temp
     xerr = zeros((2, xdat.size))
     
@@ -1520,17 +1507,11 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                 else:
                     name = 'refr' + strgydat
             
-            print 'tey'
-            print 'name'
-            print name
             if not hasattr(gdat, name):
                 continue
-            print 'mey'
 
             ydattemp = getattr(gdat, name)
             ydat = ydattemp * factydat
-            print 'ydat'
-            print ydat
             if indxydat != None:
                 ydat = ydat[indxydat]
             
@@ -1543,24 +1524,12 @@ def plot_gene(gdat, gdatmodi, strg, strgydat, strgxdat, indxydat=None, strgindxy
                     axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
                     continue
     
-    print
-    print
-    print
-    print
-
     if strgydat.startswith('histcntp'):
-        print 'meeeeeey'
-        print 'ydat'
-        summgene(ydat)
-        print
-        print
-
-
         if gdat.numbpixl > 1:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
         else:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-8:])
-        axis.plot(xdat, ydat, color='black', label='Data', alpha=gdat.alphmrkr)
+        axis.bar(xdattemp, ydattemp, deltxdat, color='black', label='Data', alpha=gdat.alphmrkr)
                 
     # axis scales
     if scalxdat == 'logt':
@@ -1647,20 +1616,15 @@ def plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, indxregiplot, plotdiff=F
     binsplot = getattr(gdat, 'bins' + strgfeat)
     factplot = getattr(gdat, 'fact' + strgfeat + 'plot')
     
-    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l))
+    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l)) * factplot
     yerr = zeros((2, ydat.size))
-    
     if strg == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l), mometype='errr')
+        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l), mometype='errr') * factplot
     
     xdat *= factplot
     xerr *= factplot
     if plotdiff:
         ydat = 100. * (ydat - xdat) / xdat
-    else: 
-        ydat *= factplot
-        if strg == 'post':
-            yerr *= factplot
     
     # plot all associations
     if plotdiff:
@@ -1668,17 +1632,6 @@ def plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, indxregiplot, plotdiff=F
     else:
         indx = where(ydat > 0.)[0]
     if indx.size > 0:
-        print 'xdat'
-        print xdat
-        print 'ydat'
-        print ydat
-        print 'indx'
-        print indx
-        print 'strgfeat'
-        print strgfeat
-        print 'yerr'
-        print yerr
-        print
         axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
         
     # temp -- plot associations inside the comparison area
@@ -1724,24 +1677,32 @@ def plot_scatcntp(gdat, gdatmodi, strg, indxregiplot, indxevttplot, indxenerplot
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     ydat = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl')
-    if strg == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl', mometype='errr')
-    else:
-        yerr = zeros((2, ydat.size))
     if indxenerplot == None:
         xdat = gdat.cntpdata[indxregiplot, :, :, indxevttplot].flatten()
         ydat = ydat[indxregiplot, :, :, indxevttplot].flatten()
         nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
+        if strg == 'post':
+            indxvarb = [indxregiplot, slice(None), slice(None), indxevttplot]
     else:
         xdat = gdat.cntpdata[indxregiplot, indxenerplot, :, indxevttplot]
         ydat = ydat[indxregiplot, indxenerplot, :, indxevttplot]
         nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
+        if strg == 'post':
+            indxvarb = [indxregiplot, indxenerplot, slice(None), indxevttplot]
+    if strg == 'post':
+        yerr = retr_fromgdat(gdat, gdatmodi, strg, 'cntpmodl', mometype='errr', indxvarb=indxvarb)
     if strg == 'post':
         colr = 'black'
     else:
         colr = 'b'
     #axis.scatter(xdat, ydat, yerr=yerr, alpha=gdat.alphmrkr, color=colr)
     if strg == 'post':
+        print 'xdat'
+        print xdat.shape
+        print 'ydat'
+        print ydat.shape
+        print 'yerr'
+        print yerr.shape
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='black', capsize=10)
     else:
         axis.plot(xdat, ydat, marker='o', ls='', markersize=5, color='b')
