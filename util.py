@@ -1258,9 +1258,14 @@ def retr_refrchanfinl(gdat):
     # temp
     gdat.refrspec[0][0][where(gdat.refrspec[0][0] < 0.)] = 0.
    
-    gdat.refrsind = []
     if gdat.numbener > 1:
-        gdat.refrsind.append(-log(gdat.refrspec[0][0][0, 1, :] / gdat.refrspec[0][0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.)))
+        gdat.refrsind[0][0] = -log(gdat.refrspec[0][0][0, 1, :] / gdat.refrspec[0][0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.))
+        
+        print 'where(logical_not(isfinite(gdat.refrsind[0][0])))[0]'
+        print where(logical_not(isfinite(gdat.refrsind[0][0])))[0]
+        print 'gdat.refrsind'
+        print gdat.refrsind
+
         gdat.refrsind[0][0][where(logical_not(isfinite(gdat.refrsind[0][0])))[0]] = 2.
     
     # temp
@@ -2756,12 +2761,10 @@ def setpprem(gdat):
         path = gdat.pathinpt + gdat.strgexprsbrt
         gdat.sbrtdata = pf.getdata(path)
 
-
         # temp
         if gdat.pixltype == 'heal' and gdat.sbrtdata.ndim == 3 or gdat.pixltype == 'cart' and gdat.sbrtdata.ndim == 4:
             print 'Input data incompatible with PCAT %s. Converting...' % gdat.strgvers
             gdat.sbrtdata = gdat.sbrtdata[None, :, :, :]
-
 
         if gdat.pixltype == 'cart' and not gdat.forccart:
             if gdat.sbrtdata.ndim != 5:
@@ -4603,6 +4606,11 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             
                     sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], sbrtbacknormtemp.shape[1], -1, sbrtbacknormtemp.shape[-1]))
            
+            # temp
+            if gdat.pixltype == 'heal' and sbrtbacknormtemp.ndim == 3 or gdat.pixltype == 'cart' and sbrtbacknormtemp.ndim == 4:
+                print 'Input data incompatible with PCAT %s. Converting...' % gdat.strgvers
+                sbrtbacknormtemp = sbrtbacknormtemp[None, :, :, :]
+
             # temp
             if gdat.strgcnfg.startswith('pcat_ferm'):
                 if sbrtbacknormtemp.shape[-1] == 2:

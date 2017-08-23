@@ -534,7 +534,7 @@ def init( \
             #backtypetemp = array([47.7, 10.8, 15.5, 11.0, 67.6]) / 15.5
             backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 15.98
         if gdat.anlytype.startswith('extr'):
-            backtypetemp = 'chanfluxback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
+            backtypetemp = 'sbrtchanback' + gdat.anlytype + '%04d.fits' % gdat.numbsidecart
         
         if gdat.anlytype == 'spec':
             backtype = [[1e2, 2.], backtypetemp]
@@ -1071,9 +1071,6 @@ def init( \
     else:
         numbelem = array([100])
     setp_namevarbvalu(gdat, 'numbelem', numbelem, popl='full', regi='full')
-    print 'gdat.truenumbelemreg0pop0'
-    print gdat.truenumbelemreg0pop0
-    print 
 
     # temp -- add poisson
     #gdat.truenumbelem = empty(gdat.truenumbpopl, dtype=int)
