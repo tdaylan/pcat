@@ -296,7 +296,7 @@ def plot_samp(gdat, gdatmodi, strg):
                     if strg != 'true' and gdat.refrinfo and gdat.allwrefr and gdat.asscrefr:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
-                                if not strgfeat in gdat.refrliststrgfeat[q]:
+                                if not strgfeat in gdat.refrliststrgfeat[q] or strgfeat in gdat.refrliststrgfeatonly[q][l]:
                                     continue
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d)
                                 plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, d, plotdiff=True)
@@ -1360,13 +1360,15 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
     
     # reference elements
     if gdat.allwrefr:
-        for q in gdat.indxrefr:
-            refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[indxregiplot][q] * getattr(gdat, 'fact' + strgfrst + 'plot')
-            refrvarbseco = getattr(gdat, 'refr' + strgseco)[indxregiplot][q] * getattr(gdat, 'fact' + strgseco + 'plot')
-            if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
-                refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
-                refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
-            axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
+        if hasattr(gdat, 'refr' + strgfrst) and hasattr(gdat, 'refr' + strgseco):
+            for q in gdat.indxrefr:
+                if strgfrst in gdat.refrliststrgfeat[q] and strgseco in gdat.refrliststrgfeat[q]:
+                    refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[indxregiplot][q] * getattr(gdat, 'fact' + strgfrst + 'plot')
+                    refrvarbseco = getattr(gdat, 'refr' + strgseco)[indxregiplot][q] * getattr(gdat, 'fact' + strgseco + 'plot')
+                    if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
+                        refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
+                        refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
+                    axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, indxpoplplot, strgfrst=strgfrst, strgseco=strgseco)
     
@@ -1615,7 +1617,7 @@ def plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, indxregiplot, plotdiff=F
     maxmplot = getattr(gdat, 'maxm' + strgfeat)
     binsplot = getattr(gdat, 'bins' + strgfeat)
     factplot = getattr(gdat, 'fact' + strgfeat + 'plot')
-    
+
     ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l)) * factplot
     yerr = zeros((2, ydat.size))
     if strg == 'post':
