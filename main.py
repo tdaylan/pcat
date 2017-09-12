@@ -305,7 +305,7 @@ def init( \
     # output paths
     gdat.rtag = gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.strgnumbswep
     gdat.pathoutpthis = gdat.pathoutp + gdat.rtag + '/'
-    
+
     # plot previous run tag
     if gdat.rtagredo != None:
         gdat.pathoutpredo = gdat.pathoutp + gdat.rtagredo + '/'
@@ -429,9 +429,19 @@ def init( \
         else:
             gdat.indxevttincl = arange(1)
    
-    print 'gdat.indxevttincl'
-    print gdat.indxevttincl
-    print
+    ## PSF class
+    if gdat.indxevttincl != None:
+        gdat.evttbins = True
+    else:
+        gdat.evttbins = False
+    if gdat.evttbins:
+        gdat.numbevtt = gdat.indxevttincl.size
+        gdat.numbevttfull = gdat.indxevttfull.size
+    else:
+        gdat.numbevtt = 1
+        gdat.numbevttfull = 1
+        gdat.indxevttincl = array([0])
+    gdat.indxevtt = arange(gdat.numbevtt)
 
     if gdat.exprtype == 'ferm':
         gdat.lablenerunit = 'GeV'
@@ -775,20 +785,6 @@ def init( \
     if gdat.radispmr == None:
         gdat.radispmr = gdat.anglassc
    
-    ## PSF class
-    if gdat.indxevttincl != None:
-        gdat.evttbins = True
-    else:
-        gdat.evttbins = False
-    if gdat.evttbins:
-        gdat.numbevtt = gdat.indxevttincl.size
-        gdat.numbevttfull = gdat.indxevttfull.size
-    else:
-        gdat.numbevtt = 1
-        gdat.numbevttfull = 1
-        gdat.indxevttincl = array([0])
-    gdat.indxevtt = arange(gdat.numbevtt)
-
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
         retr_psfnferm(gdat)
@@ -1713,6 +1709,8 @@ def init( \
         for q in gdat.indxrefr:
             refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
             for d in gdat.indxregi:
+                print 'refrfeatampl'
+                print refrfeatampl
                 indxelem = argsort(refrfeatampl[d][q][0, :])[::-1]
                 for strgfeat in gdat.refrliststrgfeat[q]:
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
@@ -2953,6 +2951,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 'gdatmodi.thislliktotlprev'
                 print gdatmodi.thislliktotlprev
                 print 'loglikelihood drop is very unlikely!'
+                raise Exception('')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:

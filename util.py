@@ -2805,13 +2805,6 @@ def setpprem(gdat):
         path = gdat.pathinpt + gdat.strgexprsbrt
         gdat.sbrtdata = pf.getdata(path)
         
-        print 'gdat.sbrtdata'
-        summgene(gdat.sbrtdata)
-        for m in gdat.indxevtt:
-            print 'm'
-            print m
-            summgene(gdat.sbrtdata[:, :, m])
-        raise Exception('')
         # temp
         if (gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart) and gdat.sbrtdata.ndim == 3 or gdat.pixltype == 'cart' and gdat.sbrtdata.ndim == 4:
             print 'Input data incompatible with PCAT %s. Converting...' % gdat.strgvers
@@ -3649,26 +3642,14 @@ def setpinit(gdat, boolinitsetp=False):
     # only include desired energy and PSF class bins 
     gdat.indxtessincl = meshgrid(gdat.indxregi, gdat.indxenerincl, gdat.indxpixlfull, gdat.indxevttincl, indexing='ij')
     
-    print 'gdat.expo'
-    summgene(gdat.expo)
-    print 'gdat.indxtessincl[k]'
-    for k in range(4):
-        print 'k'
-        print k
-        summgene(gdat.indxtessincl[k])
-        print
-    print
-
     ## exposure
     if gdat.correxpo:
         gdat.expo = gdat.expo[gdat.indxtessincl]
         if gdat.datatype == 'inpt':
             gdat.sbrtdata = gdat.sbrtdata[gdat.indxtessincl]
-        
-    print 'gdat.sbrtdata'
-    summgene(gdat.sbrtdata)
-    print
-
+            print 'gdat.sbrtdata'
+            summgene(gdat.sbrtdata)
+            print
 
     ## backgrounds
     for strgmodl in gdat.liststrgmodl:
