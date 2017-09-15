@@ -2809,6 +2809,14 @@ def setpprem(gdat):
         if (gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart) and gdat.sbrtdata.ndim == 3 or gdat.pixltype == 'cart' and gdat.sbrtdata.ndim == 4:
             print 'Input data incompatible with PCAT %s. Converting...' % gdat.strgvers
             gdat.sbrtdata = gdat.sbrtdata[None, :, :, :]
+        
+        # temp
+        print 'gdat.sbrtdata.shape'
+        print gdat.sbrtdata.shape
+        print 'gdat.anlytype'
+        print gdat.anlytype
+        if gdat.exprtype == 'ferm' and gdat.sbrtdata.shape[3] == 4 and gdat.anlytype.startswith('rec7'):
+            gdat.sbrtdata = gdat.sbrtdata[:, :, :, 2:4]
 
         if gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart:
             if gdat.sbrtdata.ndim != 4:
@@ -3646,10 +3654,24 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.correxpo:
         gdat.expo = gdat.expo[gdat.indxtessincl]
         if gdat.datatype == 'inpt':
+            print 'gdat.sbrtdata'
+            summgene(gdat.sbrtdata)
+            print 'gdat.indxtessincl'
+            for k in range(2):
+                print 'k'
+                print k
+                print 'gdat.sbrtdata[:, :, :, k]'
+                summgene(gdat.sbrtdata[:, :, :, k])
+                print 'gdat.indxtessincl[k]'
+                summgene(gdat.indxtessincl[k])
+                print
+
             gdat.sbrtdata = gdat.sbrtdata[gdat.indxtessincl]
+
             print 'gdat.sbrtdata'
             summgene(gdat.sbrtdata)
             print
+            #raise Exception('')
 
     ## backgrounds
     for strgmodl in gdat.liststrgmodl:
@@ -3809,13 +3831,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxcube = meshgrid(gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
     gdat.indxtess = meshgrid(gdat.indxregi, gdat.indxener, gdat.indxpixl, gdat.indxevtt, indexing='ij')
    
-    if gdat.datatype == 'inpt':
-        print 'gdat.sbrtdata'
-        summgene(gdat.sbrtdata)
-        print 'gdat.sbrtdata'
-        summgene(gdat.sbrtdata)
-        print 'gdat.indxtessincl[2]'
-        summgene(gdat.indxtessincl[2])
     if gdat.datatype == 'inpt':
         gdat.sbrtdata = gdat.sbrtdata[gdat.indxtessrofi]
 

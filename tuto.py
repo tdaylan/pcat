@@ -23,7 +23,10 @@ def pcat_tuto():
     
     # Now we can run PCAT
     pcat.main.init( \
-                   truelablback=['isottuto.fits'], \
+                   forccart=True, \
+                   pixltype='cart', \
+                   backtype=[1.], \
+                   #lablback=['Isotropic'], \
                    )
                 
 pcat_tuto()

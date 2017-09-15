@@ -1711,11 +1711,17 @@ def init( \
             for d in gdat.indxregi:
                 print 'refrfeatampl'
                 print refrfeatampl
-                indxelem = argsort(refrfeatampl[d][q][0, :])[::-1]
-                for strgfeat in gdat.refrliststrgfeat[q]:
-                    refrfeat = getattr(gdat, 'refr' + strgfeat)
-                    if len(refrfeat[d][q]) > 0:
-                        refrfeatsort[d][q] = refrfeat[d][q][..., indxelem]
+                print 'q'
+                print q
+                print 'gdat.listnamefeatamplrefr'
+                print gdat.listnamefeatamplrefr
+                print 
+                if len(refrfeatampl[d][q]) > 0:
+                    indxelem = argsort(refrfeatampl[d][q][0, :])[::-1]
+                    for strgfeat in gdat.refrliststrgfeat[q]:
+                        refrfeat = getattr(gdat, 'refr' + strgfeat)
+                        if len(refrfeat[d][q]) > 0:
+                            refrfeatsort[d][q] = refrfeat[d][q][..., indxelem]
         setattr(gdat, 'refr' + strgfeat, refrfeatsort)
         
     # initial plots
@@ -2951,7 +2957,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 'gdatmodi.thislliktotlprev'
                 print gdatmodi.thislliktotlprev
                 print 'loglikelihood drop is very unlikely!'
-                raise Exception('')
+                #raise Exception('')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
