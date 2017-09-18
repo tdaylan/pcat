@@ -26,6 +26,7 @@ def pcat_tuto():
                    forccart=True, \
                    pixltype='cart', \
                    backtype=[1.], \
+                   numbswep=10000, \
                    strgexpo=1e11, \
                    #lablback=['Isotropic'], \
                    )
