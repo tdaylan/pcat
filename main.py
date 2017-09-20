@@ -1771,16 +1771,10 @@ def init( \
     gdatmodifudi = tdpy.util.gdatstrt()
     gdatmodifudi.thischro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
-    
     if gdat.fittnumbtrap > 0:
         gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem] = 1
-        gdatmodifudi.thisindxelemfull = [[[] for l in gdat.fittindxpopl] for d in gdat.indxregi]
-        for d in gdat.indxregi:
-            for l in gdat.fittindxpopl:
-                gdatmodifudi.thisindxelemfull[d][l].append(0)
-        gdatmodifudi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodifudi.thisindxelemfull, 'fitt')
-    else:
-        gdatmodifudi.thisindxsampcomp = None
+    
+    retr_elemlist(gdat, gdatmodifudi)
     gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
     proc_samp(gdat, gdatmodifudi, 'this')
     gdat.liststrgvarbarrysamp = []
@@ -2367,11 +2361,7 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
                 rscl_elem(gdat, gdatmodi, indxparapert[k])
         
         gdatmodi.thissamp = copy(gdatmodi.nextsamp)
-        if gdat.fittnumbtrap > 0:
-            indxsampcomp = gdatmodi.thisindxsampcomp
-        else:
-            indxsampcomp = None
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
         proc_samp(gdat, gdatmodi, 'this', fast=True)
    
@@ -2585,13 +2575,9 @@ def retr_elemlist(gdat, gdatmodi):
             for l in gdat.fittindxpopl:
                 gdatmodi.thisindxelemfull[d][l] = range(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[d, l]].astype(int))
         gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
-    
-        indxsampcomp = gdatmodi.thisindxsampcomp
     else:
-        indxsampcomp = None
+        gdatmodi.thisindxsampcomp = None
     
-    return indxsampcomp
-
 
 def work(pathoutpthis, lock, indxprocwork):
 
@@ -2679,11 +2665,11 @@ def work(pathoutpthis, lock, indxprocwork):
             print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
             print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
         
-        indxsampcomp = retr_elemlist(gdat, gdatmodi)
+        retr_elemlist(gdat, gdatmodi)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
         
         if (gdatmodi.thissamp == 0).all():
             raise Exception('Bad initialization.')
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
     
         if gdat.fittnumbtrap > 0:
             for strgcomp in gdat.fittliststrgcomptotl:
@@ -2715,13 +2701,13 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
-        indxsampcomp = retr_elemlist(gdat, gdatmodi)
+        retr_elemlist(gdat, gdatmodi)
         if gdat.fittnumbtrap > 0:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
     else:
-        indxsampcomp = retr_elemlist(gdat, gdatmodi)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
+        retr_elemlist(gdat, gdatmodi)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -2757,7 +2743,7 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
         raise Exception('')
 
-    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, indxsampcomp)
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
