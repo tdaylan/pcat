@@ -3293,6 +3293,10 @@ def work(pathoutpthis, lock, indxprocwork):
                                 numbpara += gdatmodi.thisindxsampcomp['comp'][d][l].size
                     print 'Current number of parameters:'
                     print numbpara
+                    if numbpara * 4 > gdat.factthin:
+                        print 'Warning! Thinning factor is not enough!'
+                        print 'gdat.factthin'
+                        print gdat.factthin
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
                     print 'gdatmodi.thislpritotl'
