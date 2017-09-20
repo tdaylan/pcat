@@ -428,7 +428,7 @@ def init( \
                 gdat.indxevttincl = arange(4)
         else:
             gdat.indxevttincl = arange(1)
-   
+    
     ## PSF class
     if gdat.indxevttincl != None:
         gdat.evttbins = True
@@ -3189,7 +3189,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 1:
                 print 'Accepted.'
             
-            if False:
+            if True:
                 print 'Accepted.'
 
             # update the current state

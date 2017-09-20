@@ -6142,7 +6142,8 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxregiplot, indxpoplplot=-1):
             
     ## host galaxy position
     if hostemistype != 'none':
-        axis.scatter(gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixplgalhost], gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixpbgalhost], facecolor='none', \
+        axis.scatter(gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixplgalhost[indxregiplot]], gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixpbgalhost[indxregiplot]], \
+                                                                    facecolor='none', \
                                                                     #alpha=gdat.alphelem, \
                                                                     alpha=0.7, \
                                                                     label=gdat.legdrefrhits, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
@@ -6159,7 +6160,7 @@ def supr_fram(gdat, gdatmodi, strg, axis, indxregiplot, indxpoplplot=-1):
                                                                     alpha=0.7, \
                                                                     #alpha=gdat.alphelem, \
                                                                         label=gdat.legdrefrhits, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
-            
+        
     # model catalog
     if indxpoplplot == -1:
         listindxpoplplot = gdat.fittindxpopl
