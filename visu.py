@@ -576,38 +576,29 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             minm = min(amin(gdat.gmrbstat), amin(gdat.gmrbfixp))
             maxm = max(amax(gdat.gmrbstat), amax(gdat.gmrbfixp))
             bins = linspace(minm, maxm, 40)
-            # temp
-            try:
-                axis.hist(gdat.gmrbstat.flatten(), bins=bins, label='Data proj.')
-            except:
-                print 'gdat.gmrbstat'
-                print gdat.gmrbstat
-                print 'bins'
-                print bins
-            try:
-                axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
-            except:
-                print 'gdat.gmrbfixp'
-                print gdat.gmrbfixp
-                print 'bins'
-                print bins
+            axis.hist(gdat.gmrbstat.flatten(), bins=bins, label='Data proj.')
+            axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
             axis.set_xlabel('PSRF')
             axis.set_ylabel('$N_{stat}$')
             plt.tight_layout()
             figr.savefig(pathdiag + 'gmrbhist.pdf')
             plt.close(figr)
             
-            try:
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        maps = gdat.gmrbstat[i, :, m]
-                        path = pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
-                        tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            except:
-                print 'gdat.gmrbstat'
-                print gdat.gmrbstat
+            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            axis.plot(gdat.fittindxfixp, gdat.gmrbfixp)
+            axis.set_xticklabels(gdat.fittlablfixp)
+            axis.set_ylabel('PSRF')
+            plt.tight_layout()
+            figr.savefig(pathdiag + 'gmrbfixp.pdf')
+            plt.close(figr)
+            
+            for i in gdat.indxener:
+                for m in gdat.indxevtt:
+                    maps = gdat.gmrbstat[i, :, m]
+                    path = pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
+                    tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                            minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                            minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
         else:
             print 'Inappropriate Gelman-Rubin test statistics encountered.'
 

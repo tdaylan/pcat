@@ -2013,15 +2013,16 @@ def proc_post(gdat, prio=False):
             print 'Computing the Gelman-Rubin TS...'
             timeinit = gdat.functime()
         gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
-        gdat.gmrbstat = zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        gdat.gmrbstat = zeros((gdat.numbregi, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for k in gdat.fittindxfixp:
-            gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, gdat.fittindxfixp[k]])
+            gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, k])
             if not isfinite(gdat.gmrbfixp[k]):
                 gdat.gmrbfixp[k] = 0.
-        for i in gdat.indxener:
-            for j in gdat.indxpixl:
-                for m in gdat.indxevtt:
-                    gdat.gmrbstat[i, j, m] = tdpy.mcmc.gmrb_test(gdat.listcntpmodl[:, :, i, j, m])
+        for d in gdat.indxregi:
+            for i in gdat.indxener:
+                for j in gdat.indxpixl:
+                    for m in gdat.indxevtt:
+                        gdat.gmrbstat[d, i, j, m] = tdpy.mcmc.gmrb_test(gdat.listcntpmodl[:, :, d, i, j, m])
         if gdat.verbtype > 0:
             timefinl = gdat.functime()
             print 'Done in %.3g seconds.' % (timefinl - timeinit)

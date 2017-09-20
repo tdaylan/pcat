@@ -4253,7 +4253,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxproptypecomp = []
     for k in gdat.indxstdp:    
         gdat.indxproptypewith = cntr.incr()
-        gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{W}_{%d}$' % k)
+        gdat.lablproptype = append(gdat.lablproptype, gdat.fittlablfixp[gdat.indxfixpprop[k]])
         indx = where(gdat.indxstdppara == k)[0]
         if indx.size > 0:
             gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[indx[0]])
