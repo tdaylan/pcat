@@ -3301,6 +3301,9 @@ def work(pathoutpthis, lock, indxprocwork):
                     print gdatmodi.thislliktotl
                     print 'gdatmodi.thislpritotl'
                     print gdatmodi.thislpritotl
+                    for attr, valu in gdatmodi.__dict__.iteritems():
+                        if isinstance(valu, ndarray) and valu.size > 1e7:
+                            print 'Warning! %s has shape ' % attr, valu.shape
                     print 'Backgrounds'
                     print gdatmodi.thissamp[gdat.fittindxfixpbacp]
                     print gdatmodi.thissampvarb[gdat.fittindxfixpbacp]
