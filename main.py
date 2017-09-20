@@ -1709,13 +1709,6 @@ def init( \
         for q in gdat.indxrefr:
             refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
             for d in gdat.indxregi:
-                print 'refrfeatampl'
-                print refrfeatampl
-                print 'q'
-                print q
-                print 'gdat.listnamefeatamplrefr'
-                print gdat.listnamefeatamplrefr
-                print 
                 if len(refrfeatampl[d][q]) > 0:
                     indxelem = argsort(refrfeatampl[d][q][0, :])[::-1]
                     for strgfeat in gdat.refrliststrgfeat[q]:
@@ -3189,7 +3182,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 1:
                 print 'Accepted.'
             
-            if True:
+            if gdat.elemtype == 'lens':
                 print 'Accepted.'
 
             # update the current state
@@ -3304,6 +3297,15 @@ def work(pathoutpthis, lock, indxprocwork):
                         print 'Tempered burn-in'
                         print 'gdatmodi.thisfacttmpr'
                         print gdatmodi.thisfacttmpr
+                    print 
+                    numbpara = gdat.fittnumbfixp
+                    print 'gdat.fittnumbfixp'
+                    print gdat.fittnumbfixp
+                    for d in gdat.indxregi:
+                        for l in gdat.fittindxpopl:
+                            numbpara += gdatmodi.thisindxsampcomp['comp'][d][l].size
+                    print 'Current number of parameters:'
+                    print numbpara
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
                     print 'gdatmodi.thislpritotl'
