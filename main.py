@@ -3287,9 +3287,10 @@ def work(pathoutpthis, lock, indxprocwork):
                     numbpara = gdat.fittnumbfixp
                     print 'gdat.fittnumbfixp'
                     print gdat.fittnumbfixp
-                    for d in gdat.indxregi:
-                        for l in gdat.fittindxpopl:
-                            numbpara += gdatmodi.thisindxsampcomp['comp'][d][l].size
+                    if gdat.fittnumbtrap > 0:
+                        for d in gdat.indxregi:
+                            for l in gdat.fittindxpopl:
+                                numbpara += gdatmodi.thisindxsampcomp['comp'][d][l].size
                     print 'Current number of parameters:'
                     print numbpara
                     print 'gdatmodi.thislliktotl'
