@@ -93,8 +93,8 @@ def plot_samp(gdat, gdatmodi, strg):
                     for d in gdat.indxregi:
                         for q in gdat.indxrefr:
                             for l in gdat.fittindxpopl:
-                                lablydat = getattr(gdat, 'labl' + strgclas + 'reg%dref%dpop%d' % (d, q, l))
-                                strgindxydat = 'reg%dref%dpop%d' % (d, q, l)
+                                lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%dreg%d' % (q, l, d))
+                                strgindxydat = 'ref%dpop%dreg%d' % (q, l, d)
                                 for strgfeat in gdat.refrliststrgfeat[q]:
                                     
                                     if strgclas == 'fdis' and not strgfeat in liststrgfeatodim[l]:
@@ -168,7 +168,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 strgtemp = specconvunit[0] + specconvunit[1]
                                 if specconvunit[0] == 'ene3':
                                     strgtemp += specconvunit[2]
-                                path = pathtemp + strg + 'specreg%dpop%d%s%s.pdf' % (d, l, strgtemp, strgswep)
+                                path = pathtemp + strg + 'specpop%dreg%d%s%s.pdf' % (l, d, strgtemp, strgswep)
                                 for ydat in listydat:
                                     ydat *= factydat
                                 limtydat = [amin(gdat.minmspec) * factydat, amax(gdat.maxmspec) * factydat]
@@ -219,7 +219,7 @@ def plot_samp(gdat, gdatmodi, strg):
                                 indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
                                 beinhost = retr_fromgdat(gdat, gdatmodi, strg, 'sampvarb', indxvarb=indxfixpbeinhost)
                                 listydat.append(xdat * 0. + gdat.anglfact * beinhost[d])
-                                path = pathtemp + strg + 'deflsubhreg%dpop%d%s.pdf' % (d, l, strgswep)
+                                path = pathtemp + strg + 'deflsubhpop%dreg%d%s.pdf' % (l, d, strgswep)
                                 limtydat = [1e-3, 1.]
                                 limtxdat = [1e-3, 1.]
                                 tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
@@ -322,7 +322,7 @@ def plot_samp(gdat, gdatmodi, strg):
                         #else:
                         #    listname = ['hist' + strgfeat]
 
-                        listname = ['hist' + strgfeat + 'reg%dpop%d' % (d, l)]
+                        listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
                         for name in listname:
                             if gdat.numbpixl > 1:
                                 listydattype = ['totl', 'sden']
@@ -1336,7 +1336,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
     if strg == 'post':
         labl = gdat.legdsampdist + ' ' + legdmome
         if strgplottype == 'hist':
-            varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco + 'reg%dpop%d' % (indxregiplot, indxpoplplot))
+            varb = getattr(gdat, strgmome + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (indxpoplplot, indxregiplot))
             varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
             varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
             imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Greys', label=labl)
@@ -1357,7 +1357,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
         if strgplottype == 'hist':
             meanfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
             meanseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
-            hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco + 'reg%dpop%d' % (indxregiplot, indxpoplplot))
+            hist = getattr(gdatmodi, strg + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (indxpoplplot, indxregiplot))
             imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphmrkr)
         else:
             varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxregiplot][indxpoplplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
@@ -1398,7 +1398,7 @@ def plot_elemtdim(gdat, gdatmodi, strg, indxregiplot, indxpoplplot, strgplottype
         strgmometemp = strgmome
     else:
         strgmometemp = ''
-    path = retr_plotpath(gdat, gdatmodi, strg, '%s%s%s%sreg%dpop%d' % (strgmometemp, strgplottype, strgfrst, strgseco, indxregiplot, indxpoplplot), nameinte=strgplottype + 'tdim/')
+    path = retr_plotpath(gdat, gdatmodi, strg, '%s%s%s%spop%dreg%d' % (strgmometemp, strgplottype, strgfrst, strgseco, indxpoplplot, indxregiplot), nameinte=strgplottype + 'tdim/')
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
@@ -1627,10 +1627,10 @@ def plot_scatassc(gdat, gdatmodi, strg, q, l, strgfeat, indxregiplot, plotdiff=F
     binsplot = getattr(gdat, 'bins' + strgfeat)
     factplot = getattr(gdat, 'fact' + strgfeat + 'plot')
 
-    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l)) * factplot
+    ydat = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscref%dpop%dreg%d' % (q, l, indxregiplot)) * factplot
     yerr = zeros((2, ydat.size))
     if strg == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscreg%dref%dpop%d' % (indxregiplot, q, l), mometype='errr') * factplot
+        yerr = retr_fromgdat(gdat, gdatmodi, strg, strgfeat + 'asscref%dpop%dreg%d' % (q, l, indxregiplot), mometype='errr') * factplot
     
     xdat *= factplot
     xerr *= factplot
