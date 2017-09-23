@@ -132,10 +132,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
                     else:
                         specplot = getattr(gdatobjt, strgpfix + 'specplot')
-                    print 'specplot'
-                    print specplot
-                    print 'strgpfix'
-                    print strgpfix
                     for d in gdat.indxregi:
                         for l in range(len(specplot)):
                             listxdat = []
@@ -723,7 +719,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
 
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'post', 'fitt')
-    proc_samp(gdat, None, 'mlik')
+    proc_samp(gdat, None, 'mlik', 'fitt')
 
     if gdat.verbtype > 0:
         print 'A mosaic of samples...'
@@ -1075,11 +1071,6 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
             listydat[cntr, :] = gdat.sbrtdatamean[b, indxregiplot, :]
             cntr += 1
             
-            print 'strgstat'
-            print strgstat
-            print 'liststrgmodl'
-            print liststrgmodl
-
             for c in indxback:
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmean' % c, indxvarb=indxvarb)
                 if liststrgmodl[a] == 'post':
@@ -1189,7 +1180,10 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                         alph = 1.
                         linestyl = '-'
                     else:
-                        colr = retr_colr(liststrgmodl[a])
+                        if liststrgmodl[a] == 'true':
+                            colr = retr_colr(liststrgmodl[a])
+                        if liststrgmodl[a] == 'fitt':
+                            colr = retr_colr(strgstat)
                         linestyl = '--'
                         alph = 0.5
                    
@@ -2471,7 +2465,7 @@ def plot_init(gdat):
                 
                 # temp
                 if False and gdat.pixltype == 'cart' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
-                    figr, axis, path = init_figr(gdat, None, 'cntpdatapeak', '', d, i, m, -1)
+                    figr, axis, path = init_figr(gdat, None, 'cntpdatapeak', '', '', d, i, m, -1)
                     imag = retr_imag(gdat, axis, gdat.cntpdata, '', 'cntpdata', d, i, m)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     axis.scatter(gdat.anglfact * gdat.meanlgalcart[gdat.indxxdatmaxm], gdat.anglfact * gdat.meanbgalcart[gdat.indxydatmaxm], alpha=0.6, s=20, edgecolor='none')
@@ -2481,8 +2475,8 @@ def plot_init(gdat):
                     plt.close(figr)
         
                 if gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
-                    figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'true', d, i, m, -1)
-                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, '', 'cntpdata', d, i, m, tdim=True)
+                    figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'this', 'true', d, i, m, -1)
+                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, 'this', 'cntpdata', d, i, m, tdim=True)
                     make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     plt.tight_layout()
                     figr.savefig(path)
