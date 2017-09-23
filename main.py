@@ -1867,15 +1867,11 @@ def init( \
     proc_post(gdat)
     
     # make animations
-    print 'gdat.rtag'
-    print gdat.rtag
-    print 'gdat.strgcnfg'
-    print gdat.strgcnfg
-    print 'gdat.makeanim'
-    print gdat.makeanim
-    print
     if gdat.makeanim:
-        make_anim(gdat.rtag)
+        prid = os.fork()
+        if prid > 0:
+            make_anim(gdat.rtag)
+            os._exit(0)
 
     if gdat.verbtype > 0:
         print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
@@ -1940,8 +1936,6 @@ def initarry( \
     dictvarb['seedstat'] = seedstat
     dictvarb['randseedelem'] = randseedelem
     dictvarb['strgcnfg'] = strgcnfg
-    if nameconfexec == None:
-        dictvarb['makeanim'] = False
     
     listgdat = []
     for k, nameconf in enumerate(dictvarbvari):
