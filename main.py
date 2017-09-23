@@ -1800,7 +1800,7 @@ def init( \
         gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem] = 1
     
     retr_elemlist(gdat, gdatmodifudi)
-    gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisfittindxsampcomp)
+    gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
     proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
     gdat.liststrgvarbarrysamp = []
     gdat.liststrgvarblistsamp = []
@@ -2395,7 +2395,7 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
                 rscl_elem(gdat, gdatmodi, indxparapert[k])
         
         gdatmodi.thissamp = copy(gdatmodi.nextsamp)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisfittindxsampcomp)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
         proc_samp(gdat, gdatmodi, 'this', 'fitt', fast=True)
    
@@ -2461,7 +2461,7 @@ def optihess(gdat, gdatmodi):
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
     
     if gdat.propcomp:
-        indxsamptranprop = concatenate(gdatmodi.thisfittindxsampcomp['comp'])
+        indxsamptranprop = concatenate(gdatmodi.thisindxsampcomp['comp'])
     else:
         indxsamptranprop = []
 
@@ -2480,13 +2480,13 @@ def optihess(gdat, gdatmodi):
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
                         if gdat.fittnumbtrap > 0:
-                            if k in concatenate(gdatmodi.thisfittindxsampcomp['comp']):
+                            if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
                                 stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                                 
                                 cntr = 0
                                 indxelem = (k - gdat.fittindxsampcompinit)
                                 for strg in gdat.fittliststrgcomptotl:
-                                    if k in concatenate(gdatmodi.thisfittindxsampcomp[strg]):
+                                    if k in concatenate(gdatmodi.thisindxsampcomp[strg]):
                                         indxsampampl = k + gdat.fittindxcompampl - cntr
                                         amplfact = gdatmodi.thissampvarb[indxsampampl] / getattr(gdat, 'minm' + gdat.namefeatampl)
                                         if strg == gdat.namefeatampl:
@@ -2608,9 +2608,9 @@ def retr_elemlist(gdat, gdatmodi):
         for l in gdat.fittindxpopl:
             for d in gdat.fittindxregipopl[l]:
                 gdatmodi.thisindxelemfull[l][d] = range(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]].astype(int))
-        gdatmodi.thisfittindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
+        gdatmodi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodi.thisindxelemfull, 'fitt')
     else:
-        gdatmodi.thisfittindxsampcomp = None
+        gdatmodi.thisindxsampcomp = None
     
 
 def work(pathoutpthis, lock, indxprocwork):
@@ -2700,7 +2700,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
         
         retr_elemlist(gdat, gdatmodi)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisfittindxsampcomp)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
         
         if (gdatmodi.thissamp == 0).all():
             raise Exception('Bad initialization.')
@@ -2741,7 +2741,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 initcompfromstat(gdat, gdatmodi, 'true')
     else:
         retr_elemlist(gdat, gdatmodi)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisfittindxsampcomp)
+        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -2777,7 +2777,7 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
         raise Exception('')
 
-    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisfittindxsampcomp)
+    gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
@@ -2912,7 +2912,7 @@ def work(pathoutpthis, lock, indxprocwork):
             #gdatmodi.thistmprfactdeltllik = gdatmodi.thisfacttmpr
             gdatmodi.thistmprfactdeltllik = 1. # gdatmodi.thisfacttmpr
             gdatmodi.thistmprfactstdv = 1. / gdatmodi.thisfacttmpr
-            #gdatmodi.thistmprlposelem = -1000. * (1. - gdatmodi.thisfacttmpr) * concatenate(gdatmodi.thisfittindxsampcomp['comp']).size
+            #gdatmodi.thistmprlposelem = -1000. * (1. - gdatmodi.thisfacttmpr) * concatenate(gdatmodi.thisindxsampcomp['comp']).size
             gdatmodi.thistmprlposelem = 0.
         else:
             gdatmodi.thistmprfactdeltllik = 1.
@@ -3014,7 +3014,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
                             if gdat.fittlistscalcomp[l][k] == 'gaus' or gdat.fittlistscalcomp[l][k] == 'igam':
                                 continue
-                            comp = gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp[strgcomp][l][d]]
+                            comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
                             minm = getattr(gdat, 'fittminm' + strgcomp)
                             maxm = getattr(gdat, 'fittmaxm' + strgcomp)
                             indxtemp = where((comp < minm) | (comp > maxm))[0]
@@ -3083,7 +3083,7 @@ def work(pathoutpthis, lock, indxprocwork):
                         for l in gdat.fittindxpopl:
                             for strgcomp in gdat.fittliststrgcomp[l]:
                                 for d in gdat.fittindxregipopl[l]:
-                                    comp = gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp[strgcomp][l][d]]
+                                    comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
                                     for k in arange(comp.size):
                                         name = strgcomp + 'pop%dreg%d%04d' % (l, d, k)
                                         thisfile.create_dataset(name, data=comp[k])
@@ -3314,7 +3314,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     if gdat.fittnumbtrap > 0:
                         for l in gdat.fittindxpopl:
                             for d in gdat.fittindxregipopl[l]:
-                                numbpara += gdatmodi.thisfittindxsampcomp['comp'][l][d].size
+                                numbpara += gdatmodi.thisindxsampcomp['comp'][l][d].size
                     print 'Current number of parameters:'
                     print numbpara
                     if numbpara * 4 > gdat.factthin:

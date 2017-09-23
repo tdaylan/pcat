@@ -519,7 +519,7 @@ def updt_samp(gdat, gdatmodi):
         
         if gdatmodi.proptran:
             gdatmodi.thisindxelemfull = deepcopy(gdatmodi.nextindxelemfull)
-            gdatmodi.thisfittindxsampcomp = deepcopy(gdatmodi.nextindxsampcomp)
+            gdatmodi.thisindxsampcomp = deepcopy(gdatmodi.nextindxsampcomp)
         
         # temp
         # keep the state vectors clean
@@ -565,7 +565,7 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                     if gdat.verbtype > 0:
                         print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
                     compunit = rand(gdat.truenumbelem[l][d])
-                gdatmodi.thissamp[gdatmodi.thisfittindxsampcomp[strgcomp][l][d]] = compunit
+                gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l][d]] = compunit
 
 
 ## model evaluation
@@ -1237,7 +1237,7 @@ def show_samp(gdat, gdatmodi, thisonly=False):
             name = ''
 
         if gdat.fittnumbtrap > 0:
-            gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(concatenate(gdatmodi.thisfittindxsampcomp['comp']))))
+            gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(concatenate(gdatmodi.thisindxsampcomp['comp']))))
         else:
             gdatmodi.indxparaprop = gdat.indxfixpprop
         try:
@@ -1258,7 +1258,7 @@ def show_samplong(gdat, gdatmodi):
         scalpara = getattr(gdat, strgmodl + 'scalpara')
         indxpara = getattr(gdat, strgmodl + 'indxpara')
         if strgmodl == 'fitt':
-            indxsampcomp = gdatmodi.thisfittindxsampcomp
+            indxsampcomp = gdatmodi.thisindxsampcomp
             sampvarb = gdatmodi.thissampvarb
         else:
             indxsampcomp = gdat.trueindxsampcomp
@@ -1299,7 +1299,7 @@ def rscl_elem(gdat, gdatmodi, indxsampmodi=None):
         
         for k, strgcomp in enumerate(liststrgcomptemp):
             for d in gdat.fittindxregipopl[l]:
-                comp = gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp[strgcomp][l][d]]
+                comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
                 if listscalcomptemp[k] == 'powrslop' or listscalcomptemp[k] == 'gaus':
                     if listscalcomptemp[k] == 'powrslop' or listscalcomptemp[k] == 'igam':
                         slop = gdatmodi.nextsampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
@@ -1314,7 +1314,7 @@ def rscl_elem(gdat, gdatmodi, indxsampmodi=None):
                         distmean = gdatmodi.nextsampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
                         diststdv = gdatmodi.nextsampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
                         unit = cdfn_gaus(comp, distmean, diststdv)
-                    gdatmodi.nextsamp[gdatmodi.thisfittindxsampcomp[strgcomp][l][d]] = unit
+                    gdatmodi.nextsamp[gdatmodi.thisindxsampcomp[strgcomp][l][d]] = unit
 
 
 def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, thisindxregi=None, brth=False, deth=False):
@@ -6135,9 +6135,9 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
     for l in listindxpoplplot:
         if gdatmodi != None:
             if gdat.fittnumbtrap > 0:
-                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp[gdat.namefeatampl][indxregiplot][l]], gdat.namefeatampl)
-                lgal = gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp['lgal'][indxregiplot][l]]
-                bgal = gdatmodi.thissampvarb[gdatmodi.thisfittindxsampcomp['bgal'][indxregiplot][l]]
+                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatampl][indxregiplot][l]], gdat.namefeatampl)
+                lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][indxregiplot][l]]
+                bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][indxregiplot][l]]
                 axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
 
             ## source
