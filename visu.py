@@ -137,15 +137,15 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             listxdat = []
                             listplottype = []
                             
-                            for k in range(specplot[d][l].shape[-1]):
+                            for k in range(specplot[l][d].shape[-1]):
                                 listxdat.append(gdat.meanenerplot)
                                 listplottype.append('line')
                             
                             for specconvunit in gdat.listspecconvunit:
                                 listydat = []
                                 
-                                for k in range(specplot[d][l].shape[-1]):
-                                    specplottemp = specplot[d][l]
+                                for k in range(specplot[l][d].shape[-1]):
+                                    specplottemp = specplot[l][d]
                                     if strgmodl == 'true':
                                         specplottemp = copy(specplottemp[0, :, k])
                                     else:
@@ -201,17 +201,17 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                 listvlinseco = []
     
                                 if strgmodl == 'true':
-                                    deflproftemp = deflprof[d][l][0, :, :]
+                                    deflproftemp = deflprof[l][d][0, :, :]
                                 else:
-                                    deflproftemp = deflprof[d][l]
-                                for k in range(deflprof[d][l].shape[-1]):
+                                    deflproftemp = deflprof[l][d]
+                                for k in range(deflprof[l][d].shape[-1]):
                                     listydat.append(deflproftemp[:, k] * gdat.anglfact)
                                     if strgmodl == 'true':
-                                        ascatemp = asca[d][l][0, k]
-                                        acuttemp = acut[d][l][0, k]
+                                        ascatemp = asca[l][d][0, k]
+                                        acuttemp = acut[l][d][0, k]
                                     else:
-                                        ascatemp = asca[d][l][k]
-                                        acuttemp = acut[d][l][k]
+                                        ascatemp = asca[l][d][k]
+                                        acuttemp = acut[l][d][k]
                                     listvlinfrst.append(ascatemp * gdat.anglfact) 
                                     listvlinseco.append(acuttemp * gdat.anglfact)
                                 
@@ -1105,9 +1105,9 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                     for l in indxpopl:
                         for k in range(numbelem[d, l]):
                             if liststrgmodl[a] == 'true':
-                                listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[d][l][0, :, k]
+                                listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][0, :, k]
                             else:
-                                listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[d][l][:, k]
+                                listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][:, k]
                             
                             #if liststrgmodl[a] == 'post':
                             #    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')

@@ -6135,9 +6135,9 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
     for l in listindxpoplplot:
         if gdatmodi != None:
             if gdat.fittnumbtrap > 0:
-                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatampl][indxregiplot][l]], gdat.namefeatampl)
-                lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][indxregiplot][l]]
-                bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][indxregiplot][l]]
+                mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.namefeatampl][l][indxregiplot]], gdat.namefeatampl)
+                lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l][indxregiplot]]
+                bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l][indxregiplot]]
                 axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
 
             ## source
