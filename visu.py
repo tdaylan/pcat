@@ -118,7 +118,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
                 elif strgstat == 'post':
                     pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
-            colr = retr_colr(strgstat)
+            colr = retr_colr(strgstat, strgmodl)
     
             # transdimensional element features projected onto the data axes
             if not (strgstat == 'post' and not gdat.condcatl):
@@ -1001,14 +1001,17 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def retr_colr(strg):
+def retr_colr(strgstat, strgmodl):
     
-    if strg == 'true':
+    if strgmodl == 'true':
         colr = 'g'
-    if strg == 'this':
-        colr = 'b'
-    if strg == 'post':
-        colr = 'black'
+    if strgmodl == 'fitt':
+        if strgstat == 'this':
+            colr = 'b'
+        if strgstat == 'post':
+            colr = 'black'
+        if strgstat == 'mlik':
+            colr = 'r'
     
     return colr
 
@@ -1180,10 +1183,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                         alph = 1.
                         linestyl = '-'
                     else:
-                        if liststrgmodl[a] == 'true':
-                            colr = retr_colr(liststrgmodl[a])
-                        if liststrgmodl[a] == 'fitt':
-                            colr = retr_colr(strgstat)
+                        colr = retr_colr(strgstat, liststrgmodl[a])
                         linestyl = '--'
                         alph = 0.5
                    
@@ -1463,44 +1463,45 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
 
             xdattemp = binsxdat[:-1] + deltxdat / 2.
    
-    if strgstat == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
-        
-        if indxydat != None:
-            yerr = yerr[[slice(None)] + indxydat]
-        
-        # label
-        if strgydat.startswith('hist'):
-            ##  element distribution
-            labl = gdat.legdsampdist + ' distribution'
-        else:
-            ##  other
-            labl = gdat.legdsampdist + ' distribution'
-        
-        temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
-        for caps in listcaps:
-            caps.set_markeredgewidth(1)
-
-    elif strgstat == 'this' or strgstat == 'mlik':
-        
-        if strgstat == 'this':
-            legd = gdat.legdsamp
-        else:
-            legd = gdat.legdmlik
-
-        if histodim:
-            axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5)
-        else:
-            if plottype == 'errr':
-                yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
-
-                if indxydat != None:
-                    yerr = yerr[[slice(None)] + indxydat]
-                temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
-                for caps in listcaps:
-                    caps.set_markeredgewidth(1)
+    if strgmodl == 'fitt':
+        if strgstat == 'post':
+            yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
+            
+            if indxydat != None:
+                yerr = yerr[[slice(None)] + indxydat]
+            
+            # label
+            if strgydat.startswith('hist'):
+                ##  element distribution
+                labl = gdat.legdsampdist + ' distribution'
             else:
-                axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
+                ##  other
+                labl = gdat.legdsampdist + ' distribution'
+            
+            temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
+            for caps in listcaps:
+                caps.set_markeredgewidth(1)
+
+        elif strgstat == 'this' or strgstat == 'mlik':
+            
+            if strgstat == 'this':
+                legd = gdat.legdsamp
+            else:
+                legd = gdat.legdmlik
+
+            if histodim:
+                axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5)
+            else:
+                if plottype == 'errr':
+                    yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
+
+                    if indxydat != None:
+                        yerr = yerr[[slice(None)] + indxydat]
+                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
+                    for caps in listcaps:
+                        caps.set_markeredgewidth(1)
+                else:
+                    axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
     
     # reference histogram
     if not omittrue and gdat.allwrefr:
@@ -1598,7 +1599,17 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
     if ydattype != 'totl':
         strgydat += ydattype
 
-    make_legd(axis, offs=offslegd)
+    try:
+        make_legd(axis, offs=offslegd)
+    except:
+        print 'Legend failed when'
+        print 'strgstat'
+        print strgstat
+        print 'strgmodl'
+        print strgmodl
+        print 'strgydat'
+        print strgydat
+        print
 
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgydat, nameinte=nameinte)
@@ -2476,7 +2487,7 @@ def plot_init(gdat):
         
                 if gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
                     figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'this', 'true', d, i, m, -1)
-                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, 'this', 'cntpdata', d, i, m, tdim=True)
+                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, 'this', 'true', 'cntpdata', d, i, m, tdim=True)
                     make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     plt.tight_layout()
                     figr.savefig(path)

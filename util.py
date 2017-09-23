@@ -7836,7 +7836,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     print gdatmoditemp.nextlliktotl
                                     raise Exception('')
 
-                            dictelem[l][d]['deltllik'][k] = lliktotl - gdat.truelliktotl
+                            dictelem[l][d]['deltllik'][k] = lliktotl - gdat.nexttruelliktotl
                             if gdat.verbtype > 1:
                                 print 'k'
                                 print k
