@@ -770,12 +770,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscaltrac') + name
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
         path = getattr(gdat, 'path' + gdat.namesampdist + 'finlvarbscalhist') + name
-        print 'name'
-        print name
-        print 'scal'
-        print scal
-        print 'listvarb'
-        summgene(listvarb)
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
@@ -794,17 +788,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
             listjoin = vstack((listvarb, listvarbseco)).T
-            print 'nameseco'
-            print nameseco
-            print 'scalseco'
-            print scalseco
-            print 'listvarbseco'
-            summgene(listvarbseco)
     
             # temp -- this comes up in lens_syst
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
-        print
 
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
