@@ -444,6 +444,13 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
             for d in indxregipopl[l]:
                 if len(indxsampcomp['comp'][l][d]) > 0:
                     if amax(indxsampcomp['comp'][l][d]) > numbpara:
+                        print 'indxsampcomp'
+                        print indxsampcomp
+                        print 'numbpara'
+                        print numbpara
+                        #print 'sampvarb'
+                        #for k in range(sampvarb.size):
+                        #    print sampvarb[k]
                         raise Exception('Sample indices of the elements are bad.') 
     
     return indxsampcomp
@@ -1338,7 +1345,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     numbtrapregipoplcumr = getattr(gdat, strgmodl + 'numbtrapregipoplcumr')
     elemregitype = getattr(gdat, strgmodl + 'elemregitype')
     
-    gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgmodl)
+    gdatobjt = retr_gdatobjt(gdat, gdatmodi, 'this', strgmodl)
 
     strgpfixthis = retr_strgpfix('this', strgmodl)
     strgpfixnext = retr_strgpfix('next', strgmodl)
@@ -1349,6 +1356,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     #thisindxsampcomp = getattr(gdatobjt, strgpfixthis + 'indxsampcomp')
     if numbtrap > 0:
         thisindxsampcomp = retr_indxsampcomp(gdat, thisindxelemfull, strgmodl)
+    setattr(gdatobjt, strgpfixthis + 'indxsampcomp', thisindxsampcomp)
     
     nextsamp = copy(thissamp)
     nextsampvarb = copy(thissampvarb)
@@ -1430,11 +1438,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         else:
             
             ## splits and merges
-            if thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] == maxmnumbelem[gdatmodi.indxregimodi[0], \
-                                                                                                                                                gdatmodi.indxpoplmodi[0]]:
+            if thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] == maxmnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]:
                 gdatmodi.propmerg = True
-            elif thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] == minmnumbelem[gdatmodi.indxregimodi[0], \
-                                                                                                                                                gdatmodi.indxpoplmodi[0]]:
+            elif thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] == minmnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]:
                 gdatmodi.propsplt = True
             else:
                 if rand() < 0.5:
@@ -1818,7 +1824,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.mergindxelemfrst = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmergfrst]
 
         # find the probability of merging this element with the others 
-        probmerg = retr_probmerg(gdat, gdatmodi, gdatmodi.indxelemfullmergfrst)
+        probmerg = retr_probmerg(gdat, gdatmodi, 'this', gdatmodi.indxelemfullmergfrst)
         indxelemfulltemp = arange(len(thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]))
         gdatmodi.indxelemfullmergseco = choice(setdiff1d(indxelemfulltemp, array([gdatmodi.indxelemfullmergfrst])), p=probmerg)
         gdatmodi.indxelemfullmodi = sort(array([gdatmodi.indxelemfullmergfrst, gdatmodi.indxelemfullmergseco]))
@@ -2060,45 +2066,21 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         thisnumbelem = thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         nextnumbelem = gdatmodi.nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         
-        if False:
-            print 'calculating combinatorial factor...'
-        
         ## combinatorial factor
         if gdatmodi.propmerg:
-            probfrwdfrst = retr_probmerg(gdat, gdatmodi, gdatmodi.indxelemfullmodi[1], gdatmodi.indxelemfullmodi[0]) / thisnumbelem
-            probfrwdseco = retr_probmerg(gdat, gdatmodi, gdatmodi.indxelemfullmodi[0], gdatmodi.indxelemfullmodi[1]) / thisnumbelem
+            probfrwdfrst = retr_probmerg(gdat, gdatmodi, 'this', gdatmodi.indxelemfullmodi[1], gdatmodi.indxelemfullmodi[0]) / thisnumbelem
+            probfrwdseco = retr_probmerg(gdat, gdatmodi, 'this', gdatmodi.indxelemfullmodi[0], gdatmodi.indxelemfullmodi[1]) / thisnumbelem
             probreve = 1. / nextnumbelem
             gdatmodi.thislcomfact = log(probreve) - log(probfrwdfrst + probfrwdseco)
-            if False:
-                print 'probfrwdfrst'
-                print probfrwdfrst
-                print 'probfrwdseco'
-                print probfrwdseco
-                print 'probreve'
-                print probreve
         else:
             probfrwd = 1. / thisnumbelem
-            probrevefrst = retr_probmerg(gdat, gdatmodi, -1, gdatmodi.indxelemfullmodi[0], strgstat='next') / nextnumbelem
-            probreveseco = retr_probmerg(gdat, gdatmodi, gdatmodi.indxelemfullmodi[0], -1, strgstat='next') / nextnumbelem
+            probrevefrst = retr_probmerg(gdat, gdatmodi, 'next', -1, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
+            probreveseco = retr_probmerg(gdat, gdatmodi, 'next', gdatmodi.indxelemfullmodi[0], -1) / nextnumbelem
             gdatmodi.thislcomfact = log(probrevefrst + probreveseco) - log(probfrwd)
-            if False:
-                print 'probfrwd'
-                print probfrwd
-                print 'probrevefrst'
-                print probrevefrst
-                print 'probreveseco'
-                print probreveseco
-        if False:
-            print 'gdatmodi.thislcomfact'
-            print gdatmodi.thislcomfact
-            print
 
 
-def retr_probmerg(gdat, gdatmodi, indxelemfullexcl, indxelemfulleval=None, strgstat='this'):
+def retr_probmerg(gdat, gdatmodi, strgstat, indxelemfullexcl, indxelemfulleval=None):
     
-    if False:
-        print 'retr_probmerg'
-
     lgal = getattr(gdatmodi, strgstat + 'sampvarb')[getattr(gdatmodi, strgstat + 'indxsampcomp')['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
     bgal = getattr(gdatmodi, strgstat + 'sampvarb')[getattr(gdatmodi, strgstat + 'indxsampcomp')['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
     
@@ -2112,11 +2094,6 @@ def retr_probmerg(gdat, gdatmodi, indxelemfullexcl, indxelemfulleval=None, strgs
         probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
         probmerg /= sum(probmerg)
     else:
-        if False:
-            print 'probmerg'
-            print probmerg
-            print 'indxelemfullexcl'
-            print indxelemfullexcl
         if indxelemfullexcl == -1:
             probmerg = probmerg[:-1]
         else:
@@ -6504,9 +6481,9 @@ def retr_strgpfix(strgstat, strgmodl):
     return strgpfix
 
         
-def retr_gdatobjt(gdat, gdatmodi, strgmodl):
+def retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl):
     
-    if strgmodl == 'true':
+    if strgmodl == 'true' or strgmodl == 'fitt' and (strgstat == 'mlik' or strgstat == 'post'):
         gdatobjt = gdat
     else:
         gdatobjt = gdatmodi
@@ -6524,7 +6501,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         print strgstat
         print
     
-    gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgmodl)
+    gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl)
 
     # temp
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
@@ -8557,7 +8534,7 @@ def prep_gdatmodi(gdat, gdatmodi, gdatobjt, strgstat, strgmodl):
         setattr(gdatmodi, strgpfixthis + namevarbstat, temp)
     
 
-def make_anim(strgsrch, full=False):
+def make_anim(strgsrch):
 
     pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
     listpathruns = fnmatch.filter(os.listdir(pathimag), strgsrch)

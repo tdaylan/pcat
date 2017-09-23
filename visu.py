@@ -666,7 +666,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         for n in gdat.indxsamptotlfram:
             gdatmodi.cntrswep = n
             gdatmodi.thisindxelemfull = deepcopy(gdat.listindxelemfull[n])
-            gdatmodi.thisfittsampvarb = copy(gdat.listsampvarb[n, :])
+            gdatmodi.thissampvarb = copy(gdat.listsampvarb[n, :])
             proc_samp(gdat, gdatmodi, 'this', 'fitt')
             plot_samp(gdat, gdatmodi, 'this', 'fitt')
 
@@ -719,8 +719,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
 
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'post', 'fitt')
-    proc_samp(gdat, None, 'mlik', 'fitt')
-
+    #proc_samp(gdat, None, 'mlik', 'fitt')
+    
     if gdat.verbtype > 0:
         print 'A mosaic of samples...'
     
@@ -943,10 +943,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     plt.tight_layout()
     figr.savefig(pathdiag + 'memoresi.pdf')
     plt.close(figr)
-
-    # animate the frame plots
-    if gdat.makeanim:
-        make_anim(gdat.strgcnfg, full=True)
 
     timetotlfinl = gdat.functime()
     if gdat.verbtype > 0:
@@ -1510,8 +1506,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
             if strgydat.startswith('psfn'):
                 name = 'psfnexpr'
             else:
-                if strgydat[-4:-1] == 'pop':
-                    name = 'refr' + strgydat[:-4] + 'ref%d' % q
+                if strgydat[-8:-5] == 'pop':
+                    name = 'refr' + strgydat[:-8] + 'ref%d' % q + strgydat[-4:]
                 else:
                     name = 'refr' + strgydat
             
@@ -2055,12 +2051,12 @@ def plot_mosa(gdat, indxregiplot):
                             for b, axis in enumerate(axrw):
                                 
                                 n = indxsampmosa[numbcols*a+b]
-                                gdatmodi.thisfittsampvarb = gdat.listsampvarb[n, :].flatten()
-                                gdatmodi.thisfittsamp = gdat.listsamp[n, :].flatten()
+                                gdatmodi.thissampvarb = gdat.listsampvarb[n, :].flatten()
+                                gdatmodi.thissamp = gdat.listsamp[n, :].flatten()
                                 
                                 if gdat.fittnumbtrap > 0:
                                     gdatmodi.thisindxelemfull = gdat.listindxelemfull[n]
-                                    proc_samp(gdat, gdatmodi, 'this')
+                                    proc_samp(gdat, gdatmodi, 'this', 'fitt')
 
                                 if a == numbrows - 1:
                                     axis.set_xlabel(gdat.labllgaltotl)
@@ -2071,8 +2067,8 @@ def plot_mosa(gdat, indxregiplot):
                                 else:
                                     axis.set_yticklabels([])
                                 
-                                imag = retr_imag(gdat, axis, gdat.cntpdata, '', 'cntpdata', indxregiplot, i, m)
-                                supr_fram(gdat, gdatmodi, 'this', axis, indxregiplot, l)
+                                imag = retr_imag(gdat, axis, gdat.cntpdata, '', 'fitt', 'cntpdata', indxregiplot, i, m)
+                                supr_fram(gdat, gdatmodi, 'this', 'fitt', axis, indxregiplot, l)
                         
                         if gdat.enerbins:
                             plt.figtext(0.5, 0.93, gdat.strgener[i], ha='center', va='center')
@@ -2610,7 +2606,7 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, in
         for k, namefixp in enumerate(gdat.fittnamefixp):
             indxfixp = getattr(gdat, 'fittindxfixp' + namefixp)
 
-            initvalu = gdatmodi.thisfittsampvarb[indxfixp] * gdat.fittfactfixpplot[k]
+            initvalu = gdatmodi.thissampvarb[indxfixp] * gdat.fittfactfixpplot[k]
             labl = getattr(gdat, 'labl' + namefixp)
             minm = getattr(gdat, 'minm' + namefixp) * gdat.fittfactfixpplot[k]
             maxm = getattr(gdat, 'maxm' + namefixp) * gdat.fittfactfixpplot[k]
@@ -2621,7 +2617,7 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, in
             for k, namefixp in enumerate(gdat.fittnamefixp):
                 print namefixp
                 print freq_slider[k].val
-                gdatmodi.thisfittsampvarb[k] = freq_slider[k].val / gdat.fittfactfixpplot[k]
+                gdatmodi.thissampvarb[k] = freq_slider[k].val / gdat.fittfactfixpplot[k]
             print
             proc_samp(gdat, gdatmodi, 'this')
             maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype)

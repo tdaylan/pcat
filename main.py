@@ -1867,6 +1867,13 @@ def init( \
     proc_post(gdat)
     
     # make animations
+    print 'gdat.rtag'
+    print gdat.rtag
+    print 'gdat.strgcnfg'
+    print gdat.strgcnfg
+    print 'gdat.makeanim'
+    print gdat.makeanim
+    print
     if gdat.makeanim:
         make_anim(gdat.rtag)
 
@@ -2075,8 +2082,16 @@ def proc_post(gdat, prio=False):
         else:
             shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
         setattr(gdat, 'list' + strgvarb, inpt.reshape(shap))
-        
+    
+    # maximum likelihood sample
     indxsamptotlmlik = argmax(sum(sum(sum(sum(gdat.listllik, 4), 3), 2), 1))
+    
+    # copy the maximum likelihood sample
+    for strgvarb in gdat.liststrgvarbarrysamp:
+        setattr(gdat, 'mlik' + strgvarb, getattr(gdat, 'list' + strgvarb)[indxsamptotlmlik, ...])
+    for strgvarb in gdat.liststrgvarblistsamp:
+        setattr(gdat, 'mlik' + strgvarb, getattr(gdat, 'list' + strgvarb)[indxsamptotlmlik])
+
     # temp -- dont gdat.listllik and gdat.listsamp have the same dimensions?
     gdat.mliksamp = gdat.listsamp[indxsamptotlmlik, :]
     gdat.mliksampvarb = gdat.listsampvarb[indxsamptotlmlik, :]
@@ -2942,10 +2957,10 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdatmodi.cntrswep == 0:
                 gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
             if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -30.:
-                print 'gdatmodi.thislliktotl'
-                print gdatmodi.thislliktotl
                 print 'gdatmodi.thislliktotlprev'
                 print gdatmodi.thislliktotlprev
+                print 'gdatmodi.thislliktotl'
+                print gdatmodi.thislliktotl
                 print 'loglikelihood drop is very unlikely!'
                 raise Exception('')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
@@ -3081,9 +3096,7 @@ def work(pathoutpthis, lock, indxprocwork):
             
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
-                
                 valu = getattr(gdatmodi, 'this' + strgvarb)
-                
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
                 
             for strgvarb in gdat.liststrgvarblistsamp:
