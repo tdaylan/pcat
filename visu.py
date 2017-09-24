@@ -1084,27 +1084,21 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
                 cntr += 1
             
-            if gdat.numbpixl == 1 and liststrgmodl[a] != 'post':
+            if gdat.numbpixl == 1 and strgstat != 'post':
                 cntrline = cntr
                 for l in indxpopl:
                     for d in indxregipopl[l]:
-                        for k in range(numbelem[l][d]):
-                            print 'k'
-                            print k
-                            if liststrgmodl[a] == 'true':
-                                print 'getattr(listgdatobjt[a], liststrgmodl[a] + spec)[l][d]'
-                                print getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d]
+                        if liststrgmodl[a] == 'true':
+                            for k in range(gdat.truenumbelem[l][d]):
                                 listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][0, :, k]
-                            else:
+                        else:
+                            for k in range(numbelem[l][d]):
                                 listydat[cntr, :] = getattr(listgdatobjt[a], strgstat + 'spec')[l][d][:, k]
-                            
-                            #if liststrgmodl[a] == 'post':
-                            #    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
-                            if cntr == cntrline:
-                                listlegdsbrtspec = listlegdsbrtspec[:cntr] + ['Line'] + listlegdsbrtspec[cntr:]
-                            else:
-                                listlegdsbrtspec = listlegdsbrtspec[:cntr] + [None] + listlegdsbrtspec[cntr:]
-                            cntr += 1
+                if cntr == cntrline:
+                    listlegdsbrtspec = listlegdsbrtspec[:cntr] + ['Line'] + listlegdsbrtspec[cntr:]
+                else:
+                    listlegdsbrtspec = listlegdsbrtspec[:cntr] + [None] + listlegdsbrtspec[cntr:]
+                cntr += 1
                 
             ## total model
             if numblablsbrt > 1:
@@ -1357,8 +1351,8 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
         if hasattr(gdat, 'refr' + strgfrst) and hasattr(gdat, 'refr' + strgseco):
             for q in gdat.indxrefr:
                 if strgfrst in gdat.refrliststrgfeat[q] and strgseco in gdat.refrliststrgfeat[q]:
-                    refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[indxregiplot][q] * getattr(gdat, 'fact' + strgfrst + 'plot')
-                    refrvarbseco = getattr(gdat, 'refr' + strgseco)[indxregiplot][q] * getattr(gdat, 'fact' + strgseco + 'plot')
+                    refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[q][indxregiplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
+                    refrvarbseco = getattr(gdat, 'refr' + strgseco)[q][indxregiplot] * getattr(gdat, 'fact' + strgseco + 'plot')
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
@@ -1607,8 +1601,8 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, indxregipl
     figr, axis = plt.subplots(1, 1, figsize=(gdat.plotsize, gdat.plotsize))
 
     # prepare data to be plotted
-    xdat = copy(getattr(gdat, 'refr' + strgfeat)[indxregiplot][q][0, :])
-    xerr = tdpy.util.retr_errrvarb(getattr(gdat, 'refr' + strgfeat)[indxregiplot][q])
+    xdat = copy(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot][0, :])
+    xerr = tdpy.util.retr_errrvarb(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot])
     
     minmplot = getattr(gdat, 'minm' + strgfeat)
     maxmplot = getattr(gdat, 'maxm' + strgfeat)
@@ -1858,7 +1852,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
             if gdat.allwrefr:
                 for q in gdat.indxrefr:
                     if strgfeat in gdat.refrliststrgfeat[q]:
-                        refrsign = getattr(gdat, 'refr' + strgfeat)[indxregiplot][q]
+                        refrsign = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
                         if len(refrsign) > 0:
                             if strgfeat != None:
                                 indxelem = where((bins[indxlowr] < refrsign[0, :]) & (refrsign[0, :] < bins[indxuppr]))[0]
@@ -1866,7 +1860,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
                                 indxelem = arange(gdat.refrnumbelem[q])
                             
                             mrkrsize = retr_mrkrsize(gdat, refrsign[0, indxelem], strgfeat)
-                            axis.scatter(gdat.anglfact * gdat.refrlgal[indxregiplot][q][0, indxelem], gdat.anglfact * gdat.refrbgal[indxregiplot][q][0, indxelem], \
+                            axis.scatter(gdat.anglfact * gdat.refrlgal[q][indxregiplot][0, indxelem], gdat.anglfact * gdat.refrbgal[q][indxregiplot][0, indxelem], \
                                                                                         s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.listcolrrefr[q])
 
             if a == numbrows - 1:

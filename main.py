@@ -900,7 +900,7 @@ def init( \
                 if 'lgal' in gdat.refrliststrgfeat[q] and 'bgal' in gdat.refrliststrgfeat[q]:
                     gdat.refrliststrgfeat[q] += ['gang', 'aang']
                 for strgfeat in gdat.refrliststrgfeat[q]:
-                    setattr(gdat, 'refr' + strgfeat, [[[[] for q in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl] for q in gdat.indxrefr])
+                    setattr(gdat, 'refr' + strgfeat, [[[] for d in gdat.indxregi] for q in gdat.indxrefr])
             gdat.refrliststrgfeattotl = retr_listconc(gdat.refrliststrgfeat)
             
             if gdat.exprtype == 'ferm':
@@ -1680,25 +1680,16 @@ def init( \
             for q in gdat.indxrefr:
                 for d in gdat.indxregi:
                     if len(refrfeat[q][d]) > 0:
-                        print 'q'
-                        print q
-                        print 'd'
-                        print d
-                        print 'refrfeatrofi'
-                        print refrfeatrofi
-                        print 'refrfeat'
-                        print refrfeat
-                        print 'refrfeatrofi[q][d]'
-                        print refrfeatrofi[q][d]
-                        
-                        refrfeatrofi[q][d] = refrfeat[q][l][d][..., gdat.indxrefrpntsrofi[q][d]]
+                        refrfeatrofi[q][d] = refrfeat[q][d][..., gdat.indxrefrpntsrofi[q][d]]
             setattr(gdat, 'refr' + strgfeat, refrfeatrofi)
         
-        gdat.refrnumbelem = zeros((gdat.numbregi, gdat.numbrefr), dtype=int)
-        for d in gdat.indxregi:
-            for q in gdat.indxrefr:
-                gdat.refrnumbelem[d, q] = gdat.refrlgal[q][d].shape[1]
-        gdat.refrnumbelemtotl = sum(gdat.refrnumbelem) 
+        gdat.refrnumbelem = [[] for q in gdat.indxrefr]
+        gdat.refrnumbelemtotl = 0
+        for q in gdat.indxrefr:
+            gdat.refrnumbelem[q] = zeros(gdat.numbregi, dtype=int)
+            for d in gdat.indxregi:
+                gdat.refrnumbelem[q][d] = gdat.refrlgal[q][d].shape[1]
+            gdat.refrnumbelemtotl += sum(gdat.refrnumbelem[q]) 
         
         ## check that all reference element features are finite
         for d in gdat.indxregi:
@@ -1718,7 +1709,6 @@ def init( \
                 for strgfeat in gdat.refrliststrgfeat[q]:
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     if len(refrfeat[q][d]) > 0:
-                        print 'meeeeey'
                         bins = getattr(gdat, 'bins' + strgfeat)
                         hist = histogram(refrfeat[q][d][0, :], bins)[0]
                         setattr(gdat, 'refrhist' + strgfeat + 'ref%dreg%d' % (q, d), hist)
@@ -1743,7 +1733,7 @@ def init( \
             plot_samp(gdat, None, 'this', 'true')
         
     ## element feature indices ordered with respect to the amplitude variable
-    refrfeatsort = [[[] for q in gdat.indxrefr] for d in gdat.indxregi]
+    refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
     if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
         for q in gdat.indxrefr:
             refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
@@ -1876,16 +1866,21 @@ def init( \
 
     # run the sampler
     worksamp(gdat, lock)
+    
+    prid = os.fork()
+    if prid:
+        print 'Parent process returning. Child will continue...'
 
+        return
+        #os._exit(0)
+    
     # post process the samples
     proc_post(gdat)
     
     # make animations
     if gdat.makeanim:
-        prid = os.fork()
-        if prid > 0:
-            make_anim(gdat.rtag)
-            os._exit(0)
+        make_anim(gdat.rtag)
+        os._exit(0)
 
     if gdat.verbtype > 0:
         print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
@@ -1894,7 +1889,7 @@ def init( \
         print 'PCAT has run successfully. Returning to the OS...'
     
     return gdat
-    
+
 
 def workopti(gdat, lock):
 
@@ -2662,81 +2657,84 @@ def work(pathoutpthis, lock, indxprocwork):
         else:
             strgcnfg = gdat.strgcnfg
         path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
-        thisfile = h5py.File(path, 'r')
-        if gdat.verbtype > 0:
-            print 'Initializing with the state from %s...' % path
-            print 'Likelihood:'
-            print thisfile['lliktotl'][...]
-            
-            # find the number of populations provided
-            maxmindxpopl = 0
-            for l in range(10):
-                for attr in thisfile:
-                    if attr.startswith('lgal'):
-                        indxpopl = int(attr[7])
-                        if indxpopl > maxmindxpopl:
-                            maxmindxpopl = indxpopl
-            numbpoplinpt = maxmindxpopl + 1
-            
-            if numbpoplinpt != gdat.fittnumbpopl:
-                raise Exception('Cannot initialize with different number of populations.')
-            # find the number of elements provided
-            cntr = zeros(numbpoplinpt, dtype=int)
-            for attr in thisfile:
-                if attr.startswith('lgal'):
-                    indxpopl = int(attr[7])
-                    cntr[indxpopl] += 1
+        if os.path.exists(path):
+            boolinitreco = True
+            thisfile = h5py.File(path, 'r')
             if gdat.verbtype > 0:
-                print 'Number of found elements:'
-                print cntr
+                print 'Initializing with the state from %s...' % path
+                print 'Likelihood:'
+                print thisfile['lliktotl'][...]
+                
+                # find the number of populations provided
+                maxmindxpopl = 0
+                for l in range(10):
+                    for attr in thisfile:
+                        if attr.startswith('lgalpop'):
+                            print 'attr'
+                            print attr
+                            indxpopl = int(attr[7])
+                            if indxpopl > maxmindxpopl:
+                                maxmindxpopl = indxpopl
+                numbpoplinpt = maxmindxpopl + 1
+                
+                if numbpoplinpt != gdat.fittnumbpopl:
+                    raise Exception('Cannot initialize with different number of populations.')
+                # find the number of elements provided
+                cntr = zeros(numbpoplinpt, dtype=int)
+                for attr in thisfile:
+                    if attr.startswith('lgalpop'):
+                        indxpopl = int(attr[7])
+                        cntr[indxpopl] += 1
+                if gdat.verbtype > 0:
+                    print 'Number of found elements:'
+                    print cntr
 
-        for attr in thisfile:
-            for k, namefixp in enumerate(gdat.fittnamefixp):
-                if namefixp == attr:
-                    gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
-        
-        for d in gdat.indxregi:
-            for l in gdat.fittindxpopl:
-                maxmnumbelem = getattr(gdat, 'fittmaxmnumbelempop%dreg%d' % (l, d))
-                if gdatmodi.thissamp[l] > maxmnumbelem:
-                    gdatmodi.thissamp[l] = maxmnumbelem
-                    if gdat.verbtype > 0:
-                        print 'Tapering off the element list...'
-
-        if gdat.verbtype > 0:
-            print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
-            print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
-        
-        retr_elemlist(gdat, gdatmodi)
-        gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
-        
-        if (gdatmodi.thissamp == 0).all():
-            raise Exception('Bad initialization.')
-    
-        if gdat.fittnumbtrap > 0:
-            for strgcomp in gdat.fittliststrgcomptotl:
-                initcomp = [[[] for d in gdat.indxregi] for l in gdat.fittindxpopl]
+            for attr in thisfile:
+                for k, namefixp in enumerate(gdat.fittnamefixp):
+                    if namefixp == attr:
+                        gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
+                        if not isfinite(thisfile[attr][()]):
+                            raise Exception('Retreived state parameter is not finite.')
+                        if not isfinite(gdatmodi.thissamp[k]):
+                            raise Exception('CDF of the retreived state parameter is not finite.')
+            for d in gdat.indxregi:
                 for l in gdat.fittindxpopl:
-                    for d in gdat.fittindxregipopl[l]:
-                        initcomp[l][d] = empty(len(gdatmodi.thisindxelemfull[l][d]))
-                        for k in range(len(gdatmodi.thisindxelemfull[l][d])):
-                            namefiel = '%spop%dreg%d%04d' % (strgcomp, l, d, k)
-                            for attr in thisfile:
-                                if namefiel == attr:
-                                    print 'namefiel'
-                                    print namefiel
-                                    print 'dlk'
-                                    print l, d, k
-                                    print 'thisfile[namefiel][()]'
-                                    print thisfile[namefiel][()]
-                                    print 'initcomp[l][d]'
-                                    print initcomp[l][d]
-                                    print 
-                                    initcomp[l][d][k] = thisfile[namefiel][()]
-                setattr(gdat, 'init' + strgcomp, initcomp)
-            initcompfromstat(gdat, gdatmodi, 'init')
-        thisfile.close()
-    elif gdat.inittype == 'refr' or gdat.inittype == 'pert':
+                    maxmnumbelem = getattr(gdat, 'fittmaxmnumbelempop%dreg%d' % (l, d))
+                    if gdatmodi.thissamp[l] > maxmnumbelem:
+                        gdatmodi.thissamp[l] = maxmnumbelem
+                        if gdat.verbtype > 0:
+                            print 'Tapering off the element list...'
+
+            if gdat.verbtype > 0 and gdat.fittnumbtrap > 0:
+                print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
+                print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
+            
+            retr_elemlist(gdat, gdatmodi)
+            gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+            
+            if (gdatmodi.thissamp == 0).all():
+                raise Exception('Bad initialization.')
+    
+            if gdat.fittnumbtrap > 0:
+                for strgcomp in gdat.fittliststrgcomptotl:
+                    initcomp = [[[] for d in gdat.indxregi] for l in gdat.fittindxpopl]
+                    for l in gdat.fittindxpopl:
+                        for d in gdat.fittindxregipopl[l]:
+                            initcomp[l][d] = empty(len(gdatmodi.thisindxelemfull[l][d]))
+                            for k in range(len(gdatmodi.thisindxelemfull[l][d])):
+                                namefiel = '%spop%dreg%d%04d' % (strgcomp, l, d, k)
+                                for attr in thisfile:
+                                    if namefiel == attr:
+                                        initcomp[l][d][k] = thisfile[namefiel][()]
+                    setattr(gdat, 'init' + strgcomp, initcomp)
+                initcompfromstat(gdat, gdatmodi, 'init')
+            thisfile.close()
+        else:
+            boolinitreco = False
+            if gdat.verbtype > 0:
+                print 'Initialization from previous state failed.'
+        
+    if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
@@ -2747,7 +2745,7 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.fittnumbtrap > 0:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
-    else:
+    if gdat.inittype == 'rand' or gdat.inittype == 'reco' and not boolinitreco:
         retr_elemlist(gdat, gdatmodi)
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
