@@ -25,7 +25,7 @@ def init( \
          asscrefr=True, \
 
          # chain setup
-         numbswep=1000000, \
+         numbswep=2000000, \
          numbburn=None, \
          factthin=None, \
         
@@ -155,7 +155,7 @@ def init( \
          asscmetrtype='dist', \
 
          # plotting
-         numbswepplot=None, \
+         numbswepplot=40000, \
          
          makeplot=True, \
          makeplotinit=True, \
@@ -287,10 +287,6 @@ def init( \
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 2
     
-    ## number of sweeps between frame plots
-    if gdat.numbswepplot == None:
-        gdat.numbswepplot = max(gdat.numbswep / 20, 100000)
-    
     ## number of processes
     gdat.strgproc = os.uname()[1]
     if gdat.numbproc == None:
@@ -324,7 +320,7 @@ def init( \
 
     ## factor by which to thin the sweeps to get samples
     if gdat.factthin == None:
-        gdat.factthin = int(ceil(1e-2 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
     # samples to be saved
     gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
@@ -463,7 +459,7 @@ def init( \
                                                                                        ['ene3', 'ergs', '0507', 0.5,  7.]]
     if gdat.exprtype == 'hubb':
         gdat.listspecconvunit = [['ene3', 'ergs']]
-    
+   
     if gdat.pixltype == None:
         if gdat.exprtype == 'ferm':
             gdat.pixltype = 'heal'
@@ -863,7 +859,18 @@ def init( \
             gdat.numbrefr = 2
         if gdat.exprtype == 'chan':
             gdat.numbrefr = 2
-
+    
+    for strgmodl in gdat.liststrgmodl:
+        maxmnumbelem = getattr(gdat, strgmodl + 'maxmnumbelem')
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+        numbregipopl = [[] for l in indxpopl]
+        indxregipopl = [[] for l in indxpopl]
+        for l in indxpopl:
+            numbregipopl[l] = maxmnumbelem[l].size
+            indxregipopl[l] = arange(numbregipopl[l])
+        setattr(gdat, strgmodl + 'numbregipopl', numbregipopl)
+        setattr(gdat, strgmodl + 'indxregipopl', indxregipopl)
+        
     gdat.indxrefr = arange(gdat.numbrefr)
     gdat.listnamefeatamplrefr = [[] for q in gdat.indxrefr]
     gdat.listnamerefr = [] 
@@ -893,8 +900,7 @@ def init( \
                 if 'lgal' in gdat.refrliststrgfeat[q] and 'bgal' in gdat.refrliststrgfeat[q]:
                     gdat.refrliststrgfeat[q] += ['gang', 'aang']
                 for strgfeat in gdat.refrliststrgfeat[q]:
-                    for d in gdat.indxregi:
-                        setattr(gdat, 'refr' + strgfeat, [[[[] for q in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl] for q in gdat.indxrefr])
+                    setattr(gdat, 'refr' + strgfeat, [[[[] for q in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl] for q in gdat.indxrefr])
             gdat.refrliststrgfeattotl = retr_listconc(gdat.refrliststrgfeat)
             
             if gdat.exprtype == 'ferm':
@@ -1304,7 +1310,7 @@ def init( \
                 else:
                     limt = getattr(gdat, 'fitt' + strglimt + namevarb)
                 setattr(gdat, strglimt + namevarb, limt)
-
+    
     # temp
     for strgmodl in gdat.liststrgmodl:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -1367,47 +1373,44 @@ def init( \
             gdat.numbhalfsers = 20
             gdat.numbindxsers = 20
             
-            if gdat.fittlensmodltype != 'none' or gdat.truelensmodltype != 'none':
-                minm = amin(array([gdat.minmsizehost, gdat.minmsizesour]))
-                maxm = amax(array([gdat.maxmsizehost, gdat.maxmsizesour]))
-            else:
-                minm = gdat.minmsizehost
-                maxm = gdat.maxmsizehost
+            if (gdat.fittlensmodltype != 'none' or gdat.fitthostemistype != 'none') or \
+                                                    gdat.datatype == 'mock' and (gdat.truelensmodltype != 'none' or gdat.truehostemistype != 'none'): 
+                retr_axis(gdat, 'halfsers', gdat.sizepixl, gdat.maxmgangdata, gdat.numbhalfsers)
+                gdat.minmserihost = 0.5
+                gdat.maxmserihost = 10.
+                minm = gdat.minmserihost
+                maxm = gdat.maxmserihost
+                retr_axis(gdat, 'indxsers', minm, maxm, gdat.numbindxsers)
                 
-            retr_axis(gdat, 'halfsers', minm, maxm, gdat.numbhalfsers)
-            minm = gdat.minmserihost
-            maxm = gdat.maxmserihost
-            retr_axis(gdat, 'indxsers', minm, maxm, gdat.numbindxsers)
-            
-            gdat.binslgalsersusammesh, gdat.binsbgalsersusammesh = meshgrid(gdat.binslgalsersusam, gdat.binsbgalsersusam, indexing='ij')
-            gdat.binsradisersusam = sqrt(gdat.binslgalsersusammesh**2 + gdat.binsbgalsersusammesh**2)
-             
-            gdat.sersprofcntr = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
-            gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
-            
-            for n in range(gdat.numbindxsers + 1):
-                for k in range(gdat.numbhalfsers + 1):
-                    
-                    profusam = retr_sbrtsersnorm(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
+                gdat.binslgalsersusammesh, gdat.binsbgalsersusammesh = meshgrid(gdat.binslgalsersusam, gdat.binsbgalsersusam, indexing='ij')
+                gdat.binsradisersusam = sqrt(gdat.binslgalsersusammesh**2 + gdat.binsbgalsersusammesh**2)
+                 
+                gdat.sersprofcntr = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+                gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+                
+                for n in range(gdat.numbindxsers + 1):
+                    for k in range(gdat.numbhalfsers + 1):
+                        
+                        profusam = retr_sbrtsersnorm(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
     
-                    ## take the pixel average
-                    indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
-                    indxbgaluppr = gdat.factsersusam * (gdat.numblgalsers + 3) / 2
-                    for a in range(gdat.numblgalsers):
-                        indxlgallowr = gdat.factsersusam * a
-                        indxlgaluppr = gdat.factsersusam * (a + 1) + 1
-                        gdat.sersprofcntr[a, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, 0]
-                        gdat.sersprof[a, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, :])
-            
-            temp, indx = unique(gdat.binslgalsers, return_index=True)
-            gdat.binslgalsers = gdat.binslgalsers[indx]
-            gdat.sersprof = gdat.sersprof[indx, :, :]
-            gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
+                        ## take the pixel average
+                        indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
+                        indxbgaluppr = gdat.factsersusam * (gdat.numblgalsers + 3) / 2
+                        for a in range(gdat.numblgalsers):
+                            indxlgallowr = gdat.factsersusam * a
+                            indxlgaluppr = gdat.factsersusam * (a + 1) + 1
+                            gdat.sersprofcntr[a, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, 0]
+                            gdat.sersprof[a, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, :])
+                
+                temp, indx = unique(gdat.binslgalsers, return_index=True)
+                gdat.binslgalsers = gdat.binslgalsers[indx]
+                gdat.sersprof = gdat.sersprof[indx, :, :]
+                gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
     
-            indx = argsort(gdat.binslgalsers)
-            gdat.binslgalsers = gdat.binslgalsers[indx]
-            gdat.sersprof = gdat.sersprof[indx, :, :]
-            gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
+                indx = argsort(gdat.binslgalsers)
+                gdat.binslgalsers = gdat.binslgalsers[indx]
+                gdat.sersprof = gdat.sersprof[indx, :, :]
+                gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
     
     gdatdictcopy = deepcopy(gdat.__dict__)
     for strg, valu in gdatdictcopy.iteritems():
@@ -1503,7 +1506,7 @@ def init( \
                         continue
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     for l in gdat.fittindxpopl:
-                        for d in gdat.indxregipopl[l]:
+                        for d in gdat.fittindxregipopl[l]:
                             if refrfeat[q][d].ndim == 1:
                                 refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
@@ -1639,7 +1642,7 @@ def init( \
         # temp -- this does not rotate the uncertainties!
         for q in gdat.indxrefr:
             for l in gdat.fittindxpopl:
-                for d in gdat.indxregipopl[l]:
+                for d in gdat.fittindxregipopl[l]:
                     if len(gdat.listpathwcss[d]) > 0:
                         listhdun = ap.io.fits.open(gdat.listpathwcss[d])
                         wcso = ap.wcs.WCS(listhdun[0].header)
@@ -1673,11 +1676,22 @@ def init( \
                 gdat.indxrefrpntsrofi[q][d] = where((fabs(gdat.refrlgal[q][d][0, :]) < gdat.maxmgangdata) & (fabs(gdat.refrbgal[q][d][0, :]) < gdat.maxmgangdata))[0]
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeat = getattr(gdat, 'refr' + strgfeat)
-            refrfeatrofi = [[[] for q in gdat.indxrefr] for d in gdat.indxregi]
-            for d in gdat.indxregi:
-                for q in gdat.indxrefr:
+            refrfeatrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
+            for q in gdat.indxrefr:
+                for d in gdat.indxregi:
                     if len(refrfeat[q][d]) > 0:
-                        refrfeatrofi[q][d] = refrfeat[q][d][..., gdat.indxrefrpntsrofi[q][d]]
+                        print 'q'
+                        print q
+                        print 'd'
+                        print d
+                        print 'refrfeatrofi'
+                        print refrfeatrofi
+                        print 'refrfeat'
+                        print refrfeat
+                        print 'refrfeatrofi[q][d]'
+                        print refrfeatrofi[q][d]
+                        
+                        refrfeatrofi[q][d] = refrfeat[q][l][d][..., gdat.indxrefrpntsrofi[q][d]]
             setattr(gdat, 'refr' + strgfeat, refrfeatrofi)
         
         gdat.refrnumbelem = zeros((gdat.numbregi, gdat.numbrefr), dtype=int)

@@ -16,12 +16,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
     else:    
         
         strgpfix = retr_strgpfix(strgstat, strgmodl)
-
-        if gdatmodi != None:
-            gdatobjt = gdatmodi
-        else:
-            gdatobjt = gdat
-        
+        gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl)
+    
         numbtrap = getattr(gdat, strgmodl + 'numbtrap')
         sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
@@ -55,11 +51,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             strgswep = '_%09d' % gdatmodi.cntrswep
         else:
             strgswep = ''
-        
-        if gdatmodi != None:
-            gdatobjt = gdatmodi
-        else:
-            gdatobjt = gdat
    
         # plots
         ## histograms of the number of counts per pixel
@@ -175,7 +166,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                                            plottype=listplottype, limtxdat=[gdat.minmener, gdat.maxmener], lablydat=lablydat, \
                                                            limtydat=limtydat)
                 
-                if gdat.elemtype == 'lens':
+                if lensmodltype == 'elem' or lensmodltype == 'full':
 
                     ## deflection profiles
                     if gdat.variasca and gdat.variacut:
@@ -215,9 +206,10 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                     listvlinfrst.append(ascatemp * gdat.anglfact) 
                                     listvlinseco.append(acuttemp * gdat.anglfact)
                                 
-                                indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
-                                beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'sampvarb', indxvarb=indxfixpbeinhost)
-                                listydat.append(xdat * 0. + gdat.anglfact * beinhost[d])
+                                if lensmodltype == 'host':
+                                    indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
+                                    beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'sampvarb', indxvarb=indxfixpbeinhost)
+                                    listydat.append(xdat * 0. + gdat.anglfact * beinhost[d])
                                 path = pathtemp + strgstat + 'deflsubhpop%dreg%d%s.pdf' % (l, d, strgswep)
                                 limtydat = [1e-3, 1.]
                                 limtxdat = [1e-3, 1.]
@@ -1001,21 +993,24 @@ def retr_colr(strgstat, strgmodl):
 
 def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
     
-    if gdatmodi != None:
-        gdatobjt = gdatmodi
-    else:
-        gdatobjt = gdat
-        
+    strgpfix = retr_strgpfix(strgstat, strgmodl)
+    gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl)
+    
     backtype = getattr(gdat, strgmodl + 'backtype')
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     specback = getattr(gdat, strgmodl + 'specback')
     indxback = getattr(gdat, strgmodl + 'indxback')
     maxmgang = getattr(gdat, strgmodl + 'maxmgang')
+    indxregipopl = getattr(gdat, strgmodl + 'indxregipopl')
     hostemistype = getattr(gdat, strgmodl + 'hostemistype')
     lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
     indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
     numblablsbrt = getattr(gdat, strgmodl + 'numblablsbrt')
     numblablsbrtspec = getattr(gdat, strgmodl + 'numblablsbrtspec')
+    
+    sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
+    if numbtrap > 0:
+        indxfixpnumbelem = getattr(gdat, strgmodl + 'indxfixpnumbelem')
     
     if gdat.numbpixl == 1:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -1043,8 +1038,11 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 listydat = zeros((numblablsbrtspec, gdat.numbener))
                 listyerr = zeros((2, numblablsbrtspec, gdat.numbener))
             else:
-                numbelem = getattr(listgdatobjt[a], liststrgmodl[a] + 'numbelem')
-                numbelemtotl = sum(numbelem)
+                numbelem = [[] for l in indxpopl]
+                numbelemtotl = 0
+                for l in indxpopl:
+                    numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
+                    numbelemtotl += sum(numbelem[l])
                 listydat = zeros((numbelemtotl + 100, gdat.numbener))
                 listyerr = zeros((2, numbelemtotl + 100, gdat.numbener))
                 
@@ -1088,13 +1086,17 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
             
             if gdat.numbpixl == 1 and liststrgmodl[a] != 'post':
                 cntrline = cntr
-                for d in gdat.indxregi:
-                    for l in indxpopl:
-                        for k in range(numbelem[d, l]):
+                for l in indxpopl:
+                    for d in indxregipopl[l]:
+                        for k in range(numbelem[l][d]):
+                            print 'k'
+                            print k
                             if liststrgmodl[a] == 'true':
+                                print 'getattr(listgdatobjt[a], liststrgmodl[a] + spec)[l][d]'
+                                print getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d]
                                 listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][0, :, k]
                             else:
-                                listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][:, k]
+                                listydat[cntr, :] = getattr(listgdatobjt[a], strgstat + 'spec')[l][d][:, k]
                             
                             #if liststrgmodl[a] == 'post':
                             #    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
