@@ -26,6 +26,7 @@ def init( \
 
          # chain setup
          numbswep=2000000, \
+         numbsamp=None, \
          numbburn=None, \
          factthin=None, \
         
@@ -227,7 +228,7 @@ def init( \
          proplenp=None, \
          propcomp=None, \
          probtran=None, \
-         probbrde=1., \
+         probspmr=0., \
          # when proposing from the covariance, fracproprand should be very small!
          fracproprand=0., \
             
@@ -319,11 +320,20 @@ def init( \
     os.system('mkdir -p %s' % gdat.pathoutpthis)
 
     ## factor by which to thin the sweeps to get samples
-    if gdat.factthin == None:
-        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
     
+    if gdat.factthin != None and gdat.numbsamp != None:
+        raise Exception('Both factthin and numbsamp cannot be provided at the same time.')
+    elif gdat.factthin == None and gdat.numbsamp == None:
+        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    elif gdat.numbsamp != None:
+        gdat.factthin = int((gdat.numbswep - gdat.numbburn) * gdat.numbproc / gdat.numbsamp)
+    elif gdat.factthin != None:
+        gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+    if not isinstance(gdat.numbsamp, int) or not isinstance(gdat.factthin, int) or not isinstance(gdat.numbburn, int) or not isinstance(gdat.numbswep, int):
+        raise Exception('Number of samples is not an integer.')
+
     # samples to be saved
-    gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     gdat.indxsamp = arange(gdat.numbsamp)
     
     # samples to be saved from all chains
@@ -696,7 +706,7 @@ def init( \
     setp_varbvalu(gdat, 'hostemistype', hostemistype)
 
     if gdat.elemtype == 'lens':
-        lensmodltype = 'nomi'
+        lensmodltype = 'full'
     else:
         lensmodltype = 'none'
     setp_varbvalu(gdat, 'lensmodltype', lensmodltype)
@@ -1118,16 +1128,17 @@ def init( \
         maxmgang = getattr(gdat, strgmodl + 'maxmgang')
         setp_varblimt(gdat, 'lgal', [-maxmgang, maxmgang], strgmodl=strgmodl)
         setp_varblimt(gdat, 'bgal', [-maxmgang, maxmgang], strgmodl=strgmodl)
-        setp_varblimt(gdat, 'lgalsour', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
-        setp_varblimt(gdat, 'bgalsour', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
-        setp_varblimt(gdat, 'lgalhost', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
-        setp_varblimt(gdat, 'bgalhost', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
+    
+    setp_varblimt(gdat, 'lgalsour', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
+    setp_varblimt(gdat, 'bgalsour', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
+    setp_varblimt(gdat, 'lgalhost', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
+    setp_varblimt(gdat, 'bgalhost', [-maxmgang, maxmgang], strgmodl='fitt', regi='full')
     
     gdat.stdvhostsour = 0.04 / gdat.anglfact
-    setp_varblimt(gdat, 'lgalsour', [0., gdat.stdvhostsour], typelimt='meanstdv', regi='full')
-    setp_varblimt(gdat, 'bgalsour', [0., gdat.stdvhostsour], typelimt='meanstdv', regi='full')
-    setp_varblimt(gdat, 'lgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv', regi='full')
-    setp_varblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], typelimt='meanstdv', regi='full')
+    setp_varblimt(gdat, 'lgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+    setp_varblimt(gdat, 'bgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+    setp_varblimt(gdat, 'lgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+    setp_varblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
     
     setp_varblimt(gdat, 'fluxsour', array([1e-22, 1e-17]), regi='full')
     setp_varblimt(gdat, 'sindsour', array([0., 4.]), regi='full')
@@ -1361,20 +1372,24 @@ def init( \
     if gdat.elemtype == 'lens':
         
         if gdat.serstype == 'intp':
-            # construct pixel-convolved Sersic surface brightness template
-            gdat.factsersusam = 10
-            maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
-            gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
-            gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
-            retr_axis(gdat, 'lgalsers', 0., maxmlgal, gdat.numblgalsers)
-            retr_axis(gdat, 'lgalsersusam', -gdat.sizepixl / 2., maxmlgal + gdat.sizepixl, gdat.numblgalsersusam)
-            retr_axis(gdat, 'bgalsersusam', -gdat.sizepixl / 2., gdat.sizepixl / 2., gdat.factsersusam)
-            
-            gdat.numbhalfsers = 20
-            gdat.numbindxsers = 20
-            
             if (gdat.fittlensmodltype != 'none' or gdat.fitthostemistype != 'none') or \
                                                     gdat.datatype == 'mock' and (gdat.truelensmodltype != 'none' or gdat.truehostemistype != 'none'): 
+                
+                if gdat.verbtype > 0:
+                    print 'Evaluating the Sersic profile on an interpolation grid...'
+
+                # construct pixel-convolved Sersic surface brightness template
+                gdat.factsersusam = 100
+                maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
+                gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
+                gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
+                retr_axis(gdat, 'lgalsers', 0., maxmlgal, gdat.numblgalsers)
+                retr_axis(gdat, 'lgalsersusam', -gdat.sizepixl / 2., maxmlgal + gdat.sizepixl, gdat.numblgalsersusam)
+                retr_axis(gdat, 'bgalsersusam', -gdat.sizepixl / 2., gdat.sizepixl / 2., gdat.factsersusam)
+                
+                gdat.numbhalfsers = 20
+                gdat.numbindxsers = 20
+            
                 retr_axis(gdat, 'halfsers', gdat.sizepixl, gdat.maxmgangdata, gdat.numbhalfsers)
                 gdat.minmserihost = 0.5
                 gdat.maxmserihost = 10.
@@ -1401,7 +1416,10 @@ def init( \
                             indxlgaluppr = gdat.factsersusam * (a + 1) + 1
                             gdat.sersprofcntr[a, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, 0]
                             gdat.sersprof[a, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, :])
-                
+                    
+                    if gdat.verbtype > 0:
+                        print '%3d%% completed.' % (100. * float(n) / gdat.numbindxsers)
+
                 temp, indx = unique(gdat.binslgalsers, return_index=True)
                 gdat.binslgalsers = gdat.binslgalsers[indx]
                 gdat.sersprof = gdat.sersprof[indx, :, :]
@@ -1411,7 +1429,11 @@ def init( \
                 gdat.binslgalsers = gdat.binslgalsers[indx]
                 gdat.sersprof = gdat.sersprof[indx, :, :]
                 gdat.sersprofcntr = gdat.sersprofcntr[indx, :, :]
-    
+                
+                if gdat.makeplot:
+                    if gdat.verbtype > 0:
+                        print 'Plotting the Sersic profile interpolation grid...'
+                    
     gdatdictcopy = deepcopy(gdat.__dict__)
     for strg, valu in gdatdictcopy.iteritems():
         if strg.startswith('cmap') and strg[4:] != 'cntpdata' and strg[4:] != 'cntpresi' and strg[4:] != 'cntpmodl':
@@ -1790,7 +1812,7 @@ def init( \
     # list of variables for which the posterior is calculated at each sweep
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
-    if gdat.probbrde < 1.:
+    if gdat.probspmr > 0.:
         gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'ljcbfact', 'lcomfact']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
@@ -1817,6 +1839,8 @@ def init( \
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     
     setp_indxswepsave(gdat)
+    
+    gdat.optitypetemp = 'none'
    
     # perform an initial run, sampling from the prior
     if gdat.checprio:
@@ -1828,7 +1852,8 @@ def init( \
         gdat.legdsampdist = 'Prior'
         gdat.calcllik = False
         
-        workopti(gdat, lock)
+        if gdat.optitype != 'none':
+            workopti(gdat, lock)
 
         ## perform sampling
         worksamp(gdat, lock)
@@ -1861,8 +1886,9 @@ def init( \
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
     
-    workopti(gdat, lock)
-
+    if gdat.optitype != 'none':
+        workopti(gdat, lock)
+    
     # run the sampler
     worksamp(gdat, lock)
     
@@ -1890,25 +1916,27 @@ def init( \
 
 def workopti(gdat, lock):
 
+    gdat.optitypetemp = gdat.optitype
     inittypesave = gdat.inittype 
 
     # estimate the covariance
-    if gdat.optitype == 'burn' or gdat.optitype == 'auto':
-        gdat.numbprocsave = gdat.numbproc
-        gdat.numbproc = 1
+    gdat.numbprocsave = gdat.numbproc
+    gdat.numbproc = 1
+
+    if gdat.verbtype > 0:
+        print 'Optimizing proposal scale...'
     
-        if gdat.verbtype > 0:
-            print 'Optimizing proposal scale...'
+    worksamp(gdat, lock)
     
-        worksamp(gdat, lock)
-        
-        if gdat.verbtype > 0:
-            print 'Writing the estimated covariance matrix to the disc...'
-        
-        thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'r')
-        gdat.stdvstdp = thisfile['stdvstdp'][()]
-        thisfile.close()
-        gdat.numbproc = gdat.numbprocsave
+    if gdat.verbtype > 0:
+        print 'Writing the estimated covariance matrix to the disc...'
+    
+    gdat.optitypetemp = 'none'
+    
+    thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'r')
+    gdat.stdvstdp = thisfile['stdvstdp'][()]
+    thisfile.close()
+    gdat.numbproc = gdat.numbprocsave
     
     gdat.inittype = inittypesave
     
@@ -2381,7 +2409,13 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         indx = arange(gdat.fittnumbpara)
     indxbadd = where((gdatmodi.thissamp[indx] < 0.) | (gdatmodi.thissamp[indx] > 1.))[0]
     if indxbadd.size > 0:
+        
         print '%s went outside prior bounds when perturbing...' % gdat.fittnamepara[indxbadd]
+        print 'gdatmodi.thissamp[indxparapert[k]]'
+        print gdatmodi.thissamp[indxparapert[k]]
+        print 'stdvparapert[k]'
+        print stdvparapert[k]
+        print
         deltlpos = 0.
     
     else:
@@ -2786,7 +2820,7 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'gdatmodi.thissamp'
         print gdatmodi.thissamp[indxsampbadd, None]
         gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
-        raise Exception('')
+        #raise Exception('')
 
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
@@ -2882,7 +2916,7 @@ def work(pathoutpthis, lock, indxprocwork):
         
         gdatmodi.thischro[:] = 0.
         
-        if gdat.optitype == 'hess':
+        if gdat.optitypetemp == 'hess':
             optihess(gdat, gdatmodi)
             gdatmodi.optidone = True
             
@@ -2934,7 +2968,7 @@ def work(pathoutpthis, lock, indxprocwork):
         prop_stat(gdat, gdatmodi, 'fitt')
         stopchro(gdat, gdatmodi, 'next', 'prop')
        
-        if gdat.optitype == 'burn' and gdatmodi.cntrswep < gdat.numbburn and gdat.optitype == 'auto' and gdatmodi.cntrswep == 0 or gdat.evoltype == 'maxmllik':
+        if gdat.optitypetemp == 'auto' and gdatmodi.cntrswep == 0 or gdat.evoltype == 'maxmllik':
             gdatmodi.thisstdpscalfact *= 1.5**gdatmodi.nextdeltlliktotl
         else:
             gdatmodi.thisstdpscalfact = 1.
@@ -2967,7 +3001,7 @@ def work(pathoutpthis, lock, indxprocwork):
     
             if gdatmodi.cntrswep == 0:
                 gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
-            if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -30.:
+            if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -10.:
                 print 'gdatmodi.thislliktotlprev'
                 print gdatmodi.thislliktotlprev
                 print 'gdatmodi.thislliktotl'
@@ -3112,7 +3146,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
-                 
             stopchro(gdat, gdatmodi, 'next', 'save')
 
         # plot the current sample
@@ -3390,8 +3423,8 @@ def work(pathoutpthis, lock, indxprocwork):
                                             print 'Binned in significance feature'
                                             print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsignrefr + namevarb)
 
-                    print 'Mean residual'
-                    print mean(gdatmodi.thiscntpresi)
+                    print 'Residual RMS'
+                    print sqrt(mean(gdatmodi.thiscntpresi**2))
 
                     print 'Chronometers: '
                     print 'chro'
@@ -3419,7 +3452,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print
         
         # update the sweep counter
-        if gdat.optitype != 'auto':
+        if gdat.optitypetemp != 'auto':
             gdatmodi.cntrswep += 1
     
     for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblistsamp:

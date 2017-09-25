@@ -1426,7 +1426,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                                                  thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] != \
                                                  maxmnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]):
         
-        if rand() < gdat.probbrde or brth or deth:
+        if brth or deth or rand() < gdat.probbrde / gdat.probtran:
             
             ## births and deaths
             if thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] == \
@@ -1576,6 +1576,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     if gdat.diagmode:
         if gdat.probbrde == 0. and (gdatmodi.propbrth or gdatmodi.propdeth):
+            raise Exception('')
+
+        if gdat.probspmr == 0. and (gdatmodi.propsplt or gdatmodi.propmerg):
             raise Exception('')
 
     stdvstdp = gdat.stdvstdp * gdatmodi.thisstdpscalfact * gdatmodi.thistmprfactstdv
@@ -4196,12 +4199,14 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablproptype = array([])
     gdat.legdproptype = array([])
     gdat.nameproptype = array([])
-   
+    
     if gdat.probtran == None:
         if gdat.fittnumbtrap > 0:
+            # temp
             gdat.probtran = 0.4
         else:
             gdat.probtran = 0.
+    gdat.probbrde = gdat.probtran - gdat.probspmr
        
     cntr = tdpy.util.cntr()
     gdat.indxproptypecomp = []
@@ -4229,10 +4234,10 @@ def setpinit(gdat, boolinitsetp=False):
     #### filter for model elements
     gdat.listnamefilt = ['']
     if gdat.priofactdoff != 1.:
-        gdat.listnamefilt += ['deltllik']
+        gdat.listnamefilt += ['pars']
     #### model elements inside the image
     if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
-        gdat.listnamefilt += ['imagbndr']
+        gdat.listnamefilt += ['bndr']
     #### model subhalos inside high normalized relevance region
     if gdat.elemtype == 'lens':
         gdat.listnamefilt += ['nrel']
@@ -4241,7 +4246,7 @@ def setpinit(gdat, boolinitsetp=False):
         
         gdat.indxproptypebrth = cntr.incr()
         gdat.indxproptypedeth = cntr.incr()
-        if gdat.probtran > 0.:
+        if gdat.probbrde > 0.:
             # birth
             gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{B}$')
             gdat.legdproptype = append(gdat.legdproptype, 'Birth')
@@ -4252,18 +4257,18 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.legdproptype = append(gdat.legdproptype, 'Death')
             gdat.nameproptype = append(gdat.nameproptype, 'deth')
             
-            if gdat.probbrde < 1.:
-                # split
-                gdat.indxproptypesplt = cntr.incr()
-                gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{S}$')
-                gdat.legdproptype = append(gdat.legdproptype, 'Split')
-                gdat.nameproptype = append(gdat.nameproptype, 'splt')
-                
-                # merge
-                gdat.indxproptypemerg = cntr.incr()
-                gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{M}$')
-                gdat.legdproptype = append(gdat.legdproptype, 'Merge')
-                gdat.nameproptype = append(gdat.nameproptype, 'merg')
+        if gdat.probspmr > 0.:
+            # split
+            gdat.indxproptypesplt = cntr.incr()
+            gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{S}$')
+            gdat.legdproptype = append(gdat.legdproptype, 'Split')
+            gdat.nameproptype = append(gdat.nameproptype, 'splt')
+            
+            # merge
+            gdat.indxproptypemerg = cntr.incr()
+            gdat.lablproptype = append(gdat.lablproptype, r'$\mathcal{M}$')
+            gdat.legdproptype = append(gdat.legdproptype, 'Merge')
+            gdat.nameproptype = append(gdat.nameproptype, 'merg')
     
     gdat.numbproptype = gdat.nameproptype.size
     gdat.indxproptype = arange(gdat.numbproptype)
@@ -6044,28 +6049,33 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
         else:
             colr = 'b'
             labl = 'Sample Model %s' % gdat.strgelem
-        axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+        if not gdat.fittnumbtrap == 0:
+            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                             label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
     
     if gdat.allwrefr:
         for q in gdat.indxrefr:
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
+            if not amax(gdat.refrnumbelem[q]) == 0:
+                axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
                                                                                       label=gdat.legdrefrhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
-            axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
+                axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                       label=gdat.legdrefrmiss[q], marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
     # fixed-dimensional objects
-    if gdat.elemtype == 'lens':
-        if strgstat == 'this':
+    if strgmodl == 'fitt':
+        if gdat.fittlensmodltype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='Model Source', marker='<', lw=gdat.mrkrlinewdth, color='b')
-    
+        
+        if gdat.fitthostemistype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='Model Host', marker='s', lw=gdat.mrkrlinewdth, color='b')
-        if gdat.datatype == 'mock':
+    if strgmodl == 'true':
+        if gdat.truelensmodltype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='%s Source' % gdat.legdrefr[q], marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
         
+        if gdat.truehostemistype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                                  label='%s Host' % gdat.legdrefr[q], marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
@@ -8276,23 +8286,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     feat[l][d][strgfeat] = dictelem[l][d][strgfeat]
                         setattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d), dictelem[l][d]['hist' + strgfeat])
                         
-                        # temp -- is this necessary?
-                        #setattr(gdatobjt, 'refrhist' + strgfeat + 'ref%dreg%d' % (l, d), dictelem[l][d]['hist' + strgfeat])
-
             for strgfeat in liststrgfeattotl:
                 feattemp = [[[] for d in indxregipopl[l]] for l in indxpopl]
                 for l in indxpopl:
                     for d in indxregipopl[l]:
-                        if strgfeat in feat[l][d]:
+                        if strgfeat in liststrgfeat[l]:
                             feattemp[l][d] = feat[l][d][strgfeat]
-                        else:
-                            feattemp[l][d] = array([])
-                #if strgmodl == 'true':
-                #    liststrgtemp = ['true', 'refr']
-                #else:
-                #    liststrgtemp = [strg]
-                #for strgtemp in liststrgtemp:
-                #    setattr(gdatobjt, strgtemp + strgfeat, feattemp)
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
             
             if strgmodl == 'true' and gdat.refrinfo and gdat.datatype == 'mock' and gdat.elemtype == 'lens' and numbtrap > 0:
