@@ -23,6 +23,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
         numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
+        if gdat.elemtype == 'lens' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
+            numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         if numbtrap > 0:
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
             spectype = getattr(gdat, strgmodl + 'spectype')
@@ -77,11 +79,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         
             # completeness and false discovery rate
             if strgmodl != 'true' and gdat.allwrefr and gdat.asscrefr:
-                for strgclas in ['cmpl', 'fdis']:   
+                for strgclas in ['cmpl', 'fdis']:
                     nameinte = strgclas + '/'
                     for d in gdat.indxregi:
                         for q in gdat.indxrefr:
                             for l in gdat.fittindxpopl:
+                                if gdat.refrnumbelem[q][d] == 0 and strgclas == 'cmpl' or gdat.fittnumbtrap == 0 and strgclas == 'fdis':
+                                    continue
                                 lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%dreg%d' % (q, l, d))
                                 strgindxydat = 'ref%dpop%dreg%d' % (q, l, d)
                                 for strgfeat in gdat.refrliststrgfeat[q]:
@@ -277,11 +281,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                                                                                                     lablxdat=gdat.lablcnts, lablydat=gdat.lablcntsbackfwhm)
     
             # element feature correlations
-            for d in gdat.indxregi:
-                for l in indxpopl:
-                    if strgmodl != 'true' and gdat.refrinfo and gdat.allwrefr and gdat.asscrefr:
+            if strgmodl != 'true' and gdat.refrinfo and gdat.allwrefr and gdat.asscrefr:
+                for l in gdat.fittindxpopl:
+                    for d in gdat.fittindxregipopl[l]:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
+                                if gdat.refrnumbelem[q][d] == 0:
+                                    continue
                                 if not strgfeat in gdat.refrliststrgfeat[q] or strgfeat in gdat.refrliststrgfeatonly[q][l]:
                                     continue
                                 plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, d)
@@ -505,7 +511,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 # residual deflection field
                 if strgmodl != 'true' and gdat.datatype == 'mock':
                     plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', multfact=100.)
-                    for k in range(numbdeflsingplot):
+                    for k in range(numbsingcomm):
                         plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', indxdefl=k, multfact=100.)
                     
                     if gdat.numbpixl > 1:

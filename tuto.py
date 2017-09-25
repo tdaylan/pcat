@@ -28,6 +28,7 @@ def pcat_tuto():
                    backtype=[1.], \
                    numbswep=2000000, \
                    strgexpo=1e11, \
+                   probbrde=0.5, \
                    #lablback=['Isotropic'], \
                    )
                 

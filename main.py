@@ -285,7 +285,7 @@ def init( \
    
     ## number of burned sweeps
     if gdat.numbburn == None:
-        gdat.numbburn = gdat.numbswep / 2
+        gdat.numbburn = gdat.numbswep / 10
     
     ## number of processes
     gdat.strgproc = os.uname()[1]
@@ -1095,7 +1095,7 @@ def init( \
     else:
         numbelem = array([100])
     setp_varbvalu(gdat, 'numbelem', numbelem, popl='full', regi='full')
-
+    
     # temp -- add poisson
     #gdat.truenumbelem = empty(gdat.truenumbpopl, dtype=int)
     #if gdat.truenumbtrap > 0:
@@ -1113,7 +1113,7 @@ def init( \
             for d in gdat.trueindxregipopl[l]: 
                 
                 gdat.truenumbelem[l][d] = getattr(gdat, 'truenumbelempop%dreg%d' % (l, d))
-
+    
     for strgmodl in gdat.liststrgmodl:
         maxmgang = getattr(gdat, strgmodl + 'maxmgang')
         setp_varblimt(gdat, 'lgal', [-maxmgang, maxmgang], strgmodl=strgmodl)
@@ -1529,10 +1529,9 @@ def init( \
             if gdat.evalcirc != 'full':
                 plot_eval(gdat)
     
-    if gdat.verbtype > 1:
+    if gdat.verbtype > 1 and gdat.datatype == 'mock':
         print 'True state parameters:'
         for name in gdat.truenamepara:
-        #for name, valu in gdat.__dict__.iteritems():
             print name
             try:
                 print getattr(gdat, 'true' + name)
@@ -1867,12 +1866,11 @@ def init( \
     # run the sampler
     worksamp(gdat, lock)
     
-    prid = os.fork()
-    if prid:
-        print 'Parent process returning. Child will continue...'
-
-        return
-        #os._exit(0)
+    #prid = os.fork()
+    #if prid:
+    #    print 'Parent process returning. Child will continue...'
+    #    return
+    #    #os._exit(0)
     
     # post process the samples
     proc_post(gdat)
@@ -1880,7 +1878,6 @@ def init( \
     # make animations
     if gdat.makeanim:
         make_anim(gdat.rtag)
-        os._exit(0)
 
     if gdat.verbtype > 0:
         print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
@@ -1962,7 +1959,9 @@ def initarry( \
         if liststrgvarboutp != None:
             for strgvarb in liststrgvarboutp:
                 dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
-        
+    
+    #os.join()
+
     if makeplotarry:
         
         strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -2661,7 +2660,7 @@ def work(pathoutpthis, lock, indxprocwork):
             boolinitreco = True
             thisfile = h5py.File(path, 'r')
             if gdat.verbtype > 0:
-                print 'Initializing with the state from %s...' % path
+                print 'Initializing from the state %s...' % path
                 print 'Likelihood:'
                 print thisfile['lliktotl'][...]
                 
@@ -2670,8 +2669,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 for l in range(10):
                     for attr in thisfile:
                         if attr.startswith('lgalpop'):
-                            print 'attr'
-                            print attr
                             indxpopl = int(attr[7])
                             if indxpopl > maxmindxpopl:
                                 maxmindxpopl = indxpopl
@@ -2689,21 +2686,27 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'Number of found elements:'
                     print cntr
 
+            print 'attributes in the file'
+            for attr in thisfile:
+                print attr
             for attr in thisfile:
                 for k, namefixp in enumerate(gdat.fittnamefixp):
                     if namefixp == attr:
                         gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
+                        if gdatmodi.thissamp[k] == 0.:
+                            raise Exception('')
                         if not isfinite(thisfile[attr][()]):
                             raise Exception('Retreived state parameter is not finite.')
                         if not isfinite(gdatmodi.thissamp[k]):
                             raise Exception('CDF of the retreived state parameter is not finite.')
-            for d in gdat.indxregi:
+            if gdat.fittnumbtrap > 0:
                 for l in gdat.fittindxpopl:
-                    maxmnumbelem = getattr(gdat, 'fittmaxmnumbelempop%dreg%d' % (l, d))
-                    if gdatmodi.thissamp[l] > maxmnumbelem:
-                        gdatmodi.thissamp[l] = maxmnumbelem
-                        if gdat.verbtype > 0:
-                            print 'Tapering off the element list...'
+                    for d in gdat.fittindxregipopl[l]:
+                        maxmnumbelem = getattr(gdat, 'fittmaxmnumbelempop%dreg%d' % (l, d))
+                        if gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] > maxmnumbelem:
+                            gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = maxmnumbelem
+                            if gdat.verbtype > 0:
+                                print 'Tapering off the element list...'
 
             if gdat.verbtype > 0 and gdat.fittnumbtrap > 0:
                 print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem]'
@@ -2746,6 +2749,8 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
     if gdat.inittype == 'rand' or gdat.inittype == 'reco' and not boolinitreco:
+        if gdat.verbtype > 0:
+            print 'Initializing from a random state...'
         retr_elemlist(gdat, gdatmodi)
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
@@ -3356,9 +3361,11 @@ def work(pathoutpthis, lock, indxprocwork):
                         print gdatmodi.thislpri[0]
                         if gdat.allwrefr and gdat.asscrefr:
                             print 'Completeness'
-                            for d in gdat.indxregi:
-                                for q in gdat.indxrefr:
-                                    for l in gdat.fittindxpopl:
+                            for q in gdat.indxrefr:
+                                for l in gdat.fittindxpopl:
+                                    for d in gdat.indxregi:
+                                        if gdat.refrnumbelem[q][d] == 0:
+                                            continue
                                         namevarb = 'ref%dpop%dreg%d' % (q, l, d)
                                         print 'Region %d, Reference %d, Population %d' % (d, q, l)
                                         print 'Total'
@@ -3369,9 +3376,11 @@ def work(pathoutpthis, lock, indxprocwork):
                                             print getattr(gdatmodi, 'thiscmpl' + gdat.namefeatsignrefr + namevarb)
                                             print 
                             print 'False discovery rate'
-                            for d in gdat.indxregi:
-                                for q in gdat.indxrefr:
-                                    for l in gdat.fittindxpopl:
+                            for q in gdat.indxrefr:
+                                for l in gdat.fittindxpopl:
+                                    for d in gdat.indxregi:
+                                        if gdat.refrnumbelem[q][d] == 0:
+                                            continue
                                         namevarb = 'ref%dpop%dreg%d' % (q, l, d)
                                         print 'Region %d, Reference %d, Population %d' % (d, q, l)
                                         print 'Total'
