@@ -114,7 +114,6 @@ def init( \
          # proposals
          propcova=True, \
          propwithsing=True, \
-         pertmodleval=True, \
          # Hessian estimation
          optitype='none', \
          regulevi=False, \
@@ -769,11 +768,6 @@ def init( \
         else:
             gdat.evalcirc = 'full'
 
-    if gdat.elemtype == 'lens':
-        gdat.listnamesele = ['pars', 'nrel']
-    else:
-        gdat.listnamesele = ['pars']
-
     if gdat.nameexpr == None:
         if gdat.exprtype == 'ferm':
             gdat.nameexpr = 'Fermi-LAT'
@@ -938,8 +932,7 @@ def init( \
         for l in gdat.trueindxpopl:
             gdat.listnamefeatamplrefr[l] = gdat.namefeatampl
             for strgfeat in gdat.trueliststrgfeatodim[l]:
-                if not strgfeat.endswith('pars') and not strgfeat.endswith('nrel'):
-                    gdat.refrliststrgfeat[l].append(strgfeat)
+                gdat.refrliststrgfeat[l].append(strgfeat)
     
     ### background template normalizations
     if gdat.exprtype == 'ferm':
@@ -1359,15 +1352,16 @@ def init( \
     else:
         gdat.factspecener = array([1.])
  
-    for strgmodl in gdat.liststrgmodl:
-        for namesele in gdat.listnamesele:
-            for namefeat in gdat.listnamefeatsele:
-                try:
-                    setattr(gdat, 'minm' + namefeat + namesele, getattr(gdat, 'minm' + namefeat))
-                    setattr(gdat, 'maxm' + namefeat + namesele, getattr(gdat, 'maxm' + namefeat))
-                except:
-                    setattr(gdat, strgmodl + 'minm' + namefeat + namesele, getattr(gdat, strgmodl + 'minm' + namefeat))
-                    setattr(gdat, strgmodl + 'maxm' + namefeat + namesele, getattr(gdat, strgmodl + 'maxm' + namefeat))
+    # temp
+    #for strgmodl in gdat.liststrgmodl:
+    #    for namesele in gdat.listnamesele:
+    #        for namefeat in gdat.listnamefeatsele:
+    #            try:
+    #                setattr(gdat, 'minm' + namefeat + namesele, getattr(gdat, 'minm' + namefeat))
+    #                setattr(gdat, 'maxm' + namefeat + namesele, getattr(gdat, 'maxm' + namefeat))
+    #            except:
+    #                setattr(gdat, strgmodl + 'minm' + namefeat + namesele, getattr(gdat, strgmodl + 'minm' + namefeat))
+    #                setattr(gdat, strgmodl + 'maxm' + namefeat + namesele, getattr(gdat, strgmodl + 'maxm' + namefeat))
     
     if gdat.elemtype == 'lens':
         
@@ -1442,15 +1436,16 @@ def init( \
     #liststrgcbar = ['llikmaps', 'perc', 'percresi', 'expo', 'lpdfspatpriointp', 'conv', 'magn', 'deflcomp', 'resiconvelem', 'resimagn']
     #for strgcbar in liststrgcbar:
     #    retr_ticklabl(gdat, strgcbar)
-
-    for strgmodl in gdat.liststrgmodl:
-        for namesele in gdat.listnamesele:
-            for namefeat in gdat.listnamefeatsele:
-                for strglimt in gdat.liststrglimt:
-                    try:
-                        getattr(gdat, strglimt + namefeat + namesele)
-                    except:
-                        setattr(gdat, strglimt + namefeat + namesele, getattr(gdat, strglimt + namefeat))
+    
+    # temp
+    #for strgmodl in gdat.liststrgmodl:
+    #    for namesele in gdat.listnamesele:
+    #        for namefeat in gdat.listnamefeatsele:
+    #            for strglimt in gdat.liststrglimt:
+    #                try:
+    #                    getattr(gdat, strglimt + namefeat + namesele)
+    #                except:
+    #                    setattr(gdat, strglimt + namefeat + namesele, getattr(gdat, strglimt + namefeat))
 
     # construct the bins for element features
     for strgmodl in gdat.liststrgmodl:
@@ -2728,7 +2723,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     if namefixp == attr:
                         gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
                         if gdatmodi.thissamp[k] == 0.:
-                            raise Exception('')
+                            print 'Warning CDF is zero.'
                         if not isfinite(thisfile[attr][()]):
                             raise Exception('Retreived state parameter is not finite.')
                         if not isfinite(gdatmodi.thissamp[k]):
