@@ -1471,12 +1471,14 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.indxevttmodi = gdat.indxevtt
 
     else:
-        if gdat.propfixp and gdat.propcomp:
+        print 'gdat.indxfixpprop'
+        print gdat.indxfixpprop
+        print 'thisindxsampcomp'
+        print thisindxsampcomp
+        if gdat.propfixp and gdat.propcomp and gdat.indxfixpprop.size > 0:
             gdatmodi.thisindxsampfull = concatenate((gdat.indxfixpprop, concatenate(concatenate(thisindxsampcomp['comp']))))
         elif gdat.propcomp and not gdat.propfixp:
             gdatmodi.thisindxsampfull = concatenate(concatenate(thisindxsampcomp['comp']))
-        elif not gdat.propcomp and gdat.propfixp:
-            gdatmodi.thisindxsampfull = gdat.indxfixpprop
         else:
             gdatmodi.thisindxsampfull = gdat.indxfixpprop
         gdatmodi.indxsampmodi = choice(gdatmodi.thisindxsampfull)
@@ -1527,6 +1529,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                 gdatmodi.propmeanelem = True
             if gdatmodi.indxsampmodi in indxfixpdist:
                 gdatmodi.propdist = True
+        
+        print 'gdatmodi.thisindxsampfull'
+        print gdatmodi.thisindxsampfull
+        print 'gdatmodi.indxsampmodi'
+        print gdatmodi.indxsampmodi
+        print
 
         gdatmodi.thisindxproptype = gdat.indxstdppara[gdatmodi.indxsampmodi]
         gdatmodi.propwith = True
@@ -2678,12 +2686,16 @@ def retr_cntspnts(gdat, lgal, bgal, spec, indxregipnts):
     indxpixlpnts = retr_indxpixl(gdat, bgal, lgal)
     cnts = zeros((gdat.numbener, lgal.size))
     for k in range(lgal.size):
-        print 'spec'
-        print spec
         print 'k'
         print k
-        print 'lgal.size'
-        print lgal.size
+        print 'indxregipnts'
+        print indxregipnts
+        print 'indxpixlpnts'
+        print indxpixlpnts
+        print 'spec'
+        summgene(spec)
+        print 'lgal'
+        summgene(lgal)
         print
 
         cnts[:, k] += spec[:, k] * gdat.expototl[indxregipnts[k], :, indxpixlpnts[k]]
@@ -4729,6 +4741,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             elif psfntype == 'doubking':
                 numbpsfpform = 5
             
+            print 'numbpsfpform'
+            print numbpsfpform
+            print
+
             if oaxitype:
                 numbpsfpoaxi = 2
             else:
@@ -6602,6 +6618,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     dictelem[l][d][strgfeat] = []
                 for strgcomp in liststrgcomp[l]:
                     dictelem[l][d][strgcomp] = sampvarb[indxsampcomp[strgcomp][l][d]]
+        
+        if gdat.diagmode:
+            print 'numbelem'
+            print numbelem
+            try:
+                print 'dictelem[0][0][;lgal]'
+                print dictelem[0][0]['lgal']
+            except:
+                pass
+            print
+            for l in indxpopl:
+                for d in indxregipopl[l]:
+                    if numbelem[l][d] != dictelem[l][d]['lgal'].size:
+                        raise Exception('')
+
         if gdat.verbtype > 1:
             for l in indxpopl:
                 print 'l'
@@ -7850,6 +7881,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             indxregielem = [[[] for d in indxregipopl[l]] for l in indxpopl]
             for l in indxpopl:
                 for d in indxregipopl[l]:
+                    print 'ld'
+                    print l, d
+                    print 'numbelem'
+                    print numbelem
+                    print 'full([numbelem[l][d]], d, dtype=int)'
+                    print full([numbelem[l][d]], d, dtype=int)
                     indxregielem[l][d] = full([numbelem[l][d]], d, dtype=int)
             
             # luminosity
@@ -8346,6 +8383,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     else:
                         namerefr = 'refr' + name[4:]
                     setattr(gdat, namerefr, valu)
+                    print 'namerefr'
+                    print namerefr
+                    print
+            print 'gdat.refrdefs'
+            print gdat.refrdefs
 
         ### Exculusive comparison with the true state
         if strgmodl != 'true' and gdat.datatype == 'mock':

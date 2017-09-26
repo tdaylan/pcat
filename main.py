@@ -1373,16 +1373,17 @@ def init( \
                     print 'Evaluating the Sersic profile on an interpolation grid...'
 
                 # construct pixel-convolved Sersic surface brightness template
-                gdat.factsersusam = 100
+                gdat.factsersusam = 2
                 maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
                 gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
                 gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
                 retr_axis(gdat, 'lgalsers', 0., maxmlgal, gdat.numblgalsers)
+                retr_axis(gdat, 'bgalsers', 0., maxmlgal, gdat.numblgalsers)
                 retr_axis(gdat, 'lgalsersusam', -gdat.sizepixl / 2., maxmlgal + gdat.sizepixl, gdat.numblgalsersusam)
-                retr_axis(gdat, 'bgalsersusam', -gdat.sizepixl / 2., gdat.sizepixl / 2., gdat.factsersusam)
+                retr_axis(gdat, 'bgalsersusam', -gdat.sizepixl / 2., maxmlgal + gdat.sizepixl, gdat.numblgalsersusam)
                 
-                gdat.numbhalfsers = 20
-                gdat.numbindxsers = 20
+                gdat.numbhalfsers = 4
+                gdat.numbindxsers = 4
             
                 retr_axis(gdat, 'halfsers', gdat.sizepixl, gdat.maxmgangdata, gdat.numbhalfsers)
                 gdat.minmserihost = 0.5
@@ -1394,22 +1395,25 @@ def init( \
                 gdat.binslgalsersusammesh, gdat.binsbgalsersusammesh = meshgrid(gdat.binslgalsersusam, gdat.binsbgalsersusam, indexing='ij')
                 gdat.binsradisersusam = sqrt(gdat.binslgalsersusammesh**2 + gdat.binsbgalsersusammesh**2)
                  
-                gdat.sersprofcntr = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
-                gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+                gdat.sersprofcntr = empty((gdat.numblgalsers + 1, gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
+                gdat.sersprof = empty((gdat.numblgalsers + 1, gdat.numblgalsers + 1, gdat.numbhalfsers + 1, gdat.numbindxsers + 1))
                 
                 for n in range(gdat.numbindxsers + 1):
                     for k in range(gdat.numbhalfsers + 1):
-                        
                         profusam = retr_sbrtsersnorm(gdat.binsradisersusam, gdat.binshalfsers[k], indxsers=gdat.binsindxsers[n])
-    
+                        print 'k'
+                        print k
+                        print 'profusam'
+                        summgene(profusam)
                         ## take the pixel average
                         indxbgallowr = gdat.factsersusam * (gdat.numblgalsers + 1) / 2
                         indxbgaluppr = gdat.factsersusam * (gdat.numblgalsers + 3) / 2
                         for a in range(gdat.numblgalsers):
-                            indxlgallowr = gdat.factsersusam * a
-                            indxlgaluppr = gdat.factsersusam * (a + 1) + 1
-                            gdat.sersprofcntr[a, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, 0]
-                            gdat.sersprof[a, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, :])
+                            for b in range(gdat.numblgalsers):
+                                indxlgallowr = gdat.factsersusam * a
+                                indxlgaluppr = gdat.factsersusam * (a + 1) + 1
+                                gdat.sersprofcntr[a, b, k, n] = profusam[(indxlgallowr+indxlgaluppr)/2, (indxlgallowr+indxlgaluppr)/2]
+                                gdat.sersprof[a, b, k, n] = mean(profusam[indxlgallowr:indxlgaluppr, indxlgallowr:indxlgaluppr])
                     
                     if gdat.verbtype > 0:
                         print '%3d%% completed.' % (100. * float(n) / gdat.numbindxsers)
