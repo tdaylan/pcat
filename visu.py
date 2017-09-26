@@ -789,8 +789,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             listjoin = vstack((listvarb, listvarbseco)).T
     
             # temp -- this comes up in lens_syst
-            tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
+            try:
+                tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
+            except:
+                pass
 
     if gdat.checprio and not prio:
         # this works only for scalar variables -- needs to be generalized to all variables
@@ -1858,6 +1861,8 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
 
             if gdat.allwrefr:
                 for q in gdat.indxrefr:
+                    if gdat.refrnumbelem[q][indxregiplot] == 0:
+                        continue
                     if strgfeat in gdat.refrliststrgfeat[q]:
                         refrsign = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
                         if len(refrsign) > 0:

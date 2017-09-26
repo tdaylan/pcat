@@ -5335,7 +5335,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         indxpara = arange(numbpara)
 
     for strg, valu in locals().iteritems():
-        if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
+        if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr' and len(strg) % 4 == 0:
             setattr(gdat, strgmodl + strg, valu)
 
     for strg, valu in dicttemp.iteritems():
@@ -5780,7 +5780,8 @@ def setp_fixp(gdat, strgmodl='fitt'):
     
     for strg, valu in locals().iteritems():
         if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr':
-            setattr(gdat, strgmodl + strg, valu)
+            if len(strg) % 4 == 0:
+                setattr(gdat, strgmodl + strg, valu)
 
 
 def setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back, regi):
@@ -8368,8 +8369,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print listindxelemfilt
                             print 'refrmcut'
                             print refrmcut
-                            if len(refrmcut[q][d]) > 0:
-                                refrhistmcutpars = histogram(refrmcut[q][d][listindxelemfilt[0]], bins=bins)[0]
+                            if len(refrmcut) > 0:
+                                refrhistmcutpars = histogram(refrmcut[listindxelemfilt[0]], bins=bins)[0]
                                 if indx.size > 0:
                                     histmcutcorr[indx] = refrhistmcutpars[indx] / refrhistmcut[indx]
                             setattr(gdatobjt, strgpfix + 'histmcutcorr', histmcutcorr)
@@ -8378,16 +8379,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         if strgmodl == 'true':
             for name, valu in deepcopy(gdat.__dict__).iteritems():
                 if name.startswith('true'):
-                    if name[-8:-5] == 'pop':
-                        namerefr = 'refr' + name[4:-8] + 'ref%s' % name[-5] + name[-4:]
-                    else:
-                        namerefr = 'refr' + name[4:]
+                    if len(name) % 4 != 0:
+                        print 'name'
+                        print name
+                    for l in range(10):
+                        if 'pop%d' % l in name:
+                            namerefr = name.replace('pop%d' % l, 'ref%d' % l)
+                        else:
+                            namerefr = name
+                        namerefr = namerefr.replace('true', 'refr')
                     setattr(gdat, namerefr, valu)
-                    print 'namerefr'
-                    print namerefr
-                    print
-            print 'gdat.refrdefs'
-            print gdat.refrdefs
 
         ### Exculusive comparison with the true state
         if strgmodl != 'true' and gdat.datatype == 'mock':
