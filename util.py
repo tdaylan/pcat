@@ -2678,6 +2678,14 @@ def retr_cntspnts(gdat, lgal, bgal, spec, indxregipnts):
     indxpixlpnts = retr_indxpixl(gdat, bgal, lgal)
     cnts = zeros((gdat.numbener, lgal.size))
     for k in range(lgal.size):
+        print 'spec'
+        print spec
+        print 'k'
+        print k
+        print 'lgal.size'
+        print lgal.size
+        print
+
         cnts[:, k] += spec[:, k] * gdat.expototl[indxregipnts[k], :, indxpixlpnts[k]]
     if gdat.enerdiff:
         cnts *= gdat.deltener[:, None]
