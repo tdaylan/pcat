@@ -23,7 +23,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
         numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
-        if gdat.elemtype == 'lens' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
+        if strgstat != 'post' and gdat.elemtype == 'lens' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
             numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         if numbtrap > 0:
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
