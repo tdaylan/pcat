@@ -511,8 +511,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 # residual deflection field
                 if strgmodl != 'true' and gdat.datatype == 'mock':
                     plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', multfact=100.)
-                    for k in range(numbsingcomm):
-                        plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', indxdefl=k, multfact=100.)
+                    if strgstat != 'post':
+                        for k in range(numbsingcomm):
+                            plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', indxdefl=k, multfact=100.)
                     
                     if gdat.numbpixl > 1:
                         if numbtrap > 0:

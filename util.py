@@ -6888,7 +6888,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 #if gdat.elemtype == 'lens':
                 #    dicteval['defseval'] = concatenate([dictconc[d]['defsconc'] for d in gdat.indxregi])
                 for strgfeat in liststrgfeateval:
-                    dicteval[strgfeat + 'eval'] = concatenate([dictconc[d][strgfeat + 'conc'] for d in gdat.indxregi])
+                    if strgfeat != 'spec':
+                        dicteval[strgfeat + 'eval'] = concatenate([dictconc[d][strgfeat + 'conc'] for d in gdat.indxregi])
                 indxregieval = concatenate([full([numbelemconc[d]], d, dtype=int) for d in gdat.indxregi])
             
                 if gdat.verbtype > 1:
