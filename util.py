@@ -1357,7 +1357,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     numbtrapregipoplcumr = getattr(gdat, strgmodl + 'numbtrapregipoplcumr')
     elemregitype = getattr(gdat, strgmodl + 'elemregitype')
     
-    if gdat.elemtype == 'lght':
+    if gdat.elemtype == 'lght' or gdat.elemtype == 'line':
         spectype = getattr(gdat, strgmodl + 'spectype')
         
     gdatobjt = retr_gdatobjt(gdat, gdatmodi, 'this', strgmodl)
@@ -1579,7 +1579,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print gdatmodi.indxsampmodi
     
     if gdat.diagmode:
-        if gdat.probbrde == 0. and (gdatmodi.propbrth or gdatmodi.propdeth):
+        if gdat.probbrde == 0. and (gdatmodi.propbrth or gdatmodi.propdeth and not deth):
             raise Exception('')
 
         if gdat.probspmr == 0. and (gdatmodi.propsplt or gdatmodi.propmerg):
@@ -6860,6 +6860,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     indxregieval = full([numbelemeval], indxregimodi, dtype=int)
                     for namecomp in liststrgfeateval:
                         dicteval[namecomp + 'eval'] = gdatmodi.dicteval[namecomp + 'eval']
+                    if gdat.verbtype > 1:
+                        for strgfeat in liststrgfeateval:
+                            print strgfeat
+                            print dicteval[strgfeat + 'eval']
             else:
                 if gdat.verbtype > 1:
                     print 'Preparing all elements...'
@@ -6885,10 +6889,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     dicteval['defseval'] = concatenate([dictconc[d]['defsconc'] for d in gdat.indxregi])
                 indxregieval = concatenate([full([numbelemconc[d]], d, dtype=int) for d in gdat.indxregi])
             
-            if gdat.verbtype > 1:
-                for strgfeat in liststrgfeateval:
-                    print strgfeat
-                    print dicteval[strgfeat + 'eval']
+                if gdat.verbtype > 1:
+                    for strgfeat in liststrgfeateval:
+                        print strgfeat
+                        print dicteval[strgfeat + 'eval']
             stopchro(gdat, gdatmodi, strgstat, 'evalelem')
         else:
             numbelemeval = 0

@@ -115,7 +115,7 @@ def init( \
          propcova=True, \
          propwithsing=True, \
          # Hessian estimation
-         optitype='none', \
+         optitype='hess', \
          regulevi=False, \
          
          # modes of operation
