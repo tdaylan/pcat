@@ -4944,7 +4944,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         if gdat.elemtype == 'clus':
             liststrgfeateval = ['lgal', 'bgal', 'nobj']
         if gdat.elemtype == 'lens':
-            liststrgfeateval = ['lgal', 'bgal', 'defs']
+            liststrgfeateval = ['lgal', 'bgal', 'defs', 'asca', 'acut']
         if gdat.elemtype == 'line':
             liststrgfeateval = ['elin', 'spec']
 
@@ -6868,11 +6868,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 if gdat.verbtype > 1:
                     print 'Preparing all elements...'
                 numbelemeval = sum(numbelemconc)
-                if gdat.elemtype == 'line':
-                    dicteval['elineval'] = concatenate([dictconc[d]['elinconc'] for d in gdat.indxregi])
-                else:
-                    dicteval['lgaleval'] = concatenate([dictconc[d]['lgalconc'] for d in gdat.indxregi])
-                    dicteval['bgaleval'] = concatenate([dictconc[d]['bgalconc'] for d in gdat.indxregi])
+                #if gdat.elemtype == 'line':
+                #    dicteval['elineval'] = concatenate([dictconc[d]['elinconc'] for d in gdat.indxregi])
+                #else:
+                #    dicteval['lgaleval'] = concatenate([dictconc[d]['lgalconc'] for d in gdat.indxregi])
+                #    dicteval['bgaleval'] = concatenate([dictconc[d]['bgalconc'] for d in gdat.indxregi])
                 if gdat.elemtype == 'line' or gdat.elemtype == 'lght':
                     speceval = [[[] for d in gdat.indxregi] for l in indxpopl]
                     for l in indxpopl:
@@ -6883,10 +6883,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             else:
                                 speceval[l][d] = retr_spec(gdat, dictelem[l][d]['flux'], elin=dictelem[l][d]['elin'], edis=gdat.edis, spectype=spectype[l])
                     dicteval['speceval'] = concatenate([concatenate(speceval[l], axis=1) for l in indxpopl], axis=1)
-                if gdat.elemtype == 'clus':
-                    dicteval['nobjeval'] = concatenate([dictconc[d]['nobjconc'] for d in gdat.indxregi])
-                if gdat.elemtype == 'lens':
-                    dicteval['defseval'] = concatenate([dictconc[d]['defsconc'] for d in gdat.indxregi])
+                #if gdat.elemtype == 'clus':
+                #    dicteval['nobjeval'] = concatenate([dictconc[d]['nobjconc'] for d in gdat.indxregi])
+                #if gdat.elemtype == 'lens':
+                #    dicteval['defseval'] = concatenate([dictconc[d]['defsconc'] for d in gdat.indxregi])
+                for strgfeat in liststrgfeateval:
+                    dicteval[strgfeat + 'eval'] = concatenate([dictconc[d][strgfeat + 'conc'] for d in gdat.indxregi])
                 indxregieval = concatenate([full([numbelemconc[d]], d, dtype=int) for d in gdat.indxregi])
             
                 if gdat.verbtype > 1:
@@ -6951,6 +6953,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     print 'gdat.evalcirc'
                     print gdat.evalcirc
                     print
+        
+        if gdat.verbtype > 1:
+            if numbelemeval > 0:
+                print 'indxtessmodi'
+                summgene(indxtessmodi[0])
+                summgene(indxtessmodi[1])
+                summgene(indxtessmodi[2])
+                summgene(indxtessmodi[3])
+                print
         
         # element kernel evaluation
         if numbtrap > 0:
@@ -7143,7 +7154,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         booltemp = True
             
             if booltemp:
-                sbrtdiffconv[name] = getattr(gdatobjt, strgpfixthis + 'sbrt' + name + 'conv')[indxtessmodi]
+                sbrtdiffconv[name] = copy(getattr(gdatobjt, strgpfixthis + 'sbrt' + name + 'conv'))[indxtessmodi]
                 if gdat.verbtype > 1:
                     print 'Retrieving the already-convolved diffuse component from the state vector...'
             else:

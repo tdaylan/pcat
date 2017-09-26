@@ -669,7 +669,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
             plot_samp(gdat, gdatmodi, 'this', 'fitt')
 
     # plot split and merge diagnostics
-    if gdat.fittnumbtrap > 0 and gdat.probtran > 0. and gdat.probbrde < 1.:
+    if gdat.fittnumbtrap > 0 and gdat.probspmr > 0.:
         if gdat.verbtype > 0:
             print 'Split and merge related plots...'
     
