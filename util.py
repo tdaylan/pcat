@@ -1471,10 +1471,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.indxevttmodi = gdat.indxevtt
 
     else:
-        print 'gdat.indxfixpprop'
-        print gdat.indxfixpprop
-        print 'thisindxsampcomp'
-        print thisindxsampcomp
         if gdat.propfixp and gdat.propcomp and gdat.indxfixpprop.size > 0:
             gdatmodi.thisindxsampfull = concatenate((gdat.indxfixpprop, concatenate(concatenate(thisindxsampcomp['comp']))))
         elif gdat.propcomp and not gdat.propfixp:
@@ -1530,12 +1526,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             if gdatmodi.indxsampmodi in indxfixpdist:
                 gdatmodi.propdist = True
         
-        print 'gdatmodi.thisindxsampfull'
-        print gdatmodi.thisindxsampfull
-        print 'gdatmodi.indxsampmodi'
-        print gdatmodi.indxsampmodi
-        print
-
         gdatmodi.thisindxproptype = gdat.indxstdppara[gdatmodi.indxsampmodi]
         gdatmodi.propwith = True
         gdatmodi.proppsfnconv = (gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full') and gdatmodi.proppsfp
