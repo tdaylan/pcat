@@ -7882,12 +7882,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             indxregielem = [[[] for d in indxregipopl[l]] for l in indxpopl]
             for l in indxpopl:
                 for d in indxregipopl[l]:
-                    print 'ld'
-                    print l, d
-                    print 'numbelem'
-                    print numbelem
-                    print 'full([numbelem[l][d]], d, dtype=int)'
-                    print full([numbelem[l][d]], d, dtype=int)
+                    if False:
+                        print 'ld'
+                        print l, d
+                        print 'numbelem'
+                        print numbelem
+                        print 'full([numbelem[l][d]], d, dtype=int)'
+                        print full([numbelem[l][d]], d, dtype=int)
                     indxregielem[l][d] = full([numbelem[l][d]], d, dtype=int)
             
             # luminosity
@@ -8379,17 +8380,18 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         if strgmodl == 'true':
             for name, valu in deepcopy(gdat.__dict__).iteritems():
                 if name.startswith('true'):
-                    if len(name) % 4 != 0:
-                        print 'name'
-                        print name
-                    for l in range(10):
-                        if 'pop%d' % l in name:
-                            namerefr = name.replace('pop%d' % l, 'ref%d' % l)
-                        else:
-                            namerefr = name
-                        namerefr = namerefr.replace('true', 'refr')
+                        
+                    indx = name.find('pop')
+                    if indx != -1 and not name.endswith('pop') and name[indx+3].isdigit():
+                        if name.startswith('truehist'):
+                            print 'replacing'
+                        namerefr = name.replace('pop%s' % name[indx+3], 'ref%s' % name[indx+3])
+                    else:
+                        namerefr = name
+                    
+                    namerefr = namerefr.replace('true', 'refr')
                     setattr(gdat, namerefr, valu)
-
+        
         ### Exculusive comparison with the true state
         if strgmodl != 'true' and gdat.datatype == 'mock':
              
