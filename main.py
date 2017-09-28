@@ -1972,22 +1972,21 @@ def initarry( \
         prid = os.fork()
         listprid.append(prid)
         if prid == 0:
-            print '%d slept.' % k
-            time.sleep(5)
-            print '%d woke up.' % k
-            #listgdat.append(init(**dictvarbtemp))
-            #if liststrgvarboutp != None:
-            #    for strgvarb in liststrgvarboutp:
-            #        dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
+            #print '%d slept.' % k
+            #time.sleep(5)
+            #print '%d woke up.' % k
+            listgdat.append(init(**dictvarbtemp))
+            if liststrgvarboutp != None:
+                for strgvarb in liststrgvarboutp:
+                    dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
             os._exit(0)
-            #break    
         if k % 4 == 3 or k == len(dictvarbvari) - 1:
-            print 'parent waiting...'
-            for kk in range(4):
+            #print 'parent waiting...'
+            for kk in range(len(listprid)):
                 os.waitpid(listprid[kk], 0)
             listprid = []
 
-    print 'finished'
+    #print 'finished'
     if makeplotarry:
         
         strgtimestmp = tdpy.util.retr_strgtimestmp()
