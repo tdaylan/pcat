@@ -148,8 +148,6 @@ def init( \
          pixltype=None, \
          forccart=False, \
          fittampldisttype=None, \
-         truestdvdefsdistslop=0.5, \
-         truestdvfluxdistslop=0.1, \
         
          allwfixdtrue=True, \
          asscmetrtype='dist', \
@@ -1959,6 +1957,7 @@ def initarry( \
     dictvarb['strgcnfg'] = strgcnfg
     
     listgdat = []
+    listprid = []
     for k, nameconf in enumerate(dictvarbvari):
         
         if nameconfexec != None:
@@ -1969,14 +1968,26 @@ def initarry( \
         for strgvarb, valu in dictvarbvari[nameconf].iteritems():
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = inspect.stack()[1][3] + '_' + nameconf
-        listgdat.append(init(**dictvarbtemp))
+        
+        prid = os.fork()
+        listprid.append(prid)
+        if prid == 0:
+            print '%d slept.' % k
+            time.sleep(5)
+            print '%d woke up.' % k
+            #listgdat.append(init(**dictvarbtemp))
+            #if liststrgvarboutp != None:
+            #    for strgvarb in liststrgvarboutp:
+            #        dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
+            os._exit(0)
+            #break    
+        if k % 4 == 3 or k == len(dictvarbvari) - 1:
+            print 'parent waiting...'
+            for kk in range(4):
+                os.waitpid(listprid[kk], 0)
+            listprid = []
 
-        if liststrgvarboutp != None:
-            for strgvarb in liststrgvarboutp:
-                dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
-    
-    #os.join()
-
+    print 'finished'
     if makeplotarry:
         
         strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -3194,10 +3205,10 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 1:
                 print 'gdatmodi.nextdeltlliktotl'
                 print gdatmodi.nextdeltlliktotl
-                print 'gdatmodi.thisdeltlpri'
-                print gdatmodi.thisdeltlpri
-                print 'gdatmodi.thislpautotl'
-                print gdatmodi.thislpautotl
+                print 'gdatmodi.nextdeltlpritotl'
+                print gdatmodi.nextdeltlpritotl
+                print 'gdatmodi.nextlpautotl'
+                print gdatmodi.nextlpautotl
                 print 'gdatmodi.thislfctasym'
                 print gdatmodi.thislfctasym
                 print 'gdatmodi.thislcomfact'
@@ -3209,7 +3220,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print
             
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.thisdeltlpri + gdatmodi.thislcomfact)
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + gdatmodi.thislcomfact)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.
