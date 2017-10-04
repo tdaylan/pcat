@@ -23,19 +23,19 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
         numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
-        if strgstat != 'post' and gdat.elemtype == 'lens' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
-            numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         if numbtrap > 0:
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
             spectype = getattr(gdat, strgmodl + 'spectype')
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-            
-            if strgstat != 'post':
-                numbelem = sampvarb[getattr(gdat, strgmodl + 'indxfixpnumbelem')].astype(int)
+            elemtype = getattr(gdat, strgmodl + 'elemtype')
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strgstat != 'post':
-                indxelemfull = list(getattr(gdatobjt, strgpfix + 'indxelemfull'))
-                indxsampcomp = retr_indxsampcomp(gdat, indxelemfull, strgmodl)
+                indxfixpnumbelem = getattr(gdat, strgmodl + 'indxfixpnumbelem')
+                numbelem = [[] for l in indxpopl]
+                for l in indxpopl:
+                    numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
+                if 'lens' in elemtype  and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
+                    numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         numbback = getattr(gdat, strgmodl + 'numbback')
         backtype = getattr(gdat, strgmodl + 'backtype')
         indxback = getattr(gdat, strgmodl + 'indxback')
@@ -45,6 +45,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         unifback = getattr(gdat, strgmodl + 'unifback')
         listnameback = getattr(gdat, strgmodl + 'listnameback')
         lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
+        lablelemextn = getattr(gdat, strgmodl + 'lablelemextn')
+        namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
         
         #cntpback = getattr(gdatobjt, strgpfix + 'cntpback')
         #cntpbacktotl = getattr(gdatobjt, strgpfix + 'cntpbacktotl')
@@ -134,7 +136,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             
                             for k in range(specplot[l][d].shape[-1]):
                                 listxdat.append(gdat.meanenerplot)
-                                listplottype.append('line')
+                                listplottype.append('lghtline')
                             
                             for specconvunit in gdat.listspecconvunit:
                                 listydat = []
@@ -174,10 +176,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
 
                     ## deflection profiles
                     if gdat.variasca and gdat.variacut:
-                        xdat = gdat.meanangl * gdat.anglfact
                         lablxdat = gdat.lablgangtotl
                         if strgstat == 'post':
-                            deflprof = [empty((gdat.numbangl, gdat.numbstkscond))]
+                            deflprof = [empty((gdat.numbanglfull, gdat.numbstkscond))]
                             asca = [empty(gdat.numbstkscond)]
                             acut = [empty(gdat.numbstkscond)]
                             for r in gdat.indxstkscond:
@@ -191,14 +192,16 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
 
                         for d in gdat.indxregi:
                             for l in range(len(deflprof[d])):
+                                xdat = gdat.meananglfull * gdat.anglfact
                                 listydat = []
                                 listvlinfrst = []
                                 listvlinseco = []
-    
+                                 
                                 if strgmodl == 'true':
                                     deflproftemp = deflprof[l][d][0, :, :]
                                 else:
                                     deflproftemp = deflprof[l][d]
+                                
                                 for k in range(deflprof[l][d].shape[-1]):
                                     listydat.append(deflproftemp[:, k] * gdat.anglfact)
                                     if strgmodl == 'true':
@@ -331,21 +334,21 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             for ydattype in listydattype:
                                 
                                 # plot the surface density of elements only for the amplitude feature
-                                if strgfeat != gdat.namefeatampl and ydattype == 'sden':
+                                if strgfeat != namefeatampl and ydattype == 'sden':
                                     continue
         
                                 ## plot the surface density of elements
                                 if ydattype == 'sden':
                                     if gdat.sdenunit == 'degr':
                                         factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % gdat.lablelemextn
+                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
                                     if gdat.sdenunit == 'ster':
                                         factydat = 1. / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % gdat.lablelemextn
+                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
                                 ## plot the total number of elements
                                 if ydattype == 'totl':
                                     factydat = 1.
-                                    lablydat = r'$N_{%s}$' % gdat.lablelemextn
+                                    lablydat = r'$N_{%s}$' % lablelemextn[l]
                                 
                                 if False:
                                     print 'plot_samp()'
@@ -1065,7 +1068,14 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
             listydat[cntr, :] = gdat.sbrtdatamean[b, indxregiplot, :]
             cntr += 1
             
+            print 'listydat'
+            summgene(listydat)
+            print 'cntr'
+            print cntr
             for c in indxback:
+                print 'c'
+                print c
+                print 
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmean' % c, indxvarb=indxvarb)
                 if liststrgmodl[a] == 'post':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmean' % c, indxvarb=indxvarb, mometype='errr')
@@ -1686,17 +1696,17 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl')
     if indxenerplot == None:
-        xdat = gdat.cntpdata[indxregiplot, :, :, indxevttplot].flatten()
-        ydat = ydat[indxregiplot, :, :, indxevttplot].flatten()
+        xdat = gdat.cntpdata[indxregiplot][:, :, indxevttplot].flatten()
+        ydat = ydat[indxregiplot][:, :, indxevttplot].flatten()
         nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
         if strgstat == 'post':
-            indxvarb = [indxregiplot, slice(None), slice(None), indxevttplot]
+            indxvarb = [indxregiplot][slice(None), slice(None), indxevttplot]
     else:
-        xdat = gdat.cntpdata[indxregiplot, indxenerplot, :, indxevttplot]
-        ydat = ydat[indxregiplot, indxenerplot, :, indxevttplot]
+        xdat = gdat.cntpdata[indxregiplot][indxenerplot, :, indxevttplot]
+        ydat = ydat[indxregiplot][indxenerplot, :, indxevttplot]
         nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
         if strgstat == 'post':
-            indxvarb = [indxregiplot, indxenerplot, slice(None), indxevttplot]
+            indxvarb = [indxregiplot][indxenerplot, slice(None), indxevttplot]
     if strgstat == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', mometype='errr', indxvarb=indxvarb)
     if strgstat == 'post':
@@ -1981,7 +1991,7 @@ def plot_intr(gdat):
         plt.close()  
         
         
-def plot_eval(gdat):
+def plot_eval(gdat, indxpoplplot):
 
     if gdat.exproaxitype:
         psfntemp = copy(gdat.psfnexpr[0, :, 0, 0])
@@ -2334,9 +2344,9 @@ def plot_init(gdat):
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
         
-        if gdat.numbpixl > 1 and gdat.evalcirc != 'full':
+        if gdat.numbpixl > 1 and gdat.elemspatevaltype == 'loclhash':
             plot_indxprox(gdat)
-            if gdat.evalcirc != 'full' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
+            if gdat.elemspatevaltype != 'full' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
                 plot_eval(gdat)
         
         # temp
@@ -2489,13 +2499,13 @@ def plot_init(gdat):
             gdat.limtexpo = [gdat.minmexpo, gdat.maxmexpo]
             if gdat.enerbins:
                 path = gdat.pathinit + 'expototlmeanreg%d.pdf' % d
-                tdpy.util.plot_gene(path, gdat.meanener, gdat.expototlmean[d, :], scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
+                tdpy.util.plot_gene(path, gdat.meanener, gdat.expototlmean[d], scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
                                                                                                 lablydat=gdat.lablexpototl, limtydat=gdat.limtexpo)
             
             if gdat.numbpixl > 1:
                 for i in gdat.indxener:
                     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                    axis.hist(gdat.expototl[d, i, :], gdat.binsexpo)
+                    axis.hist(gdat.expototl[d][i, :], gdat.binsexpo)
                     axis.set_xlabel(gdat.lablexpototl)
                     axis.set_ylabel(gdat.lablnumbpixl)
                     axis.set_xscale('log')
@@ -2506,7 +2516,7 @@ def plot_init(gdat):
                     plt.close(figr)
             else:
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.hist(gdat.expototl[d, :, :].flatten(), gdat.binsexpo)
+                axis.hist(gdat.expototl[d][:, :].flatten(), gdat.binsexpo)
                 axis.set_xlabel(gdat.lablexpototl)
                 axis.set_ylabel(gdat.lablnumbpixl)
                 axis.set_xscale('log')
@@ -2555,8 +2565,9 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgvarb='defl',
     deflbgal = defl[:, :, 1]
     fact = 4
     axis.imshow(zeros((10, 10)))
+    
     ptch = axis.quiver(gdat.anglfact * gdat.lgalgridcart[::fact, ::fact], gdat.anglfact * gdat.bgalgridcart[::fact, ::fact], \
-                  gdat.fluxfactplot * defllgal[::fact, ::fact], gdat.fluxfactplot * deflbgal[::fact, ::fact], scale_units='xy', angles='xy', scale=1)
+                       gdat.anglfact * defllgal[::fact, ::fact], gdat.anglfact * deflbgal[::fact, ::fact], scale_units='xy', angles='xy', scale=1)
     supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot)
     #plt.subplots_adjust(left=0.2, bottom=0.15, top=0.75, right=0.85)
     savefigr(gdat, gdatmodi, figr, path)
