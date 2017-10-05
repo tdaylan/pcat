@@ -1519,7 +1519,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
 
     else:
         if gdat.propfixp and gdat.propcomp and gdat.indxfixpprop.size > 0:
-            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixpprop, concatenate(concatenate(thisindxsampcomp['comp']))))
+            listtemp = []
+            for l in gdat.fittindxpopl:
+                listtemp.append(concatenate(thisindxsampcomp['comp'][l]))
+            gdatmodi.thisindxsampfull = concatenate((gdat.indxfixpprop, concatenate(listtemp)))
         elif gdat.propcomp and not gdat.propfixp:
             gdatmodi.thisindxsampfull = concatenate(concatenate(thisindxsampcomp['comp']))
         else:
@@ -2890,11 +2893,6 @@ def setpprem(gdat):
             gdat.numbsidecart = 100
             gdat.numbsideheal = int(sqrt(gdat.numbpixlfull / 12))
     
-    gdat.minmcurv = -1.
-    gdat.maxmcurv = 1.
-    gdat.minmexpc = 0.1
-    gdat.maxmexpc = 10.
-        
     # pixelization
     if gdat.pixltype == 'cart':
         gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
@@ -4946,6 +4944,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 maxmsind = 2.5
                 sind = [0.4, 2.4]
             setp_varblimt(gdat, 'sind', [minmsind, maxmsind], strgmodl=strgmodl)
+            setp_varblimt(gdat, 'curv', [-1., 1.], strgmodl=strgmodl)
+            setp_varblimt(gdat, 'expc', [0.1, 10.], strgmodl=strgmodl)
             setp_varblimt(gdat, 'sinddistmean', sind, popl='full', strgmodl=strgmodl)
             #### standard deviations should not be too small
             setp_varblimt(gdat, 'sinddiststdv', [0.3, 2.], popl='full', strgmodl=strgmodl)
@@ -5292,9 +5292,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     liststrgcomp[l] += ['acut']
                     listscalcomp[l] += ['self']
         
-        print 'listscalcomp'
-        print listscalcomp
-
         # variables for which whose marginal distribution and pair-correlations will be plotted
         liststrgfeatodim = [[] for l in indxpopl]
         for l in indxpopl:
@@ -5308,9 +5305,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     liststrgfeatodim[l] + ['sbrt0018']
             if elemtype[l] == 'lens':
                 liststrgfeatodim[l] += ['mcut', 'diss', 'rele', 'reln', 'reld', 'relc']
-        
-        if 'cnts' in liststrgfeatodim[1]:
-            raise Exception('')
         
         # add reference element features that are not available in the PCAT element model
         gdat.refrliststrgfeatonly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
@@ -8075,8 +8069,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             lpdfspatprioobjt = gdat.fittlpdfspatprioobjt
                     
                     if strgpdfn == 'self':
-                        minmfeat = getattr(gdat, 'minm' + strgfeat)
-                        maxmfeat = getattr(gdat, 'maxm' + strgfeat)
+                        minmfeat = getattr(gdat, strgmodl + 'minm' + strgfeat)
+                        maxmfeat = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                         lpri[indxlpri] = numbelem[l][d] * log(1. / (maxmfeat - minmfeat))
                     elif strgpdfn == 'disc':
                         indxfixpbgaldistscal = getattr(gdat, strgmodl + 'indxfixpbgaldistscalpop%d' % l)
@@ -8965,12 +8959,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if 'lens' in elemtype:
                 numbsingcomm = min(deflsing[0].shape[2], gdat.truedeflsing[0].shape[2])
                 setattr(gdatobjt, strgpfix + 'numbsingcomm', numbsingcomm)
-                deflsingresi = deflsing[0][..., :numbsingcomm] - gdat.truedeflsing[0][..., :numbsingcomm]
+                deflsingresi = deflsing[..., :numbsingcomm] - gdat.truedeflsing[0][..., :numbsingcomm]
                 deflresi = defl - gdat.truedefl
                 deflresimgtd = sqrt(sum(deflresi**2, axis=2))
                 deflresiperc = 100. * deflresimgtd / gdat.truedeflmgtd
                 deflsingresimgtd = sqrt(sum(deflsingresi**2, axis=2))
-                print ''
                 deflsingresiperc = 100. * deflsingresimgtd / gdat.truedeflsingmgtd[..., :numbsingcomm]
                 setattr(gdatobjt, strgpfix + 'deflsingresi', deflsingresi)
                 setattr(gdatobjt, strgpfix + 'deflresi', deflresi)

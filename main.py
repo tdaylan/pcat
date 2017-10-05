@@ -984,7 +984,6 @@ def init( \
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
         for l in indxpopl:
-            
             if elemtype[l] == 'lens':
                 meandistslop = 1.9
                 stdvdistslop = 0.5
@@ -1367,14 +1366,19 @@ def init( \
         liststrgfeatpriototl = getattr(gdat, strgmodl + 'liststrgfeatpriototl')
         for strgfeat in liststrgfeattotl:
             scal = getattr(gdat, 'scal' + strgfeat + 'plot')
-            maxm = getattr(gdat, 'maxm' + strgfeat)
-            minm = getattr(gdat, 'minm' + strgfeat)
+            try:
+                maxm = getattr(gdat, 'maxm' + strgfeat)
+                minm = getattr(gdat, 'minm' + strgfeat)
+            except:
+                #scal = getattr(gdat, strgmodl + 'scal' + strgfeat + 'plot')
+                maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
+                minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
             retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplot, scal=scal)
             if strgfeat in liststrgfeatpriototl:
                 maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                 minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
                 retr_axis(gdat, strgfeat + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
-            limt = array([getattr(gdat, 'minm' + strgfeat), getattr(gdat, 'maxm' + strgfeat)])
+            limt = array([minm, maxm])
             setattr(gdat, 'limt' + strgfeat + 'plot', limt)
 
     if gdat.fittnumbtrap > 0:
@@ -2959,15 +2963,11 @@ def work(pathoutpthis, lock, indxprocwork):
                         raise Exception('Sample vector is not finite.')
             
             if gdat.fittnumbtrap > 0:
-                if gdat.fittboolelemsbrtdfnc:
+                if gdat.fittboolelemsbrtdfncanyy:
                     frac = amin(gdatmodi.thissbrtdfnc) / mean(gdatmodi.thissbrtdfnc)
                     if frac < -1e-3:
                         raise Exception('thissbrtdfnc went negative by %.3g percent.' % (100. * frac))
-
-                    frac = amin(gdatmodi.nextsbrtdfnc) / mean(gdatmodi.nextsbrtdfnc)
-                    if frac < -1e-3:
-                        raise Exception('nextsbrtdfnc went negative by %.3g percent.' % (100. * frac))
-
+                    
             # check the population index
             try:
                 if gdatmodi.indxpoplmodi < 0:
@@ -3322,7 +3322,8 @@ def work(pathoutpthis, lock, indxprocwork):
                     print gdatmodi.thissampvarb[gdat.fittindxfixpbacp]
                     if gdat.fittnumbtrap > 0:
                         print 'Number of elements:'
-                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem].astype(int)
+                        for l in gdat.fittindxpopl:
+                            print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]].astype(int)
                         print 'Mean number of elements:'
                         print gdatmodi.thissampvarb[gdat.fittindxfixpmeanelem]
                         for l in gdat.fittindxpopl:

@@ -196,32 +196,38 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                 listydat = []
                                 listvlinfrst = []
                                 listvlinseco = []
-                                 
-                                if strgmodl == 'true':
-                                    deflproftemp = deflprof[l][d][0, :, :]
-                                else:
-                                    deflproftemp = deflprof[l][d]
                                 
-                                for k in range(deflprof[l][d].shape[-1]):
-                                    listydat.append(deflproftemp[:, k] * gdat.anglfact)
+                                if 'deflprof' in elemtype[l]:
+                                    print 'l'
+                                    print l
+                                    print 'deflprof'
+                                    print deflprof
+
                                     if strgmodl == 'true':
-                                        ascatemp = asca[l][d][0, k]
-                                        acuttemp = acut[l][d][0, k]
+                                        deflproftemp = deflprof[l][d][0, :, :]
                                     else:
-                                        ascatemp = asca[l][d][k]
-                                        acuttemp = acut[l][d][k]
-                                    listvlinfrst.append(ascatemp * gdat.anglfact) 
-                                    listvlinseco.append(acuttemp * gdat.anglfact)
-                                
-                                if lensmodltype == 'host':
-                                    indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
-                                    beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'sampvarb', indxvarb=indxfixpbeinhost)
-                                    listydat.append(xdat * 0. + gdat.anglfact * beinhost[d])
-                                path = pathtemp + strgstat + 'deflsubhpop%dreg%d%s.pdf' % (l, d, strgswep)
-                                limtydat = [1e-3, 1.]
-                                limtxdat = [1e-3, 1.]
-                                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
-                                        limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
+                                        deflproftemp = deflprof[l][d]
+                                    
+                                    for k in range(deflprof[l][d].shape[-1]):
+                                        listydat.append(deflproftemp[:, k] * gdat.anglfact)
+                                        if strgmodl == 'true':
+                                            ascatemp = asca[l][d][0, k]
+                                            acuttemp = acut[l][d][0, k]
+                                        else:
+                                            ascatemp = asca[l][d][k]
+                                            acuttemp = acut[l][d][k]
+                                        listvlinfrst.append(ascatemp * gdat.anglfact) 
+                                        listvlinseco.append(acuttemp * gdat.anglfact)
+                                    
+                                    if lensmodltype == 'host':
+                                        indxfixpbeinhost = getattr(gdat, strgmodl + 'indxfixpbeinhost')
+                                        beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'sampvarb', indxvarb=indxfixpbeinhost)
+                                        listydat.append(xdat * 0. + gdat.anglfact * beinhost[d])
+                                    path = pathtemp + strgstat + 'deflsubhpop%dreg%d%s.pdf' % (l, d, strgswep)
+                                    limtydat = [1e-3, 1.]
+                                    limtxdat = [1e-3, 1.]
+                                    tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
+                                            limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                     
             if gdat.datatype == 'mock':
                 if gdat.elemtype == 'lens':
