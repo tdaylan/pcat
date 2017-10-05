@@ -258,8 +258,10 @@ def init( \
     
     # list of models
     gdat.liststrgmodl = ['fitt']
+    gdat.listlegdmodl = ['Fitting']
     if gdat.datatype == 'mock':
         gdat.liststrgmodl += ['true']
+        gdat.listlegdmodl += ['True']
     
     # PCAT folders
     if gdat.pathbase[-1] != '/':
