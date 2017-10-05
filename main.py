@@ -357,7 +357,7 @@ def init( \
     if gdat.exprtype == 'chan':
         elemtype = ['lghtpnts']
     if gdat.exprtype == 'hubb':
-        elemtype = ['lghtpnts', 'lens', 'lghtgausback']
+        elemtype = ['lghtpnts', 'lens', 'lghtgausbgrd']
     setp_varbvalu(gdat, 'elemtype', elemtype)
     
     # feature correlated with the significance of elements
@@ -982,6 +982,7 @@ def init( \
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
         for l in indxpopl:
+            
             if elemtype[l] == 'lens':
                 meandistslop = 1.9
                 stdvdistslop = 0.5
@@ -990,12 +991,19 @@ def init( \
                 minmdistslop = 0.5
                 maxmdistslop = 3.
                 scal = 'logt'
-            setp_varbvalu(gdat, 'scal' + namefeatampl[l] + 'distslop', scal, popl=l)
             if scal == 'gaus':
-                setp_varblimt(gdat, namefeatampl[l] + 'distslop', [meandistslop, stdvdistslop], popl=l, typelimt='meanstdv')
+                typelimt = 'meanstdv'
+                limt = [meandistslop, stdvdistslop]
             else:
-                setp_varblimt(gdat, namefeatampl[l] + 'distslop', [minmdistslop, maxmdistslop], popl=l)
-    
+                typelimt = 'minmmaxm'
+                limt = [minmdistslop, maxmdistslop]
+            setp_varblimt(gdat, namefeatampl[l] + 'distslop', limt, popl=l, typelimt=typelimt, strgmodl=strgmodl)
+            setp_varbvalu(gdat, 'scal' + namefeatampl[l] + 'distslop', scal, popl=l, strgmodl=strgmodl)
+
+            if elemtype[l] == 'lghtgausbgrd':
+                setp_varblimt(gdat, 'gwdtdistslop', [0.5, 4.], popl=l, strgmodl=strgmodl)
+                setp_varbvalu(gdat, 'scalgwdtdistslop', 'logt', popl=l, strgmodl=strgmodl)
+
     ### maximum horizontal/vertical distance of the elements from the image center
     gdat.fittmaxmgang = gdat.maxmgangdata * gdat.margfactmodl
     gdat.truemaxmgang = gdat.fittmaxmgang
@@ -1092,28 +1100,31 @@ def init( \
     if gdat.allwfixdtrue and gdat.datatype == 'mock':
         
         for l in gdat.trueindxpopl:
-            if elemtype[l] != 'lghtline':
+            if gdat.trueboolelemspat[l]:
                 setp_varblimt(gdat, 'lgal', [-maxmgang, maxmgang], strgmodl=strgmodl, popl=l)
                 setp_varblimt(gdat, 'bgal', [-maxmgang, maxmgang], strgmodl=strgmodl, popl=l)
                 setp_varbvalu(gdat, 'spatdistcons', 1e-3, popl=l)
                 setp_varbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=l)
-            if elemtype[l] == 'lght':
+            if gdat.trueelemtype[l] == 'lght':
                 setp_varbvalu(gdat, 'fluxdistslop', 2.2, popl=l)
-            if elemtype[l] == 'lghtline':
+            if gdat.trueelemtype[l] == 'lghtline':
                 setp_varbvalu(gdat, 'fluxdistslop', 2., popl=l)
-            if elemtype[l] == 'lens':
+            if gdat.trueelemtype[l] == 'lens':
                 setp_varbvalu(gdat, 'defsdistslop', 1.9, popl=l)
-            if elemtype[l] == 'clus':
+            if gdat.trueelemtype[l] == 'clus':
                 setp_varbvalu(gdat, 'nobjdistslop', 2., popl=l)
 
-            if elemtype[l] == 'lens':
+            if gdat.trueelemtype[l] == 'lens':
                 setp_varbvalu(gdat, 'ascadistmean', 0.05 / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'ascadiststdv', 0.04 / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=l)
             
-            if boolelemspec[l]:
+            if gdat.trueelemtype[l] == 'lght':
+                setp_varbvalu(gdat, 'gwdtdistslop', 2., popl=l)
+            
+            if gdat.trueboolelemspec[l]:
                 if gdat.exprtype == 'ferm':
                     sinddistmean = 2.15
                 if gdat.exprtype == 'chan':
@@ -1721,7 +1732,8 @@ def init( \
     gdatmodifudi.thischro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
     if gdat.fittnumbtrap > 0:
-        gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem] = 1
+        for l in gdat.fittindxpopl:
+            gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem[l]] = 1
     
     retr_elemlist(gdat, gdatmodifudi)
     gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
@@ -2762,7 +2774,7 @@ def work(pathoutpthis, lock, indxprocwork):
     # initialize the worker sampler
     ## prepare gdatmodi
     gdatmodi.thislliktotl = 0.
-    gdatmodi.thissbrtpnts = zeros_like(gdat.expo)
+    gdatmodi.thissbrtdfnc = zeros_like(gdat.expo)
     gdatmodi.thissbrthost = zeros_like(gdat.expo)
     gdatmodi.thisdeflhost = zeros_like(gdat.expo)
     gdatmodi.thispsfnconv = zeros_like(gdat.expo)
@@ -2795,7 +2807,7 @@ def work(pathoutpthis, lock, indxprocwork):
     
     # dummy definitions
     #if ('lght' in gdat.fittelemtype or 'clus' in gdat.fittelemtype or 'lghtline' in gdat.fittelemtype) and gdat.fittnumbtrap > 0:
-    #    gdatmodi.nextsbrtpnts = zeros_like(gdatmodi.thissbrtpnts)
+    #    gdatmodi.nextsbrtdfnc = zeros_like(gdatmodi.thissbrtdfnc)
     
     # enter interactive mode
     if gdat.intrevalcntpmodl:
@@ -2945,14 +2957,14 @@ def work(pathoutpthis, lock, indxprocwork):
                         raise Exception('Sample vector is not finite.')
             
             if gdat.fittnumbtrap > 0:
-                if gdat.fittboollght:
-                    frac = amin(gdatmodi.thissbrtpnts) / mean(gdatmodi.thissbrtpnts)
+                if gdat.fittboolelemsbrtdfnc:
+                    frac = amin(gdatmodi.thissbrtdfnc) / mean(gdatmodi.thissbrtdfnc)
                     if frac < -1e-3:
-                        raise Exception('thissbrtpnts went negative by %.3g percent.' % (100. * frac))
+                        raise Exception('thissbrtdfnc went negative by %.3g percent.' % (100. * frac))
 
-                    frac = amin(gdatmodi.nextsbrtpnts) / mean(gdatmodi.nextsbrtpnts)
+                    frac = amin(gdatmodi.nextsbrtdfnc) / mean(gdatmodi.nextsbrtdfnc)
                     if frac < -1e-3:
-                        raise Exception('nextsbrtpnts went negative by %.3g percent.' % (100. * frac))
+                        raise Exception('nextsbrtdfnc went negative by %.3g percent.' % (100. * frac))
 
             # check the population index
             try:
