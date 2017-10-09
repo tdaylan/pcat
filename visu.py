@@ -1714,15 +1714,15 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot
         ydat = ydat[indxregiplot][:, :, indxevttplot].flatten()
         nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
         if strgstat == 'post':
-            indxvarb = [indxregiplot][slice(None), slice(None), indxevttplot]
+            indxvarb = [slice(None), slice(None), indxevttplot]
     else:
         xdat = gdat.cntpdata[indxregiplot][indxenerplot, :, indxevttplot]
         ydat = ydat[indxregiplot][indxenerplot, :, indxevttplot]
         nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
         if strgstat == 'post':
-            indxvarb = [indxregiplot][indxenerplot, slice(None), indxevttplot]
+            indxvarb = [indxenerplot, slice(None), indxevttplot]
     if strgstat == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', mometype='errr', indxvarb=indxvarb)
+        yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', mometype='errr', indxvarb=indxvarb, indxlist=indxregiplot)
     if strgstat == 'post':
         colr = 'black'
     else:

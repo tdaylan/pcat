@@ -953,11 +953,7 @@ def init( \
     
     if 'lghtline' in gdat.commelemtype:
         setp_varblimt(gdat, 'elin', gdat.limtener)
-    
-    if 'lghtline' in gdat.commelemtype:
-        limtflux = [1e2, 1e4]
-        setp_varblimt(gdat, 'flux', limtflux)
-    
+
     minmdefs = 0.003 / gdat.anglfact
     setp_varbvalu(gdat, 'minmdefs', minmdefs)
     minmdefs = 0.01 / gdat.anglfact
@@ -1748,6 +1744,7 @@ def init( \
     gdat.liststrgvarbarrysamp = []
     gdat.liststrgvarblistsamp = []
     for strg, valu in gdatmodifudi.__dict__.iteritems():
+
         if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep and isinstance(valu, ndarray):
             gdat.liststrgvarbarrysamp.append(strg[4:])
         if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
@@ -2008,7 +2005,7 @@ def proc_post(gdat, prio=False):
             print 'Computing the Gelman-Rubin TS...'
             timeinit = gdat.functime()
         gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
-        gdat.gmrbstat = zeros((gdat.numbregi, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+        gdat.gmrbstat = [[zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))] for d in gdat.indxregi]
         for k in gdat.fittindxfixp:
             gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, k])
             if not isfinite(gdat.gmrbfixp[k]):
@@ -2017,10 +2014,25 @@ def proc_post(gdat, prio=False):
             for i in gdat.indxener:
                 for j in gdat.indxpixl:
                     for m in gdat.indxevtt:
-                        gdat.gmrbstat[d, i, j, m] = tdpy.mcmc.gmrb_test(gdat.listcntpmodl[:, :, d, i, j, m])
+                        gdat.gmrbstat[d][i, j, m] = tdpy.mcmc.gmrb_test(gdat.listcntpmodl[d][:, :, i, j, m])
         if gdat.verbtype > 0:
             timefinl = gdat.functime()
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
+    # calculate the autocorrelation of the chains
+    if gdat.verbtype > 0:
+        print 'Computing the autocorrelation of the chains...'
+        timeinit = gdat.functime()
+    gdat.atcrcntpmodl = []
+    gdat.timeatcrcntpmodl = []
+    for d in gdat.indxregi:
+        gdat.atcr[d], gdat.timeatcr[d] = tdpy.mcmc.retr_timeatcr(gdat.listcntpmodl[d])
+        if gdat.verbtype > 0:
+            if gdat.timeatcr[d] == 0.:
+                print 'Autocorrelation time estimation failed.'
+    if gdat.verbtype > 0:
+        timefinl = gdat.functime()
+        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
     # flatten the chain output
     ## lists collected at each sample
@@ -2029,6 +2041,9 @@ def proc_post(gdat, prio=False):
         for j in gdat.indxsamp:      
             for k in gdat.indxproc:
                 listtemp.append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
+        print 'strgvarb'
+        print strgvarb
+        print
         setattr(gdat, 'list' + strgvarb, listtemp)
     
     ## list of other parameters to be flattened
@@ -2151,7 +2166,7 @@ def proc_post(gdat, prio=False):
         timeinit = gdat.functime()
     
     if gdat.fittnumbtrap > 0:
-        if boolelemspatanyy:
+        if gdat.fittboolelemspatanyy:
             gdat.posthistlgalbgalelemstkd = [[[] for d in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl]
         
         for l in gdat.fittindxpopl:
@@ -2169,19 +2184,6 @@ def proc_post(gdat, prio=False):
                         gdat.posthistlgalbgalelemstkd[l][d][:, :, :, k] = histogramdd(temp, bins=(gdat.binslgalpntsprob, gdat.binsbgalpntsprob, bins))[0]
 
     if gdat.verbtype > 0:
-        timefinl = gdat.functime()
-        print 'Done in %.3g seconds.' % (timefinl - timeinit)
-
-    # calculate the autocorrelation of the chains
-    if gdat.verbtype > 0:
-        print 'Computing the autocorrelation of the chains...'
-        timeinit = gdat.functime()
-   
-    gdat.atcr, gdat.timeatcr = tdpy.mcmc.retr_timeatcr(gdat.listcntpmodl)
-
-    if gdat.verbtype > 0:
-        if gdat.timeatcr == 0.:
-            print 'Autocorrelation time estimation failed.'
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
@@ -2290,10 +2292,10 @@ def proc_post(gdat, prio=False):
     gdat.timerealtotl = time.time() - gdat.timerealtotl
     gdat.timeproctotl = time.clock() - gdat.timeproctotl
     gdat.timeproctotlswep = gdat.timeproctotl / gdat.numbswep
-    if gdat.timeatcr == 0.:
+    if gdat.timeatcrmaxm == 0.:
         gdat.timeprocnorm = 0.
     else:
-        gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcr
+        gdat.timeprocnorm = gdat.timeproctotlswep / gdat.timeatcrmaxm
     
     # write an output file to the disc, indicating that the run has been executed successfully
     filecomp = open(gdat.pathoutpthis + 'comp.txt', 'w')
@@ -2951,7 +2953,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 'gdatmodi.thislliktotl'
                 print gdatmodi.thislliktotl
                 print 'loglikelihood drop is very unlikely!'
-                raise Exception('')
+                #raise Exception('')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
@@ -3085,18 +3087,15 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
-                
-                if gdat.strgcnfg != 'pcat_lens_mock_syst_nomi' and strgvarb == 'cntpmodl':
-                    print 'heeeeey'
-                    print 'valu'
-                    summgene(valu)
-                    print 'workdict[list + strgvarb]'
-                    summgene(workdict['list' + strgvarb])
-                    print
-                    print
-
             for strgvarb in gdat.liststrgvarblistsamp:
+                print 'strgvarb'
+                print strgvarb
+                print
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
+            print 'gdat.liststrgvarblistsamp'
+            print gdat.liststrgvarblistsamp
+            print 'workdict[listcntpmodl]'
+            print workdict['listcntpmodl']
             stopchro(gdat, gdatmodi, 'next', 'save')
 
         # plot the current sample
@@ -3408,8 +3407,15 @@ def work(pathoutpthis, lock, indxprocwork):
     
     for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblistsamp:
         valu = workdict['list' + strgvarb]
+        if strgvarb.startswith('cntp'):
+            print 'strgvarb'
+            print strgvarb
+            print
         setattr(gdatmodi, 'list' + strgvarb, valu)
-    
+    print 'gdatmodi.listcntpmodl'
+    print gdatmodi.listcntpmodl
+    print
+
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
     
