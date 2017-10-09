@@ -7641,7 +7641,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     else:
                         specsour = array([fluxsour[d]])
                     
-                    if boolelemsbrtextsbgrdanyy:
+                    if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
                         sbrtgalxbgrd[dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], gdat.bgalgrid[indxpixleval[0][dd]], \
                                                                                         lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
                     
@@ -7664,7 +7664,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 sbrtdiff['lens'][dd] = getattr(gdatobjt, strgpfixthis + 'sbrthost')[d][indxcubeeval[0][dd]]
 
             if gdat.diagmode:
-                for dd, d in enumerate(indxregi):
+                for dd, d in enumerate(indxregieval):
                     if not isfinite(sbrtdiff['lens'][dd]).all():
                         raise Exception('Lensed emission is not finite.')
                     if (sbrtdiff['lens'][dd] == 0).all():
@@ -9113,7 +9113,7 @@ def retr_info(pdfnpost, pdfnprio):
 def retr_llik_depr(gdat, cntpmodl, indxregieval, indxcubeeval):
    
     llik = [[] for d in indxregieval]
-    for d, dd in enumerate(indxregieval):
+    for dd, d in enumerate(indxregieval):
         llik[dd] = gdat.cntpdata[d][indxcubeeval[0][dd]] * log(cntpmodl[dd]) - cntpmodl[dd]
         if gdat.liketype == 'pois':
             if gdat.verbtype > 1:
