@@ -36,6 +36,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
                 if 'lens' in elemtype  and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
                     numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
+        indxpoplassc = getattr(gdat, strgmodl + 'indxpoplassc')
         numbback = getattr(gdat, strgmodl + 'numbback')
         backtype = getattr(gdat, strgmodl + 'backtype')
         indxback = getattr(gdat, strgmodl + 'indxback')
@@ -83,9 +84,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             if strgmodl != 'true' and gdat.allwrefr and gdat.asscrefr:
                 for strgclas in ['cmpl', 'fdis']:
                     nameinte = strgclas + '/'
-                    for d in gdat.indxregi:
-                        for q in gdat.indxrefr:
-                            for l in gdat.fittindxpopl:
+                    for l in gdat.fittindxpopl:
+                        for d in gdat.fittindxregipopl[l]:
+                            for q in gdat.indxrefr:
+                                if not l in indxpoplassc[q]:
+                                    continue
                                 if gdat.refrnumbelem[q][d] == 0 and strgclas == 'cmpl' or gdat.fittnumbtrap == 0 and strgclas == 'fdis':
                                     continue
                                 lablydat = getattr(gdat, 'labl' + strgclas + 'ref%dpop%dreg%d' % (q, l, d))
@@ -100,6 +103,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                                         limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                                        print 'strgfeat'
+                                        print strgfeat
+                                        print 'l'
+                                        print l
+                                        print
                                         plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, plottype='errr', \
                                                   scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
@@ -1296,7 +1304,7 @@ def plot_brgt(gdat, gdatmodi, strg):
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
     if gdat.truefluxbrgt.size > 0:
-        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[0], label=gdat.legdrefr[0])
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[0], label=gdat.refrlegdelem[0])
     axis.set_xscale('log')
     axis.set_yscale('log')
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
@@ -1365,8 +1373,8 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                 hist = getattr(gdatmodi, strgstat + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (indxpoplplot, indxregiplot))
                 imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphmrkr)
             else:
-                varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxregiplot][indxpoplplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
-                varbseco = getattr(gdatmodi, 'this' + strgseco)[indxregiplot][indxpoplplot] * getattr(gdat, 'fact' + strgseco + 'plot')
+                varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxpoplplot][indxregiplot] * getattr(gdat, 'fact' + strgfrst + 'plot')
+                varbseco = getattr(gdatmodi, 'this' + strgseco)[indxpoplplot][indxregiplot] * getattr(gdat, 'fact' + strgseco + 'plot')
                 if len(varbfrst) == 0 or len(varbseco) == 0:
                     varbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                     varbseco = array([limtseco[0] * factplotseco * 0.1])
@@ -1382,7 +1390,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
-                    axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], s=sizelarg)
+                    axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, indxpoplplot, strgfrst=strgfrst, strgseco=strgseco)
     
@@ -1529,12 +1537,12 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
                 ydat = ydat[indxydat]
             
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
+                axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], alpha=gdat.alphmrkr)
             else:
                 if strgydat[-4:-1] == 'pop':
-                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
+                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], alpha=gdat.alphmrkr)
                 else:
-                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.legdrefr[q], alpha=gdat.alphmrkr)
+                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], alpha=gdat.alphmrkr)
                     continue
     
     if strgydat.startswith('histcntp'):
@@ -1861,9 +1869,9 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
                     else:
                         indxlowr = 2 * h
                         indxuppr = numbparaplot
-                temp = sum(gdat.posthistlgalbgalelemstkd[indxregiplot][indxpoplplot][:, :, indxlowr:indxuppr, indxfeatsign], 2).T
+                temp = sum(gdat.posthistlgalbgalelemstkd[indxpoplplot][indxregiplot][:, :, indxlowr:indxuppr, indxfeatsign], 2).T
             else:
-                temp = sum(sum(gdat.posthistlgalbgalelemstkd[indxregiplot][indxpoplplot], 2), 2).T
+                temp = sum(sum(gdat.posthistlgalbgalelemstkd[indxpoplplot][indxregiplot], 2), 2).T
                 
             if where(temp > 0.)[0].size > 0:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))

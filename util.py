@@ -946,7 +946,7 @@ def retr_refrchaninit(gdat):
     
     gdat.namefeatsignrefr = 'flux'
     
-    gdat.legdrefr = ['Xue+2011', 'Wolf+2008']
+    gdat.refrlegdelem = ['Xue+2011', 'Wolf+2008']
     
     gdat.listnamefeatamplrefr[0] = 'flux'
     gdat.listnamefeatamplrefr[1] = 'magt'
@@ -1077,7 +1077,7 @@ def retr_refrferminit(gdat):
     gdat.listnamerefr += ['ac15', 'ma05']
     gdat.indxrefr = arange(gdat.numbrefr)
     
-    gdat.legdrefr = ['Acero+2015', 'Manchester+2005']
+    gdat.refrlegdelem = ['Acero+2015', 'Manchester+2005']
 
     gdat.listnamefeatamplrefr[0] = 'flux'
     gdat.listnamefeatamplrefr[1] = 'flux0400'
@@ -1292,7 +1292,10 @@ def show_samp(gdat, gdatmodi, thisonly=False):
             name = ''
 
         if gdat.fittnumbtrap > 0:
-            gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(concatenate(gdatmodi.thisindxsampcomp['comp']))))
+            listtemp = []
+            for l in gdat.fittindxpopl:
+                listtemp.append(concatenate(gdatmodi.thisindxsampcomp['comp'][l]))
+            gdatmodi.indxparaprop = concatenate((gdat.indxfixpprop, concatenate(listtemp)))
         else:
             gdatmodi.indxparaprop = gdat.indxfixpprop
         try:
@@ -2917,8 +2920,8 @@ def setpinit(gdat, boolinitsetp=False):
     retr_indxsamp(gdat)
     
     gdat.listnamevarbstat = ['samp', 'sampvarb', 'indxelemfull', 'indxsampcomp', 'lliktotl', 'llik', 'lpritotl', 'lpri']
-    for name in gdat.fittlistnamediff:
-        gdat.listnamevarbstat += ['sbrt' + name + 'conv']
+    #for name in gdat.fittlistnamediff:
+    #    gdat.listnamevarbstat += ['sbrt' + name + 'conv']
     if gdat.fittboolelemsbrtdfncanyy:
         gdat.listnamevarbstat += ['sbrtdfnc']
     if gdat.fittboolelemsbrtextsbgrdanyy:
@@ -2927,6 +2930,8 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.listnamevarbstat += ['deflhost']
     if gdat.fitthostemistype != 'none':
         gdat.listnamevarbstat += ['sbrthost']
+    if gdat.fittconvdiffanyy:
+        gdat.listnamevarbstat += ['sbrtmodlconv']
     if gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full':
         gdat.listnamevarbstat += ['psfnconv']
     if gdat.fittboolelemdeflsubhanyy:
@@ -3454,27 +3459,25 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.sizeimag = 1.3 * gdat.plotsize
     ## text
     if gdat.allwrefr:
-        if gdat.datatype == 'mock':
-            if gdat.truelegdpopl != None:
-                # user-defined true population legend
-                gdat.legdrefr = gdat.truelegdpopl
+        if gdat.refrlegdpopl == None:
+            gdat.refrlegdpopl = [[] for q in gdat.indxrefr]
+            for q in gdat.indxrefr:
+                gdat.refrlegdpopl[q] = 'Pop %d' % q
+        if gdat.refrlegd == None:
+            if gdat.datatype == 'mock':
+                gdat.refrlegd = 'True'
             else:
-                # default true population legend
-                gdat.legdrefr = []
-                for l in gdat.trueindxpopl:
-                    if gdat.truenumbpopl == 1:
-                        gdat.legdrefr.append('True')
-                    else:
-                        gdat.legdrefr.append('True Pop. %d' % l)
-        gdat.legdrefrmiss = []
-        gdat.legdrefrhits = []
+                gdat.refrlegd = 'Ref'
+        gdat.refrlegdelem = [[] for q in gdat.indxrefr]
+        gdat.refrlegdmiss = [[] for q in gdat.indxrefr]
+        gdat.refrlegdhits = [[] for q in gdat.indxrefr]
         for q in gdat.indxrefr:
-            gdat.legdrefrmiss.append(gdat.legdrefr[q] + ' miss')
-            gdat.legdrefrhits.append(gdat.legdrefr[q] + ' hit')
-        if gdat.datatype == 'mock':
-            gdat.legdrefrhost = gdat.legdrefr[0] + ' host'
-            gdat.legdrefrsour = gdat.legdrefr[0] + ' sour'
-   
+            gdat.refrlegdelem[q] = gdat.refrlegd + ' ' + gdat.refrlegdpopl[q]
+            gdat.refrlegdmiss[q] = gdat.refrlegdelem[q] + ' miss'
+            gdat.refrlegdhits[q] = gdat.refrlegdelem[q] + ' hit'
+        gdat.refrlegdhost = gdat.refrlegd + ' host'
+        gdat.refrlegdsour = gdat.refrlegd + ' sour'
+    
     ## PSF class indices for which images will be plotted
     if gdat.numbevtt == 1:
         gdat.indxevttplot = gdat.indxevtt
@@ -3504,7 +3507,7 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.fittboolelemsbrtdfncanyy:
         gdat.listnamechro += ['elemsbrtdfnc']
         gdat.listlegdchro += ['Dfnc S Brght']
-    if gdat.fittboolelemsbrtextsbgrdanyy:
+    if gdat.fittboolelemdeflsubhanyy:
         gdat.listnamechro += ['elemdeflsubh']
         gdat.listlegdchro += ['Subh Defl']
     if gdat.fittboolelemsbrtextsbgrdanyy:
@@ -4064,7 +4067,6 @@ def setpinit(gdat, boolinitsetp=False):
 
         if gdat.fittnumbtrap > 0:
             gdat.stdvstdp[gdat.indxstdpmeanelempop0] = 1e-1
-            gdat.stdvstdp[gdat.indxstdpdefsdistsloppop1] = 1e-1
 
         gdat.stdvstdp[gdat.indxstdpsigcene0evt0] = 3e-2
         gdat.stdvstdp[gdat.indxstdpbacpback0000reg0ene0] = 1e-3
@@ -4289,7 +4291,7 @@ def setpinit(gdat, boolinitsetp=False):
                         gdat.boolhash = True
                     if strgmodl == 'fitt' and gdat.fittmaxmnumbelempopl[l] > 0:
                         gdat.boolhash = True
-
+    
     if gdat.boolhash:
         gdat.numbprox = 3
         gdat.indxprox = arange(gdat.numbprox)
@@ -4892,6 +4894,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 boolelempsfn[l] = True
             else:
                 boolelempsfn[l] = False
+        boolelempsfnanyy = True in boolelempsfn
         
         spectype = [[] for l in indxpopl]
         for l in indxpopl:
@@ -5374,6 +5377,13 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 liststrgfeateval[l] = ['lgal', 'bgal', 'gwdt', 'spec']
             elif elemtype[l].startswith('lght'):
                 liststrgfeateval[l] = ['lgal', 'bgal', 'spec']
+    
+        indxpoplassc = [[] for l in indxpopl]
+        for l in indxpopl:
+            if numbpopl == 3 and elemtype[1] == 'lens':
+                indxpoplassc[l] = [l]
+            else:
+                indxpoplassc[l] = indxpopl
 
         # variables for which pair-correlations will be plotted
         liststrgfeatcorr = [[] for l in indxpopl]
@@ -5458,7 +5468,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     if not 'dfncsubt' in listnameecom:
                         listnameecom += ['dfncsubt']
         listnameecomtotl = listnameecom + ['modl']
-
+        
         numbdiff = len(listnamediff)
         convdiff = zeros(numbdiff, dtype=bool)
         for k, namediff in enumerate(listnamediff):
@@ -5467,6 +5477,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 convdiff[k] = not unifback[indx]
             else:
                 convdiff[k] = True
+        convdiffanyy = True in convdiff
 
         cntr = tdpy.util.cntr()
         
@@ -6507,9 +6518,9 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
         for q in gdat.indxrefr:
             if not amax(gdat.refrnumbelem[q]) == 0:
                 axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                      label=gdat.legdrefrhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                                      label=gdat.refrlegdhits[q], marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
                 axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                                      label=gdat.legdrefrmiss[q], marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                                      label=gdat.refrlegdmiss[q], marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
     # fixed-dimensional objects
     if strgmodl == 'fitt':
@@ -6523,11 +6534,11 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
     if strgmodl == 'true':
         if gdat.truelensmodltype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                                 label='%s Source' % gdat.legdrefr[q], marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                       label='%s Source' % gdat.refrlegdelem[q], marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
         
         if gdat.truehostemistype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                                 label='%s Host' % gdat.legdrefr[q], marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                       label='%s Host' % gdat.refrlegdelem[q], marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
     
     temphand, temp = axis.get_legend_handles_labels()
     numblabl = len(temp)
@@ -6567,7 +6578,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                         ### hit
                         indx = gdatmodi.thisindxelemrefrasschits[q][l][indxregiplot]
                         if indx.size > 0:
-                            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.legdrefrmiss, \
+                            axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.refrlegdmiss, \
                                                                                                                       marker='x', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
                         ### missed
                         indx = gdatmodi.thisindxelemrefrasscmiss[q][l][indxregiplot]
@@ -6575,7 +6586,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                         indx = arange(lgal.size)
                     if indx.size > 0: 
                         axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, facecolor='none', \
-                                                                                            label=gdat.legdrefrhits, marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                                            label=gdat.refrlegdhits, marker='s', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
             
         # temp -- generalize this to input refrlgalhost vs.
         if gdat.datatype == 'mock':
@@ -6586,7 +6597,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                                                                             facecolor='none', \
                                                                             #alpha=gdat.alphelem, \
                                                                             alpha=0.7, \
-                                                                            label=gdat.legdrefrhits, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
+                                                                            label=gdat.refrlegdhits, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
             if lensmodltype != 'none':
                 ## host galaxy Einstein radius
                 axis.add_patch(plt.Circle((gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixplgalhost[indxregiplot]], \
@@ -6600,7 +6611,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                                                                             facecolor='none', \
                                                                             alpha=0.7, \
                                                                             #alpha=gdat.alphelem, \
-                                                                            label=gdat.legdrefrhits, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
+                                                                            label=gdat.refrlegdhits, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
         
     # model catalog
     if indxpoplplot == -1:
@@ -6998,6 +7009,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         boolelemsbrtextsbgrd = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrd')
         boolelemsbrtextsbgrdanyy = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrdanyy')
         boolelempsfn = getattr(gdat, strgmodl + 'boolelempsfn')
+        boolelempsfnanyy = getattr(gdat, strgmodl + 'boolelempsfnanyy')
         boolelemspat = getattr(gdat, strgmodl + 'boolelemspat')
         boolelemlghtspat = getattr(gdat, strgmodl + 'boolelemlghtspat')
         if boolelemspecanyy:
@@ -7027,7 +7039,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     
     backtype = getattr(gdat, strgmodl + 'backtype')
     psfntype = getattr(gdat, strgmodl + 'psfntype')
-    convdiff = getattr(gdat, strgmodl + 'convdiff')
+    #convdiff = getattr(gdat, strgmodl + 'convdiff')
+    convdiffanyy = getattr(gdat, strgmodl + 'convdiffanyy')
     lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
     listnamediff = getattr(gdat, strgmodl + 'listnamediff')
     hostemistype = getattr(gdat, strgmodl + 'hostemistype')
@@ -7264,25 +7277,30 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             initchro(gdat, gdatmodi, strgstat, 'psfnconv')
             if strgstat == 'next' and not gdatmodi.proppsfnconv:
                 # retrieve state variable
+                if gdat.verbtype > 1:
+                    print 'Retrieving the PSF convolution kernel...'
+
                 psfnconv = getattr(gdatobjt, strgpfixthis + 'psfnconv')
             else:
-                psfnconv = [[[] for i in gdat.indxener] for m in gdat.indxevtt]
+                if gdat.verbtype > 1:
+                    print 'Constructing the PSF convolution kernel...'
+                psfnconv = [[[] for i in indxenereval] for m in indxevtteval]
                 if gdat.pixltype == 'cart':
                     if psfntype != 'singgaus':
                         psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
                         fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
-                    for m in gdat.indxevtt:
-                        for i in gdat.indxener:
+                    for mm, m in enumerate(indxevtteval):
+                        for ii, i in enumerate(indxenereval):
                             if psfntype == 'singgaus':
                                 sigm = psfp[i+m*gdat.numbener]
                             else:
                                 sigm = fwhm[i, m] / 2.355
-                            psfnconv[m][i] = AiryDisk2DKernel(sigm / gdat.sizepixl)
+                            psfnconv[mm][ii] = AiryDisk2DKernel(sigm / gdat.sizepixl)
                 setattr(gdatobjt, strgpfix + 'psfp', psfp)
                 setattr(gdatobjt, strgpfix + 'psfnconv', psfnconv)
             stopchro(gdat, gdatmodi, strgstat, 'psfnconv')
     
-        if numbtrap > 0 and boolelempsfn:
+        if numbtrap > 0 and boolelempsfnanyy:
             ## PSF off-axis factor
             if oaxitype:
                 onor = sampvarb[getattr(gdat, strgmodl + 'indxfixppsfponor')]
@@ -7333,6 +7351,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         		        psfnintp[iy, ix, :] = dot(linalg.inv(dot(kernmatrdesi.T, kernmatrdesi)), dot(kernmatrdesi.T, p))
     
         sbrt = dict()
+        for name in listnamediff:
+            sbrt[name] = [[] for d in indxregieval]
             
         # prepare the evaluation arrays
         if numbtrap > 0:
@@ -7429,12 +7449,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         indxpixleval[yy][dd] = gdat.indxpixl
                     indxcubeeval[yy][dd] = meshgrid(indxenereval, indxpixleval[yy][dd], indxevtteval, indexing='ij')
         
+        if gdat.strgcnfg != 'pcat_lens_mock_syst_nomi':
+            print 'indxpixleval'
+            for yy, y in enumerate(indxgrideval):
+                for dd, d in enumerate(indxregieval):
+                    print 'yy, y, dd, d'
+                    print yy, y, dd, d
+                    print 'len(indxpixleval[yy][dd])'
+                    print len(indxpixleval[yy][dd])
+                    print
+
         # load indxcubeeval to the global object for a possible state update
         if strgstat == 'next':
             gdatmodi.indxregieval = indxregieval
             gdatmodi.indxcubeeval = indxcubeeval
         
-        sbrtdiff = dict()
         if numbtrap > 0:
             if boolelemsbrtdfncanyy:
                 sbrtdfnc = [[] for d in enumerate(indxregieval)]
@@ -7448,20 +7477,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     if strgstat == 'next' and not gdatmodi.proppsfp:
                         sbrtdfnc[dd] = empty_like(gdat.expo[d])
                         if gdatmodi.propelemsbrtdfnc or gdatmodi.proppsfp:
-                            sbrtdfnc[d][indxcubeeval[0][dd]] = copy(getattr(gdatobjt, strgpfixthis + 'sbrtdfnc')[d][indxcubeeval[0][dd]])
+                            sbrtdfnc[dd][indxcubeeval[0][dd]] = copy(getattr(gdatobjt, strgpfixthis + 'sbrtdfnc')[d][indxcubeeval[0][dd]])
                         else:
-                            sbrtdfnc[d][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtdfnc')[d][indxcubeeval[0][dd]]
+                            sbrtdfnc[dd][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtdfnc')[d][indxcubeeval[0][dd]]
                     else:
-                        sbrtdfnc[d] = zeros_like(gdat.expo[d])
+                        sbrtdfnc[dd] = zeros_like(gdat.expo[d])
                 if boolelemsbrtextsbgrdanyy: 
                     if strgstat == 'next':
                         sbrtextsbgrd[dd] = empty_like(gdat.expo[d])
                         if gdatmodi.propelemsbrtextsbgrd:
-                            sbrtextsbgrd[d][indxcubeeval[0][dd]] = copy(getattr(gdatobjt, strgpfixthis + 'sbrtextsbgrd')[d][indxcubeeval[0][dd]])
+                            sbrtextsbgrd[dd][indxcubeeval[0][dd]] = copy(getattr(gdatobjt, strgpfixthis + 'sbrtextsbgrd')[d][indxcubeeval[0][dd]])
                         else:
-                            sbrtextsbgrd[d][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtextsbgrd')[d][indxcubeeval[0][dd]]
+                            sbrtextsbgrd[dd][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtextsbgrd')[d][indxcubeeval[0][dd]]
                     else:
-                        sbrtextsbgrd[d] = zeros_like(gdat.expo[d])
+                        sbrtextsbgrd[dd] = zeros_like(gdat.expo[d])
                 if boolelemdeflsubhanyy:
                     if strgstat == 'next':
                         if gdatmodi.propelemdefl:
@@ -7482,7 +7511,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 if strgstat == 'this' or gdatmodi.propelemsbrtdfnc:
                     for ll, l in enumerate(indxpopleval):
                         if elemtype[l] != 'lens':
-                            for dd, d in enumerate(indxregipopl[l]):
+                            for dd, d in enumerate(indxregieval):
+                                print 'numbelemeval'
+                                print numbelemeval
+                                print 'll, dd'
+                                print ll, dd
+                                print
                                 for k in range(numbelemeval[ll][dd]):
                                     if boolelemspec[l]:
                                         varbevalextd = dicteval[ll][dd]['spec'][:, k]
@@ -7493,14 +7527,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         print varbevalextd
                                         print
                                     if boolelempsfn[l]:
-                                        sbrtdfnc[d][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
+                                        sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
                                     if elemtype[l] == 'lghtline':
-                                        sbrtdfnc[d][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
+                                        sbrtdfnc[dd][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
                                         
                 sbrt['dfnc'] = [[] for d in indxregieval]
                 for dd, d in enumerate(indxregieval):
-                    sbrt['dfnc'][dd] = sbrtdfnc[d][indxcubeeval[0][dd]]
+                    sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                 
                 # when the only background template is the data-PS residual, correct the PS template for numerical noise
                 if backtype[0] == 'data':
@@ -7511,10 +7545,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 if gdat.diagmode:
                     cntppntschec = retr_cntp(gdat, sbrt['dfnc'], indxregieval, indxcubeeval)
                     for d in gdat.indxregi:
-                        if amin(cntppntschec[d]) < -0.1:
+                        if amin(cntppntschec[dd]) < -0.1:
                             print 'Diagnostic check failed.'
-                            print 'cntppntschec[d]'
-                            summgene(cntppntschec[d])
+                            print 'cntppntschec[dd]'
+                            summgene(cntppntschec[dd])
                             raise Exception('Point source spectral surface brightness is not positive-definite.')
                 
                 stopchro(gdat, gdatmodi, strgstat, 'elemsbrtdfnc')
@@ -7557,95 +7591,84 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         if elemtype[l] == 'lghtgausbgrd':
                             for dd, d in enumerate(indxregipopl[l]):
                                 for k in range(numbelemeval[ll][dd]):
-                                    sbrtextsbgrd[d][:, listindxpixleval[ll][dd][k], :] += dicteval[ll][dd]['spec'][:, k, None, None] / \
+                                    sbrtextsbgrd[dd][:, listindxpixleval[ll][dd][k], :] += dicteval[ll][dd]['spec'][:, k, None, None] / \
                                             sqrt(2. * pi) / dicteval[ll][dd]['gwdt'][k] * \
                                             exp(-0.5 * ((dicteval[ll][dd]['lgal'][k] - gdat.lgalgrid[None, listindxpixleval[ll][dd][k], None])**2 + \
                                                         (dicteval[ll][dd]['bgal'][k] - gdat.bgalgrid[None, listindxpixleval[ll][dd][k], None])**2) / dicteval[ll][dd]['gwdt'][k]**2)
                 sbrt['extsbgrd'] = [[] for d in indxregieval]
                 for dd, d in enumerate(indxregieval):
-                    sbrt['extsbgrd'][dd] = sbrtextsbgrd[d][indxcubeeval[0][dd]]
+                    print 'dd, d'
+                    print dd, d
+                    print 'sbrtextsbgrd'
+                    print len(sbrtextsbgrd)
+                    print 'indxcubeeval[2]'
+                    print len(indxcubeeval[0])
+                    print 'sbrt[extsbgrd]'
+                    print len(sbrt['extsbgrd'])
+                    print
+                    sbrt['extsbgrd'][dd] = sbrtextsbgrd[dd][indxcubeeval[0][dd]]
                 setattr(gdatobjt, strgpfix + 'sbrtextsbgrd', sbrt['extsbgrd'])
                 
                 if gdat.diagmode:
                     cntppntschec = retr_cntp(gdat, sbrt['extsbgrd'], indxregieval, indxcubeeval)
-                    for d in gdat.indxregi:
-                        if amin(cntppntschec[d]) < -0.1:
+                    for dd, d in enumerate(indxregieval):
+                        if amin(cntppntschec[dd]) < -0.1:
                             print 'Diagnostic check failed.'
-                            print 'cntppntschec[d]'
-                            summgene(cntppntschec[d])
+                            print 'cntppntschec[dd]'
+                            summgene(cntppntschec[dd])
                             raise Exception('Point source spectral surface brightness is not positive-definite.')
             
                 stopchro(gdat, gdatmodi, strgstat, 'elemsbrtextsbgrd')
+        
+        sbrtdiff = dict()
+        for name in listnamediff:
+            sbrtdiff[name] = [[] for d in indxregieval]
         
         if lensmodltype != 'none':
             
             # lensed surface brightness
             initchro(gdat, gdatmodi, strgstat, 'sbrtlens')
             
-            sbrtdiff['lens'] = [[] for d in indxregieval]
-            
             if strgstat == 'this' or gdatmodi.propsbrtlens:
                 sbrtbgrd = [[] for d in indxregieval]
                 sbrtgalxbgrd = [[] for d in indxregieval]
                 sbrtbgrdbgrd = [[] for d in indxregieval]
                 for dd, d in enumerate(indxregieval):
+                    sbrtdiff['lens'][dd] = empty_like(indxcubeeval[0][dd][0], dtype=float)
+                
                     if gdat.numbener > 1:
                         specsour = retr_spec(gdat, array([fluxsour[d]]), sind=array([sindsour[d]]))
                     else:
                         specsour = array([fluxsour[d]])
-                    sbrtgalxbgrd[dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], gdat.bgalgrid[indxpixleval[0][dd]], \
+                    
+                    if boolelemsbrtextsbgrdanyy:
+                        sbrtgalxbgrd[dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], gdat.bgalgrid[indxpixleval[0][dd]], \
                                                                                         lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
                     
-                    sbrtbgrd[dd] = sbrtgalxbgrd[dd]
-                    if numbtrap > 0:
-                        sbrtbgrd[dd] += sbrtextsbgrd[dd]
-                    sbrtdiff['lens'][dd] = empty_like(indxcubeeval[0][dd][0])
+                        sbrtbgrd[dd] = sbrtgalxbgrd[dd] + sbrtextsbgrd[dd]
+                    
                     for ii, i in enumerate(indxenereval):
                         for mm, m in enumerate(indxevtteval):
-                            
-                            #print 'sbrtbgrd[dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart))'
-                            #summgene(sbrtbgrd[dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)))
-                            #print 'gdat.binsbgalcart'
-                            #summgene(gdat.binsbgalcart)
-                            sbrtbgrdobjt = sp.interpolate.RectBivariateSpline(gdat.meanbgalcart, gdat.meanlgalcart, \
-                                                                    sbrtbgrd[dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)))
-                            #print 'gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1]'
-                            #summgene((gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1]) * gdat.anglfact)
-                            #print 'gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0]'
-                            #summgene((gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0]) * gdat.anglfact)
-                            #print 'gdat.meanbgalcart'
-                            #summgene(gdat.meanbgalcart * gdat.anglfact)
-                            #print 'gdat.meanlgalcart'
-                            #summgene(gdat.meanlgalcart * gdat.anglfact)
-                            
-                            bgalprim = gdat.bgalgrid[indxpixleval[0][dd]] - defl[dd][indxpixleval[0][dd], 1]
-                            lgalprim = gdat.lgalgrid[indxpixleval[0][dd]] - defl[dd][indxpixleval[0][dd], 0]
-                            
-                            bgalprim[:] = 0.
-                            lgalprim[:] = 0.
-                            bgalprim[:] = 0.
-                            lgalprim[:] = 0.
-                            
-                            #print 'bgalprim'
-                            #summgene(bgalprim)
-                            
-                            #bgalprim[where(bgalprim < amin(gdat.meanlgalcart))] = amin(gdat.meanlgalcart)
-                            #lgalprim[where(lgalprim < amin(gdat.meanlgalcart))] = amin(gdat.meanlgalcart)
-                            #bgalprim[where(bgalprim > amax(gdat.meanlgalcart))] = amax(gdat.meanlgalcart)
-                            #lgalprim[where(lgalprim > amax(gdat.meanlgalcart))] = amax(gdat.meanlgalcart)
-
-                            sbrtdiff['lens'][dd][ii, :, m] = sbrtbgrdobjt(bgalprim, lgalprim, grid=False).flatten()
-
-                    #sbrtdiff['lens'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0], \
-                    #                                           gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1], \
-                    #                                                                    lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
+                            if boolelemsbrtextsbgrdanyy:
+                                sbrtbgrdobjt = sp.interpolate.RectBivariateSpline(gdat.meanbgalcart, gdat.meanlgalcart, \
+                                                                        sbrtbgrd[dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)))
+                                bgalprim = gdat.bgalgrid[indxpixleval[0][dd]] - defl[dd][indxpixleval[0][dd], 1]
+                                lgalprim = gdat.lgalgrid[indxpixleval[0][dd]] - defl[dd][indxpixleval[0][dd], 0]
+                                sbrtdiff['lens'][dd][ii, :, m] = sbrtbgrdobjt(bgalprim, lgalprim, grid=False).flatten()
+                            else:
+                                sbrtdiff['lens'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0], \
+                                                                           gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1], \
+                                                                           lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
             
             else:
                 sbrtdiff['lens'][dd] = getattr(gdatobjt, strgpfixthis + 'sbrthost')[d][indxcubeeval[0][dd]]
 
             if gdat.diagmode:
-                if not isfinite(sbrtdiff['lens']).all():
-                    raise Exception('Lensed emission is not finite.')
+                for dd, d in enumerate(indxregi):
+                    if not isfinite(sbrtdiff['lens'][dd]).all():
+                        raise Exception('Lensed emission is not finite.')
+                    if (sbrtdiff['lens'][dd] == 0).all():
+                        raise Exception('Lensed emission is zero everywhere.')
 
             stopchro(gdat, gdatmodi, strgstat, 'sbrtlens')
             setattr(gdatobjt, strgpfix + 'defl', defl)
@@ -7668,7 +7691,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         # evaluate host galaxy surface brightness
         if hostemistype != 'none':
             initchro(gdat, gdatmodi, strgstat, 'sbrthost')
-            sbrtdiff['host'] = [[] for d in indxregieval]
             for dd, d in enumerate(indxregieval):
                 if strgstat == 'next' and not gdatmodi.prophost:
                     if gdat.verbtype > 1:
@@ -7676,7 +7698,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     sbrtdiff['host'][dd] = getattr(gdatobjt, strgpfixthis + 'sbrthost')[d][indxcubeeval[0][dd]]
                 else:
                     if gdat.verbtype > 1:
-                        print 'Host galaxy surface brightness evaluation...'
+                        print 'Evaluating the host galaxy surface brightness...'
                     for dd, d in enumerate(indxregieval):
                         if gdat.numbener > 1:
                             spechost = retr_spec(gdat, array([fluxhost[d]]), sind=array([sindhost[d]]))
@@ -7710,159 +7732,93 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         summgene(sbrtdiff['host'][dd])
             stopchro(gdat, gdatmodi, strgstat, 'sbrthost')
         
-        # construct the model diffuse surface brightness
-        # convolve the model surface brightness with the PSF
-        if gdat.verbtype > 1:
-            print 'PSF convolution of diffuse components...'
-
-        initchro(gdat, gdatmodi, strgstat, 'sbrtdiffconv')
-        sbrtdiffconv = dict()
-        for k, name in enumerate(listnamediff):
-            
-            if gdat.verbtype > 1:
-                print name
-           
-            booltemp = False
-            if strgstat == 'next':
-                if name.startswith('back'):
-                    if not gdatmodi.proppsfp or unifback[int(name[4:])]:
-                        booltemp = True
-                elif name == 'host':
-                    if not gdatmodi.prophost and not gdatmodi.proppsfp:
-                        booltemp = True
-            
-            if booltemp:
-                sbrtdiffconv[name] = [[] for d in indxregieval]
-                for dd, d in enumerate(indxregieval):
-                    sbrtdiffconv[name][dd] = copy(getattr(gdatobjt, strgpfixthis + 'sbrt' + name + 'conv')[d][indxcubeeval[0][dd]])
-                if gdat.verbtype > 1:
-                    print 'Retrieving the already-convolved diffuse component from the state vector...'
-            else:
-                
-                if name.startswith('back'):
-                    indxbacktemp = int(name[4:8])
-                    
-                    sbrtdiff[name] = [[] for d in indxregieval]
-                    for dd, d in enumerate(indxregieval):
-                        if gdat.pixltype == 'heal' and (psfnevaltype == 'full' or psfnevaltype == 'conv') and not unifback[indxbacktemp]:
-                            sbrtdiff[name][dd] = getattr(gdat, strgmodl + 'sbrtbackhealfull')[indxbacktemp][d][indxcubeeval[0][dd]]
-                        else:
-                            sbrtdiff[name][dd] = sbrtbacknorm[indxbacktemp][dd][indxcubeeval[0][dd]]
-                
-                if gdat.diagmode:
-                    if not isfinite(sbrtbacknorm).all():
-                        raise Exception('')
-                    if not isfinite(sbrtdiff[name]).all():
-                        print 'name'
-                        print name
-                        raise Exception('Diffuse emission is not finite.')
-                
-                if not (strgstat == 'next' and gdatmodi.propelem and indxgridpopl[gdatmodi.indxpoplmodi[0]] == 0 or not convdiff[k]):
-                    sbrtdiffconv[name] = [[] for d in indxregieval]
-                    for dd, d in enumerate(indxregieval):
-                        sbrtdiffconv[name][dd] = empty_like(indxcubeeval[0][dd][0])
-                   
-                    # temp -- change this to modified energy and event class bins
-                    if gdat.pixltype == 'heal':
-                        psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
-                        fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
-                    for dd, d in enumerate(indxregieval):
-                        for ii, i in enumerate(indxenereval):
-                            for mm, m in enumerate(indxevtteval):
-                                if gdat.pixltype == 'cart':
-                                    sbrtdiffconv[name][dd][ii, :, mm] = convolve_fft(sbrtdiff[name][dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)), \
-                                                                                                                                                    psfnconv[m][i]).flatten()
-                                    # temp -- potentially slow
-                                    indx = where(sbrtdiffconv[name][dd][ii, :, mm] < 1e-50)
-                                    sbrtdiffconv[name][dd][ii, indx, mm] = 1e-50
-                                if gdat.pixltype == 'heal':
-                                    sbrtdiffconv[name][dd][ii, :, mm] = hp.smoothing(sbrtdiff[name][dd][ii, :, mm], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
-                                    sbrtdiffconv[name][dd][ii, :, mm][where(sbrtdiffconv[name][dd][ii, :, mm] <= 1e-50)] = 1e-50
-                    if gdat.verbtype > 1:
-                        print 'Convolving...'
-                else:
-                    sbrtdiffconv[name] = sbrtdiff[name]
-                    if gdat.verbtype > 1:
-                        print 'Falling back on the unconvolved components...'
-                
-                setattr(gdatobjt, strgpfix + 'sbrt' + name + 'conv', sbrtdiffconv[name])
-                if gdat.verbtype > 1:
-                    for dd, d in enumerate(indxregieval):
-                        print 'dd'
-                        print dd
-                        print 'sbrtdiff[name][dd]'
-                        summgene(sbrtdiff[name][dd])
-                        print
-            if gdat.verbtype > 1:
-                for dd, d in enumerate(indxregieval):
-                    print 'dd'
-                    print dd
-                    print 'sbrtdiffconv[name][dd]'
-                    summgene(sbrtdiffconv[name][dd])
-                    print
-        
-        stopchro(gdat, gdatmodi, strgstat, 'sbrtdiffconv')
-       
         ## model emission
         initchro(gdat, gdatmodi, strgstat, 'sbrtmodl')
         if gdat.verbtype > 1:
             print 'Summing up the model emission...'
-        sbrt['modl'] = [[] for d in indxregieval]
+        
+        sbrt['modlraww'] = [[] for d in indxregieval]
         for dd, d in enumerate(indxregieval):
-            sbrt['modl'][dd] = zeros_like(indxcubeeval[0][dd][0], dtype=float)
-            
+            sbrt['modlraww'][dd] = zeros_like(indxcubeeval[0][dd][0], dtype=float)
         for name in listnamediff:
-            sbrt[name] = [[] for d in indxregieval]
             for dd, d in enumerate(indxregieval):
                 if name.startswith('back'):
                     indxbacktemp = int(name[4:8])
-                    if False:
-                        print
-                        print
-                        print 'indxbacpback'
-                        print indxbacpback
-                        print 'indxbacktemp'
-                        print indxbacktemp
-                        print 'indxbacpback[indxbacktemp]'
-                        summgene(indxbacpback[indxbacktemp])
-                        print 'sbrtdiffconv[name]'
-                        summgene(sbrtdiffconv[name])
-                        print 'specback[indxbacktemp]'
-                        print specback[indxbacktemp]
-                        print 'indxbacpback[indxbacktemp]'
-                        print indxbacpback[indxbacktemp]
-                        print 'indxbacpback[indxbacktemp][indxregieval]'
-                        print indxbacpback[indxbacktemp][indxregieval]
-                        print 'bacp[indxbacpback[indxbacktemp][indxregieval]]'
-                        print bacp[indxbacpback[indxbacktemp][indxregieval]]
-                    if specback[indxbacktemp]:
-                        sbrt[name][dd] = sbrtdiffconv[name][dd] * bacp[indxbacpback[indxbacktemp][d]]
+                    
+                    if gdat.pixltype == 'heal' and (psfnevaltype == 'full' or psfnevaltype == 'conv') and not unifback[indxbacktemp]:
+                        sbrttemp = getattr(gdat, strgmodl + 'sbrtbackhealfull')[indxbacktemp][d][indxcubeeval[0][dd]]
                     else:
-                        if gdat.verbtype > 1:
-                            print 'bacp'
-                            print bacp
-                        sbrt[name][dd] = sbrtdiffconv[name][dd] * bacp[indxbacpback[indxbacktemp]].flatten()[:, None, None]
+                        sbrttemp = sbrtbacknorm[indxbacktemp][dd][indxcubeeval[0][dd]]
+                   
+                    if specback[indxbacktemp]:
+                        sbrt[name][dd] = sbrttemp * bacp[indxbacpback[indxbacktemp][d]]
+                    else:
+                        sbrt[name][dd] = sbrttemp * bacp[indxbacpback[indxbacktemp][d, :]][:, None, None]
+                
                 else:
-                    sbrt[name] = sbrtdiffconv[name]
+                    sbrt[name][dd] = sbrtdiff[name][dd]
+                
+                sbrt['modlraww'][dd] += sbrt[name][dd]
+                if gdat.diagmode:
+                    if amax(sbrttemp) == 0.:
+                        print 'name'
+                        print name
+                        raise Exception('')
 
-                sbrt['modl'][dd] += sbrt[name][dd]
                 if gdat.verbtype > 1:
                     print name
-                    print 'sbrtdiffconv[name][dd]'
-                    summgene(sbrtdiffconv[name][dd])
-                    print 'sbrt[name][dd]'
-                    summgene(sbrt[name][dd])
+                    print 'sbrt[modlraww][dd]'
+                    summgene(sbrt['modlraww'][dd])
                     print
         
+        # convolve the model with the PSF
+        sbrt['modl'] = [[] for d in gdat.indxregi]
+        if convdiffanyy:
+            sbrt['modlconv'] = [[] for d in indxregieval]
+            if strgstat == 'this' or not gdatmodi.propelemsbrtdfnc:
+                # temp -- isotropic background proposals are unnecessarily entering this clause
+                if gdat.verbtype > 1:
+                    print 'Convolving the model image with the PSF...'
+                for dd, d in enumerate(indxregieval):
+                    sbrt['modlconv'][dd] = empty_like(indxcubeeval[0][dd][0], dtype=float)
+                if gdat.pixltype == 'heal':
+                    psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, gdat.binsoaxi, oaxitype)
+                    fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
+                for dd, d in enumerate(indxregieval):
+                    for ii, i in enumerate(indxenereval):
+                        for mm, m in enumerate(indxevtteval):
+                            if gdat.pixltype == 'cart':
+                                sbrt['modlconv'][d][ii, :, mm] = convolve_fft(sbrt['modlraww'][dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)), \
+                                                                                                                                                 psfnconv[mm][ii]).flatten()
+                                indx = where(sbrt['modlconv'][d][ii, :, mm] < 1e-50)
+                                sbrt['modlconv'][d][ii, indx, mm] = 1e-50
+                            if gdat.pixltype == 'heal':
+                                sbrt['modlconv'][d][ii, :, mm] = hp.smoothing(sbrt['modlraww'][dd][ii, :, mm], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
+                                sbrt['modlconv'][d][ii, :, mm][where(sbrt['modlraww'][dd][ii, :, mm] <= 1e-50)] = 1e-50
+                setattr(gdatobjt, strgpfix + 'sbrtmodlconv', sbrt['modlconv'])
+            else:
+                if gdat.verbtype > 1:
+                    print 'Retrieving the convolved model...'
+                for dd, d in enumerate(indxregieval):
+                    sbrt['modlconv'][dd] = getattr(gdatobjt, strgpfixthis + 'sbrtmodlconv')[d][indxcubeeval[0][dd]]
+            for dd, d in enumerate(indxregieval):
+                sbrt['modl'][dd] = sbrt['modlconv'][dd]
+        else:
+            if gdat.verbtype > 1:
+                print 'Skipping PSF convolution of the model...'
+            for dd, d in enumerate(indxregieval):
+                sbrt['modl'][dd] = sbrt['modlraww'][dd]
+            
         if gdat.verbtype > 1:
             for d in gdat.indxregi:
                 print 'sbrt[modl][d]'
                 summgene(sbrt['modl'][d])
                 print
 
-        ## add point source emission
-        if numbtrap > 0 and boolelemsbrtdfnc and backtype[0] != 'data':
+        ## add PSF-convolved delta functions to the model
+        if numbtrap > 0 and boolelemsbrtdfncanyy and backtype[0] != 'data':
             if gdat.verbtype > 1:
+                print 'Adding PSF-convolved delta functions into the model...'
                 for d in gdat.indxregi:
                     print 'sbrt[dfnc][d]'
                     summgene(sbrt['dfnc'][d])
@@ -7913,15 +7869,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if not gdat.killexpo and amax(cntstemp) == 0 and not raww:
                 print 'gdat.deltener'
                 summgene(gdat.deltener)
-                print 'gdat.expo'
-                summgene(gdat.expo)
-                print 'gdat.cntpdata'
-                summgene(gdat.cntpdata)
-                print 'cntp[modl]'
-                summgene(cntp['modl'])
                 print 'gdat.apix'
                 print gdat.apix
                 print gdat.apix * gdat.anglfact**2
+                for d in gdat.indxregi:
+                    print 'gdat.expo'
+                    summgene(gdat.expo[d])
+                    print 'gdat.cntpdata'
+                    summgene(gdat.cntpdata[d])
+                    print 'cntp[modl][d]'
+                    summgene(cntp['modl'][d])
                 raise Exception('Data is zero.')
             
             if raww:
@@ -8244,11 +8201,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         setattr(gdatobjt, strgpfix + 'cntpmodl', retr_arryfromlist(cntp['modl']))
         setattr(gdatobjt, strgpfix + 'cntpresi', retr_arryfromlist(cntp['resi']))
         
-        if strgmodl == 'fitt':
-            print 'gdatmodi.thiscntpmodl'
-            summgene(gdatmodi.thiscntpmodl)
-            print
-
         namefeatsort = getattr(gdat, strgmodl + 'namefeatsort')
         
         if lensmodltype != 'none':
@@ -8941,15 +8893,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         if strgmodl == 'true':
             for name, valu in deepcopy(gdat.__dict__).iteritems():
                 if name.startswith('true'):
-                        
                     indx = name.find('pop')
                     if indx != -1 and not name.endswith('pop') and name[indx+3].isdigit():
-                        if name.startswith('truehist'):
-                            print 'replacing'
                         namerefr = name.replace('pop%s' % name[indx+3], 'ref%s' % name[indx+3])
                     else:
                         namerefr = name
-                    
                     namerefr = namerefr.replace('true', 'refr')
                     setattr(gdat, namerefr, valu)
         

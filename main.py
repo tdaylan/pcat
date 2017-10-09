@@ -34,7 +34,8 @@ def init( \
          ## condensed catalog
          condcatl=False, \
         
-         truelegdpopl=None, \
+         refrlegd=None, \
+         refrlegdpopl=None, \
          fittlegdpopl=None, \
 
          randseedelem=False, \
@@ -2150,7 +2151,7 @@ def proc_post(gdat, prio=False):
         timeinit = gdat.functime()
     
     if gdat.fittnumbtrap > 0:
-        if boolelemspat.any():
+        if boolelemspatanyy:
             gdat.posthistlgalbgalelemstkd = [[[] for d in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl]
         
         for l in gdat.fittindxpopl:
@@ -3085,6 +3086,15 @@ def work(pathoutpthis, lock, indxprocwork):
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
                 
+                if gdat.strgcnfg != 'pcat_lens_mock_syst_nomi' and strgvarb == 'cntpmodl':
+                    print 'heeeeey'
+                    print 'valu'
+                    summgene(valu)
+                    print 'workdict[list + strgvarb]'
+                    summgene(workdict['list' + strgvarb])
+                    print
+                    print
+
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
             stopchro(gdat, gdatmodi, 'next', 'save')
