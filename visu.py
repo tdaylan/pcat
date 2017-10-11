@@ -28,6 +28,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             spectype = getattr(gdat, strgmodl + 'spectype')
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
             elemtype = getattr(gdat, strgmodl + 'elemtype')
+            boolelemsbrtextsbgrdanyy = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrdanyy')
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strgstat != 'post':
                 indxfixpnumbelem = getattr(gdat, strgmodl + 'indxfixpnumbelem')
@@ -102,12 +103,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                         factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
-                                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                                        print 'strgfeat'
-                                        print strgfeat
-                                        print 'l'
-                                        print l
-                                        print
+                                        limtxdat = [getattr(gdat, strgmodl + 'minm' + strgfeat) * factxdat, getattr(gdat, strgmodl + 'maxm' + strgfeat) * factxdat]
                                         plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, plottype='errr', \
                                                   scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
@@ -330,7 +326,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                         factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
-                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                        limtxdat = [getattr(gdat, strgmodl + 'minm' + strgfeat) * factxdat, getattr(gdat, strgmodl + 'maxm' + strgfeat) * factxdat]
                         
                         # for true model, also plot the significant elements only
                         # temp
@@ -507,6 +503,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
     
         if lensmodltype != 'none':
             for d in gdat.indxregi:
+                for i in gdat.indxener:
+                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrd', d, i, -1, strgcbar='cntpdata')
+                    if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdgalx', d, i, -1, strgcbar='cntpdata')
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdexts', d, i, -1, strgcbar='cntpdata')
+                
                 # gradient of the lens emission
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
@@ -623,7 +625,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     # plot autocorrelation
     if gdat.verbtype > 0:
         print 'Autocorrelation...'
-    tdpy.mcmc.plot_atcr(pathdiag, gdat.atcr, gdat.timeatcr)
+    for d in gdat.indxregi:
+        tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrcntp[d][0, 0, 0, 0, :], gdat.timeatcrcntp[d][0, 0, 0, 0], strgextn='cntp')
+    tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrpara[0, 0, :], gdat.timeatcrpara[0, 0], strgextn='para')
     
     # plot proposal efficiency
     if gdat.verbtype > 0:
@@ -1708,26 +1712,34 @@ def make_legd(axis, offs=None, loca=1, numbcols=1):
 def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot, indxenerplot=None):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl')
+    ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', indxlist=indxregiplot)
     if indxenerplot == None:
         xdat = gdat.cntpdata[indxregiplot][:, :, indxevttplot].flatten()
-        ydat = ydat[indxregiplot][:, :, indxevttplot].flatten()
+        ydat = ydat[:, :, indxevttplot].flatten()
         nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
         if strgstat == 'post':
             indxvarb = [slice(None), slice(None), indxevttplot]
     else:
         xdat = gdat.cntpdata[indxregiplot][indxenerplot, :, indxevttplot]
-        ydat = ydat[indxregiplot][indxenerplot, :, indxevttplot]
+        ydat = ydat[indxenerplot, :, indxevttplot]
         nameplot = 'scatcntpreg%dene%devt%d' % (indxregiplot, indxenerplot, indxevttplot)
         if strgstat == 'post':
             indxvarb = [indxenerplot, slice(None), indxevttplot]
     if strgstat == 'post':
         yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', mometype='errr', indxvarb=indxvarb, indxlist=indxregiplot)
+        print 'yerr'
+        summgene(yerr)
     if strgstat == 'post':
         colr = 'black'
     else:
         colr = 'b'
     #axis.scatter(xdat, ydat, yerr=yerr, alpha=gdat.alphmrkr, color=colr)
+    print 'xdat'
+    summgene(xdat)
+    print 'ydat'
+    summgene(ydat)
+    print
+
     if strgstat == 'post':
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='black', capsize=10)
     else:
@@ -2086,7 +2098,7 @@ def plot_mosa(gdat, indxregiplot):
                                 else:
                                     axis.set_yticklabels([])
                                 
-                                imag = retr_imag(gdat, axis, gdat.cntpdata, '', 'fitt', 'cntpdata', indxregiplot, i, m)
+                                imag = retr_imag(gdat, axis, gdat.cntpdata[indxregiplot], '', 'fitt', 'cntpdata', i, m)
                                 supr_fram(gdat, gdatmodi, 'this', 'fitt', axis, indxregiplot, l)
                         
                         if gdat.enerbins:
@@ -2492,7 +2504,7 @@ def plot_init(gdat):
                 # temp
                 if False and gdat.pixltype == 'cart' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
                     figr, axis, path = init_figr(gdat, None, 'cntpdatapeak', '', '', d, i, m, -1)
-                    imag = retr_imag(gdat, axis, gdat.cntpdata, '', 'cntpdata', d, i, m)
+                    imag = retr_imag(gdat, axis, gdat.cntpdata[d], '', 'cntpdata', i, m)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     axis.scatter(gdat.anglfact * gdat.meanlgalcart[gdat.indxxdatmaxm], gdat.anglfact * gdat.meanbgalcart[gdat.indxydatmaxm], alpha=0.6, s=20, edgecolor='none')
                     
@@ -2502,7 +2514,7 @@ def plot_init(gdat):
         
                 if gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
                     figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'this', 'true', d, i, m, -1)
-                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww, 'this', 'true', 'cntpdata', d, i, m, tdim=True)
+                    imag = retr_imag(gdat, axis, gdat.truecntpmodlraww[d], 'this', 'true', 'cntpdata', i, m, tdim=True)
                     make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     plt.tight_layout()
                     figr.savefig(path)
@@ -2544,7 +2556,7 @@ def plot_init(gdat):
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
                         figr, axis, path = init_figr(gdat, None, 'expo', '', '', d, i, m, -1)
-                        imag = retr_imag(gdat, axis, gdat.expo, '', '', 'expo', d, i, m)
+                        imag = retr_imag(gdat, axis, gdat.expo[d], '', '', 'expo', i, m)
                         make_cbar(gdat, axis, imag, i)
                         plt.tight_layout()
                         figr.savefig(path)
@@ -2603,13 +2615,13 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, in
         else:
             strgtemp = ''
         strgplot = strgtemp + strgvarb
-    if indxmaps != None:
-        strgplot += '%04d' % indxmaps
+    #if indxmaps != None:
+    #    strgplot += '%04d' % indxmaps
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=intreval)
    
-    maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype, indxlist=indxmaps)
-    imag = retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxregiplot, indxenerplot, indxevttplot, tdim=tdim)
+    maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype, indxlist=indxregiplot)
+    imag = retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot, indxevttplot, tdim=tdim)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
 
@@ -2640,8 +2652,8 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, in
                 gdatmodi.thissampvarb[k] = freq_slider[k].val / gdat.fittfactfixpplot[k]
             print
             proc_samp(gdat, gdatmodi, 'this')
-            maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype)
-            retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxregiplot, indxenerplot, indxevttplot, tdim=tdim, imag=imag)
+            maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype, indxlist=indxregiplot)
+            retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot, indxevttplot, tdim=tdim, imag=imag)
             for ptch in axis.get_children():
                 if isinstance(ptch, mpl.patches.Circle) or isinstance(ptch, mpl.collections.PathCollection):#isinstance(ptch, mpl.lines.Line2D):
                     ptch.remove()

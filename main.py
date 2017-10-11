@@ -225,7 +225,7 @@ def init( \
          proplenp=None, \
          propcomp=None, \
          probtran=None, \
-         probspmr=0., \
+         probspmr=0.3, \
          # when proposing from the covariance, fracproprand should be very small!
          fracproprand=0., \
             
@@ -714,13 +714,15 @@ def init( \
             gdat.strgenerunit = 'erg'
             gdat.nameenerunit = 'ergs'
 
-    elemspatevaltype = [[] for l in indxpopl]
-    for l in indxpopl:
-        if elemtype[l] == 'lens':
-            elemspatevaltype[l] = 'full'
-        else:
-            elemspatevaltype[l] = 'loclhash'
-    setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype)
+    for strgmodl in gdat.liststrgmodl:
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+        elemspatevaltype = [[] for l in indxpopl]
+        for l in indxpopl:
+            if elemtype[l] == 'lens':
+                elemspatevaltype[l] = 'full'
+            else:
+                elemspatevaltype[l] = 'loclhash'
+        setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype, strgmodl=strgmodl)
 
     gdat.commelemspatevaltype = []
     for strgmodl in gdat.liststrgmodl:
@@ -1104,7 +1106,7 @@ def init( \
                 setp_varbvalu(gdat, 'spatdistcons', 1e-3, popl=l)
                 setp_varbvalu(gdat, 'gangdistscal', 4. / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'bgaldistscal', 2. / gdat.anglfact, popl=l)
-            if gdat.trueelemtype[l] == 'lght':
+            if gdat.trueelemtype[l] == 'lghtpnts':
                 setp_varbvalu(gdat, 'fluxdistslop', 2.2, popl=l)
             if gdat.trueelemtype[l] == 'lghtline':
                 setp_varbvalu(gdat, 'fluxdistslop', 2., popl=l)
@@ -1119,7 +1121,7 @@ def init( \
                 setp_varbvalu(gdat, 'acutdistmean', 1. / gdat.anglfact, popl=l)
                 setp_varbvalu(gdat, 'acutdiststdv', 0.04 / gdat.anglfact, popl=l)
             
-            if gdat.trueelemtype[l] == 'lght':
+            if gdat.trueelemtype[l] == 'lghtgausbgrd':
                 setp_varbvalu(gdat, 'gwdtdistslop', 2., popl=l)
             
             if gdat.trueboolelemspec[l]:
@@ -1743,13 +1745,16 @@ def init( \
     proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
     gdat.liststrgvarbarrysamp = []
     gdat.liststrgvarblistsamp = []
+    gdat.liststrgvarblarrsamp = []
     for strg, valu in gdatmodifudi.__dict__.iteritems():
-
-        if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep and isinstance(valu, ndarray):
-            gdat.liststrgvarbarrysamp.append(strg[4:])
-        if strg.startswith('this') and isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
+        if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
+            if isinstance(valu, ndarray):
+                gdat.liststrgvarbarrysamp.append(strg[4:])
+            if isinstance(valu, list) and len(valu) > 0 and isinstance(valu[0], ndarray):
+                gdat.liststrgvarblarrsamp.append(strg[4:])
+            elif isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
                                                                                             strg != 'thistrueindxelemasscmiss' and strg != 'thistrueindxelemasschits':
-            gdat.liststrgvarblistsamp.append(strg[4:])
+                gdat.liststrgvarblistsamp.append(strg[4:])
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     
@@ -1973,9 +1978,9 @@ def proc_post(gdat, prio=False):
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
         timeinit = gdat.functime()
-    ## list of parameters to be gathered
+    # arrays 
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
+    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp + gdat.liststrgvarblarrsamp
     for strgvarb in gdat.liststrgvarbarry:
         for k in gdat.indxproc:
             if k == 0:
@@ -1987,6 +1992,30 @@ def proc_post(gdat, prio=False):
             else:
                 temp[:, k] = getattr(listgdatmodi[k], 'list' + strgvarb)
         setattr(gdat, 'list' + strgvarb, temp)
+    
+    # lists of lists collected at each sample
+    for strgvarb in gdat.liststrgvarblistsamp:
+        listtemp = [[[] for k in gdat.indxproc] for j in gdat.indxsamp]
+        for j in gdat.indxsamp:      
+            for k in gdat.indxproc:
+                listtemp[j][k].append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
+        setattr(gdat, 'list' + strgvarb, listtemp)
+
+    # lists of arrays collected at each sample
+    for strgvarb in gdat.liststrgvarblarrsamp:
+        for k in gdat.indxproc:
+            listtemp = getattr(listgdatmodi[k], 'list' + strgvarb)
+            if k == 0:
+                shap = listtemp[0].shape
+                shap = [shap[0], gdat.numbproc] + list(shap[1:])
+                temp = [zeros(shap) - 1 for r in range(len(listtemp))]
+            for r in range(len(listtemp)):
+                if len(shap) > 2:
+                    temp[r][:, k, :] = listtemp[r]
+                else:
+                    temp[r][:, k] = listtemp[r]
+        setattr(gdat, 'list' + strgvarb, temp)
+
     ## maximum likelihood sample 
     gdat.maxmllikproc = empty(gdat.numbproc)
     gdat.indxswepmaxmllikproc = empty(gdat.numbproc, dtype=int)
@@ -2023,29 +2052,34 @@ def proc_post(gdat, prio=False):
     if gdat.verbtype > 0:
         print 'Computing the autocorrelation of the chains...'
         timeinit = gdat.functime()
-    gdat.atcrcntpmodl = []
-    gdat.timeatcrcntpmodl = []
+    gdat.atcrcntp = [[] for d in gdat.indxregi]
+    gdat.timeatcrcntp = [[] for d in gdat.indxregi]
     for d in gdat.indxregi:
-        gdat.atcr[d], gdat.timeatcr[d] = tdpy.mcmc.retr_timeatcr(gdat.listcntpmodl[d])
-        if gdat.verbtype > 0:
-            if gdat.timeatcr[d] == 0.:
-                print 'Autocorrelation time estimation failed.'
+        gdat.atcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt, gdat.numbsamp / 2))
+        gdat.timeatcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+    gdat.atcrpara = empty((gdat.numbproc, gdat.fittnumbpara, gdat.numbsamp / 2))
+    gdat.timeatcrpara = empty((gdat.numbproc, gdat.fittnumbpara))
+    for k in gdat.indxproc:
+        gdat.atcrpara[k, :, :], gdat.timeatcrpara[k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(gdat.listsampvarb[:, k, :], verbtype=gdat.verbtype)
+        for d in gdat.indxregi:
+            cntpmodltemp = empty((gdat.numbsamp, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+            for j in gdat.indxsamp:
+                cntpmodltemp[j, :, :, :] = gdat.listcntpmodl[d][j][k]
+            gdat.atcrcntp[d][k, :], gdat.timeatcrcntp[d][k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(cntpmodltemp, verbtype=gdat.verbtype)
+    gdat.timeatcrmaxm = 0.
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-    # flatten the chain output
+    # flatten the chains from different walkers
     ## lists collected at each sample
     for strgvarb in gdat.liststrgvarblistsamp:
         listtemp = []
         for j in gdat.indxsamp:      
             for k in gdat.indxproc:
-                listtemp.append(getattr(listgdatmodi[k], 'list' + strgvarb)[j])
-        print 'strgvarb'
-        print strgvarb
-        print
+                listtemp.append(getattr(gdat, 'list' + strgvarb)[j][k])
         setattr(gdat, 'list' + strgvarb, listtemp)
-    
+
     ## list of other parameters to be flattened
     gdat.liststrgvarbarryflat = deepcopy(gdat.liststrgvarbarry)
     for strg in ['deltlliktotl', 'memoresi']:
@@ -2169,11 +2203,26 @@ def proc_post(gdat, prio=False):
         if gdat.fittboolelemspatanyy:
             gdat.posthistlgalbgalelemstkd = [[[] for d in gdat.fittindxregipopl[l]] for l in gdat.fittindxpopl]
         
+        print 'gdat.listlgal'
+        print gdat.listlgal
         for l in gdat.fittindxpopl:
             if gdat.fittelemtype[l] != 'lghtline':
                 numb = len(gdat.fittliststrgfeatsign[l])
                 for d in gdat.fittindxregipopl[l]:
                     gdat.posthistlgalbgalelemstkd[l][d] = zeros((gdat.numbbgalpntsprob, gdat.numblgalpntsprob, gdat.numbbinsplot, numb))
+                    
+                    print 'ld'
+                    print l, d
+                    print 'len(gdat.listlgal[0])'
+                    print len(gdat.listlgal[0])
+                    print 'len(gdat.listlgal[0][l])'
+                    print len(gdat.listlgal[0][l])
+                    print 'len(gdat.listlgal[0][l][d])'
+                    print len(gdat.listlgal[0][l][d])
+                    print 'gdat.listlgal[0][l][d]'
+                    print gdat.listlgal[0][l][d]
+                    print
+
                     temparry = concatenate([gdat.listlgal[n][l][d] for n in gdat.indxsamptotl])
                     temp = empty((len(temparry), 3))
                     temp[:, 0] = temparry
@@ -2239,6 +2288,17 @@ def proc_post(gdat, prio=False):
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
                 for n in gdat.indxsamptotl:
+                    print 'nk'
+                    print n, k
+                    print 'strgchan'
+                    print strgchan
+                    print 'temp'
+                    summgene(temp)
+                    print 'listtemp[n]'
+                    print listtemp[n]
+                    print 'listtemp[n][k]'
+                    print listtemp[n][k]
+                    print 
                     temp[n, ...] = listtemp[n][k]
                 posttempsing = tdpy.util.retr_postvarb(temp)
                 meditempsing = posttempsing[0, ...]
@@ -2346,8 +2406,11 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         print '%s went outside prior bounds when perturbing...' % gdat.fittnamepara[indxbadd]
         print 'gdatmodi.thissamp[indxparapert[k]]'
         print gdatmodi.thissamp[indxparapert[k]]
+        print 'gdatmodi.thissamp[indx]'
+        print gdatmodi.thissamp[indx]
         print 'stdvparapert[k]'
         print stdvparapert[k]
+        raise Exception('')
         print
         deltlpos = 0.
     
@@ -2361,7 +2424,7 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
                 gdatmodi.nextsampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
             # rescale element features
             for k in range(numbpert):
-                rscl_elem(gdat, gdatmodi, indxparapert[k])
+                rscl_elem(gdat, gdatmodi.thissampvarb, gdatmodi.thisindxsampcomp, gdatmodi.nextsampvarb, gdatmodi.nextsamp, indxparapert[k])
         
         gdatmodi.thissamp = copy(gdatmodi.nextsamp)
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
@@ -2435,8 +2498,9 @@ def optihess(gdat, gdatmodi):
 
     deltlpos[1, 1] = retr_deltlpos(gdat, gdatmodi, array([0]), array([0.]))
     
+    gdatmodi.thisindxsampcompconc = concatenate([concatenate(gdatmodi.thisindxsampcomp['comp'][l]) for l in gdat.fittindxpopl])
     if gdat.propcomp:
-        indxsamptranprop = concatenate(gdatmodi.thisindxsampcomp['comp'])
+        indxsamptranprop = gdatmodi.thisindxsampcompconc
     else:
         indxsamptranprop = []
     
@@ -2455,15 +2519,8 @@ def optihess(gdat, gdatmodi):
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
                         if gdat.fittnumbtrap > 0:
-                            if k in concatenate(gdatmodi.thisindxsampcomp['comp']):
-                                
+                            if k in gdatmodi.thisindxsampcompconc:
                                 indxtrapmoditemp = k - gdat.fittindxsampcompinit
-                                print 'gdat.fittnumbtrappoplcumr'
-                                print gdat.fittnumbtrappoplcumr
-                                print 'k'
-                                print k
-                                print
-                                
                                 indxpoplmoditemp = array([amin(where(indxtrapmoditemp // gdat.fittnumbtrappoplcumr == 0))])
                                 indxregimoditemp = array([amin(where(indxtrapmoditemp // gdat.fittnumbtrapregipoplcumr[indxpoplmoditemp[0]] == 0))])
                                 numbparapoplinittemp = indxtrapmoditemp - gdat.fittnumbtrapregipoplcuml[indxpoplmoditemp[0]][indxregimoditemp[0]]
@@ -2474,10 +2531,25 @@ def optihess(gdat, gdatmodi):
                                 amplfact = gdatmodi.thissampvarb[indxsampampltemp] / getattr(gdat, 'minm' + gdat.fittnamefeatampl[indxpoplmoditemp[0]])
                                 
                                 stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
+                                if not isfinite(stdv):
+                                    raise Exception('')
                                 if strgcomp == gdat.fittnamefeatampl[indxpoplmoditemp[0]]:
-                                    gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem])
+                                    
+                                    print 'indxstdpfrst'
+                                    print indxstdpfrst
+                                    print 'indxstdpseco'
+                                    print indxstdpseco
+                                    print 'sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]]])'
+                                    print sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]]])
+                                    print 'stdv'
+                                    summgene(stdv)
+                                    print
+
+                                    gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / \
+                                                                                sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]]])
                                 else:
-                                    gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem])
+                                    gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
+                                                                                sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]]])
                                 gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'][indxelemmoditemp] = stdv
                                 gdatmodi.dictmodi[l][d][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp] = gdatmodi.thissampvarb[indxsampampltemp]
         
@@ -2625,7 +2697,15 @@ def work(pathoutpthis, lock, indxprocwork):
     
     if gdat.fittnumbtrap > 0:
         for l in gdat.fittindxpopl:
-            for d in gdat.fittindxregipopl:
+            for d in gdat.fittindxregipopl[l]:
+                print 'gdat.fittminmnumbelem[l][d]'
+                print gdat.fittminmnumbelem[l][d]
+                print 'gdat.fittmaxmnumbelem[l][d]'
+                print gdat.fittmaxmnumbelem[l][d]
+                print 'gdat.fittindxfixpnumbelem[l][d]'
+                print gdat.fittindxfixpnumbelem[l][d]
+                print
+
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = random_integers(gdat.fittminmnumbelem[l][d], gdat.fittmaxmnumbelem[l][d])
     
     ## impose user-specified initial state
@@ -2807,6 +2887,9 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thislfctasym = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
     
+    # dummy definitions required for logs
+    gdatmodi.nextdeltlliktotl = 0.
+
     # log the initial state
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
@@ -2832,6 +2915,11 @@ def work(pathoutpthis, lock, indxprocwork):
         else:
             shap = [gdat.numbsamp] + list(valu.shape)
         workdict['list' + strgvarb] = zeros(shap)
+    
+    for strgvarb in gdat.liststrgvarblarrsamp:
+        valu = getattr(gdatmodi, 'this' + strgvarb)
+        shap = [gdat.numbsamp] + list(valu[0].shape)
+        workdict['list' + strgvarb] = [zeros(shap) for k in range(len(valu))]
     
     for strgvarb in gdat.liststrgvarblistsamp:
         workdict['list' + strgvarb] = []
@@ -2968,8 +3056,10 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.fittnumbtrap > 0:
                 if gdat.fittboolelemsbrtdfncanyy:
                     frac = amin(gdatmodi.thissbrtdfnc) / mean(gdatmodi.thissbrtdfnc)
-                    if frac < -1e-3:
-                        raise Exception('thissbrtdfnc went negative by %.3g percent.' % (100. * frac))
+                    cntppntschec = retr_cntp(gdat, gdatmodi.thissbrtdfnc, gdat.indxregi, gdat.indxcubeeval)
+                    for d in gdat.indxregi:
+                        if amin(cntppntschec[d]) < -0.1 and frac < -1e-3:
+                            raise Exception('thissbrtdfnc went negative by %.3g percent.' % (100. * frac))
                     
             # check the population index
             try:
@@ -3087,15 +3177,12 @@ def work(pathoutpthis, lock, indxprocwork):
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
+            for strgvarb in gdat.liststrgvarblarrsamp:
+                valu = getattr(gdatmodi, 'this' + strgvarb)
+                for k in range(len(valu)):
+                    workdict['list' + strgvarb][k][indxsampsave, ...] = valu[k]
             for strgvarb in gdat.liststrgvarblistsamp:
-                print 'strgvarb'
-                print strgvarb
-                print
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
-            print 'gdat.liststrgvarblistsamp'
-            print gdat.liststrgvarblistsamp
-            print 'workdict[listcntpmodl]'
-            print workdict['listcntpmodl']
             stopchro(gdat, gdatmodi, 'next', 'save')
 
         # plot the current sample
@@ -3405,16 +3492,9 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.optitypetemp != 'auto':
             gdatmodi.cntrswep += 1
     
-    for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblistsamp:
+    for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblarrsamp + gdat.liststrgvarblistsamp:
         valu = workdict['list' + strgvarb]
-        if strgvarb.startswith('cntp'):
-            print 'strgvarb'
-            print strgvarb
-            print
         setattr(gdatmodi, 'list' + strgvarb, valu)
-    print 'gdatmodi.listcntpmodl'
-    print gdatmodi.listcntpmodl
-    print
 
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
