@@ -11,8 +11,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             for d in gdat.indxregi:
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdata', d, i, m)
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpresi', d, i, m)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdatareg%d' % d, i, m)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpresireg%d' % d, i, m)
     else:    
         
         strgpfix = retr_strgpfix(strgstat, strgmodl)
@@ -22,6 +22,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
+        lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
         numbdeflsingplot = getattr(gdat, strgmodl + 'numbdeflsingplot')
         if numbtrap > 0:
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
@@ -35,8 +36,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 numbelem = [[] for l in indxpopl]
                 for l in indxpopl:
                     numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
-                if 'lens' in elemtype  and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
-                    numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
+        if strgstat != 'post' and lensmodltype != 'none' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
+            numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         indxpoplassc = getattr(gdat, strgmodl + 'indxpoplassc')
         numbback = getattr(gdat, strgmodl + 'numbback')
         backtype = getattr(gdat, strgmodl + 'backtype')
@@ -50,9 +51,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         lablelemextn = getattr(gdat, strgmodl + 'lablelemextn')
         namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
         
-        #cntpback = getattr(gdatobjt, strgpfix + 'cntpback')
-        #cntpbacktotl = getattr(gdatobjt, strgpfix + 'cntpbacktotl')
-            
         if gdatmodi != None:
             strgswep = '_%09d' % gdatmodi.cntrswep
         else:
@@ -402,10 +400,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             for d in gdat.indxregi:
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdata', d, i, m)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdatareg%d' % d, i, m)
                         if numbpopl > 1:
-                            for l in indxpopl:
-                                plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdata', d, i, m, indxpoplplot=l)
+                            if numbtrap > 0:
+                                for l in indxpopl:
+                                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdatareg%d' % d, i, m, indxpoplplot=l)
         
         ## spatial priors
         # temp
@@ -430,49 +429,49 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             if isinstance(backtype[c], str) and backtype[c].startswith('bfun'):
                                 continue
                             if not unifback[c]:
-                                plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpback%04d' % c, d, i, m, strgcbar='cntpdata')
+                                plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpback%04dreg%d' % (c, d), i, m, strgcbar='cntpdata')
             
             ## count error
             if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and gdat.calcerrr and numbtrap > 0:
                 if strgmodl != 'true':
                     for d in gdat.indxregi:
                         for i in gdat.indxener:
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntperrr', d, i, -1, strgcbar='cntpresi')
+                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntperrrreg%d' % d, i, -1, strgcbar='cntpresi')
             
             ## diffuse components 
             for d in gdat.indxregi:
                 for i in gdat.indxener:
                     for k, name in enumerate(listnamediff):
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntp' + name, d, i, strgcbar='cntpdata')
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntp%sreg%d' % (name, d), i, strgcbar='cntpdata')
        
             ## model and residual
             for d in gdat.indxregi:
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', d, i, m, strgcbar='cntpdata')
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpresi', d, i, m)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodlreg%d' % d, i, m, strgcbar='cntpdata')
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpresireg%d' % d, i, m)
        
             # likelihood
             if strgmodl != 'true':
                 for d in gdat.indxregi:
                     for i in gdat.indxener:
                         for m in gdat.indxevtt:
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'llik', d, i, m, strgcbar='llikmaps')
+                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'llikreg%d' % d, i, m, strgcbar='llikmaps')
             
             if lensmodltype != 'none':
                 ## lensing signal to noise
                 if strgmodl == 'true':
                     for d in gdat.indxregi:
                         for i in gdat.indxener:
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 's2nr', d, i, -1)
+                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 's2nrreg%d' % d, i, -1)
                 for d in gdat.indxregi:
-                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magn', d, tdim=True)
-                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'conv', d, tdim=True)
+                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magnreg%d' % d, tdim=True)
+                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convreg%d' % d, tdim=True)
                     if numbtrap > 0:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelem', d, tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemreg%d' % d, tdim=True)
                     for i in gdat.indxener:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntplens', d, i, strgcbar='cntpdata', tdim=True)
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntplensgradmgtd', d, i, strgcbar='cntpdata', tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntplensreg%d' % d, i, strgcbar='cntpdata', tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntplensgradmgtdreg%d' % d, i, strgcbar='cntpdata', tdim=True)
         
         if gdat.penalpridiff:
             for d in gdat.indxregi:
@@ -504,10 +503,10 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         if lensmodltype != 'none':
             for d in gdat.indxregi:
                 for i in gdat.indxener:
-                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrd', d, i, -1, strgcbar='cntpdata')
+                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdreg%d' % d, i, -1, strgcbar='cntpdata')
                     if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdgalx', d, i, -1, strgcbar='cntpdata')
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdexts', d, i, -1, strgcbar='cntpdata')
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdgalxreg%d' % d, i, -1, strgcbar='cntpdata')
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpbgrdextsreg%d' % d, i, -1, strgcbar='cntpdata')
                 
                 # gradient of the lens emission
                 for i in gdat.indxener:
@@ -525,21 +524,23 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                         multfact = 1.
                     elif k >= 2:
                         multfact = 10.
-                    plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, indxdefl=k, multfact=multfact)
+                    if d == 0:
+                        plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, indxdefl=k, multfact=multfact)
                 
                 # residual deflection field
-                if strgmodl != 'true' and gdat.datatype == 'mock':
+                if strgmodl == 'fitt' and gdat.datatype == 'mock':
                     plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', multfact=100.)
                     if strgstat != 'post':
                         for k in range(numbsingcomm):
-                            plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', indxdefl=k, multfact=100.)
+                            if d == 0:
+                                plot_defl(gdat, gdatmodi, strgstat, strgmodl, d, strgcomp='resi', indxdefl=k, multfact=100.)
                     
                     if gdat.numbpixl > 1:
                         if numbtrap > 0:
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemresi', d, tdim=True)
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemresiperc', d, tdim=True)
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magnresi', d, tdim=True)
-                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magnresiperc', d, tdim=True)
+                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemresireg%d' % d, tdim=True)
+                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemresipercreg%d' % d, tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magnresireg%d' % d, tdim=True)
+                        plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'magnresipercreg%d' % d, tdim=True)
     
 
 def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
@@ -1078,48 +1079,40 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 listyerr = zeros((2, numbelemtotl + 100, gdat.numbener))
                 
             cntr = 0
-            indxvarb = [b, indxregiplot, slice(None)]
-
             cntrdata = cntr
 
             ## data
-            listydat[cntr, :] = gdat.sbrtdatamean[b, indxregiplot, :]
+            listydat[cntr, :] = gdat.sbrtdatamean[b][indxregiplot]
             cntr += 1
             
-            print 'listydat'
-            summgene(listydat)
-            print 'cntr'
-            print cntr
             for c in indxback:
-                print 'c'
-                print c
-                print 
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmean' % c, indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmea%dreg%d' % (c, b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmean' % c, indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmea%dreg%d' % (c, b, indxregiplot), \
+                                                                                                                                        indxvarb=indxvarb, mometype='errr')
                 cntr += 1
             
             if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntsmean', indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntreg%dmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntsmean', indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntsmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
             
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntssubtmean', indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntssubtmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntssubtmean', indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntssubtmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
             
             if hostemistype != 'none':
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrthostmean', indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrthostmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrthostmean', indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrthostmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
             
             if lensmodltype != 'none':
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmean', indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
             
             if gdat.numbpixl == 1 and strgstat != 'post':
@@ -1140,9 +1133,9 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 
             ## total model
             if numblablsbrt > 1:
-                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmean', indxvarb=indxvarb)
+                listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
-                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmean', indxvarb=indxvarb, mometype='errr')
+                    listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
 
             # plot energy spectra of the data, background model components and total background
@@ -1712,7 +1705,7 @@ def make_legd(axis, offs=None, loca=1, numbcols=1):
 def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot, indxenerplot=None):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', indxlist=indxregiplot)
+    ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodlreg%d' % indxregiplot)
     if indxenerplot == None:
         xdat = gdat.cntpdata[indxregiplot][:, :, indxevttplot].flatten()
         ydat = ydat[:, :, indxevttplot].flatten()
@@ -1726,19 +1719,12 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot
         if strgstat == 'post':
             indxvarb = [indxenerplot, slice(None), indxevttplot]
     if strgstat == 'post':
-        yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodl', mometype='errr', indxvarb=indxvarb, indxlist=indxregiplot)
-        print 'yerr'
-        summgene(yerr)
+        yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodlreg%d' % indxregiplot, mometype='errr', indxvarb=indxvarb)
     if strgstat == 'post':
         colr = 'black'
     else:
         colr = 'b'
     #axis.scatter(xdat, ydat, yerr=yerr, alpha=gdat.alphmrkr, color=colr)
-    print 'xdat'
-    summgene(xdat)
-    print 'ydat'
-    summgene(ydat)
-    print
 
     if strgstat == 'post':
         axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color='black', capsize=10)
@@ -2066,7 +2052,7 @@ def plot_mosa(gdat, indxregiplot):
     # empty global object
     gdatmodi = tdpy.util.gdatstrt()
     gdatmodi.thischro = zeros(gdat.numbchro)
-
+    
     numbrows = 3
     numbcols = 2
     numbsampmosa = numbrows * numbcols
@@ -2567,16 +2553,14 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgvarb='defl',
 
     if indxdefl != None:
         strgvarb += 'sing'
-    strgvarb = strgvarb + strgcomp
+    strgvarb = strgvarb + strgcomp + 'reg%d' % indxregiplot
     
     defl = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb)
     
     defl *= multfact
    
     if indxenerplot != None:
-        defl = defl[indxregiplot, indxenerplot, :, indxevttplot, ...]
-    else:
-        defl = defl[indxregiplot, ...]
+        defl = defl[indxenerplot, :, indxevttplot, ...]
 
     if indxdefl != None:
         defl = defl[..., indxdefl]
@@ -2600,11 +2584,11 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgvarb='defl',
     plt.close(figr)
     
 
-def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, indxenerplot=None, indxevttplot=-1, strgcbar=None, \
+def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxenerplot=None, indxevttplot=-1, strgcbar=None, \
                                                                 tdim=False, indxpoplplot=-1, mometype='medi', intreval=False, indxmaps=None):
     
     if strgcbar == None:
-        strgcbar = strgvarb
+        strgcbar = strgvarb[:-4]
   
     # construct the string for the map
     if strgvarb == 'cntpdata':
@@ -2617,10 +2601,17 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxregiplot, in
         strgplot = strgtemp + strgvarb
     #if indxmaps != None:
     #    strgplot += '%04d' % indxmaps
+    
+    if gdat.diagmode:
+        if strgvarb[-4:-1] != 'reg':
+            print 'strgvarb'
+            print strgvarb
+            raise Exception('')
 
+    indxregiplot = int(strgvarb[-1])
     figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=intreval)
    
-    maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype, indxlist=indxregiplot)
+    maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype=mometype)
     imag = retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot, indxevttplot, tdim=tdim)
     tick = getattr(gdat, 'tick' + strgcbar) 
     labl = getattr(gdat, 'labl' + strgcbar) 
