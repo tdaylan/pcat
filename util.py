@@ -1187,36 +1187,6 @@ def retr_refrfermfinl(gdat):
         setattr(gdat, 'refr' + name, refrtile)
 
 
-### find the list of pairs for splits and merges
-def retr_listpair(gdat, lgal, bgal):
-    
-    if gdat.verbtype > 1:
-        print 'Finding element pairs inside the linking length...'
-    
-    listpair = []
-    for k in range(lgal.size):
-        # temp -- linking uses the Cartesian approximation, which is accurate enough for splits and merges inside a small circle
-        #indxelem = k + 1 + where(sqrt((bgal[k+1:] - bgal[k])**2 + (lgal[k+1:] - lgal[k])**2) < gdat.radispmr)[0]
-        indxelem = k + 1 + where((fabs(bgal[k+1:] - bgal[k]) < gdat.radispmr) & (fabs(lgal[k+1:] - lgal[k]) < gdat.radispmr))[0]
-        for n in range(indxelem.size):
-            listpair.append([k, indxelem[n]])
-    
-    if gdat.verbtype > 1:
-        numbpair = len(listpair)
-        print '%d pairs found.' % numbpair
-
-    if gdat.diagmode:
-        boolgood = True
-        for n in range(len(listpair)):
-            dist = sqrt((lgal[listpair[n][0]] - lgal[listpair[n][1]])**2 + (bgal[listpair[n][0]] - bgal[listpair[n][1]])**2)
-            if dist >= gdat.radispmr:
-                boolgood = False
-        if not boolgood:
-            Exception('Inappropriate list of pairs')
-
-    return listpair
-
-
 def retr_singgaus(scaldevi, sigc):
     
     psfn = 1. / 2. / pi / sigc**2 * exp(-0.5 * scaldevi**2 / sigc**2)
@@ -1543,6 +1513,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             gdatmodi.indxevttmodi = gdat.indxevtt
             
         elif gdatmodi.indxsampmodi in indxfixplenp:
+            gdatmodi.proplenp = True
             gdatmodi.indxregimodi = array([int(gdat.fittnamepara[gdatmodi.indxsampmodi][-1])])
             gdatmodi.indxenermodi = gdat.indxener
             gdatmodi.indxevttmodi = gdat.indxevtt
@@ -2865,7 +2836,8 @@ def setpprem(gdat):
     gdat.factcurvplot = 1.
     gdat.factexpcplot = 1.
     
-    gdat.refrlistelemmrkrhits = ['x', '+', '|']
+    gdat.fittlistelemmrkr = ['+', '_', '3']
+    gdat.refrlistelemmrkrhits = ['x', '|', '4']
     gdat.refrlistelemmrkrmiss = ['s', 'o', 'p']
     
     if gdat.exprtype == 'hubb':
@@ -6594,7 +6566,7 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
                 labl = 'Sample Model %s' % gdat.fittlistlegdelem[l]
             if not gdat.fittmaxmnumbelempopl[l] == 0:
                 axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                                                                label=labl, marker='+', lw=gdat.mrkrlinewdth, color=colr)
+                                                                                                label=labl, marker=gdat.fittlistelemmrkr[l], lw=gdat.mrkrlinewdth, color=colr)
     
     if gdat.allwrefr:
         for q in gdat.indxrefr:
@@ -6706,7 +6678,8 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.fittnamefeatampl[l]][l][indxregiplot]], gdat.fittnamefeatampl[l])
                 lgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['lgal'][l][indxregiplot]]
                 bgal = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp['bgal'][l][indxregiplot]]
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker='+', lw=gdat.mrkrlinewdth, color='b')
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker=gdat.fittlistelemmrkr[l], \
+                                                                                                                                    lw=gdat.mrkrlinewdth, color='b')
 
             ## source
             if lensmodltype != 'none':
@@ -6742,12 +6715,12 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                 ampl[cntr] = gdat.dictglob['poststkscond'][r][gdat.fittnamefeatampl[l]][0]
                 cntr += 1
         mrkrsize = retr_mrkrsize(gdat, ampl, gdat.fittnamefeatampl[l])
-        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker='+', color='black', lw=gdat.mrkrlinewdth)
+        axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, label='Condensed', marker=gdat.fittlistelemmrkr[l], color='black', lw=gdat.mrkrlinewdth)
         if False:
             for r in gdat.indxstkscond:
                 lgal = array([gdat.dictglob['liststkscond'][r]['lgal']])
                 bgal = array([gdat.dictglob['liststkscond'][r]['bgal']])
-                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker='+', color='black', alpha=0.1, lw=gdat.mrkrlinewdth)
+                axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, marker=gdat.fittlistelemmrkr[l], color='black', alpha=0.1, lw=gdat.mrkrlinewdth)
 
 
 def retr_levi(listllik):
@@ -7693,19 +7666,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     sbrt['bgrdgalx'] = [[] for d in indxregieval]
                 
                 for dd, d in enumerate(indxregieval):
-                    sbrt['lens'][dd] = empty_like(indxcubeeval[0][dd][0], dtype=float)
-                
+                    
+                    if gdat.verbtype > 1:
+                        print 'Evaluating lensed emission of region %d....' % d
+                    
                     if gdat.numbener > 1:
                         specsour = retr_spec(gdat, array([fluxsour[d]]), sind=array([sindsour[d]]))
                     else:
                         specsour = array([fluxsour[d]])
                     
                     if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
+                
                         sbrt['bgrdgalx'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], gdat.bgalgrid[indxpixleval[0][dd]], \
                                                                                         lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
                     
                         sbrt['bgrd'][dd] = sbrt['bgrdgalx'][dd] + sbrtextsbgrd[dd]
                     
+                        sbrt['lens'][dd] = empty_like(indxcubeeval[0][dd][0], dtype=float)
                         for ii, i in enumerate(indxenereval):
                             for mm, m in enumerate(indxevtteval):
                                 sbrtbgrdobjt = sp.interpolate.RectBivariateSpline(gdat.meanbgalcart, gdat.meanlgalcart, \
@@ -7726,6 +7703,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         
             else:
                 for dd, d in enumerate(indxregieval):
+                    if gdat.verbtype > 1:
+                        print 'Retrieving lensed emission of region %d....' % d
                     sbrt['lens'][dd] = getattr(gdatobjt, strgpfixthis + 'sbrthost')[d][indxcubeeval[0][dd]]
 
             if gdat.diagmode:
@@ -7792,15 +7771,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if not (strgstat == 'next' and not gdatmodi.prophost):
                 setattr(gdatobjt, strgpfix + 'sbrthost', sbrt['host'])
             if gdat.verbtype > 1:
-                print 'sbrt[host]'
-                print sbrt['host']
                 print 'indxregieval'
                 print indxregieval
                 for dd, d in enumerate(indxregieval):
+                    print 'dd, d'
+                    print dd, d
                     print 'sbrt[host][dd]'
-                    print sbrt['host'][dd]
-                    print sbrt['host'][dd].shape
                     summgene(sbrt['host'][dd])
+                    print
             stopchro(gdat, gdatmodi, strgstat, 'sbrthost')
         
         ## model emission
@@ -7835,15 +7813,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
 
                 if gdat.verbtype > 1:
                     print name
-                    print 'sbrt[modlraww][dd]'
-                    summgene(sbrt['modlraww'][dd])
-                    print
+                    print 'dd, d'
+                    print dd, d
+                    print 'sbrt[name][dd]'
+                    summgene(sbrt[name][dd])
+        if gdat.verbtype > 1:
+            for dd, d in enumerate(indxregieval):
+                print 'dd, d'
+                print dd, d
+                print 'sbrt[modlraww][dd]'
+                summgene(sbrt['modlraww'][dd])
+                print
         
         # convolve the model with the PSF
         sbrt['modl'] = [[] for d in gdat.indxregi]
         if convdiffanyy:
             sbrt['modlconv'] = [[] for d in indxregieval]
-            if strgstat == 'this' or numbtrap > 0 and not gdatmodi.propelemsbrtdfnc:
+            if strgstat == 'this' or not (numbtrap > 0 and gdatmodi.propelemsbrtdfnc):
                 # temp -- isotropic background proposals are unnecessarily entering this clause
                 if gdat.verbtype > 1:
                     print 'Convolving the model image with the PSF...'
@@ -7879,6 +7865,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             
         if gdat.verbtype > 1:
             for dd, d in enumerate(indxregieval):
+                print 'dd, d'
+                print dd, d
                 print 'sbrt[modl][dd]'
                 summgene(sbrt['modl'][dd])
                 print
@@ -7888,8 +7876,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if gdat.verbtype > 1:
                 print 'Adding PSF-convolved delta functions into the model...'
                 for dd, d in enumerate(indxregieval):
+                    print 'dd, d'
+                    print dd, d
                     print 'sbrt[dfnc][dd]'
                     summgene(sbrt['dfnc'][dd])
+                    print
             for dd, d in enumerate(indxregieval):
                 sbrt['modl'][dd] += sbrt['dfnc'][dd]
         stopchro(gdat, gdatmodi, strgstat, 'sbrtmodl')
@@ -7897,9 +7888,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         if gdat.verbtype > 1:
             print 'After adding light emitting elements (pnts and line)...'
             for dd, d in enumerate(indxregieval):
+                print 'dd, d'
+                print dd, d
                 print 'sbrt[modl][dd]'
                 summgene(sbrt['modl'][dd])
-            print
+                print
 
         # temp
         if isinstance(backtype[0], str) and backtype[0].startswith('bfun'):
@@ -7910,14 +7903,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         initchro(gdat, gdatmodi, strgstat, 'expo')
         cntp = dict()
         cntp['modl'] = retr_cntp(gdat, sbrt['modl'], indxregieval, indxcubeeval)
-        # temp -- I think this is not needed
-        #setattr(gdatobjt, strgpfix + 'cntpmodl', cntp['modl'])
+        if gdat.diagmode:
+            setattr(gdatobjt, strgpfix + 'cntpmodl', cntp['modl'])
         stopchro(gdat, gdatmodi, strgstat, 'expo')
-
-        if gdat.verbtype > 1:
-            for dd, d in enumerate(indxregieval):
-                print 'sbrt[modl][dd]'
-                summgene(sbrt['modl'][dd])
 
         # mock data specific
         if strgmodl == 'true' and strgstat == 'this':
@@ -8279,7 +8267,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             setattr(gdatobjt, strgpfix + 'cntpmodlreg%d' % d, cntp['modl'][d])
             setattr(gdatobjt, strgpfix + 'cntpresireg%d' % d, cntp['resi'][d])
             setattr(gdatobjt, strgpfix + 'llikreg%d' % d, llik[d])
-            setattr(gdatobjt, strgpfix + 'deflhostreg%d' % d, deflhost[d])
+            if lensmodltype != 'none':
+                setattr(gdatobjt, strgpfix + 'deflhostreg%d' % d, deflhost[d])
         
         namefeatsort = getattr(gdat, strgmodl + 'namefeatsort')
         

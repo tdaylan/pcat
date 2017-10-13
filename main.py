@@ -1731,7 +1731,7 @@ def init( \
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
     if gdat.probspmr > 0.:
-        gdat.liststrgvarbarryswep += ['auxipara', 'numbpair', 'ljcbfact', 'lcomfact']
+        gdat.liststrgvarbarryswep += ['auxipara', 'ljcbfact', 'lcomfact']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
@@ -2272,30 +2272,7 @@ def proc_post(gdat, prio=False):
                     continue
                 shap = [gdat.numbsamptotl] + list(listtemp[0][k].shape)
                 temp = zeros(shap)
-                print 'gdat.numbswep'
-                print gdat.numbswep
-                print 'gdat.numbburn'
-                print gdat.numbburn
-                print 'gdat.factthin'
-                print gdat.factthin
-                print 'gdat.numbproc'
-                print gdat.numbproc
-                print 'gdat.numbsamp'
-                print gdat.numbsamp
                 for n in gdat.indxsamptotl:
-                    print 'n, k'
-                    print n, k
-                    print 'strgchan'
-                    print strgchan
-                    print 'temp'
-                    summgene(temp)
-                    print 'len(listtemp)'
-                    print len(listtemp)
-                    print 'len(listtemp[n])'
-                    print len(listtemp[n])
-                    print 'len(listtemp[n][k])'
-                    print len(listtemp[n][k])
-                    print 
                     temp[n, ...] = listtemp[n][k]
                 posttempsing = tdpy.util.retr_postvarb(temp)
                 meditempsing = posttempsing[0, ...]
@@ -2675,6 +2652,8 @@ def work(pathoutpthis, lock, indxprocwork):
     # construct the initial state
     if gdat.verbtype > 0:
         print 'Initializing the sampler state...'
+        print 'inittype'
+        print gdat.inittype
   
     gdatmodi.thisamplpert = zeros(1)
     
@@ -2782,8 +2761,23 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
+                
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+                
+                if namefixp in gdat.fittnamefixp[gdat.fittindxfixppsfp]:
+                    print 'namefixp'
+                    print namefixp
+                    print 'gdat.truesampvarb[indxfixptrue]'
+                    print gdat.truesampvarb[indxfixptrue]
+                    print 'gdatmodi.thissamp[k]'
+                    print gdatmodi.thissamp[k]
+                    print 'gdatmodi.thissampvarb[k]'
+                    print gdatmodi.thissampvarb[k]
+                    print 'gdat.truesampvarb[indxfixptrue]'
+                    print gdat.truesampvarb[indxfixptrue]
+                    print 
+
 
         retr_elemlist(gdat, gdatmodi)
         if gdat.fittnumbtrap > 0:
@@ -2831,11 +2825,11 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'Initializing these parameters from the prior...'
         #raise Exception('')
     
-    print 'gdatmodi.thissamp'
-    for k in gdat.fittindxpara:
-        print gdatmodi.thissamp[k]
-    print 
-    print
+    #print 'gdatmodi.thissamp'
+    #for k in gdat.fittindxpara:
+    #    print gdatmodi.thissamp[k]
+    #print 
+    #print
     
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
@@ -2869,7 +2863,6 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thisaccpprop = zeros(1, dtype=bool)
     gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.fittmaxmnumbcomp)
-    gdatmodi.thisnumbpair = zeros(1, dtype=int)
     gdatmodi.thisljcbfact = zeros(1)
     gdatmodi.thislcomfact = zeros(1)
     gdatmodi.thislpau = zeros(gdat.numblpau)
@@ -3028,8 +3021,8 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.thislliktotlprev
                 print 'gdatmodi.thislliktotl'
                 print gdatmodi.thislliktotl
-                print 'loglikelihood drop is very unlikely!'
-                #raise Exception('')
+                #print 'loglikelihood drop is very unlikely!'
+                raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
@@ -3466,14 +3459,16 @@ def work(pathoutpthis, lock, indxprocwork):
 
         if gdat.diagmode:
             indx = where(abs(gdatmodi.thissampdiag - gdatmodi.thissamp) > 0.)[0]
-            print 'Unit parameters that changed:'
-            print indx
-            print gdat.fittnamepara[indx]
+            if gdat.verbtype > 1:
+                print 'Unit parameters that changed:'
+                print indx
+                print gdat.fittnamepara[indx]
             indx = where(abs(gdatmodi.thissampvarbdiag - gdatmodi.thissampvarb) > 0.)[0]
-            print 'Parameters that changed:'
-            print indx
-            print gdat.fittnamepara[indx]
-            print
+            if gdat.verbtype > 1:
+                print 'Parameters that changed:'
+                print indx
+                print gdat.fittnamepara[indx]
+                print
 
         if gdat.verbtype > 1:
             print

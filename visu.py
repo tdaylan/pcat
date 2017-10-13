@@ -704,12 +704,11 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         if indxsampspmrtotl.size > 0:
     
             ## labels and names
-            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', '$N_{pair}$', r'$\log\alpha_j$', r'$\log\alpha_c$']
-            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'numbpair', 'ljcbfact', 'lcomfact']
+            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', r'$\log\alpha_j$', r'$\log\alpha_c$']
+            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'ljcbfact', 'lcomfact']
             
             ## variables
-            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listnumbpair, \
-                                                                                                                                  gdat.listljcbfact, gdat.listlcomfact]
+            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listljcbfact, gdat.listlcomfact]
            
             for k in range(len(listlabl)):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
