@@ -78,13 +78,10 @@ def init( \
          ## number of spatial dimensions
          numbspatdims=2, \
          
-         ## element type
-         elemtype=None, \
-        
-         hostemistype=None, \
+         #hostemistype=None, \
 
          ## lens model
-         lensmodltype=None, \
+         #lensmodltype=None, \
         
          penalpridiff=False, \
 
@@ -384,6 +381,15 @@ def init( \
         for elemtypetemp in elemtype:
             if not elemtypetemp in gdat.commelemtype:
                 gdat.commelemtype.append(elemtypetemp)
+            
+    #for strgvarb in ['boolelempsfnanyy']:
+    #    varbcomm = [[] for l in indxpopl]
+    #    for strgmodl in gdat.liststrgmodl:
+    #        varb = getattr(gdat, strgmodl + strgvarb)
+    #        varbcomm = varb
+    #        for elemtypetemp in :
+    #            if not elemtypetemp in gdat.commelemtype:
+    #                gdat.commelemtype.append(elemtypetemp)
     
     if 'lens' in gdat.commelemtype:
         gdat.hubbexpofact = 1.63050e-19
@@ -1140,9 +1146,15 @@ def init( \
                 setp_varbvalu(gdat, 'curvdistmean', 2., popl=l)
                 setp_varbvalu(gdat, 'curvdiststdv', 0.2, popl=l)
                 
-                setp_varbvalu(gdat, 'expcdistmeanpop1', 2., popl=l)
-                setp_varbvalu(gdat, 'expcdiststdvpop1', 0.2, popl=l)
+                setp_varbvalu(gdat, 'expcdistmean', 2., popl=l)
+                setp_varbvalu(gdat, 'expcdiststdv', 0.2, popl=l)
         
+            if gdat.trueelemtype[l] == 'lghtpntspuls':
+                setp_varbvalu(gdat, 'per0distmean', 3e-3, popl=l)
+                setp_varbvalu(gdat, 'per0diststdv', 1., popl=l)
+                setp_varbvalu(gdat, 'magfdistmean', 10**8.5, popl=l)
+                setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
+
         if gdat.exprtype == 'ferm':
 
             #setp_varbvalu(gdat, 'bacp', 5e-6, ener=0, back=0, regi='full')
@@ -1731,7 +1743,7 @@ def init( \
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
     if gdat.probspmr > 0.:
-        gdat.liststrgvarbarryswep += ['auxipara', 'ljcbfact', 'lcomfact']
+        gdat.liststrgvarbarryswep += ['auxipara', 'lcomfact', 'ljcbfact']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
@@ -2845,27 +2857,28 @@ def work(pathoutpthis, lock, indxprocwork):
 
     # initialize the worker sampler
     ## prepare gdatmodi
-    gdatmodi.thislliktotl = 0.
-    gdatmodi.thissbrtdfnc = zeros_like(gdat.expo)
-    gdatmodi.thissbrthost = zeros_like(gdat.expo)
-    gdatmodi.thisdeflhost = zeros_like(gdat.expo)
-    gdatmodi.thispsfnconv = zeros_like(gdat.expo)
-    gdatmodi.thisllik = zeros_like(gdat.expo)
-    #prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
-    gdatmodi.thismemoresi = zeros(1)
-    gdatmodi.thisdeltlliktotl = zeros(1)
-    gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
-    gdatmodi.thisaccpprob = zeros(1)
-    gdatmodi.thischro = zeros(gdat.numbchro)
+    #gdatmodi.thislliktotl = 0.
+    #gdatmodi.thissbrtdfnc = zeros_like(gdat.expo)
+    #gdatmodi.thissbrthost = zeros_like(gdat.expo)
+    ##gdatmodi.thisdeflhost = zeros_like(gdat.expo)
+    ##gdatmodi.thispsfnconv = zeros_like(gdat.expo)
+    #gdatmodi.thisllik = zeros_like(gdat.expo)
+    ##prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
+    #gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
+    
     gdatmodi.thisaccp = zeros(1, dtype=bool)
     gdatmodi.thisaccppsfn = zeros(1, dtype=bool)
     gdatmodi.thisaccpprio = zeros(1, dtype=bool)
     gdatmodi.thisaccpprop = zeros(1, dtype=bool)
     gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.fittmaxmnumbcomp)
-    gdatmodi.thisljcbfact = zeros(1)
     gdatmodi.thislcomfact = zeros(1)
+    gdatmodi.thisljcbfact = zeros(1)
+    gdatmodi.thisaccpprob = zeros(1)
+    gdatmodi.thischro = zeros(gdat.numbchro)
+    gdatmodi.thisdeltlliktotl = zeros(1)
     gdatmodi.thislpau = zeros(gdat.numblpau)
+    gdatmodi.thismemoresi = zeros(1)
     gdatmodi.thislfctasym = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.numblpri)
     
@@ -3241,7 +3254,7 @@ def work(pathoutpthis, lock, indxprocwork):
                     print 'Both likelihood and prior did not change.'
 
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + gdatmodi.thislcomfact)
+            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl)
             
         else:
             gdatmodi.thisaccpprob[0] = 0.

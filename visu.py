@@ -30,6 +30,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
             indxpopl = getattr(gdat, strgmodl + 'indxpopl')
             elemtype = getattr(gdat, strgmodl + 'elemtype')
             boolelemsbrtextsbgrdanyy = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrdanyy')
+            boolelemdeflsubhanyy = getattr(gdat, strgmodl + 'boolelemdeflsubhanyy')
+            boolelempsfnanyy = getattr(gdat, strgmodl + 'boolelempsfnanyy')
             liststrgfeatodim = getattr(gdat, strgmodl + 'liststrgfeatodim')
             if strgstat != 'post':
                 indxfixpnumbelem = getattr(gdat, strgmodl + 'indxfixpnumbelem')
@@ -76,8 +78,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         # temp
         if numbtrap > 0:
             if False:
-                if gdat.elemtype == 'lght':
-                    plot_brgt(gdat, gdatmodi, strg)
+                plot_brgt(gdat, gdatmodi, strg)
         
             # completeness and false discovery rate
             if strgmodl != 'true' and gdat.allwrefr and gdat.asscrefr:
@@ -121,18 +122,17 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
     
             # transdimensional element features projected onto the data axes
             if not (strgstat == 'post' and not gdat.condcatl):
-                
-                if gdat.numbener > 1 and gdat.elemtype == 'lght':
-                    
-                    # PS spectra
-                    if strgstat == 'post':
-                        specplot = [empty((gdat.numbenerplot, gdat.numbstkscond))]
-                        for r in gdat.indxstkscond:
-                            specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
-                    else:
-                        specplot = getattr(gdatobjt, strgpfix + 'specplot')
+                for l in indxpopl:
                     for d in gdat.indxregi:
-                        for l in range(len(specplot)):
+                        if elemtype[l] == 'lght':
+                            # PS spectra
+                            if strgstat == 'post':
+                                specplot = [empty((gdat.numbenerplot, gdat.numbstkscond))]
+                                for r in gdat.indxstkscond:
+                                    specplot[0][:, r] = gdat.dictglob['poststkscond'][r]['specplot'][0, :]
+                            else:
+                                specplot = getattr(gdatobjt, strgpfix + 'specplot')
+                            
                             listxdat = []
                             listplottype = []
                             
@@ -232,12 +232,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                             limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                     
             if gdat.datatype == 'mock':
-                if gdat.elemtype == 'lens':
+                if lensmodltype != 'none':
                     ## radial mass budget
                     factxdat = gdat.anglfact
                     lablxdat = gdat.lablanglfromhosttotl
                     for namecalc in ['delt', 'intg']:
-                        
                         for d in gdat.indxregi:
                             strgregi = 'reg%d' % d
                             
@@ -248,24 +247,24 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
                                                     lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
                             
-                            # subhalo masses
-                            limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasssubh' + namecalc + 'bein' + strgregi)]
-                            lablydat = getattr(gdat, 'lablmass' + namecalc + strgregi + 'totl')
-                            name = 'masssubh%s%s' % (namecalc, strgregi)
-                            plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
-                                                        lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
+                            if boolelemdeflsubhanyy:
+                                # subhalo masses
+                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasssubh' + namecalc + 'bein' + strgregi)]
+                                lablydat = getattr(gdat, 'lablmass' + namecalc + strgregi + 'totl')
+                                name = 'masssubh%s%s' % (namecalc, strgregi)
+                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
+                                                            lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
 
-                            # subhalo mass fraction
-                            limtydat = [1e-3, 0.1]
-                            lablydat = getattr(gdat, 'lablfracsubh' + namecalc + strgregi + 'totl')
-                            name = 'fracsubh%s%s' % (namecalc, strgregi)
-                            plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
-                                                        lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
+                                # subhalo mass fraction
+                                limtydat = [1e-3, 0.1]
+                                lablydat = getattr(gdat, 'lablfracsubh' + namecalc + strgregi + 'totl')
+                                name = 'fracsubh%s%s' % (namecalc, strgregi)
+                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
+                                                            lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
 
             alph = 0.1
 
-
-            if gdat.elemtype == 'lght' or gdat.elemtype == 'clus':
+            if boolelempsfnanyy:
                 ## PSF radial profile
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
@@ -432,11 +431,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                 plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpback%04dreg%d' % (c, d), i, m, strgcbar='cntpdata')
             
             ## count error
-            if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and gdat.calcerrr and numbtrap > 0:
-                if strgmodl != 'true':
-                    for d in gdat.indxregi:
-                        for i in gdat.indxener:
-                            plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntperrrreg%d' % d, i, -1, strgcbar='cntpresi')
+            if strgmodl != 'true':
+                if numbtrap > 0:
+                    for l in indxpopl:
+                        if calcerrr[l]:
+                            for d in gdat.indxregi:
+                                for i in gdat.indxener:
+                                    plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntperrrreg%d' % d, i, -1, strgcbar='cntpresi')
             
             ## diffuse components 
             for d in gdat.indxregi:
@@ -490,7 +491,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                                                                                scalxdat='logt', scalydat='logt', indxydat=indxydat, strgindxydat=strgindxydat)
                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'histdefl', 'meandefl', scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
                                                                                                              strgindxydat=strgindxydat, indxydat=indxydat, histodim=True)
-        if gdat.elemtype == 'lens':
+        if boolelemdeflsubhanyy:
             if numbtrap > 0:
                 for d in gdat.indxregi:
                     indxydat = [d, slice(None)]
@@ -1091,7 +1092,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                                                                                                                                         indxvarb=indxvarb, mometype='errr')
                 cntr += 1
             
-            if (gdat.elemtype == 'lght' or gdat.elemtype == 'clus') and numbtrap > 0:
+            if numbtrap > 0 and boolelemspecanyy:
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntreg%dmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtpntsmea%dreg%d' % (b, indxregiplot), mometype='errr')
@@ -2355,10 +2356,11 @@ def plot_init(gdat):
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
         
-        if gdat.numbpixl > 1 and gdat.elemspatevaltype == 'loclhash':
+        if gdat.numbpixl > 1:
             plot_indxprox(gdat)
-            if gdat.elemspatevaltype != 'full' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
-                plot_eval(gdat)
+        for l in gdat.fittindxpopl:
+            if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittboolelempsfn[l]:
+                plot_eval(gdat, l)
         
         # temp
         if gdat.makeplotintr:
@@ -2366,7 +2368,7 @@ def plot_init(gdat):
             #plot_pert()
             #plot_king(gdat)
     
-            if gdat.elemtype == 'lens':
+            if gdat.fittboolelemdeflsubh:
                 xdat = gdat.binsangl[1:] * gdat.anglfact
                 lablxdat = gdat.lablgangtotl
                 
@@ -2487,7 +2489,7 @@ def plot_init(gdat):
             for m in gdat.indxevtt:
                 
                 # temp
-                if False and gdat.pixltype == 'cart' and (gdat.elemtype == 'lght' or gdat.elemtype == 'clus'):
+                if False and gdat.pixltype == 'cart' and gdat.fittboolelempsfnanyy:
                     figr, axis, path = init_figr(gdat, None, 'cntpdatapeak', '', '', d, i, m, -1)
                     imag = retr_imag(gdat, axis, gdat.cntpdata[d], '', 'cntpdata', i, m)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
