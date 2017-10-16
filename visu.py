@@ -1039,6 +1039,8 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
     indxbacpback = getattr(gdat, strgmodl + 'indxbacpback')
     numblablsbrt = getattr(gdat, strgmodl + 'numblablsbrt')
     numblablsbrtspec = getattr(gdat, strgmodl + 'numblablsbrtspec')
+    if numbtrap > 0:
+        boolelemspecanyy = getattr(gdat, strgmodl + 'boolelemspecanyy')
     
     sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
     if numbtrap > 0:

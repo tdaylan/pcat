@@ -1154,6 +1154,7 @@ def init( \
                 setp_varbvalu(gdat, 'per0diststdv', 1., popl=l)
                 setp_varbvalu(gdat, 'magfdistmean', 10**8.5, popl=l)
                 setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
+                setp_varbvalu(gdat, 'dglcdistslop', 2., popl=l)
 
         if gdat.exprtype == 'ferm':
 
