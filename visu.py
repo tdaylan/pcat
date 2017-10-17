@@ -309,7 +309,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                 for strgplottype in ['hist', 'scat']:
                                     if strgmodl == 'true' and strgplottype == 'hist':
                                         continue
-                                    if strgmodl == 'post' and not gdat.condcatl and strgplottype == 'scat':
+                                    if strgstat == 'post' and not gdat.condcatl and strgplottype == 'scat':
                                         continue
                                     
                                     print 'strgfrst'
@@ -1496,10 +1496,10 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
             # label
             if strgydat.startswith('hist'):
                 ##  element distribution
-                labl = gdat.legdsampdist + ' distribution'
+                labl = gdat.legdsampdist
             else:
                 ##  other
-                labl = gdat.legdsampdist + ' distribution'
+                labl = gdat.legdsampdist
             
             temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
             for caps in listcaps:
@@ -1542,6 +1542,14 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
                 continue
 
             ydattemp = getattr(gdat, name)
+            
+            if strgydat.startswith('fdis'):
+                print 'name'
+                print name
+                print 'ydattemp'
+                print ydattemp
+                print
+
             ydat = ydattemp * factydat
             if indxydat != None:
                 ydat = ydat[indxydat]

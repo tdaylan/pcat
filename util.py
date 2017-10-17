@@ -2250,6 +2250,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     for d in gdat.fittindxregipopl[l]:
                         for strgcomp in gdat.fittliststrgcomp[l]:
                             temp[d][strgcomp] = thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
+                        if gdat.fittelemtype[l] == 'lghtpntspuls':
+                            temp[d]['flux'] = thissampvarb[gdatmodi.thisindxsampcomp['flux'][l][d]]
                         if gdat.fittboolelemspec[l]:
                             for strgfeat in liststrgfeatdefa:
                                 temp[d][strgfeat] = []
@@ -2944,11 +2946,12 @@ def setpprem(gdat):
     gdat.liststrglimt = ['minm', 'maxm']
    
     gdat.indxregi = arange(gdat.numbregi)
-     
-    if gdat.shrtfram:
-        gdat.numbswepplot = 1000
-    else:
-        gdat.numbswepplot = 40000
+    
+    if gdat.numbswepplot == None:
+        if gdat.shrtfram:
+            gdat.numbswepplot = 1000
+        else:
+            gdat.numbswepplot = 40000
 
     # temp
     gdat.edis = 1. / 2.35
@@ -3048,7 +3051,7 @@ def setpprem(gdat):
 
 def setpinit(gdat, boolinitsetp=False):
 
-    if False and gdat.elemtype == 'lens' and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
+    if False and gdat.boolelemdeflsubhanyy and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
         cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
         cliblens.retr_deflsubh()
     
@@ -5018,11 +5021,11 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     lablelemextn[l] = r'\rm{pul}'
                 elif elemtype[l] == 'lghtpnts':
                     lablelemextn[l] = r'\rm{pts}'
-            if elemtype == 'lens':
+            if elemtype[l] == 'lens':
                 lablelemextn[l] = r'\rm{sub}'
-            if elemtype == 'clus':
+            if elemtype[l] == 'clus':
                 lablelemextn[l] = r'\rm{cls}'
-            if elemtype == 'lghtline':
+            if elemtype[l] == 'lghtline':
                 lablelemextn[l] = r'\rm{lin}'
     
         ## legends
@@ -5038,9 +5041,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     listlegdelem[l] = 'PS'
                 elif elemtype[l] == 'lghtpnts':
                     listlegdelem[l] = 'Pulsar'
-            if elemtype == 'lens':
+            if elemtype[l] == 'lens':
                 listlegdelem[l] = 'Subhalo'
-            if elemtype == 'clus':
+            if elemtype[l] == 'clus':
                 listlegdelem[l] = 'Cluster'
             if elemtype[l] == 'lghtline':
                 listlegdelem[l]= 'Line'
@@ -6210,7 +6213,8 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if namefixp[k].startswith('numbelem'):
                 lablfixp[k] = '$N_{%s%s}$' % (lablelemextn[indxpopltemp], strgpoplcomm)
                 scalfixp[k] = 'pois'
-
+                print 'lablfixp[k]'
+                print lablfixp[k]
             if namefixp[k].startswith('meanelem'):
                 lablfixp[k] = r'$\mu_{%s%s}$' % (lablelemextn[indxpopltemp], strgpoplcomm)
                 scalfixp[k] = scalmeanelem
@@ -9346,17 +9350,25 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 feattemp = [[[] for d in indxregipopl[l]] for l in indxpopl]
                 for l in indxpopl:
                     for d in indxregipopl[l]:
+                        cntr = 0
                         if strgfeat in liststrgfeat[l]:
                             if strgfeat in feat[l][d]:
                                 feattemp[l][d] = feat[l][d][strgfeat]
                             else:
                                 feattemp[l][d] = array([])
-                print 'strgpfix + strgfeat'
-                print strgpfix + strgfeat
-                print 'feattemp'
-                print feattemp
-                print
-
+                            print 'strgpfix + strgfeat'
+                            print strgpfix + strgfeat
+                            print 'feattemp'
+                            print feattemp
+                            print
+                            if cntr == 0:
+                                numbsave = feat[l][d][strgfeat].size
+                            else:
+                                if feat[l][d][strgfeat].size != numbsave:
+                                    raise Exception('')
+                                numbsave = feat[l][d][strgfeat].size
+                            cntr += 1
+                                
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
             
             if strgmodl == 'true':
