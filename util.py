@@ -398,17 +398,6 @@ def retr_sampvarb(gdat, strgmodl, samp, indxsampcomp=None):
         listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
         retr_sampvarbtrap(gdat, strgmodl, indxsampcomp, gdat.indxregi, indxpopl, liststrgcomp, listscalcomp, samp, sampvarb)
     
-    print 'indxsampcomp'
-    print indxsampcomp
-    print 'samp'
-    for k in range(len(samp)):
-        print samp[k]
-    print 'sampvarb'
-    for k in range(len(samp)):
-        print sampvarb[k]
-    print
-    
-
     return sampvarb
     
 
@@ -1598,6 +1587,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             thisindxsampfull = concatenate(concatenate(thisindxsampcomp['comp']))
         else:
             thisindxsampfull = gdat.indxfixpprop
+        
+        if gdat.diagmode:
+            if not isinstance(thisindxsampfull, ndarray) or thisindxsampfull.size == 0:
+                raise Exception('')
+        
         gdatmodi.indxsampmodi = choice(thisindxsampfull)
         
         if gdatmodi.indxsampmodi in indxfixp:
@@ -2950,6 +2944,11 @@ def setpprem(gdat):
     gdat.liststrglimt = ['minm', 'maxm']
    
     gdat.indxregi = arange(gdat.numbregi)
+     
+    if gdat.shrtfram:
+        gdat.numbswepplot = 1000
+    else:
+        gdat.numbswepplot = 40000
 
     # temp
     gdat.edis = 1. / 2.35
@@ -4876,7 +4875,9 @@ def retr_ticklabl(gdat, strgcbar):
 
 def retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, mometype='medi', indxvarb=None, indxlist=None):
     
-    if strgvarb.startswith('cntpdata') or strgvarb.startswith('histcntpdata'):
+    if strgvarb.startswith('cntpdata'):
+        varb = getattr(gdat, strgvarb[:8])[int(strgvarb[-1])]
+    elif strgvarb.startswith('histcntpdata'):
         varb = getattr(gdat, strgvarb)
     else:
         if strgmodl == 'true':
@@ -9350,6 +9351,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 feattemp[l][d] = feat[l][d][strgfeat]
                             else:
                                 feattemp[l][d] = array([])
+                print 'strgpfix + strgfeat'
+                print strgpfix + strgfeat
+                print 'feattemp'
+                print feattemp
+                print
+
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
             
             if strgmodl == 'true':

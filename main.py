@@ -150,7 +150,7 @@ def init( \
          asscmetrtype='dist', \
 
          # plotting
-         numbswepplot=40000, \
+         numbswepplot=None, \
          
          makeplot=True, \
          makeplotinit=True, \
@@ -1047,6 +1047,8 @@ def init( \
                 if gdat.truenumbelem[l][d] > gdat.truemaxmnumbelem[l][d]:
                     raise Exception('')
 
+    setp_varbvalu(gdat, 'scalmeanelem', 'logt')
+    
     for strgmodl in gdat.liststrgmodl:
         setp_varblimt(gdat, 'lgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
         setp_varblimt(gdat, 'bgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
@@ -1085,8 +1087,6 @@ def init( \
     
     setp_varblimt(gdat, 'aang', [-pi, pi])
    
-    setp_varbvalu(gdat, 'scalmeanelem', 'self')
-    
     # copy the true model to the inference model if the inference model parameter has not been specified
     #temp = deepcopy(gdat.__dict__)
     #for strg, valu in temp.iteritems():
@@ -2670,10 +2670,17 @@ def work(pathoutpthis, lock, indxprocwork):
             meanelemtemp = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[gdat.fittindxfixpmeanelem[l]], gdat.fittindxfixpmeanelem[l])
             for d in gdat.fittindxregipopl[l]:
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = poisson(meanelemtemp)
+                print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]]'
+                print gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]]
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = max(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittminmnumbelem[l][d])
                 #gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = random_integers(gdat.fittminmnumbelem[l][d], gdat.fittmaxmnumbelem[l][d])
     
+    if gdat.fittnumbtrap > 0:
+        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]'
+        print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
+        print
+
     ## impose user-specified initial state
     if gdat.inittype == 'reco':
         if gdat.namerecostat != None:

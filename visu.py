@@ -501,15 +501,14 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                                                                                scalxdat='logt', scalydat='logt', indxydat=indxydat, strgindxydat=strgindxydat)
                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'histdefl', 'meandefl', scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
                                                                                                              strgindxydat=strgindxydat, indxydat=indxydat, histodim=True)
-        if boolelemdeflsubhanyy:
-            if numbtrap > 0:
-                for d in gdat.indxregi:
-                    indxydat = [d, slice(None)]
-                    strgindxydat = 'reg%d' % d
-                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
-                                                                      strgindxydat=strgindxydat, indxydat=indxydat, limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
-                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'histdeflsubh', 'meandeflsubh', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
-                                                                      strgindxydat=strgindxydat, indxydat=indxydat, lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+        if numbtrap > 0 and boolelemdeflsubhanyy:
+            for d in gdat.indxregi:
+                indxydat = [d, slice(None)]
+                strgindxydat = 'reg%d' % d
+                plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
+                                                                  strgindxydat=strgindxydat, indxydat=indxydat, limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
+                plot_gene(gdat, gdatmodi, strgstat, strgmodl, 'histdeflsubh', 'meandeflsubh', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
+                                                                  strgindxydat=strgindxydat, indxydat=indxydat, lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
     
         if lensmodltype != 'none':
             for d in gdat.indxregi:
