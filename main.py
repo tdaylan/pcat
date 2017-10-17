@@ -867,7 +867,7 @@ def init( \
             gdat.numbrefr = gdat.truenumbpopl
             gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
             gdat.indxrefr = arange(gdat.numbrefr)
-            gdat.listcolrrefr = gdat.refrlistcolr[:gdat.truenumbpopl]
+            gdat.refrcolrelem = gdat.refrlistcolr[:gdat.truenumbpopl]
         if gdat.datatype == 'inpt':
             if gdat.exprtype == 'ferm':
                 gdat.refrinfo = True
@@ -888,7 +888,7 @@ def init( \
             if gdat.exprtype == 'chan':
                 retr_refrchanfinl(gdat)
             
-            gdat.listcolrrefr = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
+            gdat.refrcolrelem = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
     
     for strgmodl in gdat.liststrgmodl:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -1741,7 +1741,7 @@ def init( \
     gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
     if gdat.probspmr > 0.:
-        gdat.liststrgvarbarryswep += ['auxipara', 'lcomfact', 'ljcbfact']
+        gdat.liststrgvarbarryswep += ['auxipara', 'lrpp', 'ljcb']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
@@ -2670,11 +2670,8 @@ def work(pathoutpthis, lock, indxprocwork):
             meanelemtemp = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[gdat.fittindxfixpmeanelem[l]], gdat.fittindxfixpmeanelem[l])
             for d in gdat.fittindxregipopl[l]:
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = poisson(meanelemtemp)
-                print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]]'
-                print gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]]
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
                 gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = max(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittminmnumbelem[l][d])
-                #gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = random_integers(gdat.fittminmnumbelem[l][d], gdat.fittmaxmnumbelem[l][d])
     
     if gdat.fittnumbtrap > 0:
         print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]'
@@ -2860,8 +2857,8 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thisaccpprop = zeros(1, dtype=bool)
     gdatmodi.thisindxproptype = zeros(1, dtype=int)
     gdatmodi.thisauxipara = zeros(gdat.fittmaxmnumbcomp)
-    gdatmodi.thislcomfact = zeros(1)
-    gdatmodi.thisljcbfact = zeros(1)
+    gdatmodi.thislrpp = zeros(1)
+    gdatmodi.thisljcb = zeros(1)
     gdatmodi.thisaccpprob = zeros(1)
     gdatmodi.thischro = zeros(gdat.numbchro)
     gdatmodi.thisdeltlliktotl = zeros(1)
@@ -3228,10 +3225,10 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.nextlpautotl
                 print 'gdatmodi.thislfctasym'
                 print gdatmodi.thislfctasym
-                print 'gdatmodi.thislcomfact'
-                print gdatmodi.thislcomfact
-                print 'gdatmodi.thisljcbfact'
-                print gdatmodi.thisljcbfact
+                print 'gdatmodi.thislrpp'
+                print gdatmodi.thislrpp
+                print 'gdatmodi.thisljcb'
+                print gdatmodi.thisljcb
                 print 'gdatmodi.thistmprlposelem'
                 print gdatmodi.thistmprlposelem
                 print

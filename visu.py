@@ -713,10 +713,10 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     
             ## labels and names
             listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', r'$\log\alpha_j$', r'$\log\alpha_c$']
-            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'ljcbfact', 'lcomfact']
+            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'ljcb', 'lrpp']
             
             ## variables
-            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listljcbfact, gdat.listlcomfact]
+            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listljcb, gdat.listlrpp]
            
             for k in range(len(listlabl)):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -930,7 +930,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         if gdat.datatype == 'mock':
             varbdraw += [getattr(gdat, 'true' + strgpdfn + 'totl')]
             labldraw += ['True model']
-            colrdraw += ['g']
+            colrdraw += [gdat.refrcolr]
         tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strgpdfn + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw, colrdraw=colrdraw)
     
         if strgpdfn == 'llik':
@@ -1018,7 +1018,7 @@ def plot_chro(gdat):
 def retr_colr(strgstat, strgmodl):
     
     if strgmodl == 'true':
-        colr = 'g'
+        colr = gdat.refrcolr
     if strgmodl == 'fitt':
         if strgstat == 'this':
             colr = 'b'
@@ -1310,7 +1310,7 @@ def plot_brgt(gdat, gdatmodi, strg):
             axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
             axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
     if gdat.truefluxbrgt.size > 0:
-        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[0], label=gdat.refrlegdelem[0])
+        axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.refrcolrelem[0], label=gdat.refrlegdelem[0])
     axis.set_xscale('log')
     axis.set_yscale('log')
     axis.set_xlim([gdat.minmfluxplot, gdat.maxmfluxplot])
@@ -1384,10 +1384,11 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                 if len(varbfrst) == 0 or len(varbseco) == 0:
                     varbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                     varbseco = array([limtseco[0] * factplotseco * 0.1])
-                print 'varbfrst'
-                print varbfrst
-                print 'varbseco'
-                print varbseco
+                if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
+                    print 'varbfrst'
+                    print varbfrst
+                    print 'varbseco'
+                    print varbseco
                 axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
     
     # reference elements
@@ -1400,7 +1401,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
-                    axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], s=sizelarg)
+                    axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.refrcolrelem[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, indxpoplplot, strgfrst=strgfrst, strgseco=strgseco)
     
@@ -1554,14 +1555,16 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
             if indxydat != None:
                 ydat = ydat[indxydat]
             
-            if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], alpha=gdat.alphmrkr, linewidth=5, edgecolor=gdat.listcolrrefr[q])
+            if strgydat[-8:-5] == 'pop':
+                legd = gdat.refrlegdelem[q]
+                colr = gdat.refrcolrelem[q]
             else:
-                if strgydat[-4:-1] == 'pop':
-                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.refrlegdelem[q], alpha=gdat.alphmrkr)
-                else:
-                    axis.plot(xdat, ydat, color=gdat.listcolrrefr[q], label=gdat.refrlegd, alpha=gdat.alphmrkr)
-                    break
+                legd = gdat.refrlegd
+                colr = gdat.refrcolr
+            if histodim:
+                axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphmrkr, linewidth=5, edgecolor=colr)
+            else:
+                axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphmrkr)
     
     if strgydat.startswith('histcntp'):
         if gdat.numbpixl > 1:
@@ -1597,7 +1600,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
                 if gdat.datatype == 'mock' and not omittrue:
                     truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
                     trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
-                    axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color='g')
+                    axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphmrkr, color=gdat.refrcolr)
                 
                 if strgmodl != 'true':
                     if strgstat == 'post':
@@ -1710,7 +1713,7 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, indxregipl
         strgtype = 'diff'
     else:
         strgtype = ''
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'scatassc' + strgfeat + '%sref%dpop%d' % (strgtype, q, l), nameinte='assc/')
+    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'scatassc' + strgfeat + '%sref%dpop%dreg%d' % (strgtype, q, l, indxregiplot), nameinte='assc/')
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
@@ -1916,7 +1919,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
                             
                             mrkrsize = retr_mrkrsize(gdat, refrsign[0, indxelem], strgfeat)
                             axis.scatter(gdat.anglfact * gdat.refrlgal[q][indxregiplot][0, indxelem], gdat.anglfact * gdat.refrbgal[q][indxregiplot][0, indxelem], \
-                                                                                        s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.listcolrrefr[q])
+                                                                                        s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.refrcolrelem[q])
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.labllgaltotl)
@@ -2039,7 +2042,7 @@ def plot_eval(gdat, indxpoplplot):
                 colr = 'b'
             else:
                 labl = 'Brightest PS'
-                colr = 'g'
+                colr = gdat.refrcolr
         else:
             alph = 0.2
             labl = None

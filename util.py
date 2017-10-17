@@ -1510,9 +1510,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     gdatmodi.propmeanelem = False
     gdatmodi.propdist = False
 
-    gdatmodi.nextljcbfact = 0.
+    gdatmodi.nextljcb = 0.
     gdatmodi.nextlpautotl = 0. 
-    gdatmodi.nextlcomfact = 0.
+    gdatmodi.nextlrpp = 0.
    
     gdatmodi.prophost = False
     gdatmodi.propsour = False
@@ -2265,9 +2265,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         
         ## Jacobian
         if gdatmodi.propsplt:
-            gdatmodi.nextljcbfact = log(gdatmodi.comppare[2])
+            gdatmodi.nextljcb = log(gdatmodi.comppare[2])
         else:
-            gdatmodi.nextljcbfact = -log(gdatmodi.comppare[2])
+            gdatmodi.nextljcb = -log(gdatmodi.comppare[2])
         
         thisnumbelem = thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         nextnumbelem = nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
@@ -2277,12 +2277,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             probfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], gdatmodi.indxelemfullmodi[0]) / thisnumbelem
             probfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], gdatmodi.indxelemfullmodi[1]) / thisnumbelem
             probreve = 1. / nextnumbelem
-            gdatmodi.thislcomfact = log(probreve) - log(probfrwdfrst + probfrwdseco)
+            gdatmodi.thislrpp = log(probreve) - log(probfrwdfrst + probfrwdseco)
         else:
             probfrwd = 1. / thisnumbelem
             probrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
             probreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], -1) / nextnumbelem
-            gdatmodi.thislcomfact = log(probrevefrst + probreveseco) - log(probfrwd)
+            gdatmodi.thislrpp = log(probrevefrst + probreveseco) - log(probfrwd)
 
     setattr(gdatobjt, strgpfixnext + 'samp', nextsamp)
     setattr(gdatobjt, strgpfixnext + 'sampvarb', nextsampvarb)
@@ -2952,7 +2952,8 @@ def setpprem(gdat):
             gdat.numbswepplot = 1000
         else:
             gdat.numbswepplot = 40000
-
+    
+    gdat.refrcolr = 'g'
     # temp
     gdat.edis = 1. / 2.35
 
@@ -6213,8 +6214,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if namefixp[k].startswith('numbelem'):
                 lablfixp[k] = '$N_{%s%s}$' % (lablelemextn[indxpopltemp], strgpoplcomm)
                 scalfixp[k] = 'pois'
-                print 'lablfixp[k]'
-                print lablfixp[k]
             if namefixp[k].startswith('meanelem'):
                 lablfixp[k] = r'$\mu_{%s%s}$' % (lablelemextn[indxpopltemp], strgpoplcomm)
                 scalfixp[k] = scalmeanelem
@@ -6901,9 +6900,9 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
         for q in gdat.indxrefr:
             if not amax(gdat.refrnumbelem[q]) == 0:
                 axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, \
-                                                               label=gdat.refrlegdhits[q], marker=gdat.refrlistelemmrkrhits[q], lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                               label=gdat.refrlegdhits[q], marker=gdat.refrlistelemmrkrhits[q], lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
                 axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                               label=gdat.refrlegdmiss[q], marker=gdat.refrlistelemmrkrmiss[q], lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                               label=gdat.refrlegdmiss[q], marker=gdat.refrlistelemmrkrmiss[q], lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
     
     # fixed-dimensional objects
     if strgmodl == 'fitt':
@@ -6917,11 +6916,11 @@ def make_catllabl(gdat, strgstat, strgmodl, axis):
     if strgmodl == 'true':
         if gdat.truelensmodltype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                       label='%s Source' % gdat.refrlegd, marker='>', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                       label='%s Source' % gdat.refrlegd, marker='>', lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
         
         if gdat.truehostemistype != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                       label='%s Host' % gdat.refrlegd, marker='D', lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                       label='%s Host' % gdat.refrlegd, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
     
     temphand, temp = axis.get_legend_handles_labels()
     numblabl = len(temp)
@@ -6962,14 +6961,14 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                         indx = gdatmodi.thisindxelemrefrasschits[q][l][indxregiplot]
                         if indx.size > 0:
                             axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, label=gdat.refrlegdmiss, \
-                                                                                          marker=gdat.refrlistelemmrkrhits[q], lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                                          marker=gdat.refrlistelemmrkrhits[q], lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
                         ### missed
                         indx = gdatmodi.thisindxelemrefrasscmiss[q][l][indxregiplot]
                     else:
                         indx = arange(lgal.size)
                     if indx.size > 0: 
                         axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, facecolor='none', \
-                                                                 label=gdat.refrlegdhits, marker=gdat.refrlistelemmrkrmiss[q], lw=gdat.mrkrlinewdth, color=gdat.listcolrrefr[q])
+                                                                 label=gdat.refrlegdhits, marker=gdat.refrlistelemmrkrmiss[q], lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
             
         # temp -- generalize this to input refrlgalhost vs.
         if gdat.datatype == 'mock':
@@ -6980,13 +6979,13 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                                                                             facecolor='none', \
                                                                             #alpha=gdat.alphelem, \
                                                                             alpha=0.7, \
-                                                                            label='%s Host' % gdat.refrlegd, s=300, marker='D', lw=gdat.mrkrlinewdth, color='g')
+                                                                            label='%s Host' % gdat.refrlegd, s=300, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refrcolr)
             if lensmodltype != 'none':
                 ## host galaxy Einstein radius
                 axis.add_patch(plt.Circle((gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixplgalhost[indxregiplot]], \
                                                                                 gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixpbgalhost[indxregiplot]]), \
                                                                                 gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixpbeinhost[indxregiplot]], \
-                                                                                edgecolor='g', facecolor='none', lw=gdat.mrkrlinewdth))
+                                                                                edgecolor=gdat.refrcolr, facecolor='none', lw=gdat.mrkrlinewdth))
                 
                 ## source galaxy position
                 axis.scatter(gdat.anglfact * gdat.truesampvarb[gdat.trueindxfixplgalsour[indxregiplot]], \
@@ -6994,7 +6993,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                                                                             facecolor='none', \
                                                                             alpha=0.7, \
                                                                             #alpha=gdat.alphelem, \
-                                                                            label='%s Source' % gdat.refrlegd, s=300, marker='>', lw=gdat.mrkrlinewdth, color='g')
+                                                                            label='%s Source' % gdat.refrlegd, s=300, marker='>', lw=gdat.mrkrlinewdth, color=gdat.refrcolr)
         
     # model catalog
     if indxpoplplot == -1:
@@ -8593,13 +8592,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         if gdatmodi.proptran:
             deltlpritotl += gdatmodi.nextlpautotl
         if gdatmodi.propsplt or gdatmodi.propmerg:
-            deltlpritotl += gdatmodi.nextlcomfact
-            deltlpritotl += gdatmodi.nextljcbfact
+            deltlpritotl += gdatmodi.nextlrpp
+            deltlpritotl += gdatmodi.nextljcb
         if gdatmodi.propcomp:
             deltlpritotl += gdatmodi.nextlpridist
         setattr(gdatobjt, strgpfix + 'deltlpritotl', deltlpritotl)
         if gdat.diagmode:
-            if (gdatmodi.propcomp or gdatmodi.proppsfp or gdatmodi.propbacp or gdatmodi.proplenp) and abs(deltlpritotl) > 1e-3:# or abs(thislpritotl - thissampvarb[0] * 47) > 10.:
+            if (gdatmodi.propcomp or gdatmodi.proppsfp or gdatmodi.propbacp or gdatmodi.proplenp) and abs(deltlpritotl) > 1e-3:
                 print 'gdatmodi.nextlpridist'
                 print gdatmodi.nextlpridist
                 print 'deltlpritotl'
@@ -9352,23 +9351,30 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     for d in indxregipopl[l]:
                         cntr = 0
                         if strgfeat in liststrgfeat[l]:
+                            if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
+                                print 'strgfeat'
+                                print strgfeat
                             if strgfeat in feat[l][d]:
                                 feattemp[l][d] = feat[l][d][strgfeat]
+                                if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
+                                    print 'feattemp[l][d]'
+                                    print feattemp[l][d]
                             else:
                                 feattemp[l][d] = array([])
-                            print 'strgpfix + strgfeat'
-                            print strgpfix + strgfeat
-                            print 'feattemp'
-                            print feattemp
-                            print
-                            if cntr == 0:
-                                numbsave = feat[l][d][strgfeat].size
-                            else:
-                                if feat[l][d][strgfeat].size != numbsave:
-                                    raise Exception('')
-                                numbsave = feat[l][d][strgfeat].size
-                            cntr += 1
-                                
+                            if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
+                                print
+                                if cntr == 0:
+                                    numbsave = feat[l][d][strgfeat].size
+                                else:
+                                    if feat[l][d][strgfeat].size != numbsave:
+                                        raise Exception('')
+                                    numbsave = feat[l][d][strgfeat].size
+                                cntr += 1
+                if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
+                    print 'strgpfix + strgfeat'
+                    print strgpfix + strgfeat
+                    print 'feattemp'
+                    print feattemp
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
             
             if strgmodl == 'true':
