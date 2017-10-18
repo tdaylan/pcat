@@ -1738,10 +1738,14 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lfctasym', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
+    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
+    if gdat.probspmr > 0. or gdat.propcomp:
+        gdat.liststrgvarbarryswep += ['lrpp']
+    if gdat.probtran > 0.:
+        gdat.liststrgvarbarryswep += ['auxipara']
     if gdat.probspmr > 0.:
-        gdat.liststrgvarbarryswep += ['auxipara', 'lrpp', 'ljcb']
+        gdat.liststrgvarbarryswep += ['ljcb']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
@@ -2375,6 +2379,8 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         print '%s went outside prior bounds when perturbing...' % gdat.fittnamepara[indxbadd]
         print 'gdatmodi.thissamp[indx[indxbadd]]'
         print gdatmodi.thissamp[indx[indxbadd]]
+        print 'indxparapert'
+        print indxparapert
         print 'gdatmodi.thissamp[indxparapert[k]]'
         print gdatmodi.thissamp[indxparapert[k]]
         print 'stdvparapert[k]'
@@ -2864,7 +2870,6 @@ def work(pathoutpthis, lock, indxprocwork):
     gdatmodi.thisdeltlliktotl = zeros(1)
     gdatmodi.thislpau = zeros(gdat.fittnumblpau)
     gdatmodi.thismemoresi = zeros(1)
-    gdatmodi.thislfctasym = zeros(1)
     gdatmodi.thislpriprop = zeros(gdat.fittnumblpri)
     
     # dummy definitions required for logs
@@ -3223,8 +3228,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.nextdeltlpritotl
                 print 'gdatmodi.nextlpautotl'
                 print gdatmodi.nextlpautotl
-                print 'gdatmodi.thislfctasym'
-                print gdatmodi.thislfctasym
                 print 'gdatmodi.thislrpp'
                 print gdatmodi.thislrpp
                 print 'gdatmodi.thisljcb'

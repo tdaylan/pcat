@@ -41,7 +41,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
         if strgstat != 'post' and lensmodltype != 'none' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
             numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
-        indxpoplassc = getattr(gdat, strgmodl + 'indxpoplassc')
         numbback = getattr(gdat, strgmodl + 'numbback')
         backtype = getattr(gdat, strgmodl + 'backtype')
         indxback = getattr(gdat, strgmodl + 'indxback')
@@ -88,7 +87,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q in gdat.indxrefr:
-                                if not l in indxpoplassc[q]:
+                                print 'gdat.refrindxpoplassc'
+                                print gdat.refrindxpoplassc
+                                print 'q'
+                                print q
+
+                                if not l in gdat.refrindxpoplassc[q]:
                                     continue
                                 if gdat.refrnumbelem[q][d] == 0 and strgclas == 'cmpl' or gdat.fittnumbtrap == 0 and strgclas == 'fdis':
                                     continue
@@ -103,7 +107,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                         factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
-                                        limtxdat = [getattr(gdat, strgmodl + 'minm' + strgfeat) * factxdat, getattr(gdat, strgmodl + 'maxm' + strgfeat) * factxdat]
+                                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
                                         plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, plottype='errr', \
                                                   scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
@@ -240,7 +244,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     if elemtype[l] == 'lghtpntspuls':
                         limtydat = [gdat.minmmassshel, gdat.maxmmassshel]
                         for d in gdat.indxregi:
-                            lablydat = getattr(gdat, 'lablmassshelpop%dreg%d' % (l, d))
+                            lablydat = gdat.lablmassshel
                             name = 'massshelpop%dreg%d' % (l, d)
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
                                                         lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
@@ -602,9 +606,9 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
                 if (gdat.listlpau[:, k] != 0.).any():
                     path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                     tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-            if (gdat.listlfctasym != 0.).any():
+            if (gdat.listlrpp != 0.).any():
                 path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlfctasym[gdat.listindxsamptotl[n]], '$q_{lfct}$', logthist=True)
+                tdpy.mcmc.plot_trac(path, gdat.listlrpp[gdat.listindxsamptotl[n]], '$q_{lfct}$', logthist=True)
 
     # Gelman-Rubin test
     pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
@@ -1158,6 +1162,13 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 
             ## total model
             if numblablsbrt > 1:
+                print 'a'
+                print a
+                print 'cntr'
+                print cntr
+                print 'listydat'
+                summgene(listydat)
+                print 
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot), mometype='errr')
@@ -1588,7 +1599,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphmrkr, linewidth=5, edgecolor=colr)
             else:
                 axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphmrkr)
-            if strgydat[-8:-5] == 'pop':
+            if not boolelem:
                 break
 
     if strgydat.startswith('histcntp'):

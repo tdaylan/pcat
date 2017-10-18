@@ -25,6 +25,7 @@ def pcat_tuto():
     pcat.main.init( \
                    forccart=True, \
                    pixltype='cart', \
+                   diagmode=False, \
                    backtype=[1.], \
                    numbswep=2000000, \
                    strgexpo=1e11, \
