@@ -112,7 +112,8 @@ def init( \
          propcova=True, \
          propwithsing=True, \
          # Hessian estimation
-         optitype='hess', \
+         # temp
+         optitype='none', \
          regulevi=False, \
          
          # modes of operation
@@ -2377,8 +2378,8 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
         indxbadd = where((gdatmodi.thissamp < 0.) | (gdatmodi.thissamp > 1.))[0]
     if indxbadd.size > 0:
         print '%s went outside prior bounds when perturbing...' % gdat.fittnamepara[indxbadd]
-        print 'gdatmodi.thissamp[indx[indxbadd]]'
-        print gdatmodi.thissamp[indx[indxbadd]]
+        print 'gdatmodi.thissamp[indxbadd]'
+        print gdatmodi.thissamp[indxbadd]
         print 'indxparapert'
         print indxparapert
         print 'gdatmodi.thissamp[indxparapert[k]]'
@@ -2675,9 +2676,20 @@ def work(pathoutpthis, lock, indxprocwork):
         for l in gdat.fittindxpopl:
             meanelemtemp = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[gdat.fittindxfixpmeanelem[l]], gdat.fittindxfixpmeanelem[l])
             for d in gdat.fittindxregipopl[l]:
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = poisson(meanelemtemp)
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
-                gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = max(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittminmnumbelem[l][d])
+                try:
+                    namevarb = 'initnumbelempop%dreg%d' % (l, d)
+                    initvalu = getattr(gdat, namevarb)
+                    gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = initvalu
+                    if gdat.verbtype > 0:
+                        print 'Received initial condition for %s: %.3g' % (namevarb, initvalu)
+                    
+                    if gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] > gdat.fittmaxmnumbelem[l][d] or \
+                            gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] < gdat.fittminmnumbelem[l][d]:
+                                raise Exception('Bad initial number of elements...')
+                except:
+                    gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = poisson(meanelemtemp)
+                    gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
+                    gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = max(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittminmnumbelem[l][d])
     
     if gdat.fittnumbtrap > 0:
         print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]'
@@ -2789,7 +2801,7 @@ def work(pathoutpthis, lock, indxprocwork):
         if gdat.fittnumbtrap > 0:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
-    
+
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if gdat.inittype == 'reco' or  gdat.inittype == 'refr' or gdat.inittype == 'pert':
@@ -3238,8 +3250,8 @@ def work(pathoutpthis, lock, indxprocwork):
             
             if gdat.diagmode:
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0.:
-                    #raise Exception('Both likelihood and prior did not change.')
-                    print 'Both likelihood and prior did not change.'
+                    raise Exception('Both likelihood and prior will not change.')
+                    print 'Both likelihood and prior will not change.'
 
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl)

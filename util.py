@@ -776,6 +776,12 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
+            print 'dist'
+            summgene(dist)
+            print 'gdat.binsangl'
+            summgene(gdat.binsangl)
+            print
+
             psfntemp = psfnintp(dist)
     if gdat.kernevaltype == 'bspx':
         pass
@@ -5707,7 +5713,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 if elemtype[l] == 'lghtpnts':
                     legdpopl[l] = 'FPS'
                 if elemtype[l] == 'lghtgausbgrd':
-                    legdpopl[l] = 'BPS'
+                    legdpopl[l] = 'BGS'
             else:
                 if elemtype[l] == 'lghtpntspuls':
                     legdpopl[l] = 'Pulsar'
@@ -5720,17 +5726,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'lghtline':
                 legdpopl[l]= 'Line'
         
-        print 'legdpopl'
-        print legdpopl
         if strgmodl == 'true':
             setp_varbvalu(gdat, 'legdpopl', legdpopl, strgmodl='refr')
             legdpopl = gdat.refrlegdpopl
         else:
             setp_varbvalu(gdat, 'legdpopl', legdpopl, strgmodl=strgmodl)
             legdpopl = getattr(gdat, strgmodl + 'legdpopl')
-        print 'legdpopl'
-        print legdpopl
-        print
 
         if strgmodl == 'true':
             indxpoplassc = [[] for l in indxpopl]
@@ -6547,6 +6548,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
     for l in indxpopl:
         if boolelemsbrt[l]:
             listlegdsbrt.append(legdpopl[l])
+            listlegdsbrt.append(legdpopl[l] + ' unrs')
             numblablsbrt += 2
     if lensmodltype != 'none':
         listlegdsbrt.append('Source')
@@ -6563,16 +6565,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
         listlegdsbrtspec.append('Total Model')
     numblablsbrtspec = len(listlegdsbrtspec)
     
-    print 'numblablsbrtspec'
-    print numblablsbrtspec
-    print 'numblablsbrt'
-    print numblablsbrt
-    print 'listlegdsbrtspec'
-    print listlegdsbrtspec
-    print 'listlegdsbrt'
-    print listlegdsbrt
-    print
-
     namepara = zeros(numbpara, dtype=object)
     lablpara = zeros(numbpara, dtype=object)
     scalpara = zeros(numbpara, dtype=object)
@@ -7011,11 +7003,6 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                         indx = gdatmodi.thisindxelemrefrasscmiss[q][l][indxregiplot]
                     else:
                         indx = arange(lgal.size)
-                    if strgmodl == 'fitt':
-                        print 'gdatmodi.thisindxelemrefrasschits'
-                        print gdatmodi.thisindxelemrefrasschits
-                        print 'gdatmodi.thisindxelemrefrasscmiss'
-                        print gdatmodi.thisindxelemrefrasscmiss
                     if indx.size > 0: 
                         axis.scatter(gdat.anglfact * lgal[indx], gdat.anglfact * bgal[indx], s=mrkrsize[indx], alpha=gdat.alphelem, facecolor='none', \
                                                                  label=gdat.refrlegdmiss, marker=gdat.refrlistelemmrkrmiss[q], lw=gdat.mrkrlinewdth, color=gdat.refrcolrelem[q])
@@ -8083,11 +8070,33 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     
                     if gdat.numbener > 1:
                         specsour = retr_spec(gdat, array([fluxsour[d]]), sind=array([sindsour[d]]))
+                        if gdat.verbtype > 1:
+                            print 'sindsour[d]'
+                            print sindsour[d]
                     else:
                         specsour = array([fluxsour[d]])
                     
+                    if gdat.verbtype > 1:
+                        print 'lgalsour[d]'
+                        print lgalsour[d]
+                        print 'bgalsour[d]'
+                        print bgalsour[d]
+                        print 'sizesour[d]'
+                        print sizesour[d]
+                        print 'ellpsour[d]'
+                        print ellpsour[d]
+                        print 'anglsour[d]'
+                        print anglsour[d]
+                        print 'fluxsour[d]'
+                        print fluxsour[d]
+                        print 'specsour'
+                        print specsour
+                    
                     if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
                 
+                        if gdat.verbtype > 1:
+                            print 'Interpolating the background emission...'
+
                         sbrt['bgrdgalx'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], gdat.bgalgrid[indxpixleval[0][dd]], \
                                                                                         lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
                     
@@ -8103,10 +8112,18 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 # temp -- T?
                                 sbrt['lens'][dd][ii, :, m] = sbrtbgrdobjt(bgalprim, lgalprim, grid=False).T.flatten()
                     else:
+                        if gdat.verbtype > 1:
+                            print 'Not interpolating the background emission...'
+
                         sbrt['lens'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0], \
                                                                gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1], \
                                                                lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
                         
+                        if gdat.verbtype > 1:
+                            print 'dd'
+                            print dd
+                            print 'sbrt[lens][dd]'
+                            summgene(sbrt['lens'][dd])
                         if strgstat == 'this':
                             sbrt['bgrd'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]], \
                                                                    gdat.bgalgrid[indxpixleval[0][dd]], \
@@ -8768,16 +8785,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     elif k == 2:
                         deflsing[d, :, :, k] = defl[d] - deflextr[d] - deflhost[d]
                     else:
-                        print 'indxpopllens'
-                        print indxpopllens
-                        print 'dictelem[indxpopllens]'
-                        print dictelem[indxpopllens]
-                        print 'dictelem[indxpopllens][d]'
-                        print dictelem[indxpopllens][d]
-                        print 'dictelem[indxpopllens][d][ascasort]'
-                        print dictelem[indxpopllens][d]['ascasort']
-                        print 'k'
-                        print k
                         if gdat.variasca:
                             asca = dictelem[indxpopllens][d]['ascasort'][k-3]
                         else:
@@ -9472,42 +9479,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 feattemp = [[[] for d in indxregipopl[l]] for l in indxpopl]
                 for l in indxpopl:
                     for d in indxregipopl[l]:
-                        cntr = 0
                         if strgfeat in liststrgfeat[l]:
-                            if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
-                                print 'strgfeat'
-                                print strgfeat
                             if strgfeat in feat[l][d]:
                                 feattemp[l][d] = feat[l][d][strgfeat]
                             else:
                                 feattemp[l][d] = array([])
-                            if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
-                                print
-                                if cntr == 0:
-                                    numbsave = feat[l][d][strgfeat].size
-                                    print 'setting numbsave'
-                                    print 'numbsave'
-                                    print numbsave
-                                else:
-                                    print 'checking numbsave'
-                                    print 'numbsave'
-                                    print numbsave
-                                    print 'feat[l][d][strgfeat]'
-                                    summgene(feat[l][d][strgfeat])
-                                    if feat[l][d][strgfeat].size != numbsave:
-                                        print 'Did not match!!!!'
-                                        #raise Exception('')
-                                    numbsave = feat[l][d][strgfeat].size
-                                cntr += 1
-                if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
-                    print 'strgpfix + strgfeat'
-                    print strgpfix + strgfeat
-                    #print 'feattemp'
-                    #print feattemp
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
-            
-            #if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
-            #    raise Exception('')
             
             if strgmodl == 'true':
                 for q in gdat.indxrefr:

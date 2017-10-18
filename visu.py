@@ -322,14 +322,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                         continue
                                     if strgstat == 'post' and not gdat.condcatl and strgplottype == 'scat':
                                         continue
-                                    
-                                    print 'strgfrst'
-                                    print strgfrst
-                                    print 'strgseco'
-                                    print strgseco
-                                    print 'strgplottype'
-                                    print strgplottype
-                                    print
                                     plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, d, l, strgplottype, strgfrst, strgseco)
     
             # element feature histograms
@@ -1388,11 +1380,6 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                 if len(varbfrst) == 0 or len(varbseco) == 0:
                     varbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                     varbseco = array([limtseco[0] * factplotseco * 0.1])
-                if gdat.strgcnfg == 'pcat_lens_mock_syst_lowrtrue':
-                    print 'varbfrst'
-                    print varbfrst
-                    print 'varbseco'
-                    print varbseco
                 axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color=gdat.fittcolrelem[indxpoplplot], label=gdat.legdsamp)
     
     # reference elements
@@ -1525,18 +1512,18 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
                 legd = gdat.legdmlik
 
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5, linewidth=5, edgecolor='b')
+                axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5, linewidth=5, edgecolor=colr)
             else:
                 if plottype == 'errr':
                     yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
 
                     if indxydat != None:
                         yerr = yerr[[slice(None)] + indxydat]
-                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='b', label=legd, lw=1, capsize=10)
+                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, label=legd, lw=1, capsize=10, color=colr)
                     for caps in listcaps:
                         caps.set_markeredgewidth(1)
                 else:
-                    axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5)
+                    axis.plot(xdat, ydat, label=gdat.legdsamp, alpha=0.5, color=colr)
     
     # reference histogram
     if not omittrue and gdat.allwrefr:
