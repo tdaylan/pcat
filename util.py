@@ -776,11 +776,12 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
-            print 'dist'
-            summgene(dist)
-            print 'gdat.binsangl'
-            summgene(gdat.binsangl)
-            print
+            if gdat.strgcnfg == 'pcat_ferm_igal_mock_syst_puls':
+                print 'dist'
+                summgene(dist)
+                print 'gdat.binsangl'
+                summgene(gdat.binsangl)
+                print
 
             psfntemp = psfnintp(dist)
     if gdat.kernevaltype == 'bspx':
