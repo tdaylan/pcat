@@ -8897,12 +8897,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             if gdat.refrnumbelem[q][d] == 0:
                                 continue
                             
-                            if gdat.diagmode:
-                                for strgfeat, feat in dictelem[l][d]:
-                                    if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflplot':
-                                        continue
-                                    if feat.size != numbelem[l][d]:
-                                        raise Exception('')
                             indxelemfittmatr = empty((gdat.refrnumbelem[q][d], numbelem[l][d]), dtype=int)
                             indxelemrefrmatr = empty((gdat.refrnumbelem[q][d], numbelem[l][d]), dtype=int)
                             matrdist = empty((gdat.refrnumbelem[q][d], numbelem[l][d]))
