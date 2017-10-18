@@ -320,10 +320,10 @@ def init( \
     if gdat.factthin != None and gdat.numbsamp != None:
         raise Exception('Both factthin and numbsamp cannot be provided at the same time.')
     elif gdat.factthin == None and gdat.numbsamp == None:
-        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn) * gdat.numbproc))
+        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn)))
         gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     elif gdat.numbsamp != None:
-        gdat.factthin = int((gdat.numbswep - gdat.numbburn) * gdat.numbproc / gdat.numbsamp)
+        gdat.factthin = int((gdat.numbswep - gdat.numbburn) / gdat.numbsamp)
     elif gdat.factthin != None:
         gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     if not isinstance(gdat.numbsamp, int) or not isinstance(gdat.factthin, int) or not isinstance(gdat.numbburn, int) or not isinstance(gdat.numbswep, int):
@@ -2033,7 +2033,7 @@ def proc_post(gdat, prio=False):
             print 'Computing the Gelman-Rubin TS...'
             timeinit = gdat.functime()
         gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
-        gdat.gmrbstat = [[zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))] for d in gdat.indxregi]
+        gdat.gmrbstat = [zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) for d in gdat.indxregi]
         for k in gdat.fittindxfixp:
             gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, k])
             if not isfinite(gdat.gmrbfixp[k]):
