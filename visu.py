@@ -119,7 +119,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
                 elif strgstat == 'post':
                     pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
-            colr = retr_colr(strgstat, strgmodl)
+            colr = retr_colr(gdat, strgstat, strgmodl, indxpopl=None)
     
             # transdimensional element features projected onto the data axes
             if not (strgstat == 'post' and not gdat.condcatl):
@@ -233,6 +233,18 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                             limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                     
             if gdat.datatype == 'mock':
+                # pulsar masses
+                lablxdat = gdat.lablgang
+                factxdat = gdat.anglfact
+                for l in indxpopl:
+                    if elemtype[l] == 'lghtpntspuls':
+                        limtydat = [gdat.minmmassshel, gdat.maxmmassshel]
+                        for d in gdat.indxregi:
+                            lablydat = getattr(gdat, 'lablmassshelpop%dreg%d' % (l, d))
+                            name = 'massshelpop%dreg%d' % (l, d)
+                            plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meananglhalf', scalydat='logt', \
+                                                        lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
+
                 if lensmodltype != 'none':
                     ## radial mass budget
                     factxdat = gdat.anglfact
@@ -1015,15 +1027,19 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def retr_colr(strgstat, strgmodl):
+def retr_colr(gdat, strgstat, strgmodl, indxpopl=None):
     
     if strgmodl == 'true':
-        colr = gdat.refrcolr
+        if indxpopl == None:
+            colr = gdat.refrcolr
+        else:
+            colr = gdat.refrcolrelem[indxpopl]
     if strgmodl == 'fitt':
-        if strgstat == 'this':
-            colr = 'b'
-        if strgstat == 'post':
-            colr = 'black'
+        if strgstat == 'this' or strgstat == 'post':
+            if indxpopl == None:
+                colr = gdat.fittcolr
+            else:
+                colr = gdat.fittcolrelem[indxpopl]
         if strgstat == 'mlik':
             colr = 'r'
     
@@ -1202,7 +1218,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                         alph = 1.
                         linestyl = '-'
                     else:
-                        colr = retr_colr(strgstat, liststrgmodl[a])
+                        colr = retr_colr(gdat, strgstat, liststrgmodl[a], indxpopl=None)
                         linestyl = '--'
                         alph = 0.5
                    
@@ -1307,8 +1323,8 @@ def plot_brgt(gdat, gdatmodi, strg):
         pass
     else:   
         if fluxbrgt.size > 0:
-            axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
-            axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color='b', label='Sample - Total')
+            axis.scatter(fluxbrgt, fluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.fittcolrelem[0], label=gdat.legdsamp)
+            axis.scatter(fluxbrgt[0], sum(fluxbrgtassc), alpha=gdat.alphmrkr, color=gdat.fittcolrelem[0], label='Sample - Total')
     if gdat.truefluxbrgt.size > 0:
         axis.scatter(gdat.truefluxbrgt, gdat.truefluxbrgtassc, alpha=gdat.alphmrkr, color=gdat.refrcolrelem[0], label=gdat.refrlegdelem[0])
     axis.set_xscale('log')
@@ -1389,7 +1405,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                     print varbfrst
                     print 'varbseco'
                     print varbseco
-                axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
+                axis.scatter(varbfrst, varbseco, alpha=gdat.alphmrkr, color=gdat.fittcolrelem[indxpoplplot], label=gdat.legdsamp)
     
     # reference elements
     if gdat.allwrefr:
@@ -1439,10 +1455,15 @@ def plot_sigmcont(gdat, axis, l, strgfrst=None, strgseco=None):
                 axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     
 
-def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, plottype='none', \
+def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrplot=None, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, plottype='none', \
                      scal=None, scalxdat=None, scalydat=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
                      lablxdat='', lablydat='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, ydattype='totl'):
-   
+    
+    if strgydat[-8:-5] == 'pop':
+        boolelem = True
+    else:
+        boolelem = False
+
     if scal == None:
         if scalxdat == None:
             scalxdat = 'linr'
@@ -1458,11 +1479,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
         xdat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat) * factydat
     else:
-        # temp
-        if strgxdat[4:] in gdat.fittliststrgfeattotl:
-            xdat = getattr(gdat, strgxdat) * factxdat
-        else:
-            xdat = getattr(gdat, strgxdat) * factxdat
+        xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat) * factydat
     
     if indxxdat != None:
@@ -1470,24 +1487,30 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
     if indxydat != None:
         ydat = ydat[indxydat]
     
-    # temp
-    xerr = zeros((2, xdat.size))
-    
-    if tdim:
-        axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color='b', label=gdat.legdsamp)
-    else:
-        if histodim:
-            # temp
-            if strgxdat[4:] in gdat.fittliststrgfeattotl:
-                deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
-                binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
-            else:
-                deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
-                binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
-
-            xdattemp = binsxdat[:-1] + deltxdat / 2.
-   
     if strgmodl == 'fitt':
+        xerr = zeros((2, xdat.size))
+        
+        if boolelem:
+            legd = gdat.fittlegdelem[int(strgydat[-5])]
+            colr = gdat.fittcolrelem[int(strgydat[-5])]
+        else:
+            legd = gdat.fittlegd
+            colr = gdat.fittcolr
+        
+        if tdim:
+            axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color=colr, label=gdat.legdsamp)
+        else:
+            if histodim:
+                # temp
+                if strgxdat[4:] in gdat.fittliststrgfeattotl:
+                    deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
+                    binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
+                else:
+                    deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
+                    binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
+
+                xdattemp = binsxdat[:-1] + deltxdat / 2.
+   
         if strgstat == 'post':
             yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
             
@@ -1534,7 +1557,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
             if strgydat.startswith('psfn'):
                 name = 'psfnexpr'
             else:
-                if strgydat[-8:-5] == 'pop':
+                if boolelem:
                     name = 'refr' + strgydat[:-8] + 'ref%d' % q + strgydat[-4:]
                 else:
                     name = 'refr' + strgydat
@@ -1565,7 +1588,9 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxydat=N
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphmrkr, linewidth=5, edgecolor=colr)
             else:
                 axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphmrkr)
-    
+            if strgydat[-8:-5] == 'pop':
+                break
+
     if strgydat.startswith('histcntp'):
         if gdat.numbpixl > 1:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])

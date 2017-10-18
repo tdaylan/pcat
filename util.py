@@ -2953,7 +2953,15 @@ def setpprem(gdat):
         else:
             gdat.numbswepplot = 40000
     
-    gdat.refrcolr = 'g'
+    gdat.refrcolr = 'mediumseagreen'
+
+    gdat.minmmass = 1.
+    gdat.maxmmass = 10.
+
+    gdat.minmmassshel = 1e2
+    gdat.maxmmassshel = 1e10
+    gdat.lablmassshel = 'M_{gc}' 
+
     # temp
     gdat.edis = 1. / 2.35
 
@@ -5616,6 +5624,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 
             if elemtype[l] == 'lghtpntspuls':
                 liststrgfeatodim[l] += ['lumi']
+                liststrgfeatodim[l] += ['mass']
                 liststrgfeatodim[l] += ['dlos']
             if elemtype[l] == 'lens':
                 liststrgfeatodim[l] += ['mcut', 'diss', 'rele', 'reln', 'reld', 'relc']
@@ -8874,16 +8883,18 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         print full([numbelem[l][d]], d, dtype=int)
                     indxregielem[l][d] = full([numbelem[l][d]], d, dtype=int)
             
-            # luminosity
+            ### derived quantities
             for l in indxpopl:
+                # luminosity
                 if 'reds' in liststrgfeat[l] and 'flux' in liststrgfeat[l]:
                     for d in indxregipopl[l]:
                         ldis = (1. + dictelem[l][d]['redswo08'])**2 * gdat.adisobjt(dictelem[l][d]['redswo08'])
                         lumi = 4. * pi * ldis**2 * dictelem[l][d]['flux']
                         dictelem[l][d]['lumi'] = lumi
+            
+                if elemtype[l] == 'lghtpntspuls':
+                    dictelem[l][d]['mass'] = full([numbelem[l][d]], 3.)
 
-            ### derived quantities
-            for l in indxpopl:
                 if gdat.verbtype > 1:
                     print 'l'
                     print l
@@ -9157,6 +9168,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 #if indx.size > 0:
                                 #    dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat[:-4]][indx], bins)[0]
                             else:
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'dictelem[l][d][strgfeat]'
+                                print dictelem[l][d][strgfeat]
+                                print
                                 if len(dictelem[l][d][strgfeat]) > 0 and len(listindxelemfilt[0][l][d]) > 0:
                                     # temp
                                     try:
@@ -9261,8 +9277,17 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 acut = gdat.acutglob
                             factmcutfromdefs = retr_factmcutfromdefs(gdat, gdat.adissour, gdat.adishost, gdat.adishostsour, asca, acut) 
                             masssubh = array([sum(factmcutfromdefs * dictelem[l][d]['defs'])])
-            
-        ## calculate the host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
+        
+        ## derived variables as a function of other derived variables
+        for l in indxpopl:
+            if elemtype[l].startswith('lghtpntspuls'):
+                massshel = empty(gdat.numbanglhalf)
+                for k in gdat.indxanglhalf:
+                    indxelemshel = where((gdat.binsanglhalf[k] < dictelem[l][d]['gang']) & (dictelem[l][d]['gang'] < gdat.binsanglhalf[k+1]))
+                    massshel[k] = sum(dictelem[l][d]['mass'][indxelemshel])
+                setattr(gdatobjt, strgpfix + 'massshelpop%dreg%d' % (l, d), massshel)
+                
+        ### host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
         if lensmodltype != 'none' or numbtrap > 0 and 'lens' in elemtype:
             listnametemp = ['delt', 'intg']
             listnamevarbmass = []

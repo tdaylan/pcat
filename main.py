@@ -859,15 +859,17 @@ def init( \
     gdat.listpathwcss = [[] for d in gdat.indxregi]
     gdat.numbpixllgalshft = [[] for d in gdat.indxregi]
     gdat.numbpixlbgalshft = [[] for d in gdat.indxregi]
-            
-    gdat.refrlistcolr = ['darkgreen', 'olivedrab', 'mediumspringgreen']
+    
+    # temp -- this allows up to 3 reference populations
+    gdat.refrcolrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
+    # temp -- this allows up to 3 reference populations
+    gdat.fittcolrelem = ['royalblue', 'dodgerblue', 'navy']
     if gdat.allwrefr:
         if gdat.datatype == 'mock':
             gdat.refrinfo = True
             gdat.numbrefr = gdat.truenumbpopl
             gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
             gdat.indxrefr = arange(gdat.numbrefr)
-            gdat.refrcolrelem = gdat.refrlistcolr[:gdat.truenumbpopl]
         if gdat.datatype == 'inpt':
             if gdat.exprtype == 'ferm':
                 gdat.refrinfo = True
@@ -888,8 +890,6 @@ def init( \
             if gdat.exprtype == 'chan':
                 retr_refrchanfinl(gdat)
             
-            gdat.refrcolrelem = ['m', 'y', 'orange', 'c'][:gdat.numbrefr]
-    
     for strgmodl in gdat.liststrgmodl:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         spatdisttype = [[] for l in indxpopl]
