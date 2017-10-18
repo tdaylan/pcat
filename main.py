@@ -93,7 +93,7 @@ def init( \
 
          ## lens specific
          ### Sersic type
-         serstype='vauc', \
+         serstype='intp', \
 
          # initialization
          ## initialization type
@@ -2679,13 +2679,12 @@ def work(pathoutpthis, lock, indxprocwork):
                 try:
                     namevarb = 'initnumbelempop%dreg%d' % (l, d)
                     initvalu = getattr(gdat, namevarb)
+                    if initvalu > gdat.fittmaxmnumbelem[l][d] or initvalu < gdat.fittminmnumbelem[l][d]:
+                        raise Exception('Bad initial number of elements...')
                     gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = initvalu
                     if gdat.verbtype > 0:
                         print 'Received initial condition for %s: %.3g' % (namevarb, initvalu)
                     
-                    if gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] > gdat.fittmaxmnumbelem[l][d] or \
-                            gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] < gdat.fittminmnumbelem[l][d]:
-                                raise Exception('Bad initial number of elements...')
                 except:
                     gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = poisson(meanelemtemp)
                     gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
@@ -2804,6 +2803,8 @@ def work(pathoutpthis, lock, indxprocwork):
 
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
+        if namefixp.startswith('numbelem'):
+            continue
         if gdat.inittype == 'reco' or  gdat.inittype == 'refr' or gdat.inittype == 'pert':
             try:
                 getattr(gdat, 'init' + namefixp)

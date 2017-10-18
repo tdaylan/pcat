@@ -233,7 +233,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     
             if gdat.datatype == 'mock':
                 # pulsar masses
-                lablxdat = gdat.lablgang
+                lablxdat = gdat.lablgangtotl
                 factxdat = gdat.anglfact
                 for l in indxpopl:
                     if elemtype[l] == 'lghtpntspuls':
@@ -1131,13 +1131,6 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 
             ## total model
             if numblablsbrt > 1:
-                print 'a'
-                print a
-                print 'cntr'
-                print cntr
-                print 'listydat'
-                summgene(listydat)
-                print 
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot))
                 if liststrgmodl[a] == 'post':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot), mometype='errr')
@@ -2380,11 +2373,12 @@ def plot_init(gdat):
         #if gdat.exprtype == 'ferm':
         #    plot_fgl3(gdat)
         
-        for l in gdat.fittindxpopl:
-            if gdat.fittboolelemsbrtdfnc[l]:
-                plot_eval(gdat, l)
-            if gdat.fittelemspatevaltype[l] != 'full' and gdat.numbpixl > 1:
-                plot_indxprox(gdat)
+        if gdat.fittnumbtrap > 0:
+            for l in gdat.fittindxpopl:
+                if gdat.fittboolelemsbrtdfnc[l]:
+                    plot_eval(gdat, l)
+                if gdat.fittelemspatevaltype[l] != 'full' and gdat.numbpixl > 1:
+                    plot_indxprox(gdat)
         
         # temp
         if gdat.makeplotintr:

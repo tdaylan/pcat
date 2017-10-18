@@ -769,7 +769,7 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
     
     # calculate the distance to all pixels from each point source
     dist = retr_angldistunit(gdat, lgal, bgal, indxpixleval)
-   
+    
     # interpolate the PSF onto the pixels
     if gdat.kernevaltype == 'ulip':
         if oaxitype:
@@ -2969,9 +2969,9 @@ def setpprem(gdat):
     gdat.maxmmass = 10.
     
     gdat.lablmass = 'M'
-    gdat.minmmassshel = 1e2
-    gdat.maxmmassshel = 1e10
-    gdat.lablmassshel = 'M_r' 
+    gdat.minmmassshel = 1e1
+    gdat.maxmmassshel = 1e5
+    gdat.lablmassshel = '$M_r$' 
 
     # temp
     gdat.edis = 1. / 2.35
@@ -3313,6 +3313,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.labllumi = r'L_{\gamma}'
     gdat.factlumiplot = 1.
     gdat.scallumiplot = 'logt'
+    gdat.labllumiunit = 'erg s$^{-1}$'
     
     gdat.lablthet = r'\theta_{gc}'
     gdat.factthetplot = 180. / pi
@@ -4313,30 +4314,30 @@ def setpinit(gdat, boolinitsetp=False):
         #gdat.stdvstdp[gdat.indxstdpbacpback0000reg0ene0] = 1e-1
         
         if gdat.fittlensmodltype != 'none':
-            gdat.stdvstdp[gdat.indxstdplgalsour] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpbgalsour] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpfluxsour] = 1e-2
+            gdat.stdvstdp[gdat.indxstdplgalsourreg0] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpbgalsourreg0] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpfluxsourreg0] = 1e-2
             if gdat.numbener > 1:
-                gdat.stdvstdp[gdat.indxstdpsindsour] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpsizesour] = 1e-1
-            gdat.stdvstdp[gdat.indxstdpellpsour] = 1e-1
-            gdat.stdvstdp[gdat.indxstdpanglsour] = 1e-1
+                gdat.stdvstdp[gdat.indxstdpsindsourreg0] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpsizesourreg0] = 1e-1
+            gdat.stdvstdp[gdat.indxstdpellpsourreg0] = 1e-1
+            gdat.stdvstdp[gdat.indxstdpanglsourreg0] = 1e-1
         if gdat.fitthostemistype != 'none':
-            gdat.stdvstdp[gdat.indxstdplgalhost] = 3e-4
-            gdat.stdvstdp[gdat.indxstdpbgalhost] = 3e-4
-            gdat.stdvstdp[gdat.indxstdpfluxhost] = 1e-3
+            gdat.stdvstdp[gdat.indxstdplgalhostreg0] = 3e-4
+            gdat.stdvstdp[gdat.indxstdpbgalhostreg0] = 3e-4
+            gdat.stdvstdp[gdat.indxstdpfluxhostreg0] = 1e-3
             if gdat.numbener > 1:
-                gdat.stdvstdp[gdat.indxstdpsindhost] = 1e-3
-            gdat.stdvstdp[gdat.indxstdpsizehost] = 3e-3
+                gdat.stdvstdp[gdat.indxstdpsindhostreg0] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpsizehostreg0] = 3e-3
         if gdat.fittlensmodltype != 'none':
-            gdat.stdvstdp[gdat.indxstdpbeinhost] = 1e-3
+            gdat.stdvstdp[gdat.indxstdpbeinhostreg0] = 1e-3
         if gdat.fitthostemistype != 'none':
-            gdat.stdvstdp[gdat.indxstdpellphost] = 1e-2
-            gdat.stdvstdp[gdat.indxstdpanglhost] = 1e-2
-            gdat.stdvstdp[gdat.indxstdpserihost] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpellphostreg0] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpanglhostreg0] = 1e-2
+            gdat.stdvstdp[gdat.indxstdpserihostreg0] = 1e-2
         if gdat.fittlensmodltype != 'none':
-            gdat.stdvstdp[gdat.indxstdpsherextr] = 1e-1
-            gdat.stdvstdp[gdat.indxstdpsangextr] = 3e-2
+            gdat.stdvstdp[gdat.indxstdpsherextrreg0] = 1e-1
+            gdat.stdvstdp[gdat.indxstdpsangextrreg0] = 3e-2
         
         gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
@@ -5234,7 +5235,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         for l in indxpopl:
             if elemtype[l] == 'lghtpntspuls':
                 setp_varblimt(gdat, 'gang', [1e-1 * gdat.sizepixl, gdat.maxmgangdata], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'geff', [0., 1.], strgmodl=strgmodl)
+                setp_varblimt(gdat, 'geff', [0., 0.4], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'dglc', [1e-1, 10.], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'phii', [0., 2. * pi], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'thet', [0., pi], strgmodl=strgmodl)
@@ -6059,11 +6060,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 dicttemp['indxfixpsour'] = []
         
         # construct index arrays for individual lens parameters that contain parameters for all regions
-        for name, valu in deepcopy(dicttemp).iteritems():
-            if name[:-1].endswith('reg'):
-                if not name[:-4] in dicttemp:
-                    dicttemp[name[:-4]] = []
-                dicttemp[name[:-4]].append(valu)
+        for d in gdat.indxregi:
+            for name, valu in deepcopy(dicttemp).iteritems():
+                if name.endswith('reg%d' % d):
+                    if not name[:-4] in dicttemp:
+                        dicttemp[name[:-4]] = []
+                    dicttemp[name[:-4]].append(valu)
             
 
         if lensmodltype != 'none' and hostemistype == 'none':
@@ -7620,6 +7622,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         if spatdisttype[l] == 'glc3':
                             dictelem[l][d]['dlos'], dictelem[l][d]['lgal'], dictelem[l][d]['bgal'] = retr_glc3(dictelem[l][d]['dglc'], \
                                                                                                                 dictelem[l][d]['thet'], dictelem[l][d]['phii'])
+                            
+                            if gdat.diagmode:
+                                if amin(dictelem[l][d]['lgal']) < getattr(gdat, strgmodl + 'minmlgal') or \
+                                   amax(dictelem[l][d]['lgal']) > getattr(gdat, strgmodl + 'maxmlgal') or \
+                                   amin(dictelem[l][d]['bgal']) < getattr(gdat, strgmodl + 'minmbgal') or \
+                                   amax(dictelem[l][d]['bgal']) > getattr(gdat, strgmodl + 'maxmbgal'):
+                                    raise Exception('Bad coordinates!')
+
                         if spatdisttype[l] == 'los3':
                             dictelem[l][d]['dglc'], dictelem[l][d]['thet'], dictelem[l][d]['phii'] = retr_los3(dictelem[l][d]['dlos'], \
                                                                                                                 dictelem[l][d]['lgal'], dictelem[l][d]['bgal'])
@@ -7657,7 +7667,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         if gdat.verbtype > 1:
             print 'Evaluating the likelihood...'
-        
+       
         # process a sample vector and the occupancy list to calculate secondary variables
         if lensmodltype != 'none':
             lgalsour = sampvarb[getattr(gdat, strgmodl + 'indxfixplgalsour')]
@@ -9391,6 +9401,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     for k in gdat.indxanglhalf:
                         indxelemshel = where((gdat.binsanglhalf[k] < dictelem[l][d]['gang']) & (dictelem[l][d]['gang'] < gdat.binsanglhalf[k+1]))
                         massshel[k] = sum(dictelem[l][d]['mass'][indxelemshel])
+                    print 'massshel'
+                    print massshel
+                    print
                     setattr(gdatobjt, strgpfix + 'massshelpop%dreg%d' % (l, d), massshel)
                 
         ### host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
