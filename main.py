@@ -2681,7 +2681,7 @@ def work(pathoutpthis, lock, indxprocwork):
     
     if gdat.fittnumbtrap > 0:
         print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]'
-        print gdatmodi.thissamp[gdat.fittindxfixpnumbelem]
+        print gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]
         print
 
     ## impose user-specified initial state

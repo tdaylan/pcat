@@ -413,6 +413,7 @@ def retr_sampvarbtrap(gdat, strgmodl, indxsampcomp, indxregi, indxpopl, liststrg
 def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
     
     if scalcomp == 'self' or scalcomp == 'expo' or scalcomp == 'powrslop':
+
         minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
         if scalcomp == 'powrslop':
             maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
@@ -431,14 +432,6 @@ def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
                     print maxm
                     raise Exception('')
             icdf = icdf_powr(cdfn, minm, maxm, distslop)
-            if strgcomp == 'dglc':
-                print 'cdfn'
-                print cdfn
-                print 'icdf'
-                print icdf
-                print 'distslop'
-                print distslop
-                print
 
         else:
             fact = getattr(gdat, strgmodl + 'fact' + strgcomp)
@@ -824,16 +817,6 @@ def retr_indxpixlevalconc(gdat, strgmodl, dicteval, l, ll, dd):
                 print 'indxfluxproxtemp'
                 print indxfluxproxtemp
             
-            print 'l, ll, dd'
-            print l, ll, dd
-            print 'varbeval[k]'
-            print varbeval[k]
-            print 'gdat.binsprox'
-            print gdat.binsprox
-            print 'indxfluxproxtemp'
-            print indxfluxproxtemp
-            print
-
             indxpixleval = gdat.indxpixlprox[indxfluxproxtemp][indxpixlpnts]
             if isinstance(indxpixleval, int):
                 indxpixleval = gdat.indxpixl
@@ -4552,8 +4535,8 @@ def setpinit(gdat, boolinitsetp=False):
                     getattr(gdat, 'maxm' + namefeat)
                 except:
                     try:
-                        setattr(gdat, 'minm' + namefeat, min(getattr(gdat, 'fittminm' + namefeat), getattr(gdat, 'fittminm' + namefeat)))
-                        setattr(gdat, 'maxm' + namefeat, max(getattr(gdat, 'fittmaxm' + namefeat), getattr(gdat, 'fittmaxm' + namefeat)))
+                        setattr(gdat, 'minm' + namefeat, min(getattr(gdat, 'fittminm' + namefeat), getattr(gdat, 'trueminm' + namefeat)))
+                        setattr(gdat, 'maxm' + namefeat, max(getattr(gdat, 'fittmaxm' + namefeat), getattr(gdat, 'truemaxm' + namefeat)))
                     except:
                         try:
                             setattr(gdat, 'minm' + namefeat, getattr(gdat, 'fittminm' + namefeat))
@@ -4564,6 +4547,7 @@ def setpinit(gdat, boolinitsetp=False):
                                 setattr(gdat, 'maxm' + namefeat, getattr(gdat, 'truemaxm' + namefeat))
                             except:
                                 pass
+    
 
     gdat.boolhash = False
     for strgmodl in gdat.liststrgmodl:
@@ -4858,7 +4842,7 @@ def retr_datatick(gdat):
         gdat.maxmcntpdata[d] = max(0.5, amax(sum(gdat.cntpdata[d], 2)))
     gdat.maxmcntpdata = amax(gdat.maxmcntpdata)
     gdat.maxmcntpmodl = gdat.maxmcntpdata
-    gdat.minmcntpmodl = 1e-3 * gdat.maxmcntpdata
+    gdat.minmcntpmodl = 1e-5 * gdat.maxmcntpdata
     gdat.minmcntpdata = max(0.5, gdat.minmcntpmodl)
     gdat.maxmcntpresi = ceil(gdat.maxmcntpdata * 0.1)
     gdat.minmcntpresi = -gdat.maxmcntpresi
@@ -5392,7 +5376,13 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                         raise Exception('Provided background template must have the chosen image dimensions.')
             
                     sbrtbacknormtemp = sbrtbacknormtemp.reshape((sbrtbacknormtemp.shape[0], sbrtbacknormtemp.shape[1], -1, sbrtbacknormtemp.shape[-1]))
-           
+          
+            print 'c'
+            print c
+            print 'sbrtbacknormtemp'
+            summgene(sbrtbacknormtemp)
+            print
+
             sbrtbacknorm[c, ...] = sbrtbacknormtemp
            
             
@@ -5583,10 +5573,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 liststrgcomp[l] = ['lgal', 'bgal']
                 listscalcomp[l] = ['self', 'self']
             
-            if elemtype[l] == 'lghtgausbgrd':
-                liststrgcomp[l] += ['gwdt']
-                listscalcomp[l] += ['powrslop']
-            
             if elemtype[l] == 'lghtpntspuls':
                 liststrgcomp[l] += ['per0']
             elif elemtype[l].startswith('lght'):
@@ -5598,6 +5584,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'lghtpntspuls':
                 listscalcomp[l] += ['lnormeanstdv']
             else:
+                listscalcomp[l] += ['powrslop']
+            
+            if elemtype[l] == 'lghtgausbgrd':
+                liststrgcomp[l] += ['gwdt']
                 listscalcomp[l] += ['powrslop']
             
             if elemtype[l] == 'lghtpntspuls':
@@ -9039,13 +9029,35 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             #setattr(gdatobjt, strgpfix + 'fluxbrgtassc', fluxbrgtassc)
         
         if numbtrap > 0 and boolelemsbrtextsbgrdanyy:
+            if gdat.diagmode:
+                if (sbrtextsbgrd == 0.).all():
+                    raise Exception('')
+
             sbrt['bgrdexts'] = sbrtextsbgrd
 
         #### count maps
         if gdat.correxpo:
             cntp = dict()
             for name in listnamegcom:
+                
+                print 'name'
+                print name
+                for d in gdat.indxregi:
+                    for i in gdat.indxener:
+                        for m in gdat.indxevtt:
+                            print 'sbrt[name][d][i, :, m]'
+                            summgene(sbrt[name][d][i, :, m])
+
                 cntp[name] = retr_cntp(gdat, sbrt[name], indxregieval, indxcubeeval)
+                
+                for d in gdat.indxregi:
+                    for i in gdat.indxener:
+                        for m in gdat.indxevtt:
+                            print 'cntp[name][d][i, :, m]'
+                            summgene(cntp[name][d][i, :, m])
+
+                print
+                
                 for d in gdat.indxregi:
                     setattr(gdatobjt, strgpfix + 'cntp' + name + 'reg%d' % d, cntp[name][d])
         
@@ -9063,16 +9075,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 for m in gdat.indxevtt:
                     if gdat.numbpixl > 1:
                         for i in gdat.indxener: 
-                            histcntp = histogram(cntp[name][d][i, :, m], bins=gdat.binscntpdata)[0]
+                            histcntp = histogram(cntp[name][d][i, :, m], bins=gdat.binscntpmodl)[0]
                             setattr(gdatobjt, strgpfix + 'histcntp' + name + 'reg%dene%devt%d' % (d, i, m), histcntp)
                             
                             if (histcntp == 0.).all():
                                 print 'name'
                                 print name
+                                print 'im'
+                                print i, m
+                                print 'cntp[name][d][i, :, m]'
+                                print cntp[name][d][i, :, m]
+                                summgene(cntp[name][d][i, :, m])
+                                print 'gdat.minmcntpmodl'
+                                print gdat.minmcntpmodl
                                 raise Exception('')
 
                     else:
-                        histcntp = histogram(cntp[name][d][:, 0, m], bins=gdat.binscntpdata)[0]
+                        histcntp = histogram(cntp[name][d][:, 0, m], bins=gdat.binscntpmodl)[0]
                         setattr(gdatobjt, strgpfix + 'histcntp' + name + 'reg%devt%d' % (d, m), histcntp)
 
         if lensmodltype != 'none':
@@ -9549,6 +9568,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         continue
 
                                     if len(indxelemrefrasschits[q][l][d]) > 0:
+                                        print 'qld'
+                                        print q, l, d
+                                        print 'refrfeat'
+                                        print refrfeat
+                                        print 'indxelemrefrasschits'
+                                        print indxelemrefrasschits
+                                        print
+
                                         histfeatrefrassc = histogram(refrfeat[q][d][0, indxelemrefrasschits[q][l][d]], bins=bins)[0]
                                         indxgood = where(refrhistfeat != 0.)[0]
                                         if indxgood.size > 0:
@@ -9611,8 +9638,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     print 'Feature maximum'
                                     print amax(dictelem[l][d][strgfeat])
                                     print
-                                if strgfeat == namefeatampl[l] and strgfeat in liststrgcomp[l] and (listscalcomp[l] != 'gaus' and not scalcomp[l].startswith('lnor')):
-                                    raise Exception('')
+                                if strgfeat == namefeatampl[l] and strgfeat in liststrgcomp[l]:
+                                    indxcomptemp = liststrgcomp[l].index(strgfeat)
+                                    if (listscalcomp[l][indxcomptemp] != 'gaus' and not listscalcomp[l][indxcomptemp].startswith('lnor')):
+                                        raise Exception('')
     
 
 def retr_los3(dlos, lgal, bgal):
