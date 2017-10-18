@@ -1487,9 +1487,23 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
     if indxydat != None:
         ydat = ydat[indxydat]
     
+    xerr = zeros((2, xdat.size))
+    
+    if tdim:
+        axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color=colr, label=gdat.legdsamp)
+    else:
+        if histodim:
+            # temp
+            if strgxdat[4:] in gdat.fittliststrgfeattotl:
+                deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
+                binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
+            else:
+                deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
+                binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
+
+            xdattemp = binsxdat[:-1] + deltxdat / 2.
+   
     if strgmodl == 'fitt':
-        xerr = zeros((2, xdat.size))
-        
         if boolelem:
             legd = gdat.fittlegdelem[int(strgydat[-5])]
             colr = gdat.fittcolrelem[int(strgydat[-5])]
@@ -1497,20 +1511,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
             legd = gdat.fittlegd
             colr = gdat.fittcolr
         
-        if tdim:
-            axis.scatter(xdat, ydat, alpha=gdat.alphmrkr, color=colr, label=gdat.legdsamp)
-        else:
-            if histodim:
-                # temp
-                if strgxdat[4:] in gdat.fittliststrgfeattotl:
-                    deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
-                    binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
-                else:
-                    deltxdat = getattr(gdat, 'delt' + strgxdat[4:]) * factxdat
-                    binsxdat = getattr(gdat, 'bins' + strgxdat[4:]) * factxdat
-
-                xdattemp = binsxdat[:-1] + deltxdat / 2.
-   
         if strgstat == 'post':
             yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, mometype='errr') * factydat
             

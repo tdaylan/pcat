@@ -9279,13 +9279,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             masssubh = array([sum(factmcutfromdefs * dictelem[l][d]['defs'])])
         
         ## derived variables as a function of other derived variables
-        for l in indxpopl:
-            if elemtype[l].startswith('lghtpntspuls'):
-                massshel = empty(gdat.numbanglhalf)
-                for k in gdat.indxanglhalf:
-                    indxelemshel = where((gdat.binsanglhalf[k] < dictelem[l][d]['gang']) & (dictelem[l][d]['gang'] < gdat.binsanglhalf[k+1]))
-                    massshel[k] = sum(dictelem[l][d]['mass'][indxelemshel])
-                setattr(gdatobjt, strgpfix + 'massshelpop%dreg%d' % (l, d), massshel)
+        if numbtrap > 0:
+            for l in indxpopl:
+                if elemtype[l].startswith('lghtpntspuls'):
+                    massshel = empty(gdat.numbanglhalf)
+                    for k in gdat.indxanglhalf:
+                        indxelemshel = where((gdat.binsanglhalf[k] < dictelem[l][d]['gang']) & (dictelem[l][d]['gang'] < gdat.binsanglhalf[k+1]))
+                        massshel[k] = sum(dictelem[l][d]['mass'][indxelemshel])
+                    setattr(gdatobjt, strgpfix + 'massshelpop%dreg%d' % (l, d), massshel)
                 
         ### host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
         if lensmodltype != 'none' or numbtrap > 0 and 'lens' in elemtype:
