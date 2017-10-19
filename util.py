@@ -7977,6 +7977,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             sbrtdfnc[dd][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtdfncreg%d' % d)[indxcubeeval[0][dd]]
                     else:
                         sbrtdfnc[dd] = zeros_like(gdat.expo[d])
+                if boolelemdeflsubhanyy:
+                    if strgstat == 'next':
+                        if gdatmodi.propelemdeflsubh:
+                            deflsubh[dd] = copy(getattr(gdatobjt, strgpfixthis + 'deflsubhreg%d' % d))
+                        else:
+                            deflsubh[dd] = getattr(gdatobjt, strgpfixthis + 'deflsubhreg%d' % d)
+                    else:
+                        deflsubh[dd] = zeros((gdat.numbpixl, 2))
                 if boolelemsbrtextsbgrdanyy: 
                     if strgstat == 'next':
                         sbrtextsbgrd[dd] = empty_like(gdat.expo[d])
@@ -7986,16 +7994,18 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             sbrtextsbgrd[dd][indxcubeeval[0][dd]] = getattr(gdatobjt, strgpfixthis + 'sbrtextsbgrdreg%d' % d)[indxcubeeval[0][dd]]
                     else:
                         sbrtextsbgrd[dd] = zeros_like(gdat.expo[d])
-                if boolelemdeflsubhanyy:
-                    if strgstat == 'next':
-                        if gdatmodi.propelemdeflsubh:
-                            deflsubh[dd] = copy(getattr(gdatobjt, strgpfixthis + 'deflsubhreg%d' % d))
-                        else:
-                            deflsubh[dd] = getattr(gdatobjt, strgpfixthis + 'deflsubhreg%d' % d)
-                    else:
-                        deflsubh[dd] = zeros((gdat.numbpixl, 2))
             
             if gdat.verbtype > 1:
+                for dd, d in enumerate(indxregieval):
+                    if boolelemsbrtdfncanyy:
+                        print 'sbrtdfnc[dd]'
+                        summgene(sbrtdfnc[dd])
+                    if boolelemdeflsubhanyy:
+                        print 'deflsubh[dd]'
+                        summgene(deflsubh[dd])
+                    if boolelemsbrtextsbgrdanyy:
+                        print 'sbrtextsbgrd[dd]'
+                        summgene(sbrtextsbgrd[dd])
                 print 'elemspatevaltype'
                 print elemspatevaltype
                 print
@@ -8028,6 +8038,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
                                     if elemtype[l] == 'lghtline':
                                         sbrtdfnc[dd][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
+                        print 'hey'
+                        for ii, i in enumerate(indxenereval):
+                            print 'ii, i'
+                            print ii, i
+                            print 'sbrtdfnc[dd][i, :, :]'
+                            summgene(sbrtdfnc[dd][i, :, :])
+                            print 'sbrtdfnc[dd][i, indxcubeeval[0][dd], :]'
+                            summgene(sbrtdfnc[dd][i, indxcubeeval[0][dd], :])
+                        if gdat.diagmode:
+                            for dd, d in enumerate(indxregieval):
+                                if amin(sbrtdfnc[dd]) < 0:
+                                    raise Exception('')
+                                    
+                        print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
+                        summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         # when the only background template is the data-PS residual, correct the PS template for numerical noise
                         if backtype[0] == 'data':
@@ -8037,7 +8062,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 if gdat.diagmode:
                     cntppntschec = retr_cntp(gdat, sbrt['dfnc'], indxregieval, indxcubeeval)
                     for dd, d in enumerate(indxregieval):
-                        if amin(sbrt['dfnc'][dd]) == 0. and amax(sbrt['dfnc'][dd]) == 0.:
+                        numbelemtemp = 0
+                        for l in indxpopl:
+                            if boolelemsbrtdfnc[l]:
+                                numbelemtemp += sum(numbelem[l])
+                        if (amin(sbrt['dfnc'][dd]) == 0. and amax(sbrt['dfnc'][dd]) == 0.) and numbelemtemp > 0: 
                             raise Exception('Surface brightness of delta-functions is identically zero in region %d' % d)
 
                         if amin(cntppntschec[dd]) < -0.1:
@@ -8172,14 +8201,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         if gdat.verbtype > 1:
                             print 'Not interpolating the background emission...'
                         
-                        print 'defl[d]'
-                        summgene(defl[d])
-                        print 'gdat.lgalgrid'
-                        summgene(gdat.lgalgrid)
-                        print 'gdat.bgalgrid'
-                        summgene(gdat.bgalgrid)
-                        print
-
                         sbrt['lens'][dd] = retr_sbrtsers(gdat, gdat.lgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 0], \
                                                                gdat.bgalgrid[indxpixleval[0][dd]] - defl[d][indxpixleval[0][dd], 1], \
                                                                lgalsour[d], bgalsour[d], specsour, sizesour[d], ellpsour[d], anglsour[d])
@@ -9896,7 +9917,7 @@ def retr_sbrtsers(gdat, lgalgrid, bgalgrid, lgal, bgal, spec, size, ellp, angl, 
         inpt[..., 1] = size
         inpt[..., 2] = seri
         
-        if gdat.strgcnfg == 'pcat_lens_mock_many' or gdat.strgcnfg == 'pcat_lens_mock_syst_nomi':
+        if False and (gdat.strgcnfg == 'pcat_lens_mock_many' or gdat.strgcnfg == 'pcat_lens_mock_syst_nomi'):
             print 'gdat.binslgalsers'
             summgene(gdat.binslgalsers * gdat.anglfact)
             print 'gdat.binshalfsers'

@@ -1313,7 +1313,7 @@ def init( \
         if gdat.serstype == 'intp':
             # construct pixel-convolved Sersic surface brightness template
             gdat.factsersusam = 10
-            maxmlgal = 2. * sqrt(2.) * gdat.maxmlgal
+            maxmlgal = 4. * sqrt(2.) * gdat.maxmlgal
             gdat.numblgalsers = int(ceil(maxmlgal / gdat.sizepixl))
             gdat.numblgalsersusam = (1 + gdat.numblgalsers) * gdat.factsersusam
             retr_axis(gdat, 'lgalsers', 0., maxmlgal, gdat.numblgalsers)
