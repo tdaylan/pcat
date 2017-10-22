@@ -5015,6 +5015,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'clus':
                 namefeatampl[l] = 'nobj'
                 indxcompampl[l] = 2
+            if len(namefeatampl[l]) == 0:
+                raise Exception('Amplitude feature undefined.')
+
     else:
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         elemspatevaltype = getattr(gdat, strgmodl + 'elemspatevaltype')
@@ -8011,6 +8014,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 print
         
             # element kernel evaluation
+            print 'meeeey'
+            print 'boolelempsfn'
+            print boolelempsfn
             if boolelemsbrtdfncanyy:
                 initchro(gdat, gdatmodi, strgstat, 'elemsbrtdfnc')
                 sbrt['dfnc'] = [[] for d in indxregieval]
@@ -8033,26 +8039,32 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         print 'varbevalextd'
                                         print varbevalextd
                                         print
+                                    print 'listindxpixleval'
+                                    print listindxpixleval
                                     if boolelempsfn[l]:
                                         sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
                                     if elemtype[l] == 'lghtline':
                                         sbrtdfnc[dd][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
-                        print 'hey'
-                        for ii, i in enumerate(indxenereval):
-                            print 'ii, i'
-                            print ii, i
-                            print 'sbrtdfnc[dd][i, :, :]'
-                            summgene(sbrtdfnc[dd][i, :, :])
-                            print 'sbrtdfnc[dd][i, indxcubeeval[0][dd], :]'
-                            summgene(sbrtdfnc[dd][i, indxcubeeval[0][dd], :])
+                                    
+                                    print 'hey'
+                                    for ii, i in enumerate(indxenereval):
+                                        print 'ii, i'
+                                        print ii, i
+                                        print 'sbrtdfnc[dd][i, :, :]'
+                                        summgene(sbrtdfnc[dd][i, :, :])
+                                        print 'sbrtdfnc[dd][i, indxcubeeval[0][dd], :]'
+                                        summgene(sbrtdfnc[dd][i, indxcubeeval[0][dd], :])
+                                    print
+
                         if gdat.diagmode:
                             for dd, d in enumerate(indxregieval):
                                 if amin(sbrtdfnc[dd]) < 0:
                                     raise Exception('')
                                     
-                        print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
-                        summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
+                        #print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
+                        #summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
+                        
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         # when the only background template is the data-PS residual, correct the PS template for numerical noise
                         if backtype[0] == 'data':
