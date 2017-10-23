@@ -3017,6 +3017,12 @@ def work(pathoutpthis, lock, indxprocwork):
         stopchro(gdat, gdatmodi, 'next', 'prop')
         
         if gdat.diagmode:
+            
+            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisljcb != 0.:
+                raise Exception('log Jacobian can only be be nonzero when a split or merge is proposed.')
+            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thislrpp != 0.:
+                raise Exception('log ratio proposal probability can only be be nonzero when a split or merge is proposed.')
+            
             numbtemp = 0
             for l in gdat.fittindxpopl:
                 for d in gdat.indxregi:
@@ -3261,7 +3267,6 @@ def work(pathoutpthis, lock, indxprocwork):
                 
             if gdat.fittnumbtrap == 0 and gdatmodi.propelem:
                 raise Exception('')
-    
 
         # determine the acceptance probability
         gdatmodi.thisaccpprop = gdatmodi.thisaccpprio and gdatmodi.thisaccppsfn

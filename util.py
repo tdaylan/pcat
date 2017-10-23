@@ -421,10 +421,9 @@ def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
         print 'minm'
         print minm
         if scalcomp == 'powrslop':
+            maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
             print 'maxm'
             print maxm
-
-            maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
             distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
             if gdat.diagmode:
                 if not isfinite(distslop):
@@ -2314,6 +2313,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             probrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
             probreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], -1) / nextnumbelem
             gdatmodi.thislrpp = log(probrevefrst + probreveseco) - log(probfrwd)
+    else:
+        gdatmodi.thisljcb = 0.
+        gdatmodi.thislrpp = 0.
 
     setattr(gdatobjt, strgpfixnext + 'samp', nextsamp)
     setattr(gdatobjt, strgpfixnext + 'sampvarb', nextsampvarb)
