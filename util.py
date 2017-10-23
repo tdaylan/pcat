@@ -1643,12 +1643,14 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             gdatmodi.indxevttmodi = gdat.indxevtt
    
     # reject PSF proposals when there is no non-uniform diffuse emission and no delta function elements
-    if gdatmodi.proppsfp and not convdiffanyy:
+    if gdatmodi.proppsfp:
+        gdatmodi.indxpoplmodi = []
         numb = 0
         for l in gdat.fittindxpopl:
             if boolelemsbrtdfnc[l]:
+                gdatmodi.indxpoplmodi.append(l)
                 numb += sum(thissampvarb[gdat.fittindxfixpnumbelem[l]])
-        if numb == 0:
+        if not convdiffanyy and numb == 0:
             gdatmodi.thisaccpprio = False
     
     # derived proposal flags
@@ -1705,7 +1707,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     if gdatmodi.propdist:
         gdatmodi.indxpoplmodi = [int(gdat.fittnamepara[gdatmodi.indxsampmodi][-1])]
-
+    
     if gdatmodi.propwith:
         if not gdatmodi.propfixp:
             
@@ -1725,7 +1727,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     gdatmodi.propsbrtlens = gdatmodi.proplenp
     if numbtrap > 0:
         if gdatmodi.propfixp:
-            gdatmodi.propelemsbrtdfnc = False
+            if gdatmodi.proppsfp:
+                gdatmodi.propelemsbrtdfnc = True
+            else:
+                gdatmodi.propelemsbrtdfnc = False
             gdatmodi.propelemdeflsubh = False
             gdatmodi.propelemsbrtextsbgrd = False
         else:
@@ -1970,7 +1975,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         if gdatmodi.compfrst[indxcompampl[gdatmodi.indxpoplmodi[0]]] < getattr(gdat, strgmodl + 'minm' + gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]) or \
                      gdatmodi.compseco[indxcompampl[gdatmodi.indxpoplmodi[0]]] < getattr(gdat, strgmodl + 'minm' + gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]):
             gdatmodi.thisaccpprio = False
-
+    
         if gdat.verbtype > 1:
             print 'gdatmodi.comppare'
             print gdatmodi.comppare
@@ -7869,8 +7874,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 indxgrideval = array([indxgridpopl[gdatmodi.indxpoplmodi[0]]])
                 indxregieval = gdatmodi.indxregimodi
                 numbelemeval = gdatmodi.numbelemeval
-                indxelemeval = [[[]]]
-                indxelemeval[0][0] = arange(gdatmodi.numbelemeval[0][0])
+                indxelemeval = [[[] for d in indxregieval] for l in indxpopleval]
+                print 'indxpopleval'
+                print indxpopleval
+                print 'indxregieval'
+                print indxregieval
+                for l in indxpopleval:
+                    for d in indxregieval:
+                        indxelemeval[l][d] = arange(gdatmodi.numbelemeval[l][d])
                 if not gdatmodi.propfixp or gdatmodi.proppsfp and boolelemsbrtdfncanyy:
                     dicteval = gdatmodi.dicteval
                     if gdat.verbtype > 1:
@@ -8014,9 +8025,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 print
         
             # element kernel evaluation
-            print 'meeeey'
-            print 'boolelempsfn'
-            print boolelempsfn
             if boolelemsbrtdfncanyy:
                 initchro(gdat, gdatmodi, strgstat, 'elemsbrtdfnc')
                 sbrt['dfnc'] = [[] for d in indxregieval]
@@ -8039,40 +8047,19 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         print 'varbevalextd'
                                         print varbevalextd
                                         print
-                                    print 'll, l'
-                                    print ll, l
-                                    print 'listindxpixleval'
-                                    print listindxpixleval
-                                    print 'listindxpixleval[ll][dd][k]'
-                                    print listindxpixleval[ll][dd][k]
-                                    print 'len(listindxpixleval[ll][dd][k])'
-                                    print len(listindxpixleval[ll][dd][k])
                                     if boolelempsfn[l]:
                                         sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
                                     if elemtype[l] == 'lghtline':
                                         sbrtdfnc[dd][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
                                     
-                                    print 'hey'
-                                    for ii, i in enumerate(indxenereval):
-                                        print 'ii, i'
-                                        print ii, i
-                                        print 'sbrtdfnc[dd][i, :, :]'
-                                        summgene(sbrtdfnc[dd][i, :, :])
-                                        print 'sbrtdfnc[dd][i, indxcubeeval[0][dd], :]'
-                                        summgene(sbrtdfnc[dd][i, indxcubeeval[0][dd], :])
-                                    print
-                                    print
-                                    print
-
                         if gdat.diagmode:
                             for dd, d in enumerate(indxregieval):
-                                if amin(sbrtdfnc[dd]) < 0:
+                                if amin(sbrtdfnc[dd]) / mean(sbrtdfnc[dd]) < 1e-6:
+                                    print 'sbrtdfnc[dd]'
+                                    summgene(sbrtdfnc[dd])
                                     raise Exception('')
                                     
-                        #print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
-                        #summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
-                        
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         # when the only background template is the data-PS residual, correct the PS template for numerical noise
                         if backtype[0] == 'data':

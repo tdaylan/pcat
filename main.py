@@ -667,6 +667,10 @@ def init( \
             specback = [False for k in range(len(backtype))]
             setp_varbvalu(gdat, 'specback', specback, strgmodl=strgmodl)
     
+    print 'gdat.truespecback'
+    print gdat.truespecback
+    print 'gdat.fittspecback'
+    print gdat.fittspecback
     if gdat.exprtype == 'hubb':
         hostemistype = 'sers'
     else:
@@ -732,7 +736,9 @@ def init( \
             if elemtype[l] == 'lens':
                 elemspatevaltype[l] = 'full'
             else:
-                elemspatevaltype[l] = 'loclhash'
+                # temp
+                elemspatevaltype[l] = 'full'
+                #elemspatevaltype[l] = 'loclhash'
         setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype, strgmodl=strgmodl)
 
     gdat.commelemspatevaltype = []
