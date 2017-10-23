@@ -1191,7 +1191,10 @@ def init( \
                 bacp = 2e-7
             if gdat.exprtype == 'sdyn':
                 bacp = 1.
-            setp_varbvalu(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
+            if gdat.numbpixlfull == 1:
+                setp_varbvalu(gdat, 'bacp', bacp, back=0, regi='full')
+            else:
+                setp_varbvalu(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
 
             # particle background
             if gdat.exprtype == 'chan':
@@ -3066,8 +3069,9 @@ def work(pathoutpthis, lock, indxprocwork):
                     print gdatmodi.thislliktotlprev
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
-                    #print 'loglikelihood drop is very unlikely!'
-                    raise Exception('loglikelihood drop is very unlikely!')
+                    print 'loglikelihood drop is very unlikely!'
+                    print
+                    #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:

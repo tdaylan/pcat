@@ -1829,8 +1829,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             rscl_elem(gdat, thissampvarb, thisindxsampcomp, nextsampvarb, nextsamp, gdatmodi.indxsampmodi)
         
         if gdatmodi.propcomp:
-            retr_sampvarbtrap(gdat, strgmodl, thisindxsampcomp, gdatmodi.indxregimodi, gdatmodi.indxpoplmodi, gdatmodi.thisliststrgcomp, \
-                                                          gdatmodi.thislistscalcomp, nextsamp, nextsampvarb, indxelemfull=gdatmodi.indxelemfullmodi[0])
+            strgcomptemp = liststrgcomp[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi]
+            nextsampvarb[thisindxsampcomp[strgcomptemp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]] = icdf_trap(gdat, strgmodl, \
+                        nextsamp[thisindxsampcomp[strgcomptemp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]], \
+                        thissampvarb, listscalcomp[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi], strgcomptemp, gdatmodi.indxpoplmodi[0], gdatmodi.indxregimodi[0])
+            
+            #retr_sampvarbtrap(gdat, strgmodl, thisindxsampcomp, gdatmodi.indxregimodi, gdatmodi.indxpoplmodi, gdatmodi.thisliststrgcomp, \
+            #                                              gdatmodi.thislistscalcomp, nextsamp, nextsampvarb, indxelemfull=gdatmodi.indxelemfullmodi[0])
             
             gdatmodi.thiscomp = thissampvarb[thisindxsampcomp[gdatmodi.thisstrgcomp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]]
             gdatmodi.nextcomp = nextsampvarb[thisindxsampcomp[gdatmodi.thisstrgcomp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]]
@@ -2181,11 +2186,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             nextindxsampcomp = retr_indxsampcomp(gdat, nextindxelemfull, strgmodl)
         setattr(gdatobjt, strgpfixnext + 'indxsampcomp', nextindxsampcomp)
     
-    # temp -- this is inefficient for propwithsing proposals
-    # temp -- this should be very slow!
-    if gdatmodi.thisaccpprio and (gdatmodi.propbrth):
-        nextsampvarb = retr_sampvarb(gdat, strgmodl, nextsamp, nextindxsampcomp)
-   
+    if gdatmodi.propbrth:
+        for g, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
+            nextsampvarb[gdatmodi.indxsamptran[0][g]] = icdf_trap(gdat, strgmodl, gdatmodi.auxipara[g], thissampvarb, listscalcomp[gdatmodi.indxpoplmodi[0]][g], \
+                                                                            liststrgcomp[gdatmodi.indxpoplmodi[0]][g], gdatmodi.indxpoplmodi[0], gdatmodi.indxregimodi[0])
+
     if gdatmodi.propelem:
         gdatmodi.dicteval = [[{}]]
         if boolelemspec[gdatmodi.indxpoplmodi[0]]:
@@ -2318,9 +2323,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             size = where(((thissampvarb == 0.) & (diffsampvarb > 0.)) | ((thissampvarb != 0.) & (diffsampvarb / thissampvarb > 0)))[0].size
             if gdatmodi.propbrth:
                 if size - 1 != numbcomp[gdatmodi.indxpoplmodi[0]]:
-                    show_samp(gdat, gdatmodi)
                     print 'Changing elsewhere!!'
-                    #raise Exception('')
+                    print 'gdatmodi.thisindxproptype'
+                    print gdatmodi.thisindxproptype
+                    print
+
+                    show_samp(gdat, gdatmodi)
+                    raise Exception('')
             if gdatmodi.propdeth:
                 if size != 1:
                     show_samp(gdat, gdatmodi)
@@ -7871,17 +7880,22 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             initchro(gdat, gdatmodi, strgstat, 'evalelem')
             if strgstat == 'next':
                 indxpopleval = gdatmodi.indxpoplmodi
-                indxgrideval = array([indxgridpopl[gdatmodi.indxpoplmodi[0]]])
-                indxregieval = gdatmodi.indxregimodi
-                numbelemeval = gdatmodi.numbelemeval
-                indxelemeval = [[[] for d in indxregieval] for l in indxpopleval]
-                print 'indxpopleval'
-                print indxpopleval
-                print 'indxregieval'
-                print indxregieval
-                for l in indxpopleval:
-                    for d in indxregieval:
-                        indxelemeval[l][d] = arange(gdatmodi.numbelemeval[l][d])
+                if len(indxpopleval) > 0:
+                    indxgrideval = array([indxgridpopl[gdatmodi.indxpoplmodi[0]]])
+                    indxregieval = gdatmodi.indxregimodi
+                    numbelemeval = gdatmodi.numbelemeval
+                    indxelemeval = [[[] for d in indxregieval] for l in indxpopleval]
+                    for ll, l in enumerate(indxpopleval):
+                        for dd, d in enumerate(indxregieval):
+                            print 'ld'
+                            print l, d
+                            print 'indxpopleval'
+                            print indxpopleval
+                            print 'indxregieval'
+                            print indxregieval
+                            print 'gdatmodi.numbelemeval'
+                            print gdatmodi.numbelemeval
+                            indxelemeval[ll][dd] = arange(gdatmodi.numbelemeval[ll][dd])
                 if not gdatmodi.propfixp or gdatmodi.proppsfp and boolelemsbrtdfncanyy:
                     dicteval = gdatmodi.dicteval
                     if gdat.verbtype > 1:
@@ -8055,7 +8069,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     
                         if gdat.diagmode:
                             for dd, d in enumerate(indxregieval):
-                                if amin(sbrtdfnc[dd]) / mean(sbrtdfnc[dd]) < 1e-6:
+                                if amin(sbrtdfnc[dd]) / mean(sbrtdfnc[dd]) < -1e-6:
                                     print 'sbrtdfnc[dd]'
                                     summgene(sbrtdfnc[dd])
                                     raise Exception('')
