@@ -732,7 +732,7 @@ def init( \
             if elemtype[l] == 'lens':
                 elemspatevaltype[l] = 'full'
             else:
-                # temp
+                # temp -- this causes an error and should be fixed
                 elemspatevaltype[l] = 'full'
                 #elemspatevaltype[l] = 'loclhash'
         setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype, strgmodl=strgmodl)
@@ -1050,7 +1050,7 @@ def init( \
                 gdat.truenumbelem[l][d] = getattr(gdat, 'truenumbelempop%dreg%d' % (l, d))
     
                 if gdat.truenumbelem[l][d] > gdat.truemaxmnumbelem[l][d]:
-                    raise Exception('')
+                    raise Exception('True number of elements if larger than maximum.')
 
     setp_varbvalu(gdat, 'scalmeanelem', 'logt')
     
@@ -1311,7 +1311,8 @@ def init( \
         gdat.factspecener = array([1.])
 
     # temp -- this assumes square ROI
-    gdat.frambndrmodl = gdat.maxmlgal * gdat.anglfact
+    if gdat.numbpixlfull > 1:
+        gdat.frambndrmodl = gdat.maxmlgal * gdat.anglfact
     
     if 'lens' in gdat.commelemtype:
         
@@ -1559,7 +1560,8 @@ def init( \
 
                         gdat.truesampvarb[k] = icdf_trap(gdat, 'true', gdat.truesamp[k], gdat.truesampvarb, gdat.truelistscalcomp[l][g], gdat.trueliststrgcomp[l][g], l, d)
 
-    gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
+    if gdat.numbpixlfull > 1:
+        gdat.apixmodl = (gdat.fittmaxmgang / gdat.numbsidecart)**2
     
     for strgmodl in gdat.liststrgmodl:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
@@ -2750,7 +2752,7 @@ def work(pathoutpthis, lock, indxprocwork):
                             print 'Warning CDF is zero.'
                         if not isfinite(thisfile[attr][()]):
                             raise Exception('Retreived state parameter is not finite.')
-                        if not isfinite(gdatmodi.thissamp[k]) or gdatmodi.thissamp[k] < 0. or gdatmodi.thissamp[k] > 1.:
+                        if not k in gdat.fittindxfixpnumbelemtotl and (not isfinite(gdatmodi.thissamp[k]) or gdatmodi.thissamp[k] < 0. or gdatmodi.thissamp[k] > 1.):
                             print 'namefixp'
                             print namefixp
                             print 'thisfile[attr][()]'
@@ -3014,6 +3016,14 @@ def work(pathoutpthis, lock, indxprocwork):
         prop_stat(gdat, gdatmodi, 'fitt')
         stopchro(gdat, gdatmodi, 'next', 'prop')
         
+        if gdat.diagmode:
+            numbtemp = 0
+            for l in gdat.fittindxpopl:
+                for d in gdat.indxregi:
+                    numbtemp += len(gdatmodi.thisindxsampcomp['comp'][l][d])
+            if where(gdatmodi.thissampvarb[gdat.fittnumbfixp:] != 0.)[0].size != numbtemp:
+                raise Exception('')
+        
         if gdat.optitypetemp == 'auto' and gdatmodi.cntrswep == 0 or gdat.evoltype == 'maxmllik':
             gdatmodi.thisstdpscalfact *= 1.5**gdatmodi.nextdeltlliktotl
         else:
@@ -3061,11 +3071,11 @@ def work(pathoutpthis, lock, indxprocwork):
                     raise Exception('loglikelihood drop is very unlikely!')
             else:
                 if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -10.:
+                    print 'Warning! loglikelihood drop is very unlikely!'
                     print 'gdatmodi.thislliktotlprev'
                     print gdatmodi.thislliktotlprev
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
-                    print 'loglikelihood drop is very unlikely!'
                     print
                     #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
@@ -3330,7 +3340,7 @@ def work(pathoutpthis, lock, indxprocwork):
         gdatmodi.thisdeltlliktotl[0] = gdatmodi.nextdeltlliktotl
     
         if gdat.diagmode:
-            if gdat.sqzeprop and abs(gdatmodi.nextdeltlliktotl) > 0.1:
+            if gdat.sqzeprop and abs(gdatmodi.nextdeltlliktotl) > 0.1 and not gdatmodi.proptran:
                 raise Exception('Log-likelihood difference should not be this large when the proposal scale is very small.')
                 
         ## variables to be saved for each sweep
