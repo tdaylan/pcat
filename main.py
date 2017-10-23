@@ -733,8 +733,8 @@ def init( \
                 elemspatevaltype[l] = 'full'
             else:
                 # temp -- this causes an error and should be fixed
-                elemspatevaltype[l] = 'full'
-                #elemspatevaltype[l] = 'loclhash'
+                #elemspatevaltype[l] = 'full'
+                elemspatevaltype[l] = 'loclhash'
         setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype, strgmodl=strgmodl)
 
     gdat.commelemspatevaltype = []
