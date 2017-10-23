@@ -8029,7 +8029,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         if gdat.verbtype > 1:
                             print 'Perturbing the surface brightness due to delta-functions in region %d...' % d
                         for ll, l in enumerate(indxpopleval):
-                            if elemtype[l] != 'lens':
+                            if boolelemsbrtdfnc[l]:
                                 for k in range(numbelemeval[ll][dd]):
                                     if boolelemspec[l]:
                                         varbevalextd = dicteval[ll][dd]['spec'][:, k]
@@ -8039,8 +8039,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         print 'varbevalextd'
                                         print varbevalextd
                                         print
+                                    print 'll, l'
+                                    print ll, l
                                     print 'listindxpixleval'
                                     print listindxpixleval
+                                    print 'listindxpixleval[ll][dd][k]'
+                                    print listindxpixleval[ll][dd][k]
+                                    print 'len(listindxpixleval[ll][dd][k])'
+                                    print len(listindxpixleval[ll][dd][k])
                                     if boolelempsfn[l]:
                                         sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
@@ -8055,6 +8061,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         summgene(sbrtdfnc[dd][i, :, :])
                                         print 'sbrtdfnc[dd][i, indxcubeeval[0][dd], :]'
                                         summgene(sbrtdfnc[dd][i, indxcubeeval[0][dd], :])
+                                    print
+                                    print
                                     print
 
                         if gdat.diagmode:

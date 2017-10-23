@@ -667,12 +667,6 @@ def init( \
             specback = [False for k in range(len(backtype))]
             setp_varbvalu(gdat, 'specback', specback, strgmodl=strgmodl)
     
-    print 'gdat.fittspecback'
-    print gdat.fittspecback
-    print 'gdat.truespecback'
-    print gdat.truespecback
-    print
-
     if gdat.exprtype == 'hubb':
         hostemistype = 'sers'
     else:
