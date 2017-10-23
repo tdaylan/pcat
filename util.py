@@ -521,6 +521,7 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
     numbcomp = getattr(gdat, strgmodl + 'numbcomp')
     indxpopl = getattr(gdat, strgmodl + 'indxpopl')
     boolelemspec = getattr(gdat, strgmodl + 'boolelemspec')
+    boolelemlghtspat = getattr(gdat, strgmodl + 'boolelemlghtspat')
     boolelemsbrtextsbgrd = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrd')
     indxregipopl = getattr(gdat, strgmodl + 'indxregipopl')
     spatdisttype = getattr(gdat, strgmodl + 'spatdisttype')
@@ -578,7 +579,7 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
                 indxsampcomp['geff'][l][d] = indxsamptemp + cntr.incr()
             
             # spectra
-            if boolelemspec[l]:
+            if boolelemlghtspat[l]:
                 if gdat.numbener > 1:
                     if spectype[l] == 'colr':
                         for i in gdat.indxener:
@@ -1748,7 +1749,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print 'gdatmodi.propelemsbrtdfnc'
             print gdatmodi.propelemsbrtdfnc
         if gdat.diagmode:
-            if gdatmodi.propfixp and numbtrap > 0 and gdatmodi.propelemsbrtdfnc:
+            if (gdatmodi.propfixp and not gdatmodi.proppsfp) and numbtrap > 0 and gdatmodi.propelemsbrtdfnc:
                 raise Exception('')
 
     gdatmodi.numbelemeval = [[[]]]
@@ -4618,6 +4619,10 @@ def setpinit(gdat, boolinitsetp=False):
                     if strgmodl == 'fitt' and gdat.fittmaxmnumbelempopl[l] > 0:
                         gdat.boolhash = True
     
+    print 'elemspatevaltype'
+    print elemspatevaltype
+    print
+
     if gdat.boolhash:
         gdat.numbprox = 3
         gdat.indxprox = arange(gdat.numbprox)
@@ -5280,6 +5285,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             setp_varblimt(gdat, 'expcdistmean', [1., 8.], popl='full', strgmodl=strgmodl)
             setp_varblimt(gdat, 'expcdiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl='full', strgmodl=strgmodl)
         
+        print 'elemtype'
+        print elemtype
         for l in indxpopl:
             if elemtype[l] == 'lghtpntspuls':
                 setp_varblimt(gdat, 'gang', [1e-1 * gdat.sizepixl, gdat.maxmgangdata], strgmodl=strgmodl)
@@ -5588,6 +5595,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             else:
                 print 'Building elements for the fitting model...'
 
+        print 'spatdisttype'
+        print spatdisttype
+        print
+
         liststrgcomp = [[] for l in indxpopl]
         listscalcomp = [[] for l in indxpopl]
         for l in indxpopl:
@@ -5628,7 +5639,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 liststrgcomp[l] += ['geff']
                 listscalcomp[l] += ['self']
 
-            if gdat.numbener > 1 and elemtype[l].startswith('lght'):
+            if gdat.numbener > 1 and elemtype[l].startswith('lghtpnts'):
                 if spectype[l] == 'colr':
                     for i in gdat.indxener:
                         if i == 0:
@@ -5652,6 +5663,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     liststrgcomp[l] += ['acut']
                     listscalcomp[l] += ['self']
         
+        print 'liststrgcomp'
+        print liststrgcomp
+        print 
         # variables for which whose marginal distribution and pair-correlations will be plotted
         liststrgfeatodim = [[] for l in indxpopl]
         for l in indxpopl:
@@ -6286,6 +6300,10 @@ def setp_fixp(gdat, strgmodl='fitt'):
 
         if not isinstance(k, int) or not strgvarb.startswith('indxfixp') or strgvarb == 'indxfixppsfpinit' or strg[:4] != strgmodl:
             continue
+        
+        print 'strgvarb'
+        print strgvarb
+        print
 
         strgvarb = strgvarb[8:]
         namefixp[k] = strgvarb

@@ -2375,9 +2375,9 @@ def plot_init(gdat):
         
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
-                if gdat.fittboolelemsbrtdfnc[l]:
-                    plot_eval(gdat, l)
                 if gdat.fittelemspatevaltype[l] != 'full' and gdat.numbpixl > 1:
+                    if gdat.fittboolelemsbrtdfnc[l]:
+                        plot_eval(gdat, l)
                     plot_indxprox(gdat)
         
         # temp
