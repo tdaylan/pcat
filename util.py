@@ -539,7 +539,6 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
             cntr = tdpy.util.cntr()
             # position
             if spatdisttype[l] == 'line':
-                print 'meeeeeey'
                 indxsampcomp['elin'][l][d] = indxsamptemp + cntr.incr()
             elif spatdisttype[l] == 'glc3':
                 indxsampcomp['dglc'][l][d] = indxsamptemp + cntr.incr()
@@ -736,13 +735,6 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sind0001=None, sind00
             meanener = gdat.meanener
 
         if spectype == 'gaus':
-            print 'edis'
-            print edis
-            print 'flux'
-            print flux
-            print 'elin'
-            print elin
-            print
             spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
         if spectype == 'powr':
             spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
@@ -1955,14 +1947,14 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
        
         # determine the new parameters
         if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
-            gdatmodi.compfrst[0] = gdatmodi.comppare[0] + (1. - gdatmodi.auxipara[2]) * gdatmodi.auxipara[0]
+            gdatmodi.compfrst[0] = gdatmodi.comppare[0] + (1. - gdatmodi.auxipara[1]) * gdatmodi.auxipara[0]
         else:
             gdatmodi.compfrst[0] = gdatmodi.comppare[0] + (1. - gdatmodi.auxipara[2]) * gdatmodi.auxipara[0]
             gdatmodi.compfrst[1] = gdatmodi.comppare[1] + (1. - gdatmodi.auxipara[2]) * gdatmodi.auxipara[1]
         gdatmodi.compfrst[indxcompampl[gdatmodi.indxpoplmodi[0]]] = gdatmodi.auxipara[indxcompampl[gdatmodi.indxpoplmodi[0]]] * \
                                                                                                         gdatmodi.comppare[indxcompampl[gdatmodi.indxpoplmodi[0]]]
         if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
-            gdatmodi.compseco[0] = gdatmodi.comppare[0] - gdatmodi.auxipara[2] * gdatmodi.auxipara[0]
+            gdatmodi.compseco[0] = gdatmodi.comppare[0] - gdatmodi.auxipara[1] * gdatmodi.auxipara[0]
         else:
             gdatmodi.compseco[0] = gdatmodi.comppare[0] - gdatmodi.auxipara[2] * gdatmodi.auxipara[0]
             gdatmodi.compseco[1] = gdatmodi.comppare[1] - gdatmodi.auxipara[2] * gdatmodi.auxipara[1]
@@ -2026,7 +2018,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.mergindxelemfrst = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmergfrst]
 
         # find the probability of merging this element with the others 
-        probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmergfrst)
+        probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmergfrst, elemtype)
         indxelemfulltemp = arange(len(thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]))
         if gdat.diagmode:
             if indxelemfulltemp.size < 2:
@@ -2086,7 +2078,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             return
 
         if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
-            gdatmodi.comppare[0] = gdatmodi.compfrst[0] + (1. - gdatmodi.auxipara[2]) * (gdatmodi.compseco[0] - gdatmodi.compfrst[0])
+            gdatmodi.comppare[0] = gdatmodi.compfrst[0] + (1. - gdatmodi.auxipara[1]) * (gdatmodi.compseco[0] - gdatmodi.compfrst[0])
         else:
             gdatmodi.comppare[0] = gdatmodi.compfrst[0] + (1. - gdatmodi.auxipara[2]) * (gdatmodi.compseco[0] - gdatmodi.compfrst[0])
             gdatmodi.comppare[1] = gdatmodi.compfrst[1] + (1. - gdatmodi.auxipara[2]) * (gdatmodi.compseco[1] - gdatmodi.compfrst[1])
@@ -2303,24 +2295,26 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisaccpprio:
         
         ## Jacobian
-        if gdatmodi.propsplt:
-            gdatmodi.thisljcb = log(gdatmodi.comppare[2])
+        if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
+            gdatmodi.thisljcb = log(gdatmodi.comppare[1])
         else:
-            gdatmodi.thisljcb = -log(gdatmodi.comppare[2])
+            gdatmodi.thisljcb = log(gdatmodi.comppare[2])
+        if gdatmodi.propmerg:
+            gdatmodi.thisljcb *= -1.
         
         thisnumbelem = thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         nextnumbelem = nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         
         ## combinatorial factor
         if gdatmodi.propmerg:
-            probfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], gdatmodi.indxelemfullmodi[0]) / thisnumbelem
-            probfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], gdatmodi.indxelemfullmodi[1]) / thisnumbelem
+            probfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], elemtype, gdatmodi.indxelemfullmodi[0]) / thisnumbelem
+            probfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, gdatmodi.indxelemfullmodi[1]) / thisnumbelem
             probreve = 1. / nextnumbelem
             gdatmodi.thislrpp = log(probreve) - log(probfrwdfrst + probfrwdseco)
         else:
             probfrwd = 1. / thisnumbelem
-            probrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
-            probreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], -1) / nextnumbelem
+            probrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, elemtype, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
+            probreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, -1) / nextnumbelem
             gdatmodi.thislrpp = log(probrevefrst + probreveseco) - log(probfrwd)
     else:
         gdatmodi.thisljcb = 0.
@@ -2356,16 +2350,22 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     raise Exception('')
 
 
-def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, indxelemfulleval=None):
+def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, elemtype, indxelemfulleval=None):
     
-    lgal = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
-    bgal = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+    if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
+        elin = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+        elinstat = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        angldist = abs(elin - elinstat)
     
-    lgalstat = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-    bgalstat = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-    
-    angldist = retr_angldist(gdat, lgal, bgal, lgalstat, bgalstat)
-    
+    else:
+        lgal = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+        bgal = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+        
+        lgalstat = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        bgalstat = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        
+        angldist = retr_angldist(gdat, lgal, bgal, lgalstat, bgalstat)
+
     probmerg = exp((angldist - gdat.radispmr)**2)
     if indxelemfulleval == None:
         probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
@@ -9384,6 +9384,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             setattr(gdatobjt, strgpfix + 'histcntp' + name + 'reg%dene%devt%d' % (d, i, m), histcntp)
                             
                             if (histcntp == 0.).all():
+                                print 'Count per pixel histogram is zero... Consider changing cntp limits.'
                                 print 'name'
                                 print name
                                 print 'im'
@@ -9395,8 +9396,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 summgene(cntp[name][d][i, :, m])
                                 print 'gdat.minmcntpmodl'
                                 print gdat.minmcntpmodl
+                                print
                                 #raise Exception('')
-                                print 'Count per pixel histogram is zero... Consider changing cntp limits.'
 
                     else:
                         histcntp = histogram(cntp[name][d][:, 0, m], bins=gdat.binscntpmodl)[0]

@@ -1050,7 +1050,7 @@ def init( \
                 gdat.truenumbelem[l][d] = getattr(gdat, 'truenumbelempop%dreg%d' % (l, d))
     
                 if gdat.truenumbelem[l][d] > gdat.truemaxmnumbelem[l][d]:
-                    raise Exception('True number of elements if larger than maximum.')
+                    raise Exception('True number of elements is larger than maximum.')
 
     setp_varbvalu(gdat, 'scalmeanelem', 'logt')
     
@@ -3283,6 +3283,7 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.diagmode:
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
+                        print 'Both likelihood and prior will not change.'
                         print 'gdatmodi.propdist'
                         print gdatmodi.propdist
                         if gdat.fittnumbtrap > 0:
@@ -3294,7 +3295,7 @@ def work(pathoutpthis, lock, indxprocwork):
                                 print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]'
                                 print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]
                         #raise Exception('Both likelihood and prior will not change.')
-                        print 'Both likelihood and prior will not change.'
+                        print
 
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl)

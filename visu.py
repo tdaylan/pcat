@@ -594,8 +594,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
                     path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
                     tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
             if (gdat.listlrpp != 0.).any():
-                path = pathpostlpri + 'lfctprop' + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, gdat.listlrpp[gdat.listindxsamptotl[n]], '$q_{lfct}$', logthist=True)
+                path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlrpp[gdat.listindxsamptotl[n]], r'$\log \alpha_p$', logthist=True)
 
     # Gelman-Rubin test
     pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
@@ -716,11 +716,20 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         if indxsampspmrtotl.size > 0:
     
             ## labels and names
-            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', r'$\log\alpha_j$', r'$\log\alpha_c$']
+            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', r'$\log\alpha_j$', r'$\log\alpha_p$']
             listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'ljcb', 'lrpp']
             
             ## variables
-            listvarb = [gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.anglfact * gdat.listauxipara[:, 2], gdat.listljcb, gdat.listlrpp]
+            print 'gdat.listauxipara'
+            summgene(gdat.listauxipara)
+            print 'gdat.listauxipara[:, 0]'
+            summgene(gdat.listauxipara[:, 0])
+            print 'gdat.listauxipara[:, 1]'
+            summgene(gdat.listauxipara[:, 1])
+            #print 'gdat.listauxipara[:, 2]'
+            #summgene(gdat.listauxipara[:, 2])
+            
+            listvarb = [gdat.listauxipara[:, 2], gdat.anglfact * gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listljcb, gdat.listlrpp]
            
             for k in range(len(listlabl)):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
@@ -730,8 +739,8 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
               
                 axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split', alpha=gdat.alphmrkr, color='c')
                 axis.hist(listvarb[k][indxsampmergtotl], bins=bins, label='Merge', alpha=gdat.alphmrkr, color='y')
-                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split/Accepted', alpha=gdat.alphmrkr, edgecolor='c', lw=20, facecolor='none')
-                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge/Accepted', alpha=gdat.alphmrkr, edgecolor='y', lw=20, facecolor='none')
+                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split, Accepted', edgecolor='c', facecolor='none')
+                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge, Accepted', edgecolor='y', facecolor='none')
                 
                 axis.set_ylabel('$N_{samp}$')
                 axis.set_xlabel(listlabl[k])
