@@ -1639,7 +1639,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         
         gdatmodi.thisindxproptype = gdat.indxstdppara[gdatmodi.indxsampmodi]
         gdatmodi.propwith = True
-        gdatmodi.proppsfnconv = (gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full') and gdatmodi.proppsfp
+        gdatmodi.proppsfnconv = gdat.pixltype == 'cart' and (gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full') and gdatmodi.proppsfp
         if gdat.fittlensmodltype != 'none' or gdat.fitthostemistype != 'none':
             gdatmodi.prophost = gdatmodi.indxsampmodi in indxfixphost
         if gdat.fittlensmodltype != 'none':
@@ -3130,7 +3130,7 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, 'comm' + strgvarb, varbcomm) 
 
     gdat.listnamevarbstat = ['samp', 'sampvarb', 'indxelemfull', 'lliktotl', 'llik', 'lpritotl', 'lpri']
-    if gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full':
+    if gdat.pixltype == 'cart' and (gdat.fittpsfnevaltype == 'conv' or gdat.fittpsfnevaltype == 'full'):
         gdat.listnamevarbstat += ['psfnconv']
     for d in gdat.indxregi:
         if gdat.fittboolelemsbrtdfncanyy:
@@ -7931,7 +7931,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             stopchro(gdat, gdatmodi, strgstat, 'deflextr')
         
         ## construct the PSF to be convolved with the image
-        if psfnevaltype == 'conv' or psfnevaltype == 'full':
+        if gdat.pixltype == 'cart' and (psfnevaltype == 'conv' or psfnevaltype == 'full'):
             initchro(gdat, gdatmodi, strgstat, 'psfnconv')
             if strgstat == 'next' and not gdatmodi.proppsfnconv:
                 if gdat.verbtype > 1:

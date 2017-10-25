@@ -19,7 +19,7 @@ for strgextn in liststrgextn:
 
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
-                if not os.path.exists(pathchec) or numbswep < 1000000:
+                if not os.path.exists(pathchec) or numbswep < 100000:
                     os.system('rm -rf ' + pathfile)
                     print 'Deleting %s' % pathchec
                 else:
