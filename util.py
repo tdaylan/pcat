@@ -778,13 +778,6 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
-            if gdat.strgcnfg == 'pcat_ferm_igal_mock_syst_puls':
-                print 'dist'
-                summgene(dist)
-                print 'gdat.binsangl'
-                summgene(gdat.binsangl)
-                print
-
             psfntemp = psfnintp(dist)
     if gdat.kernevaltype == 'bspx':
         pass
@@ -7831,9 +7824,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 dicteval = [[{} for d in indxregipopl[l]] for l in indxpopl]
                 for l in indxpopl:
                     for d in indxregipopl[l]:
+                        indxelemeval[l][d] = arange(numbelem[l][d])
                         for strgfeat in liststrgfeateval[l]:
                             if strgfeat == 'spec':
-                                indxelemeval[l][d] = arange(numbelem[l][d])
                                 if boolelemlghtspat[l]:
                                     dicteval[l][d]['spec'] = retr_spec(gdat, dictelem[l][d]['flux'], sind=dictelem[l][d]['sind'], curv=dictelem[l][d]['curv'], \
                                               expc=dictelem[l][d]['expc'], sind0001=dictelem[l][d]['sind0001'], sind0002=dictelem[l][d]['sind0002'], spectype=spectype[l])
@@ -8137,20 +8130,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for dd, d in enumerate(indxregieval):
                                 numbtemp = 0
                                 for l in indxpopl:
-                                    if boolelemsbrtextsbgrd[l]:
+                                    if boolelemsbrtdfnc[l]:
                                         numbtemp += sum(numbelem[l])
                                 if numbtemp > 0 and (amin(sbrtdfnc[dd][indxcubeeval[0][dd]]) / mean(sbrtdfnc[dd][indxcubeeval[0][dd]]) < -1e-6):
+                                    print 'Warning! Delta-function surface brightness went negative.'
                                     print 'boolelemsbrtextsbgrd'
                                     print boolelemsbrtextsbgrd
                                     print 'numbtemp'
                                     print numbtemp
                                     print 'numbelem'
                                     print numbelem
-                                    print 'Warning! Delta-function surface brightness went negative.'
                                     print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
                                     summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
                                     print
-                                    raise Exception('')
+                                    #raise Exception('')
                         
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         # when the only background template is the data-PS residual, correct the PS template for numerical noise
@@ -8159,9 +8152,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         
                         if gdat.diagmode:
                             if amin(sbrt['dfnc'][dd]) < 0.:
+                                print 'Saving a negative delta-function surface brightness...'
                                 print 'sbrt[dfnc][dd]'
                                 summgene(sbrt['dfnc'][dd])
-                                print 'Saving a negative delta-function surface brightness.'
+                                print
                             #if amin(sbrt['dfnc'][dd]) / mean(sbrt['dfnc'][dd]) < -1e-3:
                             #    raise Exception('Saving a negative delta-function surface brightness.')
                 
@@ -8206,7 +8200,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     deflsubh[dd][listindxpixleval[ll][dd][kk], :] += retr_defl_jitt(gdat.indxpixl, gdat.lgalgrid, gdat.bgalgrid, \
                                                                  dicteval[ll][dd]['lgal'][kk], dicteval[ll][dd]['bgal'][kk], dicteval[ll][dd]['defs'][kk], 0., 0., \
                                                                                                                  asca=asca, acut=acut, indxpixleval=listindxpixleval[ll][dd][kk])
-
+                        
                         if gdat.diagmode:
                             chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'deflsubhreg%d' % d, deflsubh[dd], [slice(None), slice(None)])
                         
@@ -8246,7 +8240,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             # temp -- indxcubeeval[0][dd] should be indxcubeeval[2][dd] 
                             chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'sbrtextsbgrdreg%d' % d, sbrtextsbgrd[dd], indxcubeeval[0][dd])
                     
-                        setattr(gdatobjt, strgpfix + 'sbrtextsbgrdreg%d' % d, sbrtextsbgrd[dd])
+                        setattr(gdatobjt, strgpfix + 'sbrtextsbgrdreg%d' % d, sbrtextsbgrd[dd][indxcubeeval[0][dd]])
                 sbrt['extsbgrd'] = [[] for d in indxregieval]
                 for dd, d in enumerate(indxregieval):
                     sbrt['extsbgrd'][dd] = sbrtextsbgrd[dd][indxcubeeval[0][dd]]
@@ -9072,7 +9066,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 for d in gdat.indxregi:
                     ### convergence
                     convelem[d, :] = retr_conv(gdat, deflsubh[d]) 
-                    
+
                     ###  power spectrum
                     ##### two dimensional
                     convpsecelem[d, :] = retr_psec(gdat, convelem[d, :])

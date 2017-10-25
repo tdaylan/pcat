@@ -56,7 +56,7 @@ def init( \
         
          namestattrue=None, \
 
-         shrtfram=False, \
+         shrtfram=True, \
         
          suprelem=True, \
          plotelemcorr=True, \
@@ -156,7 +156,7 @@ def init( \
          numbswepplot=None, \
          
          makeplot=True, \
-         makeplotinit=True, \
+         makeplotinit=False, \
          makeplotfram=True, \
          makeplotpost=True, \
          
@@ -3285,14 +3285,16 @@ def work(pathoutpthis, lock, indxprocwork):
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'gdatmodi.propdist'
                         print gdatmodi.propdist
-                        print 'gdatmodi.indxpoplmodi'
-                        print gdatmodi.indxpoplmodi
-                        print 'gdat.fittindxfixpnumbelem'
-                        print gdat.fittindxfixpnumbelem
-                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]'
-                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]
-                        raise Exception('Both likelihood and prior will not change.')
-                        #print 'Both likelihood and prior will not change.'
+                        if gdat.fittnumbtrap > 0:
+                            print 'gdatmodi.indxpoplmodi'
+                            print gdatmodi.indxpoplmodi
+                            print 'gdat.fittindxfixpnumbelem'
+                            print gdat.fittindxfixpnumbelem
+                            for l in gdat.fittindxpopl:
+                                print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]'
+                                print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]
+                        #raise Exception('Both likelihood and prior will not change.')
+                        print 'Both likelihood and prior will not change.'
 
             # evaluate the acceptance probability
             gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl)
