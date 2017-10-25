@@ -1028,7 +1028,8 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
     numbtrap = getattr(gdat, strgmodl + 'numbtrap')
     specback = getattr(gdat, strgmodl + 'specback')
     indxback = getattr(gdat, strgmodl + 'indxback')
-    maxmgang = getattr(gdat, strgmodl + 'maxmgang')
+    if gdat.numbpixlfull > 1:
+        maxmgang = getattr(gdat, strgmodl + 'maxmgang')
     indxregipopl = getattr(gdat, strgmodl + 'indxregipopl')
     hostemistype = getattr(gdat, strgmodl + 'hostemistype')
     lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')

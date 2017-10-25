@@ -729,7 +729,7 @@ def init( \
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         elemspatevaltype = [[] for l in indxpopl]
         for l in indxpopl:
-            if elemtype[l] == 'lens':
+            if elemtype[l] == 'lens' or elemtype[l] == 'lghtline':
                 elemspatevaltype[l] = 'full'
             else:
                 # temp -- this causes an error and should be fixed
@@ -2699,11 +2699,6 @@ def work(pathoutpthis, lock, indxprocwork):
                     gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittmaxmnumbelem[l][d])
                     gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = max(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]], gdat.fittminmnumbelem[l][d])
     
-    if gdat.fittnumbtrap > 0:
-        print 'gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]'
-        print gdatmodi.thissamp[gdat.fittindxfixpnumbelemtotl]
-        print
-
     ## impose user-specified initial state
     if gdat.inittype == 'reco':
         if gdat.namerecostat != None:
@@ -2797,7 +2792,8 @@ def work(pathoutpthis, lock, indxprocwork):
             boolinitreco = False
             if gdat.verbtype > 0:
                 print 'Initialization from previous state, %s, failed.' % path
-        
+    
+    
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
@@ -2806,7 +2802,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
         retr_elemlist(gdat, gdatmodi)
-        if gdat.fittnumbtrap > 0:
+        if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
 
@@ -3022,14 +3018,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 raise Exception('log Jacobian can only be be nonzero when a split or merge is proposed.')
             if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thislrpp != 0.:
                 raise Exception('log ratio proposal probability can only be be nonzero when a split or merge is proposed.')
-            
-            numbtemp = 0
-            for l in gdat.fittindxpopl:
-                for d in gdat.indxregi:
-                    numbtemp += len(gdatmodi.thisindxsampcomp['comp'][l][d])
-            if where(gdatmodi.thissampvarb[gdat.fittnumbfixp:] != 0.)[0].size != numbtemp:
-                raise Exception('')
-        
+           
         if gdat.optitypetemp == 'auto' and gdatmodi.cntrswep == 0 or gdat.evoltype == 'maxmllik':
             gdatmodi.thisstdpscalfact *= 1.5**gdatmodi.nextdeltlliktotl
         else:
@@ -3296,10 +3285,12 @@ def work(pathoutpthis, lock, indxprocwork):
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'gdatmodi.propdist'
                         print gdatmodi.propdist
-                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]'
-                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]
-                        print 'sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]])'
-                        print sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]])
+                        print 'gdatmodi.indxpoplmodi'
+                        print gdatmodi.indxpoplmodi
+                        print 'gdat.fittindxfixpnumbelem'
+                        print gdat.fittindxfixpnumbelem
+                        print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]'
+                        print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem]
                         raise Exception('Both likelihood and prior will not change.')
                         #print 'Both likelihood and prior will not change.'
 
@@ -3319,7 +3310,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 'Accepted.'
             
             # update the current state
-            updt_samp(gdat, gdatmodi)
+            updt_stat(gdat, gdatmodi)
 
             # check if the accepted sample has maximal likelihood
             if gdatmodi.thislliktotl > gdatmodi.maxmllikswep:
