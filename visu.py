@@ -6,6 +6,7 @@ from util import *
 
 def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
    
+    backtype = getattr(gdat, strgmodl + 'backtype')
     if gdat.shrtfram and strgstat == 'this':
         if gdat.numbpixl > 1:
             for d in gdat.indxregi:
@@ -13,6 +14,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     for m in gdat.indxevtt:
                         plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpdatareg%d' % d, i, m)
                         plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'cntpresireg%d' % d, i, m)
+        else:
+            if not (isinstance(backtype[0], str) and backtype[0].startswith('bfun')):
+                for d in gdat.indxregi:
+                    plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, d, gdat.listspecconvunit[0])
+       
     else:    
         
         strgpfix = retr_strgpfix(strgstat, strgmodl)
@@ -42,7 +48,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         if strgstat != 'post' and lensmodltype != 'none' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
             numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
         numbback = getattr(gdat, strgmodl + 'numbback')
-        backtype = getattr(gdat, strgmodl + 'backtype')
         indxback = getattr(gdat, strgmodl + 'indxback')
         convdiff = getattr(gdat, strgmodl + 'convdiff')
         listnamediff = getattr(gdat, strgmodl + 'listnamediff')
@@ -714,42 +719,47 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         indxsampmerg = intersect1d(where(gdat.listindxproptype == gdat.indxproptypemerg)[0], where(gdat.listaccpprop)[0])
         indxsampspmrtotl = concatenate((indxsampsplttotl, indxsampmergtotl))
         if indxsampspmrtotl.size > 0:
-    
-            ## labels and names
-            listlabl = ['$u_{frac}$', '$u_l$', r'$u_b$', r'$\log\alpha_j$', r'$\log\alpha_p$']
-            listname = ['fracauxi', 'lgalauxi', 'bgalauxi', 'ljcb', 'lrpp']
-            
-            ## variables
-            print 'gdat.listauxipara'
-            summgene(gdat.listauxipara)
-            print 'gdat.listauxipara[:, 0]'
-            summgene(gdat.listauxipara[:, 0])
-            print 'gdat.listauxipara[:, 1]'
-            summgene(gdat.listauxipara[:, 1])
-            #print 'gdat.listauxipara[:, 2]'
-            #summgene(gdat.listauxipara[:, 2])
-            
-            listvarb = [gdat.listauxipara[:, 2], gdat.anglfact * gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listljcb, gdat.listlrpp]
-           
-            for k in range(len(listlabl)):
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                maxm = amax(listvarb[k][indxsampspmrtotl])
-                minm = amin(listvarb[k][indxsampspmrtotl])
-                bins = linspace(minm, maxm, 40)
-              
-                axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split', alpha=gdat.alphmrkr, color='c')
-                axis.hist(listvarb[k][indxsampmergtotl], bins=bins, label='Merge', alpha=gdat.alphmrkr, color='y')
-                axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split, Accepted', edgecolor='c', facecolor='none')
-                axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge, Accepted', edgecolor='y', facecolor='none')
+            for l in gdat.fittindxpopl:
+                ## labels and names
+                if gdat.fittelemtype[l] == 'lghtline':
+                    listlabl = ['$u_e$', '$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                    listname = ['elinauxi', 'fracauxi', 'ljcb', 'lrpp']
+                    listvarb = [gdat.listauxipara[:, 0], gdat.listauxipara[:, 1], gdat.listljcb, gdat.listlrpp]
+                else:
+                    listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                    listname = ['lgalauxi', 'bgalauxi', 'fracauxi', 'ljcb', 'lrpp']
+                    listvarb = [gdat.anglfact * gdat.listauxipara[:, 0], gdat.anglfact * gdat.listauxipara[:, 1], gdat.listauxipara[:, 2], gdat.listljcb, gdat.listlrpp]
                 
-                axis.set_ylabel('$N_{samp}$')
-                axis.set_xlabel(listlabl[k])
+                ## variables
+                print 'gdat.listauxipara'
+                summgene(gdat.listauxipara)
+                print 'gdat.listauxipara[:, 0]'
+                summgene(gdat.listauxipara[:, 0])
+                print 'gdat.listauxipara[:, 1]'
+                summgene(gdat.listauxipara[:, 1])
+                if gdat.fittelemtype[l] != 'lghtline':
+                    print 'gdat.listauxipara[:, 2]'
+                    summgene(gdat.listauxipara[:, 2])
+                
+                for k in range(len(listlabl)):
+                    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                    maxm = amax(listvarb[k][indxsampspmrtotl])
+                    minm = amin(listvarb[k][indxsampspmrtotl])
+                    bins = linspace(minm, maxm, 40)
+                  
+                    axis.hist(listvarb[k][indxsampsplttotl], bins=bins, label='Split', alpha=gdat.alphmrkr, color='c')
+                    axis.hist(listvarb[k][indxsampmergtotl], bins=bins, label='Merge', alpha=gdat.alphmrkr, color='y')
+                    axis.hist(listvarb[k][indxsampsplt], bins=bins, label='Split, Accepted', edgecolor='c', facecolor='none')
+                    axis.hist(listvarb[k][indxsampmerg], bins=bins, label='Merge, Accepted', edgecolor='y', facecolor='none')
+                    
+                    axis.set_ylabel('$N_{samp}$')
+                    axis.set_xlabel(listlabl[k])
     
-                make_legd(axis)
-                plt.tight_layout()
-                path = getattr(gdat, 'path' + gdat.namesampdist + 'finlspmr') + listname[k] + '.pdf'
-                figr.savefig(path)
-                plt.close(figr)
+                    make_legd(axis)
+                    plt.tight_layout()
+                    path = getattr(gdat, 'path' + gdat.namesampdist + 'finlspmr') + listname[k] + '.pdf'
+                    figr.savefig(path)
+                    plt.close(figr)
     
     if gdat.verbtype > 0:
         print 'Proposal execution times...'
@@ -1221,8 +1231,8 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
             
         if gdat.numbener > 1:
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
-
-            limtydat = array([1e-4 * amin(listydat[cntrdata, :] * factener), 1e3 * amax(listydat[cntrdata, :] * factener)]) * factydat
+            
+            limtydat = array([gdat.factylimsbrt[0] * amin(listydat[cntrdata, :] * factener), gdat.factylimsbrt[1] * amax(listydat[cntrdata, :] * factener)]) * factydat
             axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)

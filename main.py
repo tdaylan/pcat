@@ -115,7 +115,7 @@ def init( \
          propwithsing=True, \
          # Hessian estimation
          # temp
-         optitype='none', \
+         optitype='hess', \
          regulevi=False, \
          
          # modes of operation
@@ -1748,7 +1748,7 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'lpri', 'lpriprop', 'lpau', 'deltlliktotl', 'lliktotl', 'chro', 'accpprob', \
+    gdat.liststrgvarbarryswep = ['memoresi', 'deltlpritotl', 'lpautotl', 'lpau', 'deltlliktotl', 'chro', 'accpprob', 'lpridist', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
     if gdat.probspmr > 0. or gdat.propcomp:
         gdat.liststrgvarbarryswep += ['lrpp']
@@ -1761,7 +1761,7 @@ def init( \
     if gdat.verbtype > 0:
         print 'Processing a fudicial sample...'
     gdatmodifudi = tdpy.util.gdatstrt()
-    gdatmodifudi.thischro = zeros(gdat.numbchro)
+    gdatmodifudi.chro = zeros(gdat.numbchro)
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
     if gdat.fittnumbtrap > 0:
         for l in gdat.fittindxpopl:
@@ -2529,6 +2529,10 @@ def optihess(gdat, gdatmodi):
                                 else:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
+                                print 'indxelemmoditemp'
+                                print indxelemmoditemp
+                                print 'gdatmodi.dictmodi[l][d][stdv + strgcomp + indv]'
+                                summgene(gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'])
                                 gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'][indxelemmoditemp] = stdv
                                 gdatmodi.dictmodi[l][d][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp] = gdatmodi.thissampvarb[indxsampampltemp]
         
@@ -2672,8 +2676,6 @@ def work(pathoutpthis, lock, indxprocwork):
         print 'inittype'
         print gdat.inittype
   
-    gdatmodi.thisamplpert = zeros(1)
-    
     gdatmodi.thisstdpscalfact = 1.
 
     ## unit sample vector
@@ -2875,24 +2877,26 @@ def work(pathoutpthis, lock, indxprocwork):
     ##prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
     #gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
     
-    gdatmodi.thisaccp = zeros(1, dtype=bool)
-    gdatmodi.thisaccppsfn = zeros(1, dtype=bool)
-    gdatmodi.thisaccpprio = zeros(1, dtype=bool)
-    gdatmodi.thisaccpprop = zeros(1, dtype=bool)
-    gdatmodi.thisindxproptype = zeros(1, dtype=int)
-    gdatmodi.thisauxipara = zeros(gdat.fittmaxmnumbcomp)
-    gdatmodi.thislrpp = zeros(1)
-    gdatmodi.thisljcb = zeros(1)
-    gdatmodi.thisaccpprob = zeros(1)
-    gdatmodi.thischro = zeros(gdat.numbchro)
-    gdatmodi.thisdeltlliktotl = zeros(1)
-    gdatmodi.thislpau = zeros(gdat.fittnumblpau)
-    gdatmodi.thismemoresi = zeros(1)
-    gdatmodi.thislpriprop = zeros(gdat.fittnumblpri)
-    
     # dummy definitions required for logs
+    gdatmodi.nextaccp = zeros(1, dtype=bool)
+    gdatmodi.nextaccppsfn = zeros(1, dtype=bool)
+    gdatmodi.nextaccpprio = zeros(1, dtype=bool)
+    gdatmodi.nextaccpprop = zeros(1, dtype=bool)
+    gdatmodi.nextindxproptype = zeros(1, dtype=int)
+    gdatmodi.nextauxipara = zeros(gdat.fittmaxmnumbcomp)
+    gdatmodi.nextlpri = zeros(gdat.fittnumblpri)
+    gdatmodi.nextlrpp = zeros(1)
+    gdatmodi.nextljcb = zeros(1)
+    gdatmodi.nextaccpprob = zeros(1)
+    gdatmodi.nextchro = zeros(gdat.numbchro)
     gdatmodi.nextdeltlliktotl = 0.
-
+    gdatmodi.nextdeltlpritotl = 0.
+    gdatmodi.nextlpau = zeros(gdat.fittnumblpau)
+    gdatmodi.nextlpautotl = 0.
+    gdatmodi.nextmemoresi = zeros(1)
+    gdatmodi.nextlpridist = 0.
+    gdatmodi.nextamplpert = zeros(1)
+    
     # log the initial state
     if gdat.verbtype > 1:
         tdpy.util.show_memo(gdatmodi, 'gdatmodi')
@@ -2912,10 +2916,14 @@ def work(pathoutpthis, lock, indxprocwork):
 
     workdict = {}
     for strgvarb in gdat.liststrgvarbarry:
-        valu = getattr(gdatmodi, 'this' + strgvarb)
         if strgvarb in gdat.liststrgvarbarryswep:
-            shap = [gdat.numbswep] + list(valu.shape)
+            valu = getattr(gdatmodi, 'next' + strgvarb)
+            if isinstance(valu, float):
+                shap = [gdat.numbswep, 1]
+            else:
+                shap = [gdat.numbswep] + list(valu.shape)
         else:
+            valu = getattr(gdatmodi, 'this' + strgvarb)
             shap = [gdat.numbsamp] + list(valu.shape)
         workdict['list' + strgvarb] = zeros(shap)
     
@@ -2946,7 +2954,7 @@ def work(pathoutpthis, lock, indxprocwork):
 
     while gdatmodi.cntrswep < gdat.numbswep:
         
-        gdatmodi.thischro[:] = 0.
+        gdatmodi.nextchro[:] = 0.
         
         if gdat.optitypetemp == 'hess':
             optihess(gdat, gdatmodi)
@@ -3014,9 +3022,9 @@ def work(pathoutpthis, lock, indxprocwork):
         
         if gdat.diagmode:
             
-            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thisljcb != 0.:
+            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.nextljcb != 0.:
                 raise Exception('log Jacobian can only be be nonzero when a split or merge is proposed.')
-            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.thislrpp != 0.:
+            if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.nextlrpp != 0.:
                 raise Exception('log ratio proposal probability can only be be nonzero when a split or merge is proposed.')
            
         if gdat.optitypetemp == 'auto' and gdatmodi.cntrswep == 0 or gdat.evoltype == 'maxmllik':
@@ -3041,7 +3049,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 print 'cntrswep'
                 print gdatmodi.cntrswep
                 print 'thisnameproptype'
-                print gdat.nameproptype[gdatmodi.thisindxproptype]
+                print gdat.nameproptype[gdatmodi.nextindxproptype]
                 print 'indxsampbadd'
                 print indxsampbadd
                 print 'thissamp'
@@ -3241,7 +3249,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 if gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[3]]:
                     for k in range(20):
                         print 'Proposal rejected due to PSF'
-                    gdatmodi.thisaccppsfn = False
+                    gdatmodi.nextaccppsfn = False
                     print 'gdatmodi.nextsampvarb'
                     print gdatmodi.nextsampvarb
                     print 'gdatmodi.nextsampvarb[gdat.fittindxfixppsfp]'
@@ -3258,8 +3266,8 @@ def work(pathoutpthis, lock, indxprocwork):
                 raise Exception('')
 
         # determine the acceptance probability
-        gdatmodi.thisaccpprop = gdatmodi.thisaccpprio and gdatmodi.thisaccppsfn
-        if gdatmodi.thisaccpprop:
+        gdatmodi.nextaccpprop = gdatmodi.nextaccpprio and gdatmodi.nextaccppsfn
+        if gdatmodi.nextaccpprop:
             
             proc_samp(gdat, gdatmodi, 'next', 'fitt')
             if not gdat.calcllik:
@@ -3272,10 +3280,10 @@ def work(pathoutpthis, lock, indxprocwork):
                 print gdatmodi.nextdeltlpritotl
                 print 'gdatmodi.nextlpautotl'
                 print gdatmodi.nextlpautotl
-                print 'gdatmodi.thislrpp'
-                print gdatmodi.thislrpp
-                print 'gdatmodi.thisljcb'
-                print gdatmodi.thisljcb
+                print 'gdatmodi.nextlrpp'
+                print gdatmodi.nextlrpp
+                print 'gdatmodi.nextljcb'
+                print gdatmodi.nextljcb
                 print 'gdatmodi.thistmprlposelem'
                 print gdatmodi.thistmprlposelem
                 print
@@ -3298,16 +3306,17 @@ def work(pathoutpthis, lock, indxprocwork):
                         print
 
             # evaluate the acceptance probability
-            gdatmodi.thisaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl)
+            gdatmodi.nextaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + \
+                                                                                                                                        gdatmodi.nextlrpp + gdatmodi.nextljcb)
             
         else:
-            gdatmodi.thisaccpprob[0] = 0.
+            gdatmodi.nextaccpprob[0] = 0.
     
         # accept or reject the proposal
         if gdat.evoltype == 'maxmllik':
-            booltemp = gdatmodi.thisaccpprop and gdatmodi.nextdeltlliktotl > 0.
+            booltemp = gdatmodi.nextaccpprop and gdatmodi.nextdeltlliktotl > 0.
         else:
-            booltemp = gdatmodi.thisaccpprob[0] >= rand()
+            booltemp = gdatmodi.nextaccpprob[0] >= rand()
         if booltemp:
             if gdat.verbtype > 1:
                 print 'Accepted.'
@@ -3322,7 +3331,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
             
             # register the sample as accepted
-            gdatmodi.thisaccp = True
+            gdatmodi.nextaccp = True
 
         # reject the sample
         else:
@@ -3333,10 +3342,10 @@ def work(pathoutpthis, lock, indxprocwork):
             if False:
                 print 'Rejected.'
 
-            gdatmodi.thisaccp = False
+            gdatmodi.nextaccp = False
         
         # temp
-        gdatmodi.thisdeltlliktotl[0] = gdatmodi.nextdeltlliktotl
+        #gdatmodi.thisdeltlliktotl[0] = gdatmodi.nextdeltlliktotl
     
         if gdat.diagmode:
             if gdat.sqzeprop and abs(gdatmodi.nextdeltlliktotl) > 0.1 and not gdatmodi.proptran:
@@ -3344,12 +3353,12 @@ def work(pathoutpthis, lock, indxprocwork):
                 
         ## variables to be saved for each sweep
         for strg in gdat.liststrgvarbarryswep:
-            workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'this' + strg)
+            workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'next' + strg)
        
         # save the execution time for the sweep
         stopchro(gdat, gdatmodi, 'next', 'totl')
         
-        workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.thisaccpprob[0]
+        workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.nextaccpprob[0]
         
         # temp
         #if gdatmodi.propwith:
@@ -3369,7 +3378,12 @@ def work(pathoutpthis, lock, indxprocwork):
             
             for k in gdat.indxproptype:
                 indxswepprop = where(workdict['listindxproptype'][indxswepintv, 0] == k)[0]
-                deltllikmean = mean(workdict['listdeltlliktotl'][indxswepprop, 0])
+                deltlliktotlmean = mean(workdict['listdeltlliktotl'][indxswepprop, 0])
+                deltlpritotlmean = mean(workdict['listdeltlpritotl'][indxswepprop, 0])
+                lrppmean = mean(workdict['listlrpp'][indxswepprop, 0])
+                ljcbmean = mean(workdict['listljcb'][indxswepprop, 0])
+                lpautotlmean = mean(workdict['listlpautotl'][indxswepprop, 0])
+                lpridistmean = mean(workdict['listlpridist'][indxswepprop, 0])
             
                 boolproptype = workdict['listindxproptype'][indxswepintv, 0] == k
                 boolaccp = workdict['listaccp'][indxswepintv, 0] == 1
@@ -3402,10 +3416,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 
                 if gdat.showmoreaccp and gdat.indxproptype[k] in gdat.indxproptypecomp:
                     for a in gdat.indxbinsplot:
-                        print '%30s %40s %10s %.5g' % ('%s-%02d' % (gdat.legdproptype[k], a), 'acceptance rate: %3d%% (%5d out of %5d)' % \
-                                                                                                    (percaccp[a], numbaccp[a], numbtotl[a]), strgstdvstdp, deltllikmean)
+                        print '%30s %40s %10s %.5g %.5g %.5g %.5g %.5g %.5g' % ('%s-%02d' % (gdat.legdproptype[k], a), 'acceptance rate: %3d%% (%5d out of %5d)' % \
+                                   (percaccp[a], numbaccp[a], numbtotl[a]), strgstdvstdp, deltlliktotlmean, deltlpritotlmean, lrppmean, ljcbmean, lpautotlmean, lpridistmean)
                 else:
-                    print '%30s %40s %10s %.5g' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % (percaccp, numbaccp, numbtotl), strgstdvstdp, deltllikmean)
+                    print '%30s %40s %10s %.5g %.5g %.5g %.5g %.5g %.5g' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % \
+                                   (percaccp, numbaccp, numbtotl), strgstdvstdp, deltlliktotlmean, deltlpritotlmean, lrppmean, ljcbmean, lpautotlmean, lpridistmean)
                 
             if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
                 print 'Tempered burn-in'
@@ -3495,9 +3510,9 @@ def work(pathoutpthis, lock, indxprocwork):
             for k in range(gdat.numbchro):
                 for name, valu in gdat.indxchro.iteritems():
                     if valu == k:
-                        print '%s: %.3g msec' % (name, gdatmodi.thischro[k] * 1e3)
+                        print '%s: %.3g msec' % (name, gdatmodi.nextchro[k] * 1e3)
                         if name == 'llik' and gdat.numbpixl > 1 and gdat.fittnumbtrap > 0 and 'loclhash' in gdat.commelemspatevaltype:
-                            print '%.3g per pixel' % (gdatmodi.thischro[k] * 1e3 / amin(gdat.numbpixlprox))
+                            print '%.3g per pixel' % (gdatmodi.nextchro[k] * 1e3 / amin(gdat.numbpixlprox))
            
             print 
 
