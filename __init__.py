@@ -27,6 +27,8 @@ import threading
 #import pyximport; pyximport.install()
 import ctypes
 
+import subprocess as subp
+
 import astropy as ap
 from astropy.convolution import convolve_fft, AiryDisk2DKernel
 

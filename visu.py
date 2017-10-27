@@ -7,6 +7,12 @@ from util import *
 def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
    
     backtype = getattr(gdat, strgmodl + 'backtype')
+    lablelemextn = getattr(gdat, strgmodl + 'lablelemextn')
+    numbtrap = getattr(gdat, strgmodl + 'numbtrap')
+    if numbtrap > 0:
+        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
+        indxregipopl = getattr(gdat, strgmodl + 'indxregipopl')
+    
     if gdat.shrtfram and strgstat == 'this':
         if gdat.numbpixl > 1:
             for d in gdat.indxregi:
@@ -19,12 +25,22 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 for d in gdat.indxregi:
                     plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, d, gdat.listspecconvunit[0])
        
+        # element deltllik histograms
+        #if numbtrap > 0:
+        #    for l in indxpopl:
+        #        strgindxydat = 'pop%d' % l
+        #        limtxdat = gdat.limtdeltllik
+        #        lablydat = r'$N_{%s}$' % lablelemextn[l]
+        #        for d in indxregipopl[d]:
+        #            name = 'histdeltllikpop%dreg%d' % (l, d)
+        #            plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'meandeltllik', scalydat='logt', lablxdat=gdat.labldeltlliktotl, \
+        #                          lablydat=lablydat, histodim=True, ydattype='totl', scalxdat='logt', limtydat=gdat.limtydathistfeat, limtxdat=limtxdat, nameinte='histodim/')
+            
     else:    
         
         strgpfix = retr_strgpfix(strgstat, strgmodl)
         gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl)
     
-        numbtrap = getattr(gdat, strgmodl + 'numbtrap')
         sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbdeflsubhplot = getattr(gdat, strgmodl + 'numbdeflsubhplot')
@@ -33,7 +49,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         if numbtrap > 0:
             liststrgfeatcorr = getattr(gdat, strgmodl + 'liststrgfeatcorr')
             spectype = getattr(gdat, strgmodl + 'spectype')
-            indxpopl = getattr(gdat, strgmodl + 'indxpopl')
             elemtype = getattr(gdat, strgmodl + 'elemtype')
             calcerrr = getattr(gdat, strgmodl + 'calcerrr')
             boolelemsbrtextsbgrdanyy = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrdanyy')
@@ -55,7 +70,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
         unifback = getattr(gdat, strgmodl + 'unifback')
         listnameback = getattr(gdat, strgmodl + 'listnameback')
         lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
-        lablelemextn = getattr(gdat, strgmodl + 'lablelemextn')
         namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
         
         if gdatmodi != None:
@@ -313,6 +327,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                     for d in gdat.fittindxregipopl[l]:
                         for strgfeat in gdat.fittliststrgfeatodim[l]:
                             for q in gdat.indxrefr:
+                                if not l in gdat.refrindxpoplassc[q]:
+                                    continue
                                 if gdat.refrnumbelem[q][d] == 0:
                                     continue
                                 if not strgfeat in gdat.refrliststrgfeat[q] or strgfeat in gdat.refrliststrgfeatonly[q][l]:
@@ -323,78 +339,73 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                         for b, strgseco in enumerate(liststrgfeatcorr[l]):
                             if a < b:
                                 for strgplottype in ['hist', 'scat']:
+                                    
+                                    # avoid 2D histogram plot for the true model 
                                     if strgmodl == 'true' and strgplottype == 'hist':
                                         continue
+
+                                    # avoid 2D scatter plot when plotting the posterior and condensed catalog is not produced 
                                     if strgstat == 'post' and not gdat.condcatl and strgplottype == 'scat':
                                         continue
-                                    plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, d, l, strgplottype, strgfrst, strgseco)
+                                    
+                                    if strgstat == 'post':
+                                        liststrgmome = ['medi', 'mean']
+                                    else:
+                                        liststrgmome = [None]
+                                    
+                                    for strgmome in liststrgmome:
+                                        plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, d, l, strgplottype, strgfrst, strgseco, strgmome=strgmome)
     
             # element feature histograms
             if not (strgmodl == 'true' and gdat.datatype == 'inpt'):
                 limtydat = gdat.limtydathistfeat
                 for l in indxpopl:
                     strgindxydat = 'pop%d' % l
-    
-                    for strgfeat in liststrgfeatodim[l]:
-                        indxydat = [l, slice(None)]
-                        scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
-                        factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
-                        lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
-                        #limtxdat = [getattr(gdat, strgmodl + 'minm' + strgfeat) * factxdat, getattr(gdat, strgmodl + 'maxm' + strgfeat) * factxdat]
-                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                        
-                        # for true model, also plot the significant elements only
-                        # temp
-                        #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
-                        #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
-                        #else:
-                        #    listname = ['hist' + strgfeat]
+                    for d in indxregipopl[l]:
+                        for strgfeat in liststrgfeatodim[l]:
+                            indxydat = [l, slice(None)]
+                            scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
+                            factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
+                            lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
+                            limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                            
+                            # for true model, also plot the significant elements only
+                            # temp
+                            #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
+                            #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
+                            #else:
+                            #    listname = ['hist' + strgfeat]
 
-                        listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
-                        for name in listname:
-                            if gdat.numbpixl > 1:
-                                listydattype = ['totl', 'sden']
-                            else:
-                                listydattype = ['totl']
-                            for ydattype in listydattype:
-                                
-                                # plot the surface density of elements only for the amplitude feature
-                                if strgfeat != namefeatampl and ydattype == 'sden':
-                                    continue
+                            listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
+                            for name in listname:
+                                if gdat.numbpixl > 1:
+                                    listydattype = ['totl', 'sden']
+                                else:
+                                    listydattype = ['totl']
+                                for ydattype in listydattype:
+                                    
+                                    # plot the surface density of elements only for the amplitude feature
+                                    if strgfeat != namefeatampl and ydattype == 'sden':
+                                        continue
         
-                                ## plot the surface density of elements
-                                if ydattype == 'sden':
-                                    if gdat.sdenunit == 'degr':
-                                        factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
-                                    if gdat.sdenunit == 'ster':
-                                        factydat = 1. / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
-                                ## plot the total number of elements
-                                if ydattype == 'totl':
-                                    factydat = 1.
-                                    lablydat = r'$N_{%s}$' % lablelemextn[l]
-                                
-                                if False:
-                                    print 'plot_samp()'
-                                    print 'element feature'
-                                    print 'strg'
-                                    print strg
-                                    print 'factydat'
-                                    print factydat
-                                    print 'name'
-                                    print name
-                                    print 'ydattype'
-                                    print ydattype
-                                    print 'strgfeat'
-                                    print strgfeat
-                                    print
-                                
-                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
-                                                  lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
-                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
-                                                  #indxydat=indxydat, strgindxydat=strgindxydat, \
-                                                  nameinte='histodim/')
+                                    ## plot the surface density of elements
+                                    if ydattype == 'sden':
+                                        if gdat.sdenunit == 'degr':
+                                            factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
+                                            lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
+                                        if gdat.sdenunit == 'ster':
+                                            factydat = 1. / (2. * gdat.maxmgang)**2
+                                            lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
+                                    ## plot the total number of elements
+                                    if ydattype == 'totl':
+                                        factydat = 1.
+                                        lablydat = r'$N_{%s}$' % lablelemextn[l]
+                                    
+                                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
+                                                      lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
+                                                      scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
+                                                      #indxydat=indxydat, strgindxydat=strgindxydat, \
+                                                      nameinte='histodim/')
         
         # data and model count scatter
         for d in gdat.indxregi:
@@ -575,32 +586,26 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         if gdat.verbtype > 0:
             print 'Plotting the prior distribution...'
 
-        indxbadd = where(isfinite(gdat.listlpri) == False)
-        if indxbadd[0].size > 0:
-            gdat.listlpri[indxbadd] = 5.
-        indxbadd = where(isfinite(gdat.listlpriprop) == False)
-        if indxbadd[0].size > 0:
-            gdat.listlpriprop[indxbadd] = 5.
-        
         for n in gdat.indxproptype:
             pathpostlpri = getattr(gdat, 'path' + gdat.namesampdist + 'finllpri')
-            for k in gdat.fittindxlpri:
-                if (gdat.listlpri[:, k] != 0.).any():
-                    path = pathpostlpri + 'lpri%04d' % k + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-                if (gdat.listlpriprop[:, k] != 0.).any():
-                    path = pathpostlpri + 'lpriprop%04d' % k + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-                if (gdat.listlpriprop[:, k] - gdat.listlpri[:, k] != 0.).any():
-                    path = pathpostlpri + 'lpridelt%04d' % k + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, gdat.listlpriprop[gdat.listindxsamptotl[n], k] - gdat.listlpri[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-            for k in gdat.fittindxlpau:
-                if (gdat.listlpau[:, k] != 0.).any():
+            #path = pathpostlpri + 'deltlliktotl' + gdat.nameproptype[n]
+            #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[gdat.listindxsamptotl[n]], r'$\log \Delta P(D|M)$', logthist=True)
+            #for k in gdat.fittindxlpri:
+            #    path = pathpostlpri + 'deltlpritotl%04d' % k + gdat.nameproptype[n]
+            #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[gdat.listindxsamptotl[n], k], r'$\log \Delta P_{%d}(M)$' % k, logthist=True)
+            if gdat.nameproptype[n] == 'brth' or gdat.nameproptype[n] == 'deth' or gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
+                path = pathpostlpri + 'lpautotl%04d' + gdat.nameproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listlpautotl[gdat.listindxsamptotl[n]], '', logthist=True)
+                for k in gdat.fittindxlpau:
                     path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], '%04d' % k, logthist=True)
-            if (gdat.listlrpp != 0.).any():
+                    tdpy.mcmc.plot_trac(path, gdat.listlpau[gdat.listindxsamptotl[n], k], r'$\log u_{%d}$' % k, logthist=True)
+                
+            if gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
                 path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, gdat.listlrpp[gdat.listindxsamptotl[n]], r'$\log \alpha_p$', logthist=True)
+
+                path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
+                tdpy.mcmc.plot_trac(path, gdat.listljcb[gdat.listindxsamptotl[n]], r'$\log \alpha_c$', logthist=True)
 
     # Gelman-Rubin test
     pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
@@ -930,10 +935,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
     if gdat.verbtype > 0:
         print 'Prior and likelihood...'
     
-    ## log-prior and log-likelihood
-    gdat.listlliktotl = sum(gdat.listllik, axis=(1, 2, 3))
-    gdat.listlpritotl = sum(gdat.listlpri, axis=1)
-
     for strgpdfn in ['lpri', 'llik']:
 
         if strgpdfn == 'lpri':

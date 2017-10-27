@@ -553,7 +553,7 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
                 indxsampcomp['bgal'][l][d] = indxsamptemp + cntr.incr()
             
             # amplitude
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 indxsampcomp['nobj'][l][d] = indxsamptemp + cntr.incr()
             if elemtype[l] == 'lghtpntspuls':
                 indxsampcomp['per0'][l][d] = indxsamptemp + cntr.incr()
@@ -561,7 +561,7 @@ def retr_indxsampcomp(gdat, indxelemfull, strgmodl):
                 indxsampcomp['flux'][l][d] = indxsamptemp + cntr.incr()
             
             # shape
-            if boolelemsbrtextsbgrd[l]:
+            if boolelemsbrtextsbgrd[l] or elemtype[l] == 'clusvari':
                 indxsampcomp['gwdt'][l][d] = indxsamptemp + cntr.incr()
             if elemtype[l] == 'lens':
                 indxsampcomp['defs'][l][d] = indxsamptemp + cntr.incr()
@@ -795,7 +795,7 @@ def retr_indxpixlevalconc(gdat, strgmodl, dicteval, l, ll, dd):
         varbeval = abs(dicteval[ll][dd]['spec'][gdat.indxenerpivt, :])
     if elemtype[l] == 'lens':
         varbeval = dicteval[ll][dd]['defs']
-    if elemtype[l] == 'clus':
+    if elemtype[l].startswith('clus'):
         varbeval = dicteval[ll][dd]['nobj']
     
     if elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash':
@@ -1434,7 +1434,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     minmnumbelem = getattr(gdat, strgmodl + 'minmnumbelem')
     maxmnumbelem = getattr(gdat, strgmodl + 'maxmnumbelem')
     indxfixp = getattr(gdat, strgmodl + 'indxfixp')
-    if gdat.numbpixl > 1:
+    psfnevaltype = getattr(gdat, strgmodl + 'psfnevaltype')
+    if psfnevaltype != 'none':
         indxfixppsfp = getattr(gdat, strgmodl + 'indxfixppsfp')
     indxfixpbacp = getattr(gdat, strgmodl + 'indxfixpbacp')
     indxfixplenp = getattr(gdat, strgmodl + 'indxfixplenp')
@@ -3210,6 +3211,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.legdsamp = 'Sample'
     gdat.legdmlik = 'Maximum likelihood'
     gdat.legdmedi = 'Median'
+    gdat.legdmean = 'Mean'
     gdat.legdstdv = 'Std. dev.'
     
     # p value contours 
@@ -4299,10 +4301,13 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         gdat.indxstdplgal = gdat.numbfixpprop
         gdat.indxstdpbgal = gdat.numbfixpprop + 1
+        if 'clusvari' in gdat.fittelemtype:
+            gdat.indxstdpgwdt = gdat.numbfixpprop + 3
         if gdat.fittboolelemspecanyy:
             if gdat.fittboolelemsbrtextsbgrdanyy:
-                gdat.indxstdpgwdt = gdat.numbfixpprop + 2
-                gdat.indxstdpflux = gdat.numbfixpprop + 3
+                gdat.indxstdpgwdt = gdat.numbfixpprop + 3
+            if gdat.fittboolelemsbrtextsbgrdanyy:
+                gdat.indxstdpflux = gdat.numbfixpprop + 2
                 gdat.indxstdpsind0001 = gdat.numbfixpprop + 4
                 gdat.indxstdpsind0002 = gdat.numbfixpprop + 5
                 gdat.indxstdpsind = gdat.numbfixpprop + 4
@@ -4319,8 +4324,9 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.indxstdpdefs = gdat.numbfixpprop + 2
             gdat.indxstdpasca = gdat.numbfixpprop + 3
             gdat.indxstdpacut = gdat.numbfixpprop + 4
-        if 'clus' in gdat.fittelemtype:
+        if 'clus' in gdat.fittelemtype or 'clusvari':
             gdat.indxstdpnobj = gdat.numbfixpprop + 2
+    
     # temp
     #gdat.indxstdpampl = getattr(gdat, 'indxstdp' + gdat.namefeatampl)
     if gdat.fittnumbtrap > 0:
@@ -4636,6 +4642,16 @@ def setpinit(gdat, boolinitsetp=False):
                             except:
                                 pass
     
+    # set plot limits
+    # temp -- this should be different for each population
+    for strg, valu in gdat.__dict__.iteritems():
+        if strg.startswith('minm'):
+            try:
+                maxm = getattr(gdat, 'maxm' + namefeat)
+                limt = [minm, maxm]
+                setattr(gdat, 'limt' + namefeat, limt)
+            except:
+                pass
 
     gdat.boolhash = False
     for strgmodl in gdat.liststrgmodl:
@@ -5062,7 +5078,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'lens':
                 namefeatampl[l] = 'defs'
                 indxcompampl[l] = 2
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 namefeatampl[l] = 'nobj'
                 indxcompampl[l] = 2
             if len(namefeatampl[l]) == 0:
@@ -5110,7 +5126,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 namefeatsort[l] = 'flux'
             if elemtype[l] == 'lens':
                 namefeatsort[l] = 'defs'
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 namefeatsort[l] = 'nobj'
     
         ## selection feature
@@ -5120,7 +5136,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 listnamefeatsele[l] = ['flux']
             if elemtype[l] == 'lens':
                 listnamefeatsele[l] = ['defs', 'mcut', 'rele']
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 listnamefeatsele[l] = ['nobj']
     
         ## label extensions
@@ -5138,7 +5154,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     lablelemextn[l] = r'\rm{pts}'
             if elemtype[l] == 'lens':
                 lablelemextn[l] = r'\rm{sub}'
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 lablelemextn[l] = r'\rm{cls}'
             if elemtype[l] == 'lghtline':
                 lablelemextn[l] = r'\rm{lin}'
@@ -5148,7 +5164,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             for indx, elemtypetemp in enumerate(elemtype):
                 # foreground grid (image plane) -- the one where the data is measured
                 if y == 0:
-                    if elemtypetemp.startswith('lght') and not elemtypetemp.endswith('bgrd') or elemtypetemp == 'clus':
+                    if elemtypetemp.startswith('lght') and not elemtypetemp.endswith('bgrd') or elemtypetemp.startswith('clus'):
                         indxpoplgrid[y].append(indx)
                 # foreground mass grid
                 if y == 1:
@@ -5214,7 +5230,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
 
         boolelemsbrtdfnc = [[] for l in indxpopl]
         for l in indxpopl:
-            if elemtype[l].startswith('lght') and not elemtype[l].endswith('bgrd') or elemtype[l] == 'clus':
+            if elemtype[l].startswith('lght') and not elemtype[l].endswith('bgrd') or elemtype[l].startswith('clus'):
                 boolelemsbrtdfnc[l] = True
             else:
                 boolelemsbrtdfnc[l] = False
@@ -5647,14 +5663,14 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 liststrgcomp[l] += ['flux']
             if elemtype[l] == 'lens':
                 liststrgcomp[l] += ['defs']
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 liststrgcomp[l] += ['nobj']
             if elemtype[l] == 'lghtpntspuls':
                 listscalcomp[l] += ['lnormeanstdv']
             else:
                 listscalcomp[l] += ['powrslop']
             
-            if elemtype[l] == 'lghtgausbgrd':
+            if elemtype[l] == 'lghtgausbgrd' or elemtype[l] == 'clusvari':
                 liststrgcomp[l] += ['gwdt']
                 listscalcomp[l] += ['powrslop']
             
@@ -5781,8 +5797,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         
         liststrgfeateval = [[] for l in indxpopl]
         for l in indxpopl:
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 liststrgfeateval[l] = ['lgal', 'bgal', 'nobj']
+            if elemtype[l] == 'clusvari':
+                liststrgfeateval[l] += ['gwdt']
             if elemtype[l] == 'lens':
                 liststrgfeateval[l] = ['lgal', 'bgal', 'defs', 'asca', 'acut']
             if elemtype[l] == 'lghtline':
@@ -5807,7 +5825,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     legdpopl[l] = 'PS'
             if elemtype[l] == 'lens':
                 legdpopl[l] = 'Subhalo'
-            if elemtype[l] == 'clus':
+            if elemtype[l].startswith('clus'):
                 legdpopl[l] = 'Cluster'
             if elemtype[l] == 'lghtline':
                 legdpopl[l]= 'Line'
@@ -6643,7 +6661,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
     if hostemistype != 'none':
         listlegdsbrt.append('Host')
         numblablsbrt += 1
-    if 'clus' in elemtype:
+    if 'clus' in elemtype or 'clusvari' in elemtype:
         listlegdsbrt.append('Uniform')
         numblablsbrt += 1
     listlegdsbrtspec = ['Data']
@@ -7545,7 +7563,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             minmflux = getattr(gdat, strgmodl + 'minmflux')
         if 'lens' in elemtype:
             minmdefs = getattr(gdat, strgmodl + 'minmdefs')
-        if 'clus' in elemtype:
+        if 'clus' in elemtype or 'clusvari' in elemtype:
             minmnobj = getattr(gdat, strgmodl + 'minmnobj')
         numbpopl = getattr(gdat, strgmodl + 'numbpopl')
         numbcomp = getattr(gdat, strgmodl + 'numbcomp')
@@ -8122,15 +8140,22 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 for k in range(numbelemeval[ll][dd]):
                                     if boolelemspec[l]:
                                         varbevalextd = dicteval[ll][dd]['spec'][:, k]
-                                    if elemtype[l] == 'clus':
+                                    if elemtype[l].startswith('clus'):
                                         varbevalextd = dicteval[ll][dd]['nobj'][None, k]
                                     if gdat.verbtype > 1:
                                         print 'varbevalextd'
                                         print varbevalextd
                                         print
+                                    
+                                    if elemtype[l] == 'clusvari':
+                                        sbrtdfnc[dd][0, listindxpixleval[ll][dd][k], 0] += dicteval[ll][dd]['nobj'][k] / 2. / pi / dicteval[ll][dd]['gwdt'][k]**2 * \
+                                            exp(-0.5 * ((dicteval[ll][dd]['lgal'][k] - gdat.lgalgrid[listindxpixleval[ll][dd][k]])**2 + \
+                                                        (dicteval[ll][dd]['bgal'][k] - gdat.bgalgrid[listindxpixleval[ll][dd][k]])**2) / dicteval[ll][dd]['gwdt'][k]**2)
+                                        
                                     if boolelempsfn[l]:
                                         sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
+                                    
                                     if elemtype[l] == 'lghtline':
                                         sbrtdfnc[dd][:, 0, 0] += dicteval[ll][dd]['spec'][:, k]
                                     
@@ -8964,6 +8989,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         dicttert = [dict() for d in gdat.indxregi]
         
+        setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl)
+
         if strgstat == 'this' and numbtrap > 0:
             numbelempopl = zeros(numbpopl)
             for l in indxpopl:
@@ -9310,16 +9337,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 # read normalization from the element dictionary
                                 if boolelemspec[l]:
                                     varbevalextd = dictelem[l][dd]['spec'][:, k]
-                                if elemtype[l] == 'clus':
+                                if elemtype[l].startswith('clus'):
                                     varbevalextd = dictelem[l][dd]['nobj'][None, k]
                                 
                                 # calculate imprint on the element surface brightness state variable
                                 if boolelempsfn[l]:
                                     sbrttemp = retr_sbrtpnts(gdat, dictelem[l][d]['lgal'][k], dictelem[l][d]['bgal'][k], \
                                                                                                             varbevalextd, psfnintp, oaxitype, listindxpixleval[l][d][k])
+                                    
+                                if elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash':
                                     indxpixltemp = listindxpixleval[l][d][k]
-                                if elemtype[l] == 'lghtline':
+                                else:
                                     indxpixltemp = slice(None)
+
+                                if elemtype[l] == 'lghtline':
                                     sbrttemp = dicteval[l][d]['spec'][:, k, None, None]
                                 
                                 # add it to the state variable depending on the significance
