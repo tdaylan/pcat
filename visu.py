@@ -1353,7 +1353,8 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
     sizelarg = 10
     sizesmll = 1
     
-    legdmome = getattr(gdat, 'legd' + strgmome)
+    if strgstat == 'post':
+        legdmome = getattr(gdat, 'legd' + strgmome)
     
     limtfrst = getattr(gdat, 'limt' + strgfrst + 'plot')
     limtseco = getattr(gdat, 'limt' + strgseco + 'plot')
