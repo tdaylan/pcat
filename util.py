@@ -3922,11 +3922,11 @@ def setpinit(gdat, boolinitsetp=False):
             for d in gdat.indxregi:
                 if gdat.datatype == 'mock':
                     if gdat.pixltype == 'heal':
-                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
                     if gdat.pixltype == 'cart':
-                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
                 if gdat.datatype == 'inpt':
-                    gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                    gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
         else: 
             if isinstance(gdat.strgexpo, list):
                 if gdat.numbregi != len(gdat.strgexpo):
@@ -3970,6 +3970,9 @@ def setpinit(gdat, boolinitsetp=False):
                                 print
 
                         gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
+                        print 'gdat.expotemp[d]'
+                        summgene(gdat.expotemp[d])
+                        print
                 gdat.expo = gdat.expotemp
     
     if gdat.killexpo:
@@ -3997,6 +4000,8 @@ def setpinit(gdat, boolinitsetp=False):
     ## exposure
     if gdat.correxpo:
         # temp -- for some reason lists of arrays require manual processing
+        print 'gdat.expo[0]'
+        summgene(gdat.expo[0])
         gdat.expo = rplc_list(gdat.expo, gdat.indxcubeincl)
         if gdat.datatype == 'inpt':
             gdat.sbrtdata = rplc_list(gdat.sbrtdata, gdat.indxcubeincl)
