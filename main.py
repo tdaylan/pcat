@@ -351,7 +351,7 @@ def init( \
         if gdat.exprtype == 'chan':
             gdat.anlytype = 'home'
         elif gdat.exprtype == 'ferm':
-            gdat.anlytype = 'manu'
+            gdat.anlytype = 'manupnts'
         else:
             gdat.anlytype = 'nomi'
     
@@ -495,9 +495,9 @@ def init( \
     ## experiment defaults
     if gdat.binsenerfull == None:
         if gdat.exprtype == 'ferm':
-            if gdat.anlytype.startswith('pnts'):
-                gdat.binsenerfull = array([0.3, 1., 3., 30.])
-            if gdat.anlytype.startswith('back'):
+            if gdat.anlytype[4:8] == 'pnts':
+                gdat.binsenerfull = logspace(log10(0.3), log10(10.), 4)
+            if gdat.anlytype[4:8] == 'back':
                 gdat.binsenerfull = logspace(log10(0.3), log10(300.), 31)
         if gdat.exprtype == 'chan':
             if gdat.anlytype.startswith('home'):
@@ -579,11 +579,11 @@ def init( \
         if gdat.binsenerfull != None:
             gdat.indxenerincl = arange(gdat.binsenerfull.size - 1)
         
-        #if gdat.exprtype == 'ferm':
-        #    if gdat.anlytype.startswith('pnts'):
-        #        gdat.indxenerincl = arange(3)
-        #    if gdat.anlytype.startswith('pnts'):
-        #        gdat.indxenerincl = arange(30)
+        if gdat.exprtype == 'ferm':
+            if gdat.anlytype[4:8] == 'pnts':
+                gdat.indxenerincl = arange(3)
+            if gdat.anlytype[4:8] == 'back':
+                gdat.indxenerincl = arange(30)
         if gdat.exprtype == 'chan':
             if gdat.anlytype.startswith('home'):
                 gdat.indxenerincl = arange(5)
@@ -595,6 +595,12 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.indxenerincl = array([0])
     
+    print 'gdat.binsenerfull'
+    print gdat.binsenerfull
+    print 'gdat.indxenerincl'
+    print gdat.indxenerincl
+    print
+
     # energy band string
     if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
@@ -607,8 +613,12 @@ def init( \
                 gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
         if gdat.exprtype == 'sdyn':
             gdat.strgenerfull = ['']
+    
+    print 'gdat.strgenerfull'
+    print gdat.strgenerfull
+    print
 
-    gdat.indxenerfull = arange(len(gdat.strgenerfull) - 1)
+    gdat.indxenerfull = arange(len(gdat.strgenerfull))
 
     ## energy
     gdat.numbener = gdat.indxenerincl.size

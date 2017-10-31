@@ -3917,28 +3917,29 @@ def setpinit(gdat, boolinitsetp=False):
 
     # exposure
     if gdat.correxpo:
+        gdat.expo = [[] for d in gdat.indxregi]
         if isinstance(gdat.strgexpo, float):
-            if gdat.datatype == 'mock':
-                if gdat.pixltype == 'heal':
-                    gdat.expo = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
-                if gdat.pixltype == 'cart':
-                    gdat.expo = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
-            if gdat.datatype == 'inpt':
-                gdat.expo = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+            for d in gdat.indxregi:
+                if gdat.datatype == 'mock':
+                    if gdat.pixltype == 'heal':
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                    if gdat.pixltype == 'cart':
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
+                if gdat.datatype == 'inpt':
+                    gdat.expo[d] = gdat.strgexpo * ones((gdat.numbregi, gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
         else: 
-            path = gdat.pathinpt + gdat.strgexpo
-            gdat.expo = pf.getdata(path)
+            if isinstance(gdat.strgexpo, list):
+                if gdat.numbregi != len(gdat.strgexpo):
+                    raise Exception('Input number of regions is different from what is inferred from exposure maps.')
             
-            # temp
-            if (gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart) and gdat.expo.ndim == 3 or gdat.pixltype == 'cart' and gdat.expo.ndim == 4:
-                print 'Exposure map incompatible with PCAT %s. Converting...' % gdat.strgvers
-                gdat.expo = gdat.expo[None, :, :, :]
-
-            # temp
-            if gdat.exprtype == 'ferm' and gdat.expo.shape[3] == 4 and (gdat.anlytype.startswith('rec7') or gdat.anlytype.startswith('manu')):
-                print 'Input exposure incompatible with new Fermi-LAT event type binning. Converting...'
-                gdat.expo = gdat.expo[:, :, :, 2:4]
-
+                for d in gdat.indxregi:
+                    path = gdat.pathinpt + gdat.strgexpo[d]
+                    gdat.expo[d] = pf.getdata(path)
+            else:
+                path = gdat.pathinpt + gdat.strgexpo
+                for d in gdat.indxregi:
+                    gdat.expo[d] = pf.getdata(path)
+            
             if amin(gdat.expo) == amax(gdat.expo):
                 raise Exception('Bad input exposure map.')
             if gdat.pixltype == 'cart':
@@ -3949,10 +3950,26 @@ def setpinit(gdat, boolinitsetp=False):
                         gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
                         for i in gdat.indxenerfull:
                             for m in gdat.indxevttfull:
+                                print 'gdat.indxenerfull'
+                                print gdat.indxenerfull
+                                print 'gdat.indxener'
+                                print gdat.indxener
+                                print 'gdat.indxevttfull'
+                                print gdat.indxevttfull
+                                print 'gdat.indxevtt'
+                                print gdat.indxevtt
+                                print 'dim'
+                                print d, i, m
+                                print 'gdat.expo[d][i, :, m]'
+                                summgene(gdat.expo[d][i, :, m])
                                 gdat.expotemp[d][i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d][i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
                                                                                              minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
                                                                                              minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
-                        gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
+                                print 'gdat.expotemp[d][i, :, :, m]'
+                                summgene(gdat.expotemp[d][i, :, :, m])
+                                print
+
+                        gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
                 gdat.expo = gdat.expotemp
     
     if gdat.killexpo:
@@ -4127,6 +4144,12 @@ def setpinit(gdat, boolinitsetp=False):
         for d in gdat.indxregi:
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
+                    print 'dim'
+                    print d, i, m
+                    print 'gdat.expo[d][i, :, m]'
+                    summgene(gdat.expo[d][i, :, m])
+                    print
+
                     gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[d][i, :, m] > 0.)[0])
     
     gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
@@ -4214,6 +4237,14 @@ def setpinit(gdat, boolinitsetp=False):
         if b == 0:
             gdat.listindxcubespatmean[b] = gdat.indxcube
     
+    print 'gdat.commboolelempsfnanyy'
+    print gdat.commboolelempsfnanyy
+    print 'gdat.numbpixl'
+    print gdat.numbpixl
+    print 'gdat.numbpixlfull'
+    print gdat.numbpixlfull
+    print
+
     if gdat.numbpixl > 1:
         # store pixels as unit vectors
         gdat.xdatgrid, gdat.ydatgrid, gdat.zaxigrid = retr_unit(gdat.lgalgrid, gdat.bgalgrid)
@@ -4251,6 +4282,8 @@ def setpinit(gdat, boolinitsetp=False):
         
         # spatial averaging setup
         # temp
+        print 'gdat.commboolelempsfnanyy'
+        print gdat.commboolelempsfnanyy
         if gdat.commboolelempsfnanyy:
             gdat.psfnexpr = retr_psfn(gdat, gdat.psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
         
