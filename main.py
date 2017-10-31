@@ -403,7 +403,7 @@ def init( \
 
     if gdat.strgexpo == None:
         if gdat.exprtype == 'ferm':
-            gdat.strgexpo = 'expofermcmp0igal.fits'
+            gdat.strgexpo = 'expofermrec8pntsigal0256.fits'
         elif gdat.exprtype == 'hubb':
             gdat.strgexpo = 1000. / gdat.hubbexpofact
         else:

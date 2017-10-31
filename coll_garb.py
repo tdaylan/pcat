@@ -10,7 +10,7 @@ else:
 for strgextn in liststrgextn:
 
     path = os.environ["PCAT_DATA_PATH"] + strgextn
-
+    
     for strgfile in os.listdir(path):
         pathfile = path + strgfile
         if os.path.isdir(pathfile) and strgfile[:8].isdigit():
