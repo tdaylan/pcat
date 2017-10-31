@@ -3944,16 +3944,16 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.pixltype == 'cart':
    
                 if gdat.forccart:
-                    gdat.expotemp = empty((gdat.numbregi, gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                    gdat.expotemp = [[] for d in gdat.indxregi]
                     for d in gdat.indxregi:
+                        gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
                         for i in gdat.indxenerfull:
                             for m in gdat.indxevttfull:
-                                gdat.expotemp[d, i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d, i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                gdat.expotemp[d][i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d][i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
                                                                                              minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
                                                                                              minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
-                    gdat.expo = gdat.expotemp
-                
-                gdat.expo = gdat.expo.reshape((gdat.expo.shape[0], gdat.expo.shape[1], -1, gdat.expo.shape[-1]))
+                        gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo.shape[0], -1, gdat.expo.shape[-1]))
+                gdat.expo = gdat.expotemp
     
     if gdat.killexpo:
         gdat.expo *= 1e-10

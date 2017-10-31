@@ -495,7 +495,10 @@ def init( \
     ## experiment defaults
     if gdat.binsenerfull == None:
         if gdat.exprtype == 'ferm':
-            gdat.binsenerfull = array([0.1, 0.3, 1., 3., 10., 100.])
+            if gdat.anlytype.startswith('pnts'):
+                gdat.binsenerfull = array([0.3, 1., 3., 30.])
+            if gdat.anlytype.startswith('back'):
+                gdat.binsenerfull = logspace(log10(0.3), log10(300.), 31)
         if gdat.exprtype == 'chan':
             if gdat.anlytype.startswith('home'):
                 gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
@@ -571,10 +574,16 @@ def init( \
         gdat.enerdiff = False
     
     if gdat.indxenerincl == None:
+        
+        # default
         if gdat.binsenerfull != None:
             gdat.indxenerincl = arange(gdat.binsenerfull.size - 1)
-        if gdat.exprtype == 'ferm':
-            gdat.indxenerincl = arange(1, 4)
+        
+        #if gdat.exprtype == 'ferm':
+        #    if gdat.anlytype.startswith('pnts'):
+        #        gdat.indxenerincl = arange(3)
+        #    if gdat.anlytype.startswith('pnts'):
+        #        gdat.indxenerincl = arange(30)
         if gdat.exprtype == 'chan':
             if gdat.anlytype.startswith('home'):
                 gdat.indxenerincl = arange(5)
