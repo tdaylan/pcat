@@ -3005,7 +3005,7 @@ def setpprem(gdat):
     
     if gdat.numbswepplot == None:
         if gdat.shrtfram:
-            gdat.numbswepplot = 1000
+            gdat.numbswepplot = 4000
         else:
             gdat.numbswepplot = 40000
     
