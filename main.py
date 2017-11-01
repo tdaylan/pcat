@@ -21,7 +21,9 @@ def init( \
          highexpo=False, \
          sqzeprop=False, \
          explprop=False, \
-        
+    
+         boolarry=False, \
+
          asscrefr=True, \
         
          thindata=False, \
@@ -299,7 +301,8 @@ def init( \
     gdat.strgnumbswep = '%d' % gdat.numbswep
     
     # output paths
-    gdat.rtag = gdat.strgtimestmp + '_' + gdat.strgcnfg + '_' + gdat.strgnumbswep
+    
+    gdat.rtag = retr_rtag(gdat.strgtimestmp, gdat.strgcnfg, gdat.strgnumbswep)
     gdat.pathoutpthis = gdat.pathoutp + gdat.rtag + '/'
 
     # plot previous run tag
@@ -1831,15 +1834,13 @@ def init( \
         worksamp(gdat, lock)
         
         ## post process the samples
-        proc_post(gdat, prio=True)
+        proc_finl(gdat, prio=True)
         
         # save the prior median of variables
         for strgvarb in gdat.liststrgchan:
-            
             # temp
             if strgvarb in gdat.fittliststrgfeattotl or strgvarb == 'indxelemfull':
                 continue
-
             setattr(gdat, 'prio' + strgvarb, getattr(gdat, 'medi' + strgvarb))
         
         gdat.calcllik = True
@@ -1864,37 +1865,19 @@ def init( \
     # run the sampler
     worksamp(gdat, lock)
     
-    #prid = os.fork()
-    #if prid > 0:
-    #    sys.exit(0)
-    #os.chdir("/")
-    #os.setsid()
-    #os.umask(0)
-    #prid = os.fork()
-    #if prid > 0:
-    #    sys.exit(0)
-    # redirect standard file descriptors
-    #sys.stdout.flush()
-    #sys.stderr.flush()
-    #si = file(self.stdin, 'r')
-    #so = file(self.stdout, 'a+')
-    #se = file(self.stderr, 'a+', 0)
-    #os.dup2(si.fileno(), sys.stdin.fileno())
-    #os.dup2(so.fileno(), sys.stdout.fileno())
-    #os.dup2(se.fileno(), sys.stderr.fileno())
-    
-    # write pidfile
-    #atexit.register(self.delpid)
-    #pid = str(os.getpid())
-    #file(self.pidfile,'w+').write("%s\n" % pid)
-    
-    #proc = mp.Process(target=work_hede)
-    #proc.daemon = True
-    #proc.start()
-    
-    work_finl(gdat)
-    #subp.Popen(['python $PCAT_PATH/main.py work_finl %s' % gdat.strgcnfg], close_fds=True)
-    #os.system('python $PCAT_PATH/main.py work_finl %s' % gdat.strgcnfg)
+    if not gdat.boolarry:
+        # post process the samples
+        proc_finl(gdat)
+        
+        # make animations
+        if gdat.makeanim:
+            proc_anim(gdat.rtag)
+
+    if gdat.verbtype > 0:
+        print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
+        if gdat.makeplot:
+            print 'The plots are at ' + gdat.pathplot
+        print 'PCAT has run successfully. Returning to the OS...'
 
 
 def work_hede():
@@ -1906,22 +1889,6 @@ def work_hede():
     filecomp.write('PCAT has run successfully.\n')
     filecomp.close()
 
-
-def work_finl(gdat):
-
-    # post process the samples
-    proc_post(gdat)
-    
-    # make animations
-    if gdat.makeanim:
-        make_anim(gdat.rtag)
-
-    if gdat.verbtype > 0:
-        print 'The ensemble of catalogs is at ' + gdat.pathoutpthis
-        if gdat.makeplot:
-            print 'The plots are at ' + gdat.pathplot
-        print 'PCAT has run successfully. Returning to the OS...'
-    
 
 def workopti(gdat, lock):
 
@@ -1971,6 +1938,7 @@ def initarry( \
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
     dictvarb['strgcnfg'] = strgcnfg
+    dictvarb['boolarry'] = True
     
     listgdat = []
     listprid = []
@@ -2033,11 +2001,27 @@ def initarry( \
     else:
         return listgdat
 
+def retr_rtag(strgtimestmp, strgcnfg, strgnumbswep):
+    
+    rtag = strgtimestmp + '_' + strgcnfg + '_' + strgnumbswep
+    
+    return rtag
 
-def proc_post(gdat, prio=False):
+
+def proc_finl(gdat=None, rtag=None, prio=False):
+    
+    if rtag != None:
+        # read initial global object
+        path = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/gdatinit'
+        gdat = readfile(path) 
+    
+    # quit if the final global object is available 
+    path = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/gdatfinl'
+    if os.path.isfile(path):
+        return
 
     if gdat.verbtype > 0:
-        print 'Post processing'
+        print 'Post processing...'
         timeinit = gdat.functime()
    
     # read the chains
@@ -2385,11 +2369,10 @@ def proc_post(gdat, prio=False):
     os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
    
     # write the final gdat object
-    if True:
-        path = gdat.pathoutpthis + 'gdatfinl'
-        if gdat.verbtype > 0:
-            print 'Writing the global object to %s...' % path
-        writfile(gdat, path) 
+    path = gdat.pathoutpthis + 'gdatfinl'
+    if gdat.verbtype > 0:
+        print 'Writing the global object to %s...' % path
+    writfile(gdat, path) 
     
     if gdat.makeplot and gdat.makeplotpost:
         plot_post(gdat, prio=prio)

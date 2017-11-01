@@ -638,7 +638,7 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
                         maps = gdat.gmrbstat[d][i, :, m]
-                        path = pathdiag + 'gmrbmaps_%d%d.pdf' % (i, m)
+                        path = pathdiag + 'gmrbdataene%devt%d.pdf' % (i, m)
                         tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
                                                                                                 minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
                                                                                                 minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
@@ -1627,6 +1627,13 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
                         ydatsupr = getattr(gdattemp, strgstat + strgydat + 'prio') * factydat
                         axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphmrkr, color='b')
    
+    for name, valu in gdat.__dict__.iteritems():
+        if name.startswith('refrplot'):
+            if name[8:12] == 'hist' and name[12:16] == strgfeat and name[16:19] == 'pop' and int(name[-1]) == indxpopltemp:
+                colr = getattr(gdat, name + 'colr')
+                linestyl = getattr(gdat, name + 'linestyl')
+                axis.plot(valu[0, :], valu[1, :], ls=linestyl, color=colr)
+
     if strgydat.startswith('hist') and strgydat[4:-8] == 'deltllik':
         plot_sigmcont(gdat, axis, int(strgydat[-1]), strgfrst=strgxdat[4:])
    

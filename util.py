@@ -8022,7 +8022,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 
                 setattr(gdatobjt, strgpfix + 'psfnconv', psfnconv)
             stopchro(gdat, gdatmodi, strgstat, 'psfnconv')
-    
+        
+        print 'gdat.kernevaltype'
+        print gdat.kernevaltype
+        print 'boolelempsfnanyy'
+        print boolelempsfnanyy
+        print 'numbtrap'
+        print numbtrap
+        print
+
         if numbtrap > 0 and boolelempsfnanyy:
             ## PSF off-axis factor
             if oaxitype:
@@ -10259,73 +10267,71 @@ def prep_gdatmodi(gdat, gdatmodi, gdatobjt, strgstat, strgmodl):
         setattr(gdatmodi, strgpfixthis + namevarbstat, temp)
     
 
-def make_anim(strgsrch):
+def proc_anim(rtag):
 
     pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
-    listpathruns = fnmatch.filter(os.listdir(pathimag), strgsrch)
     
-    print 'Making animations of frame plots...'
+    print 'Making animations of frame plots for %s...' % rtag
     
-    for pathruns in listpathruns:
-        for namesampdist in ['prio', 'post']:
-            for nameextn in ['', 'assc/', 'histodim/', 'histtdim/', 'scattdim/']:
-                
-                pathframextn = pathimag + pathruns + '/' + namesampdist + '/fram/' + nameextn
-                pathanimextn = pathimag + pathruns + '/' + namesampdist + '/anim/' + nameextn
+    for namesampdist in ['prio', 'post']:
+        for nameextn in ['', 'assc/', 'histodim/', 'histtdim/', 'scattdim/']:
             
-                try:
-                    listfile = fnmatch.filter(os.listdir(pathframextn), '*_swep*.pdf')
-                except:
-                    print '%s failed.' % pathframextn
-                    continue
+            pathframextn = pathimag + rtag + '/' + namesampdist + '/fram/' + nameextn
+            pathanimextn = pathimag + rtag + '/' + namesampdist + '/anim/' + nameextn
+        
+            try:
+                listfile = fnmatch.filter(os.listdir(pathframextn), '*_swep*.pdf')
+            except:
+                print '%s failed.' % pathframextn
+                continue
     
-                listfiletemp = []
-                for thisfile in listfile:
-                    listfiletemp.extend((thisfile.split('_')[0]).rsplit('/', 1))
-                
-                listname = list(set(listfiletemp))
-                if len(listname) == 0:
-                    continue
-                
-                shuffle(listname)
+            listfiletemp = []
+            for thisfile in listfile:
+                listfiletemp.extend((thisfile.split('_')[0]).rsplit('/', 1))
+            
+            listname = list(set(listfiletemp))
+            if len(listname) == 0:
+                continue
+            
+            shuffle(listname)
     
-                for name in listname:
-                    
-                    strgtemp = '%s*_swep*.pdf' % name
-                    listfile = fnmatch.filter(os.listdir(pathframextn), strgtemp)
+            for name in listname:
+                
+                strgtemp = '%s*_swep*.pdf' % name
+                listfile = fnmatch.filter(os.listdir(pathframextn), strgtemp)
+                numbfile = len(listfile)
+                liststrgextn = []
+                for k in range(numbfile):
+                    liststrgextn.append((listfile[k].split(name)[1]).split('_')[0])
+                
+                liststrgextn = list(set(liststrgextn))
+                
+                for k in range(len(liststrgextn)):
+            
+                    listfile = fnmatch.filter(os.listdir(pathframextn), name + liststrgextn[k] + '_swep*.pdf')
                     numbfile = len(listfile)
-                    liststrgextn = []
-                    for k in range(numbfile):
-                        liststrgextn.append((listfile[k].split(name)[1]).split('_')[0])
                     
-                    liststrgextn = list(set(liststrgextn))
+                    indxfilelowr = 0
                     
-                    for k in range(len(liststrgextn)):
-                
-                        listfile = fnmatch.filter(os.listdir(pathframextn), name + liststrgextn[k] + '_swep*.pdf')
-                        numbfile = len(listfile)
+                    if indxfilelowr < numbfile:
+                        indxfileanim = arange(indxfilelowr, numbfile)
+                    else:
+                        continue
                         
-                        indxfilelowr = 0
-                        
-                        if indxfilelowr < numbfile:
-                            indxfileanim = arange(indxfilelowr, numbfile)
-                        else:
-                            continue
-                            
-                        indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
-                        
-                        cmnd = 'convert -delay 20 -density 300 -quality 100 '
-                        for n in range(indxfileanim.size):
-                            cmnd += '%s%s ' % (pathframextn, listfile[indxfileanim[n]])
+                    indxfileanim = choice(indxfileanim, replace=False, size=indxfileanim.size)
+                    
+                    cmnd = 'convert -delay 20 -density 300 -quality 100 '
+                    for n in range(indxfileanim.size):
+                        cmnd += '%s%s ' % (pathframextn, listfile[indxfileanim[n]])
     
-                        namegiff = '%s%s.gif' % (pathanimextn, name + liststrgextn[k])
-                        cmnd += ' ' + namegiff
-                        if not os.path.exists(namegiff):
-                            print 'Run: %s, pdf: %s' % (pathruns, namesampdist)
-                            print 'Making %s animation...' % name
-                            print
-                            os.system(cmnd)
-                        else:
-                            pass
+                    namegiff = '%s%s.gif' % (pathanimextn, name + liststrgextn[k])
+                    cmnd += ' ' + namegiff
+                    if not os.path.exists(namegiff):
+                        print 'Run: %s, pdf: %s' % (rtag, namesampdist)
+                        print 'Making %s animation...' % name
+                        print
+                        os.system(cmnd)
+                    else:
+                        pass
     
 
