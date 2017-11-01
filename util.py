@@ -5382,7 +5382,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 setp_varblimt(gdat, 'per0diststdv', [1e-2, 1.], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'magfdiststdv', [1e-2, 1.], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'gangdistslop', [0.5, 4.], popl=l, strgmodl=strgmodl)
-                setp_varblimt(gdat, 'dglcdistslop', [1e-2, 1.], popl=l, strgmodl=strgmodl)
+                setp_varblimt(gdat, 'dglcdistslop', [0.5, 2.], popl=l, strgmodl=strgmodl)
                 # temp -- minima and maxima should be population dependent...
                 setp_varblimt(gdat, 'dglc', [1e-3, 3.], strgmodl=strgmodl)
     

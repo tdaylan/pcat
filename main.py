@@ -586,12 +586,6 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.indxenerincl = array([0])
     
-    print 'gdat.binsenerfull'
-    print gdat.binsenerfull
-    print 'gdat.indxenerincl'
-    print gdat.indxenerincl
-    print
-
     # energy band string
     if gdat.strgenerfull == None:
         if gdat.exprtype == 'sdss':
@@ -605,10 +599,6 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.strgenerfull = ['']
     
-    print 'gdat.strgenerfull'
-    print gdat.strgenerfull
-    print
-
     gdat.indxenerfull = arange(len(gdat.strgenerfull))
 
     ## energy
