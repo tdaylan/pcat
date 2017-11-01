@@ -2816,7 +2816,7 @@ def work(pathoutpthis, lock, indxprocwork):
                 path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
                 
                 booltemp = False
-                if os.path.isfile(path):
+                if os.path.isfile(path) and gdatmodi.indxprocwork == 0:
                     thisfilechec = h5py.File(path, 'r')
                     if thisfilechec['lliktotl'][...] > gdatmodi.thislliktotl:
                         if gdat.verbtype > 0:
