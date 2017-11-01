@@ -5374,7 +5374,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'lghtpntspuls':
                 setp_varblimt(gdat, 'gang', [1e-1 * gdat.sizepixl, gdat.maxmgangdata], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'geff', [0., 0.4], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'dglc', [1e-1, 3.], strgmodl=strgmodl)
+                setp_varblimt(gdat, 'dglc', [1e-2, 3.], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'phii', [0., 2. * pi], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'thet', [0., pi], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'per0distmean', [5e-4, 1e1], popl=l, strgmodl=strgmodl)
