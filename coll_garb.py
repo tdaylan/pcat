@@ -25,7 +25,9 @@ for strgextn in liststrgextn:
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
                 if not os.path.isfile(pathchec) or not booltemp or numbswep < 100000:
-                    os.system('rm -rf ' + pathfile)
+                    print 'strgfile'
+                    print strgfile
+                    #os.system('rm -rf ' + pathfile)
                     print 'Deleting %s' % pathchec
                 else:
                     print 'Saving %s' % pathchec
