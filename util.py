@@ -8023,14 +8023,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 setattr(gdatobjt, strgpfix + 'psfnconv', psfnconv)
             stopchro(gdat, gdatmodi, strgstat, 'psfnconv')
         
-        print 'gdat.kernevaltype'
-        print gdat.kernevaltype
-        print 'boolelempsfnanyy'
-        print boolelempsfnanyy
-        print 'numbtrap'
-        print numbtrap
-        print
-
         if numbtrap > 0 and boolelempsfnanyy:
             ## PSF off-axis factor
             if oaxitype:
