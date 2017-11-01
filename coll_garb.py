@@ -12,6 +12,7 @@ for strgextn in liststrgextn:
     for strgfile in os.listdir(path):
         pathfile = path + strgfile
         if os.path.isdir(pathfile) and strgfile[:8].isdigit():
+            print 'Processing %s...' % strgfile
 
             # check the chain status
             pathchec = pathfile.replace('imag', 'data/outp') + '/stat.txt'
