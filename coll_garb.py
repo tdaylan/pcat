@@ -1,7 +1,5 @@
 from __init__ import *
 
-pathchec = os.environ["PCAT_DATA_PATH"] + '/data/outp/comp.txt'
-
 if len(sys.argv) == 2 and sys.argv[1] == 'data':
     liststrgextn = ['/data/outp/']
 else:
@@ -15,11 +13,18 @@ for strgextn in liststrgextn:
         pathfile = path + strgfile
         if os.path.isdir(pathfile) and strgfile[:8].isdigit():
 
-            pathchec = pathfile.replace('imag', 'data/outp') + '/comp.txt'
-
+            # check the chain status
+            pathchec = pathfile.replace('imag', 'data/outp') + '/stat.txt'
+            if os.path.isfile(pathchec):
+                filestat = open(pathchec, 'r')
+                booltemp = False
+                for line in filestat:
+                    if line == 'gdatmodi written.\n':
+                        booltemp = True
+        
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
-                if not os.path.exists(pathchec) or numbswep < 100000:
+                if not os.path.isfile(pathchec) or not booltemp or numbswep < 100000:
                     os.system('rm -rf ' + pathfile)
                     print 'Deleting %s' % pathchec
                 else:

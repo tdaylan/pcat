@@ -991,54 +991,6 @@ def plot_post(gdat=None, pathpcat=None, verbtype=1, prio=False):
         print 'Plots and animations are produced in %.3g seconds.' % (timetotlfinl - timetotlinit)
 
 
-def plot_chro(gdat):
-    
-    pathdiag = getattr(gdat, 'path' + gdat.namesampdist + 'finldiag')
-
-    gdat.listchro *= 1e3
-    indxchro = array([0, 1, 2, 4])
-    binstime = logspace(log10(amin(gdat.listchro[where(gdat.listchro > 0)])), log10(amax(gdat.listchro[:, indxchro])), 50)
-
-    figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
-    for k in range(gdat.numbchro):
-        varb = gdat.listchro[:, k]
-        axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.3)
-
-    axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(gdat.listchro[where(gdat.listchro[:, 0] > 0)[0], 0]))
-    axis.set_xlim([amin(binstime), amax(binstime)])
-    axis.set_xscale('log')
-    axis.set_ylim([0.5, None])
-    make_legd(axis)
-    axis.set_xlabel('$t$ [ms]')
-    
-    plt.tight_layout()
-    figr.savefig(pathdiag + 'chro.pdf')
-    plt.close(figr)
-
-    gdat.listchro *= 1e3
-   
-    if (gdat.listchro != 0).any() and False:
-        figr, axcl = plt.subplots(gdat.numbchro, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * gdat.numbchro / 3.))
-        maxmchro = amax(gdat.listchro)
-        minmchro = amin(gdat.listchro[where(gdat.listchro > 0)])
-        binstime = logspace(log10(minmchro), log10(maxmchro), 50)
-    
-        for k in range(gdat.numbchro):
-            chro = gdat.listchro[where(gdat.listchro[:, k] > 0)[0], k]
-            axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
-            axcl[k].set_xlim([amin(binstime), amax(binstime)])
-            axcl[k].set_ylim([0.5, None])
-            axcl[k].set_ylabel(listlabl[k])
-            axcl[k].set_xscale('log')
-            if k != gdat.numbchro - 1:
-                axcl[k].set_xticklabels([])
-            axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
-        axcl[-1].set_xlabel('$t$ [ms]')
-        plt.subplots_adjust(hspace=0.05)
-        figr.savefig(pathdiag + 'chro.pdf')
-        plt.close(figr)
-
-
 def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
     
     strgpfix = retr_strgpfix(strgstat, strgmodl)
@@ -1738,14 +1690,6 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, indxregipl
     path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'scatassc' + strgfeat + '%sref%dpop%dreg%d' % (strgtype, q, l, indxregiplot), nameinte='assc/')
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
-
-
-def make_legd(axis, offs=None, loca=1, numbcols=1):
-    
-    legd = axis.legend(fancybox=True, frameon=True, bbox_to_anchor=offs, bbox_transform=axis.transAxes, ncol=numbcols, loc=loca, labelspacing=1, handlelength=2)
-    
-    legd.get_frame().set_fill(True)
-    legd.get_frame().set_facecolor('white')
 
 
 def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxevttplot, indxenerplot=None):

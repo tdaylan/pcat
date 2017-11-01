@@ -9,9 +9,10 @@ else:
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listrtag = fnmatch.filter(os.listdir(pathimag), strgsrch)
 
-print 'Batch production of animations...'
+print 'Batch production...'
 
 for rtag in listrtag:
+    print 'Processing %s...' % rtag
     
     if sys.argv[2] == 'finl':
         proc_finl(rtag=rtag)
