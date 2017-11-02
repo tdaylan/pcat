@@ -25,6 +25,10 @@ for strgextn in liststrgextn:
         
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
+                print 'numbswep'
+                print numbswep
+                print 'booltemp'
+                print booltemp
                 if not os.path.isfile(pathchec) or not booltemp or numbswep < 100000:
                     if not strgfile == '20171025_115229_pcat_lens_mock_syst_lowrtrue_2000000':
                         os.system('rm -rf ' + pathfile)
@@ -35,5 +39,7 @@ for strgextn in liststrgextn:
                     pass
                     print 'Saving %s' % pathchec
             except:
+                print 'Skipping...'
                 pass
+            print
 
