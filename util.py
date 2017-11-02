@@ -9319,12 +9319,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         print type(gdatmodi.thislliktotl)
                         raise Exception('State variables should not change types.')
                     if abs(gdatmodi.thislliktotl - lliktotl) > 1e-3:
-                        print 'Warning! State variable should not change when reprocessing the current state.'
+                        #print 'Warning! State variable should not change when reprocessing the current state.'
                         print 'lliktotl'
                         print lliktotl
                         print 'gdatmodi.thislliktotl'
                         print gdatmodi.thislliktotl
-                        #raise Exception('Warning! State variable should not change when reprocessing the current state.')
+                        raise Exception('Warning! State variable should not change when reprocessing the current state.')
                         print
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
     else:

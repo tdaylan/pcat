@@ -2699,15 +2699,17 @@ def work(pathoutpthis, lock, indxprocwork):
     
             if gdatmodi.cntrswep == 0:
                 gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
-            if gdat.evoltype == 'maxmllik':
-                if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -1e-3:
-                    print 'gdatmodi.thislliktotlprev'
-                    print gdatmodi.thislliktotlprev
-                    print 'gdatmodi.thislliktotl'
-                    print gdatmodi.thislliktotl
-                    #print 'loglikelihood drop is very unlikely!'
-                    raise Exception('loglikelihood drop is very unlikely!')
-            else:
+            
+            lliktotldiff = gdatmodi.thislliktotl - gdatmodi.thislliktotlprev
+
+            if gdat.evoltype == 'maxmllik' and lliktotldiff < -1e-3 or gdat.evoltype == 'samp' and lliktotldiff < -1e6:
+                print 'Warning! loglikelihood drop is very unlikely!'
+                print 'gdatmodi.thislliktotlprev'
+                print gdatmodi.thislliktotlprev
+                print 'gdatmodi.thislliktotl'
+                print gdatmodi.thislliktotl
+                raise Exception('')
+            if gdat.evoltype == 'samp':
                 if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -10.:
                     print 'Warning! loglikelihood drop is very unlikely!'
                     print 'gdatmodi.thislliktotlprev'
