@@ -342,7 +342,7 @@ def init( \
         if gdat.exprtype == 'chan':
             gdat.anlytype = 'home'
         elif gdat.exprtype == 'ferm':
-            gdat.anlytype = 'manupnts'
+            gdat.anlytype = 'rec8pnts'
         else:
             gdat.anlytype = 'nomi'
     
@@ -1157,11 +1157,13 @@ def init( \
                 setp_varbvalu(gdat, 'expcdistmean', 2., popl=l)
                 setp_varbvalu(gdat, 'expcdiststdv', 0.2, popl=l)
         
+            print 'heeeey'
             if gdat.trueelemtype[l] == 'lghtpntspuls':
                 setp_varbvalu(gdat, 'per0distmean', 3e-3, popl=l)
                 setp_varbvalu(gdat, 'per0diststdv', 0.3, popl=l)
                 setp_varbvalu(gdat, 'magfdistmean', 10**8.5, popl=l)
                 setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
+                print 'heeeey'
                 setp_varbvalu(gdat, 'dglcdistslop', 2., popl=l)
 
         if gdat.exprtype == 'ferm':

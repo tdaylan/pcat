@@ -5475,15 +5475,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 path = gdat.pathinpt + backtype[c]
                 sbrtbacknormtemp = pf.getdata(path)
                 
-                # temp
-                if (gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart) and sbrtbacknormtemp.ndim == 3 or gdat.pixltype == 'cart' and sbrtbacknormtemp.ndim == 4:
-                    print 'Input background template incompatible with PCAT %s. Converting...' % gdat.strgvers
-                    sbrtbacknormtemp = sbrtbacknormtemp[None, ...]
-
-                # temp
-                if gdat.exprtype == 'ferm' and sbrtbacknormtemp.shape[3] == 4 and (gdat.anlytype.startswith('rec7') or gdat.anlytype.startswith('manu')):
-                    print 'Input background template incompatible with new Fermi-LAT event type binning. Converting...'
-                    sbrtbacknormtemp = sbrtbacknormtemp[:, :, :, 2:4]
+                if sbrtbacknormtemp.ndim == 3:
+                    print 'Input background template does not have region axis. Creating...'
+                    sbrtbacknormtemp = sbrtbacknormtemp[None, :]
 
                 if gdat.pixltype == 'cart':
                     if gdat.forccart:
@@ -5491,6 +5485,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                         for d in gdat.indxregi:
                             for i in gdat.indxenerfull:
                                 for m in gdat.indxevttfull:
+                                    print 'dim'
+                                    print d, i, m
+                                    print 'sbrtbacknormtemptemp'
+                                    summgene(sbrtbacknormtemptemp)
+                                    print 'sbrtbacknormtemp'
+                                    summgene(sbrtbacknormtemp)
                                     sbrtbacknormtemptemp[d, i, :, :, m] = tdpy.util.retr_cart(sbrtbacknormtemp[d, i, :, m], \
                                                                                         numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
                                                                                         minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
