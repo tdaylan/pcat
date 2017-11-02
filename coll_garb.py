@@ -24,6 +24,10 @@ for strgextn in liststrgextn:
                         booltemp = True
         
             try:
+                print 'pathfile.rfind(_)'
+                print pathfile.rfind('_')
+                print 'pathfile'
+                print pathfile
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
                 print 'numbswep'
                 print numbswep
