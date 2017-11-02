@@ -402,19 +402,13 @@ def init( \
     
     if gdat.indxevttfull == None:
         if gdat.exprtype == 'ferm':
-            if gdat.anlytype.startswith('rec7') or gdat.anlytype.startswith('manu'):
-                gdat.indxevttfull = arange(2)
-            if gdat.anlytype.startswith('rec8'):
-                gdat.indxevttfull = arange(4)
+            gdat.indxevttfull = arange(2)
         else:
             gdat.indxevttfull = arange(1)
     
     if gdat.indxevttincl == None:
         if gdat.exprtype == 'ferm':
-            if gdat.anlytype.startswith('rec7') or gdat.anlytype.startswith('manu'):
-                gdat.indxevttincl = array([0, 1])
-            if gdat.anlytype.startswith('rec8'):
-                gdat.indxevttincl = array([2, 3])
+            gdat.indxevttincl = array([0, 1])
         else:
             gdat.indxevttincl = arange(1)
     
@@ -523,7 +517,7 @@ def init( \
             gdat.indxexpa = arange(gdat.numbexpa)
             backtype = ['bfun%04d' % k for k in gdat.indxexpa]
         else:
-            backtype = [1., 'sbrtfdfmsmthrec7norm.fits']
+            backtype = [1., 'sbrtfdfmsmthrec8pntsnorm.fits']
     if gdat.exprtype == 'chan':
         
         # particle background
