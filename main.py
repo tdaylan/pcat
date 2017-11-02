@@ -282,6 +282,12 @@ def init( \
     if gdat.strgcnfg == None:
         gdat.strgcnfg = inspect.stack()[1][3]
    
+    # check the available run outputs
+    booltemp = chec_runsprev(gdat.strgcnfg)
+    if booltemp:
+        print 'Found a previously completed run.'
+        return
+        
     ## number of burned sweeps
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 10

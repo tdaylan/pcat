@@ -6294,6 +6294,24 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         setattr(gdat, strgmodl + strg, valu)
 
 
+def chec_runsprev(namefunc):
+    
+    # list of PCAT run plot outputs
+    pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
+    listrtag = fnmatch.filter(os.listdir(pathimag), '2*')
+    
+    booltemp = False
+    for rtag in listrtag:
+        strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
+        if rtag.startswith(namefunc) and os.path.isfile(strgstat):
+            filestat = open(strgstat, 'r')
+            for line in filestat:
+                if line == 'gdatmodi written.\n':
+                    booltemp = True
+
+    return booltemp
+
+
 def setp_fixp(gdat, strgmodl='fitt'):
     
     if gdat.verbtype > 0:
