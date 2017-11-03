@@ -9123,6 +9123,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 sbrt['modlconv'][dd][ii, :, mm] = hp.smoothing(sbrt['modlraww'][dd][ii, :, mm], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
                                 sbrt['modlconv'][dd][ii, :, mm][where(sbrt['modlraww'][dd][ii, :, mm] <= 1e-50)] = 1e-50
                     
+                            print 'im'
+                            print i, m
+                            print 'sbrt[modlconv][dd]'
+                            summgene(sbrt['modlconv'][dd])
+                            print 'sbrt[modlconv][dd][ii, :, mm]'
+                            summgene(sbrt['modlconv'][dd][ii, :, mm])
+                            print
+
                     if gdat.diagmode:
                         chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'sbrtmodlconvreg%d' % d, sbrt['modlconv'][dd], indxcubeeval[0][dd])
                     
@@ -9272,10 +9280,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 raise Exception('')
             thisllik = getattr(gdatobjt, strgpfixthis + 'llik')
             deltlliktotl = 0.
-            lliktotl = 0.
+            #lliktotl = 0.
             for dd, d in enumerate(indxregieval):
-                lliktotl += sum(llik[dd])
+                #lliktotl += sum(llik[dd])
                 deltlliktotl += sum(llik[dd] - thisllik[d][indxcubeeval[0][dd]])
+            #deltlliktotl = lliktotl - thislliktotl
+            lliktotl = thislliktotl + deltlliktotl
             setattr(gdatobjt, strgpfix + 'deltlliktotl', deltlliktotl)
         else:
             lliktotl = 0.
@@ -10962,12 +10972,12 @@ def chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgthisvarb, nextvarb, indxcu
             print strgmodl
             print 'strgthisvarb'
             print strgthisvarb
-            print 'thisvarb'
-            summgene(thisvarb)
+            print 'thisvarb[indxcubeeval]'
+            summgene(thisvarb[indxcubeeval])
             print 'nextvarb'
             summgene(nextvarb)
             print 'frac'
-            print frac
+            summgene(frac)
             raise Exception('')
     
 
