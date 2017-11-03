@@ -7455,7 +7455,7 @@ def init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxen
         
         if indxevttplot == None:
             strgevtt = ''
-        elif gdat.indxevttincl[indxevttplot] == -1:
+        elif indxevttplot == -1:
             strgevtt = 'evtA'
         else:
             strgevtt = 'evt%d' % gdat.indxevttincl[indxevttplot]
@@ -7867,7 +7867,7 @@ def writfile(gdattemp, path):
     #    if name == 'psfnintp':
     #        raise Exception('')
     #print
-    print 'writing to %s...' % path
+    print 'Writing to %s...' % path
 
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
     filepick.close()
@@ -9271,11 +9271,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if isinstance(thislliktotl, ndarray):
                 raise Exception('')
             thisllik = getattr(gdatobjt, strgpfixthis + 'llik')
-            deltlliktotl = 0
+            deltlliktotl = 0.
+            lliktotl = 0.
             for dd, d in enumerate(indxregieval):
+                lliktotl += sum(llik[dd])
                 deltlliktotl += sum(llik[dd] - thisllik[d][indxcubeeval[0][dd]])
             setattr(gdatobjt, strgpfix + 'deltlliktotl', deltlliktotl)
-            lliktotl = deltlliktotl + thislliktotl
         else:
             lliktotl = 0.
             for dd, d in enumerate(indxregieval):
@@ -9300,9 +9301,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 print 'sum(llik[dd])'
                 print sum(llik[dd])
                 print
+            print 'indxregieval'
+            print indxregieval
             print 'lliktotl'
             print lliktotl
             print
+            if gdat.diagmode:
+                if gdat.numbregi == 1 and sum(llik[0]) != lliktotl:
+                    raise Exception('')
         if gdat.diagmode:
             if strgmodl == 'fitt' and strgstat == 'this':
                 try:
@@ -10937,6 +10943,9 @@ def proc_finl(gdat=None, rtag=None, prio=False):
 
 def chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgthisvarb, nextvarb, indxcubeeval):
     
+    if strgstat == 'this':
+        return
+
     booltemp = False
     
     try:
@@ -11250,13 +11259,15 @@ def proc_anim(rtag):
     
                     namegiff = '%s%s.gif' % (pathanimextn, name + liststrgextn[k])
                     cmnd += ' ' + namegiff
+                    print 'Processing %s' % namegiff
                     if not os.path.exists(namegiff):
                         print 'Run: %s, pdf: %s' % (rtag, namesampdist)
                         print 'Making %s animation...' % name
-                        print
                         os.system(cmnd)
                     else:
+                        print 'GIF already exists.'
                         pass
+                    print
     
 
 def plot_samp(gdat, gdatmodi, strgstat, strgmodl):

@@ -2388,7 +2388,8 @@ def work(pathoutpthis, lock, indxprocwork):
                             print 'Warning CDF is zero.'
                         if not isfinite(thisfile[attr][()]):
                             raise Exception('Retreived state parameter is not finite.')
-                        if not k in gdat.fittindxfixpnumbelemtotl and (not isfinite(gdatmodi.thissamp[k]) or gdatmodi.thissamp[k] < 0. or gdatmodi.thissamp[k] > 1.):
+                        if (gdat.fittnumbtrap == 0 or gdat.fittnumbtrap > 0 and not k in gdat.fittindxfixpnumbelemtotl) and \
+                                                            (not isfinite(gdatmodi.thissamp[k]) or gdatmodi.thissamp[k] < 0. or gdatmodi.thissamp[k] > 1.):
                             print 'namefixp'
                             print namefixp
                             print 'thisfile[attr][()]'
