@@ -1713,8 +1713,15 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         if gdat.probspmr == 0. and (gdatmodi.propsplt or gdatmodi.propmerg):
             raise Exception('')
 
+    print 'gdat.stdvstdp'
+    print gdat.stdvstdp
+
     stdvstdp = gdat.stdvstdp * gdatmodi.thisstdpscalfact * gdatmodi.thistmprfactstdv
     
+    print 'stdvstdp'
+    print stdvstdp
+    print
+
     if gdatmodi.propdist:
         gdatmodi.indxpoplmodi = [int(gdat.fittnamepara[gdatmodi.indxsampmodi][-1])]
     
@@ -4484,6 +4491,10 @@ def setpinit(gdat, boolinitsetp=False):
     
     if gdat.sqzeprop:
         gdat.stdvstdp *= 1e-100
+    
+    print 'gdat.stdvstdp'
+    print gdat.stdvstdp
+
     if gdat.explprop:
         gdat.stdvstdp[:] = 1.
 
@@ -8441,13 +8452,52 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 indxregieval = gdat.indxregi
             #numbelemeval = fittnumbelemzero
         
+        # determine the indices of the data cube over which the model will be evaluated
         if strgstat == 'this' or strgstat == 'next' and not gdatmodi.evalllikpert:
             indxpixleval = gdat.indxpixleval
-            indxcubeeval = gdat.indxcubeeval
+            if strgstat == 'next':
+                if gdatmodi.proplenp:
+                    indxcubeeval = gdat.indxcubeeval
+                else:
+                    indxcubeeval = [[[] for d in indxregieval] for y in indxgrideval]
+                    indxcubeeval[0][0] = meshgrid(indxenereval, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+            else:
+                indxcubeeval = gdat.indxcubeeval
         else:
-            indxcubeeval = [[[] for d in indxregieval] for y in indxgrideval]
             # list of pixels for each grid and region
             indxpixleval = [[[] for d in indxregieval] for y in indxgrideval]
+            
+            indxcubeeval = [[[] for d in indxregieval] for y in indxgrideval]
+        
+        # determine the indices of the pixels over which element kernels will be evaluated
+        if numbtrap > 0:
+            if gdat.numbpixlfull > 1:
+                # list of pixels for each grid, population, region, and element
+                listindxpixleval = [[[] for d in indxregipopl[l]] for l in indxpopleval]
+
+                # list of pixels for each grid, region, and population -- to be concatenated over populations to obtain indxpixleval
+                indxpixlevalpopl = [[[] for l in indxpopleval] for d in indxregieval]
+                for ll, l in enumerate(indxpopleval):
+                    for dd, d in enumerate(indxregieval):
+                        if numbelemeval[ll][dd] > 0:
+                            if elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash':
+                                listindxpixleval[ll][dd], indxpixlevalpopl[dd][ll] = retr_indxpixlevalconc(gdat, strgmodl, dicteval, l, ll, dd)
+                            else:
+                                listindxpixleval[ll][dd] = gdat.listindxpixl[numbelemeval[ll][dd]]
+                    for yy, y in enumerate([indxgridpopl[l]]):
+                        if strgstat == 'next' and gdatmodi.evalllikpert and (elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash') \
+                                and not boolelemsbrtextsbgrd[l] and not gdatmodi.proppsfp:
+                            indxpixleval[yy][dd] = unique(concatenate(indxpixlevalpopl[dd])).astype(int)
+                        else:
+                            indxpixleval[yy][dd] = gdat.indxpixl
+                        indxcubeeval[yy][dd] = meshgrid(indxenereval, indxpixleval[yy][dd], indxevtteval, indexing='ij')
+            else:
+                indxcubeeval = gdat.indxcubeeval 
+        # load indxcubeeval to the global object for a possible state update
+        if strgstat == 'next':
+            gdatmodi.indxregieval = indxregieval
+            gdatmodi.indxcubeeval = indxcubeeval
+            gdatmodi.indxpixleval = indxpixleval
         
         if lensmodltype != 'none':
             if raww:
@@ -8597,36 +8647,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for name in listnamediff:
             sbrt[name] = [[] for d in indxregieval]
             
-        # determine the indices of the pixels over which element kernels will be evaluated
-        if numbtrap > 0:
-            if gdat.numbpixlfull > 1:
-                # list of pixels for each grid, population, region, and element
-                listindxpixleval = [[[] for d in indxregipopl[l]] for l in indxpopleval]
-
-                # list of pixels for each grid, region, and population -- to be concatenated over populations to obtain indxpixleval
-                indxpixlevalpopl = [[[] for l in indxpopleval] for d in indxregieval]
-                for ll, l in enumerate(indxpopleval):
-                    for dd, d in enumerate(indxregieval):
-                        if numbelemeval[ll][dd] > 0:
-                            if elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash':
-                                listindxpixleval[ll][dd], indxpixlevalpopl[dd][ll] = retr_indxpixlevalconc(gdat, strgmodl, dicteval, l, ll, dd)
-                            else:
-                                listindxpixleval[ll][dd] = gdat.listindxpixl[numbelemeval[ll][dd]]
-                    for yy, y in enumerate([indxgridpopl[l]]):
-                        if strgstat == 'next' and gdatmodi.evalllikpert and (elemspatevaltype[l] == 'locl' or elemspatevaltype[l] == 'loclhash') \
-                                and not boolelemsbrtextsbgrd[l] and not gdatmodi.proppsfp:
-                            indxpixleval[yy][dd] = unique(concatenate(indxpixlevalpopl[dd])).astype(int)
-                        else:
-                            indxpixleval[yy][dd] = gdat.indxpixl
-                        indxcubeeval[yy][dd] = meshgrid(indxenereval, indxpixleval[yy][dd], indxevtteval, indexing='ij')
-            else:
-                indxcubeeval = gdat.indxcubeeval 
-        # load indxcubeeval to the global object for a possible state update
-        if strgstat == 'next':
-            gdatmodi.indxregieval = indxregieval
-            gdatmodi.indxcubeeval = indxcubeeval
-            gdatmodi.indxpixleval = indxpixleval
-        
         if numbtrap > 0:
             if boolelemsbrtdfncanyy:
                 sbrtdfnc = [[] for d in enumerate(indxregieval)]
