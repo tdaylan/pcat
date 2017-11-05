@@ -8460,6 +8460,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     indxcubeeval = gdat.indxcubeeval
                 else:
                     indxcubeeval = [[[] for d in indxregieval] for y in indxgrideval]
+                    print 'gdatmodi.propdist'
+                    print gdatmodi.propdist
+                    print 'gdatmodi.propmeanelem'
+                    print gdatmodi.propmeanelem
+                    print 'indxgrideval'
+                    print indxgrideval
+                    print 'indxregieval'
+                    print indxregieval
+                    print
                     indxcubeeval[0][0] = meshgrid(indxenereval, gdat.indxpixl, gdat.indxevtt, indexing='ij')
             else:
                 indxcubeeval = gdat.indxcubeeval

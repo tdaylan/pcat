@@ -13,10 +13,10 @@ print 'Batch production...'
 
 for rtag in listrtag:
     print 'Processing %s...' % rtag
-    
-    if sys.argv[2] == 'finl':
+
+    if sys.argv[2] == 'finl' or sys.argv[2] == 'both':
         proc_finl(rtag=rtag)
     
-    if sys.argv[2] == 'anim':
+    if sys.argv[2] == 'anim' or sys.argv[2] == 'both':
         proc_anim(rtag=rtag)
     
