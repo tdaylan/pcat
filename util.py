@@ -13676,14 +13676,14 @@ def plot_init(gdat):
                                                                                 lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
                
                 # pixel-convoltuion of the Sersic profile
+                # temp -- y axis labels are wrong, should be per solid angle
                 xdat = gdat.binslgalsers * gdat.anglfact
                 for n in range(gdat.numbindxsers + 1):
                     for k in range(gdat.numbhalfsers + 1):
                         path = gdat.pathinitintr + 'sersprofconv%04d%04d.pdf' % (gdat.binshalfsers[n], gdat.binsindxsers[k])
-                        tdpy.util.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, \
-                                                                                                                                                        limtydat=[1e-8, 1e010])
+                        tdpy.util.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-8, 1e010])
                         path = gdat.pathinitintr + 'sersprofcntr%04d%04d.pdf' % (gdat.binshalfsers[n], gdat.binsindxsers[k])
-                        tdpy.util.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl)
+                        tdpy.util.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl)
                
                 xdat = gdat.binsangl * gdat.anglfact
                 listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
@@ -13692,11 +13692,11 @@ def plot_init(gdat):
                 listydat = []
                 listlegd = []
                 for spec, size, indx in zip(listspec, listsize, listindx):
-                    listydat.append(retr_sersprof(gdat, spec, gdat.binsangl, size, indx=indx) * gdat.anglfact**2 / (4. * pi)**2)
+                    listydat.append(spec * retr_sbrtsersnorm(gdat.binsangl, size, indxsers=indx))
                     listlegd.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
                 path = gdat.pathinitintr + 'sersprof.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxsoldtotl, \
-                                                                 listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
+                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, \
+                                                                                                                    listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
             
                 minmredshost = 0.01
                 maxmredshost = 0.4
