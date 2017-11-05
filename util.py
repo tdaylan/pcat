@@ -10573,7 +10573,9 @@ def proc_finl(gdat=None, rtag=None, prio=False):
             print 'gdatinit not found...'
             print
             return
-    
+    else:
+        rtag = gdat.rtag
+
     # quit if the final global object is available 
     path = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/gdatfinl'
     if os.path.isfile(path):
@@ -13654,6 +13656,7 @@ def plot_init(gdat):
         
         # temp
         if gdat.makeplotintr:
+            print 'heeeeeey'
             plot_intr(gdat)
             #plot_pert()
             #plot_king(gdat)
