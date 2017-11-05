@@ -8399,7 +8399,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         for dd, d in enumerate(indxregieval):
                             indxelemeval[ll][dd] = arange(gdatmodi.numbelemeval[ll][dd])
                 else:
-                    indxgrideval = []
+                    #if gdatmodi.propbgrd:
+                    indxgrideval = [0]
                 if not gdatmodi.propfixp or gdatmodi.proppsfp and boolelemsbrtdfncanyy:
                     dicteval = gdatmodi.dicteval
                     if gdat.verbtype > 1:
@@ -9156,14 +9157,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 sbrt['modlconv'][dd][ii, :, mm] = hp.smoothing(sbrt['modlraww'][dd][ii, :, mm], fwhm=fwhm[i, m])[gdat.indxpixlrofi]
                                 sbrt['modlconv'][dd][ii, :, mm][where(sbrt['modlraww'][dd][ii, :, mm] <= 1e-50)] = 1e-50
                     
-                            print 'im'
-                            print i, m
-                            print 'sbrt[modlconv][dd]'
-                            summgene(sbrt['modlconv'][dd])
-                            print 'sbrt[modlconv][dd][ii, :, mm]'
-                            summgene(sbrt['modlconv'][dd][ii, :, mm])
-                            print
-
                     if gdat.diagmode:
                         chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'sbrtmodlconvreg%d' % d, sbrt['modlconv'][dd], indxcubeeval[0][dd])
                     
@@ -13771,10 +13764,10 @@ def plot_init(gdat):
                 
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 fracacutasca = logspace(-1., 2., 20)
-                mcut = 1e8 * retr_mcutfrommscl(fracacutasca)
+                mcut = retr_mcutfrommscl(fracacutasca)
                 axis.loglog(fracacutasca, mcut)
                 axis.set_xlabel(r'$\tau_n$')
-                axis.set_ylabel(gdat.lablmcuttotl)
+                axis.set_ylabel(r'$\dfrac{M_{c,n}}{M_{0,n}}$')
                 axis.axhline(1e8, ls='--')
                 path = gdat.pathinitintr + 'mcut.pdf'
                 plt.tight_layout()
