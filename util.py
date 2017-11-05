@@ -1713,14 +1713,14 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         if gdat.probspmr == 0. and (gdatmodi.propsplt or gdatmodi.propmerg):
             raise Exception('')
 
-    print 'gdat.stdvstdp'
-    print gdat.stdvstdp
+    #print 'gdat.stdvstdp'
+    #print gdat.stdvstdp
 
     stdvstdp = gdat.stdvstdp * gdatmodi.thisstdpscalfact * gdatmodi.thistmprfactstdv
     
-    print 'stdvstdp'
-    print stdvstdp
-    print
+    #print 'stdvstdp'
+    #print stdvstdp
+    #print
        
     if gdat.diagmode:
         if gdat.sqzeprop and amax(stdvstdp) > 1e-10:
