@@ -1721,6 +1721,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     print 'stdvstdp'
     print stdvstdp
     print
+       
+    if gdat.diagmode:
+        if gdat.sqzeprop and amax(stdvstdp) > 1e-10:
+            raise Exception('')
 
     if gdatmodi.propdist:
         gdatmodi.indxpoplmodi = [int(gdat.fittnamepara[gdatmodi.indxsampmodi][-1])]
@@ -9345,9 +9349,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             print 'lliktotl'
             print lliktotl
             print
-            if gdat.diagmode:
-                if gdat.numbregi == 1 and sum(llik[0]) != lliktotl:
-                    raise Exception('')
         if gdat.diagmode:
             if strgmodl == 'fitt' and strgstat == 'this':
                 try:
