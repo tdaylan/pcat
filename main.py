@@ -1763,8 +1763,8 @@ def init( \
         gdat.liststrgvarbarryswep += ['lrpp']
     if gdat.probtran > 0.:
         gdat.liststrgvarbarryswep += ['auxipara']
-    if gdat.probspmr > 0.:
-        gdat.liststrgvarbarryswep += ['ljcb']
+    
+    gdat.liststrgvarbarryswep += ['ljcb']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
     if gdat.verbtype > 0:
