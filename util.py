@@ -10623,20 +10623,31 @@ def proc_finl(gdat=None, rtag=None, prio=False):
     if gdat.verbtype > 0:
         print 'Accumulating samples from all processes...'
         timeinit = gdat.functime()
+    
+    if gdat.verbtype > 0:
+        print 'Accumulating arrays...'
+    
     # arrays 
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
     for strgvarb in gdat.liststrgvarbarry:
+        print 'Processing %s...' % strgvarb
         for k in gdat.indxproc:
             if k == 0:
                 shap = getattr(listgdatmodi[k], 'list' + strgvarb).shape
                 shap = [shap[0], gdat.numbproc] + list(shap[1:])
                 temp = zeros(shap) - 1
+            print 'shap'
+            print shap
             if len(shap) > 2:
                 temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strgvarb)
             else:
                 temp[:, k] = getattr(listgdatmodi[k], 'list' + strgvarb)
+        print
         setattr(gdat, 'list' + strgvarb, temp)
+    
+    if gdat.verbtype > 0:
+        print 'Accumulating lists...'
     
     # lists of lists collected at each sample
     for strgvarb in gdat.liststrgvarblistsamp:
