@@ -304,7 +304,6 @@ def init( \
     gdat.strgnumbswep = '%d' % gdat.numbswep
     
     # output paths
-    
     gdat.rtag = retr_rtag(gdat.strgtimestmp, gdat.strgcnfg, gdat.strgnumbswep)
     gdat.pathoutpthis = gdat.pathoutp + gdat.rtag + '/'
 
@@ -733,8 +732,6 @@ def init( \
             if elemtype[l] == 'lens' or elemtype[l] == 'lghtline' or elemtype[l] == 'clusvari' or elemtype[l] == 'lghtgausbgrd':
                 elemspatevaltype[l] = 'full'
             else:
-                # temp -- this causes an error and should be fixed
-                #elemspatevaltype[l] = 'full'
                 elemspatevaltype[l] = 'loclhash'
         setp_varbvalu(gdat, 'elemspatevaltype', elemspatevaltype, strgmodl=strgmodl)
 
@@ -993,7 +990,7 @@ def init( \
     
     maxmdefs = 1. / gdat.anglfact
     setp_varbvalu(gdat, 'maxmdefs', maxmdefs)
-   
+    
     # parameter defaults
     ## distribution
     ### flux
@@ -1157,13 +1154,11 @@ def init( \
                 setp_varbvalu(gdat, 'expcdistmean', 2., popl=l)
                 setp_varbvalu(gdat, 'expcdiststdv', 0.2, popl=l)
         
-            print 'heeeey'
             if gdat.trueelemtype[l] == 'lghtpntspuls':
                 setp_varbvalu(gdat, 'per0distmean', 3e-3, popl=l)
                 setp_varbvalu(gdat, 'per0diststdv', 0.3, popl=l)
                 setp_varbvalu(gdat, 'magfdistmean', 10**8.5, popl=l)
                 setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
-                print 'heeeey'
                 setp_varbvalu(gdat, 'dglcdistslop', 2., popl=l)
 
         if gdat.exprtype == 'ferm':
@@ -1486,7 +1481,7 @@ def init( \
     if gdat.makeplot:   
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
-                if gdat.fittelemspatevaltype[l] != 'full':
+                if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0:
                     plot_eval(gdat, l)
     
     if gdat.verbtype > 1 and gdat.datatype == 'mock':
@@ -1511,7 +1506,7 @@ def init( \
             seed()
         else:
             seed(gdat.seedtype)
-
+    
     if gdat.datatype == 'mock':
         ## unit sample vector
         #gdat.truesamp = zeros(gdat.truenumbpara)
@@ -1759,8 +1754,8 @@ def init( \
     # list of variables for which the posterior is calculated at each sweep
     gdat.liststrgvarbarryswep = ['memoresi', 'deltlpritotl', 'lpautotl', 'lpau', 'deltlliktotl', 'chro', 'accpprob', 'lpridist', \
                                                                     'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
-    if gdat.probspmr > 0. or gdat.propcomp:
-        gdat.liststrgvarbarryswep += ['lrpp']
+    #if gdat.probspmr > 0. or gdat.propcomp:
+    gdat.liststrgvarbarryswep += ['lrpp']
     if gdat.probtran > 0.:
         gdat.liststrgvarbarryswep += ['auxipara']
     
@@ -1774,7 +1769,8 @@ def init( \
     gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
     if gdat.fittnumbtrap > 0:
         for l in gdat.fittindxpopl:
-            gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem[l]] = 1
+            for d in gdat.fittindxregipopl[l]:
+                gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdat.fittmaxmnumbelem[l][d], 1)
     
     retr_elemlist(gdat, gdatmodifudi)
     gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
@@ -1925,7 +1921,6 @@ def initarry( \
         for strgvarb, valu in dictvarbvari[nameconf].iteritems():
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = inspect.stack()[1][3] + '_' + nameconf
-        
         if execpara:
             prid = os.fork()
             listprid.append(prid)
@@ -2141,15 +2136,6 @@ def optihess(gdat, gdatmodi):
                                 indxelemmoditemp = [numbparapoplinittemp // gdat.fittnumbcomp[indxpoplmoditemp[0]]]
                                 indxcompmoditemp = numbparapoplinittemp % gdat.fittnumbcomp[indxpoplmoditemp[0]]
                                 
-                                print 'k'
-                                print k
-                                print 'indxtrapmoditemp'
-                                print indxtrapmoditemp
-                                print 'gdatmodi.dictmodi'
-                                print gdatmodi.dictmodi
-                                
-                                print
-
                                 indxsampampltemp = k - indxcompmoditemp + gdat.fittindxcompampl[indxpoplmoditemp[0]]
                                 amplfact = gdatmodi.thissampvarb[indxsampampltemp] / getattr(gdat, 'minm' + gdat.fittnamefeatampl[indxpoplmoditemp[0]])
                                 
@@ -2167,11 +2153,6 @@ def optihess(gdat, gdatmodi):
                                 else:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
-                                print 'indxelemmoditemp'
-                                print indxelemmoditemp
-                                print 'gdatmodi.dictmodi[l][d][stdv + strgcomp + indv]'
-                                summgene(gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'])
-                                print
                                 gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'][indxelemmoditemp] = stdv
                                 gdatmodi.dictmodi[l][d][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp] = gdatmodi.thissampvarb[indxsampampltemp]
         
@@ -2435,11 +2416,21 @@ def work(pathoutpthis, lock, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Initialization from previous state, %s, failed.' % path
     
-    
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
+                print 'k'
+                print k
+                print 'namefixp'
+                print namefixp
+                print 'indxfixptrue'
+                print indxfixptrue
+                print 'gdat.truenamepara[indxfixptrue]'
+                print gdat.truenamepara[indxfixptrue]
+                print 'gdat.truesampvarb[indxfixptrue]'
+                print gdat.truesampvarb[indxfixptrue]
+                print
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
@@ -2486,13 +2477,16 @@ def work(pathoutpthis, lock, indxprocwork):
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial value caused unit sample vector to go outside the unit interval...'
+        print 'gdatmodi.thissamp'
+        for k in range(gdatmodi.thissamp.size):
+            print gdatmodi.thissamp[k]
         print 'gdat.fittnamepara[indxsampbadd]'
         print gdat.fittnamepara[indxsampbadd]
         print 'gdatmodi.thissamp[indxsampbadd, None]'
         print gdatmodi.thissamp[indxsampbadd, None]
-        gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
-        print 'Initializing these parameters from the prior...'
         #raise Exception('')
+        print 'Initializing these parameters from the prior...'
+        gdatmodi.thissamp[indxsampbadd] = rand(indxsampbadd.size)
     
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
@@ -2546,9 +2540,9 @@ def work(pathoutpthis, lock, indxprocwork):
     
     # enter interactive mode
     if gdat.intrevalcntpmodl:
-        plot_genemaps(gdat, gdatmodi, 'this', 'cntpmodl', strgcbar='cntpdata', thisindxener=0, thisindxevtt=0, intreval=True)
+        plot_genemaps(gdat, gdatmodi, 'this', 'fitt', 'cntpmodlreg%d' % d, 0, 0, strgcbar='cntpdata', intreval=True)
     if gdat.intrevalcntpresi:
-        plot_genemaps(gdat, gdatmodi, 'this', 'cntpresi', thisindxener=0, thisindxevtt=0, intreval=True)
+        plot_genemaps(gdat, gdatmodi, 'this', 'fitt', 'cntpresireg%d' % d, 0, 0, intreval=True)
 
     workdict = {}
     for strgvarb in gdat.liststrgvarbarry:
@@ -2941,7 +2935,7 @@ def work(pathoutpthis, lock, indxprocwork):
                                 print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]'
                                 print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]
                         print
-                        #raise Exception('')
+                        raise Exception('')
 
             # evaluate the acceptance probability
             gdatmodi.nextaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + \
@@ -3151,7 +3145,11 @@ def work(pathoutpthis, lock, indxprocwork):
                 for name, valu in gdat.indxchro.iteritems():
                     if valu == k:
                         print '%s: %.3g msec' % (name, gdatmodi.nextchro[k] * 1e3)
-                        if name == 'llik' and gdat.numbpixl > 1 and gdat.fittnumbtrap > 0 and 'loclhash' in gdat.commelemspatevaltype:
+                        booltemp = False
+                        for l in gdat.fittindxpopl:
+                            if gdat.fittelemspatevaltype[l] == 'loclhash' and gdat.fittmaxmnumbelem[l] > 0:
+                                booltemp = True
+                        if name == 'llik' and gdat.numbpixl > 1 and gdat.fittnumbtrap > 0 and booltemp:
                             print '%.3g per pixel' % (gdatmodi.nextchro[k] * 1e3 / amin(gdat.numbpixlprox))
            
             print 
