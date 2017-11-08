@@ -708,14 +708,14 @@ def updt_stat(gdat, gdatmodi):
             gdatmodi.thissampvarb[gdatmodi.indxsamptran[1]] = 0.
             gdatmodi.thissamp[gdatmodi.indxsamptran[1]] = 0.
     
-    print 'gdatmodi.propelemsbrtdfnc'
-    print gdatmodi.propelemsbrtdfnc
-    print 'gdatmodi.propllik'
-    print gdatmodi.propllik
-    print 'gdat.fittnumbtrap'
-    print gdat.fittnumbtrap
-    print 'gdatmodi.indxregieval'
-    print gdatmodi.indxregieval
+    #print 'gdatmodi.propelemsbrtdfnc'
+    #print gdatmodi.propelemsbrtdfnc
+    #print 'gdatmodi.propllik'
+    #print gdatmodi.propllik
+    #print 'gdat.fittnumbtrap'
+    #print gdat.fittnumbtrap
+    #print 'gdatmodi.indxregieval'
+    #print gdatmodi.indxregieval
 
     if gdat.fittnumbtrap > 0 and gdatmodi.propllik:
         for dd, d in enumerate(gdatmodi.indxregieval):
@@ -1738,6 +1738,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     gdatmodi.prophypr = gdatmodi.propmeanelem or gdatmodi.propdist
     gdatmodi.proplpri = gdatmodi.prophypr
+    print 'prop_stat'
+    print 'gdatmodi.prophypr'
+    print gdatmodi.prophypr
+    print
     gdatmodi.propllik = not gdatmodi.prophypr
     gdatmodi.evalllikpert = numbtrap > 0 and not gdatmodi.propfixp
     if gdatmodi.proppsfp:
@@ -8123,6 +8127,8 @@ def retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl):
 
 def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     
+    print 'proc_samp with %s' % strgstat
+
     initchro(gdat, gdatmodi, strgstat, 'proc')
 
     if gdat.verbtype > 1:
@@ -8359,6 +8365,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     # temp -- this neglects prior terms that depend on the derived quantities
     evalllik = False
     if strgstat == 'next': 
+        print 'gdatmodi.propllik'
+        print gdatmodi.propllik
         if gdatmodi.propllik:
             indxregieval = gdatmodi.indxregimodi
             indxenereval = gdatmodi.indxenermodi
@@ -8370,6 +8378,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         indxevtteval = gdat.indxevtt
         evalllik = True
     
+    print 'meeey'
+    print 'evalllik'
+    print evalllik
+    print
+
     if evalllik or strgstat != 'next':
         
         if gdat.verbtype > 1:
@@ -8678,6 +8691,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for name in listnamediff:
             sbrt[name] = [[] for d in indxregieval]
             
+        print 'meeey'
+        print
+
         if numbtrap > 0:
             if boolelemsbrtdfncanyy:
                 sbrtdfnc = [[] for d in enumerate(indxregieval)]
@@ -9184,7 +9200,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if gdat.verbtype > 1:
                 print 'Skipping PSF convolution of the model...'
             sbrt['modl'] = copy(sbrt['modlraww'])
-            
+        
+        print 'heeey'
+        print
+
         if gdat.verbtype > 1:
             for dd, d in enumerate(indxregieval):
                 print 'dd, d'
@@ -9338,6 +9357,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         raise Exception('')
                 lliktotl += sum(llik[dd])
         setattr(gdatobjt, strgpfix + 'llik', llik)
+        setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
+        print 'setting lliktotl...'
 
         if gdat.verbtype > 1:
             if strgstat == 'next':
@@ -9382,7 +9403,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         print gdatmodi.thislliktotl
                         raise Exception('Warning! State variable should not change when reprocessing the current state.')
                         print
-        setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
+
     else:
         if gdat.verbtype > 1:
             print 'Not evaluating the likelihood...'

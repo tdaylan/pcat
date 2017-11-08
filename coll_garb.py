@@ -25,7 +25,7 @@ for strgextn in liststrgextn:
         
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
-                if not os.path.isfile(pathchec) or not booltemp:# or numbswep < 100000:
+                if (not os.path.isfile(pathchec) or not booltemp) and not 'mockonly' in strgfile:# or numbswep < 100000:
                     if not strgfile == '20171025_115229_pcat_lens_mock_syst_lowrtrue_2000000':
                         os.system('rm -rf ' + pathfile)
                     else:
