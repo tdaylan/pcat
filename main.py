@@ -1685,6 +1685,10 @@ def init( \
             #    gdat.limtydathistfeat = [0.5, sum(gdat.truenumbelem) / 2.]
             #if gdat.datatype == 'inpt':
 
+    # initial plots
+    if gdat.makeplot and gdat.makeplotinit:
+        plot_init(gdat)
+
     if gdat.datatype == 'mock':
         if lensmodltype != 'none':
             proc_samp(gdat, None, 'this', 'true', raww=True)
@@ -1707,10 +1711,6 @@ def init( \
                             refrfeatsort[q][d] = refrfeat[q][d][..., indxelem]
         setattr(gdat, 'refr' + strgfeat, refrfeatsort)
         
-    # initial plots
-    if gdat.makeplot and gdat.makeplotinit:
-        plot_init(gdat)
-
     # final setup
     setpfinl(gdat, True) 
     

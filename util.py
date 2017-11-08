@@ -708,12 +708,30 @@ def updt_stat(gdat, gdatmodi):
             gdatmodi.thissampvarb[gdatmodi.indxsamptran[1]] = 0.
             gdatmodi.thissamp[gdatmodi.indxsamptran[1]] = 0.
     
+    print 'gdatmodi.propelemsbrtdfnc'
+    print gdatmodi.propelemsbrtdfnc
+    print 'gdatmodi.propllik'
+    print gdatmodi.propllik
+    print 'gdat.fittnumbtrap'
+    print gdat.fittnumbtrap
+    print 'gdatmodi.indxregieval'
+    print gdatmodi.indxregieval
+
     if gdat.fittnumbtrap > 0 and gdatmodi.propllik:
         for dd, d in enumerate(gdatmodi.indxregieval):
             if gdatmodi.propelemsbrtdfnc:
                 thissbrtdfnc = getattr(gdatmodi, 'thissbrtdfncreg%d' % d)
                 nextsbrtdfnc = getattr(gdatmodi, 'nextsbrtdfncreg%d' % d)
+                print 'heeeey'
+                print 'thissbrtdfnc'
+                summgene(thissbrtdfnc)
+                print 'nextsbrtdfnc'
+                summgene(nextsbrtdfnc)
                 thissbrtdfnc[gdatmodi.indxcubeeval[0][dd]] = copy(nextsbrtdfnc)
+                print 'thissbrtdfnc'
+                summgene(thissbrtdfnc)
+                print
+
             if gdatmodi.propelemdeflsubh:
                 thisdeflsubh = getattr(gdatmodi, 'thisdeflsubhreg%d' % d)
                 nextdeflsubh = getattr(gdatmodi, 'nextdeflsubhreg%d' % d)
@@ -1030,7 +1048,7 @@ def retr_psfnchan(gdat):
 
 def retr_psfnsdyn(gdat):
 
-    gdat.psfpexpr = array([0.15 / gdat.anglfact])
+    gdat.psfpexpr = array([0.05 / gdat.anglfact])
     gdat.exproaxitype = False
    
 
@@ -4807,6 +4825,10 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.numbpixlprox[h] += len(gdat.indxpixlprox[h][m])
             gdat.numbpixlprox[h] /= len(gdat.indxpixlprox[h])
         
+        if gdat.verbtype > 0:
+            print 'gdat.numbpixlprox'
+            print gdat.numbpixlprox
+
         if gdat.diagmode:
             diff = gdat.numbpixlprox - roll(gdat.numbpixlprox, 1)
             if not (diff[1:] >= 0).all():
@@ -5624,8 +5646,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                             setp_varblimt(gdat, 'oindene%devt%d' % (i, m), [meanoind, stdvoind], typelimt='meanstdv', strgmodl=strgmodl)
             else:
                 if gdat.exprtype == 'sdyn':
-                    minmsigm = 0.1 / gdat.anglfact
-                    maxmsigm = 0.2 / gdat.anglfact
+                    minmsigm = 0.01 / gdat.anglfact
+                    maxmsigm = 0.1 / gdat.anglfact
                 if gdat.exprtype == 'ferm':
                     minmsigm = 0.1
                     maxmsigm = 10.
@@ -13675,7 +13697,7 @@ def plot_init(gdat):
         
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
-                if gdat.fittelemspatevaltype[l] != 'full' and gdat.numbpixl > 1:
+                if (gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0) and gdat.numbpixl > 1:
                     if gdat.fittboolelemsbrtdfnc[l]:
                         plot_eval(gdat, l)
                     plot_indxprox(gdat)
@@ -13761,10 +13783,11 @@ def plot_init(gdat):
                             minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
                             maxmmass[n, k] = log10(factmcutfromdefs * gdat.maxmdefs)
                
-                valulevl = linspace(7.5, 9., 10)
+                #valulevl = linspace(7.5, 9., 5)
+                valulevl = [7.0, 7.3, 7.7, 8., 8.6]
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=10, fmt='%.3g')
+                axis.clabel(cont, inline=1, fontsize=20, fmt='%.3g')
                 axis.set_xlabel(r'$z_{\rm{hst}}$')
                 axis.set_ylabel(r'$z_{\rm{src}}$')
                 axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
@@ -13777,7 +13800,7 @@ def plot_init(gdat):
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
                 imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=9., vmax=11.)
                 cont = axis.contour(gdat.binsredshost, gdat.binsredssour, maxmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=10, fmt='%.3g')
+                axis.clabel(cont, inline=1, fontsize=15, fmt='%.3g')
                 axis.set_xlabel('$z_{hst}$')
                 axis.set_ylabel('$z_{src}$')
                 axis.set_title(r'$M_{c,max}$ [$M_{\odot}$]')
