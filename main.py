@@ -305,15 +305,13 @@ def init( \
     
     # output paths
     gdat.rtag = retr_rtag(gdat.strgtimestmp, gdat.strgcnfg, gdat.strgnumbswep)
-    gdat.pathoutpthis = gdat.pathoutp + gdat.rtag + '/'
+    gdat.pathoutprtag = gdat.pathoutp + gdat.rtag + '/'
 
     gdat.strgvers = 'v0.3'
     ## catalog output
     # create output folder for the run
-    os.system('mkdir -p %s' % gdat.pathoutpthis)
+    os.system('mkdir -p %s' % gdat.pathoutprtag)
 
-    filestat = open(gdat.pathoutpthis + 'stat.txt', 'w')
-    
     ## factor by which to thin the sweeps to get samples
     
     if gdat.factthin != None and gdat.numbsamp != None:
@@ -1687,7 +1685,15 @@ def init( \
 
     # initial plots
     if gdat.makeplot and gdat.makeplotinit:
-        plot_init(gdat)
+        # problem-specific plots
+        if gdat.makeplotintr:
+            plot_intr(gdat)
+            #plot_pert()
+            #plot_king(gdat)
+            plot_lens(gdat)
+            #plot_3fgl_thrs(gdat)
+            #if gdat.exprtype == 'ferm':
+            #    plot_fgl3(gdat)
 
     if gdat.datatype == 'mock':
         if lensmodltype != 'none':
@@ -1697,6 +1703,10 @@ def init( \
         if gdat.makeplot and gdat.makeplotinit:
             plot_samp(gdat, None, 'this', 'true')
         
+    # initial plots
+    if gdat.makeplot and gdat.makeplotinit:
+        plot_init(gdat)
+
     ## element feature indices ordered with respect to the amplitude variable
     refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
     if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
@@ -1723,14 +1733,14 @@ def init( \
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
-    fileargs = open(gdat.pathoutpthis + 'args.txt', 'w')
+    fileargs = open(gdat.pathoutprtag + 'args.txt', 'w')
     fileargs.write('PCAT call arguments\n')
     for args in listargs:
         fileargs.write('%s = %s\n' % (args, listargsvals[args]))
     fileargs.close()
     
     # write the numpy RNG state to file
-    with open(gdat.pathoutpthis + 'stat.p', 'wb') as thisfile:
+    with open(gdat.pathoutprtag + 'stat.p', 'wb') as thisfile:
     	cPickle.dump(get_state(), thisfile)
     
     # start the timer
@@ -1841,9 +1851,6 @@ def init( \
     # run the sampler
     worksamp(gdat, lock)
     
-    filestat.write('gdatmodi written.\n')
-    filestat.close()
-    
     if not gdat.boolarry:
         # post process the samples
         proc_finl(gdat)
@@ -1853,9 +1860,9 @@ def init( \
             proc_anim(gdat.rtag)
 
     if gdat.verbtype > 0:
-        print 'The output is at ' + gdat.pathoutpthis
+        print 'The output is at ' + gdat.pathoutprtag
         if gdat.makeplot:
-            print 'The plots are at ' + gdat.pathplot
+            print 'The plots are at ' + gdat.pathplotrtag
         print 'PCAT has run successfully. Returning to the OS...'
 
 
@@ -1878,7 +1885,7 @@ def workopti(gdat, lock):
     
     gdat.optitypetemp = 'none'
     
-    thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'r')
+    thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'r')
     gdat.stdvstdp = thisfile['stdvstdp'][()]
     thisfile.close()
     gdat.numbproc = gdat.numbprocsave
@@ -1980,9 +1987,9 @@ class logg(object):
     
     def __init__(self, gdat):
         self.terminal = sys.stdout
-        gdat.pathstdo = gdat.pathoutpthis + 'stdo.txt'
+        gdat.pathstdo = gdat.pathoutprtag + 'stdo.txt'
         self.log = open(gdat.pathstdo, 'a')
-        pathlink = gdat.pathplot + 'stdo.txt'
+        pathlink = gdat.pathplotrtag + 'stdo.txt'
         os.system('ln -s %s %s' % (gdat.pathstdo, pathlink))
     
     def write(self, strg):
@@ -2233,13 +2240,19 @@ def optihess(gdat, gdatmodi):
 
 def worksamp(gdat, lock):
 
+    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
+    pathorig = gdat.pathoutprtag + 'stat.txt'
+    pathlink = gdat.pathplotrtag + 'stat.txt'
+    os.system('ln -s %s %s' % (pathorig, pathlink))
+    
     if gdat.verbtype > 0:
         print 'Writing the global state to the disc before spawning workers...'
-    path = gdat.pathoutpthis + 'gdatinit'
+    path = gdat.pathoutprtag + 'gdatinit'
     writfile(gdat, path) 
+    filestat.write('gdatinit written.\n')
     
     if gdat.numbproc == 1:
-        worktrac(gdat.pathoutpthis, lock, 0)
+        worktrac(gdat.pathoutprtag, lock, 0)
     else:
         if gdat.verbtype > 0:
             print 'Forking the sampler...'
@@ -2248,11 +2261,14 @@ def worksamp(gdat, lock):
         pool = mp.Pool(gdat.numbproc)
         
         # spawn the processes
-        workpart = functools.partial(worktrac, gdat.pathoutpthis, lock)
+        workpart = functools.partial(worktrac, gdat.pathoutprtag, lock)
         pool.map(workpart, gdat.indxproc)
 
         pool.close()
         pool.join()
+    
+    filestat.write('gdatmodi written.\n')
+    filestat.close()
 
 
 def retr_elemlist(gdat, gdatmodi):
@@ -2420,17 +2436,6 @@ def work(pathoutpthis, lock, indxprocwork):
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
                 indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
-                print 'k'
-                print k
-                print 'namefixp'
-                print namefixp
-                print 'indxfixptrue'
-                print indxfixptrue
-                print 'gdat.truenamepara[indxfixptrue]'
-                print gdat.truenamepara[indxfixptrue]
-                print 'gdat.truesampvarb[indxfixptrue]'
-                print gdat.truesampvarb[indxfixptrue]
-                print
                 gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
@@ -2591,7 +2596,7 @@ def work(pathoutpthis, lock, indxprocwork):
             gdatmodi.optidone = True
             
         if gdatmodi.optidone:
-            thisfile = h5py.File(gdat.pathoutpthis + 'opti.h5', 'w')
+            thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'w')
             thisfile.create_dataset('stdvstdp', data=gdatmodi.stdvstdp)
             thisfile.close()
             break
@@ -3206,7 +3211,7 @@ def work(pathoutpthis, lock, indxprocwork):
             print
             raise Exception('')
 
-    path = gdat.pathoutpthis + 'gdatmodi%04d' % gdatmodi.indxprocwork
+    path = gdat.pathoutprtag + 'gdatmodi%04d' % gdatmodi.indxprocwork
     writfile(gdatmodi, path) 
 
 

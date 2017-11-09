@@ -291,19 +291,8 @@ def pdfn_atan(para, minmpara, maxmpara):
 
 def cdfn_fixp(gdat, strgmodl, fixp, thisindxfixp):
     
-    print 'cdfn_fixp'
-    print 'strgmodl'
-    print strgmodl
-    print 'fixp'
-    print fixp
-    print 'thisindxfixp'
-    print thisindxfixp
-
     scalfixp = getattr(gdat, strgmodl + 'scalfixp')[thisindxfixp]
     
-    print 'scalfixp'
-    print scalfixp
-
     if scalfixp == 'self' or scalfixp == 'logt' or scalfixp == 'atan':
         
         minmfixp = getattr(gdat, strgmodl + 'minmfixp')[thisindxfixp]
@@ -313,11 +302,6 @@ def cdfn_fixp(gdat, strgmodl, fixp, thisindxfixp):
             fixpunit = cdfn_self(fixp, minmfixp, factfixp)
         elif scalfixp == 'logt':
             fixpunit = cdfn_logt(fixp, minmfixp, factfixp)
-            print 'minmfixp'
-            print minmfixp
-            print 'factfixp'
-            print factfixp
-            print
 
         elif scalfixp == 'atan':
             maxmfixp = getattr(gdat, strgmodl + 'maxmfixp')[thisindxfixp]
@@ -708,30 +692,11 @@ def updt_stat(gdat, gdatmodi):
             gdatmodi.thissampvarb[gdatmodi.indxsamptran[1]] = 0.
             gdatmodi.thissamp[gdatmodi.indxsamptran[1]] = 0.
     
-    #print 'gdatmodi.propelemsbrtdfnc'
-    #print gdatmodi.propelemsbrtdfnc
-    #print 'gdatmodi.propllik'
-    #print gdatmodi.propllik
-    #print 'gdat.fittnumbtrap'
-    #print gdat.fittnumbtrap
-    #print 'gdatmodi.indxregieval'
-    #print gdatmodi.indxregieval
-
     if gdat.fittnumbtrap > 0 and gdatmodi.propllik:
         for dd, d in enumerate(gdatmodi.indxregieval):
             if gdatmodi.propelemsbrtdfnc:
                 thissbrtdfnc = getattr(gdatmodi, 'thissbrtdfncreg%d' % d)
                 nextsbrtdfnc = getattr(gdatmodi, 'nextsbrtdfncreg%d' % d)
-                print 'heeeey'
-                print 'thissbrtdfnc'
-                summgene(thissbrtdfnc)
-                print 'nextsbrtdfnc'
-                summgene(nextsbrtdfnc)
-                thissbrtdfnc[gdatmodi.indxcubeeval[0][dd]] = copy(nextsbrtdfnc)
-                print 'thissbrtdfnc'
-                summgene(thissbrtdfnc)
-                print
-
             if gdatmodi.propelemdeflsubh:
                 thisdeflsubh = getattr(gdatmodi, 'thisdeflsubhreg%d' % d)
                 nextdeflsubh = getattr(gdatmodi, 'nextdeflsubhreg%d' % d)
@@ -990,9 +955,9 @@ def retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgplot, nameinte=''):
     if strgmodl == 'true' or strgstat == '':
         path = gdat.pathinit + nameinte + strgplot + '.pdf'
     elif strgstat == 'post' or strgstat == 'mlik':
-        path = gdat.pathplot + gdat.namesampdist + '/finl/' + nameinte + strgstat + strgplot + '.pdf'
+        path = gdat.pathplotrtag + gdat.namesampdist + '/finl/' + nameinte + strgstat + strgplot + '.pdf'
     elif strgstat == 'this':
-        path = gdat.pathplot + gdat.namesampdist + '/fram/' + nameinte + strgstat + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplotrtag + gdat.namesampdist + '/fram/' + nameinte + strgstat + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
     
     return path
 
@@ -1725,10 +1690,23 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.indxpoplmodi = []
         if numbtrap > 0:
             numb = 0
+            print 'boolelemsbrtdfnc'
+            print boolelemsbrtdfnc
+            print 'boolelempsfn'
+            print boolelempsfn
+
             for l in gdat.fittindxpopl:
                 if boolelemsbrtdfnc[l]:
                     gdatmodi.indxpoplmodi.append(l)
                     numb += sum(thissampvarb[gdat.fittindxfixpnumbelem[l]])
+        print 'numbtrap'
+        print numbtrap
+        print 'convdiffanyy'
+        print convdiffanyy
+        print 'numb'
+        print numb
+        print
+
         if not convdiffanyy and (numbtrap == 0 or numbtrap > 0 and numb == 0):
             gdatmodi.nextaccpprio = False
     
@@ -1738,10 +1716,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     gdatmodi.prophypr = gdatmodi.propmeanelem or gdatmodi.propdist
     gdatmodi.proplpri = gdatmodi.prophypr
-    print 'prop_stat'
-    print 'gdatmodi.prophypr'
-    print gdatmodi.prophypr
-    print
     gdatmodi.propllik = not gdatmodi.prophypr
     gdatmodi.evalllikpert = numbtrap > 0 and not gdatmodi.propfixp
     if gdatmodi.proppsfp:
@@ -1749,6 +1723,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             if numbtrap > 0 and boolelempsfn[l] and sum(thissampvarb[indxfixpnumbelem[l]]) > 0:
                 gdatmodi.evalllikpert = True
     
+    #if gdatmodi.proppsfp and not gdatmodi.evalllikpert:
+    #    gdatmodi.nextaccpprio = False
+
     if gdat.verbtype > 1:
         if gdat.fittnumbtrap > 0:
             print 'thisindxelemfull'
@@ -3238,12 +3215,12 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pathpixlcnvt = gdat.pathdata + 'pixlcnvt/'
     gdat.pathprox = gdat.pathdata + 'prox/'
     ## plot
-    gdat.pathplot = gdat.pathimag + gdat.rtag + '/'
-    gdat.pathinit = gdat.pathplot + 'init/'
+    gdat.pathplotrtag = gdat.pathimag + gdat.rtag + '/'
+    gdat.pathinit = gdat.pathplotrtag + 'init/'
     gdat.pathinitintr = gdat.pathinit + 'intr/'
     
-    gdat.pathprio = gdat.pathplot + 'prio/'
-    gdat.pathpost = gdat.pathplot + 'post/'
+    gdat.pathprio = gdat.pathplotrtag + 'prio/'
+    gdat.pathpost = gdat.pathplotrtag + 'post/'
     
     for name in ['prio', 'post']:
         
@@ -3262,11 +3239,11 @@ def setpinit(gdat, boolinitsetp=False):
                 if namethrd == 'init':
                     if nameseco == 'assc' or nameseco == 'histtdim' or nameseco == 'fdis' or nameseco == 'cmpl':
                         continue
-                    setattr(gdat, 'path' + namethrd + nameseco, gdat.pathplot + 'init/' + nameseco + '/')
+                    setattr(gdat, 'path' + namethrd + nameseco, gdat.pathplotrtag + 'init/' + nameseco + '/')
                 else:
                     setattr(gdat, 'path' + name + namethrd + nameseco, path + namethrd + '/' + nameseco + '/')
             
-    gdat.pathinfo = gdat.pathplot + 'info/'
+    gdat.pathinfo = gdat.pathplotrtag + 'info/'
     
     ## make the directories 
     for attr, valu in gdat.__dict__.iteritems():
@@ -4030,24 +4007,42 @@ def setpinit(gdat, boolinitsetp=False):
                 path = gdat.pathinpt + gdat.strgexpo
                 for d in gdat.indxregi:
                     gdat.expo[d] = pf.getdata(path)
+            print 'gdat.expo[d]'
+            summgene(gdat.expo[d])
             
             if amin(gdat.expo) == amax(gdat.expo):
                 raise Exception('Bad input exposure map.')
             if gdat.pixltype == 'cart':
    
-                if gdat.forccart:
-                    gdat.expotemp = [[] for d in gdat.indxregi]
-                    for d in gdat.indxregi:
-                        gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                gdat.expotemp = [[] for d in gdat.indxregi]
+                for d in gdat.indxregi:
+                    gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                    if gdat.forccart:
                         for i in gdat.indxenerfull:
                             for m in gdat.indxevttfull:
                                 gdat.expotemp[d][i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d][i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
-                                                                                             minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
-                                                                                             minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
-
+                                                                                       minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                                                       minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
+                    else:
                         gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
+                print 'gdat.expo[d]'
+                summgene(gdat.expo[d])
                 gdat.expo = gdat.expotemp
-    
+
+    # check the exposure map data structure
+    booltemp = False
+    if not isinstance(gdat.expo, list):
+        booltemp = True
+    for d in gdat.indxregi:
+        if gdat.expo[d].ndim != 3:
+            booltemp = True
+    if booltemp:
+        print 'len(gdat.expo)'
+        print len(gdat.expo)
+        print 'gdat.expo[0]'
+        summgene(gdat.expo[0])
+        raise Exception('Exposure does not have the right data structure. It should be a list of 3D arrays.')
+
     if gdat.killexpo:
         gdat.expo *= 1e-10
     if gdat.highexpo:
@@ -4218,10 +4213,16 @@ def setpinit(gdat, boolinitsetp=False):
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for d in gdat.indxregi:
+            print 'gdat.expo[d]'
+            summgene(gdat.expo[d])
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
                     gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[d][i, :, m] > 0.)[0])
     
+    print 'gdat.indxpixlrofi'
+    summgene(gdat.indxpixlrofi)
+    print
+
     gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
     gdat.numbpixl = gdat.indxpixlrofi.size
     
@@ -4814,6 +4815,18 @@ def setpinit(gdat, boolinitsetp=False):
                         indxpixlproxtemp = -1
                         if gdat.maxmangl < sqrt(2.) * gdat.maxmgangdata:
                             raise Exception('Angular axis used to interpolate the PSF should be longer.')
+                    
+                    if indxpixlproxtemp.size < 10:
+                        print 'dist'
+                        summgene(dist * gdat.anglfact)
+                        print 'gdat.indxpixl'
+                        summgene(gdat.indxpixl)
+                        print 'gdat.numbpixl'
+                        print gdat.numbpixl
+                        print 'gdat.maxmangleval'
+                        print gdat.maxmangleval * gdat.anglfact
+                        raise Exception('Pixel hash list should not have fewer than 10 pixels.')
+
                     gdat.indxpixlprox[h].append(indxpixlproxtemp)
                 cntrsave = tdpy.util.show_prog(j, gdat.numbpixl, cntrsave)
             fobj = open(path, 'wb')
@@ -4832,6 +4845,18 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.verbtype > 0:
             print 'gdat.numbpixlprox'
             print gdat.numbpixlprox
+        if (gdat.numbpixlprox - mean(gdat.numbpixlprox) == 0.).all():
+            print 'gdat.lgalgrid'
+            summgene(gdat.lgalgrid * gdat.anglfact)
+            print 'gdat.bgalgrid'
+            summgene(gdat.bgalgrid * gdat.anglfact)
+            print 'gdat.maxmgangdata'
+            print gdat.maxmgangdata * gdat.anglfact
+            if gdat.pixltype == 'cart':
+                print 'gdat.numbsidecart'
+                print gdat.numbsidecart
+
+            raise Exception('Number of pixels in the hash lists should be different.')
 
         if gdat.diagmode:
             diff = gdat.numbpixlprox - roll(gdat.numbpixlprox, 1)
@@ -6045,11 +6070,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         numbdiff = len(listnamediff)
         convdiff = zeros(numbdiff, dtype=bool)
         for k, namediff in enumerate(listnamediff):
-            if namediff.startswith('back'):
-                indx = int(namediff[-4:])
-                convdiff[k] = not unifback[indx] and not gdat.thindata
-            else:
-                convdiff[k] = True and not gdat.thindata
+            if not (gdat.thindata or psfnevaltype == 'none' or psfnevaltype == 'kern'):
+                if namediff.startswith('back'):
+                    indx = int(namediff[-4:])
+                    convdiff[k] = not unifback[indx] 
+                else:
+                    convdiff[k] = True
         convdiffanyy = True in convdiff
 
         cntr = tdpy.util.cntr()
@@ -6341,6 +6367,134 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             valu = sort(valu)
         setattr(gdat, strgmodl + strg, valu)
 
+
+def plot_lens(gdat):
+    
+    if gdat.fittboolelemdeflsubh:
+        xdat = gdat.binsangl[1:] * gdat.anglfact
+        lablxdat = gdat.lablgangtotl
+        
+        listdeflscal = array([4e-2, 4e-2, 4e-2]) / gdat.anglfact
+        listanglscal = array([0.05, 0.1, 0.05]) / gdat.anglfact
+        listanglcutf = array([1.,    1.,  10.]) / gdat.anglfact
+        listasym = [False, False, False]
+        listydat = []
+        for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
+            listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
+        
+        for scalxdat in ['self', 'logt']:
+            path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
+            tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
+                                                                        lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
+       
+        # pixel-convoltuion of the Sersic profile
+        # temp -- y axis labels are wrong, should be per solid angle
+        xdat = gdat.binslgalsers * gdat.anglfact
+        for n in range(gdat.numbindxsers + 1):
+            for k in range(gdat.numbhalfsers + 1):
+                if k != 5:
+                    continue
+                path = gdat.pathinitintr + 'sersprofconv%04d%04d.pdf' % (n, k)
+                tdpy.util.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
+                #path = gdat.pathinitintr + 'sersprofcntr%04d%04d.pdf' % (n, k)
+                #tdpy.util.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
+                path = gdat.pathinitintr + 'sersprofdiff%04d%04d.pdf' % (n, k)
+                tdpy.util.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], \
+                                                                                 scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
+                path = gdat.pathinitintr + 'sersprofdiff%04d%04d.pdf' % (n, k)
+                tdpy.util.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], scalxdat='logt', \
+                                                                                 scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
+       
+        xdat = gdat.binsangl * gdat.anglfact
+        listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
+        listsize = array([0.3, 1., 1., 1.]) / gdat.anglfact
+        listindx = array([4., 2., 4., 10.])
+        listydat = []
+        listlegd = []
+        for spec, size, indx in zip(listspec, listsize, listindx):
+            listydat.append(spec * retr_sbrtsersnorm(gdat.binsangl, size, indxsers=indx))
+            listlegd.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
+        path = gdat.pathinitintr + 'sersprof.pdf'
+        tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, \
+                                                                                                            listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
+    
+        minmredshost = 0.01
+        maxmredshost = 0.4
+        minmredssour = 0.01
+        maxmredssour = 2.
+        numbreds = 200
+        retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
+        retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
+        
+        gdat.meanadishost = empty(numbreds)
+        for k in range(numbreds):
+            gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
+        
+        asca = 0.1 / gdat.anglfact
+        acut = 1. / gdat.anglfact
+    
+        minmmass = zeros((numbreds + 1, numbreds + 1))
+        maxmmass = zeros((numbreds + 1, numbreds + 1))
+        for k, redshost in enumerate(gdat.binsredshost):
+            for n, redssour in enumerate(gdat.binsredssour):
+                if redssour > redshost:
+                    adishost = gdat.adisobjt(redshost) * 1e3
+                    adissour = gdat.adisobjt(redssour) * 1e3
+                    adishostsour = adissour - (1. + redshost) / (1. + redssour) * adishost
+                    factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adishost, adishostsour, asca, acut)
+                    minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
+                    maxmmass[n, k] = log10(factmcutfromdefs * gdat.maxmdefs)
+       
+        #valulevl = linspace(7.5, 9., 5)
+        valulevl = [7.0, 7.3, 7.7, 8., 8.6]
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
+        axis.clabel(cont, inline=1, fontsize=20, fmt='%.3g')
+        axis.set_xlabel(r'$z_{\rm{hst}}$')
+        axis.set_ylabel(r'$z_{\rm{src}}$')
+        axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
+        path = gdat.pathinitintr + 'massredsminm.pdf'
+        plt.tight_layout()
+        figr.savefig(path)
+        plt.close(figr)
+        
+        valulevl = linspace(9., 11., 20)
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=9., vmax=11.)
+        cont = axis.contour(gdat.binsredshost, gdat.binsredssour, maxmmass, 10, colors='g', levels=valulevl)
+        axis.clabel(cont, inline=1, fontsize=15, fmt='%.3g')
+        axis.set_xlabel('$z_{hst}$')
+        axis.set_ylabel('$z_{src}$')
+        axis.set_title(r'$M_{c,max}$ [$M_{\odot}$]')
+        path = gdat.pathinitintr + 'massredsmaxm.pdf'
+        plt.colorbar(imag) 
+        plt.tight_layout()
+        figr.savefig(path)
+        plt.close(figr)
+        
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        axis.plot(gdat.meanredshost, gdat.meanadishost * gdat.sizepixl)
+        axis.plot(gdat.meanredshost, gdat.meanadishost * 2. * gdat.maxmgangdata)
+        axis.set_xlabel('$z_h$')
+        axis.set_yscale('log')
+        axis.set_ylabel(r'$\lambda$ [kpc]')
+        path = gdat.pathinitintr + 'wlenreds.pdf'
+        plt.tight_layout()
+        figr.savefig(path)
+        plt.close(figr)
+        
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        fracacutasca = logspace(-1., 2., 20)
+        mcut = retr_mcutfrommscl(fracacutasca)
+        axis.loglog(fracacutasca, mcut)
+        axis.set_xlabel(r'$\tau_n$')
+        axis.set_ylabel(r'$M_{c,n} / M_{0,n}$')
+        axis.axhline(1., ls='--')
+        path = gdat.pathinitintr + 'mcut.pdf'
+        plt.tight_layout()
+        figr.savefig(path)
+        plt.close(figr)
+       
 
 def chec_runsprev(namefunc):
     
@@ -7870,6 +8024,8 @@ def retr_deflextr(gdat, sher, sang):
 
 def readfile(path):
 
+    print 'Reading %s...' % path
+
     filepick = open(path + '.p', 'rb')
     filearry = h5py.File(path + '.h5', 'r')
     gdattemptemp = cPickle.load(filepick)
@@ -8127,8 +8283,6 @@ def retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl):
 
 def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     
-    print 'proc_samp with %s' % strgstat
-
     initchro(gdat, gdatmodi, strgstat, 'proc')
 
     if gdat.verbtype > 1:
@@ -8365,8 +8519,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     # temp -- this neglects prior terms that depend on the derived quantities
     evalllik = False
     if strgstat == 'next': 
-        print 'gdatmodi.propllik'
-        print gdatmodi.propllik
         if gdatmodi.propllik:
             indxregieval = gdatmodi.indxregimodi
             indxenereval = gdatmodi.indxenermodi
@@ -8378,11 +8530,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         indxevtteval = gdat.indxevtt
         evalllik = True
     
-    print 'meeey'
-    print 'evalllik'
-    print evalllik
-    print
-
     if evalllik or strgstat != 'next':
         
         if gdat.verbtype > 1:
@@ -8691,9 +8838,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for name in listnamediff:
             sbrt[name] = [[] for d in indxregieval]
             
-        print 'meeey'
-        print
-
         if numbtrap > 0:
             if boolelemsbrtdfncanyy:
                 sbrtdfnc = [[] for d in enumerate(indxregieval)]
@@ -9201,9 +9345,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 print 'Skipping PSF convolution of the model...'
             sbrt['modl'] = copy(sbrt['modlraww'])
         
-        print 'heeey'
-        print
-
         if gdat.verbtype > 1:
             for dd, d in enumerate(indxregieval):
                 print 'dd, d'
@@ -9358,7 +9499,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 lliktotl += sum(llik[dd])
         setattr(gdatobjt, strgpfix + 'llik', llik)
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
-        print 'setting lliktotl...'
 
         if gdat.verbtype > 1:
             if strgstat == 'next':
@@ -10622,56 +10762,41 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
 def proc_finl(gdat=None, rtag=None, prio=False):
     
     if rtag != None:
-        # read initial global object
-        path = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/gdatinit'
-        try:
-            gdat = readfile(path)
-        except:
-            print 'gdatinit not found...'
-            print
-            return
+        rtagtemp = rtag
     else:
+        rtagtemp = gdat.rtag
         rtag = gdat.rtag
-
+    if gdat.verbtype > 0:
+        print 'Post processing %s...' % rtagtemp
+    
+    if rtag != None:
+        # read initial global object
+        boolgdatinit = chec_gdatstat(pathoutprtag, 'gdatinit')
+        if not boolgdatinit:
+            return
+    
     # quit if the final global object is available 
-    path = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/gdatfinl'
-    if os.path.isfile(path):
+    boolgdatfinl = chec_gdatstat(pathoutprtag, 'gdatfinl')
+    if boolgdatfinl:
         print 'Run already final-processed.'
+        print
         return
+
+    # read gdatmodi
+    boolgdatmodi = chec_gdatstat(pathoutprtag, 'gdatmodi')
+    if not boolgdatmodi:
+        return 
 
     if gdat.verbtype > 0:
         print 'Post processing...'
-        timeinit = gdat.functime()
-   
-    # read gdatmodi
-    filestat = open(gdat.pathoutpthis + 'stat.txt', 'r')
-    booltemp = False
-    for line in filestat:
-        if line == 'gdatmodi written.\n':
-            booltemp = True
-    if not booltemp:
-        filestat.close()
-        print 'bad gdatmodi status...'
-        return 
-    filestat.close()
-    
-    if gdat.verbtype > 0:
         print 'Reading chains from disk...'
         timeinit = gdat.functime()
+    
     listgdatmodi = []
     for k in gdat.indxproc:
-        path = gdat.pathoutpthis + 'gdatmodi%04d' % k
-        try:
-            print 'path'
-            print path
-            listgdatmodi.append(readfile(path))
-        except:
-            raise
-            print 'gdatmodi not found...'
-            print
-            return
-        #os.system('rm -rf %s*' % path)
-    #os.system('rm -rf %s' % gdat.pathoutpthis + 'gdatinit*')
+        path = gdat.pathoutprtag + 'gdatmodi%04d' % k
+        listgdatmodi.append(readfile(path))
+    
     if gdat.verbtype > 0:
         timefinl = gdat.functime()
         print 'Done in %.3g seconds.' % (timefinl - timeinit)
@@ -11010,17 +11135,17 @@ def proc_finl(gdat=None, rtag=None, prio=False):
     gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
     gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
    
-    gdat.pathpcat = gdat.pathoutpthis + 'pcat'
+    gdat.pathpcat = gdat.pathoutprtag + 'pcat'
     writoutp(gdat, gdat.pathpcat)
-    os.system('rm -rf %sgdat*' % gdat.pathoutpthis) 
+    os.system('rm -rf %sgdat*' % gdat.pathoutprtag) 
    
     # write the final gdat object
-    path = gdat.pathoutpthis + 'gdatfinl'
+    path = gdat.pathoutprtag + 'gdatfinl'
     if gdat.verbtype > 0:
         print 'Writing the global object to %s...' % path
     writfile(gdat, path) 
     
-    filestat = open(gdat.pathoutpthis + 'stat.txt', 'w')
+    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
     filestat.write('gdatfinl written.\n')
     filestat.close()
     
@@ -11039,6 +11164,20 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         for k in gdat.indxproc:
             print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdat.timereal[k], gdat.timeproc[k])
         print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdat.timerealtotl, gdat.timeproctotl)
+
+
+def chec_gdatstat(pathoutprtag, strggdat):
+    filestat = open(pathoutprtag + 'stat.txt', 'r')
+    booltemp = False
+    for line in filestat:
+        if line == strggdat + ' written.\n':
+            booltemp = True
+    filestat.close()
+    if not booltemp:
+        print 'bad %s status.' % strggdat
+        return False
+    else:
+        return True
 
 
 def chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgthisvarb, nextvarb, indxcubeeval):
@@ -11498,11 +11637,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 pathtemp = gdat.pathinit
             else:
                 if strgstat == 'this':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/fram/'
+                    pathtemp = gdat.pathplotrtag + gdat.namesampdist + '/fram/'
                 elif strgstat == 'mlik':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
+                    pathtemp = gdat.pathplotrtag + gdat.namesampdist + '/finl/'
                 elif strgstat == 'post':
-                    pathtemp = gdat.pathplot + gdat.namesampdist + '/finl/'
+                    pathtemp = gdat.pathplotrtag + gdat.namesampdist + '/finl/'
             colr = retr_colr(gdat, strgstat, strgmodl, indxpopl=None)
     
             # transdimensional element features projected onto the data axes
@@ -11702,8 +11841,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                 plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, d)
                                 plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, d, plotdiff=True)
                 
-                print 'gdat.fittindxpopl'
-                print gdat.fittindxpopl
                 for a, strgfrst in enumerate(liststrgfeatcorr[l]):
                     for b, strgseco in enumerate(liststrgfeatcorr[l]):
                         if a < b:
@@ -13127,7 +13264,7 @@ def plot_indxprox(gdat):
     axis.set_ylabel("Number of tables")
     make_legd(axis)
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'init/indxprox.pdf')
+    figr.savefig(gdat.pathplotrtag + 'init/indxprox.pdf')
     plt.close()
     
     
@@ -13179,7 +13316,7 @@ def plot_evidtest():
     plt.colorbar(imag, ax=axis, fraction=0.03)
 
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'evidtest.pdf')
+    figr.savefig(gdat.pathplotrtag + 'evidtest.pdf')
     plt.close(figr)
     
     
@@ -13312,7 +13449,7 @@ def plot_king(gdat):
         axis.set_xlabel(r'$\mathcal{K}$')
         
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'king.pdf')
+    figr.savefig(gdat.pathplotrtag + 'king.pdf')
     plt.close(figr)
     
    
@@ -13702,7 +13839,7 @@ def plot_3fgl_thrs(gdat):
     imag = plt.imshow(fluxthrs[amin(jbgal):amax(jbgal)+1, amin(jlghprofi):amax(jlghprofi)+1], origin='lower', cmap='Reds', extent=gdat.exttrofi)
     plt.colorbar(imag, fraction=0.05)
     plt.tight_layout()
-    figr.savefig(gdat.pathplot + 'thrs.pdf')
+    figr.savefig(gdat.pathplotrtag + 'thrs.pdf')
     plt.close(figr)
     
 
@@ -13711,11 +13848,6 @@ def plot_init(gdat):
     # make initial plots
     if gdat.makeplot:
         
-        # ferm
-        #plot_3fgl_thrs(gdat)
-        #if gdat.exprtype == 'ferm':
-        #    plot_fgl3(gdat)
-        
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
                 if (gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0) and gdat.numbpixl > 1:
@@ -13723,140 +13855,6 @@ def plot_init(gdat):
                         plot_eval(gdat, l)
                     plot_indxprox(gdat)
         
-        # temp
-        if gdat.makeplotintr:
-            plot_intr(gdat)
-            #plot_pert()
-            #plot_king(gdat)
-    
-            if gdat.fittboolelemdeflsubh:
-                xdat = gdat.binsangl[1:] * gdat.anglfact
-                lablxdat = gdat.lablgangtotl
-                
-                listdeflscal = array([4e-2, 4e-2, 4e-2]) / gdat.anglfact
-                listanglscal = array([0.05, 0.1, 0.05]) / gdat.anglfact
-                listanglcutf = array([1.,    1.,  10.]) / gdat.anglfact
-                listasym = [False, False, False]
-                listydat = []
-                for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
-                    listydat.append(retr_deflcutf(gdat.binsangl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
-                
-                for scalxdat in ['self', 'logt']:
-                    path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.pdf'
-                    tdpy.util.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
-                                                                                lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
-               
-                # pixel-convoltuion of the Sersic profile
-                # temp -- y axis labels are wrong, should be per solid angle
-                xdat = gdat.binslgalsers * gdat.anglfact
-                for n in range(gdat.numbindxsers + 1):
-                    for k in range(gdat.numbhalfsers + 1):
-                        if k != 5:
-                            continue
-                        path = gdat.pathinitintr + 'sersprofconv%04d%04d.pdf' % (n, k)
-                        tdpy.util.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
-                        #path = gdat.pathinitintr + 'sersprofcntr%04d%04d.pdf' % (n, k)
-                        #tdpy.util.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
-                        path = gdat.pathinitintr + 'sersprofdiff%04d%04d.pdf' % (n, k)
-                        tdpy.util.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], \
-                                                                                         scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
-                        path = gdat.pathinitintr + 'sersprofdiff%04d%04d.pdf' % (n, k)
-                        tdpy.util.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], scalxdat='logt', \
-                                                                                         scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
-               
-                xdat = gdat.binsangl * gdat.anglfact
-                listspec = array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
-                listsize = array([0.3, 1., 1., 1.]) / gdat.anglfact
-                listindx = array([4., 2., 4., 10.])
-                listydat = []
-                listlegd = []
-                for spec, size, indx in zip(listspec, listsize, listindx):
-                    listydat.append(spec * retr_sbrtsersnorm(gdat.binsangl, size, indxsers=indx))
-                    listlegd.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
-                path = gdat.pathinitintr + 'sersprof.pdf'
-                tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, \
-                                                                                                                    listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
-            
-                minmredshost = 0.01
-                maxmredshost = 0.4
-                minmredssour = 0.01
-                maxmredssour = 2.
-                numbreds = 200
-                retr_axis(gdat, 'redshost', minmredshost, maxmredshost, numbreds)
-                retr_axis(gdat, 'redssour', minmredssour, maxmredssour, numbreds)
-                
-                gdat.meanadishost = empty(numbreds)
-                for k in range(numbreds):
-                    gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
-                
-                asca = 0.1 / gdat.anglfact
-                acut = 1. / gdat.anglfact
-    
-                minmmass = zeros((numbreds + 1, numbreds + 1))
-                maxmmass = zeros((numbreds + 1, numbreds + 1))
-                for k, redshost in enumerate(gdat.binsredshost):
-                    for n, redssour in enumerate(gdat.binsredssour):
-                        if redssour > redshost:
-                            adishost = gdat.adisobjt(redshost) * 1e3
-                            adissour = gdat.adisobjt(redssour) * 1e3
-                            adishostsour = adissour - (1. + redshost) / (1. + redssour) * adishost
-                            factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adishost, adishostsour, asca, acut)
-                            minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
-                            maxmmass[n, k] = log10(factmcutfromdefs * gdat.maxmdefs)
-               
-                #valulevl = linspace(7.5, 9., 5)
-                valulevl = [7.0, 7.3, 7.7, 8., 8.6]
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                cont = axis.contour(gdat.binsredshost, gdat.binsredssour, minmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=20, fmt='%.3g')
-                axis.set_xlabel(r'$z_{\rm{hst}}$')
-                axis.set_ylabel(r'$z_{\rm{src}}$')
-                axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
-                path = gdat.pathinitintr + 'massredsminm.pdf'
-                plt.tight_layout()
-                figr.savefig(path)
-                plt.close(figr)
-                
-                valulevl = linspace(9., 11., 20)
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=9., vmax=11.)
-                cont = axis.contour(gdat.binsredshost, gdat.binsredssour, maxmmass, 10, colors='g', levels=valulevl)
-                axis.clabel(cont, inline=1, fontsize=15, fmt='%.3g')
-                axis.set_xlabel('$z_{hst}$')
-                axis.set_ylabel('$z_{src}$')
-                axis.set_title(r'$M_{c,max}$ [$M_{\odot}$]')
-                path = gdat.pathinitintr + 'massredsmaxm.pdf'
-                plt.colorbar(imag) 
-                plt.tight_layout()
-                figr.savefig(path)
-                plt.close(figr)
-                
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.plot(gdat.meanredshost, gdat.meanadishost * gdat.sizepixl)
-                axis.plot(gdat.meanredshost, gdat.meanadishost * 2. * gdat.maxmgangdata)
-                axis.set_xlabel('$z_h$')
-                axis.set_yscale('log')
-                axis.set_ylabel(r'$\lambda$ [kpc]')
-                path = gdat.pathinitintr + 'wlenreds.pdf'
-                plt.tight_layout()
-                figr.savefig(path)
-                plt.close(figr)
-                
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                fracacutasca = logspace(-1., 2., 20)
-                mcut = retr_mcutfrommscl(fracacutasca)
-                axis.loglog(fracacutasca, mcut)
-                axis.set_xlabel(r'$\tau_n$')
-                axis.set_ylabel(r'$\frac{M_{c,n}}{M_{0,n}}$')
-                axis.axhline(1., ls='--')
-                path = gdat.pathinitintr + 'mcut.pdf'
-                plt.tight_layout()
-                figr.savefig(path)
-                plt.close(figr)
-        
-            # temp
-            raise Exception('')
-
     for d in gdat.indxregi:
         for i in gdat.indxener:
             for m in gdat.indxevtt:

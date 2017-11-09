@@ -1,22 +1,32 @@
 from __init__ import *
 from util import *
 
-if sys.argv[1]:
-    strgsrch = sys.argv[1]
-else:
+print 'PCAT post process routine started.'
+
+boolfinl = False
+boolanim = False
+if len(sys.argv) == 1:
     strgsrch = '20*'
+    boolfinl = True
+    boolanim = True
+elif len(sys.argv) == 2:
+    strgsrch = sys.argv[1]
+    boolfinl = True
+    boolanim = True
+elif len(sys.argv) == 3:
+    strgsrch = sys.argv[1]
+    boolfinl = sys.argv[2] == 'finl'
+    boolanim = sys.argv[2] == 'anim'
     
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listrtag = fnmatch.filter(os.listdir(pathimag), strgsrch)
 
-print 'Batch production...'
-
 for rtag in listrtag:
     print 'Processing %s...' % rtag
 
-    if sys.argv[2] == 'finl' or sys.argv[2] == 'both':
+    if boolfinl:
         proc_finl(rtag=rtag)
     
-    if sys.argv[2] == 'anim' or sys.argv[2] == 'both':
+    if boolanim:
         proc_anim(rtag=rtag)
     
