@@ -2276,7 +2276,6 @@ def worksamp(gdat, lock):
         pool.close()
         pool.join()
     
-    print 'heeeey'
     filestat.write('gdatmodi written.\n')
     filestat.close()
 

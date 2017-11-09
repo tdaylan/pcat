@@ -21,12 +21,15 @@ elif len(sys.argv) == 3:
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listrtag = fnmatch.filter(os.listdir(pathimag), strgsrch)
 
-for rtag in listrtag:
-    print 'Processing %s...' % rtag
-
-    if boolfinl:
+if boolfinl:
+    print 'Post-processing...'
+    for rtag in listrtag:
+        print 'Working on %s...' % rtag
         proc_finl(rtag=rtag)
     
-    if boolanim:
+if boolanim:
+    print 'Making animations...'
+    for rtag in listrtag:
+        print 'Working on %s...' % rtag
         proc_anim(rtag=rtag)
     
