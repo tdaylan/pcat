@@ -430,13 +430,6 @@ def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
             maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
             distslop = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslop')[l]]
             
-            #print 'icdf_trap'
-            #print 'minm'
-            #print minm
-            #print 'maxm'
-            #print maxm
-            #print
-
             if gdat.diagmode:
                 if not isfinite(distslop):
                     print 'distslop'
@@ -719,22 +712,12 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                 minm = getattr(gdat, 'fittminm' + strgcomp)
                 maxm = getattr(gdat, 'fittmaxm' + strgcomp)
                 comp = getattr(gdat, namerefr + strgcomp)[l][d]
-                
-                print 'ldg'
-                print l, d, g
-                print 'minm'
-                print minm
-                print 'maxm'
-                print maxm
-                
                 try:
                     if gdat.fittlistscalcomp[l][g] == 'self':
                         fact = getattr(gdat, 'fittfact' + strgcomp)
                         compunit = cdfn_self(comp, minm, fact)
                     if gdat.fittlistscalcomp[l][g] == 'powrslop' or gdat.fittlistscalcomp[l][g] == 'igam':
                         slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
-                        print 'slop'
-                        print slop
                         if gdat.fittlistscalcomp[l][g] == 'powrslop':
                             compunit = cdfn_powr(comp, minm, maxm, slop)
                         if gdat.fittlistscalcomp[l][g] == 'igam':
@@ -748,17 +731,8 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                     if gdat.verbtype > 0:
                         print 'Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp
                     compunit = rand(gdat.truenumbelem[l][d])
-                
-                print 'comp'
-                print comp
-                print 'compunit'
-                print compunit
-                print
-
                 gdatmodi.thissamp[gdatmodi.thisindxsampcomp[strgcomp][l][d]] = compunit
 
-
-## model evaluation
 
 ### find the spectra of sources
 def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sind0001=None, sind0002=None, elin=None, edis=None, spectype='powr', plot=False):
@@ -1447,6 +1421,7 @@ def rscl_elem(gdat, thissampvarb, thisindxsampcomp, nextsampvarb, nextsamp, indx
                         if listscalcomptemp[k] == 'igam':
                             cutf = getattr(gdat, 'cutf' + strgcomp)
                             unit = cdfn_igam(comp, slop, cutf)
+                    
                     if listscalcomptemp[k] == 'gaus':
                         distmean = nextsampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distmean')[l]]
                         diststdv = nextsampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'diststdv')[l]]
@@ -1508,6 +1483,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     if numbtrap > 0:
         boolelemspec = getattr(gdat, strgmodl + 'boolelemspec')
         thisindxelemfull = getattr(gdatobjt, strgpfixthis + 'indxelemfull')
+        if gdat.diagmode:
+            for l in gdat.fittindxpopl:
+                for d in gdat.fittindxregipopl[l]:
+                    if len(thisindxelemfull[l][d]) > len(set(thisindxelemfull[l][d])):
+                        raise Exception('Repeating entry in the element index list!')
+
         thisindxsampcomp = retr_indxsampcomp(gdat, thisindxelemfull, strgmodl)
         setattr(gdatobjt, strgpfixthis + 'indxsampcomp', thisindxsampcomp)
     
@@ -1562,7 +1543,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     # forced death or birth does not check for the prior on the dimensionality on purpose!
     if numbtrap > 0 and (deth or brth or rand() < gdat.probtran) and not (numbelemtemp == minmnumbelemtemp and numbelemtemp == maxmnumbelemtemp):
 
-        if brth or deth or rand() < gdat.probbrde / gdat.probtran or numbelemtemp == 0:
+        if brth or deth or rand() < gdat.probbrde / gdat.probtran or numbelemtemp == maxmnumbelemtemp and numbelemtemp == 1 or numbelemtemp == 0:
             
             ## births and deaths
             if numbelemtemp == maxmnumbelemtemp or deth:
@@ -1582,10 +1563,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
 
         else:
             ## splits and merges
-            if numbelemtemp == maxmnumbelemtemp:
-                gdatmodi.propmerg = True
-            elif numbelemtemp == minmnumbelemtemp or numbelemtemp < 2:
+            if numbelemtemp == minmnumbelemtemp or numbelemtemp < 2:
                 gdatmodi.propsplt = True
+            elif numbelemtemp == maxmnumbelemtemp:
+                gdatmodi.propmerg = True
             else:
                 if rand() < 0.5:
                     gdatmodi.propsplt = True
@@ -1690,22 +1671,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.indxpoplmodi = []
         if numbtrap > 0:
             numb = 0
-            print 'boolelemsbrtdfnc'
-            print boolelemsbrtdfnc
-            print 'boolelempsfn'
-            print boolelempsfn
-
             for l in gdat.fittindxpopl:
                 if boolelemsbrtdfnc[l]:
                     gdatmodi.indxpoplmodi.append(l)
                     numb += sum(thissampvarb[gdat.fittindxfixpnumbelem[l]])
-        print 'numbtrap'
-        print numbtrap
-        print 'convdiffanyy'
-        print convdiffanyy
-        print 'numb'
-        print numb
-        print
 
         if not convdiffanyy and (numbtrap == 0 or numbtrap > 0 and numb == 0):
             gdatmodi.nextaccpprio = False
@@ -1740,10 +1709,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         print gdatmodi.propsplt
         print 'propmerg'
         print gdatmodi.propmerg
-        print 'gdatmodi.evalllikpert'
-        print gdatmodi.evalllikpert
         print 'gdatmodi.propfixp'
         print gdatmodi.propfixp
+        print 'gdatmodi.propmeanelem'
+        print gdatmodi.propmeanelem
+        print 'gdatmodi.propdist'
+        print gdatmodi.propdist
         print 'gdatmodi.propbacp'
         print gdatmodi.propbacp
         print 'gdatmodi.proppsfp'
@@ -1752,6 +1723,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         print gdatmodi.prophost
         print 'gdatmodi.propcomp'
         print gdatmodi.propcomp
+        print 'gdatmodi.evalllikpert'
+        print gdatmodi.evalllikpert
         if gdatmodi.propwith:
             print 'gdatmodi.indxsampmodi'
             print gdatmodi.indxsampmodi
@@ -2212,8 +2185,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     indxchecfail = where((nextsamp[gdatmodi.indxsampchec] < 0.) | (nextsamp[gdatmodi.indxsampchec] > 1.))[0]
     if indxchecfail.size > 0:
         if gdat.verbtype > 1:
-            for k in range(20):
-                print 'Proposal rejected due to proposal outside the prior during the common check'
+            print 'Rejecting the proposal due to unit sample vector going outside the unit interval...'
             print 'indxchecfail'
             print indxchecfail
             print
@@ -4043,10 +4015,11 @@ def setpinit(gdat, boolinitsetp=False):
         summgene(gdat.expo[0])
         raise Exception('Exposure does not have the right data structure. It should be a list of 3D arrays.')
 
-    if gdat.killexpo:
-        gdat.expo *= 1e-10
-    if gdat.highexpo:
-        gdat.expo *= 1e10
+    for d in gdat.indxregi:
+        if gdat.killexpo:
+            gdat.expo[d] *= 1e-10
+        if gdat.highexpo:
+            gdat.expo[d] *= 1e10
     
     if gdat.thindata:
         expotemp = [[] for d in gdat.indxregi]
@@ -6496,7 +6469,7 @@ def plot_lens(gdat):
         plt.close(figr)
        
 
-def chec_runsprev(namefunc):
+def chec_runsprev(strgcnfg):
     
     # list of PCAT run plot outputs
     pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
@@ -6505,11 +6478,13 @@ def chec_runsprev(namefunc):
     booltemp = False
     for rtag in listrtag:
         strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
-        if rtag.startswith(namefunc) and os.path.isfile(strgstat):
-            filestat = open(strgstat, 'r')
-            for line in filestat:
-                if line == 'gdatmodi written.\n':
-                    booltemp = True
+        print 'rtag'
+        print rtag
+        booltemp = booltemp or chec_gdatstat(rtag, 'gdatmodi', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]
+    
+    print 'booltemp'
+    print booltemp
+    print
 
     return booltemp
 
@@ -7763,7 +7738,7 @@ def make_cbar(gdat, axis, imag, indxenerplot=None, tick=None, labl=None):
     return cbar
 
 
-def make_catllabl(gdat, strgstat, strgmodl, axis):
+def make_legdmaps(gdat, strgstat, strgmodl, axis):
     
     # transdimensional elements
     if strgmodl == 'fitt' and (strgstat == 'post' and gdat.condcatl or strgstat == 'this') and gdat.fittnumbtrap > 0:
@@ -8931,21 +8906,25 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         if gdat.diagmode:
                             for dd, d in enumerate(indxregieval):
                                 numbtemp = 0
+                                boolevalfull = True
                                 for l in indxpopl:
                                     if boolelemsbrtdfnc[l]:
                                         numbtemp += sum(numbelem[l])
+                                        if elemspatevaltype[l] != 'full':
+                                            boolevalfull = False
                                 if numbtemp > 0 and (amin(sbrtdfnc[dd][indxcubeeval[0][dd]]) / mean(sbrtdfnc[dd][indxcubeeval[0][dd]]) < -1e-6):
                                     print 'Warning! Delta-function surface brightness went negative.'
-                                    print 'boolelemsbrtextsbgrd'
-                                    print boolelemsbrtextsbgrd
                                     print 'numbtemp'
                                     print numbtemp
                                     print 'numbelem'
                                     print numbelem
                                     print 'sbrtdfnc[dd][indxcubeeval[0][dd]]'
                                     summgene(sbrtdfnc[dd][indxcubeeval[0][dd]])
+                                    print 'elemspatevaltype'
+                                    print elemspatevaltype
                                     print
-                                    #raise Exception('')
+                                    if boolevalfull:
+                                        raise Exception('')
                         
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         # when the only background template is the data-PS residual, correct the PS template for numerical noise
@@ -8958,6 +8937,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 print 'sbrt[dfnc][dd]'
                                 summgene(sbrt['dfnc'][dd])
                                 print
+                                if boolevalfull:
+                                    raise Exception('')
                             #if amin(sbrt['dfnc'][dd]) / mean(sbrt['dfnc'][dd]) < -1e-3:
                             #    raise Exception('Saving a negative delta-function surface brightness.')
                 
@@ -9439,14 +9420,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         # diagnostics
         if gdat.diagmode:
-            for varb in [sbrt['modl'], cntp['modl']]:
-                for dd, d in enumerate(indxregieval):
-                    frac = amin(varb[dd]) / mean(varb[dd])
-                    if frac < -1e-3:
-                        print 'frac'
-                        print frac
-                        summgene(varb[dd])
-                        raise Exception('Total model spectral surface brightness is not positive-definite.')
+            for dd, d in enumerate(indxregieval):
+                frac = cntp['modl'][dd] / mean(cntp['modl'][dd])
+                if amin(frac) < -1e-3 and amin(cntp['modl']) < -0.1:
+                    print 'Total model surface brightness is not positive-definite.'
+                    print 'cntp[modl][dd]'
+                    summgene(cntp['modl'][dd])
+                    print 'frac'
+                    summgene(frac)
+                    raise Exception('')
+            
+                indxcubebadd = where(cntp['modl'][dd] < 0.)[0]
+                if indxcubebadd.size > 0:
+                    print 'Warning! Model prediction is negative. Correcting to 1e-20...'
+                    cntp['modl'][dd][indxcubebadd] = 1e-20
 
         ### log-likelihood
         initchro(gdat, gdatmodi, strgstat, 'llikcalc')
@@ -9594,7 +9581,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         for l in indxpopl:
             for d in indxregipopl[l]:
-
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
@@ -9677,22 +9663,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 if gdatmodi.propdeth or gdatmodi.propmerg:
                     sampvarbtemp = getattr(gdatobjt, strgpfixthis + 'sampvarb')
         
-                if gdatmodi.propbrth or gdatmodi.propdeth:
-                
-                    for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
-                        if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'self':
-                            minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
-                            maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
-                            lpau[k] = -log(maxm - minm)
-                        if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'powrslop':
-                            lpau[k] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, sampvarbtemp[gdatmodi.indxsamptran[0][k]], \
-                                                                                               strgcomp, thissampvarb, gdatmodi.indxpoplmodi[0])
-                        if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'gaus':
-                            lpau[k] = retr_lprigausdist(gdat, gdatmodi, strgmodl, sampvarbtemp[gdatmodi.indxsamptran[0][k]], \
-                                                                                               strgcomp, thissampvarb, gdatmodi.indxpoplmodi[0])
-                if gdatmodi.propsplt or gdatmodi.propmerg:
-                
-                    for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
+                for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
+                    if (gdatmodi.propsplt or gdatmodi.propmerg) and k < 3:
                         if k == 0 or k == 1:
                             lpau[k] = -log(2. *pi) - log(gdat.radispmr) -0.5 * (gdatmodi.auxipara[k] / gdat.radispmr)
                         elif k == 2:
@@ -9700,6 +9672,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 lpau[k] = -inf
                             else:
                                 lpau[k] = 0.
+                    else:
+                        if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'self':
+                            minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
+                            maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
+                            lpau[k] = -log(maxm - minm)
                         elif listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'powrslop':
                             lpau[k] = retr_lpripowrdist(gdat, gdatmodi, strgmodl, sampvarbtemp[gdatmodi.indxsamptran[0][k]], \
                                                                                                strgcomp, thissampvarb, gdatmodi.indxpoplmodi[0])
@@ -10758,6 +10735,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     if (listscalcomp[l][indxcomptemp] != 'gaus' and not listscalcomp[l][indxcomptemp].startswith('lnor')):
                                         raise Exception('')
     
+        
+def retr_pathoutprtag(rtag):
+    
+    pathoutprtag = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/'
+    
+    return pathoutprtag
+
 
 def proc_finl(gdat=None, rtag=None, prio=False):
     
@@ -10766,24 +10750,30 @@ def proc_finl(gdat=None, rtag=None, prio=False):
     else:
         rtagtemp = gdat.rtag
         rtag = gdat.rtag
-    if gdat.verbtype > 0:
-        print 'Post processing %s...' % rtagtemp
     
     if rtag != None:
         # read initial global object
-        boolgdatinit = chec_gdatstat(pathoutprtag, 'gdatinit')
+        boolgdatinit = chec_gdatstat(rtag, 'gdatinit')
         if not boolgdatinit:
             return
     
+    # read gdatinit
+    pathoutprtag = retr_pathoutprtag(rtag)
+    path = pathoutprtag + 'gdatinit'
+    gdat = readfile(path) 
+    
+    if gdat.verbtype > 0:
+        print 'Post processing %s...' % rtagtemp
+    
     # quit if the final global object is available 
-    boolgdatfinl = chec_gdatstat(pathoutprtag, 'gdatfinl')
+    boolgdatfinl = chec_gdatstat(gdat.rtag, 'gdatfinl')
     if boolgdatfinl:
         print 'Run already final-processed.'
         print
         return
 
     # read gdatmodi
-    boolgdatmodi = chec_gdatstat(pathoutprtag, 'gdatmodi')
+    boolgdatmodi = chec_gdatstat(gdat.rtag, 'gdatmodi')
     if not boolgdatmodi:
         return 
 
@@ -10813,7 +10803,6 @@ def proc_finl(gdat=None, rtag=None, prio=False):
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
     for strgvarb in gdat.liststrgvarbarry:
-        print 'Processing %s...' % strgvarb
         for k in gdat.indxproc:
             if k == 0:
                 shap = getattr(listgdatmodi[k], 'list' + strgvarb).shape
@@ -11137,7 +11126,6 @@ def proc_finl(gdat=None, rtag=None, prio=False):
    
     gdat.pathpcat = gdat.pathoutprtag + 'pcat'
     writoutp(gdat, gdat.pathpcat)
-    os.system('rm -rf %sgdat*' % gdat.pathoutprtag) 
    
     # write the final gdat object
     path = gdat.pathoutprtag + 'gdatfinl'
@@ -11145,7 +11133,7 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         print 'Writing the global object to %s...' % path
     writfile(gdat, path) 
     
-    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
+    filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
     filestat.write('gdatfinl written.\n')
     filestat.close()
     
@@ -11166,15 +11154,41 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdat.timerealtotl, gdat.timeproctotl)
 
 
-def chec_gdatstat(pathoutprtag, strggdat):
+def chec_gdatstat(rtag, strggdat, verbtype=1):
+    
+    pathoutprtag = retr_pathoutprtag(rtag)
+    
+    print 'chec_gdatstat'
+    print 'pathoutprtag'
+    print pathoutprtag
+
+    # check the status file
+    if not os.path.isfile(pathoutprtag + 'stat.txt'):
+        if verbtype > 0:
+            print 'pathoutprtag'
+            print pathoutprtag
+            print 'stat.txt not found.'
+            print
+        return False
+
+    # check the global object
     filestat = open(pathoutprtag + 'stat.txt', 'r')
     booltemp = False
     for line in filestat:
+        print 'line'
+        print line
+
         if line == strggdat + ' written.\n':
             booltemp = True
+    print 'booltemp'
+    print booltemp
+    print
+
     filestat.close()
     if not booltemp:
-        print 'bad %s status.' % strggdat
+        if verbtype > 0:
+            print 'bad %s status.' % strggdat
+            print
         return False
     else:
         return True
@@ -13940,7 +13954,7 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgvarb='defl',
     defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
 
     figr, axis, path = init_figr(gdat, gdatmodi, strgvarb, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot)
-    make_catllabl(gdat, strgstat, strgmodl, axis)
+    make_legdmaps(gdat, strgstat, strgmodl, axis)
     draw_frambndr(gdat, axis)
   
     defllgal = defl[:, :, 0]
@@ -13989,7 +14003,7 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgvarb, indxenerplot=Non
     labl = getattr(gdat, 'labl' + strgcbar) 
 
     make_cbar(gdat, axis, imag, tick=tick, labl=labl)
-    make_catllabl(gdat, strgstat, strgmodl, axis)
+    make_legdmaps(gdat, strgstat, strgmodl, axis)
     if gdat.suprelem:
         supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplplot)
 

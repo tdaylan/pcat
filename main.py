@@ -282,10 +282,16 @@ def init( \
     if gdat.strgcnfg == None:
         gdat.strgcnfg = inspect.stack()[1][3]
    
+    gdat.strgvers = 'v0.3'
+    if gdat.verbtype > 0:
+        print 'PCAT %s started at %s.' % (gdat.strgvers, gdat.strgtimestmp)
+        print 'Configuration %s' % gdat.strgcnfg
+    
     # check the available run outputs
     booltemp = chec_runsprev(gdat.strgcnfg)
     if booltemp:
         print 'Found a previously completed run.'
+        print
         return
         
     ## number of burned sweeps
@@ -305,9 +311,8 @@ def init( \
     
     # output paths
     gdat.rtag = retr_rtag(gdat.strgtimestmp, gdat.strgcnfg, gdat.strgnumbswep)
-    gdat.pathoutprtag = gdat.pathoutp + gdat.rtag + '/'
+    gdat.pathoutprtag = retr_pathoutprtag(gdat.rtag)
 
-    gdat.strgvers = 'v0.3'
     ## catalog output
     # create output folder for the run
     os.system('mkdir -p %s' % gdat.pathoutprtag)
@@ -335,8 +340,6 @@ def init( \
     gdat.numbsweptotl = gdat.numbswep * gdat.numbproc
     
     if gdat.verbtype > 0:
-        print 'PCAT %s started at %s' % (gdat.strgvers, gdat.strgtimestmp)
-        print 'Configuration %s' % gdat.strgcnfg
         print 'Initializing...'
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
         print 'The resulting chain will contain %d samples per chain and %d samples in total.' % (gdat.numbsamp, gdat.numbsamptotl)
@@ -727,7 +730,8 @@ def init( \
         elemspatevaltype = [[] for l in indxpopl]
         for l in indxpopl:
             # these element types slow down execution!
-            if elemtype[l] == 'lens' or elemtype[l] == 'lghtline' or elemtype[l] == 'clusvari' or elemtype[l] == 'lghtgausbgrd':
+            # temp -- clus should go out of this list
+            if elemtype[l] == 'lens' or elemtype[l] == 'lghtline' or elemtype[l] == 'clusvari' or elemtype[l] == 'lghtgausbgrd' or elemtype[l] == 'clus':
                 elemspatevaltype[l] = 'full'
             else:
                 elemspatevaltype[l] = 'loclhash'
@@ -1864,6 +1868,7 @@ def init( \
         if gdat.makeplot:
             print 'The plots are at ' + gdat.pathplotrtag
         print 'PCAT has run successfully. Returning to the OS...'
+        print
 
 
 def workopti(gdat, lock):
@@ -1897,13 +1902,15 @@ def initarry( \
              dictvarbvari, \
              dictvarb, \
              execpara=False, \
-             nameconfexec=None, \
+             strgcnfgextnexec=None, \
              makeplotarry=False, \
              liststrgvarboutp=None, \
              listlablinpt=None, \
             ):
     
-    strgcnfg = inspect.stack()[1][3]
+    print 'Running PCAT in array mode...'
+    
+    #strgcnfg = inspect.stack()[1][3]
 
     numbiter = len(dictvarbvari)
 
@@ -1913,21 +1920,23 @@ def initarry( \
         for strgvarb in liststrgvarboutp:
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
-    dictvarb['strgcnfg'] = strgcnfg
+    #dictvarb['strgcnfg'] = strgcnfg
     dictvarb['boolarry'] = True
     
     listgdat = []
     listprid = []
-    for k, nameconf in enumerate(dictvarbvari):
+    for k, strgcnfgextn in enumerate(dictvarbvari):
         
-        if nameconfexec != None:
-            if nameconf != nameconfexec:
+        if strgcnfgextnexec != None:
+            if strgcnfgextn != strgcnfgextnexec:
                 continue
+        
+        strgcnfg = inspect.stack()[1][3] + '_' + strgcnfgextn
 
         dictvarbtemp = deepcopy(dictvarb)
-        for strgvarb, valu in dictvarbvari[nameconf].iteritems():
+        for strgvarb, valu in dictvarbvari[strgcnfgextn].iteritems():
             dictvarbtemp[strgvarb] = valu
-        dictvarbtemp['strgcnfg'] = inspect.stack()[1][3] + '_' + nameconf
+        dictvarbtemp['strgcnfg'] = strgcnfg
         if execpara:
             prid = os.fork()
             listprid.append(prid)
@@ -2053,10 +2062,10 @@ def retr_deltlpos(gdat, gdatmodi, indxparapert, stdvparapert):
     return deltlpos
 
 
-def worktrac(pathoutpthis, lock, indxprocwork):
+def worktrac(pathoutprtag, lock, indxprocwork):
 	
     try:
-        return work(pathoutpthis, lock, indxprocwork)
+        return work(pathoutprtag, lock, indxprocwork)
     except:
         raise Exception("".join(traceback.format_exception(*sys.exc_info())))
 
@@ -2267,6 +2276,7 @@ def worksamp(gdat, lock):
         pool.close()
         pool.join()
     
+    print 'heeeey'
     filestat.write('gdatmodi written.\n')
     filestat.close()
 
@@ -2290,9 +2300,9 @@ def retr_elemlist(gdat, gdatmodi):
         gdatmodi.thisindxsampcomp = None
     
 
-def work(pathoutpthis, lock, indxprocwork):
+def work(pathoutprtag, lock, indxprocwork):
 
-    path = pathoutpthis + 'gdatinit'
+    path = pathoutprtag + 'gdatinit'
     gdat = readfile(path) 
     
     timereal = time.time()
@@ -2621,7 +2631,7 @@ def work(pathoutpthis, lock, indxprocwork):
             gdatmodi.nextpercswep = 5 * int(20. * gdatmodi.cntrswep / gdat.numbswep) 
             if gdatmodi.nextpercswep > gdatmodi.percswepsave or thismakefram:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
-                minmswepintv = max(0, gdatmodi.cntrswep - 10000)
+                minmswepintv = max(0, gdatmodi.cntrswep - 10)
                 maxmswepintv = gdatmodi.cntrswep + 1
                 if maxmswepintv > minmswepintv:
                     boollogg = True
@@ -2991,7 +3001,22 @@ def work(pathoutpthis, lock, indxprocwork):
         ## variables to be saved for each sweep
         for strg in gdat.liststrgvarbarryswep:
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'next' + strg)
-       
+        
+        if gdat.diagmode:
+            # temp -- this only works for lensing problem
+            
+            if gdat.strgcnfg == 'pcat_lens_mock':
+                print 'Checking...'
+                print 'workdict[listindxproptype]'
+                print workdict['listindxproptype']
+                print 'workdict[listdeltlpritotl]'
+                print workdict['listdeltlpritotl']
+                print
+                indxswepprop = where(workdict['listindxproptype'][:, 0] == 5)[0]
+                listdeltlpritotltemp = workdict['listdeltlpritotl'][indxswepprop, 0]
+                if (listdeltlpritotltemp != 0.).any():
+                    raise Exception('')
+        
         # save the execution time for the sweep
         stopchro(gdat, gdatmodi, 'next', 'totl')
         
@@ -3139,10 +3164,11 @@ def work(pathoutpthis, lock, indxprocwork):
                                     print 'Binned in significance feature'
                                     print getattr(gdatmodi, 'thisfdis' + gdat.namefeatsignrefr + namevarb)
     
-            print 'Residual RMS'
+            print 'Chisq'
             for d in gdat.indxregi:
                 thiscntpresi = getattr(gdatmodi, 'thiscntpresireg%d' % d)
-                print sqrt(mean(thiscntpresi**2))
+                thiscntpmodl = getattr(gdatmodi, 'thiscntpmodlreg%d' % d)
+                print mean(thiscntpresi**2) / mean(thiscntpmodl)
 
             print 'Chronometers: '
             print 'chro'

@@ -29,6 +29,7 @@ for k in indxcols:
     except:
         print 'gdatfinl not found...'
         print
+        return
 
     if numbsampmosa > listgdat[k].numbsamptotl:
         raise Exception('number of samples is less than the number of frames.')
@@ -82,6 +83,7 @@ for d in gdat.indxregi:
                 path = pathfinl + 'mosa' + strg + 'reg%dene%dA.pdf' % (indxregiplot, gdat.indxenerincl[i])
             else:
                 path = pathfinl + 'mosa' + strg + 'reg%dene%devtt%d.pdf' % (indxregiplot, gdat.indxenerincl[i], gdat.indxevttincl[m])
+            make_legdmaps(gdat, 'this', 'fitt', axis)
             print 'Writing to %s...' % path
             figr.savefig(path)
             plt.close(figr)
