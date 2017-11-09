@@ -1910,8 +1910,6 @@ def initarry( \
     
     print 'Running PCAT in array mode...'
     
-    #strgcnfg = inspect.stack()[1][3]
-
     numbiter = len(dictvarbvari)
 
     if liststrgvarboutp != None:
@@ -1920,7 +1918,6 @@ def initarry( \
         for strgvarb in liststrgvarboutp:
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
-    #dictvarb['strgcnfg'] = strgcnfg
     dictvarb['boolarry'] = True
     
     listgdat = []

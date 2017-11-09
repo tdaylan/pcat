@@ -3974,11 +3974,16 @@ def setpinit(gdat, boolinitsetp=False):
             
                 for d in gdat.indxregi:
                     path = gdat.pathinpt + gdat.strgexpo[d]
+                    if gdat.verbtype > 0:
+                        print 'Reading %s...' % path
                     gdat.expo[d] = pf.getdata(path)
             else:
                 path = gdat.pathinpt + gdat.strgexpo
                 for d in gdat.indxregi:
+                    if gdat.verbtype > 0:
+                        print 'Reading %s...' % path
                     gdat.expo[d] = pf.getdata(path)
+            print 'heeey'
             print 'gdat.expo[d]'
             summgene(gdat.expo[d])
             
@@ -3997,6 +4002,7 @@ def setpinit(gdat, boolinitsetp=False):
                                                                                        minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
                     else:
                         gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
+                print 'meeey'
                 print 'gdat.expo[d]'
                 summgene(gdat.expo[d])
                 gdat.expo = gdat.expotemp
@@ -7608,63 +7614,12 @@ def writfile(gdattemp, path):
            
             setattr(gdattemptemp, attr, valu)
     
-    #print 'gdattemptemp'
-    #print gdattemptemp
-    #for name, valu in gdattemptemp.__dict__.iteritems():
-    #    if isinstance(valu, list) and len(valu) > 0:
-    #        if not isinstance(valu[0], float) and not isinstance(valu[0], int) and not isinstance(valu[0], ndarray) and not isinstance(valu[0], float64) and not isinstance(valu[0], str):
-    #            print 'name'
-    #            print name
-    #            print 'type(valu[0])'
-    #            print type(valu[0])
-    #    else:
-    #        if not isinstance(valu, float) and not isinstance(valu, int) and not isinstance(valu, ndarray) and not isinstance(valu, float64) and not isinstance(valu, str) \
-    #                    and not isinstance(valu, bool_):
-    #            print 'name'
-    #            print name
-    #            print 'type(valu)'
-    #            print type(valu)
-    #    #print
-    #    if name == 'psfnintp':
-    #        raise Exception('')
-    #print
     print 'Writing to %s...' % path
 
     cPickle.dump(gdattemptemp, filepick, protocol=cPickle.HIGHEST_PROTOCOL)
     filepick.close()
     filearry.close()
    
-
-def readoutp(path):
-    
-    thisfile = h5py.File(path, 'r')
-    gdattemp = tdpy.util.gdatstrt()
-    for attr in thisfile:
-        setattr(gdattemp, attr, thisfile[attr]) 
-    thisfile.close()
-
-    return gdattemp
-
-
-def writoutp(gdat, path):
-
-    thisfile = h5py.File(path, 'w')
-    for attr, valu in gdat.__dict__.iteritems():
-        if attr.startswith('list'):
-            attrtemp = attr[4:]
-            if attrtemp in gdat.fittliststrgfeatodimtotl:
-                for l in gdat.fittindxpopl:
-                    for d in gdat.fittindxregipopl[l]:
-                        attrprim = attrtemp + 'pop%dreg%d' % (l, d)
-                        listtemp = []
-                        arrytemp = zeros((gdat.numbsamptotl, gdat.fittmaxmnumbelem[l][d])) + nan
-                        for n in range(len(valu)):
-                            arrytemp[n, :len(valu[n][l][d])] = valu[n][l][d]
-                        thisfile.create_dataset(attrprim, data=arrytemp)
-            elif attrtemp == 'meanelem' or attrtemp == 'fluxdistslop' or attrtemp == 'psfp' or attrtemp == 'bacp':
-                thisfile.create_dataset(attrtemp, data=valu)
-    thisfile.close()
-    
 
 def retr_deflcutf(angl, defs, asca, acut, asym=False):
 
@@ -10696,10 +10651,13 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         # memory usage
         gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
         gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
-   
-        gdat.pathpcat = gdat.pathoutprtag + 'pcat'
-        writoutp(gdat, gdat.pathpcat)
-   
+    
+        print 'gdatfinl contents...'
+        for name, valu in gdat.__dict__.iteritems():
+            print 'name'
+            print name
+            print
+
         # write the final gdat object
         path = gdat.pathoutprtag + 'gdatfinl'
         if gdat.verbtype > 0:
