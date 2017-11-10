@@ -24,8 +24,11 @@ listrtag = fnmatch.filter(os.listdir(pathimag), strgsrch)
 if boolfinl:
     print 'Post-processing...'
     for rtag in listrtag:
-        print 'Working on %s...' % rtag
-        proc_finl(rtag=rtag)
+        try:
+            print 'Working on %s...' % rtag
+            proc_finl(rtag=rtag)
+        except:
+            pass
     
 if boolanim:
     print 'Making animations...'
