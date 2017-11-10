@@ -3984,9 +3984,6 @@ def setpinit(gdat, boolinitsetp=False):
                     if gdat.verbtype > 0:
                         print 'Reading %s...' % path
                     gdat.expo[d] = pf.getdata(path)
-            print 'heeey'
-            print 'gdat.expo[d]'
-            summgene(gdat.expo[d])
             
             if amin(gdat.expo) == amax(gdat.expo):
                 raise Exception('Bad input exposure map.')
@@ -4003,9 +4000,6 @@ def setpinit(gdat, boolinitsetp=False):
                                                                                        minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
                     else:
                         gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
-                print 'meeey'
-                print 'gdat.expo[d]'
-                summgene(gdat.expo[d])
                 gdat.expo = gdat.expotemp
 
     # check the exposure map data structure
@@ -4016,10 +4010,6 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.expo[d].ndim != 3:
             booltemp = True
     if booltemp:
-        print 'len(gdat.expo)'
-        print len(gdat.expo)
-        print 'gdat.expo[0]'
-        summgene(gdat.expo[0])
         raise Exception('Exposure does not have the right data structure. It should be a list of 3D arrays.')
 
     for d in gdat.indxregi:
@@ -8475,7 +8465,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 
                         if gdat.diagmode:
                             chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd], indxcubeeval[0][dd])
-                            chec_statvarb(strgmodl, strgstat, gdatobjt, 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd], indxcubeeval=indxcubeeval[0][dd])
+                            #chec_statvarb(strgmodl, strgstat, gdatobjt, 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd], indxcubeeval=indxcubeeval[0][dd])
 
                         setattr(gdatobjt, strgpfix + 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd])
 
@@ -10269,7 +10259,7 @@ def chec_statvarb(strgmodl, strgstat, gdatmodi, strgvarb, nextvarb, indxcubeeval
                 frac = abs((thisvarb[indxcubeeval] - nextvarb) / thisvarb[indxcubeeval])
                 print 'frac'
                 summgene(frac)
-                if (frac > 1e-3).any():
+                if (frac[where(isfinite(frac))] > 1e-3).any():
                     boolbadd = True
             else:
                 if abs(thisvarb - nextvarb) > 1e-3:

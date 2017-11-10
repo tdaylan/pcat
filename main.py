@@ -2626,7 +2626,7 @@ def work(pathoutprtag, lock, indxprocwork):
             gdatmodi.nextpercswep = 5 * int(20. * gdatmodi.cntrswep / gdat.numbswep) 
             if gdatmodi.nextpercswep > gdatmodi.percswepsave or thismakefram:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
-                minmswepintv = max(0, gdatmodi.cntrswep - 10)
+                minmswepintv = max(0, gdatmodi.cntrswep - 10000)
                 maxmswepintv = gdatmodi.cntrswep + 1
                 if maxmswepintv > minmswepintv:
                     boollogg = True
