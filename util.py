@@ -10006,26 +10006,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 dicttert[d]['fracsubh' + name[8:]][k] = dicttert[d]['masssubh' + name[8:]][k] / dicttert[d]['masshost' + name[8:]][k]
                     setattr(gdatobjt, strgpfix + name + strgregi, dicttert[d][name])
                     
-                    if False:
-                        print 'name'
-                        print name
-                        print 'getattr(gdatobjt, strgpfix + name + strgregi)'
-                        print getattr(gdatobjt, strgpfix + name + strgregi)
-                        print
-            
                 # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
                 for name in listnamevarbmassvect:
                     dicttert[d][name + 'bein'] = interp(beinhost[d], gdat.meananglhalf, dicttert[d][name])
                     setattr(gdatobjt, strgpfix + name + 'bein' + strgregi, array([dicttert[d][name + 'bein']]))
-                    
-                    if False:
-                        print 'name'
-                        print name
-                        print 'dicttert[d][name]'
-                        summgene(dicttert[d][name])
-                        print 'getattr(gdatobjt, strgpfix + name + bein + strgregi)'
-                        print getattr(gdatobjt, strgpfix + name + 'bein' + strgregi)
-                        print 
             
         if numbtrap > 0:
             ## copy element features to the global object
@@ -10665,12 +10649,6 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
         gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
     
-        print 'gdatfinl contents...'
-        for name, valu in gdat.__dict__.iteritems():
-            print 'name'
-            print name
-            print
-
         # write the final gdat object
         path = gdat.pathoutprtag + 'gdatfinl'
         if gdat.verbtype > 0:
@@ -12579,13 +12557,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgxdat, indxrefrpl
 
             ydattemp = getattr(gdat, name)
             
-            if strgydat.startswith('fdis'):
-                print 'name'
-                print name
-                print 'ydattemp'
-                print ydattemp
-                print
-
             ydat = ydattemp * factydat
             if indxydat != None:
                 ydat = ydat[indxydat]
