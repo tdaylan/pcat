@@ -1058,10 +1058,12 @@ def retr_refrchaninit(gdat):
     gdat.namefeatsignrefr = 'flux'
     
     gdat.refrlegdelem = ['Xue+2011', 'Wolf+2008']
+    gdat.refrlegdelem = ['Xue+2011']
     
     gdat.listnamefeatamplrefr[0] = 'flux'
     gdat.listnamefeatamplrefr[1] = 'magt'
     gdat.listnamerefr += ['xu11', 'wo08']
+    gdat.listnamerefr += ['xu11']
     
     setattr(gdat, 'lablotyp', 'O')
     setattr(gdat, 'minmotyp', 0.)
@@ -1104,22 +1106,43 @@ def retr_refrchaninit(gdat):
 
 
 def retr_refrchanfinl(gdat):
-   
-    if gdat.numbsidecart == 300:
-        if gdat.anlytype.startswith('extr'):
+    
+    booltemp = False
+    if gdat.anlytype.startswith('extr'):
+        if gdat.numbsidecart == 300:
             gdat.numbpixllgalshft[0] = 1490
             gdat.numbpixlbgalshft[0] = 1430
-        if gdat.anlytype.startswith('home'):
-            gdat.numbpixllgalshft[0] = 150
-            gdat.numbpixlbgalshft[0] = 150
+        else:
+            booltemp = True
+    elif gdat.anlytype.startswith('home'):
+        if gdat.anlytype[4:8] == '2msc':
+            gdat.numbpixllgalshft[0] = -152
+            gdat.numbpixlbgalshft[0] = 210
+        if gdat.anlytype[4:8] == '4msc':
+            gdat.numbpixllgalshft[0] = 78
+            gdat.numbpixlbgalshft[0] = 8
+        if gdat.anlytype[4:8] == '7msc':
+            gdat.numbpixllgalshft[0] = 78
+            gdat.numbpixlbgalshft[0] = 8
+        if gdat.numbsidecart == 600:
+            pass
+        elif gdat.numbsidecart == 300:
+            gdat.numbpixllgalshft[0] += 150
+            gdat.numbpixlbgalshft[0] += 150
+            print 'gdat.numbpixllgalshft'
+            print gdat.numbpixllgalshft
+        else:
+            booltemp = True
     else:
+        booltemp = True
+    if booltemp:
         raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
     ## WCS object for rotating reference elements into the ROI
     if gdat.numbener == 2:
         gdat.listpathwcss[0] = gdat.pathinpt + 'CDFS-4Ms-0p5to2-asca-im-bin1.fits'
     else:
-        gdat.listpathwcss[0] = gdat.pathinpt + '0.5-0.91028_thresh.img'
+        gdat.listpathwcss[0] = gdat.pathinpt + '0.5-0.91028_flux_%sMs.img' % gdat.anlytype[4]
     
     # Xue et al. (2011)
     with open(gdat.pathinpt + 'chancatl.txt', 'r') as thisfile:
@@ -1741,6 +1764,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     if gdat.diagmode:
         if gdat.sqzeprop and amax(stdvstdp) > 1e-10:
+            print 'stdvstdp'
+            print stdvstdp
             raise Exception('')
 
     if gdatmodi.propdist:
@@ -4183,16 +4208,10 @@ def setpinit(gdat, boolinitsetp=False):
     # exclude voxels with vanishing exposure
     if gdat.correxpo:
         for d in gdat.indxregi:
-            print 'gdat.expo[d]'
-            summgene(gdat.expo[d])
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
                     gdat.indxpixlrofi = intersect1d(gdat.indxpixlrofi, where(gdat.expo[d][i, :, m] > 0.)[0])
     
-    print 'gdat.indxpixlrofi'
-    summgene(gdat.indxpixlrofi)
-    print
-
     gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
     gdat.numbpixl = gdat.indxpixlrofi.size
     
@@ -4787,8 +4806,13 @@ def setpinit(gdat, boolinitsetp=False):
                             raise Exception('Angular axis used to interpolate the PSF should be longer.')
                     
                     if indxpixlproxtemp.size < 10:
+                        for d in gdat.indxregi:
+                            print 'gdat.expo[d]'
+                            summgene(gdat.expo[d])
                         print 'dist'
                         summgene(dist * gdat.anglfact)
+                        print 'indxpixlproxtemp.size'
+                        print indxpixlproxtemp.size
                         print 'gdat.indxpixl'
                         summgene(gdat.indxpixl)
                         print 'gdat.numbpixl'
@@ -5035,8 +5059,8 @@ def retr_datatick(gdat):
         gdat.maxmcntpdata[d] = max(0.5, amax(sum(gdat.cntpdata[d], 2)))
     gdat.maxmcntpdata = amax(gdat.maxmcntpdata)
     gdat.maxmcntpmodl = gdat.maxmcntpdata
-    gdat.minmcntpmodl = 1e-6 * gdat.maxmcntpdata
-    gdat.minmcntpdata = max(0.5, gdat.minmcntpmodl)
+    gdat.minmcntpdata = max(0.5, 1e-4 * gdat.maxmcntpdata)
+    gdat.minmcntpmodl = 1e-1 * gdat.minmcntpdata
     gdat.maxmcntpresi = ceil(gdat.maxmcntpdata * 0.1)
     gdat.minmcntpresi = -gdat.maxmcntpresi
 
@@ -7263,13 +7287,6 @@ def retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot=None,
         if indxevttplot == -1:
             maps = sum(maps[indxenerplot, ...], axis=1)
         else:
-            print 'maps'
-            summgene(maps)
-            print 'indxenerplot'
-            print indxenerplot
-            print 'indxevttplot'
-            print indxevttplot
-            print
             maps = maps[indxenerplot, :, indxevttplot]
     
     # project the map to 2D
@@ -7293,7 +7310,7 @@ def retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot=None,
     if scal == 'logt':
         maps = log10(maps)
     if imag == None:
-        imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
+        imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='none', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
         return imag
     else:
         imag.set_data(maps)
@@ -7592,8 +7609,8 @@ def writfile(gdattemp, path):
     filearry = h5py.File(path + '.h5', 'w')
     
     # temp
-    if hasattr(gdattemp, 'adisobjt'):
-        delattr(gdattemp, 'adisobjt')
+    #if hasattr(gdattemp, 'adisobjt'):
+    #    delattr(gdattemp, 'adisobjt')
     
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
@@ -7863,7 +7880,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     if psfnevaltype != 'none':
         psfp = sampvarb[getattr(gdat, strgmodl + 'indxfixppsfp')]
         oaxitype = getattr(gdat, strgmodl + 'oaxitype')
-    
+
     bacp = sampvarb[getattr(gdat, strgmodl + 'indxfixpbacp')]
     
     if numbtrap > 0:
@@ -12407,6 +12424,13 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
+                    print 'gdat.refrcolrelem'
+                    print gdat.refrcolrelem
+                    print 'gdat.refrlegdelem'
+                    print gdat.refrlegdelem
+                    print 'q'
+                    print q
+                    print
                     axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.refrcolrelem[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, indxpoplplot, strgfrst=strgfrst, strgseco=strgseco)
@@ -12912,21 +12936,33 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
             
             # superimpose reference elements
 
+            print 'strgbins'
+            print strgbins
+            print 'gdat.allwrefr'
+            print gdat.allwrefr
+            print 'gdat.indxrefr'
+            print gdat.indxrefr
+            print 'gdat.refrliststrgfeat'
+            print gdat.refrliststrgfeat
             if gdat.allwrefr:
                 for q in gdat.indxrefr:
                     if gdat.refrnumbelem[q][indxregiplot] == 0:
                         continue
                     if strgfeat in gdat.refrliststrgfeat[q]:
                         refrsign = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
+                        print 'refrsign'
+                        print refrsign
+                        print
                         if len(refrsign) > 0:
                             if strgfeat != None:
                                 indxelem = where((bins[indxlowr] < refrsign[0, :]) & (refrsign[0, :] < bins[indxuppr]))[0]
                             else:
                                 indxelem = arange(gdat.refrnumbelem[q])
-                            
+                            print 'indxelem'
+                            print indxelem
                             mrkrsize = retr_mrkrsize(gdat, refrsign[0, indxelem], strgfeat)
                             axis.scatter(gdat.anglfact * gdat.refrlgal[q][indxregiplot][0, indxelem], gdat.anglfact * gdat.refrbgal[q][indxregiplot][0, indxelem], \
-                                                                                        s=mrkrsize, alpha=gdat.alphmrkr, marker='*', lw=2, color=gdat.refrcolrelem[q])
+                                                                     s=mrkrsize, alpha=gdat.alphmrkr, marker=gdat.refrlistelemmrkrhits[q], lw=2, color=gdat.refrcolrelem[q])
 
             if a == numbrows - 1:
                 axis.set_xlabel(gdat.labllgaltotl)
@@ -12956,7 +12992,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
         strgtemp = ''
     else:
         strgtemp = strgfeat
-    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'posthistlgalbgalelemstkd%s%s%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
+    path = getattr(gdat, 'path' + gdat.namesampdist + 'finl') + 'posthistlgalbgalelemstkd%s%spop%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
     figr.savefig(path)
     plt.close(figr)
        

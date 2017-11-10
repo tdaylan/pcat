@@ -863,6 +863,7 @@ def init( \
     gdat.listpathwcss = [[] for d in gdat.indxregi]
     gdat.numbpixllgalshft = [[] for d in gdat.indxregi]
     gdat.numbpixlbgalshft = [[] for d in gdat.indxregi]
+    gdat.refrindxpoplassc = [[] for q in gdat.indxrefr] 
     
     # temp -- this allows up to 3 reference populations
     gdat.refrcolrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
@@ -878,9 +879,13 @@ def init( \
             if gdat.exprtype == 'ferm':
                 gdat.refrinfo = True
                 retr_refrferminit(gdat)
+                for q in gdat.indxrefr:
+                    gdat.refrindxpoplassc[q] = gdat.fittindxpopl
             if gdat.exprtype == 'chan':
                 gdat.refrinfo = True
                 retr_refrchaninit(gdat)
+                for q in gdat.indxrefr:
+                    gdat.refrindxpoplassc[q] = gdat.fittindxpopl
             
             for q in gdat.indxrefr:
                 if 'lgal' in gdat.refrliststrgfeat[q] and 'bgal' in gdat.refrliststrgfeat[q]:
@@ -1602,22 +1607,29 @@ def init( \
 
         # rotate reference elements to the spatial coordinate system of PCAT
         # temp -- this does not rotate the uncertainties!
+        if gdat.verbtype > 0:
+            print 'Rotating the reference elements...'
         for q in gdat.indxrefr:
-            for l in gdat.fittindxpopl:
-                for d in gdat.fittindxregipopl[l]:
-                    if len(gdat.listpathwcss[d]) > 0:
-                        listhdun = ap.io.fits.open(gdat.listpathwcss[d])
-                        wcso = ap.wcs.WCS(listhdun[0].header)
-                        skycobjt = ap.coordinates.SkyCoord("galactic", l=gdat.refrlgal[q][d][0, :] * 180. / pi, b=gdat.refrbgal[q][d][0, :] * 180. / pi, unit='deg')
-                        rasc = skycobjt.fk5.ra.degree
-                        decl = skycobjt.fk5.dec.degree
-                        lgal, bgal = wcso.wcs_world2pix(rasc, decl, 0)
-                        lgal -= gdat.numbpixllgalshft[d] + gdat.numbsidecart / 2
-                        bgal -= gdat.numbpixlbgalshft[d] + gdat.numbsidecart / 2
-                        lgal *= gdat.sizepixl
-                        bgal *= gdat.sizepixl
-                        gdat.refrlgal[q][d][0, :] = lgal
-                        gdat.refrbgal[q][d][0, :] = bgal
+            # temp -- this should depend on q
+            for d in gdat.indxregi:
+                if len(gdat.listpathwcss[d]) > 0:
+                    
+                    #listhduntemp = pf.open(gdat.listpathwcss[d])
+                    #listhduntemp.info()
+                    #print repr(listhduntemp[0].header)
+                    
+                    listhdun = ap.io.fits.open(gdat.listpathwcss[d])
+                    wcso = ap.wcs.WCS(listhdun[0].header)
+                    skycobjt = ap.coordinates.SkyCoord("galactic", l=gdat.refrlgal[q][d][0, :] * 180. / pi, b=gdat.refrbgal[q][d][0, :] * 180. / pi, unit='deg')
+                    rasc = skycobjt.fk5.ra.degree
+                    decl = skycobjt.fk5.dec.degree
+                    lgal, bgal = wcso.wcs_world2pix(rasc, decl, 0)
+                    lgal -= gdat.numbpixllgalshft[d] + gdat.numbsidecart / 2
+                    bgal -= gdat.numbpixlbgalshft[d] + gdat.numbsidecart / 2
+                    lgal *= gdat.sizepixl
+                    bgal *= gdat.sizepixl
+                    gdat.refrlgal[q][d][0, :] = bgal
+                    gdat.refrbgal[q][d][0, :] = lgal
 
         # save all reference element features
         for strgfeat in gdat.refrliststrgfeattotl:
@@ -2931,6 +2943,10 @@ def work(pathoutprtag, lock, indxprocwork):
                 print
             
             if gdat.diagmode:
+                if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
+                    print 'Delta log-prior should not be nonzero during a birth or death.'
+                    raise Exception('')
+                    
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'Both likelihood and prior will not change.'
