@@ -3910,7 +3910,7 @@ def setpinit(gdat, boolinitsetp=False):
    
         gdat.indxpixlrofi = where((fabs(lgalheal) < gdat.maxmgangdata) & (fabs(bgalheal) < gdat.maxmgangdata))[0]
         
-        gdat.indxpixlrofimarg = where((fabs(lgalheal) < 1.2 * gdat.maxmgang) & (fabs(bgalheal) < 1.2 * gdat.maxmgang))[0]
+        gdat.indxpixlrofimarg = where((fabs(lgalheal) < 1.2 * gdat.maxmgangdata) & (fabs(bgalheal) < 1.2 * gdat.maxmgangdata))[0]
 
         gdat.lgalgrid = lgalheal
         gdat.bgalgrid = bgalheal
