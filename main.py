@@ -288,11 +288,11 @@ def init( \
         print 'Configuration %s' % gdat.strgcnfg
     
     # check the available run outputs
-    booltemp = chec_runsprev(gdat.strgcnfg)
-    if booltemp:
-        print 'Found a previously completed run.'
-        print
-        return
+    #booltemp = chec_runsprev(gdat.strgcnfg)
+    #if booltemp:
+    #    print 'Found a previously completed run.'
+    #    print
+    #    return
         
     ## number of burned sweeps
     if gdat.numbburn == None:
