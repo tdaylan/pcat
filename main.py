@@ -730,8 +730,7 @@ def init( \
         elemspatevaltype = [[] for l in indxpopl]
         for l in indxpopl:
             # these element types slow down execution!
-            # temp -- clus should go out of this list
-            if elemtype[l] == 'lens' or elemtype[l] == 'lghtline' or elemtype[l] == 'clusvari' or elemtype[l] == 'lghtgausbgrd' or elemtype[l] == 'clus':
+            if elemtype[l] == 'lens' or elemtype[l] == 'lghtline' or elemtype[l] == 'clusvari' or elemtype[l] == 'lghtgausbgrd':
                 elemspatevaltype[l] = 'full'
             else:
                 elemspatevaltype[l] = 'loclhash'

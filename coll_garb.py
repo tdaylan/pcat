@@ -3,16 +3,6 @@ from __init__ import *
 pathdata = os.environ["PCAT_DATA_PATH"] + '/data/outp/'
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
-listrtagdata = fnmatch.filter(os.listdir(pathdata), '2*')
-listrtagimag = fnmatch.filter(os.listdir(pathimag), '2*')
-
-for rtag in listrtagdata:
-    if not rtag in listrtagimag:
-        raise Exception('Data and image folders are not synched!')
-for rtag in listrtagimag:
-    if not rtag in listrtagdata:
-        raise Exception('Data and image folders are not synched!')
-
 liststrgextn = ['/imag/', '/data/outp/']
 
 for strgextn in liststrgextn:
@@ -37,7 +27,7 @@ for strgextn in liststrgextn:
         
             try:
                 numbswep = int(pathfile[pathfile.rfind('_')+1:])
-                if (not os.path.isfile(pathchec) or not booltemp or numbswep < 1000) and not 'mockonly' in rtag:
+                if (not os.path.isfile(pathchec) or not booltemp or numbswep <= 1000) and not 'mockonly' in rtag:
                     if not rtag == '20171025_115229_pcat_lens_mock_syst_lowrtrue_2000000':
                         cmnd = 'rm -rf ' + pathfile
                         os.system(cmnd)
@@ -51,4 +41,22 @@ for strgextn in liststrgextn:
                 print 'Skipping...'
                 pass
             print
+
+listrtagdata = fnmatch.filter(os.listdir(pathdata), '2*')
+listrtagimag = fnmatch.filter(os.listdir(pathimag), '2*')
+
+booltemp = False
+for rtag in listrtagdata:
+    if not rtag in listrtagimag:
+        booltemp = True
+for rtag in listrtagimag:
+    if not rtag in listrtagdata:
+        booltemp = True
+if booltemp:
+    print 'listrtagdata'
+    print listrtagdata
+    print 'listrtagimag'
+    print listrtagimag
+    raise Exception('Data and image folders are not synched!')
+
 

@@ -690,6 +690,7 @@ def updt_stat(gdat, gdatmodi):
             if gdatmodi.propelemsbrtdfnc:
                 thissbrtdfnc = getattr(gdatmodi, 'thissbrtdfncreg%d' % d)
                 nextsbrtdfnc = getattr(gdatmodi, 'nextsbrtdfncreg%d' % d)
+                thissbrtdfnc[gdatmodi.indxcubeeval[0][dd]] = copy(nextsbrtdfnc)
             if gdatmodi.propelemdeflsubh:
                 thisdeflsubh = getattr(gdatmodi, 'thisdeflsubhreg%d' % d)
                 nextdeflsubh = getattr(gdatmodi, 'nextdeflsubhreg%d' % d)
@@ -8474,7 +8475,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 
                         if gdat.diagmode:
                             chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgpfixthis + 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd], indxcubeeval[0][dd])
-                        
+                            chec_statvarb(strgmodl, strgstat, gdatobjt, 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd], indxcubeeval=indxcubeeval[0][dd])
+
                         setattr(gdatobjt, strgpfix + 'sbrtdfncreg%d' % d, sbrt['dfnc'][dd])
 
                 if gdat.diagmode:
@@ -9038,28 +9040,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             print lliktotl
             print
         if gdat.diagmode:
-            if strgmodl == 'fitt' and strgstat == 'this':
-                try:
-                    gdatmodi.thislliktotl
-                    booltemp = gdatmodi.cntrswep >= 1
-                except:
-                    booltemp = False
-                if booltemp:
-                    booltemptemp = False
-                    if type(gdatmodi.thislliktotl) != type(lliktotl):
-                        print 'type(lliktotl)'
-                        print type(lliktotl)
-                        print 'type(gdatmodi.thislliktotl)'
-                        print type(gdatmodi.thislliktotl)
-                        raise Exception('State variables should not change types.')
-                    if abs(gdatmodi.thislliktotl - lliktotl) > 1e-3:
-                        #print 'Warning! State variable should not change when reprocessing the current state.'
-                        print 'lliktotl'
-                        print lliktotl
-                        print 'gdatmodi.thislliktotl'
-                        print gdatmodi.thislliktotl
-                        raise Exception('Warning! State variable should not change when reprocessing the current state.')
-                        print
+            chec_statvarb(strgmodl, strgstat, gdatmodi, 'lliktotl', lliktotl)
 
     else:
         if gdat.verbtype > 1:
@@ -10266,6 +10247,48 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         raise Exception('')
     
         
+def chec_statvarb(strgmodl, strgstat, gdatmodi, strgvarb, nextvarb, indxcubeeval=None):
+    
+    if strgmodl == 'fitt' and strgstat == 'this':
+        try:
+            getattr(gdatmodi, 'this' + strgvarb)
+            booltemp = gdatmodi.cntrswep >= 1
+        except:
+            booltemp = False
+        if booltemp:
+            booltemptemp = False
+            thisvarb = getattr(gdatmodi, 'this' + strgvarb)
+            if type(thisvarb) != type(nextvarb):
+                print 'type(thisvarb)'
+                print type(thisvarb)
+                print 'type(nextvarb)'
+                print type(nextvarb)
+                raise Exception('State variables should not change types.')
+            boolbadd = False
+            if indxcubeeval != None:
+                frac = abs((thisvarb[indxcubeeval] - nextvarb) / thisvarb[indxcubeeval])
+                print 'frac'
+                summgene(frac)
+                if (frac > 1e-3).any():
+                    boolbadd = True
+            else:
+                if abs(thisvarb - nextvarb) > 1e-3:
+                    boolbadd = True
+            if boolbadd:
+                print 'Warning! State variable should not change when reprocessing the current state.'
+                if indxcubeeval != None:
+                    print 'thisvarb[indxcubeeval]'
+                    summgene(thisvarb[indxcubeeval])
+                    print 'nextvarb'
+                    summgene(nextvarb)
+                else:
+                    print 'nextvarb'
+                    print nextvarb
+                    print 'thisvarb'
+                    print thisvarb
+                raise Exception('')
+
+
 def retr_pathoutprtag(rtag):
     
     pathoutprtag = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag + '/'
