@@ -2943,9 +2943,6 @@ def work(pathoutprtag, lock, indxprocwork):
                 print
             
             if gdat.diagmode:
-                if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
-                    print 'Delta log-prior should not be nonzero during a birth or death.'
-                    raise Exception('')
                     
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
