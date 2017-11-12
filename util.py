@@ -1058,7 +1058,6 @@ def retr_refrchaninit(gdat):
     gdat.namefeatsignrefr = 'flux'
     
     gdat.refrlegdelem = ['Xue+2011', 'Wolf+2008']
-    gdat.refrlegdelem = ['Xue+2011']
     
     gdat.listnamefeatamplrefr[0] = 'flux'
     gdat.listnamefeatamplrefr[1] = 'magt'
@@ -1129,8 +1128,6 @@ def retr_refrchanfinl(gdat):
         elif gdat.numbsidecart == 300:
             gdat.numbpixllgalshft[0] += 150
             gdat.numbpixlbgalshft[0] += 150
-            print 'gdat.numbpixllgalshft'
-            print gdat.numbpixllgalshft
         else:
             booltemp = True
     else:
@@ -1195,6 +1192,14 @@ def retr_refrchanfinl(gdat):
     gdat.refrbgal[1][0] = deg2rad(data['_Glat'])
     gdat.refrmagt[1][0] = data['Rmag']
     gdat.refrreds[1][0] = data['MCz']
+    
+    print 'hey'
+    print 'gdat.refrreds[1][0]'
+    summgene(gdat.refrreds[1][0])
+    print gdat.refrreds[1][0]
+    summgene(gdat.refrreds[1][0][where(isfinite(gdat.refrreds[1][0]))])
+    print
+
     #listname = []
     #for k in range(data['MCclass'].size):
     #    if not data['MCclass'][k] in listname:
@@ -2161,18 +2166,29 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print gdatmodi.comppare
 
     if gdat.verbtype > 1 and (gdatmodi.propsplt or gdatmodi.nextaccpprio and gdatmodi.propmerg):
-        print 'lgalfrst: ', gdat.anglfact * gdatmodi.compfrst[0]
-        print 'bgalfrst: ', gdat.anglfact * gdatmodi.compfrst[1]
-        print 'amplfrst: ', gdatmodi.compfrst[2]
-        print 'lgalseco: ', gdat.anglfact * gdatmodi.compseco[0]
-        print 'bgalseco: ', gdat.anglfact * gdatmodi.compseco[1]
-        print 'amplseco: ', gdatmodi.compseco[2]
-        print 'lgalpare: ', gdat.anglfact * gdatmodi.comppare[0]
-        print 'bgalpare: ', gdat.anglfact * gdatmodi.comppare[1]
-        print 'fluxpare: ', gdatmodi.comppare[2]
-        print 'auxipara[0]: ', gdat.anglfact * gdatmodi.auxipara[0]
-        print 'auxipara[1]: ', gdat.anglfact * gdatmodi.auxipara[1]
-        print 'auxipara[2]: ', gdatmodi.auxipara[2]
+        
+        if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
+            print 'elinfrst: ', gdatmodi.compfrst[0]
+            print 'amplfrst: ', gdatmodi.compfrst[1]
+            print 'elinseco: ', gdatmodi.compseco[0]
+            print 'amplseco: ', gdatmodi.compseco[1]
+            print 'elinpare: ', gdatmodi.comppare[0]
+            print 'fluxpare: ', gdatmodi.comppare[1]
+            print 'auxipara[0]: ', gdatmodi.auxipara[0]
+            print 'auxipara[1]: ', gdatmodi.auxipara[1]
+        else:
+            print 'lgalfrst: ', gdat.anglfact * gdatmodi.compfrst[0]
+            print 'bgalfrst: ', gdat.anglfact * gdatmodi.compfrst[1]
+            print 'amplfrst: ', gdatmodi.compfrst[2]
+            print 'lgalseco: ', gdat.anglfact * gdatmodi.compseco[0]
+            print 'bgalseco: ', gdat.anglfact * gdatmodi.compseco[1]
+            print 'amplseco: ', gdatmodi.compseco[2]
+            print 'lgalpare: ', gdat.anglfact * gdatmodi.comppare[0]
+            print 'bgalpare: ', gdat.anglfact * gdatmodi.comppare[1]
+            print 'fluxpare: ', gdatmodi.comppare[2]
+            print 'auxipara[0]: ', gdat.anglfact * gdatmodi.auxipara[0]
+            print 'auxipara[1]: ', gdat.anglfact * gdatmodi.auxipara[1]
+            print 'auxipara[2]: ', gdatmodi.auxipara[2]
                 
     # change the number of elements
     if gdatmodi.propbrth or gdatmodi.propsplt:
@@ -3303,10 +3319,10 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, 'lablfracsubhdelt' + strgregi, r'<f>_{\rm{r,sub}}')
     
     gdat.minmreds = 0.
-    gdat.maxmreds = 8.
+    gdat.maxmreds = 5.
     
-    gdat.minmmagt = 20.
-    gdat.maxmmagt = 30.
+    gdat.minmmagt = 19.
+    gdat.maxmmagt = 28.
 
     gdat.scalmaxmnumbelem = 'logt'
     gdat.scalmedilliktotl = 'logt'
@@ -12424,13 +12440,6 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, indxpoplplot
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
-                    print 'gdat.refrcolrelem'
-                    print gdat.refrcolrelem
-                    print 'gdat.refrlegdelem'
-                    print gdat.refrlegdelem
-                    print 'q'
-                    print q
-                    print
                     axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphmrkr, color=gdat.refrcolrelem[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
     plot_sigmcont(gdat, axis, indxpoplplot, strgfrst=strgfrst, strgseco=strgseco)

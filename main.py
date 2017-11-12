@@ -495,7 +495,7 @@ def init( \
                 gdat.binsenerfull = array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
             if gdat.anlytype.startswith('extr'):
                 gdat.binsenerfull = array([0.5, 2., 8.])
-            if gdat.anlytype == 'spec':
+            if gdat.anlytype.startswith('spec'):
                 gdat.binsenerfull = logspace(log10(0.5), log10(10.), 21)
         if gdat.exprtype == 'hubb':
             # temp
@@ -525,9 +525,8 @@ def init( \
         else:
             backtype = [1., 'sbrtfdfmsmthrec8pntsnorm.fits']
     if gdat.exprtype == 'chan':
-        
         # particle background
-        if gdat.anlytype == 'spec':
+        if gdat.anlytype.startswith('spec'):
             # temp -- this is fake!
             sbrtparttemp = array([70.04, 70.04, 12.12, 15.98, 10.79, 73.59, 73.59])
             binsenerpart = logspace(log10(0.5), log10(10.), 6)
@@ -538,7 +537,8 @@ def init( \
             backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
         if gdat.anlytype.startswith('extr'):
             backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
-        if gdat.anlytype == 'spec':
+        
+        if gdat.anlytype.startswith('spec'):
             backtype = [[1e2, 2.], backtypetemp]
         else:
             backtype = [1., backtypetemp]
@@ -547,7 +547,7 @@ def init( \
     if gdat.exprtype == 'sdyn':
         backtype = [1.]
     setp_varbvalu(gdat, 'backtype', backtype)
-        
+
     setpprem(gdat)
     
     if gdat.exprtype == 'chan':
@@ -656,7 +656,7 @@ def init( \
     
     #### boolean flag background
     if gdat.exprtype == 'chan':
-        if gdat.anlytype == 'spec':
+        if gdat.numbpixlfull == 1:
             specback = [True, True]
         else:
             specback = [False, True]
@@ -948,7 +948,7 @@ def init( \
         back = 0
         # sky background + unresolved
         if gdat.exprtype == 'chan':
-            if gdat.anlytype == 'spec':
+            if gdat.numbpixlfull == 1:
                 bacp = [1e0, 1e2]
                 setp_varblimt(gdat, 'bacp', bacp, back=0, regi='full')
             else:
@@ -1183,7 +1183,7 @@ def init( \
         else:
             # sky background
             if gdat.exprtype == 'chan':
-                if gdat.anlytype == 'spec':
+                if gdat.numbpixlfull == 1:
                     bacp = 10.
                 else:
                     bacp = 1.
@@ -1472,12 +1472,12 @@ def init( \
         
             ## preprocess reference element features
             for q in gdat.indxrefr:
-                for l in gdat.fittindxpopl:
-                    for d in gdat.fittindxregipopl[l]:
-                        gdat.refrgang[q][d] = empty((3, gdat.refrlgal[q][d].shape[1]))
-                        gdat.refraang[q][d] = empty((3, gdat.refrlgal[q][d].shape[1]))
-                        gdat.refrgang[q][d][0, :] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
-                        gdat.refraang[q][d][0, :] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
+                # temp -- this should depend on q
+                for d in gdat.indxregi:
+                    gdat.refrgang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
+                    gdat.refraang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
+                    gdat.refrgang[q][d][0, :] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
+                    gdat.refraang[q][d][0, :] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
         
     # temp
     #if gdat.refrnumbelem > 0:
@@ -2165,12 +2165,12 @@ def optihess(gdat, gdatmodi):
                                 
                                 stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                                 if not isfinite(stdv):
-                                    #raise Exception('Hessian is infinite.')
-                                    print 'Hessian is infinite. Replacing with unity.'
+                                    #print 'Hessian is infinite. Replacing with unity.'
                                     print 'deltlpos'
                                     print deltlpos
                                     print
                                     stdv = 1.
+                                    raise Exception('Hessian is infinite.')
                                 if strgcomp == gdat.fittnamefeatampl[indxpoplmoditemp[0]]:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
@@ -2918,7 +2918,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 
             if gdat.fittnumbtrap == 0 and gdatmodi.propelem:
                 raise Exception('')
-
+            
         # determine the acceptance probability
         gdatmodi.nextaccpprop = gdatmodi.nextaccpprio and gdatmodi.nextaccppsfn
         if gdatmodi.nextaccpprop:
@@ -2944,6 +2944,9 @@ def work(pathoutprtag, lock, indxprocwork):
             
             if gdat.diagmode:
                     
+                if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
+                    raise Exception('Delta log-prior should be zero during a birth or or death.')
+
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'Both likelihood and prior will not change.'
