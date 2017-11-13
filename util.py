@@ -9505,12 +9505,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)
                             for d in gdat.fittindxregipopl[l]:
                                 dictelem[l][d][name] = zeros(numbelem[l][d])
+                                print 'name'
+                                print name
                                 print 'indxelemrefrasschits'
                                 print indxelemrefrasschits
                                 print 'indxelemrefrasschits[q][l][d]'
                                 print indxelemrefrasschits[q][l][d]
                                 print 'refrfeat[q][d]'
                                 print refrfeat[q][d]
+                                summgene(refrfeat[q][d])
                                 print
 
                                 if len(refrfeat[q][d]) > 0 and len(indxelemrefrasschits[q][l][d]) > 0:

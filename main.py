@@ -1672,10 +1672,21 @@ def init( \
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     if len(refrfeat[q][d]) > 0:
                         indx = where(logical_not(isfinite(refrfeat[q][d])))[0]
+                        if strgfeat == 'reds':
+                            print 'heeeey'
+                            print 'indx'
+                            print indx
+                            print 'refrfeat[q][d]'
+                            print refrfeat[q][d]
+
                         if indx.size > 0:
                             refrfeat[q][d][indx] = 0.
                             if gdat.verbtype > 0:
                                 print 'Warning: Provided reference element feature is not finite. Defaulting to 0...'
+                        if strgfeat == 'reds':
+                            print 'heeeey'
+                            print 'refrfeat[q][d]'
+                            print refrfeat[q][d]
         
         # bin reference element features
         for q in gdat.indxrefr:
