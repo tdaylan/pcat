@@ -1193,13 +1193,6 @@ def retr_refrchanfinl(gdat):
     gdat.refrmagt[1][0] = data['Rmag']
     gdat.refrreds[1][0] = data['MCz']
     
-    print 'hey'
-    print 'gdat.refrreds[1][0]'
-    summgene(gdat.refrreds[1][0])
-    print gdat.refrreds[1][0]
-    summgene(gdat.refrreds[1][0][where(isfinite(gdat.refrreds[1][0]))])
-    print
-
     #listname = []
     #for k in range(data['MCclass'].size):
     #    if not data['MCclass'][k] in listname:
@@ -3758,10 +3751,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxproc = arange(gdat.numbproc)
 
     fileh5py = h5py.File(gdat.pathdata + 'inpt/adis.h5','r')
-    reds = fileh5py['reds'][()]
-    adis = fileh5py['adis'][()]
-    adistdim = fileh5py['adistdim'][()]
-    gdat.adisobjt = interp1d_pick(reds, adis)
+    gdat.redsintp = fileh5py['reds'][()]
+    gdat.adisintp = fileh5py['adis'][()]
+    #adistdim = fileh5py['adistdim'][()]
+    gdat.adisobjt = interp1d_pick(gdat.redsintp, gdat.adisintp)
     fileh5py.close()
     
     gdat.kprccmtr = 3.086e21
@@ -4032,15 +4025,14 @@ def setpinit(gdat, boolinitsetp=False):
    
                 gdat.expotemp = [[] for d in gdat.indxregi]
                 for d in gdat.indxregi:
-                    gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
                     if gdat.forccart:
+                        gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
                         for i in gdat.indxenerfull:
                             for m in gdat.indxevttfull:
                                 gdat.expotemp[d][i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d][i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
                                                                                        minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
                                                                                        minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
-                    else:
-                        gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
+                    gdat.expotemp[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
                 gdat.expo = gdat.expotemp
 
     # check the exposure map data structure
@@ -4050,7 +4042,10 @@ def setpinit(gdat, boolinitsetp=False):
     for d in gdat.indxregi:
         if gdat.expo[d].ndim != 3:
             booltemp = True
+    
     if booltemp:
+        print 'gdat.expo[d]'
+        summgene(gdat.expo[d])
         raise Exception('Exposure does not have the right data structure. It should be a list of 3D arrays.')
 
     for d in gdat.indxregi:
@@ -7326,7 +7321,7 @@ def retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot=None,
     if scal == 'logt':
         maps = log10(maps)
     if imag == None:
-        imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='none', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
+        imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
         return imag
     else:
         imag.set_data(maps)
@@ -7635,8 +7630,9 @@ def writfile(gdattemp, path):
                                                         isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
             filearry.create_dataset(attr, data=valu)
         else:
-           
-            setattr(gdattemptemp, attr, valu)
+            # temp -- make sure interpolation objects are not written.
+            if attr != 'adisobjt':
+                setattr(gdattemptemp, attr, valu)
     
     print 'Writing to %s...' % path
 
@@ -9500,6 +9496,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 setattr(gdatobjt, strgpfix + 'indxelemrefrasscmiss', indxelemrefrasscmiss)
                 setattr(gdatobjt, strgpfix + 'indxelemfittasscfals', indxelemfittasscfals)
                 
+                print 'collecting...'
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
                         # collect the associated reference element feature for each fitting element 
@@ -9508,6 +9505,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)
                             for d in gdat.fittindxregipopl[l]:
                                 dictelem[l][d][name] = zeros(numbelem[l][d])
+                                print 'indxelemrefrasschits'
+                                print indxelemrefrasschits
+                                print 'indxelemrefrasschits[q][l][d]'
+                                print indxelemrefrasschits[q][l][d]
+                                print 'refrfeat[q][d]'
+                                print refrfeat[q][d]
+                                print
+
                                 if len(refrfeat[q][d]) > 0 and len(indxelemrefrasschits[q][l][d]) > 0:
                                     dictelem[l][d][name][indxelemfittasschits[q][l][d]] = refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
 
@@ -9529,6 +9534,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 # luminosity
                 if 'reds' in liststrgfeat[l] and 'flux' in liststrgfeat[l]:
                     for d in indxregipopl[l]:
+                        print 'dictelem[l][d][redswo08]'
+                        summgene( dictelem[l][d]['redswo08'])
+                        print
+
                         ldis = (1. + dictelem[l][d]['redswo08'])**2 * gdat.adisobjt(dictelem[l][d]['redswo08'])
                         lumi = 4. * pi * ldis**2 * dictelem[l][d]['flux']
                         dictelem[l][d]['lumi'] = lumi
@@ -10682,15 +10691,21 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         gdat.meanmemoresi = mean(gdat.listmemoresi, 1)
         gdat.derimemoresi = (gdat.meanmemoresi[-1] - gdat.meanmemoresi[0]) / gdat.numbswep
     
+        print 'heeey'
+
         # write the final gdat object
         path = gdat.pathoutprtag + 'gdatfinl'
         if gdat.verbtype > 0:
             print 'Writing the global object to %s...' % path
+        print 'meeey'
         writfile(gdat, path) 
-        
+        print 'yeeey'
+       
+        print 'writing gdatfinl...'
         filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
         filestat.write('gdatfinl written.\n')
-    
+   
+    print 'checking post-plots...'
     booltemp = chec_statfile(rtag, 'post-plots')
     if not booltemp:
         if gdat.makeplot and gdat.makeplotpost:

@@ -53,10 +53,6 @@ for rtag in listrtagimag:
     if not rtag in listrtagdata:
         booltemp = True
 if booltemp:
-    print 'listrtagdata'
-    print listrtagdata
-    print 'listrtagimag'
-    print listrtagimag
-    raise Exception('Data and image folders are not synched!')
+    print 'Data and image folders are not synched!'
 
 

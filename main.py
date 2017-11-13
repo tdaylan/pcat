@@ -2312,6 +2312,9 @@ def work(pathoutprtag, lock, indxprocwork):
     path = pathoutprtag + 'gdatinit'
     gdat = readfile(path) 
     
+    # redefine interpolation variables
+    gdat.adisobjt = interp1d_pick(gdat.redsintp, gdat.adisintp)
+    
     timereal = time.time()
     timeproc = time.clock()
     
@@ -2943,9 +2946,10 @@ def work(pathoutprtag, lock, indxprocwork):
                 print
             
             if gdat.diagmode:
-                    
-                if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
-                    raise Exception('Delta log-prior should be zero during a birth or or death.')
+                 
+                # temp -- this is not a problem because of meanelem proposals
+                #if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
+                #    raise Exception('Delta log-prior should be zero during a birth or or death.')
 
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
