@@ -3007,25 +3007,11 @@ def retr_cntspnts(gdat, listposi, spec, indxregipnts):
     else:
         elin = listposi[0]
         indxpixlpnts = zeros_like(elin, dtype=int)
-    print 'elin'
-    summgene(elin)
     for k in range(spec.shape[1]):
-        print 'k'
-        print k
-        print 'gdat.expototl[indxregipnts[k]][:, indxpixlpnts[k]]'
-        summgene(gdat.expototl[indxregipnts[k]][:, indxpixlpnts[k]])
-        print 'spec[:, k]'
-        summgene(spec[:, k])
-        print
-
         cnts[:, k] += spec[:, k] * gdat.expototl[indxregipnts[k]][:, indxpixlpnts[k]]
     if gdat.enerdiff:
         cnts *= gdat.deltener[:, None]
     cnts = sum(cnts, axis=0)
-
-    print 'cnts'
-    summgene(cnts)
-    print
 
     return cnts
 
@@ -3594,7 +3580,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.minmcnts = 1e1
         gdat.maxmcnts = 1e5
     if gdat.exprtype == 'chan':
-        if anlytype == 'spec':
+        if gdat.anlytype == 'spec':
             gdat.minmcnts = 1e3
             gdat.maxmcnts = 1e7
         else:
@@ -4300,6 +4286,9 @@ def setpinit(gdat, boolinitsetp=False):
     for strgmodl in gdat.liststrgmodl:
         indxback = getattr(gdat, strgmodl + 'indxback')
         sbrtbacknorm = getattr(gdat, strgmodl + 'sbrtbacknorm')
+        
+        print 'sbrtbacknorm'
+        print type(sbrtbacknorm)
         
         if gdat.pixltype == 'heal':
             sbrtbackhealfull = copy(sbrtbacknorm[meshgrid(indxback, gdat.indxregi, gdat.indxener, gdat.indxpixlfull, gdat.indxevtt, indexing='ij')])
@@ -9550,24 +9539,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)
                             for d in gdat.fittindxregipopl[l]:
                                 dictelem[l][d][name] = zeros(numbelem[l][d])
-                                print 'meeeey'
+                                if len(refrfeat[q][d]) > 0 and len(indxelemrefrasschits[q][l][d]) > 0:
+                                    dictelem[l][d][name][indxelemfittasschits[q][l][d]] = refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
+                
+                # temp
+                for q in gdat.indxrefr:
+                    for l in gdat.fittindxpopl:
+                        for namefeatrefr in gdat.refrliststrgfeatonly[q][l]:
+                            name = namefeatrefr + gdat.listnamerefr[q]
+                            if namefeatrefr == 'reds' or namefeatrefr == 'magt':
                                 print 'name'
                                 print name
-                                print 'qd'
-                                print q, d
-                                print 'len(refrfeat[q][d])'
-                                print len(refrfeat[q][d])
-                                print 'indxelemrefrasschits[q][l][d]'
-                                print indxelemrefrasschits[q][l][d]
-                                if len(refrfeat[q][d]) > 0 and len(indxelemrefrasschits[q][l][d]) > 0:
-                                    print 'heeeey'
-                                    print 'refrfeat[q][d]'
-                                    summgene(refrfeat[q][d])
-                                    print 'refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]'
-                                    print refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
+                                for d in gdat.fittindxregipopl[l]:
+                                    print 'dictelem[l][d][name]'
+                                    print dictelem[l][d][name]
                                     print
-
-                                    dictelem[l][d][name][indxelemfittasschits[q][l][d]] = refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
 
             # region indices for elements
             indxregielem = [[[] for d in indxregipopl[l]] for l in indxpopl]
@@ -9923,6 +9909,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             temp = zeros((gdat.numbbinsplot, gdat.numbener))
                         else:
                             temp = zeros(gdat.numbbinsplot)
+                        print 'strgfeat'
+                        print strgfeat
+                        
                         dictelem[l][d]['hist' + strgfeat] = temp
                         if strgfeat == 'specplot' or strgfeat == 'deflprof':
                             continue
@@ -9942,8 +9931,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 #if indx.size > 0:
                                 #    dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat[:-4]][indx], bins)[0]
                             else:
+                                print 'strgfeat'
+                                print strgfeat
                                 if len(dictelem[l][d][strgfeat]) > 0 and len(listindxelemfilt[0][l][d]) > 0:
                                     # temp
+                                    print 'histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]'
+                                    print histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]
+                                    print
+
                                     try:
                                         dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]
                                     except:
@@ -10734,6 +10729,8 @@ def proc_finl(gdat=None, rtag=None, prio=False):
                 if 'asscref' in strgchan:
                     print 'listtemp'
                     summgene(listtemp)
+                    print 'strgchan'
+                    print strgchan
                     posttemp = zeros((3, listtemp.shape[1]))
                     meantemp = zeros(listtemp.shape[1])
                     for k in range(listtemp.shape[1]):
@@ -12284,28 +12281,18 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtlensmea%dreg%d' % (b, indxregiplot), mometype='errr')
                 cntr += 1
             
-            print 'beginning lines'
-            print 'cntr'
-            print cntr
-            print 'listydat.T'
-            print listydat.T
             if gdat.numbpixl == 1 and strgstat != 'post':
                 cntrline = cntr
                 indxploteleminit.append(cntr)
                 for l in indxpopl:
                     for d in indxregipopl[l]:
                         if liststrgmodl[a] == 'true':
-                            print 'gdat.truespec'
-                            print gdat.truespec
                             for k in range(gdat.truenumbelem[l][d]):
                                 listydat[cntr, :] = getattr(listgdatobjt[a], liststrgmodl[a] + 'spec')[l][d][0, :, k]
                                 cntr += 1
                                 if k == gdat.truenumbelem[l][d] - 1:
                                     indxplotelemendd.append(k)
                         else:   
-                            print 'gdatmodi.thisspec'
-                            print gdatmodi.thisspec
-
                             for k in range(numbelem[l][d]):
                                 listydat[cntr, :] = getattr(listgdatobjt[a], strgstat + 'spec')[l][d][:, k]
                                 cntr += 1
@@ -12316,12 +12303,6 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 else:
                     listlegdsbrtspec = listlegdsbrtspec[:cntr] + [None] + listlegdsbrtspec[cntr:]
                 
-            print 'beginning total'
-            print 'cntr'
-            print cntr
-            print 'listydat.T'
-            print listydat.T
-
             ## total model
             if numblablsbrt > 1:
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot))
@@ -12878,13 +12859,6 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, indxregipl
     xdat = copy(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot][0, :])
     xerr = tdpy.util.retr_errrvarb(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot])
     
-    print 'strgfeat'
-    print strgfeat
-    print 'ql'
-    print q, l
-    print 'getattr(gdat, refr + strgfeat)[q][indxregiplot]'
-    print getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
-
     minmplot = getattr(gdat, 'minm' + strgfeat)
     maxmplot = getattr(gdat, 'maxm' + strgfeat)
     binsplot = getattr(gdat, 'bins' + strgfeat)
@@ -12911,32 +12885,7 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, q, l, strgfeat, indxregipl
     else:
         indx = where(ydat > 0.)[0]
     if indx.size > 0:
-        print 'indx'
-        print indx
-        print
-        print 'xdat'
-        summgene(xdat)
-        print 'ydat'
-        summgene(ydat)
-        print 'xerr'
-        print xerr
-        summgene(xerr)
-        print 'yerr'
-        summgene(yerr)
-        print
-        print 'xdat[indx]'
-        summgene(xdat[indx])
-        print 'ydat[indx]'
-        summgene(ydat[indx])
-        print 'xerr[:, indx]'
-        summgene(xerr[:, indx])
-        print 'yerr[:, indx]'
-        summgene(yerr[:, indx])
-        print 
         axis.errorbar(xdat[indx], ydat[indx], ls='', yerr=yerr[:, indx], xerr=xerr[:, indx], lw=1, marker='o', markersize=5, color='black')
-    print
-    print
-    print
 
     # temp -- plot associations inside the comparison area
     if plotdiff:

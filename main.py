@@ -362,11 +362,6 @@ def init( \
         elemtype = ['clus']
     setp_varbvalu(gdat, 'elemtype', elemtype)
     
-    if gdat.datatype == 'mock':
-        print 'gdat.trueelemtype'
-        print gdat.trueelemtype
-        print
-    
     # feature correlated with the significance of elements
     gdat.namefeatsign = 'deltllik'
     if gdat.datatype == 'mock':
@@ -1613,11 +1608,6 @@ def init( \
             # temp -- this should depend on q
             for d in gdat.indxregi:
                 if len(gdat.listpathwcss[d]) > 0:
-                    
-                    #listhduntemp = pf.open(gdat.listpathwcss[d])
-                    #listhduntemp.info()
-                    #print repr(listhduntemp[0].header)
-                    
                     listhdun = ap.io.fits.open(gdat.listpathwcss[d])
                     wcso = ap.wcs.WCS(listhdun[0].header)
                     skycobjt = ap.coordinates.SkyCoord("galactic", l=gdat.refrlgal[q][d][0, :] * 180. / pi, b=gdat.refrbgal[q][d][0, :] * 180. / pi, unit='deg')
@@ -1640,11 +1630,6 @@ def init( \
                 gdat.refraang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
                 gdat.refrgang[q][d][:, :] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
                 gdat.refraang[q][d][:, :] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
-                print 'gdat.refrgang[q][d]' 
-                summgene(gdat.refrgang[q][d])
-                print 'gdat.refraang[q][d]'
-                summgene(gdat.refraang[q][d])
-                print
 
         # save all reference element features
         for strgfeat in gdat.refrliststrgfeattotl:
@@ -3129,19 +3114,6 @@ def work(pathoutprtag, lock, indxprocwork):
                 else:
                     print '%30s %50s %10s %10.5g %10.5g %10.5g %10.5g %10.5g %10.5g' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % \
                                    (percaccp, numbaccp, numbtotl), strgstdvstdp, deltlliktotlmean, deltlpritotlmean, lrppmean, ljcbmean, lpautotlmean, lpridistmean)
-                
-                # temp
-                if k == 0 and deltlliktotlmean != 0. and indxswepprop.size > 0:
-                    print 'indxswepprop'
-                    print indxswepprop
-                    print 'workdict[listdeltlliktotl][indxswepprop, 0]'
-                    print workdict['listdeltlliktotl'][indxswepprop, 0]
-                    print 'workdict[listdeltlpritotl][indxswepprop, 0]'
-                    print workdict['listdeltlpritotl'][indxswepprop, 0]
-                    print 'deltlliktotlmean'
-                    print deltlliktotlmean
-                    raise Exception('')
-                    
                 
             if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
                 print 'Tempered burn-in'
