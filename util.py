@@ -1196,11 +1196,6 @@ def retr_refrchanfinl(gdat):
     gdat.refrmagt[1][0] = data['Rmag']
     gdat.refrreds[1][0] = data['MCz']
   
-    print 'gdat.refrreds'
-    print gdat.refrreds
-    summgene(gdat.refrreds)
-    print
-
     #listname = []
     #for k in range(data['MCclass'].size):
     #    if not data['MCclass'][k] in listname:
@@ -5582,6 +5577,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                                                                                         numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
                                                                                         minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
                                                                                         minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).T
+                        print 'heey'
                         sbrtbacknormtemp = sbrtbacknormtemptemp
                     
                     if sbrtbacknormtemp.shape[2] != gdat.numbsidecart:
@@ -9526,7 +9522,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             refrfeat = getattr(gdat, 'refr' + namefeatrefr)
                             for d in gdat.fittindxregipopl[l]:
                                 dictelem[l][d][name] = zeros(numbelem[l][d])
+                                print 'meeeey'
+                                print 'name'
+                                print name
+                                print 'qd'
+                                print q, d
+                                print 'len(refrfeat[q][d])'
+                                print len(refrfeat[q][d])
+                                print 'indxelemrefrasschits[q][l][d]'
+                                print indxelemrefrasschits[q][l][d]
                                 if len(refrfeat[q][d]) > 0 and len(indxelemrefrasschits[q][l][d]) > 0:
+                                    print 'heeeey'
+                                    print 'refrfeat[q][d]'
+                                    summgene(refrfeat[q][d])
+                                    print 'refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]'
+                                    print refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
+                                    print
+
                                     dictelem[l][d][name][indxelemfittasschits[q][l][d]] = refrfeat[q][d][0, indxelemrefrasschits[q][l][d]]
 
             # region indices for elements
@@ -10884,11 +10896,12 @@ def proc_cntpdata(gdat):
     ## data counts
     if gdat.datatype == 'inpt':
         gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata, gdat.indxregi, gdat.indxcubeeval)
-    
-
+   
     # correct the likelihoods for the constant data dependent factorial
     gdat.llikoffs = [[] for d in gdat.indxregi]
     for d in gdat.indxregi:
+        print 'gdat.cntpdata[d]'
+        summgene(gdat.cntpdata[d])
         gdat.llikoffs[d] = sum(sp.special.gammaln(gdat.cntpdata[d] + 1))
         if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
             print 'gdat.deltener'
@@ -12378,7 +12391,9 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
         if gdat.numbener > 1:
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
             
-            limtydat = array([gdat.factylimsbrt[0] * amin(listydat[cntrdata, :] * factener), gdat.factylimsbrt[1] * amax(listydat[cntrdata, :] * factener)]) * factydat
+            minmydat = gdat.factylimsbrt[0] * amax(listydat[cntrdata, :] * factener) * factydat * 1e-4
+            maxmydat = gdat.factylimsbrt[1] * amax(listydat[cntrdata, :] * factener) * factydat
+            limtydat = [minmydat, maxmydat]
             axis.set_ylim(limtydat)
             axis.set_yscale('log')
             axis.set_xlabel(gdat.lablenertotl)

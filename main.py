@@ -1167,6 +1167,10 @@ def init( \
                 setp_varbvalu(gdat, 'magfdistmean', 10**8.5, popl=l)
                 setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
                 setp_varbvalu(gdat, 'dglcdistslop', 2., popl=l)
+    
+        print 'gdat.trueelemtype'
+        print gdat.trueelemtype
+        print
 
         if gdat.exprtype == 'ferm':
 
@@ -1471,15 +1475,6 @@ def init( \
                             if refrfeat[q][d].ndim == 1:
                                 refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
-            ## preprocess reference element features
-            for q in gdat.indxrefr:
-                # temp -- this should depend on q
-                for d in gdat.indxregi:
-                    gdat.refrgang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
-                    gdat.refraang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
-                    gdat.refrgang[q][d][0, :] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
-                    gdat.refraang[q][d][0, :] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])
-        
     # temp
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
@@ -1632,6 +1627,16 @@ def init( \
                     gdat.refrlgal[q][d][0, :] = bgal
                     gdat.refrbgal[q][d][0, :] = lgal
 
+        ## preprocess reference element features
+        for q in gdat.indxrefr:
+            # temp -- this should depend on q
+            for d in gdat.indxregi:
+                # temp -- this does not properly calculate uncertainties
+                gdat.refrgang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
+                gdat.refraang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
+                gdat.refrgang[q][d] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
+                gdat.refraang[q][d] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
+        
         # save all reference element features
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeattotl = [[] for q in gdat.indxrefr]
@@ -1666,11 +1671,6 @@ def init( \
                 gdat.refrnumbelem[q][d] = gdat.refrlgal[q][d].shape[1]
             gdat.refrnumbelemtotl += sum(gdat.refrnumbelem[q]) 
         
-        print 'gdat.refrreds'
-        print gdat.refrreds
-        summgene(gdat.refrreds)
-        print
-
         ## check that all reference element features are finite
         for d in gdat.indxregi:
             for q in gdat.indxrefr:
@@ -1694,11 +1694,6 @@ def init( \
                             print indxbadd
                         #raise Exception('')
         
-        print 'gdat.refrreds'
-        print gdat.refrreds
-        summgene(gdat.refrreds)
-        print
-
         # bin reference element features
         for q in gdat.indxrefr:
             for d in gdat.indxregi:
@@ -2663,7 +2658,7 @@ def work(pathoutprtag, lock, indxprocwork):
             gdatmodi.nextpercswep = 5 * int(20. * gdatmodi.cntrswep / gdat.numbswep) 
             if gdatmodi.nextpercswep > gdatmodi.percswepsave or thismakefram:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
-                minmswepintv = max(0, gdatmodi.cntrswep - 100)
+                minmswepintv = max(0, gdatmodi.cntrswep - 10000)
                 maxmswepintv = gdatmodi.cntrswep + 1
                 if maxmswepintv > minmswepintv:
                     boollogg = True
