@@ -1290,10 +1290,13 @@ def init( \
         liststrgpdfnprio = getattr(gdat, strgmodl + 'liststrgpdfnprio')
         for l in indxpopl:
             for strgfeat, strgpdfn in zip(liststrgfeatprio[l], liststrgpdfnprio[l]):
-                if strgpdfn == 'self':
+                if strgpdfn == 'self' or strgpdfn == 'logt':
                     minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
                     maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
-                    fact = maxm - minm
+                    if strgpdfn == 'self':
+                        fact = maxm - minm
+                    if strgpdfn == 'logt':
+                        fact = log(maxm / minm)
                     setattr(gdat, strgmodl + 'fact' + strgfeat, fact)
     # intermediate setup
 
@@ -1635,9 +1638,14 @@ def init( \
                 # temp -- this does not properly calculate uncertainties
                 gdat.refrgang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
                 gdat.refraang[q][d] = zeros((3, gdat.refrlgal[q][d].shape[1]))
-                gdat.refrgang[q][d] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
-                gdat.refraang[q][d] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
-        
+                gdat.refrgang[q][d][:, :] = retr_gang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
+                gdat.refraang[q][d][:, :] = retr_aang(gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :])[None, :]
+                print 'gdat.refrgang[q][d]' 
+                summgene(gdat.refrgang[q][d])
+                print 'gdat.refraang[q][d]'
+                summgene(gdat.refraang[q][d])
+                print
+
         # save all reference element features
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeattotl = [[] for q in gdat.indxrefr]
@@ -1947,7 +1955,7 @@ def initarry( \
         for strgvarb in liststrgvarboutp:
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
-    dictvarb['boolarry'] = True
+    dictvarb['boolarry'] = strgcnfgextnexec == None
     
     listgdat = []
     listprid = []
