@@ -630,6 +630,7 @@ def init( \
     if gdat.numbener > 1:
         gdat.enerpivt = gdat.meanener[gdat.indxenerpivt]
     gdat.indxener = arange(gdat.numbener, dtype=int)
+    gdat.indxenerinde = setdiff1d(gdat.indxener, gdat.indxenerpivt)
     
     # set mock sample vector indices
     setp_varbvalu(gdat, 'maxmnumbelem', 400, popl='full', regi='full')
@@ -1665,29 +1666,39 @@ def init( \
                 gdat.refrnumbelem[q][d] = gdat.refrlgal[q][d].shape[1]
             gdat.refrnumbelemtotl += sum(gdat.refrnumbelem[q]) 
         
+        print 'gdat.refrreds'
+        print gdat.refrreds
+        summgene(gdat.refrreds)
+        print
+
         ## check that all reference element features are finite
         for d in gdat.indxregi:
             for q in gdat.indxrefr:
                 for strgfeat in gdat.refrliststrgfeat[q]:
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     if len(refrfeat[q][d]) > 0:
-                        indx = where(logical_not(isfinite(refrfeat[q][d])))[0]
-                        if strgfeat == 'reds':
-                            print 'heeeey'
-                            print 'indx'
-                            print indx
-                            print 'refrfeat[q][d]'
-                            print refrfeat[q][d]
-
-                        if indx.size > 0:
-                            refrfeat[q][d][indx] = 0.
+                        indxbadd = where(logical_not(isfinite(refrfeat[q][d])))
+                        if indxbadd[0].size > 0:
+                            refrfeat[q][d][indxbadd] = 0.
                             if gdat.verbtype > 0:
                                 print 'Warning: Provided reference element feature is not finite. Defaulting to 0...'
-                        if strgfeat == 'reds':
-                            print 'heeeey'
-                            print 'refrfeat[q][d]'
-                            print refrfeat[q][d]
+                        
+                    if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
+                        print 'Warning! A reference element feature is all zeros!'
+                        print 'strgfeat'
+                        print strgfeat
+                        print 'refrfeat[q][d]'
+                        summgene(refrfeat[q][d])
+                        if len(refrfeat[q][d]) > 0:
+                            print 'indxbadd'
+                            print indxbadd
+                        #raise Exception('')
         
+        print 'gdat.refrreds'
+        print gdat.refrreds
+        summgene(gdat.refrreds)
+        print
+
         # bin reference element features
         for q in gdat.indxrefr:
             for d in gdat.indxregi:
@@ -2176,12 +2187,12 @@ def optihess(gdat, gdatmodi):
                                 
                                 stdv = 1. / sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                                 if not isfinite(stdv):
-                                    #print 'Hessian is infinite. Replacing with unity.'
+                                    print 'Hessian is infinite. Replacing with unity.'
                                     print 'deltlpos'
                                     print deltlpos
                                     print
                                     stdv = 1.
-                                    raise Exception('Hessian is infinite.')
+                                    #raise Exception('Hessian is infinite.')
                                 if strgcomp == gdat.fittnamefeatampl[indxpoplmoditemp[0]]:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**2. / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
@@ -2323,9 +2334,6 @@ def work(pathoutprtag, lock, indxprocwork):
     path = pathoutprtag + 'gdatinit'
     gdat = readfile(path) 
     
-    # redefine interpolation variables
-    gdat.adisobjt = interp1d_pick(gdat.redsintp, gdat.adisintp)
-    
     timereal = time.time()
     timeproc = time.clock()
     
@@ -2375,9 +2383,11 @@ def work(pathoutprtag, lock, indxprocwork):
         else:
             strgcnfg = gdat.strgcnfg
         path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
+        print 'heeey'
         if os.path.exists(path):
             boolinitreco = True
             thisfile = h5py.File(path, 'r')
+            print 'heeey'
             if gdat.verbtype > 0:
                 print 'Initializing from the state %s...' % path
                 print 'Likelihood:'
@@ -2404,6 +2414,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 if gdat.verbtype > 0:
                     print 'Number of elements found:'
                     print cntr
+            print 'heeey'
 
             print 'attributes in the file'
             for attr in thisfile:
@@ -2461,8 +2472,8 @@ def work(pathoutprtag, lock, indxprocwork):
         else:
             boolinitreco = False
             if gdat.verbtype > 0:
-                print 'Initialization from previous state, %s, failed.' % path
-    
+                print 'Could not find the state file, %s, to initialize the sampler.' % path
+
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         for k, namefixp in enumerate(gdat.fittnamefixp):
             if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
@@ -2652,7 +2663,7 @@ def work(pathoutprtag, lock, indxprocwork):
             gdatmodi.nextpercswep = 5 * int(20. * gdatmodi.cntrswep / gdat.numbswep) 
             if gdatmodi.nextpercswep > gdatmodi.percswepsave or thismakefram:
                 gdatmodi.percswepsave = gdatmodi.nextpercswep
-                minmswepintv = max(0, gdatmodi.cntrswep - 10000)
+                minmswepintv = max(0, gdatmodi.cntrswep - 100)
                 maxmswepintv = gdatmodi.cntrswep + 1
                 if maxmswepintv > minmswepintv:
                     boollogg = True
@@ -2961,7 +2972,10 @@ def work(pathoutprtag, lock, indxprocwork):
                 # temp -- this is not a problem because of meanelem proposals
                 #if (gdatmodi.propbrth or gdatmodi.propdeth) and gdatmodi.nextdeltlpritotl != 0.:
                 #    raise Exception('Delta log-prior should be zero during a birth or or death.')
-
+            
+                if (gdatmodi.prophypr or gdatmodi.propmeanelem or gdatmodi.propdist) and gdatmodi.nextdeltlliktotl != 0.:
+                    raise Exception('Likelihood should not change during a hyperparameter proposal.')
+                    
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'Both likelihood and prior will not change.'
@@ -3067,7 +3081,7 @@ def work(pathoutprtag, lock, indxprocwork):
             indxswepintv = arange(minmswepintv, maxmswepintv)
             
             for k in gdat.indxproptype:
-                indxswepprop = where(workdict['listindxproptype'][indxswepintv, 0] == k)[0]
+                indxswepprop = indxswepintv[where(workdict['listindxproptype'][indxswepintv, 0] == k)]
                 deltlliktotlmean = mean(workdict['listdeltlliktotl'][indxswepprop, 0])
                 deltlpritotlmean = mean(workdict['listdeltlpritotl'][indxswepprop, 0])
                 lrppmean = mean(workdict['listlrpp'][indxswepprop, 0])
@@ -3111,6 +3125,19 @@ def work(pathoutprtag, lock, indxprocwork):
                 else:
                     print '%30s %50s %10s %10.5g %10.5g %10.5g %10.5g %10.5g %10.5g' % (gdat.legdproptype[k], 'acceptance rate: %3d%% (%5d out of %5d)' % \
                                    (percaccp, numbaccp, numbtotl), strgstdvstdp, deltlliktotlmean, deltlpritotlmean, lrppmean, ljcbmean, lpautotlmean, lpridistmean)
+                
+                # temp
+                if k == 0 and deltlliktotlmean != 0. and indxswepprop.size > 0:
+                    print 'indxswepprop'
+                    print indxswepprop
+                    print 'workdict[listdeltlliktotl][indxswepprop, 0]'
+                    print workdict['listdeltlliktotl'][indxswepprop, 0]
+                    print 'workdict[listdeltlpritotl][indxswepprop, 0]'
+                    print workdict['listdeltlpritotl'][indxswepprop, 0]
+                    print 'deltlliktotlmean'
+                    print deltlliktotlmean
+                    raise Exception('')
+                    
                 
             if gdat.burntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
                 print 'Tempered burn-in'

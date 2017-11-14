@@ -1,5 +1,11 @@
 from __init__ import *
 
+# flag to force-delete all runs
+if len(sys.argv) > 1 and sys.argv[1] == 'forcdele':
+    boolforcdele = True
+else:
+    boolforcdele = False
+
 pathdata = os.environ["PCAT_DATA_PATH"] + '/data/outp/'
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
@@ -20,26 +26,18 @@ for strgextn in liststrgextn:
             pathchec = pathfile.replace('imag', 'data/outp') + '/stat.txt'
             if os.path.isfile(pathchec):
                 filestat = open(pathchec, 'r')
-                booltemp = False
+                boolkeep = False
                 for line in filestat:
                     if line == 'gdatmodi written.\n':
-                        booltemp = True
+                        boolkeep = True
         
-            try:
-                numbswep = int(pathfile[pathfile.rfind('_')+1:])
-                if (not os.path.isfile(pathchec) or not booltemp or numbswep <= 1000) and not 'mockonly' in rtag:
-                    if not rtag == '20171025_115229_pcat_lens_mock_syst_lowrtrue_2000000':
-                        cmnd = 'rm -rf ' + pathfile
-                        os.system(cmnd)
-                    else:
-                        print 'Saving %s' % rtag
-                    print 'Deleting %s' % pathchec
-                else:
-                    pass
-                    print 'Saving %s' % pathchec
-            except:
-                print 'Skipping...'
-                pass
+            numbswep = int(pathfile[pathfile.rfind('_')+1:])
+            if ((not os.path.isfile(pathchec) or not boolkeep or numbswep <= 1000) and not 'mockonly' in rtag) or boolforcdele:
+                print 'Deleting %s...' % pathchec
+                cmnd = 'rm -rf ' + pathfile
+                os.system(cmnd)
+            else:
+                print 'Saving %s...' % pathchec
             print
 
 listrtagdata = fnmatch.filter(os.listdir(pathdata), '2*')
