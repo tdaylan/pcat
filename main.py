@@ -362,6 +362,11 @@ def init( \
         elemtype = ['clus']
     setp_varbvalu(gdat, 'elemtype', elemtype)
     
+    if gdat.datatype == 'mock':
+        print 'gdat.trueelemtype'
+        print gdat.trueelemtype
+        print
+    
     # feature correlated with the significance of elements
     gdat.namefeatsign = 'deltllik'
     if gdat.datatype == 'mock':
@@ -1168,10 +1173,6 @@ def init( \
                 setp_varbvalu(gdat, 'magfdiststdv', 0.7, popl=l)
                 setp_varbvalu(gdat, 'dglcdistslop', 2., popl=l)
     
-        print 'gdat.trueelemtype'
-        print gdat.trueelemtype
-        print
-
         if gdat.exprtype == 'ferm':
 
             #setp_varbvalu(gdat, 'bacp', 5e-6, ener=0, back=0, regi='full')
