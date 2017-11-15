@@ -762,7 +762,12 @@ def init( \
             gdat.anglassc = 0.5 / gdat.anglfact
         if gdat.exprtype == 'hubb':
             gdat.anglassc = 0.15 / gdat.anglfact
-        if gdat.exprtype == 'chan' or gdat.exprtype == 'sdss':
+        if gdat.exprtype == 'chan':
+            if gdat.anlytype == 'spec':
+                gdat.anglassc = 0.1
+            else:
+                gdat.anglassc = 0.5 / gdat.anglfact
+        if gdat.exprtype == 'sdss':
             gdat.anglassc = 0.5 / gdat.anglfact
         if gdat.exprtype == 'sdyn':
             gdat.anglassc = 0.2
@@ -925,11 +930,13 @@ def init( \
     ### background template normalizations
     if gdat.exprtype == 'ferm':
         # Fourier basis
-        if 'bfun' in gdat.anlytype:
-            setp_varblimt(gdat, 'bacp', [1e-10, 1e10], ener='full', back='full', regi='full')
-            print 'gdat.fittnumbback'
-            print gdat.fittnumbback
-            print
+        for strgmodl in gdat.liststrgmodl:
+            backtype = getattr(gdat, strgmodl + 'backtype')
+            if 'bfun' in backtype:
+                setp_varblimt(gdat, 'bacp', [1e-10, 1e10], ener='full', back='full', regi='full')
+                print 'gdat.fittnumbback'
+                print gdat.fittnumbback
+                print
 
         # physical basis
         else:
@@ -1264,17 +1271,15 @@ def init( \
         gdat.maxmexpc = 10.
 
     # define minima and maxima for reference-only features
-    for q in gdat.indxrefr:
-        for l in gdat.fittindxpopl:
-            for namefeatrefr in gdat.refrliststrgfeatonly[q][l]:
-                # when the reference elements are from the true metamodel, define element feature limits based on element feature limits of the true metamodel
-                if gdat.datatype == 'mock':
-                    setattr(gdat, 'minm' + namefeatrefr, getattr(gdat, 'trueminm' + namefeatrefr))
-                    setattr(gdat, 'maxm' + namefeatrefr, getattr(gdat, 'truemaxm' + namefeatrefr))
+    for l in gdat.fittindxpopl:
+        for strgfeat in gdat.refrliststrgfeatextr[l]:
+            # when the reference elements are from the true metamodel, define element feature limits based on element feature limits of the true metamodel
+            if gdat.datatype == 'mock':
+                setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'trueminm' + strgfeat[:-4]))
+                setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'truemaxm' + strgfeat[:-4]))
 
-                name = namefeatrefr + gdat.listnamerefr[q]
-                setattr(gdat, 'minm' + name, getattr(gdat, 'minm' + namefeatrefr))
-                setattr(gdat, 'maxm' + name, getattr(gdat, 'maxm' + namefeatrefr))
+            setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'minm' + strgfeat[:-4]))
+            setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'maxm' + strgfeat[:-4]))
 
     # element features
     ## plot limits for element parameters

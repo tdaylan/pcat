@@ -29,7 +29,7 @@ for k in indxcols:
     except:
         print 'gdatfinl not found...'
         print
-        return
+        exit(0)
 
     if numbsampmosa > listgdat[k].numbsamptotl:
         raise Exception('number of samples is less than the number of frames.')

@@ -5199,6 +5199,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     del backtype[c]
                     for k in indxexpa:
                         backtype.insert(c+k, namebfun + '%04d' % k)
+        print 'backtype'
+        print backtype
+        print
+
         numbback = len(backtype)
         numbpopl = len(elemtype)
         
@@ -5551,6 +5555,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     termseco = ampl * cos(2. * pi * indxexpaydat * func / gdat.maxmgangdata)
                 sbrtbacknormtemp = termfrst[None, :] * termseco[:, None]
                 
+                print 'c'
+                print c
+                print
+
                 if False:
                     print 'backtype'
                     print backtype
@@ -5874,7 +5882,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         
         # add reference element features that are not available in the fitting model
         gdat.refrliststrgfeatonly = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
-        if strgmodl == 'fitt' and gdat.datatype == 'inpt':
+        gdat.refrliststrgfeatextr = [[] for l in gdat.fittindxpopl]
+        if strgmodl == 'fitt':# and gdat.datatype == 'inpt':
             for q in gdat.indxrefr: 
                 for name in gdat.refrliststrgfeat[q]:
                     for l in indxpopl:
@@ -5885,10 +5894,10 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                         if not name in liststrgfeatodim[l]:
                             liststrgfeatodim[l].append(name + gdat.listnamerefr[q])
                             gdat.refrliststrgfeatonly[q][l].append(name)
-
+                            gdat.refrliststrgfeatextr[l].append(name + gdat.listnamerefr[q])  
                             if name == 'reds' or name == 'dlos':
                                 liststrgfeatodim[l].append('lumi' + gdat.listnamerefr[q])
-                                
+                                gdat.refrliststrgfeatextr[l].append('lumi' + gdat.listnamerefr[q]) 
 
         # defaults
         liststrgpdfnmodu = [[] for l in indxpopl]
@@ -9493,7 +9502,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for k in range(numbelem[l][d]):
                                 # construct a matrix of angular distances between reference and fitting elements
                                 if elemtype[l] == 'lghtline':
-                                    matrdist[:, k] = gdat.refrelin[q][d][0, :] - dictelem[l][d]['elin'][k]
+                                    matrdist[:, k] = abs(gdat.refrelin[q][d][0, :] - dictelem[l][d]['elin'][k]) / gdat.refrelin[q][d][0, :]
                                 else:
                                     matrdist[:, k] = retr_angldist(gdat, gdat.refrlgal[q][d][0, :], gdat.refrbgal[q][d][0, :], dictelem[l][d]['lgal'][k], dictelem[l][d]['bgal'][k])
                                 indxelemrefrmatr[:, k] = arange(gdat.refrnumbelem[q][d])
@@ -9588,24 +9597,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             ### derived quantities
             for l in indxpopl:
                 # luminosity
-                print 'heeeeey'
                 if boolelemspec[l] and 'flux' in liststrgfeat[l]:
-                    print 'reeeeey'
                     for strgfeat in liststrgfeat[l]:
                         if strgfeat.startswith('reds'):
                             namerefr = strgfeat[-4:]
-                            print 'meeeey'
                             for d in indxregipopl[l]:
-                                dictelem[l][d]['lumi' + namerefr] = nan
-                                print 'yeeeey'
+                                dictelem[l][d]['lumi' + namerefr] = zeros(numbelem[l][d]) + nan
                                 reds = dictelem[l][d]['reds' + namerefr]
                                 indxgood = where(isfinite(dictelem[l][d]['reds' + namerefr]))[0]
                                 if indxgood.size > 0:
-                                    print 'teeeey'
-                                    print 'reds'
-                                    summgene(reds)
-                                    print
-
                                     ldis = (1. + reds)**2 * gdat.adisobjt(reds[indxgood])
                                     lumi = 4. * pi * ldis**2 * dictelem[l][d]['flux'][indxgood]
                                     dictelem[l][d]['lumi' + namerefr][indxgood] = lumi
@@ -11549,7 +11549,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                             scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                             factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
                             lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
-                            limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                            if strgfeat[-4:] in gdat.listnamerefr:
+                                strgfeattemp = strgfeat[:-4]
+                            else:
+                                strgfeattemp = strgfeat
+                            limtxdat = [getattr(gdat, 'minm' + strgfeattemp) * factxdat, getattr(gdat, 'maxm' + strgfeattemp) * factxdat]
                             
                             # for true model, also plot the significant elements only
                             # temp
