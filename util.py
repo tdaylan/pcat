@@ -3324,9 +3324,13 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.minmreds = 0.
     gdat.maxmreds = 5.
+    #gdat.minmredswo08 = 0.
+    #gdat.maxmredswo08 = 5.
     
     gdat.minmmagt = 19.
     gdat.maxmmagt = 28.
+    #gdat.minmmagtwo08 = 19.
+    #gdat.maxmmagtwo08 = 28.
 
     gdat.scalmaxmnumbelem = 'logt'
     gdat.scalmedilliktotl = 'logt'
@@ -5879,8 +5883,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                         if elemtype[l] == ('lens') and (name == 'cnts' or name == 'flux' or name == 'spec' or name == 'sind'):
                             continue
                         if not name in liststrgfeatodim[l]:
-                            liststrgfeatodim[l].append(name)
+                            liststrgfeatodim[l].append(name + gdat.listnamerefr[q])
                             gdat.refrliststrgfeatonly[q][l].append(name)
+
+                            if name == 'reds' or name == 'dlos':
+                                liststrgfeatodim[l].append('lumi' + gdat.listnamerefr[q])
+                                
 
         # defaults
         liststrgpdfnmodu = [[] for l in indxpopl]
@@ -9512,6 +9520,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 indxelemrefrasschits[q][l][d].append(indxelemrefrmatr[c])
                                 indxelemfittasschits[q][l][d].append(indxelemfittmatr[c])
                             
+                            print 'indxelemrefrasschits[q][l][d]'
+                            print indxelemrefrasschits[q][l][d]
+                            print 'gdat.anglassc'
+                            print gdat.anglassc
+                            if matrdist.size > 0:
+                                print 'matrdist'
+                                summgene(matrdist)
+                            print
+
                             indxelemrefrasschits[q][l][d] = array(indxelemrefrasschits[q][l][d])
                             indxelemfittasschits[q][l][d] = array(indxelemfittasschits[q][l][d])
                 setattr(gdatobjt, strgpfix + 'indxelemrefrasschits', indxelemrefrasschits)
@@ -9571,20 +9588,27 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             ### derived quantities
             for l in indxpopl:
                 # luminosity
-                if 'reds' in liststrgfeat[l] and 'flux' in liststrgfeat[l]:
-                    for d in indxregipopl[l]:
-                        for q in gdat.indxrefr:
-                            namerefr = gdat.listnamerefr[q]
-                            if 'reds' in gdat.refrliststrgfeatonly[q][l]:
+                print 'heeeeey'
+                if boolelemspec[l] and 'flux' in liststrgfeat[l]:
+                    print 'reeeeey'
+                    for strgfeat in liststrgfeat[l]:
+                        if strgfeat.startswith('reds'):
+                            namerefr = strgfeat[-4:]
+                            print 'meeeey'
+                            for d in indxregipopl[l]:
+                                dictelem[l][d]['lumi' + namerefr] = nan
+                                print 'yeeeey'
                                 reds = dictelem[l][d]['reds' + namerefr]
-                                if len(indxelemrefrasschits[q][l][d]) > 0:
+                                indxgood = where(isfinite(dictelem[l][d]['reds' + namerefr]))[0]
+                                if indxgood.size > 0:
+                                    print 'teeeey'
                                     print 'reds'
                                     summgene(reds)
                                     print
 
-                                    ldis = (1. + reds)**2 * gdat.adisobjt(reds)
-                                    lumi = 4. * pi * ldis**2 * dictelem[l][d]['flux']
-                                    dictelem[l][d]['lumi'] = lumi
+                                    ldis = (1. + reds)**2 * gdat.adisobjt(reds[indxgood])
+                                    lumi = 4. * pi * ldis**2 * dictelem[l][d]['flux'][indxgood]
+                                    dictelem[l][d]['lumi' + namerefr][indxgood] = lumi
             
                 if elemtype[l] == 'lghtpntspuls':
                     dictelem[l][d]['mass'] = full([numbelem[l][d]], 3.)
@@ -9909,8 +9933,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             temp = zeros((gdat.numbbinsplot, gdat.numbener))
                         else:
                             temp = zeros(gdat.numbbinsplot)
-                        print 'strgfeat'
-                        print strgfeat
                         
                         dictelem[l][d]['hist' + strgfeat] = temp
                         if strgfeat == 'specplot' or strgfeat == 'deflprof':
@@ -9922,46 +9944,29 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d]['cnts'][listindxelemfilt[0][l][d]], gdat.binscnts)[0]
                         elif not (strgfeat == 'curv' and spectype[l] != 'curv' or strgfeat == 'expc' and spectype[l] != 'expc' or strgfeat.startswith('sindarry') and \
                                                                                                                                                         spectype[l] != 'colr'):
-                            # temp -- implement the other filters 
-                            bins = getattr(gdat, 'bins' + strgfeat)
-                            if strgfeat[:-4] in listnamefeatsele[l] and strgmodl == 'true':
-                                # temp
-                                pass
-                                #indx = intersect1d(listindxelemfilt[1][l][d], listindxelemfilt[0][l][d])
-                                #if indx.size > 0:
-                                #    dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat[:-4]][indx], bins)[0]
+                            if strgfeat[-4:] in gdat.listnamerefr:
+                                strgfeattemp = strgfeat[:-4]
                             else:
-                                print 'strgfeat'
-                                print strgfeat
-                                if len(dictelem[l][d][strgfeat]) > 0 and len(listindxelemfilt[0][l][d]) > 0:
-                                    # temp
-                                    print 'histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]'
-                                    print histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]
-                                    print
+                                strgfeattemp = strgfeat
+                            bins = getattr(gdat, 'bins' + strgfeattemp)
+                            if len(dictelem[l][d][strgfeat]) > 0 and len(listindxelemfilt[0][l][d]) > 0:
+                                dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]
 
-                                    try:
-                                        dictelem[l][d]['hist' + strgfeat] = histogram(dictelem[l][d][strgfeat][listindxelemfilt[0][l][d]], bins)[0]
-                                    except:
-                                        print 'hey'
-                                        print 'histograming failed'
-                                        print 'strgfeat'
-                                        print strgfeat
-                                        print 'listindxelemfilt'
-                                        print listindxelemfilt
-                                        print 'dictelem[l][d][strgfeat]'
-                                        print dictelem[l][d][strgfeat]
-                                        print 'bins'
-                                        print bins
-                                        print
-                                        raise Exception('')
-                
                     #### two dimensional
                     for a, strgfrst in enumerate(liststrgfeatcorr[l]):
                         for b, strgseco in enumerate(liststrgfeatcorr[l]):
                             dictelem[l][d]['hist' + strgfrst + strgseco] = zeros((gdat.numbbinsplot, gdat.numbbinsplot))
                             if a < b:
-                                binsfrst = getattr(gdat, 'bins' + strgfrst)
-                                binsseco = getattr(gdat, 'bins' + strgseco)
+                                if strgfrst[-4:] in gdat.listnamerefr:
+                                    strgfrsttemp = strgfrst[:-4]
+                                else:
+                                    strgfrsttemp = strgfrst
+                                if strgseco[-4:] in gdat.listnamerefr:
+                                    strgsecotemp = strgseco[:-4]
+                                else:
+                                    strgsecotemp = strgseco
+                                binsfrst = getattr(gdat, 'bins' + strgfrsttemp)
+                                binsseco = getattr(gdat, 'bins' + strgsecotemp)
                                 if len(dictelem[l][d][strgfrst]) > 0 and len(dictelem[l][d][strgseco]) > 0:
                                     dictelem[l][d]['hist' + strgfrst + strgseco] = histogram2d(dictelem[l][d][strgfrst][listindxelemfilt[0][l][d]], \
                                                                                                  dictelem[l][d][strgseco][listindxelemfilt[0][l][d]], [binsfrst, binsseco])[0]
@@ -10248,8 +10253,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     errrcmplfeat = zeros((2, gdat.numbbinsplot))
                                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                                     refrhistfeat = getattr(gdat, 'refrhist' + strgfeat + 'ref%dreg%d' % (q, d))
-                                    bins = getattr(gdat, 'bins' + strgfeat)
-
+                                    if strgfeat[-4:] in gdat.listnamerefr:
+                                        strgfeattemp = strgfeat[:-4]
+                                    else:
+                                        strgfeattemp = strgfeat
+                                    bins = getattr(gdat, 'bins' + strgfeattemp)
                                     if len(indxelemrefrasschits[q][l][d]) > 0:
 
                                         histfeatrefrassc = histogram(refrfeat[q][d][0, indxelemrefrasschits[q][l][d]], bins=bins)[0]
@@ -10272,7 +10280,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     errrfdisfeat = zeros((2, gdat.numbbinsplot))
                                     if not strgfeat in liststrgfeatodim[l] or strgfeat in gdat.refrliststrgfeatonly[q][l]:
                                         continue
-                                    bins = getattr(gdat, 'bins' + strgfeat)
+                                    if strgfeat[-4:] in gdat.listnamerefr:
+                                        strgfeattemp = strgfeat[:-4]
+                                    else:
+                                        strgfeattemp = strgfeat
+                                    bins = getattr(gdat, 'bins' + strgfeattemp)
                                     if len(indxelemfittasscfals[q][l][d]) > 0 and len(dictelem[l][d][strgfeat]) > 0:
                                         histfeatfals = histogram(dictelem[l][d][strgfeat][indxelemfittasscfals[q][l][d]], bins=bins)[0]
                                         fitthistfeat = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
@@ -10801,8 +10813,6 @@ def proc_finl(gdat=None, rtag=None, prio=False):
         print 'Post plots already written.'
     else:
         if gdat.makeplot and gdat.makeplotpost:
-            print 'gdat.binsener'
-            print gdat.binsener
             plot_post(gdat, prio=prio)
         filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
         filestat.write('post-plots written.\n')
@@ -10941,8 +10951,6 @@ def proc_cntpdata(gdat):
     # correct the likelihoods for the constant data dependent factorial
     gdat.llikoffs = [[] for d in gdat.indxregi]
     for d in gdat.indxregi:
-        print 'gdat.cntpdata[d]'
-        summgene(gdat.cntpdata[d])
         gdat.llikoffs[d] = sum(sp.special.gammaln(gdat.cntpdata[d] + 1))
         if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
             print 'gdat.deltener'
@@ -12359,24 +12367,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                 xdat = gdat.meanener
                 cntr = 0
                 
-                print 'a'
-                print a
-                print 'listydat.shape'
-                print listydat.shape
-                print 'listlegdsbrtspec'
-                print listlegdsbrtspec
-                print len(listlegdsbrtspec)
-                print 'indxploteleminit'
-                print indxploteleminit
-                print 'indxplotelemendd'
-                print indxplotelemendd
-                print 'listmrkr'
-                print listmrkr
                 for k in range(listydat.shape[0]):
-                    print 'k'
-                    print k
-                    print 'cntr'
-                    print cntr
                     mrkr = listmrkr[cntr]
                     if k == cntrdata:
                         colr = 'black'
@@ -12390,11 +12381,6 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                     ydat = copy(listydat[k, :])
                     yerr = copy(listyerr[:, k, :])
                     
-                    print 'ydat'
-                    summgene(ydat)
-                    print ydat
-                    print
-
                     ydat *= factener
                     yerr *= factener
                     
@@ -12411,7 +12397,6 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
                             cntr += 1
                     else:
                         cntr += 1
-                print 
 
         if gdat.numbener > 1:
             axis.set_xlim([amin(gdat.binsener), amax(gdat.binsener)])
@@ -13098,10 +13083,19 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
             # superimpose reference elements
             if gdat.allwrefr:
                 for q in gdat.indxrefr:
+                    
+                    print 'q'
+                    print q
+                    print 'strgbins'
+                    print strgbins
+                    print 'gdat.refrnumbelem'
+                    print gdat.refrnumbelem
                     if gdat.refrnumbelem[q][indxregiplot] == 0:
                         continue
                     if strgfeat in gdat.refrliststrgfeat[q]:
                         refrsign = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
+                        print 'refrsign'
+                        print refrsign
                         if len(refrsign) > 0:
                             if strgfeat != None:
                                 indxelem = where((bins[indxlowr] < refrsign[0, :]) & (refrsign[0, :] < bins[indxuppr]))[0]

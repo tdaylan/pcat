@@ -83,7 +83,7 @@ def init( \
          
          #hostemistype=None, \
 
-         ## lens model
+         ## lens model type
          #lensmodltype=None, \
         
          penalpridiff=False, \
@@ -1254,6 +1254,27 @@ def init( \
     
     gdat.minmgang = 1e-3 * sqrt(2.) * gdat.maxmgangdata
     gdat.maxmgang = sqrt(2.) * gdat.maxmgangdata
+    
+    if gdat.datatype == 'inpt':
+        gdat.minmsind = -1.
+        gdat.maxmsind = 2.
+        gdat.minmcurv = -1.
+        gdat.maxmcurv = 1.
+        gdat.minmexpc = 0.1
+        gdat.maxmexpc = 10.
+
+    # define minima and maxima for reference-only features
+    for q in gdat.indxrefr:
+        for l in gdat.fittindxpopl:
+            for namefeatrefr in gdat.refrliststrgfeatonly[q][l]:
+                # when the reference elements are from the true metamodel, define element feature limits based on element feature limits of the true metamodel
+                if gdat.datatype == 'mock':
+                    setattr(gdat, 'minm' + namefeatrefr, getattr(gdat, 'trueminm' + namefeatrefr))
+                    setattr(gdat, 'maxm' + namefeatrefr, getattr(gdat, 'truemaxm' + namefeatrefr))
+
+                name = namefeatrefr + gdat.listnamerefr[q]
+                setattr(gdat, 'minm' + name, getattr(gdat, 'minm' + namefeatrefr))
+                setattr(gdat, 'maxm' + name, getattr(gdat, 'maxm' + namefeatrefr))
 
     # element features
     ## plot limits for element parameters
@@ -1402,13 +1423,18 @@ def init( \
                 #scal = getattr(gdat, strgmodl + 'scal' + strgfeat + 'plot')
                 maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                 minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
-            retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplot, scal=scal)
-            if strgfeat in liststrgfeatpriototl:
-                maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
-                minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
-                retr_axis(gdat, strgfeat + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
+            if strgfeat[-4:] in gdat.listnamerefr:
+                strgfeattemp = strgfeat[:-4]
+            else:
+                strgfeattemp = strgfeat
+                
+            retr_axis(gdat, strgfeattemp, minm, maxm, gdat.numbbinsplot, scal=scal)
+            if strgfeattemp in liststrgfeatpriototl:
+                maxm = getattr(gdat, strgmodl + 'maxm' + strgfeattemp)
+                minm = getattr(gdat, strgmodl + 'minm' + strgfeattemp)
+                retr_axis(gdat, strgfeattemp + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
             limt = array([minm, maxm])
-            setattr(gdat, 'limt' + strgfeat + 'plot', limt)
+            setattr(gdat, 'limt' + strgfeattemp + 'plot', limt)
 
     if gdat.fittnumbtrap > 0:
         if gdat.allwrefr and gdat.asscrefr:
@@ -1686,6 +1712,7 @@ def init( \
                         if len(refrfeat[q][d]) > 0:
                             print 'indxbadd'
                             print indxbadd
+                        print
                         #raise Exception('')
         
         # bin reference element features
