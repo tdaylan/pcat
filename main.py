@@ -521,9 +521,9 @@ def init( \
             gdat.numbexpasing = gdat.ordrexpa**2
             gdat.numbexpa = gdat.numbexpasing * 4
             gdat.indxexpa = arange(gdat.numbexpa)
-            backtype = ['bfun%04d' % k for k in gdat.indxexpa]
+            backtype = [['bfun%04d' % k for k in gdat.indxexpa]]
         else:
-            backtype = [1., 'sbrtfdfmsmthrec8pntsnorm.fits']
+            backtype = [[1., 'sbrtfdfmsmthrec8pntsnorm.fits']]
     if gdat.exprtype == 'chan':
         # particle background
         if gdat.anlytype.startswith('spec'):
@@ -539,13 +539,13 @@ def init( \
             backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
         
         if gdat.anlytype.startswith('spec'):
-            backtype = [[1e2, 2.], backtypetemp]
+            backtype = [[[1e2, 2.], backtypetemp]]
         else:
-            backtype = [1., backtypetemp]
+            backtype = [[1., backtypetemp]]
     if gdat.exprtype == 'hubb':
-        backtype = [1.]
+        backtype = [[1.]]
     if gdat.exprtype == 'sdyn':
-        backtype = [1.]
+        backtype = [[1.]]
     setp_varbvalu(gdat, 'backtype', backtype)
 
     setpprem(gdat)
@@ -658,14 +658,16 @@ def init( \
     #### boolean flag background
     if gdat.exprtype == 'chan':
         if gdat.numbpixlfull == 1:
-            specback = [True, True]
+            specback = [[True, True]]
         else:
-            specback = [False, True]
+            specback = [[False, True]]
         setp_varbvalu(gdat, 'specback', specback)
     else:
         for strgmodl in gdat.liststrgmodl:
             backtype = getattr(gdat, strgmodl + 'backtype')
-            specback = [False for k in range(len(backtype))]
+            specback = [[] for d in gdat.indxregi]
+            for d in gdat.indxregi:
+                specback[d] = [False for k in range(len(backtype[d]))]
             setp_varbvalu(gdat, 'specback', specback, strgmodl=strgmodl)
     
     if gdat.exprtype == 'hubb':
@@ -932,11 +934,12 @@ def init( \
         # Fourier basis
         for strgmodl in gdat.liststrgmodl:
             backtype = getattr(gdat, strgmodl + 'backtype')
-            if 'bfun' in backtype:
-                setp_varblimt(gdat, 'bacp', [1e-10, 1e10], ener='full', back='full', regi='full')
-                print 'gdat.fittnumbback'
-                print gdat.fittnumbback
-                print
+            indxback = getattr(gdat, strgmodl + 'indxback')
+            for d in gdat.indxregi:
+                for c in indxback[d]:
+                    if isinstance(backtype[d][c], str):
+                        if 'bfun' in backtype[d][c]:
+                            setp_varblimt(gdat, 'bacp', [1e-10, 1e10], ener='full', back=c, regi='full')
 
         # physical basis
         else:
@@ -1256,12 +1259,6 @@ def init( \
         if gdat.burntmpr:
             print 'Warning: Tempered burn-in.'
 
-    # initial setup
-    setpinit(gdat, True) 
-    
-    gdat.minmgang = 1e-3 * sqrt(2.) * gdat.maxmgangdata
-    gdat.maxmgang = sqrt(2.) * gdat.maxmgangdata
-    
     if gdat.datatype == 'inpt':
         gdat.minmsind = -1.
         gdat.maxmsind = 2.
@@ -1270,17 +1267,23 @@ def init( \
         gdat.minmexpc = 0.1
         gdat.maxmexpc = 10.
 
-    # define minima and maxima for reference-only features
+    # initial setup
+    setpinit(gdat, True) 
+    
+    gdat.minmgang = 1e-3 * sqrt(2.) * gdat.maxmgangdata
+    gdat.maxmgang = sqrt(2.) * gdat.maxmgangdata
+    
+    # define minima and maxima for reference-only features or features derived from them
     for l in gdat.fittindxpopl:
-        for strgfeat in gdat.refrliststrgfeatextr[l]:
+        for strgfeat in gdat.fittliststrgfeatextr[l]:
             # when the reference elements are from the true metamodel, define element feature limits based on element feature limits of the true metamodel
             if gdat.datatype == 'mock':
                 setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'trueminm' + strgfeat[:-4]))
                 setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'truemaxm' + strgfeat[:-4]))
-
+       
             setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'minm' + strgfeat[:-4]))
             setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'maxm' + strgfeat[:-4]))
-
+    
     # element features
     ## plot limits for element parameters
     # define minima and maxima
@@ -1428,18 +1431,29 @@ def init( \
                 #scal = getattr(gdat, strgmodl + 'scal' + strgfeat + 'plot')
                 maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
                 minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
-            if strgfeat[-4:] in gdat.listnamerefr:
-                strgfeattemp = strgfeat[:-4]
-            else:
-                strgfeattemp = strgfeat
-                
-            retr_axis(gdat, strgfeattemp, minm, maxm, gdat.numbbinsplot, scal=scal)
-            if strgfeattemp in liststrgfeatpriototl:
-                maxm = getattr(gdat, strgmodl + 'maxm' + strgfeattemp)
-                minm = getattr(gdat, strgmodl + 'minm' + strgfeattemp)
-                retr_axis(gdat, strgfeattemp + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
+            if 'otyp' in strgfeat:
+                print 'teeeeey'
+                print strgfeat
+            retr_axis(gdat, strgfeat, minm, maxm, gdat.numbbinsplot, scal=scal)
+            if strgfeat in liststrgfeatpriototl:
+                maxm = getattr(gdat, strgmodl + 'maxm' + strgfeat)
+                minm = getattr(gdat, strgmodl + 'minm' + strgfeat)
+                retr_axis(gdat, strgfeat + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
             limt = array([minm, maxm])
-            setattr(gdat, 'limt' + strgfeattemp + 'plot', limt)
+            # temp -- this is not needed because limt definition is inside retr_axis()
+            #setattr(gdat, strgmodl + 'limt' + strgfeat, limt)
+
+    # define limits and bins for reference-only features or features derived from them
+    for l in gdat.fittindxpopl:
+        for strgfeat in gdat.fittliststrgfeatextr[l]:
+            
+            #setattr(gdat, 'fact' + strgfeat, getattr(gdat, 'fact' + strgfeatinit))
+            strgfeatinit = strgfeat[:-4]
+            setattr(gdat, 'limt' + strgfeat, getattr(gdat, 'limt' + strgfeatinit))
+            if not hasattr(gdat, 'bins' + strgfeat): 
+                setattr(gdat, 'bins' + strgfeat, getattr(gdat, 'bins' + strgfeatinit))
+            if not hasattr(gdat, 'bins' + strgfeatinit): 
+                setattr(gdat, 'bins' + strgfeatinit, getattr(gdat, 'bins' + strgfeat))
 
     if gdat.fittnumbtrap > 0:
         if gdat.allwrefr and gdat.asscrefr:
@@ -2286,7 +2300,7 @@ def optihess(gdat, gdatmodi):
                             ydat = [gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'], gdatmodi.stdvstdp[getattr(gdat, 'indxstdp' + strgcomp)] / (meanplot / minm)**0.5]
                         lablxdat = getattr(gdat, 'labl' + gdat.fittnamefeatampl[l] + 'totl')
                         scalxdat = getattr(gdat, 'scal' + gdat.fittnamefeatampl[l] + 'plot')
-                        limtxdat = array(getattr(gdat, 'limt' + gdat.fittnamefeatampl[l] + 'plot')) * factamplplot
+                        limtxdat = array(getattr(gdat, 'limt' + gdat.fittnamefeatampl[l])) * factamplplot
                         tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                          lablydat=r'$\sigma_{%s}$' % getattr(gdat, 'labl' + strgcomp), plottype=['scat', 'lghtline'])
                         #tdpy.util.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
