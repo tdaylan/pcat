@@ -17,7 +17,6 @@ for strgextn in liststrgextn:
     
     for rtag in os.listdir(path):
         
-
         pathfile = path + rtag
         if os.path.isdir(pathfile) and rtag[:8].isdigit():
             print 'Processing %s...' % rtag

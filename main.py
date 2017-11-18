@@ -881,7 +881,7 @@ def init( \
         if gdat.datatype == 'mock':
             gdat.refrinfo = True
             gdat.numbrefr = gdat.truenumbpopl
-            gdat.listnamerefr = ['mock' for l in gdat.trueindxpopl] 
+            gdat.listnamerefr = ['moc%d' % l for l in gdat.trueindxpopl] 
             gdat.indxrefr = arange(gdat.numbrefr)
         if gdat.datatype == 'inpt':
             if gdat.exprtype == 'ferm':
@@ -1277,9 +1277,9 @@ def init( \
     for l in gdat.fittindxpopl:
         for strgfeat in gdat.fittliststrgfeatextr[l]:
             # when the reference elements are from the true metamodel, define element feature limits based on element feature limits of the true metamodel
-            if gdat.datatype == 'mock':
-                setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'trueminm' + strgfeat[:-4]))
-                setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'truemaxm' + strgfeat[:-4]))
+            #if gdat.datatype == 'mock':
+            #    setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'trueminm' + strgfeat[:-4]))
+            #    setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'truemaxm' + strgfeat[:-4]))
        
             setattr(gdat, 'minm' + strgfeat, getattr(gdat, 'minm' + strgfeat[:-4]))
             setattr(gdat, 'maxm' + strgfeat, getattr(gdat, 'maxm' + strgfeat[:-4]))
@@ -1449,6 +1449,7 @@ def init( \
             
             #setattr(gdat, 'fact' + strgfeat, getattr(gdat, 'fact' + strgfeatinit))
             strgfeatinit = strgfeat[:-4]
+            setattr(gdat, 'labl' + strgfeat + 'totl', getattr(gdat, 'labl' + strgfeatinit + 'totl'))
             setattr(gdat, 'limt' + strgfeat, getattr(gdat, 'limt' + strgfeatinit))
             if not hasattr(gdat, 'bins' + strgfeat): 
                 setattr(gdat, 'bins' + strgfeat, getattr(gdat, 'bins' + strgfeatinit))
@@ -1480,7 +1481,8 @@ def init( \
                 raise Exception('Parameter scaling is bad.')
         retr_axis(gdat, namevarbscal, minm, maxm, 50, scal=scal)
     
-    sys.stdout = logg(gdat)
+    #sys.stdout = logg(gdat)
+    #gdat.log.close()
 
     if gdat.verbtype > 0:
         sizetotl = 0.
@@ -1796,12 +1798,6 @@ def init( \
     # final setup
     setpfinl(gdat, True) 
     
-    # exit before running the sampler
-    if gdat.mockonly:
-        if gdat.verbtype > 0:
-            print 'Mock dataset is generated. Quitting...'
-        return gdat
-    
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -1874,7 +1870,22 @@ def init( \
     setp_indxswepsave(gdat)
     
     gdat.optitypetemp = 'none'
-   
+    
+    gdat.namesampdist = 'post'
+    
+    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
+    if gdat.verbtype > 0:
+        print 'Writing the global state to the disc before spawning workers...'
+    path = gdat.pathoutprtag + 'gdatinit'
+    writfile(gdat, path) 
+    filestat.write('gdatinit written.\n')
+    
+    # exit before running the sampler
+    if gdat.mockonly:
+        if gdat.verbtype > 0:
+            print 'Mock dataset is generated. Quitting...'
+        return gdat
+    
     # perform an initial run, sampling from the prior
     if gdat.checprio:
         
@@ -1886,10 +1897,10 @@ def init( \
         gdat.calcllik = False
         
         if gdat.optitype != 'none':
-            workopti(gdat, lock)
+            workopti(gdat, lock, filestat)
 
         ## perform sampling
-        worksamp(gdat, lock)
+        worksamp(gdat, lock, filestat)
         
         ## post process the samples
         proc_finl(gdat, prio=True)
@@ -1911,17 +1922,16 @@ def init( \
     else:
         gdat.calcllik = True
     
-    gdat.namesampdist = 'post'
     gdat.legdsampdist = 'Posterior'
 
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
     
     if gdat.optitype != 'none':
-        workopti(gdat, lock)
+        workopti(gdat, lock, filestat)
     
     # run the sampler
-    worksamp(gdat, lock)
+    worksamp(gdat, lock, filestat)
     
     if not gdat.boolarry:
         # post process the samples
@@ -1939,7 +1949,7 @@ def init( \
         print
 
 
-def workopti(gdat, lock):
+def workopti(gdat, lock, filestat):
 
     gdat.optitypetemp = gdat.optitype
     inittypesave = gdat.inittype 
@@ -1951,7 +1961,7 @@ def workopti(gdat, lock):
     if gdat.verbtype > 0:
         print 'Optimizing proposal scale...'
     
-    worksamp(gdat, lock)
+    worksamp(gdat, lock, filestat)
     
     if gdat.verbtype > 0:
         print 'Writing the estimated covariance matrix to the disc...'
@@ -1997,6 +2007,12 @@ def initarry( \
                 continue
         
         strgcnfg = inspect.stack()[1][3] + '_' + strgcnfgextn
+    
+        #for proc in psutil.process_iter():
+        #    print proc.open_files()
+            
+        #proc = psutil.Process(os.getpid())
+        #print proc.get_open_files()
 
         dictvarbtemp = deepcopy(dictvarb)
         for strgvarb, valu in dictvarbvari[strgcnfgextn].iteritems():
@@ -2312,18 +2328,11 @@ def optihess(gdat, gdatmodi):
     gdatmodi.cntrswep = 0
 
 
-def worksamp(gdat, lock):
+def worksamp(gdat, lock, filestat):
 
-    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
     pathorig = gdat.pathoutprtag + 'stat.txt'
     pathlink = gdat.pathplotrtag + 'stat.txt'
     os.system('ln -s %s %s' % (pathorig, pathlink))
-    
-    if gdat.verbtype > 0:
-        print 'Writing the global state to the disc before spawning workers...'
-    path = gdat.pathoutprtag + 'gdatinit'
-    writfile(gdat, path) 
-    filestat.write('gdatinit written.\n')
     
     if gdat.numbproc == 1:
         worktrac(gdat.pathoutprtag, lock, 0)
