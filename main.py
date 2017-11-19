@@ -806,7 +806,6 @@ def init( \
             gdat.specfraceval = 0.1
 
     ### element parameter distributions
-    gdat.calcllik = True
     
     gdat.binslgalcart = linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
     gdat.binsbgalcart = linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
@@ -1768,7 +1767,8 @@ def init( \
             #plot_3fgl_thrs(gdat)
             #if gdat.exprtype == 'ferm':
             #    plot_fgl3(gdat)
-
+    
+    gdat.calcllik = True
     if gdat.datatype == 'mock':
         if lensmodltype != 'none':
             proc_samp(gdat, None, 'this', 'true', raww=True)
@@ -1852,6 +1852,7 @@ def init( \
     
     retr_elemlist(gdat, gdatmodifudi)
     gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
+    gdat.calcllik = True
     proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
     gdat.liststrgvarbarrysamp = []
     gdat.liststrgvarblistsamp = []
@@ -1869,16 +1870,15 @@ def init( \
     
     setp_indxswepsave(gdat)
     
-    gdat.optitypetemp = 'none'
-    
     gdat.namesampdist = 'post'
     
-    filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
     if gdat.verbtype > 0:
         print 'Writing the global state to the disc before spawning workers...'
     path = gdat.pathoutprtag + 'gdatinit'
     writfile(gdat, path) 
-    filestat.write('gdatinit written.\n')
+    gdat.filestat = open(gdat.pathoutprtag + 'stat.txt', 'w')
+    gdat.filestat.write('gdatinit written.\n')
+    gdat.filestat.close()
     
     # exit before running the sampler
     if gdat.mockonly:
@@ -1892,46 +1892,47 @@ def init( \
         if gdat.verbtype > 0:
             print 'Sampling from the prior...'
         
-        gdat.namesampdist = 'prio'
-        gdat.legdsampdist = 'Prior'
-        gdat.calcllik = False
-        
         if gdat.optitype != 'none':
-            workopti(gdat, lock, filestat)
+            filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
+            filecomm.write('calcllik False\n')
+            filecomm.write('namesampdist prio\n')
+            filecomm.write('legdsampdist Prior\n')
+            filecomm.write('optitypetemp hess\n')
+            filecomm.close()
+            worksamp(gdat, lock)
 
         ## perform sampling
-        worksamp(gdat, lock, filestat)
+        filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
+        filecomm.write('calcllik False\n')
+        filecomm.write('namesampdist prio\n')
+        filecomm.write('legdsampdist Prior\n')
+        filecomm.write('optitypetemp none\n')
+        filecomm.close()
+        worksamp(gdat, lock)
         
         ## post process the samples
-        proc_finl(gdat, prio=True)
-        
-        # save the prior median of variables
-        for strgvarb in gdat.liststrgchan:
-            # temp
-            if strgvarb in gdat.fittliststrgfeattotl or strgvarb == 'indxelemfull':
-                continue
-            setattr(gdat, 'prio' + strgvarb, getattr(gdat, 'medi' + strgvarb))
-        
-        gdat.calcllik = True
-        
-        ## retrieve saved variables
-        #for strgvarbsave in liststrgvarbsave:
-        #    varb = getattr(gdat, strgvarbsave + 'saveprio')
-        #    setattr(gdat, strgvarbsave, varb)
-
-    else:
-        gdat.calcllik = True
-    
-    gdat.legdsampdist = 'Posterior'
+        proc_finl(gdat)
 
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
     
     if gdat.optitype != 'none':
-        workopti(gdat, lock, filestat)
+        filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
+        filecomm.write('calcllik True\n')
+        filecomm.write('namesampdist post\n')
+        filecomm.write('legdsampdist Posterior\n')
+        filecomm.write('optitypetemp hess\n')
+        filecomm.close()
+        worksamp(gdat, lock)
     
     # run the sampler
-    worksamp(gdat, lock, filestat)
+    filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
+    filecomm.write('calcllik True\n')
+    filecomm.write('namesampdist post\n')
+    filecomm.write('legdsampdist Posterior\n')
+    filecomm.write('optitypetemp none\n')
+    filecomm.close()
+    worksamp(gdat, lock)
     
     if not gdat.boolarry:
         # post process the samples
@@ -1948,33 +1949,6 @@ def init( \
         print 'PCAT has run successfully. Returning to the OS...'
         print
 
-
-def workopti(gdat, lock, filestat):
-
-    gdat.optitypetemp = gdat.optitype
-    inittypesave = gdat.inittype 
-
-    # estimate the covariance
-    gdat.numbprocsave = gdat.numbproc
-    gdat.numbproc = 1
-
-    if gdat.verbtype > 0:
-        print 'Optimizing proposal scale...'
-    
-    worksamp(gdat, lock, filestat)
-    
-    if gdat.verbtype > 0:
-        print 'Writing the estimated covariance matrix to the disc...'
-    
-    gdat.optitypetemp = 'none'
-    
-    thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'r')
-    gdat.stdvstdp = thisfile['stdvstdp'][()]
-    thisfile.close()
-    gdat.numbproc = gdat.numbprocsave
-    
-    gdat.inittype = inittypesave
-    
 
 def initarry( \
              dictvarbvari, \
@@ -2328,8 +2302,8 @@ def optihess(gdat, gdatmodi):
     gdatmodi.cntrswep = 0
 
 
-def worksamp(gdat, lock, filestat):
-
+def worksamp(gdat, lock): 
+    
     pathorig = gdat.pathoutprtag + 'stat.txt'
     pathlink = gdat.pathplotrtag + 'stat.txt'
     os.system('ln -s %s %s' % (pathorig, pathlink))
@@ -2350,8 +2324,9 @@ def worksamp(gdat, lock, filestat):
         pool.close()
         pool.join()
     
-    filestat.write('gdatmodi written.\n')
-    filestat.close()
+    gdat.filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
+    gdat.filestat.write('gdatmodi written.\n')
+    gdat.filestat.close()
 
 
 def retr_elemlist(gdat, gdatmodi):
@@ -2388,6 +2363,29 @@ def work(pathoutprtag, lock, indxprocwork):
     gdatmodi = tdpy.util.gdatstrt()
     gdatmodi.lock = lock
     gdatmodi.indxprocwork = indxprocwork
+            
+    listline = open(gdat.pathoutprtag + 'comm.txt', 'r')
+    for line in listline:
+        if line == 'calcllik False\n':
+            gdat.calcllik = False
+        if line == 'calcllik True\n':
+            gdat.calcllik = True
+        
+        if line == 'namesampdist prio\n':
+            gdat.namesampdist = 'prio'
+        if line == 'namesampdist post\n':
+            gdat.namesampdist = 'post'
+        
+        if line == 'legdsampdist prio\n':
+            gdat.legdsampdist = 'Prior'
+        if line == 'legdsampdist post\n':
+            gdat.legdsampdist = 'Posterior'
+        
+        if line == 'optitypetemp hess\n':
+            gdat.optitypetemp = 'hess'
+        if line == 'optitypetemp none\n':
+            gdat.optitypetemp = 'none'
+    listline.close()
 
     # construct the initial state
     if gdat.verbtype > 0:
@@ -2396,6 +2394,12 @@ def work(pathoutprtag, lock, indxprocwork):
         print gdat.inittype
   
     gdatmodi.thisstdpscalfact = 1.
+
+    if gdat.optitype == 'hess' and gdat.optitypetemp == 'none':
+        print 'Replacing the proposal scale!'
+        thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'r')
+        gdat.stdvstdp = thisfile['stdvstdp'][()]
+        thisfile.close()
 
     ## unit sample vector
     ## initialize randomly
@@ -2658,9 +2662,7 @@ def work(pathoutprtag, lock, indxprocwork):
     gdatmodi.maxmllikswep = sum(gdatmodi.thisllik)
     gdatmodi.indxswepmaxmllik = -1 
     gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
-   
-    # proposal scale optimization
-
+  
     if gdat.verbtype > 0:
         print 'Sampling...'
 
@@ -2678,11 +2680,16 @@ def work(pathoutprtag, lock, indxprocwork):
         gdatmodi.nextchro[:] = 0.
         
         if gdat.optitypetemp == 'hess':
+            if gdat.verbtype > 0:
+                print 'Optimizing proposal scale...'
             optihess(gdat, gdatmodi)
             gdatmodi.optidone = True
-            
+           
         if gdatmodi.optidone:
-            thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'w')
+            path = gdat.pathoutprtag + 'opti.h5'
+            if gdat.verbtype > 0:
+                print 'Writing the estimated covariance matrix to %s...' % path
+            thisfile = h5py.File(path, 'w')
             thisfile.create_dataset('stdvstdp', data=gdatmodi.stdvstdp)
             thisfile.close()
             break
@@ -2802,6 +2809,8 @@ def work(pathoutprtag, lock, indxprocwork):
                     print gdatmodi.thislliktotlprev
                     print 'gdatmodi.thislliktotl'
                     print gdatmodi.thislliktotl
+                    print 'workdict[listindxproptype]'
+                    print gdat.nameproptype[workdict['listindxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+5, 0].astype(int)]
                     print
                     #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
@@ -2937,6 +2946,14 @@ def work(pathoutprtag, lock, indxprocwork):
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
+                if 'asscref' in strgvarb:
+                    print  'strgvarb'
+                    print strgvarb
+                    print 'valu'
+                    summgene(valu)
+                    print 'workdict[list + strgvarb]'
+                    summgene(workdict['list' + strgvarb])
+                    print
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
