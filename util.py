@@ -13097,7 +13097,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
                             indxelem = array([])
                     else:
                         indxelem = arange(gdat.refrnumbelem[q])
-                    mrkrsize = retr_mrkrsize(gdat, reframpl[q][d][0, indxelem], strgfeat)
+                    mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], strgfeat)
                     print 'indxelem'
                     print indxelem
                     print 'gdat.refrlgal[q]'
