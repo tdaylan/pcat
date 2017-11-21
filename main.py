@@ -2040,6 +2040,7 @@ def initarry( \
     else:
         return listgdat
 
+
 def retr_rtag(strgtimestmp, strgcnfg, strgnumbswep):
     
     rtag = strgtimestmp + '_' + strgcnfg + '_' + strgnumbswep
@@ -2166,6 +2167,16 @@ def optihess(gdat, gdatmodi):
                 gdatmodi.dictmodi[l][d] = dict()
                 gdatmodi.dictmodi[l][d][gdat.fittnamefeatampl[l] + 'indv'] = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.fittnamefeatampl[l]][l][d]]
                 for strgcomp in gdat.fittliststrgcomp[l]:
+                    print 'ld'
+                    print l, d
+                    print 'strgcomp'
+                    print strgcomp
+                    print 'gdatmodi.thisindxsampcomp[strgcomp][l][d]'
+                    print gdatmodi.thisindxsampcomp[strgcomp][l][d]
+                    print 'gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]'
+                    print gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
+                    print
+
                     gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'] = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
             
     gdatmodi.cntrparasave = 0
@@ -2206,7 +2217,7 @@ def optihess(gdat, gdatmodi):
                                 numbparapoplinittemp = indxtrapmoditemp - gdat.fittnumbtrapregipoplcuml[indxpoplmoditemp[0]][indxregimoditemp[0]]
                                 indxelemmoditemp = [numbparapoplinittemp // gdat.fittnumbcomp[indxpoplmoditemp[0]]]
                                 indxcompmoditemp = numbparapoplinittemp % gdat.fittnumbcomp[indxpoplmoditemp[0]]
-                                
+                                strgcomp = gdat.fittliststrgcomp[indxpoplmoditemp[0]][indxcompmoditemp] 
                                 indxsampampltemp = k - indxcompmoditemp + gdat.fittindxcompampl[indxpoplmoditemp[0]]
                                 amplfact = gdatmodi.thissampvarb[indxsampampltemp] / getattr(gdat, 'minm' + gdat.fittnamefeatampl[indxpoplmoditemp[0]])
                                 
@@ -2224,8 +2235,25 @@ def optihess(gdat, gdatmodi):
                                 else:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
-                                gdatmodi.dictmodi[l][d]['stdv' + strgcomp + 'indv'][indxelemmoditemp] = stdv
-                                gdatmodi.dictmodi[l][d][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp] = gdatmodi.thissampvarb[indxsampampltemp]
+                                #print 'strgcomp'
+                                #print strgcomp
+                                #print 'indxpoplmoditemp'
+                                #print indxpoplmoditemp
+                                #print 'indxregimoditemp'
+                                #print indxregimoditemp
+                                #print 'gdatmodi.dictmodi[indxpoplmoditemp][indxregimoditemp][stdv + strgcomp + indv]'
+                                #print gdatmodi.dictmodi[indxpoplmoditemp][indxregimoditemp]['stdv' + strgcomp + 'indv']
+                                #print 'indxelemmoditemp'
+                                #print indxelemmoditemp
+                                #print 
+                                
+                                print 'indxregimoditemp'
+                                print indxregimoditemp
+                                print 'indxelemmoditemp'
+                                print indxelemmoditemp
+                                gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]]['stdv' + strgcomp + 'indv'][indxelemmoditemp[0]] = stdv
+                                gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp[0]] = \
+                                                                                                                                    gdatmodi.thissampvarb[indxsampampltemp]
         
                     else:
                         continue
@@ -2946,14 +2974,6 @@ def work(pathoutprtag, lock, indxprocwork):
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
-                if 'asscref' in strgvarb:
-                    print  'strgvarb'
-                    print strgvarb
-                    print 'valu'
-                    summgene(valu)
-                    print 'workdict[list + strgvarb]'
-                    summgene(workdict['list' + strgvarb])
-                    print
                 workdict['list' + strgvarb][indxsampsave, ...] = valu
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))

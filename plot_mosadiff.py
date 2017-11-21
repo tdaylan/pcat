@@ -45,6 +45,9 @@ for d in gdat.indxregi:
             figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize))
             for a, axrw in enumerate(axgr):
                 for b, axis in enumerate(axrw):
+            
+                    if a == 0 and b == 0:
+                        make_legdmaps(gdat, 'this', 'fitt', axis, mosa=True, assc=False)
                     
                     n = listindxsampmosa[b][a]
                     gdatmodi.thissampvarb = listgdat[b].listsampvarb[n, :].flatten()
@@ -65,10 +68,10 @@ for d in gdat.indxregi:
                         
                     imag = retr_imag(gdat, axis, gdat.cntpdata[indxregiplot], '', 'fitt', 'cntpdata', i, m)
                     for l in listgdat[k].fittindxpopl:
-                        supr_fram(gdat, gdatmodi, 'this', 'fitt', axis, indxregiplot, l)
+                        supr_fram(gdat, gdatmodi, 'this', 'fitt', axis, indxregiplot, l, assc=False)
                 
-            if gdat.enerbins:
-                plt.figtext(0.5, 0.93, gdat.strgener[i], ha='center', va='center')
+            #if gdat.enerbins:
+            #    plt.figtext(0.5, 0.93, gdat.strgener[i], ha='center', va='center')
             axiscomm = figr.add_axes([0.92, 0.1, 0.02, 0.8])
             cbar = figr.colorbar(imag, cax=axiscomm)
             cbar.set_ticks(gdat.tickcntpdata)
@@ -83,7 +86,6 @@ for d in gdat.indxregi:
                 path = pathfinl + 'mosa' + strg + 'reg%dene%dA.pdf' % (indxregiplot, gdat.indxenerincl[i])
             else:
                 path = pathfinl + 'mosa' + strg + 'reg%dene%devtt%d.pdf' % (indxregiplot, gdat.indxenerincl[i], gdat.indxevttincl[m])
-            make_legdmaps(gdat, 'this', 'fitt', axis)
             print 'Writing to %s...' % path
             figr.savefig(path)
             plt.close(figr)
