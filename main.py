@@ -1899,7 +1899,7 @@ def init( \
             filecomm.write('legdsampdist Prior\n')
             filecomm.write('optitypetemp hess\n')
             filecomm.close()
-            worksamp(gdat, lock)
+            worksamp(gdat, lock, boolopti=True)
 
         ## perform sampling
         filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
@@ -1923,7 +1923,7 @@ def init( \
         filecomm.write('legdsampdist Posterior\n')
         filecomm.write('optitypetemp hess\n')
         filecomm.close()
-        worksamp(gdat, lock)
+        worksamp(gdat, lock, boolopti=True)
     
     # run the sampler
     filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
@@ -2314,13 +2314,13 @@ def optihess(gdat, gdatmodi):
     gdatmodi.cntrswep = 0
 
 
-def worksamp(gdat, lock): 
+def worksamp(gdat, lock, boolopti=False): 
     
     pathorig = gdat.pathoutprtag + 'stat.txt'
     pathlink = gdat.pathplotrtag + 'stat.txt'
     os.system('ln -s %s %s' % (pathorig, pathlink))
     
-    if gdat.numbproc == 1:
+    if gdat.numbproc == 1 or boolopti:
         worktrac(gdat.pathoutprtag, lock, 0)
     else:
         if gdat.verbtype > 0:
