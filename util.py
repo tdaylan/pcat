@@ -2002,21 +2002,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
             gdatmodi.comppare[k] = copy(thissampvarb[thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]])
         
-        lgal = thissampvarb[thisindxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-        bgal = thissampvarb[thisindxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-        numbtemp = lgal.size
-        angltemp = 1e10 + zeros((numbtemp, numbtemp))
-        for k in range(numbtemp):
-            for m in range(numbtemp):
-                if k == m:
-                    continue
-                angltemp[k, m] = sqrt((lgal[k] - lgal[m])**2 - (bgal[k] - bgal[m]**2))
-        print 'sort(angltemp)[:10] * gdat.anglfact'
-        print sort(angltemp.flatten())[:10] * gdat.anglfact
-        print
-
-
-
         # draw the auxiliary parameters
         for g, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
             if boolcompposi[gdatmodi.indxpoplmodi[0]][g]:
@@ -2411,17 +2396,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             gdatmodi.nextprobreve = gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco
             gdatmodi.nextlrpp = log(gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco) - log(gdatmodi.nextprobfrwd)
         
+        gdatmodi.nextlrpp = 0.
         # temp
         dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        print 'distance between the merging elements:'
-        print dist * gdat.anglfact
-        print 'gdat.sizepixl / 2.'
-        print gdat.sizepixl / 2. * gdat.anglfact
         if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
+            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 1.5:
                 print 'adding fudge term...'
                 gdatmodi.nextlrpp += 1e6
-        gdatmodi.nextlrpp = 0.
         #gdatmodi.nextlrpp += 1e8
     else:
         gdatmodi.nextljcb = 0.
@@ -9255,8 +9236,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
                 for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
                     if (gdatmodi.propsplt or gdatmodi.propmerg) and k <= indxcompampl[gdatmodi.indxpoplmodi[0]]:
-                        if k ==  indxcompampl[gdatmodi.indxpoplmodi[0]]:
-                            lpau[k] = -log(2. *pi) - log(gdat.radispmr) -0.5 * (gdatmodi.nextauxipara[k] / gdat.radispmr)
+                        if k !=  indxcompampl[gdatmodi.indxpoplmodi[0]]:
+                            lpau[k] = -log(sqrt(2. * pi * gdat.radispmr**2)) -0.5 * (gdatmodi.nextauxipara[k] / gdat.radispmr)**2
                     else:
                         if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'self':
                             minm = getattr(gdat, strgmodl + 'minm' + strgcomp)

@@ -2814,7 +2814,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 print gdatmodi.thislliktotlprev
                 print 'gdatmodi.thislliktotl'
                 print gdatmodi.thislliktotl
-                raise Exception('')
+                #raise Exception('')
             if gdat.evoltype == 'samp':
                 if gdatmodi.thislliktotl - gdatmodi.thislliktotlprev < -10.:
                     print 'Warning! loglikelihood drop is very unlikely!'
@@ -2825,7 +2825,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'workdict[listindxproptype]'
                     print gdat.nameproptype[workdict['listindxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+5, 0].astype(int)]
                     print
-                    raise Exception('loglikelihood drop is very unlikely!')
+                    #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
