@@ -2083,7 +2083,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
 
         ## first element index to be merged
         gdatmodi.mergindxelemfrst = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmergfrst]
-        
+         
         # find the probability of merging this element with the others 
         probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmergfrst, elemtype)
         
@@ -2398,11 +2398,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         
         gdatmodi.nextlrpp = 0.
         # temp
-        dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 1.5:
-                print 'adding fudge term...'
-                gdatmodi.nextlrpp += 1e6
+        #dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
+        #if gdatmodi.propmerg and gdat.numbpixlfull > 1:
+        #    if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 1.5:
+        #        print 'adding fudge term...'
+        #        gdatmodi.nextlrpp += 1e6
         #gdatmodi.nextlrpp += 1e8
     else:
         gdatmodi.nextljcb = 0.
@@ -7592,9 +7592,9 @@ def retr_jcbn():
     matr = sympy.Matrix([[     fluxauxi,  fluxpare, 0,            0, 0,            0], \
                          [ 1 - fluxauxi, -fluxpare, 0,            0, 0,            0], \
                          [            0, -lgalauxi, 1, 1 - fluxauxi, 0,            0], \
-                         [            0, -lgalauxi, 1,    -fluxauxi, 0,            0], \
+                         [            0,  lgalauxi, 1, fluxauxi - 1, 0,            0], \
                          [            0, -bgalauxi, 0,            0, 1, 1 - fluxauxi], \
-                         [            0, -bgalauxi, 0,            0, 1,    -fluxauxi]])
+                         [            0,  bgalauxi, 0,            0, 1, fluxauxi - 1]])
 
     jcbn = matr.det()
     print jcbn
@@ -9204,8 +9204,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     elif strgpdfn == 'gaus':
                         lpri[indxlpritemp] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dictelem[l][d][strgfeat], strgfeat, sampvarb, l)
             
+        lpridist = 0.
         if strgstat == 'next':
-            lpridist = 0.
             if gdatmodi.propcomp:
                 strgcomp = liststrgcomp[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi]
                 strgpdfn = liststrgpdfnprio[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi]
