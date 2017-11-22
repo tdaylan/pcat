@@ -2395,6 +2395,7 @@ def work(pathoutprtag, lock, indxprocwork):
         
         if line == 'optitypetemp hess\n':
             gdat.optitypetemp = 'hess'
+            gdat.numbproc = 1
         if line == 'optitypetemp none\n':
             gdat.optitypetemp = 'none'
     listline.close()
