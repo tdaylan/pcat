@@ -3063,8 +3063,8 @@ def work(pathoutprtag, lock, indxprocwork):
                 if dist < gdat.sizepixl:
                     print 'dist'
                     print dist * gdat.anglfact
-                    print 'gdat.nextdeltlliktotl'
-                    print gdat.nextdeltlliktotl
+                    print 'gdatmodi.nextdeltlliktotl'
+                    print gdatmodi.nextdeltlliktotl
                     print 'gdatmodi.nextdeltlpritotl'
                     print gdatmodi.nextdeltlpritotl
                     print 'gdatmodi.nextljcb'
