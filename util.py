@@ -2001,6 +2001,21 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         # take the parent element parameters
         for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
             gdatmodi.comppare[k] = copy(thissampvarb[thisindxsampcomp[strgcomp][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmodi[0]]])
+        
+        lgal = thissampvarb[thisindxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        bgal = thissampvarb[thisindxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        numbtemp = lgal.size
+        angltemp = 1e10 + zeros((numbtemp, numbtemp))
+        for k in range(numbtemp):
+            for m in range(numbtemp):
+                if k == m:
+                    continue
+                angltemp[k, m] = sqrt((lgal[k] - lgal[m])**2 - (bgal[k] - bgal[m]**2))
+        print 'sort(angltemp)[:10] * gdat.anglfact'
+        print sort(angltemp.flatten())[:10] * gdat.anglfact
+        print
+
+
 
         # draw the auxiliary parameters
         for g, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
@@ -2084,16 +2099,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         ## first element index to be merged
         gdatmodi.mergindxelemfrst = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmergfrst]
         
-        print 'gdatmodi.propmerg'
-
         # find the probability of merging this element with the others 
         probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmergfrst, elemtype)
         
-        print 'after retr_probmerg'
-        print 'probmerg'
-        print probmerg
-        print
-
         indxelemfulltemp = arange(len(thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]))
         if gdat.diagmode:
             if indxelemfulltemp.size < 2:
@@ -2387,26 +2395,33 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         thisnumbelem = thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         nextnumbelem = nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         
-        ## combinatorial factor
+        ## asymmetric proposal factor
         if gdatmodi.propmerg:
-            probfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], elemtype, gdatmodi.indxelemfullmodi[0]) / thisnumbelem
-            probfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, gdatmodi.indxelemfullmodi[1]) / thisnumbelem
-            probreve = 1. / nextnumbelem
-            gdatmodi.nextlrpp = log(probreve) - log(probfrwdfrst + probfrwdseco)
+            gdatmodi.nextprobfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], \
+                                                                                                                    elemtype, gdatmodi.indxelemfullmodi[0]) / thisnumbelem
+            gdatmodi.nextprobfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], \
+                                                                                                                    elemtype, gdatmodi.indxelemfullmodi[1]) / thisnumbelem
+            gdatmodi.nextprobfrwd = gdatmodi.nextprobfrwdfrst + gdatmodi.nextprobfrwdseco
+            gdatmodi.nextprobreve = 1. / nextnumbelem
+            gdatmodi.nextlrpp = log(gdatmodi.nextprobreve) - log(gdatmodi.nextprobfrwdfrst + gdatmodi.nextprobfrwdseco)
         else:
-            probfrwd = 1. / thisnumbelem
-            probrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, elemtype, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
-            probreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, -1) / nextnumbelem
-            gdatmodi.nextlrpp = log(probrevefrst + probreveseco) - log(probfrwd)
+            gdatmodi.nextprobfrwd = 1. / thisnumbelem
+            gdatmodi.nextprobrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, elemtype, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
+            gdatmodi.nextprobreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, -1) / nextnumbelem
+            gdatmodi.nextprobreve = gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco
+            gdatmodi.nextlrpp = log(gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco) - log(gdatmodi.nextprobfrwd)
         
         # temp
-        #if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-        #    dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        #    print 'distance between the merging elements:'
-        #    print dist * gdat.anglfact
-        #    print ''
-        #    if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
-        #        gdatmodi.nextlrpp += 1e6
+        dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
+        print 'distance between the merging elements:'
+        print dist * gdat.anglfact
+        print 'gdat.sizepixl / 2.'
+        print gdat.sizepixl / 2. * gdat.anglfact
+        if gdatmodi.propmerg and gdat.numbpixlfull > 1:
+            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
+                print 'adding fudge term...'
+                gdatmodi.nextlrpp += 1e6
+        gdatmodi.nextlrpp = 0.
         #gdatmodi.nextlrpp += 1e8
     else:
         gdatmodi.nextljcb = 0.
@@ -2444,8 +2459,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
 
 def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, elemtype, indxelemfulleval=None):
     
-    print 'retr_probmerg()'
-
     if elemtype[gdatmodi.indxpoplmodi[0]] == 'lghtline':
         elin = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
         elinstat = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
@@ -2460,18 +2473,7 @@ def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, elem
         
         angldist = retr_angldist(gdat, lgal, bgal, lgalstat, bgalstat)
     
-    print 'lgal'
-    print lgal
-    print 'bgal'
-    print bgal
-    print 'lgalstat'
-    print lgalstat
-    print 'angldist'
-    print angldist
-
-    probmerg = exp(-(angldist / gdat.radispmr)**5)
-    print 'probmerg'
-    print probmerg
+    probmerg = exp(-(angldist / gdat.radispmr))
     if indxelemfulleval == None:
         probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
         probmerg /= sum(probmerg)
@@ -2484,8 +2486,9 @@ def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, elem
         if indxelemfullexcl < indxelemfulleval and indxelemfulleval != -1:
             indxelemfulleval -= 1
         probmerg = probmerg[indxelemfulleval]
-    print 'probmerg'
-    print probmerg
+    if gdat.diagmode:
+        if not isfinite(probmerg).all():
+            raise Exception('Merge probability is infinite.')
 
     return probmerg
 
@@ -3621,9 +3624,9 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.minmcnts = 1e1
         gdat.maxmcnts = 1e5
     if gdat.exprtype == 'chan':
-        if gdat.anlytype == 'spec':
-            gdat.minmcnts = 1e3
-            gdat.maxmcnts = 1e7
+        if gdat.numbpixlfull == 1:
+            gdat.minmcnts = 1e4
+            gdat.maxmcnts = 1e8
         else:
             gdat.minmcnts = 1.
             gdat.maxmcnts = 1e3
@@ -7882,6 +7885,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         boolelemdeflsubhanyy = getattr(gdat, strgmodl + 'boolelemdeflsubhanyy')
         boolelemsbrtdfncanyy = getattr(gdat, strgmodl + 'boolelemsbrtdfncanyy')
         boolelemsbrtextsbgrd = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrd')
+        indxcompampl = getattr(gdat, strgmodl + 'indxcompampl')
         boolelemsbrtextsbgrdanyy = getattr(gdat, strgmodl + 'boolelemsbrtextsbgrdanyy')
         boolelempsfn = getattr(gdat, strgmodl + 'boolelempsfn')
         boolelempsfnanyy = getattr(gdat, strgmodl + 'boolelempsfnanyy')
@@ -9250,14 +9254,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     sampvarbtemp = getattr(gdatobjt, strgpfixthis + 'sampvarb')
         
                 for k, strgcomp in enumerate(liststrgcomp[gdatmodi.indxpoplmodi[0]]):
-                    if (gdatmodi.propsplt or gdatmodi.propmerg) and k < 3:
-                        if k == 0 or k == 1:
+                    if (gdatmodi.propsplt or gdatmodi.propmerg) and k <= indxcompampl[gdatmodi.indxpoplmodi[0]]:
+                        if k ==  indxcompampl[gdatmodi.indxpoplmodi[0]]:
                             lpau[k] = -log(2. *pi) - log(gdat.radispmr) -0.5 * (gdatmodi.nextauxipara[k] / gdat.radispmr)
-                        elif k == 2:
-                            if gdatmodi.nextauxipara[k] < 0. or gdatmodi.nextauxipara[k] > 1.:
-                                lpau[k] = -inf
-                            else:
-                                lpau[k] = 0.
                     else:
                         if listscalcomp[gdatmodi.indxpoplmodi[0]][k] == 'self':
                             minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
@@ -11223,60 +11222,67 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 if numbtrap > 0:
                     plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, 'convelemreg%d' % d, tdim=True)
     
-        if numbtrap > 0:
-            # element feature histograms
-            if not (strgmodl == 'true' and gdat.datatype == 'inpt'):
-                limtydat = gdat.limtydathistfeat
-                for l in indxpopl:
-                    strgindxydat = 'pop%d' % l
-                    for d in indxregipopl[l]:
-                        for strgfeat in liststrgfeatodim[l]:
-                            if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
-                                            (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
-                                continue
-                            indxydat = [l, slice(None)]
-                            scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
-                            factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
-                            lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
-                            limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
-                            
-                            # for true model, also plot the significant elements only
-                            # temp
-                            #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
-                            #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
-                            #else:
-                            #    listname = ['hist' + strgfeat]
+    # temp -- restrict other plots to indxmodlelemcomp
+    if gdat.enerbins:
+        for specconvunit in gdat.listspecconvunit:
+            if not boolbfun:
+                for d in gdat.indxregi:
+                    plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, d, specconvunit)
+    
+    if numbtrap > 0:
+        # element feature histograms
+        if not (strgmodl == 'true' and gdat.datatype == 'inpt'):
+            limtydat = gdat.limtydathistfeat
+            for l in indxpopl:
+                strgindxydat = 'pop%d' % l
+                for d in indxregipopl[l]:
+                    for strgfeat in liststrgfeatodim[l]:
+                        if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
+                                        (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+                            continue
+                        indxydat = [l, slice(None)]
+                        scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
+                        factxdat = getattr(gdat, 'fact' + strgfeat + 'plot')
+                        lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
+                        limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+                        
+                        # for true model, also plot the significant elements only
+                        # temp
+                        #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
+                        #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
+                        #else:
+                        #    listname = ['hist' + strgfeat]
 
-                            listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
-                            for name in listname:
-                                if gdat.numbpixl > 1:
-                                    listydattype = ['totl', 'sden']
-                                else:
-                                    listydattype = ['totl']
-                                for ydattype in listydattype:
-                                    
-                                    # plot the surface density of elements only for the amplitude feature
-                                    if strgfeat != namefeatampl and ydattype == 'sden':
-                                        continue
-        
-                                    ## plot the surface density of elements
-                                    if ydattype == 'sden':
-                                        if gdat.sdenunit == 'degr':
-                                            factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
-                                            lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
-                                        if gdat.sdenunit == 'ster':
-                                            factydat = 1. / (2. * gdat.maxmgang)**2
-                                            lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
-                                    ## plot the total number of elements
-                                    if ydattype == 'totl':
-                                        factydat = 1.
-                                        lablydat = r'$N_{%s}$' % lablelemextn[l]
-                                    
-                                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
-                                                      lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
-                                                      scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
-                                                      #indxydat=indxydat, strgindxydat=strgindxydat, \
-                                                      nameinte='histodim/')
+                        listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
+                        for name in listname:
+                            if gdat.numbpixl > 1:
+                                listydattype = ['totl', 'sden']
+                            else:
+                                listydattype = ['totl']
+                            for ydattype in listydattype:
+                                
+                                # plot the surface density of elements only for the amplitude feature
+                                if strgfeat != namefeatampl and ydattype == 'sden':
+                                    continue
+    
+                                ## plot the surface density of elements
+                                if ydattype == 'sden':
+                                    if gdat.sdenunit == 'degr':
+                                        factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
+                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
+                                    if gdat.sdenunit == 'ster':
+                                        factydat = 1. / (2. * gdat.maxmgang)**2
+                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
+                                ## plot the total number of elements
+                                if ydattype == 'totl':
+                                    factydat = 1.
+                                    lablydat = r'$N_{%s}$' % lablelemextn[l]
+                                
+                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
+                                                  lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
+                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
+                                                  #indxydat=indxydat, strgindxydat=strgindxydat, \
+                                                  nameinte='histodim/')
         
     if not (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
         # plots
@@ -11577,13 +11583,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                 else:
                     plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, d, m)
 
-        # temp -- restrict other plots to indxmodlelemcomp
-        if gdat.enerbins:
-            for specconvunit in gdat.listspecconvunit:
-                if not boolbfun:
-                    for d in gdat.indxregi:
-                        plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, d, specconvunit)
-    
         ## spatial priors
         # temp
         if gdat.numbpixl > 1:

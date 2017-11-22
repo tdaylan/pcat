@@ -761,14 +761,14 @@ def init( \
     ## Lensing
     if gdat.anglassc == None:
         if gdat.exprtype == 'ferm':
-            gdat.anglassc = 0.5 / gdat.anglfact
+            gdat.anglassc = 0.005 / gdat.anglfact
         if gdat.exprtype == 'hubb':
             gdat.anglassc = 0.15 / gdat.anglfact
         if gdat.exprtype == 'chan':
             if gdat.anlytype == 'spec':
                 gdat.anglassc = 0.1
             else:
-                gdat.anglassc = 0.5 / gdat.anglfact
+                gdat.anglassc = 1.5 / gdat.anglfact
         if gdat.exprtype == 'sdss':
             gdat.anglassc = 0.5 / gdat.anglfact
         if gdat.exprtype == 'sdyn':
@@ -2235,22 +2235,6 @@ def optihess(gdat, gdatmodi):
                                 else:
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
-                                #print 'strgcomp'
-                                #print strgcomp
-                                #print 'indxpoplmoditemp'
-                                #print indxpoplmoditemp
-                                #print 'indxregimoditemp'
-                                #print indxregimoditemp
-                                #print 'gdatmodi.dictmodi[indxpoplmoditemp][indxregimoditemp][stdv + strgcomp + indv]'
-                                #print gdatmodi.dictmodi[indxpoplmoditemp][indxregimoditemp]['stdv' + strgcomp + 'indv']
-                                #print 'indxelemmoditemp'
-                                #print indxelemmoditemp
-                                #print 
-                                
-                                print 'indxregimoditemp'
-                                print indxregimoditemp
-                                print 'indxelemmoditemp'
-                                print indxelemmoditemp
                                 gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]]['stdv' + strgcomp + 'indv'][indxelemmoditemp[0]] = stdv
                                 gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp[0]] = \
                                                                                                                                     gdatmodi.thissampvarb[indxsampampltemp]
@@ -2840,7 +2824,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'workdict[listindxproptype]'
                     print gdat.nameproptype[workdict['listindxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+5, 0].astype(int)]
                     print
-                    #raise Exception('loglikelihood drop is very unlikely!')
+                    raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             for strgstat in ['this', 'next']:
@@ -3349,15 +3333,16 @@ def work(pathoutprtag, lock, indxprocwork):
     delattr(gdatmodi, 'lock')
 
     # temp
-    for name, valu in deepcopy(gdatmodi).__dict__.iteritems():
-        if not isinstance(valu, int) and not isinstance(valu, list) and not isinstance(valu, ndarray) and not isinstance(valu, str) and not isinstance(valu, bool) \
-                and not isinstance(valu, float) and not not isinstance(valu, float64):
-            delattr(gdatmodi, name)
-            print 'Deleting %s...' % name
-            print type(valu)
-            print
-            raise Exception('')
-
+    #for name, valu in deepcopy(gdatmodi).__dict__.iteritems():
+    #    print 'teeeeey'
+    #    if not isinstance(valu, int) and not isinstance(valu, list) and not isinstance(valu, ndarray) and not isinstance(valu, str) and not isinstance(valu, bool) \
+    #            and not isinstance(valu, float) and not not isinstance(valu, float64):
+    #        delattr(gdatmodi, name)
+    #        print 'Deleting %s...' % name
+    #        print type(valu)
+    #        print
+    #        raise Exception('')
+    
     path = gdat.pathoutprtag + 'gdatmodi%04d' % gdatmodi.indxprocwork
     writfile(gdatmodi, path) 
 
