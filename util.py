@@ -2398,11 +2398,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         
         gdatmodi.nextlrpp = 0.
         # temp
-        dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
-                print 'adding fudge term...'
-                gdatmodi.nextlrpp += 1e6
+        #dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
+        #if gdatmodi.propmerg and gdat.numbpixlfull > 1:
+        #    if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
+        #        print 'adding fudge term...'
+        #        gdatmodi.nextlrpp += 1e6
     else:
         gdatmodi.nextljcb = 0.
         gdatmodi.nextlrpp = 0.
