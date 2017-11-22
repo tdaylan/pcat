@@ -2276,7 +2276,7 @@ def optihess(gdat, gdatmodi):
     
     gdatmodi.stdvstdp = gdatmodi.stdvstdpmatr[gdat.indxstdp, gdat.indxstdp]
     
-    if gdat.makeplot:
+    if False and gdat.makeplot:
         
         xdat = gdat.indxstdp
         ydat = gdatmodi.stdvstdp
