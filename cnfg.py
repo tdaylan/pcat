@@ -245,6 +245,41 @@ def test_nomi():
         )
 
 
+def pcat_anglassc(strgcnfgextnexec=None):
+    
+    dictargs = {}
+    dictargs['exprtype'] = 'sdyn'
+    dictargs['backtype'] = [['tgasback.fits']]
+    
+    dictargs['numbsidecart'] = 200
+    
+    #dictargs['minmdatacnts'] = 0.
+    dictargs['strgexpo'] = 1.
+    dictargs['elemtype'] = ['clus']
+    dictargs['psfnevaltype'] = 'kern'
+    
+    # temp
+    dictargs['numbswep'] = 10000
+    
+    listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+   
+    # to test splits and merges
+    dictargsvari['vhig']['anglassc'] = 1.
+    dictargsvari['high']['anglassc'] = 0.1
+    dictargsvari['loww']['anglassc'] = 0.01
+    dictargsvari['vlow']['anglassc'] = 0.001
+    
+    dictglob = pcat.main.initarry( \
+                                  dictargsvari, \
+                                  dictargs, \
+                                  strgcnfgextnexec=strgcnfgextnexec, \
+                                  listnamecomp=['anglassc'], \
+                                 )
+
+
 def plot_main_lens():
         init( \
              numbswep=1000, \

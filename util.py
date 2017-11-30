@@ -822,6 +822,13 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=N
 
         if spectype == 'gaus':
             spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
+        if spectype == 'voig':
+            args = (gdat.meanener + i * gamm) / sqrt(2.) / sigm
+            spec = 1. / sigm / sqrt(2. * pi) * flux[None, :] * scipy.special.wofz(args)
+        if spectype == 'pvoi':
+            spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
+        if spectype == 'lore':
+            spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
         if spectype == 'powr':
             spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
         if spectype == 'colr':
@@ -9172,9 +9179,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
 
         ### log-likelihood
         initchro(gdat, gdatmodi, strgstat, 'llikcalc')
-        #llik = retr_llik_mult(gdat, cntp['modl'])
-        
-        llik = retr_llik_depr(gdat, cntp['modl'], indxregieval, indxcubeeval)
+        llik = retr_llik(gdat, strgmodl, cntp['modl'], indxregieval, indxcubeeval, dictelem)
         
         if gdat.verbtype > 1:
             print 'indxregieval'
@@ -9413,8 +9418,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
 
                 setattr(gdatobjt, 'nextlpau', lpau)
                 setattr(gdatobjt, 'nextlpautotl', lpautotl)
-     
+    
     lpritotl = sum(lpri)
+
+    if gdat.boolrefeforc and strgmodl == 'fitt':
+        for l in gdat.fittindxpopl:
+            for strgfeat in gdat.fittliststrgfeat[l]:
+                if strgfeat in gdat.refrliststrgfeat[gdat.indxrefrforc[l]]:
+                    for dd in gdat.indxregi:
+                        lpritotl += -2. * sum(1e6 * (dictelem[l][d][strgfeat] - gdat.refrfeat)**2 / gdat.refrfeat[q][d]**2)
 
     if strgstat == 'next':
         thislpritotl = getattr(gdatobjt, strgpfixthis + 'lpritotl')
@@ -11163,14 +11175,14 @@ def retr_info(pdfnpost, pdfnprio):
     return info
 
 
-def retr_llik_depr(gdat, cntpmodl, indxregieval, indxcubeeval):
+def retr_llik(gdat, strgmodl, cntpmodl, indxregieval, indxcubeeval, dictelem):
    
     llik = [[] for d in indxregieval]
     for dd, d in enumerate(indxregieval):
         llik[dd] = gdat.cntpdata[d][indxcubeeval[0][dd]] * log(cntpmodl[dd]) - cntpmodl[dd]
         if gdat.liketype == 'pois':
             if gdat.verbtype > 1:
-                print 'retr_llik_depr'
+                print 'retr_llik'
                 print 'gdat.cntpdata[d]'
                 summgene(gdat.cntpdata[d])
                 print 'cntpmodl[dd]'

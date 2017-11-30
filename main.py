@@ -26,7 +26,8 @@ def init( \
          asscrefr=True, \
         
          thindata=False, \
-
+        
+         prodqual=False, \
          # chain setup
          numbswep=2000000, \
          numbsamp=None, \
@@ -62,6 +63,8 @@ def init( \
 
          shrtfram=True, \
         
+         boolrefeforc=False, \
+         
          suprelem=True, \
          plotelemcorr=True, \
          relnprio=False, \
@@ -250,6 +253,13 @@ def init( \
     # copy all provided inputs to the global object
     for strg, valu in args.iteritems():
         setattr(gdat, strg, valu)
+
+    if gdat.prodqual:
+        print 'Overriding inputs for production quality run.'
+        gdat.makeplotinit = True
+        gdat.numbswep = 2000000
+        gdat.numbsamp = 2000
+        gdat.checprio = True
 
     # defaults
     if gdat.strgexprsbrt == None:
@@ -1948,31 +1958,30 @@ def init( \
         print 'PCAT has run successfully. Returning to the OS...'
         print
 
+    return gdat.rtag
+
 
 def initarry( \
              dictvarbvari, \
              dictvarb, \
              execpara=False, \
              strgcnfgextnexec=None, \
-             makeplotarry=False, \
-             liststrgvarboutp=None, \
-             listlablinpt=None, \
+             listnamevarbcomp=False, \
+             listlablcomp=False, \
             ):
     
     print 'Running PCAT in array mode...'
     
     numbiter = len(dictvarbvari)
 
-    if liststrgvarboutp != None:
-        numboutp = len(liststrgvarboutp)
+    if listnamevarbcomp != None:
+        numboutp = len(listnamevarbcomp)
         dictoutp = dict()
-        for strgvarb in liststrgvarboutp:
+        for strgvarb in listnamevarbcomp:
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
     dictvarb['boolarry'] = strgcnfgextnexec == None
-    
-    listgdat = []
-    listprid = []
+    listrtag = []
     for k, strgcnfgextn in enumerate(dictvarbvari):
         
         if strgcnfgextnexec != None:
@@ -1991,53 +2000,34 @@ def initarry( \
         for strgvarb, valu in dictvarbvari[strgcnfgextn].iteritems():
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = strgcnfg
-        if execpara:
-            prid = os.fork()
-            listprid.append(prid)
-            if prid == 0:
-                #print '%d slept.' % k
-                #time.sleep(5)
-                #print '%d woke up.' % k
-                listgdat.append(init(**dictvarbtemp))
-                if liststrgvarboutp != None:
-                    for strgvarb in liststrgvarboutp:
-                        dictoutp[strgvarb][k] = getattr(listgdat[k], strgvarb)
-                os._exit(0)
-            if k % 4 == 3 or k == len(dictvarbvari) - 1:
-                #print 'parent waiting...'
-                for kk in range(len(listprid)):
-                    os.waitpid(listprid[kk], 0)
-                listprid = []
-        else:
-            listgdat.append(init(**dictvarbtemp))
-            
+        rtag = init(**dictvarbtemp)
+        listrtag.append(rtag)
+
     #print 'finished'
-    if makeplotarry:
+    if listnamecomp != None:
         
+        listgdat = coll_rtag(listrtag)
+
         strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % strgtimestmp
+        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
-        for strgvarbvari, varbvari in dictvarbvari.iteritems():
-            for strgvarboutp, varboutp in dictoutp.iteritems():
-                if strgvarbvari.startswith('fitt'):
-                    strgvarbvari = strgvarbvari[4:]
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.plot(varbvari, varboutp)
-                axis.set_xticklabels(listlablinpt)
-                axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
-                if getattr(gdat, 'scal' + strgvarbvari) == 'logt':
-                    axis.set_xscale('log')
-                if getattr(gdat, 'scal' + strgvarboutp) == 'logt':
-                    axis.set_yscale('log')
-                plt.tight_layout()
-                plt.savefig('%s/%s%s.pdf' % (path, strgvarbvari, strgvarboutp))
-                plt.close(figr)
+        for strgvarboutp, varboutp in dictoutp.iteritems():
+            if strgvarbvari.startswith('fitt'):
+                strgvarbvari = strgvarbvari[4:]
+            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            axis.plot(varbvari, varboutp)
+            axis.set_xticklabels(listlablcomp)
+            axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
+            if getattr(gdat, 'scal' + strgvarbvari) == 'logt':
+                axis.set_xscale('log')
+            if getattr(gdat, 'scal' + strgvarboutp) == 'logt':
+                axis.set_yscale('log')
+            plt.tight_layout()
+            plt.savefig('%s/%s%s.pdf' % (path, strgvarbvari, strgvarboutp))
+            plt.close(figr)
     
-    if liststrgvarboutp != None:
-        return listgdat, dictoutp
-    else:
-        return listgdat
+    return listrtag
 
 
 def retr_rtag(strgtimestmp, strgcnfg, strgnumbswep):
