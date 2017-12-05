@@ -10104,7 +10104,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 if len(dictelem[l][d][strgfrst]) > 0 and len(dictelem[l][d][strgseco]) > 0:
                                     dictelem[l][d]['hist' + strgfrst + strgseco] = histogram2d(dictelem[l][d][strgfrst][listindxelemfilt[0][l][d]], \
                                                                                                  dictelem[l][d][strgseco][listindxelemfilt[0][l][d]], [binsfrst, binsseco])[0]
-                                setattr(gdatobjt, strgpfix + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (l, d), dictelem[l][d]['hist' + strgfrst + strgseco])
+                                strg = strgpfix + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (l, d)
+                                setattr(gdatobjt, strg, dictelem[l][d]['hist' + strgfrst + strgseco])
+                                print 'setting %s...' % strg
                 
                     ### priors on element parameters and features
                     dictelem[l][d]['hist' + strgfeat + 'prio'] = empty(gdat.numbbinsplotprio)
@@ -10307,8 +10309,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     else:
                         namerefr = name
                     namerefr = namerefr.replace('true', 'refr')
-                    print ''
                     setattr(gdat, namerefr, valu)
+                    if namerefr.startswith('refrhist'):
+                        print 'setting %s...' % namerefr
         
         ### Exculusive comparison with the true state
         if strgmodl == 'fitt' and gdat.datatype == 'mock':
@@ -10387,6 +10390,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 if gdat.refrnumbelem[q][d] == 0:
                                     continue
                                 
+                                cntrfrst = 0
+                                cntrseco = 0
                                 for strgfeatfrst, strgfeatfrsttagg in zip(gdat.refrliststrgfeat[q], gdat.refrliststrgfeattagg[q][l]):
                                     
                                     if strgfeatfrst.startswith('etag'):
@@ -10399,7 +10404,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
                                         
                                     for strgfeatseco, strgfeatsecotagg in zip(gdat.refrliststrgfeat[q], gdat.refrliststrgfeattagg[q][l]):
-                                        
                                         if strgfeatfrst == strgfeatseco:
                                             continue
 
@@ -10408,12 +10412,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         
                                         if strgfeatseco == 'spec' or strgfeatseco == 'specplot':
                                             continue
-                                        
+                                       
+                                        if cntrfrst >= cntrseco:
+                                            continue
+
                                         # temp -- the size of the cmpl array should depend on strgmodl
                                         cmpltdim = zeros((gdat.numbbinsplot, gdat.numbbinsplot)) - 1.
                                         
                                         if len(indxelemrefrasschits[q][l][d]) > 0:
-                                            refrhistfeattdim =  dictelem[l][d]['hist' + strgfeatfrsttagg + strgfeatsecotagg]
+                                            #refrhistfeattdim =  dictelem[l][d]['hist' + strgfeatfrsttagg + strgfeatsecotagg]
+                                            refrhistfeattdim = getattr(gdat, 'refrhist' + strgfeatfrst + strgfeatseco + 'ref%dreg%d' % (q, d))
                                             refrfeatseco = getattr(gdat, 'refr' + strgfeatseco)
                                             binsfeatseco = getattr(gdat, 'bins' + strgfeatseco)
                                             
@@ -10433,18 +10441,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                         print 'refrhistfeattdim'
                                                         print refrhistfeattdim
                                                         summgene(refrhistfeattdim)
-                                                        print 'refrhistfeat'
-                                                        print refrhistfeat
-                                                        summgene(refrhistfeat)
                                                         print 'refrhistfeattdimassc'
                                                         print refrhistfeattdimassc
                                                         summgene(refrhistfeattdimassc)
                                                         print 'indxgood'
                                                         print indxgood
                                                         print
-
                                                         raise Exception('')
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + strgfeatseco + 'ref%dpop%dreg%d' % (q, l, d), cmpltdim)
+                                        cntrseco += 1
                                 
                                     cmplfeatfrst = zeros(gdat.numbbinsplot) - 1.
                                     if len(indxelemrefrasschits[q][l][d]) > 0:
@@ -10458,6 +10463,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                 if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                     raise Exception('')
                                     setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'ref%dpop%dreg%d' % (q, l, d), cmplfeatfrst)
+                                    cntrfrst += 1
                                 
                     # false discovery rate
                     for q in gdat.indxrefr:
