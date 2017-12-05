@@ -10106,7 +10106,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                                                  dictelem[l][d][strgseco][listindxelemfilt[0][l][d]], [binsfrst, binsseco])[0]
                                 strg = strgpfix + 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (l, d)
                                 setattr(gdatobjt, strg, dictelem[l][d]['hist' + strgfrst + strgseco])
-                                print 'setting %s...' % strg
                 
                     ### priors on element parameters and features
                     dictelem[l][d]['hist' + strgfeat + 'prio'] = empty(gdat.numbbinsplotprio)
@@ -10310,8 +10309,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         namerefr = name
                     namerefr = namerefr.replace('true', 'refr')
                     setattr(gdat, namerefr, valu)
-                    if namerefr.startswith('refrhist'):
-                        print 'setting %s...' % namerefr
         
         ### Exculusive comparison with the true state
         if strgmodl == 'fitt' and gdat.datatype == 'mock':
@@ -10425,10 +10422,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                             refrfeatseco = getattr(gdat, 'refr' + strgfeatseco)
                                             binsfeatseco = getattr(gdat, 'bins' + strgfeatseco)
                                             
-                                            #refrhistfeattdimassc = histogram2d(refrfeatfrst[q][d][0, indxelemrefrasschits[q][l][d]], \
-                                            #                                    refrfeatseco[q][d][0, indxelemrefrasschits[q][l][d]], bins=(binsfeatfrst, binsfeatseco))[0]
-                                            refrhistfeattdimassc = histogram2d(refrfeatfrst[q][d][0, :], \
-                                                                                refrfeatseco[q][d][0, :], bins=(binsfeatfrst, binsfeatseco))[0]
+                                            refrhistfeattdimassc = histogram2d(refrfeatfrst[q][d][0, indxelemrefrasschits[q][l][d]], \
+                                                                                refrfeatseco[q][d][0, indxelemrefrasschits[q][l][d]], bins=(binsfeatfrst, binsfeatseco))[0]
                                             indxgood = where(refrhistfeattdim != 0.)
                                             if indxgood[0].size > 0:
                                                 cmpltdim[indxgood] = refrhistfeattdimassc[indxgood].astype(float) / refrhistfeattdim[indxgood]
@@ -10502,7 +10497,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                              dictelem[l][d][strgfeatseco][indxelemfittasscfals[q][l][d]], bins=(binsfeatfrst, binsfeatseco))[0]
                                             indxgood = where(fitthistfeattdim != 0.)
                                             if indxgood[0].size > 0:
-                                                fdistdim[indxgood] = refrhistfeattdimassc[indxgood].astype(float) / refrhistfeattdim[indxgood]
+                                                fdistdim[indxgood] = fitthistfeattdimfals[indxgood].astype(float) / fitthistfeattdim[indxgood]
                                                 if gdat.diagmode:
                                                     if where((fdistdim[indxgood] > 1.) | (fdistdim[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
