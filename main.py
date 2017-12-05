@@ -51,6 +51,8 @@ def init( \
         
          listmask=None, \
 
+         numbsampboot=None, \
+
          listnamefeatsele=None, \
          burntmpr=False, \
          #burntmpr=True, \
@@ -64,7 +66,8 @@ def init( \
          shrtfram=True, \
         
          boolrefeforc=False, \
-         
+         indxrefrforc=None, \
+
          suprelem=True, \
          plotelemcorr=True, \
          relnprio=False, \
@@ -181,9 +184,9 @@ def init( \
          binsangltype='logt', \
          numbsidepntsprob=400, \
     
-         listspecrefrplot=None, \
-         listenerreftplot=None, \
-         listlablreftplot=None, \
+         listprefsbrtsbrt=None, \
+         listprefsbrtener=None, \
+         listprefsbrtlabl=None, \
 
          lablgangunit=None, \
          labllgal=None, \
@@ -220,7 +223,9 @@ def init( \
          stdvspep=0.001, \
          stdvspmrsind=0.2, \
          varistdvlbhl=True, \
-         
+        
+         rtagmock=None, \
+
          propmeanelem=True, \
          propdist=True, \
          proppsfp=True, \
@@ -305,6 +310,10 @@ def init( \
     #    print
     #    return
         
+    if gdat.datatype == 'inpt' and gdat.rtagmock != None:
+        print 'Will use %s to account for selection effects.' % gdat.rtagmock 
+        gdat.pathoutprtagmock = retr_pathoutprtag(gdat.rtagmock)
+    
     ## number of burned sweeps
     if gdat.numbburn == None:
         gdat.numbburn = gdat.numbswep / 10
@@ -363,6 +372,14 @@ def init( \
         else:
             gdat.anlytype = 'nomi'
     
+    if gdat.strgexpo == None:
+        if gdat.exprtype == 'ferm':
+            gdat.strgexpo = 'expofermrec8pntsigal0256.fits'
+        elif gdat.exprtype == 'hubb':
+            gdat.strgexpo = 1000. / gdat.hubbexpofact
+        else:
+            gdat.strgexpo = 1.
+    
     if gdat.exprtype == 'ferm':
         elemtype = ['lghtpnts']
     if gdat.exprtype == 'chan':
@@ -377,122 +394,6 @@ def init( \
     gdat.namefeatsign = 'deltllik'
     if gdat.datatype == 'mock':
         gdat.namefeatsignrefr = 'deltllik'
-    
-    if gdat.numbsidecart == None:
-        if gdat.datatype == 'mock':
-            gdat.numbsidecart = 100
-
-    if gdat.inittype == None:
-        if gdat.datatype == 'inpt':
-            gdat.inittype = 'rand'
-        else:
-            gdat.inittype = 'pert'
-
-    gdat.commelemtype = []
-    for strgmodl in gdat.liststrgmodl:
-        elemtype = getattr(gdat, strgmodl + 'elemtype')
-        for elemtypetemp in elemtype:
-            if not elemtypetemp in gdat.commelemtype:
-                gdat.commelemtype.append(elemtypetemp)
-            
-    #for strgvarb in ['boolelempsfnanyy']:
-    #    varbcomm = [[] for l in indxpopl]
-    #    for strgmodl in gdat.liststrgmodl:
-    #        varb = getattr(gdat, strgmodl + strgvarb)
-    #        varbcomm = varb
-    #        for elemtypetemp in :
-    #            if not elemtypetemp in gdat.commelemtype:
-    #                gdat.commelemtype.append(elemtypetemp)
-    
-    if 'lens' in gdat.commelemtype:
-        gdat.hubbexpofact = 1.63050e-19
-    
-    gdat.sdenunit = 'degr'
-
-    if gdat.strgexpo == None:
-        if gdat.exprtype == 'ferm':
-            gdat.strgexpo = 'expofermrec8pntsigal0256.fits'
-        elif gdat.exprtype == 'hubb':
-            gdat.strgexpo = 1000. / gdat.hubbexpofact
-        else:
-            gdat.strgexpo = 1.
-    
-    if gdat.indxevttfull == None:
-        if gdat.exprtype == 'ferm':
-            gdat.indxevttfull = arange(2)
-        else:
-            gdat.indxevttfull = arange(1)
-    
-    if gdat.indxevttincl == None:
-        if gdat.exprtype == 'ferm':
-            gdat.indxevttincl = array([0, 1])
-        else:
-            gdat.indxevttincl = arange(1)
-    
-    ## PSF class
-    if gdat.indxevttincl != None:
-        gdat.evttbins = True
-    else:
-        gdat.evttbins = False
-    if gdat.evttbins:
-        gdat.numbevtt = gdat.indxevttincl.size
-        gdat.numbevttfull = gdat.indxevttfull.size
-    else:
-        gdat.numbevtt = 1
-        gdat.numbevttfull = 1
-        gdat.indxevttincl = array([0])
-    gdat.indxevtt = arange(gdat.numbevtt)
-
-    if gdat.exprtype == 'ferm':
-        gdat.lablenerunit = 'GeV'
-    if gdat.exprtype == 'chan':
-        gdat.lablenerunit = 'keV'
-    if gdat.exprtype == 'sdyn':
-        gdat.lablenerunit = ''
-    
-    gdat.factergskevv = 1.6e-9
-    if gdat.exprtype == 'ferm':
-        gdat.listspecconvunit = [['en02', 'gevv']]
-    if gdat.exprtype == 'chan':
-        gdat.listspecconvunit = [['en00', 'kevv'], ['en02', 'kevv'], ['en02', 'ergs'], ['en03', 'ergs', '0520', 0.5,  2.], \
-                                                                                       ['en03', 'ergs', '0210',  2., 10.], \
-                                                                                       ['en03', 'ergs', '0510', 0.5, 10.], \
-                                                                                       ['en03', 'ergs', '0208',  2.,  8.], \
-                                                                                       ['en03', 'ergs', '0508', 0.5,  8.], \
-                                                                                       ['en03', 'ergs', '0207',  2.,  7.], \
-                                                                                       ['en03', 'ergs', '0507', 0.5,  7.]]
-    if gdat.exprtype == 'hubb':
-        gdat.listspecconvunit = [['en03', 'ergs']]
-    
-    if gdat.pixltype == None:
-        if gdat.exprtype == 'ferm':
-            gdat.pixltype = 'heal'
-        else:
-            gdat.pixltype = 'cart'
-    
-    # temp
-    #if gdat.exprtype == 'chan' and (gdat.anlytype.startswith('home') or gdat.anlytype.startswith('extr')):
-    #    gdat.truelegdpopl = ['AGN', 'Galaxy']
-
-    ## generative model
-    if gdat.anglfact == None:
-        if gdat.exprtype == 'ferm':
-            gdat.anglfact = 180. / pi
-        if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
-            gdat.anglfact = 3600 * 180. / pi
-        if gdat.exprtype == 'sche' or gdat.exprtype == 'sdyn':
-            gdat.anglfact = 1.
-
-    ### spatial extent of the data
-    if gdat.maxmgangdata == None:
-        if gdat.exprtype == 'chan':
-            gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
-        if gdat.exprtype == 'ferm':
-            gdat.maxmgangdata = 15. / gdat.anglfact
-        if gdat.exprtype == 'sdyn':
-            gdat.maxmgangdata = 1.
-        if gdat.exprtype == 'hubb':
-            gdat.maxmgangdata = 2. / gdat.anglfact
     
     ## experiment defaults
     if gdat.binsenerfull == None:
@@ -512,19 +413,75 @@ def init( \
             # temp
             gdat.binsenerfull = array([500., 750, 1000.])
     
+    if gdat.exprtype == 'ferm':
+        gdat.lablenerunit = 'GeV'
+    if gdat.exprtype == 'chan':
+        gdat.lablenerunit = 'keV'
+    if gdat.exprtype == 'sdyn':
+        gdat.lablenerunit = ''
+    
+    # energy band string
+    if gdat.strgenerfull == None:
+        if gdat.exprtype == 'sdss':
+            gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
+        if gdat.exprtype == 'hubb':
+            gdat.strgenerfull = ['F606W', 'F814W']
+        if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
+            gdat.strgenerfull = []
+            for i in range(len(gdat.binsenerfull) - 1):
+                gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
+        if gdat.exprtype == 'sdyn':
+            gdat.strgenerfull = ['']
+    
+    ## PSF class
+    if gdat.indxevttfull == None:
+        if gdat.exprtype == 'ferm':
+            gdat.indxevttfull = arange(2)
+        else:
+            gdat.indxevttfull = arange(1)
+    
+    if gdat.indxevttincl == None:
+        if gdat.exprtype == 'ferm':
+            gdat.indxevttincl = array([0, 1])
+        else:
+            gdat.indxevttincl = arange(1)
+    
+    if gdat.indxevttincl != None:
+        gdat.evttbins = True
+    else:
+        gdat.evttbins = False
+    if gdat.evttbins:
+        gdat.numbevtt = gdat.indxevttincl.size
+        gdat.numbevttfull = gdat.indxevttfull.size
+    else:
+        gdat.numbevtt = 1
+        gdat.numbevttfull = 1
+        gdat.indxevttincl = array([0])
+    gdat.indxevtt = arange(gdat.numbevtt)
+    
+    gdat.indxenerfull = arange(len(gdat.strgenerfull))
+    
     if gdat.binsenerfull == None:
         gdat.enerbins = False
     else:
         gdat.enerbins = True
     
-    # temp
-    gdat.enerbinsadje = True
-
     if gdat.enerbins:
-        if gdat.enerbinsadje:
-            gdat.meanenerfull = sqrt(gdat.binsenerfull[1:] * gdat.binsenerfull[:-1])
+        gdat.numbenerfull = len(gdat.strgenerfull)
+    else:
+        gdat.numbenerfull = 1
+
+    gdat.indxregi = arange(gdat.numbregi)
     
-    ### background
+    gdat.pathinpt = gdat.pathdata + 'inpt/'
+    
+    if gdat.pixltype == None:
+        if gdat.exprtype == 'ferm':
+            gdat.pixltype = 'heal'
+        else:
+            gdat.pixltype = 'cart'
+    
+    ### background type
     #### template
     if gdat.exprtype == 'ferm':
         if gdat.anlytype == 'bfun':
@@ -561,6 +518,178 @@ def init( \
 
     setpprem(gdat)
     
+    ## generative model
+    if gdat.anglfact == None:
+        if gdat.exprtype == 'ferm':
+            gdat.anglfact = 180. / pi
+        if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
+            gdat.anglfact = 3600 * 180. / pi
+        if gdat.exprtype == 'sche' or gdat.exprtype == 'sdyn':
+            gdat.anglfact = 1.
+    
+    if gdat.numbsidecart != None and gdat.pixltype == 'cart' and not gdat.forccart:
+        raise Exception('numbsidecart argument should not be provided when strgexpo is a file name and pixelization is Cartesian.')
+                
+    if gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart:
+        if gdat.numbsidecart == None:
+            gdat.numbsidecart = 100
+
+    # exposure
+    # temp
+    gdat.correxpo = True
+    if gdat.correxpo:
+        gdat.expo = [[] for d in gdat.indxregi]
+        if isinstance(gdat.strgexpo, float):
+            for d in gdat.indxregi:
+                if gdat.datatype == 'mock':
+                    if gdat.pixltype == 'heal':
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                    if gdat.pixltype == 'cart':
+                        gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbevttfull))
+                if gdat.datatype == 'inpt':
+                    gdat.expo[d] = gdat.strgexpo * ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+            if gdat.datatype == 'mock':
+                if gdat.numbsidecart == None:
+                    gdat.numbsidecart = 100
+        else: 
+            if isinstance(gdat.strgexpo, list):
+                if gdat.numbregi != len(gdat.strgexpo):
+                    raise Exception('Input number of regions is different from what is inferred from exposure maps.')
+            
+                for d in gdat.indxregi:
+                    path = gdat.pathinpt + gdat.strgexpo[d]
+                    if gdat.verbtype > 0:
+                        print 'Reading %s...' % path
+                    gdat.expo[d] = pf.getdata(path)
+            else:
+                path = gdat.pathinpt + gdat.strgexpo
+                for d in gdat.indxregi:
+                    if gdat.verbtype > 0:
+                        print 'Reading %s...' % path
+                    gdat.expo[d] = pf.getdata(path)
+            
+            if gdat.numbsidecart == None:
+                # temp -- gdat.numbsidecart takes the value of the region 0
+                gdat.numbsidecart = gdat.expo[0].shape[1]
+    
+    if gdat.datatype == 'mock':
+        if gdat.pixltype == 'cart':
+            gdat.numbpixlfull = gdat.numbsidecart**2
+        if gdat.pixltype == 'heal':
+            gdat.numbpixlfull = 12 * gdat.numbsideheal**2
+    
+    if gdat.pixltype == 'cart' and isinstance(gdat.strgexpo, float) and gdat.datatype == 'inpt':
+        print 'sqrt(gdat.sbrtdata[0].shape[1]) % 1'
+        print sqrt(gdat.sbrtdata[0].shape[1]) % 1
+        if sqrt(gdat.sbrtdata[0].shape[1]) % 1 != 0:
+            raise Exception('')
+        gdat.numbsidecart = int(sqrt(gdat.sbrtdata[0].shape[1]))
+    
+    for d in gdat.indxregi:
+        if amin(gdat.expo[d]) == amax(gdat.expo[d]) and not isinstance(gdat.strgexpo, float):
+            raise Exception('Bad input exposure map.')
+    
+    ### spatial extent of the data
+    if gdat.maxmgangdata == None:
+        if gdat.exprtype == 'chan':
+            gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
+        if gdat.exprtype == 'ferm':
+            gdat.maxmgangdata = 15. / gdat.anglfact
+        if gdat.exprtype == 'sdyn':
+            gdat.maxmgangdata = 1.
+        if gdat.exprtype == 'hubb':
+            gdat.maxmgangdata = 2. / gdat.anglfact
+    
+    # pixelization
+    if gdat.pixltype == 'cart':
+        gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
+    if gdat.pixltype == 'heal':
+        temp, temp, temp, gdat.apix = tdpy.util.retr_healgrid(gdat.numbsideheal)
+    gdat.sizepixl = sqrt(gdat.apix)
+    
+    # factor by which to multiply the y axis limits of the surface brightness plot
+    if gdat.numbpixlfull == 1:
+        gdat.factylimsbrt = [1e-4, 1e7]
+    else:
+        gdat.factylimsbrt = [1e-4, 1e3]
+
+    # axes
+    gdat.minmlgaldata = -gdat.maxmgangdata
+    gdat.maxmlgaldata = gdat.maxmgangdata
+    gdat.minmbgaldata = -gdat.maxmgangdata
+    gdat.maxmbgaldata = gdat.maxmgangdata
+    
+    if gdat.correxpo:
+        if not isinstance(gdat.strgexpo, float):
+            if gdat.pixltype == 'cart':
+                if gdat.forccart:
+                    gdat.expotemp = [[] for d in gdat.indxregi]
+                    for d in gdat.indxregi:
+                        gdat.expotemp[d] = empty((gdat.numbenerfull, gdat.numbsidecart, gdat.numbsidecart, gdat.numbevttfull))
+                        for i in gdat.indxenerfull:
+                            for m in gdat.indxevttfull:
+                                gdat.expotemp[d][i, :, :, m] = tdpy.util.retr_cart(gdat.expo[d][i, :, m], numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                                                       minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                                                       minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata)#.T
+                        gdat.expotemp[d] = gdat.expotemp[d].reshape((gdat.expotemp[d].shape[0], -1, gdat.expotemp[d].shape[-1]))
+                    gdat.expo = gdat.expotemp
+                else:
+                    for d in gdat.indxregi:
+                        gdat.expo[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
+    
+    if gdat.inittype == None:
+        if gdat.datatype == 'inpt':
+            gdat.inittype = 'rand'
+        else:
+            gdat.inittype = 'pert'
+
+    gdat.commelemtype = []
+    for strgmodl in gdat.liststrgmodl:
+        elemtype = getattr(gdat, strgmodl + 'elemtype')
+        for elemtypetemp in elemtype:
+            if not elemtypetemp in gdat.commelemtype:
+                gdat.commelemtype.append(elemtypetemp)
+            
+    #for strgvarb in ['boolelempsfnanyy']:
+    #    varbcomm = [[] for l in indxpopl]
+    #    for strgmodl in gdat.liststrgmodl:
+    #        varb = getattr(gdat, strgmodl + strgvarb)
+    #        varbcomm = varb
+    #        for elemtypetemp in :
+    #            if not elemtypetemp in gdat.commelemtype:
+    #                gdat.commelemtype.append(elemtypetemp)
+    
+    if 'lens' in gdat.commelemtype:
+        gdat.hubbexpofact = 1.63050e-19
+    
+    gdat.sdenunit = 'degr'
+
+    gdat.factergskevv = 1.6e-9
+    if gdat.exprtype == 'ferm':
+        gdat.listspecconvunit = [['en02', 'gevv']]
+    if gdat.exprtype == 'chan':
+        gdat.listspecconvunit = [['en00', 'kevv'], ['en02', 'kevv'], ['en02', 'ergs'], ['en03', 'ergs', '0520', 0.5,  2.], \
+                                                                                       ['en03', 'ergs', '0210',  2., 10.], \
+                                                                                       ['en03', 'ergs', '0510', 0.5, 10.], \
+                                                                                       ['en03', 'ergs', '0208',  2.,  8.], \
+                                                                                       ['en03', 'ergs', '0508', 0.5,  8.], \
+                                                                                       ['en03', 'ergs', '0207',  2.,  7.], \
+                                                                                       ['en03', 'ergs', '0507', 0.5,  7.]]
+    if gdat.exprtype == 'hubb':
+        gdat.listspecconvunit = [['en03', 'ergs']]
+    
+    # temp
+    #if gdat.exprtype == 'chan' and (gdat.anlytype.startswith('home') or gdat.anlytype.startswith('extr')):
+    #    gdat.truelegdpopl = ['AGN', 'Galaxy']
+
+    # temp
+    gdat.enerbinsadje = True
+
+    if gdat.enerbins:
+        if gdat.enerbinsadje:
+            gdat.meanenerfull = sqrt(gdat.binsenerfull[1:] * gdat.binsenerfull[:-1])
+    
+    ### background parameters
     if gdat.exprtype == 'chan':
         if gdat.anlytype.startswith('extr'):
             meanbacpbac1 = 1.
@@ -597,21 +726,6 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.indxenerincl = array([0])
     
-    # energy band string
-    if gdat.strgenerfull == None:
-        if gdat.exprtype == 'sdss':
-            gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
-        if gdat.exprtype == 'hubb':
-            gdat.strgenerfull = ['F606W', 'F814W']
-        if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan': 
-            gdat.strgenerfull = []
-            for i in range(len(gdat.binsenerfull) - 1):
-                gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binsenerfull[i], gdat.lablenerunit, gdat.binsenerfull[i+1], gdat.lablenerunit))
-        if gdat.exprtype == 'sdyn':
-            gdat.strgenerfull = ['']
-    
-    gdat.indxenerfull = arange(len(gdat.strgenerfull))
-
     ## energy
     gdat.numbener = gdat.indxenerincl.size
     gdat.indxenerinclbins = empty(gdat.numbener+1, dtype=int)
@@ -620,7 +734,6 @@ def init( \
     gdat.indxenerpivt = 0
     if gdat.enerbins:
         gdat.numbenerplot = 100
-        gdat.numbenerfull = len(gdat.strgenerfull)
         gdat.strgener = [gdat.strgenerfull[k] for k in gdat.indxenerincl]
         if gdat.enerbinsadje:
             gdat.binsener = gdat.binsenerfull[gdat.indxenerinclbins]
@@ -636,8 +749,6 @@ def init( \
                 retr_axis(gdat, 'ener' + strg, gdat.minmener, gdat.maxmener, numbbins)
 
         gdat.limtener = [amin(gdat.binsener), amax(gdat.binsener)] 
-    else:
-        gdat.numbenerfull = 1
     if gdat.numbener > 1:
         gdat.enerpivt = gdat.meanener[gdat.indxenerpivt]
     gdat.indxener = arange(gdat.numbener, dtype=int)
@@ -717,13 +828,18 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_{z}'
         else:
-            gdat.labllgal = r'\theta_1'
-
+            if gdat.exprtype == 'ferm' and gdat.lgalcntr == 0 and gdat.bgalcntr == 0:
+                gdat.labllgal = r'l'
+            else:
+                gdat.labllgal = r'\theta_1'
     if gdat.lablbgal == None:
         if gdat.exprtype == 'sdyn':
             gdat.lablbgal = r'E_k'
         else:
-            gdat.lablbgal = r'\theta_2'
+            if gdat.exprtype == 'ferm' and gdat.lgalcntr == 0 and gdat.bgalcntr == 0:
+                gdat.lablbgal = r'b'
+            else:
+                gdat.lablbgal = r'\theta_2'
 
     if gdat.strgenerunit == None:
         if gdat.exprtype == 'ferm':
@@ -1192,6 +1308,8 @@ def init( \
             elif gdat.trueelemtype[l] == 'lghtpntsagnntrue':
                 setp_varbvalu(gdat, 'dlosdistslop', -2., popl=l)
                 setp_varbvalu(gdat, 'scaldlosdistslop', 'self', popl=l)
+                setp_varbvalu(gdat, 'lum0distsloplowr', 0.5, popl=l)
+                setp_varbvalu(gdat, 'lum0distslopuppr', 1.5, popl=l)
     
         if gdat.exprtype == 'ferm':
 
@@ -1328,19 +1446,19 @@ def init( \
     # intermediate setup
 
     ## reference spectra
-    if gdat.listspecrefrplot == None:
+    if gdat.listprefsbrtlabl == None:
         if gdat.exprtype == 'chan':
-            gdat.listenerrefrplot = []
-            gdat.listsbrtrefrplot = []
-            gdat.listlablrefrplot = ['CDFS', 'HEAO', 'XMM', 'ROSAT']
+            gdat.listprefsbrtener = []
+            gdat.listprefsbrtsbrt = []
+            gdat.listprefsbrtlabl = ['CDFS', 'HEAO', 'XMM', 'ROSAT']
             for strgfile in ['cdfs', 'heao', 'xmmm', 'rost']:
                 path = gdat.pathinpt + '%s.csv' % strgfile
                 enerrefrplot = loadtxt(path, delimiter=',')[:, 0]
                 sbrtrefrplot = loadtxt(path, delimiter=',')[:, 1]
                 sbrtrefrplot /= enerrefrplot**2
-                gdat.listenerrefrplot.append(enerrefrplot)
-                gdat.listsbrtrefrplot.append(sbrtrefrplot)
-
+                gdat.listprefsbrtener.append(enerrefrplot)
+                gdat.listprefsbrtsbrt.append(sbrtrefrplot)
+    
     if gdat.numbener > 1:
         if gdat.enerpivt == 0.:
             raise Exception('Pivot energy cannot be zero.')
@@ -1516,6 +1634,8 @@ def init( \
             for q in gdat.indxrefr:
                 for strgfeat in gdat.refrliststrgfeat[q]:
                     if strgfeat == 'gang' or strgfeat == 'aang':
+                        continue
+                    if strgfeat == 'etag':
                         continue
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
                     for l in gdat.fittindxpopl:
@@ -1877,6 +1997,63 @@ def init( \
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     
+    gdat.indxpoplcrin = 0
+    if gdat.fittnumbtrap > 0:
+        gdat.liststrgvarbhist = []
+        cntr = 0
+        for l in gdat.fittindxpopl:
+            for d in gdat.fittindxregipopl[l]:
+                for strgfeat in gdat.fittliststrgfeat[l]:
+                    gdat.liststrgvarbhist.append([[] for k in range(4)])
+                    gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeat + 'pop%dreg%d' % (l, d)
+                    gdat.liststrgvarbhist[cntr][1] = strgfeat
+                    gdat.liststrgvarbhist[cntr][3] = strgfeat + 'ref%dpop%dreg%d' % (gdat.indxpoplcrin, l, d)
+                    cntr += 1    
+                    for strgfeatseco in gdat.fittliststrgfeat[l]:
+                        if strgfeat == strgfeatseco:
+                            continue
+                        gdat.liststrgvarbhist.append([[] for k in range(4)])
+                        gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeat + strgfeatseco + 'pop%dreg%d' % (l, d)
+                        gdat.liststrgvarbhist[cntr][1] = strgfeat
+                        gdat.liststrgvarbhist[cntr][2] = strgfeatseco
+                        gdat.liststrgvarbhist[cntr][3] = strgfeat + strgfeatseco + 'ref%dpop%dreg%d' % (gdat.indxpoplcrin, l, d)
+                        cntr += 1    
+
+    # selection effects
+    if gdat.datatype == 'inpt':
+        if gdat.numbsampboot == None:
+            gdat.numbsampboot = gdat.numbsamp
+    
+        if gdat.exprtype == 'chan':
+            for l in gdat.fittindxpopl:
+                for listtemp in gdat.liststrgvarbhist:
+                    strgvarb = listtemp[0]
+                    if 'reds' in strgvarb:
+                        if len(listtemp[2]) == 0:
+                            if listtemp[:4] == 'reds':
+                                crex = gdat.meanredswo08**2
+                            else:
+                                crex = None
+                        else:
+                            crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                            if listtemp[:4] == 'reds':
+                                crex[:, :] = gdat.meanredswo08[:, None]**2
+                            else:
+                                crex[:, :] = gdat.meanredswo08[None, :]**2
+                    else:
+                        crex = None
+                    
+                    print 'strgvarb'
+                    print strgvarb
+                    print 'crex'
+                    if crex != None:
+                        summgene(crex)
+                    else:
+                        print crex
+                    print
+
+                    setattr(gdat, 'crex' + strgvarb[4:], crex)
+    
     setp_indxswepsave(gdat)
     
     gdat.namesampdist = 'post'
@@ -1966,7 +2143,7 @@ def initarry( \
              dictvarb, \
              execpara=False, \
              strgcnfgextnexec=None, \
-             listnamevarbcomp=False, \
+             listnamevarbcomp=None, \
              listlablcomp=False, \
             ):
     
@@ -2004,7 +2181,7 @@ def initarry( \
         listrtag.append(rtag)
 
     #print 'finished'
-    if listnamecomp != None:
+    if listnamevarbcomp != None:
         
         listgdat = coll_rtag(listrtag)
 
@@ -2423,11 +2600,9 @@ def work(pathoutprtag, lock, indxprocwork):
         else:
             strgcnfg = gdat.strgcnfg
         path = gdat.pathoutp + 'stat_' + strgcnfg + '.h5'
-        print 'heeey'
         if os.path.exists(path):
             boolinitreco = True
             thisfile = h5py.File(path, 'r')
-            print 'heeey'
             if gdat.verbtype > 0:
                 print 'Initializing from the state %s...' % path
                 print 'Likelihood:'
@@ -2445,6 +2620,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 
                 if numbpoplinpt != gdat.fittnumbpopl:
                     raise Exception('Cannot initialize with different number of populations.')
+                
                 # find the number of elements provided
                 cntr = zeros(numbpoplinpt, dtype=int)
                 for attr in thisfile:
@@ -2454,15 +2630,26 @@ def work(pathoutprtag, lock, indxprocwork):
                 if gdat.verbtype > 0:
                     print 'Number of elements found:'
                     print cntr
-            print 'heeey'
 
-            print 'attributes in the file'
-            for attr in thisfile:
-                print attr
+            #print 'attributes in the file'
+            #for attr in thisfile:
+            #    print attr
             for attr in thisfile:
                 for k, namefixp in enumerate(gdat.fittnamefixp):
                     if namefixp == attr:
-                        gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
+                        if namefixp.startswith('numbelem'):
+                            try:
+                                print 'namefixp'
+                                print namefixp
+                                indxpopltemp = int(namefixp[-5])
+                                indxregitemp = int(namefixp[-1])
+                                initnumbelem = getattr(gdat, 'initnumbelempop%dreg%d' % (indxpopltemp, indxregitemp))
+                                print 'Initial condition for the number of elements conflicts with the state file. Defaulting to the argument...'
+                            except:
+                                initnumbelem = thisfile[attr][()]
+                            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initnumbelem, k)
+                        else:
+                            gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', thisfile[attr][()], k)
                         if gdatmodi.thissamp[k] == 0.:
                             print 'Warning CDF is zero.'
                         if not isfinite(thisfile[attr][()]):

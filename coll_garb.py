@@ -31,7 +31,7 @@ for strgextn in liststrgextn:
                         boolkeep = True
         
             numbswep = int(pathfile[pathfile.rfind('_')+1:])
-            if ((not os.path.isfile(pathchec) or not boolkeep or numbswep <= 1000) and not 'mockonly' in rtag) or boolforcdele:
+            if ((not os.path.isfile(pathchec) or not boolkeep or numbswep < 1000) and not 'mockonly' in rtag) or boolforcdele:
                 print 'Deleting %s...' % pathchec
                 cmnd = 'rm -rf ' + pathfile
                 os.system(cmnd)
