@@ -1158,8 +1158,8 @@ def init( \
                 enertemp = sqrt(gdat.limtener[0] * gdat.limtener[1])
                 # temp -- these should depend on population index
                 setp_varblimt(gdat, 'elin', gdat.limtener, strgmodl=strgmodl)
-                setp_varblimt(gdat, 'edis', array([1e-4, 1e-1]) * enertemp, strgmodl=strgmodl)
-                setp_varblimt(gdat, 'gamm', array([1e-4, 1e-1]) * enertemp, strgmodl=strgmodl)
+                setp_varblimt(gdat, 'sigm', array([1e-1, 1e0]) * enertemp, strgmodl=strgmodl)
+                setp_varblimt(gdat, 'gamm', array([1e-1, 1e0]) * enertemp, strgmodl=strgmodl)
         
     if gdat.numbpixlfull != 1:
         minmdefs = 0.003 / gdat.anglfact
@@ -2434,6 +2434,17 @@ def optihess(gdat, gdatmodi):
                             # evaluate the posterior
                             deltlpos[a, 1] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffparaodim[a]]))
                     
+                        print 'gdat.indxstdppara'
+                        print gdat.indxstdppara
+                        print 'gdat.fittindxpara'
+                        print gdat.fittindxpara
+                        print 'indxstdpfrst'
+                        print indxstdpfrst
+                        print 'indxstdpseco'
+                        print indxstdpseco
+                        print 'gdatmodi.hess'
+                        summgene(gdatmodi.hess)
+                        print
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
                         if gdat.fittnumbtrap > 0:
@@ -2463,7 +2474,7 @@ def optihess(gdat, gdatmodi):
                                     gdatmodi.stdvstdpmatr[indxstdpfrst, indxstdpseco] += stdv * amplfact**0.5 / \
                                                                                 gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[indxpoplmoditemp[0]][indxregimoditemp[0]]]
                                 gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]]['stdv' + strgcomp + 'indv'][indxelemmoditemp[0]] = stdv
-                                gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]][gdat.fittnamefeatampl[l] + 'indv'][indxelemmoditemp[0]] = \
+                                gdatmodi.dictmodi[indxpoplmoditemp[0]][indxregimoditemp[0]][gdat.fittnamefeatampl[indxpoplmoditemp[0]] + 'indv'][indxelemmoditemp[0]] = \
                                                                                                                                     gdatmodi.thissampvarb[indxsampampltemp]
         
                     else:
@@ -3352,7 +3363,7 @@ def work(pathoutprtag, lock, indxprocwork):
         
         # temp
         #gdatmodi.thisdeltlliktotl[0] = gdatmodi.nextdeltlliktotl
-    
+        
         if gdat.diagmode:
             if gdat.sqzeprop and abs(gdatmodi.nextdeltlliktotl) > 0.1 and not gdatmodi.proptran:
                 raise Exception('Log-likelihood difference should not be this large when the proposal scale is very small.')

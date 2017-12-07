@@ -842,8 +842,12 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=N
         if spectype == 'gaus':
             spec = 1. / edis[None, :] / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis[None, :])**2)
         if spectype == 'voig':
-            args = (gdat.meanener[:, None] + 1j * gamm[None, :]) / sqrt(2.) / edis[None, :]
-            spec = 1. / edis[None, :] / sqrt(2. * pi) * flux[None, :] * real(scipy.special.wofz(args))
+            args = (gdat.meanener[:, None] + 1j * gamm[None, :]) / sqrt(2.) / sigm[None, :]
+            spec = 1. / sigm[None, :] / sqrt(2. * pi) * flux[None, :] * real(scipy.special.wofz(args))
+            print 'spec'
+            print spec
+            print
+
         if spectype == 'edis':
             edis = edisintp(elin)[None, :]
             spec = 1. / edis / sqrt(2. * pi) * flux[None, :] * exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
@@ -3432,7 +3436,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
 
     ## number of bins in histogram plots
-    gdat.numbbinsplot = 4
+    gdat.numbbinsplot = 20
     gdat.indxbinsplot = arange(gdat.numbbinsplot)
     
     ## number of bins in hyperprior plots
@@ -3618,6 +3622,8 @@ def setpinit(gdat, boolinitsetp=False):
     setattr(gdat, 'factflux0400plot', 1.)
     setattr(gdat, 'scalflux0400plot', 'logt')
     
+    for q in gdat.indxrefr:
+        setattr(gdat, 'lablaerr' + gdat.listnamerefr[q], '\Delta_{%d}' % q)
     gdat.lablsigm = '\sigma_l'
     gdat.lablgamm = '\gamma_l'
 
@@ -4208,6 +4214,13 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.highexpo:
             gdat.expo[d] *= 1e10
     
+    gdat.factcmplplot = 1.
+    gdat.factfdisplot = 1.
+    gdat.minmcmpl = 0.
+    gdat.maxmcmpl = 1.
+    gdat.minmfdis = 0.
+    gdat.maxmfdis = 1.
+
     if gdat.thindata:
         expotemp = [[] for d in gdat.indxregi]
         sbrttemp = [[] for d in gdat.indxregi]
@@ -4564,7 +4577,10 @@ def setpinit(gdat, boolinitsetp=False):
             cntr += 1
 
     if gdat.fittnumbtrap > 0:
-        gdat.numbstdp = gdat.numbfixpprop + gdat.fittmaxmnumbcomp
+        gdat.numbstdp = gdat.numbfixpprop
+        for l in gdat.fittindxpopl:
+            if gdat.fittmaxmnumbelempopl[l] > 0:
+                gdat.numbstdp += gdat.fittnumbcomp[l]
     else:
         gdat.numbstdp = gdat.numbfixpprop
     gdat.numbstdpfixp = gdat.numbfixpprop
@@ -4594,9 +4610,33 @@ def setpinit(gdat, boolinitsetp=False):
             for l in gdat.fittindxpopl:
                 for d in gdat.fittindxregipopl[l]:
                     for strgcomp in gdat.fittliststrgcomp[l]:
+                        print 'ld'
+                        print l, d
+                        print 'strgcomp'
+                        print strgcomp
+                        print 'indxsampcomp[strgcomp][l][d]'
+                        print indxsampcomp[strgcomp][l][d]
+                        print 
                         if gdat.propcomp and k in indxsampcomp[strgcomp][l][d]:
                             gdat.indxstdppara[k] = getattr(gdat, 'indxstdppop%d' % l + strgcomp)
     
+    print 'gdat.fittindxpopl'
+    print gdat.fittindxpopl
+    print 'gdat.fittindxregipopl'
+    print gdat.fittindxregipopl
+    print 'gdat.fittliststrgcomp'
+    print gdat.fittliststrgcomp
+    print ''
+    print 'gdat.indxstdppara'
+    print gdat.indxstdppara
+    print 'gdat.numbstdp'
+    print gdat.numbstdp
+    print
+    # temp
+    if amax(gdat.indxstdppara) != gdat.numbstdp:
+        pass
+        #raise Exception('')
+
     if False and amax(gdat.indxstdp) != amax(gdat.indxstdppara):
         print 'gdat.indxstdppara'
         print gdat.indxstdppara
@@ -4776,6 +4816,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxproptypecomp = []
 
     for k in gdat.indxstdp:    
+        if gdat.indxstdppara[k] == -1:
+            continue
         if k in arange(gdat.indxfixpprop.size):
             gdat.lablproptype = append(gdat.lablproptype, gdat.fittlablfixp[gdat.indxfixpprop[k]])
         else:
@@ -4792,6 +4834,21 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[indx[0]])
             else:
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[indx[0]][:-8])
+            print 'gdat.nameproptype'
+            print gdat.nameproptype
+            
+            print 'k'
+            print k
+            print 'gdat.fittnamepara'
+            print gdat.fittnamepara
+            print 'indx'
+            print indx
+            print 'gdat.indxstdppara'
+            print gdat.indxstdppara
+
+            print 'gdat.namestdp[k]'
+            print gdat.namestdp[k]
+            print
             gdat.nameproptype = append(gdat.nameproptype, gdat.namestdp[k])
         
         # take proposal types that change element parameters
@@ -7795,12 +7852,8 @@ def readfile(path):
     filearry.close()
     
     if 'gdatfinl' in path or 'gdatinit' in path:
-        print 'gdattemptemp.binsener'
-        summgene(gdattemptemp.binsener)
-        print 'gdattemptemp.edis'
-        summgene(gdattemptemp.edis)
-        print
-        gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
+        if hasattr(gdattemptemp, 'edis'):
+            gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
         gdattemptemp.adisobjt = interp1d_pick(gdattemptemp.redsintp, gdattemptemp.adisintp)
         gdattemptemp.redsfromdlosobjt = interp1d_pick(gdattemptemp.adisintp * gdattemptemp.redsintp, gdattemptemp.redsintp)
     
@@ -10512,7 +10565,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         for l in gdat.fittindxpopl:
                             for d in gdat.fittindxregipopl[l]:
                                 
-                                for strgfeatfrst in liststrgfeat[l]:
+                                for strgfeatfrst in liststrgfeatodim[l]:
                                     
                                     if not strgfeatfrst in gdat.refrliststrgfeat[q]:
                                         continue
@@ -10524,8 +10577,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         continue
                                     
                                     binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
-                                        
-                                    for strgfeatseco in liststrgfeat[l]:
+                                    for strgfeatseco in liststrgfeatodim[l]:
                                         
                                         if strgfeatfrst == strgseco:
                                             continue
@@ -10559,7 +10611,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     if len(indxelemrefrasschits[q][l][d]) > 0:
                                         binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
                                         fitthistfeatfrstfals = histogram(dictelem[l][d][strgfeatfrst][indxelemfittasscfals[q][l][d]], bins=binsfeatfrst)[0]
-                                        fitthistfeatfrst = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
+                                        fitthistfeatfrst = getattr(gdatobjt, strgpfix + 'hist' + strgfeatfrst + 'pop%dreg%d' % (l, d))
                                         indxgood = where(fitthistfeatfrst != 0.)[0]
                                         if indxgood.size > 0:
                                             fdisfeatfrst[indxgood] = fitthistfeatfrstfals[indxgood].astype(float) / fitthistfeatfrst[indxgood]
@@ -11091,7 +11143,13 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             setattr(gdat, 'stdv' + strgchan, stdvtemp)
             if strgchan in gdat.listnamevarbcpos:
                 setattr(gdat, 'cpos' + strgchan, cpostemp)
-       
+        
+        for namevarbscal in gdat.listnamevarbscal:
+            setattr(gdat, 'list' + strgpdfn + namevarbscal, getattr(gdat, 'list' + namevarbscal))
+        
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            setattr(gdat, 'list' + strgpdfn + namefixp, gdat.listsampvarb[:, k])
+        
         if gdat.checprio:
             for namevarbscal in gdat.listnamevarbscal:
                 setp_pdfnvarb(gdat, namevarbscal, namevarbscal, strgpdfn)
@@ -11176,13 +11234,17 @@ def setp_info(gdat, gdatprio, name, namefull):
     info = retr_info(pdfnpost, pdfnprio)
     deltvarbscal = getattr(gdat, 'delt' + name)
     infototl = sum(info * deltvarbscal)
-    ksts = sp.speccial.kstest(listpost, listprio)
+    print 'namefull'
+    print namefull
     print 'name'
     print name
-    print 'info'
-    summgene(info)
+    print 'listpost'
+    summgene(listpost)
+    print 'listprio'
+    summgene(listprio)
     print
-    setattr(gdat, 'ksts' + namefull, ksts)
+    temp, pvks = sp.stats.ks_2samp(listpost, listprio)
+    setattr(gdat, 'pvks' + namefull, pvks)
     setattr(gdat, 'info' + namefull, info)
     setattr(gdat, 'infototl' + namefull, infototl)
 
@@ -11251,6 +11313,7 @@ def chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgthisvarb, nextvarb, indxcu
         frac = abs(nextvarb - thisvarb[indxcubeeval]) / thisvarb[indxcubeeval]
         if gdat.sqzeprop and (frac > 1e-6).any() and not (strgstat == 'next' and gdatobjt.proptran) and not (thisvarb[indxcubeeval] == 0.).all() and \
                 not ((strgthisvarb.startswith('thissbrtdfnc') or strgthisvarb.startswith('thisdeflsubh') or strgthisvarb.startswith('thissbrtextsbgrd')) and amax(thisvarb) < 1e-10):
+            print 'Proposal check failed.'
             print 'strgmodl'
             print strgmodl
             print 'strgthisvarb'
@@ -11789,7 +11852,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl):
                                         scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                                         limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
                                         plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
-                                                  lablydat=lablydat, factxdat=factxdat, plottype='errr', \
+                                                  lablydat=lablydat, factxdat=factxdat, \
+                                                  #plottype='errr', \
                                                   scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
                                                   omittrue=True, nameinte=nameinte)
 
@@ -12169,9 +12233,9 @@ def plot_info(gdat, gdatprio, name, namefull):
     print 'name'
     print name
     
-    ksts = getattr(gdat, 'ksts' + namefull)
+    pvks = getattr(gdat, 'pvks' + namefull)
     infototl = getattr(gdat, 'infototl' + namefull)
-    titl = '$D_{KL} = %.3g$, KS = %.3g $\sigma$' % (infototl, ksts)
+    titl = '$D_{KL} = %.3g$, KS = %.3g $\sigma$' % (infototl, pvks)
     xdat = getattr(gdat, 'mean' + name) * getattr(gdat, 'fact' + name + 'plot')
     lablxdat = getattr(gdat, 'labl' + name + 'totl')
     
@@ -12853,7 +12917,10 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, specconvunit):
             if gdat.exprtype == 'chan':
                 factminm = 1e-1
                 factmaxm = 1e0
-            if gdat.exprtype == 'ferm':
+            elif gdat.exprtype == 'ferm':
+                factminm = 1e-4
+                factmaxm = 1e0
+            else:
                 factminm = 1e-4
                 factmaxm = 1e0
             minmydat = factminm * gdat.factylimsbrt[0] * amax(listydat[cntrdata, :] * factener) * factydat
