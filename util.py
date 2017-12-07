@@ -4585,8 +4585,15 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.numbstdp = gdat.numbfixpprop
     gdat.numbstdpfixp = gdat.numbfixpprop
     if gdat.indxfixpprop.size > 0:
-        gdat.strgstdp = concatenate((array(gdat.fittlablfixp)[gdat.indxfixpprop], gdat.fittliststrgcomptotl))
-        gdat.namestdp = concatenate((array(gdat.fittnamefixp)[gdat.indxfixpprop], gdat.fittliststrgcomptotl))
+        gdat.strgstdp = copy(array(gdat.fittlablfixp)[gdat.indxfixpprop])
+        gdat.namestdp = copy(array(gdat.fittnamefixp)[gdat.indxfixpprop])
+        #gdat.strgstdp = concatenate((array(gdat.fittlablfixp)[gdat.indxfixpprop], gdat.fittliststrgcomptotl))
+        #gdat.namestdp = concatenate((array(gdat.fittnamefixp)[gdat.indxfixpprop], gdat.fittliststrgcomptotl))
+        for l in gdat.fittindxpopl:
+            for d in gdat.fittindxregipopl[l]:
+                for strgcomp in gdat.fittliststrgcomp[l]:
+                    gdat.strgstdp = append(gdat.strgstdp, getattr(gdat, 'labl' + strgcomp))
+                    gdat.namestdp = append(gdat.namestdp, strgcomp + 'pop%dreg%d' % (l, d))
     else:
         gdat.strgstdp = gdat.fittliststrgcomptotl
         gdat.namestdp = gdat.fittliststrgcomptotl
@@ -4834,18 +4841,18 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[indx[0]])
             else:
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[indx[0]][:-8])
-            print 'gdat.nameproptype'
-            print gdat.nameproptype
-            
             print 'k'
             print k
+            print 'gdat.nameproptype'
+            print gdat.nameproptype
+            print 'gdat.namestdp'
+            print gdat.namestdp
             print 'gdat.fittnamepara'
             print gdat.fittnamepara
             print 'indx'
             print indx
             print 'gdat.indxstdppara'
             print gdat.indxstdppara
-
             print 'gdat.namestdp[k]'
             print gdat.namestdp[k]
             print
@@ -6176,7 +6183,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 else:
                     indxpoplassc[l] = indxpopl
 
-        # variables for which two dimensional functions will be calculated
+        # variables for which two dimensional histograms will be calculated
         liststrgfeatcorr = [[] for l in indxpopl]
         if gdat.plotelemcorr:
             for l in indxpopl:
@@ -6184,10 +6191,13 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     liststrgfeatcorr[l].append(strgfeat)
         
         # variables for which two dimensional functions will be plotted
-        liststrgfeatcorrplot = deepcopy(liststrgfeatcorr)
+        liststrgfeatcorrplot = [[] for l in indxpopl]
         for l in indxpopl:
-            if strgmodl == 'fitt':
-                liststrgfeatcorrplot[l] += ['cmpl', 'fdis', 'hccf', 'hcal']
+            for strgfeat in liststrgfeatcorr:
+                liststrgfeatcorrplot.append(strgfeat)
+                if gdat.datatype == 'inpt':
+                    for strgextn in ['excr', 'incr', 'tocr']:
+                        liststrgfeatcorrplot.append(strgextn + strgfeat[4:])
         
         # number of element parameters
         numbcomp = zeros(numbpopl, dtype=int)
@@ -8323,6 +8333,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         indxevtteval = gdat.indxevtt
         evalllik = True
     
+    print 'keeeeeeeeey'
+    print 'indxevtteval'
+    print indxevtteval
+    print
+
     if evalllik or strgstat != 'next':
         
         if gdat.verbtype > 1:
@@ -8448,7 +8463,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     indxcubeeval = gdat.indxcubeeval
                 else:
                     indxcubeeval = [[[] for d in indxregieval] for y in indxgrideval]
-                    indxcubeeval[0][0] = meshgrid(indxenereval, gdat.indxpixl, gdat.indxevtt, indexing='ij')
+                    if gdatmodi.proppsfp:
+                        indxcubeeval[0][0] = meshgrid(indxenereval, gdat.indxpixl, indxevtteval, indexing='ij')
+                    if gdatmodi.propbacp:
+                        indxcubeeval[0][0] = meshgrid(indxenereval, gdat.indxpixl, gdat.indxevtt, indexing='ij')
             else:
                 indxcubeeval = gdat.indxcubeeval
         else:
@@ -8478,9 +8496,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             indxpixleval[yy][dd] = unique(concatenate(indxpixlevalpopl[dd])).astype(int)
                         else:
                             indxpixleval[yy][dd] = gdat.indxpixl
+                        print 'feeeeeeeeeey'
+                        print 'indxevtteval'
+                        print indxevtteval
                         indxcubeeval[yy][dd] = meshgrid(indxenereval, indxpixleval[yy][dd], indxevtteval, indexing='ij')
+                        print 'indxcubeeval[yy][dd][0]'
+                        summgene(indxcubeeval[yy][dd][0])
+                        print
+
             else:
+                print 'teeeeey'
                 indxcubeeval = gdat.indxcubeeval 
+                print 'indxcubeeval[yy][dd][0]'
+                summgene(indxcubeeval[yy][dd][0])
+                print
         # load indxcubeeval to the global object for a possible state update
         if strgstat == 'next':
             gdatmodi.indxregieval = indxregieval
@@ -9093,20 +9122,25 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     #        print 'sbrt[name][dd][ii, :, mm]'
                     #        summgene(sbrt[name][dd][ii, :, mm])
         if gdat.verbtype > 1:
-            print 'sbrt[modlraww][dd]'
-            summgene(sbrt['modlraww'][dd])
-            #for dd, d in enumerate(indxregieval):
-            #    print 'dd, d'
-            #    print dd, d
-            #    for ii, i in enumerate(indxenereval):
-            #        print 'ii, i'
-            #        print ii, i
-            #        for mm, m in enumerate(indxevtteval):
-            #            print 'mm, m'
-            #            print mm, m
-            #            print 'sbrt[modlraww][dd][ii, :, mm]'
-            #            summgene(sbrt['modlraww'][dd][ii, :, mm])
-            #    print
+            #print 'sbrt[modlraww][dd]'
+            #summgene(sbrt['modlraww'][dd])
+            for dd, d in enumerate(indxregieval):
+                print 'dd, d'
+                print dd, d
+                for ii, i in enumerate(indxenereval):
+                    print 'ii, i'
+                    print ii, i
+                    for mm, m in enumerate(indxevtteval):
+                        print 'mm, m'
+                        print mm, m
+                        print 'sbrt[modlraww][dd][ii, :, mm]'
+                        summgene(sbrt['modlraww'][dd][ii, :, mm])
+                print
+        
+        if gdat.verbtype > 1:
+            for k in range(3):
+                print 'indxcubeeval[0][dd][k]'
+                summgene(indxcubeeval[0][dd][k])
         
         # convolve the model with the PSF
         if convdiffanyy and (psfnevaltype == 'full' or psfnevaltype == 'conv'):
@@ -9127,6 +9161,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     sbrt['modlconv'][dd] = empty_like(indxcubeeval[0][dd][0], dtype=float)
                     for ii, i in enumerate(indxenereval):
                         for mm, m in enumerate(indxevtteval):
+                            print 'Convolving ii, i, mm, m'
+                            print ii, i, mm, m
+                            print
                             if gdat.pixltype == 'cart':
                                 sbrt['modlconv'][dd][ii, :, mm] = convolve_fft(sbrt['modlraww'][dd][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)), \
                                                                                                                                                  psfnconv[mm][ii]).flatten()
@@ -9175,9 +9212,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 print dd, d
                 print 'sbrt[modl][dd]'
                 summgene(sbrt['modl'][dd])
-                for k in range(3):
-                    print 'indxcubeeval[0][dd][k]'
-                    summgene(indxcubeeval[0][dd][k])
                 print
             #print 'After adding light emitting elements (pnts and line)...'
             #for dd, d in enumerate(indxregieval):
@@ -11020,6 +11054,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         if gdat.datatype == 'inpt' and gdat.boolcorr:
             path = gdat.pathoutprtagmock + 'gdatfinlpost'
             gdatmock = readfile(path)
+            
             for liststrgcompvarbhist in gdat.liststrgvarbhist:
                 strgvarb = liststrgcompvarbhist[0]
                 if liststrgcompvarbhist[1].startswith('aerr') or len(liststrgcompvarbhist[2]) > 0 and liststrgcompvarbhist[2].startswith('aerr'):
@@ -11062,11 +11097,17 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 indxbaddzero = where(listcmplboot == 0.)
                 listhistboot[indxbadd] = -1.
                 listhistboot[indxbaddzero] = -2.
-                listhistcorr = listhistboot / listcmplboot * (1. - listfdisboot)
+                listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
                 if crexhist != None:
-                    listhistcorr /= crexhist 
-                
-                setattr(gdat, 'listhistboot' + strgvarb, listhistcorr)
+                    listhisttocr = listhistincr / crexhist 
+                    listhistexcr = listhistboot / crexhist
+                else:
+                    listhisttocr = listhistincr
+                    listhistexcr = None
+                setattr(gdat, 'listtocr' + strgvarb, listhisttocr)
+                setattr(gdat, 'listincr' + strgvarb, listhistincr)
+                setattr(gdat, 'listexcr' + strgvarb, listhistexcr)
+                gdat.liststrgchan += ['listtocr' + strgvarb, 'listincr' + strgvarb, 'listexcr' + strgvarb]
 
         # compute credible intervals
         if gdat.verbtype > 0:

@@ -3370,6 +3370,9 @@ def work(pathoutprtag, lock, indxprocwork):
                 
         ## variables to be saved for each sweep
         for strg in gdat.liststrgvarbarryswep:
+            print 'strg'
+            print strg
+            print
             workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'next' + strg)
         
         if gdat.diagmode:
