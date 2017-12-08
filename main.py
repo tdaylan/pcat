@@ -425,7 +425,8 @@ def init( \
             gdat.binsenerfull = logspace(log10(1. / 2.5e-6), log10(1. / 0.8e-6), 31)
         if gdat.exprtype == 'hubb':
             # temp
-            gdat.binsenerfull = array([500., 750, 1000.])
+            #gdat.binsenerfull = array([500., 750, 1000.])
+            gdat.binsenerfull = array([750, 1000.])
     
     if gdat.exprtype == 'ferm':
         gdat.lablenerunit = 'GeV'
@@ -441,7 +442,8 @@ def init( \
         if gdat.exprtype == 'sdss':
             gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
         if gdat.exprtype == 'hubb':
-            gdat.strgenerfull = ['F606W', 'F814W']
+            #gdat.strgenerfull = ['F606W', 'F814W']
+            gdat.strgenerfull = ['F814W']
         if gdat.exprtype == 'ferm' or gdat.exprtype == 'chan' or gdat.exprtype == 'fire': 
             gdat.strgenerfull = []
             for i in range(len(gdat.binsenerfull) - 1):
@@ -616,6 +618,9 @@ def init( \
             raise Exception('')
         gdat.numbsidecart = int(sqrt(gdat.sbrtdata[0].shape[1]))
 
+    if gdat.pixltype == 'cart':
+        gdat.numbpixlcart = gdat.numbsidecart**2
+    
     for d in gdat.indxregi:
         if amin(gdat.expo[d]) == amax(gdat.expo[d]) and not isinstance(gdat.strgexpo, float):
             raise Exception('Bad input exposure map.')
@@ -741,7 +746,8 @@ def init( \
             if gdat.anlytype.startswith('extr'):
                 gdat.indxenerincl = arange(2)
         if gdat.exprtype == 'hubb':
-            gdat.indxenerincl = array([1])
+            gdat.indxenerincl = array([0])
+            #gdat.indxenerincl = array([1])
             #gdat.indxenerincl = array([0, 1])
         if gdat.exprtype == 'sdyn':
             gdat.indxenerincl = array([0])
@@ -1986,6 +1992,18 @@ def init( \
         if gdat.makeplot and gdat.makeplotinit:
             plot_samp(gdat, None, 'this', 'true')
         
+    for d in gdat.indxregi:
+        if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
+            print 'gdat.deltener'
+            summgene(gdat.deltener)
+            print 'gdat.expo[d]'
+            summgene(gdat.expo[d])
+            print 'gdat.sbrtdata[d]'
+            summgene(gdat.sbrtdata[d])
+            print 'gdat.cntpdata[d]'
+            summgene(gdat.cntpdata[d])
+            raise Exception('Data counts per pixel is less than 1.')
+    
     # initial plots
     if gdat.makeplot and gdat.makeplotinit:
         plot_init(gdat)
@@ -2044,7 +2062,8 @@ def init( \
     #if gdat.probspmr > 0. or gdat.propcomp:
     gdat.liststrgvarbarryswep += ['lrpp']
     if gdat.probtran > 0.:
-        gdat.liststrgvarbarryswep += ['auxipara']
+        for l in gdat.fittindxpopl:
+            gdat.liststrgvarbarryswep += ['auxiparapop%d' % l]
     
     gdat.liststrgvarbarryswep += ['ljcb']
     
@@ -2065,8 +2084,8 @@ def init( \
     proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
     gdat.liststrgvarbarrysamp = []
     gdat.liststrgvarblistsamp = []
+
     for strg, valu in gdatmodifudi.__dict__.iteritems():
-        
         if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
             # temp
             if isinstance(valu, ndarray) or isinstance(valu, float):
@@ -2105,22 +2124,25 @@ def init( \
         if gdat.numbsampboot == None:
             gdat.numbsampboot = gdat.numbsamp
     
-        if gdat.exprtype == 'chan':
+        if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
                 for listtemp in gdat.liststrgvarbhist:
                     strgvarb = listtemp[0]
-                    if 'reds' in strgvarb:
-                        if len(listtemp[2]) == 0:
-                            if listtemp[:4] == 'reds':
-                                crex = gdat.meanredswo08**2
+                    if gdat.exprtype == 'chan':
+                        if 'reds' in strgvarb:
+                            if len(listtemp[2]) == 0:
+                                if listtemp[:4] == 'reds':
+                                    crex = gdat.meanredswo08**2
+                                else:
+                                    crex = None
                             else:
-                                crex = None
+                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                                if listtemp[:4] == 'reds':
+                                    crex[:, :] = gdat.meanredswo08[:, None]**2
+                                else:
+                                    crex[:, :] = gdat.meanredswo08[None, :]**2
                         else:
-                            crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                            if listtemp[:4] == 'reds':
-                                crex[:, :] = gdat.meanredswo08[:, None]**2
-                            else:
-                                crex[:, :] = gdat.meanredswo08[None, :]**2
+                            crex = None
                     else:
                         crex = None
                     setattr(gdat, 'crex' + strgvarb[4:], crex)
@@ -2149,7 +2171,7 @@ def init( \
         if gdat.verbtype > 0:
             print 'Sampling from the prior...'
         
-        if gdat.optitype != 'none':
+        if gdat.optitype != 'none' and not gdat.sqzeprop:
             filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
             filecomm.write('calcllik False\n')
             filecomm.write('namesampdist prio\n')
@@ -2173,7 +2195,7 @@ def init( \
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
     
-    if gdat.optitype != 'none':
+    if gdat.optitype != 'none' and not gdat.sqzeprop:
         filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
         filecomm.write('calcllik True\n')
         filecomm.write('namesampdist post\n')
@@ -2434,17 +2456,6 @@ def optihess(gdat, gdatmodi):
                             # evaluate the posterior
                             deltlpos[a, 1] = retr_deltlpos(gdat, gdatmodi, array([k]), array([diffparaodim[a]]))
                     
-                        print 'gdat.indxstdppara'
-                        print gdat.indxstdppara
-                        print 'gdat.fittindxpara'
-                        print gdat.fittindxpara
-                        print 'indxstdpfrst'
-                        print indxstdpfrst
-                        print 'indxstdpseco'
-                        print indxstdpseco
-                        print 'gdatmodi.hess'
-                        summgene(gdatmodi.hess)
-                        print
                         gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / deltparastep**2 * fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
                         
                         if gdat.fittnumbtrap > 0:
@@ -2646,7 +2657,7 @@ def work(pathoutprtag, lock, indxprocwork):
   
     gdatmodi.thisstdpscalfact = 1.
 
-    if gdat.optitype == 'hess' and gdat.optitypetemp == 'none':
+    if gdat.optitype == 'hess' and gdat.optitypetemp == 'none' and not gdat.sqzeprop:
         print 'Replacing the proposal scale!'
         thisfile = h5py.File(gdat.pathoutprtag + 'opti.h5', 'r')
         gdat.stdvstdp = thisfile['stdvstdp'][()]
@@ -2873,7 +2884,8 @@ def work(pathoutprtag, lock, indxprocwork):
     gdatmodi.nextaccpprio = zeros(1, dtype=bool)
     gdatmodi.nextaccpprop = zeros(1, dtype=bool)
     gdatmodi.nextindxproptype = zeros(1, dtype=int)
-    gdatmodi.nextauxipara = zeros(gdat.fittmaxmnumbcomp)
+    for l in gdat.fittindxpopl:
+        setattr(gdatmodi, 'nextauxiparapop%d' % l, zeros(gdat.fittnumbcomp[l]))
     gdatmodi.nextlpri = zeros(gdat.fittnumblpri)
     gdatmodi.nextlrpp = zeros(1)
     gdatmodi.nextljcb = zeros(1)
@@ -2911,10 +2923,10 @@ def work(pathoutprtag, lock, indxprocwork):
         else:
             valu = getattr(gdatmodi, 'this' + strgvarb)
             shap = [gdat.numbsamp] + list(valu.shape)
-        workdict['list' + strgvarb] = zeros(shap)
+        workdict['list' + gdat.namesampdist + strgvarb] = zeros(shap)
     
     for strgvarb in gdat.liststrgvarblistsamp:
-        workdict['list' + strgvarb] = []
+        workdict['list' + gdat.namesampdist + strgvarb] = []
     
     ## saved state of the sample index used for logging progress status
     gdatmodi.percswepsave = -1
@@ -2940,7 +2952,7 @@ def work(pathoutprtag, lock, indxprocwork):
         
         gdatmodi.nextchro[:] = 0.
         
-        if gdat.optitypetemp == 'hess':
+        if gdat.optitypetemp == 'hess' and not gdat.sqzeprop:
             if gdat.verbtype > 0:
                 print 'Optimizing proposal scale...'
             optihess(gdat, gdatmodi)
@@ -3005,10 +3017,14 @@ def work(pathoutprtag, lock, indxprocwork):
             gdatmodi.thistmprfactstdv = 1.
             gdatmodi.thistmprlposelem = 0. 
         
+        # temp -- this can be faster
+        for l in gdat.fittindxpopl:
+            setattr(gdatmodi, 'nextauxiparapop%d' % l, empty(gdat.fittnumbcomp[l]))
+
         initchro(gdat, gdatmodi, 'next', 'prop')
         prop_stat(gdat, gdatmodi, 'fitt')
         stopchro(gdat, gdatmodi, 'next', 'prop')
-        
+
         if gdat.diagmode:
             
             if not (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.nextljcb != 0.:
@@ -3027,7 +3043,7 @@ def work(pathoutprtag, lock, indxprocwork):
         if thismakefram or gdat.boolsave[gdatmodi.cntrswep] or boollogg:
             # preprocess the current sample to calculate variables that are not updated
             proc_samp(gdat, gdatmodi, 'this', 'fitt')
-            
+        
         # diagnostics
         if gdat.diagmode:
             
@@ -3068,22 +3084,23 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'Warning! loglikelihood drop is very unlikely!'
                     print 'gdatmodi.thislliktotlprev'
                     print gdatmodi.thislliktotlprev
-                    print 'gdatmodi.thislliktotl'
-                    print gdatmodi.thislliktotl
+                    print 'gdatmodi.this + gdat.namesampdist + lliktotl'
+                    print getattr(gdatmodi, 'thislliktotl')
                     print 'workdict[listindxproptype]'
-                    print gdat.nameproptype[workdict['listindxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+5, 0].astype(int)]
+                    print gdat.nameproptype[workdict['list' + gdat.namesampdist + 'indxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+5, 0].astype(int)]
                     print
                     #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
-            for strgstat in ['this', 'next']:
-                for strgvarb in ['samp', 'sampvarb']:
-                    varb = getattr(gdatmodi, strgstat + strgvarb)
-                    if not isfinite(varb).all():
-                        print 'gdatmodi' + strgstat + strgvarb
-                        for k in gdat.fittindxpara:
-                            print varb[k]
-                        raise Exception('Sample vector is not finite.')
+            if gdatmodi.nextaccpprio:
+                for strgstat in ['this', 'next']:
+                    for strgvarb in ['samp', 'sampvarb']:
+                        varb = getattr(gdatmodi, strgstat + strgvarb)
+                        if not isfinite(varb).all():
+                            print 'gdatmodi' + strgstat + strgvarb
+                            for k in gdat.fittindxpara:
+                                print varb[k]
+                            raise Exception('Sample vector is not finite.')
             
             if gdat.fittnumbtrap > 0:
                 if gdat.fittboolelemsbrtdfncanyy:
@@ -3207,9 +3224,9 @@ def work(pathoutprtag, lock, indxprocwork):
             # fill the sample lists
             for strgvarb in gdat.liststrgvarbarrysamp:
                 valu = getattr(gdatmodi, 'this' + strgvarb)
-                workdict['list' + strgvarb][indxsampsave, ...] = valu
+                workdict['list' + gdat.namesampdist + strgvarb][indxsampsave, ...] = valu
             for strgvarb in gdat.liststrgvarblistsamp:
-                workdict['list' + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
+                workdict['list' + gdat.namesampdist + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
             stopchro(gdat, gdatmodi, 'next', 'save')
 
         # plot the current sample
@@ -3293,6 +3310,8 @@ def work(pathoutprtag, lock, indxprocwork):
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop and gdat.calcllik:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'Both likelihood and prior will not change.'
+                        print 'gdatmodi.indxsampmodi'
+                        print gdatmodi.indxsampmodi
                         print 'gdatmodi.propdist'
                         print gdatmodi.propdist
                         if gdat.fittnumbtrap > 0:
@@ -3304,7 +3323,7 @@ def work(pathoutprtag, lock, indxprocwork):
                                 print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]'
                                 print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]
                         print
-                        raise Exception('')
+                        #raise Exception('')
 
             if gdat.strgcnfg.startswith('pcat_ferm_igal') and gdatmodi.propmerg and gdat.numbpixlfull > 1:
                 dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
@@ -3370,10 +3389,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 
         ## variables to be saved for each sweep
         for strg in gdat.liststrgvarbarryswep:
-            print 'strg'
-            print strg
-            print
-            workdict['list' + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'next' + strg)
+            workdict['list' + gdat.namesampdist + strg][gdatmodi.cntrswep, ...] = getattr(gdatmodi, 'next' + strg)
         
         if gdat.diagmode:
             # temp -- this only works for lensing problem
@@ -3381,19 +3397,19 @@ def work(pathoutprtag, lock, indxprocwork):
             if gdat.strgcnfg == 'pcat_lens_mock':
                 print 'Checking...'
                 print 'workdict[listindxproptype]'
-                print workdict['listindxproptype']
+                print workdict['list' + gdat.namesampdist + 'indxproptype']
                 print 'workdict[listdeltlpritotl]'
-                print workdict['listdeltlpritotl']
+                print workdict['list' + gdat.namesampdist + 'deltlpritotl']
                 print
-                indxswepprop = where(workdict['listindxproptype'][:, 0] == 5)[0]
-                listdeltlpritotltemp = workdict['listdeltlpritotl'][indxswepprop, 0]
+                indxswepprop = where(workdict['list' + gdat.namesampdist + 'indxproptype'][:, 0] == 5)[0]
+                listdeltlpritotltemp = workdict['list' + gdat.namesampdist + 'deltlpritotl'][indxswepprop, 0]
                 if (listdeltlpritotltemp != 0.).any():
                     raise Exception('')
         
         # save the execution time for the sweep
         stopchro(gdat, gdatmodi, 'next', 'totl')
         
-        workdict['listaccpprob'][gdatmodi.cntrswep, 0] = gdatmodi.nextaccpprob[0]
+        workdict['list' + gdat.namesampdist + 'accpprob'][gdatmodi.cntrswep, 0] = gdatmodi.nextaccpprob[0]
         
         # temp
         #if gdatmodi.propwith:
@@ -3414,25 +3430,27 @@ def work(pathoutprtag, lock, indxprocwork):
             indxswepintv = arange(minmswepintv, maxmswepintv)
             
             for k in gdat.indxproptype:
-                indxswepprop = indxswepintv[where(workdict['listindxproptype'][indxswepintv, 0] == k)]
-                deltlliktotlmean = mean(workdict['listdeltlliktotl'][indxswepprop, 0])
-                deltlpritotlmean = mean(workdict['listdeltlpritotl'][indxswepprop, 0])
-                lrppmean = mean(workdict['listlrpp'][indxswepprop, 0])
-                ljcbmean = mean(workdict['listljcb'][indxswepprop, 0])
-                lpautotlmean = mean(workdict['listlpautotl'][indxswepprop, 0])
-                lpridistmean = mean(workdict['listlpridist'][indxswepprop, 0])
+                indxswepprop = indxswepintv[where(workdict['list' + gdat.namesampdist + 'indxproptype'][indxswepintv, 0] == k)]
+                deltlliktotlmean = mean(workdict['list' + gdat.namesampdist + 'deltlliktotl'][indxswepprop, 0])
+                deltlpritotlmean = mean(workdict['list' + gdat.namesampdist + 'deltlpritotl'][indxswepprop, 0])
+                lrppmean = mean(workdict['list' + gdat.namesampdist + 'lrpp'][indxswepprop, 0])
+                ljcbmean = mean(workdict['list' + gdat.namesampdist + 'ljcb'][indxswepprop, 0])
+                lpautotlmean = mean(workdict['list' + gdat.namesampdist + 'lpautotl'][indxswepprop, 0])
+                lpridistmean = mean(workdict['list' + gdat.namesampdist + 'lpridist'][indxswepprop, 0])
             
-                boolproptype = workdict['listindxproptype'][indxswepintv, 0] == k
-                boolaccp = workdict['listaccp'][indxswepintv, 0] == 1
+                boolproptype = workdict['list' + gdat.namesampdist + 'indxproptype'][indxswepintv, 0] == k
+                boolaccp = workdict['list' + gdat.namesampdist + 'accp'][indxswepintv, 0] == 1
                 if gdat.showmoreaccp and gdat.indxproptype[k] in gdat.indxproptypecomp:
                     binsampl = getattr(gdat, 'bins' + gdat.namefeatampl)
                     numbaccp = empty(gdat.numbbinsplot, dtype=int)
                     for a in gdat.indxbinsplot: 
-                        boolbins = (binsampl[a] < workdict['listamplpert'][indxswepintv, 0]) & (workdict['listamplpert'][indxswepintv, 0]< binsampl[a+1])
+                        boolbins = (binsampl[a] < workdict['list' + gdat.namesampdist + 'amplpert'][indxswepintv, 0]) & \
+																			(workdict['list' + gdat.namesampdist + 'amplpert'][indxswepintv, 0]< binsampl[a+1])
                         numbaccp[a] = where(boolaccp & boolproptype & boolbins)[0].size
                     numbtotl = empty(gdat.numbbinsplot, dtype=int)
                     for a in gdat.indxbinsplot: 
-                        boolbins = (binsampl[a] < workdict['listamplpert'][indxswepintv, 0]) & (workdict['listamplpert'][indxswepintv, 0]< binsampl[a+1])
+                        boolbins = (binsampl[a] < workdict['list' + gdat.namesampdist + 'amplpert'][indxswepintv, 0]) & \
+																			(workdict['list' + gdat.namesampdist + 'amplpert'][indxswepintv, 0]< binsampl[a+1])
                         numbtotl[a] = where(boolproptype & boolbins)[0].size
                     percaccp = zeros(gdat.numbbinsplot)
                     indx = where(numbtotl > 0)[0]
@@ -3577,8 +3595,8 @@ def work(pathoutprtag, lock, indxprocwork):
             gdatmodi.cntrswep += 1
         
     for strgvarb in gdat.liststrgvarbarry + gdat.liststrgvarblistsamp:
-        valu = workdict['list' + strgvarb]
-        setattr(gdatmodi, 'list' + strgvarb, valu)
+        valu = workdict['list' + gdat.namesampdist + strgvarb]
+        setattr(gdatmodi, 'list' + gdat.namesampdist + strgvarb, valu)
 
     gdatmodi.timereal = time.time() - timereal
     gdatmodi.timeproc = time.clock() - timeproc
