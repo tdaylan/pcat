@@ -1083,7 +1083,7 @@ def init( \
                             if not strgfeattdim in gdat.refrliststrgfeattdimcumu:
                                 continue
                                             
-                            if not strgextnseco + strgextnfrst in gdat.refrliststrgfeattdimcumu and strgextnfrst != strgextnseco:
+                            if not strgextnseco + strgextnfrst in gdat.refrliststrgfeattdimcumu and strgfrst != strgseco:
                                 gdat.refrliststrgfeattdimcumu.append(strgfeattdim)
 
     for strgmodl in gdat.liststrgmodl:
@@ -1101,7 +1101,7 @@ def init( \
 
         setp_varbvalu(gdat, 'spatdisttype', spatdisttype, strgmodl=strgmodl)
         setp_varbvalu(gdat, 'fluxdisttype', fluxdisttype, strgmodl=strgmodl)
-
+    
     if gdat.datatype == 'mock':
         for l in gdat.trueindxpopl:
             if gdat.trueelemtype[l] == 'lens':
@@ -1275,6 +1275,17 @@ def init( \
     for strgmodl in gdat.liststrgmodl:
         setp_varblimt(gdat, 'lgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
         setp_varblimt(gdat, 'bgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
+    
+        spatdisttype = getattr(gdat, strgmodl + 'spatdisttype')
+        for l in indxpopl:
+            if spatdisttype[l] == 'gangexpo':
+                setp_varbvalu(gdat, 'maxmgang', getattr(gdat, strgmodl + 'maxmlgal'), strgmodl=strgmodl)
+                
+                if gdat.exprtype == 'ferm':
+                    gangdistsexp = 5. / gdat.anglfact
+                if gdat.exprtype == 'hubb':
+                    gangdistsexp = 0.5 / gdat.anglfact
+                setp_varbvalu(gdat, 'gangdistsexp', gangdistsexp, strgmodl=strgmodl, popl=l)
     
     setp_varblimt(gdat, 'lgalsour', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
     setp_varblimt(gdat, 'bgalsour', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
@@ -1587,7 +1598,7 @@ def init( \
     if gdat.numbpixlfull > 1:
         gdat.frambndrmodl = gdat.maxmlgal * gdat.anglfact
     
-    if 'lens' in gdat.commelemtype:
+    if gdat.fittlensmodltype != 'none' or gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
         
         if gdat.serstype == 'intp':
             # construct pixel-convolved Sersic surface brightness template
@@ -1764,13 +1775,6 @@ def init( \
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
 
-    # local kernel evaluation plot
-    if gdat.makeplot:   
-        if gdat.fittnumbtrap > 0:
-            for l in gdat.fittindxpopl:
-                if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0:
-                    plot_eval(gdat, l)
-    
     if gdat.verbtype > 1 and gdat.datatype == 'mock':
         print 'True state parameters:'
         for name in gdat.truenamepara:
@@ -1983,12 +1987,16 @@ def init( \
         for q0 in gdat.indxrefr:
             for d0 in gdat.refrindxregipopl[q0]:
                 for strgfeatfrst in gdat.refrliststrgfeat[q0]:
+                    if strgfeatfrst.startswith('etag'):
+                        continue
                     refrfeatfrst = getattr(gdat, 'refr' + strgfeatfrst)
                     if len(refrfeatfrst[q0][d0]) > 0:
                         binsfrst = getattr(gdat, 'bins' + strgfeatfrst)
                         hist = histogram(refrfeatfrst[q0][d0][0, :], binsfrst)[0]
                         setattr(gdat, 'refrhist' + strgfeatfrst + 'pop%dreg%d' % (q0, d0), hist)
                         for strgfeatseco in gdat.refrliststrgfeat[q0]:
+                            if strgfeatseco.startswith('etag'):
+                                continue
                             refrfeatseco = getattr(gdat, 'refr' + strgfeatseco)
                             
                             strgextnfrst = strgfeatfrst
@@ -2045,9 +2053,6 @@ def init( \
             proc_samp(gdat, None, 'this', 'true', raww=True)
         proc_samp(gdat, None, 'this', 'true')
         
-        if gdat.makeplot and gdat.makeplotinit:
-            plot_samp(gdat, None, 'this', 'true', 'init')
-        
     for d in gdat.indxregi:
         if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
             print 'gdat.deltener'
@@ -2060,10 +2065,6 @@ def init( \
             summgene(gdat.cntpdata[d])
             raise Exception('Data counts per pixel is less than 1.')
     
-    # initial plots
-    if gdat.makeplot and gdat.makeplotinit:
-        plot_init(gdat)
-
     ## element feature indices ordered with respect to the amplitude variable
     refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
     if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
@@ -2166,6 +2167,8 @@ def init( \
                     gdat.liststrgvarbhist[cntr][4] = strgfeatfrst + 'pop%dpop%dreg%d' % (gdat.indxpoplcrin, l, d)
                     cntr += 1    
                     for strgfeatseco in gdat.fittliststrgfeat[l0]:
+                        if strgfeatfrst == strgfeatseco:
+                            continue
                         gdat.liststrgvarbhist.append([[] for k in range(5)])
                         gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (l0, d0)
                         gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
@@ -2181,27 +2184,111 @@ def init( \
             gdat.numbsampboot = gdat.numbsamp
     
         if gdat.fittnumbtrap > 0:
-            for l in gdat.fittindxpopl:
-                for listtemp in gdat.liststrgvarbhist:
-                    strgvarb = listtemp[0]
-                    if gdat.exprtype == 'chan':
-                        if 'reds' in strgvarb:
-                            if len(listtemp[2]) == 0:
-                                if listtemp[:4] == 'reds':
-                                    crex = gdat.meanredswo08**2
-                                else:
-                                    crex = None
+            for listtemp in gdat.liststrgvarbhist:
+                strgvarb = listtemp[0]
+                if gdat.exprtype == 'chan':
+                    if 'reds' in strgvarb:
+                        if len(listtemp[2]) == 0:
+                            if listtemp[:4] == 'reds':
+                                crex = gdat.meanredswo08**2
                             else:
-                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                                if listtemp[:4] == 'reds':
-                                    crex[:, :] = gdat.meanredswo08[:, None]**2
-                                else:
-                                    crex[:, :] = gdat.meanredswo08[None, :]**2
+                                crex = None
                         else:
-                            crex = None
+                            crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                            if listtemp[:4] == 'reds':
+                                crex[:, :] = gdat.meanredswo08[:, None]**2
+                            else:
+                                crex[:, :] = gdat.meanredswo08[None, :]**2
                     else:
                         crex = None
-                    setattr(gdat, 'crex' + strgvarb[4:], crex)
+                else:
+                    crex = None
+                setattr(gdat, 'crex' + strgvarb[4:], crex)
+    
+    if gdat.fittnumbtrap > 0:
+        gdat.boolcrex = False
+        if gdat.datatype == 'inpt' 
+            for listtemp in gdat.liststrgvarbhist:
+                strgvarb = listtemp[0]
+                crexhist = getattr(gdat, 'crex' + strgvarb[4:])
+                if crexhist != None:
+                    gdat.boolcrex = True
+            
+        ## internal correction
+        gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
+    
+    # variables for which two dimensional functions will be plotted
+    gdat.liststrgelemtdimvarbinit = ['hist']
+    gdat.liststrgelemtdimvarbfram = deepcopy(gdat.liststrgelemtdimvarbinit)
+    if gdat.refrinfo:
+        gdat.liststrgelemtdimvarbfram += ['cmpl', 'fdis']
+    gdat.liststrgelemtdimvarbfinl = deepcopy(gdat.liststrgelemtdimvarbfram)
+    if gdat.datatype == 'inpt':
+        if gdat.boolcrex:
+            gdat.liststrgelemtdimvarbfinl += ['excr']
+        if gdat.boolcrin:
+            gdat.liststrgelemtdimvarbfinl += ['incr']
+        if gdat.boolcrin or gdat.boolcrex:
+            gdat.liststrgelemtdimvarbfinl += ['tocr']
+    gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
+
+    gdat.liststrgfoldinit = ['', 'histodim/', 'histtdim/', 'scattdim/']
+    gdat.liststrgfoldfram = ['', 'scattdim/']
+    gdat.liststrgfoldfinl = ['']
+    if gdat.refrinfo:
+        gdat.liststrgfoldfram += ['assc/']
+        gdat.liststrgfoldfinl += ['assc/']
+    gdat.liststrgfoldanim = deepcopy(gdat.liststrgfoldfram)
+
+    for strgdims in ['odim/', 'tdim/']:
+        for strgelemtdimvarb in gdat.liststrgelemtdimvarbfram:
+            gdat.liststrgfoldfram += [strgelemtdimvarb + strgdims]
+        for strgelemtdimvarb in gdat.liststrgelemtdimvarbfinl:
+            gdat.liststrgfoldfinl += [strgelemtdimvarb + strgdims]
+
+    # make folders
+    for strgpdfn in gdat.liststrgpdfn:
+        
+        path = getattr(gdat, 'path' + strgpdfn)
+        for nameseco in ['finl', 'fram', 'anim', 'opti']:
+            setattr(gdat, 'path' + strgpdfn + nameseco, path + nameseco + '/')
+        
+        for nameseco in ['diag', 'lpri', 'varbscal', 'cond', 'varbscalproc', 'deltllik', 'spmr']:
+            setattr(gdat, 'path' + strgpdfn + 'finl' + nameseco, path + 'finl/' + nameseco + '/')
+            
+        for namethrd in ['hist', 'trac', 'join', 'cova']:
+            setattr(gdat, 'path' + strgpdfn + 'finlvarbscal' + namethrd, path + 'finl/varbscal/' + namethrd + '/')
+            
+        for strgphas in gdat.liststrgphas + ['init']:
+            liststrgfold = getattr(gdat, 'liststrgfold' + strgphas)
+            for nameseco in liststrgfold:
+                if strgphas == 'init':
+                    if nameseco == 'assc/' or nameseco.startswith('cmpl') or nameseco.startswith('fdis'):
+                        continue
+                    setattr(gdat, 'path' + strgphas + nameseco, gdat.pathplotrtag + 'init/' + nameseco + '/')
+                else:
+                    setattr(gdat, 'path' + strgpdfn + strgphas + nameseco, path + strgphas + '/' + nameseco + '/')
+    gdat.pathinfo = gdat.pathplotrtag + 'info/'
+    
+    ## make the directories 
+    for attr, valu in gdat.__dict__.iteritems():
+        if attr.startswith('path'):
+            os.system('mkdir -p %s' % valu)
+
+    # initial plots
+    if gdat.makeplot and gdat.makeplotinit:
+        plot_init(gdat)
+
+    if gdat.datatype == 'mock':
+        if gdat.makeplot and gdat.makeplotinit:
+            plot_samp(gdat, None, 'this', 'true', 'init')
+        
+    # local kernel evaluation plot
+    if gdat.makeplot:   
+        if gdat.fittnumbtrap > 0:
+            for l in gdat.fittindxpopl:
+                if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0:
+                    plot_eval(gdat, l)
     
     setp_indxswepsave(gdat)
     
@@ -2505,6 +2592,12 @@ def optihess(gdat, gdatmodi):
             indxstdpfrst = gdat.indxstdppara[k]
             for n in gdat.fittindxpara:
                 if n in gdat.indxfixpprop or n in indxsamptranprop:
+                    print 'gdat.fittindxpara'
+                    print gdat.fittindxpara
+                    print 'gdat.fittnamepara'
+                    print gdat.fittnamepara
+                    print
+
                     indxstdpseco = gdat.indxstdppara[n]
                     if k == n:
                         
@@ -3199,7 +3292,7 @@ def work(pathoutprtag, lock, indxprocwork):
                             raise Exception('Number of elements is inconsistent across data structures.')
                         
                         for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
-                            if gdat.fittlistscalcomp[l][k] == 'gaus' or gdat.fittlistscalcomp[l][k] == 'igam':
+                            if gdat.fittlistscalcomp[l][k] == 'gaus' or gdat.fittlistscalcomp[l][k] == 'igam' or gdat.fittlistscalcomp[l][k] == 'expo':
                                 continue
                             comp = gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[strgcomp][l][d]]
                             minm = getattr(gdat, 'fittminm' + strgcomp)
@@ -3210,7 +3303,8 @@ def work(pathoutprtag, lock, indxprocwork):
                                 print l
                                 print 'strgcomp'
                                 print strgcomp
-                                print 
+                                print 'gdat.fittlistscalcomp[l][k]'
+                                print gdat.fittlistscalcomp[l][k]
                                 print 'minm'
                                 print minm
                                 print 'maxm'
@@ -3597,7 +3691,7 @@ def work(pathoutprtag, lock, indxprocwork):
                             for d in gdat.indxregi:
                                 if gdat.refrnumbelem[q][d] == 0:
                                     continue
-                                namevarb = 'pop%dpop%dreg%d' % (q, l, d)
+                                namevarb = 'pop%dpop%dreg%d' % (l, q, d)
                                 print 'Region %d, Reference %d, Population %d' % (d, q, l)
                                 print 'Total'
                                 print getattr(gdatmodi, 'thiscmpl' + namevarb)
