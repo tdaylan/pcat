@@ -54,6 +54,7 @@ def init( \
          numbsampboot=None, \
 
          listnamefeatsele=None, \
+         masktype='ignr', \
          burntmpr=False, \
          #burntmpr=True, \
         
@@ -1272,6 +1273,8 @@ def init( \
 
     setp_varbvalu(gdat, 'scalmeanelem', 'logt')
     
+    #setp_varbvalu(gdat, 'gangdisttype', ['self'])
+    
     for strgmodl in gdat.liststrgmodl:
         setp_varblimt(gdat, 'lgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
         setp_varblimt(gdat, 'bgal', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl=strgmodl)
@@ -1280,7 +1283,6 @@ def init( \
         for l in indxpopl:
             if spatdisttype[l] == 'gangexpo':
                 setp_varbvalu(gdat, 'maxmgang', getattr(gdat, strgmodl + 'maxmlgal'), strgmodl=strgmodl)
-                
                 if gdat.exprtype == 'ferm':
                     gangdistsexp = 5. / gdat.anglfact
                 if gdat.exprtype == 'hubb':
@@ -1575,8 +1577,8 @@ def init( \
         if gdat.exprtype == 'chan' and gdat.numbpixlfull != 1:
             gdat.listprefsbrtener = []
             gdat.listprefsbrtsbrt = []
-            gdat.listprefsbrtlabl = ['CDFS', 'HEAO', 'XMM', 'ROSAT']
-            for strgfile in ['cdfs', 'heao', 'xmmm', 'rost']:
+            gdat.listprefsbrtlabl = ['Tozzi+(2001)']
+            for strgfile in ['cdfs']:
                 path = gdat.pathinpt + '%s.csv' % strgfile
                 enerrefrplot = loadtxt(path, delimiter=',')[:, 0]
                 sbrtrefrplot = loadtxt(path, delimiter=',')[:, 1]
@@ -2207,7 +2209,7 @@ def init( \
     
     if gdat.fittnumbtrap > 0:
         gdat.boolcrex = False
-        if gdat.datatype == 'inpt' 
+        if gdat.datatype == 'inpt': 
             for listtemp in gdat.liststrgvarbhist:
                 strgvarb = listtemp[0]
                 crexhist = getattr(gdat, 'crex' + strgvarb[4:])
@@ -2217,34 +2219,39 @@ def init( \
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
     
-    # variables for which two dimensional functions will be plotted
-    gdat.liststrgelemtdimvarbinit = ['hist']
-    gdat.liststrgelemtdimvarbfram = deepcopy(gdat.liststrgelemtdimvarbinit)
-    if gdat.refrinfo:
-        gdat.liststrgelemtdimvarbfram += ['cmpl', 'fdis']
-    gdat.liststrgelemtdimvarbfinl = deepcopy(gdat.liststrgelemtdimvarbfram)
-    if gdat.datatype == 'inpt':
-        if gdat.boolcrex:
-            gdat.liststrgelemtdimvarbfinl += ['excr']
-        if gdat.boolcrin:
-            gdat.liststrgelemtdimvarbfinl += ['incr']
-        if gdat.boolcrin or gdat.boolcrex:
-            gdat.liststrgelemtdimvarbfinl += ['tocr']
-    gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
+        # variables for which two dimensional functions will be plotted
+        gdat.liststrgelemtdimvarbinit = ['hist']
+        gdat.liststrgelemtdimvarbfram = deepcopy(gdat.liststrgelemtdimvarbinit)
+        if gdat.refrinfo:
+            gdat.liststrgelemtdimvarbfram += ['cmpl', 'fdis']
+        gdat.liststrgelemtdimvarbfinl = deepcopy(gdat.liststrgelemtdimvarbfram)
+        if gdat.datatype == 'inpt':
+            if gdat.boolcrex:
+                gdat.liststrgelemtdimvarbfinl += ['excr']
+            if gdat.boolcrin:
+                gdat.liststrgelemtdimvarbfinl += ['incr']
+            if gdat.boolcrin or gdat.boolcrex:
+                gdat.liststrgelemtdimvarbfinl += ['tocr']
+        gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
 
-    gdat.liststrgfoldinit = ['', 'histodim/', 'histtdim/', 'scattdim/']
-    gdat.liststrgfoldfram = ['', 'scattdim/']
+    gdat.liststrgfoldinit = ['']
+    if gdat.fittnumbtrap > 0 or gdat.datatype == 'mock' and gdat.truenumbtrap > 0:
+        gdat.liststrgfoldinit += ['', 'histodim/', 'histtdim/', 'scattdim/']
+    gdat.liststrgfoldfram = ['']
+    if gdat.fittnumbtrap > 0:
+        gdat.liststrgfoldfram += ['scattdim/']
     gdat.liststrgfoldfinl = ['']
-    if gdat.refrinfo:
+    if gdat.refrinfo and gdat.fittnumbtrap > 0:
         gdat.liststrgfoldfram += ['assc/']
         gdat.liststrgfoldfinl += ['assc/']
     gdat.liststrgfoldanim = deepcopy(gdat.liststrgfoldfram)
 
-    for strgdims in ['odim/', 'tdim/']:
-        for strgelemtdimvarb in gdat.liststrgelemtdimvarbfram:
-            gdat.liststrgfoldfram += [strgelemtdimvarb + strgdims]
-        for strgelemtdimvarb in gdat.liststrgelemtdimvarbfinl:
-            gdat.liststrgfoldfinl += [strgelemtdimvarb + strgdims]
+    if gdat.fittnumbtrap > 0:
+        for strgdims in ['odim/', 'tdim/']:
+            for strgelemtdimvarb in gdat.liststrgelemtdimvarbfram:
+                gdat.liststrgfoldfram += [strgelemtdimvarb + strgdims]
+            for strgelemtdimvarb in gdat.liststrgelemtdimvarbfinl:
+                gdat.liststrgfoldfinl += [strgelemtdimvarb + strgdims]
 
     # make folders
     for strgpdfn in gdat.liststrgpdfn:
@@ -2592,11 +2599,6 @@ def optihess(gdat, gdatmodi):
             indxstdpfrst = gdat.indxstdppara[k]
             for n in gdat.fittindxpara:
                 if n in gdat.indxfixpprop or n in indxsamptranprop:
-                    print 'gdat.fittindxpara'
-                    print gdat.fittindxpara
-                    print 'gdat.fittnamepara'
-                    print gdat.fittnamepara
-                    print
 
                     indxstdpseco = gdat.indxstdppara[n]
                     if k == n:
@@ -2984,19 +2986,22 @@ def work(pathoutprtag, lock, indxprocwork):
     # check the initial unit sample vector for bad entries
     if gdat.fittnumbtrap > 0:
         indxsampdiff = setdiff1d(gdat.fittindxpara, gdat.fittindxfixpnumbelemtotl)
-        indxsampbaddlowr = where(gdatmodi.thissamp[indxsampdiff] <= 0.)[0]
+        indxsampbaddlowr = where((gdatmodi.thissamp[indxsampdiff] <= 0.) | logical_not(isfinite(gdatmodi.thissamp[indxsampdiff])))[0]
         indxsampbadduppr = where(gdatmodi.thissamp[indxsampdiff] >= 1.)[0]
         indxsampbaddlowr = indxsampdiff[indxsampbaddlowr]
         indxsampbadduppr = indxsampdiff[indxsampbadduppr]
     else:
         indxsampbaddlowr = where(gdatmodi.thissamp <= 0.)[0]
         indxsampbadduppr = where(gdatmodi.thissamp >= 1.)[0]
+    
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial value caused unit sample vector to go outside the unit interval...'
         print 'gdatmodi.thissamp'
         for k in range(gdatmodi.thissamp.size):
             print gdatmodi.thissamp[k]
+        print 'indxsampbadd'
+        print indxsampbadd
         print 'gdat.fittnamepara[indxsampbadd]'
         print gdat.fittnamepara[indxsampbadd]
         print 'gdatmodi.thissamp[indxsampbadd, None]'
@@ -3007,6 +3012,19 @@ def work(pathoutprtag, lock, indxprocwork):
     
     gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
     
+    indxbadd = where(logical_not(isfinite(gdatmodi.thissampvarb)))[0]
+
+    if indxbadd.size > 0:
+        print 'indxbadd'
+        print indxbadd
+        print 'gdat.fittnamepara[indxbadd]'
+        print gdat.fittnamepara[indxbadd]
+        print 'gdatmodi.thissamp[indxbadd]'
+        print gdatmodi.thissamp[indxbadd]
+        print 'gdatmodi.thissampvarb[indxbadd]'
+        print gdatmodi.thissampvarb[indxbadd]
+        raise Exception('')
+
     if gdat.verbtype > 1:
         show_samp(gdat, gdatmodi, thisonly=True)
     

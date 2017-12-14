@@ -27,16 +27,17 @@ for strgextn in liststrgextn:
                 filestat = open(pathchec, 'r')
                 boolkeep = False
                 for line in filestat:
-                    if line == 'gdatmodi written.\n':
+                    if line == 'gdatmodipost written.\n':
                         boolkeep = True
         
             numbswep = int(pathfile[pathfile.rfind('_')+1:])
             if ((not os.path.isfile(pathchec) or not boolkeep or numbswep < 1000) and not 'mockonly' in rtag) or boolforcdele:
                 print 'Deleting %s...' % pathchec
                 cmnd = 'rm -rf ' + pathfile
-                os.system(cmnd)
+                #os.system(cmnd)
             else:
-                print 'Saving %s...' % pathchec
+                pass
+                #print 'Saving %s...' % pathchec
             print
 
 listrtagdata = fnmatch.filter(os.listdir(pathdata), '2*')
