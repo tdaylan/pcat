@@ -519,16 +519,6 @@ def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
             distsloplowr = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distsloplowr')[l]]
             distslopuppr = sampvarb[getattr(gdat, strgmodl + 'indxfixp' + strgcomp + 'distslopuppr')[l]]
             icdf = icdf_dpow(cdfn, minm, maxm, distbrek, distsloplowr, distslopuppr)
-            
-            print 'scalcomp'
-            print scalcomp
-            print 'strgcomp'
-            print strgcomp
-            if gdat.exprtype == 'ferm':
-                print 'gdat.truefluxdistbrekpop0'
-                print gdat.truefluxdistbrekpop0
-            print
-
         elif scalcomp == 'expo':
             maxm = getattr(gdat, strgmodl + 'maxm' + strgcomp)
             sexp = getattr(gdat, strgmodl + strgcomp + 'distsexppop%d' % l)
