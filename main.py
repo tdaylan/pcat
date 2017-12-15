@@ -8,7 +8,7 @@ def init( \
          # user interaction
          verbtype=1, \
          pathbase=os.environ["PCAT_DATA_PATH"], \
-         showmoreaccp=False, \
+         showmoreaccp=True, \
 
          # diagnostics
          diagmode=True, \
@@ -544,6 +544,15 @@ def init( \
         backtype = [[1.]]
     setp_varbvalu(gdat, 'backtype', backtype)
 
+    if gdat.exprtype == 'hubb':
+        lensmodltype = 'full'
+    else:
+        lensmodltype = 'none'
+    setp_varbvalu(gdat, 'lensmodltype', lensmodltype)
+    
+    numbsersfgrd = array([1])
+    setp_varbvalu(gdat, 'numbsersfgrd', numbsersfgrd)
+    
     setpprem(gdat)
     
     ## generative model
@@ -830,12 +839,6 @@ def init( \
         hostemistype = 'none'
     setp_varbvalu(gdat, 'hostemistype', hostemistype)
 
-    if gdat.exprtype == 'hubb':
-        lensmodltype = 'full'
-    else:
-        lensmodltype = 'none'
-    setp_varbvalu(gdat, 'lensmodltype', lensmodltype)
-    
     if gdat.strgexprname == None:
         if gdat.exprtype == 'chan':
             gdat.strgexprname = 'Chandra'
@@ -1250,17 +1253,6 @@ def init( \
         setp_varblimt(gdat, 'acut', limtacut)
    
     # true model parameters
-    
-    # temp -- add poisson
-    #gdat.truenumbelem = empty(gdat.truenumbpopl, dtype=int)
-    #if gdat.truenumbtrap > 0:
-    #    for l in gdat.trueindxpopl:
-    #       for d in gdat.trueindxregipopl[l]:
-    #            getattr(gdat, 'truenumbelempop%dreg%d' % (l, d))
-    #            gdat.truenumbelem[l][d] = poisson(gdat.truemeannumbelem[l][d])
-    #            if gdat.truenumbelem[l][d] > gdat.truemaxmnumbelem[l][d]:
-    #                gdat.truenumbelem[l][d] = gdat.truemaxmnumbelem[l][d]
-    
     if gdat.datatype == 'mock':
         gdat.truenumbelem = [zeros(gdat.truenumbregipopl[l], dtype=int) for l in gdat.trueindxpopl]
         for l in gdat.trueindxpopl:
@@ -1285,35 +1277,46 @@ def init( \
                 setp_varbvalu(gdat, 'maxmgang', getattr(gdat, strgmodl + 'maxmlgal'), strgmodl=strgmodl)
                 if gdat.exprtype == 'ferm':
                     gangdistsexp = 5. / gdat.anglfact
-                if gdat.exprtype == 'hubb':
-                    gangdistsexp = 0.5 / gdat.anglfact
                 setp_varbvalu(gdat, 'gangdistsexp', gangdistsexp, strgmodl=strgmodl, popl=l)
+            if spatdisttype[l] == 'dsrcexpo':
+                if gdat.exprtype == 'hubb':
+                    dsrcdistsexp = 0.5 / gdat.anglfact
+                setp_varbvalu(gdat, 'dsrcdistsexp', dsrcdistsexp, strgmodl=strgmodl, popl=l)
     
+        if gdat.fittlensmodltype != 'none' or gdat.fitthostemistype != 'none':
+            setp_varblimt(gdat, 'lgalhost', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full', isfr='full')
+            setp_varblimt(gdat, 'bgalhost', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full', isfr='full')
     setp_varblimt(gdat, 'lgalsour', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
     setp_varblimt(gdat, 'bgalsour', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
-    setp_varblimt(gdat, 'lgalhost', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
-    setp_varblimt(gdat, 'bgalhost', [-gdat.maxmgangdata, gdat.maxmgangdata], strgmodl='fitt', regi='full')
     
     if gdat.numbpixlfull != 1:
         gdat.stdvhostsour = 0.04 / gdat.anglfact
-        setp_varblimt(gdat, 'lgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
-        setp_varblimt(gdat, 'bgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
-        setp_varblimt(gdat, 'lgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
-        setp_varblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+        if gdat.datatype == 'mock':
+            setp_varblimt(gdat, 'lgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+            setp_varblimt(gdat, 'bgalsour', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full')
+            if gdat.truelensmodltype != 'none' or gdat.truehostemistype != 'none':
+                setp_varblimt(gdat, 'lgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full', isfr='full')
+                setp_varblimt(gdat, 'bgalhost', [0., gdat.stdvhostsour], strgmodl='true', typelimt='meanstdv', regi='full', isfr='full')
         
         setp_varblimt(gdat, 'fluxsour', array([1e-22, 1e-17]), regi='full')
         setp_varblimt(gdat, 'sindsour', array([0., 4.]), regi='full')
         setp_varblimt(gdat, 'sizesour', [0.1 / gdat.anglfact, 2. / gdat.anglfact], regi='full')
         setp_varblimt(gdat, 'ellpsour', [0., 0.5], regi='full')
-        setp_varblimt(gdat, 'fluxhost', array([1e-20, 1e-15]), regi='full')
-        setp_varblimt(gdat, 'sindhost', array([0., 4.]), regi='full')
-        setp_varblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact], regi='full')
-        setp_varblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact], regi='full')
-        setp_varblimt(gdat, 'ellphost', [0., 0.5], regi='full')
+        
+        for strgmodl in gdat.liststrgmodl:
+            lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
+            hostemistype = getattr(gdat, strgmodl + 'hostemistype')
+            if lensmodltype != 'none' or hostemistype != 'none':
+                setp_varblimt(gdat, 'fluxhost', array([1e-20, 1e-15]), regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'sindhost', array([0., 4.]), regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'sizehost', [0.1 / gdat.anglfact, 4. / gdat.anglfact], regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact], regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'ellphost', [0., 0.5], regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'anglhost', [0., pi], regi='full', isfr='full', strgmodl=strgmodl)
+                setp_varblimt(gdat, 'serihost', [1., 8.], regi='full', isfr='full', strgmodl=strgmodl)
+        
         setp_varblimt(gdat, 'sherextr', [0., 0.1], regi='full')
         setp_varblimt(gdat, 'anglsour', [0., pi], regi='full')
-        setp_varblimt(gdat, 'anglhost', [0., pi], regi='full')
-        setp_varblimt(gdat, 'serihost', [1., 8.], regi='full')
         setp_varblimt(gdat, 'sangextr', [0., pi], regi='full')
         
         # temp -- to be removed
@@ -1415,7 +1418,7 @@ def init( \
                 setp_varbvalu(gdat, 'scaldlosdistslop', 'self', popl=l)
                 setp_varbvalu(gdat, 'lum0distsloplowr', 0.5, popl=l)
                 setp_varbvalu(gdat, 'lum0distslopuppr', 1.5, popl=l)
-    
+            
         if gdat.exprtype == 'ferm':
 
             #setp_varbvalu(gdat, 'bacp', 5e-6, ener=0, back=0, regi='full')
@@ -2153,6 +2156,10 @@ def init( \
                                                                                             strg != 'thistrueindxelemasscmiss' and strg != 'thistrueindxelemasschits':
                 gdat.liststrgvarblistsamp.append(strg[4:])
     
+    print 'gdat.liststrgvarbarrysamp'
+    print gdat.liststrgvarbarrysamp
+    print
+
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
 
     gdat.indxpoplcrin = 0
@@ -2294,7 +2301,7 @@ def init( \
     if gdat.makeplot:   
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
-                if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelem[l] > 0:
+                if gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelempopl[l] > 0:
                     plot_eval(gdat, l)
     
     setp_indxswepsave(gdat)
@@ -3609,8 +3616,21 @@ def work(pathoutprtag, lock, indxprocwork):
             
                 boolproptype = workdict['list' + gdat.strgpdfn + 'indxproptype'][indxswepintv, 0] == k
                 boolaccp = workdict['list' + gdat.strgpdfn + 'accp'][indxswepintv, 0] == 1
+                print 'gdat.indxproptypecomp'
+                print gdat.indxproptypecomp
                 if gdat.showmoreaccp and gdat.indxproptype[k] in gdat.indxproptypecomp:
-                    binsampl = getattr(gdat, 'bins' + gdat.namefeatampl)
+                    print 'gdat.indxpoplproptype'
+                    print gdat.indxpoplproptype
+                    print 'len(gdat.indxpoplproptype)'
+                    print len(gdat.indxpoplproptype)
+                    print 'gdat.indxproptype'
+                    summgene(gdat.indxproptype)
+                    print 'k'
+                    print k
+                    print
+
+                    indxpopltemp = gdat.indxpoplproptype[gdat.indxproptype[k]]
+                    binsampl = getattr(gdat, 'bins' + gdat.fittnamefeatampl[indxpopltemp])
                     numbaccp = empty(gdat.numbbinsplot, dtype=int)
                     for a in gdat.indxbinsplot: 
                         boolbins = (binsampl[a] < workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]) & \
@@ -3747,7 +3767,7 @@ def work(pathoutprtag, lock, indxprocwork):
                         print '%s: %.3g msec' % (name, gdatmodi.nextchro[k] * 1e3)
                         booltemp = False
                         for l in gdat.fittindxpopl:
-                            if gdat.fittelemspatevaltype[l] == 'loclhash' and gdat.fittmaxmnumbelem[l] > 0:
+                            if gdat.fittelemspatevaltype[l] == 'loclhash' and gdat.fittmaxmnumbelempopl[l] > 0:
                                 booltemp = True
                         if name == 'llik' and gdat.numbpixl > 1 and gdat.fittnumbtrap > 0 and booltemp:
                             print '%.3g per pixel' % (gdatmodi.nextchro[k] * 1e3 / amin(gdat.numbpixlprox))
