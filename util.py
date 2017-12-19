@@ -12540,6 +12540,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
                                         elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr') or strgelemtdimvarb.startswith('tocr'):
                                             for q in gdatmock.indxrefr:
+                                                if strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('tocr'):
+                                                    if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)) == None:
+                                                        continue
                                                 strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
                                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
