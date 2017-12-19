@@ -1951,7 +1951,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             raise Exception('')
 
     stdvstdp = gdat.stdvstdp * gdatmodi.thisstdpscalfact * gdatmodi.thistmprfactstdv
-    
+    if not gdat.calcllik:
+        stdvstdp *= 1e6
+
     if gdat.diagmode:
         if gdat.sqzeprop and amax(stdvstdp) > 1e-10:
             print 'stdvstdp'
@@ -4705,6 +4707,7 @@ def setpinit(gdat, boolinitsetp=False):
     
     # proposal scale
     if gdat.fittlensmodltype != 'none' or gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
+        
         gdat.stdvstdp = 1e-4 + zeros(gdat.numbstdp)
 
         if gdat.fittmaxmnumbelempopl[0] > 0:
@@ -12736,12 +12739,19 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
     path = gdat.pathinfo + 'info' + namefull
 
     if nameseco != None:
+       
+        limtfrst = getattr(gdat, 'limt' + name)
+        limtseco = getattr(gdat, 'limt' + nameseco)
+        factplotfrst = getattr(gdat, 'fact' + name + 'plot')
+        factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')
+        varbfrst = getattr(gdat, 'mean' + name) * factplotfrst
+        varbseco = getattr(gdat, 'mean' + nameseco) * factplotseco
+        indxpoplfrst = int(namefull[-5])
+        
+        # information gain
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        varbfrst = getattr(gdat, 'mean' + name) * getattr(gdat, 'fact' + name + 'plot')
-        varbseco = getattr(gdat, 'mean' + nameseco) * getattr(gdat, 'fact' + nameseco + 'plot')
         imag = axis.pcolor(varbfrst, varbseco, info, cmap='Greys')
         plt.colorbar(imag)
-        indxpoplfrst = int(namefull[-5])
         plot_sigmcont(gdat, axis, name, indxpoplfrst, strgseco=nameseco)
         scalfrst = getattr(gdat, 'scal' + name + 'plot')
         scalseco = getattr(gdat, 'scal' + nameseco + 'plot')
@@ -12751,10 +12761,28 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
             axis.set_yscale('log')
         axis.set_xlabel(getattr(gdat, 'labl' + name + 'totl'))
         axis.set_ylabel(getattr(gdat, 'labl' + nameseco + 'totl'))
-        #axis.set_xlim(array(limtfrst) * factplotfrst)
-        #axis.set_ylim(array(limtseco) * factplotseco)
+        axis.set_xlim(array(limtfrst) * factplotfrst)
+        axis.set_ylim(array(limtseco) * factplotseco)
         plt.tight_layout()
         plt.savefig(path)
+        plt.close(figr)
+
+        # KS test p value
+        pathpvkstdim = gdat.pathinfo + 'pvks' + namefull
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        imag = axis.pcolor(varbfrst, varbseco, pvks, cmap='Greys')
+        plt.colorbar(imag)
+        plot_sigmcont(gdat, axis, name, indxpoplfrst, strgseco=nameseco)
+        if scalfrst == 'logt':
+            axis.set_xscale('log')
+        if scalseco == 'logt':
+            axis.set_yscale('log')
+        axis.set_xlabel(getattr(gdat, 'labl' + name + 'totl'))
+        axis.set_ylabel(getattr(gdat, 'labl' + nameseco + 'totl'))
+        axis.set_xlim(array(limtfrst) * factplotfrst)
+        axis.set_ylim(array(limtseco) * factplotseco)
+        plt.tight_layout()
+        plt.savefig(pathpvkstdim)
         plt.close(figr)
 
     elif name != namefull:
