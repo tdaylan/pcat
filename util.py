@@ -10485,15 +10485,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     if strgfrst == 'spec' or strgfrst == 'specplot' or strgseco == 'spec' or strgseco == 'specplot':
                                         continue
                                     
-                                    if strgfrst == 'lgal':
-                                        print 'strgfrst'
-                                        print strgfrst
-                                        print 'strgseco'
-                                        print strgseco
                                     if not checstrgfeat(strgfrst, strgseco):
                                         continue
-                                    if strgfrst == 'lgal':
-                                        print 'passed'
 
                                     strgtemp = 'hist' + strgfrst + strgseco + 'pop%dreg%d' % (l0, d0)
                                     dictelemtdim[strgtemp] = zeros((gdat.numbbinsplot, gdat.numbbinsplot))
@@ -10505,11 +10498,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                                 dictelem[l0][d0][strgseco][listindxelemfilt[0][l0][d0]], [binsfrst, binsseco])[0]
                                     strg = strgpfix + strgtemp
                                     
-                                    if strgfrst == 'lgal':
-                                        print 'strg'
-                                        print strg
-                                        print
-
                                     setattr(gdatobjt, strg, dictelemtdim[strgtemp])
                 
                     ### priors on element parameters and features
@@ -10883,8 +10871,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 for strgfeatfrst in liststrgfeatodim[l0]:
                                     
                                     #if (not strgfeatfrst in gdat.refrliststrgfeat[q]) and (not strgfeatfrst in gdat.refrliststrgfeattagg[q][l0]):
-                                    if not strgfeatfrst in gdat.refrliststrgfeattagg[q][l0]:
-                                        continue
+                                    #if not strgfeatfrst in gdat.refrliststrgfeattagg[q][l0]:
+                                    #    continue
                         
                                     if strgfeatfrst.startswith('etag') or strgfeatfrst.startswith('aerr'):
                                         continue
@@ -10896,8 +10884,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     for strgfeatseco in liststrgfeatodim[l0]:
                                         
                                         #if (not strgfeatseco in gdat.refrliststrgfeat[q]) and (not strgfeatseco in gdat.refrliststrgfeattagg[q][l0]):
-                                        if not strgfeatseco in gdat.refrliststrgfeattagg[q][l0]:
-                                            continue
+                                        #if not strgfeatseco in gdat.refrliststrgfeattagg[q][l0]:
+                                        #    continue
     
                                         if strgfeatseco.startswith('aerr'):
                                             continue
@@ -11052,6 +11040,8 @@ def retr_pathoutprtag(rtag):
 
 
 def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
+    
+    gdatmock = None
     
     if rtag != None:
         rtagtemp = rtag
@@ -11576,7 +11566,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdat.makeplot and getattr(gdat, 'makeplotfinl' + strgpdfn):
-            plot_finl(gdat, gdatprio=gdatprio, strgpdfn=strgpdfn)
+            plot_finl(gdat, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock)
         filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
         filestat.write('plotfinl%s written.\n' % strgpdfn)
         filestat.close()
@@ -12098,7 +12088,7 @@ def proc_anim(rtag):
     filestat.close()
     
 
-def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post'):
+def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gdatmock=None):
    
     backtype = getattr(gdat, strgmodl + 'backtype')
     boolbfun = getattr(gdat, strgmodl + 'boolbfun')
@@ -12555,7 +12545,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post'):
                 for d0 in indxregipopl[l0]:
                     for l0 in indxpopl:
                         for refrstrgfrst in gdat.refrliststrgfeat[q0]:
+                            if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflplot':
+                                continue
                             for refrstrgseco in gdat.refrliststrgfeat[q0]:
+                                if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflplot':
+                                    continue
                                 
                                 if not checstrgfeat(refrstrgfrst, refrstrgseco):
                                     continue
@@ -12802,7 +12796,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
         tdpy.mcmc.plot_plot(pathpdfn, xdat, ydat, lablxdat, lablydat, scal, colr=['k', 'k'], linestyl=['-', '--'], legd=legd, titl=titl)
 
 
-def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post'):
+def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=None):
     
     if gdat.verbtype > 0:
         print 'Producing postprocessing plots...'
@@ -13040,7 +13034,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post'):
     gdat.legdpmea = 'Mean'
 
     # posterior versions of the frame plots
-    plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn)
+    plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatmock=gdatmock)
     #proc_samp(gdat, None, 'mlik', 'fitt')
     
     if gdat.verbtype > 0:

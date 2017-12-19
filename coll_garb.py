@@ -34,7 +34,7 @@ for strgextn in liststrgextn:
             if ((not os.path.isfile(pathchec) or not boolkeep or numbswep < 1000) and not 'mockonly' in rtag) or boolforcdele:
                 print 'Deleting %s...' % pathchec
                 cmnd = 'rm -rf ' + pathfile
-                #os.system(cmnd)
+                os.system(cmnd)
             else:
                 pass
                 #print 'Saving %s...' % pathchec

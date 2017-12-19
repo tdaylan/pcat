@@ -2014,29 +2014,10 @@ def init( \
                             if not checstrgfeat(strgfeatfrst, strgfeatseco):
                                 continue
                             
-
-                            print 'passed'
-                            if strgfeatfrst == 'lgal':
-                                print 'strgfeatfrst'
-                                print strgfeatfrst
-                                print 'strgfeatseco'
-                                print strgfeatseco
-                                print 'refrfeatfrst[q0][d0][0, :]'
-                                print refrfeatfrst[q0][d0][0, :]
-                                print 'refrfeatseco[q0][d0][0, :]'
-                                print refrfeatseco[q0][d0][0, :]
-                                print 'binsfrst'
-                                print binsfrst
-                                print
-                            
                             if len(refrfeatseco[q0][d0]) > 0:
                                 binsseco = getattr(gdat, 'bins' + strgfeatseco)
-                                
-                                print 'paaasssssed'
-
                                 hist = histogram2d(refrfeatfrst[q0][d0][0, :], refrfeatseco[q0][d0][0, :], bins=(binsfrst, binsseco))[0]
                                 setattr(gdat, 'refrhist' + strgfeattdim, hist)
-    
     
     if gdat.fittnumbtrap > 0:
         # plot settings
