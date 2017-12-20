@@ -10865,6 +10865,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                 if gdat.diagmode:
                                                     if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
+                                        
+                                        if strgfeatfrst == 'flux':
+                                            print 'strgfeatfrst'
+                                            print strgfeatfrst
+                                            print 'l, q0, d0'
+                                            print l, q0, d0
+                                            print
+
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0), cmplfeatfrst)
                                 
                     # false discovery rate
