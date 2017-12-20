@@ -2177,47 +2177,44 @@ def init( \
                         cntr += 1    
     
     # selection effects
-    if gdat.datatype == 'inpt':
+    if gdat.datatype == 'inpt' and gdat.fittnumbtrap > 0:
         if gdat.numbsampboot == None:
             gdat.numbsampboot = gdat.numbsamp
     
-        if gdat.fittnumbtrap > 0:
-            for l0 in gdat.fittindxpopl:
-                for d0 in gdat.fittindxregipopl[l0]:
-                    for strgfeatfrst in gdat.fittliststrgfeat[l0]:
-                        for q in gdat.indxrefr:
-                                            
-                            if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
-                                crex = gdat.meanredswo08**2
+        gdat.boolcrex = False
+        for l0 in gdat.fittindxpopl:
+            for d0 in gdat.fittindxregipopl[l0]:
+                for strgfeatfrst in gdat.fittliststrgfeat[l0]:
+                    for q in gdat.indxrefr:
+                                        
+                        if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
+                            crex = gdat.meanredswo08**2
+                        else:
+                            crex = None
+                        
+                        setattr(gdat, 'crex' + strgfeat + 'pop%dpop%dreg%d' % (q, l, d), crex)
+                        
+                        for strgfeatseco in gdat.fittliststrgfeat[l0]:
+                            
+                            if not checstrgfeat(strgfeatfrst, strgfeatseco):
+                                continue
+                                        
+                            if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
+                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                                if strgfeatfrst == 'redswo08':
+                                    crex[:, :] = gdat.meanredswo08[:, None]**2
+                                else:
+                                    crex[:, :] = gdat.meanredswo08[None, :]**2
                             else:
                                 crex = None
                             
-                            setattr(gdat, 'crex' + strgfeat + 'pop%dpop%dreg%d' % (q, l, d), crex)
-                            
-                            for strgfeatseco in gdat.fittliststrgfeat[l0]:
-                                
-                                if not checstrgfeat(strgfeatfrst, strgfeatseco):
-                                    continue
-                                            
-                                if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
-                                    crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                                    if strgfeatfrst == 'redswo08':
-                                        crex[:, :] = gdat.meanredswo08[:, None]**2
-                                    else:
-                                        crex[:, :] = gdat.meanredswo08[None, :]**2
-                                else:
-                                    crex = None
-                                
-                                setattr(gdat, 'crex' + strgfeat, crex)
+                            setattr(gdat, 'crex' + strgfeat, crex)
     
-    if gdat.fittnumbtrap > 0:
-        gdat.boolcrex = False
-        if gdat.datatype == 'inpt': 
-            for listtemp in gdat.liststrgvarbhist:
-                strgvarb = listtemp[0]
-                crexhist = getattr(gdat, 'crex' + strgvarb[4:])
-                if crexhist != None:
-                    gdat.boolcrex = True
+        for listtemp in gdat.liststrgvarbhist:
+            strgvarb = listtemp[0]
+            crexhist = getattr(gdat, 'crex' + strgvarb[4:])
+            if crexhist != None:
+                gdat.boolcrex = True
             
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
