@@ -1041,6 +1041,7 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
     cntp = [[] for d in indxregieval]
     for dd, d in enumerate(indxregieval):
         cntp[dd] = sbrt[dd] * gdat.expo[d][indxcubeeval[0][dd]] * gdat.apix
+        print ''
         if gdat.enerdiff:
             cntp[dd] *= gdat.deltener[indxcubeeval[0][dd][0]]
         
@@ -3521,8 +3522,8 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, 'lablmasssubhdeltbein' + strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
             setattr(gdat, 'lablmasssubhintgbein' + strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
             for e in gdat.fittindxsersfgrd[d]:
-                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e) + strgregi, r'$M_{\rm{hst,E,%d}}$' % d)
-                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e) + strgregi, r'$M_{\rm{hst,E,%d<}}$' % d)
+                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d}}$' % d)
+                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d<}}$' % d)
             for namevarb in ['fracsubh', 'masssubh']:
                 for namecalc in ['delt', 'intg']:
                     for nameeval in ['', 'bein']:
@@ -3912,6 +3913,9 @@ def setpinit(gdat, boolinitsetp=False):
         liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
         for l in indxpopl:
             for strgfeat in liststrgfeat[l]:
+                print 'strgfeat'
+                print strgfeat
+                print
                 if strgfeat.startswith('defs') or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or strgfeat == 'gwdt' or \
                                                                                                             strgfeat == 'diss' or strgfeat == 'asca' or strgfeat == 'acut':
                     setattr(gdat, 'fact' + strgfeat + 'plot', gdat.anglfact)
