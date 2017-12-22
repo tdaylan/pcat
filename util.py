@@ -4930,8 +4930,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.nameproptype = append(gdat.nameproptype, 'merg')
             gdat.indxpoplproptype.append(-1) 
    
-    if gdat.indxproptypebrth in gdat.indxproptypecomp:
-        raise Exception('')
+        if gdat.indxproptypebrth in gdat.indxproptypecomp:
+            raise Exception('')
 
     gdat.numbproptype = gdat.nameproptype.size
     gdat.indxproptype = arange(gdat.numbproptype)

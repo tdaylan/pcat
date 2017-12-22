@@ -2193,8 +2193,6 @@ def init( \
                         else:
                             crex = None
                         
-                        print 'crex + strgfeat + pop%dpop%dreg%d% (q, l, d)'
-                        print 'crex' + strgfeat + 'pop%dpop%dreg%d' % (q, l, d)
                         setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
                         
                         for strgfeatseco in gdat.fittliststrgfeat[l0]:
