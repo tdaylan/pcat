@@ -2172,8 +2172,9 @@ def init( \
                         gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
                         gdat.liststrgvarbhist[cntr][2] = strgfeatseco
                         # temp
-                        gdat.liststrgvarbhist[cntr][3] = 'pop0' + strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (l0, d0)
-                        gdat.liststrgvarbhist[cntr][4] = 'pop0' + strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (l0, d0)
+                        for q in gdat.indxregi:
+                            gdat.liststrgvarbhist[cntr][3] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l0, q, d0)
+                            gdat.liststrgvarbhist[cntr][4] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l0, d0)
                         cntr += 1    
     
     # selection effects
@@ -2192,7 +2193,9 @@ def init( \
                         else:
                             crex = None
                         
-                        setattr(gdat, 'crex' + strgfeat + 'pop%dpop%dreg%d' % (q, l, d), crex)
+                        print 'crex + strgfeat + pop%dpop%dreg%d% (q, l, d)'
+                        print 'crex' + strgfeat + 'pop%dpop%dreg%d' % (q, l, d)
+                        setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
                         
                         for strgfeatseco in gdat.fittliststrgfeat[l0]:
                             
@@ -2208,11 +2211,11 @@ def init( \
                             else:
                                 crex = None
                             
-                            setattr(gdat, 'crex' + strgfeat, crex)
+                            setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l, d), crex)
     
         for listtemp in gdat.liststrgvarbhist:
-            strgvarb = listtemp[0]
-            crexhist = getattr(gdat, 'crex' + strgvarb[4:])
+            strgvarb = listtemp[3]
+            crexhist = getattr(gdat, 'crex' + strgvarb)
             if crexhist != None:
                 gdat.boolcrex = True
             

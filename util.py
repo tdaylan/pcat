@@ -1264,6 +1264,14 @@ def retr_refrchanfinl(gdat):
     
         if gdat.numbsidecart == 600:
             pass
+        elif gdat.numbsidecart == 100:
+            indxtile = int(gdat.anlytype[-4:])
+            numbsidecntr = int(gdat.anlytype[8:12])
+            numbtileside = numbsidecntr / gdat.numbsidecart
+            indxtilexaxi = indxtile // numbtileside
+            indxtileyaxi = indxtile % numbtileside
+            gdat.numbpixllgalshft[0] += indxtilexaxi * gdat.numbsidecart
+            gdat.numbpixlbgalshft[0] += indxtileyaxi * gdat.numbsidecart
         elif gdat.numbsidecart == 300:
             gdat.numbpixllgalshft[0] += 150
             gdat.numbpixlbgalshft[0] += 150
@@ -1272,6 +1280,8 @@ def retr_refrchanfinl(gdat):
     else:
         booltemp = True
     if booltemp:
+        print 'gdat.numbsidecart'
+        print gdat.numbsidecart
         raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
     ## WCS object for rotating reference elements into the ROI
