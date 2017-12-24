@@ -1280,6 +1280,12 @@ def retr_refrchanfinl(gdat):
             booltemp = True
     else:
         booltemp = True
+    print 'gdat.numbpixllgalshft'
+    print gdat.numbpixllgalshft
+    print 'gdat.numbpixlbgalshft'
+    print gdat.numbpixlbgalshft
+    print
+
     if booltemp:
         print 'gdat.numbsidecart'
         print gdat.numbsidecart
@@ -11881,7 +11887,10 @@ def proc_cntpdata(gdat):
     ## data counts
     if gdat.datatype == 'inpt':
         gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata, gdat.indxregi, gdat.indxcubeeval)
-   
+        print 'gdat.cntpdata[0]'
+        summgene(gdat.cntpdata[0])
+        print
+
     # correct the likelihoods for the constant data dependent factorial
     gdat.llikoffs = [[] for d in gdat.indxregi]
     for d in gdat.indxregi:
