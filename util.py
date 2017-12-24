@@ -9866,7 +9866,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             for d in gdat.indxregi:
                 for e in indxsersfgrd[d]:
                     masshostbein = array([massfrombein * beinhost[d][e]**2])
-                    setattr(gdatobjt, strgpfix + 'masshostbeinreg%d' % d, masshostbein)
+                    setattr(gdatobjt, strgpfix + 'masshostbeinreg%disf%d' % (d, e), masshostbein)
             ### sort with respect to deflection at scale radius
             if numbtrap > 0:
                 for l in indxpopl:
@@ -10614,27 +10614,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         massshel[k] = sum(dictelem[l][d]['mass'][indxelemshel])
                     setattr(gdatobjt, strgpfix + 'massshelpop%dreg%d' % (l, d), massshel)
                 
-        ### host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
-        if lensmodltype != 'none' or numbtrap > 0 and 'lens' in elemtype:
-            listnametemp = ['delt', 'intg']
-            listnamevarbmass = []
-            listnamevarbmassscal = []
-            listnamevarbmassvect = []
-            
-        if lensmodltype == 'host' or lensmodltype == 'full':
-            listnamevarbmassscal += ['masshosttotl']
-            for strgtemp in listnametemp:
-                listnamevarbmassvect.append('masshost' + strgtemp)
-                listnamevarbmassscal.append('masshost' + strgtemp + 'bein')
-        if numbtrap > 0 and 'lens' in elemtype:
-            listnamevarbmassscal.append('masssubhtotl')
-            listnamevarbmassscal.append('fracsubhtotl')
-            for strgtemp in listnametemp:
-                listnamevarbmassvect.append('masssubh' + strgtemp)
-                listnamevarbmassvect.append('fracsubh' + strgtemp)
-                listnamevarbmassscal.append('masssubh' + strgtemp + 'bein')
-                listnamevarbmassscal.append('fracsubh' + strgtemp + 'bein')
-
         if lensmodltype != 'none' or numbtrap > 0 and 'lens' in elemtype:
             # find the host, subhalo masses and subhalo mass fraction as a function of halo-centric radius
             mdencrit = getattr(gdat, strgmodl + 'mdencrit')
@@ -10644,6 +10623,28 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             for d in gdat.indxregi:
                 strgregi = 'reg%d' % d
                 for e in indxsersfgrd[d]:
+                   
+                    strgregiisfr = 'reg%disf%d' % (d, e)
+
+                    ### host mass, subhalo mass and its fraction as a function of host halo-centric angle and interpolate at the Einstein radius of the host
+                    listnametemp = ['delt', 'intg']
+                    listnamevarbmass = []
+                    listnamevarbmassscal = []
+                    listnamevarbmassvect = []
+                    if lensmodltype == 'host' or lensmodltype == 'full':
+                        listnamevarbmassscal += ['masshosttotl']
+                        for strgtemp in listnametemp:
+                            listnamevarbmassvect.append('masshost' + strgregiisfr + strgtemp)
+                            listnamevarbmassscal.append('masshost' + strgregiisfr + strgtemp + 'bein')
+                    if numbtrap > 0 and 'lens' in elemtype:
+                        listnamevarbmassscal.append('masssubhtotl')
+                        listnamevarbmassscal.append('fracsubhtotl')
+                        for strgtemp in listnametemp:
+                            listnamevarbmassvect.append('masssubh' + strgtemp)
+                            listnamevarbmassvect.append('fracsubh' + strgtemp)
+                            listnamevarbmassscal.append('masssubh' + strgtemp + 'bein')
+                            listnamevarbmassscal.append('fracsubh' + strgtemp + 'bein')
+
                     angl = sqrt((gdat.meanlgalcart - lgalhost[d][e])**2 + (gdat.meanbgalcart - bgalhost[d][e])**2)
             
                     for name in listnamevarbmassvect:
@@ -10666,10 +10667,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     dicttert[d]['fracsubh' + name[8:]][k] = dicttert[d]['masssubh' + name[8:]][k] / dicttert[d]['masshost' + name[8:]][k]
                         setattr(gdatobjt, strgpfix + name + strgregi, dicttert[d][name])
                     
-                # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
-                for name in listnamevarbmassvect:
-                    dicttert[d][name + 'bein'] = interp(beinhost[d], gdat.meananglhalf, dicttert[d][name])
-                    setattr(gdatobjt, strgpfix + name + 'bein' + strgregi, array([dicttert[d][name + 'bein']]))
+                    # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
+                    for name in listnamevarbmassvect:
+                        dicttert[d][name + 'bein'] = interp(beinhost[d], gdat.meananglhalf, dicttert[d][name])
+                        setattr(gdatobjt, strgpfix + name + 'bein' + strgregi, array([dicttert[d][name + 'bein']]))
             
         if numbtrap > 0:
             ## copy element features to the global object
