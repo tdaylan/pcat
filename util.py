@@ -1041,7 +1041,6 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
     cntp = [[] for d in indxregieval]
     for dd, d in enumerate(indxregieval):
         cntp[dd] = sbrt[dd] * gdat.expo[d][indxcubeeval[0][dd]] * gdat.apix
-        print ''
         if gdat.enerdiff:
             cntp[dd] *= gdat.deltener[indxcubeeval[0][dd][0]]
         
@@ -3919,9 +3918,6 @@ def setpinit(gdat, boolinitsetp=False):
         liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
         for l in indxpopl:
             for strgfeat in liststrgfeat[l]:
-                print 'strgfeat'
-                print strgfeat
-                print
                 if strgfeat.startswith('defs') or strgfeat == 'gang' or strgfeat == 'lgal' or strgfeat == 'bgal' or strgfeat == 'gwdt' or \
                                                                                                             strgfeat == 'diss' or strgfeat == 'asca' or strgfeat == 'acut':
                     setattr(gdat, 'fact' + strgfeat + 'plot', gdat.anglfact)
@@ -4359,7 +4355,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.alphhist = 0.5
     gdat.alphline = 0.5
     gdat.alphbndr = 0.5
-    gdat.alphelem = 1.
+    gdat.alphelem = 0.1
     gdat.alphmaps = 1.
     
     # number of colorbar ticks in the maps
@@ -10887,13 +10883,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
                                         
-                                        if strgfeatfrst == 'flux':
-                                            print 'strgfeatfrst'
-                                            print strgfeatfrst
-                                            print 'l, q0, d0'
-                                            print l, q0, d0
-                                            print
-
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0), cmplfeatfrst)
                                 
                     # false discovery rate
@@ -11889,6 +11878,7 @@ def proc_cntpdata(gdat):
         gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata, gdat.indxregi, gdat.indxcubeeval)
         print 'gdat.cntpdata[0]'
         summgene(gdat.cntpdata[0])
+        print
         print
 
     # correct the likelihoods for the constant data dependent factorial
