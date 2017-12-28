@@ -1039,6 +1039,8 @@ def init( \
     gdat.numbpixlbgalshft = [[] for d in gdat.indxregi]
     gdat.refrindxpoplassc = [[] for q in gdat.indxrefr] 
     
+    gdat.factsindplot = 1.
+
     # temp -- this allows up to 3 reference populations
     gdat.refrcolrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
     # temp -- this allows up to 3 reference populations
@@ -2183,39 +2185,44 @@ def init( \
             gdat.numbsampboot = gdat.numbsamp
     
         gdat.boolcrex = False
-        for l0 in gdat.fittindxpopl:
-            for d0 in gdat.fittindxregipopl[l0]:
-                for strgfeatfrst in gdat.fittliststrgfeat[l0]:
-                    for q in gdat.indxrefr:
-                                        
-                        if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
-                            crex = gdat.meanredswo08**2
+        print 'gdat.indxrefr'
+        print gdat.indxrefr
+        print 
+        for q in gdat.indxrefr:
+            for l in gdat.fittindxpopl:
+                for strgfeatfrst in gdat.fittliststrgfeat[l]:
+                    
+                    if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
+                        crex = gdat.meanredswo08**2
+                    else:
+                        crex = None
+                    
+                    print 'strgfeatfrst'
+                    print strgfeatfrst
+                    setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
+                    
+                    for strgfeatseco in gdat.fittliststrgfeat[l]:
+                        
+                        if not checstrgfeat(strgfeatfrst, strgfeatseco):
+                            continue
+                                    
+                        if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
+                            crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                            if strgfeatfrst == 'redswo08':
+                                crex[:, :] = gdat.meanredswo08[:, None]**2
+                            else:
+                                crex[:, :] = gdat.meanredswo08[None, :]**2
                         else:
                             crex = None
                         
-                        setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
-                        
-                        for strgfeatseco in gdat.fittliststrgfeat[l0]:
-                            
-                            if not checstrgfeat(strgfeatfrst, strgfeatseco):
-                                continue
-                                        
-                            if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
-                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                                if strgfeatfrst == 'redswo08':
-                                    crex[:, :] = gdat.meanredswo08[:, None]**2
-                                else:
-                                    crex[:, :] = gdat.meanredswo08[None, :]**2
-                            else:
-                                crex = None
-                            
-                            setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l, d), crex)
+                        setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l, d), crex)
     
-        for listtemp in gdat.liststrgvarbhist:
-            strgvarb = listtemp[3]
-            crexhist = getattr(gdat, 'crex' + strgvarb)
-            if crexhist != None:
-                gdat.boolcrex = True
+        if gdat.refrnumbelemtotl > 0:
+            for listtemp in gdat.liststrgvarbhist:
+                strgvarb = listtemp[4]
+                crexhist = getattr(gdat, 'crex' + strgvarb)
+                if crexhist != None:
+                    gdat.boolcrex = True
             
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
@@ -2231,8 +2238,6 @@ def init( \
                 gdat.liststrgelemtdimvarbfinl += ['excr']
             if gdat.boolcrin:
                 gdat.liststrgelemtdimvarbfinl += ['incr']
-            if gdat.boolcrin or gdat.boolcrex:
-                gdat.liststrgelemtdimvarbfinl += ['tocr']
         gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
 
     gdat.liststrgfoldinit = ['']
@@ -2380,6 +2385,14 @@ def init( \
         print
 
     return gdat.rtag
+
+
+def proc_tile(strgcnfg):
+    
+
+    for k in indxtile:
+        proc_finl(gdat)
+    numbpixloffsxaxi
 
 
 def initarry( \
@@ -3613,20 +3626,53 @@ def work(pathoutprtag, lock, indxprocwork):
             
                 boolproptype = workdict['list' + gdat.strgpdfn + 'indxproptype'][indxswepintv, 0] == k
                 boolaccp = workdict['list' + gdat.strgpdfn + 'accp'][indxswepintv, 0] == 1
-                if gdat.showmoreaccp and gdat.indxproptype[k] in gdat.indxproptypecomp:
-
+                booltemp = False
+                if gdat.indxproptype[k] in gdat.indxproptypecomp:
                     indxpopltemp = gdat.indxpoplproptype[gdat.indxproptype[k]]
+                    print 'gdat.fittnamefeatampl[indxpopltemp]'
+                    print gdat.fittnamefeatampl[indxpopltemp]
+                    print 'gdat.legdproptype[k]'
+                    print gdat.legdproptype[k]
+                    if gdat.fittnamefeatampl[indxpopltemp] == gdat.legdproptype[k]:
+                        booltemp = True
+                if gdat.showmoreaccp and booltemp:
+                    print 'gdat.indxproptypecomp'
+                    print gdat.indxproptypecomp
+                    print 'k'
+                    print k
+                    print 'gdat.indxproptype[k]'
+                    print gdat.indxproptype[k]
+                    print 'gdat.indxpoplproptype'
+                    print gdat.indxpoplproptype
+                    print 'indxpopltemp'
+                    print indxpopltemp
+                    print ' gdat.fittnamefeatampl[indxpopltemp]'
+                    print  gdat.fittnamefeatampl[indxpopltemp]
+
                     binsampl = getattr(gdat, 'bins' + gdat.fittnamefeatampl[indxpopltemp])
+                    print 'binsampl'
+                    print binsampl
+                    print 'gdat.indxbinsplot'
+                    print gdat.indxbinsplot
                     numbaccp = empty(gdat.numbbinsplot, dtype=int)
-                    for a in gdat.indxbinsplot: 
-                        boolbins = (binsampl[a] < workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]) & \
-																			(workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]< binsampl[a+1])
-                        numbaccp[a] = where(boolaccp & boolproptype & boolbins)[0].size
                     numbtotl = empty(gdat.numbbinsplot, dtype=int)
                     for a in gdat.indxbinsplot: 
+                        print 'a'
+                        print a
+                        print 'workdict[list + gdat.strgpdfn + amplpert][indxswepintv, 0])'
+                        print workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]
                         boolbins = (binsampl[a] < workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]) & \
 																			(workdict['list' + gdat.strgpdfn + 'amplpert'][indxswepintv, 0]< binsampl[a+1])
+                        print 'boolbins'
+                        print boolbins
+                        numbaccp[a] = where(boolaccp & boolproptype & boolbins)[0].size
                         numbtotl[a] = where(boolproptype & boolbins)[0].size
+                    print 'numbaccp'
+                    print numbaccp
+                    print 'numbtotl'
+                    print numbtotl
+                    print 
+                    print
                     percaccp = zeros(gdat.numbbinsplot)
                     indx = where(numbtotl > 0)[0]
                     if indx.size > 0:
@@ -3644,7 +3690,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 else:
                     strgstdvstdp = ''
                 
-                if gdat.showmoreaccp and gdat.indxproptype[k] in gdat.indxproptypecomp:
+                if gdat.showmoreaccp and booltemp:
                     for a in gdat.indxbinsplot:
                         print '%30s %50s %10s %12.5g %12.5g %10.5g %10.5g %10.5g %10.5g' % ('%s-%02d' % (gdat.legdproptype[k], a), 'acceptance rate: %3d%% (%5d out of %5d)' % \
                                    (percaccp[a], numbaccp[a], numbtotl[a]), strgstdvstdp, deltlliktotlmean, deltlpritotlmean, lrppmean, ljcbmean, lpautotlmean, lpridistmean)
