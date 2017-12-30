@@ -1040,6 +1040,8 @@ def init( \
     gdat.refrindxpoplassc = [[] for q in gdat.indxrefr] 
     
     gdat.factsindplot = 1.
+    gdat.factmagtplot = 1.
+    gdat.factotypplot = 1.
 
     # temp -- this allows up to 3 reference populations
     gdat.refrcolrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
@@ -1783,6 +1785,14 @@ def init( \
                             if refrfeat[q][d].ndim == 1:
                                 refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
+            print 'gdat.refrlgal[0][0]'
+            print gdat.refrlgal[0][0]
+            summgene(gdat.refrlgal[0][0])
+            print 'gdat.refrlgal[1][0]'
+            print gdat.refrlgal[1][0]
+            summgene(gdat.refrlgal[1][0])
+            print
+
     # temp
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
@@ -2152,6 +2162,9 @@ def init( \
 
     gdat.indxpoplcrin = 0
     if gdat.fittnumbtrap > 0:
+        if gdat.rtagmock != None:
+            path = gdat.pathoutprtagmock + 'gdatfinlpost'
+            gdatmock = readfile(path)
         gdat.liststrgvarbhist = []
         cntr = 0
         for l0 in gdat.fittindxpopl:
@@ -2160,9 +2173,19 @@ def init( \
                     gdat.liststrgvarbhist.append([[] for k in range(5)])
                     gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + 'pop%dreg%d' % (l, d)
                     gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
-                    # cmpl
-                    gdat.liststrgvarbhist[cntr][3] = strgfeatfrst + 'pop%dpop%dreg%d' % (l, gdat.indxpoplcrin, d)
-                    gdat.liststrgvarbhist[cntr][4] = strgfeatfrst + 'pop%dpop%dreg%d' % (gdat.indxpoplcrin, l, d)
+                    if gdat.rtagmock != None:
+                        # cmpl
+                        gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdatmock.indxregi]
+                        # fdis
+                        gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdatmock.indxregi]
+                        booltemp = True
+                        if strgfeatfrst[-4:] in gdat.listnamerefr:
+                            q = gdat.listnamerefr.index(strgfeatfrst[-4:])
+                            booltemp = not strgfeatfrst in gdat.refrliststrgfeatonly[q][l]
+                        for qq in gdatmock.indxregi:
+                            if booltemp:
+                                gdat.liststrgvarbhist[cntr][3][qq] = strgfeatfrst + 'pop%dpop%dreg%d' % (l, qq, d)
+                                gdat.liststrgvarbhist[cntr][4][qq] = strgfeatfrst + 'pop%dpop%dreg%d' % (qq, l, d)
                     cntr += 1    
                     for b, strgfeatseco in enumerate(gdat.fittliststrgfeat[l0]):
                         
@@ -2173,10 +2196,27 @@ def init( \
                         gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (l0, d0)
                         gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
                         gdat.liststrgvarbhist[cntr][2] = strgfeatseco
-                        # temp
-                        for q in gdat.indxregi:
-                            gdat.liststrgvarbhist[cntr][3] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l0, q, d0)
-                            gdat.liststrgvarbhist[cntr][4] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l0, d0)
+                        gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdat.indxregi]
+                        gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdat.indxregi]
+                        if gdat.rtagmock != None:
+                            booltempfrst = True
+                            booltempseco = True
+                            if strgfeatfrst[-4:] in gdat.listnamerefr:
+                                q = gdat.listnamerefr.index(strgfeatfrst[-4:])
+                                booltempfrst = not strgfeatfrst in gdat.refrliststrgfeatonly[q][l]
+                            if strgfeatseco[-4:] in gdat.listnamerefr:
+                                q = gdat.listnamerefr.index(strgfeatseco[-4:])
+                                booltempseco = not strgfeatseco in gdat.refrliststrgfeatonly[q][l]
+                            for qq in gdatmock.indxregi:
+                                if booltempfrst and booltempseco:
+                                    gdat.liststrgvarbhist[cntr][3][qq] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l0, qq, d0)
+                                    gdat.liststrgvarbhist[cntr][4][qq] = strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (qq, l0, d0)
+                                elif booltempfrst:
+                                    gdat.liststrgvarbhist[cntr][3][qq] = strgfeatfrst + 'pop%dpop%dreg%d' % (l0, qq, d0)
+                                    gdat.liststrgvarbhist[cntr][4][qq] = strgfeatfrst + 'pop%dpop%dreg%d' % (qq, l0, d0)
+                                elif booltempseco:
+                                    gdat.liststrgvarbhist[cntr][3][qq] = strgfeatseco + 'pop%dpop%dreg%d' % (l0, qq, d0)
+                                    gdat.liststrgvarbhist[cntr][4][qq] = strgfeatseco + 'pop%dpop%dreg%d' % (qq, l0, d0)
                         cntr += 1    
     
     # selection effects
@@ -2185,9 +2225,6 @@ def init( \
             gdat.numbsampboot = gdat.numbsamp
     
         gdat.boolcrex = False
-        print 'gdat.indxrefr'
-        print gdat.indxrefr
-        print 
         for q in gdat.indxrefr:
             for l in gdat.fittindxpopl:
                 for strgfeatfrst in gdat.fittliststrgfeat[l]:
@@ -2197,8 +2234,6 @@ def init( \
                     else:
                         crex = None
                     
-                    print 'strgfeatfrst'
-                    print strgfeatfrst
                     setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
                     
                     for strgfeatseco in gdat.fittliststrgfeat[l]:
@@ -2219,14 +2254,16 @@ def init( \
     
         if gdat.refrnumbelemtotl > 0:
             for listtemp in gdat.liststrgvarbhist:
-                strgvarb = listtemp[4]
-                crexhist = getattr(gdat, 'crex' + strgvarb)
-                if crexhist != None:
-                    gdat.boolcrex = True
+                strgvarb = listtemp[0]
+                for q in gdat.indxrefr:
+                    crexhist = getattr(gdat, 'crex' + strgvarb[4:-8] + 'pop%d' % q + strgvarb[-8:])
+                    if crexhist != None:
+                        gdat.boolcrex = True
             
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
     
+    if gdat.fittnumbtrap > 0:
         # variables for which two dimensional functions will be plotted
         gdat.liststrgelemtdimvarbinit = ['hist']
         gdat.liststrgelemtdimvarbfram = deepcopy(gdat.liststrgelemtdimvarbinit)

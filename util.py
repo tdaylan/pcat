@@ -1279,11 +1279,6 @@ def retr_refrchanfinl(gdat):
             booltemp = True
     else:
         booltemp = True
-    print 'gdat.numbpixllgalshft'
-    print gdat.numbpixllgalshft
-    print 'gdat.numbpixlbgalshft'
-    print gdat.numbpixlbgalshft
-    print
 
     if booltemp:
         print 'gdat.numbsidecart'
@@ -11392,8 +11387,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     path = gdat.pathoutprtagmock + 'gdatfinlpost'
                     gdatmock = readfile(path)
                 
-                print 'gdat.refrliststrgfeatonly'
-                print gdat.refrliststrgfeatonly
                 for liststrgcompvarbhist in gdat.liststrgvarbhist:
                     strgvarb = liststrgcompvarbhist[0]
 
@@ -11404,26 +11397,24 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     if len(liststrgcompvarbhist[2]) > 0 and (liststrgcompvarbhist[2] == 'spec' or liststrgcompvarbhist[2] == 'deflprof' or liststrgcompvarbhist[2] == 'specplot'):
                         continue
 
-                    print 'liststrgcompvarbhist'
-                    print liststrgcompvarbhist
-                    print 'passed 0'
-                    
                     ## internal correction
                     listhist = getattr(gdat, 'list' + strgpdfn + strgvarb)
-                    booltemp = False
-                    for l in gdat.fittindxpopl:
-                        for q in gdat.indxrefr:
-                            if liststrgcompvarbhist[1][:-4] in gdat.refrliststrgfeatonly[q][l] or \
-                                    len(liststrgcompvarbhist[2][:-4]) > 0 and liststrgcompvarbhist[2][:-4] in gdat.refrliststrgfeatonly[q][l]:
-                                booltemp = True
                     
-                    print 'passed 1'
-                    
-                    if not booltemp:
-
-                        listcmpltrue = getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[3])
-                        listfdistrue = getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[3])
-                        
+                    for qq in gdatmock.indxregi:
+                        l = int(liststrgcompvarbhist[3][qq].split('pop')[1][0])
+                        qq = int(liststrgcompvarbhist[3][qq].split('pop')[2][0])
+                        if liststrgcompvarbhist[1][-4:] in gdat.listnamerefr and (liststrgcompvarbhist[2][-4:] in gdat.listnamerefr or \
+                                                                                                                        len(liststrgcompvarbhist[2]) == 0):
+                            continue
+                        elif liststrgcompvarbhist[1][-4:] in gdat.listnamerefr and len(liststrgcompvarbhist[2]) > 0:
+                            listcmpltrue = stack(gdat.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (l, qq, d))], 2)
+                            listfdistrue = stack(gdat.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (qq, l, d))], 2)
+                        elif len(liststrgcompvarbhist[2][:-4]) > 0 and liststrgcompvarbhist[2][-4:] in gdat.listnamerefr:
+                            listcmpltrue = stack(gdat.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (l, qq, d))], 1)
+                            listfdistrue = stack(gdat.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (qq, l, d))], 1)
+                        else:
+                            listcmpltrue = getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[3][qq])
+                            listfdistrue = getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[3][qq])
                         if len(liststrgcompvarbhist[2]) == 0:
                             listcmplboot = empty((gdat.numbsampboot, gdat.numbbinsplot))
                             listfdisboot = empty((gdat.numbsampboot, gdat.numbbinsplot))
@@ -11446,17 +11437,15 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         listhistboot[indxbadd] = -1.
                         listhistboot[indxbaddzero] = -2.
                         listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
-                        gdat.liststrgchan += ['incr' + strgvarb]
-                        setattr(gdat, 'listpostincr' + strgvarb, listhistincr)
+                        gdat.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
+                        setattr(gdat, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
                     
                     ## external correction
-                    crexhist = getattr(gdat, 'crex' + liststrgcompvarbhist[4])
+                    crexhist = getattr(gdat, 'crex' + liststrgcompvarbhist[4][qq])
                     if crexhist != None:
                         listhistexcr = listhistincr / crexhist 
-                        gdat.liststrgchan += ['excr' + strgvarb]
-                        setattr(gdat, 'listpostexcr' + strgvarb, listhistexcr)
-                    print strgvarb + ' passed'
-                    print
+                        gdat.liststrgchan += ['excr' + liststrgcompvarbhist[4][qq]]
+                        setattr(gdat, 'listpostexcr' + liststrgcompvarbhist[4][qq], listhistexcr)
 
         # compute credible intervals
         if gdat.verbtype > 0:
@@ -12590,6 +12579,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
                                         elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr'):
                                             for q in gdatmock.indxrefr:
+                                                if strgelemtdimvarb.startswith('incr') and strgfrst[-4:] in gdat.listnamerefr and strgseco[-4:] in gdat.listnamerefr:
+                                                    continue
                                                 if strgelemtdimvarb.startswith('excr'):
                                                     if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)) == None:
                                                         continue
@@ -12603,7 +12594,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                         for refrstrgfrst in gdat.refrliststrgfeat[q0]:
                             if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflplot':
                                 continue
+                            if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
+                                continue
                             for refrstrgseco in gdat.refrliststrgfeat[q0]:
+                                if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
+                                    continue
                                 if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflplot':
                                     continue
                                 
@@ -13724,7 +13719,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                 varb = getattr(gdat, strgmome + strgpdfn + strgtotl)
                 varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
                 varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
-                imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Greys', label=labl)
+                imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Blues', label=labl)
                 plt.colorbar(imag)
             else:
                 if gdat.condcatl:
@@ -14038,11 +14033,21 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
 def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat, indxregiplot, plotdiff=False):
     
     figr, axis = plt.subplots(1, 1, figsize=(gdat.plotsize, gdat.plotsize))
-
+    
     # prepare data to be plotted
     xdat = copy(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot][0, :])
     xerr = tdpy.util.retr_errrvarb(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot])
-    
+   
+    print 'strgfeat'
+    print strgfeat
+    print 'xerr'
+    print xerr
+    summgene(xerr)
+    print 'xdat'
+    print xdat
+    summgene(xdat)
+    print
+
     minmplot = getattr(gdat, 'minm' + strgfeat)
     maxmplot = getattr(gdat, 'maxm' + strgfeat)
     binsplot = getattr(gdat, 'bins' + strgfeat)
