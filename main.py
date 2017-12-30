@@ -2424,14 +2424,6 @@ def init( \
     return gdat.rtag
 
 
-def proc_tile(strgcnfg):
-    
-
-    for k in indxtile:
-        proc_finl(gdat)
-    numbpixloffsxaxi
-
-
 def initarry( \
              dictvarbvari, \
              dictvarb, \
