@@ -1992,17 +1992,17 @@ def init( \
                             if gdat.verbtype > 0:
                                 print 'Warning: Provided reference element feature is not finite. Defaulting to 0...'
                         
-                    if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
-                        print 'Warning! A reference element feature is all zeros!'
-                        print 'strgfeat'
-                        print strgfeat
-                        print 'refrfeat[q][d]'
-                        summgene(refrfeat[q][d])
-                        if len(refrfeat[q][d]) > 0:
-                            print 'indxbadd'
-                            print indxbadd
-                        print
-                        #raise Exception('')
+                        if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
+                            print 'Warning! A reference element feature is all zeros!'
+                            print 'strgfeat'
+                            print strgfeat
+                            print 'refrfeat[q][d]'
+                            summgene(refrfeat[q][d])
+                            if len(refrfeat[q][d]) > 0:
+                                print 'indxbadd'
+                                print indxbadd
+                            print
+                            #raise Exception('')
         
         # bin reference element features
         for q0 in gdat.indxrefr:

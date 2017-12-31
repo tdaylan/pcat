@@ -8228,6 +8228,7 @@ def retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl):
 
 def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     
+    
     initchro(gdat, gdatmodi, strgstat, 'proc')
 
     if gdat.verbtype > 1:
@@ -8482,7 +8483,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
     
     # temp -- this neglects prior terms that depend on the derived quantities
     evalllik = False
+    
+    #print 'proc_samp()'
+    #print 'strgstat'
+    #print strgstat
+    
     if strgstat == 'next': 
+        
+        #print 'gdatmodi.propllik'
+        #print gdatmodi.propllik
+        
         if gdatmodi.propllik:
             indxregieval = gdatmodi.indxregimodi
             indxenereval = gdatmodi.indxenermodi
@@ -9553,6 +9563,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if not isfinite(llik).all():
                 raise Exception('Likelihood is not finite.')
     
+        #print 'gdat.calcllik'
+        #print gdat.calcllik
+        #print 'strgmodl'
+        #print strgmodl
+        
         if gdat.calcllik:
             if strgstat == 'next':
                 thislliktotl = getattr(gdatobjt, strgpfixthis + 'lliktotl')
@@ -9576,6 +9591,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     lliktotl += sum(llik[dd])
         else:
             lliktotl = float64(0.)
+        
+        #print 'lliktotl'
+        #print lliktotl
+        #print 
 
         setattr(gdatobjt, strgpfix + 'llik', llik)
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
@@ -10668,19 +10687,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     if name[:4] == 'frac':
                         if dicttert[d]['masshost' + name[8:]][k] != 0.:
                             dicttert[d]['fracsubh' + name[8:]][k] = dicttert[d]['masssubh' + name[8:]][k] / dicttert[d]['masshost' + name[8:]][k]
-                print 'strgpfix + name'
-                print strgpfix + name
-                print 'dicttert[d][name]'
-                summgene(dicttert[d][name])
                 setattr(gdatobjt, strgpfix + name, dicttert[d][name])
                 
                 # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
                 dicttert[d][name + 'bein'] = interp(beinhost[d], gdat.meananglhalf, dicttert[d][name])
-                print 'strgpfix + name + bein'
-                print strgpfix + name + 'bein'
-                print 'array([dicttert[d][name + bein]])'
-                summgene(dicttert[d][name + 'bein'])
-                print
                 setattr(gdatobjt, strgpfix + name + 'bein', dicttert[d][name + 'bein'])
             
         if numbtrap > 0:
@@ -10847,14 +10857,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                 continue
                                             
                                             if len(indxelemrefrasschits[q0][l][d0]) > 0:
-                                                #strgfeattdim = strgfeatfrsttagg + strgfeatsecotagg + 'pop%dreg%d' % (q0, d0)
                                                 strgfeattdim = strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (q0, d0)
                                                 refrhistfeattdim = getattr(gdat, 'refrhist' + strgfeattdim)
                                                 refrfeatseco = getattr(gdat, 'refr' + strgfeatseco)
                                                 binsfeatseco = getattr(gdat, 'bins' + strgfeatseco)
                                                 
                                                 refrhistfeattdimassc = histogram2d(refrfeatfrst[q0][d0][0, indxelemrefrasschits[q0][l][d0]], \
-                                                                             refrfeatseco[q0][d0][0, indxelemrefrasschits[q0][l][d0]], bins=(binsfeatfrst, binsfeatseco))[0]
+                                                                                   refrfeatseco[q0][d0][0, indxelemrefrasschits[q0][l][d0]], bins=(binsfeatfrst, binsfeatseco))[0]
                                                 indxgood = where(refrhistfeattdim != 0.)
                                                 if indxgood[0].size > 0:
                                                     cmpltdim[indxgood] = refrhistfeattdimassc[indxgood].astype(float) / refrhistfeattdim[indxgood]
@@ -10871,10 +10880,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                             print 'refrhistfeattdimassc'
                                                             print refrhistfeattdimassc
                                                             summgene(refrhistfeattdimassc)
+                                                            #print 'cmpltdim'
+                                                            #print cmpltdim
+                                                            #summgene(cmpltdim)
                                                             print 'indxgood'
                                                             print indxgood
                                                             print
-                                                            #raise Exception('')
+                                                            if not strgfeatfrst == 'aang':
+                                                                raise Exception('')
                                             
                                             strg = strgpfix + 'cmpl' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l, q0, d0)
                                             print 'setting cmpltdim'
@@ -10968,7 +10981,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     print 'fitthistfeatfrstfals'
                                                     print fitthistfeatfrstfals
                                                     print
-                                                    #raise Exception('')
+                                                    if not strgfeatfrst == 'aang':
+                                                        raise Exception('')
                                     setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l0, d0), fdisfeatfrst)
     
     
@@ -12616,7 +12630,17 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                         
                                 if strgfrst.startswith('aerr') or strgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
                                     continue
+                                
                                 strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q, d0)
+                                
+                                print 'q0, d0, l0'
+                                print q0, d0, l0
+                                print 'refrstrgfrst'
+                                print refrstrgfrst
+                                print 'refrstrgseco'
+                                print refrstrgseco
+                                print
+
                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
                                                                                 q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
         
