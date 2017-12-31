@@ -7,9 +7,9 @@ for strg in sys.argv[1:]:
 
 strgtimestmp = tdpy.util.retr_strgtimestmp()
 
-cmnd = 'python' + strgtotl + ' > ' + strgtimestmp + '_' + sys.argv[2] + '_' + sys.argv[3] + '.out 2>&1 &'
+cmnd = 'python' + strgtotl + ' > ' + os.environ["PCAT_DATA_PATH"] + '/data/' + strgtimestmp + '_' + sys.argv[2] + '_' + sys.argv[3] + '.out 2>&1 &'
 
 print 'cmnd'
 print cmnd
 
-#os.system(cmnd)
+os.system(cmnd)
