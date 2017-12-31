@@ -11076,150 +11076,159 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
     
     gdatmock = None
     
-    if rtag != None:
-        rtagtemp = rtag
-    else:
-        rtagtemp = gdat.rtag
+    if rtag == None:
         rtag = gdat.rtag
     
-    if rtag != None:
-        # read initial global object
-        boolgdatinit = chec_statfile(rtag, 'gdatinit', '')
-        if not boolgdatinit:
-            return
+    # read initial global object
+    if isinstance(rtag, list):
+        rtaginit = rtag[0]
+        listrtagmodi = rtag
+        rtagfinl = rtag[0] + 'tile'
+        booltile = True
+    else:
+        rtaginit = rtag
+        listrtagmodi = [rtag]
+        rtagfinl = rtag
+        booltile = False
+    boolgdatinit = chec_statfile(rtaginit, 'gdatinit', '')
+    if not boolgdatinit:
+        return
     
     # skip if the final global object is available 
-    boolgdatfinl = chec_statfile(rtag, 'gdatfinl', strgpdfn)
+    boolgdatfinl = chec_statfile(rtagfinl, 'gdatfinl', strgpdfn)
     if boolgdatfinl:
         print 'Run already final-processed.'
         # read gdatfinl
-        pathoutprtag = retr_pathoutprtag(rtag)
+        pathoutprtag = retr_pathoutprtag(rtagfinl)
         path = pathoutprtag + 'gdatfinl' + strgpdfn
         gdat = readfile(path) 
     else:
         # read gdatinit
-        pathoutprtag = retr_pathoutprtag(rtag)
+        pathoutprtag = retr_pathoutprtag(rtaginit)
         path = pathoutprtag + 'gdatinit'
         gdat = readfile(path) 
     
         if gdat.verbtype > 0:
-            print 'Final processing %s...' % rtagtemp
+            print 'Final processing %s...' % rtagfinl
         
-        # read gdatmodi
-        boolgdatmodi = chec_statfile(gdat.rtag, 'gdatmodi', strgpdfn)
-        if not boolgdatmodi:
-            return 
-
         if gdat.verbtype > 0:
             print 'Post processing...'
             print 'Reading chains from disk...'
             timeinit = gdat.functime()
         
-        listgdatmodi = []
-        for k in gdat.indxproc:
-            path = gdat.pathoutprtag + 'gdatmodi%04d' % k + strgpdfn
-            listgdatmodi.append(readfile(path))
-        
-        if gdat.verbtype > 0:
-            timefinl = gdat.functime()
-            print 'Done in %.3g seconds.' % (timefinl - timeinit)
-        
-        # aggregate samples from the chains
-        if gdat.verbtype > 0:
-            print 'Accumulating samples from all processes...'
-            timeinit = gdat.functime()
-        
-        if gdat.verbtype > 0:
-            print 'Accumulating arrays...'
-        
-        gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-        gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
-        for strgvarb in gdat.liststrgvarbarry:
+        for rtagmodi in listrtagmodi:
+            
+            # read gdatmodi
+            boolgdatmodi = chec_statfile(rtagmodi, 'gdatmodi', strgpdfn)
+            if not boolgdatmodi:
+                return 
+            
+            listgdatmodi = []
             for k in gdat.indxproc:
-                if k == 0:
-                    shap = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb).shape
-                    shap = [shap[0], gdat.numbproc] + list(shap[1:])
-                    temp = zeros(shap) - 1
-                if len(shap) > 2:
-                    temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
-                else:
-                    temp[:, k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
-            setattr(gdat, 'list' + strgpdfn + strgvarb, temp)
-        
-        if gdat.verbtype > 0:
-            print 'Accumulating lists...'
-        
-        # lists of lists collected at each sample
-        for strgvarb in gdat.liststrgvarblistsamp:
-            listtemp = [[[] for k in gdat.indxproc] for j in gdat.indxsamp]
-            for j in gdat.indxsamp:      
-                for k in gdat.indxproc:
-                    listtemp[j][k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)[j]
-            setattr(gdat, 'list' + strgpdfn + strgvarb, listtemp)
-
-        ## maximum likelihood sample 
-        gdat.maxmllikproc = empty(gdat.numbproc)
-        gdat.indxswepmaxmllikproc = empty(gdat.numbproc, dtype=int)
-        gdat.sampvarbmaxmllikproc = empty((gdat.numbproc, gdat.fittnumbpara))
-        for k in gdat.indxproc:
-            gdat.maxmllikproc[k] = listgdatmodi[k].maxmllikswep
-            gdat.indxswepmaxmllikproc[k] = listgdatmodi[k].indxswepmaxmllik
-            gdat.sampvarbmaxmllikproc[k] = listgdatmodi[k].sampvarbmaxmllik
-        if gdat.verbtype > 0:
-            timefinl = gdat.functime()
-            print 'Done in %.3g seconds.' % (timefinl - timeinit)
-
-        # Gelman-Rubin test
-        if gdat.numbproc > 1:
+                path = gdat.pathoutprtag + 'gdatmodi%04d' % k + strgpdfn
+                listgdatmodi.append(readfile(path))
+            
             if gdat.verbtype > 0:
-                print 'Computing the Gelman-Rubin TS...'
+                timefinl = gdat.functime()
+                print 'Done in %.3g seconds.' % (timefinl - timeinit)
+            
+            # aggregate samples from the chains
+            if gdat.verbtype > 0:
+                print 'Accumulating samples from all processes...'
                 timeinit = gdat.functime()
-            gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
-            gdat.gmrbstat = [zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) for d in gdat.indxregi]
-            for k in gdat.fittindxfixp:
-                gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, k])
-                if not isfinite(gdat.gmrbfixp[k]):
-                    gdat.gmrbfixp[k] = 0.
-            for d in gdat.indxregi:
-                listcntpmodl = getattr(gdat, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
-                for i in gdat.indxener:
-                    for j in gdat.indxpixl:
-                        for m in gdat.indxevtt:
-                            gdat.gmrbstat[d][i, j, m] = tdpy.mcmc.gmrb_test(listcntpmodl[:, :, i, j, m])
+            
+            if gdat.verbtype > 0:
+                print 'Accumulating arrays...'
+            
+            gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
+            gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
+            for strgvarb in gdat.liststrgvarbarry:
+                for k in gdat.indxproc:
+                    if k == 0:
+                        shap = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb).shape
+                        shap = [shap[0], gdat.numbproc] + list(shap[1:])
+                        temp = zeros(shap) - 1
+                    if len(shap) > 2:
+                        temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
+                    else:
+                        temp[:, k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
+                setattr(gdat, 'list' + strgpdfn + strgvarb, temp)
+            
+            if gdat.verbtype > 0:
+                print 'Accumulating lists...'
+            
+            # lists of lists collected at each sample
+            for strgvarb in gdat.liststrgvarblistsamp:
+                listtemp = [[[] for k in gdat.indxproc] for j in gdat.indxsamp]
+                for j in gdat.indxsamp:      
+                    for k in gdat.indxproc:
+                        listtemp[j][k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)[j]
+                setattr(gdat, 'list' + strgpdfn + strgvarb, listtemp)
+
+            ## maximum likelihood sample 
+            gdat.maxmllikproc = empty(gdat.numbproc)
+            gdat.indxswepmaxmllikproc = empty(gdat.numbproc, dtype=int)
+            gdat.sampvarbmaxmllikproc = empty((gdat.numbproc, gdat.fittnumbpara))
+            for k in gdat.indxproc:
+                gdat.maxmllikproc[k] = listgdatmodi[k].maxmllikswep
+                gdat.indxswepmaxmllikproc[k] = listgdatmodi[k].indxswepmaxmllik
+                gdat.sampvarbmaxmllikproc[k] = listgdatmodi[k].sampvarbmaxmllik
             if gdat.verbtype > 0:
                 timefinl = gdat.functime()
                 print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-        # calculate the autocorrelation of the chains
-        if gdat.verbtype > 0:
-            print 'Computing the autocorrelation of the chains...'
-            timeinit = gdat.functime()
-        gdat.atcrcntp = [[] for d in gdat.indxregi]
-        gdat.timeatcrcntp = [[] for d in gdat.indxregi]
-        for d in gdat.indxregi:
-            gdat.atcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt, gdat.numbsamp / 2))
-            gdat.timeatcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
-        gdat.atcrpara = empty((gdat.numbproc, gdat.fittnumbpara, gdat.numbsamp / 2))
-        gdat.timeatcrpara = empty((gdat.numbproc, gdat.fittnumbpara))
-        for k in gdat.indxproc:
-            gdat.atcrpara[k, :, :], gdat.timeatcrpara[k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(gdat.listsampvarb[:, k, :], verbtype=gdat.verbtype)
-            for d in gdat.indxregi:
-                listcntpmodl = getattr(gdat, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
-                gdat.atcrcntp[d][k, :], gdat.timeatcrcntp[d][k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(listcntpmodltemp[:, k, :, :, :], verbtype=gdat.verbtype)
-        gdat.timeatcrmaxm = 0.
-        if gdat.verbtype > 0:
-            timefinl = gdat.functime()
-            print 'Done in %.3g seconds.' % (timefinl - timeinit)
+            if not booltile:
+                # Gelman-Rubin test
+                if gdat.numbproc > 1:
+                    if gdat.verbtype > 0:
+                        print 'Computing the Gelman-Rubin TS...'
+                        timeinit = gdat.functime()
+                    gdat.gmrbfixp = zeros(gdat.fittnumbfixp)
+                    gdat.gmrbstat = [zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt)) for d in gdat.indxregi]
+                    for k in gdat.fittindxfixp:
+                        gdat.gmrbfixp[k] = tdpy.mcmc.gmrb_test(gdat.listsampvarb[:, :, k])
+                        if not isfinite(gdat.gmrbfixp[k]):
+                            gdat.gmrbfixp[k] = 0.
+                    for d in gdat.indxregi:
+                        listcntpmodl = getattr(gdat, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
+                        for i in gdat.indxener:
+                            for j in gdat.indxpixl:
+                                for m in gdat.indxevtt:
+                                    gdat.gmrbstat[d][i, j, m] = tdpy.mcmc.gmrb_test(listcntpmodl[:, :, i, j, m])
+                    if gdat.verbtype > 0:
+                        timefinl = gdat.functime()
+                        print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-        # flatten the chains from different walkers
-        ## lists collected at each sample
-        for strgvarb in gdat.liststrgvarblistsamp:
-            listtemp = []
-            listinpt = getattr(gdat, 'list' + strgpdfn + strgvarb)
-            for j in gdat.indxsamp:      
+                # calculate the autocorrelation of the chains
+                if gdat.verbtype > 0:
+                    print 'Computing the autocorrelation of the chains...'
+                    timeinit = gdat.functime()
+                gdat.atcrcntp = [[] for d in gdat.indxregi]
+                gdat.timeatcrcntp = [[] for d in gdat.indxregi]
+                for d in gdat.indxregi:
+                    gdat.atcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt, gdat.numbsamp / 2))
+                    gdat.timeatcrcntp[d] = empty((gdat.numbproc, gdat.numbener, gdat.numbpixl, gdat.numbevtt))
+                gdat.atcrpara = empty((gdat.numbproc, gdat.fittnumbpara, gdat.numbsamp / 2))
+                gdat.timeatcrpara = empty((gdat.numbproc, gdat.fittnumbpara))
                 for k in gdat.indxproc:
-                    listtemp.append(listinpt[j][k])
-            setattr(gdat, 'list' + strgpdfn + strgvarb, listtemp)
+                    gdat.atcrpara[k, :, :], gdat.timeatcrpara[k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(gdat.listsampvarb[:, k, :], verbtype=gdat.verbtype)
+                    for d in gdat.indxregi:
+                        listcntpmodl = getattr(gdat, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
+                        gdat.atcrcntp[d][k, :], gdat.timeatcrcntp[d][k, :] = 0., 0.#tdpy.mcmc.retr_timeatcr(listcntpmodltemp[:, k, :, :, :], verbtype=gdat.verbtype)
+                gdat.timeatcrmaxm = 0.
+                if gdat.verbtype > 0:
+                    timefinl = gdat.functime()
+                    print 'Done in %.3g seconds.' % (timefinl - timeinit)
+
+            # flatten the chains from different walkers
+            ## lists collected at each sample
+            for strgvarb in gdat.liststrgvarblistsamp:
+                listtemp = []
+                listinpt = getattr(gdat, 'list' + strgpdfn + strgvarb)
+                for j in gdat.indxsamp:      
+                    for k in gdat.indxproc:
+                        listtemp.append(listinpt[j][k])
+                setattr(gdat, 'list' + strgpdfn + strgvarb, listtemp)
 
         ## list of other parameters to be flattened
         gdat.liststrgvarbarryflat = deepcopy(gdat.liststrgvarbarry)
