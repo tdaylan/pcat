@@ -1785,13 +1785,12 @@ def init( \
                             if refrfeat[q][d].ndim == 1:
                                 refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
-            print 'gdat.refrlgal[0][0]'
-            print gdat.refrlgal[0][0]
-            summgene(gdat.refrlgal[0][0])
-            print 'gdat.refrlgal[1][0]'
-            print gdat.refrlgal[1][0]
-            summgene(gdat.refrlgal[1][0])
-            print
+                print 'q'
+                print q
+                print 'gdat.refrlgal[q][0]'
+                print gdat.refrlgal[q][0]
+                summgene(gdat.refrlgal[q][0])
+                print
 
     # temp
     #if gdat.refrnumbelem > 0:
