@@ -10523,7 +10523,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for strgfrst in liststrgfeat[l0]:
                                 for strgseco in liststrgfeat[l0]:
                                     
-                                    if strgfrst == 'spec' or strgfrst == 'specplot' or strgseco == 'spec' or strgseco == 'specplot':
+                                    if strgfrst == 'spec' or strgfrst == 'specplot' or strgfrst == 'deflprof' or \
+                                            strgseco == 'spec' or strgseco == 'specplot' or strgseco == 'deflprof':
                                         continue
                                     
                                     if not checstrgfeat(strgfrst, strgseco):
@@ -10669,8 +10670,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             for name in listnamevarbmassvect:
                 dicttert[d][name] = zeros(gdat.numbanglhalf)
                 d = int(name.split('reg')[1][0])
-                e = int(name.split('isf')[1][0])
-                angl = sqrt((gdat.meanlgalcart - lgalhost[d][e])**2 + (gdat.meanbgalcart - bgalhost[d][e])**2)
+                print 'listnamevarbmassvect'
+                print listnamevarbmassvect
+                print 'name'
+                print name
+                if 'isf' in name:
+                    indxisfrtemp = int(name.split('isf')[1][0])
+                angl = sqrt((gdat.meanlgalcart - lgalhost[d][indxisfrtemp])**2 + (gdat.meanbgalcart - bgalhost[d][indxisfrtemp])**2)
                 for k in gdat.indxanglhalf:
                     if name[4:8] == 'host':
                         convtemp = conv[d, :]
@@ -10685,8 +10691,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         dicttert[d][name][k] = sum(convtemp[indxpixl]) * mdencrit[d] * gdat.apix * adishost[d]**2# * indxpixl[0].size
                     
                     if name[:4] == 'frac':
-                        if dicttert[d]['masshost' + name[8:]][k] != 0.:
-                            dicttert[d]['fracsubh' + name[8:]][k] = dicttert[d]['masssubh' + name[8:]][k] / dicttert[d]['masshost' + name[8:]][k]
+                        masshosttotl = 0.
+                        for e in indxsersfgrd[d]:
+                            masshosttotl += dicttert[d]['masshost' + name[8:12] + 'isf%d' % e + name[-4:]][k]
+                        if masshosttotl != 0.:
+                            dicttert[d]['fracsubh' + name[8:]][k] = dicttert[d]['masssubh' + name[8:]][k] / masshosttotl
                 setattr(gdatobjt, strgpfix + name, dicttert[d][name])
                 
                 # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
