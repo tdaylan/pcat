@@ -1042,7 +1042,7 @@ def init( \
     gdat.factsindplot = 1.
     gdat.factmagtplot = 1.
     gdat.factotypplot = 1.
-
+    
     # temp -- this allows up to 3 reference populations
     gdat.refrcolrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
     # temp -- this allows up to 3 reference populations
@@ -1076,7 +1076,7 @@ def init( \
                 retr_refrfermfinl(gdat)
             if gdat.exprtype == 'chan':
                 retr_refrchanfinl(gdat)
-
+    
     for strgmodl in gdat.liststrgmodl:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         spatdisttype = [[] for l in indxpopl]
@@ -1489,7 +1489,47 @@ def init( \
         gdat.maxmcurv = 1.
         gdat.minmexpc = 0.1
         gdat.maxmexpc = 10.
-    
+
+        for q in gdat.indxrefr:
+            for strgfeat in gdat.refrliststrgfeat[q]:
+                if strgfeat == 'etag' or strgfeat == 'gang' or strgfeat == 'aang':
+                    continue
+                refrfeat = getattr(gdat, 'refr' + strgfeat)
+                for d in gdat.refrindxregipopl[q]:
+                    
+                    if len(refrfeat[q][d]) == 0 or refrfeat[q][d].ndim < 2:
+                        print 'strgfeat'
+                        print strgfeat
+                        print 'refrfeat[q][d]'
+                        print refrfeat[q][d]
+                        summgene(refrfeat[q][d])
+                        raise Exception('')
+        
+        ## temp -- take the first 10 elements
+        for q in gdat.indxrefr:
+            for strgfeat in gdat.refrliststrgfeat[q]:
+                if strgfeat == 'gang' or strgfeat == 'aang':
+                    continue
+                refrfeat = getattr(gdat, 'refr' + strgfeat)
+                for d in gdat.refrindxregipopl[q]:
+                    print 'strgfeat'
+                    print strgfeat
+                    if strgfeat != 'etag':
+                        print 'refrfeat[q][d]'
+                        summgene(refrfeat[q][d])
+                    if strgfeat == 'etag':
+                        refrfeat[q][d] = refrfeat[q][d][:10]
+                    else:
+                        refrfeat[q][d] = refrfeat[q][d][:, :10, ...]
+        
+            print 'hacking!!!!'
+            print 'q'
+            print q
+            print 'gdat.refrlgal[q][0]'
+            print gdat.refrlgal[q][0]
+            summgene(gdat.refrlgal[q][0])
+            print
+
     gdat.refrnumbelem = [zeros(gdat.numbregi, dtype=int) for q in gdat.indxrefr]
     gdat.refrnumbelempopl = zeros(gdat.numbrefr, dtype=int)
     for q in gdat.indxrefr:
@@ -1756,10 +1796,10 @@ def init( \
 
     if gdat.allwrefr:
         # external catalog
-        if gdat.datatype == 'inpt':
-            gdat.numbrefrpnts = zeros((gdat.numbregi, gdat.numbrefr), dtype=int)
-            for q in gdat.indxrefr:
-                gdat.numbrefrpnts[d, q] = gdat.refrlgal[q][d].size
+        #if gdat.datatype == 'inpt':
+            #gdat.numbrefrpnts = zeros((gdat.numbregi, gdat.numbrefr), dtype=int)
+            #for q in gdat.indxrefr:
+            #    gdat.numbrefrpnts[d, q] = gdat.refrlgal[q][d].size
         
         if gdat.datatype == 'inpt':
         
@@ -1780,10 +1820,9 @@ def init( \
                     if strgfeat == 'etag':
                         continue
                     refrfeat = getattr(gdat, 'refr' + strgfeat)
-                    for l in gdat.fittindxpopl:
-                        for d in gdat.fittindxregipopl[l]:
-                            if refrfeat[q][d].ndim == 1:
-                                refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
+                    for d in gdat.refrindxregipopl[q]:
+                        if refrfeat[q][d].ndim == 1:
+                            refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
                 print 'q'
                 print q
@@ -1992,17 +2031,24 @@ def init( \
                             if gdat.verbtype > 0:
                                 print 'Warning: Provided reference element feature is not finite. Defaulting to 0...'
                         
-                        if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
-                            print 'Warning! A reference element feature is all zeros!'
+                        if len(refrfeat[q][d]) == 0:
+                            print 'Warning! A reference element feature has length zero!'
                             print 'strgfeat'
                             print strgfeat
+                        else:
                             print 'refrfeat[q][d]'
-                            summgene(refrfeat[q][d])
-                            if len(refrfeat[q][d]) > 0:
-                                print 'indxbadd'
-                                print indxbadd
-                            print
-                            #raise Exception('')
+                            print refrfeat[q][d]
+                            if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
+                                print 'Warning! A reference element feature is all zeros!'
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'refrfeat[q][d]'
+                                summgene(refrfeat[q][d])
+                                if len(refrfeat[q][d]) > 0:
+                                    print 'indxbadd'
+                                    print indxbadd
+                                print
+                                #raise Exception('')
         
         # bin reference element features
         for q0 in gdat.indxrefr:
