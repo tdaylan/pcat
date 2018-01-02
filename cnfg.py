@@ -2,8 +2,7 @@
 from __init__ import *
 
 # internal functions
-from main import init
-from visu import *
+from main import init, initarry
 
 def test_info():
     
@@ -163,69 +162,40 @@ def test_time():
         plt.close(figr)
 
     
-def test_psfn():
+def test_psfn(strgcnfgextnexec=None):
     
-    tupl = [ \
-            [                         None, 'singgaus',  True, 'chan'], \
-            [                         None, 'singgaus', False, 'chan'], \
-            ['chanfluxback_0200_4msc.fits', 'singgaus', False, 'chan'], \
-            ['chanfluxback_0200_4msc.fits', 'singgaus',  True, 'chan'], \
-            [                         None, 'doubking', False, 'ferm'], \
-            [                         None, 'gausking', False, 'ferm'], \
-            [                         None, 'doubgaus', False, 'ferm'], \
-            [                         None, 'singking', False, 'ferm'], \
-            [                         None, 'singgaus', False, 'ferm'], \
-            [    'fermflux_cmp0_ngal.fits', 'doubking', False, 'ferm'] \
-           ]
-    numbtupl = len(tupl)
-    for k in range(numbtupl):
-        
-        strgexprflux = tupl[k][0]
-        psfntype = tupl[k][1]
-        varioaxi = tupl[k][2]
-        exprtype = tupl[k][3]
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['priofactdoff'] = 0.2
+    dictargs['truemaxmnumbelempop0reg0'] = 400
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['optitype'] = 'none'
+    dictargs['numbswep'] = 10000
     
-        if exprtype == 'ferm':
-            indxenerincl = arange(2, 3)
-            indxevttincl = arange(3, 4)
-            back = ['fermisotflux.fits', 'fermfdfmflux_ngal.fits']
-            strgexpo = 'fermexpo_cmp0_ngal.fits'
-            bgalcntr = deg2rad(90.)
-            minmflux = 1e-7
-            maxmflux = 2e-7
-        else:
-            indxenerincl = arange(2)
-            indxevttincl = arange(1)
-            back = [1.]
-            strgexpo = 'chanexpo_0200_4msc.fits'
-            bgalcntr = 0.
-            minmflux = 1e-4
-            maxmflux = 2e-4
+    #oaxifree
+    listnamecnfgextn = ['nomi', 'psfntfix', 'psfnwfix', 'psfngaus', 'elemfeww']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['psfntfix']['proppsfp'] = False
+    
+    dictargsvari['psfnwfix']['proppsfp'] = False
+    dictargsvari['psfnwfix']['initsigc'] = 0.5 / anglfact
+    
+    dictargsvari['psfngaus']['psfntype'] = 'singgaus'
+    
+    dictargsvari['elemfeww']['fittmaxmnumbelem'] = 3
+    
+    dictglob = initarry( \
+                                  dictargsvari, \
+                                  dictargs, \
+                                  strgcnfgextnexec=strgcnfgextnexec, \
+                                 )
 
-        init( \
-             numbswep=10000, \
-             factthin=1, \
-             numbswepplot=2000, \
-             exprinfo=False, \
-             indxenerincl=indxenerincl, \
-             indxevttincl=indxevttincl, \
-             exprtype=exprtype, \
-             back=back, \
-             strgexpo=strgexpo, \
-             propbacp=False, \
-             propcomp=False, \
-             probtran=0., \
-             prophypr=False, \
-             psfntype=psfntype, \
-             varioaxi=varioaxi, \
-             bgalcntr=bgalcntr, \
-             maxmnumbpnts=array([3]), \
-             minmflux=minmflux, \
-             maxmflux=maxmflux, \
-             strgexprflux=strgexprflux, \
-             truenumbpnts=array([3]), \
-            )
-                
     
 def test_nomi():
       
@@ -272,7 +242,7 @@ def pcat_anglassc(strgcnfgextnexec=None):
     dictargsvari['loww']['anglassc'] = 0.01
     dictargsvari['vlow']['anglassc'] = 0.001
     
-    dictglob = pcat.main.initarry( \
+    dictglob = initarry( \
                                   dictargsvari, \
                                   dictargs, \
                                   strgcnfgextnexec=strgcnfgextnexec, \

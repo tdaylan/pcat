@@ -2031,13 +2031,17 @@ def init( \
                             if gdat.verbtype > 0:
                                 print 'Warning: Provided reference element feature is not finite. Defaulting to 0...'
                         
-                        if len(refrfeat[q][d]) == 0:
+                        if refrfeat[q][d].size == 0:
                             print 'Warning! A reference element feature has length zero!'
                             print 'strgfeat'
                             print strgfeat
                         else:
                             print 'refrfeat[q][d]'
                             print refrfeat[q][d]
+                            print 'type(refrfeat[q][d])'
+                            print type(refrfeat[q][d])
+                            print 'len(refrfeat[q][d])'
+                            print len(refrfeat[q][d])
                             if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
                                 print 'Warning! A reference element feature is all zeros!'
                                 print 'strgfeat'
@@ -2215,6 +2219,8 @@ def init( \
         for l0 in gdat.fittindxpopl:
             for d0 in gdat.fittindxregipopl[l0]:
                 for a, strgfeatfrst in enumerate(gdat.fittliststrgfeat[l0]):
+                    if strgfeatfrst == 'spec':
+                        continue
                     gdat.liststrgvarbhist.append([[] for k in range(5)])
                     gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + 'pop%dreg%d' % (l, d)
                     gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
@@ -2234,6 +2240,9 @@ def init( \
                     cntr += 1    
                     for b, strgfeatseco in enumerate(gdat.fittliststrgfeat[l0]):
                         
+                        if strgfeatseco == 'spec':
+                            continue
+
                         if not checstrgfeat(strgfeatfrst, strgfeatseco):
                             continue
                                         
