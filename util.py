@@ -11239,10 +11239,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             if not booltile:
                 listsamprsmp = getattr(gdat, 'list' + strgpdfn + 'samp')
                 listsampvarbrsmp = getattr(gdat, 'list' + strgpdfn + 'sampvarb')
-                print 'heeey'
-                print 'listsampvarbrsmp'
-                summgene(listsampvarbrsmp)
-                print
 
                 # Gelman-Rubin test
                 if gdat.numbproc > 1:
@@ -11302,6 +11298,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 setattr(gdat, 'list' + strgpdfn + strgvarb, inpt.reshape(shap))
         
             if booltile:
+                
                 # temp
                 if n > 3:
                     print 'Quitting...'
@@ -11311,19 +11308,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 listrtaggood.append(rtagmodi)
                 indxrtaggood.append(n)
                 indxtiletemp += 1
-                print 'indxrtaggood'
-                print indxrtaggood
-                print 'listrtaggood'
-                print listrtaggood
-                print 'liststrgtile'
-                print liststrgtile
 
                 if len(liststrgtile) == 1:
                     for strgvarb in gdat.liststrgvarbarrysamp:
                         if not strgvarb in [strgvarbhist[0] for strgvarbhist in gdat.liststrgvarbhist]:
-                            #listvarb = getattr(gdat, 'list' + strgpdfn + strgvarb)
-                            #shap = [numbsamptotlrsmp] + list(listvarb.shape[1:])
-                            #listvarbrsmp = empty(shap)
                             listvarbrsmp = []
                             setattr(gdat, 'list' + strgpdfn + strgvarb + 'rsmp', listvarbrsmp)
                         else:
@@ -11331,8 +11319,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             if 'spec' in strgvarbhist[0]:
                                 continue
                             hist = zeros_like(getattr(listgdatmodi[0], 'list' + strgpdfn + strgvarbhist[0]))
-                            print 'strgvarbhist[0]'
-                            print strgvarbhist[0]
                             setattr(gdat, 'list' + strgpdfn + strgvarbhist[0] + 'tile', hist)
         
                 for strgvarb in gdat.liststrgvarbarrysamp:
@@ -11341,37 +11327,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         if 'spec' in strgvarbhist[0]:
                             continue
                         hist = getattr(gdat, 'list' + strgpdfn + strgvarbhist[0] + 'tile')
-                        print 'hist'
-                        summgene(hist)
                         hist += getattr(gdat, 'list' + strgpdfn + strgvarbhist[0])
-                        print 'hist'
-                        summgene(hist)
-                        print
                     else:
                         listvarbrsmp = getattr(gdat, 'list' + strgpdfn + strgvarb + 'rsmp')
                         listvarb = getattr(gdat, 'list' + strgpdfn + strgvarb)
-                        #print 'indxtiletemp'
-                        #print indxtiletemp
-                        #print 'gdat.numbsamptotl'
-                        #print gdat.numbsamptotl
-                        #print 'listvarb'
-                        #summgene(listvarb)
-                        #print 'indxtiletemp*gdat.numbsamptotl'
-                        #print indxtiletemp*gdat.numbsamptotl
-                        #print '(indxtiletemp+1)*gdat.numbsamptotl'
-                        #print (indxtiletemp+1)*gdat.numbsamptotl
-                        #print
-                        #listvarbrsmp[indxtiletemp*gdat.numbsamptotl/numbtile:(indxtiletemp+1)*gdat.numbsamptotl/numbtile, ...] = listvarb[indxsamptotlrsmp, ...]
-                        if strgvarb.startswith('gang'):
-                            print 'appending...'
-                            print 'strgvarb'
-                            print strgvarb
-                            print 'listvarb[indxsamptotlrsmp, ...]'
-                            summgene(listvarb[indxsamptotlrsmp, ...])
-                            print
-
                         listvarbrsmp.append(listvarb[indxsamptotlrsmp, ...])
-                        
 
                 print 'Done with the tile number %d, run number %d...' % (indxtiletemp, n)
                 print
@@ -11393,16 +11353,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     if 'assc' in strgvarb:
                         numbrefrelemtotl = 0
                         for k, varbrsmp in enumerate(listvarbrsmptemp):
-                            print 'varbrsmp'
-                            summgene(varbrsmp)
                             numbrefrelemtotl += varbrsmp.shape[1]
-                        print 'gdat.numbsamptotl'
-                        print gdat.numbsamptotl
                         shap = [gdat.numbsamptotl, numbrefrelemtotl]
-                        print 'shap'
-                        print shap
-                        print 'numbrefrelemtotl'
-                        print numbrefrelemtotl
                         listvarbrsmp = empty(shap)
                         cntr = 0
                         for k, varbrsmp in enumerate(listvarbrsmptemp):
@@ -11411,20 +11363,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     else:
                         shap = [gdat.numbsamptotl * numbtile] + list(listvarbrsmptemp[0].shape[1:])
                         listvarbrsmp = empty(shap)
-                        if strgvarb.startswith('gang'):
-                            print 'strgvarb'
-                            print strgvarb
-                            print 'listvarbrsmptemp[0]'
-                            summgene(listvarbrsmptemp[0])
-                            print 'listvarbrsmptemp[1]'
-                            summgene(listvarbrsmptemp[1])
-                            print 'gdat.numbsamptotl'
-                            print gdat.numbsamptotl
-                            print 'numbtile'
-                            print numbtile
-                            print 'shap'
-                            print shap
-                            print
 
                         for k, varbrsmp in enumerate(listvarbrsmptemp):
                             listvarbrsmp[k*gdat.numbsamptotl:(k+1)*gdat.numbsamptotl, ...] = listvarbrsmptemp[k]
@@ -11802,7 +11740,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdat.makeplot and getattr(gdat, 'makeplotfinl' + strgpdfn):
-            plot_finl(gdat, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock)
+            plot_finl(gdat, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
         filestat = open(gdat.pathoutprtag + 'stat.txt', 'a')
         filestat.write('plotfinl%s written.\n' % strgpdfn)
         filestat.close()
@@ -13080,7 +13018,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
         tdpy.mcmc.plot_plot(pathpdfn, xdat, ydat, lablxdat, lablydat, scal, colr=['k', 'k'], linestyl=['-', '--'], legd=legd, titl=titl)
 
 
-def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=None):
+def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=None, booltile=None):
     
     if gdat.verbtype > 0:
         print 'Producing postprocessing plots...'
@@ -13153,166 +13091,168 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
                 path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
                 tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\log \alpha_c$', logthist=True)
+    
+    if not booltile:
 
-    # Gelman-Rubin test
-    pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
-    if gdat.numbproc > 1:
-        for d in gdat.indxregi:
-            if isfinite(gdat.gmrbstat[d]).all():
-                if gdat.verbtype > 0:
-                    print 'Gelman-Rubin TS...'
-    
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                minm = min(amin(gdat.gmrbstat[d]), amin(gdat.gmrbfixp))
-                maxm = max(amax(gdat.gmrbstat[d]), amax(gdat.gmrbfixp))
-                bins = linspace(minm, maxm, 40)
-                axis.hist(gdat.gmrbstat[d].flatten(), bins=bins, label='Data proj.')
-                axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
-                axis.set_xlabel('PSRF')
-                axis.set_ylabel('$N_{stat}$')
-                plt.tight_layout()
-                figr.savefig(pathdiag + 'gmrbhist.pdf')
-                plt.close(figr)
-                
-                figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.plot(gdat.fittindxfixp, gdat.gmrbfixp)
-                axis.set_xticklabels(gdat.fittlablfixp)
-                axis.set_ylabel('PSRF')
-                plt.tight_layout()
-                figr.savefig(pathdiag + 'gmrbfixp.pdf')
-                plt.close(figr)
-                
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        maps = gdat.gmrbstat[d][i, :, m]
-                        path = pathdiag + 'gmrbdataen%02devt%d.pdf' % (i, m)
-                        tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
-                                                                                                minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
-                                                                                                minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
-            else:
-                print 'Inappropriate Gelman-Rubin test statistics encountered for region %d.' % d
-
-    # plot autocorrelation
-    if gdat.verbtype > 0:
-        print 'Autocorrelation...'
-    for d in gdat.indxregi:
-        tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrcntp[d][0, 0, 0, 0, :], gdat.timeatcrcntp[d][0, 0, 0, 0], strgextn='cntp')
-    tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrpara[0, 0, :], gdat.timeatcrpara[0, 0], strgextn='para')
-    
-    # plot proposal efficiency
-    if gdat.verbtype > 0:
-        print 'Acceptance ratio...'
-    numbtimemcmc = 20
-    binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
-    numbtick = 2
-    numbplotfram = 8
-    cntr = 0
-    while cntr < gdat.numbproptype:
-        thisnumbplot = min(numbplotfram, gdat.numbproptype - cntr)
-        sizefigrydat = max(thisnumbplot * gdat.plotsize / 4., gdat.plotsize / 2.)
-        figr, axgr = plt.subplots(thisnumbplot, 1, figsize=(gdat.plotsize, sizefigrydat), sharex='all')
-        if thisnumbplot == 1:
-            axgr = [axgr]
-        for n, axis in enumerate(axgr):
-            histtotl = axis.hist(listindxsamptotl[n+cntr], bins=binstimemcmc)[0]
-            histaccp = axis.hist(listindxsamptotlaccp[n+cntr], bins=binstimemcmc)[0]
-            # temp
-            axis.set_ylabel('%s' % gdat.lablproptype[n+cntr])
-            if n + cntr == gdat.numbproptype - 1:
-                axis.set_xlabel('$i_{samp}$')
-            maxm = amax(histtotl)
-            axis.set_ylim([0., maxm])
-            if sum(histtotl) != 0:
-                axis.set_title('%.3g%%' % int(sum(histaccp) / sum(histtotl) * 100.))
-            listtick = linspace(maxm / 2., maxm, numbtick)
-            listlabltick = ['%.3g' % tick for tick in listtick]
-            axis.set_yticks(listtick)
-            axis.set_yticklabels(listlabltick)
-           
-            if False:
-                print 'listindxsamptotl[n]'
-                print listindxsamptotl[n]
-                print 'listindxsamptotlaccp[n]'
-                print listindxsamptotlaccp[n]
-                print 'binstimemcmc'
-                print binstimemcmc
-                print 'gdat.lablproptype[n]'
-                print gdat.lablproptype[n]
-                print 'listtick'
-                print listtick
-                print 'listlabltick'
-                print listlabltick
-                print
-    
-        plt.tight_layout()
-        figr.savefig(pathdiag + 'accpratiproptype%04d.pdf' % (cntr / numbplotfram))
-        plt.close(figr)
-        cntr += numbplotfram
-   
-    # post-processing frame plots
-    if gdat.numbframpost != None:
-        gdatmodi = tdpy.util.gdatstrt()
-        gdat.indxsamptotlfram = arange(gdat.numbframpost) * (gdat.indxsamptotl - gdat.indxsamptotl % gdat.numbframpost) / gdat.numbframpost
-        for n in gdat.indxsamptotlfram:
-            gdatmodi.cntrswep = n
-            #gdatmodi.thisindxelemfull = deepcopy(listindxelemfull[n])
-            gdatmodi.thissampvarb = copy(listsampvarb[n, :])
-            proc_samp(gdat, gdatmodi, 'this', 'fitt')
-            plot_samp(gdat, gdatmodi, 'this', 'fitt', 'fram')
-
-    # plot split and merge diagnostics
-    if gdat.fittnumbtrap > 0 and gdat.probspmr > 0.:
-        if gdat.verbtype > 0:
-            print 'Split and merge related plots...'
-    
-        indxsampsplttotl = where(listindxproptype == gdat.indxproptypesplt)[0]
-        indxsampsplt = intersect1d(where(listindxproptype == gdat.indxproptypesplt)[0], where(listaccpprop)[0])
-        indxsampmergtotl = where(listindxproptype == gdat.indxproptypemerg)[0]
-        indxsampmerg = intersect1d(where(listindxproptype == gdat.indxproptypemerg)[0], where(listaccpprop)[0])
-        indxsampspmrtotl = concatenate((indxsampsplttotl, indxsampmergtotl))
-        pathroot = getattr(gdat, 'path' + gdat.strgpdfn + 'finlspmr')
-        if indxsampspmrtotl.size > 0:
-            for l in gdat.fittindxpopl:
-                listauxipara = getattr(gdat, 'list' + strgpdfn + 'auxiparapop%d' % l)
-                if gdat.fittelemtype[l].startswith('lghtline'):
-                    listlabl = ['$u_e$', '$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
-                    listname = ['elinauxi', 'fracauxi', 'ljcb', 'lrpp']
-                    listvarb = [listauxipara[:, 0], listauxipara[:, 1], listljcb, listlrpp]
-                else:
-                    listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
-                    listname = ['lgalauxi', 'bgalauxi', 'fracauxi', 'ljcb', 'lrpp']
-                    listvarb = [gdat.anglfact * listauxipara[:, 0], gdat.anglfact * listauxipara[:, 1], listauxipara[:, 2], listljcb, listlrpp]
-                numbvarb = len(listvarb)
-                indxvarb = arange(numbvarb)
-                for k in indxvarb:
-                    maxm = amax(listvarb[k][indxsampspmrtotl])
-                    minm = amin(listvarb[k][indxsampspmrtotl])
+        # Gelman-Rubin test
+        pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
+        if gdat.numbproc > 1:
+            for d in gdat.indxregi:
+                if isfinite(gdat.gmrbstat[d]).all():
+                    if gdat.verbtype > 0:
+                        print 'Gelman-Rubin TS...'
+        
+                    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                    minm = min(amin(gdat.gmrbstat[d]), amin(gdat.gmrbfixp))
+                    maxm = max(amax(gdat.gmrbstat[d]), amax(gdat.gmrbfixp))
                     bins = linspace(minm, maxm, 40)
-                    for a in range(1):
-                        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                  
-                        axis.hist(listvarb[k][indxsampsplt], bins=bins)
-                        axis.hist(listvarb[k][indxsampmerg], bins=bins)
-                        
-                        axis.set_ylabel('$N_{samp}$')
-                        axis.set_xlabel(listlabl[k])
+                    axis.hist(gdat.gmrbstat[d].flatten(), bins=bins, label='Data proj.')
+                    axis.hist(gdat.gmrbfixp, bins=bins, label='Fixed dim.')
+                    axis.set_xlabel('PSRF')
+                    axis.set_ylabel('$N_{stat}$')
+                    plt.tight_layout()
+                    figr.savefig(pathdiag + 'gmrbhist.pdf')
+                    plt.close(figr)
+                    
+                    figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                    axis.plot(gdat.fittindxfixp, gdat.gmrbfixp)
+                    axis.set_xticklabels(gdat.fittlablfixp)
+                    axis.set_ylabel('PSRF')
+                    plt.tight_layout()
+                    figr.savefig(pathdiag + 'gmrbfixp.pdf')
+                    plt.close(figr)
+                    
+                    for i in gdat.indxener:
+                        for m in gdat.indxevtt:
+                            maps = gdat.gmrbstat[d][i, :, m]
+                            path = pathdiag + 'gmrbdataen%02devt%d.pdf' % (i, m)
+                            tdpy.util.plot_maps(path, maps, indxpixlrofi=gdat.indxpixlrofi, numbpixl=gdat.numbpixlfull, pixltype=gdat.pixltype, \
+                                                                                                    minmlgal=gdat.anglfact*gdat.minmlgal, maxmlgal=gdat.anglfact*gdat.maxmlgal, \
+                                                                                                    minmbgal=gdat.anglfact*gdat.minmbgal, maxmbgal=gdat.anglfact*gdat.maxmbgal)
+                else:
+                    print 'Inappropriate Gelman-Rubin test statistics encountered for region %d.' % d
     
-                        plt.tight_layout()
-                        path = pathroot + listname[k]
-                        if a == 0:
-                            path += 'accp'
-                        else:
-                            path += 'reje'
-                        path += '.pdf'
-                        figr.savefig(path)
-                        plt.close(figr)
+        # plot autocorrelation
+        if gdat.verbtype > 0:
+            print 'Autocorrelation...'
+        for d in gdat.indxregi:
+            tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrcntp[d][0, 0, 0, 0, :], gdat.timeatcrcntp[d][0, 0, 0, 0], strgextn='cntp')
+        tdpy.mcmc.plot_atcr(pathdiag, gdat.atcrpara[0, 0, :], gdat.timeatcrpara[0, 0], strgextn='para')
     
-    if gdat.verbtype > 0:
-        print 'Proposal execution times...'
-    plot_chro(gdat)
+        # plot proposal efficiency
+        if gdat.verbtype > 0:
+            print 'Acceptance ratio...'
+        numbtimemcmc = 20
+        binstimemcmc = linspace(0., gdat.numbswep, numbtimemcmc)
+        numbtick = 2
+        numbplotfram = 8
+        cntr = 0
+        while cntr < gdat.numbproptype:
+            thisnumbplot = min(numbplotfram, gdat.numbproptype - cntr)
+            sizefigrydat = max(thisnumbplot * gdat.plotsize / 4., gdat.plotsize / 2.)
+            figr, axgr = plt.subplots(thisnumbplot, 1, figsize=(gdat.plotsize, sizefigrydat), sharex='all')
+            if thisnumbplot == 1:
+                axgr = [axgr]
+            for n, axis in enumerate(axgr):
+                histtotl = axis.hist(listindxsamptotl[n+cntr], bins=binstimemcmc)[0]
+                histaccp = axis.hist(listindxsamptotlaccp[n+cntr], bins=binstimemcmc)[0]
+                # temp
+                axis.set_ylabel('%s' % gdat.lablproptype[n+cntr])
+                if n + cntr == gdat.numbproptype - 1:
+                    axis.set_xlabel('$i_{samp}$')
+                maxm = amax(histtotl)
+                axis.set_ylim([0., maxm])
+                if sum(histtotl) != 0:
+                    axis.set_title('%.3g%%' % int(sum(histaccp) / sum(histtotl) * 100.))
+                listtick = linspace(maxm / 2., maxm, numbtick)
+                listlabltick = ['%.3g' % tick for tick in listtick]
+                axis.set_yticks(listtick)
+                axis.set_yticklabels(listlabltick)
+               
+                if False:
+                    print 'listindxsamptotl[n]'
+                    print listindxsamptotl[n]
+                    print 'listindxsamptotlaccp[n]'
+                    print listindxsamptotlaccp[n]
+                    print 'binstimemcmc'
+                    print binstimemcmc
+                    print 'gdat.lablproptype[n]'
+                    print gdat.lablproptype[n]
+                    print 'listtick'
+                    print listtick
+                    print 'listlabltick'
+                    print listlabltick
+                    print
+        
+            plt.tight_layout()
+            figr.savefig(pathdiag + 'accpratiproptype%04d.pdf' % (cntr / numbplotfram))
+            plt.close(figr)
+            cntr += numbplotfram
+   
+        # post-processing frame plots
+        if gdat.numbframpost != None:
+            gdatmodi = tdpy.util.gdatstrt()
+            gdat.indxsamptotlfram = arange(gdat.numbframpost) * (gdat.indxsamptotl - gdat.indxsamptotl % gdat.numbframpost) / gdat.numbframpost
+            for n in gdat.indxsamptotlfram:
+                gdatmodi.cntrswep = n
+                #gdatmodi.thisindxelemfull = deepcopy(listindxelemfull[n])
+                gdatmodi.thissampvarb = copy(listsampvarb[n, :])
+                proc_samp(gdat, gdatmodi, 'this', 'fitt')
+                plot_samp(gdat, gdatmodi, 'this', 'fitt', 'fram')
 
-    if gdat.verbtype > 0:
-        print 'Derived quantities...'
+        # plot split and merge diagnostics
+        if gdat.fittnumbtrap > 0 and gdat.probspmr > 0.:
+            if gdat.verbtype > 0:
+                print 'Split and merge related plots...'
+        
+            indxsampsplttotl = where(listindxproptype == gdat.indxproptypesplt)[0]
+            indxsampsplt = intersect1d(where(listindxproptype == gdat.indxproptypesplt)[0], where(listaccpprop)[0])
+            indxsampmergtotl = where(listindxproptype == gdat.indxproptypemerg)[0]
+            indxsampmerg = intersect1d(where(listindxproptype == gdat.indxproptypemerg)[0], where(listaccpprop)[0])
+            indxsampspmrtotl = concatenate((indxsampsplttotl, indxsampmergtotl))
+            pathroot = getattr(gdat, 'path' + gdat.strgpdfn + 'finlspmr')
+            if indxsampspmrtotl.size > 0:
+                for l in gdat.fittindxpopl:
+                    listauxipara = getattr(gdat, 'list' + strgpdfn + 'auxiparapop%d' % l)
+                    if gdat.fittelemtype[l].startswith('lghtline'):
+                        listlabl = ['$u_e$', '$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                        listname = ['elinauxi', 'fracauxi', 'ljcb', 'lrpp']
+                        listvarb = [listauxipara[:, 0], listauxipara[:, 1], listljcb, listlrpp]
+                    else:
+                        listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                        listname = ['lgalauxi', 'bgalauxi', 'fracauxi', 'ljcb', 'lrpp']
+                        listvarb = [gdat.anglfact * listauxipara[:, 0], gdat.anglfact * listauxipara[:, 1], listauxipara[:, 2], listljcb, listlrpp]
+                    numbvarb = len(listvarb)
+                    indxvarb = arange(numbvarb)
+                    for k in indxvarb:
+                        maxm = amax(listvarb[k][indxsampspmrtotl])
+                        minm = amin(listvarb[k][indxsampspmrtotl])
+                        bins = linspace(minm, maxm, 40)
+                        for a in range(1):
+                            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+                      
+                            axis.hist(listvarb[k][indxsampsplt], bins=bins)
+                            axis.hist(listvarb[k][indxsampmerg], bins=bins)
+                            
+                            axis.set_ylabel('$N_{samp}$')
+                            axis.set_xlabel(listlabl[k])
+        
+                            plt.tight_layout()
+                            path = pathroot + listname[k]
+                            if a == 0:
+                                path += 'accp'
+                            else:
+                                path += 'reje'
+                            path += '.pdf'
+                            figr.savefig(path)
+                            plt.close(figr)
+        
+        if gdat.verbtype > 0:
+            print 'Proposal execution times...'
+        plot_chro(gdat)
+
+        if gdat.verbtype > 0:
+            print 'Derived quantities...'
 
     # temp
     gdat.legdpmea = 'Mean'
