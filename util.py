@@ -3928,15 +3928,6 @@ def setpinit(gdat, boolinitsetp=False):
                     setattr(gdat, 'fact' + strgfeat + 'plot', gdat.anglfact)
                 else:
                     setattr(gdat, 'fact' + strgfeat + 'plot', 1.)
-                
-                print 'strgfeat'
-                print strgfeat
-                if strgfeat == 'sind':
-                    print 'heeeeeeey'
-                    print 'heeeeeeey'
-                    print 'heeeeeeey'
-                print
-
                 if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'magf' or \
                                      strgfeat == 'relk' or strgfeat == 'relf' or strgfeat == 'elin' or \
                                      strgfeat == 'cnts' or strgfeat.startswith('per') or strgfeat == 'gwdt' or strgfeat == 'dglc' or strgfeat.startswith('lumi') or \
@@ -11163,7 +11154,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     print 'Reading chains from disk...'
                     timeinit = gdatfinl.functime()
     
-                listsampvarbrsmp = empty((gdatfinl.numbsamptotl, gdatfinl.fittnumbpara))
+                listsampvarb = empty((gdatfinl.numbsamptotl, gdatfinl.fittnumbpara))
                 
                 ## list of other parameters to be flattened
                 gdatfinl.liststrgvarbarryflat = deepcopy(gdatfinl.liststrgvarbarry)
@@ -11218,7 +11209,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         temp[:, k, :] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
                     else:
                         temp[:, k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)
-                setattr(gdatfinl, 'list' + strgpdfn + strgvarb, temp)
+                
+                #print 'strgvarb'
+                #print strgvarb
+                #print 'temp'
+                #summgene(temp)
+                #print
+
+                setattr(gdatinit, 'list' + strgpdfn + strgvarb, temp)
             
             if gdatfinl.verbtype > 0:
                 timefinl = gdatfinl.functime()
@@ -11234,14 +11232,16 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 for j in gdatfinl.indxsamp:      
                     for k in gdatfinl.indxproc:
                         listtemp[j][k] = getattr(listgdatmodi[k], 'list' + strgpdfn + strgvarb)[j]
-                setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listtemp)
+                setattr(gdatinit, 'list' + strgpdfn + strgvarb, listtemp)
 
             if gdatfinl.verbtype > 0:
                 timefinl = gdatfinl.functime()
                 print 'Done in %.3g seconds.' % (timefinl - timeinit)
             
+            print 'heeeey'
             if not booltile:
                 ## maximum likelihood sample 
+                print 'meeeey'
                 gdatfinl.maxmllikproc = empty(gdatfinl.numbproc)
                 gdatfinl.indxswepmaxmllikproc = empty(gdatfinl.numbproc, dtype=int)
                 gdatfinl.sampvarbmaxmllikproc = empty((gdatfinl.numbproc, gdatfinl.fittnumbpara))
@@ -11250,8 +11250,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     gdatfinl.indxswepmaxmllikproc[k] = listgdatmodi[k].indxswepmaxmllik
                     gdatfinl.sampvarbmaxmllikproc[k] = listgdatmodi[k].sampvarbmaxmllik
             
-                listsamprsmp = getattr(gdatfinl, 'list' + strgpdfn + 'samp')
-                listsampvarbrsmp = getattr(gdatfinl, 'list' + strgpdfn + 'sampvarb')
+                listsamp = getattr(gdatinit, 'list' + strgpdfn + 'samp')
+                listsampvarb = getattr(gdatinit, 'list' + strgpdfn + 'sampvarb')
 
                 # Gelman-Rubin test
                 if gdatfinl.numbproc > 1:
@@ -11261,7 +11261,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     gdatfinl.gmrbfixp = zeros(gdatfinl.fittnumbfixp)
                     gdatfinl.gmrbstat = [zeros((gdatfinl.numbener, gdatfinl.numbpixl, gdatfinl.numbevtt)) for d in gdatfinl.indxregi]
                     for k in gdatfinl.fittindxfixp:
-                        gdatfinl.gmrbfixp[k] = tdpy.mcmc.gmrb_test(listsampvarbrsmp[:, :, k])
+                        gdatfinl.gmrbfixp[k] = tdpy.mcmc.gmrb_test(listsampvarb[:, :, k])
                         if not isfinite(gdatfinl.gmrbfixp[k]):
                             gdatfinl.gmrbfixp[k] = 0.
                     for d in gdatfinl.indxregi:
@@ -11286,9 +11286,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 gdatfinl.atcrpara = empty((gdatfinl.numbproc, gdatfinl.fittnumbpara, gdatfinl.numbsamp / 2))
                 gdatfinl.timeatcrpara = empty((gdatfinl.numbproc, gdatfinl.fittnumbpara))
                 for k in gdatfinl.indxproc:
-                    gdatfinl.atcrpara[k, :, :], gdatfinl.timeatcrpara[k, :] = tdpy.mcmc.retr_timeatcr(listsampvarbrsmp[:, k, :], verbtype=gdatfinl.verbtype)
+                    gdatfinl.atcrpara[k, :, :], gdatfinl.timeatcrpara[k, :] = tdpy.mcmc.retr_timeatcr(listsampvarb[:, k, :], verbtype=gdatfinl.verbtype)
                     for d in gdatfinl.indxregi:
-                        listcntpmodl = getattr(gdatfinl, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
+                        listcntpmodl = getattr(gdatinit, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
                         gdatfinl.atcrcntp[d][k, :], gdatfinl.timeatcrcntp[d][k, :] = tdpy.mcmc.retr_timeatcr(listcntpmodl[:, k, :, :, :], verbtype=gdatfinl.verbtype)
                 gdatfinl.timeatcrmaxm = 0.
                 if gdatfinl.verbtype > 0:
@@ -11298,17 +11298,27 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             # flatten the list chains from different walkers
             for strgvarb in gdatfinl.liststrgvarblistsamp:
                 listtemp = []
-                listinpt = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
+                listinpt = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
                 for j in gdatfinl.indxsamp:      
                     for k in gdatfinl.indxproc:
                         listtemp.append(listinpt[j][k])
                 setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listtemp)
             
             # flatten the array chains from different walkers
+            print 'flattening...'
             for strgvarb in gdatfinl.liststrgvarbarryflat:
-                inpt = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
+                inpt = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
                 shap = [inpt.shape[0] * inpt.shape[1]] + list(inpt.shape[2:])
-                setattr(gdatfinl, 'list' + strgpdfn + strgvarb, inpt.reshape(shap))
+                
+                #if strgvarb == 'sampvarb':
+                #    print 'strgvarb'
+                #    print strgvarb
+                #    print 'shap'
+                #    print shap
+                #    print 'inpt'
+                #    summgene(inpt)
+
+                setattr(gdatinit, 'list' + strgpdfn + strgvarb, inpt.reshape(shap))
         
             if booltile:
                 
@@ -11328,17 +11338,30 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         refrfeattile = [[[] for d in gdatfinl.refrindxregipopl[q]] for q in gdatfinl.indxrefr]
                         setattr(gdatfinl, 'refr' + strgfeat + 'tile', refrfeattile)
                 
+                    print 'setting initially...'
                     for strgvarb in gdatfinl.liststrgvarbarrysamp:
                         if not strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
-                            listvarbrsmp = []
-                            setattr(gdatfinl, 'list' + strgpdfn + strgvarb + 'rsmp', listvarbrsmp)
+                            listvarb = []
+                            if strgvarb == 'cmplotypredspop0pop1reg0':
+                                print 'heeeey'
+                                print 'listvarb'
+                                print listvarb
+                            #print 'strgvarb'
+                            #print strgvarb
+                            setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarb)
                         else:
                             # temp
                             if 'spec' in strgvarbhist[0]:
                                 continue
                             hist = zeros_like(getattr(listgdatmodi[0], 'list' + strgpdfn + strgvarbhist[0]))
-                            setattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0] + 'tile', hist)
-        
+                            setattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0], hist)
+                
+                print 'gdatfinl.listpostcmplotypredspop0pop1reg0'
+                print gdatfinl.listpostcmplotypredspop0pop1reg0
+                print 'type(gdatfinl.listpostcmplotypredspop0pop1reg0)'
+                print type(gdatfinl.listpostcmplotypredspop0pop1reg0)
+                print
+
                 for strgfeat in gdatfinl.refrliststrgfeattotl:
                     refrfeat = getattr(gdatinit, 'refr' + strgfeat)
                     refrfeattile = getattr(gdatfinl, 'refr' + strgfeat + 'tile')
@@ -11352,12 +11375,17 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         # temp
                         if 'spec' in strgvarbhist[0]:
                             continue
-                        hist = getattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0] + 'tile')
+                        hist = getattr(gdatinit, 'list' + strgpdfn + strgvarbhist[0])
                         hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0])
                     else:
-                        listvarbrsmp = getattr(gdatfinl, 'list' + strgpdfn + strgvarb + 'rsmp')
                         listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
-                        listvarbrsmp.append(listvarb[indxsamptotlrsmp, ...])
+                        listvarbtile = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
+                        #print 'strgvarb'
+                        #print strgvarb
+                        #print 'listvarb'
+                        #print listvarb
+                        #print
+                        listvarb.append(listvarbtile[indxsamptotlrsmp, ...])
 
                 print 'Done with the tile number %d, run number %d...' % (indxtiletemp, n)
                 print
@@ -11373,35 +11401,41 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 print rtag[indxrtaggoodtemp]
             print
 
+            # concatenate reference elements from different tiles
             for strgfeat in gdatfinl.refrliststrgfeattotl:
-                refrfeat = getattr(gdatfinl, 'refr' + strgfeat, refrfeat)
                 refrfeattile = getattr(gdatfinl, 'refr' + strgfeat + 'tile', refrfeattile)
                 for q in gdatfinl.indxrefr:
                     if strgfeat in gdatfinl.refrliststrgfeat[q]:
                         for d in gdatfinl.refrindxregipopl[q]:
-                            refrfeattile[q][d] = concatenate(refrfeat[q][d], axis=1)
+                            refrfeattile[q][d] = concatenate(refrfeattile[q][d], axis=1)
             
             for strgvarb in gdatfinl.liststrgvarbarrysamp:
                 if not strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
-                    listvarbrsmptemp = getattr(gdatfinl, 'list' + strgpdfn + strgvarb + 'rsmp')
+                    listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                     if 'assc' in strgvarb:
                         numbrefrelemtotl = 0
-                        for k, varbrsmp in enumerate(listvarbrsmptemp):
+                        for k, varbrsmp in enumerate(listvarb):
                             numbrefrelemtotl += varbrsmp.shape[1]
                         shap = [gdatfinl.numbsamptotl, numbrefrelemtotl]
-                        listvarbrsmp = empty(shap)
+                        listvarbtemp = empty(shap)
                         cntr = 0
-                        for k, varbrsmp in enumerate(listvarbrsmptemp):
-                            listvarbrsmp[:, cntr:cntr+varbrsmp.shape[1]] = varbrsmp
-                            cntr += varbrsmp.shape[1]
+                        for k, varb in enumerate(listvarb):
+                            listvarbtemp[:, cntr:cntr+varb.shape[1]] = varb
+                            cntr += varb.shape[1]
                     else:
-                        shap = [gdatfinl.numbsamptotl * numbtile] + list(listvarbrsmptemp[0].shape[1:])
-                        listvarbrsmp = empty(shap)
+                        shap = [gdatfinl.numbsamptotl * numbtile] + list(listvarb[0].shape[1:])
+                        listvarbtemp = empty(shap)
 
-                        for k, varbrsmp in enumerate(listvarbrsmptemp):
-                            listvarbrsmp[k*gdatfinl.numbsamptotl:(k+1)*gdatfinl.numbsamptotl, ...] = listvarbrsmptemp[k]
-                    setattr(gdatfinl, 'list' + strgpdfn + strgvarb + 'rsmp', listvarbrsmp)
-            
+                        print 'strgvarb'
+                        print strgvarb
+                        print 'listvarbtemp'
+                        summgene(listvarbtemp)
+                        for k, varb in enumerate(listvarb):
+                            print 'varb'
+                            summgene(varb)
+                            print
+                            listvarbtemp[k*gdatfinl.numbsamptotl:(k+1)*gdatfinl.numbsamptotl, ...] = varb
+                    setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarbtemp)
         setattr(gdatfinl, 'list' + strgpdfn + 'sampvarbproc', copy(getattr(gdatfinl, 'list' + strgpdfn + 'sampvarb')))
         
         # maximum likelihood sample
@@ -11433,11 +11467,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatfinl.timereal[k] = listgdatmodi[k].timereal
             gdatfinl.timeproc[k] = listgdatmodi[k].timeproc
         
-        # find the maximum likelihood and posterior over the chains
-        gdatfinl.indxprocmaxmllik = argmax(gdatfinl.maxmllikproc)
-        gdatfinl.maxmllik = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
-        gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
-        gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
+        if not booltile:
+            # find the maximum likelihood and posterior over the chains
+            gdatfinl.indxprocmaxmllik = argmax(gdatfinl.maxmllikproc)
+            gdatfinl.maxmllik = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
+            gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
+            gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
         
         # calculate log-evidence using the harmonic mean estimator
         if gdatfinl.verbtype > 0:
@@ -11447,7 +11482,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         if gdatfinl.regulevi:
             # regularize the harmonic mean estimator
             ## get an ellipse around the median posterior 
-            gdatfinl.elpscntr = percentile(listsamprsmp, 50., axis=0)
+            gdatfinl.elpscntr = percentile(listsamp, 50., axis=0)
             thissamp = rand(gdatfinl.fittnumbpara) * 1e-6
             stdvpara = ones(gdatfinl.fittnumbpara) * 1e-6
             limtpara = zeros((2, gdatfinl.fittnumbpara))
@@ -11469,12 +11504,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         gdatfinl.infoharm = retr_infoharmfromlevi(listlliktotl, gdatfinl.levi)
         
         # parse the sample vector
-        print 'listsampvarbrsmp'
-        summgene(listsampvarbrsmp)
+        print 'listsampvarb'
+        summgene(listsampvarb)
         print 'gdatfinl.fittindxfixp'
         print gdatfinl.fittindxfixp
         print
-        listfixp = listsampvarbrsmp[:, gdatfinl.fittindxfixp]
+        listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
         for k, namefixp in enumerate(gdatfinl.fittnamefixp):
             setattr(gdatfinl, 'list' + strgpdfn + namefixp, listfixp[:, k])
         setattr(gdatfinl, 'list' + strgpdfn + 'fixp', listfixp)
