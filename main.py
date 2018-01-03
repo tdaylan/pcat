@@ -2330,7 +2330,7 @@ def init( \
             if gdat.boolcrin:
                 gdat.liststrgelemtdimvarbfinl += ['incr']
         gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
-
+    
     gdat.liststrgfoldinit = ['']
     if gdat.fittnumbtrap > 0 or gdat.datatype == 'mock' and gdat.truenumbtrap > 0:
         gdat.liststrgfoldinit += ['', 'histodim/', 'histtdim/', 'scattdim/']
