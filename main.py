@@ -1525,7 +1525,7 @@ def init( \
                     else:
                         refrfeat[q][d] = refrfeat[q][d][:, :10, ...]
         
-            print 'hacking!!!!'
+            print 'HACKING!'
             print 'q'
             print q
             print 'gdat.refrlgal[q][0]'
@@ -1955,6 +1955,7 @@ def init( \
 
         # rotate reference elements to the spatial coordinate system of PCAT
         # temp -- this does not rotate the uncertainties!
+
         if gdat.verbtype > 0:
             print 'Rotating the reference elements...'
         for q in gdat.indxrefr:
@@ -1996,13 +1997,21 @@ def init( \
                                 refrfeattotl[q] = refrfeat[q][d]
             setattr(gdat, 'refr' + strgfeat + 'totl', refrfeattotl)
         
+        print 'gdat.refrlgal'
+        print gdat.refrlgal
+        print
+
         # find the reference elements inside the ROI
         gdat.indxrefrpntsrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
         for q in gdat.indxrefr:
             for d in gdat.indxregi:
                 gdat.indxrefrpntsrofi[q][d] = where((fabs(gdat.refrlgal[q][d][0, :]) < gdat.maxmgangdata) & (fabs(gdat.refrbgal[q][d][0, :]) < gdat.maxmgangdata))[0]
+                print 'gdat.indxrefrpntsrofi[q][d]'
+                print gdat.indxrefrpntsrofi[q][d]
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeat = getattr(gdat, 'refr' + strgfeat)
+            print 'refrfeat'
+            print refrfeat
             refrfeatrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
             for q in gdat.indxrefr:
                 for d in gdat.indxregi:
@@ -2010,6 +2019,10 @@ def init( \
                         refrfeatrofi[q][d] = refrfeat[q][d][..., gdat.indxrefrpntsrofi[q][d]]
             setattr(gdat, 'refr' + strgfeat, refrfeatrofi)
         
+        print 'gdat.refrlgal'
+        print gdat.refrlgal
+        print
+
         # temp -- gdat.refrnumbelem is defined twice, one before and one after the filter. The initial definition is needed for strgfeat definitions.
         gdat.refrnumbelem = [[] for q in gdat.indxrefr]
         gdat.refrnumbelemtotl = 0
@@ -2082,7 +2095,10 @@ def init( \
                                 binsseco = getattr(gdat, 'bins' + strgfeatseco)
                                 hist = histogram2d(refrfeatfrst[q0][d0][0, :], refrfeatseco[q0][d0][0, :], bins=(binsfrst, binsseco))[0]
                                 setattr(gdat, 'refrhist' + strgfeattdim, hist)
-    
+        print 'gdat.refrlgal'
+        print gdat.refrlgal
+        print
+
     if gdat.fittnumbtrap > 0:
         # plot settings
         ## upper limit of histograms

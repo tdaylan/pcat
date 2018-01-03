@@ -10898,6 +10898,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                 raise Exception('')
                                             
                                             strg = strgpfix + 'cmpl' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l, q0, d0)
+                                            if strgfeatfrst == 'bgal' and strgfeatseco == 'lgal':
+                                                print 'meeey'
+                                                print 'strg'
+                                                print strg
+                                                print
+
                                             setattr(gdatobjt, strg, cmpltdim)
 
                                         cmplfeatfrst = zeros(gdat.numbbinsplot) - 1.
@@ -11551,7 +11557,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     
                     # temp
                     print 'HACKING!'
-                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180103_142305_pcat_chan_mock_nomi_1000')
+                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180103_164819_pcat_chan_mock_nomi_1000')
 
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
