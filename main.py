@@ -800,6 +800,9 @@ def init( \
     if gdat.exprtype == 'chan':
         gdat.edis = 0.3 * sqrt(gdat.binsener) / 2.35
         gdat.edisintp = interp1d_pick(gdat.binsener, gdat.edis)
+    else:
+        gdat.edis = None
+        gdat.edisintp = None
 
     # set mock sample vector indices
     setp_varbvalu(gdat, 'maxmnumbelem', 400, popl='full', regi='full')

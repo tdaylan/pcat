@@ -3511,7 +3511,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
 
     ## number of bins in histogram plots
-    gdat.numbbinsplot = 4
+    gdat.numbbinsplot = 20
     gdat.indxbinsplot = arange(gdat.numbbinsplot)
     
     ## number of bins in hyperprior plots
@@ -8005,7 +8005,7 @@ def readfile(path):
     filearry.close()
     
     if 'gdatfinl' in path or 'gdatinit' in path:
-        if hasattr(gdattemptemp, 'edis'):
+        if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis != None:
             gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
         gdattemptemp.adisobjt = interp1d_pick(gdattemptemp.redsintp, gdattemptemp.adisintp)
         gdattemptemp.redsfromdlosobjt = interp1d_pick(gdattemptemp.adisintp * gdattemptemp.redsintp, gdattemptemp.redsintp)
@@ -11310,9 +11310,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 listrtaggood.append(rtagmodi)
                 indxrtaggood.append(n)
                 indxtiletemp += 1
-            
+                
                 if len(liststrgtile) == 1:
-                    
                     for strgfeat in gdatfinl.refrliststrgfeattotl:
                         refrfeattile = [[[] for d in gdatfinl.refrindxregipopl[q]] for q in gdatfinl.indxrefr]
                         setattr(gdatfinl, 'refr' + strgfeat + 'tile', refrfeattile)
@@ -11323,18 +11322,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarb)
                         else:
                             # temp
-                            if 'spec' in strgvarbhist[0]:
+                            if 'spec' in strgvarb:
                                 continue
-                            hist = zeros_like(getattr(listgdatmodi[0], 'list' + strgpdfn + strgvarbhist[0]))
-                            setattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0], hist)
+                            hist = zeros_like(getattr(listgdatmodi[0], 'list' + strgpdfn + strgvarb))
+                            setattr(gdatfinl, 'list' + strgpdfn + strgvarb, hist)
                             
-                            if strgvarbhist[0] == 'histlgalpop0reg0':
-                                print 'strgvarbhist[0]'
-                                print strgvarbhist[0]
-                                print 'hist'
-                                summgene(hist)
-                                print
-                
                 for strgfeat in gdatfinl.refrliststrgfeattotl:
                     refrfeat = getattr(gdatinit, 'refr' + strgfeat)
                     refrfeattile = getattr(gdatfinl, 'refr' + strgfeat + 'tile')
@@ -11346,10 +11338,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 for strgvarb in gdatfinl.liststrgvarbarrysamp:
                     if strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
                         # temp
-                        if 'spec' in strgvarbhist[0]:
+                        if 'spec' in strgvarb:
                             continue
-                        hist = getattr(gdatinit, 'list' + strgpdfn + strgvarbhist[0])
-                        hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarbhist[0])
+                        hist = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
+                        hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
+                
                     else:
                         listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         listvarbtile = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
@@ -11597,6 +11590,18 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                 listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                 listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                 for k in gdatfinl.indxbinsplot:
+                                    print 'k'
+                                    print k
+                                    print 'strgvarb'
+                                    print strgvarb
+                                    print 'listcmplboot'
+                                    summgene(listcmplboot)
+                                    print 'gdatfinl.numbsampboot'
+                                    print gdatfinl.numbsampboot
+                                    print 'listcmpltrue'
+                                    summgene(listcmpltrue)
+                                    print
+
                                     listcmplboot[:, k] = choice(listcmpltrue[:, k], size=gdatfinl.numbsampboot)
                                     listfdisboot[:, k] = choice(listfdistrue[:, k], size=gdatfinl.numbsampboot)
                                     listhistboot[:, k] = choice(listhist[:, k], size=gdatfinl.numbsampboot)
