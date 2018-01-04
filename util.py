@@ -11349,8 +11349,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             continue
                         hist = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
                         hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
-                        print 'hist'
-                        summgene(hist)
+                        
+                        if strgvarb == 'histbgalpop0reg0':
+                            print 'strgpdfn'
+                            print strgpdfn
+                            print 'hist'
+                            summgene(hist)
+                            print 'gdatfinl.listposthistbgalpop0reg0'
+                            summgene(gdatfinl.listposthistbgalpop0reg0)
                 
                     else:
                         listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
@@ -11361,6 +11367,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 print
             else:   
                 gdatfinl = gdatinit
+        
+        print 'gdatfinl.listposthistbgalpop0reg0'
+        summgene(gdatfinl.listposthistbgalpop0reg0)
 
         if booltile:
             gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
@@ -11579,7 +11588,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
-                        for qq in gdatmock.indxregi:
+                        for qq in gdatmock.indxrefr:
                             l = int(liststrgcompvarbhist[3][qq].split('pop')[1][0])
                             qq = int(liststrgcompvarbhist[3][qq].split('pop')[2][0])
                             if liststrgcompvarbhist[1][-4:] in gdatfinl.listnamerefr and (liststrgcompvarbhist[2][-4:] in gdatfinl.listnamerefr or \
@@ -11616,13 +11625,29 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             listhistboot[indxbadd] = -1.
                             listhistboot[indxbaddzero] = -2.
                             listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
+                            
+                            print 'internally correcting...'
+                            print 'strgvarb'
+                            print strgvarb
+                            print 'listhistincr'
+                            summgene(listhistincr)
+                            print
+
                             gdatinit.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
                             setattr(gdatfinl, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
                         
                         ## external correction
                         crexhist = getattr(gdatfinl, 'crex' + liststrgcompvarbhist[4][qq])
                         if crexhist != None:
+                            
                             listhistexcr = listhistincr / crexhist 
+                            
+                            print 'externally correcting...'
+                            print 'strgvarb'
+                            print strgvarb
+                            print 'listhistexcr'
+                            summgene(listhistexcr)
+                            
                             gdatinit.liststrgchan += ['excr' + liststrgcompvarbhist[4][qq]]
                             setattr(gdatfinl, 'listpostexcr' + liststrgcompvarbhist[4][qq], listhistexcr)
 
@@ -11798,13 +11823,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn):
-
-            print 'gdat.histbgalpop0reg0'
-            summgene(gdat.histbgalpop0reg0)
-            print
-            print
-            print
-            print
+    
+            print 'hack'
+            if amax(gdatfinl.listposthistbgalpop0reg0) == 0:
+                raise Exception('')
 
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
         filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
@@ -12826,14 +12848,14 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 for d0 in indxregipopl[l0]:
                     for l0 in indxpopl:
                         for refrstrgfrst in gdat.refrliststrgfeat[q0]:
-                            if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflplot':
+                            if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflplot' or refrstrgfrst == 'etag':
                                 continue
                             if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
                                 continue
                             for refrstrgseco in gdat.refrliststrgfeat[q0]:
                                 if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
                                     continue
-                                if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflplot':
+                                if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflplot' or refrstrgseco == 'etag':
                                     continue
                                 
                                 if not checstrgfeat(refrstrgfrst, refrstrgseco):

@@ -30,7 +30,10 @@ for strgextn in liststrgextn:
                     if line == 'gdatmodipost written.\n':
                         boolkeep = True
         
-            numbswep = int(pathfile[pathfile.rfind('_')+1:])
+            strgtemp = pathfile[pathfile.rfind('_')+1:]
+            if strgtemp.endswith('tile'):
+                strgtemp = strgtemp[:-4]
+            numbswep = int(strgtemp)
             if ((not os.path.isfile(pathchec) or not boolkeep or numbswep <= 1000) and not 'mockonly' in rtag) or boolforcdele:
                 print 'Deleting %s...' % pathchec
                 cmnd = 'rm -rf ' + pathfile
