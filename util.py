@@ -10897,12 +10897,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                             raise Exception('')
                                             
                                             strg = strgpfix + 'cmpl' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l, q0, d0)
-                                            if strgfeatfrst == 'bgal' and strgfeatseco == 'flux':
-                                                print 'meeey'
-                                                print 'strg'
-                                                print strg
-                                                print
-
                                             setattr(gdatobjt, strg, cmpltdim)
 
                                         cmplfeatfrst = zeros(gdat.numbbinsplot) - 1.
@@ -11347,17 +11341,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         # temp
                         if 'spec' in strgvarb:
                             continue
-                        hist = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
-                        hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
-                        
-                        if strgvarb == 'histbgalpop0reg0':
-                            print 'strgpdfn'
-                            print strgpdfn
-                            print 'hist'
-                            summgene(hist)
-                            print 'gdatfinl.listposthistbgalpop0reg0'
-                            summgene(gdatfinl.listposthistbgalpop0reg0)
-                
+                        hist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
+                        hist += getattr(gdatinit, 'list' + strgpdfn + strgvarb)
                     else:
                         listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         listvarbtile = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
@@ -11368,9 +11353,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             else:   
                 gdatfinl = gdatinit
         
-        print 'gdatfinl.listposthistbgalpop0reg0'
-        summgene(gdatfinl.listposthistbgalpop0reg0)
-
         if booltile:
             gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
             makefold(gdatfinl)
@@ -11569,7 +11551,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     
                     # temp
                     print 'HACKING!'
-                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180103_164819_pcat_chan_mock_nomi_1000')
+                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180104_084600_pcat_chan_mock_nomi_1000')
 
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
@@ -11629,6 +11611,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             print 'internally correcting...'
                             print 'strgvarb'
                             print strgvarb
+                            print 'listcmplboot'
+                            summgene(listcmplboot)
+                            print 'listfdisboot'
+                            summgene(listfdisboot)
                             print 'listhistincr'
                             summgene(listhistincr)
                             print
@@ -11823,11 +11809,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn):
-    
-            print 'hack'
-            if amax(gdatfinl.listposthistbgalpop0reg0) == 0:
-                raise Exception('')
-
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
         filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
         filestat.write('plotfinl%s written.\n' % strgpdfn)
@@ -12417,6 +12398,10 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 numbelem[l] = sampvarb[indxfixpnumbelem[l]].astype(int)
     if strgstat != 'pdfn' and lensmodltype != 'none' and (strgmodl == 'fitt' and gdat.datatype == 'mock'):
         numbsingcomm = getattr(gdatobjt, strgpfix + 'numbsingcomm')
+    hostemistype = getattr(gdat, strgmodl + 'hostemistype')
+    lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
+    if lensmodltype != 'none' or hostemistype != 'none':
+        indxsersfgrd = getattr(gdat, strgmodl + 'indxsersfgrd')
     numbback = getattr(gdat, strgmodl + 'numbback')
     indxback = getattr(gdat, strgmodl + 'indxback')
     convdiff = getattr(gdat, strgmodl + 'convdiff')
@@ -12424,7 +12409,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     listnameecomtotl = getattr(gdat, strgmodl + 'listnameecomtotl')
     unifback = getattr(gdat, strgmodl + 'unifback')
     listnameback = getattr(gdat, strgmodl + 'listnameback')
-    lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
     namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
     
     if gdatmodi != None:
