@@ -1965,26 +1965,11 @@ def init( \
                                 refrfeattotl[q] = refrfeat[q][d]
             setattr(gdat, 'refr' + strgfeat + 'totl', refrfeattotl)
         
-        print 'gdat.maxmgangdata'
-        print gdat.maxmgangdata
-        print
-
         # find the reference elements inside the ROI
         gdat.indxrefrpntsrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
         for q in gdat.indxrefr:
             for d in gdat.indxregi:
-                print 'qd'
-                print q, d
-                print 'gdat.refrlgal[q][d][0, :]'
-                summgene(gdat.refrlgal[q][d][0, :])
-                print 'gdat.refrbgal[q][d][0, :]'
-                summgene(gdat.refrbgal[q][d][0, :])
                 gdat.indxrefrpntsrofi[q][d] = where((fabs(gdat.refrlgal[q][d][0, :]) < gdat.maxmgangdata) & (fabs(gdat.refrbgal[q][d][0, :]) < gdat.maxmgangdata))[0]
-                print 'gdat.indxrefrpntsrofi[q][d]'
-                print gdat.indxrefrpntsrofi[q][d]
-                print
-                #if len(gdat.indxrefrpntsrofi[q][d]) == 0:
-                #    raise Exception('')
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeat = getattr(gdat, 'refr' + strgfeat)
             refrfeatrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
@@ -1994,10 +1979,6 @@ def init( \
                         refrfeatrofi[q][d] = refrfeat[q][d][..., gdat.indxrefrpntsrofi[q][d]]
             setattr(gdat, 'refr' + strgfeat, refrfeatrofi)
         
-        print 'gdat.refrlgal'
-        print gdat.refrlgal
-        print
-
         # temp -- gdat.refrnumbelem is defined twice, one before and one after the filter. The initial definition is needed for strgfeat definitions.
         gdat.refrnumbelem = [[] for q in gdat.indxrefr]
         gdat.refrnumbelemtotl = 0
@@ -2085,23 +2066,6 @@ def init( \
                                 hist = histogram2d(refrfeatfrst[q0][d0][0, :], refrfeatseco[q0][d0][0, :], bins=(binsfrst, binsseco))[0]
                                 setattr(gdat, 'refrhist' + strgfeattdim, hist)
         
-        print
-        print
-        print
-        print 'gdat.binsaang'
-        print gdat.binsaang
-        print 'gdat.binscurv'
-        print gdat.binscurv
-        print 'gdat.refraang[0][0]'
-        print gdat.refraang[0][0]
-        print 'gdat.refrcurv[0][0]'
-        print gdat.refrcurv[0][0]
-        print 'gdat.refrhistaangpop0reg0'
-        print gdat.refrhistaangpop0reg0
-        print 'gdat.refrhistaangcurvpop0reg0'
-        print gdat.refrhistaangcurvpop0reg0
-        print
-
     if gdat.fittnumbtrap > 0:
         # plot settings
         ## upper limit of histograms
@@ -2143,35 +2107,9 @@ def init( \
             summgene(gdat.cntpdata[d])
             raise Exception('Data counts per pixel is less than 1.')
     
-    print 'gdat.refraang[0][0]'
-    print gdat.refraang[0][0]
-    print
-
-    ## element feature indices ordered with respect to the amplitude variable
-    #refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
-    #if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
-    #    for q in gdat.indxrefr:
-    #        refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
-    #        for d in gdat.indxregi:
-    #            if len(refrfeatampl[q][d]) > 0:
-    #                indxelem = argsort(refrfeatampl[q][d][0, :])[::-1]
-    #                for strgfeat in gdat.refrliststrgfeat[q]:
-    #                    refrfeat = getattr(gdat, 'refr' + strgfeat)
-    #                    if len(refrfeat[q][d]) > 0:
-    #                        refrfeatsort[q][d] = refrfeat[q][d][..., indxelem]
-    #    setattr(gdat, 'refr' + strgfeat, refrfeatsort)
-        
-    print 'gdat.refraang[0][0]'
-    print gdat.refraang[0][0]
-    print
-
     # final setup
     setpfinl(gdat, True) 
     
-    print 'gdat.refraang[0][0]'
-    print gdat.refraang[0][0]
-    print
-
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -2422,10 +2360,6 @@ def init( \
             print 'Mock dataset is generated. Quitting...'
         return gdat
     
-    print 'gdat.refraang[0][0]'
-    print gdat.refraang[0][0]
-    print
-
     # perform an initial run, sampling from the prior
     if gdat.checprio:
         

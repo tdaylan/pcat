@@ -8016,23 +8016,6 @@ def readfile(path):
 
 def writfile(gdattemp, path):
     
-    print 'writing to '
-    print path
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-    print
-
     filepick = open(path + '.p', 'wb')
     filearry = h5py.File(path + '.h5', 'w')
     
@@ -8041,13 +8024,6 @@ def writfile(gdattemp, path):
         
         if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
                                                         isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
-            #print 'attr'
-            #print attr
-            #print 'valu'
-            #print valu
-            if attr == 'pathpostfinlexcrtdim':
-                print 'HACKING!'
-                continue
             filearry.create_dataset(attr, data=valu)
         else:
             # temp -- make sure interpolation objects are not written.
@@ -10846,10 +10822,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     name = strgpfix + strgfeat + 'asscpop%dpop%dreg%d' % (q, l, d)
                                     setattr(gdatobjt, name, featrefrassc[q][l][d][strgfeat])
                     
-                    print 'gdat.refraang[0][0]'
-                    print gdat.refraang[0][0]
-                    print
-
                     # completeness
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
@@ -11865,11 +11837,6 @@ def makefold(gdat):
     ## make the directories 
     for attr, valu in gdat.__dict__.iteritems():
         if attr.startswith('path'):
-            print 'attr'
-            print attr
-            print 'valu'
-            print valu
-            print
             os.system('mkdir -p %s' % valu)
 
 
@@ -14309,16 +14276,6 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat, 
     xdat = copy(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot][0, :])
     xerr = tdpy.util.retr_errrvarb(getattr(gdat, 'refr' + strgfeat)[q][indxregiplot])
    
-    print 'strgfeat'
-    print strgfeat
-    print 'xerr'
-    print xerr
-    summgene(xerr)
-    print 'xdat'
-    print xdat
-    summgene(xdat)
-    print
-
     minmplot = getattr(gdat, 'minm' + strgfeat)
     maxmplot = getattr(gdat, 'maxm' + strgfeat)
     binsplot = getattr(gdat, 'bins' + strgfeat)
@@ -14330,12 +14287,6 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat, 
     if strgstat == 'pdfn':
         yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgfeat + 'asscpop%dpop%dreg%d' % (q, l, indxregiplot), strgpdfn, strgmome='errr') * factplot
     
-    print 'ydat'
-    summgene(ydat)
-    print 'yerr'
-    summgene(yerr)
-    print
-
     xdat *= factplot
     xerr *= factplot
     if plotdiff:
