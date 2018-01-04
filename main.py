@@ -1508,31 +1508,6 @@ def init( \
                         summgene(refrfeat[q][d])
                         raise Exception('')
         
-        ## temp -- take the first 10 elements
-        for q in gdat.indxrefr:
-            for strgfeat in gdat.refrliststrgfeat[q]:
-                if strgfeat == 'gang' or strgfeat == 'aang':
-                    continue
-                refrfeat = getattr(gdat, 'refr' + strgfeat)
-                for d in gdat.refrindxregipopl[q]:
-                    print 'strgfeat'
-                    print strgfeat
-                    if strgfeat != 'etag':
-                        print 'refrfeat[q][d]'
-                        summgene(refrfeat[q][d])
-                    if strgfeat == 'etag':
-                        refrfeat[q][d] = refrfeat[q][d][:10]
-                    else:
-                        refrfeat[q][d] = refrfeat[q][d][:, :10, ...]
-        
-            print 'HACKING!'
-            print 'q'
-            print q
-            print 'gdat.refrlgal[q][0]'
-            print gdat.refrlgal[q][0]
-            summgene(gdat.refrlgal[q][0])
-            print
-
     gdat.refrnumbelem = [zeros(gdat.numbregi, dtype=int) for q in gdat.indxrefr]
     gdat.refrnumbelempopl = zeros(gdat.numbrefr, dtype=int)
     for q in gdat.indxrefr:
@@ -1827,13 +1802,6 @@ def init( \
                         if refrfeat[q][d].ndim == 1:
                             refrfeat[q][d] = tile(refrfeat[q][d], (3, 1)) 
         
-                print 'q'
-                print q
-                print 'gdat.refrlgal[q][0]'
-                print gdat.refrlgal[q][0]
-                summgene(gdat.refrlgal[q][0])
-                print
-
     # temp
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
@@ -1997,21 +1965,28 @@ def init( \
                                 refrfeattotl[q] = refrfeat[q][d]
             setattr(gdat, 'refr' + strgfeat + 'totl', refrfeattotl)
         
-        print 'gdat.refrlgal'
-        print gdat.refrlgal
+        print 'gdat.maxmgangdata'
+        print gdat.maxmgangdata
         print
 
         # find the reference elements inside the ROI
         gdat.indxrefrpntsrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
         for q in gdat.indxrefr:
             for d in gdat.indxregi:
+                print 'qd'
+                print q, d
+                print 'gdat.refrlgal[q][d][0, :]'
+                summgene(gdat.refrlgal[q][d][0, :])
+                print 'gdat.refrbgal[q][d][0, :]'
+                summgene(gdat.refrbgal[q][d][0, :])
                 gdat.indxrefrpntsrofi[q][d] = where((fabs(gdat.refrlgal[q][d][0, :]) < gdat.maxmgangdata) & (fabs(gdat.refrbgal[q][d][0, :]) < gdat.maxmgangdata))[0]
                 print 'gdat.indxrefrpntsrofi[q][d]'
                 print gdat.indxrefrpntsrofi[q][d]
+                print
+                #if len(gdat.indxrefrpntsrofi[q][d]) == 0:
+                #    raise Exception('')
         for strgfeat in gdat.refrliststrgfeattotl:
             refrfeat = getattr(gdat, 'refr' + strgfeat)
-            print 'refrfeat'
-            print refrfeat
             refrfeatrofi = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
             for q in gdat.indxrefr:
                 for d in gdat.indxregi:
@@ -2070,6 +2045,20 @@ def init( \
                                 print
                                 #raise Exception('')
         
+        ## element feature indices ordered with respect to the amplitude variable
+        refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
+        if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
+            for q in gdat.indxrefr:
+                refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
+                for d in gdat.indxregi:
+                    if len(refrfeatampl[q][d]) > 0:
+                        indxelem = argsort(refrfeatampl[q][d][0, :])[::-1]
+                        for strgfeat in gdat.refrliststrgfeat[q]:
+                            refrfeat = getattr(gdat, 'refr' + strgfeat)
+                            if len(refrfeat[q][d]) > 0:
+                                refrfeatsort[q][d] = refrfeat[q][d][..., indxelem]
+            setattr(gdat, 'refr' + strgfeat, refrfeatsort)
+        
         # bin reference element features
         for q0 in gdat.indxrefr:
             for d0 in gdat.refrindxregipopl[q0]:
@@ -2095,8 +2084,22 @@ def init( \
                                 binsseco = getattr(gdat, 'bins' + strgfeatseco)
                                 hist = histogram2d(refrfeatfrst[q0][d0][0, :], refrfeatseco[q0][d0][0, :], bins=(binsfrst, binsseco))[0]
                                 setattr(gdat, 'refrhist' + strgfeattdim, hist)
-        print 'gdat.refrlgal'
-        print gdat.refrlgal
+        
+        print
+        print
+        print
+        print 'gdat.binsaang'
+        print gdat.binsaang
+        print 'gdat.binscurv'
+        print gdat.binscurv
+        print 'gdat.refraang[0][0]'
+        print gdat.refraang[0][0]
+        print 'gdat.refrcurv[0][0]'
+        print gdat.refrcurv[0][0]
+        print 'gdat.refrhistaangpop0reg0'
+        print gdat.refrhistaangpop0reg0
+        print 'gdat.refrhistaangcurvpop0reg0'
+        print gdat.refrhistaangcurvpop0reg0
         print
 
     if gdat.fittnumbtrap > 0:
@@ -2140,23 +2143,35 @@ def init( \
             summgene(gdat.cntpdata[d])
             raise Exception('Data counts per pixel is less than 1.')
     
+    print 'gdat.refraang[0][0]'
+    print gdat.refraang[0][0]
+    print
+
     ## element feature indices ordered with respect to the amplitude variable
-    refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
-    if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
-        for q in gdat.indxrefr:
-            refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
-            for d in gdat.indxregi:
-                if len(refrfeatampl[q][d]) > 0:
-                    indxelem = argsort(refrfeatampl[q][d][0, :])[::-1]
-                    for strgfeat in gdat.refrliststrgfeat[q]:
-                        refrfeat = getattr(gdat, 'refr' + strgfeat)
-                        if len(refrfeat[q][d]) > 0:
-                            refrfeatsort[q][d] = refrfeat[q][d][..., indxelem]
-        setattr(gdat, 'refr' + strgfeat, refrfeatsort)
+    #refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
+    #if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
+    #    for q in gdat.indxrefr:
+    #        refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
+    #        for d in gdat.indxregi:
+    #            if len(refrfeatampl[q][d]) > 0:
+    #                indxelem = argsort(refrfeatampl[q][d][0, :])[::-1]
+    #                for strgfeat in gdat.refrliststrgfeat[q]:
+    #                    refrfeat = getattr(gdat, 'refr' + strgfeat)
+    #                    if len(refrfeat[q][d]) > 0:
+    #                        refrfeatsort[q][d] = refrfeat[q][d][..., indxelem]
+    #    setattr(gdat, 'refr' + strgfeat, refrfeatsort)
         
+    print 'gdat.refraang[0][0]'
+    print gdat.refraang[0][0]
+    print
+
     # final setup
     setpfinl(gdat, True) 
     
+    print 'gdat.refraang[0][0]'
+    print gdat.refraang[0][0]
+    print
+
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -2370,33 +2385,9 @@ def init( \
                 gdat.liststrgfoldfinl += [strgelemtdimvarb + strgdims]
 
     # make folders
-    for strgpdfn in gdat.liststrgpdfn:
-        
-        path = getattr(gdat, 'path' + strgpdfn)
-        for nameseco in ['finl', 'fram', 'anim', 'opti']:
-            setattr(gdat, 'path' + strgpdfn + nameseco, path + nameseco + '/')
-        
-        for nameseco in ['diag', 'lpri', 'varbscal', 'cond', 'varbscalproc', 'deltllik', 'spmr']:
-            setattr(gdat, 'path' + strgpdfn + 'finl' + nameseco, path + 'finl/' + nameseco + '/')
-            
-        for namethrd in ['hist', 'trac', 'join', 'cova']:
-            setattr(gdat, 'path' + strgpdfn + 'finlvarbscal' + namethrd, path + 'finl/varbscal/' + namethrd + '/')
-            
-        for strgphas in gdat.liststrgphas + ['init']:
-            liststrgfold = getattr(gdat, 'liststrgfold' + strgphas)
-            for nameseco in liststrgfold:
-                if strgphas == 'init':
-                    if nameseco == 'assc/' or nameseco.startswith('cmpl') or nameseco.startswith('fdis'):
-                        continue
-                    setattr(gdat, 'path' + strgphas + nameseco, gdat.pathplotrtag + 'init/' + nameseco + '/')
-                else:
-                    setattr(gdat, 'path' + strgpdfn + strgphas + nameseco, path + strgphas + '/' + nameseco + '/')
-    gdat.pathinfo = gdat.pathplotrtag + 'info/'
-    
-    ## make the directories 
-    for attr, valu in gdat.__dict__.iteritems():
-        if attr.startswith('path'):
-            os.system('mkdir -p %s' % valu)
+    #gdat.pathprio = gdat.pathplotrtag + 'prio/'
+    #gdat.pathpost = gdat.pathplotrtag + 'post/'
+    makefold(gdat)
 
     # initial plots
     if gdat.makeplot and gdat.makeplotinit:
@@ -2431,6 +2422,10 @@ def init( \
             print 'Mock dataset is generated. Quitting...'
         return gdat
     
+    print 'gdat.refraang[0][0]'
+    print gdat.refraang[0][0]
+    print
+
     # perform an initial run, sampling from the prior
     if gdat.checprio:
         

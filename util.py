@@ -3485,9 +3485,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pathinit = gdat.pathplotrtag + 'init/'
     gdat.pathinitintr = gdat.pathinit + 'intr/'
     
-    gdat.pathprio = gdat.pathplotrtag + 'prio/'
-    gdat.pathpost = gdat.pathplotrtag + 'post/'
-    
     ## names of the variables for which cumulative posteriors will be plotted
     if 'lens' in gdat.fittelemtype:
         gdat.listnamevarbcpos = ['convelem']
@@ -3511,7 +3508,11 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
 
     ## number of bins in histogram plots
-    gdat.numbbinsplot = 20
+    print 'HACKING!'
+    if gdat.exprtype == 'ferm':
+        gdat.numbbinsplot = 4
+    else:
+        gdat.numbbinsplot = 20
     gdat.indxbinsplot = arange(gdat.numbbinsplot)
     
     ## number of bins in hyperprior plots
@@ -8015,6 +8016,23 @@ def readfile(path):
 
 def writfile(gdattemp, path):
     
+    print 'writing to '
+    print path
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+    print
+
     filepick = open(path + '.p', 'wb')
     filearry = h5py.File(path + '.h5', 'w')
     
@@ -8023,6 +8041,13 @@ def writfile(gdattemp, path):
         
         if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
                                                         isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
+            #print 'attr'
+            #print attr
+            #print 'valu'
+            #print valu
+            if attr == 'pathpostfinlexcrtdim':
+                print 'HACKING!'
+                continue
             filearry.create_dataset(attr, data=valu)
         else:
             # temp -- make sure interpolation objects are not written.
@@ -10820,6 +10845,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         featrefrassc[q][l][d][strgfeat][indxelemrefrasschits[q][l][d]] = dictelem[l][d][strgfeat][indxelemfittasschits[q][l][d]]
                                     name = strgpfix + strgfeat + 'asscpop%dpop%dreg%d' % (q, l, d)
                                     setattr(gdatobjt, name, featrefrassc[q][l][d][strgfeat])
+                    
+                    print 'gdat.refraang[0][0]'
+                    print gdat.refraang[0][0]
+                    print
 
                     # completeness
                     for l in gdat.fittindxpopl:
@@ -10876,29 +10905,31 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                             print strgfeatfrst
                                                             print 'strgfeatseco'
                                                             print strgfeatseco
-                                                            print 'refrfeatfrst'
-                                                            print refrfeatfrst
-                                                            print 'refrfeatseco'
-                                                            print refrfeatseco
-                                                            print 'indxelemrefrasschits'
-                                                            print indxelemrefrasschits
+                                                            print 'binsfeatfrst'
+                                                            print binsfeatfrst
+                                                            print 'binsfeatseco'
+                                                            print binsfeatseco
+                                                            print 'refrfeatfrst[q0][d0]'
+                                                            print refrfeatfrst[q0][d0]
+                                                            print 'refrfeatseco[q0][d0]'
+                                                            print refrfeatseco[q0][d0]
+                                                            print 'indxelemrefrasschits[q0][d0]'
+                                                            print indxelemrefrasschits[q0][d0]
+                                                            print 'strgfeattdim'
+                                                            print strgfeattdim
                                                             print 'refrhistfeattdim'
                                                             print refrhistfeattdim
                                                             summgene(refrhistfeattdim)
                                                             print 'refrhistfeattdimassc'
                                                             print refrhistfeattdimassc
                                                             summgene(refrhistfeattdimassc)
-                                                            #print 'cmpltdim'
-                                                            #print cmpltdim
-                                                            #summgene(cmpltdim)
                                                             print 'indxgood'
                                                             print indxgood
                                                             print
-                                                            if not strgfeatfrst == 'aang':
-                                                                raise Exception('')
+                                                            raise Exception('')
                                             
                                             strg = strgpfix + 'cmpl' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (l, q0, d0)
-                                            if strgfeatfrst == 'bgal' and strgfeatseco == 'lgal':
+                                            if strgfeatfrst == 'bgal' and strgfeatseco == 'flux':
                                                 print 'meeey'
                                                 print 'strg'
                                                 print strg
@@ -10991,8 +11022,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     print 'fitthistfeatfrstfals'
                                                     print fitthistfeatfrstfals
                                                     print
-                                                    if not strgfeatfrst == 'aang':
-                                                        raise Exception('')
+                                                    raise Exception('')
                                     setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l0, d0), fdisfeatfrst)
     
     
@@ -11106,7 +11136,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
     # read initial global object
     if isinstance(rtag, list):
         listrtagmodi = rtag
-        rtagfinl = rtag[0] + 'tile'
+        rtagfinl = tdpy.util.retr_strgtimestmp() + rtag[0][15:] + 'tile'
         booltile = True
     else:
         listrtagmodi = [rtag]
@@ -11131,7 +11161,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             
             # read gdatinit
             boolgdatinit = chec_statfile(rtagmodi, 'gdatinit', '')
-            if not boolgdatinit:
+            if not booltile and not boolgdatinit:
+                print 'Initial global object not found. Quitting...'
                 return
             pathoutprtag = retr_pathoutprtag(rtagmodi)
             path = pathoutprtag + 'gdatinit'
@@ -11140,6 +11171,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             # read gdatmodi
             boolgdatmodi = chec_statfile(rtagmodi, 'gdatmodi', strgpdfn)
             if not boolgdatmodi:
+                print 'Modified global object not found. Quitting...'
                 continue
         
             if n == 0:
@@ -11164,6 +11196,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     gdatfinl.liststrgvarbarryflat.remove(strg)
    
                 if booltile:
+                    gdatfinl.pathoutprtag = retr_pathoutprtag(rtagfinl)
                     #listsamp = getattr(gdat, 'list' + strgpdfn + 'samp')
                     #listsampvarb = getattr(gdat, 'list' + strgpdfn + 'sampvarb')
                     numbsamptotlrsmp = gdatfinl.numbsamptotl
@@ -11320,7 +11353,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 if len(liststrgtile) == 1:
                     for strgfeat in gdatfinl.refrliststrgfeattotl:
                         refrfeattile = [[[] for d in gdatfinl.refrindxregipopl[q]] for q in gdatfinl.indxrefr]
-                        setattr(gdatfinl, 'refr' + strgfeat + 'tile', refrfeattile)
+                        setattr(gdatfinl, 'refr' + strgfeat, refrfeattile)
                 
                     for strgvarb in gdatfinl.liststrgvarbarrysamp:
                         if not strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
@@ -11334,12 +11367,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             setattr(gdatfinl, 'list' + strgpdfn + strgvarb, hist)
                             
                 for strgfeat in gdatfinl.refrliststrgfeattotl:
-                    refrfeat = getattr(gdatinit, 'refr' + strgfeat)
-                    refrfeattile = getattr(gdatfinl, 'refr' + strgfeat + 'tile')
+                    refrfeattile = getattr(gdatinit, 'refr' + strgfeat)
+                    refrfeat = getattr(gdatfinl, 'refr' + strgfeat)
                     for q in gdatfinl.indxrefr:
                         if strgfeat in gdatfinl.refrliststrgfeat[q]:
                             for d in gdatfinl.refrindxregipopl[q]:
-                                refrfeattile[q][d].append(refrfeat[q][d])
+                                refrfeat[q][d].append(refrfeattile[q][d])
                 
                 for strgvarb in gdatfinl.liststrgvarbarrysamp:
                     if strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
@@ -11360,8 +11393,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 gdatfinl = gdatinit
 
         if booltile:
-            print 'indxrtaggood'
-            print indxrtaggood
+            gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
+            makefold(gdatfinl)
             indxrtaggood = array(indxrtaggood).astype(int)
             numbrtaggood = indxrtaggood.size
             numbtile = numbrtaggood
@@ -11372,11 +11405,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
 
             # concatenate reference elements from different tiles
             for strgfeat in gdatfinl.refrliststrgfeattotl:
-                refrfeattile = getattr(gdatfinl, 'refr' + strgfeat + 'tile', refrfeattile)
+                refrfeat = getattr(gdatfinl, 'refr' + strgfeat, refrfeat)
                 for q in gdatfinl.indxrefr:
                     if strgfeat in gdatfinl.refrliststrgfeat[q]:
                         for d in gdatfinl.refrindxregipopl[q]:
-                            refrfeattile[q][d] = concatenate(refrfeattile[q][d], axis=1)
+                            refrfeat[q][d] = concatenate(refrfeat[q][d], axis=1)
             
             for strgvarb in gdatfinl.liststrgvarbarrysamp:
                 if not strgvarb in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
@@ -11596,18 +11629,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                 listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                 listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                 for k in gdatfinl.indxbinsplot:
-                                    print 'k'
-                                    print k
-                                    print 'strgvarb'
-                                    print strgvarb
-                                    print 'listcmplboot'
-                                    summgene(listcmplboot)
-                                    print 'gdatfinl.numbsampboot'
-                                    print gdatfinl.numbsampboot
-                                    print 'listcmpltrue'
-                                    summgene(listcmpltrue)
-                                    print
-
                                     listcmplboot[:, k] = choice(listcmpltrue[:, k], size=gdatfinl.numbsampboot)
                                     listfdisboot[:, k] = choice(listfdistrue[:, k], size=gdatfinl.numbsampboot)
                                     listhistboot[:, k] = choice(listhist[:, k], size=gdatfinl.numbsampboot)
@@ -11642,6 +11663,17 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
        
         for strgchan in gdatinit.liststrgchan:
             
+            if booltile:
+                if strgchan in gdatfinl.liststrgvarbarryswep or strgchan in gdatfinl.liststrgvarblistsamp:
+                    continue
+
+            # temp
+            if strgchan in [strgvarbhist[0] for strgvarbhist in gdatfinl.liststrgvarbhist]:
+                if 'spec' in strgchan:
+                    continue
+            if strgchan == 'spec':
+                continue
+
             listtemp = getattr(gdatfinl, 'list' + strgpdfn + strgchan)
             
             if isinstance(listtemp, list):
@@ -11768,6 +11800,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
    
         # write the final gdat object
         path = gdatfinl.pathoutprtag + 'gdatfinl' + strgpdfn
+
         if gdatfinl.verbtype > 0:
             print 'Writing the global object to %s...' % path
         writfile(gdatfinl, path) 
@@ -11776,12 +11809,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         filestat.write('gdatfinl%s written.\n' % strgpdfn)
         filestat.close()
    
-        if gdatfinl.verbtype > 0:
-            for k in gdatfinl.indxproc:
-                print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdatfinl.timereal[k], gdatfinl.timeproc[k])
-            print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
+        if not booltile:
+            if gdatfinl.verbtype > 0:
+                for k in gdatfinl.indxproc:
+                    print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdatfinl.timereal[k], gdatfinl.timeproc[k])
+                print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
 
     print 'checking plotfinl%s...' % strgpdfn
+    
     booltemp = chec_statfile(rtagfinl, 'plotfinl', strgpdfn)
     if booltemp:
         print 'Final plots already written.'
@@ -11793,12 +11828,49 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn):
+
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
         filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
         filestat.write('plotfinl%s written.\n' % strgpdfn)
         filestat.close()
     print
 
+
+def makefold(gdat):
+
+    for strgpdfn in gdat.liststrgpdfn:
+        setattr(gdat, 'path' + strgpdfn, gdat.pathplotrtag + strgpdfn + '/') 
+        path = getattr(gdat, 'path' + strgpdfn)
+
+        for nameseco in ['finl', 'fram', 'anim', 'opti']:
+            setattr(gdat, 'path' + strgpdfn + nameseco, path + nameseco + '/')
+        
+        for nameseco in ['diag', 'lpri', 'varbscal', 'cond', 'varbscalproc', 'deltllik', 'spmr']:
+            setattr(gdat, 'path' + strgpdfn + 'finl' + nameseco, path + 'finl/' + nameseco + '/')
+            
+        for namethrd in ['hist', 'trac', 'join', 'cova']:
+            setattr(gdat, 'path' + strgpdfn + 'finlvarbscal' + namethrd, path + 'finl/varbscal/' + namethrd + '/')
+            
+        for strgphas in gdat.liststrgphas + ['init']:
+            liststrgfold = getattr(gdat, 'liststrgfold' + strgphas)
+            for nameseco in liststrgfold:
+                if strgphas == 'init':
+                    if nameseco == 'assc/' or nameseco.startswith('cmpl') or nameseco.startswith('fdis'):
+                        continue
+                    setattr(gdat, 'path' + strgphas + nameseco[:-1], gdat.pathplotrtag + 'init/' + nameseco + '/')
+                else:
+                    setattr(gdat, 'path' + strgpdfn + strgphas + nameseco[:-1], path + strgphas + '/' + nameseco + '/')
+    gdat.pathinfo = gdat.pathplotrtag + 'info/'
+    
+    ## make the directories 
+    for attr, valu in gdat.__dict__.iteritems():
+        if attr.startswith('path'):
+            print 'attr'
+            print attr
+            print 'valu'
+            print valu
+            print
+            os.system('mkdir -p %s' % valu)
 
 
 def make_cmapdivg(strgcolrloww, strgcolrhigh):
@@ -12082,10 +12154,6 @@ def proc_cntpdata(gdat):
     ## data counts
     if gdat.datatype == 'inpt':
         gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata, gdat.indxregi, gdat.indxcubeeval)
-        print 'gdat.cntpdata[0]'
-        summgene(gdat.cntpdata[0])
-        print
-        print
 
     # correct the likelihoods for the constant data dependent factorial
     gdat.llikoffs = [[] for d in gdat.indxregi]
@@ -13080,7 +13148,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     gdat.strgbest = 'ML'
     
-    if gdat.checprio and strgpdfn == 'post':
+    if gdat.checprio and strgpdfn == 'post' and not booltile:
         # this works only for scalar variables -- needs to be generalized to all variables
         if gdatprio == None:
             pathoutprtag = retr_pathoutprtag(rtag)
@@ -13104,49 +13172,49 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                                         
                         plot_infopvks(gdat, gdatprio, strgfeatfrst, 'hist' + strgfeatfrst + strgfeatseco + 'pop%dreg%d' % (l, d), nameseco=strgfeatseco)
     
-    listlpautotl = getattr(gdat, 'list' + strgpdfn + 'lpautotl')
     listsampvarb = getattr(gdat, 'list' + strgpdfn + 'sampvarb')
     listsamp = getattr(gdat, 'list' + strgpdfn + 'samp')
-    listlpau = getattr(gdat, 'list' + strgpdfn + 'lpau')
     listfixp = getattr(gdat, 'list' + strgpdfn + 'fixp')
-    listlrpp = getattr(gdat, 'list' + strgpdfn + 'lrpp')
-    listljcb = getattr(gdat, 'list' + strgpdfn + 'ljcb')
-    listaccpprop = getattr(gdat, 'list' + strgpdfn + 'accpprop')
-    listmemoresi = getattr(gdat, 'list' + strgpdfn + 'memoresi')
-    listindxproptype = getattr(gdat, 'list' + strgpdfn + 'indxproptype')
-    listsampvarbproc = getattr(gdat, 'list' + strgpdfn + 'sampvarbproc')
-    listindxsamptotl = getattr(gdat, 'list' + strgpdfn + 'indxsamptotl')
-    listindxsamptotlaccp = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlaccp')
-    listindxsamptotlreje = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlreje')
-    
-    # prior components
-    if gdat.diagmode:
-        if gdat.verbtype > 0:
-            print 'Plotting the prior distribution...'
-
-        for n in gdat.indxproptype:
-            pathpostlpri = getattr(gdat, 'path' + gdat.strgpdfn + 'finllpri')
-            #path = pathpostlpri + 'deltlliktotl' + gdat.nameproptype[n]
-            #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[listindxsamptotl[n]], r'$\log \Delta P(D|M)$', logthist=True)
-            #for k in gdat.fittindxlpri:
-            #    path = pathpostlpri + 'deltlpritotl%04d' % k + gdat.nameproptype[n]
-            #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[listindxsamptotl[n], k], r'$\log \Delta P_{%d}(M)$' % k, logthist=True)
-            if gdat.nameproptype[n] == 'brth' or gdat.nameproptype[n] == 'deth' or gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
-                path = pathpostlpri + 'lpautotl%04d' + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, listlpautotl[listindxsamptotl[n]], '', logthist=True)
-                for k in gdat.fittindxlpau:
-                    path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listlpau[listindxsamptotl[n], k], r'$\log u_{%d}$' % k, logthist=True)
-                
-            if gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
-                path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, listlrpp[listindxsamptotl[n]], r'$\log \alpha_p$', logthist=True)
-
-                path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
-                tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\log \alpha_c$', logthist=True)
     
     if not booltile:
+        listlpautotl = getattr(gdat, 'list' + strgpdfn + 'lpautotl')
+        listlpau = getattr(gdat, 'list' + strgpdfn + 'lpau')
+        listlrpp = getattr(gdat, 'list' + strgpdfn + 'lrpp')
+        listljcb = getattr(gdat, 'list' + strgpdfn + 'ljcb')
+        listaccpprop = getattr(gdat, 'list' + strgpdfn + 'accpprop')
+        listmemoresi = getattr(gdat, 'list' + strgpdfn + 'memoresi')
+        listindxproptype = getattr(gdat, 'list' + strgpdfn + 'indxproptype')
+        listsampvarbproc = getattr(gdat, 'list' + strgpdfn + 'sampvarbproc')
+        listindxsamptotl = getattr(gdat, 'list' + strgpdfn + 'indxsamptotl')
+        listindxsamptotlaccp = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlaccp')
+        listindxsamptotlreje = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlreje')
+    
+        # prior components
+        if gdat.diagmode:
+            if gdat.verbtype > 0:
+                print 'Plotting the prior distribution...'
 
+            for n in gdat.indxproptype:
+                pathpostlpri = getattr(gdat, 'path' + gdat.strgpdfn + 'finllpri')
+                #path = pathpostlpri + 'deltlliktotl' + gdat.nameproptype[n]
+                #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[listindxsamptotl[n]], r'$\log \Delta P(D|M)$', logthist=True)
+                #for k in gdat.fittindxlpri:
+                #    path = pathpostlpri + 'deltlpritotl%04d' % k + gdat.nameproptype[n]
+                #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[listindxsamptotl[n], k], r'$\log \Delta P_{%d}(M)$' % k, logthist=True)
+                if gdat.nameproptype[n] == 'brth' or gdat.nameproptype[n] == 'deth' or gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
+                    path = pathpostlpri + 'lpautotl%04d' + gdat.nameproptype[n]
+                    tdpy.mcmc.plot_trac(path, listlpautotl[listindxsamptotl[n]], '', logthist=True)
+                    for k in gdat.fittindxlpau:
+                        path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
+                        tdpy.mcmc.plot_trac(path, listlpau[listindxsamptotl[n], k], r'$\log u_{%d}$' % k, logthist=True)
+                    
+                if gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
+                    path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
+                    tdpy.mcmc.plot_trac(path, listlrpp[listindxsamptotl[n]], r'$\log \alpha_p$', logthist=True)
+
+                    path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
+                    tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\log \alpha_c$', logthist=True)
+    
         # Gelman-Rubin test
         pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
         if gdat.numbproc > 1:
@@ -13317,35 +13385,37 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     if gdat.verbtype > 0:
         print 'A mosaic of samples...'
     
-    ## mosaic of images of posterior catalogs
-    if gdat.numbpixl > 1:
-        for d in gdat.indxregi:
-            plot_mosa(gdat, d, strgpdfn)
+    if not booltile:
+        ## mosaic of images of posterior catalogs
+        if gdat.numbpixl > 1:
+            for d in gdat.indxregi:
+                plot_mosa(gdat, d, strgpdfn)
     
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter traces...'
     
-    ## randomly selected trandimensional parameters
-    if gdat.fittnumbtrap > 0:
-        if gdat.verbtype > 0:
-            print 'Transdimensional parameters...'
-    
-        # choose the parameters based on persistence
-        stdvlistsamptran = std(listsamp[:, gdat.fittindxsamptrap], axis=0)
-        indxtrapgood = where(stdvlistsamptran > 0.)[0]
-        numbtrapgood = indxtrapgood.size
-        numbtrapplot = min(3, numbtrapgood)
-        if numbtrapplot > 0:
-            indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
+    if not booltile:
+        ## randomly selected trandimensional parameters
+        if gdat.fittnumbtrap > 0:
+            if gdat.verbtype > 0:
+                print 'Transdimensional parameters...'
+        
+            # choose the parameters based on persistence
+            stdvlistsamptran = std(listsamp[:, gdat.fittindxsamptrap], axis=0)
+            indxtrapgood = where(stdvlistsamptran > 0.)[0]
+            numbtrapgood = indxtrapgood.size
+            numbtrapplot = min(3, numbtrapgood)
+            if numbtrapplot > 0:
+                indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
 
-            path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listelemfrst'
-            tdpy.mcmc.plot_grid(path, listsampvarb[:, gdat.fittindxsamptrap[:3]] * gdat.fittfactplotpara[gdat.fittindxsamptrap[:3]], \
-                                                                                                [gdat.fittlablpara[k] for k in gdat.fittindxsamptrap[:3]])
+                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listelemfrst'
+                tdpy.mcmc.plot_grid(path, listsampvarb[:, gdat.fittindxsamptrap[:3]] * gdat.fittfactplotpara[gdat.fittindxsamptrap[:3]], \
+                                                                                                    [gdat.fittlablpara[k] for k in gdat.fittindxsamptrap[:3]])
 
-            path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsamp'
-            tdpy.mcmc.plot_grid(path, listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-            path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsampvarb'
-            tdpy.mcmc.plot_grid(path, listsampvarb[:, indxtrapplot] * gdat.fittfactplotpara[indxtrapplot], [gdat.fittlablpara[k] for k in indxtrapplot])
+                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsamp'
+                tdpy.mcmc.plot_grid(path, listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
+                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsampvarb'
+                tdpy.mcmc.plot_grid(path, listsampvarb[:, indxtrapplot] * gdat.fittfactplotpara[indxtrapplot], [gdat.fittlablpara[k] for k in indxtrapplot])
     
     if gdat.verbtype > 0:
         print 'Scalar variables...'
