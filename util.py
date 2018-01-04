@@ -3508,11 +3508,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.pvalcont = [0.317, 0.0455, 2.7e-3, 6e-5, 1.3e-6]
 
     ## number of bins in histogram plots
-    print 'HACKING!'
-    if gdat.exprtype == 'ferm':
-        gdat.numbbinsplot = 4
-    else:
-        gdat.numbbinsplot = 20
+    gdat.numbbinsplot = 20
     gdat.indxbinsplot = arange(gdat.numbbinsplot)
     
     ## number of bins in hyperprior plots
@@ -11353,6 +11349,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             continue
                         hist = getattr(gdatinit, 'list' + strgpdfn + strgvarb)
                         hist += getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
+                        print 'hist'
+                        summgene(hist)
                 
                     else:
                         listvarb = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
@@ -11800,6 +11798,13 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatprio = None
         
         if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn):
+
+            print 'gdat.histbgalpop0reg0'
+            summgene(gdat.histbgalpop0reg0)
+            print
+            print
+            print
+            print
 
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
         filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
@@ -12479,6 +12484,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % lablelemextn[l]
                                 
+                                print 'name'
+                                print name
+                                print
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
@@ -12714,11 +12722,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             strgregi = 'reg%d' % d
                             
                             # host mass
-                            limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein' + strgregi)]
-                            lablydat = getattr(gdat, 'lablmass' + namecalc + strgregi + 'totl')
-                            name = 'masshost%s%s' % (namecalc, strgregi)
-                            plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
-                                                                                        lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
+                            for e in indxsersfgrd[d]:
+                                strgregiisfr = 'reg%disf%d' % (d, e)
+                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein' + strgregiisfr)]
+                                lablydat = getattr(gdat, 'lablmass' + namecalc + strgregiisfr + 'totl')
+                                name = 'masshost%s%s' % (namecalc, strgregiisfr)
+                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
+                                                                                            lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
                             
                             if boolelemdeflsubhanyy:
                                 # subhalo masses
@@ -12832,7 +12842,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 if strgfrst.startswith('aerr') or strgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
                                     continue
                                 
-                                strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q, d0)
+                                strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
                                 
                                 print 'q0, d0, l0'
                                 print q0, d0, l0
@@ -14062,6 +14072,11 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     else:
         xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
+    
+    print 'strgydat'
+    print strgydat
+    print 'ydat'
+    summgene(ydat)
     
     if indxxdat != None:
         xdat = xdat[indxxdat]

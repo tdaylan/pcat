@@ -2008,12 +2008,6 @@ def init( \
                             print 'strgfeat'
                             print strgfeat
                         else:
-                            print 'refrfeat[q][d]'
-                            print refrfeat[q][d]
-                            print 'type(refrfeat[q][d])'
-                            print type(refrfeat[q][d])
-                            print 'len(refrfeat[q][d])'
-                            print len(refrfeat[q][d])
                             if amin(refrfeat[q][d]) == 0. and amax(refrfeat[q][d]) == 0.:
                                 print 'Warning! A reference element feature is all zeros!'
                                 print 'strgfeat'
