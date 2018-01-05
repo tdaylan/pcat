@@ -3748,15 +3748,15 @@ def setpinit(gdat, boolinitsetp=False):
     for q in gdat.indxrefr:
         for l in gdat.fittindxpopl:
             for d in gdat.fittindxregipopl[l]:
-                setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), 0.)
-                setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), 1.)
+                setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), -0.2)
+                setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), 1.2)
                 setattr(gdat, 'corrcmplpop%dpop%dreg%d' % (l, q, d), 1.)
                 setattr(gdat, 'factcmplpop%dpop%dreg%dplot' % (l, q, d), 1.)
                 setattr(gdat, 'scalcmplpop%dpop%dreg%d' % (l, q, d), 'self')
                 setattr(gdat, 'lablcmplpop%dpop%dreg%d' % (l, q, d), '$c_{%d%d%d}$' % (l, q, d))
                 
-                setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), 0.)
-                setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), 1.)
+                setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), -0.2)
+                setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), 1.2)
                 setattr(gdat, 'corrfdispop%dpop%dreg%d' % (q, l, d), 1.)
                 setattr(gdat, 'factfdispop%dpop%dreg%dplot' % (q, l, d), 1.)
                 setattr(gdat, 'scalfdispop%dpop%dreg%d' % (q, l, d), 'self')
@@ -4275,10 +4275,10 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.factcmplplot = 1.
     gdat.factfdisplot = 1.
-    gdat.minmcmpl = 0.
-    gdat.maxmcmpl = 1.
-    gdat.minmfdis = 0.
-    gdat.maxmfdis = 1.
+    gdat.minmcmpl = -0.2
+    gdat.maxmcmpl = 1.2
+    gdat.minmfdis = -0.2
+    gdat.maxmfdis = 1.2
 
     if gdat.thindata:
         expotemp = [[] for d in gdat.indxregi]
@@ -11292,6 +11292,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 if gdatinit.verbtype > 0:
                     timefinl = gdatinit.functime()
                     print 'Done in %.3g seconds.' % (timefinl - timeinit)
+                
+                setattr(gdatinit, 'list' + strgpdfn + 'sampvarbproc', copy(getattr(gdatinit, 'list' + strgpdfn + 'sampvarb')))
 
             # flatten the list chains from different walkers
             for strgvarb in gdatfinl.liststrgvarblistsamp:
@@ -11411,8 +11413,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarbtemp)
         
         else:
-            print 
-            setattr(gdatfinl, 'list' + strgpdfn + 'sampvarbproc', copy(getattr(gdatinit, 'list' + strgpdfn + 'sampvarb')))
             
             # maximum likelihood sample
             if gdatfinl.fittnumbtrap > 0:
@@ -11562,7 +11562,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     
                     # temp
                     print 'HACKING!'
-                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180104_084600_pcat_chan_mock_nomi_1000')
+                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180105_074459_pcat_chan_mock_nomi_1000')
 
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
@@ -11615,9 +11615,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                         listhistboot[:, a, b] = choice(listhist[:, a, b], size=gdatfinl.numbsampboot)
                             indxbadd = where(listcmplboot == -1)
                             indxbaddzero = where(listcmplboot == 0.)
-                            listhistboot[indxbadd] = -1.
-                            listhistboot[indxbaddzero] = -2.
                             listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
+                            listhistincr[indxbadd] = -1.5
+                            listhistincr[indxbaddzero] = 1.5
                             
                             print 'internally correcting...'
                             print 'strgvarb'
@@ -12820,12 +12820,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
 
                                         if strgfrst.startswith('aerr') or strgseco.startswith('aerr'):
                                             continue
-                                        if strgelemtdimvarb.startswith('cmpl') or strgelemtdimvarb.startswith('fdis'):
+                                        if strgelemtdimvarb.startswith('fdis'):
                                             for q in gdat.indxrefr:
-                                                if strgelemtdimvarb.startswith('cmpl'):
-                                                    strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (l0, q, d0)
-                                                else:
-                                                    strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
+                                                strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
                                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
                                         elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr'):
@@ -12836,6 +12833,10 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                     if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)) == None:
                                                         continue
                                                 strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
+                                                print 'strgtotl'
+                                                print strgtotl
+                                                print 'strgelemtdimvarb'
+                                                print strgelemtdimvarb
                                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
         
@@ -13487,9 +13488,14 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     tdpy.mcmc.plot_grid(path, listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, varbdraw=mlikpara)
     
     ## individual processes
-    if gdat.numbproc > 1:
+    if not booltile and gdat.numbproc > 1:
         for k in gdat.indxproc:
             path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalproc') + 'proc%04d' % k
+            print 'k'
+            print k
+            print 'listsampvarbproc'
+            summgene(listsampvarbproc)
+            print
             tdpy.mcmc.plot_grid(path, listsampvarbproc[:, k, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], \
                                 gdat.fittlablfixptotl[gdat.fittindxfixp], truepara=gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp])
     
@@ -13982,6 +13988,17 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
             labl = gdat.legdsampdist + ' ' + legdmome
             if strgelemtdimtype == 'bind':
                 varb = getattr(gdat, strgmome + strgpdfn + strgtotl)
+                
+                print 'strgtotl'
+                print strgtotl
+                print 'strgmome'
+                print strgmome
+                print 'strgpdfn'
+                print strgpdfn
+                print 'varb'
+                summgene(varb)
+                print
+
                 varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
                 varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
                 imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Blues', label=labl)

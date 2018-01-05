@@ -2461,7 +2461,7 @@ def initarry( \
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = strgcnfg
     
-        if omitprev and chec_runsprev(strgcnfg):
+        if omitprev and chec_runsprev(strgcnfg) and strgcnfgextnexec == None:
             print 'Found a previous run with the configuration %s' % strgcnfg
             print 'Omitting...'
             print
