@@ -14090,11 +14090,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         xdat = getattr(gdat, strgxdat) * factxdat
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     
-    print 'strgydat'
-    print strgydat
-    print 'ydat'
-    summgene(ydat)
-    
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
