@@ -3523,14 +3523,19 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.fittlensmodltype != 'none':
         for d in gdat.indxregi:
             strgregi = 'reg%d' % d
-            setattr(gdat, 'lablfracsubh' + strgregi, r'$f_{\rm{sub}}$')
-            setattr(gdat, 'lablfracsubhdeltbein' + strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
-            setattr(gdat, 'lablfracsubhintgbein' + strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubhdeltbein' + strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
+            setattr(gdat, 'lablmasssubhintg' + strgregi, r'$M_{\rm{sub,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubhdelt' + strgregi, r'$M_{\rm{sub,%d}}$' % d)
             setattr(gdat, 'lablmasssubhintgbein' + strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubhdeltbein' + strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
+            setattr(gdat, 'lablfracsubhintg' + strgregi, r'f_{\rm{sub,%d}<}' % d)
+            setattr(gdat, 'lablfracsubhdelt' + strgregi, r'f_{\rm{sub,%d}}' % d)
+            setattr(gdat, 'lablfracsubhintgbein' + strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablfracsubhdeltbein' + strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
             for e in gdat.fittindxsersfgrd[d]:
-                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d}}$' % d)
-                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d<}}$' % d)
+                setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d%d}}$' % (d, e))
             for namevarb in ['fracsubh', 'masssubh']:
                 for namecalc in ['delt', 'intg']:
                     for nameeval in ['', 'bein']:
@@ -3539,12 +3544,6 @@ def setpinit(gdat, boolinitsetp=False):
                 for namecalc in ['delt', 'intg']:
                     for nameeval in ['', 'bein']:
                         setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
-            setattr(gdat, 'lablmassintg' + strgregi, r'<M>_{<r}')
-            setattr(gdat, 'lablmassintgunit' + strgregi, r'$M_{\odot}$')
-            setattr(gdat, 'lablmassdelt' + strgregi, r'<M>_r')
-            setattr(gdat, 'lablmassdeltunit' + strgregi, r'$M_{\odot}$')
-            setattr(gdat, 'lablfracsubhintg' + strgregi, r'<f>_{\rm{<r,sub}}')
-            setattr(gdat, 'lablfracsubhdelt' + strgregi, r'<f>_{\rm{r,sub}}')
     
     gdat.minmreds = 0.
     gdat.maxmreds = 1.5
@@ -12730,9 +12729,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             # host mass
                             for e in indxsersfgrd[d]:
                                 strgregiisfr = 'reg%disf%d' % (d, e)
-                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + namecalc + 'bein' + strgregiisfr)]
-                                lablydat = getattr(gdat, 'lablmass' + namecalc + strgregiisfr + 'totl')
-                                name = 'masshost%s%s' % (namecalc, strgregiisfr)
+                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + strgregiisfr + namecalc + 'bein')]
+                                lablydat = getattr(gdat, 'lablmass' + strgregiisfr + namecalc + 'totl')
+                                name = 'masshost%s%s' % (strgregiisfr, namecalc)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
                                                                                             lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
                             
