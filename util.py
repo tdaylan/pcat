@@ -3523,14 +3523,14 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.fittlensmodltype != 'none':
         for d in gdat.indxregi:
             strgregi = 'reg%d' % d
-            setattr(gdat, 'lablmasssubhintg' + strgregi, r'$M_{\rm{sub,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubhdelt' + strgregi, r'$M_{\rm{sub,%d}}$' % d)
-            setattr(gdat, 'lablmasssubhintgbein' + strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubhdeltbein' + strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
-            setattr(gdat, 'lablfracsubhintg' + strgregi, r'f_{\rm{sub,%d}<}' % d)
-            setattr(gdat, 'lablfracsubhdelt' + strgregi, r'f_{\rm{sub,%d}}' % d)
-            setattr(gdat, 'lablfracsubhintgbein' + strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablfracsubhdeltbein' + strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
+            setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
+            setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
+            setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
+            setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
+            setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
             for e in gdat.fittindxsersfgrd[d]:
                 setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
@@ -10946,19 +10946,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         # temp -- the size of the fdis array should depend on strgmodl
                                         fdistdim = zeros((gdat.numbbinsplot, gdat.numbbinsplot)) - 1.
                                         
-                                        if len(indxelemrefrasschits[q][l0][d0]) > 0 or len(indxelemrefrasschits[q][l0][d0]) > 0:
+                                        if len(indxelemrefrasschits[q][l0][d0]) > 0 and len(dictelem[l0][d0][strgfeatseco]) > 0 and len(dictelem[l0][d0][strgfeatfrst]) > 0: 
                                             fitthistfeattdim =  dictelemtdim['hist' + strgfeattdim]
                                             binsfeatseco = getattr(gdat, 'bins' + strgfeatseco)
-                                            
-                                            print 'dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]'
-                                            print dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]]
-                                            print 'indxelemfittasscfals[q][l0][d0]'
-                                            print indxelemfittasscfals[q][l0][d0]
-                                            print 'dictelem[l0][d0][strgfeatseco]'
-                                            print dictelem[l0][d0][strgfeatseco]
-                                            print 'dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]]'
-                                            print dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]]
-                                            print
                                             
                                             fitthistfeattdimfals = histogram2d(dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]], \
                                                                   dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]], bins=(binsfeatfrst, binsfeatseco))[0]
@@ -10972,7 +10962,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l0, d0), fdistdim)
                                 
                                     fdisfeatfrst = zeros(gdat.numbbinsplot) - 1.
-                                    if len(indxelemrefrasschits[q][l0][d0]) > 0:
+                                    if len(indxelemrefrasschits[q][l0][d0]) > 0 and len(dictelem[l0][d0][strgfeatfrst]) > 0:
                                         binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
                                         fitthistfeatfrstfals = histogram(dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]], bins=binsfeatfrst)[0]
                                         fitthistfeatfrst = getattr(gdatobjt, strgpfix + 'hist' + strgfeatfrst + 'pop%dreg%d' % (l0, d0))
@@ -11117,8 +11107,18 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
     
     # skip if the final global object is available 
     boolgdatfinl = chec_statfile(rtagfinl, 'gdatfinl', strgpdfn)
+    boolgdatfinlgood = False
     if boolgdatfinl:
         print 'Run already final-processed.'
+        pathoutprtag = retr_pathoutprtag(rtagfinl)
+        path = pathoutprtag + 'gdatfinl' + strgpdfn
+        try:
+            gdat = readfile(path) 
+            boolgdatfinlgood = True
+        except:
+            print 'Output from the previous run is corrupted.'
+
+    if boolgdatfinl and boolgdatfinlgood:
         # read gdatfinl
         pathoutprtag = retr_pathoutprtag(rtagfinl)
         path = pathoutprtag + 'gdatfinl' + strgpdfn
@@ -11411,6 +11411,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarbtemp)
         
         else:
+            print 
             setattr(gdatfinl, 'list' + strgpdfn + 'sampvarbproc', copy(getattr(gdatinit, 'list' + strgpdfn + 'sampvarb')))
             
             # maximum likelihood sample
@@ -11740,11 +11741,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             for l0 in gdatfinl.fittindxpopl:
                 for d0 in gdatfinl.fittindxregipopl[l0]:
                     for strgfeatfrst in gdatfinl.fittliststrgfeat[l0]:
-                        if strgfeatfrst == 'spec' or strgfeatfrst == 'deflplot' or strgfeatfrst == 'specplot':
+                        if strgfeatfrst == 'spec' or strgfeatfrst == 'deflprof' or strgfeatfrst == 'specplot':
                             continue
                         setp_pdfnvarb(gdatfinl, strgpdfn, strgfeatfrst, 'hist' + strgfeatfrst + 'pop%dreg%d' % (l0, d0))
                         for strgfeatseco in gdatfinl.fittliststrgfeat[l0]:
-                            if strgfeatseco == 'spec' or strgfeatseco == 'deflplot' or strgfeatseco == 'specplot':
+                            if strgfeatseco == 'spec' or strgfeatseco == 'deflprof' or strgfeatseco == 'specplot':
                                 continue
                             
                             if not checstrgfeat(strgfeatfrst, strgfeatseco):
@@ -12842,20 +12843,20 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 for d0 in indxregipopl[l0]:
                     for l0 in indxpopl:
                         for refrstrgfrst in gdat.refrliststrgfeat[q0]:
-                            if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflplot' or refrstrgfrst == 'etag':
+                            if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflprof' or refrstrgfrst == 'etag':
                                 continue
                             if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
                                 continue
                             for refrstrgseco in gdat.refrliststrgfeat[q0]:
                                 if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
                                     continue
-                                if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflplot' or refrstrgseco == 'etag':
+                                if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflprof' or refrstrgseco == 'etag':
                                     continue
                                 
                                 if not checstrgfeat(refrstrgfrst, refrstrgseco):
                                     continue
                                         
-                                if strgfrst.startswith('aerr') or strgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
+                                if refrstrgfrst.startswith('aerr') or refrstrgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
                                     continue
                                 
                                 strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
@@ -13153,11 +13154,11 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         for l in gdat.fittindxpopl:
             for d in gdat.fittindxregipopl[l]:
                 for strgfeatfrst in gdat.fittliststrgfeat[l]:
-                    if strgfeatfrst == 'spec' or strgfeatfrst == 'deflplot' or strgfeatfrst == 'specplot':
+                    if strgfeatfrst == 'spec' or strgfeatfrst == 'deflprof' or strgfeatfrst == 'specplot':
                         continue
                     plot_infopvks(gdat, gdatprio, strgfeatfrst, 'hist' + strgfeatfrst + 'pop%dreg%d' % (l, d))
                     for strgfeatseco in gdat.fittliststrgfeat[l]:
-                        if strgfeatseco == 'spec' or strgfeatseco == 'deflplot' or strgfeatseco == 'specplot':
+                        if strgfeatseco == 'spec' or strgfeatseco == 'deflprof' or strgfeatseco == 'specplot':
                             continue
                         
                         if not checstrgfeat(strgfeatfrst, strgfeatseco):
