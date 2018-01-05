@@ -2423,6 +2423,7 @@ def init( \
 def initarry( \
              dictvarbvari, \
              dictvarb, \
+             omitprev=False, \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
@@ -2459,6 +2460,13 @@ def initarry( \
         for strgvarb, valu in dictvarbvari[strgcnfgextn].iteritems():
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = strgcnfg
+    
+        if omitprev and chec_runsprev(strgcnfg):
+            print 'Found a previous run with the configuration %s' % strgcnfg
+            print 'Omitting...'
+            print
+            continue
+
         rtag = init(**dictvarbtemp)
         listrtag.append(rtag)
 

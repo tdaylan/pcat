@@ -10949,6 +10949,17 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         if len(indxelemrefrasschits[q][l0][d0]) > 0 or len(indxelemrefrasschits[q][l0][d0]) > 0:
                                             fitthistfeattdim =  dictelemtdim['hist' + strgfeattdim]
                                             binsfeatseco = getattr(gdat, 'bins' + strgfeatseco)
+                                            
+                                            print 'dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]'
+                                            print dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]]
+                                            print 'indxelemfittasscfals[q][l0][d0]'
+                                            print indxelemfittasscfals[q][l0][d0]
+                                            print 'dictelem[l0][d0][strgfeatseco]'
+                                            print dictelem[l0][d0][strgfeatseco]
+                                            print 'dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]]'
+                                            print dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]]
+                                            print
+                                            
                                             fitthistfeattdimfals = histogram2d(dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]], \
                                                                   dictelem[l0][d0][strgfeatseco][indxelemfittasscfals[q][l0][d0]], bins=(binsfeatfrst, binsfeatseco))[0]
                                             indxgood = where(fitthistfeattdim != 0.)
@@ -12730,23 +12741,23 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             for e in indxsersfgrd[d]:
                                 strgregiisfr = 'reg%disf%d' % (d, e)
                                 limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasshost' + strgregiisfr + namecalc + 'bein')]
-                                lablydat = getattr(gdat, 'lablmass' + strgregiisfr + namecalc + 'totl')
+                                lablydat = getattr(gdat, 'lablmasshost' + strgregiisfr + namecalc + 'totl')
                                 name = 'masshost%s%s' % (strgregiisfr, namecalc)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
                                                                                             lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
                             
                             if boolelemdeflsubhanyy:
                                 # subhalo masses
-                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasssubh' + namecalc + 'bein' + strgregi)]
-                                lablydat = getattr(gdat, 'lablmass' + namecalc + strgregi + 'totl')
-                                name = 'masssubh%s%s' % (namecalc, strgregi)
+                                limtydat = [gdat.minmmcut, getattr(gdat, 'maxmmasssubh' + strgregi + namecalc + 'bein')]
+                                lablydat = getattr(gdat, 'lablmasssubh' + strgregi + namecalc + 'totl')
+                                name = 'masssubh%s%s' % (strgregi, namecalc)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
                                                                                             lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
 
                                 # subhalo mass fraction
                                 limtydat = [1e-3, 0.1]
-                                lablydat = getattr(gdat, 'lablfracsubh' + namecalc + strgregi + 'totl')
-                                name = 'fracsubh%s%s' % (namecalc, strgregi)
+                                lablydat = getattr(gdat, 'lablfracsubh' + strgregi + namecalc + 'totl')
+                                name = 'fracsubh%s%s' % (strgregi, namecalc)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meananglhalf', scalydat='logt', \
                                                             lablxdat=lablxdat, lablydat=lablydat, factxdat=factxdat, limtydat=limtydat)
 
