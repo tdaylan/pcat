@@ -3374,7 +3374,7 @@ def setpprem(gdat):
         raise Exception('Cartesian forcing can only used with cart pixltype')
 
     gdat.liststrgphas = ['fram', 'finl', 'anim']
-    gdat.liststrgelemtdimtype = ['bind', 'scat']
+    gdat.liststrgelemtdimtype = ['bind']
     
     # input data
     if gdat.datatype == 'inpt':
@@ -12501,9 +12501,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     factydat = 1.
                                     lablydat = r'$N_{%s}$' % lablelemextn[l]
                                 
-                                print 'name'
-                                print name
-                                print
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
@@ -12833,10 +12830,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                     if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)) == None:
                                                         continue
                                                 strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
-                                                print 'strgtotl'
-                                                print strgtotl
-                                                print 'strgelemtdimvarb'
-                                                print strgelemtdimvarb
                                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
         
@@ -12862,14 +12855,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 
                                 strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
                                 
-                                print 'q0, d0, l0'
-                                print q0, d0, l0
-                                print 'refrstrgfrst'
-                                print refrstrgfrst
-                                print 'refrstrgseco'
-                                print refrstrgseco
-                                print
-
                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
                                                                                 q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
         
@@ -13980,7 +13965,13 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
     limtseco = getattr(gdat, 'limt' + strgseco)
     factplotfrst = getattr(gdat, 'fact' + strgfrst + 'plot')
     factplotseco = getattr(gdat, 'fact' + strgseco + 'plot')
-    
+   
+    print 'strgtotl'
+    print strgtotl
+    print 'strgelemtdimtype'
+    print strgelemtdimtype
+    print
+
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strgmodl == 'fitt':
         colrtemp = gdat.fittcolrelem[indxpoplfrst]
@@ -13988,6 +13979,12 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
             labl = gdat.legdsampdist + ' ' + legdmome
             if strgelemtdimtype == 'bind':
                 varb = getattr(gdat, strgmome + strgpdfn + strgtotl)
+                
+                varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
+                varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
+                imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Blues', label=labl)
+                #plt.colorbar(imag)
+                make_cbar(gdat, axis, imag)
                 
                 print 'strgtotl'
                 print strgtotl
@@ -13997,12 +13994,12 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                 print strgpdfn
                 print 'varb'
                 summgene(varb)
+                print 'varbfrst'
+                summgene(varbfrst)
+                print 'varbseco'
+                summgene(varbseco)
                 print
 
-                varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
-                varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
-                imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Blues', label=labl)
-                plt.colorbar(imag)
             else:
                 if gdat.condcatl:
                     varbfrst = zeros(gdat.numbprvlhigh)
@@ -14063,6 +14060,11 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
     else:
         strgmometemp = ''
     path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, '%s%s' % (strgmometemp, strgtotl), nameinte=strgelemtdimvarb + 'tdim/')
+    
+    print 'writing to'
+    print path
+    print
+
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     

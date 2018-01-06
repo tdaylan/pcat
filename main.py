@@ -1203,10 +1203,11 @@ def init( \
                 setp_varblimt(gdat, 'gamm', array([1e-1, 1e0]) * enertemp, strgmodl=strgmodl)
         
     if gdat.numbpixlfull != 1:
-        minmdefs = 0.003 / gdat.anglfact
-        setp_varbvalu(gdat, 'minmdefs', minmdefs)
+        #minmdefs = 0.003 / gdat.anglfact
+        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='true')
         minmdefs = 0.01 / gdat.anglfact
-        setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
+        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
+        setp_varbvalu(gdat, 'minmdefs', minmdefs)
     
     minmnobj = 1e0
     setp_varbvalu(gdat, 'minmnobj', minmnobj)
