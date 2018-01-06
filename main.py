@@ -2175,6 +2175,8 @@ def init( \
                 gdat.liststrgvarblistsamp.append(strg[4:])
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
+    gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
+    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
 
     gdat.indxpoplcrin = 0
     if gdat.fittnumbtrap > 0:
