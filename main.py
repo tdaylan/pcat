@@ -2248,40 +2248,47 @@ def init( \
             gdat.numbsampboot = gdat.numbsamp
     
         gdat.boolcrex = False
-        for q in gdat.indxrefr:
-            for l in gdat.fittindxpopl:
-                for strgfeatfrst in gdat.fittliststrgfeat[l]:
-                    
-                    if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
-                        crex = gdat.meanredswo08**2
-                    else:
-                        crex = None
-                    
-                    setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l, d), crex)
-                    
-                    for strgfeatseco in gdat.fittliststrgfeat[l]:
+        for qq in gdatmock.indxrefr:
+            for q in gdat.indxrefr:
+                for l in gdat.fittindxpopl:
+                    for strgfeatfrst in gdat.fittliststrgfeat[l]:
                         
-                        if not checstrgfeat(strgfeatfrst, strgfeatseco):
-                            continue
-                                    
-                        if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
-                            crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                            if strgfeatfrst == 'redswo08':
-                                crex[:, :] = gdat.meanredswo08[:, None]**2
-                            else:
-                                crex[:, :] = gdat.meanredswo08[None, :]**2
+                        if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
+                            crex = gdat.meanredswo08**2
                         else:
                             crex = None
                         
-                        setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l, d), crex)
+                        setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
+                        
+                        for strgfeatseco in gdat.fittliststrgfeat[l]:
+                            
+                            if not checstrgfeat(strgfeatfrst, strgfeatseco):
+                                continue
+                                        
+                            if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
+                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                                if strgfeatfrst == 'redswo08':
+                                    crex[:, :] = gdat.meanredswo08[:, None]**2
+                                else:
+                                    crex[:, :] = gdat.meanredswo08[None, :]**2
+                            else:
+                                crex = None
+                            
+                            setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
     
-        if gdat.refrnumbelemtotl > 0:
-            for listtemp in gdat.liststrgvarbhist:
-                strgvarb = listtemp[0]
-                for q in gdat.indxrefr:
-                    crexhist = getattr(gdat, 'crex' + strgvarb[4:-8] + 'pop%d' % q + strgvarb[-8:])
-                    if crexhist != None:
-                        gdat.boolcrex = True
+            if gdat.refrnumbelemtotl > 0:
+                for listtemp in gdat.liststrgvarbhist:
+                    strgvarb = listtemp[0]
+                    for qq in gdatmock.indxrefr:
+                        for q in gdat.indxrefr:
+                            nametemp = listtemp[1]
+                            if len(listtemp[2]) > 0:
+                                nametemp += listtemp[2]
+                            l = int(listtemp[4][qq].split('pop')[2][0])
+                            nametemp += 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
+                            crexhist = getattr(gdat, 'crex' + nametemp)
+                            if crexhist != None:
+                                gdat.boolcrex = True
             
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
@@ -3394,7 +3401,7 @@ def work(pathoutprtag, lock, indxprocwork):
            
             initchro(gdat, gdatmodi, 'next', 'save')
         
-            if gdat.savestat:
+            if gdat.savestat and gdat.calcllik:
                 
                 if gdat.namesavestat != None:
                     strgcnfg = gdat.namesavestat
