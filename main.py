@@ -2254,7 +2254,7 @@ def init( \
                     for strgfeatfrst in gdat.fittliststrgfeat[l]:
                         
                         if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
-                            crex = gdat.meanredswo08**2
+                            crex = (1. + gdat.meanredswo08)**2
                         else:
                             crex = None
                         
@@ -2268,9 +2268,9 @@ def init( \
                             if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
                                 crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
                                 if strgfeatfrst == 'redswo08':
-                                    crex[:, :] = gdat.meanredswo08[:, None]**2
+                                    crex[:, :] = (1. + gdat.meanredswo08[:, None])**2
                                 else:
-                                    crex[:, :] = gdat.meanredswo08[None, :]**2
+                                    crex[:, :] = (1. + gdat.meanredswo08[None, :])**2
                             else:
                                 crex = None
                             
@@ -2289,7 +2289,7 @@ def init( \
                             crexhist = getattr(gdat, 'crex' + nametemp)
                             if crexhist != None:
                                 gdat.boolcrex = True
-            
+        
         ## internal correction
         gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
     

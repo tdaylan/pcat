@@ -1199,8 +1199,8 @@ def retr_refrchaninit(gdat):
     gdat.listnamerefr += ['xu11', 'wo08']
     gdat.listnamerefr += ['xu11']
     
-    setattr(gdat, 'minmotyp', -0.5)
-    setattr(gdat, 'maxmotyp', 1.5)
+    setattr(gdat, 'minmotyp', 0.)
+    setattr(gdat, 'maxmotyp', 1.)
     setattr(gdat, 'lablotyp', 'O')
     setattr(gdat, 'factotypplot', 1.)
     setattr(gdat, 'scalotypplot', 'self')
@@ -1249,16 +1249,6 @@ def retr_refrchanfinl(gdat):
         else:
             booltemp = True
     elif gdat.anlytype.startswith('home'):
-        #if gdat.anlytype[4:8] == '2msc':
-        #    gdat.numbpixllgalshft[0] = -152
-        #    gdat.numbpixlbgalshft[0] = 210
-        #if gdat.anlytype[4:8] == '4msc':
-        #    gdat.numbpixllgalshft[0] = 78
-        #    gdat.numbpixlbgalshft[0] = 8
-        #if gdat.anlytype[4:8] == '7msc':
-        #    gdat.numbpixllgalshft[0] = 78
-        #    gdat.numbpixlbgalshft[0] = 8
-        # temp
         gdat.numbpixllgalshft[0] = 0
         gdat.numbpixlbgalshft[0] = 0
     
@@ -1326,14 +1316,14 @@ def retr_refrchanfinl(gdat):
         gdat.refrsind[0][0] = -log(gdat.refrspec[0][0][0, 1, :] / gdat.refrspec[0][0][0, 0, :]) / log(sqrt(7. / 2.) / sqrt(0.5 * 2.))
 
     ## object type
+    objttypechantemp = zeros(lgalchan.size) - 1.
     indx = where(objttypechan == 'AGN')[0]
-    objttypechan[indx] = 0
+    objttypechantemp[indx] = 0.165
     indx = where(objttypechan == 'Galaxy')[0]
-    objttypechan[indx] = 1
+    objttypechantemp[indx] = 0.495
     indx = where(objttypechan == 'Star')[0]
-    objttypechan[indx] = 2
-    objttypechan = objttypechan.astype(int)
-    gdat.refrotyp[0][0] = objttypechan.astype(float)
+    objttypechantemp[indx] = 0.835
+    gdat.refrotyp[0][0] = objttypechantemp
 
     # Wolf et al. (2011)
     path = gdat.pathdata + 'inpt/Wolf2008.fits'
@@ -1349,11 +1339,16 @@ def retr_refrchanfinl(gdat):
     #    if not data['MCclass'][k] in listname:
     #        listname.append(data['MCclass'][k])
     listname = ['Galaxy', 'Galaxy  (Uncl!)', 'QSO     (Gal?)', 'Galaxy  (Star?)', 'Star', 'Strange Object', 'QSO', 'WDwarf']
-    gdat.refrotyp[1][0] = empty_like(gdat.refrreds[1][0]) 
+    gdat.refrotyp[1][0] = zeros_like(gdat.refrreds[1][0]) - 1. 
     for k, name in enumerate(listname):
-        indx = where(gdat.refrotyp[1][0] == name)
-        gdat.refrotyp[1][0][indx] = k
-     
+        indx = where(data['MCclass'] == name)[0]
+        gdat.refrotyp[1][0][indx] = k / 10.
+    
+    print 'gdat.refrotyp[1][0]'
+    print gdat.refrotyp[1][0]
+    summgene(gdat.refrotyp[1][0])
+    print
+
     # error budget
     for name in ['lgal', 'bgal', 'sind', 'otyp', 'lumi', 'magt', 'reds']:
         refrtile = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
@@ -11603,7 +11598,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             continue
                         if len(liststrgcompvarbhist[2]) > 0 and (liststrgcompvarbhist[2] == 'spec' or liststrgcompvarbhist[2] == 'deflprof' or liststrgcompvarbhist[2] == 'specplot'):
                             continue
-
+                        
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
@@ -11611,40 +11606,41 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             d = int(liststrgcompvarbhist[3][qq].split('reg')[1][0])
                             l = int(liststrgcompvarbhist[3][qq].split('pop')[1][0])
                             qq = int(liststrgcompvarbhist[3][qq].split('pop')[2][0])
-                            if liststrgcompvarbhist[1][-4:] in gdatfinl.listnamerefr and (liststrgcompvarbhist[2][-4:] in gdatfinl.listnamerefr or \
-                                                                                                                            len(liststrgcompvarbhist[2]) == 0):
-                                continue
-                            elif liststrgcompvarbhist[1][-4:] in gdatfinl.listnamerefr and len(liststrgcompvarbhist[2]) > 0:
-                                listcmpltrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (l, qq, d))], 2)
-                                listfdistrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (qq, l, d))], 2)
-                            elif len(liststrgcompvarbhist[2][:-4]) > 0 and liststrgcompvarbhist[2][-4:] in gdatfinl.listnamerefr:
-                                listcmpltrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (l, qq, d))], 1)
-                                listfdistrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (qq, l, d))], 1)
+                            if liststrgcompvarbhist[1][-4:] in gdatfinl.listnamerefr and \
+                                    (len(liststrgcompvarbhist[2]) == 0 or liststrgcompvarbhist[2][-4:] in gdatfinl.listnamerefr):
+                                listhistincr = listhist
                             else:
-                                listcmpltrue = getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[3][qq])
-                                listfdistrue = getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[3][qq])
-                            if len(liststrgcompvarbhist[2]) == 0:
-                                listcmplboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
-                                listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
-                                listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
-                                for k in gdatfinl.indxbinsplot:
-                                    listcmplboot[:, k] = choice(listcmpltrue[:, k], size=gdatfinl.numbsampboot)
-                                    listfdisboot[:, k] = choice(listfdistrue[:, k], size=gdatfinl.numbsampboot)
-                                    listhistboot[:, k] = choice(listhist[:, k], size=gdatfinl.numbsampboot)
-                            else:
-                                listcmplboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
-                                listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
-                                listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
-                                for a in gdatfinl.indxbinsplot:
-                                    for b in gdatfinl.indxbinsplot:
-                                        listcmplboot[:, a, b] = choice(listcmpltrue[:, a, b], size=gdatfinl.numbsampboot)
-                                        listfdisboot[:, a, b] = choice(listfdistrue[:, a, b], size=gdatfinl.numbsampboot)
-                                        listhistboot[:, a, b] = choice(listhist[:, a, b], size=gdatfinl.numbsampboot)
-                            indxbadd = where(listcmplboot == -1)
-                            indxbaddzero = where(listcmplboot == 0.)
-                            listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
-                            listhistincr[indxbadd] = -1.5
-                            listhistincr[indxbaddzero] = 1.5
+                                if liststrgcompvarbhist[1][-4:] in gdatfinl.listnamerefr and len(liststrgcompvarbhist[2]) > 0:
+                                    listcmpltrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (l, qq, d))], 2)
+                                    listfdistrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[2] + 'pop%dpop%dreg%d' % (qq, l, d))], 2)
+                                elif len(liststrgcompvarbhist[2][:-4]) > 0 and liststrgcompvarbhist[2][-4:] in gdatfinl.listnamerefr:
+                                    listcmpltrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (l, qq, d))], 1)
+                                    listfdistrue = stack(gdatfinl.numbbinsplot * [getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[1] + 'pop%dpop%dreg%d' % (qq, l, d))], 1)
+                                else:
+                                    listcmpltrue = getattr(gdatmock, 'listpostcmpl' + liststrgcompvarbhist[3][qq])
+                                    listfdistrue = getattr(gdatmock, 'listpostfdis' + liststrgcompvarbhist[3][qq])
+                                if len(liststrgcompvarbhist[2]) == 0:
+                                    listcmplboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
+                                    listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
+                                    listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
+                                    for k in gdatfinl.indxbinsplot:
+                                        listcmplboot[:, k] = choice(listcmpltrue[:, k], size=gdatfinl.numbsampboot)
+                                        listfdisboot[:, k] = choice(listfdistrue[:, k], size=gdatfinl.numbsampboot)
+                                        listhistboot[:, k] = choice(listhist[:, k], size=gdatfinl.numbsampboot)
+                                else:
+                                    listcmplboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
+                                    listfdisboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
+                                    listhistboot = empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot, gdatfinl.numbbinsplot))
+                                    for a in gdatfinl.indxbinsplot:
+                                        for b in gdatfinl.indxbinsplot:
+                                            listcmplboot[:, a, b] = choice(listcmpltrue[:, a, b], size=gdatfinl.numbsampboot)
+                                            listfdisboot[:, a, b] = choice(listfdistrue[:, a, b], size=gdatfinl.numbsampboot)
+                                            listhistboot[:, a, b] = choice(listhist[:, a, b], size=gdatfinl.numbsampboot)
+                                indxbadd = where(listcmplboot == -1)
+                                indxbaddzero = where(listcmplboot == 0.)
+                                listhistincr = listhistboot / listcmplboot * (1. - listfdisboot)
+                                listhistincr[indxbadd] = -1.5
+                                listhistincr[indxbaddzero] = 1.5
                             
                             gdatfinl.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
                             setattr(gdatfinl, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
@@ -11656,20 +11652,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                     nametemp += liststrgcompvarbhist[2]
                                 nametemp += 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
                                 crexhist = getattr(gdatfinl, 'crex' + nametemp)
-                                if 'reds' in nametemp:
-                                    print 'trying %s...' % nametemp
                                 if crexhist != None:
                                     
-                                    listhistexcr = listhistincr / crexhist 
-                                    
-                                    if len(liststrgcompvarbhist[2]) == 0:
-                                        print 'strgvarb'
-                                        print strgvarb
-                                        print 'externally correcting...'
-                                        print 'crexhist'
-                                        summgene(crexhist)
-                                        print 'listhistexcr'
-                                        summgene(listhistexcr)
+                                    listhistexcr = listhistincr * crexhist 
                                     
                                     if crexhist.ndim == 1 and listhistincr.ndim == 3:
                                         raise Exception('')
@@ -12840,14 +12825,16 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     nameinte = namecorr + 'odim/'
                                     for qq in gdatmock.indxrefr:
                                         if namecorr == 'excr':
-                                            for q in gdat.indxrefr:
-                                                if getattr(gdat, 'crex' + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)) == None:
-                                                    continue
-                                                name = namecorr + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
-                                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
-                                                                  lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype='totl', \
-                                                                  scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
-                                                                  nameinte=nameinte)
+                                            if not strgfeat in gdat.fittliststrgfeatextr[l]:
+                                                continue
+                                            q = gdat.listnamerefr.index(strgfeat[-4:])
+                                            if getattr(gdat, 'crex' + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)) == None:
+                                                continue
+                                            name = namecorr + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
+                                            plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
+                                                              lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype='totl', \
+                                                              scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
+                                                              nameinte=nameinte)
                
                                         else:
                                             if strgfeat in gdat.fittliststrgfeatextr[l]:
@@ -14038,16 +14025,6 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
     factplotfrst = getattr(gdat, 'fact' + strgfrst + 'plot')
     factplotseco = getattr(gdat, 'fact' + strgseco + 'plot')
    
-    print 'strgtotl'
-    print strgtotl
-    print 'strgelemtdimtype'
-    print strgelemtdimtype
-    print
-    if strgtotl.startswith('hist') or strgtotl.startswith('exr') or strgtotl.startswith('incr'):
-        normtdim = None
-    else:
-        normtdim = colors.LogNorm(0.5, vmax=amax(varb))
-
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     if strgmodl == 'fitt':
         colrtemp = gdat.fittcolrelem[indxpoplfrst]
@@ -14055,27 +14032,15 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
             labl = gdat.legdsampdist + ' ' + legdmome
             if strgelemtdimtype == 'bind':
                 varb = getattr(gdat, strgmome + strgpdfn + strgtotl)
-                
                 varbfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
                 varbseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
+                if strgtotl.startswith('hist') or strgtotl.startswith('exr') or strgtotl.startswith('incr') or amax(varb) <= 0.:
+                    normtdim = None
+                else:
+                    normtdim = mpl.colors.LogNorm(0.5, vmax=amax(varb))
                 imag = axis.pcolor(varbfrst, varbseco, varb.T, cmap='Blues', label=labl, norm=normtdim)
-                #plt.colorbar(imag)
                 make_cbar(gdat, axis, imag)
                 
-                print 'strgtotl'
-                print strgtotl
-                print 'strgmome'
-                print strgmome
-                print 'strgpdfn'
-                print strgpdfn
-                print 'varb'
-                summgene(varb)
-                print 'varbfrst'
-                summgene(varbfrst)
-                print 'varbseco'
-                summgene(varbseco)
-                print
-
             else:
                 if gdat.condcatl:
                     varbfrst = zeros(gdat.numbprvlhigh)
@@ -14093,6 +14058,10 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                 meanfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
                 meanseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
                 hist = getattr(gdatmodi, strgstat + strgtotl)
+                if strgtotl.startswith('hist') or strgtotl.startswith('exr') or strgtotl.startswith('incr') or amax(varb) <= 0.:
+                    normtdim = None
+                else:
+                    normtdim = mpl.colors.LogNorm(0.5, vmax=amax(hist))
                 imag = axis.pcolor(meanfrst, meanseco, hist.T, cmap='Blues', label=gdat.legdsamp, alpha=gdat.alphhist, norm=normtdim)
             else:
                 varbfrst = getattr(gdatmodi, 'this' + strgfrst)[indxpoplfrst][indxregifrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
@@ -14104,11 +14073,19 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
     
     # reference elements
     if gdat.allwrefr:
-        if hasattr(gdat, 'refr' + strgfrst) and hasattr(gdat, 'refr' + strgseco):
+        if strgfrst[-4:] in gdat.listnamerefr:
+            strgfrsttemp = strgfrst[-4:]
+        else:
+            strgfrsttemp = strgfrst
+        if strgseco[-4:] in gdat.listnamerefr:
+            strgsecotemp = strgseco[-4:]
+        else:
+            strgsecotemp = strgseco
+        if hasattr(gdat, 'refr' + strgfrsttemp) and hasattr(gdat, 'refr' + strgsecotemp):
             for q in gdat.indxrefr:
-                if strgfrst in gdat.refrliststrgfeat[q] and strgseco in gdat.refrliststrgfeat[q]:
-                    refrvarbfrst = getattr(gdat, 'refr' + strgfrst)[q][indxregifrst] * getattr(gdat, 'fact' + strgfrst + 'plot')
-                    refrvarbseco = getattr(gdat, 'refr' + strgseco)[q][indxregifrst] * getattr(gdat, 'fact' + strgseco + 'plot')
+                if strgfrsttemp in gdat.refrliststrgfeat[q] and strgsecotemp in gdat.refrliststrgfeat[q]:
+                    refrvarbfrst = getattr(gdat, 'refr' + strgfrsttemp)[q][indxregifrst] * getattr(gdat, 'fact' + strgfrsttemp + 'plot')
+                    refrvarbseco = getattr(gdat, 'refr' + strgsecotemp)[q][indxregifrst] * getattr(gdat, 'fact' + strgsecotemp + 'plot')
                     if len(refrvarbfrst) == 0 or len(refrvarbseco) == 0:
                         refrvarbfrst = array([limtfrst[0] * factplotfrst * 0.1])
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
@@ -14137,10 +14114,6 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
         strgmometemp = ''
     path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, '%s%s' % (strgmometemp, strgtotl), nameinte=strgelemtdimvarb + 'tdim/')
     
-    print 'writing to'
-    print path
-    print
-
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
@@ -14232,18 +14205,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 ##  other
                 labl = gdat.legdsampdist
             
-            print 'strgydat'
-            print strgydat
-            print 'xdat'
-            summgene(xdat)
-            print 'ydat'
-            summgene(ydat)
-            print 'xerr'
-            summgene(xerr)
-            print 'yerr'
-            summgene(yerr)
-            print
-
             temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
             for caps in listcaps:
                 caps.set_markeredgewidth(1)
@@ -14277,12 +14238,25 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 name = 'psfnexpr'
             else:
                 if boolelem:
-                    name = 'refr' + strgydat[:-8] + 'pop%d' % q + strgydat[-4:]
+                    if strgydat[-12:-8] in gdat.listnamerefr:
+                        name = 'refr' + strgydat[:-12] + 'pop%d' % q + strgydat[-4:]
+                    else:
+                        name = 'refr' + strgydat[:-8] + 'pop%d' % q + strgydat[-4:]
                 else:
                     name = 'refr' + strgydat
             
+            if 'reds' in name:
+                print 'strgydat'
+                print strgydat
+                print 'name'
+                print name
+                print
+
             if not hasattr(gdat, name):
                 continue
+
+            if 'reds' in name:
+                print 'passed'
 
             ydattemp = getattr(gdat, name)
             
@@ -14296,6 +14270,12 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             else:
                 legd = gdat.refrlegd
                 colr = gdat.refrcolr
+            
+            if 'reds' in name:
+                print 'ydat'
+                summgene(ydat)
+                print 
+            
             if histodim:
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=5, edgecolor=colr)
             else:
