@@ -14069,7 +14069,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                 meanfrst = getattr(gdat, 'bins' + strgfrst) * getattr(gdat, 'fact' + strgfrst + 'plot')
                 meanseco = getattr(gdat, 'bins' + strgseco) * getattr(gdat, 'fact' + strgseco + 'plot')
                 hist = getattr(gdatmodi, strgstat + strgtotl)
-                if strgtotl.startswith('hist') or strgtotl.startswith('exr') or strgtotl.startswith('incr') or amax(varb) <= 0.:
+                if strgtotl.startswith('hist') or strgtotl.startswith('exr') or strgtotl.startswith('incr') or amax(hist) <= 0.:
                     normtdim = None
                 else:
                     normtdim = mpl.colors.LogNorm(0.5, vmax=amax(hist))
@@ -14217,7 +14217,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 labl = gdat.legdsampdist
             
             # draw points
-            indxerrr = where(yerr[1, :] > yerr[0., :])[0]
+            indxerrr = where(yerr[1, :] > yerr[0, :])[0]
             if indxerrr.size > 0:
                 labltemp = None
             else:
@@ -14225,7 +14225,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
             
             # draw error-bar caps 
-            if indxerr.size > 0:
+            if indxerrr.size > 0:
                 temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
                                                                                                 marker='o', ls='', markersize=5, color=colr, label=labl, lw=1, capsize=5)
             for caps in listcaps:
