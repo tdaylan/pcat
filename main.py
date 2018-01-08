@@ -2065,7 +2065,8 @@ def init( \
         # plot settings
         ## upper limit of histograms
         if gdat.allwrefr:
-            gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
+            #gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
+            gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.refrnumbelemtotl))]
         else:
             gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
             #if gdat.datatype == 'mock':
@@ -2248,33 +2249,34 @@ def init( \
             gdat.numbsampboot = gdat.numbsamp
     
         gdat.boolcrex = False
-        for qq in gdatmock.indxrefr:
-            for q in gdat.indxrefr:
-                for l in gdat.fittindxpopl:
-                    for strgfeatfrst in gdat.fittliststrgfeat[l]:
-                        
-                        if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
-                            crex = (1. + gdat.meanredswo08)**2
-                        else:
-                            crex = None
-                        
-                        setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
-                        
-                        for strgfeatseco in gdat.fittliststrgfeat[l]:
+        if gdat.rtagmock != None:
+            for qq in gdatmock.indxrefr:
+                for q in gdat.indxrefr:
+                    for l in gdat.fittindxpopl:
+                        for strgfeatfrst in gdat.fittliststrgfeat[l]:
                             
-                            if not checstrgfeat(strgfeatfrst, strgfeatseco):
-                                continue
-                                        
-                            if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
-                                crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
-                                if strgfeatfrst == 'redswo08':
-                                    crex[:, :] = (1. + gdat.meanredswo08[:, None])**2
-                                else:
-                                    crex[:, :] = (1. + gdat.meanredswo08[None, :])**2
+                            if gdat.exprtype == 'chan' and strgfeatfrst == 'redswo08':
+                                crex = (1. + gdat.meanredswo08)**2
                             else:
                                 crex = None
                             
-                            setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
+                            setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
+                            
+                            for strgfeatseco in gdat.fittliststrgfeat[l]:
+                                
+                                if not checstrgfeat(strgfeatfrst, strgfeatseco):
+                                    continue
+                                            
+                                if gdat.exprtype == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
+                                    crex = empty((gdat.numbbinsplot, gdat.numbbinsplot))
+                                    if strgfeatfrst == 'redswo08':
+                                        crex[:, :] = (1. + gdat.meanredswo08[:, None])**2
+                                    else:
+                                        crex[:, :] = (1. + gdat.meanredswo08[None, :])**2
+                                else:
+                                    crex = None
+                                
+                                setattr(gdat, 'crex' + strgfeatfrst + strgfeatseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d), crex)
     
             if gdat.refrnumbelemtotl > 0:
                 for listtemp in gdat.liststrgvarbhist:

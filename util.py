@@ -1344,11 +1344,6 @@ def retr_refrchanfinl(gdat):
         indx = where(data['MCclass'] == name)[0]
         gdat.refrotyp[1][0][indx] = k / 10.
     
-    print 'gdat.refrotyp[1][0]'
-    print gdat.refrotyp[1][0]
-    summgene(gdat.refrotyp[1][0])
-    print
-
     # error budget
     for name in ['lgal', 'bgal', 'sind', 'otyp', 'lumi', 'magt', 'reds']:
         refrtile = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
@@ -3807,8 +3802,8 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.datatype == 'inpt':
             gdat.minmlum0 = 1e42
             gdat.maxmlum0 = 1e46
-        gdat.minmlumi = 1e42
-        gdat.maxmlumi = 1e46
+        gdat.minmlumi = 1e41
+        gdat.maxmlumi = 1e45
     
     try:
         gdat.minmdlos
@@ -5793,8 +5788,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                         ampl = 1.
                         func = gdat.meanbgalcart 
                     if namebfun == 'bfunwfou':
-                        ampl = sqrt(gdat.fdfmderiintp)
-                        func = gdat.fdfmintp
+                        functemp = exp(-0.5 * (gdat.meanbgalcart / (1. / gdat.anglfact))**2)
+                        ampl = sqrt(functemp)
+                        func = functemp
                     argslgal = 2. * pi * indxexpaxdat * gdat.meanlgalcart / gdat.maxmgangdata
                     argsbgal = 2. * pi * indxexpaydat * func / gdat.maxmgangdata
                     if indxterm == 0:
@@ -6151,6 +6147,12 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                             #            liststrgfeatodim[l].append(nametemp + gdat.listnamerefr[q])
                             #            gdat.fittliststrgfeatextr[l].append(nametemptemp)
         
+        if gdat.exprtype == 'chan':
+            for l in indxpopl:
+                if elemtype[l] == 'lghtpnts':
+                    gdat.fittliststrgfeatextr[l].append('lumiwo08')
+                    liststrgfeatodim[l].append('lumiwo08')
+
         # defaults
         liststrgpdfnmodu = [[] for l in indxpopl]
         liststrgfeatmodu = [[] for l in indxpopl]
@@ -7395,10 +7397,10 @@ def plot_chro(gdat):
         plt.close(figr)
 
 
-def make_legd(axis, offs=None, loca=1, numbcols=1):
-    
-    legd = axis.legend(fancybox=True, frameon=True, bbox_to_anchor=offs, bbox_transform=axis.transAxes, ncol=numbcols, loc=loca, labelspacing=1, handlelength=2)
-    
+def make_legd(axis, offs=None, loca=1, numbcols=1, ptch=None, line=None):
+   
+    hand, labl = axis.get_legend_handles_labels()
+    legd = axis.legend(hand, labl, fancybox=True, frameon=True, bbox_to_anchor=offs, bbox_transform=axis.transAxes, ncol=numbcols, loc=loca, labelspacing=1, handlelength=2)
     try:
         legd.get_frame().set_fill(True)
         legd.get_frame().set_facecolor('white')
@@ -10152,14 +10154,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for d in indxregipopl[l]:
                                 dictelem[l][d]['lumi' + namerefr] = zeros(numbelem[l][d]) + nan
                                 dictelem[l][d]['dlos' + namerefr] = zeros(numbelem[l][d]) + nan
+                                print 'strgfeat'
+                                print strgfeat
+                                print 'namerefr'
+                                print namerefr
+
                                 reds = dictelem[l][d]['reds' + namerefr]
                                 indxgood = where(isfinite(dictelem[l][d]['reds' + namerefr]))[0]
                                 if indxgood.size > 0:
                                     # temp -- these units only work for energy units of keV
                                     dlos = gdat.adisobjt(reds)
                                     dictelem[l][d]['dlos' + namerefr][indxgood] = dlos
-                                    lumi = retr_lumi(gdat, dictelem[l][d]['flux'], dlos, reds)
+                                    print 'HACKING'
+                                    lumi = retr_lumi(gdat, dictelem[l][d]['flux'], dlos, reds) / 4e3
+                                    print 'lumi'
+                                    print lumi
                                     dictelem[l][d]['lumi' + namerefr][indxgood] = lumi
+                                print
             
                 if elemtype[l] == 'lghtpntsagnntrue':
                     dictelem[l][d]['reds'] = gdat.redsfromdlosobjt(dictelem[l][d]['dlos'])
@@ -12807,7 +12818,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                                                                                         lablxdat=gdat.lablcnts, lablydat=gdat.lablcntsbackfwhm)
         
                 # internally and externally corrected element feature histograms
-                if gdat.datatype == 'inpt' and not (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt') and gdat.rtagmock != None:
+                if gdat.datatype == 'inpt' and strgstat == 'pdfn' and gdat.rtagmock != None:
                     limtydat = gdat.limtydathistfeat
                     factydat = 1.
                     for l in indxpopl:
@@ -14205,7 +14216,18 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 ##  other
                 labl = gdat.legdsampdist
             
-            temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, color='black', label=labl, lw=1, capsize=10)
+            # draw points
+            indxerrr = where(yerr[1, :] > yerr[0., :])[0]
+            if indxerrr.size > 0:
+                labltemp = None
+            else:
+                labltemp = labl
+            axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
+            
+            # draw error-bar caps 
+            if indxerr.size > 0:
+                temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
+                                                                                                marker='o', ls='', markersize=5, color=colr, label=labl, lw=1, capsize=5)
             for caps in listcaps:
                 caps.set_markeredgewidth(1)
 
@@ -14217,14 +14239,14 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 legd = gdat.legdmlik
 
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5, linewidth=5, edgecolor=colr)
+                axis.bar(xdattemp, ydat, deltxdat, label=gdat.legdsamp, alpha=0.5, linewidth=1, edgecolor=colr)
             else:
                 if plottype == 'errr':
                     yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
 
                     if indxydat != None:
                         yerr = yerr[[slice(None)] + indxydat]
-                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, label=legd, lw=1, capsize=10, color=colr)
+                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, label=legd, lw=1, capsize=5, color=colr)
                     for caps in listcaps:
                         caps.set_markeredgewidth(1)
                 else:
@@ -14277,7 +14299,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 print 
             
             if histodim:
-                axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=5, edgecolor=colr)
+                axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=1, edgecolor=colr)
             else:
                 axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphline)
             if not boolelem:
@@ -14288,7 +14310,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-12:])
         else:
             ydattemp = getattr(gdat, 'histcntpdata' + strgydat[-8:])
-        axis.bar(xdattemp, ydattemp, deltxdat, color='black', label='Data', alpha=gdat.alphhist, linewidth=5, edgecolor='black')
+        axis.bar(xdattemp, ydattemp, deltxdat, color='black', label='Data', alpha=gdat.alphhist, linewidth=1, edgecolor='black')
                 
     # axis scales
     if scalxdat == 'logt':
@@ -14305,6 +14327,9 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     liststrgfeattotl = getattr(gdat, strgmodl + 'liststrgfeattotl')
     liststrgfeatprio = getattr(gdat, strgmodl + 'liststrgfeatprio')
     
+    ptch = None
+    line = None
+
     if strgydat.startswith('hist') and strgydat != 'histdefl' and strgydat != 'histdeflelem':
         if strgydat[-8:-5] == 'pop':
             if strgydat[4:-8] in liststrgfeatprio[int(strgydat[-5])]:
@@ -14331,7 +14356,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                         #ydatsupr = getattr(gdattemp, 'pmea' + strgydat + 'prio') * factydat
                         #yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio') * factydat
                         labl = gdat.legdsampdist + ' hyper-distribution'
-                        tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
+                        ptch, line = tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
                     else:
                         #ydatsupr = getattr(gdattemp, strgstat + strgydat + 'prio') * factydat
                         axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphline, color=gdat.fittcolrelem[int(strgydat[-5])])
@@ -14365,7 +14390,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         strgydat += ydattype
 
     try:
-        make_legd(axis, offs=offslegd)
+        make_legd(axis, offs=offslegd, ptch=ptch, line=line)
     except:
         print 'Legend failed when'
         print 'strgstat'
@@ -14492,7 +14517,7 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, in
     colr = gdat.fittcolr
 
     if strgstat == 'pdfn':
-        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color=gdat.fittcolr, capsize=10)
+        axis.errorbar(xdat, ydat, yerr=yerr, marker='o', ls='', markersize=5, color=gdat.fittcolr, capsize=5)
     else:
         axis.plot(xdat, ydat, marker='o', ls='', markersize=5, color=gdat.fittcolr)
     gdat.limtcntpdata = [gdat.binscntpdata[0], gdat.binscntpdata[-1]]
