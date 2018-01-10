@@ -5,6 +5,7 @@ rtag = sys.argv[1]
 strgplot = sys.argv[2]
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/%s/post/fram/' % rtag
 listpathfram = array(fnmatch.filter(os.listdir(pathimag), '*%s*.pdf' % strgplot))
+listpathfram = sort(listpathfram)
 print 'listpathfram'
 print listpathfram
 cmnd = 'convert -density 200x200 '
