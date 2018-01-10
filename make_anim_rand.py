@@ -12,7 +12,7 @@ if len(sys.argv) == 3:
 else:
     indxframloww = int(numbfram * float(sys.argv[3]))
 indxfram = arange(indxframloww, numbfram)
-indxframrand = choice(indxfram, size=numbfram, replace=False).astype(int)
+indxframrand = choice(indxfram, size=indxfram.size, replace=False).astype(int)
 for pathfram in listpathfram[indxframrand]:
     cmnd += '%s/%s ' % (pathimag, pathfram)
     print '%s/%s ' % (pathimag, pathfram)
