@@ -3477,9 +3477,9 @@ def setpinit(gdat, boolinitsetp=False):
     
     ## names of the variables for which cumulative posteriors will be plotted
     if 'lens' in gdat.fittelemtype:
-        gdat.listnamevarbcpos = ['convelem']
+        gdat.listnamevarbcpct = ['convelem']
     else:
-        gdat.listnamevarbcpos = []
+        gdat.listnamevarbcpct = []
 
     if gdat.numbpixlfull != 1:
         gdat.ascaglob = 0.05 / gdat.anglfact
@@ -11393,9 +11393,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             else:   
                 gdatfinl = gdatinit
         
-        print 'HACKING'
-        gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
-        gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
+        #print 'HACKING'
+        #gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
+        #gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
                     
         if booltile:
             gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
@@ -11435,13 +11435,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                         for k, varb in enumerate(listvarb):
                             listvarbtemp[k*gdatfinl.numbsamptotl:(k+1)*gdatfinl.numbsamptotl, ...] = varb
                     
-                    if strgvarb == 'histlgalpop0reg0':
-                        print 'strgvarb'
-                        print strgvarb
-                        print 'listvarbtemp'
-                        summgene(listvarbtemp)
-                        print
-
                     setattr(gdatfinl, 'list' + strgpdfn + strgvarb, listvarbtemp)
         
         else:
@@ -11749,7 +11742,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 stdvtemp = std(pctltemp, axis=0)
                 meditemp = pctltemp[0, ...]
                 
-                if strgchan in gdatfinl.listnamevarbcpos:
+                if strgchan in gdatfinl.listnamevarbcpct:
                     cpcttemp = empty([listtemp.shape[0]] + [3] + list(listtemp.shape[1:]))
                     for n in gdatfinl.indxsamptotl:
                         cpcttemp[n, ...] = tdpy.util.retr_pctlvarb(listtemp[:n+1, ...])
@@ -11759,7 +11752,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             setattr(gdatfinl, 'pmea' + strgpdfn + strgchan, pmeatemp)
             setattr(gdatfinl, 'errr' + strgpdfn + strgchan, errrtemp)
             setattr(gdatfinl, 'stdv' + strgpdfn + strgchan, stdvtemp)
-            if strgchan in gdatfinl.listnamevarbcpos:
+            if strgchan in gdatfinl.listnamevarbcpct:
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
         
         if gdatfinl.checprio:
@@ -11914,20 +11907,8 @@ def make_cmap(seq):
 
 def setp_pdfnvarb(gdat, strgpdfn, name, namefull, nameseco=None):
     
-    #print 'setp_pdfnvarb()'
-    #print 'strgpdfn'
-    #print strgpdfn
-    #print 'name'
-    #print name
-    #print 'namefull'
-    #print namefull
-    
     meanvarb = getattr(gdat, 'mean' + name)
     listvarb = getattr(gdat, 'list' + strgpdfn + namefull)
-    
-    #print 'listvarb'
-    #summgene(listvarb)
-    #print
     
     if listvarb.ndim == 1:
         shaptemp = [gdat.numbbinspdfn, 1]
@@ -13526,14 +13507,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 else:
                     raise Exception('')
                 
-            print 'listvarb'
-            summgene(listvarb)
-            print 'listvarbseco'
-            summgene(listvarbseco)
-            print 
-            
             listjoin = vstack((listvarb, listvarbseco)).T
-    
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
 
@@ -14228,8 +14202,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             if indxerrr.size > 0:
                 temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
                                                                                                 marker='o', ls='', markersize=5, color=colr, label=labl, lw=1, capsize=5)
-            for caps in listcaps:
-                caps.set_markeredgewidth(1)
+                for caps in listcaps:
+                    caps.set_markeredgewidth(1)
 
         elif strgstat == 'this' or strgstat == 'mlik':
             
