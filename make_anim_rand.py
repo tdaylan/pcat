@@ -11,7 +11,6 @@ pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/%s/post/fram/' % rtag
 listpathfram = array(fnmatch.filter(os.listdir(pathimag), '*%s*.pdf' % strgplot))
 cmnd = 'convert -density 200x200 '
 numbfram = len(listpathfram)
-indxframloww = 
 indxfram = arange(indxframloww, numbfram)
 indxframrand = choice(indxfram, size=numbfram, replace=False).astype(int)
 for pathfram in listpathfram[indxframrand]:
