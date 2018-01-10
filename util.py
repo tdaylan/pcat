@@ -11393,10 +11393,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             else:   
                 gdatfinl = gdatinit
         
-        #print 'HACKING'
-        #gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
-        #gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
-                    
         if booltile:
             gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
             makefold(gdatfinl)
@@ -11671,6 +11667,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             print 'Computing credible intervals...'
             timeinit = gdatfinl.functime()
        
+        print 'HACKING'
+        gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
+        gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
+                    
         for strgchan in gdatfinl.liststrgchan:
             
             if booltile:
