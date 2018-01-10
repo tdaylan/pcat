@@ -3480,7 +3480,7 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.listnamevarbcpct = ['convelem']
     else:
         gdat.listnamevarbcpct = []
-
+    
     if gdat.numbpixlfull != 1:
         gdat.ascaglob = 0.05 / gdat.anglfact
         gdat.acutglob = 1. / gdat.anglfact
@@ -11670,6 +11670,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         print 'HACKING'
         gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
         gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
+        try:
+            gdatfinl.listnamevarbcpct = gdatfinl.listnamevarbcpos
+        except:
+            pass
                     
         for strgchan in gdatfinl.liststrgchan:
             
