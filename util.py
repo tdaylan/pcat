@@ -9488,12 +9488,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         cntp = dict()
         cntp['modl'] = retr_cntp(gdat, sbrt['modl'], indxregieval, indxcubeeval)
         
-        print 'cntp[modl][0]'
-        summgene(cntp['modl'][0])
-        print
-        if amax(cntp['modl'][0]) > 1e4:
-            raise Exception('')
-
         if gdat.diagmode:
             setattr(gdatobjt, strgpfix + 'cntpmodl', cntp['modl'])
         stopchro(gdat, gdatmodi, strgstat, 'expo')
@@ -9983,7 +9977,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     convpsecelemodim = zeros((gdat.numbregi, gdat.numbsidecart / 2))
                     for d in gdat.indxregi:
                         ### convergence
+                        print 'deflsubh[d]'
+                        summgene(deflsubh[d] * gdat.anglfact)
+
                         convelem[d, :] = retr_conv(gdat, deflsubh[d]) 
+                        
+                        print 'convelem[d, :]'
+                        summgene(convelem[d, :])
+                        print
 
                         ###  power spectrum
                         ##### two dimensional
