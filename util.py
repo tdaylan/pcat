@@ -1040,8 +1040,18 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
    
     cntp = [[] for d in indxregieval]
     for dd, d in enumerate(indxregieval):
+        print 'gdat.expo[d]'
+        summgene(gdat.expo[d])
+        print 'gdat.apix'
+        print gdat.apix
+        print 'gdat.apix * gdat.anglfact**2'
+        print gdat.apix * gdat.anglfact**2
+        print 'sbrt[dd]'
+        summgene(sbrt[dd])
         cntp[dd] = sbrt[dd] * gdat.expo[d][indxcubeeval[0][dd]] * gdat.apix
         if gdat.enerdiff:
+            print 'gdat.deltener'
+            print gdat.deltener
             cntp[dd] *= gdat.deltener[indxcubeeval[0][dd][0]]
         
     return cntp
@@ -3522,6 +3532,9 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
             setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
             for e in gdat.fittindxsersfgrd[d]:
+                print 'lablmasshostreg%disf%dintg % (d, e)'
+                print 'lablmasshostreg%disf%dintg' % (d, e)
+                print
                 setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
@@ -9474,6 +9487,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         initchro(gdat, gdatmodi, strgstat, 'expo')
         cntp = dict()
         cntp['modl'] = retr_cntp(gdat, sbrt['modl'], indxregieval, indxcubeeval)
+        
+        print 'cntp[modl][0]'
+        summgene(cntp['modl'][0])
+        print
+        if amax(cntp['modl'][0]) > 1e4:
+            raise Exception('')
+
         if gdat.diagmode:
             setattr(gdatobjt, strgpfix + 'cntpmodl', cntp['modl'])
         stopchro(gdat, gdatmodi, strgstat, 'expo')
@@ -11584,6 +11604,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     # temp
                     print 'HACKING!'
                     gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180105_202051_pcat_chan_mock_nomi_100000')
+                    
 
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
@@ -11596,9 +11617,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                             continue
                         if liststrgcompvarbhist[1] == 'spec' or liststrgcompvarbhist[1] == 'deflprof' or liststrgcompvarbhist[1] == 'specplot':
                             continue
-                        if len(liststrgcompvarbhist[2]) > 0 and (liststrgcompvarbhist[2] == 'spec' or liststrgcompvarbhist[2] == 'deflprof' or liststrgcompvarbhist[2] == 'specplot'):
+                        if len(liststrgcompvarbhist[2]) > 0 and (liststrgcompvarbhist[2] == 'spec' or \
+                                    liststrgcompvarbhist[2] == 'deflprof' or liststrgcompvarbhist[2] == 'specplot'):
                             continue
                         
+                        print 'meeeeey'
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
@@ -11643,6 +11666,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                 listhistincr[indxbaddzero] = 1.5
                             
                             gdatfinl.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
+                            print 'liststrgcompvarbhist[4][qq]'
+                            print liststrgcompvarbhist[4][qq]
+                            if ('listpostincr' + liststrgcompvarbhist[4][qq]).startswith('lgal'):
+                                print 'heeeey'
+                                print 'listpostincr' + liststrgcompvarbhist[4][qq]
+                                print
                             setattr(gdatfinl, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
                         
                             ## external correction
@@ -13417,6 +13446,37 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
     # temp
     gdat.legdpmea = 'Mean'
+
+    ## labels and scales for variables
+    print 'HACKING'
+    if gdat.fittlensmodltype != 'none':
+        for d in gdat.indxregi:
+            strgregi = 'reg%d' % d
+            setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
+            setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
+            setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
+            setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
+            setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
+            setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
+            for e in gdat.fittindxsersfgrd[d]:
+                print 'lablmasshostreg%disf%dintg % (d, e)'
+                print 'lablmasshostreg%disf%dintg' % (d, e)
+                print
+                setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
+                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d%d}}$' % (d, e))
+            for namevarb in ['fracsubh', 'masssubh']:
+                for namecalc in ['delt', 'intg']:
+                    for nameeval in ['', 'bein']:
+                        setattr(gdat, 'scal' + namevarb + strgregi + namecalc + nameeval, 'logt')
+            for e in gdat.fittindxsersfgrd[d]:
+                for namecalc in ['delt', 'intg']:
+                    for nameeval in ['', 'bein']:
+                        setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
+    
 
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
