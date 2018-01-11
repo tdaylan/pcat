@@ -526,7 +526,7 @@ def icdf_trap(gdat, strgmodl, cdfn, sampvarb, scalcomp, strgcomp, l, d):
         else:
             fact = getattr(gdat, strgmodl + 'fact' + strgcomp)
             icdf = icdf_self(cdfn, minm, fact)
-        
+    
     if scalcomp == 'logt':
         minm = getattr(gdat, strgmodl + 'minm' + strgcomp)
         fact = getattr(gdat, strgmodl + 'fact' + strgcomp)
@@ -1040,18 +1040,8 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
    
     cntp = [[] for d in indxregieval]
     for dd, d in enumerate(indxregieval):
-        print 'gdat.expo[d]'
-        summgene(gdat.expo[d])
-        print 'gdat.apix'
-        print gdat.apix
-        print 'gdat.apix * gdat.anglfact**2'
-        print gdat.apix * gdat.anglfact**2
-        print 'sbrt[dd]'
-        summgene(sbrt[dd])
         cntp[dd] = sbrt[dd] * gdat.expo[d][indxcubeeval[0][dd]] * gdat.apix
         if gdat.enerdiff:
-            print 'gdat.deltener'
-            print gdat.deltener
             cntp[dd] *= gdat.deltener[indxcubeeval[0][dd][0]]
         
     return cntp
@@ -1314,7 +1304,7 @@ def retr_refrchanfinl(gdat):
         gdat.refrspec[0][0][0, 0, :] = fluxchansoft * 0.624e9
         gdat.refrspec[0][0][0, 1, :] = fluxchanhard * 0.624e9 / 16.
     else:
-        gdat.refrspec[0][0][0, :, :] = fluxchansoft[None, :] * 0.624e9
+        gdat.refrspec[0][0][0, :, :] = 2. * fluxchansoft[None, :] * 0.624e9
     gdat.refrspec[0][0][1, :, :] = gdat.refrspec[0][0][0, :, :]
     gdat.refrspec[0][0][2, :, :] = gdat.refrspec[0][0][0, :, :]
    
@@ -3532,9 +3522,7 @@ def setpinit(gdat, boolinitsetp=False):
             setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
             setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
             for e in gdat.fittindxsersfgrd[d]:
-                print 'lablmasshostreg%disf%dintg % (d, e)'
-                print 'lablmasshostreg%disf%dintg' % (d, e)
-                print
+                setattr(gdat, 'lablmasshostreg%disf%dbein' % (d, e), r'$M_{\rm{hst,%d%d,C}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
@@ -3544,6 +3532,7 @@ def setpinit(gdat, boolinitsetp=False):
                     for nameeval in ['', 'bein']:
                         setattr(gdat, 'scal' + namevarb + strgregi + namecalc + nameeval, 'logt')
             for e in gdat.fittindxsersfgrd[d]:
+                setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + 'bein', 'logt')
                 for namecalc in ['delt', 'intg']:
                     for nameeval in ['', 'bein']:
                         setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
@@ -3652,7 +3641,7 @@ def setpinit(gdat, boolinitsetp=False):
     setattr(gdat, 'scalper0plot', 'logt')
    
     gdat.labldglc = 'd_{gc}'
-    gdat.factdglcplot = 1.
+    gdat.factdglcplot = 1e-3
     gdat.scaldglcplot = 'logt'
     
     gdat.labldlos = 'd_{los}'
@@ -3822,11 +3811,11 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.minmdlos
     except:
         if gdat.exprtype == 'chan':
-            gdat.minmdlos = 1e4
-            gdat.maxmdlos = 1e6
+            gdat.minmdlos = 1e7
+            gdat.maxmdlos = 1e9
         else:
-            gdat.minmdlos = 6.
-            gdat.maxmdlos = 11.
+            gdat.minmdlos = 6e3
+            gdat.maxmdlos = 1.1e4
     
     if gdat.exprtype == 'ferm':
         gdat.minmcnts = 1e1
@@ -3930,16 +3919,16 @@ def setpinit(gdat, boolinitsetp=False):
                 if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'magf' or \
                                      strgfeat == 'relk' or strgfeat == 'relf' or strgfeat == 'elin' or \
                                      strgfeat == 'cnts' or strgfeat.startswith('per') or strgfeat == 'gwdt' or strgfeat == 'dglc' or strgfeat.startswith('lumi') or \
-                                     strgfeat == 'relm' or strgfeat.startswith('dlos') or strgfeat.startswith('lum0') or \
+                                     strgfeat == 'relm' or strgfeat.startswith('dlos') or strgfeat.startswith('lum0') or strgfeat == 'defs' or \
                                      strgfeat == 'relc' or strgfeat == 'rele' or strgfeat == 'reln' or strgfeat == 'reld' or strgfeat.startswith('mcut') or strgfeat == 'deltllik':
                     setattr(gdat, 'scal' + strgfeat + 'plot', 'logt')
                 else:
                     setattr(gdat, 'scal' + strgfeat + 'plot', 'self')
     
     if gdat.exprtype == 'ferm':
-        gdat.factdlosplot = 1.
-    if gdat.exprtype == 'chan':
         gdat.factdlosplot = 1e-3
+    if gdat.exprtype == 'chan':
+        gdat.factdlosplot = 1e-6
 
     # construct the fitting model
     setp_fixp(gdat)
@@ -3982,6 +3971,9 @@ def setpinit(gdat, boolinitsetp=False):
             strgregi = 'reg%d' % d
             for e in gdat.fittindxsersfgrd[d]:
                 strgisfr = 'isf%d' % e
+                gdat.listnamevarbscal += ['masshost' + strgregi + strgisfr + 'bein']
+                setattr(gdat, 'minmmasshost' + strgregi + strgisfr + 'bein', gdat.minmmasshost)
+                setattr(gdat, 'maxmmasshost' + strgregi + strgisfr + 'bein', gdat.maxmmasshost)
                 for strgtemp in ['delt', 'intg']:
                     gdat.listnamevarbscal += ['masshost' + strgregi + strgisfr + strgtemp + 'bein']
                     setattr(gdat, 'minmmasshost' + strgregi + strgisfr + strgtemp + 'bein', gdat.minmmasshost)
@@ -5748,7 +5740,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if elemtype[l] == 'lghtpntspuls':
                 setp_varblimt(gdat, 'gang', [1e-1 * gdat.sizepixl, gdat.maxmgangdata], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'geff', [0., 0.4], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'dglc', [1e-2, 3.], strgmodl=strgmodl)
+                setp_varblimt(gdat, 'dglc', [10., 3e3], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'phii', [0., 2. * pi], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'thet', [0., pi], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'per0distmean', [5e-4, 1e1], popl=l, strgmodl=strgmodl)
@@ -5762,7 +5754,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 setp_varblimt(gdat, 'spatdistcons', [1e-4, 1e-2], popl='full')
                 setp_varblimt(gdat, 'bgaldistscal', [0.5 / gdat.anglfact, 5. / gdat.anglfact], popl='full', strgmodl=strgmodl)
             if elemtype[l] == 'lghtpntsagnntrue':
-                setp_varblimt(gdat, 'dlos', [1e4, 1e6], strgmodl=strgmodl)
+                setp_varblimt(gdat, 'dlos', [1e7, 1e9], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'dlosdistslop', [-0.5, -3.], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'lum0', [1e43, 1e46], strgmodl=strgmodl)
                 setp_varblimt(gdat, 'lum0distbrek', [1e42, 1e46], popl=l, strgmodl=strgmodl)
@@ -6414,8 +6406,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             for d in gdat.indxregi:
                 redshost = getattr(gdat, strgmodl + 'redshostreg%d' % d)
                 redssour = getattr(gdat, strgmodl + 'redssourreg%d' % d)
-                adishost[d] = gdat.adisobjt(redshost) * 1e3 # [kpc]
-                adissour[d] = gdat.adisobjt(redssour) * 1e3 # [kpc]
+                adishost[d] = gdat.adisobjt(redshost)
+                adissour[d] = gdat.adisobjt(redssour)
                 adishostsour[d] = adissour[d] - (1. + redshost) / (1. + redssour) * adishost[d]
                 massfrombein[d] = retr_massfrombein(gdat, adissour[d], adishost[d], adishostsour[d])
                 mdencrit[d] = retr_mdencrit(gdat, adissour[d], adishost[d], adishostsour[d])
@@ -6776,7 +6768,7 @@ def plot_lens(gdat):
         
         gdat.meanadishost = empty(numbreds)
         for k in range(numbreds):
-            gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k]) * 1e3
+            gdat.meanadishost[k] = gdat.adisobjt(gdat.meanredshost[k])
         
         asca = 0.1 / gdat.anglfact
         acut = 1. / gdat.anglfact
@@ -6786,8 +6778,8 @@ def plot_lens(gdat):
         for k, redshost in enumerate(gdat.binsredshost):
             for n, redssour in enumerate(gdat.binsredssour):
                 if redssour > redshost:
-                    adishost = gdat.adisobjt(redshost) * 1e3
-                    adissour = gdat.adisobjt(redssour) * 1e3
+                    adishost = gdat.adisobjt(redshost)
+                    adissour = gdat.adisobjt(redssour)
                     adishostsour = adissour - (1. + redshost) / (1. + redssour) * adishost
                     factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adishost, adishostsour, asca, acut)
                     minmmass[n, k] = log10(factmcutfromdefs * gdat.minmdefs)
@@ -6821,8 +6813,8 @@ def plot_lens(gdat):
         plt.close(figr)
         
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        axis.plot(gdat.meanredshost, gdat.meanadishost * gdat.sizepixl)
-        axis.plot(gdat.meanredshost, gdat.meanadishost * 2. * gdat.maxmgangdata)
+        axis.plot(gdat.meanredshost, gdat.meanadishost * gdat.sizepixl * 1e-3)
+        axis.plot(gdat.meanredshost, gdat.meanadishost * 2. * gdat.maxmgangdata * 1e-3)
         axis.set_xlabel('$z_h$')
         axis.set_yscale('log')
         axis.set_ylabel(r'$\lambda$ [kpc]')
@@ -9977,15 +9969,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     convpsecelemodim = zeros((gdat.numbregi, gdat.numbsidecart / 2))
                     for d in gdat.indxregi:
                         ### convergence
-                        print 'deflsubh[d]'
-                        summgene(deflsubh[d] * gdat.anglfact)
-
                         convelem[d, :] = retr_conv(gdat, deflsubh[d]) 
-                        
-                        print 'convelem[d, :]'
-                        summgene(convelem[d, :])
-                        print
-
                         ###  power spectrum
                         ##### two dimensional
                         convpsecelem[d, :] = retr_psec(gdat, convelem[d, :])
@@ -10477,7 +10461,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
              
                                 ### truncated mass 
                                 dictelem[l][d]['mcut'][k] = retr_mcut(gdat, dictelem[l][d]['defs'][k], asca, acut, adishost[d], mdencrit[d])
-                                
+
                                 #### dot product with the source flux gradient
                                 # temp -- weigh the energy and PSF bins
                                 dictelem[l][d]['rele'][k] = retr_rele(gdat, cntp['lens'][d][0, :, 0], dictelem[l][d]['lgal'][k], dictelem[l][d]['bgal'][k], \
@@ -10698,7 +10682,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 d = int(name.split('reg')[1][0])
                 if 'isf' in name:
                     indxisfrtemp = int(name.split('isf')[1][0])
-                angl = sqrt((gdat.meanlgalcart - lgalhost[d][indxisfrtemp])**2 + (gdat.meanbgalcart - bgalhost[d][indxisfrtemp])**2)
+                angl = sqrt((gdat.meanlgalcartmesh - lgalhost[d][indxisfrtemp])**2 + (gdat.meanbgalcartmesh - bgalhost[d][indxisfrtemp])**2).flatten()
                 for k in gdat.indxanglhalf:
                     if name[4:8] == 'host':
                         convtemp = conv[d, :]
@@ -10706,11 +10690,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         convtemp = convelem[d, :]
                     
                     if name.endswith('delt'):
-                        indxpixl = where((gdat.binsanglhalf[k] < angl) & (angl < gdat.binsanglhalf[k+1]))
-                        dicttert[d][name][k] = sum(convtemp[indxpixl]) * mdencrit[d] * gdat.apix * adishost[d]**2# / 2. / pi * gdat.deltanglhalf[k]
+                        indxpixl = where((gdat.binsanglhalf[k] < angl) & (angl < gdat.binsanglhalf[k+1]))[0]
+                        dicttert[d][name][k] = 1e6 * sum(convtemp[indxpixl]) * mdencrit[d] * gdat.apix * adishost[d]**2 / 2. / pi * gdat.deltanglhalf[k] / gdat.meananglhalf[k]
                     if name.endswith('intg'):
-                        indxpixl = where(angl < gdat.meananglhalf[k])
-                        dicttert[d][name][k] = sum(convtemp[indxpixl]) * mdencrit[d] * gdat.apix * adishost[d]**2# * indxpixl[0].size
+                        indxpixl = where(angl < gdat.meananglhalf[k])[0]
+                        dicttert[d][name][k] = sum(convtemp[indxpixl]) * mdencrit[d] * gdat.apix * adishost[d]**2
                     
                     if name[:4] == 'frac':
                         masshosttotl = 0.
@@ -11622,7 +11606,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                     liststrgcompvarbhist[2] == 'deflprof' or liststrgcompvarbhist[2] == 'specplot'):
                             continue
                         
-                        print 'meeeeey'
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
@@ -11667,12 +11650,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                                 listhistincr[indxbaddzero] = 1.5
                             
                             gdatfinl.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
-                            print 'liststrgcompvarbhist[4][qq]'
-                            print liststrgcompvarbhist[4][qq]
-                            if ('listpostincr' + liststrgcompvarbhist[4][qq]).startswith('lgal'):
-                                print 'heeeey'
-                                print 'listpostincr' + liststrgcompvarbhist[4][qq]
-                                print
                             setattr(gdatfinl, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
                         
                             ## external correction
@@ -11697,13 +11674,13 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             print 'Computing credible intervals...'
             timeinit = gdatfinl.functime()
        
-        print 'HACKING'
-        gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
-        gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
-        try:
-            gdatfinl.listnamevarbcpct = gdatfinl.listnamevarbcpos
-        except:
-            pass
+        #print 'HACKING'
+        #gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
+        #gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
+        #try:
+        #    gdatfinl.listnamevarbcpct = gdatfinl.listnamevarbcpos
+        #except:
+        #    pass
                     
         for strgchan in gdatfinl.liststrgchan:
             
@@ -12100,9 +12077,9 @@ def chec_prop(gdat, gdatobjt, strgstat, strgmodl, strgthisvarb, nextvarb, indxcu
 
 def retr_los3(dlos, lgal, bgal):
 
-    dglc = sqrt(8.5**2 + dlos**2 - 2. * dlos * 8.5 * cos(bgal) * cos(lgal))
+    dglc = sqrt(8.5e3**2 + dlos**2 - 2. * dlos * 8.5e3 * cos(bgal) * cos(lgal))
     thet = arccos(sin(bgal) * dlos / dglc)
-    phii = arcsin(sqrt(cos(bgal)**2 * dlos**2 + 8.5**2 - 2 * dlos * cos(bgal) * 8.5) / dglc)
+    phii = arcsin(sqrt(cos(bgal)**2 * dlos**2 + 8.5e3**2 - 2 * dlos * cos(bgal) * 8.5e3) / dglc)
     
     return dglc, thet, phii
 
@@ -12113,7 +12090,7 @@ def retr_glc3(dglc, thet, phii):
     ypos = dglc * sin(thet) * sin(phii)
     zpos = dglc * cos(thet)
     dlos = sqrt(zpos**2 + xpos**2 + (8.5 - ypos)**2)
-    lgal = arctan2(8.5 - ypos, xpos) - pi / 2
+    lgal = arctan2(8.5e3 - ypos, xpos) - pi / 2
     bgal = arcsin(zpos / dlos)
    
     return dlos, lgal, bgal
@@ -12129,7 +12106,7 @@ def retr_lumipuls(geff, magf, per0):
 
 def retr_lumi(gdat, flux, dlos, reds=None):
 
-    lumi = flux * 4. * pi * dlos**2 * gdat.kprccmtr**2 / gdat.ergsgevv
+    lumi = flux * 4. * pi * dlos**2 * gdat.prsccmtr**2 / gdat.ergsgevv
     
     # temp
     # redshift correction
@@ -12141,7 +12118,7 @@ def retr_lumi(gdat, flux, dlos, reds=None):
 
 def retr_flux(gdat, lumi, dlos, reds=None):
 
-    flux = lumi / 4. / pi / dlos**2 / gdat.kprccmtr**2 * gdat.ergsgevv
+    flux = lumi / 4. / pi / dlos**2 / gdat.prsccmtr**2 * gdat.ergsgevv
     
     # temp
     # redshift correction
@@ -12161,7 +12138,7 @@ def retr_per1(per0, magf):
 def retr_dlosgalx(lgal, bgal, dglc):
 
     # temp -- this is obviously wrong
-    dlos = 8.5 - dglc
+    dlos = 8.5e3 - dglc
 
     return dlos
 
@@ -12504,7 +12481,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 strgindxydat = 'pop%d' % l
                 for d in indxregipopl[l]:
                     for strgfeat in liststrgfeatodim[l]:
-                        if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
+                        if not (strgfeat == 'flux' or strgfeat == 'mcut' or strgfeat == 'deltllik' or strgfeat == 'defs' or strgfeat == 'nobj') and \
                                                                                     (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
                             continue
                         indxydat = [l, slice(None)]
@@ -13037,19 +13014,21 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 for d in gdat.indxregi:
                     indxydat = [d, slice(None)]
                     strgindxydat = 'reg%d' % d
+                    factxdat = 1e-3
                     plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convpsecodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P(k)$', limtydat=[1e-1, 1e2], \
-                                                                                                   scalxdat='logt', scalydat='logt', indxydat=indxydat, strgindxydat=strgindxydat)
+                                                                              factxdat=factxdat, scalxdat='logt', scalydat='logt', indxydat=indxydat, strgindxydat=strgindxydat)
                     plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'histdefl', 'meandefl', \
                                                                             scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, \
-                                                                                                                 strgindxydat=strgindxydat, indxydat=indxydat, histodim=True)
+                                                                                     strgindxydat=strgindxydat, indxydat=indxydat, histodim=True)
             if numbtrap > 0 and boolelemdeflsubhanyy:
                 for d in gdat.indxregi:
                     indxydat = [d, slice(None)]
                     strgindxydat = 'reg%d' % d
+                    factxdat = 1e-3
                     plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
-                                                                      strgindxydat=strgindxydat, indxydat=indxydat, limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
+                                           factxdat=factxdat, strgindxydat=strgindxydat, indxydat=indxydat, limtydat=[1e-5, 1e-1], scalxdat='logt', scalydat='logt')
                     plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'histdeflsubh', 'meandeflsubh', scal='self', lablxdat=r'$\alpha$ [arcsec]', \
-                                                                      strgindxydat=strgindxydat, indxydat=indxydat, lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
+                                           strgindxydat=strgindxydat, indxydat=indxydat, lablydat=r'$N_{pix}$', factxdat=gdat.anglfact, histodim=True)
             
             if lensmodltype != 'none':
                 for d in gdat.indxregi:
@@ -13449,35 +13428,37 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     gdat.legdpmea = 'Mean'
 
     ## labels and scales for variables
-    print 'HACKING'
-    if gdat.fittlensmodltype != 'none':
-        for d in gdat.indxregi:
-            strgregi = 'reg%d' % d
-            setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
-            setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
-            setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
-            setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
-            setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
-            for e in gdat.fittindxsersfgrd[d]:
-                print 'lablmasshostreg%disf%dintg % (d, e)'
-                print 'lablmasshostreg%disf%dintg' % (d, e)
-                print
-                setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
-                setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
-                setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
-                setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d%d}}$' % (d, e))
-            for namevarb in ['fracsubh', 'masssubh']:
-                for namecalc in ['delt', 'intg']:
-                    for nameeval in ['', 'bein']:
-                        setattr(gdat, 'scal' + namevarb + strgregi + namecalc + nameeval, 'logt')
-            for e in gdat.fittindxsersfgrd[d]:
-                for namecalc in ['delt', 'intg']:
-                    for nameeval in ['', 'bein']:
-                        setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
-    
+    #print 'HACKING'
+    #if gdat.fittlensmodltype != 'none':
+    #    for d in gdat.indxregi:
+    #        strgregi = 'reg%d' % d
+    #        setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
+    #        setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
+    #        setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
+    #        setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
+    #        setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
+    #        setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
+    #        setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
+    #        setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
+    #        for e in gdat.fittindxsersfgrd[d]:
+    #            print 'lablmasshostreg%disf%dintg % (d, e)'
+    #            print 'lablmasshostreg%disf%dintg' % (d, e)
+    #            print
+    #            setattr(gdat, 'lablmasshostreg%disf%dbein' % (d, e), r'$M_{\rm{hst,%d%d,C}}$' % (d, e))
+    #            setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
+    #            setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
+    #            setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
+    #            setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d%d}}$' % (d, e))
+    #        for namevarb in ['fracsubh', 'masssubh']:
+    #            for namecalc in ['delt', 'intg']:
+    #                for nameeval in ['', 'bein']:
+    #                    setattr(gdat, 'scal' + namevarb + strgregi + namecalc + nameeval, 'logt')
+    #        for e in gdat.fittindxsersfgrd[d]:
+    #            setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + 'bein', 'logt')
+    #            for namecalc in ['delt', 'intg']:
+    #                for nameeval in ['', 'bein']:
+    #                    setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
+    #
 
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
@@ -13534,12 +13515,20 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
         labltotl = getattr(gdat, 'labl' + name + 'totl')
+        
+        print 'name'
+        print name
+        print 'listvarb'
+        summgene(listvarb)
         listvarb = getattr(gdat, 'list' + strgpdfn + name) * factplot
         if listvarb.ndim != 1:
             if listvarb.shape[1] == 1:
                 listvarb = listvarb[:, 0]
             else:
                 raise Exception('')
+        print 'listvarb'
+        summgene(listvarb)
+        
         mlik = getattr(gdat, 'mlik' + name) * factplot
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscaltrac') + name
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
@@ -13566,12 +13555,22 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             listvarbseco = getattr(gdat, 'list' + strgpdfn + nameseco) * factplotseco
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
+            print 'nameseco'
+            print nameseco
+            print 'listvarbseco'
+            summgene(listvarbseco)
             if listvarbseco.ndim != 1:
                 if listvarbseco.shape[1] == 1:
                     listvarbseco = listvarbseco[:, 0]
                 else:
                     raise Exception('')
                 
+            print 'nameseco'
+            print nameseco
+            print 'listvarbseco'
+            summgene(listvarbseco)
+            print
+
             listjoin = vstack((listvarb, listvarbseco)).T
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])

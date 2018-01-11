@@ -234,7 +234,7 @@ def init( \
          proplenp=None, \
          propcomp=None, \
          probtran=None, \
-         probspmr=0.3, \
+         probspmr=0., \
          # when proposing from the covariance, fracproprand should be very small!
          fracproprand=0., \
             
@@ -936,7 +936,7 @@ def init( \
             if gdat.anlytype == 'spec':
                 gdat.anglassc = 0.1
             else:
-                gdat.anglassc = 1.5 / gdat.anglfact
+                gdat.anglassc = 2.5 / gdat.anglfact
         if gdat.exprtype == 'sdss':
             gdat.anglassc = 0.5 / gdat.anglfact
         if gdat.exprtype == 'sdyn':
@@ -1096,14 +1096,18 @@ def init( \
         setp_varbvalu(gdat, 'spatdisttype', spatdisttype, strgmodl=strgmodl)
         setp_varbvalu(gdat, 'fluxdisttype', fluxdisttype, strgmodl=strgmodl)
     
-    gdat.kprccmtr = 3.086e21
+    gdat.prsccmtr = 3.086e18
     gdat.ergsgevv = 624.151
-    gdat.factnewtlght = 2.09e16 # Msun / kpc
+    gdat.factnewtlght = 2.09e13 # Msun / pc
     
+    # the adis in the file is kpc
     fileh5py = h5py.File(gdat.pathdata + 'inpt/adis.h5','r')
+    
     gdat.redsintp = fileh5py['reds'][()]
-    gdat.adisintp = fileh5py['adis'][()] * 1e3 # [kpc]
-    gdat.adisobjt = interp1d_pick(gdat.redsintp, gdat.adisintp) # [kpc]
+    gdat.adisintp = fileh5py['adis'][()] * 1e6 # [pc]
+
+    gdat.adisobjt = interp1d_pick(gdat.redsintp, gdat.adisintp)
+
     gdat.redsfromdlosobjt = interp1d_pick(gdat.adisintp * gdat.redsintp, gdat.redsintp)
     fileh5py.close()
     
@@ -1205,9 +1209,9 @@ def init( \
     if gdat.numbpixlfull != 1:
         #minmdefs = 0.003 / gdat.anglfact
         #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='true')
-        minmdefs = 0.01 / gdat.anglfact
-        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
+        minmdefs = 0.003 / gdat.anglfact
         setp_varbvalu(gdat, 'minmdefs', minmdefs)
+        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
     
     minmnobj = 1e0
     setp_varbvalu(gdat, 'minmnobj', minmnobj)
@@ -1862,7 +1866,7 @@ def init( \
             
             if gdat.truenumbtrap > 0 and (k in gdat.trueindxfixpnumbelemtotl or k in gdat.trueindxfixpmeanelem):
                 continue
-
+    
             # assume the true PSF
             if gdat.truepsfnevaltype != 'none' and gdat.numbpixl > 1 and k in gdat.trueindxfixppsfp:
                 gdat.truesampvarb[k] = gdat.psfpexpr[k-gdat.trueindxfixppsfp[0]]
@@ -1871,6 +1875,7 @@ def init( \
                 try:
                     # impose user-defined true parameter
                     gdat.truesampvarb[k] = getattr(gdat, 'true' + gdat.truenamepara[k])
+                    
                     if gdat.verbtype > 1:
                         print 'Imposing true parameter:'
                         print gdat.truenamepara[k]
@@ -1884,7 +1889,6 @@ def init( \
                         d = int(gdat.truenamepara[k][-5])
                         l = int(gdat.truenamepara[k][-9])
                         g = (k - gdat.truenumbfixp - gdat.truenumbtrapregipoplcuml[l][d]) % gdat.truenumbcomp[l]
-
                         gdat.truesampvarb[k] = icdf_trap(gdat, 'true', gdat.truesamp[k], gdat.truesampvarb, gdat.truelistscalcomp[l][g], gdat.trueliststrgcomp[l][g], l, d)
 
     if gdat.numbpixlfull > 1:
@@ -3312,10 +3316,10 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'Warning! loglikelihood drop is very unlikely!'
                     print 'gdatmodi.thislliktotlprev'
                     print gdatmodi.thislliktotlprev
-                    print 'gdatmodi.this + gdat.strgpdfn + lliktotl'
-                    print getattr(gdatmodi, 'thislliktotl')
+                    print 'gdatmodi.thislliktotl'
+                    print gdatmodi.thislliktotl
                     print 'workdict[listindxproptype]'
-                    print gdat.nameproptype[workdict['list' + gdat.strgpdfn + 'indxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep, 0].astype(int)]
+                    print gdat.nameproptype[workdict['list' + gdat.strgpdfn + 'indxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+2, 0].astype(int)]
                     print
                     #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
@@ -3785,18 +3789,17 @@ def work(pathoutprtag, lock, indxprocwork):
                 print 'Mean number of elements:'
                 print gdatmodi.thissampvarb[gdat.fittindxfixpmeanelem]
                 for l in gdat.fittindxpopl:
-                    if gdat.fittnamefeatampl[l] == 'flux':
-                        if gdat.fittfluxdisttype[l] == 'powrslop':
-                            print 'Log-slope of the amplitude parameter distribution, population %d:' % l
-                            indxfixp = getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distsloppop%d' % l)
-                            print gdatmodi.thissampvarb[indxfixp]
-                        else:
-                            print 'Flux distribution break:'
-                            print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distbrekpop%d' % l)]
-                            print 'Flux distribution lower slope:'
-                            print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distsloplowrpop%d' % l)]
-                            print 'Flux distribution upper slope:'
-                            print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distslopupprpop%d' % l)]
+                    if gdat.fittnamefeatampl[l] == 'flux' and gdat.fittfluxdisttype[l] == 'powrslop' or gdat.fittnamefeatampl[l] != 'flux':
+                        print 'Log-slope of the amplitude parameter distribution, population %d:' % l
+                        indxfixp = getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distsloppop%d' % l)
+                        print gdatmodi.thissampvarb[indxfixp]
+                    else:
+                        print 'Flux distribution break:'
+                        print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distbrekpop%d' % l)]
+                        print 'Flux distribution lower slope:'
+                        print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distsloplowrpop%d' % l)]
+                        print 'Flux distribution upper slope:'
+                        print gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + gdat.fittnamefeatampl[l] + 'distslopupprpop%d' % l)]
                 print 'Log-prior penalization term: '
                 print gdatmodi.thislpri[0]
                 if gdat.allwrefr and gdat.asscrefr:
