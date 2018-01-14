@@ -2477,9 +2477,9 @@ def initarry( \
             print 'Found at least one previous run with the configuration %s' % strgcnfg
             print 'Omitting...'
             print
+            listrtag.append(listrtagprev[0])
         else:
-            rtag = init(**dictvarbtemp)
-        listrtag.append(listrtagprev[0])
+            listrtag.append(init(**dictvarbtemp))
     
     print
     print 'Final-processing run outputs...'
@@ -2496,21 +2496,21 @@ def initarry( \
     
         path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
-        for strgvarboutp, varboutp in dictoutp.iteritems():
-            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        for k, (strgvarboutp, varboutp) in enumerate(dictoutp.iteritems()):
+            figr, axis = plt.subplots(figsize=(6, 6))
             axis.plot(varbvari, varboutp)
             axis.set_xticklabels(listlablcomp)
-            axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
+            axis.set_ylabel(getattr(listgdat[k], 'labl' + strgvarboutp))
             tickxaxi = varbxaxi
             try:
-                lablxaxi = getattr(gdat, 'labl' + namexaxi)
-                scalxaxi = getattr(gdat, 'scal' + namexaxi)
+                lablxaxi = getattr(listgdat[k], 'labl' + namexaxi)
+                scalxaxi = getattr(listgdat[k], 'scal' + namexaxi)
             except:
                 lablxaxi = listlablxaxi
                 scalxaxi = listscalxaxi
             if scalxaxi == 'logt':
                 axis.set_xscale('log')
-            if getattr(gdat, 'scal' + strgvarboutp) == 'logt':
+            if getattr(listgdat[k], 'scal' + strgvarboutp) == 'logt':
                 axis.set_yscale('log')
             plt.tight_layout()
             plt.savefig('%s/%s%s.pdf' % (path, strgvarbvari, strgvarboutp))
