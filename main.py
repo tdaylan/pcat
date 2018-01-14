@@ -304,13 +304,6 @@ def init( \
         print 'PCAT %s started at %s.' % (gdat.strgvers, gdat.strgtimestmp)
         print 'Configuration %s' % gdat.strgcnfg
     
-    # check the available run outputs
-    #booltemp = chec_runsprev(gdat.strgcnfg)
-    #if booltemp:
-    #    print 'Found a previously completed run.'
-    #    print
-    #    return
-        
     if gdat.datatype == 'inpt' and gdat.rtagmock != None:
         print 'Will use %s to account for selection effects.' % gdat.rtagmock 
         gdat.pathoutprtagmock = retr_pathoutprtag(gdat.rtagmock)
@@ -1610,17 +1603,18 @@ def init( \
     ## reference spectra
     if gdat.listprefsbrtlabl == None:
         if gdat.exprtype == 'chan' and gdat.numbpixlfull != 1:
-            gdat.listprefsbrtener = []
-            gdat.listprefsbrtsbrt = []
-            gdat.listprefsbrtlabl = ['Tozzi+(2001)']
-            for strgfile in ['cdfs']:
-                path = gdat.pathinpt + '%s.csv' % strgfile
+            gdat.listprefsbrtener = [[[] for k in range(3)]]
+            gdat.listprefsbrtsbrt = [[[] for k in range(3)]]
+            gdat.listprefsbrtlabl = ['Moretti+(2012)']
+            gdat.listprefsbrttype = ['shad']
+            
+            for k, strgextn in enumerate(['', '_lower', '_higher']):
+                path = gdat.pathinpt + 'Moretti2012%s.csv' % strgextn
                 enerrefrplot = loadtxt(path, delimiter=',')[:, 0]
-                sbrtrefrplot = loadtxt(path, delimiter=',')[:, 1]
-                sbrtrefrplot /= enerrefrplot**2
-                gdat.listprefsbrtener.append(enerrefrplot)
-                gdat.listprefsbrtsbrt.append(sbrtrefrplot)
-    
+                sbrtrefrplot = loadtxt(path, delimiter=',')[:, 1] / gdat.factergskevv / enerrefrplot**2 * (180. / pi)**2
+                gdat.listprefsbrtener[0][k] = enerrefrplot
+                gdat.listprefsbrtsbrt[0][k] = sbrtrefrplot
+
     if gdat.numbener > 1:
         if gdat.enerpivt == 0.:
             raise Exception('Pivot energy cannot be zero.')
@@ -2443,7 +2437,8 @@ def initarry( \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
-             listlablcomp=False, \
+             listlablxaxi=None, \
+             listscalxaxi=None, \
             ):
     
     print 'Running PCAT in array mode...'
@@ -2477,32 +2472,43 @@ def initarry( \
             dictvarbtemp[strgvarb] = valu
         dictvarbtemp['strgcnfg'] = strgcnfg
     
-        if omitprev and chec_runsprev(strgcnfg) and strgcnfgextnexec == None:
-            print 'Found a previous run with the configuration %s' % strgcnfg
+        listrtagprev = retr_listrtagprev(strgcnfg)
+        if omitprev and strgcnfgextnexec == None and len(listrtagprev) > 0:
+            print 'Found at least one previous run with the configuration %s' % strgcnfg
             print 'Omitting...'
             print
-            continue
-
-        rtag = init(**dictvarbtemp)
-        listrtag.append(rtag)
-
-    #print 'finished'
+        else:
+            rtag = init(**dictvarbtemp)
+        listrtag.append(listrtagprev[0])
+    
+    print
+    print 'Final-processing run outputs...'
+    for rtag in listrtag: 
+        proc_finl(rtag=rtag, strgpdfn='post')
+    
     if listnamevarbcomp != None:
+        print
+        print 'Producing comparison plots...'
         
-        listgdat = coll_rtag(listrtag)
+        listgdat = retr_listgdat(listrtag)
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
     
         path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
         for strgvarboutp, varboutp in dictoutp.iteritems():
-            if strgvarbvari.startswith('fitt'):
-                strgvarbvari = strgvarbvari[4:]
             figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
             axis.plot(varbvari, varboutp)
             axis.set_xticklabels(listlablcomp)
             axis.set_ylabel(getattr(gdat, 'labl' + strgvarboutp))
-            if getattr(gdat, 'scal' + strgvarbvari) == 'logt':
+            tickxaxi = varbxaxi
+            try:
+                lablxaxi = getattr(gdat, 'labl' + namexaxi)
+                scalxaxi = getattr(gdat, 'scal' + namexaxi)
+            except:
+                lablxaxi = listlablxaxi
+                scalxaxi = listscalxaxi
+            if scalxaxi == 'logt':
                 axis.set_xscale('log')
             if getattr(gdat, 'scal' + strgvarboutp) == 'logt':
                 axis.set_yscale('log')
@@ -3321,7 +3327,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'workdict[listindxproptype]'
                     print gdat.nameproptype[workdict['list' + gdat.strgpdfn + 'indxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+2, 0].astype(int)]
                     print
-                    #raise Exception('loglikelihood drop is very unlikely!')
+                    raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             if gdatmodi.nextaccpprio:

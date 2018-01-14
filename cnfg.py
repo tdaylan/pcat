@@ -116,7 +116,6 @@ def test_time():
                     makeplot=False, \
                     verbtype=0, \
                     strgexpo=1., \
-                    exprinfo=False, \
                     indxenerincl=indxenerincl, \
                     pixltype=pixltype, \
                     indxevttincl=arange(3, 4), \
@@ -200,7 +199,6 @@ def test_psfn(strgcnfgextnexec=None):
 def test_nomi():
       
     init( \
-         exprinfo=False, \
          proppsfp=False, \
          indxenerincl=arange(1, 3), \
          indxevttincl=arange(3, 4), \
@@ -282,7 +280,6 @@ def test_errr():
         strgtupl[k] = '%3.1f, %s, %d' % (specfraceval, binsangltype, numbangl)
         gdat = init( \
                     diagmode=True, \
-                    exprinfo=False, \
                     makeanim=True, \
                     proppsfp=False, \
                     numbangl=numbangl, \
@@ -343,7 +340,6 @@ def test_uppr():
       
     init( \
          #factthin=100, \
-         exprinfo=False, \
          proppsfp=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -369,54 +365,39 @@ def test_spatprio():
         )
 
 
-def test_prio():
+def test_pars(strgcnfgextnexec=None):
     
-    truenumbpnts = array([200])
-    priofactdoff = array([-1., -0.5, 0., 0.5, 1., 1.5, 2.])
-    arry = array([1., 0.8, 1.2])
-    numbiter = priofactdoff.size
-    liststrgvarb = ['postnumbpnts', 'postmeanpnts']
-    for k in range(numbiter):
-        gdat = init( \
-                    exprinfo=False, \
-                    proppsfp=False, \
-                    indxenerincl=arange(2, 3), \
-                    indxevttincl=arange(3, 4), \
-                    priofactdoff=priofactdoff[k], \
-                    back=['fermisotflux.fits'], \
-                    strgexpo='fermexpo_cmp0_ngal.fits', \
-                    psfntype='doubking', \
-                    maxmnumbpnts=array([1000]), \
-                    maxmgangdata=deg2rad(30.), \
-                    minmflux=5e-11, \
-                    maxmflux=1e-7, \
-                    truenumbpnts=truenumbpnts, \
-                   )
-        for strg in liststrgvarb:
-            if k == 0:
-                varb = getattr(gdat, strg)
-                shap = [numbiter] + list(varb.shap)
-                varbdict[strg] = empty(shap)
-            else:
-                varbdict[strg] = getattr(gdat, strg)
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truemaxmnumbelempop0reg0'] = 400
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['optitype'] = 'none'
+    dictargs['makeplot'] = False
+    dictargs['numbswep'] = 100
+    dictargs['numbsamp'] = 10
     
-    postnumbpnts = 100. * postnumbpnts / truenumbpnts[0] - 100.
-    postmeanpnts = 100. * postmeanpnts / truenumbpnts[0] - 100.
-    errrnumbpnts = tdpy.util.retr_errrvarb(postnumbpnts)
-    errrmeanpnts = tdpy.util.retr_errrvarb(postmeanpnts)
-    figr, axis = plt.subplots()
-    axis.errorbar(priofactdoff, postnumbpnts[0, :], ls='', yerr=errrnumbpnts, lw=1, marker='o', label='$N$')
-    axis.errorbar(priofactdoff, postmeanpnts[0, :], ls='', yerr=errrmeanpnts, lw=1, marker='o', label='$\mu$')
-    axis.set_xlabel('IC Factor')
-    axis.set_ylabel('$\Delta N$ [%]')
-    axis.set_xlim([amin(priofactdoff) - 1., amax(priofactdoff) + 1.])
-    axis.legend()
-    plt.tight_layout()
-    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_prio/'
-    os.system('mkdir -p %s' % path)
-    strgtimestmp = tdpy.util.retr_strgtimestmp()
-    figr.savefig(path + 'percbias_%s.pdf' % strgtimestmp)
-    plt.close(figr)
+    listnamecnfgextn = ['parsnone', 'parsloww']
+    #listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    #dictargsvari['parsnomi']['priofactdoff'] = 1.
+    #dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    listnamevarbcomp = ['numbelemreg0pop0']
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamevarbcomp=listnamevarbcomp, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                       )
 
 
 def test_lowr():
@@ -424,7 +405,6 @@ def test_lowr():
     init( \
          numbswep=10000, \
          verbtype=1, \
-         exprinfo=False, \
          proppsfp=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -457,7 +437,6 @@ def test_post():
              indxevttincl=indxevttincl, \
              proptran=False, \
              prophypr=False, \
-             exprinfo=False, \
              back=['fermisotflux.fits'], \
              lablback=[r'$\mathcal{I}$'], \
              strgexpo='fermexpo_cmp0_ngal.fits', \
@@ -493,7 +472,6 @@ def test_atcr():
                     #verbtype=2, \
                     makeplot=False, \
                     numbpntsmodi=listnumbpntsmodi[k], \
-                    exprinfo=False, \
                     indxenerincl=arange(2, 3), \
                     indxevttincl=arange(3, 4), \
                     back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
@@ -542,7 +520,6 @@ def test_spmr():
         init( \
              #verbtype=2, \
              factthin=1, \
-             exprinfo=False, \
              indxenerincl=arange(2, 3), \
              indxevttincl=arange(3, 4), \
              back=['fermisotflux.fits'], \
@@ -567,7 +544,6 @@ def test_cova():
      
     init( \
          numbswep=100, \
-         exprinfo=False, \
          verbtype=2, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
@@ -585,7 +561,6 @@ def test_leak():
      
     init( \
          numbswep=10000, \
-         exprinfo=False, \
          indxenerincl=arange(2, 3), \
          indxevttincl=arange(3, 4), \
          strgexpo='fermexpo_cmp0_ngal.fits', \
