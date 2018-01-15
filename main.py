@@ -2176,6 +2176,19 @@ def init( \
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
+    
+    #print 'gdat.liststrgchan'
+    #print gdat.liststrgchan
+    #if not 'numbelempop0reg0' in gdat.liststrgchan:
+    #    raise Exception('')
+    #if 'numbelem' in gdat.liststrgvarblistsamp:
+    #    raise Exception('')
+    #if 'numbelempopl' in gdat.liststrgvarblistsamp:
+    #    raise Exception('')
+    #if 'numbelem' in gdat.liststrgvarbarry:
+    #    raise Exception('')
+    #if 'numbelempopl' in gdat.liststrgvarbarry:
+    #    raise Exception('')
 
     gdat.indxpoplcrin = 0
     if gdat.fittnumbtrap > 0:
@@ -2433,18 +2446,21 @@ def init( \
 def initarry( \
              dictvarbvari, \
              dictvarb, \
-             omitprev=False, \
+             forcprev=False, \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
-             listlablxaxi=None, \
+             namexaxi=None, \
+             listvarbxaxi=None, \
+             lablxaxi=None, \
+             listtickxaxi=None, \
              listscalxaxi=None, \
             ):
     
     print 'Running PCAT in array mode...'
     
     numbiter = len(dictvarbvari)
-
+    
     if listnamevarbcomp != None:
         numboutp = len(listnamevarbcomp)
         dictoutp = dict()
@@ -2473,9 +2489,10 @@ def initarry( \
         dictvarbtemp['strgcnfg'] = strgcnfg
     
         listrtagprev = retr_listrtagprev(strgcnfg)
-        if omitprev and strgcnfgextnexec == None and len(listrtagprev) > 0:
+
+        if not forcprev and strgcnfgextnexec == None and len(listrtagprev) > 0:
             print 'Found at least one previous run with the configuration %s' % strgcnfg
-            print 'Omitting...'
+            print 'Skipping...'
             print
             listrtag.append(listrtagprev[0])
         else:
@@ -2494,26 +2511,41 @@ def initarry( \
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
     
+        print 'dictoutp'
+        print dictoutp
+
+        for k, (strgvarboutp, varboutp) in enumerate(dictoutp.iteritems()):
+            
+            print 'listgdat[k].listnamevarbscal'
+            print listgdat[k].listnamevarbscal
+            for strg, varb in listgdat[k].__dict__.iteritems():
+                if strg.startswith('pctlpostnumbelem'): 
+                    print 'strg'
+                    print strg
+                    print
+                    print
+                    print
+
+            dictoutp[strgvarboutp] = getattr(listgdat[k], 'pctlpost' + strgvarboutp)
+
         path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
         for k, (strgvarboutp, varboutp) in enumerate(dictoutp.iteritems()):
             figr, axis = plt.subplots(figsize=(6, 6))
-            axis.plot(varbvari, varboutp)
-            axis.set_xticklabels(listlablcomp)
-            axis.set_ylabel(getattr(listgdat[k], 'labl' + strgvarboutp))
-            tickxaxi = varbxaxi
-            try:
-                lablxaxi = getattr(listgdat[k], 'labl' + namexaxi)
-                scalxaxi = getattr(listgdat[k], 'scal' + namexaxi)
-            except:
-                lablxaxi = listlablxaxi
-                scalxaxi = listscalxaxi
+            print 'listvarbxaxi'
+            print listvarbxaxi
+            print 'varboutp'
+            print varboutp
+            axis.plot(listvarbxaxi, varboutp)
+            axis.set_xticklabels(listtickxaxi)
+            axis.set_xlabl(lablxaxi)
             if scalxaxi == 'logt':
                 axis.set_xscale('log')
+            axis.set_ylabel(getattr(listgdat[k], 'labl' + strgvarboutp))
             if getattr(listgdat[k], 'scal' + strgvarboutp) == 'logt':
                 axis.set_yscale('log')
             plt.tight_layout()
-            plt.savefig('%s/%s%s.pdf' % (path, strgvarbvari, strgvarboutp))
+            plt.savefig('%s/%s%s.pdf' % (path, namexaxi, strgvarboutp))
             plt.close(figr)
     
     return listrtag

@@ -390,6 +390,10 @@ def test_pars(strgcnfgextnexec=None):
     #dictargsvari['parsnomi']['priofactdoff'] = 1.
     #dictargsvari['parshigh']['priofactdoff'] = 1.5
     
+    listvarbxaxi = [dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn]
+    listscalxaxi = ['self' for namecnfgextn in listnamecnfgextn] 
+    listtickxaxi = ['%d' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
+    lablxaxi = r'\alpha_p'
     listnamevarbcomp = ['numbelemreg0pop0']
     
     dictglob = initarry( \
@@ -397,6 +401,13 @@ def test_pars(strgcnfgextnexec=None):
                         dictargs, \
                         listnamevarbcomp=listnamevarbcomp, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        listvarbxaxi=listvarbxaxi, \
+                        forcprev=True, \
+                        listscalxaxi=listscalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        lablxaxi=lablxaxi, \
+                        namexaxi='priofactdoff', \
+                        
                        )
 
 

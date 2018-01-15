@@ -11141,6 +11141,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         pathoutprtag = retr_pathoutprtag(rtagfinl)
         path = pathoutprtag + 'gdatfinl' + strgpdfn
         gdatfinl = readfile(path) 
+        
+        if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
+            if gdatfinl.datatype == 'inpt':
+                if gdatfinl.boolcorr:
+                    if gdatfinl.rtagmock != None:
+                        path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
+                        gdatmock = readfile(path)
+                    
     else:
         
         indxrtaggood = []
@@ -11580,6 +11588,13 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlaccp', listindxsamptotlaccp)
             setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlreje', listindxsamptotlreje)
        
+        if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
+            if gdatfinl.datatype == 'inpt':
+                if gdatfinl.boolcorr:
+                    if gdatfinl.rtagmock != None:
+                        path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
+                        gdatmock = readfile(path)
+                    
         # posterior corrections
         if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
 
@@ -11587,16 +11602,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             if gdatfinl.datatype == 'inpt':
                 gdatfinl.boolcorr = gdatfinl.boolcrex or gdatfinl.boolcrin
                 if gdatfinl.boolcorr:
-                    
-                    # temp
-                    print 'HACKING!'
-                    gdatfinl.pathoutprtagmock = retr_pathoutprtag('20180105_202051_pcat_chan_mock_nomi_100000')
-                    
 
-                    if gdatfinl.rtagmock != None:
-                        path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
-                        gdatmock = readfile(path)
-                    
                     for liststrgcompvarbhist in gdatfinl.liststrgvarbhist:
                         strgvarb = liststrgcompvarbhist[0]
 
@@ -14347,18 +14353,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 else:
                     name = 'refr' + strgydat
             
-            if 'reds' in name:
-                print 'strgydat'
-                print strgydat
-                print 'name'
-                print name
-                print
-
             if not hasattr(gdat, name):
                 continue
-
-            if 'reds' in name:
-                print 'passed'
 
             ydattemp = getattr(gdat, name)
             
@@ -14372,11 +14368,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             else:
                 legd = gdat.refrlegd
                 colr = gdat.refrcolr
-            
-            if 'reds' in name:
-                print 'ydat'
-                summgene(ydat)
-                print 
             
             if histodim:
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=1, edgecolor=colr)
