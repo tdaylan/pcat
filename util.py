@@ -5137,13 +5137,15 @@ def setpfinl(gdat, boolinitsetp=False):
     if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
         for l in gdat.trueindxpopl:
             setattr(gdat, 'truemeanelempop%d' % l, None)
-        print 'gdat.truemeanelempop0'
-        print gdat.truemeanelempop0
-        print
+        if gdat.fittlensmodltype != 'none':
+            for d in gdat.indxregi:
+                strgregi = 'reg%d' % d
+                for namecalc in ['delt', 'intg']:
+                    for nametemp in ['', 'bein']:
+                        setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+                        setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
 
     # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
-    print 'gdat.truemeanelempop0'
-    print gdat.truemeanelempop0
     for k in gdat.indxvarbscal:
         try:
             temp = getattr(gdat, 'true' + gdat.listnamevarbscal[k])
@@ -5151,8 +5153,6 @@ def setpfinl(gdat, boolinitsetp=False):
             temp = None
         setattr(gdat, 'corr' + gdat.listnamevarbscal[k], temp)
     
-    print 'gdat.corrmeanelempop0'
-    print gdat.corrmeanelempop0
     gdat.fittcorrfixp = empty(gdat.fittnumbfixp)
     for k in gdat.fittindxfixp:
         try:
@@ -9692,11 +9692,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for l in indxpopl:
             for d in indxregipopl[l]:
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
-                print 'gdat.priofactdoff'
-                print gdat.priofactdoff
-                print 'lpri[0]'
-                print lpri[0]
-                print 
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
                 for k, (strgfeat, strgpdfn) in enumerate(zip(liststrgfeatprio[l], liststrgpdfnprio[l])):
@@ -11531,18 +11526,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatfinl.infoharm = retr_infoharmfromlevi(listlliktotl, gdatfinl.levi)
         
         # parse the sample vector
-        print 'heeey'
-        print 'gdat.fittnamepara[:5]'
-        print gdatfinl.fittnamepara[:5]
-        for k in range(5):
-            print 'k'
-            print k
-            print 'listsampvarb[:, k]'
-            print listsampvarb[:, k]
-            summgene(listsampvarb[:, k])
-            print
-        print
-
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
         for k, namefixp in enumerate(gdatfinl.fittnamefixp):
             setattr(gdatfinl, 'list' + strgpdfn + namefixp, listfixp[:, k])
@@ -13614,12 +13597,6 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                     raise Exception('')
                 
             listjoin = vstack((listvarb, listvarbseco)).T
-            print 'heeey'
-            print 'corrseco' 
-            print corrseco
-            print 'corr'
-            print corr
-            print
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
 

@@ -2446,6 +2446,7 @@ def init( \
 def initarry( \
              dictvarbvari, \
              dictvarb, \
+             listnamecnfgextn, \
              forcprev=False, \
              execpara=False, \
              strgcnfgextnexec=None, \
@@ -2470,7 +2471,7 @@ def initarry( \
     
     dictvarb['boolarry'] = strgcnfgextnexec == None
     listrtag = []
-    for k, strgcnfgextn in enumerate(dictvarbvari):
+    for k, strgcnfgextn in enumerate(listnamecnfgextn):
         
         if strgcnfgextnexec != None:
             if strgcnfgextn != strgcnfgextnexec:

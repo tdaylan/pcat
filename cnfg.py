@@ -190,10 +190,11 @@ def test_psfn(strgcnfgextnexec=None):
     dictargsvari['elemfeww']['fittmaxmnumbelem'] = 3
     
     dictglob = initarry( \
-                                  dictargsvari, \
-                                  dictargs, \
-                                  strgcnfgextnexec=strgcnfgextnexec, \
-                                 )
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                       )
 
     
 def test_nomi():
@@ -241,11 +242,12 @@ def pcat_anglassc(strgcnfgextnexec=None):
     dictargsvari['vlow']['anglassc'] = 0.001
     
     dictglob = initarry( \
-                                  dictargsvari, \
-                                  dictargs, \
-                                  strgcnfgextnexec=strgcnfgextnexec, \
-                                  listnamecomp=['anglassc'], \
-                                 )
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        listnamecomp=['anglassc'], \
+                       )
 
 
 def plot_main_lens():
@@ -372,10 +374,8 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
-    dictargs['truemaxmnumbelempop0reg0'] = 400
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
-    #dictargs['makeplot'] = False
     dictargs['numbswep'] = 10000
     dictargs['numbsamp'] = 100
     
@@ -394,15 +394,15 @@ def test_pars(strgcnfgextnexec=None):
     scalxaxi = 'self'
     listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
     lablxaxi = r'$\alpha_p$'
-    listnamevarbcomp = ['numbelempop0reg0']
+    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
     
     dictglob = initarry( \
                         dictargsvari, \
                         dictargs, \
+                        listnamecnfgextn, \
                         listnamevarbcomp=listnamevarbcomp, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         listvarbxaxi=listvarbxaxi, \
-                        forcprev=True, \
                         scalxaxi=scalxaxi, \
                         listtickxaxi=listtickxaxi, \
                         lablxaxi=lablxaxi, \
