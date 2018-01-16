@@ -2089,6 +2089,13 @@ def init( \
             proc_samp(gdat, None, 'this', 'true', raww=True)
         proc_samp(gdat, None, 'this', 'true')
         
+    if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
+        for l in gdat.trueindxpopl:
+            setattr(gdat, 'truemeanelempop%d' % l, None)
+        print 'gdat.truemeanelempop0'
+        print gdat.truemeanelempop0
+        print
+
     for d in gdat.indxregi:
         if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
             print 'gdat.deltener'
@@ -2454,7 +2461,7 @@ def initarry( \
              listvarbxaxi=None, \
              lablxaxi=None, \
              listtickxaxi=None, \
-             listscalxaxi=None, \
+             scalxaxi=None, \
             ):
     
     print 'Running PCAT in array mode...'
@@ -2523,22 +2530,45 @@ def initarry( \
 
         path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
-        for k, (strgvarboutp, varboutp) in enumerate(dictoutp.iteritems()):
+        lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
+        scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+        
+        try:
+            trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
+        except:
+            trueyaxi = None
+
+        for strgvarboutp, varboutp in dictoutp.iteritems():
             figr, axis = plt.subplots(figsize=(6, 6))
+            ydat = empty(numbiter)
+            yerr = empty((2, numbiter))
+            for k in indxiter:
+                ydat[k] = varboutp[k][0]
+                yerr[:, k] = tdpy.util.retr_errrvarb(varboutp[k])
             print 'listvarbxaxi'
             print listvarbxaxi
             print 'varboutp'
             print varboutp
-            axis.plot(listvarbxaxi, varboutp)
+            print 'indxiter'
+            print indxiter
+            print 'listtickxaxi'
+            print listtickxaxi
+            print 
+            axis.errorbar(indxiter, ydat, yerr=yerr, color='b', ls='', capsize=5, markersize=15, marker='o', lw=1)
+            if trueyaxi != None:
+                axis.axhline(trueyaxi, ls='--', color='g')
+            axis.set_xticks(indxiter)
             axis.set_xticklabels(listtickxaxi)
             axis.set_xlabel(lablxaxi)
             if scalxaxi == 'logt':
                 axis.set_xscale('log')
-            axis.set_ylabel(getattr(listgdat[k], 'labl' + strgvarboutp))
-            if getattr(listgdat[k], 'scal' + strgvarboutp) == 'logt':
+            axis.set_ylabel(lablyaxi)
+            if scalyaxi == 'logt':
                 axis.set_yscale('log')
             plt.tight_layout()
-            plt.savefig('%s/%s%s.pdf' % (path, namexaxi, strgvarboutp))
+            pathfull = '%s%s%s.pdf' % (path, namexaxi, strgvarboutp)
+            print 'Writing to %s...' % pathfull
+            plt.savefig(pathfull)
             plt.close(figr)
     
     return listrtag

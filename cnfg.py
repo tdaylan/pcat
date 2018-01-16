@@ -375,25 +375,25 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['truemaxmnumbelempop0reg0'] = 400
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
-    dictargs['makeplot'] = False
-    dictargs['numbswep'] = 100
-    dictargs['numbsamp'] = 10
+    #dictargs['makeplot'] = False
+    dictargs['numbswep'] = 10000
+    dictargs['numbsamp'] = 100
     
-    listnamecnfgextn = ['parsnone', 'parsloww']
-    #listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    #listnamecnfgextn = ['parsnone', 'parsloww']
+    listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi', 'parshigh']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
     dictargsvari['parsnone']['priofactdoff'] = 0.
     dictargsvari['parsloww']['priofactdoff'] = 0.5
-    #dictargsvari['parsnomi']['priofactdoff'] = 1.
-    #dictargsvari['parshigh']['priofactdoff'] = 1.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
     
     listvarbxaxi = [dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn]
-    listscalxaxi = ['self' for namecnfgextn in listnamecnfgextn] 
-    listtickxaxi = ['%d' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
-    lablxaxi = r'\alpha_p'
+    scalxaxi = 'self'
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
+    lablxaxi = r'$\alpha_p$'
     listnamevarbcomp = ['numbelempop0reg0']
     
     dictglob = initarry( \
@@ -403,11 +403,10 @@ def test_pars(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         listvarbxaxi=listvarbxaxi, \
                         forcprev=True, \
-                        listscalxaxi=listscalxaxi, \
+                        scalxaxi=scalxaxi, \
                         listtickxaxi=listtickxaxi, \
                         lablxaxi=lablxaxi, \
                         namexaxi='priofactdoff', \
-                        
                        )
 
 

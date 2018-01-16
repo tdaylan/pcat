@@ -5141,8 +5141,10 @@ def setpfinl(gdat, boolinitsetp=False):
         except:
             temp = None
         setattr(gdat, 'corr' + gdat.listnamevarbscal[k], temp)
-
-	gdat.fittcorrfixp = empty(gdat.fittnumbfixp)
+    
+    print 'gdat.corrmeanelempop0'
+    print gdat.corrmeanelempop0
+    gdat.fittcorrfixp = empty(gdat.fittnumbfixp)
     for k in gdat.fittindxfixp:
         try:
             gdat.fittcorrfixp[k] = getattr(gdat, 'true' + gdat.fittnamefixp[k])
@@ -11144,7 +11146,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         
         if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
             if gdatfinl.datatype == 'inpt':
-                if gdatfinl.boolcorr:
+                if gdatfinl.boolcrex or gdatfinl.boolcrin:
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
                         gdatmock = readfile(path)
@@ -11516,9 +11518,15 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
         
         # parse the sample vector
         print 'heeey'
-        print 'listsampvarb[:, 1]'
-        print listsampvarb[:, 1]
-        summgene(listsampvarb[:, 1])
+        print 'gdat.fittnamepara[:5]'
+        print gdatfinl.fittnamepara[:5]
+        for k in range(5):
+            print 'k'
+            print k
+            print 'listsampvarb[:, k]'
+            print listsampvarb[:, k]
+            summgene(listsampvarb[:, k])
+            print
         print
 
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
@@ -11596,7 +11604,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
        
         if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
             if gdatfinl.datatype == 'inpt':
-                if gdatfinl.boolcorr:
+                if gdatfinl.boolcrex or gdatfinl.boolcrin:
                     if gdatfinl.rtagmock != None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
                         gdatmock = readfile(path)
@@ -11606,8 +11614,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
 
             ## perform corrections
             if gdatfinl.datatype == 'inpt':
-                gdatfinl.boolcorr = gdatfinl.boolcrex or gdatfinl.boolcrin
-                if gdatfinl.boolcorr:
+                if gdatfinl.boolcrex or gdatfinl.boolcrin:
 
                     for liststrgcompvarbhist in gdatfinl.liststrgvarbhist:
                         strgvarb = liststrgcompvarbhist[0]
@@ -12760,7 +12767,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                         limtydat = [1e-3, 1.]
                                         limtxdat = [1e-3, 1.]
                                         tdpy.util.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
-                                                limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
+                                                                            limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
+                                                                            listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                         
                 if gdat.datatype == 'mock':
                     # pulsar masses
@@ -12875,83 +12883,87 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                           nameinte=nameinte)
 
 
-                # element feature correlations
-                liststrgelemtdimvarb = getattr(gdat, 'liststrgelemtdimvarb' + strgphas)
-                for strgelemtdimtype in gdat.liststrgelemtdimtype:
-                    for strgelemtdimvarb in liststrgelemtdimvarb:
-                        if strgelemtdimvarb.startswith('cmpl'):
-                            continue
-                        for l0 in indxpopl:
-                            for d0 in indxregipopl[l0]:
-                                for strgfrst in liststrgfeat[l0]:
+    if not (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+        if numbtrap > 0:
+            # element feature correlations
+            liststrgelemtdimvarb = getattr(gdat, 'liststrgelemtdimvarb' + strgphas)
+            for strgelemtdimtype in gdat.liststrgelemtdimtype:
+                for strgelemtdimvarb in liststrgelemtdimvarb:
+                    if strgelemtdimvarb.startswith('cmpl'):
+                        continue
+                    for l0 in indxpopl:
+                        for d0 in indxregipopl[l0]:
+                            for strgfrst in liststrgfeat[l0]:
+                                
+                                if strgfrst == 'spec' or strgfrst == 'specplot' or strgfeat == 'deflprof':
+                                    continue
+
+                                for strgseco in liststrgfeat[l0]:
                                     
-                                    if strgfrst == 'spec' or strgfrst == 'specplot' or strgfeat == 'deflprof':
+                                    if strgseco == 'spec' or strgseco == 'specplot' or strgseco == 'deflprof':
                                         continue
+                                    
+                                    if not checstrgfeat(strgfrst, strgseco):
+                                        continue
+                                        
+                                    if strgelemtdimvarb.startswith('hist'):
+                                        
+                                        strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dreg%d' % (l0, d0)
+                                        plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
+                                                                                            l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
+                                    else:
 
-                                    for strgseco in liststrgfeat[l0]:
-                                        
-                                        if strgseco == 'spec' or strgseco == 'specplot' or strgseco == 'deflprof':
+                                        if strgfrst.startswith('aerr') or strgseco.startswith('aerr'):
                                             continue
-                                        
-                                        if not checstrgfeat(strgfrst, strgseco):
-                                            continue
-                                            
-                                        if strgelemtdimvarb.startswith('hist'):
-                                            
-                                            strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dreg%d' % (l0, d0)
-                                            plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
+                                        if strgelemtdimvarb.startswith('fdis'):
+                                            for q in gdat.indxrefr:
+                                                strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
+                                                plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                 l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
-                                        else:
-
-                                            if strgfrst.startswith('aerr') or strgseco.startswith('aerr'):
-                                                continue
-                                            if strgelemtdimvarb.startswith('fdis'):
-                                                for q in gdat.indxrefr:
-                                                    strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (q, l0, d0)
-                                                    plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
-                                                                                                    l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
-                                            elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr'):
-                                                for qq in gdatmock.indxrefr:
-                                                    if strgelemtdimvarb.startswith('excr'):
-                                                        for q in gdat.indxrefr:
-                                                            if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)) == None:
-                                                                continue
-                                                            strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)
-                                                            plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
-                                                                                                        l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
-                                                    else:
-                                                        if strgfrst[-4:] in gdat.listnamerefr and strgseco[-4:] in gdat.listnamerefr:
+                                        elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr'):
+                                            for qq in gdatmock.indxrefr:
+                                                if strgelemtdimvarb.startswith('excr'):
+                                                    for q in gdat.indxrefr:
+                                                        if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)) == None:
                                                             continue
-                                                        strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (qq, l0, d0)
+                                                        strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)
                                                         plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                     l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
-            
-                if not (gdat.datatype == 'mock' and (gdat.truenumbelemtotl == 0 or gdat.truemaxmnumbelemtotl == 0)):
-                    for q0 in gdat.indxrefr:
-                        for d0 in indxregipopl[l0]:
-                            for l0 in indxpopl:
-                                for refrstrgfrst in gdat.refrliststrgfeat[q0]:
-                                    if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflprof' or refrstrgfrst == 'etag':
+                                                else:
+                                                    if strgfrst[-4:] in gdat.listnamerefr and strgseco[-4:] in gdat.listnamerefr:
+                                                        continue
+                                                    strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dreg%d' % (qq, l0, d0)
+                                                    plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
+                                                                                                l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
+        
+            if not (gdat.datatype == 'mock' and (gdat.truenumbelemtotl == 0 or gdat.truemaxmnumbelemtotl == 0)):
+                for q0 in gdat.indxrefr:
+                    for d0 in indxregipopl[l0]:
+                        for l0 in indxpopl:
+                            for refrstrgfrst in gdat.refrliststrgfeat[q0]:
+                                if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflprof' or refrstrgfrst == 'etag':
+                                    continue
+                                if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
+                                    continue
+                                for refrstrgseco in gdat.refrliststrgfeat[q0]:
+                                    if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
                                         continue
-                                    if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
+                                    if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflprof' or refrstrgseco == 'etag':
                                         continue
-                                    for refrstrgseco in gdat.refrliststrgfeat[q0]:
-                                        if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
-                                            continue
-                                        if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflprof' or refrstrgseco == 'etag':
-                                            continue
-                                        
-                                        if not checstrgfeat(refrstrgfrst, refrstrgseco):
-                                            continue
-                                                
-                                        if refrstrgfrst.startswith('aerr') or refrstrgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
-                                            continue
-                                        
-                                        strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
-                                        
-                                        plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
-                                                                                        q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
+                                    
+                                    if not checstrgfeat(refrstrgfrst, refrstrgseco):
+                                        continue
+                                            
+                                    if refrstrgfrst.startswith('aerr') or refrstrgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
+                                        continue
+                                    
+                                    strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
+                                    
+                                    plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
+                                                                                    q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
             
+    if not booltile:
+        if not (gdat.shrtfram and strgstat == 'this' and strgmodl == 'fitt'):
             # data and model count scatter
             for d in gdat.indxregi:
                 for m in gdat.indxevttplot:
@@ -13588,6 +13600,12 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                     raise Exception('')
                 
             listjoin = vstack((listvarb, listvarbseco)).T
+            print 'heeey'
+            print 'corrseco' 
+            print corrseco
+            print 'corr'
+            print corr
+            print
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
 
