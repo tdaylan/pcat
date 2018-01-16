@@ -3382,7 +3382,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     print 'workdict[listindxproptype]'
                     print gdat.nameproptype[workdict['list' + gdat.strgpdfn + 'indxproptype'][gdatmodi.cntrswep-5:gdatmodi.cntrswep+2, 0].astype(int)]
                     print
-                    raise Exception('loglikelihood drop is very unlikely!')
+                    #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
             if gdatmodi.nextaccpprio:

@@ -5135,6 +5135,8 @@ def setpfinl(gdat, boolinitsetp=False):
             setattr(gdat, 'true' + name, gdat.truesampvarb[getattr(gdat, 'trueindxfixp' + name)])
 
     # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
+    print 'gdat.truemeanelempop0'
+    print gdat.truemeanelempop0
     for k in gdat.indxvarbscal:
         try:
             temp = getattr(gdat, 'true' + gdat.listnamevarbscal[k])
