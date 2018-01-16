@@ -2175,7 +2175,7 @@ def init( \
     
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
     gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp
+    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp + gdat.listnamevarbscal
     
     #print 'gdat.liststrgchan'
     #print gdat.liststrgchan
@@ -2460,7 +2460,8 @@ def initarry( \
     print 'Running PCAT in array mode...'
     
     numbiter = len(dictvarbvari)
-    
+    indxiter = arange(numbiter) 
+
     if listnamevarbcomp != None:
         numboutp = len(listnamevarbcomp)
         dictoutp = dict()
@@ -2513,20 +2514,12 @@ def initarry( \
     
         print 'dictoutp'
         print dictoutp
+        for strgvarboutp, varboutp in dictoutp.iteritems():
+            for k in indxiter:
+                dictoutp[strgvarboutp][k] = getattr(listgdat[k], 'pctlpost' + strgvarboutp)
 
-        for k, (strgvarboutp, varboutp) in enumerate(dictoutp.iteritems()):
-            
-            print 'listgdat[k].listnamevarbscal'
-            print listgdat[k].listnamevarbscal
-            for strg, varb in listgdat[k].__dict__.iteritems():
-                if strg.startswith('pctlpostnumbelem'): 
-                    print 'strg'
-                    print strg
-                    print
-                    print
-                    print
-
-            dictoutp[strgvarboutp] = getattr(listgdat[k], 'pctlpost' + strgvarboutp)
+        print 'dictoutp'
+        print dictoutp
 
         path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         os.system('mkdir -p %s' % path)
@@ -2538,7 +2531,7 @@ def initarry( \
             print varboutp
             axis.plot(listvarbxaxi, varboutp)
             axis.set_xticklabels(listtickxaxi)
-            axis.set_xlabl(lablxaxi)
+            axis.set_xlabel(lablxaxi)
             if scalxaxi == 'logt':
                 axis.set_xscale('log')
             axis.set_ylabel(getattr(listgdat[k], 'labl' + strgvarboutp))

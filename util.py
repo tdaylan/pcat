@@ -11515,6 +11515,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatfinl.infoharm = retr_infoharmfromlevi(listlliktotl, gdatfinl.levi)
         
         # parse the sample vector
+        print 'heeey'
+        print 'listsampvarb[:, 1]'
+        print listsampvarb[:, 1]
+        summgene(listsampvarb[:, 1])
+        print
+
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
         for k, namefixp in enumerate(gdatfinl.fittnamefixp):
             setattr(gdatfinl, 'list' + strgpdfn + namefixp, listfixp[:, k])
@@ -12920,30 +12926,31 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                         plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                                     l0, d0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
             
-                for q0 in gdat.indxrefr:
-                    for d0 in indxregipopl[l0]:
-                        for l0 in indxpopl:
-                            for refrstrgfrst in gdat.refrliststrgfeat[q0]:
-                                if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflprof' or refrstrgfrst == 'etag':
-                                    continue
-                                if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
-                                    continue
-                                for refrstrgseco in gdat.refrliststrgfeat[q0]:
-                                    if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
+                if not (gdat.datatype == 'mock' and (gdat.truenumbelemtotl == 0 or gdat.truemaxmnumbelemtotl == 0)):
+                    for q0 in gdat.indxrefr:
+                        for d0 in indxregipopl[l0]:
+                            for l0 in indxpopl:
+                                for refrstrgfrst in gdat.refrliststrgfeat[q0]:
+                                    if refrstrgfrst == 'spec' or refrstrgfrst == 'specplot' or refrstrgfrst == 'deflprof' or refrstrgfrst == 'etag':
                                         continue
-                                    if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflprof' or refrstrgseco == 'etag':
+                                    if refrstrgfrst in gdat.refrliststrgfeatonly[q0][l0]:
                                         continue
-                                    
-                                    if not checstrgfeat(refrstrgfrst, refrstrgseco):
-                                        continue
-                                            
-                                    if refrstrgfrst.startswith('aerr') or refrstrgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
-                                        continue
-                                    
-                                    strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
-                                    
-                                    plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
-                                                                                    q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
+                                    for refrstrgseco in gdat.refrliststrgfeat[q0]:
+                                        if refrstrgseco in gdat.refrliststrgfeatonly[q0][l0]:
+                                            continue
+                                        if refrstrgseco == 'spec' or refrstrgseco == 'specplot' or refrstrgseco == 'deflprof' or refrstrgseco == 'etag':
+                                            continue
+                                        
+                                        if not checstrgfeat(refrstrgfrst, refrstrgseco):
+                                            continue
+                                                
+                                        if refrstrgfrst.startswith('aerr') or refrstrgseco.startswith('aerr') or refrstrgfrst == 'specplot' or refrstrgseco == 'specplot':
+                                            continue
+                                        
+                                        strgtotl = 'cmpl' + refrstrgfrst + refrstrgseco + 'pop%dpop%dreg%d' % (l0, q0, d0)
+                                        
+                                        plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, 'bind', 'cmpl', \
+                                                                                        q0, d0, refrstrgfrst, refrstrgseco, strgtotl, strgpdfn=strgpdfn)
             
             # data and model count scatter
             for d in gdat.indxregi:
@@ -13541,18 +13548,12 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             truepara = getattr(gdat, 'corr' + name) * factplot
         labltotl = getattr(gdat, 'labl' + name + 'totl')
         
-        print 'name'
-        print name
         listvarb = getattr(gdat, 'list' + strgpdfn + name) * factplot
-        print 'listvarb'
-        summgene(listvarb)
         if listvarb.ndim != 1:
             if listvarb.shape[1] == 1:
                 listvarb = listvarb[:, 0]
             else:
                 raise Exception('')
-        print 'listvarb'
-        summgene(listvarb)
         
         mlik = getattr(gdat, 'mlik' + name) * factplot
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscaltrac') + name
@@ -13580,22 +13581,12 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             listvarbseco = getattr(gdat, 'list' + strgpdfn + nameseco) * factplotseco
             mlikseco = getattr(gdat, 'mlik' + nameseco) * factplotseco
             
-            print 'nameseco'
-            print nameseco
-            print 'listvarbseco'
-            summgene(listvarbseco)
             if listvarbseco.ndim != 1:
                 if listvarbseco.shape[1] == 1:
                     listvarbseco = listvarbseco[:, 0]
                 else:
                     raise Exception('')
                 
-            print 'nameseco'
-            print nameseco
-            print 'listvarbseco'
-            summgene(listvarbseco)
-            print
-
             listjoin = vstack((listvarb, listvarbseco)).T
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])

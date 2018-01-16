@@ -394,7 +394,7 @@ def test_pars(strgcnfgextnexec=None):
     listscalxaxi = ['self' for namecnfgextn in listnamecnfgextn] 
     listtickxaxi = ['%d' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
     lablxaxi = r'\alpha_p'
-    listnamevarbcomp = ['numbelemreg0pop0']
+    listnamevarbcomp = ['numbelempop0reg0']
     
     dictglob = initarry( \
                         dictargsvari, \
