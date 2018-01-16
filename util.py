@@ -5134,6 +5134,13 @@ def setpfinl(gdat, boolinitsetp=False):
         for name in gdat.truenamefixp:
             setattr(gdat, 'true' + name, gdat.truesampvarb[getattr(gdat, 'trueindxfixp' + name)])
 
+    if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
+        for l in gdat.trueindxpopl:
+            setattr(gdat, 'truemeanelempop%d' % l, None)
+        print 'gdat.truemeanelempop0'
+        print gdat.truemeanelempop0
+        print
+
     # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
     print 'gdat.truemeanelempop0'
     print gdat.truemeanelempop0
@@ -9685,6 +9692,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for l in indxpopl:
             for d in indxregipopl[l]:
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
+                print 'gdat.priofactdoff'
+                print gdat.priofactdoff
+                print 'lpri[0]'
+                print lpri[0]
+                print 
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
                 for k, (strgfeat, strgpdfn) in enumerate(zip(liststrgfeatprio[l], liststrgpdfnprio[l])):

@@ -2089,13 +2089,6 @@ def init( \
             proc_samp(gdat, None, 'this', 'true', raww=True)
         proc_samp(gdat, None, 'this', 'true')
         
-    if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
-        for l in gdat.trueindxpopl:
-            setattr(gdat, 'truemeanelempop%d' % l, None)
-        print 'gdat.truemeanelempop0'
-        print gdat.truemeanelempop0
-        print
-
     for d in gdat.indxregi:
         if not gdat.killexpo and amax(gdat.cntpdata[d]) < 1.:
             print 'gdat.deltener'
