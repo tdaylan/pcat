@@ -11869,7 +11869,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     for nametemp in ['', 'bein']:
                         setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
                         setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
-    gdatfinl.limtydathistfeat = 10.
+    gdatfinl.limtydathistfeat = [0.5, 10.]
 
     print 'checking plotfinl%s...' % strgpdfn
     
