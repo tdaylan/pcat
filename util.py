@@ -11873,6 +11873,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     for nametemp in ['', 'bein']:
                         setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
                         setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+                        setattr(gdat, 'scalfracsubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
+                        setattr(gdat, 'scalmasssubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
                         print 'truefracsubh%s%s%s % (strgregi, namecalc, nametemp)'
                         print 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp)
                         print
