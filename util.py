@@ -5152,6 +5152,8 @@ def setpfinl(gdat, boolinitsetp=False):
                     for nametemp in ['', 'bein']:
                         setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
                         setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+                        setattr(gdat, 'scalfracsubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
+                        setattr(gdat, 'scalmasssubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
 
     # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
     for k in gdat.indxvarbscal:
@@ -11530,6 +11532,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             else:
                 listlliktotlregu = listlliktotl
             levi = retr_levi(listlliktotlregu)
+            setattr(gdatfinl, strgpdfn + 'levi', levi)
             
         # parse the sample vector
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
@@ -11783,7 +11786,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
         
         pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
-        gdatfinl.infoharm = retr_infofromlevi(pmealliktotl, levi)
+        infoharm = retr_infofromlevi(pmealliktotl, levi)
+        setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
         gdatfinl.bcom = gdatfinl.maxmllik - pmealliktotl
         
         if gdatfinl.checprio:
@@ -13705,7 +13709,14 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
-        titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, gdat.infoharm, gdat.labllevi, gdat.levi)
+        
+        print 'HACKING'
+        gdat.postlevi = gdat.levi
+        gdat.postinfoharm = gdat.infoharm
+
+        levi = getattr(gdat, strgpdfn + 'levi')
+        infoharm = getattr(gdat, strgpdfn + 'infoharm')
+        titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, infoharm, gdat.labllevi, levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat'), labl, titl)
         varbdraw = []
         labldraw = []
