@@ -13724,6 +13724,13 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
         
         print 'HACKING'
+        gdat.lablbcom = '\eta'
+        gdat.lablinfo = 'D_{KL}'
+        gdat.lablinfounit = 'nat'
+        gdat.labllevi = '\ln P(D)'
+        gdat.lablleviharm = '\ln P_h(D)'
+        gdat.lablleviunit = 'nat'
+        gdat.lablleviharmunit = 'nat'
         gdat.postlevi = gdat.levi
         gdat.postinfoharm = gdat.infoharm
 
