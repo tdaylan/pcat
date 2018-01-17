@@ -11863,22 +11863,21 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
 
     print 'HACKING'
-    if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
-        for l in gdatfinl.trueindxpopl:
-            setattr(gdat, 'truemeanelempop%d' % l, None)
-        if gdatfinl.fittlensmodltype != 'none':
-            for d in gdatfinl.indxregi:
-                strgregi = 'reg%d' % d
-                for namecalc in ['delt', 'intg']:
-                    for nametemp in ['', 'bein']:
-                        setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
-                        setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
-                        setattr(gdat, 'scalfracsubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
-                        setattr(gdat, 'scalmasssubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
-                        print 'truefracsubh%s%s%s % (strgregi, namecalc, nametemp)'
-                        print 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp)
-                        print
-
+    #if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
+    #    for l in gdatfinl.trueindxpopl:
+    #        setattr(gdat, 'truemeanelempop%d' % l, None)
+    #    if gdatfinl.fittlensmodltype != 'none':
+    #        for d in gdatfinl.indxregi:
+    #            strgregi = 'reg%d' % d
+    #            for namecalc in ['delt', 'intg']:
+    #                for nametemp in ['', 'bein']:
+    #                    setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+    #                    setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+    #                    setattr(gdat, 'scalfracsubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
+    #                    setattr(gdat, 'scalmasssubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
+    #                    print 'truefracsubh%s%s%s % (strgregi, namecalc, nametemp)'
+    #                    print 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp)
+    #                    print
     gdatfinl.limtydathistfeat = [0.5, 10.]
 
     print 'checking plotfinl%s...' % strgpdfn
@@ -13622,6 +13621,18 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                     raise Exception('')
                 
             listjoin = vstack((listvarb, listvarbseco)).T
+    
+            
+            if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
+                if name.startswith('meanelem') or name.startswith('masssubh') or name.startswith('fracsubh'):
+                    truepara = None
+                    scal = 'self'
+                    print 'HACKING'
+                if nameseco.startswith('meanelem') or nameseco.startswith('masssubh') or nameseco.startswith('fracsubh'):
+                    trueparaseco = None
+                    scalseco = 'self'
+                    print 'HACKING'
+                
             print 'corr'
             print corr
             print 'corrseco'
