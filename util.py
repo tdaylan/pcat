@@ -14471,11 +14471,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         if strgydat[-8:-5] == 'pop':
             if strgydat[4:-8] in liststrgfeatprio[int(strgydat[-5])]:
                 xdatprio = getattr(gdat, strgmodl + strgxdat + 'prio') * factxdat
-                #if strgmodl == 'true' or strgstat == 'pdfn':
-                #    gdattemp = gdat
-                #else:
-                #    gdattemp = gdatmodi
-    
                 if gdat.datatype == 'mock' and not omittrue:
                     for q in gdat.indxrefr:
                         if gdat.refrnumbelempopl[q] == 0:
@@ -14483,27 +14478,16 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                         if strgydat[4:-8] in gdat.trueliststrgfeatprio[q]:
                             truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
                             trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
-                            print 'truexdatprio'
-                            summgene(truexdatprio)
-                            print 'trueydatsupr'
-                            summgene(trueydatsupr)
                             trueydatsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'true', strgydat + 'prio', strgpdfn) * factydat
-                            print 'trueydatsupr'
-                            summgene(trueydatsupr)
-                            print
-
                             axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphline, color=gdat.refrcolrelem[q])
 
                 if strgmodl != 'true':
                     ydatsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'fitt', strgydat + 'prio', strgpdfn) * factydat
                     if strgstat == 'pdfn':
                         yerrsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'fitt', strgydat + 'prio', strgpdfn, strgmome='errr') * factydat
-                        #ydatsupr = getattr(gdattemp, 'pmea' + strgydat + 'prio') * factydat
-                        #yerrsupr = getattr(gdattemp, 'errr' + strgydat + 'prio') * factydat
                         labl = gdat.legdsampdist + ' hyper-distribution'
                         ptch, line = tdpy.util.plot_braz(axis, xdatprio, ydatsupr, yerr=yerrsupr, lcol='lightgrey', dcol='grey', labl=labl)
                     else:
-                        #ydatsupr = getattr(gdattemp, strgstat + strgydat + 'prio') * factydat
                         axis.plot(xdatprio, ydatsupr, ls='--', alpha=gdat.alphline, color=gdat.fittcolrelem[int(strgydat[-5])])
    
     for name, valu in gdat.__dict__.iteritems():
