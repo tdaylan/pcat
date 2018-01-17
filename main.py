@@ -177,7 +177,9 @@ def init( \
          strganglunittext=None, \
          anglfact=None, \
          fluxfactplot=None, \
-         
+            
+         limtydathistfeat=None, \
+
          # model
          ## PSF
          specfraceval=None, \
@@ -2062,14 +2064,15 @@ def init( \
     if gdat.fittnumbtrap > 0:
         # plot settings
         ## upper limit of histograms
-        if gdat.allwrefr:
-            #gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
-            gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.refrnumbelemtotl))]
-        else:
-            gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
-            #if gdat.datatype == 'mock':
-            #    gdat.limtydathistfeat = [0.5, sum(gdat.truenumbelem) / 2.]
-            #if gdat.datatype == 'inpt':
+        if gdat.limtydathistfeat == None:
+            if gdat.allwrefr:
+                #gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
+                gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.refrnumbelemtotl))]
+            else:
+                gdat.limtydathistfeat = [0.5, 10**ceil(log10(gdat.fittmaxmnumbelemtotl))]
+                #if gdat.datatype == 'mock':
+                #    gdat.limtydathistfeat = [0.5, sum(gdat.truenumbelem) / 2.]
+                #if gdat.datatype == 'inpt':
 
     # initial plots
     if gdat.makeplot and gdat.makeplotinit:

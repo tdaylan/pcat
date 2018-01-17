@@ -11504,12 +11504,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
         
-            # calculate log-evidence using the harmonic mean estimator
-            if gdatfinl.verbtype > 0:
-                print 'Estimating the Bayesian evidence...'
-                timeinit = gdatfinl.functime()
-            
             if gdatfinl.regulevi:
+                
+                if gdatfinl.verbtype > 0:
+                    print 'Regularizing the Bayesian evidence...'
+                    timeinit = gdatfinl.functime()
+            
                 # regularize the harmonic mean estimator
                 ## get an ellipse around the median posterior 
                 gdatfinl.elpscntr = percentile(listsamp, 50., axis=0)
@@ -11521,21 +11521,16 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdatfinl.verbtype, optiprop=True)
                 lnorregu = -0.5 * gdatfinl.fittnumbpara * log(pi) + sp.special.gammaln(0.5 * gdatfinl.fittnumbpara + 1.) - sum(elpsaxis)
                 indxsampregu = 0
-                listlliktotltemp = listlliktotl[indxsampregu]
-            else:
-                listlliktotltemp = listlliktotl
-            gdatfinl.levi = retr_levi(listlliktotltemp)
-            
-            if gdatfinl.verbtype > 0:
-                timefinl = gdatfinl.functime()
-                print 'Done in %.3g seconds.' % (timefinl - timeinit)
+                listlliktotlregu = listlliktotl[indxsampregu]
+                
+                if gdatfinl.verbtype > 0:
+                    timefinl = gdatfinl.functime()
+                    print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
-            # calculate relative entropy
-            meanlliktotl = mean(listlliktotl, axis=0)
-            infoharm = retr_infofromlevi(gdatfinl.meanlliktotl, gdatfinl.levi)
-            bcom = gdatfinl.maxmlliktotl - gdatfinl.meanlliktotl
-            setattr(gdatfinl, 'mean' + strgpdfn + 'fixp', listfixp)
-        
+            else:
+                listlliktotlregu = listlliktotl
+            levi = retr_levi(listlliktotlregu)
+            
         # parse the sample vector
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
         for k, namefixp in enumerate(gdatfinl.fittnamefixp):
@@ -11703,14 +11698,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             print 'Computing credible intervals...'
             timeinit = gdatfinl.functime()
        
-        #print 'HACKING'
-        #gdatfinl.liststrgvarbarry = gdatfinl.liststrgvarbarrysamp + gdatfinl.liststrgvarbarryswep
-        #gdatfinl.liststrgchan = gdatfinl.liststrgvarbarry + ['fixp'] + gdatfinl.liststrgvarblistsamp
-        #try:
-        #    gdatfinl.listnamevarbcpct = gdatfinl.listnamevarbcpos
-        #except:
-        #    pass
-                    
         for strgchan in gdatfinl.liststrgchan:
             
             if booltile:
@@ -11794,6 +11781,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
             setattr(gdatfinl, 'stdv' + strgpdfn + strgchan, stdvtemp)
             if strgchan in gdatfinl.listnamevarbcpct:
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
+        
+        pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
+        gdatfinl.infoharm = retr_infofromlevi(pmealliktotl, levi)
+        gdatfinl.bcom = gdatfinl.maxmllik - pmealliktotl
         
         if gdatfinl.checprio:
             for strgvarb in gdatfinl.listnamevarbscal:
@@ -14314,12 +14305,14 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 labl = gdat.legdsampdist
             
             # draw points
-            indxerrr = where(yerr[1, :] > yerr[0, :])[0]
+            indxerrr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
             if indxerrr.size > 0:
                 labltemp = None
             else:
                 labltemp = labl
-            axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
+            #axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
+            temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
+                                                                                            marker='o', ls='', markersize=5, color=colr, label=labl, lw=1)
             
             # draw error-bar caps 
             if indxerrr.size > 0:

@@ -47,12 +47,12 @@ def test_info(strgcnfgextnexec=None):
 
 def test_time():
    
-    # pixelization type
-    [100,   'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
-    # sigc
-    [11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
-    # numbener
-    [11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
+    ## pixelization type
+    #[100,   'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
+    ## sigc
+    #[11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
+    ## numbener
+    #[11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
     
     anglfact = 3600. * 180. / pi
     dictargs = {}
@@ -93,14 +93,7 @@ def test_time():
                         listtickxaxi=listtickxaxi, \
                         lablxaxi=lablxaxi, \
                         namexaxi='minmflux', \
-
-
-
-
-
-
-
-
+                       )
 
     
 def test_psfn(strgcnfgextnexec=None):
