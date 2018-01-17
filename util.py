@@ -10583,6 +10583,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         bins = getattr(gdat, 'bins' + strgfeat)
                         delt = getattr(gdat, 'delt' + strgfeat)
                         
+                        xdatplot = getattr(gdat, 'mean' + strgfeat)
                         xdat = getattr(gdat, strgmodl + 'mean' + strgfeat + 'prio')
                         deltprio = getattr(gdat, strgmodl + 'delt' + strgfeat + 'prio')
                         
@@ -10637,7 +10638,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             booltemp = True
                         
                         if booltemp:
-                            dictelem[l][d]['hist' + strgfeat + 'prio'] = meanelem[l] * pdfn * deltprio * delt[0] / deltprio[0]
+                            dictelem[l][d]['hist' + strgfeat + 'prio'] = meanelem[l] * pdfn * interp(xdat, xdatplot, delt)
                         
                         setattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%dprio' % (l, d), dictelem[l][d]['hist' + strgfeat + 'prio'])
                         if strgmodl == 'true':
@@ -13622,8 +13623,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 
             listjoin = vstack((listvarb, listvarbseco)).T
     
-            
-            if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
+            if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
                 if name.startswith('meanelem') or name.startswith('masssubh') or name.startswith('fracsubh'):
                     truepara = None
                     scal = 'self'
@@ -13731,8 +13731,12 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         gdat.lablleviharm = '\ln P_h(D)'
         gdat.lablleviunit = 'nat'
         gdat.lablleviharmunit = 'nat'
-        gdat.postlevi = gdat.levi
-        gdat.postinfoharm = gdat.infoharm
+        try:
+            gdat.postlevi = gdat.levi
+            gdat.postinfoharm = gdat.infoharm
+        except:
+            pass
+
 
         levi = getattr(gdat, strgpdfn + 'levi')
         infoharm = getattr(gdat, strgpdfn + 'infoharm')
@@ -14478,8 +14482,16 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                             continue
                         if strgydat[4:-8] in gdat.trueliststrgfeatprio[q]:
                             truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
-                            #trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
+                            trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
+                            print 'truexdatprio'
+                            summgene(truexdatprio)
+                            print 'trueydatsupr'
+                            summgene(trueydatsupr)
                             trueydatsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'true', strgydat + 'prio', strgpdfn) * factydat
+                            print 'trueydatsupr'
+                            summgene(trueydatsupr)
+                            print
+
                             axis.plot(truexdatprio, trueydatsupr, ls='-', alpha=gdat.alphline, color=gdat.refrcolrelem[q])
 
                 if strgmodl != 'true':

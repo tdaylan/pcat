@@ -2451,6 +2451,7 @@ def initarry( \
              dictvarb, \
              listnamecnfgextn, \
              forcprev=False, \
+             takeprev=False, \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
@@ -2495,7 +2496,7 @@ def initarry( \
     
         listrtagprev = retr_listrtagprev(strgcnfg)
 
-        if not forcprev and strgcnfgextnexec == None and len(listrtagprev) > 0:
+        if (not forcprev and strgcnfgextnexec == None or takeprev and strgcnfgextnexec != None) and len(listrtagprev) > 0:
             print 'Found at least one previous run with the configuration %s' % strgcnfg
             print 'Skipping...'
             print
