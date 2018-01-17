@@ -11869,6 +11869,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     for nametemp in ['', 'bein']:
                         setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
                         setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+                        print 'truefracsubh%s%s%s % (strgregi, namecalc, nametemp)'
+                        print 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp)
+                        print
+
     gdatfinl.limtydathistfeat = [0.5, 10.]
 
     print 'checking plotfinl%s...' % strgpdfn
@@ -13612,6 +13616,16 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                     raise Exception('')
                 
             listjoin = vstack((listvarb, listvarbseco)).T
+            print 'corr'
+            print corr
+            print 'corrseco'
+            print corrseco
+            print 'truepara'
+            print truepara
+            print 'trueparaseco'
+            print trueparaseco
+            print
+
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
 
