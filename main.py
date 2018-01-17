@@ -2506,6 +2506,9 @@ def initarry( \
         proc_finl(rtag=rtag, strgpdfn='post')
     
     if listnamevarbcomp != None:
+        
+        strgtimestmp = tdpy.util.retr_strgtimestmp()
+    
         print
         print 'Producing comparison plots...'
         
@@ -2513,32 +2516,41 @@ def initarry( \
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-        print 'dictoutp'
-        print dictoutp
         for strgvarboutp, varboutp in dictoutp.iteritems():
             for k in indxiter:
                 dictoutp[strgvarboutp][k] = getattr(listgdat[k], 'pctlpost' + strgvarboutp)
-
-        print 'dictoutp'
-        print dictoutp
-
-        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
-        os.system('mkdir -p %s' % path)
-        lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
-        scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
-        
-        try:
-            trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
-        except:
-            trueyaxi = None
 
         for strgvarboutp, varboutp in dictoutp.iteritems():
             figr, axis = plt.subplots(figsize=(6, 6))
             ydat = empty(numbiter)
             yerr = empty((2, numbiter))
+            
+            lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
+            scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+            
+            try:
+                trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
+            except:
+                trueyaxi = None
+            
+            print 'strgvarboutp'
+            print strgvarboutp
             for k in indxiter:
+                print 'k'
+                print k
+                print 'varboutp[k]'
+                print varboutp
+                summgene(varboutp[k])
+                if varboutp[k].ndim == 2:
+                    if varboutp[k].shape[1] == 1:
+                        varboutp[k] = varboutp[k][:, 0]
+                    else:
+                        raise Exception('varboutp format is wrong.')
+                elif varboutp[k].ndim > 2:
+                    raise Exception('varboutp format is wrong.')
                 ydat[k] = varboutp[k][0]
                 yerr[:, k] = tdpy.util.retr_errrvarb(varboutp[k])
+            
             print 'listvarbxaxi'
             print listvarbxaxi
             print 'varboutp'
@@ -2548,7 +2560,10 @@ def initarry( \
             print 'listtickxaxi'
             print listtickxaxi
             print 
-            axis.errorbar(indxiter, ydat, yerr=yerr, color='b', ls='', capsize=5, markersize=15, marker='o', lw=1)
+            temp, listcaps, temp = axis.errorbar(indxiter, ydat, yerr=yerr, color='b', ls='', capsize=15, markersize=15, marker='o', lw=3)
+            for caps in listcaps:
+                caps.set_markeredgewidth(3)
+            
             if trueyaxi != None:
                 axis.axhline(trueyaxi, ls='--', color='g')
             axis.set_xticks(indxiter)
@@ -2560,7 +2575,8 @@ def initarry( \
             if scalyaxi == 'logt':
                 axis.set_yscale('log')
             plt.tight_layout()
-            pathfull = '%s%s%s.pdf' % (path, namexaxi, strgvarboutp)
+            path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
+            pathfull = '%s%s%s_%s.pdf' % (path, namexaxi, strgvarboutp, strgtimestmp)
             print 'Writing to %s...' % pathfull
             plt.savefig(pathfull)
             plt.close(figr)

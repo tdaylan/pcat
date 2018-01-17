@@ -4,161 +4,103 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
-def test_info():
+def test_info(strgcnfgextnexec=None):
     
-    listminmflux = logspace(-9., -8., 2)
-    numbiter = listminmflux.size
-    liststrgvarb = ['levi', 'info']
-    varbdict = {}
-    for k in range(numbiter):
-        seedstat = get_state()
-        gdat = init( \
-                    seedstat=seedstat, \
-                    numbswep=50000, \
-                    factthin=500, \
-                    indxenerincl=arange(1, 3), \
-                    indxevttincl=arange(3, 4), \
-                    minmflux=listminmflux[k], \
-                    strgexpo=1e-20, \
-                    maxmflux=1e-7, \
-                    trueminmflux=1e-8, \
-                    truenumbpnts=array([50]), \
-                    back=['fermisotflux.fits'], \
-                    #strgexpo='fermexpo_cmp0_ngal.fits', \
-                   )
-        for strg in liststrgvarb:
-            if k == 0:
-                varb = getattr(gdat, strg)
-                if isinstance(varb, ndarray):
-                    shap = [numbiter] + list(varb.shap)
-                elif isinstance(varb, float):
-                    shap = [numbiter, 1]
-                varbdict[strg] = empty(shap)
-            else:
-                varbdict[strg][k, :] = getattr(gdat, strg)
-
-    strgtimestmp = tdpy.util.retr_strgtimestmp()
-    figr, axis = plt.subplots()
-    axistwin = axis.twinx()
-    axis.plot(listminmflux, varbdict['info'][:, 0], label='Relative entropy')
-    axis.legend(bbox_to_anchor=[0.2, 1.08], loc=2)
-    axistwin.plot(listminmflux, varbdict['levi'][:, 0], label='Log-evidence', color='g')
-    axistwin.legend(bbox_to_anchor=[0.8, 1.08])
-    axis.set_ylabel('$D_{KL}$ [nats]')
-    axistwin.set_ylabel(r'$\log P(D)$ [nats]')
-    axis.set_xlabel('$f_{min}$ [1/cm$^2$/s/GeV]')
-    axis.set_xscale('log')
-    plt.tight_layout()
-    pathfold = os.environ["PCAT_DATA_PATH"] + '/imag/test_info/'
-    os.system('mkdir -p ' + pathfold)
-    figr.savefig(pathfold + 'infolevi_%s.pdf' % strgtimestmp)
-    plt.close(figr)
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['priofactdoff'] = 0.2
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
+    
+    listnamecnfgextn = ['fittlowr', 'fittnomi', 'fitthigr']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['fittlowr']['minmflux'] = 1e-9
+    dictargsvari['fittnomi']['minmflux'] = 3e-9
+    dictargsvari['fitthigr']['minmflux'] = 1e-8
+    
+    scalxaxi = 'logt'
+    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    listnamevarbcomp = ['levi', 'infoharm', 'bcom']
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['minmflux'] for namecnfgextn in listnamecnfgextn] 
+    listvarbxaxi = [dictargsvari[namecnfgextn]['minmflux'] for namecnfgextn in listnamecnfgextn]
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        listnamevarbcomp=listnamevarbcomp, \
+                        listvarbxaxi=listvarbxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        lablxaxi=lablxaxi, \
+                        namexaxi='minmflux', \
+                       )
 
 
 def test_time():
    
-    print 'Time-test suite for PCAT'
-
-    numbswepcomm = 100
-
-    tupl = [ \
-            # reference
-            [11.44, 'heal', 1e2, 1,          numbswepcomm, 1, 'Reference'], \
-            
-            # numbpixl
-            [200,   'cart', 1e2, 1,          numbswepcomm, 1, '2X pixels'], \
-            
-            # pixelization type
-            [100,   'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
-
-            # minmflux
-            [11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
-            
-            # numbener
-            [11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
-            
-            # numbproc
-            [100,   'heal', 1e2, 1, int(numbswepcomm / 2), 2, '2 Processes'], \
-
-           ]
+    # pixelization type
+    [100,   'cart', 1e2, 1,          numbswepcomm, 1, 'Cartesian'], \
+    # sigc
+    [11.44, 'heal', 5e1, 1,          numbswepcomm, 1, '2X Max PS, 1/2X $f_{min}$'], \
+    # numbener
+    [11.44, 'heal', 1e2, 3,          numbswepcomm, 1, '3 energy bins'], \
     
-    truenumbpnts = array([100])
-
-    numbiter = len(tupl)
-    indxiter = np.arange(numbiter)
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['priofactdoff'] = 0.2
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
     
-    liststrgvarb = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
-    listlablvarb = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
+    listnamecnfgextn = ['fittlowr', 'fittnomi', 'fitthigr']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
     
-    listticklabl = []
-    for k in indxiter:
-        temp, pixltype, minmflux, numbener, numbswep, numbproc, ticklabl = tupl[k]
-        listticklabl.append(ticklabl)
-        if pixltype == 'heal':
-            maxmgangdata = deg2rad(temp)
-            numbsidecart = None
-        else:
-            maxmgangdata = None
-            numbsidecart = temp
+    dictargsvari['sigclowr']['truesigc'] = 1e-9
+    dictargsvari['sigcnomi']['truesigc'] = 3e-9
+    dictargsvari['sigchigr']['truesigc'] = 1e-8
+   
+    #liststrgvarb = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
+    #listlablvarb = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
 
-        if numbener == 1:
-            indxenerincl = arange(2, 3)
-        if numbener == 3:
-            indxenerincl = arange(1, 4)
-     
-        print 'tupl[k]'
-        print tupl[k]
+    scalxaxi = 'logt'
+    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    listnamevarbcomp = ['levi', 'infoharm', 'bcom']
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['minmflux'] for namecnfgextn in listnamecnfgextn] 
+    listvarbxaxi = [dictargsvari[namecnfgextn]['minmflux'] for namecnfgextn in listnamecnfgextn]
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        listnamevarbcomp=listnamevarbcomp, \
+                        listvarbxaxi=listvarbxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        lablxaxi=lablxaxi, \
+                        namexaxi='minmflux', \
 
-        gdat = init( \
-                    numbswep=numbswep, \
-                    numbproc=numbproc, \
-                    back=[1.], \
-                    makeplot=False, \
-                    verbtype=0, \
-                    strgexpo=1., \
-                    indxenerincl=indxenerincl, \
-                    pixltype=pixltype, \
-                    indxevttincl=arange(3, 4), \
-                    psfntype='doubking', \
-                    maxmgangdata=maxmgangdata, \
-                    minmflux=minmflux, \
-                    maxmflux=1e6, \
-                    numbsidecart=numbsidecart, \
-                    truenumbpnts=truenumbpnts, \
-                   )
-        
-        print
-        
-        if k == 0:
-            varbdict = dict() 
-            for strg in liststrgvarb:
-                varb = getattr(gdat, strg)
-                if isinstance(varb, float):
-                    shap = [1]
-                else:
-                    shap = list(getattr(gdat, strg).shape)
-                varbdict[strg] = empty([numbiter] + shap)
-        
-        for strg in liststrgvarb:
-            print 'varbdict'
-            print varbdict
-            varbdict[strg][k, :] = getattr(gdat, strg)
 
-    size = 0.5
-    path = tdpy.util.retr_path('pcat', onlyimag=True) + 'test_time/'
-    os.system('mkdir -p %s' % path)
-    strgtimestmp = tdpy.util.retr_strgtimestmp()
 
-    numbplot = len(liststrgvarb)
-    for k in range(numbplot):
-        figr, axis = plt.subplots()
-        axis.bar(indxiter, dictvarb[k, :], 2 * size)
-        axis.set_ylabel(listlablvarb[k])
-        axis.set_xticks(indxtupl + size)
-        axis.set_xticklabels(listtticklabl, rotation=45)
-        plt.tight_layout()
-        figr.savefig(path + '%s_%04d_%s.pdf' % (liststrgvarb[k], log10(numbswep), strgtimestmp))
-        plt.close(figr)
+
+
+
+
+
 
     
 def test_psfn(strgcnfgextnexec=None):
@@ -169,7 +111,6 @@ def test_psfn(strgcnfgextnexec=None):
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['priofactdoff'] = 0.2
-    dictargs['truemaxmnumbelempop0reg0'] = 400
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
     dictargs['numbswep'] = 10000
@@ -197,36 +138,15 @@ def test_psfn(strgcnfgextnexec=None):
                        )
 
     
-def test_nomi():
-      
-    init( \
-         proppsfp=False, \
-         indxenerincl=arange(1, 3), \
-         indxevttincl=arange(3, 4), \
-         back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         psfntype='doubking', \
-         maxmnumbpnts=array([600]), \
-         maxmgangdata=deg2rad(20.), \
-         minmflux=5e-11, \
-         maxmflux=1e-7, \
-         truenumbpnts=array([300]), \
-        )
-
-
 def pcat_anglassc(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'sdyn'
     dictargs['backtype'] = [['tgasback.fits']]
-    
     dictargs['numbsidecart'] = 200
-    
-    #dictargs['minmdatacnts'] = 0.
     dictargs['strgexpo'] = 1.
     dictargs['elemtype'] = ['clus']
     dictargs['psfnevaltype'] = 'kern'
-    
     # temp
     dictargs['numbswep'] = 10000
     
@@ -235,10 +155,12 @@ def pcat_anglassc(strgcnfgextnexec=None):
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
    
-    # to test splits and merges
     dictargsvari['vhig']['anglassc'] = 1.
+    
     dictargsvari['high']['anglassc'] = 0.1
+    
     dictargsvari['loww']['anglassc'] = 0.01
+   
     dictargsvari['vlow']['anglassc'] = 0.001
     
     dictglob = initarry( \
@@ -376,25 +298,25 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
-    dictargs['numbswep'] = 10000
+    dictargs['numbswep'] = 100000
     dictargs['numbsamp'] = 100
     
-    #listnamecnfgextn = ['parsnone', 'parsloww']
-    listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
     dictargsvari['parsnone']['priofactdoff'] = 0.
     dictargsvari['parsloww']['priofactdoff'] = 0.5
     dictargsvari['parsnomi']['priofactdoff'] = 1.
     dictargsvari['parshigh']['priofactdoff'] = 1.5
     
-    listvarbxaxi = [dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn]
     scalxaxi = 'self'
-    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
     lablxaxi = r'$\alpha_p$'
     listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
+    listvarbxaxi = [dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn]
     
     dictglob = initarry( \
                         dictargsvari, \

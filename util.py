@@ -3691,6 +3691,14 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablsigm = '\sigma_l'
     gdat.lablgamm = '\gamma_l'
 
+    gdat.lablbcom = '\eta'
+    gdat.lablinfo = 'D_{KL}'
+    gdat.lablinfounit = 'nat'
+    gdat.labllevi = '\ln P(D)'
+    gdat.lablleviharm = '\ln P_h(D)'
+    gdat.lablleviunit = 'nat'
+    gdat.lablleviharmunit = 'nat'
+    
     gdat.lablsind = 's'
     for i in gdat.indxenerinde:
         setattr(gdat, 'lablsindcolr%04d' % i, 's_%d' % i)
@@ -7935,11 +7943,11 @@ def retr_levi(listllik):
     return levi
 
 
-def retr_infoharmfromlevi(listllik, levi):
+def retr_infofromlevi(meanllik, levi):
     
-    infoharm = mean(listllik) - levi
+    info = meanllik + levi
 
-    return infoharm
+    return info
 
 
 def retr_jcbn():
@@ -11513,17 +11521,20 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdatfinl.verbtype, optiprop=True)
                 lnorregu = -0.5 * gdatfinl.fittnumbpara * log(pi) + sp.special.gammaln(0.5 * gdatfinl.fittnumbpara + 1.) - sum(elpsaxis)
                 indxsampregu = 0
-                listlliktemp = listlliktotl[indxsampregu]
+                listlliktotltemp = listlliktotl[indxsampregu]
             else:
-                listlliktemp = listlliktotl
-            gdatfinl.levi = retr_levi(listlliktemp)
+                listlliktotltemp = listlliktotl
+            gdatfinl.levi = retr_levi(listlliktotltemp)
             
             if gdatfinl.verbtype > 0:
                 timefinl = gdatfinl.functime()
                 print 'Done in %.3g seconds.' % (timefinl - timeinit)
 
             # calculate relative entropy
-            gdatfinl.infoharm = retr_infoharmfromlevi(listlliktotl, gdatfinl.levi)
+            meanlliktotl = mean(listlliktotl, axis=0)
+            infoharm = retr_infofromlevi(gdatfinl.meanlliktotl, gdatfinl.levi)
+            bcom = gdatfinl.maxmlliktotl - gdatfinl.meanlliktotl
+            setattr(gdatfinl, 'mean' + strgpdfn + 'fixp', listfixp)
         
         # parse the sample vector
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
@@ -13287,23 +13298,23 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             for n in gdat.indxproptype:
                 pathpostlpri = getattr(gdat, 'path' + gdat.strgpdfn + 'finllpri')
                 #path = pathpostlpri + 'deltlliktotl' + gdat.nameproptype[n]
-                #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[listindxsamptotl[n]], r'$\log \Delta P(D|M)$', logthist=True)
+                #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[listindxsamptotl[n]], r'$\ln \Delta P(D|M)$', logthist=True)
                 #for k in gdat.fittindxlpri:
                 #    path = pathpostlpri + 'deltlpritotl%04d' % k + gdat.nameproptype[n]
-                #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[listindxsamptotl[n], k], r'$\log \Delta P_{%d}(M)$' % k, logthist=True)
+                #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[listindxsamptotl[n], k], r'$\ln \Delta P_{%d}(M)$' % k, logthist=True)
                 if gdat.nameproptype[n] == 'brth' or gdat.nameproptype[n] == 'deth' or gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
                     path = pathpostlpri + 'lpautotl%04d' + gdat.nameproptype[n]
                     tdpy.mcmc.plot_trac(path, listlpautotl[listindxsamptotl[n]], '', logthist=True)
                     for k in gdat.fittindxlpau:
                         path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                        tdpy.mcmc.plot_trac(path, listlpau[listindxsamptotl[n], k], r'$\log u_{%d}$' % k, logthist=True)
+                        tdpy.mcmc.plot_trac(path, listlpau[listindxsamptotl[n], k], r'$\ln u_{%d}$' % k, logthist=True)
                     
                 if gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
                     path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listlrpp[listindxsamptotl[n]], r'$\log \alpha_p$', logthist=True)
+                    tdpy.mcmc.plot_trac(path, listlrpp[listindxsamptotl[n]], r'$\ln \alpha_p$', logthist=True)
 
                     path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\log \alpha_c$', logthist=True)
+                    tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\ln \alpha_c$', logthist=True)
     
         # Gelman-Rubin test
         pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
@@ -13426,11 +13437,11 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 for l in gdat.fittindxpopl:
                     listauxipara = getattr(gdat, 'list' + strgpdfn + 'auxiparapop%d' % l)
                     if gdat.fittelemtype[l].startswith('lghtline'):
-                        listlabl = ['$u_e$', '$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                        listlabl = ['$u_e$', '$u_f$', r'$\ln\alpha_j$', r'$\ln\alpha_p$']
                         listname = ['elinauxi', 'fracauxi', 'ljcb', 'lrpp']
                         listvarb = [listauxipara[:, 0], listauxipara[:, 1], listljcb, listlrpp]
                     else:
-                        listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\log\alpha_j$', r'$\log\alpha_p$']
+                        listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\ln\alpha_j$', r'$\ln\alpha_p$']
                         listname = ['lgalauxi', 'bgalauxi', 'fracauxi', 'ljcb', 'lrpp']
                         listvarb = [gdat.anglfact * listauxipara[:, 0], gdat.anglfact * listauxipara[:, 1], listauxipara[:, 2], listljcb, listlrpp]
                     numbvarb = len(listvarb)
@@ -13676,7 +13687,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
-        titl = r'$D_{KL} = %.5g, \ln P(D) = %.5g$' % (gdat.infoharm, gdat.levi)
+        titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, gdat.infoharm, gdat.labllevi, gdat.levi)
         tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat'), labl, titl)
         varbdraw = []
         labldraw = []
