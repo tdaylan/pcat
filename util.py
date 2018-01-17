@@ -11858,6 +11858,19 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                     print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdatfinl.timereal[k], gdatfinl.timeproc[k])
                 print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
 
+    print 'HACKING'
+    if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
+        for l in gdatfinl.trueindxpopl:
+            setattr(gdat, 'truemeanelempop%d' % l, None)
+        if gdatfinl.fittlensmodltype != 'none':
+            for d in gdatfinl.indxregi:
+                strgregi = 'reg%d' % d
+                for namecalc in ['delt', 'intg']:
+                    for nametemp in ['', 'bein']:
+                        setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+                        setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
+    gdatfinl.limtydathistfeat = 10.
+
     print 'checking plotfinl%s...' % strgpdfn
     
     booltemp = chec_statfile(rtagfinl, 'plotfinl', strgpdfn)
