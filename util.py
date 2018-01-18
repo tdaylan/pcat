@@ -3508,14 +3508,20 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.fittlensmodltype != 'none':
         for d in gdat.indxregi:
             strgregi = 'reg%d' % d
-            setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
-            setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
-            setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
-            setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
-            setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
-            setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
+            if gdat.numbregi == 1:
+                lablregi = ',%d' % d
+            setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub%s}}$' % lablregi)
+            setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$\rho_{\rm{sub%s}}$' % lablregi)
+            setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E%s}}$' % lablregi)
+            setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$\rho_{\rm{sub,E%s}}$' % lablregi)
+            setattr(gdat, 'lablmasssubh%sintgunit' % strgregi, '$M_{\odot}$')
+            setattr(gdat, 'lablmasssubh%sdeltunit' % strgregi, '$M_{\odot}$/kpc')
+            setattr(gdat, 'lablmasssubh%sintgbeinunit' % strgregi, '$M_{\odot}$')
+            setattr(gdat, 'lablmasssubh%sdeltbeinunit' % strgregi, '$M_{\odot}$/kpc')
+            setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub%s}}' % lablregi)
+            setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rho,\rm{sub%s}}' % lablregi)
+            setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E%s}}$' % lablregi)
+            setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rho,\rm{sub,E%s}}$' % lablregi)
             for e in gdat.fittindxsersfgrd[d]:
                 setattr(gdat, 'lablmasshostreg%disf%dbein' % (d, e), r'$M_{\rm{hst,%d%d,C}}$' % (d, e))
                 setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
@@ -14374,7 +14380,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 labltemp = labl
             #axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
             temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
-                                                                                            marker='o', ls='', markersize=5, color=colr, label=labl, lw=1)
+                                                                                            marker='o', ls='', markersize=5, color=colr, lw=1)
             
             # draw error-bar caps 
             if indxerrr.size > 0:
