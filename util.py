@@ -11134,7 +11134,7 @@ def retr_pathoutprtag(rtag):
     return pathoutprtag
 
 
-def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
+def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
     
     gdatmock = None
     
@@ -11868,24 +11868,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post'):
                 for k in gdatfinl.indxproc:
                     print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdatfinl.timereal[k], gdatfinl.timeproc[k])
                 print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
-
-    print 'HACKING'
-    #if gdatfinl.datatype == 'mock' and gdatfinl.truenumbelemtotl == 0:
-    #    for l in gdatfinl.trueindxpopl:
-    #        setattr(gdat, 'truemeanelempop%d' % l, None)
-    #    if gdatfinl.fittlensmodltype != 'none':
-    #        for d in gdatfinl.indxregi:
-    #            strgregi = 'reg%d' % d
-    #            for namecalc in ['delt', 'intg']:
-    #                for nametemp in ['', 'bein']:
-    #                    setattr(gdat, 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp), None)
-    #                    setattr(gdat, 'truemasssubh%s%s%s' % (strgregi, namecalc, nametemp), None)
-    #                    setattr(gdat, 'scalfracsubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
-    #                    setattr(gdat, 'scalmasssubh%s%s%s' % (strgregi, namecalc, nametemp), 'self')
-    #                    print 'truefracsubh%s%s%s % (strgregi, namecalc, nametemp)'
-    #                    print 'truefracsubh%s%s%s' % (strgregi, namecalc, nametemp)
-    #                    print
-    gdatfinl.limtydathistfeat = [0.5, 10.]
 
     print 'checking plotfinl%s...' % strgpdfn
     
@@ -13499,39 +13481,6 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     # temp
     gdat.legdpmea = 'Mean'
 
-    ## labels and scales for variables
-    #print 'HACKING'
-    #if gdat.fittlensmodltype != 'none':
-    #    for d in gdat.indxregi:
-    #        strgregi = 'reg%d' % d
-    #        setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub,%d<}}$' % d)
-    #        setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$M_{\rm{sub,%d}}$' % d)
-    #        setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E,%d<}}$' % d)
-    #        setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$M_{\rm{sub,E,%d}}$' % d)
-    #        setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub,%d}<}' % d)
-    #        setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rm{sub,%d}}' % d)
-    #        setattr(gdat, 'lablfracsubh%sintgbein' % strgregi, r'$f_{\rm{sub,E,%d<}}$' % d)
-    #        setattr(gdat, 'lablfracsubh%sdeltbein' % strgregi, r'$f_{\rm{sub,E,%d}}$' % d)
-    #        for e in gdat.fittindxsersfgrd[d]:
-    #            print 'lablmasshostreg%disf%dintg % (d, e)'
-    #            print 'lablmasshostreg%disf%dintg' % (d, e)
-    #            print
-    #            setattr(gdat, 'lablmasshostreg%disf%dbein' % (d, e), r'$M_{\rm{hst,%d%d,C}}$' % (d, e))
-    #            setattr(gdat, 'lablmasshostreg%disf%dintg' % (d, e), r'$M_{\rm{hst,%d%d<}}$' % (d, e))
-    #            setattr(gdat, 'lablmasshostreg%disf%ddelt' % (d, e), r'$M_{\rm{hst,%d%d}}$' % (d, e))
-    #            setattr(gdat, 'lablmasshostreg%disf%dintgbein' % (d, e), r'$M_{\rm{hst,E,%d%d<}}$' % (d, e))
-    #            setattr(gdat, 'lablmasshostreg%disf%ddeltbein' % (d, e), r'$M_{\rm{hst,E,%d%d}}$' % (d, e))
-    #        for namevarb in ['fracsubh', 'masssubh']:
-    #            for namecalc in ['delt', 'intg']:
-    #                for nameeval in ['', 'bein']:
-    #                    setattr(gdat, 'scal' + namevarb + strgregi + namecalc + nameeval, 'logt')
-    #        for e in gdat.fittindxsersfgrd[d]:
-    #            setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + 'bein', 'logt')
-    #            for namecalc in ['delt', 'intg']:
-    #                for nameeval in ['', 'bein']:
-    #                    setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
-    #
-
     # posterior versions of the frame plots
     plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
     #proc_samp(gdat, None, 'mlik', 'fitt')
@@ -13629,26 +13578,6 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 
             listjoin = vstack((listvarb, listvarbseco)).T
     
-            if gdat.datatype == 'mock' and gdat.truenumbelemtotl == 0:
-                if name.startswith('meanelem') or name.startswith('masssubh') or name.startswith('fracsubh'):
-                    truepara = None
-                    scal = 'self'
-                    print 'HACKING'
-                if nameseco.startswith('meanelem') or nameseco.startswith('masssubh') or nameseco.startswith('fracsubh'):
-                    trueparaseco = None
-                    scalseco = 'self'
-                    print 'HACKING'
-                
-            print 'corr'
-            print corr
-            print 'corrseco'
-            print corrseco
-            print 'truepara'
-            print truepara
-            print 'trueparaseco'
-            print trueparaseco
-            print
-
             tdpy.mcmc.plot_grid(pathjoin, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
                                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
 
@@ -13729,21 +13658,6 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
         
-        print 'HACKING'
-        gdat.lablbcom = '\eta'
-        gdat.lablinfo = 'D_{KL}'
-        gdat.lablinfounit = 'nat'
-        gdat.labllevi = '\ln P(D)'
-        gdat.lablleviharm = '\ln P_h(D)'
-        gdat.lablleviunit = 'nat'
-        gdat.lablleviharmunit = 'nat'
-        try:
-            gdat.postlevi = gdat.levi
-            gdat.postinfoharm = gdat.infoharm
-        except:
-            pass
-
-
         levi = getattr(gdat, strgpdfn + 'levi')
         infoharm = getattr(gdat, strgpdfn + 'infoharm')
         titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, infoharm, gdat.labllevi, levi)
