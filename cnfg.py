@@ -64,7 +64,7 @@ def test_time():
     dictargs['numbswep'] = 1000
     dictargs['numbsamp'] = 10
     
-    listnamecnfgextn = ['fittlowr', 'fittnomi', 'fitthigr']
+    listnamecnfgextn = ['sigclowr', 'sigcnomi', 'sigchigr']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
@@ -165,16 +165,6 @@ def pcat_anglassc(strgcnfgextnexec=None):
                        )
 
 
-def plot_main_lens():
-        init( \
-             numbswep=1000, \
-             makeplotintr=True, \
-             pntstype='lens', \
-             exprtype='hubb', \
-             truenumbpnts=array([40]), \
-            )
-    
-
 def test_errr():
       
     tupl = [ \
@@ -253,35 +243,6 @@ def test_tuto():
 	    )
 
 
-def test_uppr():
-      
-    init( \
-         #factthin=100, \
-         proppsfp=False, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         psfntype='doubking', \
-         maxmnumbpnts=array([800]), \
-         maxmgangdata=deg2rad(10.), \
-         minmflux=1e-9, \
-         maxmflux=1e-5, \
-         truenumbpnts=array([400]), \
-        )
-
-
-def test_spatprio():
-      
-    init( \
-         indxenerincl=arange(1, 4), \
-         indxevttincl=arange(3, 4), \
-         back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         spatdisttype=['gaus'], \
-        )
-
-
 def test_pars(strgcnfgextnexec=None):
     
     anglfact = 3600. * 180. / pi
@@ -323,61 +284,6 @@ def test_pars(strgcnfgextnexec=None):
                         lablxaxi=lablxaxi, \
                         namexaxi='priofactdoff', \
                        )
-
-
-def test_lowr():
-      
-    init( \
-         numbswep=10000, \
-         verbtype=1, \
-         proppsfp=False, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         back=['fermisotflux.fits', 'fermfdfmflux_ngal.fits'], \
-         strgexprflux='fermflux_cmp0_ngal.fits', \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnumbpnts=array([3]), \
-         maxmgangdata=deg2rad(10.), \
-         minmflux=1e-24, \
-         maxmflux=1e-20, \
-         truenumbpnts=array([3]), \
-        )
-
-
-def test_post():
-     
-    indxenerincl = arange(2, 4)
-    indxevttincl = arange(3, 4)
-    #tupl = [[0.3, 0.001, 0.001, 0.01, 0.01, 3e-8, 1e-7], \
-    #        [0.3, 0.01, 0.01, 0.1, 0.1, 3e-9, 1e-8]]
-    tupl = [[0.3, 0.001, 0.001, 0.01, 0.01, 3e-10, 1e-9], \
-            [0.3, 0.01, 0.01, 0.1, 0.1, 3e-11, 1e-10]]
-    numbiter = len(tupl)
-    for k in range(numbiter):
-        stdvback, stdvlbhlminm, stdvlbhlmaxm, stdvflux, stdvsind, minmflux, maxmflux = tupl[k]
-        init( \
-             numbburn=0, \
-    		 factthin=1, \
-             indxenerincl=indxenerincl, \
-             indxevttincl=indxevttincl, \
-             proptran=False, \
-             prophypr=False, \
-             back=['fermisotflux.fits'], \
-             lablback=[r'$\mathcal{I}$'], \
-             strgexpo='fermexpo_cmp0_ngal.fits', \
-             stdvback=stdvback, \
-             stdvlbhlminm=stdvlbhlminm, \
-             stdvlbhlmaxm=stdvlbhlmaxm, \
-             stdvflux=stdvflux, \
-             stdvsind=stdvsind, \
-             psfntype='doubking', \
-             maxmnumbpnts=array([3]), \
-             maxmgangdata=deg2rad(1.), \
-             minmflux=minmflux, \
-             maxmflux=maxmflux, \
-             truenumbpnts=array([3]), \
-             truefluxdistslop=array([1.9]), \
-            )
 
 
 def test_atcr():
@@ -436,123 +342,46 @@ def test_atcr():
     plt.close(figr)
         
 
-def test_spmr():
+def test_spmr(strgcnfgextnexec=None):
     
-    listminmflux = array([5e-21, 5e-11])
-    listmaxmflux = array([1e-17, 1e-7])
-    numbiter = listminmflux.size
-    for k in range(numbiter):
-        init( \
-             #verbtype=2, \
-             factthin=1, \
-             indxenerincl=arange(2, 3), \
-             indxevttincl=arange(3, 4), \
-             back=['fermisotflux.fits'], \
-             strgexpo='fermexpo_cmp0_ngal.fits', \
-             prophypr=False, \
-             proppsfp=False, \
-             propbacp=False, \
-             propcomp=False, \
-             probbrde=0., \
-             psfntype='doubking', \
-             maxmgangdata=deg2rad(1.), \
-             minmflux=listminmflux[k], \
-             maxmflux=listmaxmflux[k], \
-             maxmnumbpnts=array([3]), \
-             truenumbpnts=array([2]), \
-             #maxmnumbpnts=array([3]), \
-             #truenumbpnts=array([2]), \
-            )
-        
-
-def test_cova():
-     
-    init( \
-         numbswep=100, \
-         verbtype=2, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         exprtype='ferm', \
-         minmflux=3e-8, \
-         maxmflux=3e-7, \
-         trueminmflux=3e-11, \
-         maxmnumbpnts=array([3]), \
-         truenumbpnts=array([2]), \
-        )
-
-
-def test_leak():
-     
-    init( \
-         numbswep=10000, \
-         indxenerincl=arange(2, 3), \
-         indxevttincl=arange(3, 4), \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         exprtype='ferm', \
-         minmflux=3e-8, \
-         maxmflux=3e-7, \
-         trueminmflux=3e-11, \
-         truenumbpnts=array([100]), \
-        )
-
-
-def test_popl():
-     
-    init( \
-         factthin=2, \
-         #verbtype=2, \
-         indxenerincl=arange(2, 4), \
-         indxevttincl=arange(3, 4), \
-         strgexpo='fermexpo_cmp0_ngal.fits', \
-         maxmnumbpnts=array([3, 3]), \
-         maxmgangdata=deg2rad(20.), \
-         psfntype='gausking', \
-         minmflux=3e-11, \
-         maxmflux=3e-7, \
-         sinddiststdv=array([.5, .5]), \
-         sinddistmean=array([2., 2.]), \
-         truefluxdisttype=['powr', 'powr'], \
-         truenumbpnts=array([2, 3]), \
-         truefluxdistslop=array([1.9, 1.1]), \
-        )
-
-
-def test_unbd():
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['optitype'] = 'none'
+    dictargs['numbswep'] = 10000
+    dictargs['numbsamp'] = 100
+    dictargs['probtran'] = 1.
+    dictargs['probspmr'] = 1.
     
-    init( \
-         pixltype='unbd', \
-         exprtype='chem', \
-         #verbtype=2, \
-         numbswep=10000, \
-         numbswepplot=10000, \
-         factthin=100, \
-         numbburn=0, \
-         maxmnumbpnts=array([20]), \
-        )
-
-
-def test_empt():
+    listnamecnfgextn = ['radilowr', 'radihigr']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
     
-    init( \
-         numbswep=10000000, \
-         emptsamp=True, \
-        )
-
-
-def test():
+    dictargsvari['radilowr']['radispmr'] = 0.5 / anglfact
+    dictargsvari['radihigr']['radispmr'] = 2. / anglfact
     
-    init( \
-         numbswep=1000, \
-         factthin=900, \
-         maxmnumbpnts=array([10]), \
-         makeplot=False, \
-         diagmode=False, \
-        )
-
-def defa():
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listnamevarbcomp = ['accp', 'gmrb']
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['radispmr'] for namecnfgextn in listnamecnfgextn] 
+    listvarbxaxi = [dictargsvari[namecnfgextn]['radispmr'] for namecnfgextn in listnamecnfgextn]
     
-    init()
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        listnamevarbcomp=listnamevarbcomp, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        listvarbxaxi=listvarbxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        lablxaxi=lablxaxi, \
+                        namexaxi='radispmr', \
+                       )
 
 
 globals().get(sys.argv[1])()
