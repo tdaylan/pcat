@@ -3509,14 +3509,18 @@ def setpinit(gdat, boolinitsetp=False):
         for d in gdat.indxregi:
             strgregi = 'reg%d' % d
             if gdat.numbregi == 1:
+                lablregi = ''
+            else:
                 lablregi = ',%d' % d
             setattr(gdat, 'lablmasssubh%sintg' % strgregi, r'$M_{\rm{sub%s}}$' % lablregi)
             setattr(gdat, 'lablmasssubh%sdelt' % strgregi, r'$\rho_{\rm{sub%s}}$' % lablregi)
             setattr(gdat, 'lablmasssubh%sintgbein' % strgregi, r'$M_{\rm{sub,E%s}}$' % lablregi)
             setattr(gdat, 'lablmasssubh%sdeltbein' % strgregi, r'$\rho_{\rm{sub,E%s}}$' % lablregi)
-            setattr(gdat, 'lablmasssubh%sintgunit' % strgregi, '$M_{\odot}$')
+            setattr(gdat, 'lablmasssubh%sintgunit' % strgregi, '$10^8 M_{\odot}$')
             setattr(gdat, 'lablmasssubh%sdeltunit' % strgregi, '$M_{\odot}$/kpc')
-            setattr(gdat, 'lablmasssubh%sintgbeinunit' % strgregi, '$M_{\odot}$')
+            setattr(gdat, 'factmasssubh%sintgplot' % strgregi, 1e-8)
+            setattr(gdat, 'factmasssubh%sintgbeinplot' % strgregi, 1e-8)
+            setattr(gdat, 'lablmasssubh%sintgbeinunit' % strgregi, '$10^8 M_{\odot}$')
             setattr(gdat, 'lablmasssubh%sdeltbeinunit' % strgregi, '$M_{\odot}$/kpc')
             setattr(gdat, 'lablfracsubh%sintg' % strgregi, r'f_{\rm{sub%s}}' % lablregi)
             setattr(gdat, 'lablfracsubh%sdelt' % strgregi, r'f_{\rho,\rm{sub%s}}' % lablregi)
