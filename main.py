@@ -2455,6 +2455,7 @@ def initarry( \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
+             listnamevarbcomptype=None, \
              namexaxi=None, \
              listvarbxaxi=None, \
              lablxaxi=None, \
@@ -2519,10 +2520,13 @@ def initarry( \
         listgdat = retr_listgdat(listrtag)
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
-    
-        for strgvarboutp, varboutp in dictoutp.iteritems():
-            for k in indxiter:
-                dictoutp[strgvarboutp][k] = getattr(listgdat[k], 'pctlpost' + strgvarboutp)
+        
+        listnamevarbcomptype = ['errr' for namevarbcomp in listnamevarbcomp]
+        for k in indxiter:
+            cntr = 0
+            for strgvarboutp, varboutp in dictoutp.iteritems():
+                dictoutp[strgvarboutp][k] = getattr(listgdat[k], listnamevarbcomptype[cntr] + 'post' + strgvarboutp)
+                cntr += 1
 
         for strgvarboutp, varboutp in dictoutp.iteritems():
             figr, axis = plt.subplots(figsize=(6, 6))
@@ -2553,7 +2557,7 @@ def initarry( \
                 elif varboutp[k].ndim > 2:
                     raise Exception('varboutp format is wrong.')
                 ydat[k] = varboutp[k][0]
-                yerr[:, k] = tdpy.util.retr_errrvarb(varboutp[k])
+                yerr[:, k] = varboutp[k]#tdpy.util.retr_errrvarb(varboutp[k])
             
             print 'listvarbxaxi'
             print listvarbxaxi
