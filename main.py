@@ -2455,7 +2455,10 @@ def initarry( \
              execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=None, \
-             listnamevarbcomptype=None, \
+             listscalvarbcomp=None, \
+             listlablvarbcomp=None, \
+             listtypevarbcomp=None, \
+             listpdfnvarbcomp=None, \
              namexaxi=None, \
              listvarbxaxi=None, \
              lablxaxi=None, \
@@ -2521,20 +2524,53 @@ def initarry( \
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
         
-        listnamevarbcomptype = ['errr' for namevarbcomp in listnamevarbcomp]
+        if listtypevarbcomp == None:
+            listtypevarbcomp = ['errr' for namevarbcomp in listnamevarbcomp]
+        print 'listnamevarbcomp'
+        print listnamevarbcomp
+        print 'listpdfnvarbcomp'
+        print listpdfnvarbcomp
+        if listpdfnvarbcomp == None:
+            listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
+        print 'listtypevarbcomp'
+        print listtypevarbcomp
+        print 'listpdfnvarbcomp'
+        print listpdfnvarbcomp
+        print ''
         for k in indxiter:
             cntr = 0
-            for strgvarboutp, varboutp in dictoutp.iteritems():
-                dictoutp[strgvarboutp][k] = getattr(listgdat[k], listnamevarbcomptype[cntr] + 'post' + strgvarboutp)
+            for strgvarboutp in listnamevarbcomp:
+            #for strgvarboutp, varboutp in dictoutp.iteritems():
+                #dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + 'post' + strgvarboutp)
+                print 'strgvarboutp'
+                print strgvarboutp
+                print 'cntr'
+                print cntr
+                print
+                dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
                 cntr += 1
+                
 
         for strgvarboutp, varboutp in dictoutp.iteritems():
+            
             figr, axis = plt.subplots(figsize=(6, 6))
             ydat = empty(numbiter)
             yerr = empty((2, numbiter))
+                
+            if listscalvarbcomp != None or listlablvarbcomp != None:
+                indxlist = listnamevarbcomp.index(strgvarboutp)
+            
+            if listscalvarbcomp == None:
+                scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+            else:
+                scalyaxi = listscalvarbcomp[indxlist]
+            
+            if listlablvarbcomp == None:
+                lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
+            else:
+                lablyaxi = listlablvarbcomp[indxlist]
             
             lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
-            scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
             
             try:
                 trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)

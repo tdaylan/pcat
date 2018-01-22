@@ -33,7 +33,9 @@ def test_info(strgcnfgextnexec=None):
     listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['minmflux'] for namecnfgextn in listnamecnfgextn] 
     
     listnamevarbcomp = ['levi', 'infoharm', 'bcom']
-    listnamevarbcomptype = ['', '', '']
+    listscalvarbcomp = ['self', 'self', 'self']
+    listtypevarbcomp = ['', '', '']
+    listpdfnvarbcomp = ['post', 'post', '']
     
     dictglob = initarry( \
                         dictargsvari, \
@@ -48,7 +50,9 @@ def test_info(strgcnfgextnexec=None):
                         listtickxaxi=listtickxaxi, \
                         
                         listnamevarbcomp=listnamevarbcomp, \
-                        listnamevarbcomptype=listnamevarbcomptype, \
+                        listscalvarbcomp=listscalvarbcomp, \
+                        listtypevarbcomp=listtypevarbcomp, \
+                        listpdfnvarbcomp=listpdfnvarbcomp, \
                        )
 
 
@@ -90,6 +94,7 @@ def test_perf(strgcnfgextnexec=None):
     #liststrgvarb = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
     #listlablvarb = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', '$t_{CPU}^{\prime\prime}$ [s]', '$\bar{M}$', '$\partial_t\bar{M}$']
     listnamevarbcomp = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcr', 'timeprocnorm', 'meanmemoresi', 'derimemoresi', 'timerealtotl']
+    listtypevarbcomp = ['' for namevarbcomp in listnamevarbcomp]
     
     dictglob = initarry( \
                         dictargsvari, \
@@ -104,6 +109,7 @@ def test_perf(strgcnfgextnexec=None):
                         listtickxaxi=listtickxaxi, \
                         
                         listnamevarbcomp=listnamevarbcomp, \
+                        listtypevarbcomp=listtypevarbcomp, \
                        )
 
     
@@ -123,7 +129,7 @@ def test_psfn(strgcnfgextnexec=None):
     dictargs['makeplot'] = False
     
     #oaxifree
-    listnamecnfgextn = ['nomi', 'psfntfix', 'psfnwfix', 'psfngaus', 'elemfeww']
+    listnamecnfgextn = ['nomi', 'psfntfix', 'psfnwfix']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
@@ -132,11 +138,15 @@ def test_psfn(strgcnfgextnexec=None):
     
     dictargsvari['psfnwfix']['proppsfp'] = False
     dictargsvari['psfnwfix']['initsigc'] = 0.5 / anglfact
+   
+    lablxaxi = 'PSF'
+    scalxaxi = 'self'
+    listvarbxaxi = [0., 1., 2.]
+    listtickxaxi = ['Float', 'Fixed/Wrong', 'Fixed/True'] 
     
-    dictargsvari['psfngaus']['psfntype'] = 'singgaus'
-    
-    dictargsvari['elemfeww']['fittmaxmnumbelem'] = 3
-    
+    listnamevarbcomp = ['timereal']
+    listtypevarbcomp = ['' for namevarbcomp in listnamevarbcomp]
+
     dictglob = initarry( \
                         dictargsvari, \
                         dictargs, \
@@ -170,6 +180,8 @@ def test_anglassc(strgcnfgextnexec=None):
     
     dictargsvari['high']['anglassc'] = 0.1
     
+    dictargsvari['nomi']['anglassc'] = 0.5
+    
     dictargsvari['loww']['anglassc'] = 0.01
    
     dictargsvari['vlow']['anglassc'] = 0.001
@@ -179,7 +191,7 @@ def test_anglassc(strgcnfgextnexec=None):
     listvarbxaxi = [dictargsvari[namecnfgextn]['anglassc'] for namecnfgextn in listnamecnfgextn]
     listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['anglassc'] for namecnfgextn in listnamecnfgextn] 
     
-    listnamevarbcomp = ['cmplpop0pop0reg0', 'fdispop0pop0reg0']
+    listnamevarbcomp = ['postcmplpop0pop0reg0', 'postfdispop0pop0reg0']
     
     dictglob = initarry( \
                         dictargsvari, \
@@ -220,7 +232,12 @@ def test_errr(strgcnfgextnexec=None):
     dictargsvari['loww']['specfraceval'] = 0.01
     dictargsvari['high']['specfraceval'] = 1.
     
-    listnamevarbcomp = ['stdverrrfracdimm', 'stdverrrfrac']
+    lablxaxi = r'$\Delta_f$ '
+    scalxaxi = 'logt'
+    listvarbxaxi = [dictargsvari[namecnfgextn]['specfraceval'] for namecnfgextn in listnamecnfgextn]
+    listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['specfraceval'] for namecnfgextn in listnamecnfgextn] 
+    
+    listnamevarbcomp = ['posterrrfracdimm', 'posterrrfrac']
     #listlablvarbcomp = [r'$\epsilon_m$ [%]', r'$\epsilon_d$ [%]']
     
     dictglob = initarry( \
@@ -271,7 +288,7 @@ def test_pars(strgcnfgextnexec=None):
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
-    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
+    listnamevarbcomp = ['postnumbelempop0reg0', 'postcmplpop0pop0reg0', 'postfdispop0pop0reg0', 'postfluxdistsloppop0']
     listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn] 
     listvarbxaxi = [dictargsvari[namecnfgextn]['priofactdoff'] for namecnfgextn in listnamecnfgextn]
     
@@ -319,7 +336,8 @@ def test_spmr(strgcnfgextnexec=None):
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
     listnamevarbcomp = ['accp', 'gmrb']
-    listnamevarbcomptype = ['', '']
+    listtypevarbcomp = ['', '']
+    listpdfnvarbcomp = ['', '']
     
     listtickxaxi = ['%.2g' % dictargsvari[namecnfgextn]['radispmr'] for namecnfgextn in listnamecnfgextn] 
     listvarbxaxi = [dictargsvari[namecnfgextn]['radispmr'] for namecnfgextn in listnamecnfgextn]
@@ -337,7 +355,8 @@ def test_spmr(strgcnfgextnexec=None):
                         listtickxaxi=listtickxaxi, \
                         
                         listnamevarbcomp=listnamevarbcomp, \
-                        listnamevarbcomptype=listnamevarbcomptype, \
+                        listtypevarbcomp=listtypevarbcomp, \
+                        listpdfnvarbcomp=listpdfnvarbcomp, \
                        )
 
 
