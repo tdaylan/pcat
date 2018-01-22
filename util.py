@@ -11343,18 +11343,25 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
                     print 'Computing the autocorrelation of the chains...'
                     timeinit = gdatinit.functime()
                 gdatinit.atcrcntp = [[] for d in gdatinit.indxregi]
-                gdatinit.timeatcrcntp = [[] for d in gdatinit.indxregi]
+                
+                timeatcrcntp = [[] for d in gdatinit.indxregi]
                 for d in gdatinit.indxregi:
                     gdatinit.atcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt, gdatinit.numbsamp / 2))
-                    gdatinit.timeatcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt))
+                    timeatcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt))
                 gdatinit.atcrpara = empty((gdatinit.numbproc, gdatinit.fittnumbpara, gdatinit.numbsamp / 2))
                 gdatinit.timeatcrpara = empty((gdatinit.numbproc, gdatinit.fittnumbpara))
                 for k in gdatinit.indxproc:
                     gdatinit.atcrpara[k, :, :], gdatinit.timeatcrpara[k, :] = tdpy.mcmc.retr_timeatcr(listsampvarb[:, k, :], verbtype=gdatinit.verbtype)
                     for d in gdatinit.indxregi:
                         listcntpmodl = getattr(gdatinit, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
-                        gdatinit.atcrcntp[d][k, :], gdatinit.timeatcrcntp[d][k, :] = tdpy.mcmc.retr_timeatcr(listcntpmodl[:, k, :, :, :], verbtype=gdatinit.verbtype)
-                gdatinit.timeatcrmaxm = 0.
+                        gdatinit.atcrcntp[d][k, :], timeatcrcntp[d][k, :] = tdpy.mcmc.retr_timeatcr(listcntpmodl[:, k, :, :, :], verbtype=gdatinit.verbtype)
+               
+                timeatcrcntpmaxm = empty(gdatinit.numbregi)
+                for d in gdatinit.indxregi:
+                    timeatcrcntpmaxm[d] = amax(timeatcrcntp[d])
+                    setattr(gdatinit, 'timeatcrcntpreg%d' % d, timeatcrcntp[d])
+                    setattr(gdatinit, 'timeatcrcntpmaxmreg%d' % d, timeatcrcntpmaxm[d])
+                
                 if gdatinit.verbtype > 0:
                     timefinl = gdatinit.functime()
                     print 'Done in %.3g seconds.' % (timefinl - timeinit)
