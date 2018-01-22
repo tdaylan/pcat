@@ -5522,8 +5522,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         ## flag to calculate the kernel approximation errors
         calcerrr = [[] for l in indxpopl]
         if elemspatevaltype[l] != 'full' and gdat.numbpixlfull < 1e5:
-            # temp
-            #calcerrr[l] = True
             calcerrr[l] = False
         else:
             calcerrr[l] = False
@@ -8024,6 +8022,14 @@ def readfile(path):
     gdattemptemp = cPickle.load(filepick)
     
     for attr in filearry:
+        
+        try:
+            if attr == 'minmflux':
+                print 'minmflux'
+                print minmflux
+        except:
+            pass
+
         setattr(gdattemptemp, attr, filearry[attr][()])
 
     filepick.close()
@@ -8046,6 +8052,13 @@ def writfile(gdattemp, path):
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
         
+        try:
+            if attr == 'minmflux':
+                print 'minmflux'
+                print minmflux
+        except:
+            pass
+
         if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
                                                         isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
             filearry.create_dataset(attr, data=valu)
@@ -10338,7 +10351,24 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             cntperrr[d] = cntppnts[d] - cntppntsfull[d]
                             if amax(fabs(cntperrr[d] / cntppntsfull[d])) > 0.1:
                                 raise Exception('Approximation error in calculating the PS surface brightness is above the tolerance level.')
+                            print 'cntperrr[d]'
+                            summgene(cntperrr[d])
+                            print 'setting cntperrr...'
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
+                            print
                             setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%d' % (d, l), cntperrr[d])
+                            setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%dmaxm' % (d, l), amax(cntperrr[d]))
+                            setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%dmean' % (d, l), mean(cntperrr[d]))
 
             #fluxbrgt, fluxbrgtassc = retr_fluxbrgt(gdat, dictconc['lgalconc'], dictconc['bgalconc'], concatenate(dictconc['flux']))
             #setattr(gdatobjt, strgpfix + 'fluxbrgt', fluxbrgt)
@@ -11201,6 +11231,26 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
             pathoutprtag = retr_pathoutprtag(rtagmodi)
             path = pathoutprtag + 'gdatinit'
             gdatinit = readfile(path) 
+            
+            
+            try:
+                print 'meeeeey'
+                print 'gdatinit.minmflux'
+                print gdatinit.minmflux
+                print
+                print
+                print
+                print
+                print
+                print
+                print
+                print
+                print
+                print
+            except:
+                pass
+            
+            
             #try:
             #    gdatinit = readfile(path) 
             #except:
@@ -11359,8 +11409,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
                 timeatcrcntpmaxm = empty(gdatinit.numbregi)
                 for d in gdatinit.indxregi:
                     timeatcrcntpmaxm[d] = amax(timeatcrcntp[d])
-                    setattr(gdatinit, 'timeatcrcntpreg%d' % d, timeatcrcntp[d])
-                    setattr(gdatinit, 'timeatcrcntpmaxmreg%d' % d, timeatcrcntpmaxm[d])
+                gdatinit.timeatcrcntpmaxm = amax(timeatcrcntpmaxm)
                 
                 if gdatinit.verbtype > 0:
                     timefinl = gdatinit.functime()
@@ -11622,6 +11671,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
                 listindxsamptotlaccp.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listaccp)[0]))
                 listindxsamptotlaccpprop.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listaccpprop)[0]))
                 listindxsamptotlreje.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(logical_not(listaccp))[0]))
+                if listindxsamptotl[n].size == 0:
+                    accp = 0.
+                else:
+                    accp = float(listindxsamptotlaccp[n].size) / listindxsamptotl[n].size
+                setattr(gdatfinl, 'accp' + gdatfinl.nameproptype[n], accp)
+
             setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotl', listindxsamptotl)
             setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlaccp', listindxsamptotlaccp)
             setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlreje', listindxsamptotlreje)
@@ -11858,11 +11913,30 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
             gdatfinl.timerealtotl = time.time() - gdatfinl.timerealtotl
             gdatfinl.timeproctotl = time.clock() - gdatfinl.timeproctotl
             gdatfinl.timeproctotlswep = gdatfinl.timeproctotl / gdatfinl.numbswep
-            if gdatfinl.timeatcrmaxm == 0.:
+            
+            if gdatfinl.timeatcrcntpmaxm == 0.:
                 gdatfinl.timeprocnorm = 0.
             else:
-                gdatfinl.timeprocnorm = gdatfinl.timeproctotlswep / gdatfinl.timeatcrmaxm
+                gdatfinl.timeprocnorm = gdatfinl.timeproctotlswep / gdatfinl.timeatcrcntpmaxm
    
+        try:
+            print 'heeeeey'
+            print 'gdatfinl.minmflux'
+            print gdatfinl.minmflux
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+            print
+        except:
+            pass
+
+
         # write the final gdat object
         path = gdatfinl.pathoutprtag + 'gdatfinl' + strgpdfn
 

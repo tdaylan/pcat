@@ -290,6 +290,7 @@ def init( \
     gdat.pathimag = gdat.pathbase + 'imag/'
     gdat.pathoutp = gdat.pathdata + 'outp/'
     
+
     # run tag
     gdat.strgswep = '%d' % (gdat.numbswep)
     
@@ -350,6 +351,24 @@ def init( \
     # samples to be saved
     gdat.indxsamp = arange(gdat.numbsamp)
     
+    try:
+        print 'heeeeey'
+        print 'gdat.minmflux'
+        print gdat.minmflux
+        print
+        print
+        print
+        print
+        print
+        print
+        print
+        print
+        print
+        print
+    except:
+        pass
+
+
     # samples to be saved from all chains
     gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
     gdat.indxsamptotl = arange(gdat.numbsamptotl)
@@ -2519,33 +2538,34 @@ def initarry( \
         print
         print 'Producing comparison plots...'
         
+        print 'listrtag'
+        print listrtag
         listgdat = retr_listgdat(listrtag)
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
         
         if listtypevarbcomp == None:
             listtypevarbcomp = ['errr' for namevarbcomp in listnamevarbcomp]
-        print 'listnamevarbcomp'
-        print listnamevarbcomp
-        print 'listpdfnvarbcomp'
-        print listpdfnvarbcomp
         if listpdfnvarbcomp == None:
             listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
-        print 'listtypevarbcomp'
-        print listtypevarbcomp
-        print 'listpdfnvarbcomp'
-        print listpdfnvarbcomp
-        print ''
+        
         for k in indxiter:
             cntr = 0
             for strgvarboutp in listnamevarbcomp:
-            #for strgvarboutp, varboutp in dictoutp.iteritems():
-                #dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + 'post' + strgvarboutp)
-                print 'strgvarboutp'
-                print strgvarboutp
+                
+                print 'k'
+                print k
                 print 'cntr'
                 print cntr
+                print 'listgdat[k].strgtimestmp'
+                print listgdat[k].strgtimestmp
+                try:
+                    print 'listgdat[k].minmflux'
+                    print listgdat[k].minmflux
+                except:
+                    pass
                 print
+
                 dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
                 cntr += 1
 
@@ -2554,11 +2574,8 @@ def initarry( \
             figr, axis = plt.subplots(figsize=(6, 6))
             ydat = empty(numbiter)
             yerr = zeros((2, numbiter))
-            print 'yerr'
-            print yerr
                 
-            if listscalvarbcomp != None or listlablvarbcomp != None:
-                indxlist = listnamevarbcomp.index(strgvarboutp)
+            indxlist = listnamevarbcomp.index(strgvarboutp)
             
             if listscalvarbcomp == None:
                 scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
@@ -2568,15 +2585,6 @@ def initarry( \
             if listlablvarbcomp == None:
                 lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
             else:
-                print 'listnamevarbcomp'
-                print listnamevarbcomp
-                print 'strgvarboutp'
-                print strgvarboutp
-                print 'indxlist'
-                print indxlist
-                print 'listlablvarbcomp'
-                print listlablvarbcomp
-
                 lablyaxi = listlablvarbcomp[indxlist]
             
             try:
@@ -2584,20 +2592,11 @@ def initarry( \
             except:
                 trueyaxi = None
             
-            print 'strgvarboutp'
-            print strgvarboutp
-            print 'listtypevarbcomp'
-            print listtypevarbcomp
-            print 'yerr'
-            print yerr
             for k in indxiter:
                 
-                print 'k'
-                print k
-                print 'varboutp[k]'
-                print varboutp
-                summgene(varboutp[k])
-                
+                if isinstance(varboutp[k], list):
+                    raise Exception('')
+
                 if varboutp[k].ndim == 2:
                     if varboutp[k].shape[1] == 1:
                         varboutp[k] = varboutp[k][:, 0]
@@ -2605,14 +2604,7 @@ def initarry( \
                         raise Exception('varboutp format is wrong.')
                     ydat[k] = varboutp[k][0]
                     if listtypevarbcomp[indxlist] == 'errr':
-                        print 'meeeeeey'
-                        print 
-                        print 
-                        print 
-                        print 
-                        print 
-                        print 
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[cntr] + strgvarboutp)
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
                     else:
                         yerr[:, k] = 0.
                 elif isinstance(varboutp[k], float):
@@ -2620,20 +2612,6 @@ def initarry( \
                 elif varboutp[k].ndim > 2:
                     raise Exception('varboutp format is wrong.')
             
-            print 'listtickxaxi'
-            print listtickxaxi
-            print 'indxiter'
-            print indxiter
-            print 'ydat'
-            print ydat
-            print 'yerr'
-            print yerr
-            print 
-            print 
-            print 
-            print 
-            print 
-            print 
             axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
             indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1:, :] > 0.))[0]
             if indxrtagyerr.size > 0:
