@@ -353,6 +353,10 @@ def init( \
     
     try:
         print 'heeeeey'
+        print 'gdat.fittminmflux'
+        print gdat.fittminmflux
+        print 'gdat.trueminmflux'
+        print gdat.trueminmflux
         print 'gdat.minmflux'
         print gdat.minmflux
         print
@@ -2552,20 +2556,6 @@ def initarry( \
         for k in indxiter:
             cntr = 0
             for strgvarboutp in listnamevarbcomp:
-                
-                print 'k'
-                print k
-                print 'cntr'
-                print cntr
-                print 'listgdat[k].strgtimestmp'
-                print listgdat[k].strgtimestmp
-                try:
-                    print 'listgdat[k].minmflux'
-                    print listgdat[k].minmflux
-                except:
-                    pass
-                print
-
                 dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
                 cntr += 1
 
@@ -2594,26 +2584,25 @@ def initarry( \
             
             for k in indxiter:
                 
-                if isinstance(varboutp[k], list):
+                if isinstance(varboutp[k], list) or isinstance(varboutp[k], ndarray) and varboutp[k].ndim > 2:
                     raise Exception('')
-
-                if varboutp[k].ndim == 2:
-                    if varboutp[k].shape[1] == 1:
-                        varboutp[k] = varboutp[k][:, 0]
-                    else:
-                        raise Exception('varboutp format is wrong.')
-                    ydat[k] = varboutp[k][0]
-                    if listtypevarbcomp[indxlist] == 'errr':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
-                    else:
-                        yerr[:, k] = 0.
                 elif isinstance(varboutp[k], float):
                     ydat[k] = varboutp[k]
-                elif varboutp[k].ndim > 2:
-                    raise Exception('varboutp format is wrong.')
+                else:
+                    if varboutp[k].ndim == 2:
+                        if varboutp[k].shape[1] != 1:
+                            raise Exception('varboutp format is wrong.')
+                        varboutp[k] = varboutp[k][:, 0]
+                        if listtypevarbcomp[indxlist] == 'errr':
+                            yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
+                    if listtypevarbcomp[indxlist] != 'errr':
+                        yerr[:, k] = 0.
+                    if listtypevarbcomp[indxlist] == 'errr':
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
+                    ydat[k] = varboutp[k][0]
             
             axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
-            indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1:, :] > 0.))[0]
+            indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
             if indxrtagyerr.size > 0:
                 temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr], yerr=yerr[:, indxrtagyerr], \
                                                                                     color='b', ls='', capsize=15, markersize=15, marker='o', lw=3)
@@ -2632,7 +2621,7 @@ def initarry( \
                 axis.set_yscale('log')
             plt.tight_layout()
             path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
-            pathfull = '%s%s_%s_%s.pdf' % (path, namexaxi, strgvarboutp, strgtimestmp)
+            pathfull = '%s%s_%s.pdf' % (path, strgvarboutp, strgtimestmp)
             print 'Writing to %s...' % pathfull
             plt.savefig(pathfull)
             plt.close(figr)

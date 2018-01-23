@@ -6712,7 +6712,13 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
 
     for strg, valu in locals().iteritems():
         if strg != 'gdat' and '__' not in strg and not strg.endswith('temp') and strg != 'cntr' and len(strg) % 4 == 0:
-            setattr(gdat, strgmodl + strg, valu)
+            if hasattr(gdat, strgmodl + strg):
+                pass
+                #print 'Already has %s' % (strgmodl + strg)
+                #print
+                #print
+            else:
+                setattr(gdat, strgmodl + strg, valu)
 
     for strg, valu in dicttemp.iteritems():
         # temp
@@ -8022,14 +8028,6 @@ def readfile(path):
     gdattemptemp = cPickle.load(filepick)
     
     for attr in filearry:
-        
-        try:
-            if attr == 'minmflux':
-                print 'minmflux'
-                print minmflux
-        except:
-            pass
-
         setattr(gdattemptemp, attr, filearry[attr][()])
 
     filepick.close()
@@ -8051,14 +8049,6 @@ def writfile(gdattemp, path):
     
     gdattemptemp = tdpy.util.gdatstrt()
     for attr, valu in gdattemp.__dict__.iteritems():
-        
-        try:
-            if attr == 'minmflux':
-                print 'minmflux'
-                print minmflux
-        except:
-            pass
-
         if isinstance(valu, ndarray) and valu.dtype != dtype('O') or isinstance(valu, str) or \
                                                         isinstance(valu, float) or isinstance(valu, bool) or isinstance(valu, int) or isinstance(valu, float64):
             filearry.create_dataset(attr, data=valu)
@@ -11232,25 +11222,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
             path = pathoutprtag + 'gdatinit'
             gdatinit = readfile(path) 
             
-            
-            try:
-                print 'meeeeey'
-                print 'gdatinit.minmflux'
-                print gdatinit.minmflux
-                print
-                print
-                print
-                print
-                print
-                print
-                print
-                print
-                print
-                print
-            except:
-                pass
-            
-            
             #try:
             #    gdatinit = readfile(path) 
             #except:
@@ -11394,21 +11365,21 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
                     timeinit = gdatinit.functime()
                 gdatinit.atcrcntp = [[] for d in gdatinit.indxregi]
                 
-                timeatcrcntp = [[] for d in gdatinit.indxregi]
+                gdatinit.timeatcrcntp = [[] for d in gdatinit.indxregi]
                 for d in gdatinit.indxregi:
                     gdatinit.atcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt, gdatinit.numbsamp / 2))
-                    timeatcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt))
+                    gdatinit.timeatcrcntp[d] = empty((gdatinit.numbproc, gdatinit.numbener, gdatinit.numbpixl, gdatinit.numbevtt))
                 gdatinit.atcrpara = empty((gdatinit.numbproc, gdatinit.fittnumbpara, gdatinit.numbsamp / 2))
                 gdatinit.timeatcrpara = empty((gdatinit.numbproc, gdatinit.fittnumbpara))
                 for k in gdatinit.indxproc:
                     gdatinit.atcrpara[k, :, :], gdatinit.timeatcrpara[k, :] = tdpy.mcmc.retr_timeatcr(listsampvarb[:, k, :], verbtype=gdatinit.verbtype)
                     for d in gdatinit.indxregi:
                         listcntpmodl = getattr(gdatinit, 'list' + strgpdfn + 'cntpmodlreg%d' % d)
-                        gdatinit.atcrcntp[d][k, :], timeatcrcntp[d][k, :] = tdpy.mcmc.retr_timeatcr(listcntpmodl[:, k, :, :, :], verbtype=gdatinit.verbtype)
+                        gdatinit.atcrcntp[d][k, :], gdatinit.timeatcrcntp[d][k, :] = tdpy.mcmc.retr_timeatcr(listcntpmodl[:, k, :, :, :], verbtype=gdatinit.verbtype)
                
                 timeatcrcntpmaxm = empty(gdatinit.numbregi)
                 for d in gdatinit.indxregi:
-                    timeatcrcntpmaxm[d] = amax(timeatcrcntp[d])
+                    timeatcrcntpmaxm[d] = amax(gdatinit.timeatcrcntp[d])
                 gdatinit.timeatcrcntpmaxm = amax(timeatcrcntpmaxm)
                 
                 if gdatinit.verbtype > 0:
@@ -11919,24 +11890,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
             else:
                 gdatfinl.timeprocnorm = gdatfinl.timeproctotlswep / gdatfinl.timeatcrcntpmaxm
    
-        try:
-            print 'heeeeey'
-            print 'gdatfinl.minmflux'
-            print gdatfinl.minmflux
-            print
-            print
-            print
-            print
-            print
-            print
-            print
-            print
-            print
-            print
-        except:
-            pass
-
-
         # write the final gdat object
         path = gdatfinl.pathoutprtag + 'gdatfinl' + strgpdfn
 
