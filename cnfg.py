@@ -30,14 +30,13 @@ def test_info(strgcnfgextnexec=None):
     
     lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
     scalxaxi = 'logt'
-                        tdpy.util.mexp(arry[a])
     listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['fittminmflux']) for namecnfgextn in listnamecnfgextn] 
     
-    listnamevarbcomp = ['levi', 'infoharm', 'bcom']
-    listscalvarbcomp = ['self', 'self', 'self']
-    listlablvarbcomp = ['$\ln P(D)$', '$D_{KL}$', '$\eta_B$']
-    listtypevarbcomp = ['', '', '']
-    listpdfnvarbcomp = ['post', 'post', '']
+    listnamevarbcomp = ['lliktotl', 'maxmlliktotl', 'levi', 'infoharm', 'bcom']
+    listscalvarbcomp = ['self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp = ['$\ln P(D|M)$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$']
+    listtypevarbcomp = ['errr', '', '', '', '']
+    listpdfnvarbcomp = ['post', '', 'post', 'post', '']
     
     dictglob = initarry( \
                         dictargsvari, \
@@ -261,7 +260,7 @@ def test_errr(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='specfraceval', \
                         lablxaxi=lablxaxi, \

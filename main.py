@@ -38,6 +38,8 @@ def init( \
          ## condensed catalog
          condcatl=False, \
         
+         initpsfprefr=False, \
+
          refrlegd=None, \
          refrlegdpopl=None, \
          fittlegdpopl=None, \
@@ -351,28 +353,6 @@ def init( \
     # samples to be saved
     gdat.indxsamp = arange(gdat.numbsamp)
     
-    try:
-        print 'heeeeey'
-        print 'gdat.fittminmflux'
-        print gdat.fittminmflux
-        print 'gdat.trueminmflux'
-        print gdat.trueminmflux
-        print 'gdat.minmflux'
-        print gdat.minmflux
-        print
-        print
-        print
-        print
-        print
-        print
-        print
-        print
-        print
-        print
-    except:
-        pass
-
-
     # samples to be saved from all chains
     gdat.numbsamptotl = gdat.numbsamp * gdat.numbproc
     gdat.indxsamptotl = arange(gdat.numbsamptotl)
@@ -1162,9 +1142,9 @@ def init( \
             setp_varblimt(gdat, 'bacp', [1e-7, 1e-3], ener=1, back=1, regi='full')
             setp_varblimt(gdat, 'bacp', [1e-8, 1e-4], ener=2, back=1, regi='full')
             # dark
-            setp_varblimt(gdat, 'bacp', [1e-11, 1e-8], ener=0, back=2, regi='full')
-            setp_varblimt(gdat, 'bacp', [1e-11, 1e-8], ener=1, back=2, regi='full')
-            setp_varblimt(gdat, 'bacp', [1e-11, 1e-8], ener=2, back=2, regi='full')
+            setp_varblimt(gdat, 'bacp', [1e-11, 1e-4], ener=0, back=2, regi='full')
+            setp_varblimt(gdat, 'bacp', [1e-11, 1e-4], ener=1, back=2, regi='full')
+            setp_varblimt(gdat, 'bacp', [1e-11, 1e-4], ener=2, back=2, regi='full')
 
         # Fourier basis
         for strgmodl in gdat.liststrgmodl:
@@ -2589,16 +2569,17 @@ def initarry( \
                 elif isinstance(varboutp[k], float):
                     ydat[k] = varboutp[k]
                 else:
+                    if listtypevarbcomp[indxlist] != 'errr':
+                        yerr[:, k] = 0.
                     if varboutp[k].ndim == 2:
                         if varboutp[k].shape[1] != 1:
                             raise Exception('varboutp format is wrong.')
                         varboutp[k] = varboutp[k][:, 0]
                         if listtypevarbcomp[indxlist] == 'errr':
                             yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
-                    if listtypevarbcomp[indxlist] != 'errr':
-                        yerr[:, k] = 0.
-                    if listtypevarbcomp[indxlist] == 'errr':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
+                    else:
+                        if listtypevarbcomp[indxlist] == 'errr':
+                            yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
                     ydat[k] = varboutp[k][0]
             
             axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
@@ -2616,10 +2597,12 @@ def initarry( \
                 axis.set_xscale('log')
             axis.set_xticks(indxiter+1.)
             axis.set_xticklabels(listtickxaxi)
+            
             axis.set_ylabel(lablyaxi)
             if scalyaxi == 'logt':
                 axis.set_yscale('log')
             plt.tight_layout()
+            
             path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
             pathfull = '%s%s_%s.pdf' % (path, strgvarboutp, strgtimestmp)
             print 'Writing to %s...' % pathfull
@@ -3150,12 +3133,25 @@ def work(pathoutprtag, lock, indxprocwork):
                 pass
         try:
             initvalu = getattr(gdat, 'init' + namefixp)
+            
+            print 'namefixp'
+            print namefixp
+            print 'initvalu'
+            print initvalu
+            print
+
             gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
             if gdat.verbtype > 0:
                 print 'Received initial condition for %s: %.3g' % (namefixp, initvalu)
             print
         except:
             pass
+    
+    if gdat.initpsfprefr:
+        print 'Initializing the metamodel PSF from the reference state...'
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            if k in gdat.fittindxfixppsfp:
+                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.psfpexpr[k-gdat.fittindxfixppsfp[0]], k)
 
     if gdat.inittype == 'rand' or gdat.inittype == 'reco' and not boolinitreco:
         if gdat.verbtype > 0:
@@ -3415,6 +3411,30 @@ def work(pathoutprtag, lock, indxprocwork):
             if not isfinite(gdatmodi.thislliktotl):
                 raise Exception('Log-likelihood is infinite!')
     
+            #indxsampclos = where((gdatmodi.thissamp < 0.01) & (gdatmodi.thissamp % 1. != 0.))[0]
+            #indxsampclos = list(indxsampclos)
+            #for indxsamptemp in indxsampclos:
+            #    for l in gdat.fittindxpopl:
+            #        for d in gdat.indxregi:
+            #            if not indxsamptemp in gdatmodi.thisindxsampcomp['comp'][l][d]:
+            #                indxsampclos.remove(indxsamptemp)
+            #indxsampclos = array(indxsampclos)
+            #if indxsampclos.size > 0:
+            #    print 'Warning! State is too close to 0!'
+            #    print gdat.fittnamepara[indxsampclos]
+
+            #indxsampclos = where((gdatmodi.thissamp > 0.99) & (gdatmodi.thissamp % 1. != 0.))[0]
+            #indxsampclos = list(indxsampclos)
+            #for indxsamptemp in indxsampclos:
+            #    for l in gdat.fittindxpopl:
+            #        for d in gdat.indxregi:
+            #            if not indxsamptemp in gdatmodi.thisindxsampcomp['comp'][l][d]:
+            #                indxsampclos.remove(indxsamptemp)
+            #indxsampclos = array(indxsampclos)
+            #if indxsampclos.size > 0:
+            #    print 'Warning! State is too close to 1!'
+            #    print gdat.fittnamepara[indxsampclos]
+
             if gdatmodi.cntrswep == 0:
                 gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
             

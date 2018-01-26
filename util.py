@@ -1383,8 +1383,8 @@ def retr_refrfermfinl(gdat):
     gdat.factstypplot = 1.
     gdat.scalstypplot = 'self'
     
-    gdat.minmtvar = 1e-1
-    gdat.maxmtvar = 1e3
+    gdat.minmtvar = 0.
+    gdat.maxmtvar = 400.
     gdat.labltvar = 'T'
     gdat.facttvarplot = 1.
     gdat.scaltvarplot = 'logt'
@@ -1400,8 +1400,7 @@ def retr_refrfermfinl(gdat):
     gdat.refrnumbelemfull = gdat.refrlgal[0][0].size
 
     gdat.refrspec = [[empty((3, gdat.numbener, gdat.refrlgal[0][0].size))]]
-    gdat.refrspec[0][0][0, :, :] = stack((fgl3['Flux100_300'], fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000'], \
-                                                                                            fgl3['Flux10000_100000']))[gdat.indxenerincl, :] / gdat.deltener[:, None]
+    gdat.refrspec[0][0][0, :, :] = stack((fgl3['Flux300_1000'], fgl3['Flux1000_3000'], fgl3['Flux3000_10000']))[gdat.indxenerincl, :] / gdat.deltener[:, None]
     
     fgl3specstdvtemp = stack((fgl3['Unc_Flux100_300'], fgl3['Unc_Flux300_1000'], fgl3['Unc_Flux1000_3000'], fgl3['Unc_Flux3000_10000'], \
                                                         fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.deltener[:, None, None] 
@@ -3644,7 +3643,7 @@ def setpinit(gdat, boolinitsetp=False):
     setattr(gdat, 'lablper0', 'P_0')
     setattr(gdat, 'factper0plot', 1.)
     setattr(gdat, 'scalper0plot', 'logt')
-   
+  
     gdat.labldglc = 'd_{gc}'
     gdat.factdglcplot = 1e-3
     gdat.scaldglcplot = 'logt'
@@ -3755,14 +3754,14 @@ def setpinit(gdat, boolinitsetp=False):
             for d in gdat.fittindxregipopl[l]:
                 setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), -0.2)
                 setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), 1.2)
-                setattr(gdat, 'corrcmplpop%dpop%dreg%d' % (l, q, d), 1.)
+                setattr(gdat, 'corrcmplpop%dpop%dreg%d' % (l, q, d), None)
                 setattr(gdat, 'factcmplpop%dpop%dreg%dplot' % (l, q, d), 1.)
                 setattr(gdat, 'scalcmplpop%dpop%dreg%d' % (l, q, d), 'self')
                 setattr(gdat, 'lablcmplpop%dpop%dreg%d' % (l, q, d), '$c_{%d%d%d}$' % (l, q, d))
                 
                 setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), -0.2)
                 setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), 1.2)
-                setattr(gdat, 'corrfdispop%dpop%dreg%d' % (q, l, d), 1.)
+                setattr(gdat, 'corrfdispop%dpop%dreg%d' % (q, l, d), None)
                 setattr(gdat, 'factfdispop%dpop%dreg%dplot' % (q, l, d), 1.)
                 setattr(gdat, 'scalfdispop%dpop%dreg%d' % (q, l, d), 'self')
                 setattr(gdat, 'lablfdispop%dpop%dreg%d' % (q, l, d), '$f_{%d%d%d}$' % (q, l, d))
@@ -3930,7 +3929,7 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     setattr(gdat, 'fact' + strgfeat + 'plot', 1.)
                 if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'magf' or \
-                                     strgfeat == 'relk' or strgfeat == 'relf' or strgfeat == 'elin' or \
+                                     strgfeat == 'relk' or strgfeat == 'relf' or strgfeat == 'elin' or strgfeat == 'flux0400' or \
                                      strgfeat == 'cnts' or strgfeat.startswith('per') or strgfeat == 'gwdt' or strgfeat == 'dglc' or strgfeat.startswith('lumi') or \
                                      strgfeat == 'relm' or strgfeat.startswith('dlos') or strgfeat.startswith('lum0') or strgfeat == 'defs' or \
                                      strgfeat == 'relc' or strgfeat == 'rele' or strgfeat == 'reln' or strgfeat == 'reld' or strgfeat.startswith('mcut') or strgfeat == 'deltllik':
@@ -4771,17 +4770,31 @@ def setpinit(gdat, boolinitsetp=False):
     else:
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            for d in gdat.indxregi:
-                for c in gdat.fittindxback[d]:
-                    for i in gdat.indxener:
-                        if c == 0:
-                            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg%den%02d' % (c, d, i))]] = 3e-4
-                        if c == 1:
-                            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg%den%02d' % (c, d, i))]] = 3e-4
-                        if c == 2:
-                            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg%den%02d' % (c, d, i))]] = 1e-1
-            if gdat.fittnumbtrap > 1:
-                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 1e-2
+            
+            if gdat.fittnumbtrap > 0:
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 4e-2
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloppop0]] = 1e-1
+            
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 5e-3
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 1e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 3e-2
+            
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en00')]] = 8e-4
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en01')]] = 1e-3
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en02')]] = 2e-3
+            
+            if 'dark' in gdat.fittlistnameback: 
+                indxbackdark = gdat.fittlistnameback.index('dark')
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg0en00' % indxbackdark)]] = 2e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg0en01' % indxbackdark)]] = 2e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback%04dreg0en02' % indxbackdark)]] = 3e-2
+            
+            if gdat.fittnumbtrap > 0:
+                if gdat.propcomp:
+                    gdat.stdvstdp[gdat.indxstdppop0flux] = 8e-2
+                    gdat.stdvstdp[gdat.indxstdppop0sindcolr0001] = 8e-2
+                    gdat.stdvstdp[gdat.indxstdppop0sindcolr0002] = 2e-1
+        
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             #if gdat.fittnumbtrap > 1:
@@ -5522,6 +5535,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         ## flag to calculate the kernel approximation errors
         calcerrr = [[] for l in indxpopl]
         if elemspatevaltype[l] != 'full' and gdat.numbpixlfull < 1e5:
+            # temp
             calcerrr[l] = False
         else:
             calcerrr[l] = False
@@ -5757,8 +5771,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 setp_varblimt(gdat, 'expcdistmean', [1., 8.], popl='full', strgmodl=strgmodl)
                 setp_varblimt(gdat, 'expcdiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl='full', strgmodl=strgmodl)
                 for i in gdat.indxenerinde:
-                    setp_varblimt(gdat, 'sindcolr%04d' % i, [-5., 10.], strgmodl=strgmodl)
-                    setp_varblimt(gdat, 'sindcolr%04d' % i, [-5., 10.], strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'sindcolr0001', [-2., 6.], strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'sindcolr0002', [0., 8.], strgmodl=strgmodl)
+                    #setp_varblimt(gdat, 'sindcolr%04d' % i, [-5., 10.], strgmodl=strgmodl)
         
         for l in indxpopl:
             if elemtype[l] == 'lghtpntspuls':
@@ -6877,6 +6892,8 @@ def retr_listrtagprev(strgcnfg):
         strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
         if chec_statfile(rtag, 'gdatmodi', 'post', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]:
             listrtagprev.append(rtag) 
+    
+    listrtagprev.sort()
 
     return listrtagprev
 
@@ -7409,27 +7426,22 @@ def plot_chro(gdat):
     figr.savefig(pathdiag + 'chro.pdf')
     plt.close(figr)
 
-    listchro *= 1e3
-   
-    if (listchro != 0).any() and False:
-        figr, axcl = plt.subplots(gdat.numbchro, 1, figsize=(2 * gdat.plotsize, gdat.plotsize * gdat.numbchro / 3.))
-        maxmchro = amax(listchro)
-        minmchro = amin(listchro[where(listchro > 0)])
-        binstime = logspace(log10(minmchro), log10(maxmchro), 50)
-    
-        for k in range(gdat.numbchro):
-            chro = listchro[where(listchro[:, k] > 0)[0], k]
-            axcl[k].hist(chro, binstime, log=True, label=listlabl[k])
-            axcl[k].set_xlim([amin(binstime), amax(binstime)])
-            axcl[k].set_ylim([0.5, None])
-            axcl[k].set_ylabel(listlabl[k])
-            axcl[k].set_xscale('log')
-            if k != gdat.numbchro - 1:
-                axcl[k].set_xticklabels([])
-            axcl[k].axvline(mean(chro), ls='--', alpha=0.2, color='black')
-        axcl[-1].set_xlabel('$t$ [ms]')
-        plt.subplots_adjust(hspace=0.05)
-        figr.savefig(pathdiag + 'chro.pdf')
+    for k in range(gdat.numbchro):
+        maxmchro = amax(listchro[:, k])
+        if listchro[where(listchro[:, k] > 0)].size == 0:
+            continue
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        minmchro = amin(listchro[where(listchro[:, k] > 0)])
+        binstime = logspace(log10(minmchro), log10(maxmchro), 20)
+        chro = listchro[where(listchro[:, k] > 0)[0], k]
+        axis.hist(chro, binstime, log=True)
+        axis.set_xlim([amin(binstime), amax(binstime)])
+        axis.set_ylim([0.5, None])
+        axis.set_ylabel('$N_{swep}$')
+        axis.set_xscale('log')
+        axis.axvline(mean(chro), ls='--', alpha=0.2, color='black')
+        axis.set_xlabel('$t$ [ms]')
+        figr.savefig(pathdiag + 'chro_%s.pdf' % gdat.listnamechro[k])
         plt.close(figr)
 
 
@@ -7959,9 +7971,9 @@ def retr_levi(listllik):
     return levi
 
 
-def retr_infofromlevi(meanllik, levi):
+def retr_infofromlevi(pmeallik, levi):
     
-    info = meanllik + levi
+    info = pmeallik - levi
 
     return info
 
@@ -8386,7 +8398,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print strgcomp
                             print 'sampvarb[indxsampcomp[strgcomp][l][d]]'
                             print sampvarb[indxsampcomp[strgcomp][l][d]]
-                            raise Exception('')
+                            print 'Parameter is too small!'
+                            #raise Exception('')
         
         if gdat.diagmode:
             for l in indxpopl:
@@ -10333,6 +10346,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                                                                                     varbevalextd, psfnintp, oaxitype, gdat.indxpixl)
                 
                         setattr(gdatobjt, strgpfix + 'sbrtdfncsubtreg%dpop%d' % (d, l), sbrt['dfncsubt'][d])
+                    
                     if calcerrr[l]:
                         cntppntsfull = retr_cntp(gdat, sbrt['dfncfull'], gdat.indxregi, gdat.indxcubeeval)
                         cntppnts = retr_cntp(gdat, sbrt['dfnc'], indxregieval, indxcubeeval)
@@ -10341,9 +10355,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             cntperrr[d] = cntppnts[d] - cntppntsfull[d]
                             if amax(fabs(cntperrr[d] / cntppntsfull[d])) > 0.1:
                                 raise Exception('Approximation error in calculating the PS surface brightness is above the tolerance level.')
+                            
                             print 'cntperrr[d]'
                             summgene(cntperrr[d])
                             print 'setting cntperrr...'
+                            raise Exception('')
                             print
                             print
                             print
@@ -10356,6 +10372,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print
                             print
                             print
+                            #errrpostcntperrrreg0pop0maxm
+                            
                             setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%d' % (d, l), cntperrr[d])
                             setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%dmaxm' % (d, l), amax(cntperrr[d]))
                             setattr(gdatobjt, strgpfix + 'cntperrrreg%dpop%dmean' % (d, l), mean(cntperrr[d]))
@@ -11540,7 +11558,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
         
             # find the maximum likelihood and posterior over the chains
             gdatfinl.indxprocmaxmllik = argmax(gdatfinl.maxmllikproc)
-            gdatfinl.maxmllik = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
+            gdatfinl.maxmlliktotl = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
         
@@ -11832,7 +11850,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
         pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
         infoharm = retr_infofromlevi(pmealliktotl, levi)
         setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
-        gdatfinl.bcom = gdatfinl.maxmllik - pmealliktotl
+        gdatfinl.bcom = gdatfinl.maxmlliktotl - pmealliktotl
         
         if gdatfinl.checprio:
             for strgvarb in gdatfinl.listnamevarbscal:
@@ -13567,6 +13585,13 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         if gdat.verbtype > 0:
             print 'Working on %s...' % name
         scal = getattr(gdat, 'scal' + name) 
+        if 'bacp' in name:
+            print 'name'
+            print name
+            print 'scal'
+            print scal
+            print
+
         factplot = getattr(gdat, 'fact' + name + 'plot')
         corr = getattr(gdat, 'corr' + name)
         if corr == None:
@@ -13989,8 +14014,8 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
                 factminm = 1e-1
                 factmaxm = 1e2
             elif gdat.exprtype == 'ferm':
-                factminm = 1e-4
-                factmaxm = 1e2
+                factminm = 1e1
+                factmaxm = 1e-1
             else:
                 factminm = 1e-4
                 factmaxm = 1e0
@@ -14399,6 +14424,22 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphline)
             if not boolelem:
                 break
+    
+    # external reference histogram
+    if histodim and strgydat == 'histfluxpop0reg0':
+        if gdat.listprefhistfluxlabl != None:
+            for k in range(len(gdat.listprefhistfluxlabl)):
+                if gdat.listprefhistfluxtype[k] == 'shad':
+                    axis.plot(gdat.listprefhistfluxflux[k][0], gdat.listprefhistfluxhist[k][0], color='m', label=gdat.listprefhistfluxlabl[k])
+                    enerpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
+                    enerpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxflux[k][1]
+                    enerpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxflux[k][2][::-1]
+                    sbrtpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
+                    sbrtpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxhist[k][1]
+                    sbrtpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxhist[k][2][::-1]
+                    axis.fill(enerpoly, sbrtpoly, color='m', alpha=0.5)
+                else:
+                    axis.errorbar(gdat.listprefhistfluxflux[k], gdat.listprefhistfluxhist[k], label=gdat.listprefhistfluxlabl[k], color='m')
 
     if strgydat.startswith('histcntp'):
         if gdat.numbpixl > 1:
