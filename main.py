@@ -125,7 +125,7 @@ def init( \
          propwithsing=True, \
          # Hessian estimation
          # temp
-         optitype='hess', \
+         optitype='none', \
          regulevi=False, \
          
          # modes of operation
@@ -1377,16 +1377,6 @@ def init( \
                 setp_varbvalu(gdat, 'fluxdistsloplowr', 1.5, popl=l)
                 setp_varbvalu(gdat, 'fluxdistslopuppr', 2.5, popl=l)
                 setp_varbvalu(gdat, 'fluxdistbrek', 1e-9, popl=l)
-                
-                print 'gdat.truefluxdistbrekpop0'
-                print gdat.truefluxdistbrekpop0
-                print 'gdat.truefluxdistslopupprpop0'
-                print gdat.truefluxdistslopupprpop0
-                print 'gdat.truefluxdistsloplowrpop0'
-                print gdat.truefluxdistsloplowrpop0
-                print
-
-
             if gdat.trueelemtype[l] == 'lghtpnts':
                 setp_varbvalu(gdat, 'fluxdistslop', 2.2, popl=l)
             if gdat.trueelemtype[l].startswith('lghtline'):
@@ -2472,7 +2462,7 @@ def initarry( \
     
     numbiter = len(dictvarbvari)
     indxiter = arange(numbiter) 
-
+    
     if listnamevarbcomp != None:
         numboutp = len(listnamevarbcomp)
         dictoutp = dict()
@@ -2520,7 +2510,7 @@ def initarry( \
         strgtimestmp = tdpy.util.retr_strgtimestmp()
     
         print
-        print 'Producing comparison plots...'
+        print 'Making comparison plots...'
         
         print 'listrtag'
         print listrtag

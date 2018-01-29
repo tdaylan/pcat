@@ -9,58 +9,90 @@ def comp(nameplot):
 
     print 'comp() working on ' + nameplot + '...'
     
-    cmnd = 'mkdir -p ' + pathimag + 'compfink/' + nameplot + '/'
-    os.system(cmnd)
+    cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
+    print cmnd
+    #os.system(cmnd)
     
     cmnd = 'mkdir -p ' + pathimag + 'compgold/' + nameplot + '/'
-    os.system(cmnd)
+    print cmnd
+    #os.system(cmnd)
     
     for line in listline:
         
         if line in listlinegold:
             strgtemp = 'gold'
         else:
-            strgtemp = 'fink'
+            strgtemp = 'rtag'
         namedest = pathimag + 'comp' + strgtemp + '/' + nameplot + '/' + line + '.pdf'
         if not os.path.isfile(namedest):
-            cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink2/www/tansu/link/pcat/imag/' + line + '/' + nameplot + '.pdf ' + namedest 
-            os.system(cmnd)
+            if boolfink:
+                cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink2/www/tansu/link/pcat/imag/' + line + '/' + nameplot + '.pdf ' + namedest 
+            else:
+                cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
+            
+            print cmnd
+            #os.system(cmnd)
 
-print 'compfink initialized...'
+
+print 'comp_rtag() initialized...'
 
 # list of golden runs
 listlinegold = [ \
-                '20170522_020917_pcat_lens_mock_syst_0001_5000000', \
-                '20170521_232045_pcat_lens_mock_syst_0000_5000000', \
+                '20180125_222826_pcat_chan_inpt_home7msc06000000_10000', \
+                '20180125_223105_pcat_chan_inpt_home7msc06000001_10000', \
                ]
+
+if os.uname()[1] == 'fink1.rc.fas.harvard.edu' or os.uname()[1] == 'fink2.rc.fas.harvard.edu':
+    boolfink = True
+else:
+    boolfink = False
 
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 pathgold = pathimag + 'compgold/'
 
 print 'Listing the available runs...'
-cmnd = 'ssh tansu@fink2.rc.fas.harvard.edu "ls /n/fink1/tansu/data/pcat/imag/ | xargs -n 1 basename > /n/fink1/tansu/data/pcat/imag/listfink.txt"'
+if boolfink:
+    cmnd = 'ssh tansu@fink2.rc.fas.harvard.edu "ls /n/fink1/tansu/data/pcat/imag/ | xargs -n 1 basename > /n/fink1/tansu/data/pcat/imag/listfink.txt"'
+else:
+    cmnd = 'ls %s | xargs -n 1 basename > %s/listlocl.txt' % (pathimag, pathimag)
+print cmnd
 os.system(cmnd)
 
-print 'Copying the list to the local directory...'
-cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/listfink.txt %s' % pathimag
-os.system(cmnd)
+if boolfink:
+    print 'Copying the list to the local directory...'
+    cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/listfink.txt %s' % pathimag
+    print cmnd
+    #os.system(cmnd)
 
 print 'Erasing the gold compilation contents...'
-os.system('rm -rf ' + pathgold)
+cmnd = 'rm -rf ' + pathgold
+print cmnd
+os.system(cmnd)
 
-pathlist = pathimag + 'listfink.txt'
+if boolfink:
+    pathlist = pathimag + 'listfink.txt'
+else:
+    pathlist = pathimag + 'listlocl.txt'
+
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
     listline = [x.strip() for x in listline] 
-strgsrch = '20170609*'
+strgsrch = '20*chan_inpt*'
 listline = fnmatch.filter(listline, strgsrch)
 
-namerefr = '20170609_050550_pcat_lens_mock_syst_0000_2000000'
+print 'listline'
+for line in listline:
+    print line
+
+namerefr = '20180125_222826_pcat_chan_inpt_home7msc06000000_10000'
 pathrefr = os.environ["PCAT_DATA_PATH"] + '/imag/' + namerefr + '/'
-if not os.path.isdir(pathrefr):
-    print 'Copying reference run to the local directory...'
-    cmnd = 'scp -r tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/%s/ %s' % (namerefr, pathimag)
-    os.system(cmnd)
+
+if boolfink:
+    if not os.path.isdir(pathrefr):
+        print 'Copying reference run to the local directory...'
+        cmnd = 'scp -r tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/%s/ %s' % (namerefr, pathimag)
+        print cmnd
+        #os.system(cmnd)
 
 print 'Iterating over folders of the reference run...'
 for namefrst in os.listdir(pathrefr):

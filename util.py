@@ -942,7 +942,12 @@ def retr_indxpixlevalconc(gdat, strgmodl, dicteval, l, ll, dd):
             if indxfluxproxtemp > 0:
                 indxfluxproxtemp -= 1
             if indxfluxproxtemp == gdat.binsprox.size - 1:
-                print 'Index of the proximity pixel list overflew. Taking the largest list...'
+                print 'Warning! Index of the proximity pixel list overflew. Taking the largest list...'
+                print 'varbeval[k]'
+                print varbeval[k]
+                print 'gdat.binsprox'
+                print gdat.binsprox
+                print
                 indxfluxproxtemp -= 1
             if gdat.verbtype > 1:
                 print 'k'
@@ -8510,7 +8515,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             dictelem[l][d]['reds'] = gdat.redsfromdlosobjt(dictelem[l][d]['dlos'])
                             dictelem[l][d]['lumi'] = dictelem[l][d]['lum0'] * (1. + dictelem[l][d]['reds'])**4
                         if elemtype[l] == 'lghtpntspuls' or elemtype[l] == 'lghtpntsagnntrue':
+                            print 'dictelem[l][d][lumi]'
+                            print dictelem[l][d]['lumi']
                             dictelem[l][d]['flux'] = retr_flux(gdat, dictelem[l][d]['lumi'], dictelem[l][d]['dlos'])
+                            print 'dictelem[l][d][dlos]'
+                            print dictelem[l][d]['dlos']
+                            print 'dictelem[l][d][flux]'
+                            print dictelem[l][d]['flux']
                         # evaluate spectra
                         if elemtype[l].startswith('lghtline'):
                             if elemtype[l] == 'lghtlinevoig':
@@ -11847,10 +11858,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
             if strgchan in gdatfinl.listnamevarbcpct:
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
         
-        pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
-        infoharm = retr_infofromlevi(pmealliktotl, levi)
-        setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
-        gdatfinl.bcom = gdatfinl.maxmlliktotl - pmealliktotl
+        if not booltile:
+            pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
+            infoharm = retr_infofromlevi(pmealliktotl, levi)
+            setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
+            gdatfinl.bcom = gdatfinl.maxmlliktotl - pmealliktotl
         
         if gdatfinl.checprio:
             for strgvarb in gdatfinl.listnamevarbscal:
@@ -12187,7 +12199,7 @@ def retr_glc3(dglc, thet, phii):
     xpos = dglc * sin(thet) * cos(phii)
     ypos = dglc * sin(thet) * sin(phii)
     zpos = dglc * cos(thet)
-    dlos = sqrt(zpos**2 + xpos**2 + (8.5 - ypos)**2)
+    dlos = sqrt(zpos**2 + xpos**2 + (8.5e3 - ypos)**2)
     lgal = arctan2(8.5e3 - ypos, xpos) - pi / 2
     bgal = arcsin(zpos / dlos)
    
@@ -12667,7 +12679,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', \
                                                                                                     scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl], limtxdat=limtxdat)
-                        else:
+                        /Users/tansu/Downloads/data/pcat/imag/20180125_190755_pcat_ferm_igal_inpt_nomi_200000/post/finl/histtdim/pdfnpmeahistgangsindac15pop0reg0.pdf else:
                             name = 'histcntp' + nameecom + 'reg%devt%d' % (d, m)
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbener], limtxdat=limtxdat)
@@ -14427,19 +14439,22 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     
     # external reference histogram
     if histodim and strgydat == 'histfluxpop0reg0':
-        if gdat.listprefhistfluxlabl != None:
-            for k in range(len(gdat.listprefhistfluxlabl)):
-                if gdat.listprefhistfluxtype[k] == 'shad':
-                    axis.plot(gdat.listprefhistfluxflux[k][0], gdat.listprefhistfluxhist[k][0], color='m', label=gdat.listprefhistfluxlabl[k])
-                    enerpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
-                    enerpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxflux[k][1]
-                    enerpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxflux[k][2][::-1]
-                    sbrtpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
-                    sbrtpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxhist[k][1]
-                    sbrtpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxhist[k][2][::-1]
-                    axis.fill(enerpoly, sbrtpoly, color='m', alpha=0.5)
-                else:
-                    axis.errorbar(gdat.listprefhistfluxflux[k], gdat.listprefhistfluxhist[k], label=gdat.listprefhistfluxlabl[k], color='m')
+        try:
+            if gdat.listprefhistfluxlabl != None:
+                for k in range(len(gdat.listprefhistfluxlabl)):
+                    if gdat.listprefhistfluxtype[k] == 'shad':
+                        axis.plot(gdat.listprefhistfluxflux[k][0], gdat.listprefhistfluxhist[k][0], color='m', label=gdat.listprefhistfluxlabl[k])
+                        enerpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
+                        enerpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxflux[k][1]
+                        enerpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxflux[k][2][::-1]
+                        sbrtpoly = empty(gdat.listprefhistfluxflux[k][1].size + gdat.listprefhistfluxflux[k][2].size)
+                        sbrtpoly[:gdat.listprefhistfluxflux[k][1].size] = gdat.listprefhistfluxhist[k][1]
+                        sbrtpoly[gdat.listprefhistfluxflux[k][1].size:] = gdat.listprefhistfluxhist[k][2][::-1]
+                        axis.fill(enerpoly, sbrtpoly, color='m', alpha=0.5)
+                    else:
+                        axis.errorbar(gdat.listprefhistfluxflux[k], gdat.listprefhistfluxhist[k], label=gdat.listprefhistfluxlabl[k], color='m')
+        except:
+            pass
 
     if strgydat.startswith('histcntp'):
         if gdat.numbpixl > 1:

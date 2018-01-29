@@ -15,8 +15,8 @@ def test_info(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     #dictargs['verbtype'] = 0
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 20000
+    dictargs['numbsamp'] = 100
     dictargs['makeplot'] = False
     
     listnamecnfgextn = ['fittlowr', 'fittnomi', 'fitthigr']
@@ -349,9 +349,11 @@ def test_spmr(strgcnfgextnexec=None):
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
     listnamevarbcomp = ['accpsplt', 'accpmerg', 'timeatcrcntpmaxm']
+    listscalvarbcomp = ['self' for namevarbcomp in listnamevarbcomp]
+    listlablvarbcomp = [r'$\alpha_{splt}$', r'$\alpha_{merg}$', r'$\tau_{ac}$']
     listtypevarbcomp = ['', '', '']
     listpdfnvarbcomp = ['', '', '']
-    
+
     listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['radispmr']) for namecnfgextn in listnamecnfgextn] 
     
     dictglob = initarry( \
@@ -367,6 +369,8 @@ def test_spmr(strgcnfgextnexec=None):
                         listtickxaxi=listtickxaxi, \
                         
                         listnamevarbcomp=listnamevarbcomp, \
+                        listscalvarbcomp=listscalvarbcomp, \
+                        listlablvarbcomp=listlablvarbcomp, \
                         listtypevarbcomp=listtypevarbcomp, \
                         listpdfnvarbcomp=listpdfnvarbcomp, \
                        )
