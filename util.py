@@ -12679,7 +12679,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', \
                                                                                                     scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl], limtxdat=limtxdat)
-                        /Users/tansu/Downloads/data/pcat/imag/20180125_190755_pcat_ferm_igal_inpt_nomi_200000/post/finl/histtdim/pdfnpmeahistgangsindac15pop0reg0.pdf else:
                             name = 'histcntp' + nameecom + 'reg%devt%d' % (d, m)
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbener], limtxdat=limtxdat)
