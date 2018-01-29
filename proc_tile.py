@@ -11,10 +11,12 @@ print strgcnfg
 
 listrtag = fnmatch.filter(os.listdir(pathdata), strgcnfg)
 
-print 'Found the following run tags: '
-for rtag in listrtag:
-    print rtag
-
-proc_finl(rtag=listrtag)
+if len(listrtag) == 0:
+    print 'Did not find any run tags.'
+else:
+    print 'Found the following run tags: '
+    for rtag in listrtag:
+        print rtag
+    proc_finl(rtag=listrtag)
 
 
