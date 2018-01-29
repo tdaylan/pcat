@@ -10428,7 +10428,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     if gdat.numbpixl > 1:
                         for i in gdat.indxener: 
                             histcntp = histogram(cntp[name][d][i, :, m], bins=gdat.binscntpmodl)[0]
-                            setattr(gdatobjt, strgpfix + 'histcntp' + name + 'reg%den%02devt%d' % (d, i, m), histcntp)
+                            strgtemp = strgpfix + 'histcntp' + name + 'reg%den%02devt%d' % (d, i, m)
+                            print 'strgtemp'
+                            print strgtemp
+                            print 'histcntp'
+                            summgene(histcntp)
+                            print
+                            setattr(gdatobjt, strgtemp, histcntp)
                             
                             if (histcntp == 0.).all():
                                 if gdat.verbtype > 0:
