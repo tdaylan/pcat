@@ -4778,7 +4778,14 @@ def setpinit(gdat, boolinitsetp=False):
             
             if gdat.fittnumbtrap > 0:
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 4e-2
-                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloppop0]] = 1e-1
+                
+                for l in gdat.fittindxpopl:
+                    if gdat.fittfluxdisttype[l] == 'powrslop':
+                        gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloppop0]] = 1e-1
+                    else:
+                        gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistbrekpop0]] = 1e-1
+                        gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloplowrpop0]] = 1e-1
+                        gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistslopupprpop0]] = 1e-1
             
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 5e-3
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 1e-2
