@@ -15,7 +15,7 @@ def test_info(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     #dictargs['verbtype'] = 0
     
-    dictargs['numbswep'] = 20000
+    dictargs['numbswep'] = 100000
     dictargs['numbsamp'] = 100
     dictargs['makeplot'] = False
     
@@ -43,7 +43,7 @@ def test_info(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -84,18 +84,19 @@ def test_perf(strgcnfgextnexec=None):
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['sigclowr']['truesigc'] = 1e-9
-    dictargsvari['sigcnomi']['truesigc'] = 3e-9
-    dictargsvari['sigchigr']['truesigc'] = 1e-8
+    dictargsvari['sigclowr']['truesigc'] = 0.5 / anglfact
+    dictargsvari['sigcnomi']['truesigc'] = 2. / anglfact
+    dictargsvari['sigchigr']['truesigc'] = 4. / anglfact
 
-    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    lablxaxi = r'$\sigma_c$ [$^\circ$]'
     scalxaxi = 'logt'
-    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['truesigc']) for namecnfgextn in listnamecnfgextn] 
+    listtickxaxi = [anglfact * tdpy.util.mexp(dictargsvari[namecnfgextn]['truesigc']) for namecnfgextn in listnamecnfgextn] 
     
-    #liststrgvarb = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeprocnorm', 'meanmemoresi', 'derimemoresi']
-    listnamevarbcomp = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcrcntpmaxm', 'timeprocnorm', 'meanmemoresi', 'derimemoresi', 'timerealtotl']
+    listnamevarbcomp = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcrcntpmaxm', 'timeprocnorm', 'meanmemoresi', 'timerealtotl']
+    listnamevarbcomp += ['numbpixlprox%04d' % k for k in range(3)]
     listscalvarbcomp = ['self' for namevarbcomp in listnamevarbcomp]
     listlablvarbcomp = ['$t$ [s]', '$t_{CPU}$ [s]', '$t_{CPU}^\prime$ [s]', '$t_{MC}$', r'$t_{CPU}^{\prime\prime}$ [s]', r'$\bar{M}$', r'$\partial_t\bar{M}$', '$t$ [s]']
+    listlablvarbcomp += ['$N_{pxp,%d}$' % k for k in range(3)]
     listtypevarbcomp = ['' for namevarbcomp in listnamevarbcomp]
     listpdfnvarbcomp = ['' for namevarbcomp in listnamevarbcomp]
     
@@ -104,7 +105,7 @@ def test_perf(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='truesigc', \
                         lablxaxi=lablxaxi, \
@@ -153,6 +154,12 @@ def test_psfn(strgcnfgextnexec=None):
     listtickxaxi = ['Float', 'Fixed/Wrong', 'Fixed/True'] 
     
     listnamevarbcomp = ['numbelempop0reg0']
+    
+    listnamevarbcomp = ['numbelempop0reg0']
+    listscalvarbcomp = ['self']
+    listlablvarbcomp = ['$N_{pts}$']
+    listtypevarbcomp = ['errr']
+    listpdfnvarbcomp = ['post']
 
     dictglob = initarry( \
                         dictargsvari, \
@@ -167,10 +174,10 @@ def test_psfn(strgcnfgextnexec=None):
                         listtickxaxi=listtickxaxi, \
                         
                         listnamevarbcomp=listnamevarbcomp, \
-                        #listscalvarbcomp=listscalvarbcomp, \
-                        #listlablvarbcomp=listlablvarbcomp, \
-                        #listtypevarbcomp=listtypevarbcomp, \
-                        #listpdfnvarbcomp=listpdfnvarbcomp, \
+                        listscalvarbcomp=listscalvarbcomp, \
+                        listlablvarbcomp=listlablvarbcomp, \
+                        listtypevarbcomp=listtypevarbcomp, \
+                        listpdfnvarbcomp=listpdfnvarbcomp, \
                        )
 
     

@@ -2583,8 +2583,6 @@ def initarry( \
             if trueyaxi != None:
                 axis.axhline(trueyaxi, ls='--', color='g')
             axis.set_xlabel(lablxaxi)
-            if scalxaxi == 'logt':
-                axis.set_xscale('log')
             axis.set_xticks(indxiter+1.)
             axis.set_xticklabels(listtickxaxi)
             

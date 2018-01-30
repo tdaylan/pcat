@@ -4802,10 +4802,27 @@ def setpinit(gdat, boolinitsetp=False):
         
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
-            #if gdat.fittnumbtrap > 1:
-            #    for l in gdat.fittindxpopl:
-            #        if gdat.fittelemtype[l] != 'lghtpntsagnntrue':
-            #            gdat.stdvstdp[gdat.indxstdppop0flux] = 1e-2
+            
+            if gdat.fittnumbtrap > 0:
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 2e-1
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloppop0]] = 2e-1
+            
+            gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
+            
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 5e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 2e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0')]] = 1e-1
+            
+            if gdat.fittnumbtrap > 0:
+                if gdat.propcomp:
+                    gdat.stdvstdp[gdat.indxstdppop0lgal] = 2e-2
+                    gdat.stdvstdp[gdat.indxstdppop0bgal] = 2e-2
+                    gdat.stdvstdp[gdat.indxstdppop0flux] = 2e-1
+                    gdat.stdvstdp[gdat.indxstdppop0sind] = 2e-1
+        
         if gdat.exprtype == 'sdyn':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
         if gdat.exprtype == 'fire':
@@ -5126,7 +5143,7 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     gdat.numbpixlprox[h] += len(gdat.indxpixlprox[h][m])
             gdat.numbpixlprox[h] /= len(gdat.indxpixlprox[h])
-        
+            setattr(gdat, 'numbpixlprox%04d' % h, gdat.numbpixlprox[h])
         if gdat.verbtype > 0:
             print 'gdat.numbpixlprox'
             print gdat.numbpixlprox
@@ -10429,11 +10446,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         for i in gdat.indxener: 
                             histcntp = histogram(cntp[name][d][i, :, m], bins=gdat.binscntpmodl)[0]
                             strgtemp = strgpfix + 'histcntp' + name + 'reg%den%02devt%d' % (d, i, m)
-                            print 'strgtemp'
-                            print strgtemp
-                            print 'histcntp'
-                            summgene(histcntp)
-                            print
                             setattr(gdatobjt, strgtemp, histcntp)
                             
                             if (histcntp == 0.).all():
@@ -12685,6 +12697,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', \
                                                                                                     scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbpixl], limtxdat=limtxdat)
+                        else:
                             name = 'histcntp' + nameecom + 'reg%devt%d' % (d, m)
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbener], limtxdat=limtxdat)
