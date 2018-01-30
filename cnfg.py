@@ -15,7 +15,7 @@ def test_info(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     #dictargs['verbtype'] = 0
     
-    dictargs['numbswep'] = 100000
+    dictargs['numbswep'] = 10000
     dictargs['numbsamp'] = 100
     dictargs['makeplot'] = False
     

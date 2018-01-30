@@ -27,7 +27,7 @@ if boolfinl:
     print 'Post-processing...'
     for rtag in listrtag:
         print 'Working on %s...' % rtag
-        proc_finl(rtag=rtag, listnamevarbproc=listnamevarbproc)
+        proc_finl(rtag=rtag, listnamevarbproc=listnamevarbproc, forcplot=True)
         #try:
         #    proc_finl(rtag=rtag)
         #except:

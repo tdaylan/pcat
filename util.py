@@ -4773,6 +4773,11 @@ def setpinit(gdat, boolinitsetp=False):
         
         gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
+        
+        print 'gdat.fittnameback'
+        print gdat.fittnameback
+        print
+
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             
@@ -10455,21 +10460,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             strgtemp = strgpfix + 'histcntp' + name + 'reg%den%02devt%d' % (d, i, m)
                             setattr(gdatobjt, strgtemp, histcntp)
                             
-                            if (histcntp == 0.).all():
-                                if gdat.verbtype > 0:
-                                    print 'Count per pixel histogram is zero... Consider changing cntp limits.'
-                                    print 'name'
-                                    print name
-                                    print 'im'
-                                    print i, m
-                                    print 'sbrt[name][d][i, :, m]'
-                                    print sbrt[name][d][i, :, m]
-                                    print 'cntp[name][d][i, :, m]'
-                                    print cntp[name][d][i, :, m]
-                                    summgene(cntp[name][d][i, :, m])
-                                    print 'gdat.minmcntpmodl'
-                                    print gdat.minmcntpmodl
-                                    print
+                            #if (histcntp == 0.).all():
+                                #if gdat.verbtype > 0:
+                                #    print 'Count per pixel histogram is zero... Consider changing cntp limits.'
+                                #    print 'name'
+                                #    print name
+                                #    print 'im'
+                                #    print i, m
+                                #    print 'sbrt[name][d][i, :, m]'
+                                #    print sbrt[name][d][i, :, m]
+                                #    print 'cntp[name][d][i, :, m]'
+                                #    print cntp[name][d][i, :, m]
+                                #    summgene(cntp[name][d][i, :, m])
+                                #    print 'gdat.minmcntpmodl'
+                                #    print gdat.minmcntpmodl
+                                #    print
                                 #raise Exception('')
 
                     else:
@@ -11212,7 +11217,7 @@ def retr_pathoutprtag(rtag):
     return pathoutprtag
 
 
-def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
+def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forcplot=False):
     
     gdatmock = None
     
@@ -11974,11 +11979,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None):
         else:
             gdatprio = None
         
-        if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn):
+        if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn) or forcplot:
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
-        filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
-        filestat.write('plotfinl%s written.\n' % strgpdfn)
-        filestat.close()
+            filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
+            filestat.write('plotfinl%s written.\n' % strgpdfn)
+            filestat.close()
     print
 
 
