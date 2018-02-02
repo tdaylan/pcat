@@ -90,7 +90,7 @@ def test_perf(strgcnfgextnexec=None):
 
     lablxaxi = r'$\sigma_c$ [$^\circ$]'
     scalxaxi = 'logt'
-    listtickxaxi = [anglfact * tdpy.util.mexp(dictargsvari[namecnfgextn]['truesigc']) for namecnfgextn in listnamecnfgextn] 
+    listtickxaxi = [tdpy.util.mexp(anglfact * dictargsvari[namecnfgextn]['truesigc']) for namecnfgextn in listnamecnfgextn] 
     
     listnamevarbcomp = ['timereal', 'timeproctotl', 'timeproctotlswep', 'timeatcrcntpmaxm', 'timeprocnorm', 'meanmemoresi', 'timerealtotl']
     listnamevarbcomp += ['numbpixlprox%04d' % k for k in range(3)]

@@ -532,14 +532,17 @@ def init( \
             meanenerparttemp = concatenate((array([0.5]), meanenerpart, array([10.])))
             backtypetemp = interp(gdat.meanenerfull, meanenerparttemp, sbrtparttemp)
         if gdat.anlytype.startswith('home') :
-            backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
+            backtypetemp = 1.
+            #backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
         if gdat.anlytype.startswith('extr'):
-            backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
+            #backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
+            backtypetemp = 1.
         
         if gdat.anlytype.startswith('spec'):
             backtype = [[[1e2, 2.], backtypetemp]]
         else:
             backtype = [[1., backtypetemp]]
+    
     if gdat.exprtype == 'hubb':
         backtype = [[1.]]
     if gdat.exprtype == 'sdyn':
@@ -830,7 +833,7 @@ def init( \
         if gdat.numbpixlfull == 1:
             specback = [[True, True]]
         else:
-            specback = [[False, True]]
+            specback = [[False, False]]
         setp_varbvalu(gdat, 'specback', specback)
     else:
         for strgmodl in gdat.liststrgmodl:
@@ -3802,10 +3805,6 @@ def work(pathoutprtag, lock, indxprocwork):
                 booltemp = False
                 if gdat.indxproptype[k] in gdat.indxproptypecomp:
                     indxpopltemp = gdat.indxpoplproptype[gdat.indxproptype[k]]
-                    print 'gdat.fittnamefeatampl[indxpopltemp]'
-                    print gdat.fittnamefeatampl[indxpopltemp]
-                    print 'gdat.legdproptype[k]'
-                    print gdat.legdproptype[k]
                     if gdat.fittnamefeatampl[indxpopltemp] == gdat.legdproptype[k]:
                         booltemp = True
                 if gdat.showmoreaccp and booltemp:

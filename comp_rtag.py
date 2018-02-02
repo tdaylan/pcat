@@ -20,10 +20,7 @@ def comp(nameplot):
         strgtemp = 'rtag'
         namedest = pathimag + 'comp' + strgtemp + '/' + nameplot + '/' + line + '.pdf'
         if not os.path.isfile(namedest):
-            if boolfink:
-                cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink2/www/tansu/link/pcat/imag/' + line + '/' + nameplot + '.pdf ' + namedest 
-            else:
-                cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
+            cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
             print cmnd
             print
@@ -32,31 +29,14 @@ def comp(nameplot):
 
 print 'comp_rtag() initialized...'
 
-if os.uname()[1] == 'fink1.rc.fas.harvard.edu' or os.uname()[1] == 'fink2.rc.fas.harvard.edu':
-    boolfink = True
-else:
-    boolfink = False
-
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
 print 'Listing the available runs...'
-if boolfink:
-    cmnd = 'ssh tansu@fink2.rc.fas.harvard.edu "ls /n/fink1/tansu/data/pcat/imag/ | xargs -n 1 basename > /n/fink1/tansu/data/pcat/imag/listfink.txt"'
-else:
-    cmnd = 'ls %s | xargs -n 1 basename > %s/listlocl.txt' % (pathimag, pathimag)
+cmnd = 'ls %s | xargs -n 1 basename > %s/listrtag.txt' % (pathimag, pathimag)
 print cmnd
 os.system(cmnd)
 
-if boolfink:
-    print 'Copying the list to the local directory...'
-    cmnd = 'scp tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/listfink.txt %s' % pathimag
-    print cmnd
-    os.system(cmnd)
-
-if boolfink:
-    pathlist = pathimag + 'listfink.txt'
-else:
-    pathlist = pathimag + 'listlocl.txt'
+pathlist = pathimag + 'listrtag.txt'
 
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
@@ -70,14 +50,6 @@ for line in listline:
 
 namerefr = '20180125_222826_pcat_chan_inpt_home7msc06000000_10000'
 pathrefr = os.environ["PCAT_DATA_PATH"] + '/imag/' + namerefr + '/'
-
-if boolfink:
-    if not os.path.isdir(pathrefr):
-        print 'Copying reference run to the local directory...'
-        cmnd = 'scp -r tansu@fink2.rc.fas.harvard.edu:/n/fink1/tansu/data/pcat/imag/%s/ %s' % (namerefr, pathimag)
-        print cmnd
-        os.system(cmnd)
-        print
 
 print 'Iterating over folders of the reference run...'
 for namefrst in os.listdir(pathrefr):
