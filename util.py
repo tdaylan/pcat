@@ -12580,6 +12580,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     listnameecomtotl = getattr(gdat, strgmodl + 'listnameecomtotl')
     unifback = getattr(gdat, strgmodl + 'unifback')
     listnameback = getattr(gdat, strgmodl + 'listnameback')
+    print 'listnameback'
+    print listnameback
     namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
     
     if gdatmodi != None:

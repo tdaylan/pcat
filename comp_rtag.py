@@ -41,14 +41,14 @@ pathlist = pathimag + 'listrtag.txt'
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
     listline = [x.strip() for x in listline] 
-strgsrch = '20180129_*_test_info_*_100000'
+strgsrch = sys.argv[1]
 listline = fnmatch.filter(listline, strgsrch)
 
 print 'listline'
 for line in listline:
     print line
 
-namerefr = '20180125_222826_pcat_chan_inpt_home7msc06000000_10000'
+namerefr = listline[0]
 pathrefr = os.environ["PCAT_DATA_PATH"] + '/imag/' + namerefr + '/'
 
 print 'Iterating over folders of the reference run...'

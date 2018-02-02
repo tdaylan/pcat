@@ -238,7 +238,7 @@ def init( \
          proplenp=None, \
          propcomp=None, \
          probtran=None, \
-         probspmr=0., \
+         probspmr=0.3, \
          # when proposing from the covariance, fracproprand should be very small!
          fracproprand=0., \
             
