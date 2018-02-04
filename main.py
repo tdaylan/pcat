@@ -523,25 +523,28 @@ def init( \
         else:
             backtype = [[1., 'sbrtfdfmsmthrec8pntsnorm.fits']]
     if gdat.exprtype == 'chan':
-        # particle background
-        if gdat.anlytype.startswith('spec'):
-            # temp -- this is fake!
-            sbrtparttemp = array([70.04, 70.04, 12.12, 15.98, 10.79, 73.59, 73.59])
-            binsenerpart = logspace(log10(0.5), log10(10.), 6)
-            meanenerpart = sqrt(binsenerpart[:-1] * binsenerpart[1:])
-            meanenerparttemp = concatenate((array([0.5]), meanenerpart, array([10.])))
-            backtypetemp = interp(gdat.meanenerfull, meanenerparttemp, sbrtparttemp)
-        if gdat.anlytype.startswith('home') :
-            backtypetemp = 1.
-            #backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
-        if gdat.anlytype.startswith('extr'):
-            #backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
-            backtypetemp = 1.
-        
-        if gdat.anlytype.startswith('spec'):
-            backtype = [[[1e2, 2.], backtypetemp]]
+        if True:
+            backtype = [[1.]]
         else:
-            backtype = [[1., backtypetemp]]
+            # particle background
+            if gdat.anlytype.startswith('spec'):
+                # temp -- this is fake!
+                sbrtparttemp = array([70.04, 70.04, 12.12, 15.98, 10.79, 73.59, 73.59])
+                binsenerpart = logspace(log10(0.5), log10(10.), 6)
+                meanenerpart = sqrt(binsenerpart[:-1] * binsenerpart[1:])
+                meanenerparttemp = concatenate((array([0.5]), meanenerpart, array([10.])))
+                backtypetemp = interp(gdat.meanenerfull, meanenerparttemp, sbrtparttemp)
+            if gdat.anlytype.startswith('home') :
+                backtypetemp = 1.
+                #backtypetemp = array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
+            if gdat.anlytype.startswith('extr'):
+                #backtypetemp = 'sbrtchanback' + gdat.anlytype + '.fits'
+                backtypetemp = 1.
+            
+            if gdat.anlytype.startswith('spec'):
+                backtype = [[[1e2, 2.], backtypetemp]]
+            else:
+                backtype = [[1., backtypetemp]]
     
     if gdat.exprtype == 'hubb':
         backtype = [[1.]]
@@ -550,7 +553,7 @@ def init( \
     if gdat.exprtype == 'fire':
         backtype = [[1.]]
     setp_varbvalu(gdat, 'backtype', backtype)
-
+    
     if gdat.exprtype == 'hubb':
         lensmodltype = 'full'
     else:
@@ -1003,8 +1006,8 @@ def init( \
     listnameback = ['isot']
     if gdat.exprtype == 'ferm':
         listnameback.append('fdfm')
-    if gdat.exprtype == 'chan':
-        listnameback.append('part')
+    #if gdat.exprtype == 'chan':
+    #    listnameback.append('part')
     setp_varbvalu(gdat, 'listnameback', listnameback)
     
     # reference elements
@@ -2550,8 +2553,13 @@ def initarry( \
             else:
                 lablyaxi = listlablvarbcomp[indxlist]
             
+            print 'strgvarboutp'
+            print strgvarboutp
+            
             try:
                 trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
+                print 'trueyaxi'
+                print trueyaxi
             except:
                 trueyaxi = None
             
@@ -2568,12 +2576,22 @@ def initarry( \
                         if varboutp[k].shape[1] != 1:
                             raise Exception('varboutp format is wrong.')
                         varboutp[k] = varboutp[k][:, 0]
+                        print 'varboutp[k]'
+                        print varboutp[k]
                         if listtypevarbcomp[indxlist] == 'errr':
                             yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
                     else:
                         if listtypevarbcomp[indxlist] == 'errr':
                             yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
                     ydat[k] = varboutp[k][0]
+                    
+                    print 'k'
+                    print k
+                    print 'ydat[k]'
+                    print ydat[k]
+                    print 'yerr[:, k]'
+                    print yerr[:, k]
+                    print
             
             axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
             indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
@@ -2923,7 +2941,7 @@ def work(pathoutprtag, lock, indxprocwork):
     timeproc = time.clock()
     
     # re-seed the random number generator for this chain
-    seed(indxprocwork)
+    seed(indxprocwork + 1000)
     
     # empty object to hold chain-specific variables that will be modified by the chain
     gdatmodi = tdpy.util.gdatstrt()
@@ -2972,6 +2990,13 @@ def work(pathoutprtag, lock, indxprocwork):
     ## initialize randomly
     gdatmodi.thissamp = rand(gdat.fittnumbpara)
     gdatmodi.thissampvarb = zeros(gdat.fittnumbpara)
+    
+    #print 'gdat.inittype'
+    #print gdat.inittype
+    #print 'gdat.trussamp[gdat.truenumbfixp:gdat.truenumbfixp+20]'
+    #print gdat.truesamp[gdat.truenumbfixp:gdat.truenumbfixp+20]
+    #print 'gdatmodi.thissamp[gdat.fittnumbfixp:gdat.fittnumbfixp+20]'
+    #print gdatmodi.thissamp[gdat.fittnumbfixp:gdat.fittnumbfixp+20]
     
     if gdat.fittnumbtrap > 0:
         for l in gdat.fittindxpopl:
@@ -3108,10 +3133,11 @@ def work(pathoutprtag, lock, indxprocwork):
                 gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
         retr_elemlist(gdat, gdatmodi)
+        
         if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'true')
-
+    
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if namefixp.startswith('numbelem'):

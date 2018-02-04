@@ -42,7 +42,7 @@ def test_info(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        #forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \

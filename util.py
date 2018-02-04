@@ -2613,13 +2613,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             gdatmodi.nextprobreve = gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco
             gdatmodi.nextlrpp = log(gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco) - log(gdatmodi.nextprobfrwd)
         
-        gdatmodi.nextlrpp = 0.
         # temp
-        dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-            if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
-                print 'adding fudge term...'
-                gdatmodi.nextlrpp += 1e6
+        #gdatmodi.nextlrpp = 0.
+        #dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
+        #if gdatmodi.propmerg and gdat.numbpixlfull > 1:
+        #    if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
+        #        print 'adding fudge term...'
+        #        gdatmodi.nextlrpp += 1e6
     else:
         gdatmodi.nextljcb = 0.
         gdatmodi.nextlrpp = 0.
@@ -4774,10 +4774,6 @@ def setpinit(gdat, boolinitsetp=False):
         gdat.stdvstdp[gdat.indxstdpcomp] = 5e-2
     else:
         
-        print 'gdat.fittnameback'
-        print gdat.fittnameback
-        print
-
         if gdat.exprtype == 'ferm':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
             
@@ -4826,7 +4822,7 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 5e-2
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 2e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0')]] = 1e-1
+            #gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0')]] = 1e-1
             
             if gdat.fittnumbtrap > 0:
                 if gdat.propcomp:
@@ -9686,6 +9682,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         else:
             lliktotl = float64(0.)
         
+        print 'lliktotl'
+        print lliktotl
+        if gdat.datatype == 'mock' and strgmodl == 'fitt':
+            print 'gdat.truelliktotl'
+            print gdat.truelliktotl
+            print
+
         setattr(gdatobjt, strgpfix + 'llik', llik)
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
 
@@ -12580,8 +12583,6 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     listnameecomtotl = getattr(gdat, strgmodl + 'listnameecomtotl')
     unifback = getattr(gdat, strgmodl + 'unifback')
     listnameback = getattr(gdat, strgmodl + 'listnameback')
-    print 'listnameback'
-    print listnameback
     namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
     
     if gdatmodi != None:
