@@ -4860,8 +4860,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 5e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 2e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 2e-2
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 1e-2
             #gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0')]] = 1e-1
             
             if gdat.fittnumbtrap > 0:
