@@ -2452,8 +2452,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         print gdatmodi.nextboolpropfilt
         print 'gdatmodi.indxsampchec'
         print gdatmodi.indxsampchec
-        print 'gdatmodi.indxsampmodi'
-        print gdatmodi.indxsampmodi
+        if gdatmodi.nextboolpropfilt:
+            print 'gdatmodi.indxsampmodi'
+            print gdatmodi.indxsampmodi
         if numbtrap > 0:
             if gdatmodi.proptran:
                 print 'gdatmodi.indxsamptran'
@@ -2510,7 +2511,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     gdatmodi.dicteval[0][0][namecomp] = array([-gdatmodi.comppare[k], gdatmodi.compfrst[k], gdatmodi.compseco[k]])
                 else:
                     gdatmodi.dicteval[0][0][namecomp] = array([gdatmodi.comppare[k], gdatmodi.compfrst[k], gdatmodi.compseco[k]])
-            elif gdatmodi.propmerg and gdatmodi.nextboolpropfilt:
+            #elif gdatmodi.propmerg and gdatmodi.nextboolpropfilt:
+            elif gdatmodi.propmerg:
                 if namecomp == namefeatampl[gdatmodi.indxpoplmodi[0]]:
                     gdatmodi.dicteval[0][0][namecomp] = array([-gdatmodi.compfrst[k], -gdatmodi.compseco[k], gdatmodi.comppare[k]])
                 else:
