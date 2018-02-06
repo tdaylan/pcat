@@ -940,7 +940,7 @@ def init( \
             if gdat.anlytype == 'spec':
                 gdat.anglassc = 0.1
             else:
-                gdat.anglassc = 2.5 / gdat.anglfact
+                gdat.anglassc = 0.2 / gdat.anglfact
         if gdat.exprtype == 'sdss':
             gdat.anglassc = 0.5 / gdat.anglfact
         if gdat.exprtype == 'sdyn':
@@ -2138,10 +2138,17 @@ def init( \
         tdpy.util.show_memo(gdat, 'gdat')
     
     # list of variables for which the posterior is calculated at each sweep
-    gdat.liststrgvarbarryswep = ['memoresi', 'deltlpritotl', 'lpautotl', 'lpau', 'deltlliktotl', 'chro', 'accpprob', 'lpridist', \
-                                                                    'accp', 'accppsfn', 'accpprio', 'accpprop', 'indxproptype', 'amplpert']
-    #if gdat.probspmr > 0. or gdat.propcomp:
+    gdat.liststrgvarbarryswep = ['memoresi', 'deltlpritotl', 'deltlliktotl', 'chro', 'accpprob', 'lpridist', \
+                                                                    'boolpropfilt', 'boolpropaccp', 'indxproptype', 'amplpert']
+    for l in gdat.fittindxpopl:
+        gdat.liststrgvarbarryswep += ['lpaupop%dtotl' % l]
+        for k in gdat.fittindxcomp[l]:
+            gdat.liststrgvarbarryswep += ['lpaupop%dter%d' % (l, k)]
     gdat.liststrgvarbarryswep += ['lrpp']
+    for k in range(3):
+        gdat.liststrgvarbarryswep += ['lrpp%04d' % k]
+    
+    #if gdat.probspmr > 0. or gdat.propcomp:
     if gdat.probtran > 0.:
         for l in gdat.fittindxpopl:
             gdat.liststrgvarbarryswep += ['auxiparapop%d' % l]
@@ -2525,7 +2532,7 @@ def initarry( \
         strgtimestmp = tdpy.util.retr_strgtimestmp()
         
         if listtypevarbcomp == None:
-            listtypevarbcomp = ['errr' for namevarbcomp in listnamevarbcomp]
+            listtypevarbcomp = ['pctl' for namevarbcomp in listnamevarbcomp]
         if listpdfnvarbcomp == None:
             listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
         
@@ -2553,13 +2560,8 @@ def initarry( \
             else:
                 lablyaxi = listlablvarbcomp[indxlist]
             
-            print 'strgvarboutp'
-            print strgvarboutp
-            
             try:
                 trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
-                print 'trueyaxi'
-                print trueyaxi
             except:
                 trueyaxi = None
             
@@ -2570,29 +2572,19 @@ def initarry( \
                 elif isinstance(varboutp[k], float):
                     ydat[k] = varboutp[k]
                 else:
-                    if listtypevarbcomp[indxlist] != 'errr':
+                    if listtypevarbcomp[indxlist] != 'pctl':
                         yerr[:, k] = 0.
                     if varboutp[k].ndim == 2:
                         if varboutp[k].shape[1] != 1:
                             raise Exception('varboutp format is wrong.')
                         varboutp[k] = varboutp[k][:, 0]
-                        print 'varboutp[k]'
-                        print varboutp[k]
-                        if listtypevarbcomp[indxlist] == 'errr':
+                        if listtypevarbcomp[indxlist] == 'pctl':
                             yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
                     else:
-                        if listtypevarbcomp[indxlist] == 'errr':
+                        if listtypevarbcomp[indxlist] == 'pctl':
                             yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
                     ydat[k] = varboutp[k][0]
                     
-                    print 'k'
-                    print k
-                    print 'ydat[k]'
-                    print ydat[k]
-                    print 'yerr[:, k]'
-                    print yerr[:, k]
-                    print
-            
             axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
             indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
             if indxrtagyerr.size > 0:
@@ -3239,23 +3231,30 @@ def work(pathoutprtag, lock, indxprocwork):
     ##prep_gdatmodi(gdat, gdatmodi, gdatmodi, 'this')
     #gdatmodi.thisstdvsamp = zeros(gdat.fittnumbpara)
     
+    # definitions required for the initial sample
+    gdatmodi.nextboolpropfilt = True
+    gdatmodi.nextboolpropaccp = True
+    
     # dummy definitions required for logs
-    gdatmodi.nextaccp = zeros(1, dtype=bool)
-    gdatmodi.nextaccppsfn = zeros(1, dtype=bool)
-    gdatmodi.nextaccpprio = zeros(1, dtype=bool)
-    gdatmodi.nextaccpprop = zeros(1, dtype=bool)
     gdatmodi.nextindxproptype = zeros(1, dtype=int)
     for l in gdat.fittindxpopl:
         setattr(gdatmodi, 'nextauxiparapop%d' % l, zeros(gdat.fittnumbcomp[l]))
     gdatmodi.nextlpri = zeros(gdat.fittnumblpri)
     gdatmodi.nextlrpp = zeros(1)
+    for k in range(3):
+        setattr(gdatmodi, 'nextlrpp%04d' % k, zeros(1))
+    for l in gdat.fittindxpopl:
+        #for strgpdir in gdat.listnamepdir:
+            #for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+            #    setattr(gdatmodi, 'nextlpripop%d%s' % (l, strgpdir), zeros(1))
+        for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+            setattr(gdatmodi, 'nextlpaupop%dter%d' % (l, k), zeros(1))
+        setattr(gdatmodi, 'nextlpaupop%dtotl' % l, zeros(1))
     gdatmodi.nextljcb = zeros(1)
     gdatmodi.nextaccpprob = zeros(1)
     gdatmodi.nextchro = zeros(gdat.numbchro)
     gdatmodi.nextdeltlliktotl = 0.
     gdatmodi.nextdeltlpritotl = 0.
-    gdatmodi.nextlpau = zeros(gdat.fittnumblpau)
-    gdatmodi.nextlpautotl = 0.
     gdatmodi.nextmemoresi = zeros(1)
     gdatmodi.nextlpridist = 0.
     gdatmodi.nextamplpert = zeros(1)
@@ -3277,7 +3276,7 @@ def work(pathoutprtag, lock, indxprocwork):
     for strgvarb in gdat.liststrgvarbarry:
         if strgvarb in gdat.liststrgvarbarryswep:
             valu = getattr(gdatmodi, 'next' + strgvarb)
-            if isinstance(valu, float):
+            if isinstance(valu, float) or isinstance(valu, bool):
                 shap = [gdat.numbswep, 1]
             else:
                 shap = [gdat.numbswep] + list(valu.shape)
@@ -3477,7 +3476,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     #raise Exception('loglikelihood drop is very unlikely!')
             gdatmodi.thislliktotlprev = gdatmodi.thislliktotl
        
-            if gdatmodi.nextaccpprio:
+            if gdatmodi.nextboolpropfilt:
                 for strgstat in ['this', 'next']:
                     for strgvarb in ['samp', 'sampvarb']:
                         varb = getattr(gdatmodi, strgstat + strgvarb)
@@ -3639,20 +3638,6 @@ def work(pathoutprtag, lock, indxprocwork):
         
             stopchro(gdat, gdatmodi, 'next', 'plot')
     
-        # temp
-        if gdat.fittpsfnevaltype != 'none':
-            if gdat.fittpsfntype == 'doubking':
-                if gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[1]] >= gdatmodi.nextsampvarb[gdat.fittindxfixppsfp[3]]:
-                    for k in range(20):
-                        print 'Proposal rejected due to PSF'
-                    gdatmodi.nextaccppsfn = False
-                    print 'gdatmodi.nextsampvarb'
-                    print gdatmodi.nextsampvarb
-                    print 'gdatmodi.nextsampvarb[gdat.fittindxfixppsfp]'
-                    print gdatmodi.nextsampvarb[gdat.fittindxfixppsfp]
-                    print 'gdatmodi.propbrth'
-                    print gdatmodi.propbrth
-       
         # assertions
         if gdat.diagmode:
             if not gdat.calcllik and gdatmodi.propllik:
@@ -3662,8 +3647,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 raise Exception('')
             
         # determine the acceptance probability
-        gdatmodi.nextaccpprop = gdatmodi.nextaccpprio and gdatmodi.nextaccppsfn
-        if gdatmodi.nextaccpprop and not gdat.emptsamp:
+        if gdatmodi.nextboolpropfilt and not gdat.emptsamp:
             
             proc_samp(gdat, gdatmodi, 'next', 'fitt')
             if not gdat.calcllik:
@@ -3728,7 +3712,6 @@ def work(pathoutprtag, lock, indxprocwork):
                     print gdatmodi.nextlrpp
                     print
 
-            
             # evaluate the acceptance probability
             gdatmodi.nextaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + \
                                                                                                                                         gdatmodi.nextlrpp + gdatmodi.nextljcb)
@@ -3738,9 +3721,10 @@ def work(pathoutprtag, lock, indxprocwork):
     
         # accept or reject the proposal
         if gdat.evoltype == 'maxmllik':
-            booltemp = gdatmodi.nextaccpprop and gdatmodi.nextdeltlliktotl > 0.
+            booltemp = gdatmodi.nextboolpropfilt and gdatmodi.nextdeltlliktotl > 0.
         else:
             booltemp = gdatmodi.nextaccpprob[0] >= rand()
+        
         if booltemp:
             if gdat.verbtype > 1:
                 print 'Accepted.'
@@ -3755,7 +3739,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 gdatmodi.sampvarbmaxmllik = copy(gdatmodi.thissampvarb)
             
             # register the sample as accepted
-            gdatmodi.nextaccp = True
+            gdatmodi.nextboolpropaccp = True
 
         # reject the sample
         else:
@@ -3763,10 +3747,7 @@ def work(pathoutprtag, lock, indxprocwork):
             if gdat.verbtype > 1:
                 print 'Rejected.'
 
-            if False:
-                print 'Rejected.'
-
-            gdatmodi.nextaccp = False
+            gdatmodi.nextboolpropaccp = False
         
         # temp
         #gdatmodi.thisdeltlliktotl[0] = gdatmodi.nextdeltlliktotl
@@ -3823,11 +3804,13 @@ def work(pathoutprtag, lock, indxprocwork):
                 deltlpritotlmean = mean(workdict['list' + gdat.strgpdfn + 'deltlpritotl'][indxswepprop, 0])
                 lrppmean = mean(workdict['list' + gdat.strgpdfn + 'lrpp'][indxswepprop, 0])
                 ljcbmean = mean(workdict['list' + gdat.strgpdfn + 'ljcb'][indxswepprop, 0])
-                lpautotlmean = mean(workdict['list' + gdat.strgpdfn + 'lpautotl'][indxswepprop, 0])
+                
+                lpautotlmean = mean(workdict['list' + gdat.strgpdfn + 'lpaupop0totl'][indxswepprop, 0])
                 lpridistmean = mean(workdict['list' + gdat.strgpdfn + 'lpridist'][indxswepprop, 0])
             
                 boolproptype = workdict['list' + gdat.strgpdfn + 'indxproptype'][indxswepintv, 0] == k
-                boolaccp = workdict['list' + gdat.strgpdfn + 'accp'][indxswepintv, 0] == 1
+                boolaccp = workdict['list' + gdat.strgpdfn + 'boolpropaccp'][indxswepintv, 0] == 1
+                
                 booltemp = False
                 if gdat.indxproptype[k] in gdat.indxproptypecomp:
                     indxpopltemp = gdat.indxpoplproptype[gdat.indxproptype[k]]

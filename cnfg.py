@@ -13,8 +13,10 @@ def test_info(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['priofactdoff'] = 0.2
     dictargs['truenumbelempop0reg0'] = 100
-    #dictargs['verbtype'] = 0
+    #dictargs['makeplotfram'] = False
+    #dictargs['makeplotinit'] = False
     
+    dictargs['inittype'] = 'refr'
     dictargs['numbswep'] = 100000
     dictargs['numbsamp'] = 100
     
@@ -34,7 +36,7 @@ def test_info(strgcnfgextnexec=None):
     listnamevarbcomp = ['lliktotl', 'maxmlliktotl', 'levi', 'infoharm', 'bcom']
     listscalvarbcomp = ['self', 'self', 'self', 'self', 'self']
     listlablvarbcomp = ['$\ln P(D|M)$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$']
-    listtypevarbcomp = ['errr', '', '', '', '']
+    listtypevarbcomp = ['pctl', '', '', '', '']
     listpdfnvarbcomp = ['post', '', 'post', 'post', '']
     
     dictglob = initarry( \
@@ -42,7 +44,7 @@ def test_info(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -157,7 +159,7 @@ def test_psfn(strgcnfgextnexec=None):
     listnamevarbcomp = ['numbelempop0reg0']
     listscalvarbcomp = ['self']
     listlablvarbcomp = ['$N_{pts}$']
-    listtypevarbcomp = ['errr']
+    listtypevarbcomp = ['pctl']
     listpdfnvarbcomp = ['post']
 
     dictglob = initarry( \

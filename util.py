@@ -1702,8 +1702,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     if numbtrap > 0:
         nextindxelemfull = deepcopy(thisindxelemfull)
      
-    gdatmodi.nextaccppsfn = True
-    gdatmodi.nextaccpprio = True
+    gdatmodi.nextboolpropfilt = True 
     gdatmodi.evalllikpert = False 
 
     # initialize the Boolean flag indicating the type of transdimensional proposal
@@ -1718,7 +1717,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     gdatmodi.propmerg = False
     gdatmodi.propmeanelem = False
     gdatmodi.propdist = False
-
+       
+    gdatmodi.nextlpridist = 0.
     gdatmodi.nextlpautotl = 0. 
    
     gdatmodi.prophostlght = False
@@ -1893,7 +1893,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     numb += sum(thissampvarb[gdat.fittindxfixpnumbelem[l]])
         gdatmodi.indxpoplmodi = array(gdatmodi.indxpoplmodi)
         if not convdiffanyy and (numbtrap == 0 or numbtrap > 0 and numb == 0):
-            gdatmodi.nextaccpprio = False
+            gdatmodi.nextboolpropfilt = False
     
     # derived proposal flags
     gdatmodi.proptran = gdatmodi.propbrth or gdatmodi.propdeth or gdatmodi.propsplt or gdatmodi.propmerg
@@ -1909,7 +1909,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                 gdatmodi.evalllikpert = True
     
     #if gdatmodi.proppsfp and not gdatmodi.evalllikpert:
-    #    gdatmodi.nextaccpprio = False
+    #    gdatmodi.nextboolpropfilt = False
     
     if gdat.verbtype > 1:
         if gdat.fittnumbtrap > 0:
@@ -2183,7 +2183,10 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         
         gdatmodi.numbelemeval[0][0] = 3
         
-        gdatmodi.indxelemfullsplt = choice(arange(thissamp[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]], dtype=int))
+        # find the probability of splitting elements
+        probsplt = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, boolmerg=False)
+        
+        gdatmodi.indxelemfullsplt = choice(arange(thissamp[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]], dtype=int), p=probsplt)
         gdatmodi.indxelemsplt = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullsplt]
         gdatmodi.indxelemfullmodi.insert(0, gdatmodi.indxelemfullsplt)
         gdatmodi.indxelemmodi.insert(0, gdatmodi.indxelemsplt)
@@ -2239,23 +2242,29 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         # check for prior boundaries
         if elemtype[gdatmodi.indxpoplmodi[0]].startswith('lghtline'):
             if fabs(gdatmodi.compfrst[0]) > gdat.maxmelin or fabs(gdatmodi.compseco[0]) > gdat.maxmelin:
-                gdatmodi.nextaccpprio = False
+                if gdat.verbtype > 1:
+                    print 'Rejecting the proposal due to a split that falls out of the prior...'
+                gdatmodi.nextboolpropfilt = False
         else:
             maxmlgal = getattr(gdat, strgmodl + 'maxmlgal')
             maxmbgal = getattr(gdat, strgmodl + 'maxmbgal')
             if fabs(gdatmodi.compfrst[0]) > maxmlgal or fabs(gdatmodi.compseco[0]) > maxmlgal or \
                                                                     fabs(gdatmodi.compfrst[1]) > maxmbgal or fabs(gdatmodi.compseco[1]) > maxmbgal:
-                gdatmodi.nextaccpprio = False
+                gdatmodi.nextboolpropfilt = False
+                if gdat.verbtype > 1:
+                    print 'Rejecting the proposal due to a split that falls out of the prior...'
         if gdatmodi.compfrst[indxcompampl[gdatmodi.indxpoplmodi[0]]] < getattr(gdat, strgmodl + 'minm' + gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]) or \
                      gdatmodi.compseco[indxcompampl[gdatmodi.indxpoplmodi[0]]] < getattr(gdat, strgmodl + 'minm' + gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]):
-            gdatmodi.nextaccpprio = False
+            gdatmodi.nextboolpropfilt = False
+            if gdat.verbtype > 1:
+                print 'Rejecting the proposal due to a split that falls out of the prior...'
     
         if gdat.verbtype > 1:
             print 'gdatmodi.comppare'
             print gdatmodi.comppare
 
         # calculate the list of pairs
-        if False and gdatmodi.nextaccpprio:
+        if False and gdatmodi.nextboolpropfilt:
 
             # calculate the list of pairs
             ## proposed
@@ -2283,7 +2292,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.mergindxelemfrst = thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]][gdatmodi.indxelemfullmergfrst]
          
         # find the probability of merging this element with the others 
-        probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmergfrst, elemtype)
+        probmerg = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, indxelemfullexcl=gdatmodi.indxelemfullmergfrst, elemtype=elemtype)
         
         indxelemfulltemp = arange(len(thisindxelemfull[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]))
         if gdat.diagmode:
@@ -2338,7 +2347,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.comppare[indxcompampl[gdatmodi.indxpoplmodi[0]]] = gdatmodi.compfrst[indxcompampl[gdatmodi.indxpoplmodi[0]]] + \
                                                                                                 gdatmodi.compseco[indxcompampl[gdatmodi.indxpoplmodi[0]]]
         if gdatmodi.comppare[indxcompampl[gdatmodi.indxpoplmodi[0]]] > getattr(gdat, 'maxm' + gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]):
-            gdatmodi.nextaccpprio = False
+            gdatmodi.nextboolpropfilt = False
             if gdat.verbtype > 1:
                 print 'Proposal rejected due to falling outside the prior.'
             return
@@ -2370,7 +2379,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print 'gdatmodi.comppare'
             print gdatmodi.comppare
 
-    if gdat.verbtype > 1 and (gdatmodi.propsplt or gdatmodi.nextaccpprio and gdatmodi.propmerg):
+    if gdat.verbtype > 1 and (gdatmodi.propsplt or gdatmodi.nextboolpropfilt and gdatmodi.propmerg):
         
         if elemtype[gdatmodi.indxpoplmodi[0]].startswith('lghtline'):
             print 'elinfrst: ', gdatmodi.compfrst[0]
@@ -2407,7 +2416,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] = \
                                                                 thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]] - 1
     
-    if (gdatmodi.propdeth or gdatmodi.propmerg) and gdatmodi.nextaccpprio:
+    if (gdatmodi.propdeth or gdatmodi.propmerg) and gdatmodi.nextboolpropfilt:
         # remove the element from the occupied element list
         for a, indxelem in enumerate(gdatmodi.indxelemmodi):
             if a == 0 and gdatmodi.propdeth or a == 1 and gdatmodi.propmerg:
@@ -2420,7 +2429,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.indxsampchec = gdatmodi.indxsampmodi
     else:
         gdatmodi.indxsampchec = []
-        if (gdatmodi.propbrth or gdatmodi.propmerg) and gdatmodi.nextaccpprio:
+        if (gdatmodi.propbrth or gdatmodi.propmerg) and gdatmodi.nextboolpropfilt:
             gdatmodi.indxsampmodi = concatenate((indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0], None], gdatmodi.indxsamptran[0]))
         if gdatmodi.propdeth:
             gdatmodi.indxsampmodi = indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0], None]
@@ -2436,11 +2445,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print 'indxchecfail'
             print indxchecfail
             print
-        gdatmodi.nextaccpprio = False
+        gdatmodi.nextboolpropfilt = False
     
     if gdat.verbtype > 1:
-        print 'gdatmodi.nextaccpprio'
-        print gdatmodi.nextaccpprio
+        print 'gdatmodi.nextboolpropfilt'
+        print gdatmodi.nextboolpropfilt
         print 'gdatmodi.indxsampchec'
         print gdatmodi.indxsampchec
         print 'gdatmodi.indxsampmodi'
@@ -2454,7 +2463,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             print thisindxelemfull
             print 'nextindxelemfull'
             print nextindxelemfull
-            if gdatmodi.propelem and not (gdatmodi.propmerg and not gdatmodi.nextaccpprio):
+            if gdatmodi.propelem and not (gdatmodi.propmerg and not gdatmodi.nextboolpropfilt):
                 
                 print 'gdatmodi.indxelemmodi'
                 print gdatmodi.indxelemmodi
@@ -2501,7 +2510,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     gdatmodi.dicteval[0][0][namecomp] = array([-gdatmodi.comppare[k], gdatmodi.compfrst[k], gdatmodi.compseco[k]])
                 else:
                     gdatmodi.dicteval[0][0][namecomp] = array([gdatmodi.comppare[k], gdatmodi.compfrst[k], gdatmodi.compseco[k]])
-            elif gdatmodi.propmerg and gdatmodi.nextaccpprio:
+            elif gdatmodi.propmerg and gdatmodi.nextboolpropfilt:
                 if namecomp == namefeatampl[gdatmodi.indxpoplmodi[0]]:
                     gdatmodi.dicteval[0][0][namecomp] = array([-gdatmodi.compfrst[k], -gdatmodi.compseco[k], gdatmodi.comppare[k]])
                 else:
@@ -2584,7 +2593,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     gdatmodi.dicteval.append(temp)
 
     # calculate the factor, i.e., Jacobian and combinatorial, to multiply the acceptance rate
-    if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.nextaccpprio:
+    if (gdatmodi.propsplt or gdatmodi.propmerg) and gdatmodi.nextboolpropfilt:
         
         ## Jacobian
         if elemtype[gdatmodi.indxpoplmodi[0]].startswith('lghtline'):
@@ -2598,32 +2607,32 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         nextnumbelem = nextsampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         
         ## asymmetric proposal factor
-        if gdatmodi.propmerg:
-            gdatmodi.nextprobfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[1], \
-                                                                                                                    elemtype, gdatmodi.indxelemfullmodi[0]) / thisnumbelem
-            gdatmodi.nextprobfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, gdatmodi.indxelemfullmodi[0], \
-                                                                                                                    elemtype, gdatmodi.indxelemfullmodi[1]) / thisnumbelem
-            gdatmodi.nextprobfrwd = gdatmodi.nextprobfrwdfrst + gdatmodi.nextprobfrwdseco
-            gdatmodi.nextprobreve = 1. / nextnumbelem
-            gdatmodi.nextlrpp = log(gdatmodi.nextprobreve) - log(gdatmodi.nextprobfrwdfrst + gdatmodi.nextprobfrwdseco)
+        if gdatmodi.propsplt:
+            gdatmodi.nextprobrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, indxelemfullexcl=-1, elemtype=elemtype, \
+                                                                                            indxelemfulleval=gdatmodi.indxelemfullmodi[0])
+            gdatmodi.nextprobreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, indxelemfullexcl=gdatmodi.indxelemfullmodi[0], elemtype=elemtype, \
+                                                                                            indxelemfulleval=-1)
+            gdatmodi.nextlrpp0000 = log(gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco)
+            #gdatmodi.nextlrpp0001 = log(thisnumbelem)
+            gdatmodi.nextlrpp0001 = -log(retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, boolmerg=False, indxelemfulleval=gdatmodi.indxelemfullmodi[0]))
+            gdatmodi.nextlrpp = gdatmodi.nextlrpp0000 + gdatmodi.nextlrpp0001
         else:
-            gdatmodi.nextprobfrwd = 1. / thisnumbelem
-            gdatmodi.nextprobrevefrst = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, -1, elemtype, gdatmodi.indxelemfullmodi[0]) / nextnumbelem
-            gdatmodi.nextprobreveseco = retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, gdatmodi.indxelemfullmodi[0], elemtype, -1) / nextnumbelem
-            gdatmodi.nextprobreve = gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco
-            gdatmodi.nextlrpp = log(gdatmodi.nextprobrevefrst + gdatmodi.nextprobreveseco) - log(gdatmodi.nextprobfrwd)
-        
-        # temp
-        #gdatmodi.nextlrpp = 0.
-        #dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-        #if gdatmodi.propmerg and gdat.numbpixlfull > 1:
-        #    if sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2) < gdat.sizepixl / 2.:
-        #        print 'adding fudge term...'
-        #        gdatmodi.nextlrpp += 1e6
+            gdatmodi.nextprobfrwdfrst = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, indxelemfullexcl=gdatmodi.indxelemfullmodi[1], \
+                                                                                                   elemtype=elemtype, indxelemfulleval=gdatmodi.indxelemfullmodi[0])
+            gdatmodi.nextprobfrwdseco = retr_probmerg(gdat, gdatmodi, thissampvarb, thisindxsampcomp, indxelemfullexcl=gdatmodi.indxelemfullmodi[0], \
+                                                                                                   elemtype=elemtype, indxelemfulleval=gdatmodi.indxelemfullmodi[1])
+            
+            gdatmodi.nextlrpp0000 = -log(gdatmodi.nextprobfrwdfrst + gdatmodi.nextprobfrwdseco)
+            #gdatmodi.nextlrpp0001 = -log(nextnumbelem)
+            gdatmodi.nextlrpp0001 = log(retr_probmerg(gdat, gdatmodi, nextsampvarb, nextindxsampcomp, boolmerg=False, indxelemfulleval=gdatmodi.indxelemfullmodi[0]))
+            gdatmodi.nextlrpp = gdatmodi.nextlrpp0000 + gdatmodi.nextlrpp0001
+       
     else:
         gdatmodi.nextljcb = 0.
+        gdatmodi.nextlrpp0000 = 0.
+        gdatmodi.nextlrpp0001 = 0.
         gdatmodi.nextlrpp = 0.
-
+    
     setattr(gdatobjt, strgpfixnext + 'samp', nextsamp)
     setattr(gdatobjt, strgpfixnext + 'sampvarb', nextsampvarb)
    
@@ -2634,7 +2643,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     if numbtrap > 0:
         setattr(gdatobjt, strgpfixnext + 'indxelemfull', nextindxelemfull)
-    
+        
     if gdat.diagmode:
         if strgmodl == 'fitt':
             #print '%20s %20s %20s %20s' % ('thissampvarb', 'gdatmodi.thissampvarb', 'nextsampvarb', 'gdatmodi.nextsampvarb')
@@ -2660,38 +2669,67 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
                     raise Exception('')
 
 
-def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl, elemtype, indxelemfulleval=None):
+def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl=None, elemtype=None, indxelemfulleval=None, boolmerg=True):
     
-    if elemtype[gdatmodi.indxpoplmodi[0]].startswith('lghtline'):
-        elin = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
-        elinstat = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-        angldist = abs(elin - elinstat)
-    
-    else:
-        lgal = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
-        bgal = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
-        
-        lgalstat = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-        bgalstat = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
-        
-        angldist = retr_angldist(gdat, lgal, bgal, lgalstat, bgalstat)
-    
-    probmerg = exp(-(angldist / gdat.radispmr))
-    if indxelemfulleval == None:
-        probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
-        probmerg /= sum(probmerg)
-    else:
-        if indxelemfullexcl == -1:
-            probmerg = probmerg[:-1]
+    if boolmerg:
+        if elemtype[gdatmodi.indxpoplmodi[0]].startswith('lghtline'):
+            elin = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+            elinstat = sampvarb[indxsampcomp['elin'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+            probmerg = exp(-0.5 * ((elin - elinstat) / gdat.radispmr)**2)
         else:
+            lgal = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+            bgal = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]][indxelemfullexcl]
+            lgalstat = sampvarb[indxsampcomp['lgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+            bgalstat = sampvarb[indxsampcomp['bgal'][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+            probmerg = exp(-0.5 * (((lgal - lgalstat) / gdat.radispmr)**2 + ((bgal - bgalstat) / gdat.radispmr)**2))
+        
+        if (probmerg == 0.).all():
+            gdatmodi.nextboolpropfilt = False
+            print 'Merhe probability is zero.'
+            print 'Turning off gdatmodi.nextboolpropfilt'
+            probmerg[0] = 1.
+            print 'probmerg'
+            print probmerg
+            print
+
+    else:
+        amplstat = sampvarb[indxsampcomp[gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
+        probmerg = amplstat / sum(amplstat)
+    
+    if indxelemfulleval == None:
+        if indxelemfullexcl != None:
             probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
-        probmerg /= sum(probmerg)
+            probmerg /= sum(probmerg)
+    else:
+        if indxelemfullexcl != None:
+            if indxelemfullexcl == -1:
+                probmerg = probmerg[:-1]
+            else:
+                probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
+            probmerg /= sum(probmerg)
         if indxelemfullexcl < indxelemfulleval and indxelemfulleval != -1:
             indxelemfulleval -= 1
         probmerg = probmerg[indxelemfulleval]
+    
+    if not isfinite(probmerg).all():
+        gdatmodi.nextboolpropfilt = False
+        probmerg = zeros_like(probmerg)
+        probmerg[0] = 1.
+
     if gdat.diagmode:
         if not isfinite(probmerg).all():
-            raise Exception('Merge probability is infinite.')
+            print 'Merge probability is infinite.'
+            
+            print 'probmerg'
+            print probmerg
+            print 'boolmerg'
+            print boolmerg
+            print 'indxelemfullexcl'
+            print indxelemfullexcl
+            print 'indxelemfulleval'
+            print indxelemfulleval
+            print
+            #raise Exception('Merge probability is infinite.')
 
     return probmerg
 
@@ -4947,7 +4985,7 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.legdproptype = append(gdat.legdproptype, gdat.fittnamepara[k][:-4])
                 l = int(gdat.fittnamepara[k][-5])
                 strgcomp = gdat.fittnamepara[k][:-12]
-                gdat.lablproptype = append(gdat.lablproptype, getattr(gdat, 'labl' + strgcomp))
+                gdat.lablproptype = append(gdat.lablproptype, '$%s$' % getattr(gdat, 'labl' + strgcomp))
                 gdat.indxpoplproptype.append(l)
                 gdat.indxproptypecomp.append(cntr.gets())
                 gdat.nameproptype = append(gdat.nameproptype, gdat.namestdp[cntr.gets()])
@@ -5190,7 +5228,33 @@ def rplc_list(listarry, indx):
 
 
 def setpfinl(gdat, boolinitsetp=False):
+   
+    gdat.listnamepdir = ['forw', 'reve']
+    gdat.listlablpdir = ['f', 'r']
     
+    # terms in the log-acceptance probability
+    gdat.listnametermlacp = ['deltlliktotlflat', 'deltlpritotl']
+    gdat.listlabltermlacp = [u'$\Delta \ln P(D|M)$', u'$\Delta \ln P(M)$']
+    for l in gdat.fittindxpopl:
+        if gdat.fittnumbpopl > 1:
+            strgpopl = '%d,' % l
+        else:
+            strgpopl = ''
+        for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
+            labl = getattr(gdat, 'labl' + strgcomp)
+            gdat.listnametermlacp += ['lpaupop%dter%d' % (l, k)]
+            gdat.listlabltermlacp += ['$u_{%s%s}$' % (strgpopl, labl)]
+    gdat.listnametermlacp += ['lrpp']
+    gdat.listlabltermlacp += [u'$\ln P(q)$']
+    for a in range(3):
+        gdat.listnametermlacp += ['lrpp%04d' % a]
+        gdat.listlabltermlacp += [u'$\ln P(q_{%d})$' % a]
+    gdat.listnametermlacp += ['ljcb']
+    gdat.listlabltermlacp += [u'$\ln J$']
+    
+    gdat.numbtermlacp = len(gdat.listnametermlacp)
+    gdat.indxtermlacp = arange(gdat.numbtermlacp)
+
     if gdat.datatype == 'mock':
         for name in gdat.truenamefixp:
             setattr(gdat, 'true' + name, gdat.truesampvarb[getattr(gdat, 'trueindxfixp' + name)])
@@ -8379,7 +8443,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
 
     # grab the sample vector
     sampvarb = getattr(gdatobjt, strgpfix + 'sampvarb')
-    
+
     if gdat.diagmode:
         if not isfinite(sampvarb).all():
             print 'sampvarb'
@@ -8444,6 +8508,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print strgcomp
                             print 'dictelem[l][d][strgcomp]'
                             print dictelem[l][d][strgcomp]
+                            summgene(dictelem[l][d][strgcomp])
                             raise Exception('')
 
         if gdat.verbtype > 1:
@@ -8540,13 +8605,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             dictelem[l][d]['reds'] = gdat.redsfromdlosobjt(dictelem[l][d]['dlos'])
                             dictelem[l][d]['lumi'] = dictelem[l][d]['lum0'] * (1. + dictelem[l][d]['reds'])**4
                         if elemtype[l] == 'lghtpntspuls' or elemtype[l] == 'lghtpntsagnntrue':
-                            print 'dictelem[l][d][lumi]'
-                            print dictelem[l][d]['lumi']
                             dictelem[l][d]['flux'] = retr_flux(gdat, dictelem[l][d]['lumi'], dictelem[l][d]['dlos'])
-                            print 'dictelem[l][d][dlos]'
-                            print dictelem[l][d]['dlos']
-                            print 'dictelem[l][d][flux]'
-                            print dictelem[l][d]['flux']
                         # evaluate spectra
                         if elemtype[l].startswith('lghtline'):
                             if elemtype[l] == 'lghtlinevoig':
@@ -9682,13 +9741,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         else:
             lliktotl = float64(0.)
         
-        print 'lliktotl'
-        print lliktotl
-        if gdat.datatype == 'mock' and strgmodl == 'fitt':
-            print 'gdat.truelliktotl'
-            print gdat.truelliktotl
-            print
-
         setattr(gdatobjt, strgpfix + 'llik', llik)
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
 
@@ -9845,11 +9897,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if gdat.verbtype > 1:
                 print 'lpridist'
                 print lpridist
-            setattr(gdatobjt, 'nextlpridist', lpridist)
 
+            numblpau = getattr(gdat, strgmodl + 'numblpau')
+            lpau = zeros(numblpau) 
             if gdatmodi.proptran:
-                numblpau = getattr(gdat, strgmodl + 'numblpau')
-                lpau = zeros(numblpau) 
                 
                 thissampvarb = getattr(gdatobjt, strgpfixthis + 'sampvarb')
                 if gdatmodi.propbrth or gdatmodi.propsplt:
@@ -9886,9 +9937,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     print 'lpautotl'
                     print lpautotl
 
-                setattr(gdatobjt, 'nextlpau', lpau)
-                setattr(gdatobjt, 'nextlpautotl', lpautotl)
-    
+            else:
+                lpautotl = 0.
+            gdatmodi.nextlpautotl = lpautotl
+
+            setattr(gdatobjt, 'nextlpaupop%d' % gdatmodi.indxpoplmodi[0], lpau)
+            for k in gdat.fittindxcomp[gdatmodi.indxpoplmodi[0]]:
+                setattr(gdatobjt, 'nextlpaupop%dter%d' % (gdatmodi.indxpoplmodi[0], k), lpau[k])
+            setattr(gdatobjt, 'nextlpaupop%dtotl' % gdatmodi.indxpoplmodi[0], lpautotl)
+        setattr(gdatobjt, 'nextlpridist', lpridist)
+             
     lpritotl = sum(lpri)
 
     if strgstat == 'next':
@@ -10250,23 +10308,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for d in indxregipopl[l]:
                                 dictelem[l][d]['lumi' + namerefr] = zeros(numbelem[l][d]) + nan
                                 dictelem[l][d]['dlos' + namerefr] = zeros(numbelem[l][d]) + nan
-                                print 'strgfeat'
-                                print strgfeat
-                                print 'namerefr'
-                                print namerefr
-
                                 reds = dictelem[l][d]['reds' + namerefr]
                                 indxgood = where(isfinite(dictelem[l][d]['reds' + namerefr]))[0]
                                 if indxgood.size > 0:
                                     # temp -- these units only work for energy units of keV
                                     dlos = gdat.adisobjt(reds)
                                     dictelem[l][d]['dlos' + namerefr][indxgood] = dlos
-                                    print 'HACKING'
-                                    lumi = retr_lumi(gdat, dictelem[l][d]['flux'], dlos, reds) / 4e3
-                                    print 'lumi'
-                                    print lumi
+                                    lumi = retr_lumi(gdat, dictelem[l][d]['flux'], dlos, reds)
                                     dictelem[l][d]['lumi' + namerefr][indxgood] = lumi
-                                print
             
                 if elemtype[l] == 'lghtpntsagnntrue':
                     dictelem[l][d]['reds'] = gdat.redsfromdlosobjt(dictelem[l][d]['dlos'])
@@ -10301,6 +10350,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             gdatmoditemp = tdpy.util.gdatstrt()
                             prep_gdatmodi(gdat, gdatmoditemp, gdatobjt, strgstat, strgmodl)
                             prop_stat(gdat, gdatmoditemp, strgmodl, deth=True, thisindxpopl=l, thisindxregi=d, thisindxelem=k, boolpropsamp=False)
+                            
                             proc_samp(gdat, gdatmoditemp, 'next', strgmodl)
                             if gdat.diagmode:
                                 if not isfinite(lliktotl):
@@ -11656,23 +11706,24 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if not booltile:
             if gdatfinl.fittnumbtrap > 0:
                 if gdatfinl.fittboolelemspatanyy:
-                    gdatfinl.posthistlgalbgalelemstkd = [[[] for d in gdatfinl.fittindxregipopl[l]] for l in gdatfinl.fittindxpopl]
+                    histlgalbgalelemstkd = [[[] for d in gdatfinl.fittindxregipopl[l]] for l in gdatfinl.fittindxpopl]
                 
-                listlgal = getattr(gdatfinl, 'list' + strgpdfn + 'lgal')
-                listbgal = getattr(gdatfinl, 'list' + strgpdfn + 'bgal')
-                for l in gdatfinl.fittindxpopl:
-                    if gdatfinl.fittelemtype[l] != 'lghtline':
-                        numb = len(gdatfinl.fittliststrgfeatsign[l])
-                        for d in gdatfinl.fittindxregipopl[l]:
-                            gdatfinl.posthistlgalbgalelemstkd[l][d] = zeros((gdatfinl.numbbgalpntsprob, gdatfinl.numblgalpntsprob, gdatfinl.numbbinsplot, numb))
-                            temparry = concatenate([listlgal[n][l][d] for n in gdatfinl.indxsamptotl])
-                            temp = empty((len(temparry), 3))
-                            temp[:, 0] = temparry
-                            temp[:, 1] = concatenate([listbgal[n][l][d] for n in gdatfinl.indxsamptotl])
-                            for k, strgfeat in enumerate(gdatfinl.fittliststrgfeatsign[l]):
-                                temp[:, 2] = concatenate([getattr(gdatfinl, 'list' + strgpdfn + strgfeat)[n][l][d] for n in gdatfinl.indxsamptotl])
-                                bins = getattr(gdatfinl, 'bins' + strgfeat)
-                                gdatfinl.posthistlgalbgalelemstkd[l][d][:, :, :, k] = histogramdd(temp, bins=(gdatfinl.binslgalpntsprob, gdatfinl.binsbgalpntsprob, bins))[0]
+                    listlgal = getattr(gdatfinl, 'list' + strgpdfn + 'lgal')
+                    listbgal = getattr(gdatfinl, 'list' + strgpdfn + 'bgal')
+                    for l in gdatfinl.fittindxpopl:
+                        if gdatfinl.fittelemtype[l] != 'lghtline':
+                            numb = len(gdatfinl.fittliststrgfeatsign[l])
+                            for d in gdatfinl.fittindxregipopl[l]:
+                                histlgalbgalelemstkd[l][d] = zeros((gdatfinl.numbbgalpntsprob, gdatfinl.numblgalpntsprob, gdatfinl.numbbinsplot, numb))
+                                temparry = concatenate([listlgal[n][l][d] for n in gdatfinl.indxsamptotl])
+                                temp = empty((len(temparry), 3))
+                                temp[:, 0] = temparry
+                                temp[:, 1] = concatenate([listbgal[n][l][d] for n in gdatfinl.indxsamptotl])
+                                for k, strgfeat in enumerate(gdatfinl.fittliststrgfeatsign[l]):
+                                    temp[:, 2] = concatenate([getattr(gdatfinl, 'list' + strgpdfn + strgfeat)[n][l][d] for n in gdatfinl.indxsamptotl])
+                                    bins = getattr(gdatfinl, 'bins' + strgfeat)
+                                    histlgalbgalelemstkd[l][d][:, :, :, k] = histogramdd(temp, bins=(gdatfinl.binslgalpntsprob, gdatfinl.binsbgalpntsprob, bins))[0]
+                    setattr(gdatfinl, strgpdfn + 'histlgalbgalelemstkd', histlgalbgalelemstkd)
 
             if gdatfinl.verbtype > 0:
                 timefinl = gdatfinl.functime()
@@ -11693,26 +11744,26 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
 
             # construct lists of samples for each proposal type
             listindxproptype = getattr(gdatfinl, 'list' + strgpdfn + 'indxproptype')
-            listaccp = getattr(gdatfinl, 'list' + strgpdfn + 'accp')
-            listaccpprop = getattr(gdatfinl, 'list' + strgpdfn + 'accpprop')
-            listindxsamptotlaccpprop = []
-            listindxsamptotl = []
-            listindxsamptotlaccp = []
-            listindxsamptotlreje = []
+            listboolpropaccp = getattr(gdatfinl, 'list' + strgpdfn + 'boolpropaccp')
+            listboolpropfilt = getattr(gdatfinl, 'list' + strgpdfn + 'boolpropfilt')
+            listindxsamptotlproptotl = []
+            listindxsamptotlpropfilt = []
+            listindxsamptotlpropaccp = []
+            listindxsamptotlpropreje = []
             for n in gdatfinl.indxproptype:
-                listindxsamptotl.append(where(listindxproptype == gdatfinl.indxproptype[n])[0])
-                listindxsamptotlaccp.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listaccp)[0]))
-                listindxsamptotlaccpprop.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listaccpprop)[0]))
-                listindxsamptotlreje.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(logical_not(listaccp))[0]))
-                if listindxsamptotl[n].size == 0:
+                listindxsamptotlproptotl.append(where(listindxproptype == gdatfinl.indxproptype[n])[0])
+                listindxsamptotlpropaccp.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listboolpropaccp)[0]))
+                listindxsamptotlpropfilt.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(listboolpropfilt)[0]))
+                listindxsamptotlpropreje.append(intersect1d(where(listindxproptype == gdatfinl.indxproptype[n])[0], where(logical_not(listboolpropaccp))[0]))
+                if listindxsamptotlproptotl[n].size == 0:
                     accp = 0.
                 else:
-                    accp = float(listindxsamptotlaccp[n].size) / listindxsamptotl[n].size
+                    accp = float(listindxsamptotlpropaccp[n].size) / listindxsamptotlproptotl[n].size
                 setattr(gdatfinl, 'accp' + gdatfinl.nameproptype[n], accp)
 
-            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotl', listindxsamptotl)
-            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlaccp', listindxsamptotlaccp)
-            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlreje', listindxsamptotlreje)
+            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlproptotl', listindxsamptotlproptotl)
+            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlpropaccp', listindxsamptotlpropaccp)
+            setattr(gdatfinl, 'list' + strgpdfn + 'indxsamptotlpropreje', listindxsamptotlpropreje)
        
         if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
             if gdatfinl.datatype == 'inpt':
@@ -11938,6 +11989,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             timefinl = gdatfinl.functime()
             print 'Done in %.3g seconds.' % (timefinl - timeinit)
         
+        # flatten the arrays which have been collected at each sweep
+        #setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
+        gdatfinl.listpostdeltlliktotlflat = gdatfinl.listpostdeltlliktotl.reshape((gdatfinl.numbswep, 1))
+        
         if not booltile:
             # memory usage
             listmemoresi = getattr(gdatfinl, 'list' + strgpdfn + 'memoresi')
@@ -12010,9 +12065,12 @@ def makefold(gdat):
         for nameseco in ['finl', 'fram', 'anim', 'opti']:
             setattr(gdat, 'path' + strgpdfn + nameseco, path + nameseco + '/')
         
-        for nameseco in ['diag', 'lpri', 'varbscal', 'cond', 'varbscalproc', 'deltllik', 'spmr']:
+        for nameseco in ['diag', 'lpac', 'varbscal', 'cond', 'varbscalproc']:
             setattr(gdat, 'path' + strgpdfn + 'finl' + nameseco, path + 'finl/' + nameseco + '/')
-            
+        
+        for n in gdat.indxproptype:
+            setattr(gdat, 'path' + strgpdfn + 'finl' + gdat.nameproptype[n], path + 'finl/lpac/' + gdat.nameproptype[n] + '/')
+
         for namethrd in ['hist', 'trac', 'join', 'cova']:
             setattr(gdat, 'path' + strgpdfn + 'finlvarbscal' + namethrd, path + 'finl/varbscal/' + namethrd + '/')
             
@@ -12453,6 +12511,7 @@ def prep_gdatmodi(gdat, gdatmodi, gdatobjt, strgstat, strgmodl):
     gdatmodi.nextchro = zeros(gdat.numbchro)
     gdatmodi.thisstdpscalfact = 1.
     gdatmodi.thistmprfactstdv = 1.
+    gdatmodi.nextboolpropfilt = True
     for namevarbstat in gdat.listnamevarbstat:
         temp = copytdgu(getattr(gdatobjt, strgpfixthis + namevarbstat))
         setattr(gdatmodi, strgpfixthis + namevarbstat, temp)
@@ -13352,6 +13411,28 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     gdat.strgbest = 'ML'
     
+    # terms in the log-acceptance probability
+    listindxsamptotlproptotl = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlproptotl')
+    listindxsamptotlpropaccp = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlpropaccp')
+    listindxsamptotlpropreje = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlpropreje')
+    for n in gdat.indxproptype:
+        pathbase = getattr(gdat, 'path' + gdat.strgpdfn + 'finl%s' % gdat.nameproptype[n])
+        for k in gdat.indxtermlacp:
+            varb = getattr(gdat, 'list' + strgpdfn + gdat.listnametermlacp[k])
+            labl = gdat.listlabltermlacp[k]
+            
+            if listindxsamptotlproptotl[n].size > 0 and (varb[listindxsamptotlproptotl[n]] != 0.).any():
+                path = pathbase + gdat.listnametermlacp[k] + 'totl'
+                tdpy.mcmc.plot_trac(path, varb[listindxsamptotlproptotl[n]], labl, titl=gdat.lablproptype[n] + ', Total')
+            
+            if listindxsamptotlpropaccp[n].size > 0 and (varb[listindxsamptotlpropaccp[n]] != 0.).any():
+                path = pathbase + gdat.listnametermlacp[k] + 'accp'
+                tdpy.mcmc.plot_trac(path, varb[listindxsamptotlpropaccp[n]], labl, titl=gdat.lablproptype[n] + ', Accepted')
+            
+            if listindxsamptotlpropreje[n].size > 0 and (varb[listindxsamptotlpropreje[n]] != 0.).any():
+                path = pathbase + gdat.listnametermlacp[k] + 'reje'
+                tdpy.mcmc.plot_trac(path, varb[listindxsamptotlpropreje[n]], labl, titl=gdat.lablproptype[n] + ', Rejected')
+        
     if gdat.checprio and strgpdfn == 'post' and not booltile:
         # this works only for scalar variables -- needs to be generalized to all variables
         if gdatprio == None:
@@ -13381,43 +13462,10 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     listfixp = getattr(gdat, 'list' + strgpdfn + 'fixp')
     
     if not booltile:
-        listlpautotl = getattr(gdat, 'list' + strgpdfn + 'lpautotl')
-        listlpau = getattr(gdat, 'list' + strgpdfn + 'lpau')
-        listlrpp = getattr(gdat, 'list' + strgpdfn + 'lrpp')
-        listljcb = getattr(gdat, 'list' + strgpdfn + 'ljcb')
-        listaccpprop = getattr(gdat, 'list' + strgpdfn + 'accpprop')
+        listboolpropfilt = getattr(gdat, 'list' + strgpdfn + 'boolpropfilt')
         listmemoresi = getattr(gdat, 'list' + strgpdfn + 'memoresi')
         listindxproptype = getattr(gdat, 'list' + strgpdfn + 'indxproptype')
         listsampvarbproc = getattr(gdat, 'list' + strgpdfn + 'sampvarbproc')
-        listindxsamptotl = getattr(gdat, 'list' + strgpdfn + 'indxsamptotl')
-        listindxsamptotlaccp = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlaccp')
-        listindxsamptotlreje = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlreje')
-    
-        # prior components
-        if gdat.diagmode:
-            if gdat.verbtype > 0:
-                print 'Plotting the prior distribution...'
-
-            for n in gdat.indxproptype:
-                pathpostlpri = getattr(gdat, 'path' + gdat.strgpdfn + 'finllpri')
-                #path = pathpostlpri + 'deltlliktotl' + gdat.nameproptype[n]
-                #tdpy.mcmc.plot_trac(path, gdat.listdeltlliktotl[listindxsamptotl[n]], r'$\ln \Delta P(D|M)$', logthist=True)
-                #for k in gdat.fittindxlpri:
-                #    path = pathpostlpri + 'deltlpritotl%04d' % k + gdat.nameproptype[n]
-                #    tdpy.mcmc.plot_trac(path, gdat.listdeltlpritotl[listindxsamptotl[n], k], r'$\ln \Delta P_{%d}(M)$' % k, logthist=True)
-                if gdat.nameproptype[n] == 'brth' or gdat.nameproptype[n] == 'deth' or gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
-                    path = pathpostlpri + 'lpautotl%04d' + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listlpautotl[listindxsamptotl[n]], '', logthist=True)
-                    for k in gdat.fittindxlpau:
-                        path = pathpostlpri + 'lpau%04d' % k + gdat.nameproptype[n]
-                        tdpy.mcmc.plot_trac(path, listlpau[listindxsamptotl[n], k], r'$\ln u_{%d}$' % k, logthist=True)
-                    
-                if gdat.nameproptype[n] == 'splt' or gdat.nameproptype[n] == 'merg':
-                    path = pathpostlpri + 'lrpp' + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listlrpp[listindxsamptotl[n]], r'$\ln \alpha_p$', logthist=True)
-
-                    path = pathpostlpri + 'ljcb' + gdat.nameproptype[n]
-                    tdpy.mcmc.plot_trac(path, listljcb[listindxsamptotl[n]], r'$\ln \alpha_c$', logthist=True)
     
         # Gelman-Rubin test
         pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
@@ -13479,8 +13527,8 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             if thisnumbplot == 1:
                 axgr = [axgr]
             for n, axis in enumerate(axgr):
-                histtotl = axis.hist(listindxsamptotl[n+cntr], bins=binstimemcmc)[0]
-                histaccp = axis.hist(listindxsamptotlaccp[n+cntr], bins=binstimemcmc)[0]
+                histtotl = axis.hist(listindxsamptotlproptotl[n+cntr], bins=binstimemcmc)[0]
+                histaccp = axis.hist(listindxsamptotlpropaccp[n+cntr], bins=binstimemcmc)[0]
                 # temp
                 axis.set_ylabel('%s' % gdat.lablproptype[n+cntr])
                 if n + cntr == gdat.numbproptype - 1:
@@ -13525,53 +13573,6 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 proc_samp(gdat, gdatmodi, 'this', 'fitt')
                 plot_samp(gdat, gdatmodi, 'this', 'fitt', 'fram')
 
-        # plot split and merge diagnostics
-        if gdat.fittnumbtrap > 0 and gdat.probspmr > 0.:
-            if gdat.verbtype > 0:
-                print 'Split and merge related plots...'
-        
-            indxsampsplttotl = where(listindxproptype == gdat.indxproptypesplt)[0]
-            indxsampsplt = intersect1d(where(listindxproptype == gdat.indxproptypesplt)[0], where(listaccpprop)[0])
-            indxsampmergtotl = where(listindxproptype == gdat.indxproptypemerg)[0]
-            indxsampmerg = intersect1d(where(listindxproptype == gdat.indxproptypemerg)[0], where(listaccpprop)[0])
-            indxsampspmrtotl = concatenate((indxsampsplttotl, indxsampmergtotl))
-            pathroot = getattr(gdat, 'path' + gdat.strgpdfn + 'finlspmr')
-            if indxsampspmrtotl.size > 0:
-                for l in gdat.fittindxpopl:
-                    listauxipara = getattr(gdat, 'list' + strgpdfn + 'auxiparapop%d' % l)
-                    if gdat.fittelemtype[l].startswith('lghtline'):
-                        listlabl = ['$u_e$', '$u_f$', r'$\ln\alpha_j$', r'$\ln\alpha_p$']
-                        listname = ['elinauxi', 'fracauxi', 'ljcb', 'lrpp']
-                        listvarb = [listauxipara[:, 0], listauxipara[:, 1], listljcb, listlrpp]
-                    else:
-                        listlabl = ['$u_x$', r'$u_y$', r'$u_f$', r'$\ln\alpha_j$', r'$\ln\alpha_p$']
-                        listname = ['lgalauxi', 'bgalauxi', 'fracauxi', 'ljcb', 'lrpp']
-                        listvarb = [gdat.anglfact * listauxipara[:, 0], gdat.anglfact * listauxipara[:, 1], listauxipara[:, 2], listljcb, listlrpp]
-                    numbvarb = len(listvarb)
-                    indxvarb = arange(numbvarb)
-                    for k in indxvarb:
-                        maxm = amax(listvarb[k][indxsampspmrtotl])
-                        minm = amin(listvarb[k][indxsampspmrtotl])
-                        bins = linspace(minm, maxm, 40)
-                        for a in range(1):
-                            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                      
-                            axis.hist(listvarb[k][indxsampsplt], bins=bins)
-                            axis.hist(listvarb[k][indxsampmerg], bins=bins)
-                            
-                            axis.set_ylabel('$N_{samp}$')
-                            axis.set_xlabel(listlabl[k])
-        
-                            plt.tight_layout()
-                            path = pathroot + listname[k]
-                            if a == 0:
-                                path += 'accp'
-                            else:
-                                path += 'reje'
-                            path += '.pdf'
-                            figr.savefig(path)
-                            plt.close(figr)
-        
         if gdat.verbtype > 0:
             print 'Proposal execution times...'
         plot_chro(gdat)
@@ -13746,63 +13747,39 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         liststrgbins = ['quad', 'full']
         for d in gdat.indxregi:
             for l in gdat.fittindxpopl:
-                plot_posthistlgalbgalelemstkd(gdat, d, l, 'cumu')
+                plot_histlgalbgalelemstkd(gdat, strgpdfn, d, l, 'cumu')
                 for strgbins in liststrgbins:
                     for strgfeatsign in gdat.fittliststrgfeatsign[l]:
-                        plot_posthistlgalbgalelemstkd(gdat, d, l, strgbins, strgfeatsign)
+                        plot_histlgalbgalelemstkd(gdat, strgpdfn, d, l, strgbins, strgfeatsign)
 
     if gdat.verbtype > 0:
         print 'Prior and likelihood...'
     
-    for strgpdfntemp in ['lpri', 'llik']:
+    for strgpdfntemp in ['lpritotl', 'lliktotl']:
 
-        if strgpdfntemp == 'lpri':
+        if strgpdfntemp == 'lpritotl':
             labltemp = '\ln P(M)'
-        if strgpdfntemp == 'llik':
+        if strgpdfntemp == 'lliktotl':
             labltemp = '\ln P(D|M)'
         labl = r'$%s$' % labltemp
 
-        setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
-        
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
         
         levi = getattr(gdat, strgpdfn + 'levi')
         infoharm = getattr(gdat, strgpdfn + 'infoharm')
         titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, infoharm, gdat.labllevi, levi)
-        tdpy.mcmc.plot_hist(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat'), labl, titl)
+        varb = getattr(gdat, 'list' + strgpdfn + strgpdfntemp)
+        tdpy.mcmc.plot_hist(path, varb, labl, titl)
         varbdraw = []
         labldraw = []
         colrdraw = []
         if gdat.datatype == 'mock':
-            varbdraw += [getattr(gdat, 'true' + strgpdfntemp + 'totl')]
+            varbdraw += [getattr(gdat, 'true' + strgpdfntemp)]
             labldraw += ['True model']
             colrdraw += [gdat.refrcolr]
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat'), labl, varbdraw=varbdraw, labldraw=labldraw, colrdraw=colrdraw)
-    
-        if strgpdfntemp == 'llik':
-            #setattr(gdat, 'list' + strgpdfn + 'delt' + strgpdfntemp + 'totlflat', listdeltlliktotl.flatten())
-            #listdeltlliktotlflat = getattr(gdat, 'list' + strgpdfn + 'delt' + strgpdfntemp + 'totlflat')
-            listdeltlliktotl = getattr(gdat, 'list' + strgpdfn + 'delt' + strgpdfntemp + 'totl')
-            listdeltlliktotlflat = listdeltlliktotl.flatten()
-            
-            labldelt = r'$\Delta%s$' % labltemp
-            pathbase = getattr(gdat, 'path' + gdat.strgpdfn + 'finldelt%s' % strgpdfntemp)
-            path = pathbase + 'delt%s' % strgpdfntemp
-    
-            tdpy.mcmc.plot_trac(path, listdeltlliktotlflat, labldelt)
-            
-            if gdat.numbproc > 1:
-                for k in gdat.indxproc:
-                    path = pathbase + 'delt%s_proc%04d' % (strgpdfntemp, k)
-                    tdpy.mcmc.plot_trac(path, listdeltlliktotl[:, k], labldelt, titl='Process %d' % k)
-            for n in gdat.indxproptype:
-                path = pathbase + 'delt%s_%s' % (strgpdfntemp, gdat.nameproptype[n])
-                tdpy.mcmc.plot_trac(path, listdeltlliktotlflat[listindxsamptotl[n]], labldelt, titl=gdat.nameproptype[n])
-                path = pathbase + 'delt%s_%s_accp' % (strgpdfntemp, gdat.nameproptype[n])
-                tdpy.mcmc.plot_trac(path, listdeltlliktotlflat[listindxsamptotlaccp[n]], labldelt, titl=gdat.nameproptype[n] + ', Accepted')
-                path = pathbase + 'delt%s_%s_reje' % (strgpdfntemp, gdat.nameproptype[n])
-                tdpy.mcmc.plot_trac(path, listdeltlliktotlflat[listindxsamptotlreje[n]], labldelt, titl=gdat.nameproptype[n] + ', Rejected')
         
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp), labl, varbdraw=varbdraw, labldraw=labldraw, colrdraw=colrdraw)
+    
     # plot resident memory
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     axis.plot(gdat.indxswep, mean(listmemoresi, 1) / float(2**30))
@@ -14789,7 +14766,7 @@ def plot_evidtest():
     plt.close(figr)
     
     
-def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, strgfeat=None):
+def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbins, strgfeat=None):
     
     if strgfeat != None:
         numbparaplot = gdat.numbbinsplot
@@ -14810,6 +14787,8 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
         indxfeatsign = gdat.fittliststrgfeatsign[indxpoplplot].index(strgfeat)
     else:
         indxfeatsign = arange(len(gdat.fittliststrgfeatsign))
+    
+    histlgalbgalelemstkd = getattr(gdat, strgpdfn + 'histlgalbgalelemstkd')
 
     figr, axgr = plt.subplots(numbrows, numbcols, figsize=(numbcols * gdat.plotsize, numbrows * gdat.plotsize), sharex='all', sharey='all')
     if numbrows == 1:
@@ -14833,9 +14812,9 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
                     else:
                         indxlowr = 2 * h
                         indxuppr = numbparaplot
-                temp = sum(gdat.posthistlgalbgalelemstkd[indxpoplplot][indxregiplot][:, :, indxlowr:indxuppr, indxfeatsign], 2).T
+                temp = sum(histlgalbgalelemstkd[indxpoplplot][indxregiplot][:, :, indxlowr:indxuppr, indxfeatsign], 2).T
             else:
-                temp = sum(sum(gdat.posthistlgalbgalelemstkd[indxpoplplot][indxregiplot], 2), 2).T
+                temp = sum(sum(histlgalbgalelemstkd[indxpoplplot][indxregiplot], 2), 2).T
                 
             if where(temp > 0.)[0].size > 0:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi, norm=mpl.colors.LogNorm(vmin=0.5, vmax=None))
@@ -14893,7 +14872,7 @@ def plot_posthistlgalbgalelemstkd(gdat, indxregiplot, indxpoplplot, strgbins, st
         strgtemp = ''
     else:
         strgtemp = strgfeat
-    path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + 'posthistlgalbgalelemstkd%s%spop%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
+    path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + 'histlgalbgalelemstkd%s%spop%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
     figr.savefig(path)
     plt.close(figr)
        
