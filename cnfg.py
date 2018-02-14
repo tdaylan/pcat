@@ -200,8 +200,8 @@ def test_anglassc(strgcnfgextnexec=None):
     
     # temp
     dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 20000
-    dictargs['numbsamp'] = 100
+    dictargs['numbswep'] = 200000
+    dictargs['numbsamp'] = 1000
     #dictargs['makeplot'] = False
     
     #listnamecnfgextn = ['loww', 'nomi', 'high']
@@ -361,8 +361,8 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['minmflux'] = 1e-8
     dictargs['optitype'] = 'none'
     
-    dictargs['numbswep'] = 10000
-    dictargs['numbsamp'] = 100
+    dictargs['numbswep'] = 200000
+    dictargs['numbsamp'] = 1000
     #dictargs['makeplot'] = False
     
     listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
