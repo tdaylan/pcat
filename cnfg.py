@@ -11,40 +11,47 @@ def test_info(strgcnfgextnexec=None):
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
-    dictargs['priofactdoff'] = 0.2
+    dictargs['priofactdoff'] = 0.
     dictargs['truenumbelempop0reg0'] = 100
+    #dictargs['truemaxmnumbelempop0reg0'] = 
+    #dictargs['mockonly'] = True
+    dictargs['maxmangleval'] = array([11., 12., 13.]) / anglfact
+    #dictargs['verbtype'] = 2
     #dictargs['makeplotfram'] = False
     #dictargs['makeplotinit'] = False
     
     dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 100000
-    dictargs['numbsamp'] = 100
+    dictargs['numbproc'] = 4
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 2000
     
-    listnamecnfgextn = ['fittlowr', 'fittnomi', 'fitthigr']
+    listnamecnfgextn = ['fittvlow', 'fittlowr', 'fittnomi', 'fitthigr', 'fittvhig']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
+    dictargsvari['fittvlow']['fittminmflux'] = 3e-10
     dictargsvari['fittlowr']['fittminmflux'] = 1e-9
     dictargsvari['fittnomi']['fittminmflux'] = 3e-9
     dictargsvari['fitthigr']['fittminmflux'] = 1e-8
+    dictargsvari['fittvhig']['fittminmflux'] = 3e-8
     
     lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
     scalxaxi = 'logt'
     listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['fittminmflux']) for namecnfgextn in listnamecnfgextn] 
     
-    listnamevarbcomp = ['lliktotl', 'maxmlliktotl', 'levi', 'infoharm', 'bcom']
-    listscalvarbcomp = ['self', 'self', 'self', 'self', 'self']
-    listlablvarbcomp = ['$\ln P(D|M)$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$']
-    listtypevarbcomp = ['pctl', '', '', '', '']
-    listpdfnvarbcomp = ['post', '', 'post', 'post', '']
+    listnamevarbcomp = ['lliktotl', 'maxmlliktotl', 'levi', 'infoharm', 'bcom', 'truelliktotl']
+    listscalvarbcomp = ['self', 'self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp = ['$\ln P(D|M)$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\ln P(D|M_{true})$']
+    listtypevarbcomp = ['pctl', '', '', '', '', '']
+    listpdfnvarbcomp = ['post', '', 'post', 'post', '', '']
     
     dictglob = initarry( \
                         dictargsvari, \
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        #forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -193,16 +200,18 @@ def test_anglassc(strgcnfgextnexec=None):
     dictargs['psfnevaltype'] = 'kern'
     
     # temp
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['inittype'] = 'refr'
+    dictargs['numbswep'] = 10000
+    dictargs['numbsamp'] = 100
     dictargs['makeplot'] = False
     
-    listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
+    listnamecnfgextn = ['loww', 'nomi', 'high']
+    #listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
    
-    dictargsvari['vlow']['anglassc'] = 0.001
+    #dictargsvari['vlow']['anglassc'] = 0.001
     
     dictargsvari['loww']['anglassc'] = 0.01
    
@@ -210,7 +219,7 @@ def test_anglassc(strgcnfgextnexec=None):
     
     dictargsvari['high']['anglassc'] = 0.5
     
-    dictargsvari['vhig']['anglassc'] = 1.
+    #dictargsvari['vhig']['anglassc'] = 1.
     
     lablxaxi = r'$\theta_{asc}$ [deg]'
     scalxaxi = 'self'
@@ -223,6 +232,7 @@ def test_anglassc(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        forcprev=True, \
                         
                         namexaxi='anglassc', \
                         lablxaxi=lablxaxi, \
@@ -284,6 +294,63 @@ def test_errr(strgcnfgextnexec=None):
     #binsangltype=binsangltype, \
 
 
+def test_elemspatevaltype(strgcnfgextnexec=None):
+    
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    
+    dictargs['numbswep'] = 100
+    dictargs['numbsamp'] = 10
+    dictargs['mockonly'] = True
+    dictargs['makeplot'] = False
+    
+    listnamecnfgextn = ['full', 'locllarg', 'loclsmal']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['full']['elemspatevaltype'] = ['full']
+    
+    dictargsvari['locllarg']['elemspatevaltype'] = ['loclhash']
+    dictargsvari['locllarg']['maxmangleval'] = array([5., 7., 10.]) / anglfact
+    
+    dictargsvari['loclsmal']['elemspatevaltype'] = ['loclhash']
+    dictargsvari['loclsmal']['maxmangleval'] = array([2., 3., 4.]) / anglfact
+    
+    scalxaxi = 'self'
+    lablxaxi = ''
+    listtickxaxi = ['Full', 'Local, LK', 'Local, SK']
+    
+    listnamevarbcomp = ['truelliktotl']
+    listscalvarbcomp = ['self']
+    listlablvarbcomp = ['$\ln P(D|M_{true})$']
+    listtypevarbcomp = ['']
+    listpdfnvarbcomp = ['']
+   
+
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        
+                        namexaxi='elemspatevaltype', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                        listnamevarbcomp=listnamevarbcomp, \
+                        listscalvarbcomp=listscalvarbcomp, \
+                        listlablvarbcomp=listlablvarbcomp, \
+                        listtypevarbcomp=listtypevarbcomp, \
+                        listpdfnvarbcomp=listpdfnvarbcomp, \
+                       )
+
+
 def test_pars(strgcnfgextnexec=None):
     
     anglfact = 3600. * 180. / pi
@@ -294,20 +361,21 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
-    dictargs['makeplot'] = False
+    dictargs['numbswep'] = 10000
+    dictargs['numbsamp'] = 100
+    #dictargs['makeplot'] = False
     
-    listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    #listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    #dictargsvari['parsnega']['priofactdoff'] = -0.5
     dictargsvari['parsnone']['priofactdoff'] = 0.
     dictargsvari['parsloww']['priofactdoff'] = 0.5
     dictargsvari['parsnomi']['priofactdoff'] = 1.
-    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    #dictargsvari['parshigh']['priofactdoff'] = 1.5
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
@@ -319,7 +387,8 @@ def test_pars(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        
+                        forcprev=True, \
+
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
                         scalxaxi=scalxaxi, \

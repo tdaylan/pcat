@@ -11,6 +11,10 @@ print strgcnfg
 
 listrtag = fnmatch.filter(os.listdir(pathdata), strgcnfg)
 
+if '20180207_002838_pcat_chan_inpt_home7msc06000024_150000' in listrtag:
+    print 'Removing 20180207_002838_pcat_chan_inpt_home7msc06000024_150000...'
+    listrtag.remove('20180207_002838_pcat_chan_inpt_home7msc06000024_150000')
+
 if len(listrtag) == 0:
     print 'Did not find any run tags.'
 else:

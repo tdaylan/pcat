@@ -59,6 +59,8 @@ def init( \
          masktype='ignr', \
          burntmpr=False, \
          #burntmpr=True, \
+            
+         maxmangleval=None, \
         
          numbregi=1, \
          # evaluate the likelihood inside circles around elements
@@ -931,23 +933,23 @@ def init( \
             gdat.nameexpr = 'Gaia'
     
     ## Lensing
-    if gdat.anglassc == None:
+    if gdat.radispmr == None:
         if gdat.exprtype == 'ferm':
-            gdat.anglassc = 0.6 / gdat.anglfact
+            gdat.radispmr = 0.6 / gdat.anglfact
         if gdat.exprtype == 'hubb':
-            gdat.anglassc = 0.15 / gdat.anglfact
+            gdat.radispmr = 0.15 / gdat.anglfact
         if gdat.exprtype == 'chan':
             if gdat.anlytype == 'spec':
-                gdat.anglassc = 0.1
+                gdat.radispmr = 0.1
             else:
-                gdat.anglassc = 0.2 / gdat.anglfact
+                gdat.radispmr = 0.2 / gdat.anglfact
         if gdat.exprtype == 'sdss':
-            gdat.anglassc = 0.5 / gdat.anglfact
+            gdat.radispmr = 0.5 / gdat.anglfact
         if gdat.exprtype == 'sdyn':
-            gdat.anglassc = 0.2
+            gdat.radispmr = 0.2
     
-    if gdat.radispmr == None:
-        gdat.radispmr = gdat.anglassc
+    if gdat.anglassc == None:
+        gdat.anglassc = 5. * gdat.radispmr
    
     ### experimental PSFs
     if gdat.exprtype == 'ferm':
@@ -1448,16 +1450,22 @@ def init( \
             if gdat.exprtype == 'chan':
                 if gdat.numbpixlfull == 1:
                     bacp = 10.
+                    setp_varbvalu(gdat, 'bacp', bacp, regi='full')
                 else:
-                    bacp = 1.
-            if gdat.exprtype == 'hubb':
-                bacp = 2e-7
-            if gdat.exprtype == 'sdyn':
-                bacp = 1.
-            if gdat.numbpixlfull == 1:
-                setp_varbvalu(gdat, 'bacp', bacp, back=0, regi='full')
+                    setp_varbvalu(gdat, 'bacp', 170., back=0, ener=0, regi='full')
+                    setp_varbvalu(gdat, 'bacp', 17.4, back=0, ener=1, regi='full')
+                    setp_varbvalu(gdat, 'bacp', 27., back=0, ener=2, regi='full')
+                    setp_varbvalu(gdat, 'bacp', 11.8, back=0, ener=3, regi='full')
+                    setp_varbvalu(gdat, 'bacp', 101., back=0, ener=4, regi='full')
             else:
-                setp_varbvalu(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
+                if gdat.exprtype == 'hubb':
+                    bacp = 2e-7
+                if gdat.exprtype == 'sdyn':
+                    bacp = 1.
+                if gdat.numbpixlfull == 1:
+                    setp_varbvalu(gdat, 'bacp', bacp, back=0, regi='full')
+                else:
+                    setp_varbvalu(gdat, 'bacp', bacp, ener='full', back=0, regi='full')
 
             # particle background
             if gdat.exprtype == 'chan':
@@ -1806,27 +1814,17 @@ def init( \
     #if gdat.refrnumbelem > 0:
     #    gdat.refrfluxbrgt, gdat.refrfluxbrgtassc = retr_fluxbrgt(gdat, gdat.refrlgal, gdat.refrbgal, gdat.refrflux[0, :])
 
-    if gdat.verbtype > 1 and gdat.datatype == 'mock':
-        print 'True state parameters:'
-        for name in gdat.truenamepara:
-            print name
-            try:
-                print getattr(gdat, 'true' + name)
-            except:
-                print 'failed'
-        print
-
     # generate true data
     if gdat.datatype == 'mock':
         
         if gdat.verbtype > 0:
             print 'Generating mock data...'
 
-        if gdat.verbtype > 0:
-            print 'Setting the seed for the RNG...'
         if gdat.seedtype == 'rand':
             seed()
         else:
+            if gdat.verbtype > 0:
+                print 'Setting the seed for the RNG to %d...' % gdat.seedtype
             seed(gdat.seedtype)
     
     if gdat.datatype == 'mock':
@@ -2156,35 +2154,36 @@ def init( \
     gdat.liststrgvarbarryswep += ['ljcb']
     
     # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
-    if gdat.verbtype > 0:
-        print 'Processing a fudicial sample...'
-    gdatmodifudi = tdpy.util.gdatstrt()
-    gdatmodifudi.chro = zeros(gdat.numbchro)
-    gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
-    if gdat.fittnumbtrap > 0:
-        for l in gdat.fittindxpopl:
-            for d in gdat.fittindxregipopl[l]:
-                gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdat.fittmaxmnumbelem[l][d], 1)
-    
-    retr_elemlist(gdat, gdatmodifudi)
-    gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
-    gdat.calcllik = True
-    proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
-    gdat.liststrgvarbarrysamp = []
-    gdat.liststrgvarblistsamp = []
+    if not gdat.mockonly:
+        if gdat.verbtype > 0:
+            print 'Processing a fudicial sample...'
+        gdatmodifudi = tdpy.util.gdatstrt()
+        gdatmodifudi.chro = zeros(gdat.numbchro)
+        gdatmodifudi.thissamp = rand(gdat.fittnumbpara)
+        if gdat.fittnumbtrap > 0:
+            for l in gdat.fittindxpopl:
+                for d in gdat.fittindxregipopl[l]:
+                    gdatmodifudi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = min(gdat.fittmaxmnumbelem[l][d], 1)
+        
+        retr_elemlist(gdat, gdatmodifudi)
+        gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
+        gdat.calcllik = True
+        proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
+        gdat.liststrgvarbarrysamp = []
+        gdat.liststrgvarblistsamp = []
 
-    for strg, valu in gdatmodifudi.__dict__.iteritems():
-        if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
-            # temp
-            if isinstance(valu, ndarray) or isinstance(valu, float):
-                gdat.liststrgvarbarrysamp.append(strg[4:])
-            elif isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
-                                                                                            strg != 'thistrueindxelemasscmiss' and strg != 'thistrueindxelemasschits':
-                gdat.liststrgvarblistsamp.append(strg[4:])
-    
-    gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-    gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-    gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp + gdat.listnamevarbscal
+        for strg, valu in gdatmodifudi.__dict__.iteritems():
+            if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
+                # temp
+                if isinstance(valu, ndarray) or isinstance(valu, float):
+                    gdat.liststrgvarbarrysamp.append(strg[4:])
+                elif isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
+                                                                                                strg != 'thistrueindxelemasscmiss' and strg != 'thistrueindxelemasschits':
+                    gdat.liststrgvarblistsamp.append(strg[4:])
+        
+        gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
+        gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
+        gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp + gdat.listnamevarbscal
     
     #print 'gdat.liststrgchan'
     #print gdat.liststrgchan
@@ -2384,7 +2383,7 @@ def init( \
     if gdat.mockonly:
         if gdat.verbtype > 0:
             print 'Mock dataset is generated. Quitting...'
-        return gdat
+        return gdat.rtag
     
     # perform an initial run, sampling from the prior
     if gdat.checprio:
@@ -2482,6 +2481,8 @@ def initarry( \
         for strgvarb in listnamevarbcomp:
             dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
+    cntrcomp = 0
+
     dictvarb['boolarry'] = strgcnfgextnexec == None
     listrtag = []
     for k, strgcnfgextn in enumerate(listnamecnfgextn):
@@ -2504,6 +2505,7 @@ def initarry( \
         dictvarbtemp['strgcnfg'] = strgcnfg
     
         listrtagprev = retr_listrtagprev(strgcnfg)
+        cntrcomp += 1
 
         if (not forcprev and strgcnfgextnexec == None or takeprev and strgcnfgextnexec != None) and len(listrtagprev) > 0:
             print 'Found at least one previous run with the configuration %s' % strgcnfg
@@ -2513,8 +2515,16 @@ def initarry( \
         else:
             listrtag.append(init(**dictvarbtemp))
     
+    if cntrcomp == 0:
+        print 'Found no runs...'
+
     print
     print 'Final-processing run outputs...'
+    print
+
+    print 'listrtag'
+    print listrtag
+
     for rtag in listrtag: 
         proc_finl(rtag=rtag, strgpdfn='post')
     
@@ -2524,10 +2534,11 @@ def initarry( \
     
         print
         print 'Making comparison plots...'
-        
-        print 'listrtag'
-        print listrtag
-        listgdat = retr_listgdat(listrtag)
+         
+        if 'mockonly' in dictvarb and dictvarb['mockonly']:
+            listgdat = retr_listgdat(listrtag, typegdat='init')
+        else:
+            listgdat = retr_listgdat(listrtag)
 
         strgtimestmp = tdpy.util.retr_strgtimestmp()
         
@@ -2610,6 +2621,14 @@ def initarry( \
             plt.savefig(pathfull)
             plt.close(figr)
     
+    
+    print 'Compiling run plots...'
+
+    cmnd = 'python comp_rtag.py'
+    for rtag in listrtag: 
+        cmnd += ' %s' % rtag
+    os.system(cmnd)
+
     return listrtag
 
 
