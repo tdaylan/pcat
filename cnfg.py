@@ -200,17 +200,17 @@ def test_anglassc(strgcnfgextnexec=None):
     
     # temp
     dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 10000
+    dictargs['numbswep'] = 20000
     dictargs['numbsamp'] = 100
-    dictargs['makeplot'] = False
+    #dictargs['makeplot'] = False
     
-    listnamecnfgextn = ['loww', 'nomi', 'high']
-    #listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
+    #listnamecnfgextn = ['loww', 'nomi', 'high']
+    listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
    
-    #dictargsvari['vlow']['anglassc'] = 0.001
+    dictargsvari['vlow']['anglassc'] = 0.001
     
     dictargsvari['loww']['anglassc'] = 0.01
    
@@ -218,7 +218,7 @@ def test_anglassc(strgcnfgextnexec=None):
     
     dictargsvari['high']['anglassc'] = 0.5
     
-    #dictargsvari['vhig']['anglassc'] = 1.
+    dictargsvari['vhig']['anglassc'] = 1.
     
     lablxaxi = r'$\theta_{asc}$ [deg]'
     scalxaxi = 'self'
@@ -358,23 +358,24 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
+    dictargs['minmflux'] = 1e-8
     dictargs['optitype'] = 'none'
     
     dictargs['numbswep'] = 10000
     dictargs['numbsamp'] = 100
     #dictargs['makeplot'] = False
     
-    #listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
-    listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi']
+    listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
+    #listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    #dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
     dictargsvari['parsnone']['priofactdoff'] = 0.
     dictargsvari['parsloww']['priofactdoff'] = 0.5
     dictargsvari['parsnomi']['priofactdoff'] = 1.
-    #dictargsvari['parshigh']['priofactdoff'] = 1.5
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
