@@ -205,7 +205,7 @@ def test_anglassc(strgcnfgextnexec=None):
     #dictargs['makeplot'] = False
     
     #listnamecnfgextn = ['loww', 'nomi', 'high']
-    listnamecnfgextn = ['nomi', 'vhig', 'high', 'vlow', 'loww']
+    listnamecnfgextn = ['vlow', 'loww', 'nomi', 'high', 'vhig']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
