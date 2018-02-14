@@ -21,7 +21,6 @@ def test_info(strgcnfgextnexec=None):
     #dictargs['makeplotinit'] = False
     
     dictargs['inittype'] = 'refr'
-    dictargs['numbproc'] = 4
     dictargs['numbswep'] = 1000000
     dictargs['numbsamp'] = 2000
     
@@ -407,7 +406,6 @@ def test_spmr(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['optitype'] = 'none'
-    dictargs['numbproc'] = 2
     dictargs['probtran'] = 1.
     dictargs['probspmr'] = 1.
     
