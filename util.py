@@ -9650,15 +9650,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 for i in gdat.indxener:
                     for j in gdat.indxpixl:
                         for m in gdat.indxevtt:
-                            
                             cntptemp[d][i, j, m] = poisson(cntp['modl'][d][i, j, m])
-                for i in gdat.indxener:
-                    for m in gdat.indxevtt:
-                        print 'im'
-                        print i, m
-                        print 'cntptemp[d][i, :, m]'
-                        summgene(cntptemp[d][i, :, m])
-                        print
                 setattr(gdat, strgvarb + 'reg%d' % d, cntptemp[d])
             setattr(gdat, strgvarb, cntptemp)
         
@@ -9801,6 +9793,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         liststrgfeatprio = getattr(gdat, strgmodl + 'liststrgfeatprio')
         liststrgpdfnprio = getattr(gdat, strgmodl + 'liststrgpdfnprio')
     
+        print 'indxfixpmeanelem'
+        print indxfixpmeanelem
         meanelem = sampvarb[indxfixpmeanelem]
         
         if gdat.penalpridiff:
@@ -9839,12 +9833,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for l in indxpopl:
             for d in indxregipopl[l]:
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
-                print 'numbelem[l][d]'
-                print numbelem[l][d]
-                print 'meanelem[l]'
-                print meanelem[l]
                 print 'ld'
                 print l, d
+                print 'gdat.trueindxpopl'
+                print gdat.trueindxpopl
+                print 'numbelem'
+                print numbelem
+                print 'meanelem'
+                print meanelem
                 print
 
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
@@ -9973,8 +9969,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 setattr(gdatobjt, 'nextlpaupop%dter%d' % (gdatmodi.indxpoplmodi[0], k), lpau[k])
             setattr(gdatobjt, 'nextlpaupop%dtotl' % gdatmodi.indxpoplmodi[0], lpautotl)
         setattr(gdatobjt, 'nextlpridist', lpridist)
-             
-    setattr(gdatobjt, strgpfix + 'lpripena', lpri[0])
+    
+        setattr(gdatobjt, strgpfix + 'lpripena', lpri[0])
+    else:
+        setattr(gdatobjt, strgpfix + 'lpripena', array([0.]))
+        
     lpritotl = sum(lpri)
 
     if strgstat == 'next':
@@ -12001,6 +12000,15 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
             gdatfinl.bcom = gdatfinl.maxmlliktotl - pmealliktotl
         
+        for namevarbscal in ['lliktotl', 'lpripena']:
+            listtemp = getattr(gdatfinl, 'list' + strgpdfn + namevarbscal)
+            minm = amin(listtemp)
+            maxm = amax(listtemp)
+            setattr(gdatfinl, 'minm' + namevarbscal, minm)
+            setattr(gdatfinl, 'maxm' + namevarbscal, maxm)
+            setattr(gdatfinl, 'scal' + namevarbscal, 'self')
+            retr_axis_wrap(gdatfinl, namevarbscal)
+        
         if gdatfinl.checprio:
             for strgvarb in gdatfinl.listnamevarbscal:
                 setp_pdfnvarb(gdatfinl, strgpdfn, strgvarb, strgvarb)
@@ -12097,6 +12105,24 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             filestat.write('plotfinl%s written.\n' % strgpdfn)
             filestat.close()
     print
+
+
+def retr_axis_wrap(gdat, namevarbscal):
+
+    minm = getattr(gdat, 'minm' + namevarbscal)
+    maxm = getattr(gdat, 'maxm' + namevarbscal)
+    if namevarbscal in gdat.fittnamefixp:
+        scal = getattr(gdat, 'fittscal' + namevarbscal)
+    else:
+        scal = getattr(gdat, 'scal' + namevarbscal)
+    if gdat.diagmode:
+        if not isinstance(scal, str):
+            print 'namevarbscal'
+            print namevarbscal
+            print 'scal'
+            print scal
+            raise Exception('Parameter scaling is bad.')
+    retr_axis(gdat, namevarbscal, minm, maxm, gdat.numbbinspdfn, scal=scal)
 
 
 def retr_listgdat(listrtag, typegdat='finlpost'):

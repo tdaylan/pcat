@@ -1758,21 +1758,8 @@ def init( \
         if namevarbscal == 'lliktotl' or namevarbscal == 'lpripena':
             continue
 
-        minm = getattr(gdat, 'minm' + namevarbscal)
-        maxm = getattr(gdat, 'maxm' + namevarbscal)
-        if namevarbscal in gdat.fittnamefixp:
-            scal = getattr(gdat, 'fittscal' + namevarbscal)
-        else:
-            scal = getattr(gdat, 'scal' + namevarbscal)
-        if gdat.diagmode:
-            if not isinstance(scal, str):
-                print 'namevarbscal'
-                print namevarbscal
-                print 'scal'
-                print scal
-                raise Exception('Parameter scaling is bad.')
-        retr_axis(gdat, namevarbscal, minm, maxm, gdat.numbbinspdfn, scal=scal)
-    
+        retr_axis_wrap(gdat, namevarbscal)
+
     #sys.stdout = logg(gdat)
     #gdat.log.close()
 

@@ -27,8 +27,6 @@ def comp(nameplot):
 
 
 print 'comp_rtag() initialized...'
-print 'listline'
-print listline
 
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
