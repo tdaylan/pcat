@@ -14,12 +14,8 @@ def comp(nameplot):
     print cmnd
     os.system(cmnd)
     print
-    print 'listline'
-    print listline
-    print
 
     for line in listline:
-        
         strgtemp = 'rtag'
         namedest = pathimag + 'comp' + strgtemp + '/' + nameplot + '/' + line + '.pdf'
         if not os.path.isfile(namedest):
@@ -27,8 +23,9 @@ def comp(nameplot):
             
             print cmnd
             os.system(cmnd)
-            print
-
+        else:
+            print 'File already exists...'
+        print
 
 print 'comp_rtag() initialized...'
 

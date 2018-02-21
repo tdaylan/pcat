@@ -9795,8 +9795,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         liststrgfeatprio = getattr(gdat, strgmodl + 'liststrgfeatprio')
         liststrgpdfnprio = getattr(gdat, strgmodl + 'liststrgpdfnprio')
     
-        print 'indxfixpmeanelem'
-        print indxfixpmeanelem
         meanelem = sampvarb[indxfixpmeanelem]
         
         if gdat.penalpridiff:
