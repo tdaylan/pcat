@@ -4046,9 +4046,10 @@ def setpinit(gdat, boolinitsetp=False):
                         setattr(gdat, 'maxmmasssubh' + strgregi + strgtemp + 'bein', gdat.maxmmasssubh)
                         setattr(gdat, 'minmfracsubh' + strgregi + strgtemp + 'bein', gdat.minmfracsubh)
                         setattr(gdat, 'maxmfracsubh' + strgregi + strgtemp + 'bein', gdat.maxmfracsubh)
+    gdat.listnamevarbscal += ['lliktotl', 'lpripena']
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
-    
+        
     # plotting factors for scalar variables
     for name in gdat.listnamevarbscal:
         if name in gdat.fittnamefixp:
@@ -9973,6 +9974,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             setattr(gdatobjt, 'nextlpaupop%dtotl' % gdatmodi.indxpoplmodi[0], lpautotl)
         setattr(gdatobjt, 'nextlpridist', lpridist)
              
+    setattr(gdatobjt, strgpfix + 'lpripena', lpri[0])
     lpritotl = sum(lpri)
 
     if strgstat == 'next':

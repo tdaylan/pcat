@@ -7,14 +7,13 @@ def comp(nameplot):
     
     nameplot = nameplot[:-4]
 
+    print
     print 'comp() working on ' + nameplot + '...'
     
     cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
     print cmnd
     os.system(cmnd)
     
-    print 'listline'
-    print listline
     for line in listline:
         
         strgtemp = 'rtag'
@@ -28,6 +27,8 @@ def comp(nameplot):
 
 
 print 'comp_rtag() initialized...'
+print 'listline'
+print listline
 
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 

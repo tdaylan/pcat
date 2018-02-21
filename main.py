@@ -1754,6 +1754,10 @@ def init( \
             
     # construct bins for the scalar variables
     for namevarbscal in gdat.listnamevarbscal:
+        # temp
+        if namevarbscal == 'lliktotl' or namevarbscal == 'lpripena':
+            continue
+
         minm = getattr(gdat, 'minm' + namevarbscal)
         maxm = getattr(gdat, 'maxm' + namevarbscal)
         if namevarbscal in gdat.fittnamefixp:
