@@ -14,7 +14,10 @@ def comp(nameplot):
     print cmnd
     os.system(cmnd)
     print
-    
+    print 'listline'
+    print listline
+    print
+
     for line in listline:
         
         strgtemp = 'rtag'

@@ -3765,6 +3765,8 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.labllliktotl = r'\mathcal{L}'
     gdat.lablmedilliktotl = r'\mathcal{L}^{med}'
     
+    gdat.labllpripena = r'\ln P(N)'
+    
     gdat.lablasca = r'\theta_s'
     gdat.lablascaunit = gdat.lablgangunit
     gdat.lablacut = r'\theta_c'
@@ -9833,16 +9835,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for l in indxpopl:
             for d in indxregipopl[l]:
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
-                print 'ld'
-                print l, d
-                print 'gdat.trueindxpopl'
-                print gdat.trueindxpopl
-                print 'numbelem'
-                print numbelem
-                print 'meanelem'
-                print meanelem
-                print
-
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
                 for k, (strgfeat, strgpdfn) in enumerate(zip(liststrgfeatprio[l], liststrgpdfnprio[l])):
