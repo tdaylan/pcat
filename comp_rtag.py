@@ -13,6 +13,7 @@ def comp(nameplot):
     cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
     print cmnd
     os.system(cmnd)
+    print
     
     for line in listline:
         
@@ -22,8 +23,8 @@ def comp(nameplot):
             cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
             print cmnd
-            print
             os.system(cmnd)
+            print
 
 
 print 'comp_rtag() initialized...'
