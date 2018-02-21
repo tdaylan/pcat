@@ -3137,17 +3137,18 @@ def work(pathoutprtag, lock, indxprocwork):
                 print 'Could not find the state file, %s, to initialize the sampler.' % path
 
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
-        for k, namefixp in enumerate(gdat.fittnamefixp):
-            if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
-                indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
-                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
-                gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
+        if gdat.datatype == 'mock':
+            for k, namefixp in enumerate(gdat.fittnamefixp):
+                if not (gdat.inittype == 'pert' and namefixp.startswith('numbelem')) and namefixp in gdat.truenamefixp:
+                    indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
+                    gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
+                    gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
 
         retr_elemlist(gdat, gdatmodi)
         
         if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
-                initcompfromstat(gdat, gdatmodi, 'true')
+                initcompfromstat(gdat, gdatmodi, 'refr')
     
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):

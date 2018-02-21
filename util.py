@@ -1377,7 +1377,7 @@ def retr_refrferminit(gdat):
         setattr(gdat, 'minmexpc' + name, 0.1)
         setattr(gdat, 'maxmexpc' + name, 10.)
    
-    gdat.refrliststrgfeat[0] += ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expc', 'tvar', 'etag', 'styp']
+    gdat.refrliststrgfeat[0] += ['lgal', 'bgal', 'flux', 'sind', 'curv', 'expc', 'tvar', 'etag', 'styp', 'sindcolr0001', 'sindcolr0002']
     gdat.refrliststrgfeat[1] += ['lgal', 'bgal', 'flux0400', 'per0', 'per1']
 
 
@@ -1415,6 +1415,8 @@ def retr_refrfermfinl(gdat):
     gdat.refrspec[0][0][where(isfinite(gdat.refrspec[0][0]) == False)] = 0.
     
     gdat.refrflux[0][0] = gdat.refrspec[0][0][:, gdat.indxenerpivt, :]
+    gdat.refrsindcolr0001[0][0] = -log(gdat.refrspec[0][0][:, 1, :] / gdat.refrflux[0][0]) / log(gdat.meanener[1] / gdat.enerpivt)
+    gdat.refrsindcolr0002[0][0] = -log(gdat.refrspec[0][0][:, 2, :] / gdat.refrflux[0][0]) / log(gdat.meanener[2] / gdat.enerpivt)
     fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
     fgl3anglstdv = deg2rad(fgl3['Conf_68_PosAng']) # [rad]
     fgl3lgalstdv = fgl3axisstdv * abs(cos(fgl3anglstdv))
@@ -9836,6 +9838,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         for l in indxpopl:
             for d in indxregipopl[l]:
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
+                print 'numbelem[l][d]'
+                print numbelem[l][d]
+                print 'meanelem[l]'
+                print meanelem[l]
+                print 'ld'
+                print l, d
+                print
+
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
                 for k, (strgfeat, strgpdfn) in enumerate(zip(liststrgfeatprio[l], liststrgpdfnprio[l])):
@@ -9890,7 +9900,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         lpri[indxlpritemp] = retr_lprigausdist(gdat, gdatmodi, strgmodl, dictelem[l][d][strgfeat], strgfeat, sampvarb, l)
             
         lpridist = 0.
-        if strgstat == 'next':
+        if strgstat == 'next' and numbtrap > 0:
             if gdatmodi.propcomp:
                 strgcomp = liststrgcomp[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi]
                 strgpdfn = liststrgpdfnprio[gdatmodi.indxpoplmodi[0]][gdatmodi.indxcompmodi]
@@ -9955,7 +9965,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             gdatmodi.nextlpautotl = lpautotl
 
             setattr(gdatobjt, 'nextlpaupop%d' % gdatmodi.indxpoplmodi[0], lpau)
-            for k in gdat.fittindxcomp[gdatmodi.indxpoplmodi[0]]:
+            
+            indxcomp = getattr(gdat, strgmodl + 'indxcomp')
+
+            for k in indxcomp[gdatmodi.indxpoplmodi[0]]:
                 setattr(gdatobjt, 'nextlpaupop%dter%d' % (gdatmodi.indxpoplmodi[0], k), lpau[k])
             setattr(gdatobjt, 'nextlpaupop%dtotl' % gdatmodi.indxpoplmodi[0], lpautotl)
         setattr(gdatobjt, 'nextlpridist', lpridist)
@@ -12030,7 +12043,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         # flatten the arrays which have been collected at each sweep
         #setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         if not booltile:
-            gdatfinl.listpostdeltlliktotlflat = gdatfinl.listpostdeltlliktotl.reshape((gdatfinl.numbswep, 1))
+            if not gdatfinl.checprio:
+                gdatfinl.listpostdeltlliktotlflat = gdatfinl.listpostdeltlliktotl.reshape((gdatfinl.numbswep, 1))
         
             # memory usage
             listmemoresi = getattr(gdatfinl, 'list' + strgpdfn + 'memoresi')
