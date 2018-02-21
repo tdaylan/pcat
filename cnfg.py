@@ -22,7 +22,7 @@ def test_info(strgcnfgextnexec=None):
     
     dictargs['inittype'] = 'refr'
     dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 2000
+    dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = ['fittvlow', 'fittlowr', 'fittnomi', 'fitthigr', 'fittvhig']
     dictargsvari = {}
@@ -361,11 +361,12 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['minmflux'] = 1e-8
     dictargs['optitype'] = 'none'
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
-                        'parsnegatruenomi', 'parsnonetruenomi', 'parslowwtruenomi', 'parsnomitruenomi', 'parshightruenomi', \
+                        'parsnegatruenomi', 'parsnonetruenomi', \
+                        'parslowwtruenomi', 'parsnomitruenomi', 'parshightruenomi', \
                         'parsnegatruenone', 'parsnonetruenone', 'parslowwtruenone', 'parsnomitruenone', 'parshightruenone', \
                        ]
     dictargsvari = {}
@@ -396,7 +397,7 @@ def test_pars(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
