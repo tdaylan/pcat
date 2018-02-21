@@ -361,21 +361,30 @@ def test_pars(strgcnfgextnexec=None):
     dictargs['minmflux'] = 1e-8
     dictargs['optitype'] = 'none'
     
-    dictargs['numbswep'] = 200000
-    dictargs['numbsamp'] = 1000
-    #dictargs['makeplot'] = False
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
     
-    listnamecnfgextn = ['parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh']
-    #listnamecnfgextn = ['parsnone', 'parsloww', 'parsnomi']
+    listnamecnfgextn = [ \
+                        'parsnegatruenomi', 'parsnonetruenomi', 'parslowwtruenomi', 'parsnomitruenomi', 'parshightruenomi', \
+                        'parsnegatruenone', 'parsnonetruenone', 'parslowwtruenone', 'parsnomitruenone', 'parshightruenone', \
+                       ]
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['parsnega']['priofactdoff'] = -0.5
-    dictargsvari['parsnone']['priofactdoff'] = 0.
-    dictargsvari['parsloww']['priofactdoff'] = 0.5
-    dictargsvari['parsnomi']['priofactdoff'] = 1.
-    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    dictargsvari['parsnegatruenomi']['priofactdoff'] = -0.5
+    dictargsvari['parsnonetruenomi']['priofactdoff'] = 0.
+    dictargsvari['parslowwtruenomi']['priofactdoff'] = 0.5
+    dictargsvari['parsnomitruenomi']['priofactdoff'] = 1.
+    dictargsvari['parshightruenomi']['priofactdoff'] = 1.5
+    
+    dictargsvari['parsnegatruenone']['truemaxmnumbelempop0reg0'] = 0
+    dictargsvari['parsnegatruenone']['truenumbelempop0reg0'] = 0
+    dictargsvari['parsnegatruenone']['priofactdoff'] = -0.5
+    dictargsvari['parsnonetruenone']['priofactdoff'] = 0.
+    dictargsvari['parslowwtruenone']['priofactdoff'] = 0.5
+    dictargsvari['parsnomitruenone']['priofactdoff'] = 1.
+    dictargsvari['parshightruenone']['priofactdoff'] = 1.5
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
