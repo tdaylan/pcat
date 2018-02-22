@@ -3143,6 +3143,9 @@ def work(pathoutprtag, lock, indxprocwork):
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'refr')
     
+    if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
+        raise Exception('')
+
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if namefixp.startswith('numbelem'):

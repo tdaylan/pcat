@@ -806,6 +806,11 @@ def updt_stat(gdat, gdatmodi):
 
 def initcompfromstat(gdat, gdatmodi, namerefr):
     
+    print 'heeeeey'
+    print 'namerefr'
+    print namerefr
+    print
+
     for l in gdat.fittindxpopl:
         for d in gdat.fittindxregipopl[l]:
             for g, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
