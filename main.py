@@ -1730,6 +1730,8 @@ def init( \
                         retr_axis(gdat, strgfeat + 'prio', minm, maxm, gdat.numbbinsplotprio, scal=scal, strginit=strgmodl)
 
     # define limits and bins for reference-only features or features derived from them
+    print 'gdat.fittindxpopl'
+    print gdat.fittindxpopl
     for l in gdat.fittindxpopl:
         for strgfeat in gdat.fittliststrgfeatextr[l]:
             if strgfeat[:-4] == 'etag':

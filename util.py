@@ -3465,7 +3465,7 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat + gdat.listnamerefr[q])
                 else:
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat)
-    
+   
     # common element features
     gdat.liststrgfeatcomm = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
     for q in gdat.indxrefr:
@@ -4517,6 +4517,9 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.indxcuberofi = meshgrid(gdat.indxener, gdat.indxpixlrofi, gdat.indxevtt, indexing='ij')
     gdat.numbpixl = gdat.indxpixlrofi.size
     
+    # temp -- gdat.numbener * gdat.numbevtt * gdat.numbpixl should be region dependent...
+    gdat.numbdata = gdat.numbregi * gdat.numbener * gdat.numbevtt * gdat.numbpixl
+
     gdat.lgalgridrofi = gdat.lgalgrid[gdat.indxpixlrofi]
     gdat.bgalgridrofi = gdat.bgalgrid[gdat.indxpixlrofi]
 
@@ -9744,6 +9747,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             else:
                 lliktotl = 0.
                 for dd, d in enumerate(indxregieval):
+                    lliktotl += gdat.llikoffs[dd]
                     if gdat.diagmode:
                         if isinstance(lliktotl, ndarray):
                             raise Exception('')
@@ -9751,7 +9755,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         else:
             lliktotl = float64(0.)
         
+        numbdoff = numbfixp
+        for l in indxpopl:
+            for d in indxregipopl[l]:
+                numbdoff += len(indxsampcomp['comp'][l][d])
         setattr(gdatobjt, strgpfix + 'llik', llik)
+        setattr(gdatobjt, strgpfix + 'llikmean', lliktotl / gdat.numbdata) 
+        setattr(gdatobjt, strgpfix + 'llikcmea', lliktotl / (gdat.numbdata - numbdoff)) 
         setattr(gdatobjt, strgpfix + 'lliktotl', lliktotl) 
 
         if gdat.verbtype > 1:
