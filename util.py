@@ -8153,7 +8153,7 @@ def readfile(path):
     filearry.close()
     
     if 'gdatfinl' in path or 'gdatinit' in path:
-        if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis != None:
+        if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis != None and hasattr(gdattemptemp, 'binsener'):
             gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
         gdattemptemp.adisobjt = interp1d_pick(gdattemptemp.redsintp, gdattemptemp.adisintp)
         gdattemptemp.redsfromdlosobjt = interp1d_pick(gdattemptemp.adisintp * gdattemptemp.redsintp, gdattemptemp.redsintp)
@@ -9755,6 +9755,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         else:
             lliktotl = float64(0.)
         
+        numbfixp = getattr(gdat, strgmodl + 'numbfixp')
         numbdoff = numbfixp
         for l in indxpopl:
             for d in indxregipopl[l]:
