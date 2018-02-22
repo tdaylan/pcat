@@ -4887,6 +4887,24 @@ def setpinit(gdat, boolinitsetp=False):
         
         if gdat.exprtype == 'sdyn':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
+        
+            if gdat.fittnumbtrap > 0:
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 2e-1
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpnobjdistsloppop0]] = 3e-1
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpgwdtdistsloppop0]] = 3e-1
+            
+            if gdat.fittpsfnevaltype != 'none':
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
+            
+            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
+        
+            if gdat.fittnumbtrap > 0:
+                if gdat.propcomp:
+                    gdat.stdvstdp[gdat.indxstdppop0lgal] = 4e-2
+                    gdat.stdvstdp[gdat.indxstdppop0bgal] = 4e-2
+                    gdat.stdvstdp[gdat.indxstdppop0nobj] = 3e-1
+                    gdat.stdvstdp[gdat.indxstdppop0gwdt] = 5e-1
+        
         if gdat.exprtype == 'fire':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
     
@@ -5122,6 +5140,8 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.maxmangleval == None:
             if gdat.exprtype == 'chan':
                 gdat.maxmangleval = maximum(gdat.maxmangleval, array([5., 6., 9.]) / gdat.anglfact)
+            elif gdat.exprtype == 'ferm':
+                gdat.maxmangleval = maximum(gdat.maxmangleval, array([7., 9., 15.]) / gdat.anglfact)
             else:
                 gdat.maxmangleval = empty(gdat.numbprox)
                 if gdat.numbpixlfull != 1:
@@ -9133,6 +9153,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                             boolevalfull = False
                                 if numbtemp > 0 and (amin(sbrtdfnc[dd][indxcubeeval[0][dd]]) / mean(sbrtdfnc[dd][indxcubeeval[0][dd]]) < -1e-6):
                                     print 'Warning! Delta-function surface brightness went negative.'
+                                    print 'strgmodl'
+                                    print strgmodl
                                     print 'numbtemp'
                                     print numbtemp
                                     print 'numbelem'
@@ -9142,8 +9164,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     print 'elemspatevaltype'
                                     print elemspatevaltype
                                     print
-                                    if boolevalfull:
-                                        raise Exception('')
+                                    print
+                                    print
+                                    print
+                                    #if boolevalfull:
+                                    raise Exception('')
+                                        #raise Exception('')
                         
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
                         
