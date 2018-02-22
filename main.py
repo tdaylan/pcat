@@ -3710,21 +3710,6 @@ def work(pathoutprtag, lock, indxprocwork):
                         print
                         raise Exception('')
 
-            if gdat.strgcnfg.startswith('pcat_ferm_igal') and gdatmodi.propmerg and gdat.numbpixlfull > 1:
-                dist = sqrt((gdatmodi.compfrst[0] - gdatmodi.compseco[0])**2 + (gdatmodi.compfrst[1] - gdatmodi.compseco[1])**2)
-                if dist < gdat.sizepixl:
-                    print 'dist'
-                    print dist * gdat.anglfact
-                    print 'gdatmodi.nextdeltlliktotl'
-                    print gdatmodi.nextdeltlliktotl
-                    print 'gdatmodi.nextdeltlpritotl'
-                    print gdatmodi.nextdeltlpritotl
-                    print 'gdatmodi.nextljcb'
-                    print gdatmodi.nextljcb
-                    print 'gdatmodi.nextlrpp'
-                    print gdatmodi.nextlrpp
-                    print
-
             # evaluate the acceptance probability
             gdatmodi.nextaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + \
                                                                                                                                         gdatmodi.nextlrpp + gdatmodi.nextljcb)
