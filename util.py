@@ -11820,9 +11820,15 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         
             # find the maximum likelihood and posterior over the chains
             gdatfinl.indxprocmaxmllik = argmax(gdatfinl.maxmllikproc)
-            gdatfinl.maxmlliktotl = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
+            #gdatfinl.maxmlliktotl = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
+            
+            gdatfinl.minmlliktotl = amin(gdatfinl.postlliktotl)
+            gdatfinl.maxmlliktotl = amax(gdatfinl.postlliktotl)
+            
+            gdatfinl.skewlliktotl = mean(((lliktotl - gdatfinl.pmealliktotl) / gdatfinl.stdvlliktotl)**3)
+            gdatfinl.kurtlliktotl = mean(((lliktotl - gdatfinl.pmealliktotl) / gdatfinl.stdvlliktotl)**4)
         
             if gdatfinl.regulevi:
                 

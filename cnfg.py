@@ -4,6 +4,68 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
+def test_numbelem(strgcnfgextnexec=None):
+    
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['priofactdoff'] = 0.
+    dictargs['fittmaxmnumbelempop0reg0'] = 1000
+    dictargs['truemaxmnumbelempop0reg0'] = 1000
+    #dictargs['truemaxmnumbelempop0reg0'] = 
+    #dictargs['mockonly'] = True
+    dictargs['maxmangleval'] = array([11., 12., 13.]) / anglfact
+    #dictargs['verbtype'] = 2
+    #dictargs['makeplotfram'] = False
+    #dictargs['makeplotinit'] = False
+    
+    dictargs['inittype'] = 'refr'
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
+    
+    listnamecnfgextn = ['numbvlow', 'numblowr', 'numbnomi', 'numbhigr', 'numbvhig']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['numbvlow']['truenumbelempop0reg0'] = 10
+    dictargsvari['numblowr']['truenumbelempop0reg0'] = 30
+    dictargsvari['numbnomi']['truenumbelempop0reg0'] = 100
+    dictargsvari['numbhigr']['truenumbelempop0reg0'] = 300
+    dictargsvari['numbvhig']['truenumbelempop0reg0'] = 1000
+    
+    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    scalxaxi = 'logt'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['truenumbelempop0reg0']) for namecnfgextn in listnamecnfgextn] 
+    
+    listnamevarbcomp = ['lliktotl', 'maxmlliktotl', 'levi', 'infoharm', 'bcom', 'truelliktotl']
+    listscalvarbcomp = ['self', 'self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp = ['$\ln P(D|M)$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\ln P(D|M_{true})$']
+    listtypevarbcomp = ['pctl', '', '', '', '', '']
+    listpdfnvarbcomp = ['post', '', 'post', 'post', '', '']
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        #forcprev=True, \
+                        
+                        namexaxi='fittminmflux', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                        listnamevarbcomp=listnamevarbcomp, \
+                        listscalvarbcomp=listscalvarbcomp, \
+                        listlablvarbcomp=listlablvarbcomp, \
+                        listtypevarbcomp=listtypevarbcomp, \
+                        listpdfnvarbcomp=listpdfnvarbcomp, \
+                       )
+
+
 def test_info(strgcnfgextnexec=None):
     
     anglfact = 3600. * 180. / pi
@@ -114,6 +176,54 @@ def test_pars(strgcnfgextnexec=None):
 
 
 def test_pars_truenone(strgcnfgextnexec=None):
+    
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truemaxmnumbelempop0reg0'] = 0
+    dictargs['truenumbelempop0reg0'] = 0
+    
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = [ \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        forcprev=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                        listnamevarbcomp=listnamevarbcomp, \
+                       )
+
+
+def test_trueback(strgcnfgextnexec=None):
     
     anglfact = 3600. * 180. / pi
     dictargs = {}

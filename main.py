@@ -2589,7 +2589,7 @@ def initarry( \
         if listpdfnvarbcomp == None:
             listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
         
-        for namevarbscal in listrtag[0].listnamevarbscal:
+        for namevarbscal in listgdat[0].listnamevarbscal:
             if namevarbscal in listnamevarbcomp:
                 raise Exception('')
             listnamevarbcomp += [namevarbscal]
@@ -2597,7 +2597,13 @@ def initarry( \
             listlablvarbcomp += [getattr(listrtag[0], 'labl' + namevarbscal)]
             listtypevarbcomp += ['pctl']
             listpdfnvarbcomp += ['post']
-        
+       
+        listnamevarbcomp += ['maxmlliktotl', 'levi', 'infoharm', 'bcom', 'stdvllik', 'skewllik', 'kurtllik']
+        listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self']
+        listlablvarbcomp += ['$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma^2_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
+        listtypevarbcomp += ['', '', '', '', '', '', '']
+        listpdfnvarbcomp += ['', 'post', 'post', '', 'post', 'post', 'post']
+
         strgtimestmp = tdpy.util.retr_strgtimestmp()
         
         for k in indxiter:
