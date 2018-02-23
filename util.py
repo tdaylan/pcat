@@ -11131,6 +11131,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         continue
                                     for (strgfeatfrst, strgfeatfrsttagg) in zip(gdat.refrliststrgfeat[q0], gdat.refrliststrgfeattagg[q0][l]):
                                         
+                                        if strgfeatfrst == 'flux':
+                                            print 'flux'
+                                            print 'q0'
+                                            print q0
+                                            print
+
                                         if strgfeatfrst.startswith('etag'):
                                             continue
                                                 
