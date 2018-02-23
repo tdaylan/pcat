@@ -822,6 +822,9 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                         fact = getattr(gdat, 'fittfact' + strgcomp)
                         if gdat.fittlistscalcomp[l][g] == 'self':
                             compunit = cdfn_self(comp, minm, fact)
+                            print 'compunit'
+                            print compunit
+                            print
                         if gdat.fittlistscalcomp[l][g] == 'logt':
                             compunit = cdfn_logt(comp, minm, fact)
                     if gdat.fittlistscalcomp[l][g] == 'expo':
@@ -3594,6 +3597,15 @@ def setpinit(gdat, boolinitsetp=False):
                     for nameeval in ['', 'bein']:
                         setattr(gdat, 'scalmasshostreg%disf%d' % (d, e) + namecalc + nameeval, 'logt')
     
+    # scalar variable setup
+    gdat.lablhistcntplowrdfncsubtreg0en00evt0 = 'N_{pix,l}'
+    gdat.lablhistcntphigrdfncsubtreg0en00evt0 = 'N_{pix,h}'
+    gdat.lablhistcntplowrdfncreg0en00evt0 = 'N_{pix,l}'
+    gdat.lablhistcntphigrdfncreg0en00evt0 = 'N_{pix,h}'
+    for i in gdat.indxener:
+        setattr(gdat, 'lablfracsdenmeandarkdfncsubten%02d' % i, 'f_{D/ST,%d}' % i)
+    gdat.lablbooldfncsubt = 'H'
+    
     gdat.minmreds = 0.
     gdat.maxmreds = 1.5
     
@@ -3983,7 +3995,7 @@ def setpinit(gdat, boolinitsetp=False):
                     setattr(gdat, 'fact' + strgfeat + 'plot', gdat.anglfact)
                 else:
                     setattr(gdat, 'fact' + strgfeat + 'plot', 1.)
-                if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'magf' or \
+                if strgfeat == 'flux' or strgfeat == 'expo' or strgfeat == 'magf' or strgfeat == 'nobj' or \
                                      strgfeat == 'relk' or strgfeat == 'relf' or strgfeat == 'elin' or strgfeat == 'flux0400' or \
                                      strgfeat == 'cnts' or strgfeat.startswith('per') or strgfeat == 'gwdt' or strgfeat == 'dglc' or strgfeat.startswith('lumi') or \
                                      strgfeat == 'relm' or strgfeat.startswith('dlos') or strgfeat.startswith('lum0') or strgfeat == 'defs' or \
@@ -4054,6 +4066,15 @@ def setpinit(gdat, boolinitsetp=False):
                         setattr(gdat, 'minmfracsubh' + strgregi + strgtemp + 'bein', gdat.minmfracsubh)
                         setattr(gdat, 'maxmfracsubh' + strgregi + strgtemp + 'bein', gdat.maxmfracsubh)
     gdat.listnamevarbscal += ['lliktotl', 'lpripena']
+    
+    if gdat.fittboolelemsbrtdfncanyy:
+        for strgbins in ['lowr', 'higr']:
+            gdat.listnamevarbscal += ['histcntp%sdfncreg0en00evt0' % strgbins]
+            gdat.listnamevarbscal += ['histcntp%sdfncsubtreg0en00evt0' % strgbins]
+        for i in gdat.indxener:
+            gdat.listnamevarbscal += ['fracsdenmeandarkdfncsubten%02d' % i]
+        gdat.listnamevarbscal += ['booldfncsubt']
+            
     gdat.numbvarbscal = len(gdat.listnamevarbscal)
     gdat.indxvarbscal = arange(gdat.numbvarbscal)
         
@@ -5266,7 +5287,8 @@ def rplc_list(listarry, indx):
 
 
 def setpfinl(gdat, boolinitsetp=False):
-   
+    
+    
     gdat.listnamepdir = ['forw', 'reve']
     gdat.listlablpdir = ['f', 'r']
     
@@ -10562,6 +10584,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             for b in gdat.indxspatmean:
                 for d in gdat.indxregi:
                     setattr(gdatobjt, strgpfix + 'sbrt%smea%dreg%d' % (name, b, d), sbrtmean[name][b][d])
+        
+        if boolelemsbrtdfncanyy:
+            for i in gdat.indxener:
+                if 'dark' in listnamegcom:
+                    fracsdenmeandarkdfncsubt = sbrtmean['dfncsubt'][0][0][i] / (sbrtmean['dfncsubt'][0][0][i] + sbrtmean['dark'][0][0][i])
+                else:
+                    fracsdenmeandarkdfncsubt = 1.
+                setattr(gdatobjt, strgpfix + 'fracsdenmeandarkdfncsubten%02d' % i, array([fracsdenmeandarkdfncsubt]))
+            
+            if 'dark' in listnamegcom:
+                booldfncsubt = float(where(sbrtmean['dfncsubt'][0][0] > sbrtmean['dark'][0][0])[0].any())
+            else:
+                booldfncsubt = 1.
+            setattr(gdatobjt, strgpfix + 'booldfncsubt', array([booldfncsubt]))
 
         # find the 1-point function of the count maps of all emission components including the total emission
         for name in listnamegcom:
@@ -10572,6 +10608,29 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             histcntp = histogram(cntp[name][d][i, :, m], bins=gdat.binscntpmodl)[0]
                             strgtemp = strgpfix + 'histcntp' + name + 'reg%den%02devt%d' % (d, i, m)
                             setattr(gdatobjt, strgtemp, histcntp)
+                            
+                            if i == 0 and m == 0 and d == 0 and (name == 'dfnc' or name == 'dfncsubt'):
+                                for strgbins in ['lowr', 'higr']:
+                                    strgtemp = strgpfix + 'histcntp' + strgbins + name + 'reg%den%02devt%d' % (d, i, m)
+                                    
+                                    # temp
+                                    #if strgtemp.endswith('histcntplowrdfncreg0en00evt0'):
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    #    print 'teeeeeeeeeeeeeeeeey'
+                                    
+                                    if strgbins == 'lowr':
+                                        setattr(gdatobjt, strgtemp, array([float(sum(histcntp[:gdat.numbtickcbar-1]))]))
+                                    else:
+                                        setattr(gdatobjt, strgtemp, array([float(sum(histcntp[gdat.numbtickcbar-1:]))]))
                             
                             #if (histcntp == 0.).all():
                                 #if gdat.verbtype > 0:
@@ -11060,6 +11119,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     setattr(gdatobjt, name, featrefrassc[q][l][d][strgfeat])
                     
                     # completeness
+                    print 'gdat.refrliststrgfeat'
+                    print gdat.refrliststrgfeat
+                    print 'gdat.refrliststrgfeattagg'
+                    print gdat.refrliststrgfeattagg
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q0 in gdat.indxrefr:
@@ -11152,6 +11215,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
                                         
+                                        print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
+                                        print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
+                                        print 'pmeapostcmplfluxpop0pop2reg0'
+                                        print 
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0), cmplfeatfrst)
                                 
                     # false discovery rate
@@ -12085,7 +12152,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         # flatten the arrays which have been collected at each sweep
         #setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         if not booltile:
-            if not gdatfinl.checprio:
+            if strgpdfn == 'post':
                 gdatfinl.listpostdeltlliktotlflat = gdatfinl.listpostdeltlliktotl.reshape((gdatfinl.numbswep, 1))
         
             # memory usage

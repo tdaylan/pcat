@@ -21,8 +21,8 @@ def test_info(strgcnfgextnexec=None):
     #dictargs['makeplotinit'] = False
     
     dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
     
     listnamecnfgextn = ['fittvlow', 'fittlowr', 'fittnomi', 'fitthigr', 'fittvhig']
     dictargsvari = {}
@@ -62,6 +62,102 @@ def test_info(strgcnfgextnexec=None):
                         listlablvarbcomp=listlablvarbcomp, \
                         listtypevarbcomp=listtypevarbcomp, \
                         listpdfnvarbcomp=listpdfnvarbcomp, \
+                       )
+
+
+def test_pars(strgcnfgextnexec=None):
+    
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['minmflux'] = 1e-8
+    
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
+    
+    listnamecnfgextn = [ \
+                        'parsnegatruenomi', 'parsnonetruenomi', 'parslowwtruenomi', 'parsnomitruenomi', 'parshightruenomi', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnegatruenomi']['priofactdoff'] = -0.5
+    dictargsvari['parsnonetruenomi']['priofactdoff'] = 0.
+    dictargsvari['parslowwtruenomi']['priofactdoff'] = 0.5
+    dictargsvari['parsnomitruenomi']['priofactdoff'] = 1.
+    dictargsvari['parshightruenomi']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        forcprev=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                        listnamevarbcomp=listnamevarbcomp, \
+                       )
+
+
+def test_pars_truenone(strgcnfgextnexec=None):
+    
+    anglfact = 3600. * 180. / pi
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truemaxmnumbelempop0reg0'] = 0
+    dictargs['truenumbelempop0reg0'] = 0
+    
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = [ \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        forcprev=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                        listnamevarbcomp=listnamevarbcomp, \
                        )
 
 
@@ -139,7 +235,6 @@ def test_psfn(strgcnfgextnexec=None):
     dictargs['minmflux'] = 1e-7
     dictargs['priofactdoff'] = 0.2
     dictargs['truenumbelempop0reg0'] = 10
-    dictargs['optitype'] = 'none'
     
     dictargs['numbswep'] = 1000
     dictargs['numbsamp'] = 10
@@ -159,8 +254,6 @@ def test_psfn(strgcnfgextnexec=None):
     lablxaxi = 'PSF'
     scalxaxi = 'self'
     listtickxaxi = ['Float', 'Fixed/Wrong', 'Fixed/True'] 
-    
-    listnamevarbcomp = ['numbelempop0reg0']
     
     listnamevarbcomp = ['numbelempop0reg0']
     listscalvarbcomp = ['self']
@@ -330,7 +423,6 @@ def test_elemspatevaltype(strgcnfgextnexec=None):
     listtypevarbcomp = ['']
     listpdfnvarbcomp = ['']
    
-
     dictglob = initarry( \
                         dictargsvari, \
                         dictargs, \
@@ -350,64 +442,6 @@ def test_elemspatevaltype(strgcnfgextnexec=None):
                        )
 
 
-def test_pars(strgcnfgextnexec=None):
-    
-    anglfact = 3600. * 180. / pi
-    dictargs = {}
-    dictargs['exprtype'] = 'chan'
-    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
-    dictargs['elemtype'] = ['lghtpnts']
-    dictargs['truenumbelempop0reg0'] = 100
-    dictargs['minmflux'] = 1e-8
-    dictargs['optitype'] = 'none'
-    
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
-    
-    listnamecnfgextn = [ \
-                        'parsnegatruenomi', 'parsnonetruenomi', \
-                        'parslowwtruenomi', 'parsnomitruenomi', 'parshightruenomi', \
-                        'parsnegatruenone', 'parsnonetruenone', 'parslowwtruenone', 'parsnomitruenone', 'parshightruenone', \
-                       ]
-    dictargsvari = {}
-    for namecnfgextn in listnamecnfgextn:
-        dictargsvari[namecnfgextn] = {}
-    
-    dictargsvari['parsnegatruenomi']['priofactdoff'] = -0.5
-    dictargsvari['parsnonetruenomi']['priofactdoff'] = 0.
-    dictargsvari['parslowwtruenomi']['priofactdoff'] = 0.5
-    dictargsvari['parsnomitruenomi']['priofactdoff'] = 1.
-    dictargsvari['parshightruenomi']['priofactdoff'] = 1.5
-    
-    dictargsvari['parsnegatruenone']['truemaxmnumbelempop0reg0'] = 0
-    dictargsvari['parsnegatruenone']['truenumbelempop0reg0'] = 0
-    dictargsvari['parsnegatruenone']['priofactdoff'] = -0.5
-    dictargsvari['parsnonetruenone']['priofactdoff'] = 0.
-    dictargsvari['parslowwtruenone']['priofactdoff'] = 0.5
-    dictargsvari['parsnomitruenone']['priofactdoff'] = 1.
-    dictargsvari['parshightruenone']['priofactdoff'] = 1.5
-    
-    scalxaxi = 'self'
-    lablxaxi = r'$\alpha_p$'
-    listnamevarbcomp = ['numbelempop0reg0', 'cmplpop0pop0reg0', 'fdispop0pop0reg0', 'fluxdistsloppop0']
-    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
-    
-    dictglob = initarry( \
-                        dictargsvari, \
-                        dictargs, \
-                        listnamecnfgextn, \
-                        strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
-
-                        namexaxi='priofactdoff', \
-                        lablxaxi=lablxaxi, \
-                        scalxaxi=scalxaxi, \
-                        listtickxaxi=listtickxaxi, \
-                        
-                        listnamevarbcomp=listnamevarbcomp, \
-                       )
-
-
 def test_spmr(strgcnfgextnexec=None):
     
     anglfact = 3600. * 180. / pi
@@ -416,7 +450,6 @@ def test_spmr(strgcnfgextnexec=None):
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
-    dictargs['optitype'] = 'none'
     dictargs['probtran'] = 1.
     dictargs['probspmr'] = 1.
     
@@ -434,6 +467,7 @@ def test_spmr(strgcnfgextnexec=None):
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
+    
     listnamevarbcomp = ['accpsplt', 'accpmerg', 'timeatcrcntpmaxm']
     listscalvarbcomp = ['self' for namevarbcomp in listnamevarbcomp]
     listlablvarbcomp = [r'$\alpha_{splt}$', r'$\alpha_{merg}$', r'$\tau_{ac}$']

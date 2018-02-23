@@ -1752,6 +1752,24 @@ def init( \
     
     gdat.numbbinspdfn = 50
             
+    # scalar variable setup continued
+    for strgbins in ['lowr', 'higr']:
+        for strgecom in ['dfnc', 'dfncsubt']:
+            setattr(gdat, 'scalhistcntp' + strgbins + strgecom + 'reg0en00evt0', 'logt')
+            setattr(gdat, 'minmhistcntp' + strgbins + strgecom + 'reg0en00evt0', 0.1)
+            setattr(gdat, 'maxmhistcntp' + strgbins + strgecom + 'reg0en00evt0', gdat.numbpixl)
+            setattr(gdat, 'facthistcntp' + strgbins + strgecom + 'reg0en00evt0', 1.)
+    for i in gdat.indxener:
+        setattr(gdat, 'scalfracsdenmeandarkdfncsubten%02d' % i, 'self')
+        setattr(gdat, 'minmfracsdenmeandarkdfncsubten%02d' % i, 0.)
+        setattr(gdat, 'maxmfracsdenmeandarkdfncsubten%02d' % i, 1.)
+        setattr(gdat, 'factfracsdenmeandarkdfncsubten%02d' % i, 1.)
+    
+    gdat.scalbooldfncsubt = 'self'
+    gdat.minmbooldfncsubt = -0.5
+    gdat.maxmbooldfncsubt = 1.5
+    gdat.factbooldfncsubt = 1.
+
     # construct bins for the scalar variables
     for namevarbscal in gdat.listnamevarbscal:
         # temp
@@ -2165,7 +2183,19 @@ def init( \
 
         for strg, valu in gdatmodifudi.__dict__.iteritems():
             if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
+                
                 # temp
+                #if 'histcntplowr' in strg:
+                #    print 'strg'
+                #    print strg
+                #    print 'isinstance(valu, ndarray)'
+                #    print isinstance(valu, ndarray)
+                #    print 'isinstance(valu, float)'
+                #    print isinstance(valu, float)
+                #    print 'type(valu)'
+                #    print type(valu)
+                #    print
+                    
                 if isinstance(valu, ndarray) or isinstance(valu, float):
                     gdat.liststrgvarbarrysamp.append(strg[4:])
                 elif isinstance(valu, list) and strg != 'thisindxsampcomp' and strg != 'thispsfnconv' and \
@@ -2531,12 +2561,21 @@ def initarry( \
         else:
             listgdat = retr_listgdat(listrtag)
 
-        strgtimestmp = tdpy.util.retr_strgtimestmp()
-        
         if listtypevarbcomp == None:
             listtypevarbcomp = ['pctl' for namevarbcomp in listnamevarbcomp]
         if listpdfnvarbcomp == None:
             listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
+        
+        for namevarbscal in listrtag[0].listnamevarbscal:
+            if namevarbscal in listnamevarbcomp:
+                raise Exception('')
+            listnamevarbcomp += [namevarbscal]
+            listscalvarbcomp += [getattr(listrtag[0], 'scal' + namevarbscal)]
+            listlablvarbcomp += [getattr(listrtag[0], 'labl' + namevarbscal)]
+            listtypevarbcomp += ['pctl']
+            listpdfnvarbcomp += ['post']
+        
+        strgtimestmp = tdpy.util.retr_strgtimestmp()
         
         for k in indxiter:
             cntr = 0
@@ -2612,9 +2651,12 @@ def initarry( \
             plt.savefig(pathfull)
             plt.close(figr)
     
+    print 'Making animations...'
+    for rtag in listrtag:
+        print 'Working on %s...' % rtag
+        proc_anim(rtag=rtag)
     
     print 'Compiling run plots...'
-
     cmnd = 'python comp_rtag.py'
     for rtag in listrtag: 
         cmnd += ' %s' % rtag
@@ -3140,7 +3182,7 @@ def work(pathoutprtag, lock, indxprocwork):
         if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'refr')
-    
+   
     if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
         raise Exception('')
 
@@ -3298,7 +3340,15 @@ def work(pathoutprtag, lock, indxprocwork):
             valu = getattr(gdatmodi, 'this' + strgvarb)
             shap = [gdat.numbsamp] + list(valu.shape)
         workdict['list' + gdat.strgpdfn + strgvarb] = zeros(shap)
-    
+   
+    #for strg in gdat.liststrgvarbarrysamp:
+    #    if 'histcntplowr' in strg:
+    #        print 'strg'
+    #        print strg
+    #        print
+    #raise Exception('')
+
+
     for strgvarb in gdat.liststrgvarblistsamp:
         workdict['list' + gdat.strgpdfn + strgvarb] = []
     

@@ -7,13 +7,13 @@ def comp(nameplot):
     
     nameplot = nameplot[:-4]
 
-    print
-    print 'comp() working on ' + nameplot + '...'
+    #print
+    #print 'comp() working on ' + nameplot + '...'
     
     cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
-    print cmnd
+    #print cmnd
     os.system(cmnd)
-    print
+    #print
 
     for line in listline:
         strgtemp = 'rtag'
@@ -21,11 +21,12 @@ def comp(nameplot):
         if not os.path.isfile(namedest):
             cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
-            print cmnd
+            #print cmnd
             os.system(cmnd)
         else:
-            print 'File already exists...'
-        print
+            pass
+            #print 'File already exists...'
+        #print
 
 print 'comp_rtag() initialized...'
 
@@ -41,8 +42,12 @@ pathlist = pathimag + 'listrtag.txt'
 with open(pathlist) as thisfile:
     listline = thisfile.readlines()
     listline = [x.strip() for x in listline] 
-strgsrch = sys.argv[1]
-listline = fnmatch.filter(listline, strgsrch)
+
+if len(sys.argv) > 2:
+    listline = sys.argv[1:]
+else:
+    strgsrch = sys.argv[1]
+    listline = fnmatch.filter(listline, strgsrch)
 
 print 'listline'
 for line in listline:
