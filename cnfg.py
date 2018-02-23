@@ -102,7 +102,7 @@ def test_pars(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        #forcprev=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \

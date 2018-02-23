@@ -3473,7 +3473,7 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat + gdat.listnamerefr[q])
                 else:
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat)
-   
+    
     # common element features
     gdat.liststrgfeatcomm = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
     for q in gdat.indxrefr:
@@ -5287,7 +5287,6 @@ def rplc_list(listarry, indx):
 
 
 def setpfinl(gdat, boolinitsetp=False):
-    
     
     gdat.listnamepdir = ['forw', 'reve']
     gdat.listlablpdir = ['f', 'r']
@@ -11129,13 +11128,27 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 for d0 in gdat.refrindxregipopl[q0]:
                                     if gdat.refrnumbelem[q0][d0] == 0:
                                         continue
+                                    print 'q0'
+                                    print q0
+                                    print 'gdat.refrliststrgfeat[q0]'
+                                    print gdat.refrliststrgfeat[q0]
+                                    print 'gdat.refrliststrgfeattagg[q0][l]'
+                                    print gdat.refrliststrgfeattagg[q0][l]
                                     for (strgfeatfrst, strgfeatfrsttagg) in zip(gdat.refrliststrgfeat[q0], gdat.refrliststrgfeattagg[q0][l]):
-                                        
+                                        print 'strgfeatfrst'
+                                        print strgfeatfrst
+                                        print 'strgfeatfrsttagg'
+                                        print strgfeatfrsttagg
                                         if strgfeatfrst == 'flux':
-                                            print 'flux'
+                                            print 'flux, heeey'
                                             print 'q0'
                                             print q0
                                             print
+                                            print
+                                            print
+                                            print
+                                        print
+                                        print
 
                                         if strgfeatfrst.startswith('etag'):
                                             continue
@@ -11221,10 +11234,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
                                         
-                                        print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
-                                        print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
-                                        print 'pmeapostcmplfluxpop0pop2reg0'
-                                        print 
+                                        #print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
+                                        #print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
+                                        #print 'pmeapostcmplfluxpop0pop2reg0'
+                                        #print 
+                                        
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0), cmplfeatfrst)
                                 
                     # false discovery rate

@@ -1755,8 +1755,8 @@ def init( \
     # scalar variable setup continued
     for strgbins in ['lowr', 'higr']:
         for strgecom in ['dfnc', 'dfncsubt']:
-            setattr(gdat, 'scalhistcntp' + strgbins + strgecom + 'reg0en00evt0', 'logt')
-            setattr(gdat, 'minmhistcntp' + strgbins + strgecom + 'reg0en00evt0', 0.1)
+            setattr(gdat, 'scalhistcntp' + strgbins + strgecom + 'reg0en00evt0', 'self')
+            setattr(gdat, 'minmhistcntp' + strgbins + strgecom + 'reg0en00evt0', 0.)
             setattr(gdat, 'maxmhistcntp' + strgbins + strgecom + 'reg0en00evt0', gdat.numbpixl)
             setattr(gdat, 'facthistcntp' + strgbins + strgecom + 'reg0en00evt0', 1.)
     for i in gdat.indxener:
@@ -1916,6 +1916,14 @@ def init( \
                                                                                                     exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
                     gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
     
+    for q in gdat.indxrefr:
+        print 'gdat.refrliststrgfeat[q]'
+        print gdat.refrliststrgfeat[q]
+        print 'gdat.refrliststrgfeattagg[q]'
+        print gdat.refrliststrgfeattagg[q]
+        print
+    #raise Exception('')
+    
     if gdat.datatype == 'mock':
         
         gdat.truenumbelemtotl = sum(gdat.truenumbelem)
@@ -1924,8 +1932,23 @@ def init( \
         gdatdictcopy = deepcopy(gdat.__dict__)
         for name, valu in gdatdictcopy.iteritems():
             if name.startswith('true'):
+                if name[4:].startswith('liststrgfeat'):
+                    print 'name[4:]'
+                    print name[4:]
+                    print 'valu'
+                    print valu
+                    print
+
                 setattr(gdat, 'refr' + name[4:], valu)
 
+    for q in gdat.indxrefr:
+        print 'gdat.refrliststrgfeat[q]'
+        print gdat.refrliststrgfeat[q]
+        print 'gdat.refrliststrgfeattagg[q]'
+        print gdat.refrliststrgfeattagg[q]
+        print
+    #raise Exception('')
+    
     if gdat.allwrefr and gdat.datatype == 'inpt':
 
         # rotate reference elements to the spatial coordinate system of PCAT
