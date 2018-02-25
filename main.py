@@ -29,7 +29,7 @@ def init( \
         
          prodqual=False, \
          # chain setup
-         numbswep=2000000, \
+         numbswep=1000000, \
          numbsamp=None, \
          numbburn=None, \
          factthin=None, \
@@ -269,8 +269,8 @@ def init( \
     if gdat.prodqual:
         print 'Overriding inputs for production quality run.'
         gdat.makeplotinit = True
-        gdat.numbswep = 2000000
-        gdat.numbsamp = 2000
+        gdat.numbswep = 1000000
+        gdat.numbsamp = 1000
         gdat.checprio = True
 
     # defaults
@@ -343,7 +343,7 @@ def init( \
     if gdat.factthin != None and gdat.numbsamp != None:
         raise Exception('Both factthin and numbsamp cannot be provided at the same time.')
     elif gdat.factthin == None and gdat.numbsamp == None:
-        gdat.factthin = int(ceil(5e-4 * (gdat.numbswep - gdat.numbburn)))
+        gdat.factthin = int(ceil(1e-3 * (gdat.numbswep - gdat.numbburn)))
         gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     elif gdat.numbsamp != None:
         gdat.factthin = int((gdat.numbswep - gdat.numbburn) / gdat.numbsamp)
@@ -2502,7 +2502,7 @@ def initarry( \
              forcprev=False, \
              takeprev=False, \
              strgpara=False, \
-             execpara=True, \
+             execpara=False, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=[], \
              listscalvarbcomp=[], \
@@ -2524,6 +2524,7 @@ def initarry( \
 
     dictvarb['boolarry'] = strgcnfgextnexec == None
     listrtag = []
+    listpridchld = []
     for k, strgcnfgextn in enumerate(listnamecnfgextn):
         
         if strgcnfgextnexec != None:
@@ -2553,15 +2554,21 @@ def initarry( \
             listrtag.append(listrtagprev[-1])
         else:
             if execpara:
-                cmnd = 'python %s %s %s > null.log &' % (strgpara, inspect.stack()[1][3], strgcnfgextn)
-                print cmnd
-                os.system(cmnd)
+                #cmnd = 'python %s %s %s > null.log &' % (strgpara, inspect.stack()[1][3], strgcnfgextn)
+                #print cmnd
+                prid = os.fork()
+                if prid > 0:
+                    listpridchld.append(prid)
+                else:
+                    init(**dictvarbtemp)
+                    print 'Child %d submitted the job.' % prid 
+                    os._exit(0)
             else:
                 listrtag.append(init(**dictvarbtemp))
     
     if execpara:
-        print 'Exiting because of parallel execution...'
-        return
+        for prid in listpridchld:
+            os.waitpid(prid, 0)
 
     if cntrcomp == 0:
         print 'Found no runs...'

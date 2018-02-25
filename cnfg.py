@@ -13,8 +13,8 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
     dictargs['priofactdoff'] = 0.
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    #dictargs['numbswep'] = 1000
+    #dictargs['numbsamp'] = 10
     
     listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
     dictargsvari = {}
@@ -45,6 +45,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                         
                         strgpara='$PCAT_PATH/cnfg.py', \
                         forcprev=True, \
+                        execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -67,8 +68,8 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
     dictargsvari = {}
@@ -90,7 +91,9 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         forcprev=True, \
+                        execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -109,8 +112,8 @@ def test_pars_truepnts(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['minmflux'] = 1e-8
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
                         'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
@@ -134,7 +137,9 @@ def test_pars_truepnts(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         forcprev=True, \
+                        execpara=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -153,8 +158,8 @@ def test_pars_trueback(strgcnfgextnexec=None):
     dictargs['truemaxmnumbelempop0reg0'] = 0
     dictargs['truenumbelempop0reg0'] = 0
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
                         'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
@@ -178,7 +183,9 @@ def test_pars_trueback(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         forcprev=True, \
+                        execpara=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -198,8 +205,8 @@ def test_truenumbelem(strgcnfgextnexec=None):
     dictargs['fittmaxmnumbelempop0reg0'] = 1000
     dictargs['truemaxmnumbelempop0reg0'] = 1000
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = ['numbvlow', 'numbloww', 'numbnomi', 'numbhigh', 'numbvhig']
     dictargsvari = {}
@@ -221,7 +228,9 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         forcprev=True, \
+                        execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -239,8 +248,8 @@ def test_trueminmflux(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
                         'truevlow', 'trueloww', 'truenomi', 'truehigh', 'truevhig', \
@@ -264,7 +273,9 @@ def test_trueminmflux(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         forcprev=True, \
+                        execpara=True, \
 
                         namexaxi='trueminmflux', \
                         lablxaxi=lablxaxi, \

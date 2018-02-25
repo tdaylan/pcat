@@ -806,10 +806,11 @@ def updt_stat(gdat, gdatmodi):
 
 def initcompfromstat(gdat, gdatmodi, namerefr):
     
-    print 'heeeeey'
-    print 'namerefr'
-    print namerefr
-    print
+    if gdat.strgcnfg.startswith('pcat_ferm_igal_inpt_exce'):
+        print 'heeeeey'
+        print 'namerefr'
+        print namerefr
+        print
 
     for l in gdat.fittindxpopl:
         for d in gdat.fittindxregipopl[l]:
@@ -822,9 +823,10 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                         fact = getattr(gdat, 'fittfact' + strgcomp)
                         if gdat.fittlistscalcomp[l][g] == 'self':
                             compunit = cdfn_self(comp, minm, fact)
-                            print 'compunit'
-                            print compunit
-                            print
+                            if gdat.strgcnfg.startswith('pcat_ferm_igal_inpt_exce'):
+                                print 'compunit'
+                                print compunit
+                                print
                         if gdat.fittlistscalcomp[l][g] == 'logt':
                             compunit = cdfn_logt(comp, minm, fact)
                     if gdat.fittlistscalcomp[l][g] == 'expo':
@@ -3365,10 +3367,7 @@ def setpprem(gdat):
     gdat.liststrglimt = ['minm', 'maxm']
    
     if gdat.numbswepplot == None:
-        if gdat.shrtfram:
-            gdat.numbswepplot = 4000
-        else:
-            gdat.numbswepplot = 40000
+        gdat.numbswepplot = 20000
     
     gdat.refrcolr = 'mediumseagreen'
     gdat.fittcolr = 'deepskyblue'
@@ -11120,37 +11119,42 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     setattr(gdatobjt, name, featrefrassc[q][l][d][strgfeat])
                     
                     # completeness
-                    print 'gdat.refrliststrgfeat'
-                    print gdat.refrliststrgfeat
-                    print 'gdat.refrliststrgfeattagg'
-                    print gdat.refrliststrgfeattagg
+                    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
+                        print 'gdat.refrliststrgfeat'
+                        print gdat.refrliststrgfeat
+                        print 'gdat.refrliststrgfeattagg'
+                        print gdat.refrliststrgfeattagg
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q0 in gdat.indxrefr:
                                 for d0 in gdat.refrindxregipopl[q0]:
                                     if gdat.refrnumbelem[q0][d0] == 0:
                                         continue
-                                    print 'q0'
-                                    print q0
-                                    print 'gdat.refrliststrgfeat[q0]'
-                                    print gdat.refrliststrgfeat[q0]
-                                    print 'gdat.refrliststrgfeattagg[q0][l]'
-                                    print gdat.refrliststrgfeattagg[q0][l]
+                        
+                                    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
+                                        print 'q0'
+                                        print q0
+                                        print 'gdat.refrliststrgfeat[q0]'
+                                        print gdat.refrliststrgfeat[q0]
+                                        print 'gdat.refrliststrgfeattagg[q0][l]'
+                                        print gdat.refrliststrgfeattagg[q0][l]
                                     for (strgfeatfrst, strgfeatfrsttagg) in zip(gdat.refrliststrgfeat[q0], gdat.refrliststrgfeattagg[q0][l]):
-                                        print 'strgfeatfrst'
-                                        print strgfeatfrst
-                                        print 'strgfeatfrsttagg'
-                                        print strgfeatfrsttagg
-                                        if strgfeatfrst == 'flux':
-                                            print 'flux, heeey'
-                                            print 'q0'
-                                            print q0
+                                        
+                                        if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
+                                            print 'strgfeatfrst'
+                                            print strgfeatfrst
+                                            print 'strgfeatfrsttagg'
+                                            print strgfeatfrsttagg
+                                            if strgfeatfrst == 'flux':
+                                                print 'flux, heeey'
+                                                print 'q0'
+                                                print q0
+                                                print
+                                                print
+                                                print
+                                                print
                                             print
                                             print
-                                            print
-                                            print
-                                        print
-                                        print
 
                                         if strgfeatfrst.startswith('etag'):
                                             continue
