@@ -4,30 +4,27 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
-def test_minmflux(strgcnfgextnexec=None):
+def test_minmflux_parsnone(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
     dictargs = {}
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['priofactdoff'] = 0.
     dictargs['truenumbelempop0reg0'] = 100
-    dictargs['maxmangleval'] = array([11., 12., 13.]) / anglfact
     
-    dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
-    listnamecnfgextn = ['fittvlow', 'fittlowr', 'fittnomi', 'fitthigr', 'fittvhig']
+    listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
     dictargsvari['fittvlow']['fittminmflux'] = 3e-10
-    dictargsvari['fittlowr']['fittminmflux'] = 1e-9
+    dictargsvari['fittloww']['fittminmflux'] = 1e-9
     dictargsvari['fittnomi']['fittminmflux'] = 3e-9
-    dictargsvari['fitthigr']['fittminmflux'] = 1e-8
+    dictargsvari['fitthigh']['fittminmflux'] = 1e-8
     dictargsvari['fittvhig']['fittminmflux'] = 3e-8
     
     lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
@@ -45,7 +42,7 @@ def test_minmflux(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -60,9 +57,49 @@ def test_minmflux(strgcnfgextnexec=None):
                        )
 
 
+def test_minmflux_parsnomi(strgcnfgextnexec=None):
+    
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['fittvlow']['fittminmflux'] = 3e-10
+    dictargsvari['fittloww']['fittminmflux'] = 1e-9
+    dictargsvari['fittnomi']['fittminmflux'] = 3e-9
+    dictargsvari['fitthigh']['fittminmflux'] = 1e-8
+    dictargsvari['fittvhig']['fittminmflux'] = 3e-8
+    
+    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    scalxaxi = 'logt'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['fittminmflux']) for namecnfgextn in listnamecnfgextn] 
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        forcprev=True, \
+                        
+                        namexaxi='fittminmflux', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                       )
+
+
 def test_pars_truepnts(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
     dictargs = {}
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
@@ -70,8 +107,8 @@ def test_pars_truepnts(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['minmflux'] = 1e-8
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
                         'parsnegatruepnts', 'parsnonetruepnts', 'parslowwtruepnts', 'parsnomitruepnts', 'parshightruepnts', \
@@ -95,7 +132,7 @@ def test_pars_truepnts(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -107,7 +144,6 @@ def test_pars_truepnts(strgcnfgextnexec=None):
 
 def test_pars_trueback(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
     dictargs = {}
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
@@ -115,8 +151,8 @@ def test_pars_trueback(strgcnfgextnexec=None):
     dictargs['truemaxmnumbelempop0reg0'] = 0
     dictargs['truenumbelempop0reg0'] = 0
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
                         'parsnegatrueback', 'parsnonetrueback', 'parslowwtrueback', 'parsnomitrueback', 'parshightrueback', \
@@ -140,7 +176,7 @@ def test_pars_trueback(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -152,7 +188,6 @@ def test_pars_trueback(strgcnfgextnexec=None):
 
 def test_truenumbelem(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
     dictargs = {}
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
@@ -161,19 +196,18 @@ def test_truenumbelem(strgcnfgextnexec=None):
     dictargs['fittmaxmnumbelempop0reg0'] = 1000
     dictargs['truemaxmnumbelempop0reg0'] = 1000
     
-    dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
-    listnamecnfgextn = ['numbvlow', 'numblowr', 'numbnomi', 'numbhigr', 'numbvhig']
+    listnamecnfgextn = ['numbvlow', 'numbloww', 'numbnomi', 'numbhigh', 'numbvhig']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
     dictargsvari['numbvlow']['truenumbelempop0reg0'] = 10
-    dictargsvari['numblowr']['truenumbelempop0reg0'] = 30
+    dictargsvari['numbloww']['truenumbelempop0reg0'] = 30
     dictargsvari['numbnomi']['truenumbelempop0reg0'] = 100
-    dictargsvari['numbhigr']['truenumbelempop0reg0'] = 300
+    dictargsvari['numbhigh']['truenumbelempop0reg0'] = 300
     dictargsvari['numbvhig']['truenumbelempop0reg0'] = 1000
     
     lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
@@ -185,7 +219,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        #forcprev=True, \
+                        forcprev=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -195,35 +229,33 @@ def test_truenumbelem(strgcnfgextnexec=None):
                        )
 
 
-def test_trueback(strgcnfgextnexec=None):
+def test_trueminmflux(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
     dictargs = {}
     dictargs['exprtype'] = 'chan'
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
-    dictargs['truemaxmnumbelempop0reg0'] = 0
-    dictargs['truenumbelempop0reg0'] = 0
+    dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
-                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                        'truevlow', 'trueloww', 'truenomi', 'truehigh', 'truevhig', \
                        ]
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['parsnega']['priofactdoff'] = -0.5
-    dictargsvari['parsnone']['priofactdoff'] = 0.
-    dictargsvari['parsloww']['priofactdoff'] = 0.5
-    dictargsvari['parsnomi']['priofactdoff'] = 1.
-    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    dictargsvari['truevlow']['trueminmflux'] = 3e-10
+    dictargsvari['trueloww']['trueminmflux'] = 1e-9
+    dictargsvari['truenomi']['trueminmflux'] = 3e-9
+    dictargsvari['truehigh']['trueminmflux'] = 1e-8
+    dictargsvari['truevhig']['trueminmflux'] = 3e-8
     
-    scalxaxi = 'self'
-    lablxaxi = r'$\alpha_p$'
-    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    scalxaxi = 'logt'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['trueminmflux']) for namecnfgextn in listnamecnfgextn] 
     
     dictglob = initarry( \
                         dictargsvari, \
@@ -232,7 +264,7 @@ def test_trueback(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         forcprev=True, \
 
-                        namexaxi='priofactdoff', \
+                        namexaxi='trueminmflux', \
                         lablxaxi=lablxaxi, \
                         scalxaxi=scalxaxi, \
                         listtickxaxi=listtickxaxi, \
@@ -257,18 +289,18 @@ def test_perf(strgcnfgextnexec=None):
     dictargs['priofactdoff'] = 0.2
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     dictargs['makeplot'] = False
     
-    listnamecnfgextn = ['sigclowr', 'sigcnomi', 'sigchigr']
+    listnamecnfgextn = ['sigcloww', 'sigcnomi', 'sigchigh']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['sigclowr']['truesigc'] = 0.5 / anglfact
+    dictargsvari['sigcloww']['truesigc'] = 0.5 / anglfact
     dictargsvari['sigcnomi']['truesigc'] = 2. / anglfact
-    dictargsvari['sigchigr']['truesigc'] = 4. / anglfact
+    dictargsvari['sigchigh']['truesigc'] = 4. / anglfact
 
     lablxaxi = r'$\sigma_c$ [$^\circ$]'
     scalxaxi = 'logt'
@@ -315,8 +347,8 @@ def test_psfn(strgcnfgextnexec=None):
     dictargs['priofactdoff'] = 0.2
     dictargs['truenumbelempop0reg0'] = 10
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     dictargs['makeplot'] = False
     
     #oaxifree
@@ -360,8 +392,7 @@ def test_anglassc(strgcnfgextnexec=None):
     dictargs['psfnevaltype'] = 'kern'
     
     # temp
-    dictargs['inittype'] = 'refr'
-    dictargs['numbswep'] = 200000
+    dictargs['numbswep'] = 1000000
     dictargs['numbsamp'] = 1000
     #dictargs['makeplot'] = False
     
@@ -411,8 +442,8 @@ def test_errr(strgcnfgextnexec=None):
     dictargs['psfnevaltype'] = 'kern'
     
     # temp
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     dictargs['makeplot'] = False
     
     listnamecnfgextn = ['nomi', 'loww', 'high']
@@ -460,8 +491,8 @@ def test_elemspatevaltype(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 100
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     dictargs['mockonly'] = True
     dictargs['makeplot'] = False
     
@@ -518,17 +549,17 @@ def test_spmr(strgcnfgextnexec=None):
     dictargs['probtran'] = 1.
     dictargs['probspmr'] = 1.
     
-    dictargs['numbswep'] = 1000
-    dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000000
+    dictargs['numbsamp'] = 1000
     dictargs['makeplot'] = False
     
-    listnamecnfgextn = ['radilowr', 'radihigr']
+    listnamecnfgextn = ['radiloww', 'radihigh']
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['radilowr']['radispmr'] = 0.5 / anglfact
-    dictargsvari['radihigr']['radispmr'] = 2. / anglfact
+    dictargsvari['radiloww']['radispmr'] = 0.5 / anglfact
+    dictargsvari['radihigh']['radispmr'] = 2. / anglfact
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
