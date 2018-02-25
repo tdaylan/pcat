@@ -1916,13 +1916,16 @@ def init( \
                                                                                                     exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
                     gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
     
-    for q in gdat.indxrefr:
-        print 'gdat.refrliststrgfeat[q]'
-        print gdat.refrliststrgfeat[q]
-        print 'gdat.refrliststrgfeattagg[q]'
-        print gdat.refrliststrgfeattagg[q]
-        print
-    #raise Exception('')
+    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
+        for q in gdat.indxrefr:
+            print 'q'
+            print q
+            print 'gdat.refrliststrgfeat[q]'
+            print gdat.refrliststrgfeat[q]
+            print 'gdat.refrliststrgfeattagg[q]'
+            print gdat.refrliststrgfeattagg[q]
+            print
+        raise Exception('')
     
     if gdat.datatype == 'mock':
         
