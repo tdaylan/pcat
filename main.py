@@ -2501,7 +2501,8 @@ def initarry( \
              listnamecnfgextn, \
              forcprev=False, \
              takeprev=False, \
-             execpara=False, \
+             strgpara=False, \
+             execpara=True, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=[], \
              listscalvarbcomp=[], \
@@ -2551,8 +2552,17 @@ def initarry( \
             print
             listrtag.append(listrtagprev[-1])
         else:
-            listrtag.append(init(**dictvarbtemp))
+            if execpara:
+                cmnd = 'python %s %s %s > null.log &' % (strgpara, inspect.stack()[1][3], strgcnfgextn)
+                print cmnd
+                os.system(cmnd)
+            else:
+                listrtag.append(init(**dictvarbtemp))
     
+    if execpara:
+        print 'Exiting because of parallel execution...'
+        return
+
     if cntrcomp == 0:
         print 'Found no runs...'
 

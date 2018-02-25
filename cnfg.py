@@ -13,8 +13,8 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
     dictargs['priofactdoff'] = 0.
     dictargs['truenumbelempop0reg0'] = 100
     
-    dictargs['numbswep'] = 1000000
-    dictargs['numbsamp'] = 1000
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
     
     listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
     dictargsvari = {}
@@ -42,6 +42,8 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
+                        strgpara='$PCAT_PATH/cnfg.py', \
                         forcprev=True, \
                         
                         namexaxi='fittminmflux', \
@@ -592,4 +594,4 @@ def test_spmr(strgcnfgextnexec=None):
                        )
 
 
-globals().get(sys.argv[1])()
+globals().get(sys.argv[1])(*sys.argv[2:])
