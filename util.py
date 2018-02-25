@@ -13983,7 +13983,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
 def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specconvunit):
     
-    strgpfix = retr_strgpfix(strgstat, strgmodl)
+    strgpfix = retr_strgpfix(strgstat, strgmodl, strgpdfn=strgpdfn)
     gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl)
     
     backtype = getattr(gdat, strgmodl + 'backtype')
@@ -15198,6 +15198,9 @@ def plot_mosa(gdat, indxregiplot, strgpdfn):
     gdatmodi = tdpy.util.gdatstrt()
     gdatmodi.thischro = zeros(gdat.numbchro)
     
+    listsampvarb = getattr(gdat, 'list' + strgpdfn + 'sampvarb')
+    listsamp = getattr(gdat, 'list' + strgpdfn + 'samp')
+
     numbrows = 3
     numbcols = 2
     numbsampmosa = numbrows * numbcols
@@ -15213,8 +15216,8 @@ def plot_mosa(gdat, indxregiplot, strgpdfn):
                             for b, axis in enumerate(axrw):
                                 
                                 n = indxsampmosa[numbcols*a+b]
-                                gdatmodi.thissampvarb = gdat.listpostsampvarb[n, :].flatten()
-                                gdatmodi.thissamp = gdat.listpostsamp[n, :].flatten()
+                                gdatmodi.thissampvarb = listsampvarb[n, :].flatten()
+                                gdatmodi.thissamp = listsamp[n, :].flatten()
                                 
                                 if gdat.fittnumbtrap > 0:
                                     gdatmodi.thisindxelemfull = getattr(gdat, 'list' + strgpdfn + 'indxelemfull')[n]

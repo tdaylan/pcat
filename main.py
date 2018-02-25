@@ -2559,6 +2559,9 @@ def initarry( \
             print
             listrtag.append(listrtagprev[-1])
         else:
+            print 'Did not find any previous run.'
+            print 'listrtagprev'
+            print listrtagprev
             if execpara:
                 #cmnd = 'python %s %s %s > null.log &' % (strgpara, inspect.stack()[1][3], strgcnfgextn)
                 #print cmnd
