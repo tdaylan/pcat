@@ -11119,11 +11119,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     setattr(gdatobjt, name, featrefrassc[q][l][d][strgfeat])
                     
                     # completeness
-                    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
-                        print 'gdat.refrliststrgfeat'
-                        print gdat.refrliststrgfeat
-                        print 'gdat.refrliststrgfeattagg'
-                        print gdat.refrliststrgfeattagg
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q0 in gdat.indxrefr:
@@ -11131,31 +11126,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     if gdat.refrnumbelem[q0][d0] == 0:
                                         continue
                         
-                                    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
-                                        print 'q0'
-                                        print q0
-                                        print 'gdat.refrliststrgfeat[q0]'
-                                        print gdat.refrliststrgfeat[q0]
-                                        print 'gdat.refrliststrgfeattagg[q0][l]'
-                                        print gdat.refrliststrgfeattagg[q0][l]
                                     for (strgfeatfrst, strgfeatfrsttagg) in zip(gdat.refrliststrgfeat[q0], gdat.refrliststrgfeattagg[q0][l]):
                                         
-                                        if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
-                                            print 'strgfeatfrst'
-                                            print strgfeatfrst
-                                            print 'strgfeatfrsttagg'
-                                            print strgfeatfrsttagg
-                                            if strgfeatfrst == 'flux':
-                                                print 'flux, heeey'
-                                                print 'q0'
-                                                print q0
-                                                print
-                                                print
-                                                print
-                                                print
-                                            print
-                                            print
-
                                         if strgfeatfrst.startswith('etag'):
                                             continue
                                                 
