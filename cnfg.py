@@ -44,7 +44,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         strgpara='$PCAT_PATH/cnfg.py', \
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
                         
                         namexaxi='fittminmflux', \
