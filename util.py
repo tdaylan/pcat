@@ -7039,8 +7039,14 @@ def retr_listrtagprev(strgcnfg):
     pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
     listrtag = fnmatch.filter(os.listdir(pathimag), '2*')
     
+    print 'retr_listrtagprev'
+    print 'strgcnfg'
+    print strgcnfg
+
     listrtagprev = []
     for rtag in listrtag:
+        print 'rtag[16:]'
+        print rtag[16:]
         strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
         if chec_statfile(rtag, 'gdatmodi', 'post', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]:
             listrtagprev.append(rtag) 
