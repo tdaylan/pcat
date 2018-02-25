@@ -168,7 +168,7 @@ def init( \
          makeplot=True, \
          makeplotinit=False, \
          makeplotfram=True, \
-         makeplotfinlprio=False, \
+         makeplotfinlprio=True, \
          makeplotfinlpost=True, \
          
          numbframpost=None, \
@@ -189,7 +189,7 @@ def init( \
          specfraceval=None, \
          numbangl=1000, \
          binsangltype='logt', \
-         numbsidepntsprob=400, \
+         numbsidepntsprob=100, \
     
          listprefsbrtsbrt=None, \
          listprefsbrtener=None, \
@@ -1038,7 +1038,7 @@ def init( \
         setattr(gdat, strgmodl + 'maxmnumbelempopl', maxmnumbelempopl)
         
     gdat.indxrefr = arange(gdat.numbrefr)
-    gdat.listnamefeatamplrefr = [[] for q in gdat.indxrefr]
+    gdat.refrlistnamefeatampl = [[] for q in gdat.indxrefr]
     gdat.listnamerefr = [] 
     gdat.refrliststrgfeat = [[] for q in gdat.indxrefr]
     gdat.refrliststrgfeatodim = [[] for q in gdat.indxrefr]
@@ -1132,7 +1132,7 @@ def init( \
         retr_indxsamp(gdat, strgmodl='true')
         gdat.refrliststrgfeattotl = gdat.trueliststrgfeattotl
         for l in gdat.trueindxpopl:
-            gdat.listnamefeatamplrefr[l] = gdat.truenamefeatampl[l]
+            gdat.refrlistnamefeatampl[l] = gdat.truenamefeatampl[l]
             for strgfeat in gdat.trueliststrgfeatodim[l]:
                 gdat.refrliststrgfeat[l].append(strgfeat)
     
@@ -1925,7 +1925,6 @@ def init( \
             print 'gdat.refrliststrgfeattagg[q]'
             print gdat.refrliststrgfeattagg[q]
             print
-        raise Exception('')
     
     if gdat.datatype == 'mock':
         
@@ -1935,7 +1934,7 @@ def init( \
         gdatdictcopy = deepcopy(gdat.__dict__)
         for name, valu in gdatdictcopy.iteritems():
             if name.startswith('true'):
-                if name[4:].startswith('liststrgfeat'):
+                if name[4:].startswith('liststrgfeattagg'):
                     print 'name[4:]'
                     print name[4:]
                     print 'valu'
@@ -1944,13 +1943,17 @@ def init( \
 
                 setattr(gdat, 'refr' + name[4:], valu)
 
-    for q in gdat.indxrefr:
-        print 'gdat.refrliststrgfeat[q]'
-        print gdat.refrliststrgfeat[q]
-        print 'gdat.refrliststrgfeattagg[q]'
-        print gdat.refrliststrgfeattagg[q]
-        print
-    #raise Exception('')
+    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
+        for q in gdat.indxrefr:
+            print 'q'
+            print q
+            print 'gdat.refrliststrgfeat[q]'
+            print gdat.refrliststrgfeat[q]
+            print 'gdat.refrliststrgfeattagg[q]'
+            print gdat.refrliststrgfeattagg[q]
+            print
+        
+        raise Exception('')
     
     if gdat.allwrefr and gdat.datatype == 'inpt':
 
@@ -2057,7 +2060,7 @@ def init( \
         refrfeatsort = [[[] for d in gdat.indxregi] for q in gdat.indxrefr]
         if not (gdat.datatype == 'mock' and gdat.truenumbtrap == 0):
             for q in gdat.indxrefr:
-                refrfeatampl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
+                refrfeatampl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
                 for d in gdat.indxregi:
                     if len(refrfeatampl[q][d]) > 0:
                         indxelem = argsort(refrfeatampl[q][d][0, :])[::-1]
@@ -2563,8 +2566,11 @@ def initarry( \
                 if prid > 0:
                     listpridchld.append(prid)
                 else:
-                    init(**dictvarbtemp)
-                    print 'Child %d submitted the job.' % prid 
+                    print 'Child running the configuration extension...' 
+                    rtag = init(**dictvarbtemp)
+                    if 'checprio' in dictvarbtemp and dictvarbtemp['checprio']:
+                        proc_finl(rtag=rtag, strgpdfn='prio')
+                    proc_finl(rtag=rtag, strgpdfn='post')
                     os._exit(0)
             else:
                 listrtag.append(init(**dictvarbtemp))
@@ -2572,7 +2578,9 @@ def initarry( \
     if execpara:
         for prid in listpridchld:
             os.waitpid(prid, 0)
-
+        print 'Exiting before comparion plots because of parallel execution...'
+        return
+    
     if cntrcomp == 0:
         print 'Found no runs...'
 
@@ -2626,6 +2634,10 @@ def initarry( \
 
     for strgvarboutp, varboutp in dictoutp.iteritems():
         
+        print 'strgvarboutp'
+        print strgvarboutp
+        print
+
         figr, axis = plt.subplots(figsize=(6, 6))
         ydat = empty(numbiter)
         yerr = zeros((2, numbiter))
@@ -3210,6 +3222,11 @@ def work(pathoutprtag, lock, indxprocwork):
             if gdat.verbtype > 0:
                 print 'Could not find the state file, %s, to initialize the sampler.' % path
 
+    if gdat.inittype == 'refr' and gdat.datatype == 'inpt':
+        for l in gdat.fittindxpopl:
+            gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l][d]] = gdat.refrnumbelem[l][d]
+            gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l][d]] = gdat.refrnumbelem[l][d]
+    
     if gdat.inittype == 'refr' or gdat.inittype == 'pert':
         if gdat.datatype == 'mock':
             for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -3217,15 +3234,25 @@ def work(pathoutprtag, lock, indxprocwork):
                     indxfixptrue = where(gdat.truenamefixp == namefixp)[0]
                     gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.truesampvarb[indxfixptrue], k)
                     gdatmodi.thissampvarb[k] = icdf_fixp(gdat, 'fitt', gdatmodi.thissamp[k], k)
-
+            
         retr_elemlist(gdat, gdatmodi)
         
+        if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
+            print 'gdatmodi.thissamp[:5]'
+            print gdatmodi.thissamp[:5]
+            print 'gdatmodi.thissampvarb[:5]'
+            print gdatmodi.thissampvarb[:5]
+            print 'gdatmodi.thisindxsampcomp[comp]'
+            print gdatmodi.thisindxsampcomp['comp']
+            #raise Exception('')
+
         if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
                 initcompfromstat(gdat, gdatmodi, 'refr')
    
     if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
-        raise Exception('')
+        print 'gdatmodi.thisindxsampcomp[comp]'
+        print gdatmodi.thisindxsampcomp['comp']
 
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):

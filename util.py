@@ -1205,8 +1205,8 @@ def retr_refrchaninit(gdat):
     
     gdat.refrlegdelem = ['Xue+2011', 'Wolf+2008']
     
-    gdat.listnamefeatamplrefr[0] = 'flux'
-    gdat.listnamefeatamplrefr[1] = 'magt'
+    gdat.refrlistnamefeatampl[0] = 'flux'
+    gdat.refrlistnamefeatampl[1] = 'magt'
     gdat.listnamerefr += ['xu11', 'wo08']
     gdat.listnamerefr += ['xu11']
     
@@ -1374,8 +1374,8 @@ def retr_refrferminit(gdat):
     
     gdat.refrlegdelem = ['Acero+2015', 'Manchester+2005']
 
-    gdat.listnamefeatamplrefr[0] = 'flux'
-    gdat.listnamefeatamplrefr[1] = 'flux0400'
+    gdat.refrlistnamefeatampl[0] = 'flux'
+    gdat.refrlistnamefeatampl[1] = 'flux0400'
     gdat.namefeatsignrefr = 'flux'
     
     setattr(gdat, 'lablcurvac15', '%s_{3FGL}' % gdat.lablcurv)
@@ -7553,50 +7553,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
                 setattr(gdat, strgmodl + strg, valu)
 
 
-def plot_chro(gdat):
-    
-    listchro = getattr(gdat, 'list' + gdat.strgpdfn + 'chro')
-    pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
-
-    listchro *= 1e3
-    indxchro = array([0, 1, 2, 4])
-    binstime = logspace(log10(amin(listchro[where(listchro > 0)])), log10(amax(listchro[:, indxchro])), 50)
-
-    figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
-    for k in range(gdat.numbchro):
-        varb = listchro[:, k]
-        axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.3)
-
-    axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(listchro[where(listchro[:, 0] > 0)[0], 0]))
-    axis.set_xlim([amin(binstime), amax(binstime)])
-    axis.set_xscale('log')
-    axis.set_ylim([0.5, None])
-    make_legd(axis)
-    axis.set_xlabel('$t$ [ms]')
-    
-    plt.tight_layout()
-    figr.savefig(pathdiag + 'chro.pdf')
-    plt.close(figr)
-
-    for k in range(gdat.numbchro):
-        maxmchro = amax(listchro[:, k])
-        if listchro[where(listchro[:, k] > 0)].size == 0:
-            continue
-        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-        minmchro = amin(listchro[where(listchro[:, k] > 0)])
-        binstime = logspace(log10(minmchro), log10(maxmchro), 20)
-        chro = listchro[where(listchro[:, k] > 0)[0], k]
-        axis.hist(chro, binstime, log=True)
-        axis.set_xlim([amin(binstime), amax(binstime)])
-        axis.set_ylim([0.5, None])
-        axis.set_ylabel('$N_{swep}$')
-        axis.set_xscale('log')
-        axis.axvline(mean(chro), ls='--', alpha=0.2, color='black')
-        axis.set_xlabel('$t$ [ms]')
-        figr.savefig(pathdiag + 'chro_%s.pdf' % gdat.listnamechro[k])
-        plt.close(figr)
-
-
 def make_legd(axis, offs=None, loca=1, numbcols=1, ptch=None, line=None):
    
     hand, labl = axis.get_legend_handles_labels()
@@ -7971,11 +7927,11 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                 else:
                     listindxpoplplot = [indxpoplplot]
                 for l in listindxpoplplot:
-                    reframpl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
+                    reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
                     if reframpl == None:
                         mrkrsize = full(gdat.refrnumbelem[q][indxregiplot], 5.)
                     else:
-                        mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, :], gdat.listnamefeatamplrefr[q])
+                        mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, :], gdat.refrlistnamefeatampl[q])
                     lgal = copy(gdat.refrlgal[q][indxregiplot][0, :])
                     bgal = copy(gdat.refrbgal[q][indxregiplot][0, :])
                     numbelem = int(gdat.refrnumbelem[q][indxregiplot])
@@ -9804,6 +9760,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             raise Exception('')
                     lliktotl += sum(llik[dd])
         else:
+            setattr(gdatobjt, strgpfix + 'deltlliktotl', 0.)
             lliktotl = float64(0.)
         
         numbfixp = getattr(gdat, strgmodl + 'numbfixp')
@@ -12161,8 +12118,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         # flatten the arrays which have been collected at each sweep
         #setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         if not booltile:
-            if strgpdfn == 'post':
-                gdatfinl.listpostdeltlliktotlflat = gdatfinl.listpostdeltlliktotl.reshape((gdatfinl.numbswep, 1))
+            listdeltlliktotl = getattr(gdatfinl, 'list' + strgpdfn + 'deltlliktotl')
+            listdeltlliktotlflat = listdeltlliktotl.reshape((gdatfinl.numbswep, 1))
+            setattr(gdatfinl, 'list' + strgpdfn + 'deltlliktotlflat', listdeltlliktotlflat)
         
             # memory usage
             listmemoresi = getattr(gdatfinl, 'list' + strgpdfn + 'memoresi')
@@ -13764,7 +13722,47 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
         if gdat.verbtype > 0:
             print 'Proposal execution times...'
-        plot_chro(gdat)
+        
+        listchro = getattr(gdat, 'list' + strgpdfn + 'chro')
+        pathdiag = getattr(gdat, 'path' + strgpdfn + 'finldiag')
+
+        listchro *= 1e3
+        indxchro = array([0, 1, 2, 4])
+        binstime = logspace(log10(amin(listchro[where(listchro > 0)])), log10(amax(listchro[:, indxchro])), 50)
+
+        figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
+        for k in range(gdat.numbchro):
+            varb = listchro[:, k]
+            axis.hist(varb, binstime, log=True, label=gdat.listlegdchro[k], linewidth=2, alpha=0.3)
+
+        axis.set_title(r'$\langle t \rangle$ = %.3g ms' % mean(listchro[where(listchro[:, 0] > 0)[0], 0]))
+        axis.set_xlim([amin(binstime), amax(binstime)])
+        axis.set_xscale('log')
+        axis.set_ylim([0.5, None])
+        make_legd(axis)
+        axis.set_xlabel('$t$ [ms]')
+        
+        plt.tight_layout()
+        figr.savefig(pathdiag + 'chro.pdf')
+        plt.close(figr)
+
+        for k in range(gdat.numbchro):
+            maxmchro = amax(listchro[:, k])
+            if listchro[where(listchro[:, k] > 0)].size == 0:
+                continue
+            figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+            minmchro = amin(listchro[where(listchro[:, k] > 0)])
+            binstime = logspace(log10(minmchro), log10(maxmchro), 20)
+            chro = listchro[where(listchro[:, k] > 0)[0], k]
+            axis.hist(chro, binstime, log=True)
+            axis.set_xlim([amin(binstime), amax(binstime)])
+            axis.set_ylim([0.5, None])
+            axis.set_ylabel('$N_{swep}$')
+            axis.set_xscale('log')
+            axis.axvline(mean(chro), ls='--', alpha=0.2, color='black')
+            axis.set_xlabel('$t$ [ms]')
+            figr.savefig(pathdiag + 'chro_%s.pdf' % gdat.listnamechro[k])
+            plt.close(figr)
 
         if gdat.verbtype > 0:
             print 'Derived quantities...'
@@ -14210,8 +14208,10 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
                     if k == cntrdata and a > 0:
                         continue
                     
-                    axis.errorbar(xdat, ydat, yerr=yerr, color=colr, marker=mrkr, ls=linestyl, markersize=15, alpha=alph, label=listlegdsbrtspec[k])
-            
+                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, color=colr, marker=mrkr, ls=linestyl, markersize=15, alpha=alph, label=listlegdsbrtspec[k])
+                    for caps in listcaps:
+                        caps.set_markeredgewidth(1)
+
                     if gdat.numbpixl == 1 and strgstat != 'pdfn':
                         if cntr != cntrline or k in indxplotelemendd:
                             cntr += 1
@@ -15028,7 +15028,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
                 for q in gdat.indxrefr:
                     if gdat.refrnumbelem[q][indxregiplot] == 0:
                         continue
-                    reframpl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
+                    reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
                     if strgfeat in gdat.refrliststrgfeat[q]:
                         refrfeat = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
                         if len(refrfeat) > 0:
@@ -15037,7 +15037,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
                             indxelem = array([])
                     else:
                         indxelem = arange(gdat.refrnumbelem[q])
-                    mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], gdat.listnamefeatamplrefr[q])
+                    mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], gdat.refrlistnamefeatampl[q])
 
                     if indxelem.size > 0:
                         axis.scatter(gdat.anglfact * gdat.refrlgal[q][indxregiplot][0, indxelem], gdat.anglfact * gdat.refrbgal[q][indxregiplot][0, indxelem], \
