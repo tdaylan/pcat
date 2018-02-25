@@ -9189,7 +9189,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                     print
                                     print
                                     #if boolevalfull:
-                                    raise Exception('')
+                                    #raise Exception('')
                                         #raise Exception('')
                         
                         sbrt['dfnc'][dd] = sbrtdfnc[dd][indxcubeeval[0][dd]]
@@ -9809,9 +9809,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         numbfixp = getattr(gdat, strgmodl + 'numbfixp')
         numbdoff = numbfixp
-        for l in indxpopl:
-            for d in indxregipopl[l]:
-                numbdoff += len(indxsampcomp['comp'][l][d])
+        if numbtrap > 0:
+            for l in indxpopl:
+                for d in indxregipopl[l]:
+                    numbdoff += len(indxsampcomp['comp'][l][d])
         setattr(gdatobjt, strgpfix + 'llik', llik)
         setattr(gdatobjt, strgpfix + 'llikmean', lliktotl / gdat.numbdata) 
         setattr(gdatobjt, strgpfix + 'llikcmea', lliktotl / (gdat.numbdata - numbdoff)) 
@@ -10584,19 +10585,20 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 for d in gdat.indxregi:
                     setattr(gdatobjt, strgpfix + 'sbrt%smea%dreg%d' % (name, b, d), sbrtmean[name][b][d])
         
-        if boolelemsbrtdfncanyy:
-            for i in gdat.indxener:
+        if numbtrap > 0:
+            if boolelemsbrtdfncanyy:
+                for i in gdat.indxener:
+                    if 'dark' in listnamegcom:
+                        fracsdenmeandarkdfncsubt = sbrtmean['dfncsubt'][0][0][i] / (sbrtmean['dfncsubt'][0][0][i] + sbrtmean['dark'][0][0][i])
+                    else:
+                        fracsdenmeandarkdfncsubt = 1.
+                    setattr(gdatobjt, strgpfix + 'fracsdenmeandarkdfncsubten%02d' % i, array([fracsdenmeandarkdfncsubt]))
+                
                 if 'dark' in listnamegcom:
-                    fracsdenmeandarkdfncsubt = sbrtmean['dfncsubt'][0][0][i] / (sbrtmean['dfncsubt'][0][0][i] + sbrtmean['dark'][0][0][i])
+                    booldfncsubt = float(where(sbrtmean['dfncsubt'][0][0] > sbrtmean['dark'][0][0])[0].any())
                 else:
-                    fracsdenmeandarkdfncsubt = 1.
-                setattr(gdatobjt, strgpfix + 'fracsdenmeandarkdfncsubten%02d' % i, array([fracsdenmeandarkdfncsubt]))
-            
-            if 'dark' in listnamegcom:
-                booldfncsubt = float(where(sbrtmean['dfncsubt'][0][0] > sbrtmean['dark'][0][0])[0].any())
-            else:
-                booldfncsubt = 1.
-            setattr(gdatobjt, strgpfix + 'booldfncsubt', array([booldfncsubt]))
+                    booldfncsubt = 1.
+                setattr(gdatobjt, strgpfix + 'booldfncsubt', array([booldfncsubt]))
 
         # find the 1-point function of the count maps of all emission components including the total emission
         for name in listnamegcom:
@@ -11824,12 +11826,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
             
-            gdatfinl.minmlliktotl = amin(gdatfinl.postlliktotl)
-            gdatfinl.maxmlliktotl = amax(gdatfinl.postlliktotl)
-            
-            gdatfinl.skewlliktotl = mean(((lliktotl - gdatfinl.pmealliktotl) / gdatfinl.stdvlliktotl)**3)
-            gdatfinl.kurtlliktotl = mean(((lliktotl - gdatfinl.pmealliktotl) / gdatfinl.stdvlliktotl)**4)
-        
             if gdatfinl.regulevi:
                 
                 if gdatfinl.verbtype > 0:
@@ -12121,9 +12117,20 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         
         if not booltile:
             pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
+            stdvlliktotl = getattr(gdatfinl, 'stdv' + strgpdfn + 'lliktotl')
+            minmlliktotl = amin(listlliktotl)
+            maxmlliktotl = amax(listlliktotl)
+            skewlliktotl = mean(((listlliktotl - pmealliktotl) / stdvlliktotl)**3)
+            kurtlliktotl = mean(((listlliktotl - pmealliktotl) / stdvlliktotl)**4)
+            setattr(gdatfinl, 'minm' + strgpdfn + 'lliktotl', minmlliktotl)
+            setattr(gdatfinl, 'maxm' + strgpdfn + 'lliktotl', maxmlliktotl)
+            setattr(gdatfinl, 'skew' + strgpdfn + 'lliktotl', skewlliktotl)
+            setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
+
             infoharm = retr_infofromlevi(pmealliktotl, levi)
+            bcom = maxmlliktotl - pmealliktotl
             setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
-            gdatfinl.bcom = gdatfinl.maxmlliktotl - pmealliktotl
+            setattr(gdatfinl, strgpdfn + 'bcom', bcom)
         
         for namevarbscal in ['lliktotl', 'lpripena']:
             listtemp = getattr(gdatfinl, 'list' + strgpdfn + namevarbscal)
@@ -14507,6 +14514,10 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                      scal=None, scalxdat=None, scalydat=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
                      lablxdat='', lablydat='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, ydattype='totl', boolhistprio=True):
     
+    print 'plot_gene()'
+    print 'strgydat'
+    print strgydat
+    
     if strgydat[-8:-5] == 'pop':
         boolelem = True
     else:
@@ -14566,6 +14577,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         if strgstat == 'pdfn':
             yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
             
+            print 'plotting model...'
+
             if indxydat != None:
                 yerr = yerr[[slice(None)] + indxydat]
             
@@ -14645,7 +14658,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             else:
                 legd = gdat.refrlegd
                 colr = gdat.refrcolr
-            
+    
+            print 'plotting refr...'
             if histodim:
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=1, edgecolor=colr)
             else:
@@ -14759,6 +14773,9 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         print 'strgydat'
         print strgydat
         print
+
+    print 'plot_gene() ended'
+    print
 
     plt.tight_layout()
     path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgydat, nameinte=nameinte)

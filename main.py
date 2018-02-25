@@ -2503,11 +2503,11 @@ def initarry( \
              takeprev=False, \
              execpara=False, \
              strgcnfgextnexec=None, \
-             listnamevarbcomp=None, \
-             listscalvarbcomp=None, \
-             listlablvarbcomp=None, \
-             listtypevarbcomp=None, \
-             listpdfnvarbcomp=None, \
+             listnamevarbcomp=[], \
+             listscalvarbcomp=[], \
+             listlablvarbcomp=[], \
+             listtypevarbcomp=[], \
+             listpdfnvarbcomp=[], \
              namexaxi=None, \
              lablxaxi=None, \
              listtickxaxi=None, \
@@ -2518,12 +2518,6 @@ def initarry( \
     
     numbiter = len(dictvarbvari)
     indxiter = arange(numbiter) 
-    
-    if listnamevarbcomp != None:
-        numboutp = len(listnamevarbcomp)
-        dictoutp = dict()
-        for strgvarb in listnamevarbcomp:
-            dictoutp[strgvarb] = [[] for k in range(numbiter)]
     
     cntrcomp = 0
 
@@ -2572,113 +2566,111 @@ def initarry( \
     for rtag in listrtag: 
         proc_finl(rtag=rtag, strgpdfn='post')
     
-    if listnamevarbcomp != None:
-        
-        strgtimestmp = tdpy.util.retr_strgtimestmp()
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-        print
-        print 'Making comparison plots...'
-         
-        if 'mockonly' in dictvarb and dictvarb['mockonly']:
-            listgdat = retr_listgdat(listrtag, typegdat='init')
-        else:
-            listgdat = retr_listgdat(listrtag)
+    print
+    print 'Making comparison plots...'
+     
+    if 'mockonly' in dictvarb and dictvarb['mockonly']:
+        listgdat = retr_listgdat(listrtag, typegdat='init')
+    else:
+        listgdat = retr_listgdat(listrtag)
 
-        if listtypevarbcomp == None:
-            listtypevarbcomp = ['pctl' for namevarbcomp in listnamevarbcomp]
-        if listpdfnvarbcomp == None:
-            listpdfnvarbcomp = ['post' for namevarbcomp in listnamevarbcomp]
+    for namevarbscal in listgdat[0].listnamevarbscal:
+        if namevarbscal in listnamevarbcomp:
+            raise Exception('')
+        listnamevarbcomp += [namevarbscal]
+        listscalvarbcomp += [getattr(listgdat[0], 'scal' + namevarbscal)]
+        listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal)]
+        listtypevarbcomp += ['pctl']
+        listpdfnvarbcomp += ['post']
+    
+    listnamevarbcomp += ['lliktotl', 'lliktotl', 'lliktotl', 'levi', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl']
+    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp += ['$\ln P(D|M)$', '$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', \
+                                        '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
+    listtypevarbcomp += ['pctl', 'minm', 'maxm', '', '', '', 'stdv', 'skew', 'kurt']
+    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+
+    strgtimestmp = tdpy.util.retr_strgtimestmp()
+    
+    dictoutp = dict()
+    for strgvarb in listnamevarbcomp:
+        dictoutp[strgvarb] = [[] for k in range(numbiter)]
+    
+    for k in indxiter:
+        cntr = 0
+        for strgvarboutp in listnamevarbcomp:
+            dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
+            cntr += 1
+
+    for strgvarboutp, varboutp in dictoutp.iteritems():
         
-        for namevarbscal in listgdat[0].listnamevarbscal:
-            if namevarbscal in listnamevarbcomp:
-                raise Exception('')
-            listnamevarbcomp += [namevarbscal]
-            listscalvarbcomp += [getattr(listrtag[0], 'scal' + namevarbscal)]
-            listlablvarbcomp += [getattr(listrtag[0], 'labl' + namevarbscal)]
-            listtypevarbcomp += ['pctl']
-            listpdfnvarbcomp += ['post']
-       
-        listnamevarbcomp += ['maxmlliktotl', 'levi', 'infoharm', 'bcom', 'stdvllik', 'skewllik', 'kurtllik']
-        listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self']
-        listlablvarbcomp += ['$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma^2_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
-        listtypevarbcomp += ['', '', '', '', '', '', '']
-        listpdfnvarbcomp += ['', 'post', 'post', '', 'post', 'post', 'post']
-
-        strgtimestmp = tdpy.util.retr_strgtimestmp()
+        figr, axis = plt.subplots(figsize=(6, 6))
+        ydat = empty(numbiter)
+        yerr = zeros((2, numbiter))
+            
+        indxlist = listnamevarbcomp.index(strgvarboutp)
+        
+        if listscalvarbcomp == None:
+            scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+        else:
+            scalyaxi = listscalvarbcomp[indxlist]
+        
+        if listlablvarbcomp == None:
+            lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
+        else:
+            lablyaxi = listlablvarbcomp[indxlist]
+        
+        try:
+            trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
+        except:
+            trueyaxi = None
         
         for k in indxiter:
-            cntr = 0
-            for strgvarboutp in listnamevarbcomp:
-                dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
-                cntr += 1
-
-        for strgvarboutp, varboutp in dictoutp.iteritems():
             
-            figr, axis = plt.subplots(figsize=(6, 6))
-            ydat = empty(numbiter)
-            yerr = zeros((2, numbiter))
-                
-            indxlist = listnamevarbcomp.index(strgvarboutp)
-            
-            if listscalvarbcomp == None:
-                scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+            if isinstance(varboutp[k], list) or isinstance(varboutp[k], ndarray) and varboutp[k].ndim > 2:
+                raise Exception('')
+            elif isinstance(varboutp[k], float):
+                ydat[k] = varboutp[k]
             else:
-                scalyaxi = listscalvarbcomp[indxlist]
-            
-            if listlablvarbcomp == None:
-                lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
-            else:
-                lablyaxi = listlablvarbcomp[indxlist]
-            
-            try:
-                trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
-            except:
-                trueyaxi = None
-            
-            for k in indxiter:
-                
-                if isinstance(varboutp[k], list) or isinstance(varboutp[k], ndarray) and varboutp[k].ndim > 2:
-                    raise Exception('')
-                elif isinstance(varboutp[k], float):
-                    ydat[k] = varboutp[k]
+                if listtypevarbcomp[indxlist] != 'pctl':
+                    yerr[:, k] = 0.
+                if varboutp[k].ndim == 2:
+                    if varboutp[k].shape[1] != 1:
+                        raise Exception('varboutp format is wrong.')
+                    varboutp[k] = varboutp[k][:, 0]
+                    if listtypevarbcomp[indxlist] == 'pctl':
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
                 else:
-                    if listtypevarbcomp[indxlist] != 'pctl':
-                        yerr[:, k] = 0.
-                    if varboutp[k].ndim == 2:
-                        if varboutp[k].shape[1] != 1:
-                            raise Exception('varboutp format is wrong.')
-                        varboutp[k] = varboutp[k][:, 0]
-                        if listtypevarbcomp[indxlist] == 'pctl':
-                            yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
-                    else:
-                        if listtypevarbcomp[indxlist] == 'pctl':
-                            yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
-                    ydat[k] = varboutp[k][0]
-                    
-            axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
-            indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
-            if indxrtagyerr.size > 0:
-                temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr], yerr=yerr[:, indxrtagyerr], \
-                                                                                    color='b', ls='', capsize=15, markersize=15, marker='o', lw=3)
-                for caps in listcaps:
-                    caps.set_markeredgewidth(3)
-            
-            if trueyaxi != None:
-                axis.axhline(trueyaxi, ls='--', color='g')
-            axis.set_xlabel(lablxaxi)
-            axis.set_xticks(indxiter+1.)
-            axis.set_xticklabels(listtickxaxi)
-            
-            axis.set_ylabel(lablyaxi)
-            if scalyaxi == 'logt':
-                axis.set_yscale('log')
-            plt.tight_layout()
-            
-            path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
-            pathfull = '%s%s_%s.pdf' % (path, strgvarboutp, strgtimestmp)
-            print 'Writing to %s...' % pathfull
-            plt.savefig(pathfull)
-            plt.close(figr)
+                    if listtypevarbcomp[indxlist] == 'pctl':
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
+                ydat[k] = varboutp[k][0]
+                
+        axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
+        indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
+        if indxrtagyerr.size > 0:
+            temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr], yerr=yerr[:, indxrtagyerr], \
+                                                                                color='b', ls='', capsize=15, markersize=15, marker='o', lw=3)
+            for caps in listcaps:
+                caps.set_markeredgewidth(3)
+        
+        if trueyaxi != None:
+            axis.axhline(trueyaxi, ls='--', color='g')
+        axis.set_xlabel(lablxaxi)
+        axis.set_xticks(indxiter+1.)
+        axis.set_xticklabels(listtickxaxi)
+        
+        axis.set_ylabel(lablyaxi)
+        if scalyaxi == 'logt':
+            axis.set_yscale('log')
+        plt.tight_layout()
+        
+        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
+        pathfull = '%s%s_%s.pdf' % (path, strgvarboutp, strgtimestmp)
+        print 'Writing to %s...' % pathfull
+        plt.savefig(pathfull)
+        plt.close(figr)
     
     print 'Making animations...'
     for rtag in listrtag:
