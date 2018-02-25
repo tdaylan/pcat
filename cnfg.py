@@ -117,11 +117,11 @@ def test_pars_truepnts(strgcnfgextnexec=None):
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['parsnegatruepnts']['priofactdoff'] = -0.5
-    dictargsvari['parsnonetruepnts']['priofactdoff'] = 0.
-    dictargsvari['parslowwtruepnts']['priofactdoff'] = 0.5
-    dictargsvari['parsnomitruepnts']['priofactdoff'] = 1.
-    dictargsvari['parshightruepnts']['priofactdoff'] = 1.5
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
