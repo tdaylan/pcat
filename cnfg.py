@@ -111,7 +111,7 @@ def test_pars_truepnts(strgcnfgextnexec=None):
     dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
-                        'parsnegatruepnts', 'parsnonetruepnts', 'parslowwtruepnts', 'parsnomitruepnts', 'parshightruepnts', \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
                        ]
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
@@ -155,17 +155,17 @@ def test_pars_trueback(strgcnfgextnexec=None):
     dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = [ \
-                        'parsnegatrueback', 'parsnonetrueback', 'parslowwtrueback', 'parsnomitrueback', 'parshightrueback', \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
                        ]
     dictargsvari = {}
     for namecnfgextn in listnamecnfgextn:
         dictargsvari[namecnfgextn] = {}
     
-    dictargsvari['parsnegatrueback']['priofactdoff'] = -0.5
-    dictargsvari['parsnonetrueback']['priofactdoff'] = 0.
-    dictargsvari['parslowwtrueback']['priofactdoff'] = 0.5
-    dictargsvari['parsnomitrueback']['priofactdoff'] = 1.
-    dictargsvari['parshightrueback']['priofactdoff'] = 1.5
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
     
     scalxaxi = 'self'
     lablxaxi = r'$\alpha_p$'
