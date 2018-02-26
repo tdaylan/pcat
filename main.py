@@ -2639,6 +2639,7 @@ def initarry( \
     cmnd = 'mkdir -p %s' % pathbase 
     os.system(cmnd)
     
+    cmnd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%smrgd.pdf' % pathbase
     for strgvarboutp, varboutp in dictoutp.iteritems():
         
         figr, axis = plt.subplots(figsize=(6, 6))
@@ -2701,12 +2702,15 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
         pathfull = '%s%s_%s%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], strgvarboutp)
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)
     
+        cmnd += ' %s' % pathfull
+    print cmnd
+    os.system(cmnd)
+
     print 'Making animations...'
     for rtag in listrtag:
         print 'Working on %s...' % rtag
