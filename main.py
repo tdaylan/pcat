@@ -2589,12 +2589,8 @@ def initarry( \
 
     print
     print 'Final-processing run outputs...'
-    print
-
-    print 'listrtag'
-    print listrtag
-
-    for rtag in listrtag: 
+    for rtag in listrtag:
+        print rtag
         proc_finl(rtag=rtag, strgpdfn='post')
     
     strgtimestmp = tdpy.util.retr_strgtimestmp()

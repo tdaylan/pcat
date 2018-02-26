@@ -7309,12 +7309,6 @@ def setp_fixp(gdat, strgmodl='fitt'):
         
         if strgvarb.startswith('bacp'):
             
-            # find the sample vector index of the first background parameter
-            try:
-                indxfixpbacpinit
-            except:
-                indxfixpbacpinit = k
-            
             # indices of the background and region
             indxbacktemp = int(strgvarb[8:12])
             indxregitemp = int(strgvarb[15])
@@ -7324,12 +7318,12 @@ def setp_fixp(gdat, strgmodl='fitt'):
             if specback[indxregitemp][indxbacktemp]:
                 strgenertemp = ''
             else:
-                i = indxenerbacp[k-indxfixpbacpinit]
+                indxenertemp = int(strgvarb[18:20])
                 if gdat.numbener > 1:
-                    strgenertemp = '%d' % i
+                    strgenertemp = '%d' % indxenertemp
                 else:
                     strgenertemp = ''
-                name += 'en%02d' % i
+                name += 'en%02d' % indxenertemp
             
             if numbback[indxregitemp] > 1:
                 strgbacktemp = '%d' % indxbacktemp
@@ -7452,7 +7446,7 @@ def setp_fixp(gdat, strgmodl='fitt'):
             print 'minmfixp[k]'
             print minmfixp[k]
             raise Exception('')
-
+    
     # background templates
     listlegdsbrt = deepcopy(listlegdback)
     numblablsbrt = 0
