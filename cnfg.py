@@ -140,7 +140,7 @@ def test_pars_truepnts(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        execpara=True, \
+                        #execpara=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -186,7 +186,7 @@ def test_pars_trueback(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        execpara=True, \
+                        #execpara=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -231,7 +231,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        execpara=True, \
+                        #execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -276,7 +276,7 @@ def test_trueminmflux(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        execpara=True, \
+                        #execpara=True, \
 
                         namexaxi='trueminmflux', \
                         lablxaxi=lablxaxi, \
