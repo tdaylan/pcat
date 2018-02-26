@@ -4911,8 +4911,11 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.fittnumbtrap > 0:
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 2e-1
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpnobjdistsloppop0]] = 3e-1
-                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpgwdtdistsloppop0]] = 3e-1
-            
+                try:
+                    gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpgwdtdistsloppop0]] = 3e-1
+                except:
+                    pass
+
             if gdat.fittpsfnevaltype != 'none':
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
             
@@ -4923,8 +4926,11 @@ def setpinit(gdat, boolinitsetp=False):
                     gdat.stdvstdp[gdat.indxstdppop0lgal] = 4e-2
                     gdat.stdvstdp[gdat.indxstdppop0bgal] = 4e-2
                     gdat.stdvstdp[gdat.indxstdppop0nobj] = 3e-1
-                    gdat.stdvstdp[gdat.indxstdppop0gwdt] = 5e-1
-        
+                    try:
+                        gdat.stdvstdp[gdat.indxstdppop0gwdt] = 5e-1
+                    except:
+                        pass
+
         if gdat.exprtype == 'fire':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
     
