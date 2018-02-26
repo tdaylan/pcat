@@ -2635,6 +2635,10 @@ def initarry( \
             dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
             cntr += 1
 
+    pathbase = '%s/imag/%s/' % (os.environ["PCAT_DATA_PATH"], inspect.stack()[1][3])
+    cmnd = 'mkdir %s' % pathbase 
+    os.system(cmnd)
+    
     for strgvarboutp, varboutp in dictoutp.iteritems():
         
         print 'strgvarboutp'
@@ -2701,8 +2705,8 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s_' % inspect.stack()[1][3]
-        pathfull = '%s%s_%s.pdf' % (path, strgvarboutp, strgtimestmp)
+        path = os.environ["PCAT_DATA_PATH"] + '/imag/%s/' % inspect.stack()[1][3]
+        pathfull = '%s%s_%s%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], strgvarboutp)
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)
