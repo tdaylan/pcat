@@ -12381,10 +12381,6 @@ def chec_statfile(rtag, strggdat, strgpdfn, verbtype=1):
         if line == strggdat + strgpdfn + ' written.\n':
             booltemp = True
     
-    print 'booltemp'
-    print booltemp
-    print
-
     filestat.close()
     if not booltemp:
         if verbtype > 0:
