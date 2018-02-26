@@ -44,6 +44,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         strgpara='$PCAT_PATH/cnfg.py', \
+                        
                         #forcprev=True, \
                         execpara=True, \
                         
@@ -92,7 +93,7 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
                         
                         namexaxi='fittminmflux', \
@@ -138,7 +139,7 @@ def test_pars_truepnts(strgcnfgextnexec=None):
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
 
                         namexaxi='priofactdoff', \
@@ -184,7 +185,7 @@ def test_pars_trueback(strgcnfgextnexec=None):
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
 
                         namexaxi='priofactdoff', \
@@ -229,7 +230,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
                         
                         namexaxi='fittminmflux', \
@@ -274,7 +275,7 @@ def test_trueminmflux(strgcnfgextnexec=None):
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
-                        forcprev=True, \
+                        #forcprev=True, \
                         execpara=True, \
 
                         namexaxi='trueminmflux', \
@@ -332,7 +333,8 @@ def test_perf(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        
+                        #forcprev=True, \
                         
                         namexaxi='truesigc', \
                         lablxaxi=lablxaxi, \
@@ -384,7 +386,8 @@ def test_psfn(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        
+                        #forcprev=True, \
                         
                         namexaxi='truesigc', \
                         lablxaxi=lablxaxi, \
@@ -434,7 +437,8 @@ def test_anglassc(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        
+                        #forcprev=True, \
                         
                         namexaxi='anglassc', \
                         lablxaxi=lablxaxi, \
@@ -479,7 +483,8 @@ def test_errr(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
-                        forcprev=True, \
+                        
+                        #forcprev=True, \
                         
                         namexaxi='specfraceval', \
                         lablxaxi=lablxaxi, \
@@ -590,6 +595,7 @@ def test_spmr(strgcnfgextnexec=None):
                         dictargs, \
                         listnamecnfgextn, \
                         strgcnfgextnexec=strgcnfgextnexec, \
+                        
                         #forcprev=True, \
                         
                         namexaxi='radispmr', \
