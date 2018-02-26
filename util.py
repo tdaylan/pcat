@@ -7927,11 +7927,19 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                 else:
                     listindxpoplplot = [indxpoplplot]
                 for l in listindxpoplplot:
-                    reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
+                    # temp -- backcomp
+                    try:
+                        reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
+                    except:
+                        reframpl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
                     if reframpl == None:
                         mrkrsize = full(gdat.refrnumbelem[q][indxregiplot], 5.)
                     else:
-                        mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, :], gdat.refrlistnamefeatampl[q])
+                        # temp -- backcomp
+                        try:
+                            mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, :], gdat.refrlistnamefeatampl[q])
+                        except:
+                            mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, :], gdat.listnamefeatamplrefr[q])
                     lgal = copy(gdat.refrlgal[q][indxregiplot][0, :])
                     bgal = copy(gdat.refrbgal[q][indxregiplot][0, :])
                     numbelem = int(gdat.refrnumbelem[q][indxregiplot])
@@ -15028,7 +15036,11 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
                 for q in gdat.indxrefr:
                     if gdat.refrnumbelem[q][indxregiplot] == 0:
                         continue
-                    reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
+                    # temp -- backcomp
+                    try:
+                        reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
+                    except:
+                        reframpl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
                     if strgfeat in gdat.refrliststrgfeat[q]:
                         refrfeat = getattr(gdat, 'refr' + strgfeat)[q][indxregiplot]
                         if len(refrfeat) > 0:
@@ -15037,7 +15049,11 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
                             indxelem = array([])
                     else:
                         indxelem = arange(gdat.refrnumbelem[q])
-                    mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], gdat.refrlistnamefeatampl[q])
+                    # temp -- backcomp
+                    try:
+                        mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], gdat.refrlistnamefeatampl[q])
+                    except:
+                        mrkrsize = retr_mrkrsize(gdat, reframpl[q][indxregiplot][0, indxelem], gdat.listnamefeatamplrefr[q])
 
                     if indxelem.size > 0:
                         axis.scatter(gdat.anglfact * gdat.refrlgal[q][indxregiplot][0, indxelem], gdat.anglfact * gdat.refrbgal[q][indxregiplot][0, indxelem], \
