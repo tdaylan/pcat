@@ -94,7 +94,7 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        execpara=True, \
+                        #execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
