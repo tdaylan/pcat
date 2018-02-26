@@ -2635,16 +2635,12 @@ def initarry( \
             dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
             cntr += 1
 
-    pathbase = '%s/imag/%s/' % (os.environ["PCAT_DATA_PATH"], inspect.stack()[1][3])
-    cmnd = 'mkdir %s' % pathbase 
+    pathbase = '%s/imag/%s_%s/' % (os.environ["PCAT_DATA_PATH"], strgtimestmp, inspect.stack()[1][3])
+    cmnd = 'mkdir -p %s' % pathbase 
     os.system(cmnd)
     
     for strgvarboutp, varboutp in dictoutp.iteritems():
         
-        print 'strgvarboutp'
-        print strgvarboutp
-        print
-
         figr, axis = plt.subplots(figsize=(6, 6))
         ydat = empty(numbiter)
         yerr = zeros((2, numbiter))
