@@ -31,6 +31,9 @@ print 'comp_rtag() initialized...'
 
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 
+cmnd = 'mkdir -p %s' % (os.environ["PCAT_DATA_PATH"] + '/imag/comprtag')
+os.system(cmnd)
+
 print 'Listing the available runs...'
 cmnd = 'ls %s | xargs -n 1 basename > %s/listrtag.txt' % (pathimag, pathimag)
 print cmnd

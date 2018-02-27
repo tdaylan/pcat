@@ -2602,15 +2602,22 @@ def initarry( \
         listgdat = retr_listgdat(listrtag, typegdat='init')
     else:
         listgdat = retr_listgdat(listrtag)
+    
+    numbgdat = len(listgdat)
 
     for namevarbscal in listgdat[0].listnamevarbscal:
-        if namevarbscal in listnamevarbcomp:
-            raise Exception('')
-        listnamevarbcomp += [namevarbscal]
-        listscalvarbcomp += [getattr(listgdat[0], 'scal' + namevarbscal)]
-        listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal + 'totl')]
-        listtypevarbcomp += ['pctl']
-        listpdfnvarbcomp += ['post']
+        booltemp = True
+        for k in range(1, numbgdat - 1):
+            if not namevarbscal in listgdat[k].listnamevarbscal:
+                booltemp = False
+        if booltemp:
+            if namevarbscal in listnamevarbcomp:
+                raise Exception('')
+            listnamevarbcomp += [namevarbscal]
+            listscalvarbcomp += [getattr(listgdat[0], 'scal' + namevarbscal)]
+            listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal + 'totl')]
+            listtypevarbcomp += ['pctl']
+            listpdfnvarbcomp += ['post']
     
     listnamevarbcomp += ['lliktotl', 'lliktotl', 'levi', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl']
     listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
@@ -2622,7 +2629,7 @@ def initarry( \
     
     dictoutp = dict()
     liststrgvarbtotl = []
-    for (typevarbcomp, pdfnvarbcomp, namevarbcomp) in zip(listtypevarbcomp, lisrpdfnvarbcomp, listnamevarbcomp):
+    for (typevarbcomp, pdfnvarbcomp, namevarbcomp) in zip(listtypevarbcomp, listpdfnvarbcomp, listnamevarbcomp):
         strgtemp = typevarbcomp + pdfnvarbcomp + namevarbcomp
         liststrgvarbtotl.append(strgtemp)
         dictoutp[strgtemp] = [[] for k in range(numbiter)]
@@ -3834,7 +3841,7 @@ def work(pathoutprtag, lock, indxprocwork):
                                 print 'gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]'
                                 print gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[l]]
                         print
-                        raise Exception('')
+                        #raise Exception('')
 
             # evaluate the acceptance probability
             gdatmodi.nextaccpprob[0] = exp(gdatmodi.thistmprfactdeltllik * gdatmodi.nextdeltlliktotl + gdatmodi.thistmprlposelem + gdatmodi.nextdeltlpritotl + \

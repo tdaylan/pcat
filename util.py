@@ -4878,6 +4878,9 @@ def setpinit(gdat, boolinitsetp=False):
             
             if gdat.fittnumbtrap > 0:
                 if gdat.propcomp:
+                    if 'excefixd' in gdat.strgcnfg:
+                        gdat.stdvstdp[gdat.indxstdppop0lgal] = 1e-100
+                        gdat.stdvstdp[gdat.indxstdppop0bgal] = 1e-100
                     gdat.stdvstdp[gdat.indxstdppop0flux] = 8e-2
                     gdat.stdvstdp[gdat.indxstdppop0sindcolr0001] = 8e-2
                     gdat.stdvstdp[gdat.indxstdppop0sindcolr0002] = 2e-1
