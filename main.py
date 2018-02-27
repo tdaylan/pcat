@@ -2656,16 +2656,16 @@ def initarry( \
         indxlist = liststrgvarbtotl.index(strgvarbtotl)
         
         if listscalvarbcomp == None:
-            scalyaxi = getattr(listgdat[0], 'scal' + liststrgvarboutp[indxlist])
+            scalyaxi = getattr(listgdat[0], 'scal' + listnamevarbcomp[indxlist])
         else:
             scalyaxi = listscalvarbcomp[indxlist]
         
         lablyaxi = listlablvarbcomp[indxlist]
         
-        factplot = getattr(listgdat[0], 'fact' + liststrgvarboutp[indxlist] + 'plot')
+        factplot = getattr(listgdat[0], 'fact' + listnamevarbcomp[indxlist] + 'plot')
         
         try:
-            trueyaxi = getattr(listgdat[0], 'true' + liststrgvarboutp[indxlist])
+            trueyaxi = getattr(listgdat[0], 'true' + listnamevarbcomp[indxlist])
         except:
             trueyaxi = None
         
@@ -2683,10 +2683,10 @@ def initarry( \
                         raise Exception('varboutp format is wrong.')
                     varboutp[k] = varboutp[k][:, 0]
                     if listtypevarbcomp[indxlist] == 'pctl':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + liststrgvarboutp[indxlist])[:, 0]
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + listnamevarbcomp[indxlist])[:, 0]
                 else:
                     if listtypevarbcomp[indxlist] == 'pctl':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + liststrgvarboutp[indxlist])
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + listnamevarbcomp[indxlist])
                 ydat[k] = varboutp[k][0]
                 
         axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
@@ -2708,7 +2708,7 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], liststrgvarboutp[indxlist])
+        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], listnamevarbcomp[indxlist])
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)
