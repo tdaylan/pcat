@@ -2668,7 +2668,7 @@ def initarry( \
             factplot = 1.
         
         try:
-            trueyaxi = getattr(listgdat[0], 'true' + listnamevarbcomp[indxlist])
+            trueyaxi = getattr(listgdat[0], 'true' + listtypevarbcomp[indxlist] + listnamevarbcomp[indxlist])
         except:
             trueyaxi = None
         
