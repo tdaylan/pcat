@@ -2621,14 +2621,15 @@ def initarry( \
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
     dictoutp = dict()
-    for strgvarb in listnamevarbcomp:
-        dictoutp[strgvarb] = [[] for k in range(numbiter)]
+    liststrgvarbtotl = []
+    for (typevarbcomp, pdfnvarbcomp, namevarbcomp) in zip(listtypevarbcomp, lisrpdfnvarbcomp, listnamevarbcomp):
+        strgtemp = typevarbcomp + pdfnvarbcomp + namevarbcomp
+        liststrgvarbtotl.append(strgtemp)
+        dictoutp[strgtemp] = [[] for k in range(numbiter)]
     
     for k in indxiter:
-        cntr = 0
-        for strgvarboutp in listnamevarbcomp:
-            dictoutp[strgvarboutp][k] = getattr(listgdat[k], listtypevarbcomp[cntr] + listpdfnvarbcomp[cntr] + strgvarboutp)
-            cntr += 1
+        for strgvarbtotl in liststrgvarbtotl:
+            dictoutp[strgvarbtotl][k] = getattr(listgdat[k], strgvarbtotl)
 
     pathbase = '%s/imag/%s_%s/' % (os.environ["PCAT_DATA_PATH"], strgtimestmp, inspect.stack()[1][3])
     cmnd = 'mkdir -p %s' % pathbase 
@@ -2639,29 +2640,25 @@ def initarry( \
     print 'listnamevarbcomp'
     print listnamevarbcomp
     cmnd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%smrgd.pdf' % pathbase
-    for strgvarboutp, varboutp in dictoutp.iteritems():
+    for strgvarbtotl, varboutp in dictoutp.iteritems():
         
         figr, axis = plt.subplots(figsize=(6, 6))
         ydat = empty(numbiter)
         yerr = zeros((2, numbiter))
             
-        indxlist = listnamevarbcomp.index(strgvarboutp)
+        indxlist = liststrgvarbtotl.index(strgvarbtotl)
         
-        print 'strgvarboutp'
-        print strgvarboutp
-        print
-
         if listscalvarbcomp == None:
-            scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
+            scalyaxi = getattr(listgdat[0], 'scal' + liststrgvarboutp[indxlist])
         else:
             scalyaxi = listscalvarbcomp[indxlist]
         
         lablyaxi = listlablvarbcomp[indxlist]
         
-        factplot = getattr(listgdat[0], 'fact' + strgvarboutp + 'plot')
+        factplot = getattr(listgdat[0], 'fact' + liststrgvarboutp[indxlist] + 'plot')
         
         try:
-            trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
+            trueyaxi = getattr(listgdat[0], 'true' + liststrgvarboutp[indxlist])
         except:
             trueyaxi = None
         
@@ -2679,10 +2676,10 @@ def initarry( \
                         raise Exception('varboutp format is wrong.')
                     varboutp[k] = varboutp[k][:, 0]
                     if listtypevarbcomp[indxlist] == 'pctl':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)[:, 0]
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + liststrgvarboutp[indxlist])[:, 0]
                 else:
                     if listtypevarbcomp[indxlist] == 'pctl':
-                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + strgvarboutp)
+                        yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + liststrgvarboutp[indxlist])
                 ydat[k] = varboutp[k][0]
                 
         axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
@@ -2704,12 +2701,13 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], strgvarboutp)
+        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], liststrgvarboutp[indxlist])
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)
     
         cmnd += ' %s' % pathfull
+
     print cmnd
     os.system(cmnd)
 
