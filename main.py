@@ -2719,7 +2719,7 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], listnamevarbtotl[indxlist])
+        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], liststrgvarbtotl[indxlist])
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)
