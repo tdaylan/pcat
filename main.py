@@ -2691,7 +2691,15 @@ def initarry( \
                     if listtypevarbcomp[indxlist] == 'pctl':
                         yerr[:, k] = getattr(listgdat[k], 'errr' + listpdfnvarbcomp[indxlist] + listnamevarbcomp[indxlist])
                 ydat[k] = varboutp[k][0]
-                
+        
+        print 'listnamevarbcomp[indxlist]'
+        print listnamevarbcomp[indxlist]
+        print 'lablyaxi'
+        print lablyaxi
+        print 'ydat'
+        print ydat
+        print
+
         axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
         indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
         if indxrtagyerr.size > 0:
