@@ -3778,8 +3778,8 @@ def setpinit(gdat, boolinitsetp=False):
 
     gdat.lablexpcunit = gdat.strgenerunit
     
-    gdat.labllliktotl = r'\mathcal{L}'
-    gdat.lablmedilliktotl = r'\mathcal{L}^{med}'
+    gdat.labllliktotl = r'\ln P(D|M)'
+    #gdat.lablmedilliktotl = r'\ln P(D|M)^{med}'
     
     gdat.labllpripena = r'\ln P(N)'
     
@@ -3799,7 +3799,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablspecplot = gdat.lablflux
     gdat.lablspecplotunit = gdat.lablfluxunit
     gdat.lablcnts = 'C'
-    gdat.labldeltllik = r'\Delta_n \ln \mathcal{L}'
+    gdat.labldeltllik = r'\Delta_n \ln P(D|M)'
     gdat.labldiss = r'\theta_{sa}'
     gdat.labldissunit = gdat.lablgangunit
     

@@ -16,8 +16,7 @@ def comp(nameplot):
     #print
 
     for line in listline:
-        strgtemp = 'rtag'
-        namedest = pathimag + 'comp' + strgtemp + '/' + nameplot + '/' + line + '.pdf'
+        namedest = pathimag + 'comprtag/' + nameplot + '/' + nameplot + line + '.pdf'
         if not os.path.isfile(namedest):
             cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             

@@ -2608,16 +2608,15 @@ def initarry( \
             raise Exception('')
         listnamevarbcomp += [namevarbscal]
         listscalvarbcomp += [getattr(listgdat[0], 'scal' + namevarbscal)]
-        listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal)]
+        listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal + 'totl')]
         listtypevarbcomp += ['pctl']
         listpdfnvarbcomp += ['post']
     
-    listnamevarbcomp += ['lliktotl', 'lliktotl', 'lliktotl', 'levi', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl']
-    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
-    listlablvarbcomp += ['$\ln P(D|M)$', '$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', \
-                                        '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
-    listtypevarbcomp += ['pctl', 'minm', 'maxm', '', '', '', 'stdv', 'skew', 'kurt']
-    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+    listnamevarbcomp += ['lliktotl', 'lliktotl', 'levi', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl']
+    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
+    listtypevarbcomp += ['minm', 'maxm', '', '', '', 'stdv', 'skew', 'kurt']
+    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
 
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
@@ -2635,6 +2634,10 @@ def initarry( \
     cmnd = 'mkdir -p %s' % pathbase 
     os.system(cmnd)
     
+    print 'dictoutp'
+    print dictoutp
+    print 'listnamevarbcomp'
+    print listnamevarbcomp
     cmnd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%smrgd.pdf' % pathbase
     for strgvarboutp, varboutp in dictoutp.iteritems():
         
@@ -2644,15 +2647,18 @@ def initarry( \
             
         indxlist = listnamevarbcomp.index(strgvarboutp)
         
+        print 'strgvarboutp'
+        print strgvarboutp
+        print
+
         if listscalvarbcomp == None:
             scalyaxi = getattr(listgdat[0], 'scal' + strgvarboutp)
         else:
             scalyaxi = listscalvarbcomp[indxlist]
         
-        if listlablvarbcomp == None:
-            lablyaxi = getattr(listgdat[0], 'labl' + strgvarboutp)
-        else:
-            lablyaxi = listlablvarbcomp[indxlist]
+        lablyaxi = listlablvarbcomp[indxlist]
+        
+        factplot = getattr(listgdat[0], 'fact' + strgvarboutp + 'plot')
         
         try:
             trueyaxi = getattr(listgdat[0], 'true' + strgvarboutp)
@@ -2682,7 +2688,7 @@ def initarry( \
         axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
         indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
         if indxrtagyerr.size > 0:
-            temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr], yerr=yerr[:, indxrtagyerr], \
+            temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr] * factplot, yerr=yerr[:, indxrtagyerr] * factplot, \
                                                                                 color='b', ls='', capsize=15, markersize=15, marker='o', lw=3)
             for caps in listcaps:
                 caps.set_markeredgewidth(3)
@@ -2698,7 +2704,7 @@ def initarry( \
             axis.set_yscale('log')
         plt.tight_layout()
         
-        pathfull = '%s%s_%s%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], strgvarboutp)
+        pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], strgvarboutp)
         print 'Writing to %s...' % pathfull
         plt.savefig(pathfull)
         plt.close(figr)

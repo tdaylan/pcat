@@ -4,7 +4,7 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
-def test_minmflux_parsnone(strgcnfgextnexec=None):
+def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -61,7 +61,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                        )
 
 
-def test_minmflux_parsnomi(strgcnfgextnexec=None):
+def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -104,7 +104,7 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                        )
 
 
-def test_pars_truepnts(strgcnfgextnexec=None):
+def test_fittpars_truepnts(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -150,7 +150,7 @@ def test_pars_truepnts(strgcnfgextnexec=None):
                        )
 
 
-def test_pars_trueback(strgcnfgextnexec=None):
+def test_fittpars_trueback(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -220,7 +220,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
     dictargsvari['numbhigh']['truenumbelempop0reg0'] = 300
     dictargsvari['numbvhig']['truenumbelempop0reg0'] = 1000
     
-    lablxaxi = r'$f_{min}$ [cm$^{-2}$ s$^{-1}$ keV$^{-1}$]'
+    lablxaxi = r'$N_{pts}$'
     scalxaxi = 'logt'
     listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['truenumbelempop0reg0']) for namecnfgextn in listnamecnfgextn] 
     
@@ -233,7 +233,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         #forcprev=True, \
                         #execpara=True, \
                         
-                        namexaxi='fittminmflux', \
+                        namexaxi='truenumbelempop0reg0', \
                         lablxaxi=lablxaxi, \
                         scalxaxi=scalxaxi, \
                         listtickxaxi=listtickxaxi, \
