@@ -2662,7 +2662,10 @@ def initarry( \
         
         lablyaxi = listlablvarbcomp[indxlist]
         
-        factplot = getattr(listgdat[0], 'fact' + listnamevarbcomp[indxlist] + 'plot')
+        try:
+            factplot = getattr(listgdat[0], 'fact' + listnamevarbcomp[indxlist] + 'plot')
+        except:
+            factplot = 1.
         
         try:
             trueyaxi = getattr(listgdat[0], 'true' + listnamevarbcomp[indxlist])
