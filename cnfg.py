@@ -4,7 +4,8 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
-def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
+#def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
+def test_minmflux_parsnone(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -61,7 +62,8 @@ def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
                        )
 
 
-def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
+#def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
+def test_minmflux_parsnomi(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -104,7 +106,8 @@ def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
                        )
 
 
-def test_fittpars_truepnts(strgcnfgextnexec=None):
+#def test_fittpars_truepnts(strgcnfgextnexec=None):
+def test_pars_truepnts(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -150,7 +153,8 @@ def test_fittpars_truepnts(strgcnfgextnexec=None):
                        )
 
 
-def test_fittpars_trueback(strgcnfgextnexec=None):
+#def test_fittpars_trueback(strgcnfgextnexec=None):
+def test_pars_trueback(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
