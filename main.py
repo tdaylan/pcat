@@ -2701,9 +2701,12 @@ def initarry( \
         print lablyaxi
         print 'ydat'
         print ydat
-        print
+        print 'yerr'
+        print yerr
+        print 'indxiter'
+        print indxiter
 
-        axis.errorbar(indxiter+1., ydat, yerr=yerr, color='b', ls='', markersize=15, marker='o', lw=3)
+        axis.errorbar(indxiter+1., ydat * factplot, yerr=yerr * factplot, color='b', ls='', markersize=15, marker='o', lw=3)
         indxrtagyerr = where((yerr[0, :] > 0.) | (yerr[1, :] > 0.))[0]
         if indxrtagyerr.size > 0:
             temp, listcaps, temp = axis.errorbar(indxiter[indxrtagyerr]+1., ydat[indxrtagyerr] * factplot, yerr=yerr[:, indxrtagyerr] * factplot, \
@@ -2724,6 +2727,9 @@ def initarry( \
         
         pathfull = '%s%s_%s_%s.pdf' % (pathbase, strgtimestmp, inspect.stack()[1][3], liststrgvarbtotl[indxlist])
         print 'Writing to %s...' % pathfull
+        print
+        print
+        print
         plt.savefig(pathfull)
         plt.close(figr)
     

@@ -4,8 +4,7 @@ from __init__ import *
 # internal functions
 from main import init, initarry
 
-#def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
-def test_minmflux_parsnone(strgcnfgextnexec=None):
+def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -13,9 +12,11 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['priofactdoff'] = 0.
     dictargs['truenumbelempop0reg0'] = 100
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
-    #dictargs['numbswep'] = 1000
-    #dictargs['numbsamp'] = 10
+    dictargs['numbswep'] = 1000
+    dictargs['numbsamp'] = 10
     
     listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
     dictargsvari = {}
@@ -47,7 +48,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                         strgpara='$PCAT_PATH/cnfg.py', \
                         
                         #forcprev=True, \
-                        #execpara=True, \
+                        execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -62,8 +63,7 @@ def test_minmflux_parsnone(strgcnfgextnexec=None):
                        )
 
 
-#def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
-def test_minmflux_parsnomi(strgcnfgextnexec=None):
+def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -96,7 +96,7 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        #execpara=True, \
+                        execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \
@@ -106,55 +106,7 @@ def test_minmflux_parsnomi(strgcnfgextnexec=None):
                        )
 
 
-#def test_fittpars_truepnts(strgcnfgextnexec=None):
-def test_pars_truepnts(strgcnfgextnexec=None):
-    
-    dictargs = {}
-    dictargs['exprtype'] = 'chan'
-    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
-    dictargs['elemtype'] = ['lghtpnts']
-    dictargs['truenumbelempop0reg0'] = 100
-    dictargs['minmflux'] = 1e-8
-    
-    #dictargs['numbswep'] = 1000000
-    #dictargs['numbsamp'] = 1000
-    
-    listnamecnfgextn = [ \
-                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
-                       ]
-    dictargsvari = {}
-    for namecnfgextn in listnamecnfgextn:
-        dictargsvari[namecnfgextn] = {}
-    
-    dictargsvari['parsnega']['priofactdoff'] = -0.5
-    dictargsvari['parsnone']['priofactdoff'] = 0.
-    dictargsvari['parsloww']['priofactdoff'] = 0.5
-    dictargsvari['parsnomi']['priofactdoff'] = 1.
-    dictargsvari['parshigh']['priofactdoff'] = 1.5
-    
-    scalxaxi = 'self'
-    lablxaxi = r'$\alpha_p$'
-    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
-    
-    dictglob = initarry( \
-                        dictargsvari, \
-                        dictargs, \
-                        listnamecnfgextn, \
-                        strgcnfgextnexec=strgcnfgextnexec, \
-                        
-                        #forcprev=True, \
-                        #execpara=True, \
-
-                        namexaxi='priofactdoff', \
-                        lablxaxi=lablxaxi, \
-                        scalxaxi=scalxaxi, \
-                        listtickxaxi=listtickxaxi, \
-                        
-                       )
-
-
-#def test_fittpars_trueback(strgcnfgextnexec=None):
-def test_pars_trueback(strgcnfgextnexec=None):
+def test_fittpars_trueback(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['exprtype'] = 'chan'
@@ -190,7 +142,145 @@ def test_pars_trueback(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        #execpara=True, \
+                        execpara=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                       )
+
+
+def test_fittpars_truepnts(strgcnfgextnexec=None):
+    
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['minmflux'] = 1e-8
+    
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = [ \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        
+                        #forcprev=True, \
+                        execpara=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                       )
+
+
+def test_fittpars_truepntsfittminmfluxloww(strgcnfgextnexec=None):
+    
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['fittminmflux'] = 1e-9
+    
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = [ \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        
+                        #forcprev=True, \
+                        execpara=True, \
+
+                        namexaxi='priofactdoff', \
+                        lablxaxi=lablxaxi, \
+                        scalxaxi=scalxaxi, \
+                        listtickxaxi=listtickxaxi, \
+                        
+                       )
+
+
+def test_fittpars_truepntsfittminmfluxhigh(strgcnfgextnexec=None):
+    
+    dictargs = {}
+    dictargs['exprtype'] = 'chan'
+    dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
+    dictargs['elemtype'] = ['lghtpnts']
+    dictargs['truenumbelempop0reg0'] = 100
+    dictargs['fittminmflux'] = 1e-8
+    
+    #dictargs['numbswep'] = 1000000
+    #dictargs['numbsamp'] = 1000
+    
+    listnamecnfgextn = [ \
+                        'parsnega', 'parsnone', 'parsloww', 'parsnomi', 'parshigh', \
+                       ]
+    dictargsvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictargsvari[namecnfgextn] = {}
+    
+    dictargsvari['parsnega']['priofactdoff'] = -0.5
+    dictargsvari['parsnone']['priofactdoff'] = 0.
+    dictargsvari['parsloww']['priofactdoff'] = 0.5
+    dictargsvari['parsnomi']['priofactdoff'] = 1.
+    dictargsvari['parshigh']['priofactdoff'] = 1.5
+    
+    scalxaxi = 'self'
+    lablxaxi = r'$\alpha_p$'
+    listtickxaxi = [tdpy.util.mexp(dictargsvari[namecnfgextn]['priofactdoff']) for namecnfgextn in listnamecnfgextn] 
+    
+    dictglob = initarry( \
+                        dictargsvari, \
+                        dictargs, \
+                        listnamecnfgextn, \
+                        strgcnfgextnexec=strgcnfgextnexec, \
+                        
+                        #forcprev=True, \
+                        execpara=True, \
 
                         namexaxi='priofactdoff', \
                         lablxaxi=lablxaxi, \
@@ -235,7 +325,7 @@ def test_truenumbelem(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        #execpara=True, \
+                        execpara=True, \
                         
                         namexaxi='truenumbelempop0reg0', \
                         lablxaxi=lablxaxi, \
@@ -280,7 +370,7 @@ def test_trueminmflux(strgcnfgextnexec=None):
                         strgcnfgextnexec=strgcnfgextnexec, \
                         
                         #forcprev=True, \
-                        #execpara=True, \
+                        execpara=True, \
 
                         namexaxi='trueminmflux', \
                         lablxaxi=lablxaxi, \

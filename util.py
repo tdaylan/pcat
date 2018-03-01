@@ -3779,7 +3779,6 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablexpcunit = gdat.strgenerunit
     
     gdat.labllliktotl = r'\ln P(D|M)'
-    #gdat.lablmedilliktotl = r'\ln P(D|M)^{med}'
     
     gdat.labllpripena = r'\ln P(N)'
     
@@ -4894,19 +4893,22 @@ def setpinit(gdat, boolinitsetp=False):
             
             gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
             
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 2e-2
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 1e-2
-            #gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0')]] = 1e-1
+            if (gdat.indxenerincl == arange(5)).all():
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 2e-2
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 1e-2
+            elif gdat.indxenerincl == array([2]):
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
             
             if gdat.fittnumbtrap > 0:
                 if gdat.propcomp:
                     gdat.stdvstdp[gdat.indxstdppop0lgal] = 2e-2
                     gdat.stdvstdp[gdat.indxstdppop0bgal] = 2e-2
                     gdat.stdvstdp[gdat.indxstdppop0flux] = 2e-1
-                    gdat.stdvstdp[gdat.indxstdppop0sind] = 2e-1
+                    if gdat.numbener > 1:
+                        gdat.stdvstdp[gdat.indxstdppop0sind] = 2e-1
         
         if gdat.exprtype == 'sdyn':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
@@ -12521,7 +12523,7 @@ def proc_cntpdata(gdat):
     # correct the likelihoods for the constant data dependent factorial
     gdat.llikoffs = [[] for d in gdat.indxregi]
     for d in gdat.indxregi:
-        gdat.llikoffs[d] = sum(sp.special.gammaln(gdat.cntpdata[d] + 1))
+        gdat.llikoffs[d] = -sum(sp.special.gammaln(gdat.cntpdata[d] + 1))
 
     ## spatial average
     gdat.sbrtdatamean = retr_spatmean(gdat, gdat.cntpdata, boolcntp=True)
