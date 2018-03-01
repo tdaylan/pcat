@@ -70,6 +70,8 @@ def test_fittminmflux_fittparsnomi(strgcnfgextnexec=None):
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -114,6 +116,8 @@ def test_fittpars_trueback(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truemaxmnumbelempop0reg0'] = 0
     dictargs['truenumbelempop0reg0'] = 0
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -160,6 +164,8 @@ def test_fittpars_truepnts(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['minmflux'] = 1e-8
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -206,6 +212,8 @@ def test_fittpars_truepntsfittminmfluxloww(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['fittminmflux'] = 1e-9
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -252,6 +260,8 @@ def test_fittpars_truepntsfittminmfluxhigh(strgcnfgextnexec=None):
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['fittminmflux'] = 1e-8
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -299,6 +309,8 @@ def test_truenumbelem(strgcnfgextnexec=None):
     dictargs['priofactdoff'] = 0.
     dictargs['fittmaxmnumbelempop0reg0'] = 1000
     dictargs['truemaxmnumbelempop0reg0'] = 1000
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
@@ -342,6 +354,8 @@ def test_trueminmflux(strgcnfgextnexec=None):
     dictargs['strgexpo'] = 'expochanhome7msc06000000.fits'
     dictargs['elemtype'] = ['lghtpnts']
     dictargs['truenumbelempop0reg0'] = 100
+    dictargs['indxenerincl'] = array([2])
+    dictargs['proppsfp'] = True
     
     #dictargs['numbswep'] = 1000000
     #dictargs['numbsamp'] = 1000
