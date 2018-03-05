@@ -128,7 +128,6 @@ def init( \
          # Hessian estimation
          # temp
          optitype='none', \
-         regulevi=False, \
          
          # modes of operation
          ## interactive
@@ -2619,11 +2618,12 @@ def initarry( \
             listtypevarbcomp += ['pctl']
             listpdfnvarbcomp += ['post']
     
-    listnamevarbcomp += ['lliktotl', 'lliktotl', 'levi', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl']
-    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
-    listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$\ln P(D)$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$']
-    listtypevarbcomp += ['minm', 'maxm', '', '', '', 'stdv', 'skew', 'kurt']
-    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+    listnamevarbcomp += ['lliktotl', 'lliktotl', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'levi', 'leviharm']
+    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
+    listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$', \
+                                                                                                                                        '$\ln P(D)$', '$\ln P_H(D)$']
+    listtypevarbcomp += ['minm', 'maxm', '', '', 'stdv', 'skew', 'kurt', '', '']
+    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'prio', 'post']
 
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     

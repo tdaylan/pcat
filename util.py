@@ -1058,16 +1058,6 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
     return cntp
 
 
-def retr_elpsfrac(elpsaxis):
-    
-    distnorm = sum(((listsamp - gdat.elpscntr[None, :]) / elpsaxis[None, :])**2, axis=1)
-    indxsampregu = where(distnorm < 1.)[0]
-    thissampfrac = indxsampregu.size / gdat.numbsamp
-    vari = (thissampfrac / 0.05 - 1.)**2
-    
-    return vari
-
-
 ## plotting
 ### construct path for plots
 def retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgplot, nameinte=''):
@@ -3768,7 +3758,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablinfo = 'D_{KL}'
     gdat.lablinfounit = 'nat'
     gdat.labllevi = '\ln P(D)'
-    gdat.lablleviharm = '\ln P_h(D)'
+    gdat.lablleviharm = '\ln P_H(D)'
     gdat.lablleviunit = 'nat'
     gdat.lablleviharmunit = 'nat'
     
@@ -8084,12 +8074,12 @@ def retr_colr(gdat, strgstat, strgmodl, indxpopl=None):
     return colr
 
 
-def retr_levi(listllik):
+def retr_leviharm(listllik):
     
     minmlistllik = amin(listllik)
-    levi = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
+    leviharm = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
     
-    return levi
+    return leviharm
 
 
 def retr_infofromlevi(pmeallik, levi):
@@ -11772,33 +11762,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
             
-            if gdatfinl.regulevi:
-                
-                if gdatfinl.verbtype > 0:
-                    print 'Regularizing the Bayesian evidence...'
-                    timeinit = gdatfinl.functime()
+            leviharm = retr_leviharm(listlliktotl)
+            setattr(gdatfinl, strgpdfn + 'leviharm', leviharm)
             
-                # regularize the harmonic mean estimator
-                ## get an ellipse around the median posterior 
-                gdatfinl.elpscntr = percentile(listsamp, 50., axis=0)
-                thissamp = rand(gdatfinl.fittnumbpara) * 1e-6
-                stdvpara = ones(gdatfinl.fittnumbpara) * 1e-6
-                limtpara = zeros((2, gdatfinl.fittnumbpara))
-                limtpara[1, :] = 1.
-                ## find the samples that lie inside the ellipse
-                elpsaxis, minmfunc = tdpy.util.minm(thissamp, retr_elpsfrac, stdvpara=stdvpara, limtpara=limtpara, tolrfunc=1e-6, verbtype=gdatfinl.verbtype, optiprop=True)
-                lnorregu = -0.5 * gdatfinl.fittnumbpara * log(pi) + sp.special.gammaln(0.5 * gdatfinl.fittnumbpara + 1.) - sum(elpsaxis)
-                indxsampregu = 0
-                listlliktotlregu = listlliktotl[indxsampregu]
-                
-                if gdatfinl.verbtype > 0:
-                    timefinl = gdatfinl.functime()
-                    print 'Done in %.3g seconds.' % (timefinl - timeinit)
-
-            else:
-                listlliktotlregu = listlliktotl
-            levi = retr_levi(listlliktotlregu)
-            setattr(gdatfinl, strgpdfn + 'levi', levi)
+            if strgpdfn == 'prio':
+                levi = log(mean(exp(listlliktotl)))
+                setattr(gdatfinl, strgpdfn + 'levi', levi)
             
         # parse the sample vector
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
@@ -12073,7 +12042,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, 'skew' + strgpdfn + 'lliktotl', skewlliktotl)
             setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
 
-            infoharm = retr_infofromlevi(pmealliktotl, levi)
+            info = retr_infofromlevi(pmealliktotl, levi)
             bcom = maxmlliktotl - pmealliktotl
             setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
             setattr(gdatfinl, strgpdfn + 'bcom', bcom)
@@ -13965,11 +13934,8 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
         path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
         
-        levi = getattr(gdat, strgpdfn + 'levi')
-        infoharm = getattr(gdat, strgpdfn + 'infoharm')
-        titl = r'$%s$ = %.5g, $%s$ = %.5g$' % (gdat.lablinfo, infoharm, gdat.labllevi, levi)
         varb = getattr(gdat, 'list' + strgpdfn + strgpdfntemp)
-        tdpy.mcmc.plot_hist(path, varb, labl, titl)
+        tdpy.mcmc.plot_hist(path, varb, labl)
         varbdraw = []
         labldraw = []
         colrdraw = []
