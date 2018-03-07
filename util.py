@@ -3595,6 +3595,9 @@ def setpinit(gdat, boolinitsetp=False):
         setattr(gdat, 'lablfracsdenmeandarkdfncsubten%02d' % i, 'f_{D/ST,%d}' % i)
     gdat.lablbooldfncsubt = 'H'
     
+    gdat.lablpriofactdoff = r'$\alpha_{p}$'
+    gdat.scalpriofactdoff = 'self'
+
     gdat.minmreds = 0.
     gdat.maxmreds = 1.5
     

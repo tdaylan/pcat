@@ -2727,6 +2727,13 @@ def initarry( \
         
         if trueyaxi != None:
             axis.axhline(trueyaxi, ls='--', color='g')
+        
+        if lablxaxi == None:
+            lablxaxi = getattr(listgdat[0], 'labl' + namexaxi + 'totl')
+        
+        if scalxaxi == None:
+            scalxaxi = getattr(listgdat[0], 'scal' + namexaxi)
+        
         axis.set_xlabel(lablxaxi)
         axis.set_xticks(indxiter+1.)
         axis.set_xticklabels(listtickxaxi)
