@@ -4727,13 +4727,12 @@ def setpinit(gdat, boolinitsetp=False):
                     else:
                         setattr(gdat, 'prop' + strgfeat + 'pop%d' % l, False)
         
+    gdat.numbstdp = gdat.numbfixpprop
     if gdat.fittnumbtrap > 0:
-        gdat.numbstdp = gdat.numbfixpprop
         for l in gdat.fittindxpopl:
-            if gdat.fittmaxmnumbelempopl[l] > 0 and getattr(gdat, 'prop' + strgfeat + 'pop%d' % l):
-                gdat.numbstdp += gdat.fittnumbcomp[l]
-    else:
-        gdat.numbstdp = gdat.numbfixpprop
+            for strgcomp in gdat.fittliststrgcomp[l]:
+                if gdat.fittmaxmnumbelempopl[l] > 0 and getattr(gdat, 'prop' + strgcomp + 'pop%d' % l):
+                    gdat.numbstdp += 1
     gdat.numbstdpfixp = gdat.numbfixpprop
     if gdat.indxfixpprop.size > 0:
         gdat.strgstdp = copy(array(gdat.fittlablfixp)[gdat.indxfixpprop])
@@ -11442,10 +11441,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 gdatfinl = readfile(path) 
                 
                 if gdatfinl.verbtype > 0:
-                    print 'Final processing %s...' % rtagfinl
+                    print 
+                    print 
+                    print 'Final processing %s..., %s' % (rtagfinl, strgpdfn)
                 
                 if gdatfinl.verbtype > 0:
-                    print 'Post processing...'
                     print 'Reading chains from disk...'
                     timeinit = gdatfinl.functime()
     
@@ -11766,6 +11766,13 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, strgpdfn + 'leviharm', leviharm)
             
             if strgpdfn == 'prio':
+                print 'heeeey'
+                print 
+                print 
+                print 
+                print 
+                print 
+                print 
                 levi = log(mean(exp(listlliktotl)))
                 setattr(gdatfinl, strgpdfn + 'levi', levi)
             
@@ -11778,7 +11785,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if strgpdfn == 'post' and gdatfinl.checprio:
             pathoutprtag = retr_pathoutprtag(rtag)
             path = pathoutprtag + 'gdatfinlprio'
-            gdatprio = readfile(path)
+            
+            try:
+                gdatprio = readfile(path)
+            except:
+                proc_finl(gdat=gdatfinl, strgpdfn='prio', listnamevarbproc=listnamevarbproc, forcplot=forcplot)
+        
         else:
             gdatprio = None
         
@@ -12042,9 +12054,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, 'skew' + strgpdfn + 'lliktotl', skewlliktotl)
             setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
 
-            info = retr_infofromlevi(pmealliktotl, levi)
+            if strgpdfn == 'post':
+                levi = getattr(gdatprio, 'priolevi')
+                info = retr_infofromlevi(pmealliktotl, levi)
+                setattr(gdatfinl, strgpdfn + 'infoharm', info)
+            
             bcom = maxmlliktotl - pmealliktotl
-            setattr(gdatfinl, strgpdfn + 'infoharm', infoharm)
             setattr(gdatfinl, strgpdfn + 'bcom', bcom)
         
         for namevarbscal in ['lliktotl', 'lpripena']:

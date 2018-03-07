@@ -14,8 +14,9 @@ def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
     dictargs['truenumbelempop0reg0'] = 100
     dictargs['indxenerincl'] = array([2])
     dictargs['proppsfp'] = True
+    dictargs['checprio'] = True
     
-    dictargs['numbswep'] = 100000
+    dictargs['numbswep'] = 10000
     dictargs['numbsamp'] = 100
     
     listnamecnfgextn = ['fittvlow', 'fittloww', 'fittnomi', 'fitthigh', 'fittvhig']
@@ -47,8 +48,8 @@ def test_fittminmflux_fittparsnone(strgcnfgextnexec=None):
                         
                         strgpara='$PCAT_PATH/cnfg.py', \
                         
-                        forcprev=True, \
-                        execpara=True, \
+                        #forcprev=True, \
+                        #execpara=True, \
                         
                         namexaxi='fittminmflux', \
                         lablxaxi=lablxaxi, \

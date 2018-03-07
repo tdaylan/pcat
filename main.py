@@ -1212,11 +1212,8 @@ def init( \
                 setp_varblimt(gdat, 'gamm', array([1e-1, 1e0]) * enertemp, strgmodl=strgmodl)
         
     if gdat.numbpixlfull != 1:
-        #minmdefs = 0.003 / gdat.anglfact
-        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='true')
         minmdefs = 0.003 / gdat.anglfact
         setp_varbvalu(gdat, 'minmdefs', minmdefs)
-        #setp_varbvalu(gdat, 'minmdefs', minmdefs, strgmodl='fitt')
     
     minmnobj = 1e0
     setp_varbvalu(gdat, 'minmnobj', minmnobj)
@@ -2618,13 +2615,27 @@ def initarry( \
             listtypevarbcomp += ['pctl']
             listpdfnvarbcomp += ['post']
     
-    listnamevarbcomp += ['lliktotl', 'lliktotl', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'levi', 'leviharm']
-    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
+    # add others to the variable list
+    listnamevarbcomp += ['lliktotl', 'lliktotl', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'leviharm']
+    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
     listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$', \
-                                                                                                                                        '$\ln P(D)$', '$\ln P_H(D)$']
-    listtypevarbcomp += ['minm', 'maxm', '', '', 'stdv', 'skew', 'kurt', '', '']
-    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'prio', 'post']
-
+                                                                                                                                                       '$\ln P_H(D)$']
+    listtypevarbcomp += ['minm', 'maxm', '', '', 'stdv', 'skew', 'kurt', '']
+    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+   
+    # add log-evidence to the variable list, if prior is also sampled
+    booltemp = True
+    for k in range(numbgdat):
+        if not listgdat[k].checprio:
+            booltemp = False
+    if booltemp:
+        listnamevarbcomp += ['leviharm']
+        listscalvarbcomp += ['self']
+        listlablvarbcomp += ['$\ln P(D)$']
+        listtypevarbcomp += ['']
+        listpdfnvarbcomp += ['prio']
+    
+    # time stamp
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
     dictoutp = dict()
