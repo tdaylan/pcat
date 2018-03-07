@@ -2616,7 +2616,7 @@ def initarry( \
             listpdfnvarbcomp += ['post']
     
     # add others to the variable list
-    listnamevarbcomp += ['lliktotl', 'lliktotl', 'infoharm', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'leviharm']
+    listnamevarbcomp += ['lliktotl', 'lliktotl', 'infopost', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'levipost']
     listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
     listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$', \
                                                                                                                                                        '$\ln P_H(D)$']
@@ -2629,9 +2629,9 @@ def initarry( \
         if not listgdat[k].checprio:
             booltemp = False
     if booltemp:
-        listnamevarbcomp += ['leviharm']
+        listnamevarbcomp += ['leviprio']
         listscalvarbcomp += ['self']
-        listlablvarbcomp += ['$\ln P(D)$']
+        listlablvarbcomp += ['$\ln P_{pr}(D)$']
         listtypevarbcomp += ['']
         listpdfnvarbcomp += ['prio']
     

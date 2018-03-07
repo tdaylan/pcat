@@ -3757,10 +3757,10 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablbcom = '\eta'
     gdat.lablinfo = 'D_{KL}'
     gdat.lablinfounit = 'nat'
-    gdat.labllevi = '\ln P(D)'
-    gdat.lablleviharm = '\ln P_H(D)'
-    gdat.lablleviunit = 'nat'
-    gdat.lablleviharmunit = 'nat'
+    gdat.lablleviprio = '\ln P_{pr}(D)'
+    gdat.labllevipost = '\ln P_{po}(D)'
+    gdat.labllevipriounit = 'nat'
+    gdat.labllevipostunit = 'nat'
     
     gdat.lablsind = 's'
     for i in gdat.indxenerinde:
@@ -8073,12 +8073,12 @@ def retr_colr(gdat, strgstat, strgmodl, indxpopl=None):
     return colr
 
 
-def retr_leviharm(listllik):
+def retr_levipost(listllik):
     
     minmlistllik = amin(listllik)
-    leviharm = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
+    levipost = log(mean(1. / exp(listllik - minmlistllik))) + minmlistllik
     
-    return leviharm
+    return levipost
 
 
 def retr_infofromlevi(pmeallik, levi):
@@ -11761,9 +11761,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             #gdatfinl.maxmlliktotl = gdatfinl.maxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
-            
-            leviharm = retr_leviharm(listlliktotl)
-            setattr(gdatfinl, strgpdfn + 'leviharm', leviharm)
+                
+            levipost = retr_levipost(listlliktotl)
+            setattr(gdatfinl, strgpdfn + 'levipost', levipost)
             
             if strgpdfn == 'prio':
                 print 'heeeey'
@@ -12054,10 +12054,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, 'skew' + strgpdfn + 'lliktotl', skewlliktotl)
             setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
 
-            if strgpdfn == 'post':
-                levi = getattr(gdatprio, 'priolevi')
-                info = retr_infofromlevi(pmealliktotl, levi)
-                setattr(gdatfinl, strgpdfn + 'infoharm', info)
+            if strgpdfn == 'post' and gdatfinl.checprio:
+                leviesti = getattr(gdatprio, 'priolevi')
+                infoesti = retr_infofromlevi(pmealliktotl, leviesti)
+                setattr(gdatfinl, strgpdfn + 'infoesti', infoesti)
             
             bcom = maxmlliktotl - pmealliktotl
             setattr(gdatfinl, strgpdfn + 'bcom', bcom)
@@ -13209,7 +13209,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                         for d0 in indxregipopl[l0]:
                             for strgfrst in liststrgfeat[l0]:
                                 
-                                if strgfrst == 'spec' or strgfrst == 'specplot' or strgfeat == 'deflprof':
+                                if strgfrst == 'spec' or strgfrst == 'specplot' or strgfrst == 'deflprof':
                                     continue
 
                                 for strgseco in liststrgfeat[l0]:
