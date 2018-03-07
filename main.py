@@ -2504,7 +2504,7 @@ def initarry( \
              forcprev=False, \
              takeprev=False, \
              strgpara=False, \
-             execpara=False, \
+             execpara=True, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=[], \
              listscalvarbcomp=[], \
@@ -2559,8 +2559,6 @@ def initarry( \
             print 'listrtagprev'
             print listrtagprev
             if execpara:
-                #cmnd = 'python %s %s %s > null.log &' % (strgpara, inspect.stack()[1][3], strgcnfgextn)
-                #print cmnd
                 prid = os.fork()
                 if prid > 0:
                     listpridchld.append(prid)
