@@ -3758,12 +3758,16 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablgamm = '\gamma_l'
 
     gdat.lablbcom = '\eta'
-    gdat.lablinfo = 'D_{KL}'
-    gdat.lablinfounit = 'nat'
-    gdat.lablleviprio = '\ln P_{pr}(D)'
-    gdat.labllevipost = '\ln P_{po}(D)'
-    gdat.labllevipriounit = 'nat'
+    
+    gdat.lablinfopost = 'D_{KL}'
+    gdat.lablinfopostunit = 'nat'
+    gdat.lablinfoprio = 'D_{KL,pr}'
+    gdat.lablinfopriounit = 'nat'
+    
+    gdat.labllevipost = '\ln P(D)'
     gdat.labllevipostunit = 'nat'
+    gdat.lablleviprio = '\ln P_{pr}(D)'
+    gdat.labllevipriounit = 'nat'
     
     gdat.lablsind = 's'
     for i in gdat.indxenerinde:
@@ -11765,19 +11769,15 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             gdatfinl.indxswepmaxmllik = gdatfinl.indxprocmaxmllik * gdatfinl.numbsamp + gdatfinl.indxswepmaxmllikproc[gdatfinl.indxprocmaxmllik]
             gdatfinl.sampvarbmaxmllik = gdatfinl.sampvarbmaxmllikproc[gdatfinl.indxprocmaxmllik, :]
                 
-            levipost = retr_levipost(listlliktotl)
-            setattr(gdatfinl, strgpdfn + 'levipost', levipost)
+            if strgpdfn == 'post':
+                levipost = retr_levipost(listlliktotl)
+                infopost = retr_infofromlevi(pmealliktotl, levipost)
+                setattr(gdatfinl, strgpdfn + 'levipost', levipost)
+                setattr(gdatfinl, strgpdfn + 'infopost', infopost)
             
             if strgpdfn == 'prio':
-                print 'heeeey'
-                print 
-                print 
-                print 
-                print 
-                print 
-                print 
-                levi = log(mean(exp(listlliktotl)))
-                setattr(gdatfinl, strgpdfn + 'levi', levi)
+                leviprio = log(mean(exp(listlliktotl)))
+                setattr(gdatfinl, strgpdfn + 'leviprio', leviprio)
             
         # parse the sample vector
         listfixp = listsampvarb[:, gdatfinl.fittindxfixp]
@@ -12058,9 +12058,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
 
             if strgpdfn == 'post' and gdatfinl.checprio:
-                leviesti = getattr(gdatprio, 'priolevi')
-                infoesti = retr_infofromlevi(pmealliktotl, leviesti)
-                setattr(gdatfinl, strgpdfn + 'infoesti', infoesti)
+                leviprio = getattr(gdatprio, 'priolevi')
+                infoprio = retr_infofromlevi(pmealliktotl, leviprio)
+                setattr(gdatfinl, strgpdfn + 'infoprio', infoprio)
             
             bcom = maxmlliktotl - pmealliktotl
             setattr(gdatfinl, strgpdfn + 'bcom', bcom)
