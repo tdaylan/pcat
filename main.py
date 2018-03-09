@@ -2501,6 +2501,9 @@ def initarry( \
     indxiter = arange(numbiter) 
     
     cntrcomp = 0
+    
+    if execpara:
+        cntrproc = 0
 
     dictvarb['boolarry'] = strgcnfgextnexec == None
     listrtag = []
@@ -2535,6 +2538,7 @@ def initarry( \
         else:
             print 'Did not find any previous run.'
             if execpara:
+                cntrproc += 1
                 prid = os.fork()
                 if prid > 0:
                     listpridchld.append(prid)
@@ -2551,8 +2555,9 @@ def initarry( \
     if execpara:
         for prid in listpridchld:
             os.waitpid(prid, 0)
-        print 'Exiting before comparion plots because of parallel execution...'
-        return
+        if cntrproc > 0:
+            print 'Exiting before comparion plots because of parallel execution...'
+            return
     
     if cntrcomp == 0:
         print 'Found no runs...'
