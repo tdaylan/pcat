@@ -4887,7 +4887,8 @@ def setpinit(gdat, boolinitsetp=False):
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpmeanelem]] = 2e-1
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixpfluxdistsloppop0]] = 2e-1
             
-            gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
+            if gdat.numbpixlfull > 1:
+                gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
             
             if (gdat.indxenerincl == arange(5)).all():
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
