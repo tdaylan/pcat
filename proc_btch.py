@@ -21,6 +21,12 @@ elif len(sys.argv) == 3:
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listrtag = fnmatch.filter(os.listdir(pathimag), strgsrch)
 
+# shuffle the run rtag list
+listrtag = array(listrtag)
+numbrtag = len(listrtag)
+indx = choice(arange(numbrtag), size=numbrtag, replace=False)
+listrtag = listrtag[indx]
+
 listnamevarbproc = None
 
 if boolfinl:
