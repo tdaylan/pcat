@@ -12066,7 +12066,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 infopost = retr_infofromlevi(pmealliktotl, levipost)
                 setattr(gdatfinl, strgpdfn + 'infopost', infopost)
             if strgpdfn == 'post' and gdatfinl.checprio:
-                leviprio = getattr(gdatprio, 'priolevi')
+                leviprio = getattr(gdatprio, 'prioleviprio')
                 infoprio = retr_infofromlevi(pmealliktotl, leviprio)
                 setattr(gdatfinl, strgpdfn + 'infoprio', infoprio)
             
