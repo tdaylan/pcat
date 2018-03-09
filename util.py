@@ -11439,8 +11439,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             # read gdatmodi
             boolgdatmodi = chec_statfile(rtagmodi, 'gdatmodi', strgpdfn)
             if not boolgdatmodi:
-                print 'Modified global object not found. Quitting...'
-                continue
+                print 'Modified global object not found. Quitting final-processing...'
+                return
         
             if n == 0:
                 
