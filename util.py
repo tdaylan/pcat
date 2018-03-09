@@ -11772,9 +11772,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 
             if strgpdfn == 'post':
                 levipost = retr_levipost(listlliktotl)
-                infopost = retr_infofromlevi(pmealliktotl, levipost)
                 setattr(gdatfinl, strgpdfn + 'levipost', levipost)
-                setattr(gdatfinl, strgpdfn + 'infopost', infopost)
             
             if strgpdfn == 'prio':
                 leviprio = log(mean(exp(listlliktotl)))
@@ -12058,6 +12056,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, 'skew' + strgpdfn + 'lliktotl', skewlliktotl)
             setattr(gdatfinl, 'kurt' + strgpdfn + 'lliktotl', kurtlliktotl)
 
+            if strgpdfn == 'post':
+                infopost = retr_infofromlevi(pmealliktotl, levipost)
+                setattr(gdatfinl, strgpdfn + 'infopost', infopost)
             if strgpdfn == 'post' and gdatfinl.checprio:
                 leviprio = getattr(gdatprio, 'priolevi')
                 infoprio = retr_infofromlevi(pmealliktotl, leviprio)
