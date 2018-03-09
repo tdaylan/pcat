@@ -1912,16 +1912,6 @@ def init( \
                                                                                                     exp(-0.5 * (gdat.binsbgalcartmesh - gdat.bgalprio[k])**2 / gdat.stdvspatprio**2)
                     gdat.pdfnspatpriotemp /= amax(gdat.pdfnspatpriotemp)
     
-    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
-        for q in gdat.indxrefr:
-            print 'q'
-            print q
-            print 'gdat.refrliststrgfeat[q]'
-            print gdat.refrliststrgfeat[q]
-            print 'gdat.refrliststrgfeattagg[q]'
-            print gdat.refrliststrgfeattagg[q]
-            print
-    
     if gdat.datatype == 'mock':
         
         gdat.truenumbelemtotl = sum(gdat.truenumbelem)
@@ -1939,18 +1929,6 @@ def init( \
 
                 setattr(gdat, 'refr' + name[4:], valu)
 
-    if gdat.strgcnfg.startswith('pcat_ferm_igal_mock'):
-        for q in gdat.indxrefr:
-            print 'q'
-            print q
-            print 'gdat.refrliststrgfeat[q]'
-            print gdat.refrliststrgfeat[q]
-            print 'gdat.refrliststrgfeattagg[q]'
-            print gdat.refrliststrgfeattagg[q]
-            print
-        
-        raise Exception('')
-    
     if gdat.allwrefr and gdat.datatype == 'inpt':
 
         # rotate reference elements to the spatial coordinate system of PCAT
@@ -2556,14 +2534,12 @@ def initarry( \
             listrtag.append(listrtagprev[-1])
         else:
             print 'Did not find any previous run.'
-            print 'listrtagprev'
-            print listrtagprev
             if execpara:
                 prid = os.fork()
                 if prid > 0:
                     listpridchld.append(prid)
                 else:
-                    print 'Child running the configuration extension...' 
+                    print 'Forking a child process to run the configuration extension...' 
                     rtag = init(**dictvarbtemp)
                     if 'checprio' in dictvarbtemp and dictvarbtemp['checprio']:
                         proc_finl(rtag=rtag, strgpdfn='prio')

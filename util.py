@@ -4861,9 +4861,10 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 1e-2
             gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 3e-2
             
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en00')]] = 8e-4
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en01')]] = 1e-3
-            gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en02')]] = 2e-3
+            if 'fdfm' in gdat.fittlistnameback: 
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en00')]] = 8e-4
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en01')]] = 1e-3
+                gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0001reg0en02')]] = 2e-3
             
             if 'dark' in gdat.fittlistnameback: 
                 indxbackdark = gdat.fittlistnameback.index('dark')
@@ -4890,22 +4891,27 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.numbpixlfull > 1:
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
             
-            if (gdat.indxenerincl == arange(5)).all():
+            print 'gdat.indxenerincl'
+            print gdat.indxenerincl
+            print 'gdat.indxenerincl == arange(5)'
+            print gdat.indxenerincl == arange(5)
+            if gdat.indxenerincl.size == 5 and (gdat.indxenerincl == arange(5)).all():
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en02')]] = 2e-2
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en03')]] = 2e-2
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en04')]] = 1e-2
-            elif gdat.indxenerincl == array([2]):
+            elif gdat.indxenerincl.size == 2 and (gdat.indxenerincl == array([2])).all():
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
             
             if gdat.fittnumbtrap > 0:
                 if gdat.propcomp:
-                    gdat.stdvstdp[gdat.indxstdppop0lgal] = 2e-2
-                    gdat.stdvstdp[gdat.indxstdppop0bgal] = 2e-2
+                    if gdat.numbpixlfull > 1:
+                        gdat.stdvstdp[gdat.indxstdppop0lgal] = 2e-2
+                        gdat.stdvstdp[gdat.indxstdppop0bgal] = 2e-2
+                        if gdat.numbener > 1:
+                            gdat.stdvstdp[gdat.indxstdppop0sind] = 2e-1
                     gdat.stdvstdp[gdat.indxstdppop0flux] = 2e-1
-                    if gdat.numbener > 1:
-                        gdat.stdvstdp[gdat.indxstdppop0sind] = 2e-1
         
         if gdat.exprtype == 'sdyn':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
