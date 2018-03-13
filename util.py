@@ -12144,6 +12144,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             else:
                 gdatfinl.timeprocnorm = gdatfinl.timeproctotlswep / gdatfinl.timeatcrcntpmaxm
    
+            ## make merged plots for each folder
+            merg_plot(gdatfinl)
+
         # write the final gdat object
         path = gdatfinl.pathoutprtag + 'gdatfinl' + strgpdfn
 
@@ -12162,7 +12165,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
 
     print 'checking plotfinl%s...' % strgpdfn
-    
+
+
     booltemp = chec_statfile(rtagfinl, 'plotfinl', strgpdfn)
     if booltemp:
         print 'Final plots already written.'
@@ -12179,6 +12183,19 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             filestat.write('plotfinl%s written.\n' % strgpdfn)
             filestat.close()
     print
+
+
+def merg_plot(gdat):
+    
+    for attr, valu in gdat.__dict__.iteritems():
+        if attr.startswith('path') and attr != 'pathimag' and attr != 'pathdata' and not 'fram' in attr:
+            listfile = fnmatch.filter(os.listdir(valu), '*.pdf')
+            if len(listfile) > 1:
+                cmnd = 'convert'
+                for filetemp in listfile:
+                    cmnd += ' ' + valu + '/' + filetemp
+                cmnd += ' ' + valu + '/merg.pdf'
+                os.system(cmnd)
 
 
 def retr_axis_wrap(gdat, namevarbscal):

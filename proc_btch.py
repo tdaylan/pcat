@@ -1,7 +1,7 @@
 from __init__ import *
 from util import *
 
-print 'PCAT post process routine started.'
+print 'PCAT final-processing routine'
 
 boolfinl = False
 boolanim = False
