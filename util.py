@@ -12191,7 +12191,7 @@ def merg_plot(gdat):
         if attr.startswith('path') and attr != 'pathimag' and attr != 'pathdata' and not 'fram' in attr:
             listfile = fnmatch.filter(os.listdir(valu), '*.pdf')
             if len(listfile) > 1:
-                cmnd = 'convert'
+                cmnd = 'convert -density 300'
                 for filetemp in listfile:
                     cmnd += ' ' + valu + '/' + filetemp
                 cmnd += ' ' + valu + '/merg.pdf'

@@ -16,7 +16,7 @@ def comp(nameplot):
     
     strgplot = nameplot.split('/')[-1]
 
-    cmndconv = 'convert'
+    cmndconv = 'convert -density 300'
     for line in listline:
         print 'nameplot'
         print nameplot
