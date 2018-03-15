@@ -13,12 +13,14 @@ def comp(nameplot):
     print cmnd
     os.system(cmnd)
     print
+    
+    strgplot = nameplot.split('/')[-1])
 
     for line in listline:
         print 'nameplot'
         print nameplot
         
-        namedest = pathimag + 'comprtag/' + nameplot + '/' + nameplot + line + '.pdf'
+        namedest = pathimag + 'comprtag/' + nameplot + '/' + strgplot + line + '.pdf'
         if not os.path.isfile(namedest):
             cmnd = 'cp %s' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
