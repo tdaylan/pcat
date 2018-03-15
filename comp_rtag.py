@@ -14,7 +14,7 @@ def comp(nameplot):
     os.system(cmnd)
     print
     
-    strgplot = nameplot.split('/')[-1])
+    strgplot = nameplot.split('/')[-1]
 
     for line in listline:
         print 'nameplot'
