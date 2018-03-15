@@ -16,13 +16,15 @@ def comp(nameplot):
     
     strgplot = nameplot.split('/')[-1]
 
+    cmndconv = 'convert'
     for line in listline:
         print 'nameplot'
         print nameplot
         
-        namedest = pathimag + 'comprtag/' + nameplot + '/' + strgplot + line + '.pdf'
+        namedest = pathimag + 'comprtag/' + nameplot + '/' + strgplot + '_' + line + '.pdf'
         if not os.path.isfile(namedest):
-            cmnd = 'cp %s' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
+            strgorig = '%s' % pathimag + line + '/' + nameplot + '.pdf'
+            cmnd = 'cp %s %s' % (strgorig, namedest)
             
             print cmnd
             os.system(cmnd)
@@ -31,6 +33,13 @@ def comp(nameplot):
             pass
             print 'File already exists...'
         print
+    
+        cmndconv += ' ' + namedest
+    cmndconv += ' ' + pathimag + 'comprtag/' + nameplot + '/merg.pdf'
+    print 'cmndconv'
+    print cmndconv
+    #os.system(cmndconv)
+
     print
 
 print 'comp_rtag() initialized...'
