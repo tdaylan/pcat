@@ -15,9 +15,12 @@ def comp(nameplot):
     print
 
     for line in listline:
+        print 'nameplot'
+        print nameplot
+        
         namedest = pathimag + 'comprtag/' + nameplot + '/' + nameplot + line + '.pdf'
         if not os.path.isfile(namedest):
-            cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
+            cmnd = 'cp %s' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
             print cmnd
             os.system(cmnd)
