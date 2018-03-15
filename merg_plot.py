@@ -7,10 +7,10 @@ if len(sys.argv) > 2:
     listrtag = sys.argv[1:]
 else:
     strgsrch = sys.argv[1]
+    pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
+    listrtag = os.listdir(pathimag)
     listrtag = fnmatch.filter(listrtag, strgsrch)
 
-pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
-listrtag = fnmatch.filter(os.listdir(pathimag), '20*_pcat_*')
 listgdat = retr_listgdat(listrtag, typegdat='init')
 
 for gdat in listgdat:
