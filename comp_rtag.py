@@ -10,37 +10,32 @@ def comp(nameplot):
     print 'comp() working on ' + nameplot + '...'
     
     cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
-    print cmnd
+    #print cmnd
     os.system(cmnd)
-    print
+    #print
     
     strgplot = nameplot.split('/')[-1]
 
     cmndconv = 'convert -density 300'
     for line in listline:
-        print 'nameplot'
-        print nameplot
         
         namedest = pathimag + 'comprtag/' + nameplot + '/' + strgplot + '_' + line + '.pdf'
         if not os.path.isfile(namedest):
             strgorig = '%s' % pathimag + line + '/' + nameplot + '.pdf'
             cmnd = 'cp %s %s' % (strgorig, namedest)
             
-            print cmnd
+            #print cmnd
             os.system(cmnd)
-            print
+            #print
         else:
             pass
             print 'File already exists...'
-        print
+        #print
     
         cmndconv += ' ' + namedest
     cmndconv += ' ' + pathimag + 'comprtag/' + nameplot + '/merg.pdf'
-    print 'cmndconv'
-    print cmndconv
-    #os.system(cmndconv)
-
-    print
+    os.system(cmndconv)
+    #print
 
 print 'comp_rtag() initialized...'
 
