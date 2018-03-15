@@ -7,7 +7,7 @@ if len(sys.argv) > 2:
     listrtag = sys.argv[1:]
 else:
     strgsrch = sys.argv[1]
-    listrtag = fnmatch.filter(listline, strgsrch)
+    listrtag = fnmatch.filter(listrtag, strgsrch)
 
 pathimag = os.environ["PCAT_DATA_PATH"] + '/imag/'
 listrtag = fnmatch.filter(os.listdir(pathimag), '20*_pcat_*')

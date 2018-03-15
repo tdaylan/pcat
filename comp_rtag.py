@@ -7,25 +7,26 @@ def comp(nameplot):
     
     nameplot = nameplot[:-4]
 
-    #print
-    #print 'comp() working on ' + nameplot + '...'
+    print 'comp() working on ' + nameplot + '...'
     
     cmnd = 'mkdir -p ' + pathimag + 'comprtag/' + nameplot + '/'
-    #print cmnd
+    print cmnd
     os.system(cmnd)
-    #print
+    print
 
     for line in listline:
         namedest = pathimag + 'comprtag/' + nameplot + '/' + nameplot + line + '.pdf'
         if not os.path.isfile(namedest):
             cmnd = 'cp %s/' % pathimag + line + '/' + nameplot + '.pdf ' + namedest 
             
-            #print cmnd
+            print cmnd
             os.system(cmnd)
+            print
         else:
             pass
-            #print 'File already exists...'
-        #print
+            print 'File already exists...'
+        print
+    print
 
 print 'comp_rtag() initialized...'
 
