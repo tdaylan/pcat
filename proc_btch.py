@@ -33,7 +33,9 @@ if boolfinl:
     print 'Post-processing...'
     for rtag in listrtag:
         print 'Working on %s...' % rtag
-        proc_finl(rtag=rtag, listnamevarbproc=listnamevarbproc, forcplot=True)
+        
+        for strgpdfn in ['prio', 'post']:
+            proc_finl(rtag=rtag, listnamevarbproc=listnamevarbproc, strgpdfn=strgpdfn, forcplot=True)
         #try:
         #    proc_finl(rtag=rtag)
         #except:

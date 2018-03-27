@@ -909,6 +909,10 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=N
 def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
     
     # calculate the distance to all pixels from each point source
+    print 'lgal'
+    summgene(lgal * gdat.anglfact)
+    print 'bgal'
+    summgene(bgal * gdat.anglfact)
     dist = retr_angldistunit(gdat, lgal, bgal, indxpixleval)
     
     # interpolate the PSF onto the pixels
@@ -917,6 +921,10 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
             indxoaxitemp = retr_indxoaxipnts(gdat, lgal, bgal)
             psfntemp = psfnintp[indxoaxitemp](dist)
         else:
+            print 'dist'
+            summgene(dist * gdat.anglfact)
+            print
+
             psfntemp = psfnintp(dist)
     if gdat.kernevaltype == 'bspx':
         pass
@@ -4541,8 +4549,8 @@ def setpinit(gdat, boolinitsetp=False):
     # temp -- gdat.numbener * gdat.numbevtt * gdat.numbpixl should be region dependent...
     gdat.numbdata = gdat.numbregi * gdat.numbener * gdat.numbevtt * gdat.numbpixl
 
-    gdat.lgalgridrofi = gdat.lgalgrid[gdat.indxpixlrofi]
-    gdat.bgalgridrofi = gdat.bgalgrid[gdat.indxpixlrofi]
+    #gdat.lgalgridrofi = gdat.lgalgrid[gdat.indxpixlrofi]
+    #gdat.bgalgridrofi = gdat.bgalgrid[gdat.indxpixlrofi]
 
     gdat.minmexpo = empty(gdat.numbregi)
     gdat.maxmexpo = empty(gdat.numbregi)
@@ -4592,7 +4600,7 @@ def setpinit(gdat, boolinitsetp=False):
             sbrtbackhealfull = [[[] for c in indxback[d]] for d in gdat.indxregi]
             for d in gdat.indxregi:
                 for c in indxback[d]:
-                    sbrtbackhealfull[c][d] = copy(sbrtbacknorm[d][c])
+                    sbrtbackhealfull[d][c] = copy(sbrtbacknorm[d][c])
             setattr(gdat, strgmodl + 'sbrtbackhealfull', sbrtbackhealfull)
         sbrtbacknormincl = [[[] for c in indxback[d]] for d in gdat.indxregi]
         for d in gdat.indxregi:
@@ -4620,7 +4628,11 @@ def setpinit(gdat, boolinitsetp=False):
         
     if gdat.numbpixlfull != 1:
         retr_axis(gdat, 'angl', 0., gdat.maxmangl, gdat.numbangl)
-    
+        
+        print 'gdat.binsangl'
+        summgene(gdat.binsangl * gdat.anglfact)
+        print
+
     gdat.listnamespatmean = ['full']
     if gdat.exprtype == 'ferm':
         gdat.listnamespatmean += ['innr']
@@ -4878,8 +4890,10 @@ def setpinit(gdat, boolinitsetp=False):
                         gdat.stdvstdp[gdat.indxstdppop0lgal] = 1e-100
                         gdat.stdvstdp[gdat.indxstdppop0bgal] = 1e-100
                     gdat.stdvstdp[gdat.indxstdppop0flux] = 8e-2
-                    gdat.stdvstdp[gdat.indxstdppop0sindcolr0001] = 8e-2
-                    gdat.stdvstdp[gdat.indxstdppop0sindcolr0002] = 2e-1
+
+                    if gdat.fittspectype[0] == 'colr':
+                        gdat.stdvstdp[gdat.indxstdppop0sindcolr0001] = 8e-2
+                        gdat.stdvstdp[gdat.indxstdppop0sindcolr0002] = 2e-1
         
         if gdat.exprtype == 'chan':
             gdat.stdvstdp = 1e-2 + zeros(gdat.numbstdp)
@@ -4891,10 +4905,6 @@ def setpinit(gdat, boolinitsetp=False):
             if gdat.numbpixlfull > 1:
                 gdat.stdvstdp[gdat.indxstdppara[gdat.fittindxfixppsfp]] = 4e-1
             
-            print 'gdat.indxenerincl'
-            print gdat.indxenerincl
-            print 'gdat.indxenerincl == arange(5)'
-            print gdat.indxenerincl == arange(5)
             if gdat.indxenerincl.size == 5 and (gdat.indxenerincl == arange(5)).all():
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en00')]] = 2e-2
                 gdat.stdvstdp[gdat.indxstdppara[getattr(gdat, 'fittindxfixpbacpback0000reg0en01')]] = 3e-2
@@ -5162,6 +5172,22 @@ def setpinit(gdat, boolinitsetp=False):
                     if strgmodl == 'fitt' and gdat.fittmaxmnumbelempopl[l] > 0:
                         gdat.boolhash = True
     
+    print 'gdat.maxmlgal'
+    print gdat.maxmlgal * gdat.anglfact
+    print 'gdat.fittmaxmlgal'
+    print gdat.fittmaxmlgal * gdat.anglfact
+    print 'gdat.maxmlgaldata'
+    print gdat.maxmlgaldata * gdat.anglfact
+    print 'gdat.maxmbgal'
+    print gdat.maxmbgal * gdat.anglfact
+    print 'gdat.fittmaxmbgal'
+    print gdat.fittmaxmbgal * gdat.anglfact
+    print 'gdat.maxmbgaldata'
+    print gdat.maxmbgaldata * gdat.anglfact
+    print 'gdat.maxmgangdata'
+    print gdat.maxmgangdata * gdat.anglfact
+    print
+
     if gdat.boolhash:
         gdat.numbprox = 3
         gdat.indxprox = arange(gdat.numbprox)
@@ -7056,6 +7082,7 @@ def retr_listrtagprev(strgcnfg):
     listrtagprev = []
     for rtag in listrtag:
         strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
+        
         if chec_statfile(rtag, 'gdatmodi', 'post', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]:
             listrtagprev.append(rtag) 
     
@@ -9128,6 +9155,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                         (dicteval[ll][dd]['bgal'][k] - gdat.bgalgrid[listindxpixleval[ll][dd][k]])**2) / dicteval[ll][dd]['gwdt'][k]**2)
                                         
                                     if boolelempsfn[l]:
+                                        print 'dicteval[ll][dd][lgal][k]'
+                                        summgene(dicteval[ll][dd]['lgal'][k] * gdat.anglfact)
+                                        print 'dicteval[ll][dd][bgal][k]'
+                                        summgene(dicteval[ll][dd]['bgal'][k] * gdat.anglfact)
+                                        print
                                         sbrtdfnc[dd][:, listindxpixleval[ll][dd][k], :] += retr_sbrtpnts(gdat, dicteval[ll][dd]['lgal'][k], \
                                                                                        dicteval[ll][dd]['bgal'][k], varbevalextd, psfnintp, oaxitype, listindxpixleval[ll][dd][k])
                                     
@@ -9467,7 +9499,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print anglhost[d][e]
                             print 'serihost[d][e]'
                             print serihost[d][e]
-                        sbrt['hostisf%d' % e][dd] = retr_sbrtsers(gdat, gdat.lgalgridrofi, gdat.bgalgridrofi, lgalhost[d][e], \
+                        sbrt['hostisf%d' % e][dd] = retr_sbrtsers(gdat, gdat.lgalgrid, gdat.bgalgrid, lgalhost[d][e], \
                                                                                     bgalhost[d][e], spechost, sizehost[d][e], ellphost[d][e], anglhost[d][e], serihost[d][e])
                         
                         if gdat.diagmode:
@@ -11095,6 +11127,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q0 in gdat.indxrefr:
+                                print 'q0'
+                                print q0
+                                print 'gdat.refrliststrgfeat[q0]'
+                                print gdat.refrliststrgfeat[q0]
+                                print 'gdat.refrliststrgfeattagg[q0][l]'
+                                print gdat.refrliststrgfeattagg[q0][l]
+                                print
                                 for d0 in gdat.refrindxregipopl[q0]:
                                     if gdat.refrnumbelem[q0][d0] == 0:
                                         continue
@@ -11106,6 +11145,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                 
                                         if strgfeatfrst == 'spec' or strgfeatfrst == 'specplot':
                                             continue
+                                        
+                                        if strgfeatfrst == 'flux':
+                                            print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
+                                            print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
+                                            print 
                                         
                                         refrfeatfrst = getattr(gdat, 'refr' + strgfeatfrst)
                                         binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
@@ -11184,11 +11228,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                 if gdat.diagmode:
                                                     if where((cmplfeatfrst[indxgood] > 1.) | (cmplfeatfrst[indxgood] < 0.))[0].size > 0:
                                                         raise Exception('')
-                                        
-                                        #print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
-                                        #print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
-                                        #print 'pmeapostcmplfluxpop0pop2reg0'
-                                        #print 
+                                       
+                                        if strgfeatfrst == 'flux':
+                                            print 'strgpfix + cmpl + strgfeatfrst + pop%dpop%dreg%d % (l, q0, d0)'
+                                            print strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0)
+                                            print 
                                         
                                         setattr(gdatobjt, strgpfix + 'cmpl' + strgfeatfrst + 'pop%dpop%dreg%d' % (l, q0, d0), cmplfeatfrst)
                                 
@@ -15293,6 +15337,9 @@ def plot_grap(plottype, verbtype=0):
     figr, axis = plt.subplots(figsize=(6, 6))
 
     grap = nx.DiGraph()
+    if plottype == 'meta':
+        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'magenta']
+
     if plottype == 'lght0000':
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
 
@@ -15313,16 +15360,27 @@ def plot_grap(plottype, verbtype=0):
         listcolr = ['olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', \
                                                                                                                                         'magenta', 'magenta', 'magenta']
 
-    grap.add_edges_from([ \
-                         ('meanelem', 'numbelem'), \
-                         ('modl','data'), \
-                         ('psfp', 'modl'), \
-                         ('bacp', 'modl'), \
-                         ('lgal','modl'), \
-                         ('bgal','modl'), \
-                         ('numbelem','lgal'), \
-                         ('numbelem','bgal'), \
-                        ])
+    if plottype.startswith('meta'):
+        grap.add_edges_from([ \
+                             ('meanelem', 'numbelem'), \
+                             ('modl','data'), \
+                             ('psfp', 'modl'), \
+                             ('feat','modl'), \
+                             ('numbelem','feat'), \
+                             ('ampldistslop', 'ampl'), \
+                            ])
+    
+    if plottype.startswith('lght') or plottype.startswith('lens'):
+        grap.add_edges_from([ \
+                             ('meanelem', 'numbelem'), \
+                             ('modl','data'), \
+                             ('psfp', 'modl'), \
+                             ('bacp', 'modl'), \
+                             ('lgal','modl'), \
+                             ('bgal','modl'), \
+                             ('numbelem','lgal'), \
+                             ('numbelem','bgal'), \
+                            ])
     
     if plottype.startswith('lght'):
         grap.add_edges_from([ \

@@ -2208,6 +2208,9 @@ def init( \
         gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
         gdat.liststrgvarbarry = gdat.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
         gdat.liststrgchan = gdat.liststrgvarbarry + ['fixp'] + gdat.liststrgvarblistsamp + gdat.listnamevarbscal
+        
+        if gdat.strgcnfg == 'pcat_ferm_igal_mock_nomi' and not 'cmplfluxpop0pop2reg0' in gdat.liststrgchan:
+            raise Exception('')
     
     #print 'gdat.liststrgchan'
     #print gdat.liststrgchan
@@ -2536,7 +2539,10 @@ def initarry( \
             print
             listrtag.append(listrtagprev[-1])
         else:
-            print 'Did not find any previous run.'
+            if len(listrtagprev) > 0:
+                print 'Found at least one previous run. But, repeating the run anways...'
+            else:
+                print 'Did not find any previous run.'
             if execpara:
                 cntrproc += 1
                 prid = os.fork()
