@@ -2543,7 +2543,7 @@ def initarry( \
                 print 'Found at least one previous run. But, repeating the run anways...'
             else:
                 print 'Did not find any previous run.'
-            if execpara:
+            if execpara and strgcnfgextnexec != None:
                 cntrproc += 1
                 prid = os.fork()
                 if prid > 0:
@@ -2556,9 +2556,10 @@ def initarry( \
                     proc_finl(rtag=rtag, strgpdfn='post')
                     os._exit(0)
             else:
+                print 'Calling the main PCAT function without forking a child...' 
                 listrtag.append(init(**dictvarbtemp))
     
-    if execpara:
+    if execpara and strgcnfgextnexec != None:
         for prid in listpridchld:
             os.waitpid(prid, 0)
         if cntrproc > 0:
