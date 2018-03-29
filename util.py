@@ -12254,7 +12254,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         #setattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'flat', getattr(gdat, 'list' + strgpdfn + strgpdfntemp + 'totl').flatten())
         if not booltile:
             listdeltlliktotl = getattr(gdatfinl, 'list' + strgpdfn + 'deltlliktotl')
-            listdeltlliktotlflat = listdeltlliktotl.reshape((gdatfinl.numbswep, 1))
+            listdeltlliktotlflat = listdeltlliktotl.reshape((gdatfinl.numbswep * gdatfinl.numbproc, 1))
             setattr(gdatfinl, 'list' + strgpdfn + 'deltlliktotlflat', listdeltlliktotlflat)
         
             # memory usage
