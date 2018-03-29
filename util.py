@@ -3493,18 +3493,6 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat)
     
-    for q in gdat.indxrefr:
-        print 'q'
-        print q
-        print 'gdat.refrliststrgfeat[q]'
-        print gdat.refrliststrgfeat[q]
-        for l in gdat.fittindxpopl:
-            print 'l'
-            print l
-            print 'gdat.refrliststrgfeattagg[q][l]'
-            print gdat.refrliststrgfeattagg[q][l]
-            print 
-
     # common element features
     gdat.liststrgfeatcomm = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
     for q in gdat.indxrefr:
@@ -5224,6 +5212,7 @@ def setpinit(gdat, boolinitsetp=False):
         if gdat.datatype == 'inpt':
             path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
             gdatmock = readfile(path)
+            gdat.truenumbtrap = gdatmock.truenumbtrap
             if gdatmock.trueindxpopl != gdat.fittindxpopl:
                 raise Exception('')
             for l in indxpopl:
@@ -11133,16 +11122,17 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             setattr(gdatobjt, strgpfix + 'ptfn' + strgfeat + 'pop%dreg%d' % (q, d), ptfn)
             
             if gdat.rtagmock != None and gdat.datatype == 'inpt' or gdat.datatype == 'mock':
-                for l in indxpopl:
-                    for d in indxregipopl[l]:
-                        for strgfeat in liststrgfeat[l]:
-                            if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':# or strgfeat.startswith('aerr'):
-                                continue
-                            if strgfeat in gdat.trueliststrgfeat[l]:
-                                hist = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
-                                ptfn = getattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
-                                histptfn = hist / ptfn
-                                setattr(gdatobjt, strgpfix + 'histptfn' + strgfeat + 'pop%dreg%d' % (l, d), histptfn)
+                if gdat.truenumbtrap > 0:
+                    for l in indxpopl:
+                        for d in indxregipopl[l]:
+                            for strgfeat in liststrgfeat[l]:
+                                if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':# or strgfeat.startswith('aerr'):
+                                    continue
+                                if strgfeat in gdat.trueliststrgfeat[l]:
+                                    hist = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
+                                    ptfn = getattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
+                                    histptfn = hist / ptfn
+                                    setattr(gdatobjt, strgpfix + 'histptfn' + strgfeat + 'pop%dreg%d' % (l, d), histptfn)
 
         ### Exculusive comparison with the true state
         if strgmodl == 'fitt' and gdat.datatype == 'mock':
@@ -11218,15 +11208,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     for l in gdat.fittindxpopl:
                         for d in gdat.fittindxregipopl[l]:
                             for q0 in gdat.indxrefr:
-                                
-                                #print 'q0'
-                                #print q0
-                                #print 'gdat.refrliststrgfeat[q0]'
-                                #print gdat.refrliststrgfeat[q0]
-                                #print 'gdat.refrliststrgfeattagg[q0][l]'
-                                #print gdat.refrliststrgfeattagg[q0][l]
-                                #print
-                                
                                 for d0 in gdat.refrindxregipopl[q0]:
                                     if gdat.refrnumbelem[q0][d0] == 0:
                                         continue
@@ -13025,6 +13006,10 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             for histtype in listhisttype:
                                 
                                 if histtype == 'histptfn':
+                                    
+                                    if gdat.truenumbtrap == 0:
+                                        continue
+
                                     if strgfeat == 'specplot' or strgfeat == 'spec' or strgfeat == 'deflprof':
                                         continue
                                 
