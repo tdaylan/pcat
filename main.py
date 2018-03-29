@@ -2116,6 +2116,18 @@ def init( \
     # final setup
     setpfinl(gdat, True) 
     
+    for q in gdat.indxrefr:
+        print 'q'
+        print q
+        print 'gdat.refrliststrgfeat[q]'
+        print gdat.refrliststrgfeat[q]
+        for l in gdat.fittindxpopl:
+            print 'l'
+            print l
+            print 'gdat.refrliststrgfeattagg[q][l]'
+            print gdat.refrliststrgfeattagg[q][l]
+            print 
+
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)
@@ -2492,6 +2504,7 @@ def initarry( \
              listlablvarbcomp=[], \
              listtypevarbcomp=[], \
              listpdfnvarbcomp=[], \
+             listgdatvarbcomp=[], \
              namexaxi=None, \
              lablxaxi=None, \
              listtickxaxi=None, \
@@ -2543,7 +2556,7 @@ def initarry( \
                 print 'Found at least one previous run. But, repeating the run anways...'
             else:
                 print 'Did not find any previous run.'
-            if execpara and strgcnfgextnexec != None:
+            if execpara and strgcnfgextnexec == None:
                 cntrproc += 1
                 prid = os.fork()
                 if prid > 0:
@@ -2559,7 +2572,7 @@ def initarry( \
                 print 'Calling the main PCAT function without forking a child...' 
                 listrtag.append(init(**dictvarbtemp))
     
-    if execpara and strgcnfgextnexec != None:
+    if execpara and strgcnfgextnexec == None:
         for prid in listpridchld:
             os.waitpid(prid, 0)
         if cntrproc > 0:
@@ -2577,6 +2590,9 @@ def initarry( \
     
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
+    if strgcnfgextnexec != None:
+        return
+
     print
     print 'Making comparison plots...'
      
@@ -2600,26 +2616,37 @@ def initarry( \
             listlablvarbcomp += [getattr(listgdat[0], 'labl' + namevarbscal + 'totl')]
             listtypevarbcomp += ['pctl']
             listpdfnvarbcomp += ['post']
+            listgdatvarbcomp += ['post']
     
     # add others to the variable list
     listnamevarbcomp += ['lliktotl', 'lliktotl', 'infopost', 'bcom', 'lliktotl', 'lliktotl', 'lliktotl', 'levipost']
-    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
+    listscalvarbcomp += ['self', 'self', 'self', 'self', 'self', 'self', 'self', 'self']
     listlablvarbcomp += ['$\ln P(D|M_{min})$', '$\ln P(D|M_{max})$', '$D_{KL}$', '$\eta_B$', '$\sigma_{P(D|M)}$', r'$\gamma_{P(D|M)}$', r'$\kappa_{P(D|M)}$', \
                                                                                                                                                        '$\ln P_H(D)$']
     listtypevarbcomp += ['minm', 'maxm', '', '', 'stdv', 'skew', 'kurt', '']
-    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
-   
+    listpdfnvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+    listgdatvarbcomp += ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post']
+    
+    arrytemp = array([len(listnamevarbcomp), len(listscalvarbcomp), len(listlablvarbcomp), len(listtypevarbcomp), len(listpdfnvarbcomp), len(listgdatvarbcomp)])
+    if (arrytemp - mean(arrytemp) != 0.).all():
+        raise Exception('')
+
     # add log-evidence to the variable list, if prior is also sampled
     booltemp = True
     for k in range(numbgdat):
         if not listgdat[k].checprio:
             booltemp = False
+    
+    pathbase = '%s/imag/%s_%s/' % (os.environ["PCAT_DATA_PATH"], strgtimestmp, inspect.stack()[1][3])
     if booltemp:
+        listgdatprio = retr_listgdat(listrtag, typegdat='finlprio')
+        
         listnamevarbcomp += ['leviprio']
         listscalvarbcomp += ['self']
         listlablvarbcomp += ['$\ln P_{pr}(D)$']
         listtypevarbcomp += ['']
         listpdfnvarbcomp += ['prio']
+        listgdatvarbcomp += ['prio']
     
     # time stamp
     strgtimestmp = tdpy.util.retr_strgtimestmp()
@@ -2632,10 +2659,13 @@ def initarry( \
         dictoutp[strgtemp] = [[] for k in range(numbiter)]
     
     for k in indxiter:
-        for strgvarbtotl in liststrgvarbtotl:
-            dictoutp[strgvarbtotl][k] = getattr(listgdat[k], strgvarbtotl)
+        for a, strgvarbtotl in enumerate(liststrgvarbtotl):
+            if listgdatvarbcomp[a] == 'prio':
+                gdattemp = listgdatprio[k]
+            else:
+                gdattemp = listgdat[k]
+            dictoutp[strgvarbtotl][k] = getattr(gdattemp, strgvarbtotl)
 
-    pathbase = '%s/imag/%s_%s/' % (os.environ["PCAT_DATA_PATH"], strgtimestmp, inspect.stack()[1][3])
     cmnd = 'mkdir -p %s' % pathbase 
     os.system(cmnd)
     
@@ -3197,8 +3227,6 @@ def work(pathoutprtag, lock, indxprocwork):
                     if namefixp == attr:
                         if namefixp.startswith('numbelem'):
                             try:
-                                print 'namefixp'
-                                print namefixp
                                 indxpopltemp = int(namefixp[-5])
                                 indxregitemp = int(namefixp[-1])
                                 initnumbelem = getattr(gdat, 'initnumbelempop%dreg%d' % (indxpopltemp, indxregitemp))
@@ -3304,13 +3332,6 @@ def work(pathoutprtag, lock, indxprocwork):
                 pass
         try:
             initvalu = getattr(gdat, 'init' + namefixp)
-            
-            print 'namefixp'
-            print namefixp
-            print 'initvalu'
-            print initvalu
-            print
-
             gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', initvalu, k)
             if gdat.verbtype > 0:
                 print 'Received initial condition for %s: %.3g' % (namefixp, initvalu)

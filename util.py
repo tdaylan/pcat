@@ -817,8 +817,8 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
             for g, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
                 minm = getattr(gdat, 'fittminm' + strgcomp)
                 maxm = getattr(gdat, 'fittmaxm' + strgcomp)
-                comp = getattr(gdat, namerefr + strgcomp)[l][d]
                 try:
+                    comp = getattr(gdat, namerefr + strgcomp)[l][d]
                     if gdat.fittlistscalcomp[l][g] == 'self' or gdat.fittlistscalcomp[l][g] == 'logt':
                         fact = getattr(gdat, 'fittfact' + strgcomp)
                         if gdat.fittlistscalcomp[l][g] == 'self':
@@ -3493,6 +3493,18 @@ def setpinit(gdat, boolinitsetp=False):
                 else:
                     gdat.refrliststrgfeattagg[q][l].append(strgfeat)
     
+    for q in gdat.indxrefr:
+        print 'q'
+        print q
+        print 'gdat.refrliststrgfeat[q]'
+        print gdat.refrliststrgfeat[q]
+        for l in gdat.fittindxpopl:
+            print 'l'
+            print l
+            print 'gdat.refrliststrgfeattagg[q][l]'
+            print gdat.refrliststrgfeattagg[q][l]
+            print 
+
     # common element features
     gdat.liststrgfeatcomm = [[[] for l in gdat.fittindxpopl] for q in gdat.indxrefr]
     for q in gdat.indxrefr:
@@ -5208,6 +5220,19 @@ def setpinit(gdat, boolinitsetp=False):
     #summgene(gdat.binsangl * gdat.anglfact)
     #print
 
+    if gdat.rtagmock != None:
+        if gdat.datatype == 'inpt':
+            path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
+            gdatmock = readfile(path)
+            if gdatmock.trueindxpopl != gdat.fittindxpopl:
+                raise Exception('')
+            for l in indxpopl:
+                for d in indxregipopl[l]:
+                    for strgfeat in liststrgfeat[l]:
+                        ptfn = getattr(gdatmock, 'trueptfn' + strgfeat)
+                        setattr(gdat, 'trueptfn', ptfn)
+            gdat.trueliststrgfeat = gdatmock.trueliststrgfeat
+    
     if gdat.boolhash:
         gdat.numbprox = 3
         gdat.indxprox = arange(gdat.numbprox)
@@ -6379,6 +6404,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 liststrgfeatodim[l] += ['flux']
             if elemtype[l] == 'lghtpntspuls':
                 liststrgfeatodim[l] += ['lumi']
+                liststrgfeatodim[l] += ['flux']
                 liststrgfeatodim[l] += ['mass']
                 liststrgfeatodim[l] += ['dlos']
             if elemtype[l] == 'lens':
@@ -9263,7 +9289,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print 'Diagnostic check failed.'
                             print 'cntppntschec[dd]'
                             summgene(cntppntschec[dd])
-                            raise Exception('Point source spectral surface brightness is not positive-definite.')
+                            print 'Point source spectral surface brightness is not positive-definite.'
+                            #raise Exception('Point source spectral surface brightness is not positive-definite.')
                 
                 stopchro(gdat, gdatmodi, strgstat, 'elemsbrtdfnc')
             
@@ -11064,20 +11091,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                 feattemp[l][d] = array([])
                 setattr(gdatobjt, strgpfix + strgfeat, feattemp)
             
-            if strgmodl == 'true':
-                for q in gdat.indxrefr:
-                    if elemtype[q] == 'lens' and numbelempopl[q] > 0:
-                        for d in gdat.trueindxregipopl[q]:
-                            refrmcut = dictelem[q][d]['mcut']
-                            refrhistmcut = getattr(gdat, 'truehistmcutpop%dreg%d' % (q, d))
-                            indx = where(refrhistmcut > 0)[0]
-                            histmcutcorr = zeros(gdat.numbbinsplot)
-                            if len(refrmcut) > 0:
-                                refrhistmcutpars = histogram(refrmcut[listindxelemfilt[0][q][d]], bins=bins)[0]
-                                if indx.size > 0:
-                                    histmcutcorr[indx] = refrhistmcutpars[indx] / refrhistmcut[indx]
-                            setattr(gdatobjt, strgpfix + 'histmcutcorr', histmcutcorr)
-        
         # copy true state to the reference state
         if strgmodl == 'true':
             for name, valu in deepcopy(gdat.__dict__).iteritems():
@@ -11092,6 +11105,45 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                     name = name.replace('true', 'refr')
                     setattr(gdat, name, valu)
         
+        if numbtrap > 0 and gdat.priofactdoff != 0.:
+            if strgmodl == 'true':
+                for q in gdat.indxrefr:
+                    for d in gdat.trueindxregipopl[q]:
+                        for strgfeat in gdat.refrliststrgfeat[q]:
+                            if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':
+                                continue
+                            refrhist = getattr(gdat, 'truehist' + strgfeat + 'pop%dreg%d' % (q, d))
+                            
+                            indxelempars = where(dictelem[q][d]['deltllik'] > 2.5)[0]
+                            
+                            ptfn = zeros(gdat.numbbinsplot) - 1.
+                            refrhistpars = zeros(gdat.numbbinsplot) - 1.
+                            
+                            indxrefrgood = where(refrhist > 0)[0]
+                            ptfn[indxrefrgood] = 0.
+                            refrhistpars[indxrefrgood] = 0.
+                            
+                            bins = getattr(gdat, 'bins' + strgfeat)
+                            if len(indxelempars) > 0:
+                                refrhistpars = histogram(dictelem[q][d][strgfeat][indxelempars], bins=bins)[0].astype(float)
+                                if indxrefrgood.size > 0:
+                                    ptfn[indxrefrgood] = refrhistpars[indxrefrgood] / refrhist[indxrefrgood]
+                            
+                            setattr(gdatobjt, strgpfix + 'histpars' + strgfeat + 'pop%dreg%d' % (q, d), refrhistpars)
+                            setattr(gdatobjt, strgpfix + 'ptfn' + strgfeat + 'pop%dreg%d' % (q, d), ptfn)
+            
+            if gdat.rtagmock != None and gdat.datatype == 'inpt' or gdat.datatype == 'mock':
+                for l in indxpopl:
+                    for d in indxregipopl[l]:
+                        for strgfeat in liststrgfeat[l]:
+                            if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':# or strgfeat.startswith('aerr'):
+                                continue
+                            if strgfeat in gdat.trueliststrgfeat[l]:
+                                hist = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
+                                ptfn = getattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
+                                histptfn = hist / ptfn
+                                setattr(gdatobjt, strgpfix + 'histptfn' + strgfeat + 'pop%dreg%d' % (l, d), histptfn)
+
         ### Exculusive comparison with the true state
         if strgmodl == 'fitt' and gdat.datatype == 'mock':
             if lensmodltype != 'none':
@@ -12938,44 +12990,53 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                         lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                         limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
                         
-                        # for true model, also plot the significant elements only
-                        # temp
-                        #if strgmodl == 'true' and strgfeat in gdat.listnamefeatpars:
-                        #    listname = ['hist' + strgfeat, 'hist' + strgfeat + 'pars']
-                        #else:
-                        #    listname = ['hist' + strgfeat]
-
-                        listname = ['hist' + strgfeat + 'pop%dreg%d' % (l, d)]
-                        for name in listname:
-                            if gdat.numbpixl > 1:
-                                listydattype = ['totl', 'sden']
-                            else:
-                                listydattype = ['totl']
-                            for ydattype in listydattype:
+                        if gdat.numbpixl > 1:
+                            listydattype = ['totl', 'sden']
+                        else:
+                            listydattype = ['totl']
+                        for ydattype in listydattype:
+                            
+    
+                            ## plot the surface density of elements
+                            if ydattype == 'sden':
                                 
                                 # plot the surface density of elements only for the amplitude feature
-                                if strgfeat != namefeatampl and ydattype == 'sden':
+                                if strgfeat != namefeatampl: 
                                     continue
-    
-                                ## plot the surface density of elements
-                                if ydattype == 'sden':
-                                    if gdat.sdenunit == 'degr':
-                                        factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
-                                    if gdat.sdenunit == 'ster':
-                                        factydat = 1. / (2. * gdat.maxmgang)**2
-                                        lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
-                                ## plot the total number of elements
-                                if ydattype == 'totl':
-                                    factydat = 1.
-                                    lablydat = r'$N_{%s}$' % lablelemextn[l]
                                 
-                                boolhistprio = not booltile
-                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
+                                if gdat.sdenunit == 'degr':
+                                    factydat = (pi / 180.)**2 / (2. * gdat.maxmgang)**2
+                                    lablydat = r'$\Sigma_{%s}$ [deg$^{-2}$]' % lablelemextn[l]
+                                if gdat.sdenunit == 'ster':
+                                    factydat = 1. / (2. * gdat.maxmgang)**2
+                                    lablydat = r'$\Sigma_{%s}$ [sr$^{-2}$]' % lablelemextn[l]
+                            
+                            ## plot the total number of elements
+                            if ydattype == 'totl':
+                                factydat = 1.
+                                lablydat = r'$N_{%s}$' % lablelemextn[l]
+                        
+                            if ydattype == 'totl' and not (gdat.datatype == 'inpt' and gdat.rtagmock == None):
+                                listhisttype = ['hist', 'histptfn']
+                            else:
+                                listhisttype = ['hist']
+                            
+                            boolhistprio = not booltile
+                            for histtype in listhisttype:
+                                
+                                if histtype == 'histptfn':
+                                    if strgfeat == 'specplot' or strgfeat == 'spec' or strgfeat == 'deflprof':
+                                        continue
+                                
+                                    if not strgfeat in gdat.trueliststrgfeat[l]:
+                                        continue
+                                
+                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'hist' + strgfeat + 'pop%dreg%d' % (l, d), \
+                                                  'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, boolhistprio=boolhistprio, \
                                                   #indxydat=indxydat, strgindxydat=strgindxydat, \
-                                                  nameinte='histodim/')
+                                                  nameinte='histodim/', histtype=histtype)
         
     if not booltile:
         if numbtrap > 0:
@@ -14241,6 +14302,9 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
                 if strgstat == 'pdfn':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%dreg%d' % (b, indxregiplot), strgpdfn, strgmome='errr')
                 cntr += 1
+           
+            if liststrgmodl[a] == 'true':
+                listyerr = zeros((2, numbplot, gdat.numbener))
             
             # plot energy spectra of the data, background model components and total background
             if gdat.numbener > 1:
@@ -14305,7 +14369,11 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
                     if k == cntrdata and a > 0:
                         continue
                     
-                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, color=colr, marker=mrkr, ls=linestyl, markersize=15, alpha=alph, label=listlegdsbrtspec[k])
+                    if liststrgmodl[a] == 'fitt':
+                        legd = listlegdsbrtspec[k]
+                    else:
+                        legd = None
+                    temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, color=colr, marker=mrkr, ls=linestyl, markersize=15, alpha=alph, label=legd)
                     for caps in listcaps:
                         caps.set_markeredgewidth(1)
 
@@ -14582,14 +14650,10 @@ def plot_sigmcont(gdat, axis, strgfrst, indxpoplfrst, strgseco=None):
                 axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     
 
-def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, \
+def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, histtype='hist', \
                      indxrefrplot=None, indxydat=None, strgindxydat=None, indxxdat=None, strgindxxdat=None, plottype='none', \
                      scal=None, scalxdat=None, scalydat=None, limtxdat=None, limtydat=None, omittrue=False, nameinte='', \
                      lablxdat='', lablydat='', factxdat=1., factydat=1., histodim=False, offslegd=None, tdim=False, ydattype='totl', boolhistprio=True):
-    
-    print 'plot_gene()'
-    print 'strgydat'
-    print strgydat
     
     if strgydat[-8:-5] == 'pop':
         boolelem = True
@@ -14612,7 +14676,10 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     else:
         xdat = getattr(gdat, strgxdat) * factxdat
-        ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
+        if histtype == 'histptfn':
+            ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'histptfn' + strgydat[4:], strgpdfn) * factydat
+        else:
+            ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     
     if indxxdat != None:
         xdat = xdat[indxxdat]
@@ -14648,10 +14715,10 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             colr = gdat.fittcolr
         
         if strgstat == 'pdfn':
-            yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
-            
-            print 'plotting model...'
-
+            if histtype == 'histptfn':
+                yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'histptfn' + strgydat[4:], strgpdfn, strgmome='errr') * factydat
+            else:
+                yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
             if indxydat != None:
                 yerr = yerr[[slice(None)] + indxydat]
             
@@ -14732,11 +14799,19 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 legd = gdat.refrlegd
                 colr = gdat.refrcolr
     
-            print 'plotting refr...'
             if histodim:
                 axis.bar(xdattemp, ydat, deltxdat, color=colr, label=legd, alpha=gdat.alphhist, linewidth=1, edgecolor=colr)
             else:
                 axis.plot(xdat, ydat, color=colr, label=legd, alpha=gdat.alphline)
+                           
+            try:
+                if histodim:
+                    if histtype == 'histptfn':
+                        ptfn = getattr(gdat, 'trueptfn' + strgydat[4:])
+                    axis.plot(xdattemp, 10. * ptfn, color=colr, label='PTFN', alpha=gdat.alphline)
+            except:
+                pass
+
             if not boolelem:
                 break
     
@@ -14786,13 +14861,14 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
 
     if strgydat.startswith('hist') and strgydat != 'histdefl' and strgydat != 'histdeflelem' and boolhistprio:
         if strgydat[-8:-5] == 'pop':
-            if strgydat[4:-8] in liststrgfeatprio[int(strgydat[-5])]:
+            strgtemp = strgydat[4:-8]
+            if strgtemp in liststrgfeatprio[int(strgydat[-5])]:
                 xdatprio = getattr(gdat, strgmodl + strgxdat + 'prio') * factxdat
                 if gdat.datatype == 'mock' and not omittrue:
                     for q in gdat.indxrefr:
                         if gdat.refrnumbelempopl[q] == 0:
                             continue
-                        if strgydat[4:-8] in gdat.trueliststrgfeatprio[q]:
+                        if strgtemp in gdat.trueliststrgfeatprio[q]:
                             truexdatprio = getattr(gdat, 'true' + strgxdat + 'prio') * factxdat
                             trueydatsupr = getattr(gdat, 'true' + strgydat + 'prio') * factydat
                             trueydatsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'true', strgydat + 'prio', strgpdfn) * factydat
@@ -14847,11 +14923,11 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         print strgydat
         print
 
-    print 'plot_gene() ended'
-    print
-
     plt.tight_layout()
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgydat, nameinte=nameinte)
+    if histtype == 'histptfn':
+        path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'histptfn' + strgydat[4:], nameinte=nameinte)
+    else:
+        path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgydat, nameinte=nameinte)
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
@@ -15212,11 +15288,12 @@ def plot_intr(gdat):
     if gdat.verbtype > 0:
         print 'Making PCAT introductory plots...'
 
+    #plot_grap(plottype='meta', verbtype=1)
     plot_grap(plottype='lght0000', verbtype=1)
-    plot_grap(plottype='lght0001', verbtype=1)
-    plot_grap(plottype='lght0002', verbtype=1)
-    plot_grap(plottype='lght0003', verbtype=1)
-    plot_grap(plottype='lens0000', verbtype=1)
+    #plot_grap(plottype='lght0001', verbtype=1)
+    #plot_grap(plottype='lght0002', verbtype=1)
+    #plot_grap(plottype='lght0003', verbtype=1)
+    #plot_grap(plottype='lens0000', verbtype=1)
     plot_grap(plottype='lens0001', verbtype=1)
     
     with plt.xkcd():
@@ -15371,8 +15448,16 @@ def plot_grap(plottype, verbtype=0):
     if plottype == 'meta':
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'magenta']
 
+
+    if plottype == 'lens0001':
+        listcolr = ['olive', 'olive', 'black', 'magenta', 'magenta', 'magenta', 'magenta', 'magenta', 'olive', 'olive', 'olive', 'olive', 'olive', \
+                                                                                                                                        r'black', 'olive', 'black']
+
     if plottype == 'lght0000':
-        listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta']
+        listcolr = [r'olive', r'black', r'magenta', r'magenta', 'magenta', r'magenta', r'olive', r'olive', r'black', r'olive', r'olive', r'black', r'olive']
+    
+
+
 
     if plottype == 'lght0001':
         listcolr = ['black', 'olive', 'black', 'olive', 'olive', 'black', 'olive', 'olive', 'olive', 'magenta', 'magenta', 'magenta', 'magenta', 'black']
@@ -15387,9 +15472,6 @@ def plot_grap(plottype, verbtype=0):
     if plottype == 'lens0000':
         listcolr = ['olive', 'black', 'black', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', 'magenta']
 
-    if plottype == 'lens0001':
-        listcolr = ['olive', 'black', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'olive', 'black', 'olive', 'magenta', 'magenta', \
-                                                                                                                                        'magenta', 'magenta', 'magenta']
 
     if plottype.startswith('meta'):
         grap.add_edges_from([ \
@@ -15486,19 +15568,22 @@ def plot_grap(plottype, verbtype=0):
     labl['bacp'] = r'$\vec{A}$'
     labl['lgal'] = r'$\vec{\theta_1}$'
     labl['bgal'] = r'$\vec{\theta_2}$'
-    if plottype.startswith('lght'):
-        labl['sind'] = r'$\vec{s}$'
-        labl['ampl'] = r'$\vec{f}$'
+    if plottype.startswith('meta'):
+        labl['feat'] = r'$\vec{\xi}$'
     else:
-        labl['defs'] = r'$\vec{\alpha_{\rm{s}}}$'
+        if plottype.startswith('lght'):
+            labl['sind'] = r'$\vec{s}$'
+            labl['ampl'] = r'$\vec{f}$'
+        else:
+            labl['defs'] = r'$\vec{\alpha_{\rm{s}}}$'
     if plottype == 'lens0001':
         labl['asca'] = r'$\vec{\theta_{\rm{s}}}$'
         labl['acut'] = r'$\vec{\theta_{\rm{c}}}$'
         
     if plottype == 'lght0002':
         labl['expc'] = r'$\vec{E_{\rm{c}}}$'
-    labl['modl'] = r'$\mathcal{M}$'
-    labl['data'] = r'$\mathcal{D}$'
+    labl['modl'] = r'$M_D$'
+    labl['data'] = r'$D$'
     
     posi = nx.circular_layout(grap)
     posi['sinddistmean'] = array([0.4, 0.15])
@@ -15515,11 +15600,11 @@ def plot_grap(plottype, verbtype=0):
     
     if plottype.startswith('lght'):
         if plottype == 'lght0002':
-            posi['psfp'] = array([0.9, -0.0])
-            posi['bacp'] = array([0.7, -0.0])
-        else:
             posi['psfp'] = array([0.7, -0.0])
-            posi['bacp'] = array([0.5, -0.0])
+            posi['bacp'] = array([0.9, -0.0])
+        else:
+            posi['psfp'] = array([0.5, -0.0])
+            posi['bacp'] = array([0.7, -0.0])
     if plottype == 'lens0000':
         posi['psfp'] = array([0.3, -0.0])
         posi['bacp'] = array([0.5, -0.0])
