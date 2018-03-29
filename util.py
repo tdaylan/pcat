@@ -3387,7 +3387,7 @@ def setpprem(gdat):
     gdat.liststrglimt = ['minm', 'maxm']
    
     if gdat.numbswepplot == None:
-        gdat.numbswepplot = 20000
+        gdat.numbswepplot = 50000
     
     gdat.refrcolr = 'mediumseagreen'
     gdat.fittcolr = 'deepskyblue'
