@@ -2116,18 +2116,6 @@ def init( \
     # final setup
     setpfinl(gdat, True) 
     
-    for q in gdat.indxrefr:
-        print 'q'
-        print q
-        print 'gdat.refrliststrgfeat[q]'
-        print gdat.refrliststrgfeat[q]
-        for l in gdat.fittindxpopl:
-            print 'l'
-            print l
-            print 'gdat.refrliststrgfeattagg[q][l]'
-            print gdat.refrliststrgfeattagg[q][l]
-            print 
-
     # write the list of arguments to file
     fram = inspect.currentframe()
     listargs, temp, temp, listargsvals = inspect.getargvalues(fram)

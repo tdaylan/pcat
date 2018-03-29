@@ -13016,6 +13016,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     if not strgfeat in gdat.trueliststrgfeat[l]:
                                         continue
                                 
+                                print 'histtype'
+                                print histtype
+                                print 'gdat.truenumbtrap'
+                                print gdat.truenumbtrap
+                                print
+
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'hist' + strgfeat + 'pop%dreg%d' % (l, d), \
                                                   'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
                                                   lablydat=lablydat, factxdat=factxdat, histodim=True, factydat=factydat, ydattype=ydattype, \
