@@ -5214,7 +5214,7 @@ def setpinit(gdat, boolinitsetp=False):
 
     if gdat.rtagmock != None:
         if gdat.datatype == 'inpt':
-            path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
+            path = gdat.pathoutprtagmock + 'gdatfinlpost'
             gdatmock = readfile(path)
             gdat.truenumbtrap = gdatmock.truenumbtrap
             if gdatmock.trueindxpopl != gdat.fittindxpopl:
