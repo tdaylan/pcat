@@ -5404,7 +5404,7 @@ def setpfinl(gdat, boolinitsetp=False):
         gdat.listnametermlacp += ['lrpp%04d' % a]
         gdat.listlabltermlacp += [u'$\ln P(q_{%d})$' % a]
     gdat.listnametermlacp += ['ljcb']
-    gdat.listlabltermlacp += [u'$\ln J$']
+    gdat.listlabltermlacp += [r'$\ln \alpha_j$']
     
     gdat.numbtermlacp = len(gdat.listnametermlacp)
     gdat.indxtermlacp = arange(gdat.numbtermlacp)
