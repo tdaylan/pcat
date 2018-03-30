@@ -5219,9 +5219,9 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.truenumbtrap = gdatmock.truenumbtrap
             if gdatmock.trueindxpopl != gdat.fittindxpopl:
                 raise Exception('')
-            for l in indxpopl:
-                for d in indxregipopl[l]:
-                    for strgfeat in liststrgfeat[l]:
+            for l in gdat.fittindxpopl:
+                for d in gdat.fittindxregipopl[l]:
+                    for strgfeat in gdat.fittliststrgfeat[l]:
                         ptfn = getattr(gdatmock, 'trueptfn' + strgfeat)
                         setattr(gdat, 'trueptfn', ptfn)
             gdat.trueliststrgfeat = gdatmock.trueliststrgfeat
