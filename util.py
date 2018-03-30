@@ -929,6 +929,10 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, oaxitype, indxpixleval):
                 print 'dist'
                 summgene(dist * gdat.anglfact)
                 print
+            
+            if amax(dist) > gdat.maxmangl:
+                dist[where(dist > gdat.maxmangl)] = gdat.maxmangl
+                print 'HACKING!!!!'
 
             psfntemp = psfnintp(dist)
     if gdat.kernevaltype == 'bspx':
@@ -13007,7 +13011,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 
                                 if histtype == 'histptfn':
                                     
-                                    if gdat.truenumbtrap == 0:
+                                    if gdat.truenumbtrap > 0 or gdat.priofactdoff == 0.:
                                         continue
 
                                     if strgfeat == 'specplot' or strgfeat == 'spec' or strgfeat == 'deflprof':
