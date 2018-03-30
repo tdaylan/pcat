@@ -13011,7 +13011,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 
                                 if histtype == 'histptfn':
                                     
-                                    if gdat.truenumbtrap > 0 or gdat.priofactdoff == 0.:
+                                    if gdat.truenumbtrap == 0 or gdat.priofactdoff == 0.:
                                         continue
 
                                     if strgfeat == 'specplot' or strgfeat == 'spec' or strgfeat == 'deflprof':
