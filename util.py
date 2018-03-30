@@ -8187,33 +8187,43 @@ def retr_infofromlevi(pmeallik, levi):
 
 
 def retr_jcbn():
-   
-    #fluxpare, lgalpare, bgalpare, sindpare, fluxauxi, radiauxi, anglauxi, sindauxi \
-    #                                                        = sympy.symbols('fluxpare lgalpare bgalpare sindpare fluxauxi radiauxi anglauxi sindauxi')
     
     fluxpare, lgalpare, bgalpare, fluxauxi, lgalauxi, bgalauxi = sympy.symbols('fluxpare lgalpare bgalpare fluxauxi lgalauxi bgalauxi')
     
-    #matr = sympy.Matrix([[     fluxauxi, 0, 0 , 0,                         fluxpare,                                    0,                                               0, 0], \
-    #                     [            0, 1, 0 , 0, -radiauxi * sympy.cos(anglauxi) , (1 - fluxauxi) * sympy.cos(anglauxi), (fluxauxi - 1) * radiauxi * sympy.sin(anglauxi), 0], \
-    #                     [            0, 0, 1 , 0, -radiauxi * sympy.cos(anglauxi) , (1 - fluxauxi) * sympy.cos(anglauxi), (1 - fluxauxi) * radiauxi * sympy.cos(anglauxi), 0], \
-    #                     [            0, 0, 0 , 1,                                0,                                    0,                                               0, 0], \
-    #                     [ 1 - fluxauxi, 0, 0 , 0,                        -fluxpare,                                    0,                                               0, 0], \
-    #                     [            0, 1, 0 , 0, -radiauxi * sympy.cos(anglauxi) , -fluxauxi * sympy.cos(anglauxi), fluxauxi * radiauxi * sympy.sin(anglauxi), 0], \
-    #                     [            0, 0, 1 , 0, -radiauxi * sympy.cos(anglauxi) , -fluxauxi * sympy.cos(anglauxi), -fluxauxi * radiauxi * sympy.cos(anglauxi), 0], \
-    #                     [            0, 0, 0 , 0,                               0 ,                                    0,                                               0, 1]])
-
-    matr = sympy.Matrix([[     fluxauxi,  fluxpare, 0,            0, 0,            0], \
-                         [ 1 - fluxauxi, -fluxpare, 0,            0, 0,            0], \
-                         [            0, -lgalauxi, 1, 1 - fluxauxi, 0,            0], \
-                         [            0,  lgalauxi, 1, fluxauxi - 1, 0,            0], \
-                         [            0, -bgalauxi, 0,            0, 1, 1 - fluxauxi], \
-                         [            0,  bgalauxi, 0,            0, 1, fluxauxi - 1]])
+    matr = sympy.Matrix([[ fluxpare,      fluxauxi, 0,            0, 0,            0], \
+                         [-fluxpare, 1  - fluxauxi, 0,            0, 0,            0], \
+                         [-lgalauxi,             0, 1, 1 - fluxauxi, 0,            0], \
+                         [-lgalauxi,             0, 1,    -fluxauxi, 0,            0], \
+                         [-bgalauxi,             0, 0,            0, 1, 1 - fluxauxi], \
+                         [-bgalauxi,             0, 0,            0, 1,    -fluxauxi]])
 
     jcbn = matr.det()
     print jcbn
 
     return jcbn
 
+# f1 = uf f0
+# f2 = (1 - uf) f0
+# x1 = x0 + (1 - uf) ux
+# x2 = x0 - uf ux
+# y1 = y0 + (1 - uf) uy
+# y2 = y0 - uf uy
+
+# f1/uf f1/f0 f1/x0 f1/ux f1/y0 f1/uy
+# f2/uf f2/f0 f2/x0 f2/ux f2/y0 f2/uy
+# x1/uf x1/f0 x1/x0 x1/ux x1/y0 x1/uy
+# x2/uf x2/f0 x2/x0 x2/ux x2/y0 x2/uy
+# y1/uf y1/f0 y1/x0 y1/ux y1/y0 y1/uy
+# y2/uf y2/f0 y2/x0 y2/ux y2/y0 y2/uy
+
+#  f0     uf 0      0 0      0
+# -f0 1 - uf 0      0 0      0
+# -ux      0 1 1 - uf 0      0
+# -ux      0 1    -uf 0      0
+# -uy      0 0      0 1 1 - uf
+# -uy      0 0      0 1    -uf
+
+# f0
 #retr_jcbn()
 
 def retr_angldist(gdat, lgalfrst, bgalfrst, lgalseco, bgalseco):
@@ -13627,7 +13637,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         imag = axis.pcolor(varbfrst, varbseco, info, cmap='Greys')
         plt.colorbar(imag)
-        plot_sigmcont(gdat, axis, name, indxpoplfrst, strgseco=nameseco)
+        plot_sigmcont(gdat, 'fitt', axis, name, indxpoplfrst, strgseco=nameseco)
         scalfrst = getattr(gdat, 'scal' + name + 'plot')
         scalseco = getattr(gdat, 'scal' + nameseco + 'plot')
         if scalfrst == 'logt':
@@ -13647,7 +13657,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         imag = axis.pcolor(varbfrst, varbseco, pvks, cmap='Greys')
         plt.colorbar(imag)
-        plot_sigmcont(gdat, axis, name, indxpoplfrst, strgseco=nameseco)
+        plot_sigmcont(gdat, 'fitt', axis, name, indxpoplfrst, strgseco=nameseco)
         if scalfrst == 'logt':
             axis.set_xscale('log')
         if scalseco == 'logt':
@@ -14600,7 +14610,13 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
                     axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphelem, color=gdat.refrcolrelem[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
-    plot_sigmcont(gdat, axis, strgfrst, indxpoplfrst, strgseco=strgseco)
+    print 'strgfrst'
+    print strgfrst
+    print 'indxpoplfrst'
+    print indxpoplfrst
+    print
+
+    plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=strgseco)
     
     scalfrst = getattr(gdat, 'scal' + strgfrst + 'plot')
     scalseco = getattr(gdat, 'scal' + strgseco + 'plot')
@@ -14627,15 +14643,17 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
     plt.close(figr)
     
 
-def plot_sigmcont(gdat, axis, strgfrst, indxpoplfrst, strgseco=None):
+def plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=None):
     
+    numbcomp = getattr(gdat, strgmodl + 'numbcomp')
+
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
             if strgfrst == 'deltllik':
-                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gdat.fittnumbcomp[indxpoplfrst])
+                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, numbcomp[indxpoplfrst])
                 axis.axvline(deltlliksigm, ls='--', color='black', alpha=0.2) 
             if strgseco == 'deltllik':
-                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gdat.fittnumbcomp[indxpoplfrst])
+                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, numbcomp[indxpoplfrst])
                 axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     
 
@@ -14880,7 +14898,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 axis.plot(valu[0, :], valu[1, :], ls=linestyl, color=colr)
 
     if strgydat.startswith('hist') and strgydat[4:-8] == 'deltllik':
-        plot_sigmcont(gdat, axis, strgxdat[4:], int(strgydat[-1]))
+        plot_sigmcont(gdat, strgmodl, axis, strgxdat[4:], int(strgydat[-1]))
    
     if indxydat != None:
         strgydat += strgindxydat
