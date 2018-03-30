@@ -5222,6 +5222,10 @@ def setpinit(gdat, boolinitsetp=False):
             for l in gdat.fittindxpopl:
                 for d in gdat.fittindxregipopl[l]:
                     for strgfeat in gdat.fittliststrgfeat[l]:
+                        if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':
+                            continue
+                        if strgfeat[-4:] in gdat.listnamerefr[l]:
+                            continue
                         ptfn = getattr(gdatmock, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
                         setattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d), ptfn)
             gdat.trueliststrgfeat = gdatmock.trueliststrgfeat
