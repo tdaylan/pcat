@@ -5222,8 +5222,8 @@ def setpinit(gdat, boolinitsetp=False):
             for l in gdat.fittindxpopl:
                 for d in gdat.fittindxregipopl[l]:
                     for strgfeat in gdat.fittliststrgfeat[l]:
-                        ptfn = getattr(gdatmock, 'trueptfn' + strgfeat)
-                        setattr(gdat, 'trueptfn', ptfn)
+                        ptfn = getattr(gdatmock, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
+                        setattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d), ptfn)
             gdat.trueliststrgfeat = gdatmock.trueliststrgfeat
     
     if gdat.boolhash:
