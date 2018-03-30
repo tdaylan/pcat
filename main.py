@@ -209,7 +209,7 @@ def init( \
 
          # prior
          priotype='logt', \
-         priofactdoff=1., \
+         priofactdoff=None, \
          
          # lensing
          fittrelnpowr=0., \
@@ -372,6 +372,11 @@ def init( \
         else:
             gdat.anlytype = 'nomi'
     
+    if gdat.exprtype == 'chan':
+        gdat.priofactdoff = 0.5
+    else:
+        gdat.priofactdoff = 1.
+
     if gdat.exprtype == 'ferm':
         elemtype = ['lghtpnts']
     if gdat.exprtype == 'chan':
