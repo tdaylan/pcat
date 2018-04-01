@@ -1209,10 +1209,6 @@ def retr_psfnferm(gdat):
     for m in gdat.indxevtt:
         for k in range(numbpsfpform):
             indxfermpsfptemp = m * numbpsfpform * gdat.numbener + gdat.indxener * numbpsfpform + k
-            #if k == 0 or k == 2:
-            #    gdat.psfpexpr[indxfermpsfptemp] = fermform[:, m, k] * gdat.fermscalfact[:, m]
-            #else:
-            #    gdat.psfpexpr[indxfermpsfptemp] = fermform[:, m, k]
             gdat.psfpexpr[indxfermpsfptemp] = fermform[:, m, k]
     
 
@@ -4706,6 +4702,17 @@ def setpinit(gdat, boolinitsetp=False):
         # spatial averaging setup
         # temp
         if gdat.commboolelempsfnanyy:
+            
+            #psfpexprrefr = [ \
+            #                0.28075119,  2.47231847,  0.80118883,  4.12709716,  0.41065212, \
+            #                0.26864196,  2.30128914,  0.94988186,  3.67082551,  0.43411280, \
+            #                0.22774713,  2.08559673,  1.09252476,  3.83093504,  0.49825722, \
+            #                0.29412507,  2.39312755,  0.67897261,  3.63290249,  0.43429424, \
+            #                0.31114269,  5.07762084,  0.75146146,  4.32017532,  0.44487419, \
+            #                0.35342958,  4.88936252,  0.90038969,  5.02284958,  0.47180235, \
+            #               ]
+
+            psfnexpr = retr_psfn(gdat, psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
             gdat.psfnexpr = retr_psfn(gdat, gdat.psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
         
         # temp -- check if 1000 is too much

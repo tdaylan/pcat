@@ -39,6 +39,7 @@ def init( \
          condcatl=False, \
         
          initpsfprefr=False, \
+         initpsfp=None, \
 
          refrlegd=None, \
          refrlegdpopl=None, \
@@ -3332,6 +3333,14 @@ def work(pathoutprtag, lock, indxprocwork):
         except:
             pass
     
+    if gdat.initpsfp != None:
+        print 'Initializing the metamodel PSF from the provided initial state...'
+        if gdat.initpsfp.size != gdat.fittindxfixppsfp.size:
+            raise Exception('')
+        for k, namefixp in enumerate(gdat.fittnamefixp):
+            if k in gdat.fittindxfixppsfp:
+                gdatmodi.thissamp[k] = cdfn_fixp(gdat, 'fitt', gdat.initpsfp[k-gdat.fittindxfixppsfp[0]], k)
+
     if gdat.initpsfprefr:
         print 'Initializing the metamodel PSF from the reference state...'
         for k, namefixp in enumerate(gdat.fittnamefixp):
@@ -3344,6 +3353,10 @@ def work(pathoutprtag, lock, indxprocwork):
         retr_elemlist(gdat, gdatmodi)
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
+    print 'gdatmodi.thissampvarb[gdat.fittindxfixppsfp]'
+    print gdatmodi.thissampvarb[gdat.fittindxfixppsfp]
+    print
+    
     # check the initial unit sample vector for bad entries
     if gdat.fittnumbtrap > 0:
         indxsampdiff = setdiff1d(gdat.fittindxpara, gdat.fittindxfixpnumbelemtotl)
