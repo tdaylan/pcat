@@ -4711,8 +4711,8 @@ def setpinit(gdat, boolinitsetp=False):
             #                0.31114269,  5.07762084,  0.75146146,  4.32017532,  0.44487419, \
             #                0.35342958,  4.88936252,  0.90038969,  5.02284958,  0.47180235, \
             #               ]
-
-            psfnexpr = retr_psfn(gdat, psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
+            #psfnexpr = retr_psfn(gdat, psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
+            
             gdat.psfnexpr = retr_psfn(gdat, gdat.psfpexpr, gdat.indxener, gdat.binsangl, gdat.psfntypeexpr, gdat.binsoaxi, gdat.exproaxitype)
         
         # temp -- check if 1000 is too much
@@ -14657,7 +14657,12 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
 def plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=None):
     
     numbcomp = getattr(gdat, strgmodl + 'numbcomp')
-
+    
+    print 'numbcomp'
+    print numbcomp
+    print 'indxpoplfrst'
+    print indxpoplfrst
+    print
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
             if strgfrst == 'deltllik':
