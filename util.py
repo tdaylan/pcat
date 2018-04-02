@@ -3840,19 +3840,24 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.lablrelm = r'\langle |\vec{\nabla}_{\hat{\alpha}} k_l| / \alpha_{s,n} \rangle'
     gdat.lablrelk = r'\langle |\vec{\nabla}_{\hat{\alpha}} k_l| / \alpha_{s,n} \rangle'
     gdat.lablrelf = r'\langle |\vec{\nabla}_{\hat{\alpha}} k_l| / \alpha_{s,n} \rangle / k_m'
+    
+    gdat.minmcmpl = -0.2
+    gdat.maxmcmpl = 1.2
+    gdat.minmfdis = -0.2
+    gdat.maxmfdis = 1.2
    
     for q in gdat.indxrefr:
         for l in gdat.fittindxpopl:
             for d in gdat.fittindxregipopl[l]:
-                setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), -0.2)
-                setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), 1.2)
+                setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), gdat.minmcmpl)
+                setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), gdat.maxmcmpl)
                 setattr(gdat, 'corrcmplpop%dpop%dreg%d' % (l, q, d), None)
                 setattr(gdat, 'factcmplpop%dpop%dreg%dplot' % (l, q, d), 1.)
                 setattr(gdat, 'scalcmplpop%dpop%dreg%d' % (l, q, d), 'self')
                 setattr(gdat, 'lablcmplpop%dpop%dreg%d' % (l, q, d), '$c_{%d%d%d}$' % (l, q, d))
                 
-                setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), -0.2)
-                setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), 1.2)
+                setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), gdat.minmfdis)
+                setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), gdat.maxmfdis)
                 setattr(gdat, 'corrfdispop%dpop%dreg%d' % (q, l, d), None)
                 setattr(gdat, 'factfdispop%dpop%dreg%dplot' % (q, l, d), 1.)
                 setattr(gdat, 'scalfdispop%dpop%dreg%d' % (q, l, d), 'self')
@@ -4384,10 +4389,6 @@ def setpinit(gdat, boolinitsetp=False):
     
     gdat.factcmplplot = 1.
     gdat.factfdisplot = 1.
-    gdat.minmcmpl = -0.2
-    gdat.maxmcmpl = 1.2
-    gdat.minmfdis = -0.2
-    gdat.maxmfdis = 1.2
 
     if gdat.thindata:
         expotemp = [[] for d in gdat.indxregi]
@@ -5980,7 +5981,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         if boolelemlghtanyy:
             # flux
             if gdat.exprtype == 'ferm':
-                minmflux = 3e-9
+                minmflux = 1e-9
                 maxmflux = 1e-6
             if gdat.exprtype == 'chan':
                 if gdat.anlytype == 'spec':
@@ -12183,6 +12184,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             if strgchan in gdatfinl.listnamevarbcpct:
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
         
+        print 'gdatfinl.pmeapostcmplfluxpop0pop0reg0'
+        print gdatfinl.pmeapostcmplfluxpop0pop0reg0
+        summgene(gdatfinl.pmeapostcmplfluxpop0pop0reg0)
+        print 
+        
         if not booltile:
             pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
             stdvlliktotl = getattr(gdatfinl, 'stdv' + strgpdfn + 'lliktotl')
@@ -13101,6 +13107,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 if strgmodl != 'true' and gdat.allwrefr and gdat.asscrefr:
                     for strgclas in ['cmpl', 'fdis']:
                         nameinte = strgclas + 'odim/'
+                        limtydat = [getattr(gdat, 'minm' + strgclas), getattr(gdat, 'maxm' + strgclas)]
                         for l in gdat.fittindxpopl:
                             for d in gdat.fittindxregipopl[l]:
                                 for q in gdat.indxrefr:
@@ -13125,10 +13132,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                             lablxdat = getattr(gdat, 'labl' + strgfeat + 'totl')
                                             scalxdat = getattr(gdat, 'scal' + strgfeat + 'plot')
                                             limtxdat = [getattr(gdat, 'minm' + strgfeat) * factxdat, getattr(gdat, 'maxm' + strgfeat) * factxdat]
+
                                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgclas + strgfeat + strgindxydat, 'mean' + strgfeat, lablxdat=lablxdat, \
                                                       lablydat=lablydat, factxdat=factxdat, \
                                                       #plottype='errr', \
-                                                      scalxdat=scalxdat, limtydat=[0., 1.], limtxdat=limtxdat, \
+                                                      scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
                                                       omittrue=True, nameinte=nameinte)
 
             if numbtrap > 0:
@@ -14621,12 +14629,6 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
                         refrvarbseco = array([limtseco[0] * factplotseco * 0.1])
                     axis.scatter(refrvarbfrst, refrvarbseco, alpha=gdat.alphelem, color=gdat.refrcolrelem[q], label=gdat.refrlegdelem[q], s=sizelarg)
 
-    print 'strgfrst'
-    print strgfrst
-    print 'indxpoplfrst'
-    print indxpoplfrst
-    print
-
     plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=strgseco)
     
     scalfrst = getattr(gdat, 'scal' + strgfrst + 'plot')
@@ -14658,11 +14660,6 @@ def plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=None):
     
     numbcomp = getattr(gdat, strgmodl + 'numbcomp')
     
-    print 'numbcomp'
-    print numbcomp
-    print 'indxpoplfrst'
-    print indxpoplfrst
-    print
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
             if strgfrst == 'deltllik':
@@ -14704,6 +14701,12 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         else:
             ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     
+    if strgydat.startswith('cmpl'):
+        print 'ydat'
+        print ydat
+        summgene(ydat)
+        print
+
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
@@ -14763,6 +14766,21 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
                                                                                             marker='o', ls='', markersize=5, color=colr, lw=1)
             
+            if strgydat.startswith('cmpl'):
+                print 'ydat'
+                print ydat
+                summgene(ydat)
+                print 'xdat'
+                print xdat
+                summgene(xdat)
+                print 'yerr'
+                print yerr
+                summgene(yerr)
+                print 'indxerrr'
+                print indxerrr
+                summgene(indxerrr)
+                print
+
             # draw error-bar caps 
             if indxerrr.size > 0:
                 temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
@@ -14831,7 +14849,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 if histodim:
                     if histtype == 'histptfn':
                         ptfn = getattr(gdat, 'trueptfn' + strgydat[4:])
-                    axis.plot(xdattemp, 10. * ptfn, color=colr, label='PTFN', alpha=gdat.alphline)
+                    axis.plot(xdattemp, 10. * ptfn, color='purple', label='PTFN', alpha=gdat.alphline)
             except:
                 pass
 
