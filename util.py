@@ -14763,8 +14763,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             else:
                 labltemp = labl
             #axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
-            temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
-                                                                                            marker='o', ls='', markersize=5, color=colr, lw=1)
+            temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, label=labl, \
+                                                                                                 marker='o', ls='', markersize=5, color=colr, lw=1, capsize=5)
             
             if strgydat.startswith('cmpl'):
                 print 'ydat'
@@ -14784,7 +14784,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             # draw error-bar caps 
             if indxerrr.size > 0:
                 temp, listcaps, temp = axis.errorbar(xdat[indxerrr], ydat[indxerrr], yerr=yerr[:, indxerrr], xerr=xerr[:, indxerrr], \
-                                                                                                marker='o', ls='', markersize=5, color=colr, label=labl, lw=1, capsize=5)
+                                                                                                marker='o', ls='', markersize=5, color=colr, lw=1, capsize=5)
                 for caps in listcaps:
                     caps.set_markeredgewidth(1)
 
