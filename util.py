@@ -14762,24 +14762,8 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 labltemp = None
             else:
                 labltemp = labl
-            #axis.scatter(xdat, ydat, marker='o', s=5, color=colr, label=labltemp, lw=1)
             temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, label=labl, \
                                                                                                  marker='o', ls='', markersize=5, color=colr, lw=1, capsize=5)
-            
-            if strgydat.startswith('cmpl'):
-                print 'ydat'
-                print ydat
-                summgene(ydat)
-                print 'xdat'
-                print xdat
-                summgene(xdat)
-                print 'yerr'
-                print yerr
-                summgene(yerr)
-                print 'indxerrr'
-                print indxerrr
-                summgene(indxerrr)
-                print
 
             # draw error-bar caps 
             if indxerrr.size > 0:
