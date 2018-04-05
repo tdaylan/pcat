@@ -12184,11 +12184,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             if strgchan in gdatfinl.listnamevarbcpct:
                 setattr(gdatfinl, 'cpct' + strgpdfn + strgchan, cpcttemp)
         
-        print 'gdatfinl.pmeapostcmplfluxpop0pop0reg0'
-        print gdatfinl.pmeapostcmplfluxpop0pop0reg0
-        summgene(gdatfinl.pmeapostcmplfluxpop0pop0reg0)
-        print 
-        
         if not booltile:
             pmealliktotl = getattr(gdatfinl, 'pmea' + strgpdfn + 'lliktotl')
             stdvlliktotl = getattr(gdatfinl, 'stdv' + strgpdfn + 'lliktotl')
