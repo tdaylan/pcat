@@ -9980,6 +9980,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
         
         for l in indxpopl:
             for d in indxregipopl[l]:
+                print 'gdat.priofactdoff'
+                print gdat.priofactdoff
+                print
                 lpri[0] -= 0.5 * gdat.priofactdoff * numbcomp[l] * numbelem[l][d]
                 lpri[2] += retr_lprbpois(numbelem[l][d], meanelem[l])
                 
