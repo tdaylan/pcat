@@ -12986,7 +12986,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             
             print 'HACKING'
             print
-            gdat.limtydathistfeat = [0.5, max(100. 10**ceil(log10(gdat.refrnumbelemtotl)))]
+            gdat.limtydathistfeat = [0.5, max(100., 10**ceil(log10(gdat.refrnumbelemtotl)))]
             
             limtydat = gdat.limtydathistfeat
 

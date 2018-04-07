@@ -2083,7 +2083,7 @@ def init( \
         if gdat.limtydathistfeat == None:
             if gdat.allwrefr:
                 #gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
-                gdat.limtydathistfeat = [0.5, max(100. 10**ceil(log10(gdat.refrnumbelemtotl)))]
+                gdat.limtydathistfeat = [0.5, max(100., 10**ceil(log10(gdat.refrnumbelemtotl)))]
             else:
                 gdat.limtydathistfeat = [0.5, max(100., 10**ceil(log10(gdat.fittmaxmnumbelemtotl)))]
                 #if gdat.datatype == 'mock':
