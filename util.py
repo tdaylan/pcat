@@ -12983,7 +12983,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     if numbtrap > 0:
         # element feature histograms
         if not (strgmodl == 'true' and gdat.datatype == 'inpt'):
+            
+            print 'HACKING'
+            print
+            gdat.limtydathistfeat = [0.5, max(100. 10**ceil(log10(gdat.refrnumbelemtotl)))]
+            
             limtydat = gdat.limtydathistfeat
+
             for l in indxpopl:
                 strgindxydat = 'pop%d' % l
                 for d in indxregipopl[l]:
