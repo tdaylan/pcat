@@ -11358,7 +11358,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                             continue
                                         
                                         # temp -- the size of the fdis array should depend on strgmodl
-                                        fdistdim = zeros((gdat.numbbinsplot, gdat.numbbinsplot)) - 1.
+                                        fdistdim = zeros((gdat.numbbinsplot, gdat.numbbinsplot))
                                         
                                         if len(indxelemrefrasschits[q][l0][d0]) > 0 and len(dictelem[l0][d0][strgfeatseco]) > 0 and len(dictelem[l0][d0][strgfeatfrst]) > 0: 
                                             fitthistfeattdim =  dictelemtdim['hist' + strgfeattdim]
@@ -11375,7 +11375,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                         
                                         setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + strgfeatseco + 'pop%dpop%dreg%d' % (q, l0, d0), fdistdim)
                                 
-                                    fdisfeatfrst = zeros(gdat.numbbinsplot) - 1.
+                                    fdisfeatfrst = zeros(gdat.numbbinsplot)
                                     if len(indxelemrefrasschits[q][l0][d0]) > 0 and len(dictelem[l0][d0][strgfeatfrst]) > 0:
                                         binsfeatfrst = getattr(gdat, 'bins' + strgfeatfrst)
                                         fitthistfeatfrstfals = histogram(dictelem[l0][d0][strgfeatfrst][indxelemfittasscfals[q][l0][d0]], bins=binsfeatfrst)[0]
@@ -11399,6 +11399,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     print fitthistfeatfrstfals
                                                     print
                                                     raise Exception('')
+                                    
+                                    print 'strgfeatfrst'
+                                    print strgfeatfrst
+                                    print 'fdisfeatfrst'
+                                    print fdisfeatfrst
+                                    summgene(fdisfeatfrst)
+                                    print
+
                                     setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l0, d0), fdisfeatfrst)
     
     
