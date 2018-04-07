@@ -14696,12 +14696,6 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         else:
             ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     
-    if strgydat.startswith('cmpl'):
-        print 'ydat'
-        print ydat
-        summgene(ydat)
-        print
-
     if indxxdat != None:
         xdat = xdat[indxxdat]
     if indxydat != None:
