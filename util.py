@@ -806,12 +806,6 @@ def updt_stat(gdat, gdatmodi):
 
 def initcompfromstat(gdat, gdatmodi, namerefr):
     
-    if gdat.strgcnfg.startswith('pcat_ferm_igal_inpt_exce'):
-        print 'heeeeey'
-        print 'namerefr'
-        print namerefr
-        print
-
     for l in gdat.fittindxpopl:
         for d in gdat.fittindxregipopl[l]:
             for g, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
@@ -835,8 +829,26 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                         compunit = cdfn_expo(icdf, maxm, scal)
                     if gdat.fittlistscalcomp[l][g] == 'powrslop' or gdat.fittlistscalcomp[l][g] == 'igam':
                         slop = gdatmodi.thissampvarb[getattr(gdat, 'fittindxfixp' + strgcomp + 'distslop')[l]]
+                        
                         if gdat.fittlistscalcomp[l][g] == 'powrslop':
                             compunit = cdfn_powr(comp, minm, maxm, slop)
+                        
+                        print 'strgcomp'
+                        print strgcomp
+                        print 'namerefr'
+                        print namerefr
+                        print 'slop'
+                        print slop
+                        print 'minm'
+                        print minm
+                        print 'maxm'
+                        print maxm
+                        print 'comp'
+                        print comp
+                        print 'compunit'
+                        print compunit
+                        print
+
                         if gdat.fittlistscalcomp[l][g] == 'igam':
                             cutf = getattr(gdat, 'cutf' + strgcomp)
                             compunit = cdfn_igam(comp, slop, cutf)
@@ -11400,13 +11412,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                                                     print
                                                     raise Exception('')
                                     
-                                    print 'strgfeatfrst'
-                                    print strgfeatfrst
-                                    print 'fdisfeatfrst'
-                                    print fdisfeatfrst
-                                    summgene(fdisfeatfrst)
-                                    print
-
                                     setattr(gdatobjt, strgpfix + 'fdis' + strgfeatfrst + 'pop%dpop%dreg%d' % (q, l0, d0), fdisfeatfrst)
     
     
@@ -13109,6 +13114,33 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'meancntpdata', scalydat='logt', scalxdat='logt', lablxdat=gdat.lablcnts, histodim=True, \
                                                                                                     lablydat='$N_{pix}$', limtydat=[0.5, gdat.numbener], limtxdat=limtxdat)
 
+            
+            
+            
+            print 'HACKING'
+            gdat.minmcmpl = 0.
+            gdat.maxmcmpl = 1.
+            gdat.minmfdis = 0.
+            gdat.maxmfdis = 1.
+   
+            for q in gdat.indxrefr:
+                for l in gdat.fittindxpopl:
+                    for d in gdat.fittindxregipopl[l]:
+                        setattr(gdat, 'minmcmplpop%dpop%dreg%d' % (l, q, d), gdat.minmcmpl)
+                        setattr(gdat, 'maxmcmplpop%dpop%dreg%d' % (l, q, d), gdat.maxmcmpl)
+                        setattr(gdat, 'corrcmplpop%dpop%dreg%d' % (l, q, d), None)
+                        setattr(gdat, 'factcmplpop%dpop%dreg%dplot' % (l, q, d), 1.)
+                        setattr(gdat, 'scalcmplpop%dpop%dreg%d' % (l, q, d), 'self')
+                        setattr(gdat, 'lablcmplpop%dpop%dreg%d' % (l, q, d), '$c_{%d%d%d}$' % (l, q, d))
+                        
+                        setattr(gdat, 'minmfdispop%dpop%dreg%d' % (q, l, d), gdat.minmfdis)
+                        setattr(gdat, 'maxmfdispop%dpop%dreg%d' % (q, l, d), gdat.maxmfdis)
+                        setattr(gdat, 'corrfdispop%dpop%dreg%d' % (q, l, d), None)
+                        setattr(gdat, 'factfdispop%dpop%dreg%dplot' % (q, l, d), 1.)
+                        setattr(gdat, 'scalfdispop%dpop%dreg%d' % (q, l, d), 'self')
+                        setattr(gdat, 'lablfdispop%dpop%dreg%d' % (q, l, d), '$f_{%d%d%d}$' % (q, l, d))
+                
+            
             ## highest amplitude element
             # temp
             if numbtrap > 0:

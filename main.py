@@ -3298,23 +3298,12 @@ def work(pathoutprtag, lock, indxprocwork):
             
         retr_elemlist(gdat, gdatmodi)
         
-        if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
-            print 'gdatmodi.thissamp[:5]'
-            print gdatmodi.thissamp[:5]
-            print 'gdatmodi.thissampvarb[:5]'
-            print gdatmodi.thissampvarb[:5]
-            print 'gdatmodi.thisindxsampcomp[comp]'
-            print gdatmodi.thisindxsampcomp['comp']
-            #raise Exception('')
-
         if gdatmodi.thisindxsampcomp != None:
             if gdat.inittype == 'refr':
+                gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
+                print 'Initializing elements from the reference element parameters...'
                 initcompfromstat(gdat, gdatmodi, 'refr')
    
-    if gdat.strgcnfg == 'pcat_ferm_igal_inpt_exce':
-        print 'gdatmodi.thisindxsampcomp[comp]'
-        print gdatmodi.thisindxsampcomp['comp']
-
     ## impose user-specified individual initial values
     for k, namefixp in enumerate(gdat.fittnamefixp):
         if namefixp.startswith('numbelem'):
@@ -3372,9 +3361,6 @@ def work(pathoutprtag, lock, indxprocwork):
     indxsampbadd = concatenate((indxsampbaddlowr, indxsampbadduppr))
     if indxsampbadd.size > 0:
         print 'Initial value caused unit sample vector to go outside the unit interval...'
-        print 'gdatmodi.thissamp'
-        for k in range(gdatmodi.thissamp.size):
-            print gdatmodi.thissamp[k]
         print 'indxsampbadd'
         print indxsampbadd
         print 'gdat.fittnamepara[indxsampbadd]'
