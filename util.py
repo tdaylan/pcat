@@ -1240,7 +1240,6 @@ def retr_refrchaninit(gdat):
     gdat.refrlistnamefeatampl[0] = 'flux'
     gdat.refrlistnamefeatampl[1] = 'magt'
     gdat.listnamerefr += ['xu11', 'wo08']
-    gdat.listnamerefr += ['xu11']
     
     setattr(gdat, 'minmotyp', 0.)
     setattr(gdat, 'maxmotyp', 1.)
@@ -5239,6 +5238,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.truenumbtrap = gdatmock.truenumbtrap
             if gdatmock.trueindxpopl != gdat.fittindxpopl:
                 raise Exception('')
+            print 'gdat.fittliststrgfeat'
+            print gdat.fittliststrgfeat
             for l in gdat.fittindxpopl:
                 for d in gdat.fittindxregipopl[l]:
                     for strgfeat in gdat.fittliststrgfeat[l]:
