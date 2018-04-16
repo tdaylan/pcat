@@ -1106,14 +1106,14 @@ def retr_cntp(gdat, sbrt, indxregieval, indxcubeeval):
 
 ## plotting
 ### construct path for plots
-def retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgplot, nameinte=''):
+def retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, strgplot, nameinte=''):
     
     if strgmodl == 'true' or strgstat == '':
         path = gdat.pathinit + nameinte + strgplot + '.pdf'
     elif strgstat == 'pdfn' or strgstat == 'mlik':
-        path = gdat.pathplotrtag + gdat.strgpdfn + '/finl/' + nameinte + strgstat + strgplot + '.pdf'
+        path = gdat.pathplotrtag + strgpdfn + '/finl/' + nameinte + strgstat + strgplot + '.pdf'
     elif strgstat == 'this':
-        path = gdat.pathplotrtag + gdat.strgpdfn + '/fram/' + nameinte + strgstat + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
+        path = gdat.pathplotrtag + strgpdfn + '/fram/' + nameinte + strgstat + strgplot + '_swep%09d.pdf' % gdatmodi.cntrswep
     
     return path
 
@@ -3278,7 +3278,7 @@ def retr_condcatl(gdat):
     retr_axis(gdat, 'prvl', gdat.minmprvl, gdat.maxmprvl, 10)
     gdat.histprvl = histogram(gdat.prvl, bins=gdat.binsprvl)[0]
     if gdat.makeplot:
-        pathcond = getattr(gdat, 'path' + gdat.strgpdfn + 'finlcond')
+        pathcond = getattr(gdat, 'path' + strgpdfn + 'finlcond')
         for k, strgcomp in enumerate(gdat.fittliststrgcomptotl):
             path = pathcond + 'histdist' + strgcomp 
             listtemp = copy(listdist[k].toarray()).flatten()
@@ -7848,7 +7848,7 @@ def retr_indxoaxipnts(gdat, lgal, bgal):
     return indxoaxipnts
 
 
-def init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=False):
+def init_figr(gdat, gdatmodi, strgpdfn, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=False):
     
     if intreval:
         figrsize = [10, 10]
@@ -7881,7 +7881,7 @@ def init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxen
 
         nameplot = '%s%s%s%s%s' % (strgplot, strgregi, strgener, strgevtt, strgpopl)
    
-        path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, nameplot)
+        path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, nameplot)
     
     axis.set_xlabel(gdat.labllgaltotl)
     axis.set_ylabel(gdat.lablbgaltotl)
@@ -13188,11 +13188,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     pathtemp = gdat.pathinit
                 else:
                     if strgstat == 'this':
-                        pathtemp = gdat.pathplotrtag + gdat.strgpdfn + '/fram/'
+                        pathtemp = gdat.pathplotrtag + strgpdfn + '/fram/'
                     elif strgstat == 'mlik':
-                        pathtemp = gdat.pathplotrtag + gdat.strgpdfn + '/finl/'
+                        pathtemp = gdat.pathplotrtag + strgpdfn + '/finl/'
                     elif strgstat == 'pdfn':
-                        pathtemp = gdat.pathplotrtag + gdat.strgpdfn + '/finl/'
+                        pathtemp = gdat.pathplotrtag + strgpdfn + '/finl/'
                 colr = retr_colr(gdat, strgstat, strgmodl, indxpopl=None)
         
                 # transdimensional element features projected onto the data axes
@@ -13784,7 +13784,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         listindxsamptotlpropaccp = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlpropaccp')
         listindxsamptotlpropreje = getattr(gdat, 'list' + strgpdfn + 'indxsamptotlpropreje')
         for n in gdat.indxproptype:
-            pathbase = getattr(gdat, 'path' + gdat.strgpdfn + 'finl%s' % gdat.nameproptype[n])
+            pathbase = getattr(gdat, 'path' + strgpdfn + 'finl%s' % gdat.nameproptype[n])
             for k in gdat.indxtermlacp:
                 varb = getattr(gdat, 'list' + strgpdfn + gdat.listnametermlacp[k])
                 labl = gdat.listlabltermlacp[k]
@@ -13835,7 +13835,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         listsampvarbproc = getattr(gdat, 'list' + strgpdfn + 'sampvarbproc')
     
         # Gelman-Rubin test
-        pathdiag = getattr(gdat, 'path' + gdat.strgpdfn + 'finldiag')
+        pathdiag = getattr(gdat, 'path' + strgpdfn + 'finldiag')
         if gdat.numbproc > 1:
             for d in gdat.indxregi:
                 if isfinite(gdat.gmrbstat[d]).all():
@@ -14020,13 +14020,13 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             if numbtrapplot > 0:
                 indxtrapplot = sort(choice(gdat.fittindxsamptrap[indxtrapgood], size=numbtrapplot, replace=False))
 
-                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listelemfrst'
+                path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'listelemfrst'
                 tdpy.mcmc.plot_grid(path, listsampvarb[:, gdat.fittindxsamptrap[:3]] * gdat.fittfactplotpara[gdat.fittindxsamptrap[:3]], \
                                                                                                     [gdat.fittlablpara[k] for k in gdat.fittindxsamptrap[:3]])
 
-                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsamp'
+                path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'listsamp'
                 tdpy.mcmc.plot_grid(path, listsamp[:, indxtrapplot], ['%d' % k for k in indxtrapplot])
-                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'listsampvarb'
+                path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'listsampvarb'
                 tdpy.mcmc.plot_grid(path, listsampvarb[:, indxtrapplot] * gdat.fittfactplotpara[indxtrapplot], [gdat.fittlablpara[k] for k in indxtrapplot])
     
     if gdat.verbtype > 0:
@@ -14061,9 +14061,9 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 raise Exception('')
         
         mlik = getattr(gdat, 'mlik' + name) * factplot
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscaltrac') + name
+        path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscaltrac') + name
         tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalhist') + name
+        path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalhist') + name
         tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
@@ -14074,7 +14074,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             if gdat.verbtype > 0:
                 print 'Working on correlation of %s with %s...' % (name, nameseco)
             
-            pathjoin = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscaljoin') + name + nameseco
+            pathjoin = getattr(gdat, 'path' + strgpdfn + 'finlvarbscaljoin') + name + nameseco
             scalseco = getattr(gdat, 'scal' + nameseco) 
             factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')
             corrseco = getattr(gdat, 'corr' + nameseco)
@@ -14102,7 +14102,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     ### covariance
     ## overall
-    path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'fixp'
+    path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'fixp'
     truepara = gdat.fittcorrfixp * gdat.fittfactfixpplot
     mlikpara = gdat.mlikfixp * gdat.fittfactfixpplot
     tdpy.mcmc.plot_grid(path, listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, varbdraw=mlikpara)
@@ -14110,7 +14110,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     ## individual processes
     if not booltile and gdat.numbproc > 1:
         for k in gdat.indxproc:
-            path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalproc') + 'proc%04d' % k
+            path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalproc') + 'proc%04d' % k
             tdpy.mcmc.plot_grid(path, listsampvarbproc[:, k, gdat.fittindxfixp] * gdat.fittfactfixpplot[None, gdat.fittindxfixp], \
                                 gdat.fittlablfixptotl[gdat.fittindxfixp], truepara=gdat.fittcorrfixp[gdat.fittindxfixp] * gdat.fittfactfixpplot[gdat.fittindxfixp])
     
@@ -14120,7 +14120,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     if gdat.fittnumbtrap > 0:
         #### hyperparameters
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'hypr'
+        path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'hypr'
         tdpy.mcmc.plot_grid(path, listfixp[:, gdat.fittindxfixphypr] * gdat.fittfactfixpplot[None, gdat.fittindxfixphypr], gdat.fittlablfixptotl[gdat.fittindxfixphypr], \
                                                                                            truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixphypr])
     
@@ -14129,7 +14129,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     #### PSF
     if gdat.proppsfp and gdat.numbpixl > 1 and gdat.fittpsfnevaltype != 'none':
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'psfp'
+        path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'psfp'
         tdpy.mcmc.plot_grid(path, listfixp[:, gdat.fittindxfixppsfp] * gdat.fittfactfixpplot[None, gdat.fittindxfixppsfp], gdat.fittlablfixptotl[gdat.fittindxfixppsfp], \
                                           truepara=[gdat.fittcorrfixp[k] * gdat.fittfactfixpplot[k] for k in gdat.fittindxfixppsfp], numbplotside=gdat.fittnumbpsfptotl)
     if gdat.verbtype > 0:
@@ -14137,13 +14137,13 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     
     #### backgrounds
     if gdat.propbacp:
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'bacp'
+        path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'bacp'
         tdpy.mcmc.plot_grid(path, listfixp[:, gdat.fittindxfixpbacp], gdat.fittlablfixptotl[gdat.fittindxfixpbacp], \
                                                                                                         truepara=[gdat.fittcorrfixp[k] for k in gdat.fittindxfixpbacp])
         if gdat.fittnumbback == 2 and gdat.fittspecback == [False, False]:
             for i in gdat.indxener:
                 indx = gdat.fittindxfixpbacp[gdat.fittindxback*gdat.numbener+i]
-                path = getattr(gdat, 'path' + gdat.strgpdfn + 'finlvarbscalcova') + 'bacpen%02d' % i
+                path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova') + 'bacpen%02d' % i
                 tdpy.mcmc.plot_grid(path, listfixp[:, indx], gdat.fittlablfixptotl[indx], truepara=[gdat.fittcorrfixp[k] for k in indx], join=True)
         
     if gdat.verbtype > 0:
@@ -14170,7 +14170,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             labltemp = '\ln P(D|M)'
         labl = r'$%s$' % labltemp
 
-        path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + strgpdfntemp
+        path = getattr(gdat, 'path' + strgpdfn + 'finl') + strgpdfntemp
         
         varb = getattr(gdat, 'list' + strgpdfn + strgpdfntemp)
         tdpy.mcmc.plot_hist(path, varb, labl)
@@ -14466,7 +14466,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
             make_legd(axis, numbcols=2)
             
             plt.tight_layout()
-            path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'sdenmean%s%s%s' % (namespatmean, specconvunit[0], specconvunit[1]))
+            path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, 'sdenmean%s%s%s' % (namespatmean, specconvunit[0], specconvunit[1]))
             figr.savefig(path)
             plt.close(figr)
         
@@ -14572,7 +14572,7 @@ def plot_brgt(gdat, gdatmodi, strg):
     make_legd(axis, loca=2)
     
     plt.tight_layout()
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'scatbrgt')
+    path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, 'scatbrgt')
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
@@ -14691,7 +14691,7 @@ def plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelem
         strgmometemp = strgmome
     else:
         strgmometemp = ''
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, '%s%s' % (strgmometemp, strgtotl), nameinte=strgelemtdimvarb + 'tdim/')
+    path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, '%s%s' % (strgmometemp, strgtotl), nameinte=strgelemtdimvarb + 'tdim/')
     
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
@@ -14985,9 +14985,9 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
 
     plt.tight_layout()
     if histtype == 'histptfn':
-        path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'histptfn' + strgydat[4:], nameinte=nameinte)
+        path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, 'histptfn' + strgydat[4:], nameinte=nameinte)
     else:
-        path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, strgydat, nameinte=nameinte)
+        path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, strgydat, nameinte=nameinte)
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
@@ -15076,7 +15076,7 @@ def plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat, 
         strgtype = 'diff'
     else:
         strgtype = ''
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, 'scatassc' + strgfeat + '%spop%dpop%dreg%d' % (strgtype, q, l, indxregiplot), nameinte='assc/')
+    path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, 'scatassc' + strgfeat + '%spop%dpop%dreg%d' % (strgtype, q, l, indxregiplot), nameinte='assc/')
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
 
@@ -15114,7 +15114,7 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, in
     axis.set_yscale('log')
     plt.tight_layout()
 
-    path = retr_plotpath(gdat, gdatmodi, strgstat, strgmodl, nameplot)
+    path = retr_plotpath(gdat, gdatmodi, strgpdfn, strgstat, strgmodl, nameplot)
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
     
@@ -15312,7 +15312,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
         strgtemp = ''
     else:
         strgtemp = strgfeat
-    path = getattr(gdat, 'path' + gdat.strgpdfn + 'finl') + 'histlgalbgalelemstkd%s%spop%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
+    path = getattr(gdat, 'path' + strgpdfn + 'finl') + 'histlgalbgalelemstkd%s%spop%d' % (strgbins, strgtemp, indxpoplplot) + '.pdf'
     figr.savefig(path)
     plt.close(figr)
        
@@ -15488,7 +15488,7 @@ def plot_mosa(gdat, indxregiplot, strgpdfn):
                             strg = ''
                         else:
                             strg = 'pop%d' % l
-                        pathfinl = getattr(gdat, 'path' + gdat.strgpdfn + 'finl')
+                        pathfinl = getattr(gdat, 'path' + strgpdfn + 'finl')
                         if m == None:
                             path = pathfinl + 'mosa' + strg + 'reg%den%02dA.pdf' % (indxregiplot, gdat.indxenerincl[i])
                         else:
@@ -15776,7 +15776,7 @@ def plot_init(gdat):
                 
                 # temp
                 if False and gdat.pixltype == 'cart' and gdat.fittboolelempsfnanyy:
-                    figr, axis, path = init_figr(gdat, None, 'cntpdatapeak', '', '', d, i, m, -1)
+                    figr, axis, path = init_figr(gdat, None, 'post', 'cntpdatapeak', '', '', d, i, m, -1)
                     imag = retr_imag(gdat, axis, gdat.cntpdata[d], '', 'cntpdata', i, m)
                     make_cbar(gdat, axis, imag, i, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     axis.scatter(gdat.anglfact * gdat.meanlgalcart[gdat.indxxdatmaxm], gdat.anglfact * gdat.meanbgalcart[gdat.indxydatmaxm], alpha=0.6, s=20, edgecolor='none')
@@ -15786,7 +15786,7 @@ def plot_init(gdat):
                     plt.close(figr)
         
                 if gdat.datatype == 'mock' and gdat.truelensmodltype != 'none':
-                    figr, axis, path = init_figr(gdat, None, 'cntpmodlraww', 'this', 'true', d, i, m, -1)
+                    figr, axis, path = init_figr(gdat, None, 'post', 'cntpmodlraww', 'this', 'true', d, i, m, -1)
                     imag = retr_imag(gdat, axis, gdat.truecntpmodlraww[d], 'this', 'true', 'cntpdata', i, m, tdim=True)
                     make_cbar(gdat, axis, imag, 0, tick=gdat.tickcntpdata, labl=gdat.lablcntpdata)
                     plt.tight_layout()
@@ -15828,7 +15828,7 @@ def plot_init(gdat):
             if gdat.numbpixl > 1:
                 for i in gdat.indxener:
                     for m in gdat.indxevtt:
-                        figr, axis, path = init_figr(gdat, None, 'expo', '', '', d, i, m, -1)
+                        figr, axis, path = init_figr(gdat, None, 'post', 'expo', '', '', d, i, m, -1)
                         imag = retr_imag(gdat, axis, gdat.expo[d], '', '', 'expo', i, m)
                         make_cbar(gdat, axis, imag, i)
                         plt.tight_layout()
@@ -15855,7 +15855,7 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgpdfn, \
         strgvarb += '%04d' % indxdefl
     defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
 
-    figr, axis, path = init_figr(gdat, gdatmodi, strgvarb, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot)
+    figr, axis, path = init_figr(gdat, gdatmodi, strgpdfn, strgvarb, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot)
     make_legdmaps(gdat, strgstat, strgmodl, axis)
     draw_frambndr(gdat, axis)
   
@@ -15895,7 +15895,7 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
             raise Exception('')
 
     indxregiplot = int(strgvarb[-1])
-    figr, axis, path = init_figr(gdat, gdatmodi, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=intreval)
+    figr, axis, path = init_figr(gdat, gdatmodi, strgpdfn, strgplot, strgstat, strgmodl, indxregiplot, indxenerplot, indxevttplot, indxpoplplot, intreval=intreval)
    
     maps = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, strgpdfn)
     
