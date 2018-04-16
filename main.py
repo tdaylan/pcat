@@ -47,6 +47,7 @@ def init( \
 
          # numpy RNG seed
          seedtype=0, \
+         seedchan=True, \
          seedelemtype=None, \
          
          indxevttincl=None, \
@@ -3101,8 +3102,13 @@ def work(pathoutprtag, lock, indxprocwork):
     timeproc = time.clock()
     
     # re-seed the random number generator for this chain
-    seed(indxprocwork + 1000)
-    
+    try:
+        if gdat.seedchan:
+            seed(indxprocwork + 1000)
+    except:
+        print 'HACKING'
+        seed(indxprocwork + 1000)
+
     # empty object to hold chain-specific variables that will be modified by the chain
     gdatmodi = tdpy.util.gdatstrt()
     gdatmodi.lock = lock
