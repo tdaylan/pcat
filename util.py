@@ -5244,6 +5244,14 @@ def setpinit(gdat, boolinitsetp=False):
                     for strgfeat in gdat.fittliststrgfeat[l]:
                         if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':
                             continue
+                        print 'l'
+                        print l
+                        print 'gdat.listnamerefr'
+                        print gdat.listnamerefr
+                        print 'strgfeat'
+                        print strgfeat
+                        print
+
                         if strgfeat[-4:] in gdat.listnamerefr[l]:
                             continue
                         ptfn = getattr(gdatmock, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
