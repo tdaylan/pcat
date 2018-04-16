@@ -375,10 +375,7 @@ def init( \
             gdat.anlytype = 'nomi'
     
     if gdat.priofactdoff == None:
-        if gdat.exprtype == 'chan':
-            gdat.priofactdoff = 0.5
-        else:
-            gdat.priofactdoff = 1.
+        gdat.priofactdoff = 0.5
 
     if gdat.exprtype == 'ferm':
         elemtype = ['lghtpnts']
