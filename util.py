@@ -5238,20 +5238,11 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.truenumbtrap = gdatmock.truenumbtrap
             if gdatmock.trueindxpopl != gdat.fittindxpopl:
                 raise Exception('')
-            print 'gdat.fittliststrgfeat'
-            print gdat.fittliststrgfeat
             for l in gdat.fittindxpopl:
                 for d in gdat.fittindxregipopl[l]:
                     for strgfeat in gdat.fittliststrgfeat[l]:
                         if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':
                             continue
-                        print 'l'
-                        print l
-                        print 'gdat.listnamerefr'
-                        print gdat.listnamerefr
-                        print 'strgfeat'
-                        print strgfeat
-                        print
 
                         if strgfeat[-4:] in gdat.listnamerefr:
                             continue
