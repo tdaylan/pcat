@@ -5253,7 +5253,7 @@ def setpinit(gdat, boolinitsetp=False):
                         print strgfeat
                         print
 
-                        if strgfeat[-4:] in gdat.listnamerefr[l]:
+                        if strgfeat[-4:] in gdat.listnamerefr:
                             continue
                         ptfn = getattr(gdatmock, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
                         setattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d), ptfn)
