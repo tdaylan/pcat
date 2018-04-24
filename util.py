@@ -11555,7 +11555,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         path = pathoutprtag + 'gdatfinl' + strgpdfn
         gdatfinl = readfile(path) 
         
-        if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
+        if gdatfinl.fittnumbtrap > 0:
             if gdatfinl.datatype == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
                     if gdatfinl.rtagmock != None:
