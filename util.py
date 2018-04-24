@@ -11166,10 +11166,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             for strgfeat in liststrgfeat[l]:
                                 if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':# or strgfeat.startswith('aerr'):
                                     continue
+                                print 'gdat.trueliststrgfeat'
+                                print gdat.trueliststrgfeat
                                 if strgfeat in gdat.trueliststrgfeat[l]:
                                     hist = getattr(gdatobjt, strgpfix + 'hist' + strgfeat + 'pop%dreg%d' % (l, d))
                                     ptfn = getattr(gdat, 'trueptfn' + strgfeat + 'pop%dreg%d' % (l, d))
                                     histptfn = hist / ptfn
+                                    print 'histptfn'
+                                    print histptfn
                                     setattr(gdatobjt, strgpfix + 'histptfn' + strgfeat + 'pop%dreg%d' % (l, d), histptfn)
 
         ### Exculusive comparison with the true state
