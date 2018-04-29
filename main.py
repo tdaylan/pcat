@@ -3347,10 +3347,6 @@ def work(pathoutprtag, lock, indxprocwork):
         retr_elemlist(gdat, gdatmodi)
         gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
 
-    print 'gdatmodi.thissampvarb[gdat.fittindxfixppsfp]'
-    print gdatmodi.thissampvarb[gdat.fittindxfixppsfp]
-    print
-    
     # check the initial unit sample vector for bad entries
     if gdat.fittnumbtrap > 0:
         indxsampdiff = setdiff1d(gdat.fittindxpara, gdat.fittindxfixpnumbelemtotl)
