@@ -2465,13 +2465,13 @@ def init( \
     filecomm.close()
     worksamp(gdat, lock)
     
-    if not gdat.boolarry:
-        # post process the samples
-        proc_finl(gdat)
-        
-        # make animations
-        if gdat.makeanim:
-            proc_anim(gdat.rtag)
+    #if not gdat.boolarry:
+    # post process the samples
+    proc_finl(gdat)
+    
+    # make animations
+    if gdat.makeanim:
+        proc_anim(gdat.rtag)
 
     if gdat.verbtype > 0:
         print 'The output is at ' + gdat.pathoutprtag
@@ -2487,8 +2487,8 @@ def initarry( \
              dictvarbvari, \
              dictvarb, \
              listnamecnfgextn, \
+             forcneww=False, \
              forcprev=False, \
-             takeprev=False, \
              strgpara=False, \
              execpara=True, \
              strgcnfgextnexec=None, \
@@ -2539,7 +2539,7 @@ def initarry( \
         listrtagprev = retr_listrtagprev(strgcnfg)
         cntrcomp += 1
 
-        if (not forcprev and strgcnfgextnexec == None or takeprev and strgcnfgextnexec != None) and len(listrtagprev) > 0:
+        if (not forcneww and strgcnfgextnexec == None or forcprev and strgcnfgextnexec != None) and len(listrtagprev) > 0:
             print 'Found at least one previous run with the configuration %s' % strgcnfg
             print 'Skipping...'
             print
@@ -2557,9 +2557,9 @@ def initarry( \
                 else:
                     print 'Forking a child process to run the configuration extension...' 
                     rtag = init(**dictvarbtemp)
-                    if 'checprio' in dictvarbtemp and dictvarbtemp['checprio']:
-                        proc_finl(rtag=rtag, strgpdfn='prio')
-                    proc_finl(rtag=rtag, strgpdfn='post')
+                    #if 'checprio' in dictvarbtemp and dictvarbtemp['checprio']:
+                    #    proc_finl(rtag=rtag, strgpdfn='prio')
+                    #proc_finl(rtag=rtag, strgpdfn='post')
                     os._exit(0)
             else:
                 print 'Calling the main PCAT function without forking a child...' 
@@ -2766,10 +2766,10 @@ def initarry( \
     print cmnd
     os.system(cmnd)
 
-    print 'Making animations...'
-    for rtag in listrtag:
-        print 'Working on %s...' % rtag
-        proc_anim(rtag=rtag)
+    #print 'Making animations...'
+    #for rtag in listrtag:
+    #    print 'Working on %s...' % rtag
+    #    proc_anim(rtag=rtag)
     
     print 'Compiling run plots...'
     cmnd = 'python comp_rtag.py'
