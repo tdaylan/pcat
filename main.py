@@ -2443,7 +2443,7 @@ def init( \
         
         ## post process the samples
         proc_finl(gdat, strgpdfn='prio')
-
+        
     if gdat.verbtype > 0:
         print 'Sampling from the posterior...'
     
@@ -2580,6 +2580,7 @@ def initarry( \
     for rtag in listrtag:
         print rtag
         proc_finl(rtag=rtag, strgpdfn='post')
+        proc_anim(rtag)
     
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
