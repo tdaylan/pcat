@@ -11523,6 +11523,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
     
     gdatmock = None
     
+    print 'Calling proc_finl...'
+
     if rtag == None:
         rtag = gdat.rtag
     
