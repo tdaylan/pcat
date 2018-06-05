@@ -109,7 +109,7 @@ def init( \
 
          ## lens specific
          ### Sersic type
-         serstype='intp', \
+         serstype='vauc', \
 
          # initialization
          ## initialization type
@@ -1337,7 +1337,11 @@ def init( \
                 setp_varblimt(gdat, 'beinhost', [0.5 / gdat.anglfact, 2. / gdat.anglfact], regi='full', isfr='full', strgmodl=strgmodl)
                 setp_varblimt(gdat, 'ellphost', [0., 0.5], regi='full', isfr='full', strgmodl=strgmodl)
                 setp_varblimt(gdat, 'anglhost', [0., pi], regi='full', isfr='full', strgmodl=strgmodl)
-                setp_varblimt(gdat, 'serihost', [1., 8.], regi='full', isfr='full', strgmodl=strgmodl)
+                if strgmodl == 'fitt':
+                    setp_varblimt(gdat, 'serihost', [1., 8.], regi='full', isfr='full', strgmodl=strgmodl)
+                else:
+                    setp_varbvalu(gdat, 'serihost', 4., regi='full', isfr='full', strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'serihost', [1., 8.], regi='full', isfr='full', strgmodl=strgmodl)
         
         setp_varblimt(gdat, 'sherextr', [0., 0.1], regi='full')
         setp_varblimt(gdat, 'anglsour', [0., pi], regi='full')
@@ -1485,6 +1489,9 @@ def init( \
             setp_varbvalu(gdat, 'ellphost', 0.2, regi='full')
             setp_varbvalu(gdat, 'sangextr', pi / 2., regi='full')
             setp_varbvalu(gdat, 'serihost', 4., regi='full')
+            
+            print 'teeeey'
+        print 'meeey'
 
     if gdat.defa:
         return gdat
@@ -2584,9 +2591,9 @@ def initarry( \
     
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-    if strgcnfgextnexec != None:
+    if strgcnfgextnexec != None or namexaxi == None: 
         return
-
+    
     print
     print 'Making comparison plots...'
      
@@ -3100,11 +3107,7 @@ def work(pathoutprtag, lock, indxprocwork):
     timeproc = time.clock()
     
     # re-seed the random number generator for this chain
-    try:
-        if gdat.seedchan:
-            seed(indxprocwork + 1000)
-    except:
-        print 'HACKING'
+    if gdat.seedchan:
         seed(indxprocwork + 1000)
 
     # empty object to hold chain-specific variables that will be modified by the chain
