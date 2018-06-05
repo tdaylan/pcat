@@ -1942,7 +1942,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     
     gdatmodi.prophypr = gdatmodi.propmeanelem or gdatmodi.propdist
     gdatmodi.proplpri = gdatmodi.prophypr
-    gdatmodi.propllik = gdat.calcllik and not gdatmodi.prophypr
+    gdatmodi.propllik = not gdatmodi.prophypr
     gdatmodi.evalllikpert = numbtrap > 0 and not gdatmodi.propfixp
     if gdatmodi.proppsfp:
         for l in indxpopl:
@@ -2002,7 +2002,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
             raise Exception('')
 
     stdvstdp = gdat.stdvstdp * gdatmodi.thisstdpscalfact * gdatmodi.thistmprfactstdv
-    if not gdat.calcllik:
+    if gdat.legdsampdist == 'Prior':
         stdvstdp *= 1e6
 
     if gdat.diagmode:
@@ -9881,36 +9881,30 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if not isfinite(llik).all():
                 raise Exception('Likelihood is not finite.')
     
-        #print 'gdat.calcllik'
-        #print gdat.calcllik
         #print 'strgmodl'
         #print strgmodl
         
-        if gdat.calcllik:
-            if strgstat == 'next':
-                thislliktotl = getattr(gdatobjt, strgpfixthis + 'lliktotl')
-                if isinstance(thislliktotl, ndarray):
-                    raise Exception('')
-                thisllik = getattr(gdatobjt, strgpfixthis + 'llik')
-                deltlliktotl = 0.
-                #lliktotl = 0.
-                for dd, d in enumerate(indxregieval):
-                    #lliktotl += sum(llik[dd])
-                    deltlliktotl += sum(llik[dd] - thisllik[d][indxcubeeval[0][dd]])
-                #deltlliktotl = lliktotl - thislliktotl
-                lliktotl = thislliktotl + deltlliktotl
-                setattr(gdatobjt, strgpfix + 'deltlliktotl', deltlliktotl)
-            else:
-                lliktotl = 0.
-                for dd, d in enumerate(indxregieval):
-                    lliktotl += gdat.llikoffs[dd]
-                    if gdat.diagmode:
-                        if isinstance(lliktotl, ndarray):
-                            raise Exception('')
-                    lliktotl += sum(llik[dd])
+        if strgstat == 'next':
+            thislliktotl = getattr(gdatobjt, strgpfixthis + 'lliktotl')
+            if isinstance(thislliktotl, ndarray):
+                raise Exception('')
+            thisllik = getattr(gdatobjt, strgpfixthis + 'llik')
+            deltlliktotl = 0.
+            #lliktotl = 0.
+            for dd, d in enumerate(indxregieval):
+                #lliktotl += sum(llik[dd])
+                deltlliktotl += sum(llik[dd] - thisllik[d][indxcubeeval[0][dd]])
+            #deltlliktotl = lliktotl - thislliktotl
+            lliktotl = thislliktotl + deltlliktotl
+            setattr(gdatobjt, strgpfix + 'deltlliktotl', deltlliktotl)
         else:
-            setattr(gdatobjt, strgpfix + 'deltlliktotl', 0.)
-            lliktotl = float64(0.)
+            lliktotl = 0.
+            for dd, d in enumerate(indxregieval):
+                lliktotl += gdat.llikoffs[dd]
+                if gdat.diagmode:
+                    if isinstance(lliktotl, ndarray):
+                        raise Exception('')
+                lliktotl += sum(llik[dd])
         
         numbfixp = getattr(gdat, strgmodl + 'numbfixp')
         numbdoff = numbfixp
@@ -10529,7 +10523,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                 
                 for d in indxregipopl[l]:
                     dictelem[l][d]['deltllik'] = zeros(numbelem[l][d])
-                if gdat.calcllik and not (strgmodl == 'true' and gdat.checprio): 
+                if not (strgmodl == 'true' and gdat.checprio): 
                     if gdat.verbtype > 1:
                         print
                         print 'Calculating log-likelihood differences when removing elements from the model.'
@@ -12250,11 +12244,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 for l0 in gdatfinl.fittindxpopl:
                     for d0 in gdatfinl.fittindxregipopl[l0]:
                         for strgfeatfrst in gdatfinl.fittliststrgfeat[l0]:
-                            if strgfeatfrst == 'spec' or strgfeatfrst == 'deflplot' or strgfeatfrst == 'specplot':
+                            if strgfeatfrst == 'spec' or strgfeatfrst == 'deflprof' or strgfeatfrst == 'specplot':
                                 continue
                             setp_info(gdatfinl, gdatprio, strgfeatfrst, 'hist' + strgfeatfrst + 'pop%dreg%d' % (l0, d0))
                             for strgfeatseco in gdatfinl.fittliststrgfeat[l0]:
-                                if strgfeatseco == 'spec' or strgfeatseco == 'deflplot' or strgfeatseco == 'specplot':
+                                if strgfeatseco == 'spec' or strgfeatseco == 'deflprof' or strgfeatseco == 'specplot':
                                     continue
                                 
                                 if not checstrgfeat(strgfeatfrst, strgfeatseco):

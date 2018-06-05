@@ -2107,7 +2107,6 @@ def init( \
             #if gdat.exprtype == 'ferm':
             #    plot_fgl3(gdat)
     
-    gdat.calcllik = True
     if gdat.datatype == 'mock':
         if lensmodltype != 'none':
             proc_samp(gdat, None, 'this', 'true', raww=True)
@@ -2191,7 +2190,6 @@ def init( \
         
         retr_elemlist(gdat, gdatmodifudi)
         gdatmodifudi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodifudi.thissamp, gdatmodifudi.thisindxsampcomp)
-        gdat.calcllik = True
         proc_samp(gdat, gdatmodifudi, 'this', 'fitt')
         gdat.liststrgvarbarrysamp = []
         gdat.liststrgvarblistsamp = []
@@ -2432,7 +2430,6 @@ def init( \
         
         if gdat.optitype != 'none' and not gdat.sqzeprop:
             filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
-            filecomm.write('calcllik False\n')
             filecomm.write('namesampdist prio\n')
             filecomm.write('legdsampdist Prior\n')
             filecomm.write('optitypetemp hess\n')
@@ -2441,7 +2438,6 @@ def init( \
 
         ## perform sampling
         filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
-        filecomm.write('calcllik False\n')
         filecomm.write('namesampdist prio\n')
         filecomm.write('legdsampdist Prior\n')
         filecomm.write('optitypetemp none\n')
@@ -2456,7 +2452,6 @@ def init( \
     
     if gdat.optitype != 'none' and not gdat.sqzeprop:
         filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
-        filecomm.write('calcllik True\n')
         filecomm.write('namesampdist post\n')
         filecomm.write('legdsampdist Posterior\n')
         filecomm.write('optitypetemp hess\n')
@@ -2465,7 +2460,6 @@ def init( \
     
     # run the sampler
     filecomm = open(gdat.pathoutprtag + 'comm.txt', 'w')
-    filecomm.write('calcllik True\n')
     filecomm.write('namesampdist post\n')
     filecomm.write('legdsampdist Posterior\n')
     filecomm.write('optitypetemp none\n')
@@ -3117,10 +3111,6 @@ def work(pathoutprtag, lock, indxprocwork):
             
     listline = open(gdat.pathoutprtag + 'comm.txt', 'r')
     for line in listline:
-        if line == 'calcllik False\n':
-            gdat.calcllik = False
-        if line == 'calcllik True\n':
-            gdat.calcllik = True
         
         if line == 'namesampdist prio\n':
             gdat.strgpdfn = 'prio'
@@ -3746,7 +3736,7 @@ def work(pathoutprtag, lock, indxprocwork):
            
             initchro(gdat, gdatmodi, 'next', 'save')
         
-            if gdat.savestat and gdat.calcllik:
+            if gdat.savestat:
                 
                 if gdat.namesavestat != None:
                     strgcnfg = gdat.namesavestat
@@ -3827,8 +3817,6 @@ def work(pathoutprtag, lock, indxprocwork):
     
         # assertions
         if gdat.diagmode:
-            if not gdat.calcllik and gdatmodi.propllik:
-                raise Exception('')
                 
             if gdat.fittnumbtrap == 0 and gdatmodi.propelem:
                 raise Exception('')
@@ -3837,8 +3825,6 @@ def work(pathoutprtag, lock, indxprocwork):
         if gdatmodi.nextboolpropfilt and not gdat.emptsamp:
             
             proc_samp(gdat, gdatmodi, 'next', 'fitt')
-            if not gdat.calcllik:
-                gdatmodi.nextdeltlliktotl = 0.
         
             if gdat.verbtype > 1:
                 print 'gdatmodi.nextdeltlliktotl'
@@ -3864,7 +3850,7 @@ def work(pathoutprtag, lock, indxprocwork):
                 if (gdatmodi.prophypr or gdatmodi.propmeanelem or gdatmodi.propdist) and gdatmodi.nextdeltlliktotl != 0.:
                     raise Exception('Likelihood should not change during a hyperparameter proposal.')
                     
-                if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop and gdat.calcllik:
+                if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
                         print 'Both likelihood and prior will not change.'
                         print 'gdatmodi.indxsampmodi'
