@@ -1127,6 +1127,13 @@ def retr_mrkrsize(gdat, compampl, namefeatampl):
 
 ## experiment specific
 
+def retr_psfntess(gdat):
+
+    # temp
+    gdat.psfpexpr = array([1.]) / gdat.anglfact
+    gdat.exproaxitype = False
+
+
 def retr_psfnhubb(gdat):
 
     # temp
@@ -3451,8 +3458,9 @@ def setpprem(gdat):
                 path = gdat.pathinpt + strg
                 gdat.sbrtdata.append(pf.getdata(path))
         else:
-            path = gdat.pathinpt + gdat.strgexprsbrt
-            gdat.sbrtdata = [pf.getdata(path)]
+            if not gdat.lionmode:
+                path = gdat.pathinpt + gdat.strgexprsbrt
+                gdat.sbrtdata = [pf.getdata(path)]
             
         for d in gdat.indxregi:
             if gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart:
@@ -3484,7 +3492,7 @@ def setpprem(gdat):
     
 
 def setpinit(gdat, boolinitsetp=False):
-
+    
     if False and gdat.boolelemdeflsubhanyy and gdat.strgproc == 'fink2.rc.fas.harvard.edu':
         cliblens = ctypes.CDLL(os.environ["PCAT_PATH"] + '/cliblens.so')
         cliblens.retr_deflsubh()
@@ -4650,6 +4658,8 @@ def setpinit(gdat, boolinitsetp=False):
             gdat.maxmangl = 1.
         if gdat.exprtype == 'ferm':
             gdat.maxmangl = 20. / gdat.anglfact
+        if gdat.exprtype == 'tess':
+            gdat.maxmangl = 25. / gdat.anglfact
         if gdat.exprtype == 'chan':
             gdat.maxmangl = 15. / gdat.anglfact
         if gdat.exprtype == 'hubb':
@@ -6000,6 +6010,9 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
             if gdat.exprtype == 'ferm':
                 minmflux = 1e-9
                 maxmflux = 1e-6
+            if gdat.exprtype == 'tess':
+                minmflux = 1.
+                maxmflux = 1e3
             if gdat.exprtype == 'chan':
                 if gdat.anlytype == 'spec':
                     minmflux = 1e4
@@ -6023,34 +6036,35 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 setp_varblimt(gdat, 'fluxdistsloplowr', [0.5, 3.], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'fluxdistslopuppr', [0.5, 3.], popl=l, strgmodl=strgmodl)
             
-            ### spectral parameters
-            if gdat.exprtype == 'ferm':
-                sind = [1., 3.]
-                minmsind = 1.
-                maxmsind = 3.
-            if gdat.exprtype == 'chan':
-                minmsind = 0.4
-                maxmsind = 2.4
-                sind = [0.4, 2.4]
-            if gdat.exprtype == 'hubb':
-                minmsind = 0.5
-                maxmsind = 2.5
-                sind = [0.4, 2.4]
-            if gdat.exprtype != 'fire':
-                setp_varblimt(gdat, 'sind', [minmsind, maxmsind], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'curv', [-1., 1.], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'expc', [0.1, 10.], strgmodl=strgmodl)
-                setp_varblimt(gdat, 'sinddistmean', sind, popl='full', strgmodl=strgmodl)
-                #### standard deviations should not be too small
-                setp_varblimt(gdat, 'sinddiststdv', [0.3, 2.], popl='full', strgmodl=strgmodl)
-                setp_varblimt(gdat, 'curvdistmean', [-1., 1.], popl='full', strgmodl=strgmodl)
-                setp_varblimt(gdat, 'curvdiststdv', [0.1, 1.], popl='full', strgmodl=strgmodl)
-                setp_varblimt(gdat, 'expcdistmean', [1., 8.], popl='full', strgmodl=strgmodl)
-                setp_varblimt(gdat, 'expcdiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl='full', strgmodl=strgmodl)
-                for i in gdat.indxenerinde:
-                    setp_varblimt(gdat, 'sindcolr0001', [-2., 6.], strgmodl=strgmodl)
-                    setp_varblimt(gdat, 'sindcolr0002', [0., 8.], strgmodl=strgmodl)
-                    #setp_varblimt(gdat, 'sindcolr%04d' % i, [-5., 10.], strgmodl=strgmodl)
+            if gdat.enerbins:
+                ### spectral parameters
+                if gdat.exprtype == 'ferm':
+                    sind = [1., 3.]
+                    minmsind = 1.
+                    maxmsind = 3.
+                if gdat.exprtype == 'chan':
+                    minmsind = 0.4
+                    maxmsind = 2.4
+                    sind = [0.4, 2.4]
+                if gdat.exprtype == 'hubb':
+                    minmsind = 0.5
+                    maxmsind = 2.5
+                    sind = [0.4, 2.4]
+                if gdat.exprtype != 'fire':
+                    setp_varblimt(gdat, 'sind', [minmsind, maxmsind], strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'curv', [-1., 1.], strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'expc', [0.1, 10.], strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'sinddistmean', sind, popl='full', strgmodl=strgmodl)
+                    #### standard deviations should not be too small
+                    setp_varblimt(gdat, 'sinddiststdv', [0.3, 2.], popl='full', strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'curvdistmean', [-1., 1.], popl='full', strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'curvdiststdv', [0.1, 1.], popl='full', strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'expcdistmean', [1., 8.], popl='full', strgmodl=strgmodl)
+                    setp_varblimt(gdat, 'expcdiststdv', [0.01 * gdat.maxmener, gdat.maxmener], popl='full', strgmodl=strgmodl)
+                    for i in gdat.indxenerinde:
+                        setp_varblimt(gdat, 'sindcolr0001', [-2., 6.], strgmodl=strgmodl)
+                        setp_varblimt(gdat, 'sindcolr0002', [0., 8.], strgmodl=strgmodl)
+                        #setp_varblimt(gdat, 'sindcolr%04d' % i, [-5., 10.], strgmodl=strgmodl)
         
         for l in indxpopl:
             if elemtype[l] == 'lghtpntspuls':
@@ -6076,7 +6090,8 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                 setp_varblimt(gdat, 'lum0distbrek', [1e42, 1e46], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'lum0distsloplowr', [0.5, 3.], popl=l, strgmodl=strgmodl)
                 setp_varblimt(gdat, 'lum0distslopuppr', [0.5, 3.], popl=l, strgmodl=strgmodl)
-
+    
+        
         # construct background surface brightness templates from the user input
         lensmodltype = getattr(gdat, strgmodl + 'lensmodltype')
         if lensmodltype != 'none' or hostemistype != 'none':
@@ -12666,7 +12681,7 @@ def proc_cntpdata(gdat):
 
     # exclude voxels with vanishing exposure
     ## data counts
-    if gdat.datatype == 'inpt':
+    if gdat.datatype == 'inpt' and not gdat.lionmode:
         gdat.cntpdata = retr_cntp(gdat, gdat.sbrtdata, gdat.indxregi, gdat.indxcubeeval)
 
     # correct the likelihoods for the constant data dependent factorial
