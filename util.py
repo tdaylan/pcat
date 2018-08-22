@@ -1779,12 +1779,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
     gdatmodi.proppsfnconv = False
     
     # index of the population in which a transdimensional proposal will be made
-    if thisindxpopl == None:
+    if thisindxpopl is None:
         gdatmodi.indxpoplmodi = array([choice(indxpopl)])
     else:
         gdatmodi.indxpoplmodi = array([thisindxpopl])
     
-    if thisindxregi == None:
+    if thisindxregi is None:
         if elemregitype[gdatmodi.indxpoplmodi[0]]:
             gdatmodi.indxregimodi = array([choice(gdat.indxregi)])
         else:
@@ -2200,7 +2200,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, th
         gdatmodi.numbelemeval[0][0] = 1
         
         # occupied element index to be killed
-        if thisindxelem == None:
+        if thisindxelem is None:
             dethindxindxelem = choice(arange(thissampvarb[indxfixpnumbelem[gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]], dtype=int))
         else:
             dethindxindxelem = thisindxelem
@@ -2746,7 +2746,7 @@ def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl=None,
         amplstat = sampvarb[indxsampcomp[gdat.fittnamefeatampl[gdatmodi.indxpoplmodi[0]]][gdatmodi.indxpoplmodi[0]][gdatmodi.indxregimodi[0]]]
         probmerg = amplstat / sum(amplstat)
     
-    if indxelemfulleval == None:
+    if indxelemfulleval is None:
         if indxelemfullexcl != None:
             probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
             probmerg /= sum(probmerg)
@@ -2877,7 +2877,7 @@ def retr_psfn(gdat, psfp, indxenertemp, thisangl, psfntype, binsoaxi=None, oaxit
 
 def retr_axis(gdat, strgvarb, minm=None, maxm=None, numb=None, bins=None, scal='self', invr=False, strginit=''):
     
-    if bins == None:
+    if bins is None:
         if scal == 'self' or scal == 'pois' or scal == 'gaus':
             binsscal = linspace(minm, maxm, numb + 1)
         if scal == 'logt':
@@ -3401,7 +3401,7 @@ def setpprem(gdat):
     
     gdat.liststrglimt = ['minm', 'maxm']
    
-    if gdat.numbswepplot == None:
+    if gdat.numbswepplot is None:
         gdat.numbswepplot = 50000
     
     gdat.refrcolr = 'mediumseagreen'
@@ -3886,7 +3886,7 @@ def setpinit(gdat, boolinitsetp=False):
             labl = getattr(gdat, 'labl' + name)
             try:
                 lablunit = getattr(gdat, 'labl' + name + 'unit')
-                if lablunit == '' or lablunit == None:
+                if lablunit == '' or lablunit is None:
                     raise
                 if labl.startswith('$'):
                     setattr(gdat, 'labl' + name + 'totl', '%s [%s]' % (labl, lablunit))
@@ -4017,10 +4017,10 @@ def setpinit(gdat, boolinitsetp=False):
     if gdat.datatype == 'inpt':
         for l in gdat.fittindxpopl:
             for strgpdfn in gdat.fittliststrgpdfnprio[l]:
-                if strgpdfn.startswith('gaum') and gdat.fittlgalprio == None and gdat.fittbgalprio == None:
+                if strgpdfn.startswith('gaum') and gdat.fittlgalprio is None and gdat.fittbgalprio is None:
                     raise Exception('If spatdisttype is "gaus", spatial coordinates of the prior catalog should be provided via lgalprio and bgalprio.')
     
-    if gdat.propcomp == None:
+    if gdat.propcomp is None:
         gdat.propcomp = gdat.fittnumbtrap > 0
 
     # temp -- have these definitions separate for all features
@@ -4197,7 +4197,7 @@ def setpinit(gdat, boolinitsetp=False):
             else:
                 indxpopl = gdat.fittindxpopl
 
-            if legdpopl == None:
+            if legdpopl is None:
                 legdpopl = [[] for l in indxpopl]
                 for l in indxpopl:
                     legdpopl[l] = 'Pop %d' % l
@@ -4737,7 +4737,7 @@ def setpinit(gdat, boolinitsetp=False):
         # temp -- check if 1000 is too much
         gdat.numbanglelem = 1000
     
-    if gdat.proplenp == None:
+    if gdat.proplenp is None:
         if gdat.fittlensmodltype != 'none':
             gdat.proplenp = True
         else:
@@ -5084,7 +5084,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.legdproptype = array([])
     gdat.nameproptype = array([])
     
-    if gdat.probtran == None:
+    if gdat.probtran is None:
         if gdat.fittnumbtrap > 0:
             # temp
             gdat.probtran = 0.4
@@ -5245,7 +5245,7 @@ def setpinit(gdat, boolinitsetp=False):
             try:
                 gdatmock = readfile(path)
             except:
-                print 'Could not read the gdatfinlpost object of the run on the mock data. Setting gdat.rtagmock == None.'
+                print 'Could not read the gdatfinlpost object of the run on the mock data. Setting gdat.rtagmock is None.'
                 booltemp = False
                 gdat.rtagmock = None
 
@@ -5274,7 +5274,7 @@ def setpinit(gdat, boolinitsetp=False):
         
         # determine the maximum angle at which the contribution of the element will be computed
        
-        if gdat.maxmangleval == None:
+        if gdat.maxmangleval is None:
             if gdat.exprtype == 'chan':
                 gdat.maxmangleval = maximum(gdat.maxmangleval, array([5., 6., 9.]) / gdat.anglfact)
             elif gdat.exprtype == 'ferm':
@@ -7779,7 +7779,7 @@ def setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back, regi, is
 
 def setp_varbvalu(gdat, strgvarb, valu, popl='none', ener='none', evtt='none', back='none', regi='none', isfr='none', strgmodl=None):
     
-    if strgmodl == None:
+    if strgmodl is None:
         if gdat.datatype == 'mock':
             liststrgmodl = ['true', 'fitt']
         else:
@@ -7797,13 +7797,13 @@ def setp_varbiter(gdat, strgmodltemp, strgvarbtemp, valu):
     
     try:
         valutemp = getattr(gdat, strgvarbtemp)
-        if valutemp == None:
+        if valutemp is None:
             raise
         setattr(gdat, strgmodltemp + strgvarbtemp, valutemp)
     except:
         try:
             valutemp = getattr(gdat, strgmodltemp + strgvarbtemp)
-            if valutemp == None:
+            if valutemp is None:
                 raise
         except:
             setattr(gdat, strgmodltemp + strgvarbtemp, valu)
@@ -7811,7 +7811,7 @@ def setp_varbiter(gdat, strgmodltemp, strgvarbtemp, valu):
 
 def setp_varblimt(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl='none', ener='none', evtt='none', back='none', regi='none', isfr='none', strgmodl=None):
     
-    if strgmodl == None:
+    if strgmodl is None:
         if gdat.datatype == 'mock':
             liststrgmodl = ['true', 'fitt']
         else:
@@ -7882,12 +7882,12 @@ def init_figr(gdat, gdatmodi, strgpdfn, strgplot, strgstat, strgmodl, indxregipl
     else:
         strgregi = 'reg%d' % indxregiplot
         
-        if indxenerplot == None:
+        if indxenerplot is None:
             strgener = ''
         else:
             strgener = 'en%02d' % gdat.indxenerincl[indxenerplot]
         
-        if indxevttplot == None:
+        if indxevttplot is None:
             strgevtt = ''
         elif indxevttplot == -1:
             strgevtt = 'evtA'
@@ -7969,7 +7969,7 @@ def retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot=None,
         maps = arcsinh(maps)
     if scal == 'logt':
         maps = log10(maps)
-    if imag == None:
+    if imag is None:
         imag = axis.imshow(maps, cmap=cmap, origin='lower', extent=gdat.exttrofi, interpolation='nearest', vmin=vmin, vmax=vmax, alpha=gdat.alphmaps)
         return imag
     else:
@@ -8068,7 +8068,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                         reframpl = getattr(gdat, 'refr' + gdat.refrlistnamefeatampl[q])
                     except:
                         reframpl = getattr(gdat, 'refr' + gdat.listnamefeatamplrefr[q])
-                    if reframpl == None:
+                    if reframpl is None:
                         mrkrsize = full(gdat.refrnumbelem[q][indxregiplot], 5.)
                     else:
                         # temp -- backcomp
@@ -8199,13 +8199,13 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
 def retr_colr(gdat, strgstat, strgmodl, indxpopl=None):
     
     if strgmodl == 'true':
-        if indxpopl == None:
+        if indxpopl is None:
             colr = gdat.refrcolr
         else:
             colr = gdat.refrcolrelem[indxpopl]
     if strgmodl == 'fitt':
         if strgstat == 'this' or strgstat == 'pdfn':
-            if indxpopl == None:
+            if indxpopl is None:
                 colr = gdat.fittcolr
             else:
                 colr = gdat.fittcolrelem[indxpopl]
@@ -11539,7 +11539,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
     
     print 'Calling proc_finl...'
 
-    if rtag == None:
+    if rtag is None:
         rtag = gdat.rtag
     
     # determine if the final-processing if nominal or tiling
@@ -13060,7 +13060,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 factydat = 1.
                                 lablydat = r'$N_{%s}$' % lablelemextn[l]
                         
-                            if ydattype == 'totl' and not (gdat.datatype == 'inpt' and gdat.rtagmock == None):
+                            if ydattype == 'totl' and not (gdat.datatype == 'inpt' and gdat.rtagmock is None):
                                 listhisttype = ['hist', 'histptfn']
                             else:
                                 listhisttype = ['hist']
@@ -13412,7 +13412,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                             if not strgfeat in gdat.fittliststrgfeatextr[l]:
                                                 continue
                                             q = gdat.listnamerefr.index(strgfeat[-4:])
-                                            if getattr(gdat, 'crex' + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)) == None:
+                                            if getattr(gdat, 'crex' + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)) is None:
                                                 continue
                                             name = namecorr + strgfeat + 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
                                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'mean' + strgfeat, scalydat='logt', lablxdat=lablxdat, \
@@ -13473,7 +13473,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                             for qq in gdatmock.indxrefr:
                                                 if strgelemtdimvarb.startswith('excr'):
                                                     for q in gdat.indxrefr:
-                                                        if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)) == None:
+                                                        if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)) is None:
                                                             continue
                                                         strgtotl = strgelemtdimvarb + strgfrst + strgseco + 'pop%dpop%dpop%dreg%d' % (q, qq, l0, d0)
                                                         plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
@@ -13817,7 +13817,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             
         if gdat.checprio and strgpdfn == 'post' and not booltile:
             # this works only for scalar variables -- needs to be generalized to all variables
-            if gdatprio == None:
+            if gdatprio is None:
                 pathoutprtag = retr_pathoutprtag(rtag)
                 path = pathoutprtag + 'gdatfinlprio'
                 gdatprio = readfile(path)
@@ -14064,7 +14064,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
 
         factplot = getattr(gdat, 'fact' + name + 'plot')
         corr = getattr(gdat, 'corr' + name)
-        if corr == None:
+        if corr is None:
             truepara = None
         else:
             truepara = getattr(gdat, 'corr' + name) * factplot
@@ -14095,7 +14095,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             scalseco = getattr(gdat, 'scal' + nameseco) 
             factplotseco = getattr(gdat, 'fact' + nameseco + 'plot')
             corrseco = getattr(gdat, 'corr' + nameseco)
-            if corrseco == None:
+            if corrseco is None:
                 trueparaseco = None
             else:
                 trueparaseco = getattr(gdat, 'corr' + nameseco) * factplotseco
@@ -14571,7 +14571,7 @@ def plot_pdfntotlflux():
 def plot_brgt(gdat, gdatmodi, strg):
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    if gdatmodi == None:
+    if gdatmodi is None:
         # temp
         pass
     else:   
@@ -14738,10 +14738,10 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     else:
         boolelem = False
 
-    if scal == None:
-        if scalxdat == None:
+    if scal is None:
+        if scalxdat is None:
             scalxdat = 'linr'
-        if scalydat == None:
+        if scalydat is None:
             scalydat = 'linr'
     else:
         scalxdat = scal
@@ -15102,7 +15102,7 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, in
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
     ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'cntpmodlreg%d' % indxregiplot, strgpdfn)
-    if indxenerplot == None:
+    if indxenerplot is None:
         xdat = gdat.cntpdata[indxregiplot][:, :, indxevttplot].flatten()
         ydat = ydat[:, :, indxevttplot].flatten()
         nameplot = 'scatcntpreg%devt%d' % (indxregiplot, indxevttplot)
@@ -15506,7 +15506,7 @@ def plot_mosa(gdat, indxregiplot, strgpdfn):
                         else:
                             strg = 'pop%d' % l
                         pathfinl = getattr(gdat, 'path' + strgpdfn + 'finl')
-                        if m == None:
+                        if m is None:
                             path = pathfinl + 'mosa' + strg + 'reg%den%02dA.pdf' % (indxregiplot, gdat.indxenerincl[i])
                         else:
                             path = pathfinl + 'mosa' + strg + 'reg%den%02devtt%d.pdf' % (indxregiplot, gdat.indxenerincl[i], gdat.indxevttincl[m])
@@ -15892,7 +15892,7 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgpdfn, \
 def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxenerplot=None, indxevttplot=-1, strgcbar=None, \
                                                                 tdim=False, indxpoplplot=-1, strgmome='pmea', intreval=False):
     
-    if strgcbar == None:
+    if strgcbar is None:
         strgcbar = strgvarb[:-4]
   
     # construct the string for the map
