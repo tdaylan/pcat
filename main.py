@@ -279,8 +279,8 @@ def init( \
         gdat.checprio = True
 
     # defaults
-    if gdat.datatype == None:
-        if gdat.strgexprsbrt == None:
+    if gdat.datatype is None:
+        if gdat.strgexprsbrt is None:
             gdat.datatype = 'mock'
         else:
             gdat.datatype = 'inpt'
@@ -309,7 +309,7 @@ def init( \
     gdat.strgtimestmp = tdpy.util.retr_strgtimestmp()
     
     ## name of the configuration function
-    if gdat.strgcnfg == None:
+    if gdat.strgcnfg is None:
         gdat.strgcnfg = inspect.stack()[1][3]
    
     gdat.strgvers = 'v0.3'
@@ -317,17 +317,17 @@ def init( \
         print 'PCAT %s started at %s.' % (gdat.strgvers, gdat.strgtimestmp)
         print 'Configuration %s' % gdat.strgcnfg
     
-    if gdat.datatype == 'inpt' and gdat.rtagmock != None:
+    if gdat.datatype == 'inpt' and gdat.rtagmock is not None:
         print 'Will use %s to account for selection effects.' % gdat.rtagmock 
         gdat.pathoutprtagmock = retr_pathoutprtag(gdat.rtagmock)
 
     ## number of burned sweeps
-    if gdat.numbburn == None:
+    if gdat.numbburn is None:
         gdat.numbburn = gdat.numbswep / 10
     
     ## number of processes
     gdat.strgproc = os.uname()[1]
-    if gdat.numbproc == None:
+    if gdat.numbproc is None:
         if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
             gdat.numbproc = 1
         else:
@@ -346,14 +346,14 @@ def init( \
 
     ## factor by which to thin the sweeps to get samples
     
-    if gdat.factthin != None and gdat.numbsamp != None:
+    if gdat.factthin is not None and gdat.numbsamp is not None:
         raise Exception('Both factthin and numbsamp cannot be provided at the same time.')
-    elif gdat.factthin == None and gdat.numbsamp == None:
+    elif gdat.factthin is None and gdat.numbsamp is None:
         gdat.factthin = int(ceil(1e-3 * (gdat.numbswep - gdat.numbburn)))
         gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
-    elif gdat.numbsamp != None:
+    elif gdat.numbsamp is not None:
         gdat.factthin = int((gdat.numbswep - gdat.numbburn) / gdat.numbsamp)
-    elif gdat.factthin != None:
+    elif gdat.factthin is not None:
         gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
     if not isinstance(gdat.numbsamp, int) or not isinstance(gdat.factthin, int) or not isinstance(gdat.numbburn, int) or not isinstance(gdat.numbswep, int):
         raise Exception('Number of samples is not an integer.')
@@ -371,7 +371,7 @@ def init( \
         print '%d samples will be taken, discarding the first %d. The chain will be thinned by a factor of %d.' % (gdat.numbswep, gdat.numbburn, gdat.factthin)
         print 'The resulting chain will contain %d samples per chain and %d samples in total.' % (gdat.numbsamp, gdat.numbsamptotl)
     
-    if gdat.anlytype == None:
+    if gdat.anlytype is None:
         if gdat.exprtype == 'chan':
             gdat.anlytype = 'home'
         elif gdat.exprtype == 'ferm':
@@ -379,7 +379,7 @@ def init( \
         else:
             gdat.anlytype = 'nomi'
     
-    if gdat.priofactdoff == None:
+    if gdat.priofactdoff is None:
         gdat.priofactdoff = 0.5
 
     if gdat.exprtype == 'ferm':
@@ -406,7 +406,7 @@ def init( \
     if 'lens' in gdat.commelemtype:
         gdat.hubbexpofact = 1.63050e-19
     
-    if gdat.strgexpo == None:
+    if gdat.strgexpo is None:
         if gdat.exprtype == 'ferm':
             gdat.strgexpo = 'expofermrec8pntsigal0256.fits'
         elif gdat.exprtype == 'hubb':
@@ -426,7 +426,7 @@ def init( \
         gdat.namefeatsignrefr = 'deltllik'
     
     ## experiment defaults
-    if gdat.binsenerfull == None:
+    if gdat.binsenerfull is None:
         if gdat.exprtype == 'ferm':
             if gdat.anlytype[4:8] == 'pnts':
                 gdat.binsenerfull = logspace(log10(0.3), log10(10.), 4)
@@ -456,7 +456,7 @@ def init( \
         gdat.lablenerunit = '$\mu$m^{-1}'
     
     # energy band string
-    if gdat.strgenerfull == None:
+    if gdat.strgenerfull is None:
         if gdat.exprtype == 'tess':
             gdat.strgenerfull = ['T']
         if gdat.exprtype == 'sdss':
@@ -472,19 +472,19 @@ def init( \
             gdat.strgenerfull = ['']
     
     ## PSF class
-    if gdat.indxevttfull == None:
+    if gdat.indxevttfull is None:
         if gdat.exprtype == 'ferm':
             gdat.indxevttfull = arange(2)
         else:
             gdat.indxevttfull = arange(1)
     
-    if gdat.indxevttincl == None:
+    if gdat.indxevttincl is None:
         if gdat.exprtype == 'ferm':
             gdat.indxevttincl = array([0, 1])
         else:
             gdat.indxevttincl = arange(1)
     
-    if gdat.indxevttincl != None:
+    if gdat.indxevttincl is not None:
         gdat.evttbins = True
     else:
         gdat.evttbins = False
@@ -499,7 +499,7 @@ def init( \
     
     gdat.indxenerfull = arange(len(gdat.strgenerfull))
     
-    if gdat.binsenerfull == None:
+    if gdat.binsenerfull is None:
         gdat.enerbins = False
     else:
         gdat.enerbins = True
@@ -513,7 +513,7 @@ def init( \
     
     gdat.pathinpt = gdat.pathdata + 'inpt/'
     
-    if gdat.pixltype == None:
+    if gdat.pixltype is None:
         if gdat.exprtype == 'ferm':
             gdat.pixltype = 'heal'
         else:
@@ -625,7 +625,7 @@ def init( \
     setpprem(gdat)
     
     ## generative model
-    if gdat.anglfact == None:
+    if gdat.anglfact is None:
         if gdat.exprtype == 'ferm':
             gdat.anglfact = 180. / pi
         if gdat.exprtype == 'tess':
@@ -635,11 +635,11 @@ def init( \
         if gdat.exprtype == 'sche' or gdat.exprtype == 'sdyn':
             gdat.anglfact = 1.
     
-    if gdat.numbsidecart != None and gdat.pixltype == 'cart' and not gdat.forccart and not isinstance(strgexpo, float):
+    if gdat.numbsidecart is not None and gdat.pixltype == 'cart' and not gdat.forccart and not isinstance(strgexpo, float):
         raise Exception('numbsidecart argument should not be provided when strgexpo is a file name and pixelization is Cartesian.')
                 
     if gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart:
-        if gdat.numbsidecart == None:
+        if gdat.numbsidecart is None:
             gdat.numbsidecart = 100
 
     
@@ -650,7 +650,7 @@ def init( \
         gdat.expo = [[] for d in gdat.indxregi]
         if isinstance(gdat.strgexpo, float):
             if gdat.datatype == 'mock':
-                if gdat.numbsidecart == None:
+                if gdat.numbsidecart is None:
                     gdat.numbsidecart = 100
             for d in gdat.indxregi:
                 if gdat.datatype == 'mock':
@@ -669,19 +669,19 @@ def init( \
                     path = gdat.pathinpt + gdat.strgexpo[d]
                     if gdat.verbtype > 0:
                         print 'Reading %s...' % path
-                    gdat.expo[d] = pf.getdata(path)
+                    gdat.expo[d] = astropy.io.fits.getdata(path)
             else:
                 path = gdat.pathinpt + gdat.strgexpo
                 for d in gdat.indxregi:
                     if gdat.verbtype > 0:
                         print 'Reading %s...' % path
-                    gdat.expo[d] = pf.getdata(path)
+                    gdat.expo[d] = astropy.io.fits.getdata(path)
             
                 if gdat.pixltype == 'cart':
                     for d in gdat.indxregi:
                         gdat.expo[d] = gdat.expo[d].reshape((gdat.expo[d].shape[0], -1, gdat.expo[d].shape[-1]))
     
-            if gdat.numbsidecart == None:
+            if gdat.numbsidecart is None:
                 # temp -- gdat.numbsidecart takes the value of the region 0
                 if sqrt(gdat.expo[0].shape[1]) % 1. != 0.:
                     print 'gdat.pixltype'
@@ -712,7 +712,7 @@ def init( \
             raise Exception('Bad input exposure map.')
     
     ### spatial extent of the data
-    if gdat.maxmgangdata == None:
+    if gdat.maxmgangdata is None:
         if gdat.exprtype == 'chan':
             gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecart / 2.
         if gdat.exprtype == 'ferm':
@@ -765,7 +765,7 @@ def init( \
                                                                                minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).flatten()
                 gdat.expo[d] = expotemp
     
-    if gdat.inittype == None:
+    if gdat.inittype is None:
         if gdat.datatype == 'inpt':
             gdat.inittype = 'rand'
         else:
@@ -817,10 +817,10 @@ def init( \
     if gdat.exprtype == 'hubb' or gdat.exprtype == 'sdyn' or gdat.exprtype == 'tess':
         gdat.enerdiff = False
     
-    if gdat.indxenerincl == None:
+    if gdat.indxenerincl is None:
         
         # default
-        if gdat.binsenerfull != None:
+        if gdat.binsenerfull is not None:
             gdat.indxenerincl = arange(gdat.binsenerfull.size - 1)
         
         if gdat.exprtype == 'ferm':
@@ -914,7 +914,7 @@ def init( \
                 specback[d] = [False for k in range(len(backtype[d]))]
             setp_varbvalu(gdat, 'specback', specback, strgmodl=strgmodl)
     
-    if gdat.strgexprname == None:
+    if gdat.strgexprname is None:
         if gdat.exprtype == 'chan':
             gdat.strgexprname = 'Chandra'
         if gdat.exprtype == 'ferm':
@@ -926,7 +926,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.strgexprname = 'TGAS-RAVE'
     
-    if gdat.lablgangunit == None:
+    if gdat.lablgangunit is None:
         if gdat.exprtype == 'ferm':
             gdat.lablgangunit = '$^o$'
         if gdat.exprtype == 'sdyn':
@@ -934,7 +934,7 @@ def init( \
         if gdat.exprtype == 'sdss' or gdat.exprtype == 'chan' or gdat.exprtype == 'hubb':
             gdat.lablgangunit = '$^{\prime\prime}$'
     
-    if gdat.labllgal == None:
+    if gdat.labllgal is None:
         if gdat.exprtype == 'sdyn':
             gdat.labllgal = r'L_{z}'
         else:
@@ -942,7 +942,7 @@ def init( \
                 gdat.labllgal = r'l'
             else:
                 gdat.labllgal = r'\theta_1'
-    if gdat.lablbgal == None:
+    if gdat.lablbgal is None:
         if gdat.exprtype == 'sdyn':
             gdat.lablbgal = r'E_k'
         else:
@@ -951,7 +951,7 @@ def init( \
             else:
                 gdat.lablbgal = r'\theta_2'
 
-    if gdat.strgenerunit == None:
+    if gdat.strgenerunit is None:
         if gdat.exprtype == 'ferm':
             gdat.strgenerunit = 'GeV'
             gdat.nameenerunit = 'gevv'
@@ -986,7 +986,7 @@ def init( \
             if not elemspatevaltypetemp in gdat.commelemspatevaltype:
                 gdat.commelemspatevaltype.append(elemspatevaltypetemp)
     
-    if gdat.nameexpr == None:
+    if gdat.nameexpr is None:
         if gdat.exprtype == 'ferm':
             gdat.nameexpr = 'Fermi-LAT'
         if gdat.exprtype == 'sdss':
@@ -999,7 +999,7 @@ def init( \
             gdat.nameexpr = 'Gaia'
     
     ## Lensing
-    if gdat.radispmr == None:
+    if gdat.radispmr is None:
         if gdat.exprtype == 'ferm':
             gdat.radispmr = 0.6 / gdat.anglfact
         if gdat.exprtype == 'hubb':
@@ -1016,7 +1016,7 @@ def init( \
         if gdat.exprtype == 'sdyn':
             gdat.radispmr = 0.2
     
-    if gdat.anglassc == None:
+    if gdat.anglassc is None:
         gdat.anglassc = 5. * gdat.radispmr
    
     ### experimental PSFs
@@ -1043,7 +1043,7 @@ def init( \
     gdat.numbburntmpr = gdat.factburntmpr * gdat.numbburn
 
     # model evaluation approximation error tolerance in units of the fraction of the lowest PS flux
-    if gdat.specfraceval == None:
+    if gdat.specfraceval is None:
         if gdat.exprtype == 'ferm':
             gdat.specfraceval = 0.5
         else:
@@ -1431,7 +1431,7 @@ def init( \
     #    if strg.startswith('true') and not strg[4:].startswith('indx'):
     #        try:
     #            valumodl = getattr(gdat, 'fitt' + strg[4:])
-    #            if valumodl == None:
+    #            if valumodl is None:
     #                raise
     #            if gdat.verbtype > 1:
     #                print 'Received custom input for ' + strg[4:]
@@ -1685,7 +1685,7 @@ def init( \
     # intermediate setup
 
     ## reference spectra
-    if gdat.listprefsbrtlabl == None:
+    if gdat.listprefsbrtlabl is None:
         if gdat.exprtype == 'chan' and gdat.numbpixlfull != 1:
             gdat.listprefsbrtener = [[[] for k in range(3)]]
             gdat.listprefsbrtsbrt = [[[] for k in range(3)]]
@@ -1935,7 +1935,7 @@ def init( \
                     gdat.trueindxelemfull = []
 
             if gdat.truenumbtrap > 0:
-                if gdat.seedelemtype != None:
+                if gdat.seedelemtype is not None:
                     if gdat.seedelemtype == 'rand':
                         seed()
                     else:
@@ -1981,7 +1981,7 @@ def init( \
             liststrgpdfnmodu = getattr(gdat, strgmodl + 'liststrgpdfnmodu')
             for strgfeat, strgpdfn in zip(liststrgfeatmodu[l], liststrgpdfnmodu[l]):
                 if strgpdfn == 'tmpl':
-                    if gdat.lgalprio == None or gdat.bgalprio == None:
+                    if gdat.lgalprio is None or gdat.bgalprio is None:
                         gdat.lgalprio = concatenate((gdat.truelgal))
                         gdat.bgalprio = concatenate((gdat.truebgal))
                     gdat.numbspatprio = gdat.lgalprio.size
@@ -2155,7 +2155,7 @@ def init( \
     if gdat.fittnumbtrap > 0:
         # plot settings
         ## upper limit of histograms
-        if gdat.limtydathistfeat == None:
+        if gdat.limtydathistfeat is None:
             if gdat.allwrefr:
                 #gdat.limtydathistfeat = [0.5, 10**ceil(log10(max(gdat.fittmaxmnumbelemtotl, gdat.refrnumbelemtotl)))]
                 gdat.limtydathistfeat = [0.5, max(100., 10**ceil(log10(gdat.refrnumbelemtotl)))]
@@ -2311,7 +2311,7 @@ def init( \
 
     gdat.indxpoplcrin = 0
     if gdat.fittnumbtrap > 0:
-        if gdat.rtagmock != None:
+        if gdat.rtagmock is not None:
             path = gdat.pathoutprtagmock + 'gdatfinlpost'
             gdatmock = readfile(path)
         gdat.liststrgvarbhist = []
@@ -2324,7 +2324,7 @@ def init( \
                     gdat.liststrgvarbhist.append([[] for k in range(5)])
                     gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + 'pop%dreg%d' % (l, d)
                     gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
-                    if gdat.rtagmock != None:
+                    if gdat.rtagmock is not None:
                         # cmpl
                         gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdatmock.indxregi]
                         # fdis
@@ -2352,7 +2352,7 @@ def init( \
                         gdat.liststrgvarbhist[cntr][2] = strgfeatseco
                         gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdat.indxregi]
                         gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdat.indxregi]
-                        if gdat.rtagmock != None:
+                        if gdat.rtagmock is not None:
                             booltempfrst = True
                             booltempseco = True
                             if strgfeatfrst[-4:] in gdat.listnamerefr:
@@ -2375,11 +2375,11 @@ def init( \
     
     # selection effects
     if gdat.datatype == 'inpt' and gdat.fittnumbtrap > 0:
-        if gdat.numbsampboot == None:
+        if gdat.numbsampboot is None:
             gdat.numbsampboot = gdat.numbsamp
     
         gdat.boolcrex = False
-        if gdat.rtagmock != None:
+        if gdat.rtagmock is not None:
             for qq in gdatmock.indxrefr:
                 for q in gdat.indxrefr:
                     for l in gdat.fittindxpopl:
@@ -2419,11 +2419,11 @@ def init( \
                             l = int(listtemp[4][qq].split('pop')[2][0])
                             nametemp += 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
                             crexhist = getattr(gdat, 'crex' + nametemp)
-                            if crexhist != None:
+                            if crexhist is not None:
                                 gdat.boolcrex = True
         
         ## internal correction
-        gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock != None
+        gdat.boolcrin = gdat.datatype == 'inpt' and gdat.rtagmock is not None
     
     if gdat.fittnumbtrap > 0:
         # variables for which two dimensional functions will be plotted
@@ -2589,12 +2589,12 @@ def initarry( \
     if execpara:
         cntrproc = 0
 
-    dictvarb['boolarry'] = strgcnfgextnexec == None
+    dictvarb['boolarry'] = strgcnfgextnexec is None
     listrtag = []
     listpridchld = []
     for k, strgcnfgextn in enumerate(listnamecnfgextn):
         
-        if strgcnfgextnexec != None:
+        if strgcnfgextnexec is not None:
             if strgcnfgextn != strgcnfgextnexec:
                 continue
         
@@ -2614,7 +2614,7 @@ def initarry( \
         listrtagprev = retr_listrtagprev(strgcnfg)
         cntrcomp += 1
 
-        if (not forcneww and strgcnfgextnexec == None or forcprev and strgcnfgextnexec != None) and len(listrtagprev) > 0:
+        if (not forcneww and strgcnfgextnexec is None or forcprev and strgcnfgextnexec is not None) and len(listrtagprev) > 0:
             print 'Found at least one previous run with the configuration %s' % strgcnfg
             print 'Skipping...'
             print
@@ -2624,7 +2624,7 @@ def initarry( \
                 print 'Found at least one previous run. But, repeating the run anways...'
             else:
                 print 'Did not find any previous run.'
-            if execpara and strgcnfgextnexec == None:
+            if execpara and strgcnfgextnexec is None:
                 cntrproc += 1
                 prid = os.fork()
                 if prid > 0:
@@ -2640,7 +2640,7 @@ def initarry( \
                 print 'Calling the main PCAT function without forking a child...' 
                 listrtag.append(init(**dictvarbtemp))
     
-    if execpara and strgcnfgextnexec == None:
+    if execpara and strgcnfgextnexec is None:
         for prid in listpridchld:
             os.waitpid(prid, 0)
         if cntrproc > 0:
@@ -2659,7 +2659,7 @@ def initarry( \
     
     strgtimestmp = tdpy.util.retr_strgtimestmp()
     
-    if strgcnfgextnexec != None or namexaxi == None: 
+    if strgcnfgextnexec is not None or namexaxi is None: 
         return
     
     print
@@ -2751,7 +2751,7 @@ def initarry( \
             
         indxlist = liststrgvarbtotl.index(strgvarbtotl)
         
-        if listscalvarbcomp == None:
+        if listscalvarbcomp is None:
             scalyaxi = getattr(listgdat[0], 'scal' + listnamevarbcomp[indxlist])
         else:
             scalyaxi = listscalvarbcomp[indxlist]
@@ -2810,13 +2810,13 @@ def initarry( \
             for caps in listcaps:
                 caps.set_markeredgewidth(3)
         
-        if trueyaxi != None:
+        if trueyaxi is not None:
             axis.axhline(trueyaxi, ls='--', color='g')
         
-        if lablxaxi == None:
+        if lablxaxi is None:
             lablxaxi = getattr(listgdat[0], 'labl' + namexaxi + 'totl')
         
-        if scalxaxi == None:
+        if scalxaxi is None:
             scalxaxi = getattr(listgdat[0], 'scal' + namexaxi)
         
         axis.set_xlabel(lablxaxi)
@@ -3249,7 +3249,7 @@ def work(pathoutprtag, lock, indxprocwork):
     
     ## impose user-specified initial state
     if gdat.inittype == 'reco':
-        if gdat.namerecostat != None:
+        if gdat.namerecostat is not None:
             strgcnfg = gdat.namerecostat
         else:
             strgcnfg = gdat.strgcnfg
@@ -3335,7 +3335,7 @@ def work(pathoutprtag, lock, indxprocwork):
             if (gdatmodi.thissamp == 0).all():
                 raise Exception('Bad initialization.')
     
-            if gdat.fittnumbtrap > 0 and gdatmodi.thisindxsampcomp != None:
+            if gdat.fittnumbtrap > 0 and gdatmodi.thisindxsampcomp is not None:
                 for strgcomp in gdat.fittliststrgcomptotl:
                     initcomp = [[[] for d in gdat.indxregi] for l in gdat.fittindxpopl]
                     for l in gdat.fittindxpopl:
@@ -3369,7 +3369,7 @@ def work(pathoutprtag, lock, indxprocwork):
             
         retr_elemlist(gdat, gdatmodi)
         
-        if gdatmodi.thisindxsampcomp != None:
+        if gdatmodi.thisindxsampcomp is not None:
             if gdat.inittype == 'refr':
                 gdatmodi.thissampvarb = retr_sampvarb(gdat, 'fitt', gdatmodi.thissamp, gdatmodi.thisindxsampcomp)
                 print 'Initializing elements from the reference element parameters...'
@@ -3394,7 +3394,7 @@ def work(pathoutprtag, lock, indxprocwork):
         except:
             pass
     
-    if gdat.initpsfp != None:
+    if gdat.initpsfp is not None:
         print 'Initializing the metamodel PSF from the provided initial state...'
         if gdat.initpsfp.size != gdat.fittindxfixppsfp.size:
             raise Exception('')
@@ -3822,7 +3822,7 @@ def work(pathoutprtag, lock, indxprocwork):
         
             if gdat.savestat:
                 
-                if gdat.namesavestat != None:
+                if gdat.namesavestat is not None:
                     strgcnfg = gdat.namesavestat
                 else:
                     strgcnfg = gdat.strgcnfg
@@ -3936,7 +3936,8 @@ def work(pathoutprtag, lock, indxprocwork):
                     
                 if gdatmodi.nextdeltlliktotl == 0 and gdatmodi.nextdeltlpritotl == 0. and not gdat.sqzeprop:
                     if not (gdatmodi.propdist and sum(gdatmodi.thissampvarb[gdat.fittindxfixpnumbelem[gdatmodi.indxpoplmodi[0]]]) == 0):
-                        print 'Both likelihood and prior will not change.'
+                        
+                        print 'Warning! Both likelihood and prior will not change.'
                         print 'gdatmodi.indxsampmodi'
                         print gdatmodi.indxsampmodi
                         print 'gdat.fittnamepara[gdatmodi.indxsampmodi]'

@@ -460,7 +460,7 @@ def retr_sampvarb(gdat, strgmodl, samp, indxsampcomp=None):
                 print samp[k]
                 raise Exception('ICDF is infinite!')
     
-    if indxsampcomp != None:
+    if indxsampcomp is not None:
         indxpopl = getattr(gdat, strgmodl + 'indxpopl')
         liststrgcomp = getattr(gdat, strgmodl + 'liststrgcomp')
         listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
@@ -1185,7 +1185,7 @@ def retr_psfnferm(gdat):
         path = gdat.pathdata + 'expr/irfn/psf_P8R2_SOURCE_V6_PSF.fits'
     else:
         path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_back.fits'
-    irfn = pf.getdata(path, 1)
+    irfn = astropy.io.fits.getdata(path, 1)
     minmener = irfn['energ_lo'].squeeze() * 1e-3 # [GeV]
     maxmener = irfn['energ_hi'].squeeze() * 1e-3 # [GeV]
     enerirfn = sqrt(minmener * maxmener)
@@ -1199,8 +1199,8 @@ def retr_psfnferm(gdat):
     strgpara = ['score', 'gcore', 'stail', 'gtail', 'ntail']
     for m in gdat.indxevtt:
         if gdat.anlytype.startswith('rec8'):
-            irfn = pf.getdata(path, 1 + 3 * gdat.indxevttincl[m])
-            fermscal[m, :] = pf.getdata(path, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
+            irfn = astropy.io.fits.getdata(path, 1 + 3 * gdat.indxevttincl[m])
+            fermscal[m, :] = astropy.io.fits.getdata(path, 2 + 3 * gdat.indxevttincl[m])['PSFSCALE']
         else:
             if m == 1:
                 path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_front.fits'
@@ -1208,8 +1208,8 @@ def retr_psfnferm(gdat):
                 path = gdat.pathdata + 'expr/irfn/psf_P7REP_SOURCE_V15_back.fits'
             else:
                 continue
-            irfn = pf.getdata(path, 1)
-            fermscal[m, :] = pf.getdata(path, 2)['PSFSCALE']
+            irfn = astropy.io.fits.getdata(path, 1)
+            fermscal[m, :] = astropy.io.fits.getdata(path, 2)['PSFSCALE']
         for k in range(numbpsfpform):
             fermform[:, m, k] = interp1d_pick(enerirfn, mean(irfn[strgpara[k]].squeeze(), axis=0))(gdat.meanener)
     # convert N_tail to f_core
@@ -1373,7 +1373,7 @@ def retr_refrchanfinl(gdat):
 
     # Wolf et al. (2011)
     path = gdat.pathdata + 'inpt/Wolf2008.fits'
-    data = pf.getdata(path)
+    data = astropy.io.fits.getdata(path)
     gdat.refrlgal[1][0] = deg2rad(data['_Glon'])
     gdat.refrlgal[1][0] = ((gdat.refrlgal[1][0] - pi) % (2. * pi)) - pi
     gdat.refrbgal[1][0] = deg2rad(data['_Glat'])
@@ -1442,7 +1442,7 @@ def retr_refrfermfinl(gdat):
     
     # Acero+2015
     path = gdat.pathdata + 'expr/pnts/gll_psc_v16.fit'
-    fgl3 = pf.getdata(path)
+    fgl3 = astropy.io.fits.getdata(path)
     
     gdat.refrlgal[0][0] = deg2rad(fgl3['glon'])
     gdat.refrlgal[0][0] = pi - ((gdat.refrlgal[0][0] - pi) % (2. * pi))
@@ -1497,7 +1497,7 @@ def retr_refrfermfinl(gdat):
 
     # Manchester+2005
     path = gdat.pathdata + 'inpt/Manchester2005.fits'
-    data = pf.getdata(path)
+    data = astropy.io.fits.getdata(path)
    
     gdat.refrlgal[1][0] = deg2rad(data['glon'])
     gdat.refrlgal[1][0] = ((gdat.refrlgal[1][0] - pi) % (2. * pi)) - pi
@@ -1590,7 +1590,7 @@ def show_samp(gdat, gdatmodi, thisonly=False):
             print
         name = gdat.fittnamepara[k]
 
-        if gdat.fittnumbtrap > 0 and gdatmodi.thisindxsampcomp != None:
+        if gdat.fittnumbtrap > 0 and gdatmodi.thisindxsampcomp is not None:
             listtemp = []
             for l in gdat.fittindxpopl:
                 listtemp.append(concatenate(gdatmodi.thisindxsampcomp['comp'][l]))
@@ -1641,7 +1641,7 @@ def rscl_elem(gdat, thissampvarb, thisindxsampcomp, nextsampvarb, nextsamp, indx
         return
     
     for l in listindxpopltemp:
-        if indxsampmodi != None:
+        if indxsampmodi is not None:
             liststrgcomptemp = [strgcompmodi]
             listscalcomptemp = [scalcompmodi]
         else:
@@ -2747,11 +2747,11 @@ def retr_probmerg(gdat, gdatmodi, sampvarb, indxsampcomp, indxelemfullexcl=None,
         probmerg = amplstat / sum(amplstat)
     
     if indxelemfulleval is None:
-        if indxelemfullexcl != None:
+        if indxelemfullexcl is not None:
             probmerg = concatenate((probmerg[:indxelemfullexcl], probmerg[indxelemfullexcl+1:]))
             probmerg /= sum(probmerg)
     else:
-        if indxelemfullexcl != None:
+        if indxelemfullexcl is not None:
             if indxelemfullexcl == -1:
                 probmerg = probmerg[:-1]
             else:
@@ -3456,11 +3456,11 @@ def setpprem(gdat):
             gdat.sbrtdata = []
             for strg in gdat.strgexprsbrt:
                 path = gdat.pathinpt + strg
-                gdat.sbrtdata.append(pf.getdata(path))
+                gdat.sbrtdata.append(astropy.io.fits.getdata(path))
         else:
             if not gdat.lionmode:
                 path = gdat.pathinpt + gdat.strgexprsbrt
-                gdat.sbrtdata = [pf.getdata(path)]
+                gdat.sbrtdata = [astropy.io.fits.getdata(path)]
             
         for d in gdat.indxregi:
             if gdat.pixltype == 'heal' or gdat.pixltype == 'cart' and gdat.forccart:
@@ -4451,7 +4451,7 @@ def setpinit(gdat, boolinitsetp=False):
     #        setattr(gdat, strgmodl + 'sbrtbacknormcart', sbrtbacknormcart)
     
     # mask the exposure map
-    if gdat.listmask != None:
+    if gdat.listmask is not None:
         for mask in gdat.listmask:
             if mask[0] == 'sqre':
                 indxpixlmask = where((gdat.lgalgrid > mask[1]) & (gdat.lgalgrid < mask[2]) & (gdat.bgalgrid > mask[3]) & (gdat.bgalgrid < mask[4]))[0]
@@ -5238,7 +5238,7 @@ def setpinit(gdat, boolinitsetp=False):
     #summgene(gdat.binsangl * gdat.anglfact)
     #print
 
-    if gdat.rtagmock != None:
+    if gdat.rtagmock is not None:
         if gdat.datatype == 'inpt':
             path = gdat.pathoutprtagmock + 'gdatfinlpost'
             booltemp = True
@@ -5570,7 +5570,7 @@ def retr_rele(gdat, maps, lgal, bgal, defs, asca, acut, indxpixleval, absv=True,
     defl = retr_defl(gdat, indxpixleval, lgal, bgal, defs, asca=asca, acut=acut)
 
     prod = grad * defl
-    if cntpmodl != None:
+    if cntpmodl is not None:
         prod /= cntpmodl[:, None]
     dotstemp = sum(prod, 1)
     if absv:
@@ -5717,10 +5717,10 @@ def retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgvarb, strgpdfn, strgmo
             if strgstat == 'pdfn':
                 varb = getattr(gdat, strgmome + strgpdfn + strgvarb)
 
-    if indxlist != None:
+    if indxlist is not None:
         varb = varb[indxlist]
 
-    if indxvarb != None:
+    if indxvarb is not None:
         if strgmome == 'errr':
             varb = varb[[slice(None)] + indxvarb]
         else:
@@ -6145,7 +6145,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
                     
                 else:
                     path = gdat.pathinpt + backtype[d][c]
-                    sbrtbacknorm[d][c] = pf.getdata(path)
+                    sbrtbacknorm[d][c] = astropy.io.fits.getdata(path)
                     
                     if gdat.pixltype == 'cart':
                         
@@ -7906,9 +7906,9 @@ def init_figr(gdat, gdatmodi, strgpdfn, strgplot, strgstat, strgmodl, indxregipl
     axis.set_xlabel(gdat.labllgaltotl)
     axis.set_ylabel(gdat.lablbgaltotl)
     titl = ''
-    if indxenerplot != None and gdat.numbener > 1 and strgplot.endswith('cnts'):
+    if indxenerplot is not None and gdat.numbener > 1 and strgplot.endswith('cnts'):
         titl = gdat.strgener[indxenerplot]
-    if indxevttplot != None and gdat.numbevtt > 1 and strgplot.endswith('cnts'):
+    if indxevttplot is not None and gdat.numbevtt > 1 and strgplot.endswith('cnts'):
         titl += ' ' + gdat.strgevtt[indxevttplot]
     axis.set_title(titl)
 
@@ -7937,7 +7937,7 @@ def retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot=None,
     draw_frambndr(gdat, axis)
     
     # take the relevant energy and PSF bins
-    if indxenerplot != None:
+    if indxenerplot is not None:
         if indxevttplot == -1:
             maps = sum(maps[indxenerplot, ...], axis=1)
         else:
@@ -7980,7 +7980,7 @@ def make_cbar(gdat, axis, imag, indxenerplot=None, tick=None, labl=None):
 
     # make a color bar
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05, aspect=15)
-    if tick != None and labl != None:
+    if tick is not None and labl is not None:
         cbar.set_ticks(tick)
         cbar.set_ticklabels(labl)
     
@@ -8080,7 +8080,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
                     bgal = copy(gdat.refrbgal[q][indxregiplot][0, :])
                     numbelem = int(gdat.refrnumbelem[q][indxregiplot])
                     
-                    if gdatmodi != None and numbtrap > 0 and assc:   
+                    if gdatmodi is not None and numbtrap > 0 and assc:   
                         ### hit
                         indx = gdatmodi.thisindxelemrefrasschits[q][l][indxregiplot]
                         if indx.size > 0:
@@ -8135,7 +8135,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxregiplot, indxpoplpl
     else:
         listindxpoplplot = [indxpoplplot]
     for l in listindxpoplplot:
-        if gdatmodi != None:
+        if gdatmodi is not None:
             if gdat.fittnumbtrap > 0:
                 colr = retr_colr(gdat, strgstat, strgmodl, l)
                 mrkrsize = retr_mrkrsize(gdat, gdatmodi.thissampvarb[gdatmodi.thisindxsampcomp[gdat.fittnamefeatampl[l]][l][indxregiplot]], gdat.fittnamefeatampl[l])
@@ -8308,7 +8308,7 @@ def readfile(path):
     filearry.close()
     
     if 'gdatfinl' in path or 'gdatinit' in path:
-        if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis != None and hasattr(gdattemptemp, 'binsener'):
+        if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis is not None and hasattr(gdattemptemp, 'binsener'):
             gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
         gdattemptemp.adisobjt = interp1d_pick(gdattemptemp.redsintp, gdattemptemp.adisintp)
         gdattemptemp.redsfromdlosobjt = interp1d_pick(gdattemptemp.adisintp * gdattemptemp.redsintp, gdattemptemp.redsintp)
@@ -8385,7 +8385,7 @@ def retr_defl(gdat, indxpixleval, lgal, bgal, angllens, ellp=None, angl=None, rc
     lgaltran = gdat.lgalgrid[indxpixleval] - lgal
     bgaltran = gdat.bgalgrid[indxpixleval] - bgal
     
-    if acut != None:
+    if acut is not None:
         defs = angllens
         angl = sqrt(lgaltran**2 + bgaltran**2)
         defl = retr_deflcutf(angl, defs, asca, acut)
@@ -8482,7 +8482,7 @@ def traptdim(gdat, arry):
 def retr_spatprio(gdat, pdfnspatpriotemp, spatdistcons=None):
     
     pdfnspatprio = pdfnspatpriotemp
-    if spatdistcons != None:
+    if spatdistcons is not None:
         pdfnspatprio += spatdistcons
 
     summ = traptdim(gdat, pdfnspatprio)
@@ -8531,7 +8531,7 @@ def retr_gdatobjt(gdat, gdatmodi, strgstat, strgmodl):
 
 def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
    
-    if False and gdatmodi != None:
+    if False and gdatmodi is not None:
         if hasattr(gdatmodi, 'cntrswep') and gdat.exprtype == 'ferm':
             print 'proc_samp()'
             print 'gdatmodi.cntrswep'
@@ -9612,8 +9612,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             print anglhost[d][e]
                             print 'serihost[d][e]'
                             print serihost[d][e]
-                        print 'strgmodl'
-                        print strgmodl
                         
                         sbrt['hostisf%d' % e][dd] = retr_sbrtsers(gdat, gdat.lgalgrid, gdat.bgalgrid, lgalhost[d][e], \
                                                                                     bgalhost[d][e], spechost, sizehost[d][e], ellphost[d][e], anglhost[d][e], serihost[d][e])
@@ -9896,9 +9894,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
             if not isfinite(llik).all():
                 raise Exception('Likelihood is not finite.')
     
-        #print 'strgmodl'
-        #print strgmodl
-        
         if strgstat == 'next':
             thislliktotl = getattr(gdatobjt, strgpfixthis + 'lliktotl')
             if isinstance(thislliktotl, ndarray):
@@ -10051,7 +10046,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                         lpri[indxlpritemp] = sum(lpdfspatprioobjt(dictelem[l][d]['bgal'], dictelem[l][d]['lgal'], grid=False))
                     
                     # temp
-                    #if gdat.mask != None:
+                    #if gdat.mask is not None:
                     #    indxbadd = where((dicttemp['lgalconc'] > gdat.mask[0]) & (dicttemp['lgalconc'] < gdat.mask[1]) & \
                     #                                (dicttemp['bgalconc'] > gdat.mask[2]) & (dicttemp['bgalconc'] < gdat.mask[3]))[0]
                     #    lpri[0] -= 1e6 * indxbadd.size
@@ -11177,7 +11172,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False):
                             setattr(gdatobjt, strgpfix + 'histpars' + strgfeat + 'pop%dreg%d' % (q, d), refrhistpars)
                             setattr(gdatobjt, strgpfix + 'ptfn' + strgfeat + 'pop%dreg%d' % (q, d), ptfn)
             
-            if gdat.rtagmock != None and gdat.datatype == 'inpt' or gdat.datatype == 'mock':
+            if gdat.rtagmock is not None and gdat.datatype == 'inpt' or gdat.datatype == 'mock':
                 if gdat.truenumbtrap > 0:
                     for l in indxpopl:
                         for d in indxregipopl[l]:
@@ -11502,7 +11497,7 @@ def chec_statvarb(strgmodl, strgstat, gdatmodi, strgvarb, nextvarb, indxcubeeval
                 print type(nextvarb)
                 raise Exception('State variables should not change types.')
             boolbadd = False
-            if indxcubeeval != None:
+            if indxcubeeval is not None:
                 frac = abs((thisvarb[indxcubeeval] - nextvarb) / thisvarb[indxcubeeval])
                 print 'frac'
                 summgene(frac)
@@ -11513,7 +11508,7 @@ def chec_statvarb(strgmodl, strgstat, gdatmodi, strgvarb, nextvarb, indxcubeeval
                     boolbadd = True
             if boolbadd:
                 print 'Warning! State variable should not change when reprocessing the current state.'
-                if indxcubeeval != None:
+                if indxcubeeval is not None:
                     print 'thisvarb[indxcubeeval]'
                     summgene(thisvarb[indxcubeeval])
                     print 'nextvarb'
@@ -11574,7 +11569,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if gdatfinl.fittnumbtrap > 0:
             if gdatfinl.datatype == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
-                    if gdatfinl.rtagmock != None:
+                    if gdatfinl.rtagmock is not None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
                         gdatmock = readfile(path)
                     
@@ -12025,7 +12020,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if gdatfinl.fittnumbtrap > 0 and strgpdfn == 'post':
             if gdatfinl.datatype == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
-                    if gdatfinl.rtagmock != None:
+                    if gdatfinl.rtagmock is not None:
                         path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
                         gdatmock = readfile(path)
                     
@@ -12100,7 +12095,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                                     nametemp += liststrgcompvarbhist[2]
                                 nametemp += 'pop%dpop%dpop%dreg%d' % (q, qq, l, d)
                                 crexhist = getattr(gdatfinl, 'crex' + nametemp)
-                                if crexhist != None:
+                                if crexhist is not None:
                                     
                                     listhistexcr = listhistincr * crexhist 
                                     
@@ -12634,7 +12629,7 @@ def retr_lumi(gdat, flux, dlos, reds=None):
     
     # temp
     # redshift correction
-    if reds != None:
+    if reds is not None:
         lumi *= (1. + reds)**2
 
     return lumi
@@ -12646,7 +12641,7 @@ def retr_flux(gdat, lumi, dlos, reds=None):
     
     # temp
     # redshift correction
-    if reds != None:
+    if reds is not None:
         pass
 
     return flux
@@ -12984,7 +12979,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     listnameback = getattr(gdat, strgmodl + 'listnameback')
     namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
     
-    if gdatmodi != None:
+    if gdatmodi is not None:
         strgswep = '_%09d' % gdatmodi.cntrswep
     else:
         strgswep = ''
@@ -13391,7 +13386,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                                                                                         lablxdat=gdat.lablcnts, lablydat=gdat.lablcntsbackfwhm)
         
                 # internally and externally corrected element feature histograms
-                if gdat.datatype == 'inpt' and strgstat == 'pdfn' and gdat.rtagmock != None:
+                if gdat.datatype == 'inpt' and strgstat == 'pdfn' and gdat.rtagmock is not None:
                     limtydat = gdat.limtydathistfeat
                     factydat = 1.
                     for l in indxpopl:
@@ -13697,7 +13692,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
 
     path = gdat.pathinfo + 'info' + namefull
 
-    if nameseco != None:
+    if nameseco is not None:
        
         limtfrst = getattr(gdat, 'limt' + name)
         limtseco = getattr(gdat, 'limt' + nameseco)
@@ -13944,7 +13939,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             cntr += numbplotfram
    
         # post-processing frame plots
-        if gdat.numbframpost != None:
+        if gdat.numbframpost is not None:
             gdatmodi = tdpy.util.gdatstrt()
             gdat.indxsamptotlfram = arange(gdat.numbframpost) * (gdat.indxsamptotl - gdat.indxsamptotl % gdat.numbframpost) / gdat.numbframpost
             for n in gdat.indxsamptotlfram:
@@ -14253,7 +14248,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxregiplot, specco
         figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
         
         # plot reference spectra
-        if gdat.listprefsbrtlabl != None:
+        if gdat.listprefsbrtlabl is not None:
             for k in range(len(gdat.listprefsbrtlabl)):
                 if gdat.listprefsbrttype[k] == 'shad':
                     factenerrefr = [[] for a in range(3)]
@@ -14596,13 +14591,13 @@ def plot_brgt(gdat, gdatmodi, strg):
 
 def savefigr(gdat, gdatmodi, figr, path):
     
-    #if gdatmodi != None and gdat.numbproc > 1:
+    #if gdatmodi is not None and gdat.numbproc > 1:
     #    gdatmodi.lock.acquire()
     #    print 'Process %d acquiring the lock...' % gdatmodi.indxprocwork 
     
     plt.savefig(path)
     
-    #if gdatmodi != None and gdat.numbproc > 1:
+    #if gdatmodi is not None and gdat.numbproc > 1:
     #    gdatmodi.lock.release()
     #    print 'Process %d releasing the lock...' % gdatmodi.indxprocwork 
         
@@ -14759,9 +14754,9 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         else:
             ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn) * factydat
     
-    if indxxdat != None:
+    if indxxdat is not None:
         xdat = xdat[indxxdat]
-    if indxydat != None:
+    if indxydat is not None:
         ydat = ydat[indxydat]
     
     xerr = zeros((2, xdat.size))
@@ -14797,7 +14792,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'histptfn' + strgydat[4:], strgpdfn, strgmome='errr') * factydat
             else:
                 yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
-            if indxydat != None:
+            if indxydat is not None:
                 yerr = yerr[[slice(None)] + indxydat]
             
             # label
@@ -14837,7 +14832,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
                 if plottype == 'errr':
                     yerr = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn, strgmome='errr') * factydat
 
-                    if indxydat != None:
+                    if indxydat is not None:
                         yerr = yerr[[slice(None)] + indxydat]
                     temp, listcaps, temp = axis.errorbar(xdat, ydat, yerr=yerr, xerr=xerr, marker='o', ls='', markersize=5, label=legd, lw=1, capsize=5, color=colr)
                     for caps in listcaps:
@@ -14866,7 +14861,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             ydattemp = getattr(gdat, name)
             
             ydat = ydattemp * factydat
-            if indxydat != None:
+            if indxydat is not None:
                 ydat = ydat[indxydat]
             
             if strgydat[-8:-5] == 'pop':
@@ -14895,7 +14890,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     # external reference histogram
     if histodim and strgydat == 'histfluxpop0reg0':
         try:
-            if gdat.listprefhistfluxlabl != None:
+            if gdat.listprefhistfluxlabl is not None:
                 for k in range(len(gdat.listprefhistfluxlabl)):
                     if gdat.listprefhistfluxtype[k] == 'shad':
                         axis.plot(gdat.listprefhistfluxflux[k][0], gdat.listprefhistfluxhist[k][0], color='m', label=gdat.listprefhistfluxlabl[k])
@@ -14970,17 +14965,17 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     if strgydat.startswith('hist') and strgydat[4:-8] == 'deltllik':
         plot_sigmcont(gdat, strgmodl, axis, strgxdat[4:], int(strgydat[-1]))
    
-    if indxydat != None:
+    if indxydat is not None:
         strgydat += strgindxydat
     
-    if indxxdat != None:
+    if indxxdat is not None:
         strgxdat += strgindxxdat
     
-    if limtxdat != None:
+    if limtxdat is not None:
         axis.set_xlim(limtxdat)
     else:
         axis.set_xlim([amin(xdat), amax(xdat)])
-    if limtydat != None:
+    if limtydat is not None:
         axis.set_ylim([limtydat[0] * factydat, limtydat[1] * factydat])
     else:
         axis.set_ylim([amin(ydat), amax(ydat)])
@@ -15217,7 +15212,7 @@ def plot_evidtest():
     
 def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbins, strgfeat=None):
     
-    if strgfeat != None:
+    if strgfeat is not None:
         numbparaplot = gdat.numbbinsplot
     else:
         numbparaplot = 1
@@ -15232,7 +15227,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
         else:
             numbrows = 2
     
-    if strgfeat != None:
+    if strgfeat is not None:
         indxfeatsign = gdat.fittliststrgfeatsign[indxpoplplot].index(strgfeat)
     else:
         indxfeatsign = arange(len(gdat.fittliststrgfeatsign))
@@ -15246,7 +15241,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
         if numbcols == 1:
             axrw = [axrw]
         for b, axis in enumerate(axrw):
-            if strgfeat != None:
+            if strgfeat is not None:
                 h = a * 2 + b
                 if strgbins == 'full':
                     indxlowr = h
@@ -15270,7 +15265,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
             else:
                 imag = axis.imshow(temp, interpolation='nearest', origin='lower', cmap='BuPu', extent=gdat.exttrofi)
                 
-            if strgfeat != None:
+            if strgfeat is not None:
                 bins = getattr(gdat, 'bins' + strgfeat)
             
             # superimpose reference elements
@@ -15318,7 +15313,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxregiplot, indxpoplplot, strgbi
                 titl = tdpy.util.mexp(factfeatplot * bins[indxlowr]) + ' < $%s$ < ' % lablfeat + tdpy.util.mexp(factfeatplot * bins[indxuppr])
                 axis.set_title(titl)
     
-    if strgfeat != None:
+    if strgfeat is not None:
         lablfeattotl = getattr(gdat, 'labl' + strgfeat + 'totl')
         plt.figtext(0.5, 0.95, '%s' % lablfeattotl, ha='center', va='center')
     axiscomm = figr.add_axes([0.87, 0.2, 0.02, 0.6])
@@ -15747,7 +15742,7 @@ def plot_grap(plottype, verbtype=0):
 def plot_3fgl_thrs(gdat):
 
     path = os.environ["PCAT_DATA_PATH"] + '/detthresh_P7v15source_4years_PL22.fits'
-    fluxthrs = pf.getdata(path, 0)
+    fluxthrs = astropy.io.fits.getdata(path, 0)
 
     bgalfgl3 = linspace(-90., 90., 481)
     lgalfgl3 = linspace(-180., 180., 960)
@@ -15856,7 +15851,7 @@ def plot_init(gdat):
 def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgpdfn, \
                                         strgvarb='defl', strgcomp='', indxdefl=None, indxpoplplot=-1, multfact=1., indxenerplot=None, indxevttplot=None):
 
-    if indxdefl != None:
+    if indxdefl is not None:
         strgvarb += 'sing'
     strgvarb = strgvarb + strgcomp + 'reg%d' % indxregiplot
     
@@ -15864,10 +15859,10 @@ def plot_defl(gdat, gdatmodi, strgstat, strgmodl, indxregiplot, strgpdfn, \
     
     defl *= multfact
    
-    if indxenerplot != None:
+    if indxenerplot is not None:
         defl = defl[indxenerplot, :, indxevttplot, ...]
 
-    if indxdefl != None:
+    if indxdefl is not None:
         defl = defl[..., indxdefl]
         strgvarb += '%04d' % indxdefl
     defl = defl.reshape((gdat.numbsidecart, gdat.numbsidecart, 2))

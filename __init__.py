@@ -29,6 +29,7 @@ import ctypes
 
 import subprocess as subp, psutil
 
+import astropy
 import astropy as ap
 from astropy.convolution import convolve_fft, AiryDisk2DKernel
 
@@ -38,7 +39,7 @@ import multiprocessing as mp
 from copy import deepcopy
 
 # FITS files
-import pyfits as pf, h5py
+import h5py
 
 # utilities
 import os, time, sys, getpass, glob, fnmatch, cPickle, inspect, traceback, shelve
