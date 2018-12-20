@@ -2565,7 +2565,7 @@ def initarry( \
              forcneww=False, \
              forcprev=False, \
              strgpara=False, \
-             execpara=True, \
+             boolexecpara=True, \
              strgcnfgextnexec=None, \
              listnamevarbcomp=[], \
              listscalvarbcomp=[], \
@@ -2586,7 +2586,7 @@ def initarry( \
     
     cntrcomp = 0
     
-    if execpara:
+    if boolexecpara:
         cntrproc = 0
 
     dictvarb['boolarry'] = strgcnfgextnexec is None
@@ -2624,7 +2624,7 @@ def initarry( \
                 print 'Found at least one previous run. But, repeating the run anways...'
             else:
                 print 'Did not find any previous run.'
-            if execpara and strgcnfgextnexec is None:
+            if boolexecpara and strgcnfgextnexec is None:
                 cntrproc += 1
                 prid = os.fork()
                 if prid > 0:
@@ -2640,7 +2640,7 @@ def initarry( \
                 print 'Calling the main PCAT function without forking a child...' 
                 listrtag.append(init(**dictvarbtemp))
     
-    if execpara and strgcnfgextnexec is None:
+    if boolexecpara and strgcnfgextnexec is None:
         for prid in listpridchld:
             os.waitpid(prid, 0)
         if cntrproc > 0:
@@ -3222,6 +3222,11 @@ def work(pathoutprtag, lock, indxprocwork):
     gdatmodi.thissamp = rand(gdat.fittnumbpara)
     gdatmodi.thissampvarb = zeros(gdat.fittnumbpara)
     
+    gdatmodi.chro = dict()
+    #for k, name in enumerate(gdat.listnamechro):
+    #    gdatmodi.chro[name] = 0zeros(gdat.numbchro)
+
+
     #print 'gdat.inittype'
     #print gdat.inittype
     #print 'gdat.trussamp[gdat.truenumbfixp:gdat.truenumbfixp+20]'
@@ -3495,7 +3500,6 @@ def work(pathoutprtag, lock, indxprocwork):
         setattr(gdatmodi, 'nextlpaupop%dtotl' % l, zeros(1))
     gdatmodi.nextljcb = zeros(1)
     gdatmodi.nextaccpprob = zeros(1)
-    gdatmodi.nextchro = zeros(gdat.numbchro)
     gdatmodi.nextdeltlliktotl = 0.
     gdatmodi.nextdeltlpritotl = 0.
     gdatmodi.nextmemoresi = zeros(1)
@@ -3582,7 +3586,7 @@ def work(pathoutprtag, lock, indxprocwork):
         #    print 'Empty sampling. Sample number %d' % gdatmodi.cntrswep
         #    break
 
-        initchro(gdat, gdatmodi, 'next', 'totl')
+        initchro(gdat, gdatmodi, 'totl')
         
         if gdat.verbtype > 1:
             print
@@ -3642,9 +3646,9 @@ def work(pathoutprtag, lock, indxprocwork):
         for l in gdat.fittindxpopl:
             setattr(gdatmodi, 'nextauxiparapop%d' % l, empty(gdat.fittnumbcomp[l]))
 
-        initchro(gdat, gdatmodi, 'next', 'prop')
+        initchro(gdat, gdatmodi, 'prop')
         prop_stat(gdat, gdatmodi, 'fitt')
-        stopchro(gdat, gdatmodi, 'next', 'prop')
+        stopchro(gdat, gdatmodi, 'prop')
 
         if gdat.diagmode:
             
@@ -3668,7 +3672,7 @@ def work(pathoutprtag, lock, indxprocwork):
         # diagnostics
         if gdat.diagmode:
             
-            initchro(gdat, gdatmodi, 'next', 'diag')
+            initchro(gdat, gdatmodi, 'diag')
             
             indxsampbadd = where((gdatmodi.thissamp[gdat.fittnumbpopl*gdat.numbregi:] > 1.) | (gdatmodi.thissamp[gdat.fittnumbpopl*gdat.numbregi:] < 0.))[0] + 1
             if indxsampbadd.size > 0:
@@ -3813,12 +3817,12 @@ def work(pathoutprtag, lock, indxprocwork):
                                 print
                                 raise Exception('A component of an element went outside the prior range.')
         
-            stopchro(gdat, gdatmodi, 'next', 'diag')
+            stopchro(gdat, gdatmodi, 'diag')
     
         # save the sample
         if gdat.boolsave[gdatmodi.cntrswep]:
            
-            initchro(gdat, gdatmodi, 'next', 'save')
+            initchro(gdat, gdatmodi, 'save')
         
             if gdat.savestat:
                 
@@ -3873,12 +3877,12 @@ def work(pathoutprtag, lock, indxprocwork):
                 workdict['list' + gdat.strgpdfn + strgvarb][indxsampsave, ...] = valu
             for strgvarb in gdat.liststrgvarblistsamp:
                 workdict['list' + gdat.strgpdfn + strgvarb].append(deepcopy(getattr(gdatmodi, 'this' + strgvarb)))
-            stopchro(gdat, gdatmodi, 'next', 'save')
+            stopchro(gdat, gdatmodi, 'save')
 
         # plot the current sample
         if thismakefram:
             
-            initchro(gdat, gdatmodi, 'next', 'plot')
+            initchro(gdat, gdatmodi, 'plot')
             
             if gdat.verbtype > 0:
                 print 'Process %d is in queue for making a frame.' % gdatmodi.indxprocwork
@@ -3897,7 +3901,7 @@ def work(pathoutprtag, lock, indxprocwork):
             if gdat.numbproc > 1:
                 gdatmodi.lock.release()
         
-            stopchro(gdat, gdatmodi, 'next', 'plot')
+            stopchro(gdat, gdatmodi,  'plot')
     
         # assertions
         if gdat.diagmode:
@@ -3908,7 +3912,7 @@ def work(pathoutprtag, lock, indxprocwork):
         # determine the acceptance probability
         if gdatmodi.nextboolpropfilt and not gdat.emptsamp:
             
-            proc_samp(gdat, gdatmodi, 'next', 'fitt')
+            proc_samp(gdat, gdatmodi, 'fitt')
         
             if gdat.verbtype > 1:
                 print 'gdatmodi.nextdeltlliktotl'
@@ -4019,7 +4023,7 @@ def work(pathoutprtag, lock, indxprocwork):
                     raise Exception('')
         
         # save the execution time for the sweep
-        stopchro(gdat, gdatmodi, 'next', 'totl')
+        stopchro(gdat, gdatmodi, 'totl')
         
         workdict['list' + gdat.strgpdfn + 'accpprob'][gdatmodi.cntrswep, 0] = gdatmodi.nextaccpprob[0]
         
