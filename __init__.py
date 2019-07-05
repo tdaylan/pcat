@@ -7,16 +7,19 @@ import seaborn as sns
 # numpy
 import random as randommod
 import numpy as np
-from numpy import *
+#from numpy import *
 from numpy.random import *
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 # scipy
 import scipy as sp
-from scipy.interpolate import *
+import scipy.interpolate
 from scipy.special import erfinv, erf
 from scipy.stats import poisson as pss
 import scipy.ndimage
+
+import scipy.fftpack
+
 import scipy.ndimage.filters
 import scipy.sparse
 
