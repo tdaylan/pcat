@@ -388,12 +388,17 @@ def cdfn_fixp(gdat, strgmodl, fixp, thisindxfixp):
 def icdf_samp(gdat, strgmodl, sampunit, indxsampcomp):
     
     # tobechanged
-    samp = np.empty_like(sampunit)
+    # temp -- change zeros to empty
+    samp = np.zeros_like(sampunit)
     for scaltype in gdat.listscaltype:
         listindxfixpscal = getattr(gdat, strgmodl + 'listindxfixpscal')[scaltype]
         if len(listindxfixpscal) == 0:
             continue
         samp[listindxfixpscal] = icdf_fixp(gdat, strgmodl, sampunit[listindxfixpscal], scaltype, listindxfixpscal)
+    
+    if not np.isfinite(samp).all():
+        raise Exception('')
+        
     indxpopl = getattr(gdat, strgmodl + 'indxpopl')
     indxcomp = getattr(gdat, strgmodl + 'indxcomp')
     listscalcomp = getattr(gdat, strgmodl + 'listscalcomp')
@@ -421,6 +426,9 @@ def icdf_samp(gdat, strgmodl, sampunit, indxsampcomp):
                         print sampunit[indxsamptemp]
                         raise Exception('')
 
+    if not np.isfinite(samp).all():
+        raise Exception('')
+        
     return samp
 
     
@@ -727,16 +735,11 @@ def retr_indxpixlelemconc(gdat, strgmodl, dictelem, l):
     elemspatevaltype = getattr(gdat, strgmodl + 'elemspatevaltype')
     elemtype = getattr(gdat, strgmodl + 'elemtype')
     boolelemlght = getattr(gdat, strgmodl + 'boolelemlght')
-    
+    namefeatampl = getattr(gdat, strgmodl + 'namefeatampl')
+
     lgal = dictelem[l]['lgal']
     bgal = dictelem[l]['bgal']
-    
-    if boolelemlght[l]:
-        varbampl = abs(dictelem[l]['spec'][gdat.indxenerpivt, :])
-    if elemtype[l] == 'lens':
-        varbampl = dictelem[l]['defs']
-    if elemtype[l].startswith('clus'):
-        varbampl = dictelem[l]['nobj']
+    varbampl = dictelem[l][namefeatampl[l]]
     
     if elemspatevaltype[l] == 'locl':
         listindxpixlelem = [[] for k in range(lgal.size)]
@@ -752,6 +755,12 @@ def retr_indxpixlelemconc(gdat, strgmodl, dictelem, l):
                 print varbampl[k]
                 print 'gdat.binsprox'
                 print gdat.binsprox
+                print 'gdat.fittminmflux'
+                print gdat.fittminmflux
+                print 'gdat.fittmaxmflux'
+                print gdat.fittmaxmflux
+                #print 'dictelem'
+                #print dictelem
                 print
                 indxfluxproxtemp -= 1
             if gdat.verbtype > 1:
@@ -1429,17 +1438,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
                     gdatmodi.thisindxproptype = 4
     else:
         
-        if gdatmodi.boolburn and gdat.boolevolstdp:
-            gdatmodi.stdpprev = np.copy(gdatmodi.stdp)
-            
-            # increase all proposal sizes
-            gdatmodi.stdp += gdatmodi.stdp * 0.1 * np.random.random(gdat.numbstdp)
-            # decrease those proposal sizes that inreased in the last rejected step
-            if gdatmodi.indxstdpincr.size > 0:
-                gdatmodi.stdp[gdatmodi.indxstdpincr] -= gdatmodi.stdp[gdatmodi.indxstdpincr] * 0.1 * np.random.randn(gdatmodi.indxstdpincr.size)
-        else:
-            stdp = gdatmodi.stdp
-        
         if gdat.booldiagmode and (gdatmodi.stdp > 1e2).any():
             print 'Warning! gdatmodi.stdp went too large.'
             print 'gdatmodi.stdp'
@@ -1560,6 +1558,19 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
 
         nextsamp = icdf_samp(gdat, strgmodl, nextsampunit, thisindxsampcomp)
 
+        if gdat.booldiagmode:
+            if not np.isfinite(nextsampunit).all():
+                raise Exception('')
+        
+            if np.amin(nextsampunit[numbpopl:]) < 0.:
+                raise Exception('')
+        
+            if np.amax(nextsampunit[numbpopl:]) > 1.:
+                raise Exception('')
+        
+            if not np.isfinite(nextsamp).all():
+                raise Exception('')
+        
     if gdatmodi.thisindxproptype > 0:
         gdatmodi.indxsamptran = []
         if gdatmodi.thisindxproptype == 1:

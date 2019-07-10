@@ -2788,15 +2788,23 @@ def opti_hess(gdat, gdatmodi):
             for k, strgcomp in enumerate(gdat.fittliststrgcomp[l]):
                 gdatmodi.indxparastdp[gdat.fittnumbfixp-gdat.fittnumbpopl+cntr] = np.concatenate(gdatmodi.thisindxsampcomp[strgcomp])
                 cntr += 1
-
-    gdatmodi.nextindxelemfull = gdatmodi.thisindxelemfull
-    gdatmodi.nextindxsampcomp = gdatmodi.thisindxsampcomp
+    
+    if gdat.fittnumbtrap > 0:
+        gdatmodi.nextindxelemfull = gdatmodi.thisindxelemfull
+        gdatmodi.nextindxsampcomp = gdatmodi.thisindxsampcomp
+    else:
+        gdatmodi.nextindxsampcomp = None
 
     gdatmodi.stdpmatr = np.zeros((gdat.numbstdp, gdat.numbstdp)) 
     gdatmodi.hess = np.zeros((gdat.numbstdp, gdat.numbstdp)) 
     deltlpos = np.zeros((3, 3))
-    diffpara = 1e-5
-    
+    diffpara = np.empty(gdat.numbstdp)
+    for k, indxparatemp in enumerate(gdatmodi.indxparastdp):
+        if len(indxparatemp) == 0:
+            diffpara[k] = 0.
+        else:
+            diffpara[k] = min(min(np.amin(gdatmodi.thissampunit[indxparatemp]) * 0.9, np.amin(1. - gdatmodi.thissampunit[indxparatemp]) * 0.9), 1e-5)
+
     #gdatmodi.thissampunitsave = np.copy(gdatmodi.thissampunit)
     
     #if gdat.fittnumbtrap > 0:
@@ -2840,25 +2848,40 @@ def opti_hess(gdat, gdatmodi):
                 
                 if len(gdatmodi.indxparastdp[indxstdpseco]) == 0:
                     continue
+                
+                #print 'indxstdpfrst'
+                #print indxstdpfrst
+                #print 'gdat.fittnamepara[gdatmodi.indxparastdp[indxstdpfrst]]'
+                #print gdat.fittnamepara[gdatmodi.indxparastdp[indxstdpfrst]]
 
                 for a in range(2):
                     gdatmodi.nextsampunit = np.copy(gdatmodi.thissampunit)
                     if a == 0:
-                        gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara
+                        gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara[indxstdpseco]
                     if a == 1:
-                        gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpseco]] += diffpara
+                        gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpseco]] += diffpara[indxstdpseco]
                     
                     gdatmodi.nextsamp = icdf_samp(gdat, 'fitt', gdatmodi.nextsampunit, gdatmodi.nextindxsampcomp)
+                    
+                    #print 'a'
+                    #print a
+                    #print 'gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpfrst]]'
+                    #print gdatmodi.nextsampunit[gdatmodi.indxparastdp[indxstdpfrst]]
+                    #print 'gdatmodi.nextsamp[gdatmodi.indxparastdp[indxstdpfrst]]'
+                    #print gdatmodi.nextsamp[gdatmodi.indxparastdp[indxstdpfrst]]
+                    
                     proc_samp(gdat, gdatmodi, 'next', 'fitt')
                     if a == 0:
                         deltlpos[0, 1] = gdatmodi.nextlliktotl
                     if a == 1:
                         deltlpos[2, 1] = gdatmodi.nextlliktotl
-                print 'indxstdpfrst'
-                print indxstdpfrst
-                print 'deltlpos[:, 1]'
-                print deltlpos[:, 1]
-                gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / diffpara**2 * np.fabs(deltlpos[0, 1] + deltlpos[2, 1] - 2. * deltlpos[1, 1])
+                
+                #print 'deltlpos[:, 1]'
+                #print deltlpos[:, 1]
+                #print
+
+                gdatmodi.hess[indxstdpfrst, indxstdpseco] = 1. / 4. / diffpara[indxstdpseco]**2 * np.fabs(deltlpos[0, 1] + \
+                                                                                                        deltlpos[2, 1] - 2. * deltlpos[1, 1])
             else:
                 # temp
                 continue
