@@ -1,25 +1,6 @@
 # common imports
 from __init__ import *
 
-class interp1d_pick:
-    """ class wrapper for piecewise linear function
-    """
-    def __init__(self, xi, yi, **kwargs):
-        self.xi = xi
-        self.yi = yi
-        self.args = kwargs
-        self.f = scipy.interpolate.interp1d(xi, yi, **kwargs)
-
-    def __call__(self, xnew):
-        return self.f(xnew)
-
-    def __getstate__(self):
-        return self.xi, self.yi, self.args
-
-    def __setstate__(self, state):
-        self.f = scipy.interpolate.interp1d(state[0], state[1], **state[2])
-
-
 def retr_psfnwdth(gdat, psfn, frac):
 
     wdth = np.zeros((gdat.numbener, gdat.numbevtt))
@@ -29,7 +10,7 @@ def retr_psfnwdth(gdat, psfn, frac):
             indxanglgood = np.argsort(psfntemp)
             intpwdth = max(frac * np.amax(psfntemp), np.amin(psfntemp))
             if intpwdth >= np.amin(psfntemp[indxanglgood]) and intpwdth <= np.amax(psfntemp[indxanglgood]):
-                wdthtemp = interp1d_pick(psfntemp[indxanglgood], gdat.binsangl[indxanglgood])(intpwdth)
+                wdthtemp = sp.interpolate.interp1d(psfntemp[indxanglgood], gdat.binsangl[indxanglgood], fill_value='extrapolate')(intpwdth)
             else:
                 wdthtemp = 0.
             wdth[i, m] = wdthtemp
@@ -731,6 +712,9 @@ def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, indxpixlelem):
 
 ### find the set of pixels in proximity to a position on the map
 def retr_indxpixlelemconc(gdat, strgmodl, dictelem, l):
+    
+    if gdat.verbtype > 2:
+        print 'retr_indxpixlelemconc()'
 
     elemspatevaltype = getattr(gdat, strgmodl + 'elemspatevaltype')
     elemtype = getattr(gdat, strgmodl + 'elemtype')
@@ -954,7 +938,7 @@ def retr_psfpferm(gdat):
             irfn = astropy.io.fits.getdata(path, 1)
             fermscal[m, :] = astropy.io.fits.getdata(path, 2)['PSFSCALE']
         for k in range(numbpsfpform):
-            fermform[:, m, k] = interp1d_pick(enerirfn, np.mean(irfn[strgpara[k]].squeeze(), axis=0))(gdat.meanener)
+            fermform[:, m, k] = sp.interpolate.interp1d(enerirfn, np.mean(irfn[strgpara[k]].squeeze(), axis=0), fill_value='extrapolate')(gdat.meanener)
     # convert N_tail to f_core
     for m in gdat.indxevtt:
         for i in gdat.indxener:
@@ -3934,7 +3918,7 @@ def setpinit(gdat, boolinitsetp=False):
     gdat.expototl = np.sum(gdat.expo, axis=2)
     gdat.expototlmean = np.mean(gdat.expototl, axis=1)
 
-    if 'locl' in gdat.commelemspatevaltype:
+    if gdat.commelemspatevaltype == 'locl':
         if gdat.exprtype == 'sdyn':
             gdat.maxmangl = 1.
         if gdat.exprtype == 'ferm':
@@ -4334,19 +4318,6 @@ def setpinit(gdat, boolinitsetp=False):
             except:
                 pass
 
-    gdat.boolhash = False
-    for strgmodl in gdat.liststrgmodl:
-        elemspatevaltype = getattr(gdat, strgmodl + 'elemspatevaltype')
-        indxpopl = getattr(gdat, strgmodl + 'indxpopl')
-        numbtrap = getattr(gdat, strgmodl + 'numbtrap')
-        if numbtrap > 0:
-            for l in indxpopl:
-                if elemspatevaltype[l] == 'locl':
-                    if strgmodl == 'true' and gdat.truenumbelempopl[l] > 0:
-                        gdat.boolhash = True
-                    if strgmodl == 'fitt' and gdat.fittmaxmnumbelempopl[l] > 0:
-                        gdat.boolhash = True
-    
     if gdat.rtagmock is not None:
         if gdat.datatype == 'inpt':
             path = gdat.pathoutprtagmock + 'gdatfinlpost'
@@ -4373,7 +4344,8 @@ def setpinit(gdat, boolinitsetp=False):
                         setattr(gdat, 'trueptfn' + strgfeat + 'pop%d' % l, ptfn)
                 gdat.trueliststrgfeat = gdatmock.trueliststrgfeat
     
-    if gdat.boolhash:
+    if gdat.fittelemspatevaltype[l] == 'locl' and gdat.fittnumbtrap > 0 or \
+                        gdat.datatype == 'mock' and gdat.trueelemspatevaltype[l] == 'locl' and gdat.truenumbtrap > 0:
         gdat.numbprox = 3
         gdat.indxprox = np.arange(gdat.numbprox)
         minmfeatampl = getattr(gdat, 'fittminm' + gdat.fittnamefeatampl[0])
@@ -4428,13 +4400,13 @@ def setpinit(gdat, boolinitsetp=False):
         else:
             if gdat.verbtype > 0 and boolinitsetp:
                 print 'Computing the look-up table...'
-            gdat.indxpixlprox = [[] for h in range(gdat.numbprox)]
+            gdat.indxpixlprox = [[] for h in gdat.indxprox]
             cntrsave = -1.
             # temp
             for j in gdat.indxpixl:
                 dist = retr_angldistunit(gdat, gdat.lgalgrid[j], gdat.bgalgrid[j], gdat.indxpixl)
                 dist[j] = 0.
-                for h in range(gdat.numbprox):
+                for h in gdat.indxprox:
                     indxpixlproxtemp = np.where(dist < gdat.maxmangleval[h])[0]
                     if indxpixlproxtemp.size > 2e4:
                         indxpixlproxtemp = -1
@@ -4463,14 +4435,11 @@ def setpinit(gdat, boolinitsetp=False):
             fobj.close()
         
         gdat.numbpixlprox = np.zeros(gdat.numbprox) 
-        for h in range(gdat.numbprox):
-            for m in range(len(gdat.indxpixlprox[h])):
-                if isinstance(gdat.indxpixlprox[h][m], int):
-                    gdat.numbpixlprox[h] += gdat.numbpixl
-                else:
-                    gdat.numbpixlprox[h] += len(gdat.indxpixlprox[h][m])
-            gdat.numbpixlprox[h] /= len(gdat.indxpixlprox[h])
-            setattr(gdat, 'numbpixlprox%04d' % h, gdat.numbpixlprox[h])
+        for h in gdat.indxprox:
+            for j in gdat.indxpixl:
+                gdat.numbpixlprox[h] += len(gdat.indxpixlprox[h][j])
+        gdat.numbpixlprox[h] /= len(gdat.indxpixlprox[h])
+        
         if gdat.verbtype > 0:
             print 'gdat.numbpixlprox'
             print gdat.numbpixlprox
@@ -4486,17 +4455,6 @@ def setpinit(gdat, boolinitsetp=False):
                 print gdat.numbsidecart
             raise Exception('Number of pixels in the hash lists should be different.')
 
-        if gdat.booldiagmode:
-            diff = gdat.numbpixlprox - np.roll(gdat.numbpixlprox, 1)
-            if not (diff[1:] >= 0).all():
-                print 'gdat.numbpixlprox'
-                print gdat.numbpixlprox
-                print 'np.roll(gdat.numbpixlprox, 1)'
-                print np.roll(gdat.numbpixlprox, 1)
-                print 'diff'
-                print diff
-                raise Exception('Number of pixels in the pixel look-up table is wrong.')
-    
 
 def setpfinl(gdat, boolinitsetp=False):
     
@@ -4850,7 +4808,7 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         ## flag to calculate the kernel approximation errors
         calcerrr = [[] for l in indxpopl]
         for l in indxpopl:
-            if elemspatevaltype[l] != 'full' and gdat.numbpixlfull < 1e5:
+            if elemspatevaltype[l] == 'locl' and gdat.numbpixlfull < 1e5:
                 # temp
                 calcerrr[l] = False
             else:
@@ -5236,8 +5194,6 @@ def retr_indxsamp(gdat, strgmodl='fitt', init=False):
         if psfnevaltype != 'none':
             psfntype = getattr(gdat, strgmodl + 'psfntype')
             
-            print 'psfntype'
-            print psfntype
             if psfntype == 'singgaus':
                 numbpsfpform = 1
             elif psfntype == 'singking':
@@ -6135,7 +6091,7 @@ def retr_listrtagprev(strgcnfg):
     for rtag in listrtag:
         strgstat = os.environ["PCAT_DATA_PATH"] + '/data/outp/' + rtag
         
-        if chec_statfile(rtag, 'gdatmodi', 'post', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]:
+        if chec_statfile(rtag, 'gdatmodi', verbtype=0) and strgcnfg + '_' + rtag[16:].split('_')[-1] == rtag[16:]:
             listrtagprev.append(rtag) 
     
     listrtagprev.sort()
@@ -7242,9 +7198,10 @@ def readfile(path):
     
     if 'gdatfinl' in path or 'gdatinit' in path:
         if hasattr(gdattemptemp, 'edis') and gdattemptemp.edis is not None and hasattr(gdattemptemp, 'binsener'):
-            gdattemptemp.edisintp = interp1d_pick(gdattemptemp.binsener, gdattemptemp.edis)
-        gdattemptemp.adisobjt = interp1d_pick(gdattemptemp.redsintp, gdattemptemp.adisintp)
-        gdattemptemp.redsfromdlosobjt = interp1d_pick(gdattemptemp.adisintp * gdattemptemp.redsintp, gdattemptemp.redsintp)
+            gdattemptemp.edisintp = sp.interpolate.interp1d(gdattemptemp.binsener, gdattemptemp.edis, fill_value='extrapolate')
+        gdattemptemp.adisobjt = sp.interpolate.interp1d(gdattemptemp.redsintp, gdattemptemp.adisintp, fill_value='extrapolate')
+        gdattemptemp.redsfromdlosobjt = sp.interpolate.interp1d(gdattemptemp.adisintp * gdattemptemp.redsintp, \
+                                                                                        gdattemptemp.redsintp, fill_value='extrapolate')
     
     return gdattemptemp
 
@@ -7284,7 +7241,7 @@ def retr_deflcutf(angl, defs, asca, acut, asym=False):
     fact = np.ones_like(fracanglasca)
     indxlowr = np.where(fracanglasca < 1.)[0]
     indxuppr = np.where(fracanglasca > 1.)[0]
-    fact[indxlowr] = arccosh(1. / fracanglasca[indxlowr]) / np.sqrt(1. - fracanglasca[indxlowr]**2)
+    fact[indxlowr] = np.arccosh(1. / fracanglasca[indxlowr]) / np.sqrt(1. - fracanglasca[indxlowr]**2)
     fact[indxuppr] = np.arccos(1. / fracanglasca[indxuppr]) / np.sqrt(fracanglasca[indxuppr]**2 - 1.)
     
     if asym:
@@ -7292,7 +7249,7 @@ def retr_deflcutf(angl, defs, asca, acut, asym=False):
     else:
         fracacutasca = acut / asca
         factcutf = fracacutasca**2 / (fracacutasca**2 + 1)**2 * ((fracacutasca**2 + 1. + 2. * (fracanglasca**2 - 1.)) * fact + \
-                np.pi * fracacutasca + (fracacutasca**2 - 1.) * np.log(fracacutasca) + np.sqrt(fracanglasca**2 + fracacutasca**2) * (-pi + (fracacutasca**2 - 1.) / fracacutasca * \
+                np.pi * fracacutasca + (fracacutasca**2 - 1.) * np.log(fracacutasca) + np.sqrt(fracanglasca**2 + fracacutasca**2) * (-np.pi + (fracacutasca**2 - 1.) / fracacutasca * \
                 np.log(fracanglasca / (np.sqrt(fracanglasca**2 + fracacutasca**2) + fracacutasca))))
         deflcutf *= factcutf
        
@@ -7797,7 +7754,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False, boolin
             for l in indxpopl:
                 if numbelem[l] > 0:
                     listindxpixlelem[l], listindxpixlelemconc[l] = retr_indxpixlelemconc(gdat, strgmodl, dictelem, l)
-    
+                    
     if lensmodltype != 'none':
         if raww:
             sherextr = 0
@@ -7894,12 +7851,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, raww=False, fast=False, boolin
             
             if gdat.pixltype == 'heal':
                 psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, strgmodl)
-                psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
+                psfnintp = sp.interpolate.interp1d(gdat.binsangl, psfn, axis=1, fill_value='extrapolate')
                 fwhm = 2. * retr_psfnwdth(gdat, psfn, 0.5)
             if gdat.pixltype == 'cart':
                 if gdat.kernevaltype == 'ulip':
                     psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binsangl, psfntype, strgmodl)
-                    psfnintp = interp1d_pick(gdat.binsangl, psfn, axis=1)
+                    psfnintp = sp.interpolate.interp1d(gdat.binsangl, psfn, axis=1, fill_value='extrapolate')
 
                 if gdat.kernevaltype == 'bspx':
                     
@@ -9714,7 +9671,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         booltile = False
     
     # determine of the gdatfinl object is available 
-    boolgdatfinl = chec_statfile(rtagfinl, 'gdatfinl', strgpdfn)
+    boolgdatfinl = chec_statfile(rtagfinl, 'gdatfinl')
     boolgdatfinlgood = False
     if boolgdatfinl:
         print 'Final-processing has been performed previously.'
@@ -9751,7 +9708,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         for n, rtagmodi in enumerate(listrtagmodi):
             
             # read gdatinit
-            boolgdatinit = chec_statfile(rtagmodi, 'gdatinit', '')
+            boolgdatinit = chec_statfile(rtagmodi, 'gdatinit')
             if not boolgdatinit:
                 if booltile:
                     print 'Initial global object not found. Skipping...'
@@ -9775,7 +9732,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 return
 
             # read gdatmodi
-            boolgdatmodi = chec_statfile(rtagmodi, 'gdatmodi', strgpdfn)
+            boolgdatmodi = chec_statfile(rtagmodi, 'gdatmodi')
             if not boolgdatmodi:
                 print 'Modified global object not found. Quitting final-processing...'
                 return
@@ -10103,7 +10060,8 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                             for k, strgfeat in enumerate(gdatfinl.fittliststrgfeatsign[l]):
                                 temp[:, 2] = np.concatenate([getattr(gdatfinl, 'list' + strgpdfn + strgfeat)[n][l] for n in gdatfinl.indxsamptotl])
                                 bins = getattr(gdatfinl, 'bins' + strgfeat)
-                                histlgalbgalelemstkd[l][:, :, :, k] = histogramdd(temp, bins=(gdatfinl.binslgalpntsprob, gdatfinl.binsbgalpntsprob, bins))[0]
+                                histlgalbgalelemstkd[l][:, :, :, k] = np.histogramdd(temp, \
+                                                                        bins=(gdatfinl.binslgalpntsprob, gdatfinl.binsbgalpntsprob, bins))[0]
                     setattr(gdatfinl, strgpdfn + 'histlgalbgalelemstkd', histlgalbgalelemstkd)
 
             if gdatfinl.verbtype > 0:
@@ -10132,10 +10090,11 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             listindxsamptotlpropaccp = []
             listindxsamptotlpropreje = []
             for n in gdatfinl.indxproptype:
-                listindxsamptotlproptotl.append(np.where(listindxproptype == gdatfinl.indxproptype[n])[0])
-                listindxsamptotlpropaccp.append(np.intersect1d(np.where(listindxproptype == gdatfinl.indxproptype[n])[0], np.where(listboolpropaccp)[0]))
-                listindxsamptotlpropfilt.append(np.intersect1d(np.where(listindxproptype == gdatfinl.indxproptype[n])[0], np.where(listboolpropfilt)[0]))
-                listindxsamptotlpropreje.append(np.intersect1d(np.where(listindxproptype == gdatfinl.indxproptype[n])[0], np.where(np.logical_not(listboolpropaccp))[0]))
+                indxsampproptype = np.where(listindxproptype == gdatfinl.indxproptype[n])[0]
+                listindxsamptotlproptotl.append(indxsampproptype)
+                listindxsamptotlpropaccp.append(np.intersect1d(indxsampproptype, np.where(listboolpropaccp)[0]))
+                listindxsamptotlpropfilt.append(np.intersect1d(indxsampproptype, np.where(listboolpropfilt)[0]))
+                listindxsamptotlpropreje.append(np.intersect1d(indxsampproptype, np.where(np.logical_not(listboolpropaccp))[0]))
                 if listindxsamptotlproptotl[n].size == 0:
                     accp = 0.
                 else:
@@ -10438,13 +10397,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 for k in gdatfinl.indxproc:
                     print 'Process %d has been completed in %d real seconds, %d CPU seconds.' % (k, gdatfinl.timereal[k], gdatfinl.timeproc[k])
                 print 'Parent process has run in %d real seconds, %d CPU seconds.' % (gdatfinl.timerealtotl, gdatfinl.timeproctotl)
+    
+    print 'HACKING!!'
+    gdatfinl.strgpdfn = 'post'
 
-    print 'checking plotfinl%s...' % strgpdfn
-
-
-    booltemp = chec_statfile(rtagfinl, 'plotfinl', strgpdfn)
+    print 'Checking whether post-processing plots already exist.'
+    booltemp = chec_statfile(rtagfinl, 'plotfinl')
     if booltemp:
-        print 'Final plots already written.'
+        print 'Final plots already exist. Skipping...'
     else:
         if strgpdfn == 'post' and gdatfinl.checprio:
             path = pathoutprtag + 'gdatfinlprio'
@@ -10457,7 +10417,6 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
             filestat.write('plotfinl%s written.\n' % strgpdfn)
             filestat.close()
-    print
 
 
 def retr_axis_wrap(gdat, namevarbscal):
@@ -10631,7 +10590,8 @@ def setp_info(gdat, gdatprio, name, namefull, nameseco=None, namesecofull=None):
     setattr(gdat, 'info' + namefull, info)
 
 
-def chec_statfile(rtag, strggdat, strgpdfn, verbtype=1):
+# check the state file
+def chec_statfile(rtag, strggdat, verbtype=1):
     
     pathoutprtag = retr_pathoutprtag(rtag)
     
@@ -11857,14 +11817,14 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         numbtimemcmc = 20
         binstimemcmc = np.linspace(0., gdat.numbswep, numbtimemcmc)
         numbtick = 2
-        sizefigrydat = 0.75 * gdat.numbproptype * gdat.plotsize
-        figr, axgr = plt.subplots(gdat.numbproptype, 1, figsize=(gdat.plotsize, sizefigrydat), sharex='all')
+        sizefigrydat = 4. * gdat.numbproptype
+        figr, axgr = plt.subplots(gdat.numbproptype, 1, figsize=(12., sizefigrydat), sharex='all')
         if gdat.numbproptype == 1:
             axgr = [axgr]
-        for k, axis in enumerate(axgr):
-            histtotl = axis.hist(listindxsamptotlproptotl[n+k], bins=binstimemcmc)[0]
-            histaccp = axis.hist(listindxsamptotlpropaccp[n+k], bins=binstimemcmc)[0]
-            axis.set_ylabel('%s' % gdat.nameproptype[k])
+        for n, axis in enumerate(axgr):
+            histtotl = axis.hist(listindxsamptotlproptotl[n], bins=binstimemcmc)[0]
+            histaccp = axis.hist(listindxsamptotlpropaccp[n], bins=binstimemcmc)[0]
+            axis.set_ylabel('%s' % gdat.nameproptype[n])
             if k == gdat.numbproptype - 1:
                 axis.set_xlabel('$i_{samp}$')
         plt.tight_layout()
@@ -11956,9 +11916,9 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         
         mlik = getattr(gdat, 'mlik' + name) * factplot
         path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscaltrac') + name
-        tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
+        tdpy.mcmc.plot_trac(path, listvarb, labltotl, truepara=truepara, scalpara=scal, listvarbdraw=[mlik], listlabldraw=[''], listcolrdraw=['r'])
         path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalhist') + name
-        tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, varbdraw=[mlik], labldraw=[''], colrdraw=['r'])
+        tdpy.mcmc.plot_hist(path, listvarb, labltotl, truepara=truepara, scalpara=scal, listvarbdraw=[mlik], listlabldraw=[''], listcolrdraw=['r'])
        
         for nameseco in gdat.listnamevarbscal:
             
@@ -11998,8 +11958,9 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             print mlik
             print 'trueparaseco'
             print trueparaseco
+
             tdpy.mcmc.plot_grid(pathjoin, name + nameseco, listjoin, [labltotl, labltotlseco], scalpara=[scal, scalseco], truepara=[truepara, trueparaseco], \
-                                                                                                                   join=True, varbdraw=[mlik, mlikseco])
+                                                                                                join=True, listvarbdraw=[np.array([mlik, mlikseco])])
 
     if gdat.verbtype > 0:
         print 'Fixed dimensional parameter covariance...'
@@ -12009,7 +11970,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova')
     truepara = gdat.fittcorrfixp * gdat.fittfactfixpplot
     mlikpara = gdat.mlikfixp * gdat.fittfactfixpplot
-    tdpy.mcmc.plot_grid(path, 'fixp', listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, varbdraw=mlikpara)
+    tdpy.mcmc.plot_grid(path, 'fixp', listfixp * gdat.fittfactfixpplot[None, :], gdat.fittlablfixptotl, truepara=truepara, listvarbdraw=[mlikpara])
     
     # stacked posteiors binned in position and flux
     if gdat.fittnumbtrap > 0 and gdat.numbpixl > 1:
@@ -12035,15 +11996,16 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         
         varb = getattr(gdat, 'list' + strgpdfn + strgpdfntemp)
         tdpy.mcmc.plot_hist(path, varb, labl)
-        varbdraw = []
-        labldraw = []
-        colrdraw = []
+        listvarbdraw = []
+        listlabldraw = []
+        listcolrdraw = []
         if gdat.datatype == 'mock':
-            varbdraw += [getattr(gdat, 'true' + strgpdfntemp)]
-            labldraw += ['True model']
-            colrdraw += [gdat.refrcolr]
+            listvarbdraw += [getattr(gdat, 'true' + strgpdfntemp)]
+            listlabldraw += ['True model']
+            listcolrdraw += [gdat.refrcolr]
         
-        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp), labl, varbdraw=varbdraw, labldraw=labldraw, colrdraw=colrdraw)
+        tdpy.mcmc.plot_trac(path, getattr(gdat, 'list' + strgpdfn + strgpdfntemp), labl, \
+                                listvarbdraw=listvarbdraw, listlabldraw=listlabldraw, listcolrdraw=listcolrdraw)
     
     # plot resident memory
     figr, axis = plt.subplots(figsize=(2 * gdat.plotsize, gdat.plotsize))
@@ -12969,7 +12931,7 @@ def plot_indxprox(gdat):
     numbfluxprox = len(gdat.indxpixlprox)
     bins = np.empty((gdat.numbprox, numbbins + 1))
     indxpixlproxsize = np.empty((numbfluxprox, gdat.numbpixlfull))
-    for h in range(gdat.numbprox):
+    for h in gdat.indxprox:
         for j in gdat.indxpixlfull:
             try:
                 indxpixlproxsize[h, j] = gdat.indxpixlprox[h][j].size
@@ -12978,7 +12940,7 @@ def plot_indxprox(gdat):
         bins[h, :] = np.logspace(np.log10(np.amin(indxpixlproxsize[h, :])), np.log10(np.amax(indxpixlproxsize[h, :])), numbbins + 1)
     
     figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-    for h in range(gdat.numbprox):
+    for h in gdat.indxprox:
         axis.hist(indxpixlproxsize[h, :], bins=bins[h, :], log=True, label='Flux bin %d' % h, alpha=gdat.alphhist)
     axis.set_xscale('log')
     axis.axvline(gdat.numbpixlfull, label='ROI', ls='--')
@@ -13141,7 +13103,7 @@ def plot_histlgalbgalelemstkd(gdat, strgpdfn, indxpoplplot, strgbins, strgfeat=N
             if strgbins != 'cumu':
                 lablfeat = getattr(gdat, 'labl' + strgfeat)
                 factfeatplot = getattr(gdat, 'fact' + strgfeat + 'plot')
-                titl = tdpy.util.mnp.exp(factfeatplot * bins[indxlowr]) + ' < $%s$ < ' % lablfeat + tdpy.util.mnp.exp(factfeatplot * bins[indxuppr])
+                titl = tdpy.util.mexp(factfeatplot * bins[indxlowr]) + ' < $%s$ < ' % lablfeat + tdpy.util.mexp(factfeatplot * bins[indxuppr])
                 axis.set_title(titl)
     
     if strgfeat is not None:
@@ -13604,7 +13566,7 @@ def plot_init(gdat):
         
         if gdat.fittnumbtrap > 0:
             for l in gdat.fittindxpopl:
-                if (gdat.fittelemspatevaltype[l] != 'full' and gdat.fittmaxmnumbelempopl[l] > 0) and gdat.numbpixl > 1:
+                if (gdat.fittelemspatevaltype[l] == 'locl' and gdat.fittmaxmnumbelempopl[l] > 0) and gdat.numbpixl > 1:
                     if gdat.fittboolelemsbrtdfnc[l]:
                         plot_eval(gdat, l)
                     plot_indxprox(gdat)
