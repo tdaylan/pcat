@@ -10230,13 +10230,13 @@ def chec_statfile(rtag, strggdat, verbtype=1):
     filestat = open(pathoutprtag + 'stat.txt', 'r')
     booltemp = False
     for line in filestat:
-        if line == strggdat + strgpdfn + ' written.\n':
+        if line == strggdat + ' written.\n':
             booltemp = True
     
     filestat.close()
     if not booltemp:
         if verbtype > 0:
-            print 'bad %s status.' % (strggdat + strgpdfn)
+            print 'bad %s status.' % (strggdat)
             print
         return False
     else:

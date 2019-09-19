@@ -50,7 +50,7 @@ import functools
 
 # tdpy
 import tdpy.util
-from tdpy.util import show, summgene, summ
+from tdpy.util import summgene
 import tdpy.mcmc
 
 # HealPix

@@ -2184,35 +2184,35 @@ def init( \
         
         gdat.liststrgvarbarryswep += ['ljcb']
         
-        # perform a fudicial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
+        # perform a fiducial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
         if not gdat.mockonly:
             if gdat.verbtype > 0:
-                print 'Processing a fudicial sample...'
-            gdatmodifudi = tdpy.util.gdatstrt()
+                print 'Processing a fiducial sample...'
+            gdatmodifidu = tdpy.util.gdatstrt()
             for k, name in enumerate(gdat.listnamechro):
-                setattr(gdatmodifudi, 'thischro' + name, 0.)
-            gdatmodifudi.thissampunit = rand(gdat.fittnumbpara)
+                setattr(gdatmodifidu, 'thischro' + name, 0.)
+            gdatmodifidu.thissampunit = rand(gdat.fittnumbpara)
             if gdat.fittnumbtrap > 0:
-                gdatmodifudi.thisindxelemfull = []
+                gdatmodifidu.thisindxelemfull = []
                 for l in gdat.fittindxpopl:
-                    gdatmodifudi.thissampunit[gdat.fittindxfixpnumbelem[l]] = min(gdat.fittmaxmnumbelem[l], 1)
-                    gdatmodifudi.thisindxelemfull.append(range(gdatmodifudi.thissampunit[gdat.fittindxfixpnumbelem[l]].astype(int)))
+                    gdatmodifidu.thissampunit[gdat.fittindxfixpnumbelem[l]] = min(gdat.fittmaxmnumbelem[l], 1)
+                    gdatmodifidu.thisindxelemfull.append(range(gdatmodifidu.thissampunit[gdat.fittindxfixpnumbelem[l]].astype(int)))
             else:
-                gdatmodifudi.thisindxelemfull = None
-            gdatmodifudi.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodifudi.thisindxelemfull, 'fitt')
-            gdatmodifudi.thissamp = icdf_samp(gdat, 'fitt', gdatmodifudi.thissampunit, gdatmodifudi.thisindxsampcomp)
+                gdatmodifidu.thisindxelemfull = None
+            gdatmodifidu.thisindxsampcomp = retr_indxsampcomp(gdat, gdatmodifidu.thisindxelemfull, 'fitt')
+            gdatmodifidu.thissamp = icdf_samp(gdat, 'fitt', gdatmodifidu.thissampunit, gdatmodifidu.thisindxsampcomp)
             if gdat.booldiagmode:
-                if not np.isfinite(gdatmodifudi.thissamp).all():
-                    print 'gdatmodifudi.thissamp'
-                    for k in range(len(gdatmodifudi.thissamp)):
-                        print gdatmodifudi.thissamp[k]
+                if not np.isfinite(gdatmodifidu.thissamp).all():
+                    print 'gdatmodifidu.thissamp'
+                    for k in range(len(gdatmodifidu.thissamp)):
+                        print gdatmodifidu.thissamp[k]
                     raise Exception('')
 
-            proc_samp(gdat, gdatmodifudi, 'this', 'fitt', boolinit=True)
+            proc_samp(gdat, gdatmodifidu, 'this', 'fitt', boolinit=True)
             gdat.liststrgvarbarrysamp = []
             gdat.liststrgvarblistsamp = []
 
-            for strg, valu in gdatmodifudi.__dict__.iteritems():
+            for strg, valu in gdatmodifidu.__dict__.iteritems():
                 if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
                     if isinstance(valu, np.ndarray) or isinstance(valu, float):
                         gdat.liststrgvarbarrysamp.append(strg[4:])
@@ -2978,9 +2978,6 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     gdatmodi.lock = lock
     gdatmodi.indxprocwork = indxprocwork
     
-    if hasattr(gdat, 'strgpdfn'):
-        raise Exception('')
-
     gdat.strgpdfn = strgpdfn
     
     if gdat.strgpdfn == 'prio':
