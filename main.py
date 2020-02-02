@@ -2805,7 +2805,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         
         gdatmodi.liststrgvarbarry = gdatmodi.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
         gdatmodi.liststrgvarbarry = gdatmodi.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
-        gdat.liststrgchan = gdatmodi.liststrgvarbarry + ['fixp'] + gdatmodi.liststrgvarblistsamp + gdat.listnamevarbscal
+        gdatmodi.liststrgchan = gdatmodi.liststrgvarbarry + ['fixp'] + gdatmodi.liststrgvarblistsamp + gdat.listnamevarbscal
         
     ## sample index
     gdatmodi.cntrswep = 0

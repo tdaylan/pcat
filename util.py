@@ -10327,7 +10327,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                                 listhistincr[indxbadd] = -1.5
                                 listhistincr[indxbaddzero] = 1.5
                             
-                            gdatfinl.liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
+                            listgdatmodi[0].liststrgchan += ['incr' + liststrgcompvarbhist[4][qq]]
                             setattr(gdatfinl, 'listpostincr' + liststrgcompvarbhist[4][qq], listhistincr)
                         
                             ## external correction
@@ -10344,7 +10344,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                                     if crexhist.ndim == 1 and listhistincr.ndim == 3:
                                         raise Exception('')
                                     
-                                    gdatfinl.liststrgchan += ['excr' + nametemp]
+                                    listgdatmodi[0].liststrgchan += ['excr' + nametemp]
                                     setattr(gdatfinl, 'listpostexcr' + nametemp, listhistexcr)
                             
         # compute credible intervals
@@ -10352,7 +10352,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             print 'Computing credible intervals...'
             timeinit = gdatfinl.functime()
        
-        for strgchan in gdatfinl.liststrgchan:
+        for strgchan in listgdatmodi[0].liststrgchan:
             
             if booltile:
                 if strgchan in gdatfinl.liststrgvarbarryswep or strgchan in listgdatmodi[0].liststrgvarblistsamp:
