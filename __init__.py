@@ -7,8 +7,6 @@ import seaborn as sns
 # numpy
 import random as randommod
 import numpy as np
-#from numpy import *
-from numpy.random import *
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 # scipy
@@ -45,7 +43,8 @@ from copy import deepcopy
 import h5py
 
 # utilities
-import os, time, sys, getpass, glob, fnmatch, cPickle, inspect, traceback, shelve
+import os, time, sys, getpass, glob, fnmatch, inspect, traceback, shelve
+import pickle as cPickle
 import functools
 
 # tdpy
@@ -54,8 +53,8 @@ from tdpy.util import summgene
 import tdpy.mcmc
 
 # HealPix
-import healpy as hp
-from healpy import ang2pix
+#import healpy as hp
+#from healpy import ang2pix
 
 # ignore warnings if not in diagnostic mode
 import warnings
@@ -69,11 +68,10 @@ import warnings
 warnings.simplefilter('ignore')
 np.set_printoptions(linewidth=180)
 sns.set(context='poster', style='ticks', color_codes=True)
-mpl.rc('image', interpolation='nearest', origin='lower')
 
 # secondaries
 ## Symbolic Jacobian calculation
-import sympy
+#import sympy
 
 ## Probabilistic Graphical Model generation
 import networkx as nx
