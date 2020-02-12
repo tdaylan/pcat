@@ -2602,7 +2602,9 @@ def retr_gdatmodifidu(gdat):
     
     if gdat.verbtype > 0:
         print 'Making a gdatmodi object for a fiducial sample...'
+    
     gdatmodifidu = tdpy.util.gdatstrt()
+    
     for k, name in enumerate(gdat.listnamechro):
         setattr(gdatmodifidu, 'thischro' + name, 0.)
     gdatmodifidu.thissampunit = np.random.rand(gdat.fittnumbpara)
@@ -9893,8 +9895,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         
             ## list of other parameters to be flattened
             gdatinit.liststrgvarbarryflat = deepcopy(listgdatmodi[0].liststrgvarbarry)
-            for strg in ['memoresi']:
-                gdatinit.liststrgvarbarryflat.remove(strg)
+            # temp
+            #for strg in ['memoresi']:
+            #    gdatinit.liststrgvarbarryflat.remove(strg)
    
             listsamp = np.empty((gdatinit.numbsamptotl, gdatinit.fittnumbpara))
             

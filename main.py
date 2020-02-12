@@ -2139,13 +2139,6 @@ def init( \
         
         gdat.liststrgvarbarryswep += ['ljcb']
     
-        # intermediate setup
-        # to be deleted
-        #gdatmodifidufixd = retr_gdatmodifidu(gdat)
-        #show_samp(gdat, gdatmodifidufixd)
-        #print('Processing a sample from the fitting model with all parameters (including fixed ones to generate the PSF)...')
-        #proc_samp(gdat, gdatmodifidufixd, 'this', 'fitt', boolinit=True)
-        
         # write the numpy RNG state to file
         with open(gdat.pathoutprtag + 'stat.p', 'wb') as thisfile:
         	cPickle.dump(np.random.get_state(), thisfile)
@@ -2737,9 +2730,6 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
 
     # construct a global object to hold chain-specific variables that will be modified by the worker
     gdatmodi = tdpy.util.gdatstrt()
-    gdatmodi.booldone = False
-    gdatmodi.lock = lock
-    gdatmodi.indxprocwork = indxprocwork
     
     gdat.strgpdfn = strgpdfn
     
@@ -2760,6 +2750,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         
     
     ## initialization
+    gdatmodi.indxprocwork = indxprocwork
     init_stat(gdat, gdatmodi)
    
     # final setup
@@ -2774,6 +2765,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     for strg, valu in gdatdictcopy.iteritems():
         if strg.startswith('fittindxfixp'):
             delattr(gdat, strg)
+    # reflush gdatmodi
 
     print('Determining the parameter indices of the fitting model with only the floating parameters...')
 
@@ -2782,20 +2774,25 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     setp_fixp(gdat, 'finl')
     # final setup
     setpfinl(gdat, boolfittflot=True) 
+    gdatmodi = tdpy.util.gdatstrt()
+    gdatmodi.booldone = False
+    gdatmodi.lock = lock
+    gdatmodi.indxprocwork = indxprocwork
+    #gdatmodi = retr_gdatmodifidu(gdat)
+    
     
     ## initialization
     init_stat(gdat, gdatmodi)
     
-    # perform a fiducial processing of a sample vector in order to find the list of variables for which the posterior will be calculated
+    # find the list of variables for which the posterior will be calculated
     if not gdat.boolmockonly:
         
-        gdatmodifidulist = retr_gdatmodifidu(gdat)
-        show_samp(gdat, gdatmodifidulist)
-        proc_samp(gdat, gdatmodifidulist, 'this', 'fitt')
+        show_samp(gdat, gdatmodi)
+        proc_samp(gdat, gdatmodi, 'this', 'fitt')
         gdatmodi.liststrgvarbarrysamp = []
         gdatmodi.liststrgvarblistsamp = []
 
-        for strg, valu in gdatmodifidulist.__dict__.iteritems():
+        for strg, valu in gdatmodi.__dict__.iteritems():
             if strg.startswith('this') and not strg[4:] in gdat.liststrgvarbarryswep:
                 if isinstance(valu, np.ndarray) or isinstance(valu, float):
                     gdatmodi.liststrgvarbarrysamp.append(strg[4:])
@@ -2806,7 +2803,10 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         gdatmodi.liststrgvarbarry = gdatmodi.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
         gdatmodi.liststrgvarbarry = gdatmodi.liststrgvarbarrysamp + gdat.liststrgvarbarryswep
         gdatmodi.liststrgchan = gdatmodi.liststrgvarbarry + ['fixp'] + gdatmodi.liststrgvarblistsamp + gdat.listnamevarbscal
-        
+        print('gdatmodi.liststrgchan')
+        print(gdatmodi.liststrgchan)
+        raise Exception('')
+
     ## sample index
     gdatmodi.cntrswep = 0
    
