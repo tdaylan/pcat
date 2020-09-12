@@ -1,7 +1,75 @@
 # common imports
 from .__init__ import *
 
+# photometry related
+
+### find the spectra of sources
+def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=None, edisintp=None, sigm=None, gamm=None, spectype='powr', plot=False):
+    
+    if gdat.numbener == 1:
+        spec = flux[None, :]
+    else:
+        if plot:
+            meanener = gdat.meanenerplot
+        else:
+            meanener = gdat.meanener
+
+        if spectype == 'gaus':
+            spec = 1. / edis[None, :] / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis[None, :])**2)
+        if spectype == 'voig':
+            args = (gdat.meanener[:, None] + 1j * gamm[None, :]) / np.sqrt(2.) / sigm[None, :]
+            spec = 1. / sigm[None, :] / np.sqrt(2. * pi) * flux[None, :] * real(scipy.special.wofz(args))
+        if spectype == 'edis':
+            edis = edisintp(elin)[None, :]
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
+        if spectype == 'pvoi':
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
+        if spectype == 'lore':
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
+        if spectype == 'powr':
+            spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
+        if spectype == 'colr':
+            if plot:
+                spec = np.zeros((gdat.numbenerplot, flux.size))
+            else:
+                spec = np.empty((gdat.numbener, flux.size))
+                for i in gdat.indxener:
+                    if i < gdat.indxenerpivt:
+                        spec[i, :] = flux * (gdat.meanener[i] / gdat.enerpivt)**(-sindcolr[i])
+                    elif i == gdat.indxenerpivt:
+                        spec[i, :] =  flux
+                    else:
+                        spec[i, :] = flux * (gdat.meanener[i] / gdat.enerpivt)**(-sindcolr[i-1])
+        if spectype == 'curv':
+            spec = flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
+        if spectype == 'expc':
+            spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :]) * np.exp(-(meanener - gdat.enerpivt)[:, None] / expc[None, :])
+    
+    return spec
+
+
+### find the surface brightness due to one point source
+def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, indxpixlelem):
+    
+    # calculate the distance to all pixels from each point source
+    dist = retr_angldistunit(gdat, lgal, bgal, indxpixlelem)
+    
+    # interpolate the PSF onto the pixels
+    if gdat.kernevaltype == 'ulip':
+        psfntemp = psfnintp(dist)
+    if gdat.kernevaltype == 'bspx':
+        pass
+
+    # scale by the PS spectrum
+    sbrtpnts = spec[:, None, None] * psfntemp
+    
+    return sbrtpnts
+
+
 def retr_psfnwdth(gdat, psfn, frac):
+    '''
+    Return the PSF width
+    '''
 
     wdth = np.zeros((gdat.numbener, gdat.numbevtt))
     for i in gdat.indxener:
@@ -29,89 +97,20 @@ def samp_lgalbgalfromtmpl(gdat, probtmpl):
 
 
 ## custom random variables, pdfs, cdfs and icdfs
-def cdfn_powr(flux, minm, maxm, slop):
+### probability distribution functions
+def retr_lprbpois(data, modl):
+    
+    lprb = data * np.log(modl) - modl - sp.special.gammaln(data + 1)
+    
+    return lprb
+    
         
-    unit = (flux**(1. - slop) - minm**(1. - slop)) / (maxm**(1. - slop) - minm**(1. - slop))
+### probability density functions
+def pdfn_self(xdat, minm, maxm):
     
-    return unit
-
-
-def cdfn_igam(xdat, slop, cutf):
+    pdfn = 1. / (maxm - minm)
     
-    cdfn = sp.stats.invgamma.cdf(xdat, slop - 1., scale=cutf)
-    
-    return cdfn
-
-
-def icdf_dpow(unit, minm, maxm, brek, sloplowr, slopuppr):
-    
-    if np.isscalar(unit):
-        unit = np.array([unit])
-    
-    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) \
-                                / (1. - sloplowr) + (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
-    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
-
-    para = np.empty_like(unit)
-    cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
-    indxlowr = np.where(unit <= cdfnbrek)[0]
-    indxuppr = np.where(unit > cdfnbrek)[0]
-    if indxlowr.size > 0:
-        para[indxlowr] = (unit[indxlowr] / facb + minm**(1. - sloplowr))**(1. / (1. - sloplowr))
-    if indxuppr.size > 0:
-        para[indxuppr] = ((1. - slopuppr) * (unit[indxuppr] - cdfnbrek) / faca + brek**(1. - slopuppr))**(1. / (1. - slopuppr))
-    
-    return para
-
-
-def cdfn_dpow(para, minm, maxm, brek, sloplowr, slopuppr):
-    
-    if np.isscalar(para):
-        para = np.array([para])
-    
-    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) / (1. - sloplowr) + \
-                                                            (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
-    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
-
-    cdfn = np.empty_like(para)
-    indxlowr = np.where(para <= brek)[0]
-    indxuppr = np.where(para > brek)[0]
-    
-    if indxlowr.size > 0:
-        cdfn[indxlowr] = facb * (para[indxlowr]**(1. - sloplowr) - minm**(1. - sloplowr))
-    if indxuppr.size > 0:
-        cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
-        cdfn[indxuppr] = cdfnbrek + faca / (1. - slopuppr) * (para[indxuppr]**(1. - slopuppr) - brek**(1. - slopuppr))
-    
-    return cdfn
-
-
-def icdf_powr(unit, minm, maxm, slop):
-    
-    para = (unit * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
-    
-    return para
-
-
-def icdf_igam(xdat, slop, cutf):
-    
-    icdf = sp.stats.invgamma.ppf(xdat, slop - 1., scale=cutf)
-    
-    return icdf
-
-
-def cdfn_expo(para, maxm, scal):
-
-    unit = (1. - np.exp(-para / maxm)) / (1. - np.exp(-maxm / scal))
-
-    return unit
-
-
-def icdf_expo(unit, maxm, scal):
-
-    para = -scal * np.log(1. - unit * (1. - np.exp(-maxm / scal)))
-
-    return para
+    return pdfn
 
 
 def pdfn_expo(xdat, maxm, scal):
@@ -122,26 +121,6 @@ def pdfn_expo(xdat, maxm, scal):
         pdfn = 1. / scal / (1. - np.exp(-maxm / scal)) * np.exp(-xdat / scal)
 
     return pdfn
-
-
-def icdf_dexp(cdfn, maxm, scal):
-    
-    if cdfn < 0.5:
-        icdf = -icdf_expo(2. * cdfn, maxm, scal)
-    else:
-        icdf = icdf_expo(2. * (cdfn - 0.5), maxm, scal)
-    
-    return icdf
-
-
-def cdfn_dexp(icdf, maxm, scal):
-    
-    if icdf < 0.:
-        cdfn = cdfn_expo(-icdf, maxm, scal)
-    else:
-        cdfn = cdfn_expo(icdf, maxm, scal)
-    
-    return cdfn
 
 
 def pdfn_dexp(xdat, maxm, scal):
@@ -180,13 +159,6 @@ def pdfn_powr(xdat, minm, maxm, slop):
     return pdfn
 
 
-def pdfn_self(xdat, minm, maxm):
-    
-    pdfn = 1. / (maxm - minm)
-    
-    return pdfn
-
-
 def pdfn_logt(xdat, minm, maxm):
     
     pdfn =  1. / (np.log(maxm) - np.log(minm)) / xdat
@@ -201,53 +173,11 @@ def pdfn_igam(xdat, slop, cutf):
     return pdfn
 
 
-def cdfn_self(para, minmpara, factpara):
-    
-    cdfn = (para - minmpara) / factpara
-    
-    return cdfn
-
-
-def icdf_self(cdfn, minmpara, factpara):
-    
-    para = factpara * cdfn + minmpara
-    
-    return para
-
-
-def cdfn_lnor(para, meanpara, stdvpara):
-   
-    cdfn = cdfn_gaus(np.log(para), np.log(meanpara), stdvpara)
-    
-    return cdfn
-
-
-def icdf_lnor(cdfn, meanpara, stdvpara):
-    
-    para = np.exp(icdf_gaus(cdfn, np.log(meanpara), stdvpara))
-
-    return para
-
-
 def pdfn_lnor(xdat, mean, stdv):
     
     pdfn = pdfn_gaus(np.log(xdat), np.log(mean), stdv)
 
     return pdfn
-
-
-def cdfn_gaus(para, meanpara, stdvpara):
-   
-    cdfn = 0.5  * (1. + sp.special.erf((para - meanpara) / np.sqrt(2) / stdvpara))
-    
-    return cdfn
-
-
-def icdf_gaus(cdfn, meanpara, stdvpara):
-    
-    para = meanpara + stdvpara * np.sqrt(2) * sp.special.erfinv(2. * cdfn - 1.)
-
-    return para
 
 
 def pdfn_gaus(xdat, mean, stdv):
@@ -257,25 +187,99 @@ def pdfn_gaus(xdat, mean, stdv):
     return pdfn
 
 
-def cdfn_lgau(para, mean, stdv):
-    
-    cdfn = cdfn_gaus(np.log(para), np.log(mean), stdv)
-
-    return cdfn
-
-
-def icdf_lgau(cdfn, mean, stdv):
-    
-    icdf = np.exp(icdf_gaus(cdfn, np.log(mean), stdv))
-
-    return icdf
-
-
 def pdfn_lgau(xdat, mean, stdv):
     
     pdfn = pdfn_gaus(np.log(xdat), np.log(mean), stdv)
 
     return pdfn
+
+
+def pdfn_atan(para, minmpara, maxmpara):
+
+    pdfn = 1. / (para**2 + 1.) / (np.arctan(maxmpara) - np.arctan(minmpara))
+    
+    return pdfn
+
+
+def cdfn_powr(flux, minm, maxm, slop):
+        
+    unit = (flux**(1. - slop) - minm**(1. - slop)) / (maxm**(1. - slop) - minm**(1. - slop))
+    
+    return unit
+
+
+def cdfn_igam(xdat, slop, cutf):
+    
+    cdfn = sp.stats.invgamma.cdf(xdat, slop - 1., scale=cutf)
+    
+    return cdfn
+
+
+def cdfn_dpow(para, minm, maxm, brek, sloplowr, slopuppr):
+    
+    if np.isscalar(para):
+        para = np.array([para])
+    
+    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) / (1. - sloplowr) + \
+                                                            (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
+    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
+
+    cdfn = np.empty_like(para)
+    indxlowr = np.where(para <= brek)[0]
+    indxuppr = np.where(para > brek)[0]
+    
+    if indxlowr.size > 0:
+        cdfn[indxlowr] = facb * (para[indxlowr]**(1. - sloplowr) - minm**(1. - sloplowr))
+    if indxuppr.size > 0:
+        cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
+        cdfn[indxuppr] = cdfnbrek + faca / (1. - slopuppr) * (para[indxuppr]**(1. - slopuppr) - brek**(1. - slopuppr))
+    
+    return cdfn
+
+
+def cdfn_expo(para, maxm, scal):
+
+    unit = (1. - np.exp(-para / maxm)) / (1. - np.exp(-maxm / scal))
+
+    return unit
+
+
+def cdfn_dexp(icdf, maxm, scal):
+    
+    if icdf < 0.:
+        cdfn = cdfn_expo(-icdf, maxm, scal)
+    else:
+        cdfn = cdfn_expo(icdf, maxm, scal)
+    
+    return cdfn
+
+
+def cdfn_self(para, minmpara, factpara):
+    
+    cdfn = (para - minmpara) / factpara
+    
+    return cdfn
+
+
+def cdfn_lnor(para, meanpara, stdvpara):
+   
+    cdfn = cdfn_gaus(np.log(para), np.log(meanpara), stdvpara)
+    
+    return cdfn
+
+
+def cdfn_gaus(para, meanpara, stdvpara):
+   
+    cdfn = 0.5  * (1. + sp.special.erf((para - meanpara) / np.sqrt(2) / stdvpara))
+    
+    return cdfn
+
+
+def cdfn_lgau(para, mean, stdv):
+    
+    cdfn = cdfn_gaus(np.log(para), np.log(mean), stdv)
+
+    return cdfn
 
 
 def cdfn_eerr(para, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
@@ -287,27 +291,11 @@ def cdfn_eerr(para, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
     return cdfn
 
 
-def icdf_eerr(cdfn, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
-    
-    cdfnnormpara = cdfn * cdfnnormdiff + cdfnnormminm
-    tranpara = sp.special.erfinv(2. * cdfnnormpara - 1.) * np.sqrt(2)
-    para = tranpara * stdvpara + meanpara
-   
-    return para
-
-
 def cdfn_logt(para, minmpara, factpara):
 
     cdfn = np.log(para / minmpara) / factpara
 
     return cdfn
-
-
-def icdf_logt(cdfn, minmpara, factpara):
-    
-    para = np.exp(cdfn * factpara) * minmpara
-
-    return para
 
 
 def cdfn_atan(para, minmpara, maxmpara):
@@ -317,18 +305,107 @@ def cdfn_atan(para, minmpara, maxmpara):
     return cdfn
 
 
+def icdf_dexp(cdfn, maxm, scal):
+    
+    if cdfn < 0.5:
+        icdf = -icdf_expo(2. * cdfn, maxm, scal)
+    else:
+        icdf = icdf_expo(2. * (cdfn - 0.5), maxm, scal)
+    
+    return icdf
+
+
+def icdf_dpow(unit, minm, maxm, brek, sloplowr, slopuppr):
+    
+    if np.isscalar(unit):
+        unit = np.array([unit])
+    
+    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) \
+                                / (1. - sloplowr) + (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
+    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
+
+    para = np.empty_like(unit)
+    cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
+    indxlowr = np.where(unit <= cdfnbrek)[0]
+    indxuppr = np.where(unit > cdfnbrek)[0]
+    if indxlowr.size > 0:
+        para[indxlowr] = (unit[indxlowr] / facb + minm**(1. - sloplowr))**(1. / (1. - sloplowr))
+    if indxuppr.size > 0:
+        para[indxuppr] = ((1. - slopuppr) * (unit[indxuppr] - cdfnbrek) / faca + brek**(1. - slopuppr))**(1. / (1. - slopuppr))
+    
+    return para
+
+
+def icdf_powr(unit, minm, maxm, slop):
+    
+    para = (unit * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
+    
+    return para
+
+
+def icdf_igam(xdat, slop, cutf):
+    
+    icdf = sp.stats.invgamma.ppf(xdat, slop - 1., scale=cutf)
+    
+    return icdf
+
+
+def icdf_lgau(cdfn, mean, stdv):
+    
+    icdf = np.exp(icdf_gaus(cdfn, np.log(mean), stdv))
+
+    return icdf
+
+
+def icdf_self(cdfn, minmpara, factpara):
+    
+    para = factpara * cdfn + minmpara
+    
+    return para
+
+
+def icdf_lnor(cdfn, meanpara, stdvpara):
+    
+    para = np.exp(icdf_gaus(cdfn, np.log(meanpara), stdvpara))
+
+    return para
+
+
+def icdf_gaus(cdfn, meanpara, stdvpara):
+    
+    para = meanpara + stdvpara * np.sqrt(2) * sp.special.erfinv(2. * cdfn - 1.)
+
+    return para
+
+
+def icdf_expo(unit, maxm, scal):
+
+    para = -scal * np.log(1. - unit * (1. - np.exp(-maxm / scal)))
+
+    return para
+
+
+def icdf_eerr(cdfn, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
+    
+    cdfnnormpara = cdfn * cdfnnormdiff + cdfnnormminm
+    tranpara = sp.special.erfinv(2. * cdfnnormpara - 1.) * np.sqrt(2)
+    para = tranpara * stdvpara + meanpara
+   
+    return para
+
+
+def icdf_logt(cdfn, minmpara, factpara):
+    
+    para = np.exp(cdfn * factpara) * minmpara
+
+    return para
+
+
 def icdf_atan(cdfn, minmpara, maxmpara):
 
     para = tan((np.arctan(maxmpara) - np.arctan(minmpara)) * cdfn + np.arctan(minmpara))
     
     return para
-
-
-def pdfn_atan(para, minmpara, maxmpara):
-
-    pdfn = 1. / (para**2 + 1.) / (np.arctan(maxmpara) - np.arctan(minmpara))
-    
-    return pdfn
 
 
 def cdfn_fixp(gdat, strgmodl, fixp, thisindxfixp):
@@ -438,13 +515,6 @@ def icdf_fixp(gdat, strgmodl, fixpunitscal, scaltype, indxfixpscal):
     return fixp
 
 
-def retr_lprbpois(data, modl):
-    
-    lprb = data * np.log(modl) - modl - sp.special.gammaln(data + 1)
-    
-    return lprb
-    
-        
 def icdf_trap(gdat, strgmodl, cdfn, samp, scalcomp, strgcomp, l):
     
     if scalcomp == 'self' or scalcomp == 'expo' or scalcomp == 'powrslop' or scalcomp == 'dpowslopbrek':
@@ -599,69 +669,6 @@ def initcompfromstat(gdat, gdatmodi, namerefr):
                     print('Initialization from the reference catalog failed for %s. Sampling randomly...' % strgcomp)
                 compunit = np.random.rand(gdatmodi.thissamp[gdat.fittindxfixpnumbelem[l]].astype(int))
             gdatmodi.thissampunit[gdatmodi.thisindxsampcomp[strgcomp][l]] = compunit
-
-
-### find the spectra of sources
-def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=None, edisintp=None, sigm=None, gamm=None, spectype='powr', plot=False):
-    
-    if gdat.numbener == 1:
-        spec = flux[None, :]
-    else:
-        if plot:
-            meanener = gdat.meanenerplot
-        else:
-            meanener = gdat.meanener
-
-        if spectype == 'gaus':
-            spec = 1. / edis[None, :] / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis[None, :])**2)
-        if spectype == 'voig':
-            args = (gdat.meanener[:, None] + 1j * gamm[None, :]) / np.sqrt(2.) / sigm[None, :]
-            spec = 1. / sigm[None, :] / np.sqrt(2. * pi) * flux[None, :] * real(scipy.special.wofz(args))
-        if spectype == 'edis':
-            edis = edisintp(elin)[None, :]
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
-        if spectype == 'pvoi':
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
-        if spectype == 'lore':
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanener[:, None] - elin[None, :]) / edis)**2)
-        if spectype == 'powr':
-            spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
-        if spectype == 'colr':
-            if plot:
-                spec = np.zeros((gdat.numbenerplot, flux.size))
-            else:
-                spec = np.empty((gdat.numbener, flux.size))
-                for i in gdat.indxener:
-                    if i < gdat.indxenerpivt:
-                        spec[i, :] = flux * (gdat.meanener[i] / gdat.enerpivt)**(-sindcolr[i])
-                    elif i == gdat.indxenerpivt:
-                        spec[i, :] =  flux
-                    else:
-                        spec[i, :] = flux * (gdat.meanener[i] / gdat.enerpivt)**(-sindcolr[i-1])
-        if spectype == 'curv':
-            spec = flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
-        if spectype == 'expc':
-            spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :]) * np.exp(-(meanener - gdat.enerpivt)[:, None] / expc[None, :])
-    
-    return spec
-
-
-### find the surface brightness due to one point source
-def retr_sbrtpnts(gdat, lgal, bgal, spec, psfnintp, indxpixlelem):
-    
-    # calculate the distance to all pixels from each point source
-    dist = retr_angldistunit(gdat, lgal, bgal, indxpixlelem)
-    
-    # interpolate the PSF onto the pixels
-    if gdat.kernevaltype == 'ulip':
-        psfntemp = psfnintp(dist)
-    if gdat.kernevaltype == 'bspx':
-        pass
-
-    # scale by the PS spectrum
-    sbrtpnts = spec[:, None, None] * psfntemp
-    
-    return sbrtpnts
 
 
 ### find the set of pixels in proximity to a position on the map

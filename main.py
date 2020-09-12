@@ -12,6 +12,9 @@ def init( \
          ## path in which PCAT data lives
          pathbase=os.environ["PCAT_DATA_PATH"], \
         
+         # user-defined likelihood function
+         retr_llik=None, \
+
          # miscelleneaous
          ## type of PDF to sample from
          strgpdfn='post', \
