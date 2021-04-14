@@ -1,4 +1,9 @@
-import pcat.main, os, numpy as np, pyfits as pf
+import os
+
+import numpy as np
+import pyfits as pf
+
+import pcat
 
 def pcat_tuto():
     # you should set $PCAT_DATA_PATH to a folder that will contain input, indermediate and output files of PCAT
@@ -33,5 +38,39 @@ def pcat_tuto():
                    #lablback=['Isotropic'], \
                    )
                 
-pcat_tuto()
+
+def retr_modl(para):
+    
+    parafixp, paraelem = para
+    
+    modl = np.sum(paraelem['ampl'][None, :] * np.exp(-0.5 * (paraelem['posi'][None, :] - grid[:, None])**2), 1)
+    
+    return modl
+
+
+def retr_llik(para, *args):
+    
+    modl = retr_modl(para)
+
+    llik = np.sum(-0.5 * (data - modl) / vari)
+    
+    return llik
+
+
+# generate grid
+numbgrid = 100
+grid = np.linspace(-1, 1., numbgrid)
+
+# make mock data
+numbelem = 10
+parafixp = np.array([1.])
+paraelem = {}
+paraelem['ampl'] = np.random.rand(numbelem)
+paraelem['posi'] = np.random.rand(numbelem) * 2. - 1.
+para = parafixp, paraelem
+obsd = retr_modl(para) + 1e-2 * np.random.randn(numbgrid)
+
+pcat.main.init(retr_llik=retr_llik)
+
+
 
