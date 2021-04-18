@@ -1,7 +1,7 @@
 import os
+import sys
 
 import numpy as np
-import pyfits as pf
 
 import pcat
 
@@ -27,7 +27,7 @@ def pcat_tuto():
     #os.system(cmnd)
     
     # Now we can run PCAT
-    pcat.main.init( \
+    pcat.init( \
                    forccart=True, \
                    pixltype='cart', \
                    diagmode=False, \
@@ -39,7 +39,7 @@ def pcat_tuto():
                    )
                 
 
-def retr_modl(para):
+def retr_modl(para, grid):
     
     parafixp, paraelem = para
     
@@ -50,27 +50,30 @@ def retr_modl(para):
 
 def retr_llik(para, *args):
     
-    modl = retr_modl(para)
+    modl = retr_modl(para, grid)
 
     llik = np.sum(-0.5 * (data - modl) / vari)
     
     return llik
 
 
-# generate grid
-numbgrid = 100
-grid = np.linspace(-1, 1., numbgrid)
+def cnfg_GMM():
 
-# make mock data
-numbelem = 10
-parafixp = np.array([1.])
-paraelem = {}
-paraelem['ampl'] = np.random.rand(numbelem)
-paraelem['posi'] = np.random.rand(numbelem) * 2. - 1.
-para = parafixp, paraelem
-obsd = retr_modl(para) + 1e-2 * np.random.randn(numbgrid)
+    # generate grid
+    numbgrid = 100
+    grid = np.linspace(-1, 1., numbgrid)
+    
+    # make mock data
+    numbelem = 10
+    parafixp = np.array([1.])
+    paraelem = {}
+    paraelem['ampl'] = np.random.rand(numbelem)
+    paraelem['posi'] = np.random.rand(numbelem) * 2. - 1.
+    para = parafixp, paraelem
+    obsd = retr_modl(para, grid) + 1e-2 * np.random.randn(numbgrid)
+    
+    pcat.init(retr_llik=retr_llik)
 
-pcat.main.init(retr_llik=retr_llik)
 
-
+globals().get(sys.argv[1])()
 

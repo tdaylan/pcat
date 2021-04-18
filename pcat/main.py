@@ -1,8 +1,83 @@
-# common imports
-#from __init__ import *
+# plotting
+import matplotlib as mpl
 
-# internal functions
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# numpy
+import random as randommod
+import numpy as np
+from matplotlib.widgets import Slider, Button, RadioButtons
+
+# scipy
+import scipy as sp
+import scipy.interpolate
+from scipy.special import erfinv, erf
+from scipy.stats import poisson as pss
+import scipy.ndimage
+
+import scipy.fftpack
+
+import scipy.ndimage.filters
+import scipy.sparse
+
+# jit
+from numba import jit
+import threading
+
+#import pyximport; pyximport.install()
+import ctypes
+
+import subprocess as subp, psutil
+
+import astropy
+import astropy as ap
+from astropy.convolution import convolve_fft, AiryDisk2DKernel
+
+# multiprocessing
+import multiprocessing as mp
+
+from copy import deepcopy
+
+# FITS files
+import h5py
+
+# utilities
+import os, time, sys, getpass, glob, fnmatch, inspect, traceback, shelve
+import pickle as cPickle
+import functools
+
+# tdpy
+import tdpy.util
+from tdpy.util import summgene
+import tdpy.mcmc
+
+# HealPix
+#import healpy as hp
+#from healpy import ang2pix
+
+# ignore warnings if not in diagnostic mode
+import warnings
+    
+#from skimage.feature import blob_doh
+
+# defualt options
+#seterr(divide='raise', over='raise', invalid='raise')
+#seterr(all='raise')
+#seterr(under='ignore')
+warnings.simplefilter('ignore')
+np.set_printoptions(linewidth=180)
+sns.set(context='poster', style='ticks', color_codes=True)
+
+# secondaries
+## Symbolic Jacobian calculation
+#import sympy
+
+## Probabilistic Graphical Model generation
+import networkx as nx
+
 from .util import *
+
 
 def init( \
          # user interaction
@@ -393,11 +468,11 @@ def init( \
             raise Exception('Both factthin and numbsamp cannot be provided at the same time.')
         elif gdat.factthin is None and gdat.numbsamp is None:
             gdat.factthin = int(np.ceil(1e-3 * (gdat.numbswep - gdat.numbburn)))
-            gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+            gdat.numbsamp = int((gdat.numbswep - gdat.numbburn) / gdat.factthin)
         elif gdat.numbsamp is not None:
             gdat.factthin = int((gdat.numbswep - gdat.numbburn) / gdat.numbsamp)
         elif gdat.factthin is not None:
-            gdat.numbsamp = (gdat.numbswep - gdat.numbburn) / gdat.factthin
+            gdat.numbsamp = int((gdat.numbswep - gdat.numbburn) / gdat.factthin)
         if not isinstance(gdat.numbsamp, int) or not isinstance(gdat.factthin, int) or \
                                         not isinstance(gdat.numbburn, int) or not isinstance(gdat.numbswep, int):
             print('gdat.numbsamp')
