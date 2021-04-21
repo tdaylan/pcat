@@ -941,7 +941,7 @@ def init( \
         # number of elements
         setp_varbvalu(gdat, 'numbelem', [0, 400], popl='full')
         
-        # define np.maximum and np.minimum number of elements as lists of np.arrays
+        # define maximum and minimum number of elements as lists of np.arrays
         for strgmodl in gdat.liststrgmodl:
             for strglimt in gdat.liststrglimt:
                 numbpopl = getattr(gdat, strgmodl + 'numbpopl')
