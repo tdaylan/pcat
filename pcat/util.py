@@ -67,7 +67,7 @@ import warnings
 #seterr(under='ignore')
 warnings.simplefilter('ignore')
 np.set_printoptions(linewidth=180)
-sns.set(context='poster', style='ticks', color_codes=True)
+#sns.set(context='poster', style='ticks', color_codes=True)
 
 # secondaries
 ## Symbolic Jacobian calculation
@@ -445,6 +445,19 @@ def icdf_self(cdfn, minmpara, factpara):
 def icdf_lnor(cdfn, meanpara, stdvpara):
     
     para = np.exp(icdf_gaus(cdfn, np.log(meanpara), stdvpara))
+
+    return para
+
+
+def icdf_gaustrun(cdfn, meanpara, stdvpara, minmpara, maxmpara):
+    
+    para = icdf_gaus(cdfn, meanpara, stdvpara)
+    while True:
+        indx = np.where((para < minmpara) | (para > maxmpara))[0]
+        if indx.size > 0:
+            para[indx] = icdf_gaus(cdfn[indx], meanpara, stdvpara)
+        else:
+            break
 
     return para
 
@@ -6737,7 +6750,12 @@ def setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back, isfr):
 
 
 def setp_varbvalu(gdat, strgvarb, valu, popl='none', ener='none', evtt='none', back='none', isfr='none', strgmodl=None):
+    """
+    Set up variable values across all models (true and fitting) as well as all populations, energy bins, 
+    event bins, background components, and Sersic components 
+    """
     
+    # determine the list of models
     if strgmodl is None:
         if gdat.datatype == 'mock':
             liststrgmodl = ['true', 'fitt']
@@ -6745,14 +6763,21 @@ def setp_varbvalu(gdat, strgvarb, valu, popl='none', ener='none', evtt='none', b
             liststrgmodl = ['fitt']
     else:
         liststrgmodl = [strgmodl]
-    liststrgmodl = deepcopy(liststrgmodl)
-    for strgmodltemp in liststrgmodl:
-        liststrgvarb = setp_namevarbsing(gdat, strgmodltemp, strgvarb, popl, ener, evtt, back, isfr)
-        for strgvarbtemp in liststrgvarb:
-            setp_varbiter(gdat, strgmodltemp, strgvarbtemp, valu)
+    
+    for strgmodl in liststrgmodl:
+        # get the list of names of the variable
+        liststrgvarb = setp_namevarbsing(gdat, strgmodl, strgvarb, popl, ener, evtt, back, isfr)
+        
+        # set the values of each variable in the list
+        for strgvarb in liststrgvarb:
+            print('strgvarb')
+            print(strgvarb)
+            print('liststrgvarb')
+            print(liststrgvarb)
+            setp_valuvarb(gdat, strgmodl, strgvarb, valu)
 
 
-def setp_varbiter(gdat, strgmodltemp, strgvarbtemp, valu):
+def setp_valuvarb(gdat, strgmodltemp, strgvarbtemp, valu):
     
     try:
         valutemp = getattr(gdat, strgvarbtemp)
@@ -6785,13 +6810,13 @@ def setp_varblimt(gdat, strgvarb, listvalu, typelimt='minmmaxm', popl='none', en
         for strgvarbtemp in liststrgvarb:
 
             if typelimt == 'minmmaxm':
-                setp_varbiter(gdat, strgmodltemp, 'minm' + strgvarbtemp, listvalu[0])
-                setp_varbiter(gdat, strgmodltemp, 'maxm' + strgvarbtemp, listvalu[1])
+                setp_valuvarb(gdat, strgmodltemp, 'minm' + strgvarbtemp, listvalu[0])
+                setp_valuvarb(gdat, strgmodltemp, 'maxm' + strgvarbtemp, listvalu[1])
             else:
-                setp_varbiter(gdat, strgmodltemp, 'mean' + strgvarbtemp, listvalu[0])
-                setp_varbiter(gdat, strgmodltemp, 'stdv' + strgvarbtemp, listvalu[1])
+                setp_valuvarb(gdat, strgmodltemp, 'mean' + strgvarbtemp, listvalu[0])
+                setp_valuvarb(gdat, strgmodltemp, 'stdv' + strgvarbtemp, listvalu[1])
                 
-                # set np.minimum and np.maximum for Gaussian distributed variables
+                # set minimum and maximum for Gaussian distributed variables
                 meanpara = getattr(gdat, strgmodltemp + 'mean' + strgvarbtemp)
                 stdp = getattr(gdat, strgmodltemp + 'stdv' + strgvarbtemp)
                 setattr(gdat, strgmodltemp + 'minm' + strgvarbtemp, meanpara - stdp * 5)

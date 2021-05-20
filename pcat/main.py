@@ -2,7 +2,7 @@
 import matplotlib as mpl
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 
 # numpy
 import random as randommod
@@ -67,7 +67,7 @@ import warnings
 #seterr(under='ignore')
 warnings.simplefilter('ignore')
 np.set_printoptions(linewidth=180)
-sns.set(context='poster', style='ticks', color_codes=True)
+#sns.set(context='poster', style='ticks', color_codes=True)
 
 # secondaries
 ## Symbolic Jacobian calculation
@@ -941,6 +941,9 @@ def init( \
         # number of elements
         setp_varbvalu(gdat, 'numbelem', [0, 400], popl='full')
         
+        print('fittminmnumbelempop0')
+        print(fittminmnumbelempop0)
+
         # define maximum and minimum number of elements as lists of np.arrays
         for strgmodl in gdat.liststrgmodl:
             for strglimt in gdat.liststrglimt:
