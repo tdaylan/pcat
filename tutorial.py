@@ -72,7 +72,37 @@ def cnfg_GMM():
     para = parafixp, paraelem
     obsd = retr_modl(para, grid) + 1e-2 * np.random.randn(numbgrid)
     
-    pcat.init(retr_llik=retr_llik)
+    pcat.init( \
+              typeexpr='gene', \
+             )
+
+
+def cnfg_external():
+
+    # generate synethetic data
+    ## number of samples
+    numbsamp = 100
+    ## horizontal (x-axis) position of the synethetic samples
+    xpossamp = pcat.icdf_gaus(np.random.rand(numbsamp), 0.1, 0.5)
+    ## vertical (y-axis) position of the synethetic samples
+    ypossamp = pcat.icdf_gaus(np.random.rand(numbsamp), 0.2, 0.1)
+
+    def retr_llik(para, paraelem, *args):
+        
+        xpossamp, ypossamp = args
+
+        llik = np.exp(-(xpos - xpossamp)**2) + np.exp(-(yposgrid - ypossamp)**2)
+        
+        return llik
+
+
+    def retr_lpri(para, paraelem, *args):
+        
+        lpri = np.exp(-xpos**2) + np.exp(-yposgrid**2)
+        
+        return lpri
+
+    pcat.init(retr_llik=retr_llik, retr_lpri=retr_lpri)
 
 
 globals().get(sys.argv[1])()
