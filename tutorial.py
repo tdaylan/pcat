@@ -75,6 +75,7 @@ def cnfg_GMM():
     pcat.init( \
               typeexpr='gene', \
               typeverb=0, \
+              numbsidecart=100, \
              )
 
 
