@@ -260,226 +260,6 @@ def pdfn_atan(para, minmpara, maxmpara):
     return pdfn
 
 
-def cdfn_powr(flux, minm, maxm, slop):
-        
-    unit = (flux**(1. - slop) - minm**(1. - slop)) / (maxm**(1. - slop) - minm**(1. - slop))
-    
-    return unit
-
-
-def cdfn_igam(xdat, slop, cutf):
-    
-    cdfn = sp.stats.invgamma.cdf(xdat, slop - 1., scale=cutf)
-    
-    return cdfn
-
-
-def cdfn_dpow(para, minm, maxm, brek, sloplowr, slopuppr):
-    
-    if np.isscalar(para):
-        para = np.array([para])
-    
-    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) / (1. - sloplowr) + \
-                                                            (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
-    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
-
-    cdfn = np.empty_like(para)
-    indxlowr = np.where(para <= brek)[0]
-    indxuppr = np.where(para > brek)[0]
-    
-    if indxlowr.size > 0:
-        cdfn[indxlowr] = facb * (para[indxlowr]**(1. - sloplowr) - minm**(1. - sloplowr))
-    if indxuppr.size > 0:
-        cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
-        cdfn[indxuppr] = cdfnbrek + faca / (1. - slopuppr) * (para[indxuppr]**(1. - slopuppr) - brek**(1. - slopuppr))
-    
-    return cdfn
-
-
-def cdfn_expo(para, maxm, scal):
-
-    unit = (1. - np.exp(-para / maxm)) / (1. - np.exp(-maxm / scal))
-
-    return unit
-
-
-def cdfn_dexp(icdf, maxm, scal):
-    
-    if icdf < 0.:
-        cdfn = cdfn_expo(-icdf, maxm, scal)
-    else:
-        cdfn = cdfn_expo(icdf, maxm, scal)
-    
-    return cdfn
-
-
-def cdfn_self(para, minmpara, factpara):
-    
-    cdfn = (para - minmpara) / factpara
-    
-    return cdfn
-
-
-def cdfn_lnor(para, meanpara, stdvpara):
-   
-    cdfn = cdfn_gaus(np.log(para), np.log(meanpara), stdvpara)
-    
-    return cdfn
-
-
-def cdfn_gaus(para, meanpara, stdvpara):
-   
-    cdfn = 0.5  * (1. + sp.special.erf((para - meanpara) / np.sqrt(2) / stdvpara))
-    
-    return cdfn
-
-
-def cdfn_lgau(para, mean, stdv):
-    
-    cdfn = cdfn_gaus(np.log(para), np.log(mean), stdv)
-
-    return cdfn
-
-
-def cdfn_eerr(para, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
-    
-    tranpara = (para - meanpara) / stdvpara
-    cdfnnormpara = 0.5 * (sp.special.erf(tranpara / np.sqrt(2.)) + 1.)
-    cdfn = (cdfnnormpara - cdfnnormminm) / cdfnnormdiff
-
-    return cdfn
-
-
-def cdfn_logt(para, minmpara, factpara):
-
-    cdfn = np.log(para / minmpara) / factpara
-
-    return cdfn
-
-
-def cdfn_atan(para, minmpara, maxmpara):
-    
-    cdfn = (np.arctan(para) - np.arctan(minmpara)) / (np.arctan(maxmpara) - np.arctan(minmpara))
-    
-    return cdfn
-
-
-def icdf_dexp(cdfn, maxm, scal):
-    
-    if cdfn < 0.5:
-        icdf = -icdf_expo(2. * cdfn, maxm, scal)
-    else:
-        icdf = icdf_expo(2. * (cdfn - 0.5), maxm, scal)
-    
-    return icdf
-
-
-def icdf_dpow(unit, minm, maxm, brek, sloplowr, slopuppr):
-    
-    if np.isscalar(unit):
-        unit = np.array([unit])
-    
-    faca = 1. / (brek**(sloplowr - slopuppr) * (brek**(1. - sloplowr) - minm**(1. - sloplowr)) \
-                                / (1. - sloplowr) + (maxm**(1. - slopuppr) - brek**(1. - slopuppr)) / (1. - slopuppr))
-    facb = faca * brek**(sloplowr - slopuppr) / (1. - sloplowr)
-
-    para = np.empty_like(unit)
-    cdfnbrek = facb * (brek**(1. - sloplowr) - minm**(1. - sloplowr))
-    indxlowr = np.where(unit <= cdfnbrek)[0]
-    indxuppr = np.where(unit > cdfnbrek)[0]
-    if indxlowr.size > 0:
-        para[indxlowr] = (unit[indxlowr] / facb + minm**(1. - sloplowr))**(1. / (1. - sloplowr))
-    if indxuppr.size > 0:
-        para[indxuppr] = ((1. - slopuppr) * (unit[indxuppr] - cdfnbrek) / faca + brek**(1. - slopuppr))**(1. / (1. - slopuppr))
-    
-    return para
-
-
-def icdf_powr(unit, minm, maxm, slop):
-    
-    para = (unit * (maxm**(1. - slop) - minm**(1. - slop)) + minm**(1. - slop))**(1. / (1. - slop))
-    
-    return para
-
-
-def icdf_igam(xdat, slop, cutf):
-    
-    icdf = sp.stats.invgamma.ppf(xdat, slop - 1., scale=cutf)
-    
-    return icdf
-
-
-def icdf_lgau(cdfn, mean, stdv):
-    
-    icdf = np.exp(icdf_gaus(cdfn, np.log(mean), stdv))
-
-    return icdf
-
-
-def icdf_self(cdfn, minmpara, factpara):
-    
-    para = factpara * cdfn + minmpara
-    
-    return para
-
-
-def icdf_lnor(cdfn, meanpara, stdvpara):
-    
-    para = np.exp(icdf_gaus(cdfn, np.log(meanpara), stdvpara))
-
-    return para
-
-
-def icdf_gaustrun(cdfn, meanpara, stdvpara, minmpara, maxmpara):
-    
-    para = icdf_gaus(cdfn, meanpara, stdvpara)
-    while True:
-        indx = np.where((para < minmpara) | (para > maxmpara))[0]
-        if indx.size > 0:
-            para[indx] = icdf_gaus(cdfn[indx], meanpara, stdvpara)
-        else:
-            break
-
-    return para
-
-
-def icdf_gaus(cdfn, meanpara, stdvpara):
-    
-    para = meanpara + stdvpara * np.sqrt(2) * sp.special.erfinv(2. * cdfn - 1.)
-
-    return para
-
-
-def icdf_expo(unit, maxm, scal):
-
-    para = -scal * np.log(1. - unit * (1. - np.exp(-maxm / scal)))
-
-    return para
-
-
-def icdf_eerr(cdfn, meanpara, stdvpara, cdfnnormminm, cdfnnormdiff):
-    
-    cdfnnormpara = cdfn * cdfnnormdiff + cdfnnormminm
-    tranpara = sp.special.erfinv(2. * cdfnnormpara - 1.) * np.sqrt(2)
-    para = tranpara * stdvpara + meanpara
-   
-    return para
-
-
-def icdf_logt(cdfn, minmpara, factpara):
-    
-    para = np.exp(cdfn * factpara) * minmpara
-
-    return para
-
-
-def icdf_atan(cdfn, minmpara, maxmpara):
-
-    para = tan((np.arctan(maxmpara) - np.arctan(minmpara)) * cdfn + np.arctan(minmpara))
-    
-    return para
-
-
 def cdfn_paragenrscalbase(gdat, strgmodl, paragenrscalbase, thisindxparagenrbase):
     
     gmod = getattr(gdat, strgmodl)
@@ -506,7 +286,8 @@ def cdfn_paragenrscalbase(gdat, strgmodl, paragenrscalbase, thisindxparagenrbase
         if scalparagenrbase == 'eerr':
             gmod.cdfnlistminmparagenrscalbaseunit = gmod.cdfnlistminmparagenrscalbaseunit[thisindxparagenrbase]
             gmod.listparagenrscalbaseunitdiff = gmod.listparagenrscalbaseunitdiff[thisindxparagenrbase]
-            paragenrscalbaseunit = cdfn_eerr(paragenrscalbase, gmod.listmeanparagenrscalbase, gmod.liststdvparagenrscalbase, gmod.cdfnlistminmparagenrscalbaseunit, gmod.listparagenrscalbaseunitdiff)
+            paragenrscalbaseunit = cdfn_eerr(paragenrscalbase, gmod.listmeanparagenrscalbase, gmod.liststdvparagenrscalbase, \
+                                                                            gmod.cdfnlistminmparagenrscalbaseunit, gmod.listparagenrscalbaseunitdiff)
         else:
             paragenrscalbaseunit = cdfn_gaus(paragenrscalbase, gmod.listmeanparagenrscalbase, gmod.liststdvparagenrscalbase)
 
@@ -564,21 +345,21 @@ def icdf_paragenrscalbase(gdat, strgmodl, paragenrunitbase, scaltype, indxparage
         factparagenrscalbase = gmod.factpara.genrbase[indxparagenrbasescal]
 
     if scaltype == 'self':
-        paragenrscalbase = icdf_self(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
+        paragenrscalbase = tdpy.icdf_self(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
     elif scaltype == 'logt':
-        paragenrscalbase = icdf_logt(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
+        paragenrscalbase = tdpy.icdf_logt(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
     elif scaltype == 'atan':
         listmaxmparagenrscalbase = gmod.listmaxmparagenrscalbase[indxparagenrbasescal]
-        paragenrscalbase = icdf_atan(paragenrunitbase, minmparagenrscalbase, listmaxmparagenrscalbase)
+        paragenrscalbase = tdpy.icdf_atan(paragenrunitbase, minmparagenrscalbase, listmaxmparagenrscalbase)
     elif scaltype == 'gaus' or scaltype == 'eerr':
         listmeanparagenrscalbase = gmod.listmeanparagenrscalbase[indxparagenrbasescal]
         liststdvparagenrscalbase = gmod.liststdvparagenrscalbase[indxparagenrbasescal]
         if scaltype == 'eerr':
             cdfnminmparagenrscalbaseunit = gmod.cdfnminmparagenrscalbaseunit[indxparagenrbasescal]
             listparagenrscalbaseunitdiff = gmod.listparagenrscalbaseunitdiff[indxparagenrbasescal]
-            paragenrscalbase = icdf_eerr(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase, cdfnminmparagenrscalbaseunit, listparagenrscalbaseunitdiff)
+            paragenrscalbase = tdpy.icdf_eerr(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase, cdfnminmparagenrscalbaseunit, listparagenrscalbaseunitdiff)
         else:
-            paragenrscalbase = icdf_gaus(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase)
+            paragenrscalbase = tdpy.icdf_gaus(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase)
     elif scaltype == 'pois':
         paragenrscalbase = paragenrunitbase
     
@@ -614,43 +395,43 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
                 raise Exception('')
             if maxm < minm:
                 raise Exception('')
-        icdf = icdf_powr(cdfn, minm, maxm, slop)
+        icdf = tdpy.icdf_powr(cdfn, minm, maxm, slop)
 
     if scalcomp == 'dpowslopbrek':
         distbrek = paragenrscalfull[getattr(gmod.indxpara, 'brekprio' + nameparagenrelem)[l]]
         sloplowr = paragenrscalfull[getattr(gmod.indxpara, 'sloplowrprio' + nameparagenrelem)[l]]
         slopuppr = paragenrscalfull[getattr(gmod.indxpara, 'slopupprprio' + nameparagenrelem)[l]]
-        icdf = icdf_dpow(cdfn, minm, maxm, distbrek, sloplowr, slopuppr)
+        icdf = tdpy.icdf_dpow(cdfn, minm, maxm, distbrek, sloplowr, slopuppr)
     
     if scalcomp == 'expo':
         sexp = getattr(gmod, nameparagenrelem + 'distsexppop%d' % l)
-        icdf = icdf_expo(cdfn, maxm, sexp)
+        icdf = tdpy.icdf_expo(cdfn, maxm, sexp)
     
     if scalcomp == 'self':
         fact = getattr(gmod.factpara, nameparagenrelem)
-        icdf = icdf_self(cdfn, minm, fact)
+        icdf = tdpy.icdf_self_fact(cdfn, minm, fact)
     
     if scalcomp == 'logt':
-        icdf = icdf_logt(cdfn, minm, fact)
+        icdf = tdpy.icdf_logt(cdfn, minm, fact)
     
     if scalcomp == 'dexp':
         scal = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'distscal')[l]]
-        icdf = icdf_dnp.exp(cdfn, maxm, scal)
+        icdf = tdpy.icdf_dexp(cdfn, maxm, scal)
     
     if scalcomp == 'lnormeanstdv':
         distmean = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'distmean')[l]]
         diststdv = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'diststdv')[l]]
-        icdf = icdf_lnor(cdfn, distmean, diststdv)
+        icdf = tdpy.icdf_lnor(cdfn, distmean, diststdv)
     
     if scalcomp == 'igam':
         slop = paragenrscalfull[getattr(gmod.indxpara, 'slopprio' + nameparagenrelem)[l]]
         cutf = getattr(gdat, 'cutf' + nameparagenrelem)
-        icdf = icdf_igam(cdfn, slop, cutf)
+        icdf = tdpy.icdf_igam(cdfn, slop, cutf)
     
     if scalcomp == 'gaus':
         distmean = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'distmean')[l]]
         diststdv = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'diststdv')[l]]
-        icdf = icdf_gaus(cdfn, distmean, diststdv)
+        icdf = tdpy.icdf_gaus(cdfn, distmean, diststdv)
     
     if gdat.booldiagmode:
         if not np.isfinite(icdf).all():
