@@ -3,11 +3,18 @@ import sys
 
 import numpy as np
 
+import tdpy
 import pcat
 
-def pcat_tuto():
-    # you should set $PCAT_DATA_PATH to a folder that will contain input, indermediate and output files of PCAT
-    #os.environ['PCAT_DATA_PATH'] = '/path/to/your/pcat/data/folder'
+def cnfg_fermi():
+    '''
+    The output folder will contain initial, indermediate, and output image and data files. To define this folder, tou should either
+        1) set $PCAT_DATA_PATH environment variable, as in
+            os.environ['PCAT_DATA_PATH'] = '/path/to/your/pcat/data/folder'
+            inside your .bashrc or .zshrc, or
+        2) input pathpcat as an argument.
+    '''
+    
     
     numbener = 5
     numbside = 256
@@ -39,72 +46,23 @@ def pcat_tuto():
                    )
                 
 
-def retr_modl(para, grid):
-    
-    parafixp, paraelem = para
-    
-    modl = np.sum(paraelem['ampl'][None, :] * np.exp(-0.5 * (paraelem['posi'][None, :] - grid[:, None])**2), 1)
-    
-    return modl
-
-
-def retr_llik(para, *args):
-    
-    modl = retr_modl(para, grid)
-
-    llik = np.sum(-0.5 * (data - modl) / vari)
-    
-    return llik
-
-
-def cnfg_GMM():
-
-    # generate grid
-    numbgrid = 100
-    grid = np.linspace(-1, 1., numbgrid)
-    
-    # make mock data
-    numbelem = 10
-    parafixp = np.array([1.])
-    paraelem = {}
-    paraelem['ampl'] = np.random.rand(numbelem)
-    paraelem['posi'] = np.random.rand(numbelem) * 2. - 1.
-    para = parafixp, paraelem
-    obsd = retr_modl(para, grid) + 1e-2 * np.random.randn(numbgrid)
+def cnfg_GaussianMix():
+    '''
+    Gaussian Mixture
+    '''
     
     pcat.init( \
-              typeexpr='gene', \
-              typeverb=0, \
-              numbsidecart=100, \
              )
 
 
-def cnfg_external():
-
-    # generate synethetic data
-    ## number of samples
-    numbsamp = 100
-    ## horizontal (x-axis) position of the synethetic samples
-    xpossamp = pcat.icdf_gaus(np.random.rand(numbsamp), 0.1, 0.5)
-    ## vertical (y-axis) position of the synethetic samples
-    ypossamp = pcat.icdf_gaus(np.random.rand(numbsamp), 0.2, 0.1)
-
-    def retr_llik(para, paraelem, *args):
-        
-        xpossamp, ypossamp = args
-
-        llik = np.exp(-(xpos - xpossamp)**2) + np.exp(-(yposgrid - ypossamp)**2)
-        
-        return llik
-
-
-    def retr_lpri(para, paraelem, *args):
-        
-        lpri = np.exp(-xpos**2) + np.exp(-yposgrid**2)
-        
-        return lpri
-
-    pcat.init(retr_llik=retr_llik, retr_lpri=retr_lpri)
+def cnfg_GaussianMix_unbinned():
+    '''
+    Unbinned Gaussian Mixture
+    '''
+    
+    pcat.init( \
+              boolbins=False, \
+             )
 
 
 globals().get(sys.argv[1])()

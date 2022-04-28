@@ -1,6 +1,6 @@
 # plotting
-import matplotlib
-matplotlib.use('agg')
+import matplotlib as mpl
+mpl.use('agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -265,17 +265,17 @@ def cdfn_paragenrscalbase(gdat, strgmodl, paragenrscalbase, thisindxparagenrbase
     
     gmod = getattr(gdat, strgmodl)
 
-    scalparagenrbase = gmod.scalpara.genrbase[thisindxparagenrbase]
+    scalparagenrbase = gmod.scalpara.genr.base.totl[thisindxparagenrbase]
     
     if scalparagenrbase == 'self' or scalparagenrbase == 'logt' or scalparagenrbase == 'atan':
         
         listminmparagenrscalbase = gmod.minmpara.genrbase[thisindxparagenrbase]
-        factparagenrscalbase = gmod.factparagenrscalbase[thisindxparagenrbase]
+        maxmparagenrscalbase = gmod.maxmparagenrscalbase[thisindxparagenrbase]
 
         if scalparagenrbase == 'self':
-            paragenrscalbaseunit = cdfn_self(paragenrscalbase, listminmparagenrscalbase, factparagenrscalbase)
+            paragenrscalbaseunit = cdfn_self(paragenrscalbase, listminmparagenrscalbase, maxmparagenrscalbase)
         elif scalparagenrbase == 'logt':
-            paragenrscalbaseunit = cdfn_logt(paragenrscalbase, listminmparagenrscalbase, factparagenrscalbase)
+            paragenrscalbaseunit = cdfn_logt(paragenrscalbase, listminmparagenrscalbase, maxmparagenrscalbase)
 
         elif scalparagenrbase == 'atan':
             gmod.listmaxmparagenrscalbase = gmod.listmaxmparagenrscalbase[thisindxparagenrbase]
@@ -295,7 +295,7 @@ def cdfn_paragenrscalbase(gdat, strgmodl, paragenrscalbase, thisindxparagenrbase
     elif scalparagenrbase == 'pois':
         paragenrscalbaseunit = paragenrscalbase
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if paragenrscalbaseunit == 0:
             print('Warning. CDF is zero.')
 
@@ -308,31 +308,31 @@ def icdf_paragenrscalfull(gdat, strgmodl, paragenrunitfull, indxparagenrfullelem
 
     # tobechanged
     # temp -- change zeros to empty
-    paragenrscalfull = np.zeros_like(paragenrunitfull)
+    paragenrscalfull = np.empty_like(paragenrunitfull) + np.nan
     for scaltype in gdat.listscaltype:
-        listindxparagenrbasescal = gmod.listindxparagenrbasescal[scaltype]
+        listindxparagenrbasescal = gmod.indxpara.genr.base.scal[scaltype]
         if len(listindxparagenrbasescal) == 0:
             continue
         paragenrscalfull[listindxparagenrbasescal] = icdf_paragenrscalbase(gdat, strgmodl, paragenrunitfull[listindxparagenrbasescal], scaltype, listindxparagenrbasescal)
         
-    if not np.isfinite(paragenrscalfull).all():
-        raise Exception('')
-        
     if indxparagenrfullelem is not None:
         for l in gmod.indxpopl:
-            for g in gmod.indxparagenrelemsing[l]:
-                indxparagenrfulltemp = indxparagenrfullelem[l][gmod.namepara.genrelem[l][g]]
+            for g in gmod.indxpara.genr.elemsing[l]:
+                indxparagenrfulltemp = indxparagenrfullelem[l][gmod.namepara.genr.elem.odim[l][g]]
                 if indxparagenrfulltemp.size == 0:
                     continue
                 paragenrscalfull[indxparagenrfulltemp] = icdf_trap(gdat, strgmodl, paragenrunitfull[indxparagenrfulltemp], paragenrscalfull, \
-                                                                    gmod.listscalparagenrelem[l][g], gmod.namepara.genrelem[l][g], l)
+                                                                    gmod.scalpara.genr.elem.odim[l][g], gmod.namepara.genr.elem.odim[l][g], l)
     
-                if gdat.booldiagmode:
+                if gdat.booldiag:
                     if not np.isfinite(paragenrscalfull[indxparagenrfulltemp]).all():
                         raise Exception('')
 
-    if not np.isfinite(paragenrscalfull).all():
-        raise Exception('')
+    if gdat.booldiag and not np.isfinite(paragenrscalfull).all():
+        print('paragenrscalfull')
+        print(paragenrscalfull)
+        print('WARNING!!! TEMPPPP')
+        #raise Exception('')
     
     return paragenrscalfull
 
@@ -343,12 +343,12 @@ def icdf_paragenrscalbase(gdat, strgmodl, paragenrunitbase, scaltype, indxparage
     
     if scaltype == 'self' or scaltype == 'logt' or scaltype == 'atan':
         minmparagenrscalbase = gmod.minmpara.genrbase[indxparagenrbasescal]
-        factparagenrscalbase = gmod.factpara.genrbase[indxparagenrbasescal]
+        maxmparagenrscalbase = gmod.maxmpara.genrbase[indxparagenrbasescal]
 
     if scaltype == 'self':
-        paragenrscalbase = tdpy.icdf_self(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
+        paragenrscalbase = tdpy.icdf_self(paragenrunitbase, minmparagenrscalbase, maxmparagenrscalbase)
     elif scaltype == 'logt':
-        paragenrscalbase = tdpy.icdf_logt(paragenrunitbase, minmparagenrscalbase, factparagenrscalbase)
+        paragenrscalbase = tdpy.icdf_logt(paragenrunitbase, minmparagenrscalbase, maxmparagenrscalbase)
     elif scaltype == 'atan':
         listmaxmparagenrscalbase = gmod.listmaxmparagenrscalbase[indxparagenrbasescal]
         paragenrscalbase = tdpy.icdf_atan(paragenrunitbase, minmparagenrscalbase, listmaxmparagenrscalbase)
@@ -361,10 +361,10 @@ def icdf_paragenrscalbase(gdat, strgmodl, paragenrunitbase, scaltype, indxparage
             paragenrscalbase = tdpy.icdf_eerr(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase, cdfnminmparagenrscalbaseunit, listparagenrscalbaseunitdiff)
         else:
             paragenrscalbase = tdpy.icdf_gaus(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase)
-    elif scaltype == 'pois':
+    elif scaltype == 'drct':
         paragenrscalbase = paragenrunitbase
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if not np.isfinite(paragenrscalbase).all():
             print('scaltype')
             print(scaltype)
@@ -391,7 +391,7 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
     
     if scalcomp == 'powr':
         slop = paragenrscalfull[getattr(gmod.indxpara, 'slopprio%spop%d' % (nameparagenrelem, l))]
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if not np.isfinite(slop):
                 raise Exception('')
             if maxm < minm:
@@ -409,8 +409,9 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
         icdf = tdpy.icdf_expo(cdfn, maxm, sexp)
     
     if scalcomp == 'self':
-        fact = getattr(gmod.factpara, nameparagenrelem)
-        icdf = tdpy.icdf_self_fact(cdfn, minm, fact)
+        minm = getattr(gmod.minmpara, nameparagenrelem)
+        maxm = getattr(gmod.maxmpara, nameparagenrelem)
+        icdf = tdpy.icdf_self(cdfn, minm, maxm)
     
     if scalcomp == 'logt':
         icdf = tdpy.icdf_logt(cdfn, minm, fact)
@@ -434,7 +435,7 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
         diststdv = paragenrscalfull[getattr(gmod.indxpara, nameparagenrelem + 'diststdv')[l]]
         icdf = tdpy.icdf_gaus(cdfn, distmean, diststdv)
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if not np.isfinite(icdf).all():
             print('icdf')
             print(icdf)
@@ -448,37 +449,37 @@ def cdfn_trap(gdat, gdatmodi, strgmodl, icdf, indxpoplthis):
     gmod = getattr(gdat, strgmodl)
     gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgmodl)
     
-    gmod.listscalparagenrelem = gmod.listscalparagenrelem[indxpoplthis]
+    gmod.scalpara.genr.elem = gmod.scalpara.genr.elem.odim[indxpoplthis]
     cdfn = np.empty_like(icdf)
-    for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[indxpoplthis]):
+    for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[indxpoplthis]):
         
-        if gmod.listscalparagenrelem[k] == 'self' or gmod.listscalparagenrelem[k] == 'dexp' or gmod.listscalparagenrelem[k] == 'expo' \
-                                                                        or gmod.listscalparagenrelem[k] == 'powr' or gmod.listscalparagenrelem[k] == 'dpowslopbrek':
-            minm = getattr(gdat.fitt.minm, nameparagenrelem)
-            if gmod.listscalparagenrelem[k] == 'powr':
+        if gmod.scalpara.genr.elem.odim[k] == 'self' or gmod.scalpara.genr.elem.odim[k] == 'dexp' or gmod.scalpara.genr.elem.odim[k] == 'expo' \
+                                                                        or gmod.scalpara.genr.elem.odim[k] == 'powr' or gmod.scalpara.genr.elem.odim[k] == 'dpowslopbrek':
+            minm = getattr(gdat.fitt.minmpara, nameparagenrelem)
+            if gmod.scalpara.genr.elem.odim[k] == 'powr':
                 maxm = getattr(gdat.fitt.maxm, nameparagenrelem)
-                slop = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'slop')[indxpoplthis]]
+                slop = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'slop')[indxpoplthis]]
                 cdfn[k] = cdfn_powr(icdf[k], minm, maxm, slop)
-            elif gmod.listscalparagenrelem[k] == 'dpowslopbrek':
+            elif gmod.scalpara.genr.elem.odim[k] == 'dpowslopbrek':
                 maxm = getattr(gdat.fitt.maxm, nameparagenrelem)
-                brek = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'distbrek')[indxpoplthis]]
-                sloplowr = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'sloplowr')[indxpoplthis]]
-                slopuppr = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'slopuppr')[indxpoplthis]]
+                brek = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'distbrek')[indxpoplthis]]
+                sloplowr = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'sloplowr')[indxpoplthis]]
+                slopuppr = gdatobjt.this.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'slopuppr')[indxpoplthis]]
                 cdfn[k] = cdfn_dpow(icdf[k], minm, maxm, brek, sloplowr, slopuppr)
             else:
-                fact = getattr(gdat.fitt, 'fact' + nameparagenrelem)
-                cdfn[k] = cdfn_self(icdf[k], minm, fact)
-        if gmod.listscalparagenrelem[k] == 'lnormeanstdv':
-            distmean = gdatmodi.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'distmean')[indxpoplthis]]
-            diststdv = gdatmodi.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'diststdv')[indxpoplthis]]
+                maxm = getattr(gdat.fitt.maxmpara, nameparagenrelem)
+                cdfn[k] = cdfn_self(icdf[k], minm, maxm)
+        if gmod.scalpara.genr.elem.odim[k] == 'lnormeanstdv':
+            distmean = gdatmodi.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'distmean')[indxpoplthis]]
+            diststdv = gdatmodi.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'diststdv')[indxpoplthis]]
             cdfn[k] = cdfn_lnor(icdf[k], distmean, slop)
-        if gmod.listscalparagenrelem[k] == 'igam':
-            slop = gdatmodi.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'slop')[indxpoplthis]]
+        if gmod.scalpara.genr.elem.odim[k] == 'igam':
+            slop = gdatmodi.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'slop')[indxpoplthis]]
             cutf = getattr(gdat, 'cutf' + nameparagenrelem)
             cdfn[k] = cdfn_igam(icdf[k], slop, cutf)
-        if gmod.listscalparagenrelem[k] == 'gaus':
-            distmean = gdatmodi.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'distmean')[indxpoplthis]]
-            diststdv = gdatmodi.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'diststdv')[indxpoplthis]]
+        if gmod.scalpara.genr.elem.odim[k] == 'gaus':
+            distmean = gdatmodi.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'distmean')[indxpoplthis]]
+            diststdv = gdatmodi.paragenrscalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'diststdv')[indxpoplthis]]
             cdfn[k] = cdfn_gaus(icdf[k], distmean, diststdv)
     
     return cdfn
@@ -494,52 +495,51 @@ def updt_stat(gdat, gdatmodi):
     gdatmodi.this.lpritotl = gdatmodi.next.lpritotl
     gdatmodi.this.lliktotl = gdatmodi.next.lliktotl
     gdatmodi.this.lpostotl = gdatmodi.next.lpostotl
-    gdatmodi.this.paragenrscalfull[gdatmodi.indxsampmodi] = np.copy(gdatmodi.next.paragenrscalfull[gdatmodi.indxsampmodi])
-    gdatmodi.this.paragenrunitfull[gdatmodi.indxsampmodi] = np.copy(gdatmodi.next.paragenrunitfull[gdatmodi.indxsampmodi])
+    gdatmodi.this.para.genr.scalfull[gdatmodi.indxsampmodi] = np.copy(gdatmodi.next.paragenrscalfull[gdatmodi.indxsampmodi])
+    gdatmodi.this.para.genr.unitfull[gdatmodi.indxsampmodi] = np.copy(gdatmodi.next.paragenrunitfull[gdatmodi.indxsampmodi])
     if gdatmodi.this.indxproptype > 0:
         gdatmodi.this.indxelemfull = deepcopy(gdatmodi.next.indxelemfull)
-        gdatmodi.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gdatmodi.this.indxelemfull, 'fitt')
+        gdatmodi.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gdatmodi.this.indxelemfull, 'fitt')
 
 
 def initcompfromstat(gdat, gdatmodi, namerefr):
     
     for l in gmod.indxpopl:
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
             minm = getattr(gdat.fitt.minmpara, nameparagenrelem)
             maxm = getattr(gdat.fitt.maxmpara, nameparagenrelem)
             try:
                 comp = getattr(gdat, namerefr + nameparagenrelem)[l][0, :]
-                if gmod.listscalparagenrelem[l][g] == 'self' or gmod.listscalparagenrelem[l][g] == 'logt':
-                    fact = getattr(gdat.fitt, 'fact' + nameparagenrelem)
-                    if gmod.listscalparagenrelem[l][g] == 'self':
-                        compunit = cdfn_self(comp, minm, fact)
-                    if gmod.listscalparagenrelem[l][g] == 'logt':
-                        compunit = cdfn_logt(comp, minm, fact)
-                if gmod.listscalparagenrelem[l][g] == 'expo':
+                if gmod.scalpara.genr.elem.odim[l][g] == 'self' or gmod.scalpara.genr.elem.odim[l][g] == 'logt':
+                    if gmod.scalpara.genr.elem.odim[l][g] == 'self':
+                        compunit = cdfn_self(comp, minm, maxm)
+                    if gmod.scalpara.genr.elem.odim[l][g] == 'logt':
+                        compunit = cdfn_logt(comp, minm, maxm)
+                if gmod.scalpara.genr.elem.odim[l][g] == 'expo':
                     scal = getattr(gdat.fitt, 'gangdistsexp')
                     maxm = getattr(gdat.fitt.maxm, nameparagenrelem)
                     compunit = cdfn_expo(icdf, maxm, scal)
-                if gmod.listscalparagenrelem[l][g] == 'powr' or gmod.listscalparagenrelem[l][g] == 'igam':
-                    slop = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'slop')[l]]
-                    if gmod.listscalparagenrelem[l][g] == 'powr':
+                if gmod.scalpara.genr.elem.odim[l][g] == 'powr' or gmod.scalpara.genr.elem.odim[l][g] == 'igam':
+                    slop = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'slop')[l]]
+                    if gmod.scalpara.genr.elem.odim[l][g] == 'powr':
                         compunit = cdfn_powr(comp, minm, maxm, slop)
-                    if gmod.listscalparagenrelem[l][g] == 'igam':
+                    if gmod.scalpara.genr.elem.odim[l][g] == 'igam':
                         cutf = getattr(gdat, 'cutf' + nameparagenrelem)
                         compunit = cdfn_igam(comp, slop, cutf)
-                if gmod.listscalparagenrelem[l][g] == 'dpowslopbrek':
-                    brek = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'distbrek')[l]]
-                    sloplowr = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'sloplowr')[l]]
-                    slopuppr = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'slopuppr')[l]]
+                if gmod.scalpara.genr.elem.odim[l][g] == 'dpowslopbrek':
+                    brek = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'distbrek')[l]]
+                    sloplowr = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'sloplowr')[l]]
+                    slopuppr = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'slopuppr')[l]]
                     compunit = cdfn_powr(comp, minm, maxm, brek, sloplowr, slopuppr)
-                if gmod.listscalparagenrelem[l][g] == 'gaus':
-                    distmean = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'distmean')[l]]
-                    diststdv = gdatmodi.this.paragenrscalfull[getattr(gdat.fitt, 'indxparagenrbase' + nameparagenrelem + 'diststdv')[l]]
+                if gmod.scalpara.genr.elem.odim[l][g] == 'gaus':
+                    distmean = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'distmean')[l]]
+                    diststdv = gdatmodi.this.para.genr.scalfull[getattr(gdat.fitt.indxpara, 'genrbase' + nameparagenrelem + 'diststdv')[l]]
                     compunit = cdfn_gaus(comp, distmean, diststdv)
             except:
                 if gdat.typeverb > 0:
                     print('Initialization from the reference catalog failed for %s. Sampling randomly...' % nameparagenrelem)
-                compunit = np.random.rand(gdatmodi.this.paragenrscalfull[gmod.indxpara.numbelem[l]].astype(int))
-            gdatmodi.this.paragenrunitfull[gdatmodi.this.indxparagenrfullelem[l][nameparagenrelem]] = compunit
+                compunit = np.random.rand(gdatmodi.this.para.genr.scalfull[gmod.indxpara.numbelem[l]].astype(int))
+            gdatmodi.this.para.genr.unitfull[gdatmodi.this.indxpara.genrfullelem[l][nameparagenrelem]] = compunit
 
 
 ### find the set of pixels in proximity to a position on the map
@@ -599,7 +599,7 @@ def retr_indxpixl(gdat, bgal, lgal):
 
     if gdat.typepixl == 'heal':
         indxpixl = gdat.pixlcnvt[hp.ang2pix(gdat.numbsideheal, np.pi / 2. - bgal, lgal)]
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if (indxpixl == -1).any():  
                 raise Exception('pixlcnvt went negative!')
 
@@ -1075,20 +1075,26 @@ def show_paragenrscalfull(gdat, gdatmodi, strgstat='this', strgmodl='fitt', indx
     print('strgmodl: ' + strgmodl)
     print('strgstat: ' + strgstat)
     print('%5s %20s %30s %30s %15s' % ('index', 'namepara', 'paragenrunitfull', 'paragenrscalfull', 'scalpara'))
-    for k in gmod.indxparagenrfull:
+    for k in gmod.indxpara.genrfull:
         
         if indxsampshow is not None and not k in indxsampshow:
             continue
         
-        if gmod.numbparaelem > 0:
+        if gdat.booldiag:
+            if gmod.namepara.genr.full.totl[k] == '0.0':
+                raise Exception('')
+            if gmod.scalpara.genr.full.totl[k] == '0.0':
+                raise Exception('')
+        
+        if gmod.numbpara.totl.elem.popl > 0:
             
             booltemp = False
             for l in gmod.indxpopl:
-                if k == gmod.indxparagenrelemsing[l][0]:
+                if k == gmod.indxpara.genr.elemsing[l][0]:
                     booltemp = True
             if booltemp:
                 print('')
-        print('%5d %20s %30g %30g %15s' % (k, gmod.namepara.genrfull[k], gmodstat.paragenrunitfull[k], gmodstat.paragenrscalfull[k], gmod.scalpara.genrfull[k]))
+        print('%5d %20s %30g %30g %15s' % (k, gmod.namepara.genr.full.totl[k], gmodstat.paragenrunitfull[k], gmodstat.paragenrscalfull[k], gmod.scalpara.genr.full.totl[k]))
     
 
 def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, brth=False, deth=False):
@@ -1104,8 +1110,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     gmodthis = getattr(gdatobjt, 'this')
     gmodnext = getattr(gdatobjt, 'next')
     
-    if gmod.numbparaelem > 0:
-        if gdat.booldiagmode:
+    if gmod.numbpara.totl.elem.popl > 0:
+        if gdat.booldiag:
             for l in gmod.indxpopl:
                 if len(gmodthis.indxelemfull[l]) > len(set(gmodthis.indxelemfull[l])):
                     raise Exception('Repeating entry in the element index list!')
@@ -1118,7 +1124,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     gdatmodi.this.boolpropfilt = True 
 
     # index of the population in which a transdimensional proposal will be attempted
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if thisindxpopl is None:
             gdatmodi.indxpopltran = np.random.choice(gmod.indxpopl)
         else:
@@ -1126,7 +1132,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         numbelemtemp = gmodthis.paragenrscalfull[gmod.indxpara.numbelem[gdatmodi.indxpopltran]]
     
     # forced death or birth does not check for the prior on the dimensionality on purpose!
-    if gmod.numbparaelem > 0 and (deth or brth or np.random.rand() < gdat.probtran) and \
+    if gmod.numbpara.totl.elem.popl > 0 and (deth or brth or np.random.rand() < gdat.probtran) and \
                         not (numbelemtemp == gmod.minmpara.numbelem[gdatmodi.indxpopltran] and numbelemtemp == gmod.maxmpara.numbelem[gdatmodi.indxpopltran]):
 
         if brth or deth or np.random.rand() < gdat.probbrde or \
@@ -1156,7 +1162,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
                     gdatmodi.this.indxproptype = 4
     else:
         
-        if gdat.booldiagmode and (gdatmodi.stdp > 1e2).any():
+        if gdat.booldiag and (gdatmodi.stdp > 1e2).any():
             raise Exception('')
 
         thisindxparagenrfullelemconc = []
@@ -1164,17 +1170,17 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             thisindxparagenrfullelemconc.append(thisindxparagenrfullelem[l]['full'])
 
         # get the indices of the current parameter vector
-        if gmod.numbparaelem > 0:
-            thisindxsampfull = np.concatenate([gmod.indxparagenrbasestdv] + thisindxparagenrfullelemconc)
+        if gmod.numbpara.totl.elem.popl > 0:
+            thisindxsampfull = np.concatenate([gmod.indxpara.genr.pert.base] + thisindxparagenrfullelemconc)
         else:
-            thisindxsampfull = gmod.indxparagenrbasestdv
+            thisindxsampfull = gmod.indxpara.genr.pert.base
         
         thisstdp = gdatmodi.stdp[gdat.indxstdppara[thisindxsampfull]]
         if not np.isfinite(thisstdp).all():
             raise Exception('')
         gdatmodi.this.indxproptype = 0
     
-    if gdat.booldiagmode and gdat.probspmr == 0 and gdatmodi.this.indxproptype > 2:
+    if gdat.booldiag and gdat.probspmr == 0 and gdatmodi.this.indxproptype > 2:
         raise Exception('')
 
     if gdat.typeverb > 1:
@@ -1183,12 +1189,12 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
 
     if gdatmodi.this.indxproptype == 0:
         gmodnext.paragenrunitfull = np.copy(gmodthis.paragenrunitfull)
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             gmodnext.indxelemfull = gmodthis.indxelemfull
     if gdatmodi.this.indxproptype > 0:
         gmodnext.paragenrunitfull = np.copy(gmodthis.paragenrunitfull)
         gmodnext.paragenrscalfull = np.copy(gmodthis.paragenrscalfull)
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             gmodnext.indxelemfull = deepcopy(gmodthis.indxelemfull)
     
     if gdatmodi.this.indxproptype == 0:
@@ -1214,7 +1220,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         diffparagenrunitfull = np.random.normal(size=thisindxsampfull.size) * thisstdp
         gmodnext.paragenrunitfull[thisindxsampfull] = gmodthis.paragenrunitfull[thisindxsampfull] + diffparagenrunitfull
         
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if (gmodnext.paragenrunitfull[gmod.numbpopl:] == 1).any():
                 raise Exception('')
 
@@ -1228,7 +1234,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         if indxsamplowr.size > 0:
             gmodnext.paragenrunitfull[gmod.numbpopl+indxsamplowr] = abs(gmodnext.paragenrunitfull[gmod.numbpopl+indxsamplowr]) % 1.
         
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if (gmodnext.paragenrunitfull[gmod.numbpopl:] == 1).any():
                 raise Exception('')
 
@@ -1239,7 +1245,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         if indxsampuppr.size > 0:
             gmodnext.paragenrunitfull[gmod.numbpopl+indxsampuppr] = (gmodnext.paragenrunitfull[gmod.numbpopl+indxsampuppr] - 1.) % 1.
         
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if (gmodnext.paragenrunitfull[gmod.numbpopl:] == 1).any():
                 raise Exception('')
 
@@ -1251,7 +1257,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
 
         gmodnext.paragenrscalfull = icdf_paragenrscalfull(gdat, strgmodl, gmodnext.paragenrunitfull, thisindxparagenrfullelem)
 
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if not np.isfinite(gmodnext.paragenrunitfull).all():
                 raise Exception('')
         
@@ -1267,9 +1273,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     if gdatmodi.this.indxproptype > 0:
         gdatmodi.indxsamptran = []
         if gdatmodi.this.indxproptype == 1:
-            gdatmodi.this.auxipara = np.random.rand(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
+            gdatmodi.this.auxipara = np.random.rand(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran])
         elif gdatmodi.this.indxproptype != 2:
-            gdatmodi.this.auxipara = np.empty(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
+            gdatmodi.this.auxipara = np.empty(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran])
     
     if gdatmodi.this.indxproptype == 1 or gdatmodi.this.indxproptype == 3:
        
@@ -1281,8 +1287,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         gdatmodi.indxelemfullmodi = [gmodthis.paragenrscalfull[gmod.indxpara.numbelem[gdatmodi.indxpopltran]].astype(int)]
        
         # sample indices to add the new element
-        gdatmodi.indxparagenrfullelemaddd = retr_indxparaelem(gmod, gdatmodi.indxpopltran, gdatmodi.indxelemmodi[0])
-        gdatmodi.indxsamptran.append(gdatmodi.indxparagenrfullelemaddd)
+        gdatmodi.indxpara.genrfullelemaddd = retr_indxparagenrelem(gmod, gdatmodi.indxpopltran, gdatmodi.indxelemmodi[0])
+        gdatmodi.indxsamptran.append(gdatmodi.indxpara.genrfullelemaddd)
         gmodnext.indxelemfull[gdatmodi.indxpopltran].append(gdatmodi.indxelemmodi[0])
     if gdatmodi.this.indxproptype == 1:
         
@@ -1308,15 +1314,15 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         gdatmodi.indxelemmodi.append(gmodthis.indxelemfull[gdatmodi.indxpopltran][dethindxindxelem])
         gdatmodi.indxelemfullmodi.append(dethindxindxelem)
         # parameter indices to be killed
-        indxparagenrfullelemdeth = retr_indxparaelem(gmod, gdatmodi.indxpopltran, gdatmodi.indxelemmodi[0])
+        indxparagenrfullelemdeth = retr_indxparagenrelem(gmod, gdatmodi.indxpopltran, gdatmodi.indxelemmodi[0])
         gdatmodi.indxsamptran.append(indxparagenrfullelemdeth)
         
         gdatmodi.this.auxipara = gmodthis.paragenrscalfull[indxparagenrfullelemdeth]
 
     if gdatmodi.this.indxproptype > 2:
-        gdatmodi.comppare = np.empty(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
-        gdatmodi.compfrst = np.empty(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
-        gdatmodi.compseco = np.empty(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
+        gdatmodi.comppare = np.empty(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran])
+        gdatmodi.compfrst = np.empty(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran])
+        gdatmodi.compseco = np.empty(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran])
     
     # split
     if gdatmodi.this.indxproptype == 3:
@@ -1328,25 +1334,25 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         gdatmodi.indxelemmodi.insert(0, gdatmodi.indxelemsplt)
 
         # sample indices for the first element
-        gdatmodi.indxparagenrfullelemfrst = retr_indxparaelem(gmod, l, gdatmodi.indxelemmodi[0])
-        gdatmodi.indxsamptran.insert(0, gdatmodi.indxparagenrfullelemfrst)
+        gdatmodi.indxpara.genrfullelemfrst = retr_indxparagenrelem(gmod, l, gdatmodi.indxelemmodi[0])
+        gdatmodi.indxsamptran.insert(0, gdatmodi.indxpara.genrfullelemfrst)
         
         # sample indices for the second element
-        gdatmodi.indxsampseco = gdatmodi.indxparagenrfullelemaddd
+        gdatmodi.indxsampseco = gdatmodi.indxpara.genrfullelemaddd
         
         # take the parent element parameters
-        for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             gdatmodi.comppare[k] = np.copy(gmodthis.paragenrscalfull[thisindxparagenrfullelem[gdatmodi.indxpopltran][nameparagenrelem][gdatmodi.indxelemfullmodi[0]]])
         
         # draw the auxiliary parameters
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             if gmod.boolcompposi[gdatmodi.indxpopltran][g]:
                 gdatmodi.this.auxipara[g] = np.random.randn() * gdat.radispmr
-            elif g == gmod.indxparagenrelemampl[gdatmodi.indxpopltran]:
+            elif g == gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]:
                 gdatmodi.this.auxipara[g] = np.random.rand()
             else:
-                gdatmodi.this.auxipara[g] = icdf_trap(gdat, strgmodl, np.random.rand(), gmodthis.paragenrscalfull, gmod.listscalparagenrelem[gdatmodi.indxpopltran][g], \
-                                                                                                     gmod.namepara.genrelem[gdatmodi.indxpopltran][g], l)
+                gdatmodi.this.auxipara[g] = icdf_trap(gdat, strgmodl, np.random.rand(), gmodthis.paragenrscalfull, gmod.scalpara.genr.elem.odim[gdatmodi.indxpopltran][g], \
+                                                                                                     gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran][g], l)
 
         # determine the new parameters
         if gmod.typeelem[gdatmodi.indxpopltran].startswith('lghtline'):
@@ -1354,17 +1360,17 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         else:
             gdatmodi.compfrst[0] = gdatmodi.comppare[0] + (1. - gdatmodi.this.auxipara[2]) * gdatmodi.this.auxipara[0]
             gdatmodi.compfrst[1] = gdatmodi.comppare[1] + (1. - gdatmodi.this.auxipara[2]) * gdatmodi.this.auxipara[1]
-        gdatmodi.compfrst[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] = gdatmodi.this.auxipara[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] * \
-                                                                                                        gdatmodi.comppare[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]
+        gdatmodi.compfrst[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] = gdatmodi.this.auxipara[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] * \
+                                                                                                        gdatmodi.comppare[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]
         if gmod.typeelem[gdatmodi.indxpopltran].startswith('lghtline'):
             gdatmodi.compseco[0] = gdatmodi.comppare[0] - gdatmodi.this.auxipara[1] * gdatmodi.this.auxipara[0]
         else:
             gdatmodi.compseco[0] = gdatmodi.comppare[0] - gdatmodi.this.auxipara[2] * gdatmodi.this.auxipara[0]
             gdatmodi.compseco[1] = gdatmodi.comppare[1] - gdatmodi.this.auxipara[2] * gdatmodi.this.auxipara[1]
-        gdatmodi.compseco[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] = (1. - gdatmodi.this.auxipara[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]) * \
-                                                                                                        gdatmodi.comppare[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]
-        for g in range(gmod.numbparagenrelemsing[gdatmodi.indxpopltran]):
-            if not gmod.boolcompposi[gdatmodi.indxpopltran][g] and g != gmod.indxparagenrelemampl[gdatmodi.indxpopltran]:
+        gdatmodi.compseco[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] = (1. - gdatmodi.this.auxipara[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]) * \
+                                                                                                        gdatmodi.comppare[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]
+        for g in range(gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran]):
+            if not gmod.boolcompposi[gdatmodi.indxpopltran][g] and g != gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]:
                 gdatmodi.compfrst[g] = gdatmodi.comppare[g]
                 gdatmodi.compseco[g] = gdatmodi.this.auxipara[g]
        
@@ -1382,8 +1388,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             if np.fabs(gdatmodi.compfrst[0]) > maxmlgal or np.fabs(gdatmodi.compseco[0]) > maxmlgal or \
                                                                     np.fabs(gdatmodi.compfrst[1]) > maxmbgal or np.fabs(gdatmodi.compseco[1]) > maxmbgal:
                 gdatmodi.this.boolpropfilt = False
-        if gdatmodi.compfrst[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] < getattr(gmod.minmpara, gmod.nameparagenrelemampl[gdatmodi.indxpopltran]) or \
-           gdatmodi.compseco[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] < getattr(gmod.minmpara, gmod.nameparagenrelemampl[gdatmodi.indxpopltran]):
+        if gdatmodi.compfrst[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] < getattr(gmod.minmpara, gmod.nameparagenrelemampl[gdatmodi.indxpopltran]) or \
+           gdatmodi.compseco[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] < getattr(gmod.minmpara, gmod.nameparagenrelemampl[gdatmodi.indxpopltran]):
             gdatmodi.this.boolpropfilt = False
         if gdat.typeverb > 1:
             if not gdatmodi.this.boolpropfilt:
@@ -1401,32 +1407,32 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         probmerg = retr_probmerg(gdat, gdatmodi, gmodthis.paragenrscalfull, thisindxparagenrfullelem, gdatmodi.indxpopltran, 'seco', typeelem=gmod.typeelem)
         
         indxelemfulltemp = np.arange(len(gmodthis.indxelemfull[gdatmodi.indxpopltran]))
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if indxelemfulltemp.size < 2:
                 raise Exception('')
         gdatmodi.indxelemfullmergseco = np.random.choice(np.setdiff1d(indxelemfulltemp, np.array([gdatmodi.indxelemfullmergfrst])), p=probmerg)
         gdatmodi.indxelemfullmodi = np.sort(np.array([gdatmodi.indxelemfullmergfrst, gdatmodi.indxelemfullmergseco]))
         
         # parameters of the first element to be merged
-        for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             ## first
             gdatmodi.compfrst[k] = gmodthis.paragenrscalfull[thisindxparagenrfullelem[gdatmodi.indxpopltran][nameparagenrelem][gdatmodi.indxelemfullmodi[0]]]
         
         # determine indices of the modified elements in the sample vector
         ## first element
         # temp -- this would not work for multiple populations !
-        gdatmodi.indxparagenrfullelemfrst = retr_indxparaelem(gmod, l, gdatmodi.mergindxelemfrst)
-        gdatmodi.indxsamptran.append(gdatmodi.indxparagenrfullelemfrst)
+        gdatmodi.indxpara.genrfullelemfrst = retr_indxparagenrelem(gmod, l, gdatmodi.mergindxelemfrst)
+        gdatmodi.indxsamptran.append(gdatmodi.indxpara.genrfullelemfrst)
 
         ## second element index to be merged
         gdatmodi.mergindxelemseco = gmodthis.indxelemfull[gdatmodi.indxpopltran][gdatmodi.indxelemfullmergseco]
        
         ## second element
-        gdatmodi.indxparagenrfullelemseco = retr_indxparaelem(gmod, l, gdatmodi.mergindxelemseco)
-        gdatmodi.indxsamptran.append(gdatmodi.indxparagenrfullelemseco)
+        gdatmodi.indxpara.genrfullelemseco = retr_indxparagenrelem(gmod, l, gdatmodi.mergindxelemseco)
+        gdatmodi.indxsamptran.append(gdatmodi.indxpara.genrfullelemseco)
         
         # parameters of the elements to be merged
-        for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             ## second
             gdatmodi.compseco[k] = gmodthis.paragenrscalfull[thisindxparagenrfullelem[gdatmodi.indxpopltran][nameparagenrelem][gdatmodi.indxelemfullmodi[1]]]
 
@@ -1439,16 +1445,16 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         else:
             gdatmodi.this.auxipara[0] = gdatmodi.compseco[0] - gdatmodi.compfrst[0]
             gdatmodi.this.auxipara[1] = gdatmodi.compseco[1] - gdatmodi.compfrst[1]
-        gdatmodi.this.auxipara[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] = gdatmodi.compfrst[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] / \
-                                        (gdatmodi.compfrst[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] + gdatmodi.compseco[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]) 
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
-            if not gmod.boolcompposi[gdatmodi.indxpopltran][g] and g != gmod.indxparagenrelemampl[gdatmodi.indxpopltran]:
+        gdatmodi.this.auxipara[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] = gdatmodi.compfrst[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] / \
+                                        (gdatmodi.compfrst[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] + gdatmodi.compseco[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]) 
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
+            if not gmod.boolcompposi[gdatmodi.indxpopltran][g] and g != gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]:
                 gdatmodi.this.auxipara[g] = gdatmodi.compseco[g]
 
         # merged element
-        gdatmodi.comppare[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] = gdatmodi.compfrst[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] + \
-                                                                                                gdatmodi.compseco[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]
-        if gdatmodi.comppare[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]] > getattr(gdat, 'maxm' + gmod.nameparagenrelemampl[gdatmodi.indxpopltran]):
+        gdatmodi.comppare[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] = gdatmodi.compfrst[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] + \
+                                                                                                gdatmodi.compseco[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]
+        if gdatmodi.comppare[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]] > getattr(gdat, 'maxm' + gmod.nameparagenrelemampl[gdatmodi.indxpopltran]):
             gdatmodi.this.boolpropfilt = False
             if gdat.typeverb > 1:
                 print('Proposal rejected due to falling outside the prior.')
@@ -1459,11 +1465,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         else:
             gdatmodi.comppare[0] = gdatmodi.compfrst[0] + (1. - gdatmodi.this.auxipara[2]) * (gdatmodi.compseco[0] - gdatmodi.compfrst[0])
             gdatmodi.comppare[1] = gdatmodi.compfrst[1] + (1. - gdatmodi.this.auxipara[2]) * (gdatmodi.compseco[1] - gdatmodi.compfrst[1])
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             if gmod.boolcompposi[gdatmodi.indxpopltran][g]:
-                gdatmodi.comppare[g] = gdatmodi.compfrst[g] + (1. - gdatmodi.this.auxipara[gmod.indxparagenrelemampl[gdatmodi.indxpopltran]]) * \
+                gdatmodi.comppare[g] = gdatmodi.compfrst[g] + (1. - gdatmodi.this.auxipara[gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]]) * \
                                                                                             (gdatmodi.compseco[g] - gdatmodi.compfrst[g])
-            elif g == gmod.indxparagenrelemampl[gdatmodi.indxpopltran]:
+            elif g == gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]:
                 gdatmodi.comppare[g] = gdatmodi.compfrst[g] + gdatmodi.compseco[g]
             else:
                 gdatmodi.comppare[g] = gdatmodi.compfrst[g]
@@ -1477,8 +1483,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             print('gdatmodi.indxelemfullmergfrst: ', gdatmodi.indxelemfullmergfrst)
             print('mergindxseco: ', gdatmodi.mergindxelemseco)
             print('gdatmodi.indxelemfullmergseco: ', gdatmodi.indxelemfullmergseco)
-            print('indxparagenrfullelemfrst: ', gdatmodi.indxparagenrfullelemfrst)
-            print('indxparagenrfullelemseco: ', gdatmodi.indxparagenrfullelemseco)
+            print('indxparagenrfullelemfrst: ', gdatmodi.indxpara.genrfullelemfrst)
+            print('indxparagenrfullelemseco: ', gdatmodi.indxpara.genrfullelemseco)
 
     if gdat.typeverb > 1 and (gdatmodi.this.indxproptype == 3 or gdatmodi.this.boolpropfilt and gdatmodi.this.indxproptype == 4):
         
@@ -1505,7 +1511,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             print('auxipara[0][1]: ', gdat.anglfact * gdatmodi.this.auxipara[1])
             print('auxipara[0][2]: ', gdatmodi.this.auxipara[2])
                 
-    if gmod.numbparaelem > 0 and gdatmodi.this.indxproptype > 0 and gdatmodi.this.boolpropfilt:
+    if gmod.numbpara.totl.elem.popl > 0 and gdatmodi.this.indxproptype > 0 and gdatmodi.this.boolpropfilt:
         # change the number of elements
         if gdatmodi.this.indxproptype == 1 or gdatmodi.this.indxproptype == 3:
             gmodnext.paragenrscalfull[gmod.indxpara.numbelem[gdatmodi.indxpopltran]] = gmodthis.paragenrscalfull[gmod.indxpara.numbelem[gdatmodi.indxpopltran]] + 1
@@ -1532,7 +1538,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         if gdatmodi.this.indxproptype == 4:
             gdatmodi.indxsampmodi = np.concatenate((np.array([gmod.indxpara.numbelem[gdatmodi.indxpopltran]]), gdatmodi.indxsamptran[0]))
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gdatmodi.this.indxproptype == 0:
             indxparagenrfullelem = thisindxparagenrfullelem
         else:
@@ -1540,7 +1546,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     if gdat.typeverb > 1:
         print('gdatmodi.indxsampmodi')
         print(gdatmodi.indxsampmodi)
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             print('gmodthis.indxelemfull')
             print(gmodthis.indxelemfull)
             print('gmodthis.paragenrscalfull[gmod.indxpara.numbelem[gdatmodi.indxpopltran]].astype(int)')
@@ -1556,13 +1562,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             print(indxparagenrfullelem)
     
     if gdatmodi.this.indxproptype == 1:
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             gmodnext.paragenrscalfull[gdatmodi.indxsamptran[0][g]] = icdf_trap(gdat, strgmodl, gdatmodi.this.auxipara[g], gmodthis.paragenrscalfull, \
-                                                                            gmod.listscalparagenrelem[gdatmodi.indxpopltran][g], \
-                                                                            gmod.namepara.genrelem[gdatmodi.indxpopltran][g], gdatmodi.indxpopltran)
+                                                                            gmod.scalpara.genr.elem.odim[gdatmodi.indxpopltran][g], \
+                                                                            gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran][g], gdatmodi.indxpopltran)
 
-    if gdat.booldiagmode:
-        if gmod.numbparaelem > 0:
+    if gdat.booldiag:
+        if gmod.numbpara.totl.elem.popl > 0:
             for l in gmod.indxpopl:
                 if gmodthis.paragenrunitfull[gmod.indxpara.numbelem[l]] != round(gmodthis.paragenrunitfull[gmod.indxpara.numbelem[l]]):
                     print('l')
@@ -1584,7 +1590,7 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             #size = np.where(((gmodthis.paragenrscalfull == 0.) & (diffparagenrscalfull > 0.)) | ((gmodthis.paragenrscalfull != 0.) & (diffparagenrscalfull / gmodthis.paragenrscalfull > 0)))[0].size
             size = np.where(diffparagenrscalfull != 0.)[0].size
             if gdatmodi.this.indxproptype == 1:
-                if size - 1 != gmod.numbparagenrelemsing[gdatmodi.indxpopltran]:
+                if size - 1 != gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran]:
                     raise Exception('')
     
 
@@ -1598,7 +1604,7 @@ def calc_probprop(gdat, gdatmodi):
         gdatmodi.this.lpau = 0.
     elif gdatmodi.this.indxproptype == 1 or gdatmodi.this.indxproptype == 2:
         gdatmodi.this.lpau = gdatmodi.next.lpritotl - gdatmodi.this.lpritotl
-        lpautemp = 0.5 * gdat.priofactdoff * gmod.numbparagenrelemsing[gdatmodi.indxpopltran]
+        lpautemp = 0.5 * gdat.priofactdoff * gmod.numbpara.genr.elem.sing[gdatmodi.indxpopltran]
         if gdatmodi.this.indxproptype == 1:
             gdatmodi.this.lpau += lpautemp
         if gdatmodi.this.indxproptype == 2:
@@ -1606,26 +1612,26 @@ def calc_probprop(gdat, gdatmodi):
     elif gdatmodi.this.indxproptype == 3 or gdatmodi.this.indxproptype == 4:
         gdatmodi.this.lpau = 0.
         dictelemtemp = [dict()]
-        for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[gdatmodi.indxpopltran]):
+        for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran]):
             if gmod.gmod.boolcompposi[gdatmodi.indxpopltran][g]:
                 gdatmodi.this.lpau += -0.5 * np.log(2. * np.pi * gdat.radispmr**2) - 0.5 * (gdatmodi.this.auxipara[g] / gdat.radispmr)**2
-            elif g != gmod.indxparagenrelemampl[gdatmodi.indxpopltran]:
+            elif g != gmod.indxpara.genrelemampl[gdatmodi.indxpopltran]:
                 dictelemtemp[0][nameparagenrelem] = gdatmodi.this.auxipara[g]
                 gdatmodi.this.lpau += retr_lprielem(gdat, 'fitt', gdatmodi.indxpopltran, g, \
-                                            gmod.namepara.genrelem[gdatmodi.indxpopltran][g], gmod.listscalparagenrelem[gdatmodi.indxpopltran][g], \
-                                            gdatmodi.this.paragenrscalfull, dictelemtemp, [1])
+                                            gmod.namepara.genr.elem.odim[gdatmodi.indxpopltran][g], gmod.scalpara.genr.elem.odim[gdatmodi.indxpopltran][g], \
+                                            gdatmodi.this.para.genr.scalfull, dictelemtemp, [1])
         if gdatmodi.this.indxproptype == 4:
             gdatmodi.this.lpau *= -1.
 
     if gdatmodi.this.indxproptype > 2 and gdatmodi.this.boolpropfilt:
         ## the ratio of the probability of the reverse and forward proposals, and
         if gdatmodi.this.indxproptype == 3:
-            gdatmodi.this.probmergtotl = retr_probmerg(gdat, gdatmodi, gdatmodi.next.paragenrscalfull, gdatmodi.next.indxparagenrfullelem, gdatmodi.indxpopltran, 'pair', \
+            gdatmodi.this.probmergtotl = retr_probmerg(gdat, gdatmodi, gdatmodi.next.paragenrscalfull, gdatmodi.next.indxpara.genrfullelem, gdatmodi.indxpopltran, 'pair', \
                                                                                typeelem=gmod.typeelem)
             gdatmodi.this.ltrp = np.log(gdatmodi.this.numbelem[gdatmodi.indxpopltran] + 1) + np.log(gdatmodi.this.probmergtotl)
 
         else:
-            gdatmodi.this.probmergtotl = retr_probmerg(gdat, gdatmodi, gdatmodi.this.paragenrscalfull, gdatmodi.this.indxparagenrfullelem, gdatmodi.indxpopltran, 'pair', \
+            gdatmodi.this.probmergtotl = retr_probmerg(gdat, gdatmodi, gdatmodi.this.para.genr.scalfull, gdatmodi.this.indxpara.genrfullelem, gdatmodi.indxpopltran, 'pair', \
                                                                                typeelem=gmod.typeelem)
             
             gdatmodi.this.ltrp = -np.log(gdatmodi.this.numbelem[gdatmodi.indxpopltran]) - np.log(gdatmodi.this.probmergtotl)
@@ -1652,30 +1658,30 @@ def retr_indxparagenrfullelem(gdat, indxelemfull, strgmodl):
     gmod = getattr(gdat, strgmodl)
     
     ## element parameters
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         indxparagenrfullelem = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
-            indxparagenrfulltemp = gmod.indxparagenrfulleleminit + gmod.numbparagenrelemcuml[l] + np.array(indxelemfull[l], dtype=int) * gmod.numbparagenrelemsing[l]
+            indxparagenrfulltemp = gmod.numbpara.genr.base.totl + gmod.numbpara.genr.elem.cuml[l] + np.array(indxelemfull[l], dtype=int) * gmod.numbpara.genr.elem.sing[l]
             
             cntr = tdpy.cntr()
             
             indxparagenrfullelem[l] = dict()
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
+            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
                 indxparagenrfullelem[l][nameparagenrelem] = indxparagenrfulltemp + cntr.incr()
-            indxparagenrfullelem[l]['full'] = np.repeat(indxparagenrfulltemp, gmod.numbparagenrelemsing[l]) + np.tile(gmod.indxparagenrelemsing[l], len(indxelemfull[l]))
+            indxparagenrfullelem[l]['full'] = np.repeat(indxparagenrfulltemp, gmod.numbpara.genr.elem.sing[l]) + np.tile(gmod.indxpara.genr.elemsing[l], len(indxelemfull[l]))
         
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             for l in gmod.indxpopl:
                 if len(indxparagenrfullelem[l]['full']) > 0:
-                    if np.amax(indxparagenrfullelem[l]['full']) > gmod.numbparagenrelem[l] + gmod.numbparagenrbase:
+                    if np.amax(indxparagenrfullelem[l]['full']) > gmod.numbpara.genr.elem.popl[l] + gmod.numbpara.genr.base.totl:
                         print('strgmodl')
                         print(strgmodl)
                         print('strgstat')
                         print(strgstat)
-                        print('gmod.numbparagenrbase')
-                        print(gmod.numbparagenrbase)
-                        print('gmod.numbparagenrelem[l]')
-                        print(gmod.numbparagenrelem[l])
+                        print('gmod.numbpara.genr.base.totl')
+                        print(gmod.numbpara.genr.base.totl)
+                        print('gmod.numbpara.genr.elem.popl[l]')
+                        print(gmod.numbpara.genr.elem.popl[l])
                         print('indxparagenrfullelem[l][full]')
                         summgene(indxparagenrfullelem[l]['full'])
                         print('gdat.fitt.minmpara.numbelempop0')
@@ -1740,18 +1746,18 @@ def retr_probmerg(gdat, gdatmodi, paragenrscalfull, indxparagenrfullelem, indxpo
             weigpair = retr_weigmergtdim(gdat, lgal, lgaltotl[gdatmodi.indxelemfullmodi[1]], bgal, bgaltotl[gdatmodi.indxelemfullmodi[1]])
         probmerg = weigpair / np.sum(listweigmerg[0]) + weigpair / np.sum(listweigmerg[1])
         
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if not np.isfinite(probmerg).all():
             raise Exception('Merge probability is infinite.')
 
     return probmerg
 
     
-def retr_indxparaelem(gmod, l, u):
+def retr_indxparagenrelem(gmod, l, u):
 
-    indxsamppnts = gmod.indxparagenrfulleleminit + gmod.numbparagenrelemcuml[l] + u * gmod.numbparagenrelemsing[l] + gmod.indxparagenrelemsing[l]
+    indxparagenrelem = gmod.numbpara.genr.base.totl + gmod.numbpara.genr.elem.cuml[l] + u * gmod.numbpara.genr.elem.sing[l] + gmod.indxpara.genr.elemsing[l]
 
-    return indxsamppnts
+    return indxparagenrelem
 
 
 def gang_detr():
@@ -1879,31 +1885,31 @@ def retr_condcatl(gdat):
         print(numbstks)
 
     cntr = 0 
-    arrystks = np.zeros((numbstks, gmod.numbparagenrelemtotl))
+    arrystks = np.zeros((numbstks, gmod.numbpara.genr.elemtotl))
     for n in gdat.indxsamptotl:
         indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gdat.listpostindxelemfull[n], 'fitt') 
         for l in gmod.indxpopl:
             for k in np.arange(len(gdat.listpostindxelemfull[n][l])):
-                for m, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
-                    arrystks[indxstks[n][l][k], m] = gdat.listpostparagenrscalfull[n, gmodstat.indxparagenrfullelem[l][nameparagenrelem][k]]
+                for m, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
+                    arrystks[indxstks[n][l][k], m] = gdat.listpostparagenrscalfull[n, gmodstat.indxpara.genrfullelem[l][nameparagenrelem][k]]
 
     if gdat.typeverb > 0:
         print('Constructing the distance matrix for %d stacked samples...' % arrystks.shape[0])
         timeinit = gdat.functime()
     
-    gdat.distthrs = np.empty(gmod.numbparagenrelemtotl)
+    gdat.distthrs = np.empty(gmod.numbpara.genr.elemtotl)
     for k, nameparagenrelem in enumerate(gmod.namepara.elem):
        # temp
        l = 0
        gdat.distthrs[k] = gdat.stdp[getattr(gdat, 'indxstdppop%d' % l + nameparagenrelem)]
     
     # construct lists of samples for each proposal type
-    listdisttemp = [[] for k in range(gmod.numbparagenrelemtotl)]
-    indxstksrows = [[] for k in range(gmod.numbparagenrelemtotl)]
-    indxstkscols = [[] for k in range(gmod.numbparagenrelemtotl)]
+    listdisttemp = [[] for k in range(gmod.numbpara.genr.elemtotl)]
+    indxstksrows = [[] for k in range(gmod.numbpara.genr.elemtotl)]
+    indxstkscols = [[] for k in range(gmod.numbpara.genr.elemtotl)]
     thisperc = 0
     cntr = 0
-    for k in gmod.indxparagenrelemtotl:
+    for k in gmod.indxpara.genrelemtotl:
         for n in range(numbstks):
             dist = np.fabs(arrystks[n, k] - arrystks[:, k])
             indxstks = np.where(dist < gdat.distthrs[k])[0]
@@ -1914,7 +1920,7 @@ def retr_condcatl(gdat):
                     indxstksrows[k].append(n)
                     indxstkscols[k].append(j)
             
-            nextperc = np.floor(100. * float(k * numbstks + n) / numbstks / gmod.numbparagenrelemtotl)
+            nextperc = np.floor(100. * float(k * numbstks + n) / numbstks / gmod.numbpara.genr.elemtotl)
             if nextperc > thisperc:
                 thisperc = nextperc
             if cntr > 1e6:
@@ -1927,7 +1933,7 @@ def retr_condcatl(gdat):
         if cntr > 1e6:
             break
     
-    listdist = [[] for k in range(gmod.numbparagenrelemtotl)]
+    listdist = [[] for k in range(gmod.numbpara.genr.elemtotl)]
     for k, nameparagenrelem in enumerate(gmod.namepara.elem):
         listdist[k] = scipy.sparse.csr_matrix((listdisttemp[k], (indxstksrows[k], indxstkscols[k])), shape=(numbstks, numbstks))
     
@@ -1990,7 +1996,7 @@ def retr_condcatl(gdat):
                 
                 if indxstkstemp.size > 0:
                     totl = np.zeros_like(indxstkstemp)
-                    for k in gmod.indxparagenrelemtotl:
+                    for k in gmod.indxpara.genrelemtotl:
                         temp = listdist[k][indxstkscntr, indxstkstemp].tonp.array()[0]
                         totl = totl + temp**2
 
@@ -1999,7 +2005,7 @@ def retr_condcatl(gdat):
                     indxstksthis = indxstkstemp[indxleft]
                 
                     thisbool = True
-                    for k in gmod.indxparagenrelemtotl:
+                    for k in gmod.indxpara.genrelemtotl:
                         if listdist[k][indxstkscntr, indxstksthis] > gdat.distthrs[k]:
                             thisbool = False
 
@@ -2018,7 +2024,7 @@ def retr_condcatl(gdat):
                 #        indxsamptotlcntr = indxtupl[indxstkstemp][0]
                 #        indxpoplcntr = indxtupl[indxstkstemp][1]
                 #        indxelemcntr = indxtupl[indxstkstemp][2]
-                #        gdatmodi.this.paragenrscalfull = gdat.listparagenrscalfull[indxsamptotlcntr, :]
+                #        gdatmodi.this.para.genr.scalfull = gdat.listparagenrscalfull[indxsamptotlcntr, :]
                 #        gdatmodi.this.indxelemfull[].append()
 
                 #    plot_genemaps(gdat, gdatmodi, 'this', 'cntpdata', strgpdfn, indxenerplot=0, indxevttplot=0, cond=True)
@@ -2033,7 +2039,7 @@ def retr_condcatl(gdat):
         gdat.dictglob['liststkscond'][r] = {}
         gdat.dictglob['poststkscond'].append([])
         gdat.dictglob['poststkscond'][r] = {}
-        for strgfeat in gmod.namepara.genrelem:
+        for strgfeat in gmod.namepara.genr.elem:
             gdat.dictglob['liststkscond'][r][strgfeat] = []
 
         # for each associated sample associated with the central stacked sample 
@@ -2042,14 +2048,14 @@ def retr_condcatl(gdat):
             indxpoplcntr = indxtupl[indxstksassc[r][k]][1]
             indxelemcntr = indxtupl[indxstksassc[r][k]][2]
             
-            for strgfeat in gmod.namepara.genrelem:
+            for strgfeat in gmod.namepara.genr.elem:
                 temp = getattr(gdat, 'list' + strgfeat)
                 if temp[indxsamptotlcntr][indxpoplcntr].size > 0:
                     temp = temp[indxsamptotlcntr][indxpoplcntr][..., indxelemcntr]
                     gdat.dictglob['liststkscond'][r][strgfeat].append(temp)
 
     for r in range(len(gdat.dictglob['liststkscond'])):
-        for strgfeat in gmod.namepara.genrelem:
+        for strgfeat in gmod.namepara.genr.elem:
             arry = np.stack(gdat.dictglob['liststkscond'][r][strgfeat], axis=0)
             gdat.dictglob['poststkscond'][r][strgfeat] = np.zeros(([3] + list(arry.shape[1:])))
             gdat.dictglob['poststkscond'][r][strgfeat][0, ...] = median(arry, axis=0)
@@ -2280,64 +2286,82 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
         if strgmodl == 'true':
             gmod.lablmodl = 'True'
 
-        # transdimensional element populations
         
+        for strgfeatpara in ['scal', 'indx', 'numb', 'name']:
+            featpara = getattr(gmod, strgfeatpara + 'para')
+            for strgtypepara in ['genr', 'deri', 'totl']:
+                setattr(featpara, strgtypepara, tdpy.gdatstrt())
+                featparatype = getattr(featpara, strgtypepara)
+                featparatype.base = tdpy.gdatstrt()
+                featparatype.base.totl = []
+                featparatype.elem = tdpy.gdatstrt()
+            
+                for strgtypeparadims in ['base', 'elem']:
+                    setattr(featparatype, strgtypeparadims, tdpy.gdatstrt())
+                    if strgtypepara == 'genr':
+                        featparatype.pert = tdpy.gdatstrt()
+        
+        # transdimensional element populations
         gmod.numbpopl = len(gmod.typeelem)
         gmod.indxpopl = np.arange(gmod.numbpopl)
         
-        if gdat.typeexpr != 'user':
-            # background component
-            gmod.numbback = 0
-            gmod.indxback = []
-            for c in range(len(gmod.typeback)):
-                if isinstance(gmod.typeback[c], str):
-                    if gmod.typeback[c].startswith('bfunfour') or gmod.typeback[c].startswith('bfunwfou'):
-                        namebfun = gmod.typeback[c][:8]
-                        ordrexpa = int(gmod.typeback[c][8:])
-                        numbexpa = 4 * ordrexpa**2
-                        indxexpa = np.arange(numbexpa)
-                        del gmod.typeback[c]
-                        for k in indxexpa:
-                            gmod.typeback.insert(c+k, namebfun + '%04d' % k)
-            gmod.numbback = len(gmod.typeback)
-            gmod.indxback = np.arange(gmod.numbback)
-            gmod.numbbacktotl = np.sum(gmod.numbback)
-            gmod.indxbacktotl = np.arange(gmod.numbbacktotl)
-            
-            # galaxy components
-            gmod.indxsersfgrd = np.arange(gmod.numbsersfgrd)
+        gmod.namepara.genr.elem.odim = [[] for l in gmod.indxpopl]
+        gmod.scalpara.genr.elem.odim = [[] for l in gmod.indxpopl]
+        gmod.namepara.genr.elem.odim = [[] for l in gmod.indxpopl]
+        gmod.namepara.deri.elem.odim = [[] for l in gmod.indxpopl]
+        
+        # background component
+        gmod.numbback = 0
+        gmod.indxback = []
+        for c in range(len(gmod.typeback)):
+            if isinstance(gmod.typeback[c], str):
+                if gmod.typeback[c].startswith('bfunfour') or gmod.typeback[c].startswith('bfunwfou'):
+                    namebfun = gmod.typeback[c][:8]
+                    ordrexpa = int(gmod.typeback[c][8:])
+                    numbexpa = 4 * ordrexpa**2
+                    indxexpa = np.arange(numbexpa)
+                    del gmod.typeback[c]
+                    for k in indxexpa:
+                        gmod.typeback.insert(c+k, namebfun + '%04d' % k)
+        gmod.numbback = len(gmod.typeback)
+        gmod.indxback = np.arange(gmod.numbback)
+        gmod.numbbacktotl = np.sum(gmod.numbback)
+        gmod.indxbacktotl = np.arange(gmod.numbbacktotl)
+        
+        # galaxy components
+        gmod.indxsersfgrd = np.arange(gmod.numbsersfgrd)
 
-            # name of the generative element parameter used for the amplitude
-            gmod.nameparagenrelemampl = [[] for l in gmod.indxpopl]
-            gmod.indxparagenrelemampl = [[] for l in gmod.indxpopl]
-            for l in gmod.indxpopl:
-                if gmod.typeelem[l] == 'lghtpntspuls':
-                    gmod.nameparagenrelemampl[l] = 'per0'
-                    gmod.indxparagenrelemampl[l] = 2
-                elif gmod.typeelem[l] == 'lghtpntsagnntrue':
-                    gmod.nameparagenrelemampl[l] = 'lum0'
-                    gmod.indxparagenrelemampl[l] = 2
-                elif gmod.typeelem[l].startswith('lghtline'):
-                    gmod.nameparagenrelemampl[l] = 'flux'
-                    gmod.indxparagenrelemampl[l] = 1
-                elif gmod.typeelem[l].startswith('lghtpnts'):
-                    gmod.nameparagenrelemampl[l] = 'flux'
-                    gmod.indxparagenrelemampl[l] = 2
-                elif gmod.typeelem[l].startswith('lghtgausbgrd'):
-                    gmod.nameparagenrelemampl[l] = 'flux'
-                    gmod.indxparagenrelemampl[l] = 2
-                if gmod.typeelem[l] == 'lens':
-                    gmod.nameparagenrelemampl[l] = 'defs'
-                    gmod.indxparagenrelemampl[l] = 2
-                if gmod.typeelem[l].startswith('clus'):
-                    gmod.nameparagenrelemampl[l] = 'nobj'
-                    gmod.indxparagenrelemampl[l] = 2
-                if gmod.typeelem[l] == 'lens':
-                    gmod.nameparagenrelemampl[l] = 'defs'
-                if gmod.typeelem[l] == 'clus':
-                    gmod.nameparagenrelemampl[l] = 'nobj'
-                if len(gmod.nameparagenrelemampl[l]) == 0:
-                    raise Exception('Amplitude feature undefined.')
+        # name of the generative element parameter used for the amplitude
+        gmod.nameparagenrelemampl = [[] for l in gmod.indxpopl]
+        gmod.indxpara.genrelemampl = [[] for l in gmod.indxpopl]
+        for l in gmod.indxpopl:
+            if gmod.typeelem[l] == 'lghtpntspuls':
+                gmod.nameparagenrelemampl[l] = 'per0'
+                gmod.indxpara.genrelemampl[l] = 2
+            elif gmod.typeelem[l] == 'lghtpntsagnntrue':
+                gmod.nameparagenrelemampl[l] = 'lum0'
+                gmod.indxpara.genrelemampl[l] = 2
+            elif gmod.typeelem[l].startswith('lghtline'):
+                gmod.nameparagenrelemampl[l] = 'flux'
+                gmod.indxpara.genrelemampl[l] = 1
+            elif gmod.typeelem[l].startswith('lghtpnts'):
+                gmod.nameparagenrelemampl[l] = 'flux'
+                gmod.indxpara.genrelemampl[l] = 2
+            elif gmod.typeelem[l].startswith('lghtgausbgrd'):
+                gmod.nameparagenrelemampl[l] = 'flux'
+                gmod.indxpara.genrelemampl[l] = 2
+            if gmod.typeelem[l] == 'lens':
+                gmod.nameparagenrelemampl[l] = 'defs'
+                gmod.indxpara.genrelemampl[l] = 2
+            if gmod.typeelem[l].startswith('clus'):
+                gmod.nameparagenrelemampl[l] = 'nobj'
+                gmod.indxpara.genrelemampl[l] = 2
+            if gmod.typeelem[l] == 'lens':
+                gmod.nameparagenrelemampl[l] = 'defs'
+            if gmod.typeelem[l] == 'clus':
+                gmod.nameparagenrelemampl[l] = 'nobj'
+            if len(gmod.nameparagenrelemampl[l]) == 0:
+                raise Exception('Amplitude feature undefined.')
     
         for featpara in gdat.listfeatpara:
             for strggrop in gdat.liststrggroppara:
@@ -2511,9 +2535,10 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                 spectype[l] = 'none'
         setp_varb(gdat, 'spectype', valu=spectype, strgmodl=strgmodl)
     
-        minmgwdt = 2. * gdat.sizepixl
-        maxmgwdt = gdat.maxmgangdata / 4.
-        setp_varb(gdat, 'gwdt', minm=minmgwdt, maxm=maxmgwdt, strgmodl=strgmodl)
+        if gdat.boolbinsspat:
+            minmgwdt = 2. * gdat.sizepixl
+            maxmgwdt = gdat.maxmgangdata / 4.
+            setp_varb(gdat, 'gwdt', minm=minmgwdt, maxm=maxmgwdt, strgmodl=strgmodl)
         setp_varb(gdat, 'aerr', minm=-100, maxm=100, strgmodl=strgmodl, popl='full')
     
         if gmod.boolelemlghtanyy:
@@ -2531,7 +2556,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                 else:
                     minmflux = 3e-9
                     maxmflux = 1e-6
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 minmflux = 0.1
                 maxmflux = 100.
             if gdat.typeexpr == 'hubb':
@@ -2687,7 +2712,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                 gmod.boolbfun = True
         
         if boolzero and not gmod.boolbfun:
-            raise Exception('At least one background template must be positive everynp.where.')
+            raise Exception('At least one background template must be positive everywhere.')
         
         # temp -- does not take into account dark hosts
         gmod.boolhost = gmod.typeemishost != 'none'
@@ -2754,7 +2779,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                                 stdvpsff = meanpsff * 0.1
                                 setp_varb(gdat, 'psffen%02devt%d' % (i, m), mean=meanpsff, stdv=stdvpsff, strgmodl=strgmodl)
             else:
-                if gdat.typeexpr == 'gene':
+                if gdat.typeexpr == 'gmix':
                     minmsigm = 0.01 / gdat.anglfact
                     maxmsigm = 0.1 / gdat.anglfact
                 if gdat.typeexpr == 'ferm':
@@ -2831,7 +2856,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
         gmod.listnamegcom = deepcopy(gmod.listnameecomtotl)
         if gmod.boollens:
             gmod.listnamegcom += ['bgrd']
-            if gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
+            if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
                 gmod.listnamegcom += ['bgrdgalx', 'bgrdexts']
         
         numbdiff = len(gmod.listnamediff)
@@ -2862,158 +2887,167 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
             print('Building elements for the %s model...' % strgtemp)
         
         # define the names and scalings of element parameters
-        gmod.namepara.genrelem = [[] for l in gmod.indxpopl]
-        gmod.listscalparagenrelem = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
             
             if gmod.typeelem[l].startswith('lghtline'):
-                gmod.namepara.genrelem[l] = ['elin']
-                gmod.listscalparagenrelem[l] = ['logt']
+                gmod.namepara.genr.elem.odim[l] = ['elin']
+                gmod.scalpara.genr.elem.odim[l] = ['logt']
             elif gmod.typespatdist[l] == 'diskscal':
-                gmod.namepara.genrelem[l] = ['lgal', 'bgal']
-                gmod.listscalparagenrelem[l] = ['self', 'dexp']
+                gmod.namepara.genr.elem.odim[l] = ['lgal', 'bgal']
+                gmod.scalpara.genr.elem.odim[l] = ['self', 'dexp']
             elif gmod.typespatdist[l] == 'gangexpo':
-                gmod.namepara.genrelem[l] = ['gang', 'aang']
-                gmod.listscalparagenrelem[l] = ['expo', 'self']
+                gmod.namepara.genr.elem.odim[l] = ['gang', 'aang']
+                gmod.scalpara.genr.elem.odim[l] = ['expo', 'self']
             elif gmod.typespatdist[l] == 'glc3':
-                gmod.namepara.genrelem[l] = ['dglc', 'thet', 'phii']
-                gmod.listscalparagenrelem[l] = ['powr', 'self', 'self']
+                gmod.namepara.genr.elem.odim[l] = ['dglc', 'thet', 'phii']
+                gmod.scalpara.genr.elem.odim[l] = ['powr', 'self', 'self']
             else:
-                gmod.namepara.genrelem[l] = ['lgal', 'bgal']
-                gmod.listscalparagenrelem[l] = ['self', 'self']
+                gmod.namepara.genr.elem.odim[l] = ['lgal', 'bgal']
+                gmod.scalpara.genr.elem.odim[l] = ['self', 'self']
             
             # amplitude
             if gmod.typeelem[l] == 'lghtpntsagnntrue':
-                gmod.namepara.genrelem[l] += ['lum0']
-                gmod.listscalparagenrelem[l] += ['dpowslopbrek']
+                gmod.namepara.genr.elem.odim[l] += ['lum0']
+                gmod.scalpara.genr.elem.odim[l] += ['dpowslopbrek']
             elif gmod.typeelem[l] == 'lghtpntspuls':
-                gmod.namepara.genrelem[l] += ['per0']
-                gmod.listscalparagenrelem[l] += ['lnormeanstdv']
+                gmod.namepara.genr.elem.odim[l] += ['per0']
+                gmod.scalpara.genr.elem.odim[l] += ['lnormeanstdv']
             elif gmod.typeelem[l].startswith('lght'):
-                gmod.namepara.genrelem[l] += ['flux']
-                gmod.listscalparagenrelem[l] += [gmod.typeprioflux[l]]
+                gmod.namepara.genr.elem.odim[l] += ['flux']
+                gmod.scalpara.genr.elem.odim[l] += [gmod.typeprioflux[l]]
             elif gmod.typeelem[l] == 'lens':
-                gmod.namepara.genrelem[l] += ['defs']
-                gmod.listscalparagenrelem[l] += ['powr']
+                gmod.namepara.genr.elem.odim[l] += ['defs']
+                gmod.scalpara.genr.elem.odim[l] += ['powr']
             elif gmod.typeelem[l].startswith('clus'):
-                gmod.namepara.genrelem[l] += ['nobj']
-                gmod.listscalparagenrelem[l] += ['powr']
+                gmod.namepara.genr.elem.odim[l] += ['nobj']
+                gmod.scalpara.genr.elem.odim[l] += ['powr']
            
             # shape
             if gmod.typeelem[l] == 'lghtgausbgrd' or gmod.typeelem[l] == 'clusvari':
-                gmod.namepara.genrelem[l] += ['gwdt']
-                gmod.listscalparagenrelem[l] += ['powr']
+                gmod.namepara.genr.elem.odim[l] += ['gwdt']
+                gmod.scalpara.genr.elem.odim[l] += ['powr']
             if gmod.typeelem[l] == 'lghtlinevoig':
-                gmod.namepara.genrelem[l] += ['sigm']
-                gmod.listscalparagenrelem[l] += ['logt']
-                gmod.namepara.genrelem[l] += ['gamm']
-                gmod.listscalparagenrelem[l] += ['logt']
+                gmod.namepara.genr.elem.odim[l] += ['sigm']
+                gmod.scalpara.genr.elem.odim[l] += ['logt']
+                gmod.namepara.genr.elem.odim[l] += ['gamm']
+                gmod.scalpara.genr.elem.odim[l] += ['logt']
             
             # others
             if gmod.typeelem[l] == 'lghtpntspuls':
-                gmod.namepara.genrelem[l] += ['magf']
-                gmod.listscalparagenrelem[l] += ['lnormeanstdv']
-                gmod.namepara.genrelem[l] += ['geff']
-                gmod.listscalparagenrelem[l] += ['self']
+                gmod.namepara.genr.elem.odim[l] += ['magf']
+                gmod.scalpara.genr.elem.odim[l] += ['lnormeanstdv']
+                gmod.namepara.genr.elem.odim[l] += ['geff']
+                gmod.scalpara.genr.elem.odim[l] += ['self']
             elif gmod.typeelem[l] == 'lghtpntsagnntrue':
-                gmod.namepara.genrelem[l] += ['dlos']
-                gmod.listscalparagenrelem[l] += ['powr']
+                gmod.namepara.genr.elem.odim[l] += ['dlos']
+                gmod.scalpara.genr.elem.odim[l] += ['powr']
 
             if gdat.numbener > 1 and gmod.typeelem[l].startswith('lghtpnts'):
                 if gmod.spectype[l] == 'colr':
                     for i in gdat.indxener:
                         if i == 0:
                             continue
-                        gmod.namepara.genrelem[l] += ['sindcolr%04d' % i]
-                        gmod.listscalparagenrelem[l] += ['self']
+                        gmod.namepara.genr.elem.odim[l] += ['sindcolr%04d' % i]
+                        gmod.scalpara.genr.elem.odim[l] += ['self']
                 else:
-                    gmod.namepara.genrelem[l] += ['sind']
-                    gmod.listscalparagenrelem[l] += ['self']
+                    gmod.namepara.genr.elem.odim[l] += ['sind']
+                    gmod.scalpara.genr.elem.odim[l] += ['self']
                     if gmod.spectype[l] == 'curv':
-                        gmod.namepara.genrelem[l] += ['curv']
-                        gmod.listscalparagenrelem[l] += ['self']
+                        gmod.namepara.genr.elem.odim[l] += ['curv']
+                        gmod.scalpara.genr.elem.odim[l] += ['self']
                     if gmod.spectype[l] == 'expc':
-                        gmod.namepara.genrelem[l] += ['expc']
-                        gmod.listscalparagenrelem[l] += ['self']
+                        gmod.namepara.genr.elem.odim[l] += ['expc']
+                        gmod.scalpara.genr.elem.odim[l] += ['self']
             if gmod.typeelem[l] == 'lens':
                 if gdat.variasca:
-                    gmod.namepara.genrelem[l] += ['asca']
-                    gmod.listscalparagenrelem[l] += ['self']
+                    gmod.namepara.genr.elem.odim[l] += ['asca']
+                    gmod.scalpara.genr.elem.odim[l] += ['self']
                 if gdat.variacut:
-                    gmod.namepara.genrelem[l] += ['acut']
-                    gmod.listscalparagenrelem[l] += ['self']
+                    gmod.namepara.genr.elem.odim[l] += ['acut']
+                    gmod.scalpara.genr.elem.odim[l] += ['self']
         
         # names of element parameters for each scaling
-        gmod.namepara.genrelemscal = [{} for l in gmod.indxpopl]
+        gmod.namepara.genr.elemscal = [{} for l in gmod.indxpopl]
         for l in gmod.indxpopl:
             for scaltype in gdat.listscaltype:
-                gmod.namepara.genrelemscal[l][scaltype] = []
-                for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
-                    if scaltype == gmod.listscalparagenrelem[l][k]:
-                        gmod.namepara.genrelemscal[l][scaltype].append(nameparagenrelem)
+                gmod.namepara.genr.elemscal[l][scaltype] = []
+                for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
+                    if scaltype == gmod.scalpara.genr.elem.odim[l][k]:
+                        gmod.namepara.genr.elemscal[l][scaltype].append(nameparagenrelem)
 
         # variables for which whose marginal distribution and pair-correlations will be plotted
-        gmod.namepara.derielemodim = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
-            gmod.namepara.derielemodim[l] = deepcopy(gmod.namepara.genrelem[l])
-            gmod.namepara.derielemodim[l] += ['deltllik']
+            gmod.namepara.deri.elem.odim[l] = ['deltllik']
+            
             if gdat.boolbinsspat:
-                if not 'lgal' in gmod.namepara.derielemodim[l]:
-                    gmod.namepara.derielemodim[l] += ['lgal']
-                if not 'bgal' in gmod.namepara.derielemodim[l]:
-                    gmod.namepara.derielemodim[l] += ['bgal']
-                if not 'gang' in gmod.namepara.derielemodim[l]:
-                    gmod.namepara.derielemodim[l] += ['gang']
-                if not 'aang' in gmod.namepara.derielemodim[l]:
-                    gmod.namepara.derielemodim[l] += ['aang']
+                # to be deleted
+                #if not 'lgal' in gmod.namepara.deri.elem.odim[l]:
+                #    gmod.namepara.deri.elem.odim[l] += ['lgal']
+                #if not 'bgal' in gmod.namepara.deri.elem.odim[l]:
+                #    gmod.namepara.deri.elem.odim[l] += ['bgal']
+                
+                if not 'gang' in gmod.namepara.deri.elem.odim[l]:
+                    gmod.namepara.deri.elem.odim[l] += ['gang']
+                if not 'aang' in gmod.namepara.deri.elem.odim[l]:
+                    gmod.namepara.deri.elem.odim[l] += ['aang']
+            
             if gmod.typeelem[l].startswith('lght'):
-                gmod.namepara.derielemodim[l] += ['cnts']
+                gmod.namepara.deri.elem.odim[l] += ['cnts']
                 if gdat.typeexpr == 'ferm':
-                    gmod.namepara.derielemodim[l] + ['sbrt0018']
+                    gmod.namepara.deri.elem.odim[l] + ['sbrt0018']
                 
             if gmod.typeelem[l] == 'lghtpntsagnntrue':
-                gmod.namepara.derielemodim[l] += ['reds']
-                gmod.namepara.derielemodim[l] += ['lumi']
-                gmod.namepara.derielemodim[l] += ['flux']
+                gmod.namepara.deri.elem.odim[l] += ['reds']
+                gmod.namepara.deri.elem.odim[l] += ['lumi']
+                gmod.namepara.deri.elem.odim[l] += ['flux']
             if gmod.typeelem[l] == 'lghtpntspuls':
-                gmod.namepara.derielemodim[l] += ['lumi']
-                gmod.namepara.derielemodim[l] += ['flux']
-                gmod.namepara.derielemodim[l] += ['mass']
-                gmod.namepara.derielemodim[l] += ['dlos']
+                gmod.namepara.deri.elem.odim[l] += ['lumi']
+                gmod.namepara.deri.elem.odim[l] += ['flux']
+                gmod.namepara.deri.elem.odim[l] += ['mass']
+                gmod.namepara.deri.elem.odim[l] += ['dlos']
             if gmod.typeelem[l] == 'lens':
-                gmod.namepara.derielemodim[l] += ['mcut', 'diss', 'rele', 'reln', 'relk', 'relf', 'relm', 'reld', 'relc']
+                gmod.namepara.deri.elem.odim[l] += ['mcut', 'diss', 'rele', 'reln', 'relk', 'relf', 'relm', 'reld', 'relc']
         
-            #for k in range(len(gmod.namepara.derielemodim[l])):
-            #    gmod.namepara.derielemodim[l][k] += 'pop%d' % l
+            #for k in range(len(gmod.namepara.deri.elem.odim[l])):
+            #    gmod.namepara.deri.elem.odim[l][k] += 'pop%d' % l
             
             # check later
             # temp
             #if strgmodl == 'fitt':
             #    for q in gdat.indxrefr: 
             #        if gmod.nameparagenrelemampl[l] in gdat.refr.namepara.elem[q]:
-            #            gmod.namepara.derielemodim[l].append('aerr' + gdat.listnamerefr[q])
+            #            gmod.namepara.deri.elem.odim[l].append('aerr' + gdat.listnamerefr[q])
         
         if gdat.typeverb > 1:
-            print('gmod.namepara.derielemodim')
-            print(gmod.namepara.derielemodim)
-        
-        # derived element parameters
-        gmod.namepara.derielem = gmod.namepara.derielemodim[:]
-        
-        if gdat.typeverb > 1:
-            print('gmod.namepara.derielem')
-            print(gmod.namepara.derielem)
+            print('gmod.namepara.deri.elem.odim')
+            print(gmod.namepara.deri.elem.odim)
+            print('gmod.namepara.deri.elem.odim')
+            print(gmod.namepara.deri.elem.odim)
+            
+        if gdat.booldiag:
+            if np.unique(np.array(gmod.namepara.deri.elem.odim[l])).size != len(gmod.namepara.deri.elem.odim[l]):
+                print('gmod.namepara.deri.elem.odim')
+                print(gmod.namepara.deri.elem.odim)
+                raise Exception('')
+            
+            for name in gmod.namepara.deri.elem.odim[l]:
+                if name in gmod.namepara.genr.elem.odim[l]:
+                    print('gmod.namepara.deri.elem.odim')
+                    print(gmod.namepara.deri.elem.odim)
+                    print('gmod.namepara.genr.elem.odim')
+                    print(gmod.namepara.genr.elem.odim)
+                    raise Exception('')
         
         # derived parameters
-        gmod.listnameparaderitotl = [temptemp for temp in gmod.namepara.derielem for temptemp in temp]
-        #gmod.listnameparaderitotl += gmod.namepara.scal
-        
-        for namediff in gmod.listnamediff:
-            gmod.listnameparaderitotl += ['cntp' + namediff]
-        
-        if gdat.typeverb > 1:
-            print('gmod.listnameparaderitotl')
-            print(gmod.listnameparaderitotl)
+        #gmod.listnameparaderitotl = [temptemp for temp in gmod.namepara.deri.elem for temptemp in temp]
+        ##gmod.listnameparaderitotl += gmod.namepara.scal
+        #
+        #for namediff in gmod.listnamediff:
+        #    gmod.listnameparaderitotl += ['cntp' + namediff]
+        #
+        #if gdat.typeverb > 1:
+        #    print('gmod.listnameparaderitotl')
+        #    print(gmod.listnameparaderitotl)
 
         if strgmodl == 'fitt':
             # add reference element parameters that are not available in the fitting model
@@ -3028,11 +3062,11 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                             continue
                         if gmod.typeelem[l] == ('lens') and (name == 'cnts' or name == 'flux' or name == 'spec' or name == 'sind'):
                             continue
-                        if not name in gmod.namepara.derielemodim[l]:
+                        if not name in gmod.namepara.deri.elem.odim[l]:
                             nametotl = name + gdat.listnamerefr[q]
                             if name == 'etag':
                                 continue
-                            gmod.namepara.derielemodim[l].append(nametotl)
+                            gmod.namepara.deri.elem.odim[l].append(nametotl)
                             
                             if gdat.refr.numbelem[q] == 0:
                                 continue
@@ -3044,7 +3078,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                             #    for nametemp in ['lumi', 'dlos']:
                             #        nametemptemp = nametemp + gdat.listnamerefr[q]
                             #        if not nametemptemp in gmod.namepara.extrelem[l]:
-                            #            gmod.namepara.derielemodim[l].append(nametemp + gdat.listnamerefr[q])
+                            #            gmod.namepara.deri.elem.odim[l].append(nametemp + gdat.listnamerefr[q])
                             #            gmod.namepara.extrelem[l].append(nametemptemp)
             
             if gdat.typeverb > 1:
@@ -3055,7 +3089,7 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                 for l in gmod.indxpopl:
                     if gmod.typeelem[l] == 'lghtpnts':
                         gmod.namepara.extrelem[l].append('lumiwo08')
-                        gmod.namepara.derielemodim[l].append('lumiwo08')
+                        gmod.namepara.deri.elem.odim[l].append('lumiwo08')
             
             if gdat.typeverb > 1:
                 print('gmod.namepara.extrelem')
@@ -3063,20 +3097,20 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
 
         # defaults
         gmod.liststrgpdfnmodu = [[] for l in gmod.indxpopl]
-        gmod.namepara.genrelemmodu = [[] for l in gmod.indxpopl]
+        gmod.namepara.genr.elemmodu = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
             if gmod.typeelem[l].startswith('lght'): 
                 if gdat.typeexpr == 'ferm' and gdat.lgalcntr == 0.:
                     if l == 1:
                         gmod.liststrgpdfnmodu[l] += ['tmplnfwp']
-                        gmod.namepara.genrelemmodu[l] += ['lgalbgal']
+                        gmod.namepara.genr.elemmodu[l] += ['lgalbgal']
                     if l == 2:
                         gmod.liststrgpdfnmodu[l] += ['tmplnfwp']
-                        gmod.namepara.genrelemmodu[l] += ['lgalbgal']
+                        gmod.namepara.genr.elemmodu[l] += ['lgalbgal']
         
         gmod.namepara.elem = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
-            for liststrg in [gmod.namepara.genrelem[l], gmod.namepara.derielemodim[l]]:
+            for liststrg in [gmod.namepara.genr.elem.odim[l], gmod.namepara.deri.elem.odim[l]]:
                 for strgthis in liststrg:
                     if not strgthis in gmod.namepara.elem[l]:
                         gmod.namepara.elem[l].append(strgthis)
@@ -3084,26 +3118,26 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
         # temp
         for l in gmod.indxpopl:
             if gmod.typeelem[l].startswith('lghtline'):
-                gmod.namepara.genrelem[l] += ['spec']
+                gmod.namepara.genr.elem.odim[l] += ['spec']
             if gmod.typeelem[l].startswith('lght'):
-                gmod.namepara.genrelem[l] += ['spec', 'specplot']
+                gmod.namepara.genr.elem.odim[l] += ['spec', 'specplot']
             if gmod.typeelem[l] == 'lens':
-                gmod.namepara.genrelem[l] += ['deflprof']
+                gmod.namepara.genr.elem.odim[l] += ['deflprof']
         
-        #gmod.namepara.genrelemeval = [[] for l in gmod.indxpopl]
+        #gmod.namepara.genr.elemeval = [[] for l in gmod.indxpopl]
         #for l in gmod.indxpopl:
         #    if gmod.typeelem[l].startswith('clus'):
-        #        gmod.namepara.genrelemeval[l] = ['lgal', 'bgal', 'nobj']
+        #        gmod.namepara.genr.elemeval[l] = ['lgal', 'bgal', 'nobj']
         #    if gmod.typeelem[l] == 'clusvari':
-        #        gmod.namepara.genrelemeval[l] += ['gwdt']
+        #        gmod.namepara.genr.elemeval[l] += ['gwdt']
         #    if gmod.typeelem[l] == 'lens':
-        #        gmod.namepara.genrelemeval[l] = ['lgal', 'bgal', 'defs', 'asca', 'acut']
+        #        gmod.namepara.genr.elemeval[l] = ['lgal', 'bgal', 'defs', 'asca', 'acut']
         #    if gmod.typeelem[l].startswith('lghtline'):
-        #        gmod.namepara.genrelemeval[l] = ['elin', 'spec']
+        #        gmod.namepara.genr.elemeval[l] = ['elin', 'spec']
         #    elif gmod.typeelem[l] == 'lghtgausbgrd':
-        #        gmod.namepara.genrelemeval[l] = ['lgal', 'bgal', 'gwdt', 'spec']
+        #        gmod.namepara.genr.elemeval[l] = ['lgal', 'bgal', 'gwdt', 'spec']
         #    elif gmod.typeelem[l].startswith('lght'):
-        #        gmod.namepara.genrelemeval[l] = ['lgal', 'bgal', 'spec']
+        #        gmod.namepara.genr.elemeval[l] = ['lgal', 'bgal', 'spec']
         
         ## element legends
         lablpopl = [[] for l in gmod.indxpopl]
@@ -3127,6 +3161,9 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
             if gmod.typeelem[l].startswith('lghtline'):
                 lablpopl[l]= 'Line'
         setp_varb(gdat, 'lablpopl', valu=lablpopl, strgmodl=strgmodl)
+        
+        for l in gmod.indxpopl:
+            setp_varb(gdat, 'slopprionobjpop%d', lablroot='$\alpha_{%d}$' % l, strgmodl=strgmodl)
 
         if strgmodl == 'true':
             gmod.indxpoplassc = [[] for l in gmod.indxpopl]
@@ -3137,61 +3174,65 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                     gmod.indxpoplassc[l] = gmod.indxpopl
 
         # variables for which two dimensional histograms will be calculated
-        gmod.namepara.genrelemcorr = [[] for l in gmod.indxpopl]
+        gmod.namepara.genr.elemcorr = [[] for l in gmod.indxpopl]
         if gdat.boolplotelemcorr:
             for l in gmod.indxpopl:
-                for strgfeat in gmod.namepara.derielemodim[l]:
-                    gmod.namepara.genrelemcorr[l].append(strgfeat)
+                for strgfeat in gmod.namepara.deri.elem.odim[l]:
+                    gmod.namepara.genr.elemcorr[l].append(strgfeat)
         
+
         # number of element parameters
         if gmod.numbpopl > 0:
-            gmod.numbparagenrelemsing = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparaderielemsing = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparaelemsing = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparagenrelem = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparagenrelemcuml = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparagenrelemcumr = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparaderielem = np.zeros(gmod.numbpopl, dtype=int)
-            gmod.numbparaelem = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.genr.elem.sing = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.genr.elem.popl = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.genr.elem.cuml = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.genr.elem.cumr = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.deri.elem.popl = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.deri.elem.sing = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.totl.elem.popl = np.zeros(gmod.numbpopl, dtype=int)
+            gmod.numbpara.totl.elem.sing = np.zeros(gmod.numbpopl, dtype=int)
             for l in gmod.indxpopl:
                 # number of generative element parameters for a single element of a specific population
-                gmod.numbparagenrelemsing[l] = len(gmod.namepara.genrelem[l])
+                gmod.numbpara.genr.elem.sing[l] = len(gmod.namepara.genr.elem.odim[l])
                 # number of derived element parameters for a single element of a specific population
-                gmod.numbparaderielemsing[l] = len(gmod.namepara.derielem[l])
+                gmod.numbpara.deri.elem.sing[l] = len(gmod.namepara.deri.elem.odim[l])
                 # number of element parameters for a single element of a specific population
-                gmod.numbparaelemsing[l] = len(gmod.namepara.elem[l])
+                gmod.numbpara.totl.elem.sing[l] = len(gmod.namepara.elem[l])
                 # number of generative element parameters for all elements of a specific population
-                gmod.numbparagenrelem[l] = gmod.numbparagenrelemsing[l] * gmod.maxmpara.numbelem[l]
+                gmod.numbpara.genr.elem.popl[l] = gmod.numbpara.genr.elem.sing[l] * gmod.maxmpara.numbelem[l]
                 # number of generative element parameters up to the beginning of a population
-                gmod.numbparagenrelemcuml[l] = np.sum(gmod.numbparagenrelem[:l])
+                gmod.numbpara.genr.elem.cuml[l] = np.sum(gmod.numbpara.genr.elem.popl[:l])
                 # number of generative element parameters up to the end of a population
-                gmod.numbparagenrelemcumr[l] = np.sum(gmod.numbparagenrelem[:l+1])
+                gmod.numbpara.genr.elem.cumr[l] = np.sum(gmod.numbpara.genr.elem.popl[:l+1])
                 # number of derived element parameters for all elements of a specific population
-                gmod.numbparaderielem[l] = gmod.numbparaderielemsing[l] * gmod.numbelem[l]
+                gmod.numbpara.deri.elem.popl[l] = gmod.numbpara.deri.elem.sing[l] * gmod.numbelem[l]
                 # number of element parameters for all elements of a specific population
-                gmod.numbparaelem[l] = gmod.numbparaelemsing[l] * gmod.numbelem[l]
+                gmod.numbpara.totl.elem.popl[l] = gmod.numbpara.totl.elem.sing[l] * gmod.numbelem[l]
             # number of generative element parameters summed over all populations
-            gmod.numbparagenrelemtotl = np.sum(gmod.numbparagenrelem)
+            gmod.numbpara.genr.elemtotl = np.sum(gmod.numbpara.genr.elem.popl)
+            gmod.indxparagenrelemtotl = np.arange(gmod.numbpara.genr.elemtotl)
             # number of derived element parameters summed over all populations
-            gmod.numbparaderielemtotl = np.sum(gmod.numbparaderielem)
+            gmod.numbpara.deri.elemtotl = np.sum(gmod.numbpara.deri.elem.popl)
+            gmod.indxparaderielemtotl = np.arange(gmod.numbpara.deri.elemtotl)
             # number of element parameters summed over all populations
-            gmod.numbparaelemtotl = np.sum(gmod.numbparaderielem)
+            gmod.numbpara.totl.elemtotl = np.sum(gmod.numbpara.totl.elem.popl)
+            gmod.indxparatotlelemtotl = np.arange(gmod.numbpara.totl.elemtotl)
         
-        gmod.indxparagenrelemsing = []
-        for l in gmod.indxpopl:
-            gmod.indxparagenrelemsing.append(np.arange(gmod.numbparagenrelemsing[l]))
-        
-        gmod.indxparaderielemsing = []
-        for l in gmod.indxpopl:
-            gmod.indxparaderielemsing.append(np.arange(gmod.numbparaderielemsing[l]))
-        
-        gmod.indxparaelemsing = []
-        for l in gmod.indxpopl:
-            gmod.indxparaelemsing.append(np.arange(gmod.numbparaelemsing[l]))
-
+            gmod.indxpara.genr.elemsing = []
+            for l in gmod.indxpopl:
+                gmod.indxpara.genr.elemsing.append(np.arange(gmod.numbpara.genr.elem.sing[l]))
+            
+            gmod.indxpara.deri.elemsing = []
+            for l in gmod.indxpopl:
+                gmod.indxpara.deri.elemsing.append(np.arange(gmod.numbpara.deri.elem.sing[l]))
+            
+            gmod.indxpara.totl.elemsing = []
+            for l in gmod.indxpopl:
+                gmod.indxpara.totl.elemsing.append(np.arange(gmod.numbpara.totl.elem.sing[l]))
+            
         # size of the auxiliary variable propobability density vector
         if gmod.maxmpara.numbelemtotl > 0:
-            gmod.numblpri = 3 + gmod.numbparagenrelem * gmod.numbpopl
+            gmod.numblpri = 3 + gmod.numbpara.genr.elem.popl * gmod.numbpopl
         else:
             gmod.numblpri = 0
         if gdat.penalpridiff:
@@ -3200,38 +3241,34 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
 
         # append the population tags to element parameter names
         #for l in gmod.indxpopl:
-        #    gmod.namepara.genrelem[l] = [gmod.namepara.genrelem[l][g] + 'pop%d' % l for g in gmod.indxparagenrelemsing[l]]
+        #    gmod.namepara.genr.elem.odim[l] = [gmod.namepara.genr.elem.odim[l][g] + 'pop%d' % l for g in gmod.indxpara.genr.elemsing[l]]
         
+        # Boolean flag indicating if a generative element parameter is "positional"
         gmod.boolcompposi = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
-            gmod.boolcompposi[l] = np.zeros(gmod.numbparagenrelemsing[l], dtype=bool)
+            gmod.boolcompposi[l] = np.zeros(gmod.numbpara.genr.elem.sing[l], dtype=bool)
             if gmod.typeelem[l].startswith('lghtline'):
                 gmod.boolcompposi[l][0] = True
             else:
                 gmod.boolcompposi[l][0] = True
                 gmod.boolcompposi[l][1] = True
         
-        # list of strings across all populations
-        ## all (generative and derived) element parameters
-        gmod.numbparaelem = len(gmod.namepara.elem)
-        gmod.indxparaelem = np.arange(gmod.numbparaelem)
+        # flattened list of element parameters
+        for strgtypepara in ['genr', 'deri']:
+        # temp for strgtypepara in ['genr', 'deri', 'totl']:
+            nameparaelem = getattr(gmod.namepara, strgtypepara).elem
+            nameparaelem.flat = []
+            for l in gmod.indxpopl:
+                for nameparaelemodim in nameparaelem.odim[l]:
+                    nameparaelem.flat.append(nameparaelemodim + 'pop%d' % l)
         
-        # flattened list of generative element parameters
-        gmod.listnameparagenfelem = []
+        gmod.numbpara.totl.elem.popl = np.empty(gmod.numbpopl, dtype=int)
         for l in gmod.indxpopl:
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
-                gmod.listnameparagenfelem.append(nameparagenrelem + 'pop%d' % l)
-        
-        # concatenated list of flattened generative and derived element parameters
-        gmod.listnameparatotlelem = gmod.listnameparagenfelem + gmod.namepara.derielem
-
-        gmod.numbparaelem = np.empty(gmod.numbpopl, dtype=int)
-        for l in gmod.indxpopl:
-            gmod.numbparaelem[l] = len(gmod.namepara.elem[l])
+            gmod.numbpara.totl.elem.popl[l] = len(gmod.namepara.elem[l])
         
         numbdeflsubhplot = 2
         numbdeflsingplot = numbdeflsubhplot
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             numbdeflsingplot += 3
 
         gmod.convdiffanyy = True in convdiff
@@ -3245,11 +3282,8 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
             massfrombein = retr_massfrombein(gdat, adissour, adishost, adishostsour)
             mdencrit = retr_mdencrit(gdat, adissour, adishost, adishostsour)
         
-        # object of parameter indices
-        gmod.indxpara = tdpy.gdatstrt()
-        
         # define parameter indices
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
 
             # number of elements
             #gmod.indxpara.numbelem = np.empty(gmod.numbpopl, dtype=int)
@@ -3272,11 +3306,11 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
             liststrgvarb = []
             for l in gmod.indxpopl:
                 if gmod.maxmpara.numbelem[l] > 0:
-                    for strgpdfnelemgenr, strgfeat in zip(gmod.listscalparagenrelem[l], gmod.namepara.genrelem[l]):
+                    for strgpdfnelemgenr, strgfeat in zip(gmod.scalpara.genr.elem.odim[l], gmod.namepara.genr.elem.odim[l]):
                         if strgpdfnelemgenr == 'expo' or strgpdfnelemgenr == 'dexp':
                             liststrgvarb += [strgfeat + 'distscal']
                         if strgpdfnelemgenr == 'powr':
-                            liststrgvarb += ['slopprio' + strgfeat + 'pop%d' % l]
+                            liststrgvarb += ['slopprio' + strgfeat]
                         if strgpdfnelemgenr == 'dpow':
                             liststrgvarb += [strgfeat + 'distbrek']
                             liststrgvarb += [strgfeat + 'sloplowr']
@@ -3288,36 +3322,48 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                         if strgpdfnelemgenr == 'gausmeanstdv' or strgpdfnelemgenr == 'lnormeanstdv':
                             liststrgvarb += [nameparagenrelem + 'distmean', nameparagenrelem + 'diststdv']
             for strgvarb in liststrgvarb:
-                setattr(gmod.indxpara, strgvarb, np.zeros(gmod.numbpopl, dtype=int) - 1)
+                for l in gmod.indxpopl:
+                    indx = cntr.incr()
+                    if gdat.booldiag and strgvarb[-4:-1] == 'pop':
+                        print('strgvarb')
+                        print(strgvarb)
+                        print('liststrgvarb')
+                        print(liststrgvarb)
+                        raise Exception('')
+                    setattr(gmod.indxpara.genr.base, strgvarb + 'pop%d' % l, indx)
+                setattr(gmod.indxpara.genr.base, strgvarb, np.zeros(gmod.numbpopl, dtype=int) - 1)
 
             for l in gmod.indxpopl:
-                strgpopl = 'pop%d' % l
                 if gmod.maxmpara.numbelem[l] > 0:
-                    for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
+                    for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
                         
-                        if gmod.listscalparagenrelem[l][k] == 'self':
+                        if gmod.scalpara.genr.elem.odim[l][k] == 'self':
                             continue
                         indx = cntr.incr()
 
-                        if gmod.listscalparagenrelem[l][k] == 'dpow':
+                        if gmod.scalpara.genr.elem.odim[l][k] == 'dpow':
                             for nametemp in ['brek', 'sloplowr', 'slopuppr']:
                                 strg = '%s' % nametemp + nameparagenrelem
                                 setattr(gmod.indxpara, strg, indx)
                                 setattr(gmod.indxpara, strg, indx)
                         else:
-                            if gmod.listscalparagenrelem[l][k] == 'expo' or gmod.listscalparagenrelem[l][k] == 'dexp':
+                            if gmod.scalpara.genr.elem.odim[l][k] == 'expo' or gmod.scalpara.genr.elem.odim[l][k] == 'dexp':
                                 strghypr = 'scal'
-                            if gmod.listscalparagenrelem[l][k] == 'powr':
+                            if gmod.scalpara.genr.elem.odim[l][k] == 'powr':
                                 strghypr = 'slop'
-                            if gmod.listscalparagenrelem[l][k] == 'gausmean' or gmod.listscalparagenrelem[l][k] == 'gausmeanstdv' or \
-                                            gmod.listscalparagenrelem[l][k] == 'lnormean' or gmod.listscalparagenrelem[l][k] == 'lnormeanstdv':
+                            if gmod.scalpara.genr.elem.odim[l][k] == 'gausmean' or gmod.scalpara.genr.elem.odim[l][k] == 'gausmeanstdv' or \
+                                            gmod.scalpara.genr.elem.odim[l][k] == 'lnormean' or gmod.scalpara.genr.elem.odim[l][k] == 'lnormeanstdv':
                                 strghypr = 'mean'
-                            if gmod.listscalparagenrelem[l][k] == 'gausstdv' or gmod.listscalparagenrelem[l][k] == 'gausmeanstdv' or \
-                                            gmod.listscalparagenrelem[l][k] == 'lnorstdv' or gmod.listscalparagenrelem[l][k] == 'lnormeanstdv':
+                            if gmod.scalpara.genr.elem.odim[l][k] == 'gausstdv' or gmod.scalpara.genr.elem.odim[l][k] == 'gausmeanstdv' or \
+                                            gmod.scalpara.genr.elem.odim[l][k] == 'lnorstdv' or gmod.scalpara.genr.elem.odim[l][k] == 'lnormeanstdv':
                                 strghypr = 'stdv'
-                            strg = strghypr + 'prio' + nameparagenrelem + 'pop%d' % l
+                            strg = strghypr + 'prio' + nameparagenrelem
+                            print('strg')
+                            print(strg)
                             setattr(gmod.indxpara, strg, indx)
-        
+            
+            #raise Exception('')
+
         # group PSF parameters
         if gmod.typeevalpsfn == 'kern' or gmod.typeevalpsfn == 'full':
             for m in gdat.indxevtt:
@@ -3471,7 +3517,7 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     print('setp_paragenrscalbase(): Building the %s model base paremeter names and scales...' % strgmodl)
     gmod = getattr(gdat, strgmodl)
     
-    listlablback = []
+    # list of labels for background components
     listlablback = []
     for nameback in gmod.listnameback:
         if nameback == 'isot':
@@ -3515,23 +3561,23 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     numblablsbrtspec = len(listlablsbrtspec)
     
     # number of generative parameters per element, depends on population
-    #numbparaelem = gmod.numbparagenrelem + numbparaelemderi
+    #numbparaelem = gmod.numbpara.genr.elem.popl + numbparaelemderi
 
     # maximum total number of parameters
-    #numbparagenrfull = gmod.numbparagenrbase + gmod.numbparaelem
+    #numbparagenrfull = gmod.numbpara.genr.base.totl + gmod.numbpara.totl.elem
     
-    #numbparaelemkind = gmod.numbparagenrbase
+    #numbparaelemkind = gmod.numbpara.genr.base.totl
     #for l in gmod.indxpopl:
-    #    numbparaelemkind += gmod.numbparagenrelemsing[l]
+    #    numbparaelemkind += gmod.numbpara.genr.elem.sing[l]
     
     #nameparagenrbase
-    #gmod.namepara.genrelem
+    #gmod.namepara.genr.elem
     
     #listnameparaderifixd
     #listnameparaderielem
     
-    #gmod.namepara.genrelemextd = gmod.namepara.genrelem * maxm.numbelem
-    #listnameparaderielemextd = gmod.namepara.genrelem * maxm.numbelem
+    #gmod.namepara.genr.elemextd = gmod.namepara.genr.elem * maxm.numbelem
+    #listnameparaderielemextd = gmod.namepara.genr.elem * maxm.numbelem
     
     gmod.listindxparakindscal = {}
     for scaltype in gdat.listscaltype:
@@ -3543,22 +3589,22 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     #gmod.listnameparastck = np.zeros(gmod.maxmnumbpara, dtype=object)
     #gmod.listscalparastck = np.zeros(gmod.maxmnumbpara, dtype=object)
     #
-    #gmod.listnameparastck[gmod.indxparagenrbase] = gmod.nameparagenrbase
-    #gmod.listscalparastck[gmod.indxparagenrbase] = gmod.listscalparagenrbase
-    #for k in range(gmod.numbparaelem):
+    #gmod.listnameparastck[gmod.indxpara.genr.base.totl] = gmod.namepara.genr.base
+    #gmod.listscalparastck[gmod.indxpara.genr.base.totl] = gmod.listscalparagenrbase
+    #for k in range(gmod.numbpara.totl.elem):
     #    for l in gmod.indxpopl:  
-    #        if k >= gmod.numbparagenrelemcuml[l]:
+    #        if k >= gmod.numbpara.genr.elem.cuml[l]:
     #            indxpopltemp = l
-    #            indxelemtemp = (k - gmod.numbparagenrelemcuml[indxpopltemp]) // gmod.numbparagenrelemsing[indxpopltemp]
-    #            gmod.indxparagenrelemtemp = (k - gmod.numbparagenrelemcuml[indxpopltemp]) % gmod.numbparagenrelemsing[indxpopltemp]
+    #            indxelemtemp = (k - gmod.numbpara.genr.elem.cuml[indxpopltemp]) // gmod.numbpara.genr.elem.sing[indxpopltemp]
+    #            gmod.indxpara.genrelemtemp = (k - gmod.numbpara.genr.elem.cuml[indxpopltemp]) % gmod.numbpara.genr.elem.sing[indxpopltemp]
     #            break
-    #    gmod.listnameparastck[gmod.numbparagenrbase+k] = '%spop%d%04d' % (gmod.namepara.genrelem[indxpopltemp][gmod.indxparagenrelemtemp], indxpopltemp, indxelemtemp)
-    #    gmod.listscalparastck[gmod.numbparagenrbase+k] = gmod.listscalparagenrelem[indxpopltemp][gmod.indxparagenrelemtemp]
+    #    gmod.listnameparastck[gmod.numbpara.genr.base.totl+k] = '%spop%d%04d' % (gmod.namepara.genr.elem.odim[indxpopltemp][gmod.indxpara.genrelemtemp], indxpopltemp, indxelemtemp)
+    #    gmod.listscalparastck[gmod.numbpara.genr.base.totl+k] = gmod.scalpara.genr.elem.odim[indxpopltemp][gmod.indxpara.genrelemtemp]
     #
     #
     #if np.where(gmod.listscalpara == 0)[0].size > 0:
-    #    print('gmod.listscalpara[gmod.indxparagenrbase]')
-    #    print(gmod.listscalpara[gmod.indxparagenrbase])
+    #    print('gmod.listscalpara[gmod.indxpara.genr.base.totl]')
+    #    print(gmod.listscalpara[gmod.indxpara.genr.base.totl])
     #    raise Exception('')
     #
     ## labels and scales for variables
@@ -3923,98 +3969,128 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
 
     # collect groups of parameter indices into lists
     ## labels and scales for base parameters
-    gmod.nameparagenrbase = []
-    for name, k in gmod.indxpara.__dict__.items():
-        if not np.isscalar(k):
-            print('name')
-            print(name)
-            print('temp: no nonscalar should be here!')
-            continue
-        gmod.nameparagenrbase.append(name)
-    gmod.numbparagenrbase = len(gmod.nameparagenrbase)
-    gmod.indxparagenrbase = np.arange(gmod.numbparagenrbase)
-    gmod.indxparagenrbasestdv = gmod.indxparagenrbase[gmod.numbpopl:]
+    gmod.namepara.genr.base.totl = []
+    print('gmod.indxpara.genr.base')
+    print(gmod.indxpara.genr.base)
+    for name, k in gmod.indxpara.genr.base.__dict__.items():
+        print('name')
+        print(name)
+        print('k')
+        print(k)
+        if np.isscalar(k):
+            gmod.namepara.genr.base.totl.append(name)
+    
+    if gdat.booldiag:
+        for name in gmod.namepara.genr.base.totl:
+            if 'pop0pop0' in name:
+                raise Exception('')
+
+    gmod.numbpara.genr.base.totl = len(gmod.namepara.genr.base.totl)
+    
+    if gdat.booldiag:
+        if gmod.numbpara.genr.base.totl == 0:
+            print('gmod.namepara.genr.base.totl')
+            print(gmod.namepara.genr.base.totl)
+            raise Exception('')
+
+    gmod.indxpara.genr.base.totl = np.arange(gmod.numbpara.genr.base.totl)
+
+    # base parameters to be perturbed
+    gmod.indxpara.genr.pert.base = gmod.indxpara.genr.base.totl[gmod.numbpopl:]
     ## list of scalar variable names
-    gmod.namepara.scal = list(gmod.nameparagenrbase) 
+    gmod.namepara.scal = list(gmod.namepara.genr.base.totl) 
     gmod.namepara.scal += ['lliktotl']
 
     # derived parameters
     print('Determining the list of derived, fixed-dimensional parameter names...')
-    gmod.namepara.genrelemextd = [[[] for g in gmod.indxparagenrelemsing[l]] for l in gmod.indxpopl]
-    gmod.namepara.derielemextd = [[[] for k in gmod.indxparaderielemsing[l]] for l in gmod.indxpopl]
-    gmod.namepara.genrelemflat = []
-    gmod.namepara.derielemflat = []
-    gmod.namepara.genrelemextdflat = []
-    gmod.namepara.derielemextdflat = []
+    gmod.namepara.genr.elemextd = [[[] for g in gmod.indxpara.genr.elemsing[l]] for l in gmod.indxpopl]
+    gmod.namepara.deri.elemextd = [[[] for k in gmod.indxpara.deri.elemsing[l]] for l in gmod.indxpopl]
+    gmod.namepara.genr.elemflat = []
+    gmod.namepara.deri.elemflat = []
+    gmod.namepara.genr.elem.extdflat = []
+    gmod.namepara.deri.elem.extdflat = []
     for l in gmod.indxpopl:
-        for g in gmod.indxparagenrelemsing[l]:
-            gmod.namepara.genrelemflat.append(gmod.namepara.genrelem[l][g] + 'pop%d' % l)
+        for g in gmod.indxpara.genr.elemsing[l]:
+            gmod.namepara.genr.elemflat.append(gmod.namepara.genr.elem.odim[l][g] + 'pop%d' % l)
             for d in range(gmod.maxmpara.numbelem[l]):
-                gmod.namepara.genrelemextd[l][g].append(gmod.namepara.genrelem[l][g] + 'pop%d' % l + '%04d' % d)
-                gmod.namepara.genrelemextdflat.append(gmod.namepara.genrelemextd[l][g][d])
-        for k in gmod.indxparaderielemsing[l]:  
-            gmod.namepara.derielemflat.append(gmod.namepara.derielem[l][k] + 'pop%d' % l)
+                gmod.namepara.genr.elemextd[l][g].append(gmod.namepara.genr.elem.odim[l][g] + 'pop%d' % l + '%04d' % d)
+                gmod.namepara.genr.elem.extdflat.append(gmod.namepara.genr.elemextd[l][g][d])
+        for k in gmod.indxpara.deri.elemsing[l]:  
+            gmod.namepara.deri.elemflat.append(gmod.namepara.deri.elem.odim[l][k] + 'pop%d' % l)
             for d in range(gmod.maxmpara.numbelem[l]):
-                gmod.namepara.derielemextd[l][k].append(gmod.namepara.derielem[l][k] + 'pop%d' % l + '%04d' % d)
-                gmod.namepara.derielemextdflat.append(gmod.namepara.derielemextd[l][k][d])
+                gmod.namepara.deri.elemextd[l][k].append(gmod.namepara.deri.elem.odim[l][k] + 'pop%d' % l + '%04d' % d)
+                gmod.namepara.deri.elem.extdflat.append(gmod.namepara.deri.elemextd[l][k][d])
 
     # list of element parameter names (derived and generative), counting label-degenerate element parameters only once 
-    gmod.namepara.elem = [[] for l in gmod.indxpopl]
-    for l in gmod.indxpopl:
-        gmod.namepara.elem[l].extend(gmod.namepara.genrelem[l])
-        gmod.namepara.elem[l].extend(gmod.namepara.derielem[l])
+    # to be deleted
+    #gmod.namepara.elem = [[] for l in gmod.indxpopl]
+    #for l in gmod.indxpopl:
+    #    gmod.namepara.genr.elem[l].extend(gmod.namepara.genr.elem.odim[l])
+    #    gmod.namepara.deri.elem[l].extend(gmod.namepara.deri.elem.odim[l])
     
+    # temp
+    gmod.namepara.totl.base.totl = gmod.namepara.genr.base.totl
+
     gmod.namepara.elemflat = []
     for l in gmod.indxpopl:
         gmod.namepara.elemflat.extend(gmod.namepara.elem[l])
 
-    gmod.namepara.genrelemdefa = deepcopy(gmod.namepara.elemflat)
+    gmod.namepara.genr.elemdefa = deepcopy(gmod.namepara.elemflat)
     if gmod.boolelemlghtanyy:
         for strgfeat in ['sind', 'curv', 'expc'] + ['sindcolr%04d' % i for i in gdat.indxenerinde]:
-            if not strgfeat in gmod.namepara.genrelemdefa:
-                gmod.namepara.genrelemdefa.append(strgfeat)
+            if not strgfeat in gmod.namepara.genr.elemdefa:
+                gmod.namepara.genr.elemdefa.append(strgfeat)
 
     # list of flattened generative element parameter names, counting label-degenerate element parameters only once
-    gmod.namepara.genrelemkind = gmod.namepara.genrelemflat + gmod.namepara.derielemflat
-    gmod.numbparagenrelemkind = len(gmod.namepara.genrelemkind)
-    #gmod.inxparagenrscalelemkind = np.arange(gmod.numbparagenrelemkind)
-    gmod.inxparagenrscalelemkind = tdpy.gdatstrt()
+    gmod.namepara.genr.elemkind = gmod.namepara.genr.elemflat + gmod.namepara.deri.elemflat
+    gmod.numbpara.genr.elemkind = len(gmod.namepara.genr.elemkind)
+    #gmod.indxpara.genrscalelemkind = np.arange(gmod.numbpara.genr.elemkind)
+    gmod.indxpara.genrscalelemkind = tdpy.gdatstrt()
     
-    gmod.numbparagenrelemextdflat = len(gmod.namepara.genrelemextdflat)
-    gmod.indxparagenrelemextdflat = np.arange(gmod.numbparagenrelemextdflat)
+    gmod.numbpara.genr.elemextdflat = len(gmod.namepara.genr.elem.extdflat)
+    gmod.indxpara.genrelemextdflat = np.arange(gmod.numbpara.genr.elemextdflat)
 
     # list of parameter names (derived and generative), counting label-degenerate element parameters only once, element lists flattened
-    gmod.namepara.kind = gmod.nameparagenrbase + gmod.listnameparaderitotl + gmod.namepara.genrelemflat + gmod.namepara.derielemflat
+    print('gmod.namepara.totl.base.totl')
+    print(gmod.namepara.totl.base.totl)
+    gmod.namepara.kind = gmod.namepara.totl.base.totl + gmod.namepara.genr.elemflat + gmod.namepara.deri.elemflat
     
+    if gdat.booldiag:
+        if np.unique(np.array(gmod.namepara.kind)).size != len(gmod.namepara.kind):
+            print('gmod.namepara.kind')
+            print(gmod.namepara.kind)
+            print('gmod.namepara.totl.base.totl')
+            print(gmod.namepara.totl.base.totl)
+            print('gmod.namepara.genr.elemflat')
+            print(gmod.namepara.genr.elemflat)
+            print('gmod.namepara.deri.elemflat')
+            print(gmod.namepara.deri.elemflat)
+            raise Exception('')
+
     gmod.numbparakind = len(gmod.namepara.kind)
     gmod.indxparakind = np.arange(gmod.numbparakind)
 
     # list of generative parameter names, separately including all label-degenerate element parameters, element lists flattened
-    gmod.namepara.genrscalfull = gmod.nameparagenrbase + gmod.namepara.genrelemextdflat
-    gmod.namepara.genrscalfull = np.array(gmod.namepara.genrscalfull)
-    gmod.numbparagenrfull = len(gmod.namepara.genrscalfull)
-    gmod.indxparagenrfull = np.arange(gmod.numbparagenrfull)
+    gmod.namepara.genr.scalfull = gmod.namepara.genr.base.totl + gmod.namepara.genr.elem.extdflat
+    gmod.namepara.genr.scalfull = np.array(gmod.namepara.genr.scalfull)
+    gmod.numbpara.genr.full = len(gmod.namepara.genr.scalfull)
+    gmod.indxpara.genrfull = np.arange(gmod.numbpara.genr.full)
 
     # list of generative parameter names, counting label-degenerate element parameters only once, element lists flattened
-    gmod.listnameparagenrscal = gmod.nameparagenrbase + gmod.namepara.genrelemflat
-    gmod.numbparagenr = len(gmod.listnameparagenrscal)
-    gmod.indxparagenr = np.arange(gmod.numbparagenr)
+    gmod.listnameparagenrscal = gmod.namepara.genr.base.totl + gmod.namepara.genr.elemflat
 
     # list of parameter names (derived and generative), element lists flattened
-    gmod.listnameparatotl = gmod.nameparagenrbase + gmod.listnameparaderitotl + \
-                                                                        gmod.namepara.genrelemextdflat + gmod.namepara.derielemextdflat
+    gmod.listnameparatotl = gmod.namepara.totl.base.totl + gmod.namepara.genr.elem.extdflat + gmod.namepara.deri.elem.extdflat
     
-    gmod.nameparagenrbase = np.array(gmod.nameparagenrbase)
-
     for e in gmod.indxsersfgrd:
         gmod.namepara.scal += ['masshost' + strgsersfgrd + 'bein']
         for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
             gmod.namepara.scal += ['masshost' + strgsersfgrd + strgcalcmasssubh + 'bein']
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gmod.boollenssubh:
             for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
                 gmod.namepara.scal += ['masssubh' + strgcalcmasssubh + 'bein', 'fracsubh' + strgcalcmasssubh + 'bein'] 
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         gmod.namepara.scal += ['lpripena']
     if False and gmod.boolelemsbrtdfncanyy:
         for strgbins in ['lowr', 'higr']:
@@ -4023,7 +4099,7 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         for i in gdat.indxener:
             gmod.namepara.scal += ['fracsdenmeandarkdfncsubten%02d' % i]
         gmod.namepara.scal += ['booldfncsubt']
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         for q in gdat.indxrefr:
             if gdat.boolasscrefr[q]:
                 for l in gmod.indxpopl:
@@ -4034,44 +4110,55 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     gmod.indxvarbscal = np.arange(gmod.numbvarbscal)
     
     # determine total label
-    gmod.listnameparaglob = gmod.namepara.kind + gmod.namepara.genrelemextdflat + gmod.namepara.derielemextdflat
+    print('gmod.namepara.kind')
+    print(gmod.namepara.kind)
+    print('gmod.namepara.genr.elem.extdflat')
+    print(gmod.namepara.genr.elem.extdflat)
+    print('gmod.namepara.deri.elem.extdflat')
+    print(gmod.namepara.deri.elem.extdflat)
+    gmod.listnameparaglob = gmod.namepara.kind + gmod.namepara.genr.elem.extdflat + gmod.namepara.deri.elem.extdflat
     gmod.listnameparaglob += ['cntpmodl']
+    print('gmod.listnameparaglob')
+    print(gmod.listnameparaglob)
     for l in gmod.indxpopl:
-        for g in gmod.indxparagenrelemsing[l]:
-            if not gmod.namepara.genrelem[l][g] in gmod.listnameparaglob:
-                gmod.listnameparaglob.append(gmod.namepara.genrelem[l][g])
-                gmod.listnameparaglob.append(gmod.namepara.derielem[l][g])
-
+        for g in gmod.indxpara.genr.elemsing[l]:
+            if not gmod.namepara.genr.elem.odim[l][g] in gmod.listnameparaglob:
+                gmod.listnameparaglob.append(gmod.namepara.genr.elem.odim[l][g])
+                gmod.listnameparaglob.append(gmod.namepara.deri.elem.odim[l][g])
+    print('gmod.listnameparaglob')
+    print(gmod.listnameparaglob)
     for name in gmod.listnameparaglob:
         lablroot = getattr(gmod.lablrootpara, name)
         lablunit = getattr(gmod.lablunitpara, name)
         labltotl = tdpy.retr_labltotlsing(lablroot, lablunit)
         setattr(gmod.labltotlpara, name, labltotl)
-    
+        
     # define fact
-    for l in gmod.indxpopl:
-        for k in gmod.indxparakind:
-            name = gmod.namepara.kind[k]
-            scal = getattr(gmod.scalpara, name)
-            if scal == 'self' or scal == 'logt':
-                minm = getattr(gmod.minmpara, name)
-                maxm = getattr(gmod.maxmpara, name)
-                if scal == 'self':
-                    fact = maxm - minm
-                if scal == 'logt':
-                    fact = np.log(maxm / minm)
-                
-                if fact == 0:
-                    print('name')
-                    print(name)
-                    raise Exception('')
-                setattr(gmod.factpara, name, fact)
+    # to be deleted
+    #for l in gmod.indxpopl:
+    #    for k in gmod.indxparakind:
+    #        name = gmod.namepara.kind[k]
+    #        scal = getattr(gmod.scalpara, name)
+    #        if scal == 'self' or scal == 'logt':
+    #            minm = getattr(gmod.minmpara, name)
+    #            maxm = getattr(gmod.maxmpara, name)
+    #            if scal == 'self':
+    #                fact = maxm - minm
+    #            if scal == 'logt':
+    #                fact = np.log(maxm / minm)
+    #            
+    #            if fact == 0:
+    #                print('name')
+    #                print(name)
+    #                raise Exception('')
+    #            setattr(gmod.factpara, name, fact)
 
-    if gmod.numbparaelem > 0:
-        gmod.indxparagenrfulleleminit = gmod.indxparagenrbase[-1] + 1
-    else:
-        gmod.indxparagenrfulleleminit = -1
-    
+    if gmod.numbpopl > 0:
+        gmod.indxpara.genr.elemtotl = gmod.numbpara.genr.base.totl + np.arange(gmod.numbpara.genr.elemtotl)
+        gmod.indxpara.deri.elemtotl = np.arange(gmod.numbpara.deri.elemtotl)
+        gmod.indxpara.totl.elemtotl = np.arange(gmod.numbpara.totl.elemtotl)
+        
+    gmod.indxpara.genr.full = np.concatenate((gmod.indxpara.genr.base.totl, gmod.indxpara.genr.elemtotl))
 
     ## arrays of parameter features (e.g., minm, maxm, labl, scal, etc.)
     for featpara in gdat.listfeatparalist:
@@ -4110,22 +4197,33 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         #    setattr(gmodfeat, strgtypepara + 'elem', listfeat)
         #    setattr(gmodfeat, strgtypepara + 'elemflat', listfeatflat)
         
-        ### groups of parameters inside the parameter vector
-        ### 'base': all fixed-dimensional generative parameters
-        ### 'full': all generative parameters
+        if gdat.booldiag:
+            if gmod.numbpara.genr.base.totl == 0:
+                raise Exception('')
+
+        ## groups of parameters inside the parameter vector
+        ## 'base': all fixed-dimensional generative parameters
+        ## 'full': all generative parameters
         for strggroppara in ['base', 'full']:
-            indx = getattr(gmod, 'indxparagenr' + strggroppara)
+            indx = getattr(gmod.indxpara.genr, strggroppara).totl
             feat = [0. for k in indx]
-        
+            
+            print('strggroppara')
+            print(strggroppara)
             for attr, valu in gmod.indxpara.__dict__.items():
                 
                 if not np.isscalar(valu):
                     continue
 
-                scal = getattr(gmod.scalpara, attr)
-                if not (scal == 'self' or scal == 'logt') and featpara == 'fact':
-                    continue
+                print('attr')
+                print(attr)
+                print('valu')
+                print(valu)
 
+                scal = getattr(gmod.scalpara, attr)
+                
+                print('scal')
+                print(scal)
                 if scal != 'gaus' and (featpara == 'mean' or featpara == 'stdv'):
                     print('Mean or Std for non-Gaussian')
                     continue
@@ -4135,10 +4233,21 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
                 else:
                     feat[valu] = getattr(gmodfeat, attr)
             
+                print('')
             feat = np.array(feat)
             setattr(gmodfeat, 'genr' + strggroppara, feat)
     
-    
+
+    print('gmod.namepara.genr.base.totl')
+    print(gmod.namepara.genr.base.totl)
+    print('gmod.scalpara.genr.base.totl')
+    print(gmod.scalpara.genr.base.totl)
+    print('gmod.namepara.genr.full.totl')
+    print(gmod.namepara.genr.full.totl)
+    print('gmod.scalpara.genr.full.totl')
+    print(gmod.scalpara.genr.full.totl)
+    raise Exception('')
+
     #print('gmod.minmpara')
     #for attr, varb in gmod.minmpara.__dict__.items():
     #    print(attr, varb)
@@ -4181,12 +4290,12 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         gmod.indxpara.hypr = gmod.indxpara.prioelem
         
     ## generative base parameter indices for each scaling
-    gmod.listindxparagenrbasescal = dict()
+    gmod.indxpara.genr.base.scal = dict()
     for scaltype in gdat.listscaltype:
-        gmod.listindxparagenrbasescal[scaltype] = np.where(np.array(gmod.scalpara.genrbase) == scaltype)[0]
+        gmod.indxpara.genr.base.scal[scaltype] = np.where(np.array(gmod.scalpara.genr.base.totl) == scaltype)[0]
 
-    if gdat.booldiagmode:
-        if np.where(gmod.scalpara.genrfull == 0)[0].size > 0:
+    if gdat.booldiag:
+        if np.where(gmod.scalpara.genr.full.totl == 0)[0].size > 0:
             raise Exception('')
 
 
@@ -4405,7 +4514,7 @@ def setp_namevarbsing(gdat, gmod, strgmodl, strgvarb, popl, ener, evtt, back, is
     if popl == 'none' and ener == 'none' and evtt == 'none' and back == 'none' and isfr == 'none':
         liststrgvarb.append(strgvarb)
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         for strgvarb in liststrgvarb:
             if liststrgvarb.count(strgvarb) != 1:
                 print('liststrgvarb')
@@ -4448,8 +4557,6 @@ def setp_varb(gdat, strgvarbbase, valu=None, minm=None, maxm=None, scal='self', 
             liststrgmodl = [strgmodl]
         else:
             liststrgmodl = ['fitt', 'plot']
-    print('liststrgmodl')
-    print(liststrgmodl)
     for strgmodl in liststrgmodl:
         
         if strgmodl == 'plot':
@@ -4483,13 +4590,6 @@ def setp_varb(gdat, strgvarbbase, valu=None, minm=None, maxm=None, scal='self', 
             
             if valu is not None:
                 if strgstat is None:
-                    print('strgvarb')
-                    print(strgvarb)
-                    print('strgmodl')
-                    print(strgmodl)
-                    print('valu')
-                    print(valu)
-                    print('')
                     setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, valu)
                 elif strgstat == 'this':
                     setp_varbcore(gdat, strgmodl, gmodoutp.this, strgvarb, valu)
@@ -4516,11 +4616,11 @@ def setp_varb(gdat, strgvarbbase, valu=None, minm=None, maxm=None, scal='self', 
                     maxm = mean + gdat.numbstdvgaus * stdv
                 
                 # uniformly-distributed
-                if scal == 'self' or scal == 'pois' or scal == 'gaus':
+                if scal == 'self' or scal == 'drct' or scal == 'pois' or scal == 'gaus':
                     binsunif = np.linspace(minm, maxm, numbbins + 1)
                 if scal == 'logt' or scal == 'powr':
                     binsunif = np.linspace(np.log10(minm), np.log10(maxm), numbbins + 1)
-                    if gdat.booldiagmode:
+                    if gdat.booldiag:
                         if minm <= 0.:
                             raise Exception('')
                 if scal == 'asnh':
@@ -4531,7 +4631,7 @@ def setp_varb(gdat, strgvarbbase, valu=None, minm=None, maxm=None, scal='self', 
                 
                 meanparaunif = (binsunif[1:] + binsunif[:-1]) / 2.
                 
-                if scal == 'self' or scal == 'pois' or scal == 'gaus':
+                if scal == 'self' or scal == 'drct' or scal == 'pois' or scal == 'gaus':
                     meanpara = meanparaunif
                     bins = binsunif
                     minmunif = minm
@@ -4641,15 +4741,8 @@ def retr_axistemp(gdat, strgvarb, strgmodl=None, boolinvr=False):
         if scal == 'self' or scal == 'pois' or scal == 'gaus':
             binsscal = np.linspace(minm, maxm, numb + 1)
         if scal == 'logt':
-            print('minm')
-            print(minm)
-            print('maxm')
-            print(maxm)
-            print('strgvarb')
-            print(strgvarb)
             binsscal = np.linspace(np.log10(minm), np.log10(maxm), numb + 1)
-            print('')
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 if minm <= 0.:
                     raise Exception('')
 
@@ -4842,7 +4935,7 @@ def make_legdmaps(gdat, strgstat, strgmodl, axis, mosa=False, assc=False):
     gmod = getattr(gdat, strgmodl)
     
     # transdimensional elements
-    if strgmodl == 'fitt' and (strgstat == 'pdfn' and gdat.boolcondcatl or strgstat == 'this') and gmod.numbparaelem > 0:
+    if strgmodl == 'fitt' and (strgstat == 'pdfn' and gdat.boolcondcatl or strgstat == 'this') and gmod.numbpara.totl.elem.popl > 0:
         for l in gmod.indxpopl:
             colr = retr_colr(gdat, strgstat, strgmodl, l)
             if strgstat == 'pdfn':
@@ -4915,7 +5008,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
                 bgal = np.copy(gdat.refr.dictelem[q]['bgal'][0, :])
                 numbelem = int(gdat.refr.numbelem[q])
                 
-                if gdatmodi is not None and gmod.numbparaelem > 0 and assc:   
+                if gdatmodi is not None and gmod.numbpara.totl.elem.popl > 0 and assc:   
                     ### hit
                     indx = gdatmodi.this.indxelemrefrasschits[q][l]
                     if indx.size > 0:
@@ -4975,23 +5068,23 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
         listindxpoplplot = [indxpoplplot]
     for l in listindxpoplplot:
         if gdatmodi is not None:
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 colr = retr_colr(gdat, strgstat, strgmodl, l)
-                mrkrsize = retr_mrkrsize(gdat, strgmodl, gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[gmod.nameparagenrelemampl[l]][l]], gmod.nameparagenrelemampl[l])
-                if 'lgal' in gdatmodi.this.indxparagenrfullelem:
-                    lgal = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l]['lgal']]
-                    bgal = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l]['bgal']]
+                mrkrsize = retr_mrkrsize(gdat, strgmodl, gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[gmod.nameparagenrelemampl[l]][l]], gmod.nameparagenrelemampl[l])
+                if 'lgal' in gdatmodi.this.indxpara.genrfullelem:
+                    lgal = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l]['lgal']]
+                    bgal = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l]['bgal']]
                 else:
-                    gang = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l]['gang']]
-                    aang = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l]['aang']]
+                    gang = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l]['gang']]
+                    aang = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l]['aang']]
                     lgal, bgal = retr_lgalbgal(gang, aang)
                 axis.scatter(gdat.anglfact * lgal, gdat.anglfact * bgal, s=mrkrsize, alpha=gdat.alphelem, label='Sample', marker=gmod.listelemmrkr[l], \
                                                                                                                            lw=gdat.mrkrlinewdth, color=colr)
 
             ## source
             if gmod.boollens:
-                lgalsour = gdatmodi.this.paragenrscalfull[gmod.indxpara.lgalsour]
-                bgalsour = gdatmodi.this.paragenrscalfull[gmod.indxpara.bgalsour]
+                lgalsour = gdatmodi.this.para.genr.scalfull[gmod.indxpara.lgalsour]
+                bgalsour = gdatmodi.this.para.genr.scalfull[gmod.indxpara.bgalsour]
                 axis.scatter(gdat.anglfact * lgalsour, gdat.anglfact * bgalsour, facecolor='none', \
                                                   alpha=gdat.alphelem, \
                                                   label='%s Source' % gmod.lablpara, s=300, marker='<', lw=gdat.mrkrlinewdth, color=gmod.colr)
@@ -5001,19 +5094,19 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
                 lgalhost = [[] for e in gmod.indxsersfgrd]
                 bgalhost = [[] for e in gmod.indxsersfgrd]
                 for e in gmod.indxsersfgrd:
-                    lgalhost[e] = gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'lgalhostisf%d' % (e))]
-                    bgalhost[e] = gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'bgalhostisf%d' % (e))]
+                    lgalhost[e] = gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'lgalhostisf%d' % (e))]
+                    bgalhost[e] = gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'bgalhostisf%d' % (e))]
                     axis.scatter(gdat.anglfact * lgalhost[e], gdat.anglfact * bgalhost[e], facecolor='none', \
                                                      alpha=gdat.alphelem, \
                                                      label='%s Host' % gmod.lablpara, s=300, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
                     if gmod.boollens:
-                        beinhost = gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'beinhostisf%d' % (e))]
+                        beinhost = gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'beinhostisf%d' % (e))]
                         axis.add_patch(plt.Circle((gdat.anglfact * lgalhost[e], gdat.anglfact * bgalhost[e]), \
                                                        gdat.anglfact * beinhost, edgecolor=gmod.colr, facecolor='none', \
                                                        lw=gdat.mrkrlinewdth, ls='--'))
                 
     # temp
-    if strgstat == 'pdfn' and gdat.boolcondcatl and gmod.numbparaelem > 0:
+    if strgstat == 'pdfn' and gdat.boolcondcatl and gmod.numbpara.totl.elem.popl > 0:
         lgal = np.zeros(gdat.numbprvlhigh)
         bgal = np.zeros(gdat.numbprvlhigh)
         ampl = np.zeros(gdat.numbprvlhigh)
@@ -5169,14 +5262,14 @@ def init_stat(gdat):
     
     ## initialization
     ### initialize the unit sample vector randomly
-    gmod.this.paragenrunitfull = np.random.rand(gmod.numbparagenrfull)
-    gmod.this.paragenrscalfull = np.empty(gmod.numbparagenrfull)
+    gmod.this.paragenrunitfull = np.random.rand(gmod.numbpara.genr.full)
+    gmod.this.paragenrscalfull = np.empty(gmod.numbpara.genr.full)
 
     ## impose user-specified initial state
     ### number of elements
     ## create dummy indxparagenrfullelem 
-    gmod.this.indxparagenrfullelem = None
-    if gmod.numbparaelem > 0:
+    gmod.this.indxpara.genrfullelem = None
+    if gmod.numbpara.totl.elem.popl > 0:
         if gdat.inittype == 'refr':
             for l in gmod.indxpopl:
                 gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]] = gmod.paragenrunitfull[gmod.indxpara.numbelem[l]]
@@ -5184,7 +5277,7 @@ def init_stat(gdat):
             for l in gmod.indxpopl:
                 if gmod.typemodltran == 'pois':
                     meanelemtemp = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, \
-                                                gmod.this.indxparagenrfullelem)[gmod.indxpara.meanelem[l]]
+                                                gmod.this.indxpara.genrfullelem)[gmod.indxpara.meanelem[l]]
                 
                 print('temp -- user input is not working for numbelem')
                 #namevarb = 'numbelempop%d' % l
@@ -5202,17 +5295,17 @@ def init_stat(gdat):
                                         max(gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]], gmod.minmpara.numbelem[l])
                 gmod.this.paragenrscalfull[gmod.indxpara.numbelem[l]] = gmod.this.paragenrscalfull[gmod.indxpara.numbelem[l]]
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if gdat.typedata == 'mock' and gdat.inittype == 'refr':
             for l in gmod.indxpopl:
                 if gmod.paragenrunitfull[gmod.indxpara.numbelem[l]] > gmod.maxmpara.numbelem[l]:
                     raise Exception('')
 
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         gmod.this.indxelemfull = []
         for l in gmod.indxpopl:
             gmod.this.indxelemfull.append(list(range(gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]].astype(int))))
-        gmod.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
+        gmod.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
 
     if gdat.inittype == 'reco':
         if gdat.namerecostat is not None:
@@ -5252,11 +5345,11 @@ def init_stat(gdat):
                     print(cntr)
 
             for attr in thisfile:
-                for k, gmod.nameparagenrbase in enumerate(gmod.nameparagenrbase):
-                    if gmod.nameparagenrbase == attr:
-                        if gmod.nameparagenrbase.startswith('numbelem'):
+                for k, namepara in enumerate(gmod.namepara.genr.base.totl):
+                    if namepara == attr:
+                        if gmod.namepara.genr.base.startswith('numbelem'):
                             try:
-                                indxpopltemp = int(gmod.nameparagenrbase[-1])
+                                indxpopltemp = int(gmod.namepara.genr.base[-1])
                                 initnumbelem = getattr(gdat, 'initnumbelempop%d' % indxpopltemp)
                                 print('Initial condition for the number of elements conflicts with the state file. Defaulting to the argument...')
                             except:
@@ -5268,11 +5361,11 @@ def init_stat(gdat):
                             print('Warning CDF is zero.')
                         if not np.isfinite(thisfile[attr][()]):
                             raise Exception('Retreived state parameter is not finite.')
-                        if (gmod.numbparaelem == 0 or gmod.numbparaelem > 0 and not k in gmod.indxpara.numbelem) and \
+                        if (gmod.numbpara.totl.elem.popl == 0 or gmod.numbpara.totl.elem.popl > 0 and not k in gmod.indxpara.numbelem) and \
                                         (not np.isfinite(gmod.this.paragenrunitfull[k]) or gmod.this.paragenrunitfull[k] < 0. or \
                                         gmod.this.paragenrunitfull[k] > 1.):
                             raise Exception('CDF of the retreived state parameter is bad.')
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 for l in gmod.indxpopl:
                     maxm.numbelem = getattr(gdat.fitt.maxm, 'numbelempop%d' % l)
                     if gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]] > maxm.numbelem:
@@ -5287,13 +5380,13 @@ def init_stat(gdat):
                     print('gmod.this.paragenrunitfull[gmod.indxpara.numbelem]')
                     print(gmod.this.paragenrunitfull[gmod.indxpara.numbelem])
             
-            gmod.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
-            gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxparagenrfullelem)
+            gmod.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
+            gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxpara.genrfullelem)
             
             if (gmod.this.paragenrunitfull == 0).all():
                 raise Exception('Bad initialization.')
     
-            if gmod.numbparaelem > 0 and gmod.this.indxparagenrfullelem is not None:
+            if gmod.numbpara.totl.elem.popl > 0 and gmod.this.indxpara.genrfullelem is not None:
                 for nameparagenrelem in gmod.namepara.elem:
                     initcomp = [[] for l in gmod.indxpopl]
                     for l in gmod.indxpopl:
@@ -5316,39 +5409,38 @@ def init_stat(gdat):
             for l in gmod.indxpopl:
                 gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]] = gdat.refr.numbelem[l]
         if gdat.typedata == 'mock':
-            for k, gmod.nameparagenrbase in enumerate(gmod.nameparagenrbase):
-                if not (gdat.inittype == 'pert' and gmod.nameparagenrbase.startswith('numbelem')) and \
-                                                                gmod.nameparagenrbase in gmod.nameparagenrbase:
-                    gmod.indxpara.true = np.where(gmod.nameparagenrbase == gmod.nameparagenrbase)[0]
+            for k, namepara in enumerate(gmod.namepara.genr.base.totl):
+                if not (gdat.inittype == 'pert' and gmod.namepara.genr.base.startswith('numbelem')):
+                    gmod.indxpara.true = k
                     gmod.this.paragenrunitfull[k] = cdfn_paragenrscalbase(gdat.fitt, '', gmodstat.paragenrscalfull[gmod.indxpara.true], k)
-        if gmod.numbparaelem > 0:
-            gmod.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
+        if gmod.numbpara.totl.elem.popl > 0:
+            gmod.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
         if gdat.typeverb > 1:
             show_paragenrscalfull(gdat, gdatmodi)
-        if gmod.this.indxparagenrfullelem is not None:
+        if gmod.this.indxpara.genrfullelem is not None:
             print('Initializing elements from the reference element parameters...')
             show_paragenrscalfull(gdat, gdatmodi)
-            gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxparagenrfullelem)
+            gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxpara.genrfullelem)
             show_paragenrscalfull(gdat, gdatmodi)
             initcompfromstat(gdat, gdatmodi, 'refr')
-        gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxparagenrfullelem)
+        gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxpara.genrfullelem)
     
     ## impose user-specified individual initial values
-    for k, gmod.nameparagenrbase in enumerate(gmod.nameparagenrbase):
-        if gmod.nameparagenrbase.startswith('numbelem'):
+    for k, namepara in enumerate(gmod.namepara.genr.base.totl):
+        if gmod.namepara.genr.base.startswith('numbelem'):
             continue
         if gdat.inittype == 'reco' or  gdat.inittype == 'refr' or gdat.inittype == 'pert':
             try:
-                getattr(gdat, 'init' + gmod.nameparagenrbase)
+                getattr(gdat, 'init' + gmod.namepara.genr.base.totl)
                 print('Conflicting initial state arguments detected, init keyword takes precedence.')
             except:
                 pass
         try:
             raise Exception('')
-            initvalu = getattr(gdat, 'init' + gmod.nameparagenrbase)
+            initvalu = getattr(gdat, 'init' + gmod.namepara.genr.base.totl)
             gmod.this.paragenrunitfull[k] = cdfn_paragenrscalbase(gdat.fitt, '', initvalu, k)
             if gdat.typeverb > 0:
-                print('Received initial condition for %s: %.3g' % (gmod.nameparagenrbase, initvalu))
+                print('Received initial condition for %s: %.3g' % (gmod.namepara.genr.base, initvalu))
         except:
             pass
     
@@ -5357,26 +5449,26 @@ def init_stat(gdat):
         print('Initializing the metamodel PSF from the provided initial state...')
         if gdat.initpsfp.size != gmod.indxpara.psfp.size:
             raise Exception('')
-        for k, gmod.nameparagenrbase in enumerate(gmod.nameparagenrbase):
+        for k, namepara in enumerate(gmod.namepara.genr.base.totl):
             if k in gmod.indxpara.psfp:
                 gmod.this.paragenrunitfull[k] = cdfn_paragenrscalbase(gdat.fitt, '', gdat.initpsfp[k-gmod.indxpara.psfp[0]], k)
     if gdat.initpsfprefr:
         print('Initializing the metamodel PSF from the reference state...')
-        for k, gmod.nameparagenrbase in enumerate(gmod.nameparagenrbase):
+        for k, namepara in enumerate(gmod.namepara.genr.base.totl):
             if k in gmod.indxpara.psfp:
                 gmod.this.paragenrunitfull[k] = cdfn_paragenrscalbase(gdat.fitt, '', gmod.psfpexpr[k-gmod.indxpara.psfp[0]], k)
 
     if gdat.inittype == 'rand' or gdat.inittype == 'reco' and not boolinitreco:
         if gdat.typeverb > 0:
             print('Initializing from a random state...')
-        gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxparagenrfullelem)
+        gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxpara.genrfullelem)
     
-    if gmod.numbparaelem > 0:
-        gmod.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
+    if gmod.numbpara.totl.elem.popl > 0:
+        gmod.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gmod.this.indxelemfull, 'fitt')
 
     # check the initial unit sample vector for bad entries
-    if gmod.numbparaelem > 0:
-        indxsampdiff = np.setdiff1d(gmod.indxparagenrfull, gmod.indxpara.numbelem)
+    if gmod.numbpara.totl.elem.popl > 0:
+        indxsampdiff = np.setdiff1d(gmod.indxpara.genrfull, gmod.indxpara.numbelem)
         
         if np.logical_not(np.isfinite(gmod.this.paragenrunitfull[indxsampdiff])).any():
             raise Exception('')
@@ -5395,7 +5487,7 @@ def init_stat(gdat):
         gmod.this.paragenrunitfull[indxsampbadd] = np.random.rand(indxsampbadd.size)
         raise Exception('')
     
-    gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxparagenrfullelem)
+    gmod.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gmod.this.paragenrunitfull, gmod.this.indxpara.genrfullelem)
     indxbadd = np.where(np.logical_not(np.isfinite(gmod.this.paragenrscalfull)))[0]
     if indxbadd.size > 0:
         raise Exception('')
@@ -5615,49 +5707,74 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     # grab the sample vector
     indxpara = np.arange(gmodstat.paragenrscalfull.size) 
 
-    if gdat.booldiagmode:
-        if not np.isfinite(gmodstat.paragenrscalfull).all():
-            raise Exception('')
-
     if gmod.typeevalpsfn != 'none' and (strgmodl == 'true' or boolinit or gdat.boolmodipsfn):
         psfp = gmodstat.paragenrscalfull[gmod.indxpara.psfp]
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if np.where(psfp == 0)[0].size == psfp.size:
                 raise Exception('')
         setattr(gmodstat, 'psfp', psfp)
     bacp = gmodstat.paragenrscalfull[gmod.indxpara.bacp]
    
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         
         # temp -- this may slow down execution
-        gmodstat.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gmodstat.indxelemfull, strgmodl)
+        gmodstat.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gmodstat.indxelemfull, strgmodl)
+        print('gmodstat.indxpara.genrfullelem')
+        print(gmodstat.indxpara.genrfullelem)
+        print('gmodstat.indxelemfull')
+        print(gmodstat.indxelemfull)
+        
+        # check if all active generative parameters are finite
+        if gdat.booldiag:
+            print('gmodstat.indxpara.genrfullelem')
+            summgene(gmodstat.indxpara.genrfullelem)
+            print('gmod.indxpara.genr.base.totl')
+            summgene(gmod.indxpara.genr.base.totl)
+            indxparatemp = []
+            for l in gmod.indxpopl:
+                indxparatemp.append(gmodstat.indxpara.genrfullelem[l]['full'])
+            indxparatemp.append(gmod.indxpara.genr.base.totl)
+            gmodstat.indxpara.genrfull = np.concatenate(indxparatemp)
+            if not np.isfinite(gmodstat.paragenrscalfull[gmodstat.indxpara.genrfull]).all():
+                raise Exception('')
 
         gmodstat.numbelem = np.empty(gmod.numbpopl, dtype=int)
         indxelem = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
+            print('gmodstat.paragenrscalfull')
+            print(gmodstat.paragenrscalfull)
+            print('gmod.indxpara.numbelem[l]')
+            print(gmod.indxpara.numbelem[l])
             gmodstat.numbelem[l] = gmodstat.paragenrscalfull[gmod.indxpara.numbelem[l]].astype(int)
             indxelem[l] = np.arange(gmodstat.numbelem[l])
             gmodstat.numbelem[l] = np.sum(gmodstat.numbelem[l])
+        
+        print('gmodstat.numbelem')
+        print(gmodstat.numbelem)
+        
         gmodstat.numbelemtotl = np.sum(gmodstat.numbelem) 
 
         gmodstat.dictelem = [[] for l in gmod.indxpopl]
         for l in gmod.indxpopl:
             gmodstat.dictelem[l] = dict()
-            for strgfeat in gmod.namepara.genrelemdefa:
+            for strgfeat in gmod.namepara.genr.elemdefa:
                 gmodstat.dictelem[l][strgfeat] = []
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
-                gmodstat.dictelem[l][nameparagenrelem] = gmodstat.paragenrscalfull[gmodstat.indxparagenrfullelem[l][nameparagenrelem]]
-                if gdat.booldiagmode:
-                    if ((abs(gmodstat.paragenrscalfull[gmodstat.indxparagenrfullelem[l][nameparagenrelem]]) < 1e-100 ) & (abs(gmodstat.paragenrscalfull[gmodstat.indxparagenrfullelem[l][nameparagenrelem]]) > 0.)).any():
+            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
+                gmodstat.dictelem[l][nameparagenrelem] = gmodstat.paragenrscalfull[gmodstat.indxpara.genrfullelem[l][nameparagenrelem]]
+                if gdat.booldiag:
+                    if ((abs(gmodstat.paragenrscalfull[gmodstat.indxpara.genrfullelem[l][nameparagenrelem]]) < 1e-100 ) & \
+                        (abs(gmodstat.paragenrscalfull[gmodstat.indxpara.genrfullelem[l][nameparagenrelem]]) > 0.)).any():
                         raise Exception('')
 
                     if gmodstat.numbelem[l] != len(gmodstat.dictelem[l][nameparagenrelem]):
                         print('l')
                         print(l)
-                        print('numbelem')
-                        print(numbelem)
-                        print('gmodstat.dictelem')
-                        print(gmodstat.dictelem)
+                        print('gmodstat.numbelem[l]')
+                        print(gmodstat.numbelem[l])
+                        print('gmodstat.dictelem[l]')
+                        print(gmodstat.dictelem[l])
+                        print('gmodstat.dictelem[l][nameparagenrelem]')
+                        print(gmodstat.dictelem[l][nameparagenrelem])
                         print('nameparagenrelem')
                         print(nameparagenrelem)
                         raise Exception('')
@@ -5667,7 +5784,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 print('Calculating element spectra...')
             initchro(gdat, gdatmodi, 'spec')
             for l in gmod.indxpopl:
-                for strgfeat in gmod.namepara.genrelem[l]:
+                for strgfeat in gmod.namepara.genr.elem.odim[l]:
                     sindcolr = [gmodstat.dictelem[l]['sindcolr%04d' % i] for i in gdat.indxenerinde]
                     gmodstat.dictelem[l]['spec'] = retr_spec(gdat, gmodstat.dictelem[l]['flux'], sind=gmodstat.dictelem[l]['sind'], curv=gmodstat.dictelem[l]['curv'], \
                               expc=gmodstat.dictelem[l]['expc'], sindcolr=sindcolr, spectype=gmod.spectype[l])
@@ -5686,15 +5803,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             for l in gmod.indxpopl:
                 print('l')
                 print(l)
-                for strgfeat in gmod.namepara.genrelem[l]:
+                for strgfeat in gmod.namepara.genr.elem.odim[l]:
                     print(strgfeat)
                     print(gmodstat.dictelem[l][strgfeat])
     
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             for l in gmod.indxpopl:
-                for g, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
-                    if (gmod.listscalparagenrelem[l][g] != 'gaus' and not gmod.listscalparagenrelem[l][g].startswith('lnor')) and  \
-                       (gmod.listscalparagenrelem[l][g] != 'expo' and (gmodstat.dictelem[l][nameparagenrelem] < getattr(gmod.minmpara, nameparagenrelem)).any()) or \
+                for g, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
+                    if (gmod.scalpara.genr.elem.odim[l][g] != 'gaus' and not gmod.scalpara.genr.elem.odim[l][g].startswith('lnor')) and  \
+                       (gmod.scalpara.genr.elem.odim[l][g] != 'expo' and (gmodstat.dictelem[l][nameparagenrelem] < getattr(gmod.minmpara, nameparagenrelem)).any()) or \
                                         (gmodstat.dictelem[l][nameparagenrelem] > getattr(gmod.maxmpara, nameparagenrelem)).any():
                         
                         print('l, g')
@@ -5707,21 +5824,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         print(getattr(gmod.minmpara, nameparagenrelem))
                         print('getattr(gmod, maxm + nameparagenrelem)')
                         print(getattr(gmod.maxmpara, nameparagenrelem))
-                        print('gmod.listscalparagenrelem[l][g]')
-                        print(gmod.listscalparagenrelem[l][g])
+                        print('gmod.scalpara.genr.elem.odim[l][g]')
+                        print(gmod.scalpara.genr.elem.odim[l][g])
                         raise Exception('')
            
         # calculate element spectra
         # temp
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             for l in gmod.indxpopl:
                 if gmod.typeelem[l] == 'lens':
                     if gdat.variasca:
-                        indx = np.where(gmodstat.paragenrscalfull[gmodstat.indxparagenrfullelem[l]['acut']] < 0.)[0]
+                        indx = np.where(gmodstat.paragenrscalfull[gmodstat.indxpara.genrfullelem[l]['acut']] < 0.)[0]
                         if indx.size > 0:
                             raise Exception('')
                     if gdat.variacut:
-                        indx = np.where(gmodstat.paragenrscalfull[gmodstat.indxparagenrfullelem[l]['asca']] < 0.)[0]
+                        indx = np.where(gmodstat.paragenrscalfull[gmodstat.indxpara.genrfullelem[l]['asca']] < 0.)[0]
                         if indx.size > 0:
                             raise Exception('')
     
@@ -5737,7 +5854,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     gmodstat.dictelem[l]['lgal'], gmodstat.dictelem[l]['bgal'], = retr_lgalbgal(gmodstat.dictelem[l]['gang'], \
                                                                                                         gmodstat.dictelem[l]['aang'])
                     
-                    if gdat.booldiagmode:
+                    if gdat.booldiag:
                         if gmodstat.numbelem[l] > 0:
                             if np.amin(gmodstat.dictelem[l]['lgal']) < gmod.minmlgal or \
                                np.amax(gmodstat.dictelem[l]['lgal']) > gmod.maxmlgal or \
@@ -5822,7 +5939,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
     # determine the indices of the pixels over which element kernels will be evaluated
     if gdat.boolbinsspat:
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             listindxpixlelem = [[] for l in gmod.indxpopl]
             listindxpixlelemconc = [[] for l in gmod.indxpopl]
             for l in gmod.indxpopl:
@@ -5855,7 +5972,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
             deflhost[e] = retr_defl(gdat, indxpixlmiss, lgalhost[e], bgalhost[e], beinhost[e], ellp=ellphost[e], angl=anglhost[e])
              
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 indxpixltemp = slice(None)
             
             setattr(gmodstat, 'deflhostisf%d' % e, deflhost[e])
@@ -5869,7 +5986,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 print('After adding the host deflection...')
                 print('defl')
                 summgene(defl)
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if not np.isfinite(deflhost).all():
                 raise Exception('')
         
@@ -5913,7 +6030,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
         stopchro(gdat, gdatmodi, 'psfnconv')
     
-    if (gmod.typeevalpsfn == 'kern' or gmod.typeevalpsfn == 'full') and gmod.numbparaelem > 0:
+    if (gmod.typeevalpsfn == 'kern' or gmod.typeevalpsfn == 'full') and gmod.numbpara.totl.elem.popl > 0:
         if strgmodl == 'true' or boolinit or gdat.boolmodipsfn:
             if gdat.typepixl == 'heal':
                 gmodstat.psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binspara.angl, gmod.typemodlpsfn, strgmodl)
@@ -5923,7 +6040,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 if gdat.kernevaltype == 'ulip':
                     gmodstat.psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binspara.angl, gmod.typemodlpsfn, strgmodl)
                     gmodstat.psfnintp = sp.interpolate.interp1d(gdat.binspara.angl, gmodstat.psfn, axis=1, fill_value='extrapolate')
-                    if gdat.booldiagmode:
+                    if gdat.booldiag:
                         if not np.isfinite(gmodstat.psfnintp(0.05)).all():
                             raise Exception('')
 
@@ -5962,7 +6079,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     for name in gmod.listnamediff:
         sbrt[name] = []
         
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gmod.boolelemsbrtdfncanyy:
             sbrtdfnc = []
         if gmod.boolelemsbrtextsbgrdanyy:
@@ -6004,13 +6121,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         
             sbrt['dfnc'] = sbrtdfnc
             
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 if not np.isfinite(sbrtdfnc).all():
                     raise Exception('Element delta function brightness not finite.')
 
             setattr(gmodstat, 'sbrtdfnc', sbrt['dfnc'])
 
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 cntppntschec = retr_cntp(gdat, sbrt['dfnc'])
                 numbelemtemp = 0
                 for l in gmod.indxpopl:
@@ -6048,7 +6165,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 summgene(deflsubh)
             setattr(gmodstat, 'deflsubh', deflsubh)
             
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 if not np.isfinite(deflsubh).all():
                     raise Exception('Element deflection is not finite.')
 
@@ -6075,7 +6192,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             sbrt['extsbgrd'] = []
             sbrt['extsbgrd'] = sbrtextsbgrd
             
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 cntppntschec = retr_cntp(gdat, sbrt['extsbgrd'])
                 if np.amin(cntppntschec) < -0.1:
                     raise Exception('Point source spectral surface brightness is not positive-definite.')
@@ -6102,9 +6219,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         if gdat.typeverb > 2:
             print('Evaluating lensed surface brightness...')
         
-        if strgstat == 'this' or gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
+        if strgstat == 'this' or gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
             sbrt['bgrd'] = []
-        if gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
+        if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
             sbrt['bgrdgalx'] = []
         
         if gdat.numbener > 1:
@@ -6131,7 +6248,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             print('specsour')
             print(specsour)
 
-        if gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
+        if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
         
             if gdat.typeverb > 2:
                 print('Interpolating the background emission...')
@@ -6170,11 +6287,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             
         setattr(gmodthis, 'sbrtlens', sbrt['lens'])
 
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if not np.isfinite(sbrt['lens']).all():
                 raise Exception('Lensed emission is not finite.')
             if (sbrt['lens'] == 0).all():
-                raise Exception('Lensed emission is zero everynp.where.')
+                raise Exception('Lensed emission is zero everywhere.')
 
         stopchro(gdat, gdatmodi, 'sbrtlens')
         
@@ -6245,7 +6362,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 sbrt[name] = sbrttemp * bacp[gmod.indxbacpback[gmod.indxbacktemp][gdat.indxener]][:, None, None]
         
         sbrt['modlraww'] += sbrt[name]
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if np.amax(sbrttemp) == 0.:
                 raise Exception('')
 
@@ -6304,7 +6421,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         summgene(sbrt['modl'])
 
     ## add PSF-convolved delta functions to the model
-    if gmod.numbparaelem > 0 and gmod.boolelemsbrtdfncanyy:
+    if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtdfncanyy:
         if gdat.typeverb > 2:
             print('Adding delta functions into the model...')
             print('sbrt[dfnc]')
@@ -6321,7 +6438,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     cntp = dict()
     cntp['modl'] = retr_cntp(gdat, sbrt['modl'])
     
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         setattr(gmodstat, 'cntpmodl', cntp['modl'])
     stopchro(gdat, gdatmodi, 'expo')
 
@@ -6348,7 +6465,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         proc_cntpdata(gdat)
     
     ## diagnostics
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         frac = cntp['modl'] / np.mean(cntp['modl'])
         if np.amin(frac) < -1e-3 and np.amin(cntp['modl']) < -0.1:
             raise Exception('')
@@ -6365,10 +6482,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         print('Evaluating the prior...')
         
     lpri = np.zeros(gmod.numblpri)
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         
         for l in gmod.indxpopl:
-            lpri[0] -= 0.5 * gdat.priofactdoff * gmod.numbparagenrelemsing[l] * gmodstat.numbelem[l]
+            lpri[0] -= 0.5 * gdat.priofactdoff * gmod.numbpara.genr.elem.sing[l] * gmodstat.numbelem[l]
         
         if gdat.penalpridiff:
             sbrtdatapnts = gdat.sbrtdata - sbrt['dfnc']
@@ -6398,8 +6515,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 lpri[2] += retr_lprbpois(gmodstat.numbelem[l], meanelem[l])
         
         for l in gmod.indxpopl:
-            for g, (strgfeat, strgpdfn) in enumerate(zip(gmod.namepara.genrelem[l], gmod.listscalparagenrelem[l])):
-                indxlpritemp = 3 + l * gmod.numbparagenrelem + g
+            for g, (strgfeat, strgpdfn) in enumerate(zip(gmod.namepara.genr.elem.odim[l], gmod.scalpara.genr.elem.odim[l])):
+                indxlpritemp = 3 + l * gmod.numbpara.genr.elem.popl + g
                 lpri[indxlpritemp] = retr_lprielem(gdat, strgmodl, l, g, strgfeat, strgpdfn, gmodstat.paragenrscalfull, gmodstat.dictelem, gmodstat.numbelem)
     lpritotl = np.sum(lpri)
     
@@ -6419,21 +6536,21 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         print('np.sum(gdat.cntpdata, (1, 2))')
         print(np.sum(gdat.cntpdata, (1, 2)))
 
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if not np.isfinite(llik).all():
             raise Exception('Likelihood is not finite.')
     
     gmodstat.lliktotl = np.sum(llik)
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if isinstance(gmodstat.lliktotl, np.ndarray):
             raise Exception('')
         if not np.isfinite(gmodstat.lliktotl).all():
             raise Exception('')
 
-    numbdoff = gdat.numbdata - gmod.numbparagenrbase
-    if gmod.numbparaelem > 0:
+    numbdoff = gdat.numbdata - gmod.numbpara.genr.base.totl
+    if gmod.numbpara.totl.elem.popl > 0:
         for l in gmod.indxpopl:
-            numbdoff -= len(gmodstat.indxparagenrfullelem[l]['full'])
+            numbdoff -= len(gmodstat.indxpara.genrfullelem[l]['full'])
 
     setattr(gmodstat, 'llik', llik)
     setattr(gmodstat, 'llikmean', gmodstat.lliktotl / gdat.numbdata) 
@@ -6465,7 +6582,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     
     setattr(gmodstat, 'lpri', lpri)
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         setattr(gmodstat, 'lpripena', lpri[0])
     
     dicttert = {}
@@ -6490,22 +6607,22 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             masshostbein = massfrombein * beinhost[e]**2
             setattr(gmodstat, 'masshostisf%dbein' % e, masshostbein)
         ### sort with respect to deflection at scale radius
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             for l in gmod.indxpopl:
                 if gmodstat.numbelem[l] > 0:
                     indxelemsortampl = np.argsort(gmodstat.dictelem[l][nameparaelemsort[l]])[::-1]
-                    for nameparagenrelem in gmod.namepara.genrelem[l]:
+                    for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
                         gmodstat.dictelem[l][nameparagenrelem + 'sort'] = gmodstat.dictelem[l][nameparagenrelem][indxelemsortampl]
 
         deflsing = np.zeros((gdat.numbpixlcart, 2, numbdeflsingplot))
         conv = np.zeros((gdat.numbpixlcart))
         convpsec = np.zeros(((gdat.numbsidecarthalf)**2))
         convpsecodim = np.zeros((gdat.numbsidecarthalf))
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if boolelemlens:
                 gmod.indxpopllens = gmod.typeelem.index('lens')
         numbdeflsing = 2
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if boolelemlens:
                 if numbelem[indxpopllens] > 0:
                     numbdeflsing += min(numbdeflsubhplot, numbelem[indxpopllens]) 
@@ -6546,7 +6663,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, 'convisf%d' % e, convhost[e, ...])
         
         ## subhalos
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if boolelemlens:
                 convelem = np.zeros((gdat.numbpixl))
                 convpsecelem = np.zeros(((gdat.numbsidecarthalf)**2))
@@ -6566,16 +6683,16 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         ### magnification
         magn = np.empty((gdat.numbpixlcart))
         histdefl = np.empty((gdat.numbdefl))
-        if gmod.numbparaelem > 0 and boolelemlens:
+        if gmod.numbpara.totl.elem.popl > 0 and boolelemlens:
             histdeflsubh = np.empty((gdat.numbdefl))
         deflsingmgtd = np.zeros((gdat.numbpixlcart, numbdeflsingplot))
         magn[:] = 1. / retr_invm(gdat, defl) 
         histdefl[:] = np.histogram(defl, bins=gdat.binspara.defl)[0]
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if boolelemlens:
                 histdeflsubh[:] = np.histogram(deflsubh, bins=gdat.binspara.deflsubh)[0]
         deflsingmgtd[:, :] = np.sqrt(np.sum(deflsing[...]**2, axis=1))
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if boolelemlens:
                 setattr(gmodstat, 'histdeflsubh', histdeflsubh)
         setattr(gmodstat, 'histdefl', histdefl)
@@ -6584,7 +6701,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         setattr(gmodstat, 'deflsingmgtd', deflsingmgtd[...])
     
     ## element related
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gdat.numbpixl == 1:
             for l in gmod.indxpopl:
                 for k in range(gmodstat.numbelem[l]):
@@ -6601,7 +6718,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             if gmod.typeelem[l] == 'lghtpntspuls':
                 gmodstat.dictelem[l]['per1'] = retr_per1(gmodstat.dictelem[l]['per0'], gmodstat.dictelem[l]['magf'])
         
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if strgstat == 'this' or gdat.boolrefeforc and strgmodl == 'fitt':
             # correlate the fitting model elements with the reference elements
             if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'mock') and gdat.boolasscrefr:
@@ -6686,14 +6803,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                                 gmodstat.dictelem[l]['aerr' + gdat.listnamerefr[q]] = np.zeros(gmodstat.numbelem[l])
                                 fittfeattemp = gmodstat.dictelem[l][strgfeat][indxelemfittasschits[q][l]]
                                 refrfeattemp = refrfeat[q][0, indxelemrefrasschits[q][l]]
-                                if gdat.booldiagmode:
+                                if gdat.booldiag:
                                     if not np.isfinite(refrfeattemp).all():
                                         raise Exception('')
                                 gmodstat.dictelem[l]['aerr' + gdat.listnamerefr[q]][indxelemfittasschits[q][l]] = 100. * (fittfeattemp - refrfeattemp) / refrfeattemp
                 
             if gdat.boolrefeforc and strgmodl == 'fitt':
                 for l in gmod.indxpopl:
-                    for strgfeat in gmod.namepara.genrelem[l]:
+                    for strgfeat in gmod.namepara.genr.elem.odim[l]:
                         if strgfeat in gdat.refr.namepara.elem[gdat.indxrefrforc[l]]:
                             if len(indxelemrefrasschits[gdat.indxrefrforc[l]][l]) == 0:
                                 continue
@@ -6706,7 +6823,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     ## number of degrees of freedom
 
     chi2doff = np.sum(cntp['resi']**2 / gdat.varidata) / numbdoff
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if not np.isfinite(cntp['resi']).all():
             raise Exception('')
         if not np.isfinite(numbdoff):
@@ -6716,17 +6833,17 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     setattr(gmodstat, 'numbdoff', numbdoff)
     setattr(gmodstat, 'chi2doff', chi2doff)
     
-    if gmod.boolelempsfn and gmod.numbparaelem > 0:
+    if gmod.boolelempsfn and gmod.numbpara.totl.elem.popl > 0:
         gmodstat.fwhmpsfn = 2. * retr_psfnwdth(gdat, gmodstat.psfn, 0.5)
             
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         
         ### derived parameters
         for l in gmod.indxpopl:
 
             # luminosity
-            if gmod.boolelemlght[l] and 'flux' in gmod.namepara.genrelem[l]:
-                for strgfeat in gmod.namepara.genrelem[l]:
+            if gmod.boolelemlght[l] and 'flux' in gmod.namepara.genr.elem.odim[l]:
+                for strgfeat in gmod.namepara.genr.elem.odim[l]:
                     if strgfeat.startswith('reds') and strgfeat != 'reds':
                         namerefr = strgfeat[-4:]
                         gmodstat.dictelem[l]['lumi' + namerefr] = np.zeros(gmodstat.numbelem[l]) + np.nan
@@ -6778,7 +6895,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     prop_stat(gdat, gdatmoditemp, strgmodl, deth=True, thisindxpopl=l, thisindxelem=k)
                     proc_samp(gdat, gdatmoditemp, 'next', strgmodl)#, boolinit=boolinit)
                     
-                    if gdat.booldiagmode:
+                    if gdat.booldiag:
                         if not np.isfinite(gmodstat.lliktotl):
                             raise Exception('')
                     
@@ -6796,9 +6913,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             fwhm = 2. * retr_psfnwdth(gdat, gmodstat.psfn, 0.5)
         setattr(gmodstat, 'fwhm', fwhm)
     
-    if gmod.numbparaelem > 0 and gmod.boolelemsbrtdfncanyy:
+    if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtdfncanyy:
         
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             sbrt['dfnctotl'] = np.zeros_like(gdat.expo)
             sbrt['dfncsubt'] = np.zeros_like(gdat.expo)
             sbrt['dfncsupt'] = np.zeros_like(gdat.expo)
@@ -6837,8 +6954,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             
                 setattr(gmodstat, 'sbrtdfncsubtpop%d' % l, sbrt['dfncsubt'])
                 
-    if gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
-        if gdat.booldiagmode:
+    if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
+        if gdat.booldiag:
             numbtemp = 0
             for l in gmod.indxpopl:
                 if gmod.boolelemsbrtextsbgrd[l]:
@@ -6863,7 +6980,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, 'sbrt%smea%d' % (name, b), sbrtmean[name][b])
             setattr(gmodstat, 'sbrt%sstd%d' % (name, b), sbrtstdv[name][b])
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gmod.boolelemsbrtdfncanyy:
             for i in gdat.indxener:
                 if 'dark' in gmod.listnamegcom:
@@ -6923,7 +7040,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         setattr(gmodstat, 'cntplensgrad', cntplensgrad)
         setattr(gmodstat, 'cntplensgradmgtd', cntplensgradmgtd)
 
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         for l in gmod.indxpopl:
             if gmod.boolelemlght[l]:
                 #### spectra
@@ -7004,7 +7121,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 if namefilt == 'imagbndr':
                     listindxelemfilt[k][l] = np.where((np.fabs(gmodstat.dictelem[l]['lgal']) < gdat.maxmgangdata) & (np.fabs(gmodstat.dictelem[l]['bgal']) < gdat.maxmgangdata))[0]
                 if namefilt == 'deltllik':
-                    listindxelemfilt[k][l] = np.where(gmodstat.dictelem[l]['deltllik'] > 0.5 * gmod.numbparagenrelemsing[l])[0]
+                    listindxelemfilt[k][l] = np.where(gmodstat.dictelem[l]['deltllik'] > 0.5 * gmod.numbpara.genr.elem.sing[l])[0]
                 if namefilt == 'nrel':
                     listindxelemfilt[k][l] = np.where(gmodstat.dictelem[l]['reln'] > 0.3)[0]
     
@@ -7049,7 +7166,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     setattr(gmodstat, 'hist' + namefrst + nameseco + 'pop%d' % l, histtdim)
                 
             ### priors on element parameters and features
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
+            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
                 xdat = gmodstat.dictelem[l][nameparagenrelem]
                 minm = getattr(gmod.minmpara, nameparagenrelem + 'pop%d' % l)
                 maxm = getattr(gmod.maxmpara, nameparagenrelem + 'pop%d' % l)
@@ -7104,7 +7221,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 #if strgmodl == 'true':
                 #    setattr(gmodstat, 'refrhist' + nameparagenrelem + 'pop%dprio' % l, gmodstat.dictelem[l]['hist' + nameparagenrelem + 'prio'])
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         for l in gmod.indxpopl:
             if gmod.typeelem[l] == 'lens':
                 if gmodstat.numbelem[l] > 0:
@@ -7116,7 +7233,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     masssubh = np.array([np.sum(factmcutfromdefs * gmodstat.dictelem[l]['defs'])])
     
     ## derived variables as a function of other derived variables
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         for l in gmod.indxpopl:
             if gmod.typeelem[l].startswith('lghtpntspuls'):
                 massshel = np.empty(gdat.numbanglhalf)
@@ -7125,7 +7242,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     massshel[k] = np.sum(gmodstat.dictelem[l]['mass'][indxelemshel])
                 setattr(gmodstat, 'massshelpop%d' % l, massshel)
             
-    if gmod.boollens or gmod.numbparaelem > 0 and gmod.boollenssubh:
+    if gmod.boollens or gmod.numbpara.totl.elem.popl > 0 and gmod.boollenssubh:
         # find the host, subhalo masses and subhalo mass fraction as a function of halo-centric radius
         listnametemp = gdat.liststrgcalcmasssubh
         listnamevarbmass = []
@@ -7137,7 +7254,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 for strgtemp in listnametemp:
                     listnamevarbmassvect.append('masshostisf%d' % e + strgtemp)
                     listnamevarbmassscal.append('masshostisf%d' % e + strgtemp + 'bein')
-        if gmod.numbparaelem > 0 and gmod.boollenssubh:
+        if gmod.numbpara.totl.elem.popl > 0 and gmod.boollenssubh:
             listnamevarbmassscal.append('masssubhtotl')
             listnamevarbmassscal.append('fracsubhtotl')
             for strgtemp in listnametemp:
@@ -7177,12 +7294,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             dicttert[name + 'bein'] = np.interp(beinhost, gdat.meanpara.anglhalf, dicttert[name])
             setattr(gmodstat, name + 'bein', dicttert[name + 'bein'])
         
-    #if gmod.numbparaelem > 0:
+    #if gmod.numbpara.totl.elem.popl > 0:
     #    ## copy element parameters to the global object
     #    feat = [[] for l in gmod.indxpopl]
     #    for l in gmod.indxpopl:
     #        feat[l] = dict()
-    #        for strgfeat in gmod.namepara.genrelem[l]:
+    #        for strgfeat in gmod.namepara.genr.elem.odim[l]:
     #            if strgfeat[:-4] == 'etag':
     #                continue
     #            if len(gmodstat.dictelem[l][strgfeat]) > 0:
@@ -7195,7 +7312,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     #    #for strgfeat in gmod.namepara.elem:
     #    #    feattemp = [[] for l in gmod.indxpopl]
     #    #    for l in gmod.indxpopl:
-    #    #        if strgfeat in gmod.namepara.genrelem[l]:
+    #    #        if strgfeat in gmod.namepara.genr.elem.odim[l]:
     #    #            if strgfeat in feat[l]:
     #    #                feattemp[l] = feat[l][strgfeat]
     #    #            else:
@@ -7216,7 +7333,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     #            name = name.replace('true', 'refr')
     #            setattr(gdat, name, valu)
     
-    if gmod.numbparaelem > 0 and gdat.priofactdoff != 0.:
+    if gmod.numbpara.totl.elem.popl > 0 and gdat.priofactdoff != 0.:
         if strgmodl == 'true':
             for q in gdat.indxrefr:
                 for strgfeat in gdat.refr.namepara.elem[q]:
@@ -7247,12 +7364,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         print('gdat.rtagmock')
         print(gdat.rtagmock)
         if gdat.rtagmock is not None:
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 for l in gmod.indxpopl:
-                    for strgfeat in gmod.namepara.genrelem[l]:
+                    for strgfeat in gmod.namepara.genr.elem.odim[l]:
                         if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':# or strgfeat.startswith('aerr'):
                             continue
-                        if strgfeat in gmod.namepara.genrelem[l]:
+                        if strgfeat in gmod.namepara.genr.elem.odim[l]:
                             hist = getattr(gmodstat, 'hist' + strgfeat + 'pop%d' % l)
                             reca = getattr(gdat.true.this, 'reca' + strgfeat + 'pop%d' % l)
                             histcorrreca = hist / reca
@@ -7274,7 +7391,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             deflresiperc = 100. * deflresimgtd / truedeflmgtd
             setattr(gmodstat, 'deflresi', deflresi)
             setattr(gmodstat, 'deflresimgtd', deflresimgtd)
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 trueconvelem = getattr(gdat.true.this, 'convelem')
                 convelemresi = convelem[:] - trueconvelem
                 convelemresiperc = 100. * convelemresi / trueconvelem
@@ -7286,7 +7403,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, 'magnresi', magnresi)
             setattr(gmodstat, 'magnresiperc', magnresiperc)
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
     
         # correlate the catalog sample with the reference catalog
         if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'mock') and gdat.boolasscrefr:
@@ -7295,7 +7412,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 for l in gmod.indxpopl:
                     if gdat.refr.numbelem[q] > 0:
                         cmpl = np.array([float(len(indxelemrefrasschits[q][l])) / gdat.refr.numbelem[q]])
-                        if gdat.booldiagmode:
+                        if gdat.booldiag:
                             if cmpl > 1. or cmpl < 0.:
                                 raise Exception('')
                     else:
@@ -7303,7 +7420,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     setattr(gmodstat, 'cmplpop%dpop%d' % (l, q), cmpl)
                     if gmodstat.numbelem[l] > 0:
                         fdis = np.array([float(indxelemfittasscfals[q][l].size) / gmodstat.numbelem[l]])
-                        if gdat.booldiagmode:
+                        if gdat.booldiag:
                             if fdis > 1. or fdis < 0.:
                                 raise Exception('')
                     else:
@@ -7316,7 +7433,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 for l in gmod.indxpopl:
                     featrefrassc[q][l] = dict()
                     for strgfeat in gdat.refr.namepara.elem[q]:
-                        if not strgfeat in gmod.namepara.genrelem[l] or strgfeat in gdat.refr.namepara.elemonly[q][l]:
+                        if not strgfeat in gmod.namepara.genr.elem.odim[l] or strgfeat in gdat.refr.namepara.elemonly[q][l]:
                             continue
                         if isinstance(gmodstat.dictelem[l][strgfeat], np.ndarray) and gmodstat.dictelem[l][strgfeat].ndim > 1:
                             continue
@@ -7370,7 +7487,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                             indxgood = np.where(refrhistfeattdim != 0.)
                             if indxgood[0].size > 0:
                                 cmpltdim[indxgood] = refrhistfeattdimassc[indxgood].astype(float) / refrhistfeattdim[indxgood]
-                                if gdat.booldiagmode:
+                                if gdat.booldiag:
                                     if np.where((cmpltdim[indxgood] > 1.) | (cmpltdim[indxgood] < 0.))[0].size > 0:
                                         raise Exception('')
                         setattr(gmodstat, 'cmpl%s%spop%d' % (nameparaelemfrst, nameparaelemseco, q), cmpltdim)
@@ -7383,7 +7500,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         indxgood = np.where(refrhistfeatfrst != 0.)[0]
                         if indxgood.size > 0:
                             cmplfrst[indxgood] = refrhistfeatfrstassc[indxgood].astype(float) / refrhistfeatfrst[indxgood]
-                            if gdat.booldiagmode:
+                            if gdat.booldiag:
                                 if np.where((cmplfrst[indxgood] > 1.) | (cmplfrst[indxgood] < 0.))[0].size > 0:
                                     raise Exception('')
                    
@@ -7414,7 +7531,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                             indxgood = np.where(fitthistfeattdim != 0.)
                             if indxgood[0].size > 0:
                                 fdistdim[indxgood] = fitthistfeattdimfals[indxgood].astype(float) / fitthistfeattdim[indxgood]
-                                if gdat.booldiagmode:
+                                if gdat.booldiag:
                                     if np.where((fdistdim[indxgood] > 1.) | (fdistdim[indxgood] < 0.))[0].size > 0:
                                         raise Exception('')
                         
@@ -7428,7 +7545,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         indxgood = np.where(fitthistfeatfrst != 0.)[0]
                         if indxgood.size > 0:
                             fdisfrst[indxgood] = fitthistfeatfrstfals[indxgood].astype(float) / fitthistfeatfrst[indxgood]
-                            if gdat.booldiagmode:
+                            if gdat.booldiag:
                                 if np.where((fdisfrst[indxgood] > 1.) | (fdisfrst[indxgood] < 0.))[0].size > 0:
                                     raise Exception('')
                     
@@ -7437,7 +7554,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         # temp
         if strgmodl == 'true' and gdat.typeverb > 0:
             for l in gmod.indxpopl:
-                for strgfeat in gmod.namepara.genrelem[l]:
+                for strgfeat in gmod.namepara.genr.elem.odim[l]:
                     minm = getattr(gmod.minmpara, strgfeat)
                     maxm = getattr(gmod.maxmpara, strgfeat)
                     if np.where(minm > gmodstat.dictelem[l][strgfeat])[0].size > 0 or np.where(maxm < gmodstat.dictelem[l][strgfeat])[0].size > 0:
@@ -7450,9 +7567,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         print(minm)
                         print('Plot maxmimum')
                         print(maxm)
-                        if strgfeat == gmod.nameparagenrelemampl[l] and strgfeat in gmod.namepara.genrelem[l]:
-                            gmod.indxparagenrelemtemp = gmod.namepara.genrelem[l].index(strgfeat)
-                            if (gmod.listscalparagenrelem[l][gmod.indxparagenrelemtemp] != 'gaus' and not gmod.listscalparagenrelem[l][gmod.indxparagenrelemtemp].startswith('lnor')):
+                        if strgfeat == gmod.nameparagenrelemampl[l] and strgfeat in gmod.namepara.genr.elem.odim[l]:
+                            gmod.indxpara.genrelemtemp = gmod.namepara.genr.elem.odim[l].index(strgfeat)
+                            if (gmod.scalpara.genr.elem.odim[l][gmod.indxpara.genrelemtemp] != 'gaus' and not gmod.scalpara.genr.elem.odim[l][gmod.indxpara.genrelemtemp].startswith('lnor')):
                                 raise Exception('')
     stopchro(gdat, gdatmodi, 'tert')
     
@@ -7711,7 +7828,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                         timeinit = gdatfinl.functime()
                     gdatfinl.gmrbparagenrscalbase = np.zeros(gdatfinl.fitt.numbparagenrbase)
                     gdatfinl.gmrbstat = np.zeros((gdatfinl.numbener, gdatfinl.numbpixl, gdatfinl.numbevtt))
-                    for k in gdatfinl.fitt.indxparagenrbase:
+                    for k in gdatfinl.fitt.indxpara.genrbase:
                         gdatfinl.gmrbparagenrscalbase[k] = tdpy.mcmc.gmrb_test(listparagenrscalfull[:, :, k])
                         if not np.isfinite(gdatfinl.gmrbparagenrscalbase[k]):
                             gdatfinl.gmrbparagenrscalbase[k] = 0.
@@ -7770,7 +7887,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 indxtiletemp += 1
                 
                 if len(liststrgtile) == 1:
-                    for strgfeat in gdatfinl.refrgmod.namepara.genrelemtotl:
+                    for strgfeat in gdatfinl.refrgmod.namepara.genr.elemtotl:
                         refrfeattile = [[] for q in gdatfinl.indxrefr]
                         setattr(gdatfinl, 'refr' + strgfeat, refrfeattile)
                 
@@ -7786,12 +7903,12 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                         if name.startswith('refrhist'):
                             setattr(gdatfinl, name, np.zeros_like(getattr(gdatfinl, name)))
                             
-                #for strgfeat in gdatfinl.refrgmod.namepara.genrelemtotl:
+                #for strgfeat in gdatfinl.refrgmod.namepara.genr.elemtotl:
                 #    refrfeattile = getattr(gdatfinl, 'refr' + strgfeat)
                 #    #refrfeat = getattr(gdatfinl, 'refr' + strgfeat)
                 #    refrfeat = [[] for q in gdatfinl.indxrefr]
                 #    for q in gdatfinl.indxrefr:
-                #        if strgfeat in gdatfinl.refrgmod.namepara.genrelem[q]:
+                #        if strgfeat in gdatfinl.refrgmod.namepara.genr.elem.odim[q]:
                 #            refrfeat[q].append(refrfeattile[q])
                 
                 for strgvarb in gdatfinl.liststrgvarbarrysamp:
@@ -7820,10 +7937,10 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 print(rtag[indxrtaggoodtemp])
 
             # np.concatenate reference elements from different tiles
-            #for strgfeat in gdatfinl.refrgmod.namepara.genrelemtotl:
+            #for strgfeat in gdatfinl.refrgmod.namepara.genr.elemtotl:
             #    refrfeat = getattr(gdatfinl, 'refr' + strgfeat, refrfeat)
             #    for q in gdatfinl.indxrefr:
-            #        if strgfeat in gdatfinl.refrgmod.namepara.genrelem[q]:
+            #        if strgfeat in gdatfinl.refrgmod.namepara.genr.elem.odim[q]:
             #            refrfeat[q] = np.concatenate(refrfeat[q], axis=1)
             
             for strgvarb in gdatfinl.liststrgvarbarrysamp:
@@ -7864,9 +7981,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             gdatfinl.mlikparagenrscalfull = getattr(gdatfinl, 'list' + strgpdfn + 'paragenrscalfull')[indxsamptotlmlik, :]
             #if gdatfinl.fitt.numbparaelem > 0:
             #    gdatfinl.mlikindxelemfull = listindxelemfull[indxsamptotlmlik]
-            gdatfinl.mlikparagenrscalbase = gdatfinl.mlikparagenrscalfull[gdatfinl.fitt.indxparagenrbase]
-            for k, gmod.nameparagenrbase in enumerate(gdatfinl.fitt.nameparagenrbase):
-                setattr(gdatfinl, 'mlik' + gmod.nameparagenrbase, gdatfinl.mlikparagenrscalbase[k])
+            gdatfinl.mlikparagenrscalbase = gdatfinl.mlikparagenrscalfull[gdatfinl.fitt.indxpara.genrbase]
+            for k, namepara in enumerate(gdatfinl.fitt.namepara.genr.base.totl):
+                setattr(gdatfinl, 'mlik' + gmod.namepara.genr.base, gdatfinl.mlikparagenrscalbase[k])
 
             # add execution times to the chain output
             gdatfinl.timereal = np.zeros(gdatfinl.numbproc)
@@ -7890,9 +8007,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 setattr(gdatfinl, strgpdfn + 'leviprio', leviprio)
             
         # parse the sample vector
-        listparagenrscalbase = listparagenrscalfull[:, gdatfinl.fitt.indxparagenrbase]
-        for k, gmod.nameparagenrbase in enumerate(gdatfinl.fitt.nameparagenrbase):
-            setattr(gdatfinl, 'list' + strgpdfn + gmod.nameparagenrbase, listparagenrscalbase[:, k])
+        listparagenrscalbase = listparagenrscalfull[:, gdatfinl.fitt.indxpara.genrbase]
+        for k, namepara in enumerate(gdatfinl.fitt.namepara.genr.base.totl):
+            setattr(gdatfinl, 'list' + strgpdfn + gmod.namepara.genr.base, listparagenrscalbase[:, k])
         setattr(gdatfinl, 'list' + strgpdfn + 'paragenrscalbase', listparagenrscalbase)
 
         if strgpdfn == 'post' and gdatfinl.checprio:
@@ -7986,41 +8103,41 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             if gdatfinl.typedata == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
 
-                    for gmod.namepara.genrelemvarbhist in gdatfinl.liststrgvarbhist:
-                        strgvarb = gmod.namepara.genrelemvarbhist[0]
+                    for gmod.namepara.genr.elemvarbhist in gdatfinl.liststrgvarbhist:
+                        strgvarb = gmod.namepara.genr.elemvarbhist[0]
 
-                        if gmod.namepara.genrelemvarbhist[1].startswith('aerr') or len(gmod.namepara.genrelemvarbhist[2]) > 0 and gmod.namepara.genrelemvarbhist[2].startswith('aerr'):
+                        if gmod.namepara.genr.elemvarbhist[1].startswith('aerr') or len(gmod.namepara.genr.elemvarbhist[2]) > 0 and gmod.namepara.genr.elemvarbhist[2].startswith('aerr'):
                             continue
-                        if gmod.namepara.genrelemvarbhist[1] == 'spec' or gmod.namepara.genrelemvarbhist[1] == 'deflprof' or gmod.namepara.genrelemvarbhist[1] == 'specplot':
+                        if gmod.namepara.genr.elemvarbhist[1] == 'spec' or gmod.namepara.genr.elemvarbhist[1] == 'deflprof' or gmod.namepara.genr.elemvarbhist[1] == 'specplot':
                             continue
-                        if len(gmod.namepara.genrelemvarbhist[2]) > 0 and (gmod.namepara.genrelemvarbhist[2] == 'spec' or \
-                                    gmod.namepara.genrelemvarbhist[2] == 'deflprof' or gmod.namepara.genrelemvarbhist[2] == 'specplot'):
+                        if len(gmod.namepara.genr.elemvarbhist[2]) > 0 and (gmod.namepara.genr.elemvarbhist[2] == 'spec' or \
+                                    gmod.namepara.genr.elemvarbhist[2] == 'deflprof' or gmod.namepara.genr.elemvarbhist[2] == 'specplot'):
                             continue
                         
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
                         for qq in gdatmock.indxrefr:
-                            l = int(gmod.namepara.genrelemvarbhist[3][qq].split('pop')[1][0])
-                            qq = int(gmod.namepara.genrelemvarbhist[3][qq].split('pop')[2][0])
-                            if gmod.namepara.genrelemvarbhist[1][-4:] in gdatfinl.listnamerefr and \
-                                    (len(gmod.namepara.genrelemvarbhist[2]) == 0 or gmod.namepara.genrelemvarbhist[2][-4:] in gdatfinl.listnamerefr):
+                            l = int(gmod.namepara.genr.elemvarbhist[3][qq].split('pop')[1][0])
+                            qq = int(gmod.namepara.genr.elemvarbhist[3][qq].split('pop')[2][0])
+                            if gmod.namepara.genr.elemvarbhist[1][-4:] in gdatfinl.listnamerefr and \
+                                    (len(gmod.namepara.genr.elemvarbhist[2]) == 0 or gmod.namepara.genr.elemvarbhist[2][-4:] in gdatfinl.listnamerefr):
                                 listhistincr = listhist
                             else:
-                                if gmod.namepara.genrelemvarbhist[1][-4:] in gdatfinl.listnamerefr and len(gmod.namepara.genrelemvarbhist[2]) > 0:
+                                if gmod.namepara.genr.elemvarbhist[1][-4:] in gdatfinl.listnamerefr and len(gmod.namepara.genr.elemvarbhist[2]) > 0:
                                     listcmpltrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genrelemvarbhist[2] + 'pop%dpop%d' % (l, qq))], 2)
+                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (l, qq))], 2)
                                     listfdistrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genrelemvarbhist[2] + 'pop%dpop%d' % (qq, l))], 2)
-                                elif len(gmod.namepara.genrelemvarbhist[2][:-4]) > 0 and gmod.namepara.genrelemvarbhist[2][-4:] in gdatfinl.listnamerefr:
+                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (qq, l))], 2)
+                                elif len(gmod.namepara.genr.elemvarbhist[2][:-4]) > 0 and gmod.namepara.genr.elemvarbhist[2][-4:] in gdatfinl.listnamerefr:
                                     listcmpltrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genrelemvarbhist[1] + 'pop%dpop%d' % (l, qq))], 1)
+                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (l, qq))], 1)
                                     listfdistrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genrelemvarbhist[1] + 'pop%dpop%d' % (qq, l))], 1)
+                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (qq, l))], 1)
                                 else:
-                                    listcmpltrue = getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genrelemvarbhist[3][qq])
-                                    listfdistrue = getattr(gdatmock, 'listpostfdis' + gmod.namepara.genrelemvarbhist[3][qq])
-                                if len(gmod.namepara.genrelemvarbhist[2]) == 0:
+                                    listcmpltrue = getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[3][qq])
+                                    listfdistrue = getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[3][qq])
+                                if len(gmod.namepara.genr.elemvarbhist[2]) == 0:
                                     listcmplboot = np.empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                     listfdisboot = np.empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                     listhistboot = np.empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
@@ -8043,14 +8160,14 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                                 listhistincr[indxbadd] = -1.5
                                 listhistincr[indxbaddzero] = 1.5
                             
-                            listgdatmodi[0].liststrgchan += ['incr' + gmod.namepara.genrelemvarbhist[4][qq]]
-                            setattr(gdatfinl, 'listpostincr' + gmod.namepara.genrelemvarbhist[4][qq], listhistincr)
+                            listgdatmodi[0].liststrgchan += ['incr' + gmod.namepara.genr.elemvarbhist[4][qq]]
+                            setattr(gdatfinl, 'listpostincr' + gmod.namepara.genr.elemvarbhist[4][qq], listhistincr)
                         
                             ## external correction
                             for q in gdatfinl.indxrefr:
-                                nametemp = gmod.namepara.genrelemvarbhist[1] 
-                                if len(gmod.namepara.genrelemvarbhist[2]) > 0:
-                                    nametemp += gmod.namepara.genrelemvarbhist[2]
+                                nametemp = gmod.namepara.genr.elemvarbhist[1] 
+                                if len(gmod.namepara.genr.elemvarbhist[2]) > 0:
+                                    nametemp += gmod.namepara.genr.elemvarbhist[2]
                                 nametemp += 'pop%dpop%dpop%d' % (q, qq, l)
                                 crexhist = getattr(gdatfinl, 'crex' + nametemp)
                                 if crexhist is not None:
@@ -8178,7 +8295,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             setattr(gdatfinl, strgpdfn + 'bcom', bcom)
         
         listnametemp = ['lliktotl']
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             listnametemp += ['lpripena']
 
         for namevarbscal in listnametemp:
@@ -8610,6 +8727,16 @@ def retr_infodens(pdfnpost, pdfnprio):
     return infodens
 
 
+def retr_llik_unbd(gdat, strgmodl, cntpmodl):
+    
+    if gdat.liketype == 'pois':
+        llik = np.exp(-(xpos - xpossamp)**2) + np.exp(-(yposgrid - ypossamp)**2)
+    if gdat.liketype == 'gaus':
+        llik = np.exp(-(xpos - xpossamp)**2) + np.exp(-(yposgrid - ypossamp)**2)
+    
+    return llik
+
+
 def retr_llik(gdat, strgmodl, cntpmodl):
    
     if gdat.liketype == 'pois':
@@ -8790,7 +8917,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntpresi', i, m)
         
         if gdat.numbpixl > 1:
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 if gmod.boolelemlens:
                     plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convelem', booltdim=True)
         
@@ -8804,7 +8931,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 plot_psfn(gdat, gdatmodi, strgstat, strgmodl)
     
     setp_indxswepsave(gdat)
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         # element parameter histograms
         if not (strgmodl == 'true' and gdat.typedata == 'inpt'):
             
@@ -8812,7 +8939,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
 
             for l in gmod.indxpopl:
                 strgindxydat = 'pop%d' % l
-                for nameparaderielemodim in gmod.namepara.derielemodim[l]:
+                for nameparaderielemodim in gmod.namepara.deri.elem.odim[l]:
                     if not (nameparaderielemodim == 'flux' or nameparaderielemodim == 'mcut' or \
                             nameparaderielemodim == 'deltllik' or nameparaderielemodim == 'defs' or nameparaderielemodim == 'nobj'):
                         continue
@@ -8860,13 +8987,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             
                             if typehist == 'histcorrreca':
                                 
-                                if gmod.numbparaelem == 0 or gdat.priofactdoff == 0.:
+                                if gmod.numbpara.totl.elem.popl == 0 or gdat.priofactdoff == 0.:
                                     continue
 
                                 if nameparaderielemodim == 'specplot' or nameparaderielemodim == 'spec' or nameparaderielemodim == 'deflprof':
                                     continue
                             
-                                if not nameparaderielemodim in gmod.namepara.genrelem[l]:
+                                if not nameparaderielemodim in gmod.namepara.genr.elem.odim[l]:
                                     continue
                             
                             plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'hist' + nameparaderielemodim + 'pop%d' % l, \
@@ -8878,11 +9005,11 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                               nameinte='histodim/', typehist=typehist)
     
     if not booltile:
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             # element parameter correlations
             for l in gmod.indxpopl:
                 if strgmodl != 'true' and gdat.boolinforefr and gdat.boolasscrefr:
-                    for strgfeat in gmod.namepara.derielemodim[l]:
+                    for strgfeat in gmod.namepara.deri.elem.odim[l]:
                         if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
                                                                                     (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
                             continue
@@ -8901,7 +9028,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
                     if gmod.numbpopl > 1:
-                        if gmod.numbparaelem > 0:
+                        if gmod.numbpara.totl.elem.popl > 0:
                             for l in gmod.indxpopl:
                                 plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntpdata', i, m, indxpoplplot=l)
         
@@ -8923,7 +9050,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             
             ## highest amplitude element
             # temp
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 # completeness and false discovery rate
                 if strgmodl != 'true' and gdat.boolasscrefr:
                     for strgclas in ['cmpl', 'fdis']:
@@ -8933,7 +9060,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             for q in gdat.indxrefr:
                                 if not l in gdat.refrindxpoplassc[q]:
                                     continue
-                                if gdat.refr.numbelem[q] == 0 and strgclas == 'cmpl' or gmod.numbparaelem == 0 and strgclas == 'fdis':
+                                if gdat.refr.numbelem[q] == 0 and strgclas == 'cmpl' or gmod.numbpara.totl.elem.popl == 0 and strgclas == 'fdis':
                                     continue
                                 if strgclas == 'cmpl':
                                     lablydat = getattr(gmod.lablpara, strgclas + 'pop%dpop%d' % (l, q))
@@ -8944,7 +9071,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 for strgfeat in gdat.refr.namepara.elem[q]:
                                     if strgfeat == 'etag':
                                         continue
-                                    if strgclas == 'fdis' and not strgfeat in gmod.namepara.derielemodim[l]:
+                                    if strgclas == 'fdis' and not strgfeat in gmod.namepara.deri.elem.odim[l]:
                                         continue
                                     if not strgfeat.startswith('spec') and not strgfeat.startswith('defl') \
                                                          and not strgfeat in gdat.refr.namepara.elemonly[q][l] and \
@@ -8957,7 +9084,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                   scalxdat=scalxdat, limtydat=limtydat, limtxdat=limtxdat, \
                                                   omittrue=True, nameinte=nameinte)
 
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 alph = 0.1
                 if strgmodl == 'true':
                     pathtemp = gdat.pathinit
@@ -9124,7 +9251,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     limtydat = gdat.limtydathistfeat
                     for l in gmod.indxpopl:
                         strgindxydat = 'pop%d' % l
-                        for strgfeat in gmod.namepara.derielemodim[l]:
+                        for strgfeat in gmod.namepara.deri.elem.odim[l]:
                             if strgfeat.startswith('aerr') or strgfeat == 'specplot' or strgfeat == 'spec' or strgfeat == 'deflprof':
                                 continue
                             lablydat = r'$N_{%s}$' % gmod.lablelemextn[l]
@@ -9154,7 +9281,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
 
 
     if not (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             # element parameter correlations
             liststrgelemtdimvarb = getattr(gdat, 'liststrgelemtdimvarb' + strgphas)
             for strgelemtdimtype in gdat.liststrgelemtdimtype:
@@ -9162,12 +9289,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     if strgelemtdimvarb.startswith('cmpl'):
                         continue
                     for l0 in gmod.indxpopl:
-                        for strgfrst in gmod.namepara.genrelem[l0]:
+                        for strgfrst in gmod.namepara.genr.elem.odim[l0]:
                             
                             if strgfrst.startswith('spec') or strgfrst == 'specplot' or strgfrst == 'deflprof':
                                 continue
 
-                            for strgseco in gmod.namepara.genrelem[l0]:
+                            for strgseco in gmod.namepara.genr.elem.odim[l0]:
                                 
                                 if strgseco.startswith('spec') or strgseco == 'specplot' or strgseco == 'deflprof':
                                     continue
@@ -9258,9 +9385,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             ## spatial priors
             # temp
             if gdat.numbpixl > 1:
-                if gmod.numbparaelem > 0:
+                if gmod.numbpara.totl.elem.popl > 0:
                     for l in gmod.indxpopl:
-                        for strgfeat, strgpdfn in zip(gmod.namepara.genrelemmodu[l], gmod.liststrgpdfnmodu[l]):
+                        for strgfeat, strgpdfn in zip(gmod.namepara.genr.elemmodu[l], gmod.liststrgpdfnmodu[l]):
                             if strgpdfn == 'tmplreln':
                                 plot_genemaps(gdat, gdatmodi, 'fitt', strgpdfn, 'lpdfspatpriointp', booltdim=True)
                             if strgpdfn == 'tmplgaum':
@@ -9279,7 +9406,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 
                 ## count error
                 if strgmodl != 'true':
-                    if gmod.numbparaelem > 0:
+                    if gmod.numbpara.totl.elem.popl > 0:
                         for l in gmod.indxpopl:
                             if gmod.boolcalcerrr[l]:
                                 for i in gdat.indxener:
@@ -9329,7 +9456,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'histdefl', 'meandefl', \
                                                                         scal='self', lablxdat=r'$\alpha$ [arcsec]', lablydat=r'$N_{pix}$', \
                                                                                  strgindxydat=strgindxydat, indxydat=indxydat, histodim=True)
-            if gmod.numbparaelem > 0 and gmod.boolelemdeflsubhanyy:
+            if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemdeflsubhanyy:
                 indxydat = [slice(None)]
                 strgindxydat = ''
                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convpsecelemodim', 'meanwvecodim', lablxdat='$k$ [1/kpc]', lablydat='$P_{sub}(k)$', \
@@ -9340,7 +9467,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             if gmod.boollens:
                 for i in gdat.indxener:
                     plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntpbgrd', i, -1, strgcbar='cntpdata')
-                    if gmod.numbparaelem > 0 and gmod.boolelemsbrtextsbgrdanyy:
+                    if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtextsbgrdanyy:
                         plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntpbgrdgalx', i, -1, strgcbar='cntpdata')
                         plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntpbgrdexts', i, -1, strgcbar='cntpdata')
                 
@@ -9372,7 +9499,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             plot_defl(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, nameparagenrelem='resi', indxdefl=k, multfact=100.)
                     
                     if gdat.numbpixl > 1:
-                        if gmod.numbparaelem > 0:
+                        if gmod.numbpara.totl.elem.popl > 0:
                             plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convelemresi', booltdim=True)
                             plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'convelemresiperc', booltdim=True)
                         plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'magnresi', booltdim=True)
@@ -9519,11 +9646,11 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             for namevarbscal in gmod.namepara.scal:
                 plot_infopvks(gdat, gdatprio, namevarbscal, namevarbscal)
             for l in gmod.indxpopl:
-                for strgfeatfrst in gmod.namepara.genrelem[l]:
+                for strgfeatfrst in gmod.namepara.genr.elem.odim[l]:
                     if strgfeatfrst == 'spec' or strgfeatfrst == 'deflprof' or strgfeatfrst == 'specplot':
                         continue
                     plot_infopvks(gdat, gdatprio, strgfeatfrst, 'hist' + strgfeatfrst + 'pop%d' % l)
-                    for strgfeatseco in gmod.namepara.genrelem[l]:
+                    for strgfeatseco in gmod.namepara.genr.elem.odim[l]:
                         if strgfeatseco == 'spec' or strgfeatseco == 'deflprof' or strgfeatseco == 'specplot':
                             continue
                         
@@ -9561,7 +9688,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
                 plt.close(figr)
                 
                 figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
-                axis.plot(gmod.indxparagenrbase, gdat.gmrbparagenrscalbase)
+                axis.plot(gmod.indxpara.genr.base.totl, gdat.gmrbparagenrscalbase)
                 axis.set_xticklabels(gmod.labltotlpara.genrbase)
                 axis.set_ylabel('PSRF')
                 plt.tight_layout()
@@ -9635,7 +9762,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     if booltile:
         return
 
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gdat.typeverb > 0:
             print('A mosaic of samples...')
     
@@ -9644,17 +9771,17 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
             plot_mosa(gdat, strgpdfn)
     
     ## randomly selected trandimensional parameters
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         if gdat.typeverb > 0:
             print('Transdimensional parameters...')
     
         # choose the parameters based on persistence
         stdvlistsamptran = np.std(listparagenrscalfull[:, gmod.indxsamptrap], axis=0)
         indxtrapgood = np.where(stdvlistsamptran > 0.)[0]
-        gmod.numbparaelemgood = indxtrapgood.size
-        gmod.numbparaelemplot = min(3, gmod.numbparaelemgood)
-        if gmod.numbparaelemplot > 0:
-            indxtrapplot = np.sort(np.random.choice(gmod.indxsamptrap[indxtrapgood], size=gmod.numbparaelemplot, replace=False))
+        gmod.numbpara.totl.elemgood = indxtrapgood.size
+        gmod.numbpara.totl.elemplot = min(3, gmod.numbpara.totl.elemgood)
+        if gmod.numbpara.totl.elemplot > 0:
+            indxtrapplot = np.sort(np.random.choice(gmod.indxsamptrap[indxtrapgood], size=gmod.numbpara.totl.elemplot, replace=False))
 
             path = getattr(gdat, 'path' + strgpdfn + 'finlvarbscalcova')
             tdpy.mcmc.plot_grid(path, 'listelemfrst', listparagenrscalfull[:, gmod.indxsamptrap[:3]], [gmod.lablpara[k] for k in gmod.indxsamptrap[:3]])
@@ -9727,7 +9854,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     tdpy.mcmc.plot_grid(path, 'paragenrscalbase', listparagenrscalbase, gmod.labltotlpara.genrbasetotl, truepara=truepara, listvarbdraw=[mlikpara])
     
     # stacked posteiors binned in position and flux
-    if gmod.numbparaelem > 0 and gdat.numbpixl > 1:
+    if gmod.numbpara.totl.elem.popl > 0 and gdat.numbpixl > 1:
         liststrgbins = ['quad', 'full']
         for l in gmod.indxpopl:
             plot_histlgalbgalelemstkd(gdat, strgpdfn, l, 'cumu')
@@ -9850,7 +9977,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit):
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtback%04dmea%d' % (c, b), strgpdfn, strgmome='errr')
                 cntr += 1
             
-            if gmod.numbparaelem > 0 and gmod.boolelemsbrtdfncanyy and not (liststrgmodl[a] == 'true' and gdat.refr.numbelemtotl == 0):
+            if gmod.numbpara.totl.elem.popl > 0 and gmod.boolelemsbrtdfncanyy and not (liststrgmodl[a] == 'true' and gdat.refr.numbelemtotl == 0):
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtdfncmea%d' % (b), strgpdfn)
                 if strgstat == 'pdfn':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtdfncmea%d' % (b), strgpdfn, strgmome='errr')
@@ -10220,10 +10347,10 @@ def plot_sigmcont(gdat, strgmodl, axis, strgfrst, indxpoplfrst, strgseco=None):
     if strgfrst == 'deltllik' or strgseco == 'deltllik':
         for pval in gdat.pvalcont:
             if strgfrst == 'deltllik':
-                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gmod.numbparagenrelemsing[indxpoplfrst])
+                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gmod.numbpara.genr.elem.sing[indxpoplfrst])
                 axis.axvline(deltlliksigm, ls='--', color='black', alpha=0.2) 
             if strgseco == 'deltllik':
-                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gmod.numbparagenrelemsing[indxpoplfrst])
+                deltlliksigm = scipy.stats.chi2.ppf(1. - pval, gmod.numbpara.genr.elem.sing[indxpoplfrst])
                 axis.axhline(deltlliksigm, ls='--', color='black', alpha=0.2) 
     
 
@@ -10439,13 +10566,13 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
     if strgydat.startswith('hist') and strgydat != 'histdefl' and strgydat != 'histdeflelem' and boolhistprio:
         if strgydat[-8:-5] == 'pop':
             strgtemp = strgydat[4:-8]
-            if strgtemp in gmod.namepara.genrelem[int(strgydat[-5])]:
+            if strgtemp in gmod.namepara.genr.elem.odim[int(strgydat[-5])]:
                 xdatprio = getattr(gmod, strgxdat + 'prio')
                 if gdat.typedata == 'mock' and not omittrue:
                     for q in gdat.indxrefr:
                         if gdat.refr.numbelem[q] == 0:
                             continue
-                        if strgtemp in gmod.namepara.genrelem[q]:
+                        if strgtemp in gmod.namepara.genr.elem.odim[q]:
                             truexdatprio = getattr(gdat.true, strgxdat + 'prio')
                             trueydatsupr = getattr(gdat.true, strgydat + 'prio')
                             trueydatsupr = retr_fromgdat(gdat, gdatmodi, strgstat, 'true', strgydat + 'prio', strgpdfn)
@@ -10964,9 +11091,9 @@ def plot_mosa(gdat, strgpdfn):
                         for b, axis in enumerate(axrw):
                             
                             n = indxsampmosa[numbcols*a+b]
-                            gdatmodi.this.paragenrscalfull = listparagenrscalfull[n, :].flatten()
-                            gdatmodi.this.paragenrunitfull = listparagenrunitfull[n, :].flatten()
-                            if gmod.numbparaelem > 0:
+                            gdatmodi.this.para.genr.scalfull = listparagenrscalfull[n, :].flatten()
+                            gdatmodi.this.para.genr.unitfull = listparagenrunitfull[n, :].flatten()
+                            if gmod.numbpara.totl.elem.popl > 0:
                                 gdatmodi.this.indxelemfull = getattr(gdat, 'list' + strgpdfn + 'indxelemfull')[n]
                                 proc_samp(gdat, gdatmodi, 'this', 'fitt')
 
@@ -11274,7 +11401,7 @@ def plot_init(gdat):
     # make initial plots
     if gdat.makeplot:
         
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             for l in gmod.indxpopl:
                 if (gmod.typeelemspateval[l] == 'locl' and gmod.maxmpara.numbelem[l] > 0) and gdat.numbpixl > 1:
                     plot_indxprox(gdat)
@@ -11391,8 +11518,6 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
     if gdat.boolsuprelem:
         supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot)
 
-    print('strgvarb')
-    print(strgvarb)
     plt.tight_layout()
     savefigr(gdat, gdatmodi, figr, path)
     plt.close(figr)
@@ -11417,11 +11542,12 @@ def init( \
          ### 'real': real data retrieved from databases
          typedata=None, \
          ## type of experiment
-         typeexpr='user', \
+         ### 'gmix': two-dimensional Gaussian Mixture Model (GMM)
+         typeexpr='gmix', \
 
          # diagnostics
          ## Boolean to enter the diagnostic mode
-         booldiagmode=True, \
+         booldiag=True, \
          ## squeeze exposure to check the low sample limit         
          boolsqzeexpo=False, \
          ### explode exposure to check the large sample limit         
@@ -11719,7 +11845,7 @@ def init( \
     gdat.liststrggroppara = ['genrbase', 'genrelem', 'derifixd', 'derielem', 'genrelemextd', 'derielemextd', 'kind', 'full']
     
     # list of parameter features to be turned into lists
-    gdat.listfeatparalist = ['minm', 'maxm', 'fact', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name']
+    gdat.listfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name']
     # list of parameter features
     gdat.listfeatpara = gdat.listfeatparalist + ['limt', 'bins', 'delt', 'numb', 'indx', 'cmap', 'mean', 'tick', 'numbbins', 'valutickmajr', 'labltickmajr', 'valutickminr', 'labltickminr']
         
@@ -11904,7 +12030,7 @@ def init( \
             gdat.lablenerunit = 'GeV'
         if gdat.typeexpr == 'chan':
             gdat.lablenerunit = 'keV'
-        if gdat.typeexpr == 'gene':
+        if gdat.typeexpr == 'gmix':
             gdat.lablenerunit = ''
         if gdat.typeexpr == 'fire':
             gdat.lablenerunit = '$\mu$m^{-1}'
@@ -11927,7 +12053,7 @@ def init( \
             # temp
             #bins = np.array([500., 750, 1000.])
             bins = np.array([750, 1000.])
-        if gdat.typeexpr != 'gene':
+        if gdat.typeexpr != 'gmix':
             setp_varb(gdat, 'enerfull', bins=bins)
         
         setp_varb(gdat, 'numbpixl', lablroot='$N_{pix}$')
@@ -11948,7 +12074,7 @@ def init( \
                 gdat.strgenerfull = []
                 for i in range(len(gdat.binspara.enerfull) - 1):
                     gdat.strgenerfull.append('%.3g %s - %.3g %s' % (gdat.binspara.enerfull[i], gdat.lablenerunit, gdat.binspara.enerfull[i+1], gdat.lablenerunit))
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.strgenerfull = ['']
         
         ## PSF class
@@ -11978,7 +12104,7 @@ def init( \
         gdat.indxevtt = np.arange(gdat.numbevtt)
         
         # Boolean flag to indicate that the data are binned in energy
-        if gdat.typeexpr == 'gene':
+        if gdat.typeexpr == 'gmix':
             gdat.boolbinsener = False
         else:
             gdat.boolbinsener = True
@@ -12046,12 +12172,12 @@ def init( \
             typeback = [1.]
         if gdat.typeexpr == 'tess':
             typeback = [1.]
-        if gdat.typeexpr == 'gene':
+        if gdat.typeexpr == 'gmix':
             typeback = [1.]
         if gdat.typeexpr == 'fire':
             typeback = [1.]
-        if gdat.typeexpr != 'user':
-            setp_varb(gdat, 'typeback', valu=typeback)
+        
+        setp_varb(gdat, 'typeback', valu=typeback)
         
         if gdat.typeexpr == 'hubb':
             numbsersfgrd = 1
@@ -12059,7 +12185,7 @@ def init( \
             numbsersfgrd = 0
         setp_varb(gdat, 'numbsersfgrd', valu=numbsersfgrd)
         
-        if gdat.typeexpr == 'gene':
+        if gdat.typeexpr == 'gmix':
             typeelem = ['clus']
         if gdat.typeexpr == 'ferm':
             typeelem = ['lghtpnts']
@@ -12071,8 +12197,6 @@ def init( \
             typeelem = ['lghtpnts', 'lens', 'lghtgausbgrd']
         if gdat.typeexpr == 'fire':
             typeelem = ['lghtlineabso']
-        if gdat.typeexpr == 'user':
-            typeelem = ['user']
         setp_varb(gdat, 'typeelem', valu=typeelem)
         print('gdat.fitt.typeelem')
         print(gdat.fitt.typeelem)
@@ -12089,12 +12213,11 @@ def init( \
             typemodlpsfn = 'singgaus'
         if gdat.typeexpr == 'tess':
             typemodlpsfn = 'singgaus'
-        if gdat.typeexpr == 'gene':
+        if gdat.typeexpr == 'gmix':
             typemodlpsfn = 'singgaus'
         if gdat.typeexpr == 'fire':
             typemodlpsfn = None
-        if gdat.typeexpr != 'user':
-            setp_varb(gdat, 'typemodlpsfn', valu=typemodlpsfn)
+        setp_varb(gdat, 'typemodlpsfn', valu=typemodlpsfn)
         
         #### background names
         listnameback = ['isot']
@@ -12167,7 +12290,7 @@ def init( \
         gdat.true.listlablmiss = ['s', 'o', 'p']
         
         # list of scalings
-        gdat.listscaltype = ['self', 'logt', 'atan', 'gaus', 'pois', 'expo']
+        gdat.listscaltype = ['self', 'logt', 'atan', 'gaus', 'pois', 'expo', 'drct']
         
         # number of grids
         gdat.numbgrid = 1
@@ -12238,7 +12361,7 @@ def init( \
                 gdat.anglfact = 60 * 180. / np.pi
             if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'hubb':
                 gdat.anglfact = 3600 * 180. / np.pi
-            if gdat.typeexpr == 'sche' or gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'sche' or gdat.typeexpr == 'gmix':
                 gdat.anglfact = 1.
         
         if gdat.numbsidecart is not None and gdat.typepixl == 'cart' and not gdat.boolforccart and isinstance(strgexpo, str):
@@ -12286,85 +12409,83 @@ def init( \
         if gdat.inittype is None:
             gdat.inittype = 'rand'
 
-        if gdat.typeexpr != 'user':
+        # Boolean flag to indicate binning in space
+        gdat.boolbinsspat = gdat.numbpixlfull != 1
+
+        print('gdat.boolbinsspat')
+        print(gdat.boolbinsspat)
+        
+        if gdat.boolcorrexpo and np.amin(gdat.expo) == np.amax(gdat.expo) and not isinstance(gdat.strgexpo, float):
+            raise Exception('Bad input exposure map.')
+        
+        if gdat.boolbinsspat:
+            if gdat.typepixl == 'cart' and isinstance(gdat.strgexpo, float) and gdat.typedata == 'inpt':
+                if np.sqrt(gdat.sbrtdata.shape[1]) % 1. != 0.:
+                    raise Exception('')
+                gdat.numbsidecart = int(np.sqrt(gdat.sbrtdata.shape[1]))
             
-            # Boolean flag to indicate binning in space
-            gdat.boolbinsspat = gdat.numbpixlfull != 1
+            gdat.numbsidecarthalf = int(gdat.numbsidecart / 2)
 
-            print('gdat.boolbinsspat')
-            print(gdat.boolbinsspat)
+            if gdat.typepixl == 'cart':
+                gdat.numbpixlcart = gdat.numbsidecart**2
+        
+            ### spatial extent of the data
+            if gdat.maxmgangdata is None:
+                if gdat.typeexpr == 'chan':
+                    gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecarthalf
+                if gdat.typeexpr == 'ferm':
+                    gdat.maxmgangdata = 15. / gdat.anglfact
+                if gdat.typeexpr == 'tess':
+                    gdat.maxmgangdata = 20. / gdat.anglfact
+                if gdat.typeexpr == 'hubb':
+                    gdat.maxmgangdata = 2. / gdat.anglfact
+                if gdat.typeexpr == 'gmix':
+                    gdat.maxmgangdata = 1. / gdat.anglfact
             
-            if gdat.boolcorrexpo and np.amin(gdat.expo) == np.amax(gdat.expo) and not isinstance(gdat.strgexpo, float):
-                raise Exception('Bad input exposure map.')
+            print('gdat.numbsidecart')
+            print(gdat.numbsidecart)
+            print('gdat.maxmgangdata')
+            print(gdat.maxmgangdata)
         
-            if gdat.boolbinsspat:
-                if gdat.typepixl == 'cart' and isinstance(gdat.strgexpo, float) and gdat.typedata == 'inpt':
-                    if np.sqrt(gdat.sbrtdata.shape[1]) % 1. != 0.:
-                        raise Exception('')
-                    gdat.numbsidecart = int(np.sqrt(gdat.sbrtdata.shape[1]))
-                
-                gdat.numbsidecarthalf = int(gdat.numbsidecart / 2)
+            # pixelization
+            if gdat.typepixl == 'cart':
+                gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
+            if gdat.typepixl == 'heal':
+                temp, temp, temp, gdat.apix = tdpy.retr_healgrid(gdat.numbsideheal)
+            gdat.sizepixl = np.sqrt(gdat.apix)
+        
+        # factor by which to multiply the y axis limits of the surface brightness plot
+        if gdat.numbpixlfull == 1:
+            gdat.factylimtbrt = [1e-4, 1e7]
+        else:
+            gdat.factylimtbrt = [1e-4, 1e3]
 
-                if gdat.typepixl == 'cart':
-                    gdat.numbpixlcart = gdat.numbsidecart**2
+        # grid
+        gdat.minmlgaldata = -gdat.maxmgangdata
+        gdat.maxmlgaldata = gdat.maxmgangdata
+        gdat.minmbgaldata = -gdat.maxmgangdata
+        gdat.maxmbgaldata = gdat.maxmgangdata
         
-                ### spatial extent of the data
-                if gdat.maxmgangdata is None:
-                    if gdat.typeexpr == 'chan':
-                        gdat.maxmgangdata = 0.492 / gdat.anglfact * gdat.numbsidecarthalf
-                    if gdat.typeexpr == 'ferm':
-                        gdat.maxmgangdata = 15. / gdat.anglfact
-                    if gdat.typeexpr == 'tess':
-                        gdat.maxmgangdata = 20. / gdat.anglfact
-                    if gdat.typeexpr == 'hubb':
-                        gdat.maxmgangdata = 2. / gdat.anglfact
-                    if gdat.typeexpr == 'gene':
-                        gdat.maxmgangdata = 1. / gdat.anglfact
-                
-                print('gdat.numbsidecart')
-                print(gdat.numbsidecart)
-                print('gdat.maxmgangdata')
-                print(gdat.maxmgangdata)
-        
-                # pixelization
-                if gdat.typepixl == 'cart':
-                    gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
-                if gdat.typepixl == 'heal':
-                    temp, temp, temp, gdat.apix = tdpy.retr_healgrid(gdat.numbsideheal)
-                gdat.sizepixl = np.sqrt(gdat.apix)
-        
-            # factor by which to multiply the y axis limits of the surface brightness plot
-            if gdat.numbpixlfull == 1:
-                gdat.factylimtbrt = [1e-4, 1e7]
-            else:
-                gdat.factylimtbrt = [1e-4, 1e3]
+        if gdat.typepixl == 'cart' and gdat.boolforccart:
+            if gdat.typedata == 'inpt':
+                sbrtdatatemp = np.empty((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                for i in gdat.indxenerfull:
+                    for m in gdat.indxevttfull:
+                        sbrtdatatemp[i, :, m] = tdpy.retr_cart(gdat.sbrtdata[i, :, m], \
+                                                        numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                        minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                        minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).flatten()
+                gdat.sbrtdata = sbrtdatatemp
 
-            # grid
-            gdat.minmlgaldata = -gdat.maxmgangdata
-            gdat.maxmlgaldata = gdat.maxmgangdata
-            gdat.minmbgaldata = -gdat.maxmgangdata
-            gdat.maxmbgaldata = gdat.maxmgangdata
-            
-            if gdat.typepixl == 'cart' and gdat.boolforccart:
-                if gdat.typedata == 'inpt':
-                    sbrtdatatemp = np.empty((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
-                    for i in gdat.indxenerfull:
-                        for m in gdat.indxevttfull:
-                            sbrtdatatemp[i, :, m] = tdpy.retr_cart(gdat.sbrtdata[i, :, m], \
-                                                            numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
-                                                            minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
-                                                            minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).flatten()
-                    gdat.sbrtdata = sbrtdatatemp
-
-                if gdat.boolcorrexpo:
-                    expotemp = np.empty((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
-                    for i in gdat.indxenerfull:
-                        for m in gdat.indxevttfull:
-                            expotemp[i, :, m] = tdpy.retr_cart(gdat.expo[i, :, m], \
-                                                            numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
-                                                            minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
-                                                            minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).flatten()
-                    gdat.expo = expotemp
+            if gdat.boolcorrexpo:
+                expotemp = np.empty((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
+                for i in gdat.indxenerfull:
+                    for m in gdat.indxevttfull:
+                        expotemp[i, :, m] = tdpy.retr_cart(gdat.expo[i, :, m], \
+                                                        numbsidelgal=gdat.numbsidecart, numbsidebgal=gdat.numbsidecart, \
+                                                        minmlgal=gdat.anglfact*gdat.minmlgaldata, maxmlgal=gdat.anglfact*gdat.maxmlgaldata, \
+                                                        minmbgal=gdat.anglfact*gdat.minmbgaldata, maxmbgal=gdat.anglfact*gdat.maxmbgaldata).flatten()
+                gdat.expo = expotemp
         
         gdat.sdenunit = 'degr'
 
@@ -12390,7 +12511,7 @@ def init( \
 
         if gdat.typeexpr == 'ferm' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'fire':
             gdat.enerdiff = True
-        if gdat.typeexpr == 'hubb' or gdat.typeexpr == 'gene' or gdat.typeexpr == 'tess':
+        if gdat.typeexpr == 'hubb' or gdat.typeexpr == 'gmix' or gdat.typeexpr == 'tess':
             gdat.enerdiff = False
         
         if gdat.indxenerincl is None:
@@ -12413,7 +12534,7 @@ def init( \
                 gdat.indxenerincl = np.array([0])
                 #gdat.indxenerincl = np.array([1])
                 #gdat.indxenerincl = np.array([0, 1])
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.indxenerincl = np.array([0])
         
         if gdat.indxenerincl is None:
@@ -12466,9 +12587,9 @@ def init( \
                         numbelem = 25
                     else:
                         numbelem = 5
-                    setp_varb(gdat, 'numbelem', minm=0, maxm=10, lablroot='N', scal='pois', valu=numbelem, popl=l, strgmodl=strgmodl, strgstat='this')
+                    setp_varb(gdat, 'numbelem', minm=0, maxm=10, lablroot='N', scal='drct', valu=numbelem, popl=l, strgmodl=strgmodl, strgstat='this')
             if strgmodl == 'fitt':
-                setp_varb(gdat, 'numbelem', minm=0, maxm=10, lablroot='N', scal='pois', popl='full', strgmodl=strgmodl)
+                setp_varb(gdat, 'numbelem', minm=0, maxm=10, lablroot='N', scal='drct', popl='full', strgmodl=strgmodl)
 
             ## hyperparameters
             setp_varb(gdat, 'typemodltran', valu='drct', strgmodl=strgmodl)
@@ -12477,15 +12598,14 @@ def init( \
                 setp_varb(gdat, 'meanelem', minm=0.1, maxm=1000., scal='logt', popl='full', strgmodl=strgmodl)
         
             #### boolean flag background
-            if gdat.typeexpr != 'user':
-                if gdat.typeexpr == 'chan':
-                    if gdat.numbpixlfull == 1:
-                        boolspecback = [True, True]
-                    else:
-                        boolspecback = [False, False]
+            if gdat.typeexpr == 'chan':
+                if gdat.numbpixlfull == 1:
+                    boolspecback = [True, True]
                 else:
-                    boolspecback = [False for k in gmod.indxback]
-                setp_varb(gdat, 'boolspecback', valu=boolspecback, strgmodl=strgmodl)
+                    boolspecback = [False, False]
+            else:
+                boolspecback = [False for k in gmod.indxback]
+            setp_varb(gdat, 'boolspecback', valu=boolspecback, strgmodl=strgmodl)
         
             typeelemspateval = [[] for l in gmod.indxpopl]
             for l in gmod.indxpopl:
@@ -12529,19 +12649,19 @@ def init( \
                 gdat.strgexprname = 'HST'
             if gdat.typeexpr == 'sche':
                 gdat.strgexprname = 'XXXXX'
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.strgexprname = 'TGAS-RAVE'
         
         if gdat.lablgangunit is None:
             if gdat.typeexpr == 'ferm':
                 gdat.lablgangunit = '$^o$'
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.lablgangunit = ''
             if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'hubb':
                 gdat.lablgangunit = '$^{\prime\prime}$'
         
         if gdat.labllgal is None:
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.labllgal = r'L_{z}'
             else:
                 if gdat.typeexpr == 'ferm' and gdat.lgalcntr == 0 and gdat.bgalcntr == 0:
@@ -12549,7 +12669,7 @@ def init( \
                 else:
                     gdat.labllgal = r'\theta_1'
         if gdat.lablbgal is None:
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.lablbgal = r'E_k'
             else:
                 if gdat.typeexpr == 'ferm' and gdat.lgalcntr == 0 and gdat.bgalcntr == 0:
@@ -12564,7 +12684,7 @@ def init( \
             if gdat.typeexpr == 'chan':
                 gdat.strgenerunit = 'keV'
                 gdat.nameenerunit = 'kevv'
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.strgenerunit = ''
                 gdat.nameenerunit = ''
             if gdat.typeexpr == 'hubb':
@@ -12601,7 +12721,7 @@ def init( \
                     gdat.radispmr = 0.2 / gdat.anglfact
             if gdat.typeexpr == 'sdss':
                 gdat.radispmr = 0.5 / gdat.anglfact
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.radispmr = 0.2
         
         print('gdat.radispmr')
@@ -12630,7 +12750,7 @@ def init( \
                     retr_psfphubb(gmod)
                 if gdat.typeexpr == 'tess':
                     retr_psfptess(gmod)
-                if gdat.typeexpr == 'gene':
+                if gdat.typeexpr == 'gmix':
                     retr_psfpsdyn(gmod)
         
 
@@ -12641,10 +12761,11 @@ def init( \
             else:
                 gdat.specfraceval = 0.1
 
-        gdat.binspara.lgalcart = np.linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
-        gdat.binspara.bgalcart = np.linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
-        gdat.meanpara.lgalcart = (gdat.binspara.lgalcart[0:-1] + gdat.binspara.lgalcart[1:]) / 2.
-        gdat.meanpara.bgalcart = (gdat.binspara.bgalcart[0:-1] + gdat.binspara.bgalcart[1:]) / 2.
+        if gdat.boolbinsspat:
+            gdat.binspara.lgalcart = np.linspace(gdat.minmlgaldata, gdat.maxmlgaldata, gdat.numbsidecart + 1)
+            gdat.binspara.bgalcart = np.linspace(gdat.minmbgaldata, gdat.maxmbgaldata, gdat.numbsidecart + 1)
+            gdat.meanpara.lgalcart = (gdat.binspara.lgalcart[0:-1] + gdat.binspara.lgalcart[1:]) / 2.
+            gdat.meanpara.bgalcart = (gdat.binspara.bgalcart[0:-1] + gdat.binspara.bgalcart[1:]) / 2.
         
         # reference elements
         gdat.numbrefr = 0
@@ -12823,7 +12944,7 @@ def init( \
 
             if gdat.typeexpr == 'hubb':
                 bacp = [1e-10, 1e-6]
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 setp_varb(gdat, 'bacp', minm=1e-1, maxm=1e3, valu=1e1, lablroot='$A$', scal='logt', ener=0, back=0, strgmodl=strgmodl)
             
             if gdat.typeexpr == 'fire':
@@ -13000,11 +13121,10 @@ def init( \
                 if gmod.typeelem[l] == 'lghtgausbgrd' or gmod.typeelem[l] == 'clusvari':
                     setp_varb(gdat, 'gwdtslop', limt=[0.5, 4.], scal='logt', popl=l, strgmodl=strgmodl)
         
-                if gdat.typeexpr != 'user':
-                    if gdat.boolbinsspat:
-                        setp_varb(gdat, 'spatdistcons', valu=1e-3, popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'gangslop', valu=1.1, popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'bgaldistscal', valu=2. / gdat.anglfact, popl=l, strgmodl=strgmodl)
+                if gdat.boolbinsspat:
+                    setp_varb(gdat, 'spatdistcons', valu=1e-3, popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'gangslop', valu=1.1, popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'bgaldistscal', valu=2. / gdat.anglfact, popl=l, strgmodl=strgmodl)
 
                 if gdat.typeexpr == 'ferm':
                     setp_varb(gdat, 'sloplowrprioflux', valu=1.5, popl=l)
@@ -13065,35 +13185,34 @@ def init( \
                 setp_varb(gdat, 'sangextr', valu=np.pi / 2.)
                 setp_varb(gdat, 'serihost', valu=4.)
                 
-            if gdat.typeexpr != 'user':
-                if gdat.boolbinsspat:
-                    minm = -gdat.maxmgangdata
-                    maxm = gdat.maxmgangdata
-                    for l in gmod.indxpopl:
-                        setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='$l$', strgmodl=strgmodl)
-                        setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='$b$', strgmodl=strgmodl)
-                        setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='l_{gal}', popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='b_{gal}', popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='l_{gal}', popl=l, iele='full', strgmodl=strgmodl)
-                        setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='b_{gal}', popl=l, iele='full', strgmodl=strgmodl)
-                
-                minm = 0.1
-                maxm = 10.
+            if gdat.boolbinsspat:
+                minm = -gdat.maxmgangdata
+                maxm = gdat.maxmgangdata
                 for l in gmod.indxpopl:
-                    if strgmodl == 'fitt':
-                        setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N')
-                    setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', strgmodl=strgmodl)
-                    setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', popl=l, strgmodl=strgmodl)
-                    setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', popl=l, iele='full', strgmodl=strgmodl)
+                    setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='$l$', strgmodl=strgmodl)
+                    setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='$b$', strgmodl=strgmodl)
+                    setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='$l_{gal}$', popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='$b_{gal}$', popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'lgal', minm=minm, maxm=maxm, lablroot='$l_{gal}$', popl=l, iele='full', strgmodl=strgmodl)
+                    setp_varb(gdat, 'bgal', minm=minm, maxm=maxm, lablroot='$b_{gal}$', popl=l, iele='full', strgmodl=strgmodl)
             
-                if gdat.boolbinsspat:
-                    for l in gmod.indxpopl:
-                        setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', strgmodl=strgmodl)
-                        setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', popl=l, strgmodl=strgmodl, iele='full')
-                        setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', strgmodl=strgmodl)
-                        setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', popl=l, strgmodl=strgmodl)
-                        setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', popl=l, strgmodl=strgmodl, iele='full')
+            minm = 0.1
+            maxm = 10.
+            for l in gmod.indxpopl:
+                if strgmodl == 'fitt':
+                    setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N')
+                setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', strgmodl=strgmodl)
+                setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'nobj', minm=minm, maxm=maxm, scal='powr', lablroot='N', popl=l, iele='full', strgmodl=strgmodl)
+            
+            if gdat.boolbinsspat:
+                for l in gmod.indxpopl:
+                    setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', strgmodl=strgmodl)
+                    setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'aang', minm=-np.pi, maxm=np.pi, lablroot=r'$\theta$', popl=l, strgmodl=strgmodl, iele='full')
+                    setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', strgmodl=strgmodl)
+                    setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', popl=l, strgmodl=strgmodl)
+                    setp_varb(gdat, 'gang', minm=0, maxm=gdat.maxmgangdata, lablroot=r'$\psi$', popl=l, strgmodl=strgmodl, iele='full')
 
         
         # copy the true model to the inference model if the inference model parameter has not been specified
@@ -13180,7 +13299,7 @@ def init( \
                 setp_varb(gdat, 'masshost' + strgsersfgrd + 'bein', limt=[1e7, 1e14], strgmodl=strgmodl)
                 for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
                     setp_varb(gdat, 'masshost' + strgsersfgrd + strgcalcmasssubh + 'bein', limt=[1e7, 1e14], strgmodl=strgmodl)
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 if gmod.boollenssubh:
                     for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
                         setp_varb(gdat, 'masssubh' + strgsersfgrd + 'bein', limt=[1e7, 1e10], strgmodl=strgmodl)
@@ -13269,7 +13388,7 @@ def init( \
         # temp
         if gdat.typedata == 'inpt':
             for l in gmod.indxpopl:
-                for strgpdfn in gmod.listscalparagenrelem[l]:
+                for strgpdfn in gmod.scalpara.genr.elem.odim[l]:
                     if strgpdfn.startswith('gaum') and gmod.lgalprio is None and gmod.bgalprio is None:
                         raise Exception('If typespatdist is "gaus", spatial coordinates of the prior catalog should be provided via lgalprio and bgalprio.')
         
@@ -13279,7 +13398,7 @@ def init( \
         
         gdat.listnamechro = ['totl', 'prop', 'diag', 'save', 'plot', 'proc', 'pars', 'modl', 'llik', 'sbrtmodl']
         gdat.listlablchro = ['Total', 'Proposal', 'Diagnostics', 'Save', 'Plot', 'Process', 'Parse', 'Model', 'Likelihood', 'Total emission']
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             gdat.listnamechro += ['spec']
             gdat.listlablchro += ['Spectrum calculation']
         if gmod.boollens:
@@ -13321,7 +13440,7 @@ def init( \
         ## number of elements
         numb = 0
         for l in gmod.indxpopl:
-            numb += len(gmod.namepara.genrelem[l])
+            numb += len(gmod.namepara.genr.elem.odim[l])
         
         # process index
         gdat.indxproc = np.arange(gdat.numbproc)
@@ -13520,12 +13639,12 @@ def init( \
             gmod = getattr(gdat, strgmodl)
             
             # element parameter vector indices
-            gmod.indxparagenrelemlgal = 0
-            gmod.indxparagenrelembgal = 1
-            gmod.indxparagenrelemflux = 2
-            gmod.indxparagenrelemsind = 3
-            gmod.indxparagenrelemcurv = 4
-            gmod.indxparagenrelemexpc = 4
+            gmod.indxpara.genrelemlgal = 0
+            gmod.indxpara.genrelembgal = 1
+            gmod.indxpara.genrelemflux = 2
+            gmod.indxpara.genrelemsind = 3
+            gmod.indxpara.genrelemcurv = 4
+            gmod.indxpara.genrelemexpc = 4
 
         # check the exposure map data structure
         if gdat.boolcorrexpo:
@@ -13752,7 +13871,7 @@ def init( \
             gdat.expototlmean = np.mean(gdat.expototl, axis=1)
 
         if gdat.typeelemspateval == 'locl':
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.maxmangl = 1.
             if gdat.typeexpr == 'ferm':
                 gdat.maxmangl = 20. / gdat.anglfact
@@ -13822,18 +13941,18 @@ def init( \
         gdat.numbprop = 5
         gdat.indxprop = np.arange(gdat.numbprop)
         
-        gdat.numbstdp = gmod.numbparagenrbase - gmod.numbpopl
+        gdat.numbstdp = gmod.numbpara.genr.base.totl - gmod.numbpopl
         cntr = 0
         for l in gmod.indxpopl:
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
-                setattr(gdat.fitt.inxparagenrscalelemkind, nameparagenrelem + 'pop%d' % l, gdat.numbstdp)
+            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
+                setattr(gdat.fitt.indxpara.genrscalelemkind, nameparagenrelem + 'pop%d' % l, gdat.numbstdp)
                 cntr += 1
         gdat.numbstdp += cntr
         
         gdat.lablstdp = np.copy(np.array(gmod.labltotlpara.genrbase[gmod.numbpopl:]))
-        gdat.namestdp = np.copy(np.array(gmod.nameparagenrbase[gmod.numbpopl:]))
+        gdat.namestdp = np.copy(np.array(gmod.namepara.genr.base[gmod.numbpopl:]))
         for l in gmod.indxpopl:
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
+            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
                 gdat.lablstdp = np.append(gdat.lablstdp, getattr(gdat.fitt.labltotlpara, nameparagenrelem))
                 gdat.namestdp = np.append(gdat.namestdp, nameparagenrelem + 'pop%d' % l)
         gdat.namestdp = gdat.namestdp.astype(object)
@@ -13845,14 +13964,14 @@ def init( \
         indxelemfull = [list(range(gmod.maxmpara.numbelem[l])) for l in gmod.indxpopl]
         gdat.fitt.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, indxelemfull, 'fitt')
         
-        gdat.indxstdppara = np.zeros(gmod.numbparagenrfull, dtype=int) - 1
+        gdat.indxstdppara = np.zeros(gmod.numbpara.genr.full, dtype=int) - 1
         cntr = 0
-        gdat.indxstdppara[gmod.numbpopl:gmod.numbparagenrbase] = gmod.indxparagenrbase[gmod.numbpopl:] - gmod.numbpopl
-        if gmod.numbparaelem > 0:
+        gdat.indxstdppara[gmod.numbpopl:gmod.numbpara.genr.base.totl] = gmod.indxpara.genr.base.totl[gmod.numbpopl:] - gmod.numbpopl
+        if gmod.numbpara.totl.elem.popl > 0:
             for l in gmod.indxpopl:
-                for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
+                for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
                     for indx in gdat.fitt.this.indxparagenrfullelem[l][nameparagenrelem]:
-                        gdat.indxstdppara[indx] = cntr + gmod.numbparagenrbase - gmod.numbpopl
+                        gdat.indxstdppara[indx] = cntr + gmod.numbpara.genr.base.totl - gmod.numbpopl
                     cntr += 1
         
         # for the fitting model, define proposal type indices
@@ -13873,10 +13992,10 @@ def init( \
                 temp = None
             setattr(gmod.corr, name, temp)
 
-        gmod.corrparagenrscalbase = np.empty(gmod.numbparagenrbase)
-        for k in gmod.indxparagenrbase:
+        gmod.corrparagenrscalbase = np.empty(gmod.numbpara.genr.base.totl)
+        for k in gmod.indxpara.genr.base.totl:
             try:
-                gmod.corrparagenrscalbase[k] = getattr(gdat.true, gmod.nameparagenrbase[k])
+                gmod.corrparagenrscalbase[k] = getattr(gdat.true, gmod.namepara.genr.base[k])
             except:
                 gmod.corrparagenrscalbase[k] = None
 
@@ -13970,7 +14089,7 @@ def init( \
             if gdat.typeexpr == 'ferm':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
                 
-                if gmod.typemodltran == 'pois' and gmod.numbparaelem > 0:
+                if gmod.typemodltran == 'pois' and gmod.numbpara.totl.elem.popl > 0:
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 4e-2
                     
                     for l in gmod.indxpopl:
@@ -13996,7 +14115,7 @@ def init( \
                     gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback%04den01' % gmod.indxbackdark)]] = 2e-2
                     gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback%04den02' % gmod.indxbackdark)]] = 3e-2
                 
-                if gmod.numbparaelem > 0:
+                if gmod.numbpara.totl.elem.popl > 0:
                     gdat.stdp[gdat.indxstdppop0flux] = 8e-2
 
                     if gmod.spectype[0] == 'colr':
@@ -14006,11 +14125,11 @@ def init( \
             if gdat.typeexpr == 'chan':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
                 
-                if gmod.typemodltran == 'pois' and gmod.numbparaelem > 0:
+                if gmod.typemodltran == 'pois' and gmod.numbpara.totl.elem.popl > 0:
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 2e-1
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.sloppriofluxpop0]] = 2e-1
                 
-                if gmod.numbparaelem > 0 and gdat.boolbinsspat:
+                if gmod.numbpara.totl.elem.popl > 0 and gdat.boolbinsspat:
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.psfp]] = 4e-1
                 
                 if gdat.indxenerincl.size == 5 and (gdat.indxenerincl == np.arange(5)).all():
@@ -14022,18 +14141,18 @@ def init( \
                 elif gdat.indxenerincl.size == 2 and (gdat.indxenerincl == np.array([2])).all():
                     gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 2e-2
                 
-                if gmod.numbparaelem > 0:
+                if gmod.numbpara.totl.elem.popl > 0:
                     if gdat.boolbinsspat:
-                        gdat.stdp[gdat.fitt.inxparagenrscalelemkind.lgalpop0] = 2e-2
-                        gdat.stdp[gdat.fitt.inxparagenrscalelemkind.bgalpop0] = 2e-2
+                        gdat.stdp[gdat.fitt.indxpara.genrscalelemkind.lgalpop0] = 2e-2
+                        gdat.stdp[gdat.fitt.indxpara.genrscalelemkind.bgalpop0] = 2e-2
                         if gdat.numbener > 1:
                             gdat.stdp[gdat.indxstdppop0sind] = 2e-1
                     gdat.stdp[gdat.indxstdppop0flux] = 2e-1
             
-            if gdat.typeexpr == 'gene':
+            if gdat.typeexpr == 'gmix':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
             
-                if gmod.typemodltran == 'pois' and gmod.numbparaelem > 0:
+                if gmod.typemodltran == 'pois' and gmod.numbpara.totl.elem.popl > 0:
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 2e-1
                     gdat.stdp[gdat.indxstdppara[gmod.indxpara.slopprionobjpop0]] = 3e-1
                     try:
@@ -14046,10 +14165,10 @@ def init( \
                 
                 gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 2e-2
             
-                if gmod.numbparaelem > 0:
-                    gdat.stdp[gdat.fitt.inxparagenrscalelemkind.lgalpop0] = 4e-2
-                    gdat.stdp[gdat.fitt.inxparagenrscalelemkind.bgalpop0] = 4e-2
-                    gdat.stdp[gdat.fitt.inxparagenrscalelemkind.nobjpop0] = 3e-1
+                if gmod.numbpara.totl.elem.popl > 0:
+                    gdat.stdp[gdat.fitt.indxpara.genrscalelemkind.lgalpop0] = 4e-2
+                    gdat.stdp[gdat.fitt.indxpara.genrscalelemkind.bgalpop0] = 4e-2
+                    gdat.stdp[gdat.fitt.indxpara.genrscalelemkind.nobjpop0] = 3e-1
                     try:
                         gdat.stdp[gdat.indxstdppop0gwdt] = 5e-1
                     except:
@@ -14086,24 +14205,24 @@ def init( \
                 print(strgmodl)
                 print('Fixed dimensional parameters:')
                 print('%20s%25s%5s%20s%20s' % ('name', 'labltotl', 'scal', 'minm', 'maxm'))
-                for k in gmod.indxparagenrbase:
-                    print('%20s%25s%5s%20.6g%20.6g' % (gmod.nameparagenrbase[k], gmod.labltotlpara.genrbase[k], gmod.scalpara.genrbase[k], \
+                for k in gmod.indxpara.genr.base.totl:
+                    print('%20s%25s%5s%20.6g%20.6g' % (gmod.namepara.genr.base[k], gmod.labltotlpara.genrbase[k], gmod.scalpara.genr.base.totl[k], \
                                                                                 gmod.minmpara.genrbase[k], gmod.maxmpara.genrbase[k]))
                 
                 print('Element parameters')
                 print('%20s%20s' % ('nameparagenrelem', 'scalcomp'))
                 for l in gmod.indxpopl:
-                    for nameparagenrelem, scalcomp in zip(gmod.namepara.genrelem[l], gmod.listscalparagenrelem[l]):
+                    for nameparagenrelem, scalcomp in zip(gmod.namepara.genr.elem.odim[l], gmod.scalpara.genr.elem.odim[l]):
                         print('%20s%20s' % (nameparagenrelem, scalcomp))
                 
                 print('%20s%20s' % ('strgmodu', 'pdfnmodu'))
                 for l in gmod.indxpopl:
-                    for strgmodu, pdfnmodu in zip(gmod.namepara.genrelemmodu[l], gmod.liststrgpdfnmodu[l]):
+                    for strgmodu, pdfnmodu in zip(gmod.namepara.genr.elemmodu[l], gmod.liststrgpdfnmodu[l]):
                         print('%20s%20s' % (strgmodu, pdfnmodu))
                 
                 print('%20s%20s' % ('strgfeat', 'pdfnprio'))
                 for l in gmod.indxpopl:
-                    for strgfeat, pdfnprio in zip(gmod.namepara.genrelem[l], gmod.listscalparagenrelem[l]):
+                    for strgfeat, pdfnprio in zip(gmod.namepara.genr.elem.odim[l], gmod.scalpara.genr.elem.odim[l]):
                         print('%20s%20s' % (strgfeat, pdfnprio))
                 
         # proposals
@@ -14115,7 +14234,7 @@ def init( \
                 strgpopl = '%d,' % l
             else:
                 strgpopl = ''
-            for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
+            for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
                 labl = getattr(gmod.lablrootpara, nameparagenrelem)
                 gdat.listlabltermlacp += ['$u_{%s%s}$' % (strgpopl, labl)]
         gdat.listnametermlacp += ['ltrp']
@@ -14127,12 +14246,12 @@ def init( \
         gdat.indxtermlacp = np.arange(gdat.numbtermlacp)
         
         if gdat.probtran is None:
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 gdat.probtran = 0.4
             else:
                 gdat.probtran = 0.
         if gdat.probspmr is None:
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 gdat.probspmr = gdat.probtran / 2.
             else:
                 gdat.probspmr = 0.
@@ -14143,13 +14262,13 @@ def init( \
             raise Exception('')
         gdat.lablproptype = ['Within']
         gdat.nameproptype = ['with']
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             gdat.lablproptype += ['Birth', 'Death', 'Split', 'Merge']
             gdat.nameproptype += ['brth', 'deth', 'splt', 'merg']
         gdat.numbproptype = len(gdat.lablproptype)
         gdat.nameproptype = np.array(gdat.nameproptype)
         cntr = tdpy.cntr()
-        if gmod.numbparaelem > 0.:
+        if gmod.numbpara.totl.elem.popl > 0.:
             # birth
             gdat.indxproptypebrth = cntr.incr()
             # death
@@ -14161,8 +14280,8 @@ def init( \
                 gdat.indxproptypemerg = cntr.incr()
    
         gdat.indxproptype = np.arange(gdat.numbproptype)
-        gmod.indxpara.prop = np.arange(gmod.numbparagenrbase)
-        gdat.numbstdpparagenrscalbase = gmod.numbparagenrbase - gmod.numbpopl
+        gmod.indxpara.prop = np.arange(gmod.numbpara.genr.base.totl)
+        gdat.numbstdpparagenrscalbase = gmod.numbpara.genr.base.totl - gmod.numbpopl
         #### filter for model elements
         gdat.listnamefilt = ['']
         if gdat.priofactdoff != 1.:
@@ -14186,21 +14305,21 @@ def init( \
             lpdfprioobjt = [None for l in gmod.indxpopl]
             lpdfpriointp = [None for l in gmod.indxpopl]
             for l in gmod.indxpopl:
-                for strgfeat, strgpdfn in zip(gmod.namepara.genrelem, gmod.listscalparagenrelem):
+                for strgfeat, strgpdfn in zip(gmod.namepara.genr.elem, gmod.scalpara.genr.elem):
                     if strgpdfn == 'tmplgrad':
                         pdfnpriotemp = np.empty((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
                         lpdfprio, lpdfprioobjt = retr_spatprio(gdat, pdfnpriotemp)
                         lpdfpriointp = lpdfprioobjt(gdat.meanpara.bgalcart, gdat.meanpara.lgalcart)
             
         gdat.indxpoplcrin = 0
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             if gdat.rtagmock is not None:
                 path = gdat.pathoutprtagmock + 'gdatfinlpost'
                 gdatmock = readfile(path)
             gdat.liststrgvarbhist = []
             cntr = 0
             for l0 in gmod.indxpopl:
-                for a, strgfeatfrst in enumerate(gmod.namepara.genrelem[l0]):
+                for a, strgfeatfrst in enumerate(gmod.namepara.genr.elem.odim[l0]):
                     if strgfeatfrst == 'spec':
                         continue
                     gdat.liststrgvarbhist.append([[] for k in range(5)])
@@ -14219,7 +14338,7 @@ def init( \
                             gdat.liststrgvarbhist[cntr][3][qq] = strgfeatfrst + 'pop%dpop%d' % (l, qq)
                             gdat.liststrgvarbhist[cntr][4][qq] = strgfeatfrst + 'pop%dpop%d' % (qq, l)
                     cntr += 1    
-                    for b, strgfeatseco in enumerate(gmod.namepara.genrelem[l0]):
+                    for b, strgfeatseco in enumerate(gmod.namepara.genr.elem.odim[l0]):
                         
                         if strgfeatseco == 'spec':
                             continue
@@ -14255,7 +14374,7 @@ def init( \
                         cntr += 1    
         
         # selection effects
-        if gdat.typedata == 'inpt' and gmod.numbparaelem > 0:
+        if gdat.typedata == 'inpt' and gmod.numbpara.totl.elem.popl > 0:
             if gdat.numbsampboot is None:
                 gdat.numbsampboot = gdat.numbsamp
         
@@ -14264,7 +14383,7 @@ def init( \
                 for qq in gdatmock.indxrefr:
                     for q in gdat.indxrefr:
                         for l in gmod.indxpopl:
-                            for strgfeatfrst in gmod.namepara.genrelem[l]:
+                            for strgfeatfrst in gmod.namepara.genr.elem.odim[l]:
                                 
                                 if gdat.typeexpr == 'chan' and strgfeatfrst == 'redswo08':
                                     crex = (1. + gdat.meanpara.redswo08)**2
@@ -14273,7 +14392,7 @@ def init( \
                                 
                                 setattr(gdat, 'crex' + strgfeatfrst + 'pop%dpop%dpop%d' % (q, qq, l), crex)
                                 
-                                for strgfeatseco in gmod.namepara.genrelem[l]:
+                                for strgfeatseco in gmod.namepara.genr.elem.odim[l]:
                                     
                                     if not checstrgfeat(strgfeatfrst, strgfeatseco):
                                         continue
@@ -14306,7 +14425,7 @@ def init( \
             ## internal correction
             gdat.boolcrin = gdat.typedata == 'inpt' and gdat.rtagmock is not None
         
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             # variables for which two dimensional functions will be plotted
             gdat.liststrgelemtdimvarbinit = ['hist']
             gdat.liststrgelemtdimvarbfram = deepcopy(gdat.liststrgelemtdimvarbinit)
@@ -14321,18 +14440,18 @@ def init( \
             gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
         
         gdat.liststrgfoldinit = ['']
-        if gmod.numbparaelem > 0 or gdat.typedata == 'mock' and gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0 or gdat.typedata == 'mock' and gmod.numbpara.totl.elem.popl > 0:
             gdat.liststrgfoldinit += ['', 'histodim/', 'histtdim/', 'scattdim/', 'cmpltdim/']
         gdat.liststrgfoldfram = ['']
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             gdat.liststrgfoldfram += ['scattdim/']
         gdat.liststrgfoldfinl = ['']
-        if gdat.boolinforefr and gmod.numbparaelem > 0:
+        if gdat.boolinforefr and gmod.numbpara.totl.elem.popl > 0:
             gdat.liststrgfoldfram += ['assc']
             gdat.liststrgfoldfinl += ['assc']
         gdat.liststrgfoldanim = deepcopy(gdat.liststrgfoldfram)
 
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             for strgdims in ['odim/', 'tdim/']:
                 for strgelemtdimvarb in gdat.liststrgelemtdimvarbfram:
                     gdat.liststrgfoldfram += [strgelemtdimvarb + strgdims]
@@ -14370,7 +14489,7 @@ def init( \
                     if gdatmock.trueindxpopl != gmod.indxpopl:
                         raise Exception('')
                     for l in gmod.indxpopl:
-                        for strgfeat in gmod.namepara.genrelem[l]:
+                        for strgfeat in gmod.namepara.genr.elem.odim[l]:
                             if strgfeat == 'spec' or strgfeat == 'specplot' or strgfeat == 'deflprof':
                                 continue
 
@@ -14378,10 +14497,10 @@ def init( \
                                 continue
                             reca = getattr(gdatmock.true, 'reca' + strgfeat + 'pop%d' % l)
                             setattr(gdat.true, 'reca' + strgfeat + 'pop%d' % l, reca)
-                    gmod.namepara.genrelem = gdatmock.truegmod.namepara.genrelem
+                    gmod.namepara.genr.elem = gdatmock.truegmod.namepara.genr.elem
         
-        if gmod.typeelemspateval[l] == 'locl' and gmod.numbparaelem > 0 or \
-                            gdat.typedata == 'mock' and gmod.typeelemspateval[l] == 'locl' and gmod.numbparaelem > 0:
+        if gmod.typeelemspateval[l] == 'locl' and gmod.numbpara.totl.elem.popl > 0 or \
+                            gdat.typedata == 'mock' and gmod.typeelemspateval[l] == 'locl' and gmod.numbpara.totl.elem.popl > 0:
             gdat.numbprox = 3
             gdat.indxprox = np.arange(gdat.numbprox)
             minmparagenrscalelemampl = getattr(gdat.fitt.minmpara, gmod.nameparagenrelemampl[0])
@@ -14393,7 +14512,7 @@ def init( \
                 if gdat.maxmangleval is None:
                     if gdat.typeexpr == 'chan':
                         gdat.maxmangleval = np.array([5., 6., 9.]) / gdat.anglfact
-                    elif gdat.typeexpr == 'gene':
+                    elif gdat.typeexpr == 'gmix':
                         gdat.maxmangleval = np.array([0.1, 0.2, 0.3]) / gdat.anglfact
                     elif gdat.typeexpr == 'ferm':
                         gdat.maxmangleval = np.array([7., 9., 15.]) / gdat.anglfact
@@ -14489,10 +14608,10 @@ def init( \
         # try to pass true metamodel minima and maxima to common minima and maxima when that feature does not exist in the fitting metamodel
         if gdat.typedata == 'mock':
             for q in gdat.indxrefr:
-                for strgfeat in gmod.namepara.genrelem[q]:
+                for strgfeat in gmod.namepara.genr.elem.odim[q]:
                     booltemp = False
                     for l in gmod.indxpopl:
-                        if strgfeat in gmod.namepara.genrelem[l]:
+                        if strgfeat in gmod.namepara.genr.elem.odim[l]:
                             booltemp = True
                     if not booltemp:
                         try:
@@ -14522,7 +14641,7 @@ def init( \
                 raise Exception('Pivot energy cannot be zero.')
             #if gdat.typeexpr != 'fire':
             #    gdat.enerexpcfact = gdat.enerpivt - gdat.meanpara.ener
-            #if gmod.numbparaelem > 0 and gdat.numbener > 1:
+            #if gmod.numbpara.totl.elem.popl > 0 and gdat.numbener > 1:
             #    minmsinddistmeanpop0 = getattr(gmod, 'minmsinddistmeanpop0')
             #    factspecener = (gdat.meanpara.ener / gdat.enerpivt)**(-np.sqrt(np.amin(minmsinddistmeanpop0) * np.amax(maxmsinddistmeanpop0)))
         else:
@@ -14607,13 +14726,16 @@ def init( \
                     gdat.true.this.paragenrunitfull[gdat.true.indxpara.numbelem[l]] = getattr(gdat.true.this, 'numbelempop%d' % l)
                     gdat.true.this.numbelempopl[l] = getattr(gdat.true.this, 'numbelempop%d' % l)
 
-                gdat.true.this.indxelemfull = [[] for l in gdat.true.indxpopl]
+                gdat.true.this.indxelem.full = [[] for l in gdat.true.indxpopl]
                 for l in gdat.true.indxpopl:
-                    gdat.true.this.indxelemfull[l] = list(range(gdat.true.numbelem[l]))
-                gdat.true.this.indxparagenrfullelem = retr_indxparagenrfullelem(gdat, gdat.true.this.indxelemfull, 'true')
+                    gdat.true.this.indxelem.full[l] = list(range(gdat.true.numbelem[l]))
+                print('gdat.true.numbelem')
+                print(gdat.true.numbelem)
+
+                gdat.true.this.indxpara.genrfullelem = retr_indxparagenrfullelem(gdat, gdat.true.this.indxelem.full, 'true')
             else:
-                gdat.true.this.indxelemfull = []
-                gdat.true.this.indxparagenrfullelem = None
+                gdat.true.this.indxelem.full = []
+                gdat.true.this.indxpara.genrfullelem = None
 
             if gdat.true.numbparaelem > 0:
                 if gdat.seedelem is None:
@@ -14622,10 +14744,16 @@ def init( \
                     np.random.seed(gdat.seedelem)
                 gdat.true.this.paragenrunitfull[gdat.true.numbparagenrbase:] = np.random.rand(gdat.true.numbparagenrelemtotl)
             
-            gdat.true.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'true', gdat.true.this.paragenrunitfull, gdat.true.this.indxparagenrfullelem)
+            print('gdat.true.this.paragenrunitfull')
+            print(gdat.true.this.paragenrunitfull)
+
+            gdat.true.this.paragenrscalfull = icdf_paragenrscalfull(gdat, 'true', gdat.true.this.paragenrunitfull, gdat.true.this.indxpara.genrfullelem)
             
+            print('gdat.true.this.paragenrscalfull')
+            print(gdat.true.this.paragenrscalfull)
+
             # impose true values (valu)
-            for k in gdat.true.indxparagenr:
+            for k in gdat.true.indxpara.genr:
                 
                 if gdat.true.numbparaelem > 0 and (k in gdat.true.indxpara.numbelem or \
                                             gdat.true.typemodltran == 'pois' and k in gdat.true.indxpara.meanelem):
@@ -14666,7 +14794,7 @@ def init( \
                     if gmod.maxmpara.numbelem[l] > 0:
                         # temp -- does not cover the case when different populations have parameters with the same name
                         for strgfeat in gmod.listnameparaglob:
-                        #for strgfeat in gmod.namepara.genrelem[l]:
+                        #for strgfeat in gmod.namepara.genr.elem.odim[l]:
                             if strgfeat[:-4] == 'etag':
                                 continue
                             #retr_axis(gdat, strgfeat)
@@ -14730,7 +14858,7 @@ def init( \
         #        if gmod.maxmpara.numbelem[l] > 0:
         #            # temp -- does not cover the case when different populations have parameters with the same name
         #            for strgfeat in gmod.listnameparaglob:
-        #            #for strgfeat in gmod.namepara.genrelem[l]:
+        #            #for strgfeat in gmod.namepara.genr.elem.odim[l]:
         #                if strgfeat[:-4] == 'etag':
         #                    continue
         #                #retr_axis(gdat, strgfeat)
@@ -14814,7 +14942,7 @@ def init( \
         
         for strgmodl in gdat.liststrgmodl:
             for l in gmod.indxpopl:
-                for strgfeat, strgpdfn in zip(gmod.namepara.genrelemmodu[l], gmod.liststrgpdfnmodu[l]):
+                for strgfeat, strgpdfn in zip(gmod.namepara.genr.elemmodu[l], gmod.liststrgpdfnmodu[l]):
                     if strgpdfn == 'tmpl':
                         if gdat.lgalprio is None or gdat.bgalprio is None:
                             gdat.lgalprio = np.concatenate((gmod.lgal))
@@ -14919,7 +15047,7 @@ def init( \
             
             ## element feature indices ordered with respect to the amplitude variable
             refrfeatsort = [[] for q in gdat.indxrefr]
-            if not (gdat.typedata == 'mock' and gmod.numbparaelem == 0):
+            if not (gdat.typedata == 'mock' and gmod.numbpara.totl.elem.popl == 0):
                 for q in gdat.indxrefr:
                     refrparagenrscalelemampl = getattr(gdat.refr, gdat.refr.nameparagenrelemampl[q])
                     if len(refrparagenrscalelemampl[q]) > 0:
@@ -14955,7 +15083,7 @@ def init( \
                                 hist = np.histogram2d(refrfeatfrst[q][0, :], refrfeatseco[q][0, :], bins=(binsfrst, binsseco))[0]
                                 setattr(gdat.refr, 'hist' + strgfeattdim, hist)
             
-        if gmod.numbparaelem > 0:
+        if gmod.numbpara.totl.elem.popl > 0:
             # plot settings
             ## upper limit of histograms
             if gdat.limtydathistfeat is None:
@@ -15356,18 +15484,18 @@ def opti_hess(gdat, gdatmodi):
     
     gmod = gdat.fitt
 
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         cntr = 0
         for l in gmod.indxpopl:
-            for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
-                gdatmodi.indxparastdp[gmod.numbparagenrbase-gmod.numbpopl+cntr] = np.concatenate(gdatmodi.this.indxparagenrfullelem[nameparagenrelem])
+            for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
+                gdatmodi.indxparastdp[gmod.numbpara.genr.base.totl-gmod.numbpopl+cntr] = np.concatenate(gdatmodi.this.indxpara.genrfullelem[nameparagenrelem])
                 cntr += 1
     
-    if gmod.numbparaelem > 0:
+    if gmod.numbpara.totl.elem.popl > 0:
         gdatmodi.next.indxelemfull = gdatmodi.this.indxelemfull
-        gdatmodi.next.indxparagenrfullelem = gdatmodi.this.indxparagenrfullelem
+        gdatmodi.next.indxpara.genrfullelem = gdatmodi.this.indxpara.genrfullelem
     else:
-        gdatmodi.next.indxparagenrfullelem = None
+        gdatmodi.next.indxpara.genrfullelem = None
 
     gdatmodi.stdpmatr = np.zeros((gdat.numbstdp, gdat.numbstdp)) 
     gdatmodi.hess = np.zeros((gdat.numbstdp, gdat.numbstdp)) 
@@ -15377,21 +15505,21 @@ def opti_hess(gdat, gdatmodi):
         if len(indxparatemp) == 0:
             diffpara[k] = 0.
         else:
-            diffpara[k] = min(min(np.amin(gdatmodi.this.paragenrunitfull[indxparatemp]) * 0.9, np.amin(1. - gdatmodi.this.paragenrunitfull[indxparatemp]) * 0.9), 1e-5)
+            diffpara[k] = min(min(np.amin(gdatmodi.this.para.genr.unitfull[indxparatemp]) * 0.9, np.amin(1. - gdatmodi.this.para.genr.unitfull[indxparatemp]) * 0.9), 1e-5)
 
-    #gdatmodi.this.sampunitsave = np.copy(gdatmodi.this.paragenrunitfull)
+    #gdatmodi.this.sampunitsave = np.copy(gdatmodi.this.para.genr.unitfull)
     
-    #if gmod.numbparaelem > 0:
+    #if gmod.numbpara.totl.elem.popl > 0:
     #    gdatmodi.dictmodi = [[] for l in gmod.indxpopl]
     #    for l in gmod.indxpopl:
     #        gdatmodi.dictmodi[l] = dict()
-    #        gdatmodi.dictmodi[l][gmod.nameparagenrelemampl[l] + 'indv'] = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[gmod.nameparagenrelemampl[l]][l]]
-    #        for nameparagenrelem in gmod.namepara.genrelem[l]:
-    #            gdatmodi.dictmodi[l]['stdv' + nameparagenrelem + 'indv'] = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l][nameparagenrelem]]
-    #if gmod.numbparaelem > 0:
-    #    gdatmodi.this.indxparagenrfullelemconc = np.concatenate([gdatmodi.this.indxparagenrfullelem[l]['full'] for l in gmod.indxpopl])
+    #        gdatmodi.dictmodi[l][gmod.nameparagenrelemampl[l] + 'indv'] = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[gmod.nameparagenrelemampl[l]][l]]
+    #        for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
+    #            gdatmodi.dictmodi[l]['stdv' + nameparagenrelem + 'indv'] = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l][nameparagenrelem]]
+    #if gmod.numbpara.totl.elem.popl > 0:
+    #    gdatmodi.this.indxpara.genrfullelemconc = np.concatenate([gdatmodi.this.indxpara.genrfullelem[l]['full'] for l in gmod.indxpopl])
     #if gdat.boolpropcomp:
-    #    indxsamptranprop = gdatmodi.this.indxparagenrfullelemconc
+    #    indxsamptranprop = gdatmodi.this.indxpara.genrfullelemconc
     #else:
     #    indxsamptranprop = []
     
@@ -15404,33 +15532,33 @@ def opti_hess(gdat, gdatmodi):
             
             if indxstdpfrst == indxstdpseco:
                 
-                #if gmod.numbparaelem > 0:
-                #    if k in gdatmodi.this.indxparagenrfullelemconc:
-                #        indxtrapmoditemp = k - gmod.indxparagenrfulleleminit
-                #        indxpoplmoditemp = np.array([np.amin(np.where(indxtrapmoditemp // gmod.numbparagenrelemcumr == 0))])
-                #        numbparapoplinittemp = indxtrapmoditemp - gmod.numbparagenrelemcuml[indxpoplmoditemp[0]]
-                #        indxelemmoditemp = [numbparapoplinittemp // gmod.numbparagenrelemsing[indxpoplmoditemp[0]]]
-                #        gmod.indxparagenrelemmoditemp = numbparapoplinittemp % gmod.numbparagenrelemsing[indxpoplmoditemp[0]]
-                #        nameparagenrelem = gmod.namepara.genrelem[indxpoplmoditemp[0]][gmod.indxparagenrelemmoditemp] 
-                #        indxsampampltemp = k - gmod.indxparagenrelemmoditemp + gmod.indxparagenrelemampl[indxpoplmoditemp[0]]
-                #        #amplfact = gdatmodi.this.paragenrscalfull[indxsampampltemp] / getattr(gdat, 'minm' + gmod.nameparagenrelemampl[indxpoplmoditemp[0]])
+                #if gmod.numbpara.totl.elem.popl > 0:
+                #    if k in gdatmodi.this.indxpara.genrfullelemconc:
+                #        indxtrapmoditemp = k - gmod.numbpara.genr.base
+                #        indxpoplmoditemp = np.array([np.amin(np.where(indxtrapmoditemp // gmod.numbpara.genr.elem.cumr == 0))])
+                #        numbparapoplinittemp = indxtrapmoditemp - gmod.numbpara.genr.elem.cuml[indxpoplmoditemp[0]]
+                #        indxelemmoditemp = [numbparapoplinittemp // gmod.numbpara.genr.elem.sing[indxpoplmoditemp[0]]]
+                #        gmod.indxpara.genrelemmoditemp = numbparapoplinittemp % gmod.numbpara.genr.elem.sing[indxpoplmoditemp[0]]
+                #        nameparagenrelem = gmod.namepara.genr.elem.odim[indxpoplmoditemp[0]][gmod.indxpara.genrelemmoditemp] 
+                #        indxsampampltemp = k - gmod.indxpara.genrelemmoditemp + gmod.indxpara.genrelemampl[indxpoplmoditemp[0]]
+                #        #amplfact = gdatmodi.this.para.genr.scalfull[indxsampampltemp] / getattr(gdat, 'minm' + gmod.nameparagenrelemampl[indxpoplmoditemp[0]])
                 #        stdv = 1. / np.sqrt(gdatmodi.hess[indxstdpfrst, indxstdpseco])
                 #        gdatmodi.stdpmatr[indxstdpfrst, indxstdpseco] += stdv
                 #        gdatmodi.dictmodi[indxpoplmoditemp[0]]['stdv' + nameparagenrelem + 'indv'][indxelemmoditemp[0]] = stdv
                 #        gdatmodi.dictmodi[indxpoplmoditemp[0]][gmod.nameparagenrelemampl[indxpoplmoditemp[0]] + 'indv'][indxelemmoditemp[0]] = \
-                #                                                                                             gdatmodi.this.paragenrscalfull[indxsampampltemp]
+                #                                                                                             gdatmodi.this.para.genr.scalfull[indxsampampltemp]
                 
                 if len(gdatmodi.indxparastdp[indxstdpseco]) == 0:
                     continue
                 
                 for a in range(2):
-                    gdatmodi.next.paragenrunitfull = np.copy(gdatmodi.this.paragenrunitfull)
+                    gdatmodi.next.paragenrunitfull = np.copy(gdatmodi.this.para.genr.unitfull)
                     if a == 0:
                         gdatmodi.next.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara[indxstdpseco]
                     if a == 1:
                         gdatmodi.next.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] += diffpara[indxstdpseco]
                     
-                    gdatmodi.next.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gdatmodi.next.paragenrunitfull, gdatmodi.next.indxparagenrfullelem)
+                    gdatmodi.next.paragenrscalfull = icdf_paragenrscalfull(gdat, 'fitt', gdatmodi.next.paragenrunitfull, gdatmodi.next.indxpara.genrfullelem)
                     
                     proc_samp(gdat, gdatmodi, 'next', 'fitt')
                     if a == 0:
@@ -15445,19 +15573,19 @@ def opti_hess(gdat, gdatmodi):
                 continue
 
                 for a in range(4):
-                    gdatmodi.this.paragenrunitfull = np.copy(gdatmodi.this.sampunitsave)
+                    gdatmodi.this.para.genr.unitfull = np.copy(gdatmodi.this.sampunitsave)
                     if a == 0:
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpfrst]] -= diffpara
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpfrst]] -= diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara
                     if a == 1:
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpfrst]] += diffpara
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] += diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpfrst]] += diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpseco]] += diffpara
                     if a == 2:
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpfrst]] -= diffpara
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] += diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpfrst]] -= diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpseco]] += diffpara
                     if a == 3:
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpfrst]] += diffpara
-                        gdatmodi.this.paragenrunitfull[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpfrst]] += diffpara
+                        gdatmodi.this.para.genr.unitfull[gdatmodi.indxparastdp[indxstdpseco]] -= diffpara
                     proc_samp(gdat, gdatmodi, 'this', 'fitt')
                     if a == 0:
                         deltlpos[0, 0] = gdatmodi.this.lpostotl
@@ -15472,7 +15600,7 @@ def opti_hess(gdat, gdatmodi):
             
             if not np.isfinite(gdatmodi.hess[indxstdpfrst, indxstdpseco]):
                 raise Exception('')
-            if gdat.booldiagmode and not np.isfinite(gdatmodi.next.paragenrscalfull).all():
+            if gdat.booldiag and not np.isfinite(gdatmodi.next.paragenrscalfull).all():
                 raise Exception('')
             if gdatmodi.hess[indxstdpfrst, indxstdpseco] == 0.:
                 raise Exception('')
@@ -15481,9 +15609,9 @@ def opti_hess(gdat, gdatmodi):
 
     # temp
     #gdatmodi.stdpmatr = np.sqrt(linalg.inv(gdatmodi.hess))
-    numbdoffefff = gmod.numbparagenrbase
-    if gmod.numbparaelem > 0:
-        numbdoffefff += gmod.numbparagenrelem * 10
+    numbdoffefff = gmod.numbpara.genr.base.totl
+    if gmod.numbpara.totl.elem.popl > 0:
+        numbdoffefff += gmod.numbpara.genr.elem.popl * 10
     gdatmodi.stdpmatr = np.sqrt(1. / gdatmodi.hess) / np.sqrt(numbdoffefff)
     
     if (gdatmodi.stdpmatr == 0).any():
@@ -15554,17 +15682,12 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     gdatmodi.lock = lock
     gdatmodi.indxprocwork = indxprocwork
     
-    # plotting factors for scalar variables
-    for name in gmod.namepara.scal:
-        if name in gmod.nameparagenrbase:
-            gmod.indxpara.temp = np.where(gmod.nameparagenrbase == name)[0]
-    
     # find the list of variables for which the posterior will be calculated
     if not gdat.boolmockonly:
         
         if gdat.typeverb > 1:
-            print('gdatmodi.this.paragenrunitfull')
-            print(gdatmodi.this.paragenrunitfull)
+            print('gdatmodi.this.para.genr.unitfull')
+            print(gdatmodi.this.para.genr.unitfull)
             show_paragenrscalfull(gdat, gdatmodi)
         proc_samp(gdat, gdatmodi, 'this', 'fitt')
         
@@ -15601,7 +15724,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     ## sample index
     gdatmodi.cntrswep = 0
    
-    if gdat.booldiagmode:
+    if gdat.booldiag:
         if gdat.indxswepsave.size != gdat.numbsamp:
             raise Exception('Inappropriate number of samples.')
 
@@ -15614,7 +15737,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     # dummy definitions required for logs
     gdatmodi.this.indxproptype = np.zeros(1, dtype=int)
     for l in gmod.indxpopl:
-        setattr(gdatmodi.this, 'auxiparapop%d' % l, np.zeros(gmod.numbparagenrelemsing[l]))
+        setattr(gdatmodi.this, 'auxiparapop%d' % l, np.zeros(gmod.numbpara.genr.elem.sing[l]))
     gdatmodi.this.lpri = np.zeros(gmod.numblpri)
     gdatmodi.this.lpau = np.zeros(1)
     gdatmodi.this.ltrp = np.zeros(1)
@@ -15637,7 +15760,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     
     # indices of parameters corresping to each proposal scale
     gdatmodi.indxparastdp = [[] for k in gdat.indxstdp]
-    for k in gmod.indxparagenrbase:
+    for k in gmod.indxpara.genr.base.totl:
         if k < gmod.numbpopl:
             continue
         gdatmodi.indxparastdp[k-gmod.numbpopl] = [k]
@@ -15667,7 +15790,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     # store the initial sample as the best fit sample
     gdatmodi.maxmllikswep = np.sum(gdatmodi.this.llik)
     gdatmodi.indxswepmaxmllik = -1 
-    gdatmodi.sampmaxmllik = np.copy(gdatmodi.this.paragenrscalfull)
+    gdatmodi.sampmaxmllik = np.copy(gdatmodi.this.para.genr.scalfull)
     
     if gdat.typeverb > 0:
         print('Sampling...')
@@ -15714,9 +15837,9 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
                                 lablxdat='$i_{stdp}$', lablydat=r'$\sigma$', plottype='hist', limtydat=[np.amin(ydat) / 2., 2. * np.amax(ydat)])
                 
                 # plot uncertainties of element parameters as a function of amplitude parameter
-                if gmod.numbparaelem > 0:
+                if gmod.numbpara.totl.elem.popl > 0:
                     for l in gmod.indxpopl:
-                        for nameparagenrelem in gmod.namepara.genrelem[l]:
+                        for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
                             path = pathopti + 'stdv' + nameparagenrelem + 'pop%d.pdf' % l
                             xdat = [gdatmodi.dictmodi[l][gmod.nameparagenrelemampl[l] + 'indv'], meanplot]
                             
@@ -15770,7 +15893,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         if gdat.boolburntmpr and gdatmodi.cntrswep < gdat.numbburntmpr:
             gdatmodi.this.facttmpr = ((gdatmodi.cntrswep + 1.) / gdat.numbburntmpr)**4
             gdatmodi.this.tmprfactstdv = 1. / gdatmodi.this.facttmpr
-            #gdatmodi.this.tmprlposelem = -1000. * (1. - gdatmodi.this.facttmpr) * np.concatenate(gdatmodi.this.indxparagenrfullelem['full']).size
+            #gdatmodi.this.tmprlposelem = -1000. * (1. - gdatmodi.this.facttmpr) * np.concatenate(gdatmodi.this.indxpara.genrfullelem['full']).size
             gdatmodi.this.tmprlposelem = 0.
         else:
             gdatmodi.this.tmprfactstdv = 1.
@@ -15778,7 +15901,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         
         # temp -- this can be faster
         for l in gmod.indxpopl:
-            setattr(gdatmodi.this, 'auxiparapop%d' % l, np.empty(gmod.numbparagenrelemsing[l]))
+            setattr(gdatmodi.this, 'auxiparapop%d' % l, np.empty(gmod.numbpara.genr.elem.sing[l]))
 
         if gdat.typeverb > 1:
             show_paragenrscalfull(gdat, gdatmodi)
@@ -15788,10 +15911,10 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         prop_stat(gdat, gdatmodi, 'fitt')
         stopchro(gdat, gdatmodi, 'prop')
 
-        if gdat.booldiagmode:
+        if gdat.booldiag:
         
-            for k in gmod.indxparagenrbase:
-                if gmod.scalpara.genrbase[k] == 'logt' and gdatmodi.this.paragenrscalfull[k] < 0.:
+            for k in gmod.indxpara.genr.base.totl:
+                if gmod.scalpara.genr.base.totl[k] == 'logt' and gdatmodi.this.para.genr.scalfull[k] < 0.:
                     raise Exception('')
 
             if not np.isfinite(gdatmodi.next.paragenrscalfull).all():
@@ -15805,33 +15928,33 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
             proc_samp(gdat, gdatmodi, 'this', 'fitt')
         
         # diagnostics
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             
             initchro(gdat, gdatmodi, 'diag')
             
-            indxsampbadd = np.where((gdatmodi.this.paragenrunitfull[gmod.numbpopl:] > 1.) | (gdatmodi.this.paragenrunitfull[gmod.numbpopl:] < 0.))[0] + 1
+            indxsampbadd = np.where((gdatmodi.this.para.genr.unitfull[gmod.numbpopl:] > 1.) | (gdatmodi.this.para.genr.unitfull[gmod.numbpopl:] < 0.))[0] + 1
             if indxsampbadd.size > 0:
                 raise Exception('Unit sample vector went outside [0,1].')
             
             if not np.isfinite(gdatmodi.this.lliktotl):
                 raise Exception('Log-likelihood is infinite!')
     
-            #indxsampclos = np.where((gdatmodi.this.paragenrscalfull < 0.01) & (gdatmodi.this.paragenrscalfull % 1. != 0.))[0]
+            #indxsampclos = np.where((gdatmodi.this.para.genr.scalfull < 0.01) & (gdatmodi.this.para.genr.scalfull % 1. != 0.))[0]
             #indxsampclos = list(indxsampclos)
             #for indxparagenrfulltemp in indxsampclos:
             #    for l in gmod.indxpopl:
-            #        if not indxparagenrfulltemp in gdatmodi.this.indxparagenrfullelem[l]['full']:
+            #        if not indxparagenrfulltemp in gdatmodi.this.indxpara.genrfullelem[l]['full']:
             #            indxsampclos.remove(indxparagenrfulltemp)
             #indxsampclos = np.array(indxsampclos)
             #if indxsampclos.size > 0:
             #    print 'Warning! State is too close to 0!'
             #    print gmod.namepara[indxsampclos]
 
-            #indxsampclos = np.where((gdatmodi.this.paragenrscalfull > 0.99) & (gdatmodi.this.paragenrscalfull % 1. != 0.))[0]
+            #indxsampclos = np.where((gdatmodi.this.para.genr.scalfull > 0.99) & (gdatmodi.this.para.genr.scalfull % 1. != 0.))[0]
             #indxsampclos = list(indxsampclos)
             #for indxparagenrfulltemp in indxsampclos:
             #    for l in gmod.indxpopl:
-            #        if not indxparagenrfulltemp in gdatmodi.this.indxparagenrfullelem[l]['full']:
+            #        if not indxparagenrfulltemp in gdatmodi.this.indxpara.genrfullelem[l]['full']:
             #            indxsampclos.remove(indxparagenrfulltemp)
             #indxsampclos = np.array(indxsampclos)
             #if indxsampclos.size > 0:
@@ -15853,7 +15976,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
                     if not np.isfinite(varb).all():
                         raise Exception('Sample vector is not finite.')
             
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 if gmod.boolelemsbrtdfncanyy:
                     thissbrtdfnc = getattr(gdatmodi.this, 'sbrtdfnc')
                     frac = np.amin(thissbrtdfnc) / np.mean(thissbrtdfnc)
@@ -15865,19 +15988,19 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
             if (gdatmodi.this.cntpmodl <= 0.).any() or not (np.isfinite(gdatmodi.this.cntpmodl)).all():
                 raise Exception('Current flux model is not positive')
 
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 for l in gmod.indxpopl:
-                    if gdatmodi.this.paragenrscalfull[gmod.indxpara.numbelem[l]] != len(gdatmodi.this.indxelemfull[l]):
+                    if gdatmodi.this.para.genr.scalfull[gmod.indxpara.numbelem[l]] != len(gdatmodi.this.indxelemfull[l]):
                         raise Exception('Number of elements is inconsistent with the element index list.')
 
-                    if gdatmodi.this.paragenrscalfull[gmod.indxpara.numbelem[l]] != len(gdatmodi.this.indxelemfull[l]):
+                    if gdatmodi.this.para.genr.scalfull[gmod.indxpara.numbelem[l]] != len(gdatmodi.this.indxelemfull[l]):
                         raise Exception('Number of elements is inconsistent across data structures.')
                     
-                    for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
-                        if gmod.listscalparagenrelem[l][k] == 'gaus' or gmod.listscalparagenrelem[l][k] == 'igam' \
-                                                                                            or gmod.listscalparagenrelem[l][k] == 'expo':
+                    for k, nameparagenrelem in enumerate(gmod.namepara.genr.elem.odim[l]):
+                        if gmod.scalpara.genr.elem.odim[l][k] == 'gaus' or gmod.scalpara.genr.elem.odim[l][k] == 'igam' \
+                                                                                            or gmod.scalpara.genr.elem.odim[l][k] == 'expo':
                             continue
-                        comp = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l][nameparagenrelem]]
+                        comp = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l][nameparagenrelem]]
                         minm = getattr(gdat.fitt.minmpara, nameparagenrelem)
                         maxm = getattr(gdat.fitt.maxmpara, nameparagenrelem)
                         indxtemp = np.where((comp < minm) | (comp > maxm))[0]
@@ -15922,13 +16045,13 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         
                     thisfile = h5py.File(path, 'w')
                     thisfile.create_dataset('lliktotl', data=gdatmodi.this.lliktotl)
-                    for gmod.nameparagenrbase in gmod.nameparagenrbase:
-                        valu = gdatmodi.this.paragenrscalfull[gmod.indxparagenrbase]
-                        thisfile.create_dataset(gmod.nameparagenrbase, data=valu)
-                    if gmod.numbparaelem > 0:
+                    for gmod.namepara.genr.base in gmod.namepara.genr.base:
+                        valu = gdatmodi.this.para.genr.scalfull[gmod.indxpara.genr.base.totl]
+                        thisfile.create_dataset(gmod.namepara.genr.base, data=valu)
+                    if gmod.numbpara.totl.elem.popl > 0:
                         for l in gmod.indxpopl:
-                            for nameparagenrelem in gmod.namepara.genrelem[l]:
-                                comp = gdatmodi.this.paragenrscalfull[gdatmodi.this.indxparagenrfullelem[l][nameparagenrelem]]
+                            for nameparagenrelem in gmod.namepara.genr.elem.odim[l]:
+                                comp = gdatmodi.this.para.genr.scalfull[gdatmodi.this.indxpara.genrfullelem[l][nameparagenrelem]]
                                 for k in np.arange(comp.size):
                                     name = nameparagenrelem + 'pop%d%04d' % (l, k)
                                     thisfile.create_dataset(name, data=comp[k])
@@ -15979,7 +16102,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         
             calc_probprop(gdat, gdatmodi)
             
-            if gdat.booldiagmode:
+            if gdat.booldiag:
                 if not gdatmodi.this.indxproptype > 2 and gdatmodi.this.ljcb != 0.:
                     raise Exception('log Jacobian can only be be nonzero when a split or merge is proposed.')
                 if not gdatmodi.this.indxproptype > 2 and gdatmodi.this.ltrp != 0.:
@@ -16022,7 +16145,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
         # accept or reject the proposal
         booltemp = gdatmodi.this.accpprob[0] >= np.random.rand()
         
-        if gdat.booldiagmode:
+        if gdat.booldiag:
             if gdatmodi.this.indxproptype == 0:
                 if gdat.boolsqzeprop and not booltemp:
                     raise Exception('')
@@ -16038,7 +16161,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
             if gdatmodi.this.lliktotl > gdatmodi.maxmllikswep:
                 gdatmodi.maxmllikswep = gdatmodi.this.lliktotl
                 gdatmodi.indxswepmaxmllik = gdatmodi.cntrswep
-                gdatmodi.sampmaxmllik = np.copy(gdatmodi.this.paragenrscalfull)
+                gdatmodi.sampmaxmllik = np.copy(gdatmodi.this.para.genr.scalfull)
             
             # register the sample as accepted
             gdatmodi.this.boolpropaccp = True
@@ -16086,15 +16209,15 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
                 print('Tempered burn-in')
                 print('gdatmodi.this.facttmpr')
                 print(gdatmodi.this.facttmpr)
-            print 
-            numbpara = gmod.numbparagenrbase
-            if gmod.numbparaelem > 0:
+            
+            numbpara = gmod.numbpara.genr.base.totl
+            if gmod.numbpara.totl.elem.popl > 0:
                 for l in gmod.indxpopl:
-                    numbpara += gdatmodi.this.indxparagenrfullelem[l]['full'].size
-            if gmod.numbparaelem > 0:
+                    numbpara += gdatmodi.this.indxpara.genrfullelem[l]['full'].size
+            if gmod.numbpara.totl.elem.popl > 0:
                 print('Number of elements:')
                 for l in gmod.indxpopl:
-                    print(gdatmodi.this.paragenrscalfull[gmod.indxpara.numbelem[l]].astype(int))
+                    print(gdatmodi.this.para.genr.scalfull[gmod.indxpara.numbelem[l]].astype(int))
             print('Current number of parameters:')
             print(numbpara)
             print('gdatmodi.this.numbdoff')
@@ -16104,25 +16227,25 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
                     if 8 * valu.size * gdat.numbsamptotl > 1e9:
                         print('Warning! %s has total length %d and size %s' % (attr, valu.size * gdat.numbsamptotl, \
                                                                                         tdpy.retr_strgmemo(8 * valu.size * gdat.numbsamptotl)))
-            if gmod.numbparaelem > 0:
+            if gmod.numbpara.totl.elem.popl > 0:
                 if gmod.typemodltran == 'pois':
                     print('Mean number of elements:')
-                    print(gdatmodi.this.paragenrscalfull[gmod.indxpara.meanelem])
+                    print(gdatmodi.this.para.genr.scalfull[gmod.indxpara.meanelem])
                 for l in gmod.indxpopl:
                     if gmod.nameparagenrelemampl[l] == 'flux' and gmod.typeprioflux[l] == 'powr' or gmod.nameparagenrelemampl[l] != 'flux':
                         print('Log-slope of the amplitude parameter distribution, population %d:' % l)
-                        indxparagenrbase = getattr(gmod.indxpara, 'slopprio' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)
-                        print(gdatmodi.this.paragenrscalfull[indxparagenrbase])
+                        indxparagenrbase = getattr(gmod.indxpara.genr.base, 'slopprio' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)
+                        print(gdatmodi.this.para.genr.scalfull[indxparagenrbase])
                     else:
                         print('Flux distribution break:')
-                        print(gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'brek' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
+                        print(gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'brek' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
                         print('Flux distribution lower slope:')
-                        print(gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'sloplowr' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
+                        print(gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'sloplowr' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
                         print('Flux distribution upper slope:')
-                        print(gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'slopuppr' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
+                        print(gdatmodi.this.para.genr.scalfull[getattr(gmod.indxpara, 'slopuppr' + gmod.nameparagenrelemampl[l] + 'pop%d' % l)])
             print('Backgrounds')
-            print(gdatmodi.this.paragenrscalfull[gmod.indxpara.bacp])
-            if gmod.numbparaelem > 0:
+            print(gdatmodi.this.para.genr.scalfull[gmod.indxpara.bacp])
+            if gmod.numbpara.totl.elem.popl > 0:
                 print('Log-prior penalization term: ')
                 print(gdatmodi.this.lpripena)
                 print('Completeness')
@@ -16165,7 +16288,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
                 for l in gmod.indxpopl:
                     if gmod.typeelemspateval[l] == 'locl' and gmod.maxmpara.numbelem[l] > 0:
                         booltemp = True
-                if name == 'llik' and gdat.numbpixl > 1 and gmod.numbparaelem > 0 and booltemp:
+                if name == 'llik' and gdat.numbpixl > 1 and gmod.numbpara.totl.elem.popl > 0 and booltemp:
                     print('%.3g per pixel' % (thischro * 1e3 / np.amin(gdat.numbpixlprox)))
             print 
 
