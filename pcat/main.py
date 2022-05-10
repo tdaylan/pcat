@@ -426,7 +426,7 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
         icdf = tdpy.icdf_lnor(cdfn, distmean, diststdv)
     
     if scalcomp == 'igam':
-        slop = paragenrscalfull[getattr(gmod.indxpara, 'slopprio' + nameparagenrelem)[l]]
+        slop = paragenrscalfull[getattr(gmod.indxpara, 'slopprio%s%d' % (nameparagenrelem, l))[l]]
         cutf = getattr(gdat, 'cutf' + nameparagenrelem)
         icdf = tdpy.icdf_igam(cdfn, slop, cutf)
     
@@ -3321,17 +3321,10 @@ def setp_indxpara(gdat, typesetp, strgmodl='fitt'):
                             liststrgvarb += [strgfeat + 'diststdv']
                         if strgpdfnelemgenr == 'gausmeanstdv' or strgpdfnelemgenr == 'lnormeanstdv':
                             liststrgvarb += [nameparagenrelem + 'distmean', nameparagenrelem + 'diststdv']
-            for strgvarb in liststrgvarb:
-                for l in gmod.indxpopl:
-                    indx = cntr.incr()
-                    if gdat.booldiag and strgvarb[-4:-1] == 'pop':
-                        print('strgvarb')
-                        print(strgvarb)
-                        print('liststrgvarb')
-                        print(liststrgvarb)
-                        raise Exception('')
-                    setattr(gmod.indxpara.genr.base, strgvarb + 'pop%d' % l, indx)
-                setattr(gmod.indxpara.genr.base, strgvarb, np.zeros(gmod.numbpopl, dtype=int) - 1)
+                        for strgvarb in liststrgvarb:
+                            indx = cntr.incr()
+                            setattr(gmod.indxpara.genr.base, strgvarb + 'pop%d' % l, indx)
+                #setattr(gmod.indxpara.genr.base, strgvarb, np.zeros(gmod.numbpopl, dtype=int) - 1)
 
             for l in gmod.indxpopl:
                 if gmod.maxmpara.numbelem[l] > 0:
