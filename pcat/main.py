@@ -313,9 +313,13 @@ def icdf_paragenrscalfull(gdat, strgmodl, paragenrunitfull, indxparagenrfullelem
         listindxparagenrbasescal = gmod.indxpara.genrbasescal[scaltype]
         if len(listindxparagenrbasescal) == 0:
             continue
-        paragenrscalfull[listindxparagenrbasescal] = icdf_paragenrscalbase(gdat, strgmodl, paragenrunitfull[listindxparagenrbasescal], scaltype, listindxparagenrbasescal)
+        paragenrscalfull[listindxparagenrbasescal] = icdf_paragenrscalbase(gdat, strgmodl, paragenrunitfull[listindxparagenrbasescal], \
+                                                                                                            scaltype, listindxparagenrbasescal)
     
         if gdat.booldiag and not np.isfinite(paragenrscalfull).all():
+            print('')
+            print('')
+            print('')
             raise Exception('')
 
     if indxparagenrfullelem is not None:
@@ -329,9 +333,15 @@ def icdf_paragenrscalfull(gdat, strgmodl, paragenrunitfull, indxparagenrfullelem
     
                 if gdat.booldiag:
                     if not np.isfinite(paragenrscalfull[indxparagenrfulltemp]).all():
+                        print('')
+                        print('')
+                        print('')
                         raise Exception('')
 
     if gdat.booldiag and not np.isfinite(paragenrscalfull).all():
+        print('')
+        print('')
+        print('')
         print('paragenrscalfull')
         print(paragenrscalfull)
         raise Exception('')
@@ -360,7 +370,8 @@ def icdf_paragenrscalbase(gdat, strgmodl, paragenrunitbase, scaltype, indxparage
         if scaltype == 'eerr':
             cdfnminmparagenrscalbaseunit = gmod.cdfnminmparagenrscalbaseunit[indxparagenrbasescal]
             listparagenrscalbaseunitdiff = gmod.listparagenrscalbaseunitdiff[indxparagenrbasescal]
-            paragenrscalbase = tdpy.icdf_eerr(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase, cdfnminmparagenrscalbaseunit, listparagenrscalbaseunitdiff)
+            paragenrscalbase = tdpy.icdf_eerr(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase, \
+                                                                cdfnminmparagenrscalbaseunit, listparagenrscalbaseunitdiff)
         else:
             paragenrscalbase = tdpy.icdf_gaus(paragenrunitbase, listmeanparagenrscalbase, liststdvparagenrscalbase)
     elif scaltype == 'drct':
@@ -368,6 +379,9 @@ def icdf_paragenrscalbase(gdat, strgmodl, paragenrunitbase, scaltype, indxparage
     
     if gdat.booldiag:
         if not np.isfinite(paragenrscalbase).all():
+            print('')
+            print('')
+            print('')
             print('scaltype')
             print(scaltype)
             print('paragenrscalbase')
@@ -395,8 +409,14 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
         slop = paragenrscalfull[getattr(gmod.indxpara, 'slopprio%spop%d' % (nameparagenrelem, l))]
         if gdat.booldiag:
             if not np.isfinite(slop):
+                print('')
+                print('')
+                print('')
                 raise Exception('')
             if maxm < minm:
+                print('')
+                print('')
+                print('')
                 raise Exception('')
         icdf = tdpy.icdf_powr(cdfn, minm, maxm, slop)
 
@@ -439,6 +459,9 @@ def icdf_trap(gdat, strgmodl, cdfn, paragenrscalfull, scalcomp, nameparagenrelem
     
     if gdat.booldiag:
         if not np.isfinite(icdf).all():
+            print('')
+            print('')
+            print('')
             print('icdf')
             print(icdf)
             raise Exception('')
@@ -604,6 +627,9 @@ def retr_indxpixl(gdat, bgal, lgal):
         indxpixl = gdat.pixlcnvt[hp.ang2pix(gdat.numbsideheal, np.pi / 2. - bgal, lgal)]
         if gdat.booldiag:
             if (indxpixl == -1).any():  
+                print('')
+                print('')
+                print('')
                 raise Exception('pixlcnvt went negative!')
 
     if gdat.typepixl == 'cart':
@@ -822,6 +848,9 @@ def retr_refrchanfinl(gdat):
         booltemp = True
 
     if booltemp:
+        print('')
+        print('')
+        print('')
         raise Exception('Reference elements cannot be aligned with the spatial axes!')
     
     ## WCS object for rotating reference elements into the ROI
@@ -975,6 +1004,9 @@ def retr_refrfermfinl(gdat):
     gdat.refrstyp[0][np.where(fgl3['SpectrumType'] == 'PLSuperExpCutoff')] = 3
     indx = np.where(gdat.refrstyp[0] == -1)[0]
     if indx.size > 0:
+        print('')
+        print('')
+        print('')
         raise Exception('')
     gdat.refrsind[0] = fgl3['Spectral_Index']
     gdat.refrcurv[0] = fgl3['beta']
@@ -1085,8 +1117,14 @@ def show_paragenrscalfull(gdat, gdatmodi, strgstat='this', strgmodl='fitt', indx
         
         if gdat.booldiag:
             if gmod.namepara.genr[k] == '0.0':
+                print('')
+                print('')
+                print('')
                 raise Exception('')
             if gmod.scalpara.genr[k] == '0.0':
+                print('')
+                print('')
+                print('')
                 raise Exception('')
         
         if gmod.numbpopl > 0:
@@ -1117,6 +1155,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         if gdat.booldiag:
             for l in gmod.indxpopl:
                 if len(gmodthis.indxelemfull[l]) > len(set(gmodthis.indxelemfull[l])):
+                    print('')
+                    print('')
+                    print('')
                     raise Exception('Repeating entry in the element index list!')
 
         thisindxparagenrfullelem = retr_indxparagenrelemfull(gdat, gmodthis.indxelemfull, strgmodl)
@@ -1166,6 +1207,9 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     else:
         
         if gdat.booldiag and (gdatmodi.stdp > 1e2).any():
+            print('')
+            print('')
+            print('')
             raise Exception('')
 
         thisindxparagenrfullelemconc = []
@@ -1180,11 +1224,18 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         
         thisstdp = gdatmodi.stdp[gdat.indxstdppara[thisindxsampfull]]
         if not np.isfinite(thisstdp).all():
+            print('')
+            print('')
+            print('')
             raise Exception('')
         gdatmodi.this.indxproptype = 0
     
-    if gdat.booldiag and gdat.probspmr == 0 and gdatmodi.this.indxproptype > 2:
-        raise Exception('')
+    if gdat.booldiag:
+        if gdat.probspmr == 0 and gdatmodi.this.indxproptype > 2:
+            print('')
+            print('')
+            print('')
+            raise Exception('')
 
     if gdat.typeverb > 1:
         print('gdatmodi.this.indxproptype')
@@ -14651,11 +14702,13 @@ def init( \
 
             setp_varb(gdat, 'angl', minm=0., maxm=10.)
             if gdat.boolelempsfnanyy and gdat.maxmpara.angl < np.amax(gdat.maxmangleval):
+                print('')
+                print('')
+                print('')
                 print('gdat.maxmpara.angl')
                 print(gdat.maxmpara.angl)
                 print('gdat.maxmangleval')
                 print(gdat.maxmangleval)
-                
                 raise Exception('Angular axis is too short.')
 
             # make a look-up table of nearby pixels for each pixel
