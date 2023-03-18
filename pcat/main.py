@@ -73,22 +73,22 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=N
         spec = flux[None, :]
     else:
         if plot:
-            meanener = gdat.meanpara.enerplot
+            meanener = gdat.bctrpara.enerplot
         else:
-            meanener = gdat.meanpara.ener
+            meanener = gdat.bctrpara.ener
 
         if gmod.spectype == 'gaus':
-            spec = 1. / edis[None, :] / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanpara.ener[:, None] - elin[None, :]) / edis[None, :])**2)
+            spec = 1. / edis[None, :] / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.bctrpara.ener[:, None] - elin[None, :]) / edis[None, :])**2)
         if gmod.spectype == 'voig':
-            args = (gdat.meanpara.ener[:, None] + 1j * gamm[None, :]) / np.sqrt(2.) / sigm[None, :]
+            args = (gdat.bctrpara.ener[:, None] + 1j * gamm[None, :]) / np.sqrt(2.) / sigm[None, :]
             spec = 1. / sigm[None, :] / np.sqrt(2. * pi) * flux[None, :] * real(scipy.special.wofz(args))
         if gmod.spectype == 'edis':
             edis = edisintp(elin)[None, :]
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanpara.ener[:, None] - elin[None, :]) / edis)**2)
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.bctrpara.ener[:, None] - elin[None, :]) / edis)**2)
         if gmod.spectype == 'pvoi':
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanpara.ener[:, None] - elin[None, :]) / edis)**2)
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.bctrpara.ener[:, None] - elin[None, :]) / edis)**2)
         if gmod.spectype == 'lore':
-            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.meanpara.ener[:, None] - elin[None, :]) / edis)**2)
+            spec = 1. / edis / np.sqrt(2. * pi) * flux[None, :] * np.exp(-0.5 * ((gdat.bctrpara.ener[:, None] - elin[None, :]) / edis)**2)
         if gmod.spectype == 'powr':
             spec = flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
         if gmod.spectype == 'colr':
@@ -98,11 +98,11 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None, elin=N
                 spec = np.empty((gdat.numbener, flux.size))
                 for i in gdat.indxener:
                     if i < gdat.indxenerpivt:
-                        spec[i, :] = flux * (gdat.meanpara.ener[i] / gdat.enerpivt)**(-sindcolr[i])
+                        spec[i, :] = flux * (gdat.bctrpara.ener[i] / gdat.enerpivt)**(-sindcolr[i])
                     elif i == gdat.indxenerpivt:
                         spec[i, :] =  flux
                     else:
-                        spec[i, :] = flux * (gdat.meanpara.ener[i] / gdat.enerpivt)**(-sindcolr[i-1])
+                        spec[i, :] = flux * (gdat.bctrpara.ener[i] / gdat.enerpivt)**(-sindcolr[i-1])
         if gmod.spectype == 'curv':
             spec = flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
         if gmod.spectype == 'expc':
@@ -765,14 +765,14 @@ def retr_psfpferm(gmod):
             irfn = astropy.io.fits.getdata(path, 1)
             fermscal[m, :] = astropy.io.fits.getdata(path, 2)['PSFSCALE']
         for k in range(numbpsfpform):
-            fermform[:, m, k] = sp.interpolate.interp1d(enerirfn, np.mean(irfn[strgpara[k]].squeeze(), axis=0), fill_value='extrapolate')(gdat.meanpara.ener)
+            fermform[:, m, k] = sp.interpolate.interp1d(enerirfn, np.mean(irfn[strgpara[k]].squeeze(), axis=0), fill_value='extrapolate')(gdat.bctrpara.ener)
     # convert N_tail to f_core
     for m in gdat.indxevtt:
         for i in gdat.indxener:
             fermform[i, m, 4] = 1. / (1. + fermform[i, m, 4] * fermform[i, m, 2]**2 / fermform[i, m, 0]**2)
 
     # calculate the scale factor
-    gdat.fermscalfact = np.sqrt((fermscal[None, :, 0] * (10. * gdat.meanpara.ener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
+    gdat.fermscalfact = np.sqrt((fermscal[None, :, 0] * (10. * gdat.bctrpara.ener[:, None])**fermscal[None, :, 2])**2 + fermscal[None, :, 1]**2)
     
     # store the fermi PSF parameters
     gmod.psfpexpr = np.zeros(gdat.numbener * gdat.numbevtt * numbpsfpform)
@@ -987,8 +987,8 @@ def retr_refrfermfinl(gdat):
     gdat.refrspec[0][np.where(np.isfinite(gdat.refrspec[0]) == False)] = 0.
     
     gdat.refrflux[0] = gdat.refrspec[0][:, gdat.indxenerpivt, :]
-    gdat.refrsindcolr0001[0] = -np.log(gdat.refrspec[0][:, 1, :] / gdat.refrflux[0]) / np.log(gdat.meanpara.ener[1] / gdat.enerpivt)
-    gdat.refrsindcolr0002[0] = -np.log(gdat.refrspec[0][:, 2, :] / gdat.refrflux[0]) / np.log(gdat.meanpara.ener[2] / gdat.enerpivt)
+    gdat.refrsindcolr0001[0] = -np.log(gdat.refrspec[0][:, 1, :] / gdat.refrflux[0]) / np.log(gdat.bctrpara.ener[1] / gdat.enerpivt)
+    gdat.refrsindcolr0002[0] = -np.log(gdat.refrspec[0][:, 2, :] / gdat.refrflux[0]) / np.log(gdat.bctrpara.ener[2] / gdat.enerpivt)
     fgl3axisstdv = (fgl3['Conf_68_SemiMinor'] + fgl3['Conf_68_SemiMajor']) * 0.5
     fgl3anglstdv = np.deg2rad(fgl3['Conf_68_PosAng']) # [rad]
     fgl3xposstdv = fgl3axisstdv * abs(np.cos(fgl3anglstdv))
@@ -1894,9 +1894,9 @@ def retr_psecodim(gdat, psec):
     psec = psec.reshape((gdat.numbsidecarthalf, gdat.numbsidecarthalf))
     psecodim = np.zeros(gdat.numbsidecarthalf)
     for k in gdat.indxmpolodim:
-        indxmpol = np.where((gdat.meanpara.mpol > gdat.binspara.mpolodim[k]) & (gdat.meanpara.mpol < gdat.binspara.mpolodim[k+1]))
+        indxmpol = np.where((gdat.bctrpara.mpol > gdat.binspara.mpolodim[k]) & (gdat.bctrpara.mpol < gdat.binspara.mpolodim[k+1]))
         psecodim[k] = np.mean(psec[indxmpol])
-    psecodim *= gdat.meanpara.mpolodim**2
+    psecodim *= gdat.bctrpara.mpolodim**2
     
     return psecodim
 
@@ -2643,12 +2643,12 @@ def setp_indxpara_finl(gdat, strgmodl):
             indxexpaydat = (indxexpatemp % ordrexpa**2) % ordrexpa + 1
             if namebfun == 'bfunfour':
                 ampl = 1.
-                func = gdat.meanpara.yposcart 
+                func = gdat.bctrpara.yposcart 
             if namebfun == 'bfunwfou':
-                functemp = np.exp(-0.5 * (gdat.meanpara.yposcart / (1. / gdat.anglfact))**2)
+                functemp = np.exp(-0.5 * (gdat.bctrpara.yposcart / (1. / gdat.anglfact))**2)
                 ampl = np.sqrt(functemp)
                 func = functemp
-            argsxpos = 2. * np.pi * indxexpaxdat * gdat.meanpara.xposcart / gdat.maxmgangdata
+            argsxpos = 2. * np.pi * indxexpaxdat * gdat.bctrpara.xposcart / gdat.maxmgangdata
             argsypos = 2. * np.pi * indxexpaydat * func / gdat.maxmgangdata
             if indxterm == 0:
                 termfrst = np.sin(argsxpos)
@@ -3276,44 +3276,9 @@ def setp_indxpara_finl(gdat, strgmodl):
     cntr = tdpy.cntr()
     
     # collect lensing here
-    if gmod.boollens:
-        if gmod.boollenshost:
-            setp_varb(gdat, 'redshost', valu=0.2, limt=[0., 0.4], strgmodl=strgmodl)
-            setp_varb(gdat, 'redssour', valu=1., limt=[0.5, 1.5], strgmodl=strgmodl)
+    gdat.function1(gdat)
+    
 
-        gmod.adislens = gdat.adisobjt(gmod.redshost)
-        gmod.adissour = gdat.adisobjt(gmod.redssour)
-        gmod.adislenssour = gmod.adissour - (1. + gmod.redshost) / (1. + gmod.redssour) * gmod.adislens
-        gmod.ratimassbeinsqrd = chalcedon.retr_ratimassbeinsqrd(gmod.adissour, gmod.adislens, gmod.adislenssour)
-        gmod.mdencrit = chalcedon.retr_mdencrit(gmod.adissour, gmod.adislens, gmod.adislenssour)
-    
-        minmredshost = 0.01
-        maxmredshost = 0.4
-        minmredssour = 0.01
-        maxmredssour = 2.
-        numbreds = 200
-        retr_axis(gdat, 'redshost')
-        retr_axis(gdat, 'redssour')
-        
-        gdat.meanpara.adislens = np.empty(numbreds)
-        for k in range(numbreds):
-            gdat.meanpara.adislens[k] = gdat.adisobjt(gdat.meanpara.redshost[k])
-        
-        asca = 0.1 / gdat.anglfact
-        acut = 1. / gdat.anglfact
-    
-        minmmass = np.zeros((numbreds + 1, numbreds + 1))
-        maxmmass = np.zeros((numbreds + 1, numbreds + 1))
-        for k, redshost in enumerate(gdat.binspara.redshost):
-            for n, redssour in enumerate(gdat.binspara.redssour):
-                if redssour > redshost:
-                    adislens = gdat.adisobjt(redshost)
-                    adissour = gdat.adisobjt(redssour)
-                    adislenssour = adissour - (1. + redshost) / (1. + redssour) * adislens
-                    factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adislens, adislenssour, asca, acut)
-                    minmmass[n, k] = np.log10(factmcutfromdefs * gdat.minmdefs)
-                    maxmmass[n, k] = np.log10(factmcutfromdefs * gdat.maxmdefs)
-       
     # define parameter indices
     print('Defining the indices of individual parameters...')
     if gmod.numbpopl > 0:
@@ -3540,6 +3505,306 @@ def setp_indxpara_finl(gdat, strgmodl):
     #            liststrgspep[l] = ['curv']
     #    numbspep[l] = len(liststrgspep[l]) 
         
+
+
+def retr_strgcalc(gdat):
+
+    ## list of strings indicating different methods of calculating the subhalo mass fraction
+    gdat.liststrgcalcmasssubh = ['delt', 'intg']
+        
+
+def function1_lens(gdat):
+    
+    # collect lensing here
+    if gmod.boollens:
+        if gmod.boollenshost:
+            setp_varb(gdat, 'redshost', valu=0.2, minm=0., maxm=0.4, strgmodl=strgmodl)
+            setp_varb(gdat, 'redssour', valu=1., minm=0.5, maxm=1.5, strgmodl=strgmodl)
+
+        gmod.adislens = gdat.adisobjt(gmod.redshost)
+        gmod.adissour = gdat.adisobjt(gmod.redssour)
+        gmod.adislenssour = gmod.adissour - (1. + gmod.redshost) / (1. + gmod.redssour) * gmod.adislens
+        gmod.ratimassbeinsqrd = chalcedon.retr_ratimassbeinsqrd(gmod.adissour, gmod.adislens, gmod.adislenssour)
+        gmod.mdencrit = chalcedon.retr_mdencrit(gmod.adissour, gmod.adislens, gmod.adislenssour)
+    
+        minmredshost = 0.01
+        maxmredshost = 0.4
+        minmredssour = 0.01
+        maxmredssour = 2.
+        numbreds = 200
+        
+        gmod.bctrpara.adislens = gdat.adisobjt(gmod.bctrpara.redshost)
+        
+        asca = 0.1 / gdat.anglfact
+        acut = 1. / gdat.anglfact
+    
+        minmmass = np.zeros((numbreds + 1, numbreds + 1))
+        maxmmass = np.zeros((numbreds + 1, numbreds + 1))
+        for k, redshost in enumerate(gmod.binspara.redshost):
+            for n, redssour in enumerate(gmod.binspara.redssour):
+                if redssour > redshost:
+                    adislens = gdat.adisobjt(redshost)
+                    adissour = gdat.adisobjt(redssour)
+                    adislenssour = adissour - (1. + redshost) / (1. + redssour) * adislens
+                    factmcutfromdefs = retr_factmcutfromdefs(gdat, adissour, adislens, adislenssour, asca, acut)
+                    minmmass[n, k] = np.log10(factmcutfromdefs * gdat.minmdefs)
+                    maxmmass[n, k] = np.log10(factmcutfromdefs * gdat.maxmdefs)
+        
+def plot_lens(gdat):
+    
+    if gmod.boolelemdeflsubh:
+        xdat = gdat.binspara.angl[1:] * gdat.anglfact
+        lablxdat = gdat.labltotlpara.gang
+        
+        listdeflscal = np.array([4e-2, 4e-2, 4e-2]) / gdat.anglfact
+        listanglscal = np.array([0.05, 0.1, 0.05]) / gdat.anglfact
+        listanglcutf = np.array([1.,    1.,  10.]) / gdat.anglfact
+        listasym = [False, False, False]
+        listydat = []
+        for deflscal, anglscal, anglcutf, asym in zip(listdeflscal, listanglscal, listanglcutf, listasym):
+            listydat.append(chalcedon.retr_deflcutf(gdat.binspara.angl[1:], deflscal, anglscal, anglcutf, asym=asym) * gdat.anglfact)
+        
+        for scalxdat in ['self', 'logt']:
+            path = gdat.pathinitintr + 'deflcutf' + scalxdat + '.%s' % gdat.typefileplot
+            tdpy.plot_gene(path, xdat, listydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, \
+                                                             lablydat=r'$\alpha_n$ [$^{\prime\prime}$]', limtydat=[1e-3, 1.5e-2], limtxdat=[None, 2.])
+       
+        # pixel-convoltuion of the Sersic profile
+        # temp -- y axis labels are wrong, should be per solid angle
+        xdat = gdat.binspara.xpossers * gdat.anglfact
+        for n in range(gdat.numbindxsers + 1):
+            for k in range(gdat.numbhalfsers + 1):
+                if k != 5:
+                    continue
+                path = gdat.pathinitintr + 'sersprofconv%04d%04d.%s' % (n, k, gdat.typefileplot)
+                tdpy.plot_gene(path, xdat, gdat.sersprof[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
+                #path = gdat.pathinitintr + 'sersprofcntr%04d%04d.%s' % (n, k, gdat.typefileplot)
+                #tdpy.plot_gene(path, xdat, gdat.sersprofcntr[:, n, k], scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e6, 1e12])
+                path = gdat.pathinitintr + 'sersprofdiff%04d%04d.%s' % (n, k, gdat.typefileplot)
+                tdpy.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], \
+                                                                     scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
+                path = gdat.pathinitintr + 'sersprofdiff%04d%04d.%s' % (n, k, gdat.typefileplot)
+                tdpy.plot_gene(path, xdat, abs(gdat.sersprof[:, n, k] - gdat.sersprofcntr[:, n, k]) / gdat.sersprofcntr[:, n, k], scalxdat='logt', \
+                                                                     scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, limtydat=[1e-6, 1.])
+       
+        xdat = gdat.binspara.angl * gdat.anglfact
+        listspec = np.array([1e-19, 1e-18, 1e-18, 1e-18]) / gdat.anglfact
+        listsize = np.array([0.3, 1., 1., 1.]) / gdat.anglfact
+        listindx = np.array([4., 2., 4., 10.])
+        listydat = []
+        listlabl = []
+        for spec, size, indx in zip(listspec, listsize, listindx):
+            listydat.append(spec * retr_sbrtsersnorm(gdat.binspara.angl, size, indxsers=indx))
+            listlabl.append('$R_e = %.3g ^{\prime\prime}, n = %.2g$' % (size * gdat.anglfact, indx))
+        path = gdat.pathinitintr + 'sersprof.%s' % gdat.typefileplot
+        tdpy.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', lablxdat=lablxdat, lablydat=gdat.lablfluxtotl, \
+                                                                                                   listlegd=listlegd, listhlin=1e-7, limtydat=[1e-8, 1e0])
+    
+        #valulevl = np.linspace(7.5, 9., 5)
+        valulevl = [7.0, 7.3, 7.7, 8., 8.6]
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        cont = axis.contour(gdat.binspara.redshost, gdat.binspara.redssour, minmmass, 10, colors='g', levels=valulevl)
+        axis.clabel(cont, inline=1, fontsize=20, fmt='%.3g')
+        axis.set_xlabel(r'$z_{\rm{hst}}$')
+        axis.set_ylabel(r'$z_{\rm{src}}$')
+        axis.set_title(r'$M_{c,min}$ [$M_{\odot}$]')
+        path = gdat.pathinitintr + 'massredsminm.%s' % gdat.typefileplot
+        plt.tight_layout()
+        print('Writing to %s...' % path)
+        figr.savefig(path)
+        plt.close(figr)
+        
+        valulevl = np.linspace(9., 11., 20)
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        imag = axis.imshow(maxmmass, extent=[minmredshost, maxmredshost, minmredssour, maxmredssour], aspect='auto', vmin=9., vmax=11.)
+        cont = axis.contour(gdat.binspara.redshost, gdat.binspara.redssour, maxmmass, 10, colors='g', levels=valulevl)
+        axis.clabel(cont, inline=1, fontsize=15, fmt='%.3g')
+        axis.set_xlabel('$z_{hst}$')
+        axis.set_ylabel('$z_{src}$')
+        axis.set_title(r'$M_{c,max}$ [$M_{\odot}$]')
+        path = gdat.pathinitintr + 'massredsmaxm.%s' % gdat.typefileplot
+        plt.colorbar(imag) 
+        plt.tight_layout()
+        print('Writing to %s...' % path)
+        figr.savefig(path)
+        plt.close(figr)
+        
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        axis.plot(gdat.meanpara.redshost, gdat.meanpara.adislens * gdat.sizepixl * 1e-3)
+        axis.plot(gdat.meanpara.redshost, gdat.meanpara.adislens * 2. * gdat.maxmgangdata * 1e-3)
+        axis.set_xlabel('$z_h$')
+        axis.set_yscale('log')
+        axis.set_ylabel(r'$\lambda$ [kpc]')
+        path = gdat.pathinitintr + 'wlenreds.%s' % gdat.typefileplot
+        plt.tight_layout()
+        print('Writing to %s...' % path)
+        figr.savefig(path)
+        plt.close(figr)
+        
+        figr, axis = plt.subplots(figsize=(gdat.plotsize, gdat.plotsize))
+        fracacutasca = np.logspace(-1., 2., 20)
+        mcut = retr_mcutfrommscl(fracacutasca)
+        axis.lognp.log(fracacutasca, mcut)
+        axis.set_xlabel(r'$\tau_n$')
+        axis.set_ylabel(r'$M_{c,n} / M_{0,n}$')
+        axis.axhline(1., ls='--')
+        path = gdat.pathinitintr + 'mcut.%s' % gdat.typefileplot
+        plt.tight_layout()
+        print('Writing to %s...' % path)
+        figr.savefig(path)
+        plt.close(figr)
+       
+
+
+def init_image( \
+              
+         # data
+         ## type of data
+         ### 'simu': simulated data
+         ### 'inpt': input data
+         ### 'real': real data retrieved from databases
+         typedata=None, \
+         ## type of experiment
+         ### 'gmix': two-dimensional Gaussian Mixture Model (GMM)
+         typeexpr='gmix', \
+        
+         # Boolean flag to bin the data in energy
+         boolbinsener=None, \
+        
+         dicttrue=None, \
+         dictfitt=None, \
+
+         indxevttincl=None, \
+         indxenerincl=None, \
+        
+         listmask=None, \
+        
+         strgexprsbrt=None, \
+         
+         # type of mask for the exposure map
+         typemaskexpo='ignr', \
+         
+         # type of exposure
+         ## 'cons': constant
+         ## 'file': provided in a file
+         typeexpo='cons', \
+
+         # modes of operation
+         ## only generate and plot simulated data
+         boolsimuonly=False, \
+         
+         ### Sersic type
+         typesers='vauc', \
+         ## transdimensional parameters (elements)
+         ### vary projected scale radius
+         variasca=True, \
+         ### vary projected cutoff radius
+         variacut=True, \
+
+         # maximum spatial distance out to which element kernel will be evaluated
+         maxmangleval=None, \
+         
+         rtagsimu=None, \
+        
+         # initial state
+         initpsfprefr=False, \
+         initpsfp=None, \
+        
+         **dictpcat
+
+              ):
+   
+    # preliminary setup
+    # construct the global object 
+    gdat = tdpy.gdatstrt()
+    
+    # copy locals (inputs) to the global object
+    dictinpt = dict(locals())
+    for attr, valu in dictinpt.items():
+        if '__' not in attr and attr != 'gdat':
+            setattr(gdat, attr, valu)
+
+    print('gdat.typeexpr')
+    print(gdat.typeexpr)
+        
+    dictpcatinpt = retr_dictpcatinpt()
+    
+    listlablcnfg = ['', '', '', '', '']
+    listnamecnfgextn = ['truevlow', 'trueloww', 'nomi', 'truehigh', 'truevhig']
+    dictpcatinptvari = {}
+    for namecnfgextn in listnamecnfgextn:
+        dictpcatinptvari[namecnfgextn] = retr_dictpcatinpt()
+    
+    # defaults
+    if gdat.typedata is None:
+        if gdat.strgexprsbrt is None:
+            gdat.typedata = 'simu'
+        else:
+            gdat.typedata = 'inpt'
+    print('gdat.typedata')
+    print(gdat.typedata)
+
+    # list of models
+    gdat.liststrgmodl = []
+    if gdat.typedata == 'simu':
+        gdat.liststrgmodl += ['true']
+    gdat.liststrgmodl += ['fitt']
+        
+    # list of parameter groups
+    # temp: check whether you need this list in addition to gdat.liststrggroppara
+    gdat.liststrggropparachec = ['genrbase', 'genrelem', 'derifixd', 'derielem', 'genrelemextd', 'derielemextd', 'kind', 'full']
+    
+    # list of parameter features to be turned into lists
+    gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name']
+    # list of parameter features
+    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'bins', 'delt', 'numb', 'indx', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
+                                                                                                            'labltickmajr', 'valutickminr', 'labltickminr']
+        
+    for strgmodl in gdat.liststrgmodl + ['refr']:
+        setattr(gdat, strgmodl, tdpy.gdatstrt())
+        gmod = getattr(gdat, strgmodl)
+        for strgfeatpara in gdat.liststrgfeatpara:
+            setattr(gmod, strgfeatpara + 'para', tdpy.gdatstrt())
+    
+    # copy user-provided inputs into gmod
+    if gdat.dicttrue is not None:
+        for name in gdat.dicttrue:
+            setattr(gdat.true, name, gdat.dicttrue[name])
+    if gdat.dictfitt is not None:
+        for name in gdat.dictfitt:
+            setattr(gdat.fitt, name, gdat.dictfitt[name])
+    
+    for strgfeatpara in gdat.liststrgfeatpara:
+        setattr(gdat, strgfeatpara + 'para', tdpy.gdatstrt())
+        
+    if gdat.typedata == 'inpt' and gdat.rtagsimu is not None:
+        print('Will use %s to account for selection effects.' % gdat.rtagsimu)
+        gdat.pathoutprtagsimu = retr_pathoutprtag(gdat.pathpcat, gdat.rtagsimu)
+
+    dictglob = sample( \
+                      **dictpcat, \
+                     )
+
+
+
+
+
+
+
+
+
+
+# new parameters to define
+## relnpowr = 0.
+
+
+
+
+
+
+
+
+
 
 def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     '''
@@ -4362,8 +4627,8 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
 def retr_listrtagprev(strgcnfg, pathpcat):
     
     # list of PCAT run plot outputs
-    pathimag = pathpcat + '/imag/'
-    listrtag = fnmatch.filter(os.listdir(pathimag), '2*')
+    pathvisu = pathpcat + 'visuals/'
+    listrtag = fnmatch.filter(os.listdir(pathvisu), '2*')
     
     listrtagprev = []
     for rtag in listrtag:
@@ -4511,9 +4776,19 @@ def setp_varb(gdat, \
     event bins, background components, and Sersic components 
     '''
     
+    if limt is not None and (minm is not None or maxm is not None): 
+        print('')
+        print('')
+        print('')
+        raise Exception('limt is not None and (minm is not None or maxm is not None)')
+    
+    if limt is not None:
+        minm = limt[0]
+        maxm = limt[1]
+
     # determine the list of models
     if strgmodl is None:
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             liststrgmodl = ['true', 'fitt', 'plot']
         else:
             liststrgmodl = ['fitt', 'plot']
@@ -4586,7 +4861,7 @@ def setp_varb(gdat, \
             
             if numbbins is not None:
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, numbbins, 'numbbinspara')
-            
+                
             # create limt, bins, mean, and delt if minm, maxm, mean, and stdv are defined
             if minm is not None and maxm is not None or mean is not None and stdv is not None:
                 
@@ -4627,20 +4902,20 @@ def setp_varb(gdat, \
                 if boolinvr:
                     binsunif = binsunif[::-1]
                 
-                meanparaunif = (binsunif[1:] + binsunif[:-1]) / 2.
+                bctrunif = (binsunif[1:] + binsunif[:-1]) / 2.
                 
                 if scal == 'self' or scal == 'drct' or scal == 'pois' or scal == 'gaus' or scal is None:
-                    meanpara = meanparaunif
+                    bctr = bctrunif
                     bins = binsunif
                     minmunif = minm
                     maxmunif = maxm
                 if scal == 'logt' or scal == 'powr':
-                    meanpara = 10**meanparaunif
+                    bctr = 10**bctrunif
                     bins = 10**binsunif
                     minmunif = np.log10(minm)
                     maxmunif = np.log10(maxm)
                 if scal == 'asnh':
-                    meanpara = np.sinh(meanparaunif)
+                    bctr = np.sinh(bctrunif)
                     bins = np.sinh(binsunif)
                     minmunif = np.arcsinh(minm)
                     maxmunif = np.arcsinh(maxm)
@@ -4674,11 +4949,11 @@ def setp_varb(gdat, \
 
                 setattr(gmodoutp.limtpara, strgvarb, limt)
                 setattr(gmodoutp.binspara, strgvarb, bins)
-                setattr(gmodoutp.meanpara, strgvarb, meanpara)
+                setattr(gmodoutp.bctrpara, strgvarb, bctr)
                 setattr(gmodoutp.deltpara, strgvarb, delt)
        
 
-def retr_ticklabltemp(gdat, strgcbar):
+def retr_ticklabltemp_TOBEDELETED(gdat, strgcbar):
     
     minm = getattr(gdat.minmpara, strgcbar)
     maxm = getattr(gdat.maxmpara, strgcbar)
@@ -4717,7 +4992,8 @@ def retr_ticklabltemp(gdat, strgcbar):
     setattr(gdat.tickpara, strgcbar, tick)
 
 
-def retr_axis(gdat, strgvarb, strgmodl=None, boolinvr=False):
+
+def retr_axis_TOBEDELETED(gdat, strgvarb, strgmodl=None, boolinvr=False):
     
     if strgmodl is None:
         listgdattemp = [gdat]
@@ -4780,7 +5056,7 @@ def retr_axis(gdat, strgvarb, strgmodl=None, boolinvr=False):
         
         setattr(gdattemp.limtpara, strgvarb, limt)
         setattr(gdattemp.binspara, strgvarb, bins)
-        setattr(gdattemp.meanpara, strgvarb, meanvarb)
+        setattr(gdattemp.bctrpara, strgvarb, meanvarb)
         setattr(gdattemp.deltpara, strgvarb, delt)
 
 
@@ -4981,7 +5257,7 @@ def make_legdmaps(gdat, strgstat, strgmodl, axis, mosa=False, assc=False):
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                            label='%s Host' % gmod.lablmodl, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
     
-    if gdat.typedata == 'mock':
+    if gdat.typedata == 'simu':
         if gmod.boollens:
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
                                                                 label='%s Source' % gdat.refr.labl, marker='>', lw=gdat.mrkrlinewdth, color=gdat.refr.colr)
@@ -5047,7 +5323,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
                                                                                                              color='red', fontsize=1)
 
     # temp -- generalize this to input refrxposhost vs.
-    if gdat.typedata == 'mock':
+    if gdat.typedata == 'simu':
         ## host galaxy position
         if gmod.typeemishost != 'none':
             for e in gmod.indxsersfgrd:
@@ -5311,7 +5587,7 @@ def init_stat(gdat):
                 gmod.this.paragenrscalfull[gmod.indxpara.numbelem[l]] = gmod.this.paragenrscalfull[gmod.indxpara.numbelem[l]]
     
     if gdat.booldiag:
-        if gdat.typedata == 'mock' and gdat.inittype == 'refr':
+        if gdat.typedata == 'simu' and gdat.inittype == 'refr':
             for l in gmod.indxpopl:
                 if gmod.paragenrunitfull[gmod.indxpara.numbelem[l]] > gmod.maxmpara.numbelem[l]:
                     raise Exception('')
@@ -5423,7 +5699,7 @@ def init_stat(gdat):
         if gdat.typedata == 'inpt':
             for l in gmod.indxpopl:
                 gmod.this.paragenrunitfull[gmod.indxpara.numbelem[l]] = gdat.refr.numbelem[l]
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             for k, namepara in enumerate(gmod.namepara.genrbase):
                 if not (gdat.inittype == 'pert' and gmod.namepara.genr.base.startswith('numbelem')):
                     gmod.indxpara.true = k
@@ -6204,7 +6480,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             sbrt['lens'] = np.empty_like(gdat.cntpdata)
             for ii, i in enumerate(gdat.indxener):
                 for mm, m in enumerate(gdat.indxevtt):
-                    sbrtbgrdobjt = sp.interpolate.RectBivariateSpline(gdat.meanpara.yposcart, gdat.meanpara.xposcart, \
+                    sbrtbgrdobjt = sp.interpolate.RectBivariateSpline(gdat.bctrpara.yposcart, gdat.bctrpara.xposcart, \
                                                             sbrt['bgrd'][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)).T)
                     
                     yposprim = gdat.yposgrid[indxpixlelem[0]] - defl[indxpixlelem[0], 1]
@@ -6328,7 +6604,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         sbrt['modlconv'] = np.zeros((gdat.numbener, gdat.numbpixl, gdat.numbevtt))
         for ii, i in enumerate(gdat.indxener):
             for mm, m in enumerate(gdat.indxevtt):
-                if gdat.strgcnfg == 'pcat_ferm_igal_mock_test':
+                if gdat.strgcnfg == 'pcat_ferm_igal_simu_test':
                     print('Convolving ii, i, mm, m')
                     print(ii, i, mm, m)
                 if gdat.typepixl == 'cart':
@@ -6380,7 +6656,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         setattr(gmodstat, 'cntpmodl', cntp['modl'])
     stopchro(gdat, gdatmodi, 'expo')
 
-    # mock data specific
+    # simulated-data specific
     if strgmodl == 'true' and strgstat == 'this':
         
         # generate count data
@@ -6437,7 +6713,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.binspara.angl, gmod.typemodlpsfn, strgmodl)
             fwhm = 2. * retr_psfnwdth(gdat, gmodstat.psfn, 0.5)
             sigm = fwhm / 2.355
-            psecodimdatapntsprio = np.exp(-2. * gdat.meanpara.mpolodim[None, :, None] / (0.1 / sigm[:, None, :]))
+            psecodimdatapntsprio = np.exp(-2. * gdat.bctrpara.mpolodim[None, :, None] / (0.1 / sigm[:, None, :]))
             lpridiff = 0.
             for i in gdat.indxener:
                 for m in gdat.indxevtt:
@@ -6663,7 +6939,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 for k in range(gmodstat.numbelem[l]):
                     setattr(gmodstat, 'speclinepop%d%04d' % (l, k), gmodstat.dictelem[l]['spec'][:, k])
         
-        if gdat.typedata == 'mock' and strgmodl == 'true' and gdat.numbpixl > 1:
+        if gdat.typedata == 'simu' and strgmodl == 'true' and gdat.numbpixl > 1:
             gdat.refrxpos = [[] for l in gmod.indxpopl]
             gdat.refrypos = [[] for l in gmod.indxpopl]
             for l in gmod.indxpopl:
@@ -6677,7 +6953,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     if gmod.numbpopl > 0:
         if strgstat == 'this' or gdat.boolrefeforc and strgmodl == 'fitt':
             # correlate the fitting model elements with the reference elements
-            if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'mock') and gdat.boolasscrefr:
+            if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr:
                 indxelemrefrasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
                 indxelemfittasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
                 for q in gdat.indxrefr:
@@ -7031,7 +7307,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     gmodstat.dictelem[l]['relm'] = np.empty(gmodstat.numbelem[l])
 
                     # temp -- this can be placed earlier in the code
-                    cntplensobjt = sp.interpolate.RectBivariateSpline(gdat.meanpara.yposcart, gdat.meanpara.xposcart, \
+                    cntplensobjt = sp.interpolate.RectBivariateSpline(gdat.bctrpara.yposcart, gdat.bctrpara.xposcart, \
                                                             cntp['lens'][ii, :, mm].reshape((gdat.numbsidecart, gdat.numbsidecart)).T)
                     
                     for k in np.arange(gmodstat.numbelem[l]):
@@ -7040,7 +7316,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         acut = gmodstat.dictelem[l]['acut'][k]
                         
                         #### deflection profiles
-                        gmodstat.dictelem[l]['deflprof'][:, k] = chalcedon.retr_deflcutf(gdat.meanpara.anglfull, gmodstat.dictelem[l]['defs'][k], asca, acut)
+                        gmodstat.dictelem[l]['deflprof'][:, k] = chalcedon.retr_deflcutf(gdat.bctrpara.anglfull, gmodstat.dictelem[l]['defs'][k], asca, acut)
          
                         ### truncated mass 
                         gmodstat.dictelem[l]['mcut'][k] = retr_mcut(gdat, gmodstat.dictelem[l]['defs'][k], asca, acut, adislens, mdencrit)
@@ -7223,7 +7499,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             dicttert[name] = np.zeros(gdat.numbanglhalf)
             if 'isf' in name:
                 indxisfrtemp = int(name.split('isf')[1][0])
-            angl = np.sqrt((gdat.meanpara.xposcartmesh - xposhost[indxisfrtemp])**2 + (gdat.meanpara.yposcartmesh - yposhost[indxisfrtemp])**2).flatten()
+            angl = np.sqrt((gdat.bctrpara.xposcartmesh - xposhost[indxisfrtemp])**2 + (gdat.bctrpara.yposcartmesh - yposhost[indxisfrtemp])**2).flatten()
             for k in gdat.indxanglhalf:
                 if name[4:8] == 'host':
                     convtemp = conv[:]
@@ -7233,9 +7509,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 if name.endswith('delt'):
                     indxpixl = np.where((gdat.binspara.anglhalf[k] < angl) & (angl < gdat.binspara.anglhalf[k+1]))[0]
                     dicttert[name][k] = 1e6 * np.sum(convtemp[indxpixl]) * mdencrit * \
-                                                gdat.apix * adislens**2 / 2. / np.pi * gdat.deltanglhalf[k] / gdat.meanpara.anglhalf[k]
+                                                gdat.apix * adislens**2 / 2. / np.pi * gdat.deltanglhalf[k] / gdat.bctrpara.anglhalf[k]
                 if name.endswith('intg'):
-                    indxpixl = np.where(angl < gdat.meanpara.anglhalf[k])[0]
+                    indxpixl = np.where(angl < gdat.bctrpara.anglhalf[k])[0]
                     dicttert[name][k] = np.sum(convtemp[indxpixl]) * mdencrit * gdat.apix * adislens**2
                 
                 if name[:4] == 'frac':
@@ -7247,7 +7523,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, name, dicttert[name])
             
             # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
-            dicttert[name + 'bein'] = np.interp(beinhost, gdat.meanpara.anglhalf, dicttert[name])
+            dicttert[name + 'bein'] = np.interp(beinhost, gdat.bctrpara.anglhalf, dicttert[name])
             setattr(gmodstat, name + 'bein', dicttert[name + 'bein'])
         
     #if gmod.numbpopl > 0:
@@ -7317,9 +7593,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     setattr(gmodstat, 'histpars' + strgfeat + 'pop%d' % q, refrhistpars)
                     setattr(gmodstat, 'reca' + strgfeat + 'pop%d' % q, reca)
         
-        print('gdat.rtagmock')
-        print(gdat.rtagmock)
-        if gdat.rtagmock is not None:
+        print('gdat.rtagsimu')
+        print(gdat.rtagsimu)
+        if gdat.rtagsimu is not None:
             if gmod.numbpopl > 0:
                 for l in gmod.indxpopl:
                     for strgfeat in gmod.namepara.genrelem[l]:
@@ -7332,7 +7608,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                             setattr(gmodstat, 'histcorrreca' + strgfeat + 'pop%d' % l, histcorrreca)
 
     ### Exculusive comparison with the true state
-    if strgmodl == 'fitt' and gdat.typedata == 'mock':
+    if strgmodl == 'fitt' and gdat.typedata == 'simu':
         if gmod.boollens:
             numbsingcomm = min(deflsing.shape[2], gmod.deflsing.shape[2])
             deflsingresi = deflsing[0, ..., :numbsingcomm] - gmod.deflsing[..., :numbsingcomm]
@@ -7362,7 +7638,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     if gmod.numbpopl > 0:
     
         # correlate the catalog sample with the reference catalog
-        if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'mock') and gdat.boolasscrefr:
+        if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr:
             
             for q in gdat.indxrefr:
                 for l in gmod.indxpopl:
@@ -7566,7 +7842,7 @@ def retr_lprielem(gdat, strgmodl, l, g, strgfeat, strgpdfn, paragenrscalfull, di
             pdfnspatpriotemp = getattr(gmod, 'pdfnspatpriotemp')
             spatdistcons = paragenrscalfull[getattr(gmod.indxpara, 'spatdistcons')]
             lpdfspatprio, lpdfspatprioobjt = retr_spatprio(gdat, pdfnspatpriotemp, spatdistcons)
-            lpdfspatpriointp = lpdfspatprioobjt(gdat.meanpara.yposcart, gdat.meanpara.xposcart)
+            lpdfspatpriointp = lpdfspatprioobjt(gdat.bctrpara.yposcart, gdat.bctrpara.xposcart)
             lpdfspatpriointp = lpdfspatpriointp.T
             setattr(gmodstat, 'lpdfspatpriointp', lpdfspatpriointp)
             setattr(gmodstat, 'lpdfspatprioobjt', lpdfspatprioobjt)
@@ -7603,7 +7879,7 @@ def retr_pathoutprtag(pathpcat, rtag):
 
 def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forcplot=False):
     
-    gdatmock = None
+    gdatsimu = None
     
     print('proc_finl()')
 
@@ -7642,9 +7918,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if gdatfinl.fitt.numbpopl > 0:
             if gdatfinl.typedata == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
-                    if gdatfinl.rtagmock is not None:
-                        path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
-                        gdatmock = readfile(path)
+                    if gdatfinl.rtagsimu is not None:
+                        path = gdatfinl.pathoutprtagsimu + 'gdatfinlpost'
+                        gdatsimu = readfile(path)
                     
     else:
         
@@ -7689,7 +7965,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 if strg.startswith('fitt.indxpara.'):
                     delattr(gdatinit, strg)
 
-            if gdatinit.boolmockonly:
+            if gdatinit.boolsimuonly:
                 print('Mock only run. Quitting final-processing...')
                 return
 
@@ -7883,7 +8159,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                 print('Done with the tile number %d, run number %d...' % (indxtiletemp, n))
         
         if booltile:
-            gdatfinl.pathplotrtag = gdatfinl.pathimag + rtagfinl + '/'
+            gdatfinl.pathplotrtag = gdatfinl.pathvisu + rtagfinl + '/'
             make_fold(gdatfinl)
             indxrtaggood = np.array(indxrtaggood).astype(int)
             numbrtaggood = indxrtaggood.size
@@ -8048,9 +8324,9 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
         if gdatfinl.fitt.numbpopl > 0 and strgpdfn == 'post':
             if gdatfinl.typedata == 'inpt':
                 if gdatfinl.boolcrex or gdatfinl.boolcrin:
-                    if gdatfinl.rtagmock is not None:
-                        path = gdatfinl.pathoutprtagmock + 'gdatfinlpost'
-                        gdatmock = readfile(path)
+                    if gdatfinl.rtagsimu is not None:
+                        path = gdatfinl.pathoutprtagsimu + 'gdatfinlpost'
+                        gdatsimu = readfile(path)
                     
         # posterior corrections
         if gdatfinl.fitt.numbpopl > 0 and strgpdfn == 'post':
@@ -8073,7 +8349,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                         ## internal correction
                         listhist = getattr(gdatfinl, 'list' + strgpdfn + strgvarb)
                         
-                        for qq in gdatmock.indxrefr:
+                        for qq in gdatsimu.indxrefr:
                             l = int(gmod.namepara.genr.elemvarbhist[3][qq].split('pop')[1][0])
                             qq = int(gmod.namepara.genr.elemvarbhist[3][qq].split('pop')[2][0])
                             if gmod.namepara.genr.elemvarbhist[1][-4:] in gdatfinl.listnamerefr and \
@@ -8082,17 +8358,17 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
                             else:
                                 if gmod.namepara.genr.elemvarbhist[1][-4:] in gdatfinl.listnamerefr and len(gmod.namepara.genr.elemvarbhist[2]) > 0:
                                     listcmpltrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (l, qq))], 2)
+                                                    [getattr(gdatsimu, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (l, qq))], 2)
                                     listfdistrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (qq, l))], 2)
+                                                    [getattr(gdatsimu, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[2] + 'pop%dpop%d' % (qq, l))], 2)
                                 elif len(gmod.namepara.genr.elemvarbhist[2][:-4]) > 0 and gmod.namepara.genr.elemvarbhist[2][-4:] in gdatfinl.listnamerefr:
                                     listcmpltrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (l, qq))], 1)
+                                                    [getattr(gdatsimu, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (l, qq))], 1)
                                     listfdistrue = np.stack(gdatfinl.numbbinsplot * \
-                                                    [getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (qq, l))], 1)
+                                                    [getattr(gdatsimu, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[1] + 'pop%dpop%d' % (qq, l))], 1)
                                 else:
-                                    listcmpltrue = getattr(gdatmock, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[3][qq])
-                                    listfdistrue = getattr(gdatmock, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[3][qq])
+                                    listcmpltrue = getattr(gdatsimu, 'listpostcmpl' + gmod.namepara.genr.elemvarbhist[3][qq])
+                                    listfdistrue = getattr(gdatsimu, 'listpostfdis' + gmod.namepara.genr.elemvarbhist[3][qq])
                                 if len(gmod.namepara.genr.elemvarbhist[2]) == 0:
                                     listcmplboot = np.empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
                                     listfdisboot = np.empty((gdatfinl.numbsampboot, gdatfinl.numbbinsplot))
@@ -8351,7 +8627,7 @@ def proc_finl(gdat=None, rtag=None, strgpdfn='post', listnamevarbproc=None, forc
             gdatprio = None
         
         if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn) or forcplot:
-            plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
+            plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatsimu=gdatsimu, booltile=booltile)
             filestat = open(gdatfinl.pathoutprtag + 'stat.txt', 'a')
             filestat.write('plotfinl%s written.\n' % strgpdfn)
             filestat.close()
@@ -8767,8 +9043,8 @@ def proc_anim(rtag):
     for strgpdfn in gdat.liststrgpdfn:
         for nameextn in gdat.liststrgfoldanim:
             
-            pathframextn = gdat.pathimag + rtag + '/' + strgpdfn + '/fram/' + nameextn
-            pathanimextn = gdat.pathimag + rtag + '/' + strgpdfn + '/anim/' + nameextn
+            pathframextn = gdat.pathvisu + rtag + '/' + strgpdfn + '/fram/' + nameextn
+            pathanimextn = gdat.pathvisu + rtag + '/' + strgpdfn + '/anim/' + nameextn
         
             try:
                 listfile = fnmatch.filter(os.listdir(pathframextn), '*_swep*.%s' % gdat.typefileplot)
@@ -8832,7 +9108,7 @@ def proc_anim(rtag):
     filestat.close()
     
 
-def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gdatmock=None, booltile=False):
+def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gdatsimu=None, booltile=False):
     
     gmod = getattr(gdat, strgmodl)
     gdatobjt = retr_gdatobjt(gdat, gdatmodi, strgmodl)
@@ -8897,7 +9173,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     lablxdat = getattr(gmod.labltotlpara, namepopl)
                     scalxdat = getattr(gmod.scalpara, namepopl)
                     limtxdat = getattr(gmod.limtpara, namepopl)
-                    meanxdat = getattr(gdat.meanpara, name)
+                    meanxdat = getattr(gdat.bctrpara, name)
                         
                     if gdat.numbpixl > 1:
                         listydattype = ['totl', 'sden']
@@ -8921,7 +9197,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                         if ydattype == 'totl':
                             lablydat = r'$N_{%s}$' % gmod.lablelemsubs[l]
                     
-                        if ydattype == 'totl' and not gdat.rtagmock is None:
+                        if ydattype == 'totl' and not gdat.rtagsimu is None:
                             listtypehist = ['hist', 'histcorrreca']
                         else:
                             listtypehist = ['hist']
@@ -9019,7 +9295,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                         continue
                                     if not strgfeat.startswith('spec') and not strgfeat.startswith('defl') \
                                                          and not strgfeat in gdat.refr.namepara.elemonly[q][l] and \
-                                                         not (gdat.typedata == 'mock' and (strgfeat.endswith('pars') or strgfeat.endswith('nrel'))):
+                                                         not (gdat.typedata == 'simu' and (strgfeat.endswith('pars') or strgfeat.endswith('nrel'))):
                                         
                                         plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgclas + strgfeat + strgindxydat, \
                                                   'mean' + strgfeat, lablxdat=lablxdat, \
@@ -9055,7 +9331,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             listplottype = []
                             
                             for k in range(specplot[l].shape[-1]):
-                                listxdat.append(gdat.meanpara.enerplot)
+                                listxdat.append(gdat.bctrpara.enerplot)
                                 listplottype.append('lghtline')
                             
                             for specconvunit in gdat.listspecconvunit:
@@ -9068,9 +9344,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     else:
                                         specplottemp = np.copy(specplottemp[:, k])
                                     if specconvunit[0] == 'en01':
-                                        specplottemp *= gdat.meanpara.enerplot
+                                        specplottemp *= gdat.bctrpara.enerplot
                                     if specconvunit[0] == 'en02':
-                                        specplottemp *= gdat.meanpara.enerplot**2
+                                        specplottemp *= gdat.bctrpara.enerplot**2
                                     if specconvunit[0] == 'en03':
                                         # temp
                                         pass
@@ -9102,7 +9378,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                     acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
 
                             for l in range(len(deflprof)):
-                                xdat = gdat.meanpara.anglfull * gdat.anglfact
+                                xdat = gdat.bctrpara.anglfull * gdat.anglfact
                                 listydat = []
                                 listvlinfrst = []
                                 listvlinseco = []
@@ -9136,7 +9412,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                                         limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
                                                                         listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                         
-                if gdat.typedata == 'mock':
+                if gdat.typedata == 'simu':
                     # pulsar masses
                     for l in gmod.indxpopl:
                         if gmod.typeelem[l] == 'lghtpntspuls':
@@ -9191,7 +9467,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                             lablxdat=lablxdat, lablydat=r'$\mathcal{P}$', limtydat=limtydat)
         
                 # internally and externally corrected element parameter histograms
-                if gdat.typedata == 'inpt' and strgstat == 'pdfn' and gdat.rtagmock is not None:
+                if gdat.typedata == 'inpt' and strgstat == 'pdfn' and gdat.rtagsimu is not None:
                     limtydat = gdat.limtydathistfeat
                     for l in gmod.indxpopl:
                         strgindxydat = 'pop%d' % l
@@ -9201,7 +9477,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             lablydat = r'$N_{%s}$' % gmod.lablelemsubs[l]
                             for namecorr in ['incr', 'excr']:
                                 nameinte = namecorr + 'odim/'
-                                for qq in gdatmock.indxrefr:
+                                for qq in gdatsimu.indxrefr:
                                     if namecorr == 'excr':
                                         if not strgfeat in gmod.namepara.extrelem[l]:
                                             continue
@@ -9265,7 +9541,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                             plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                             l0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
                                     elif strgelemtdimvarb.startswith('excr') or strgelemtdimvarb.startswith('incr'):
-                                        for qq in gdatmock.indxrefr:
+                                        for qq in gdatsimu.indxrefr:
                                             if strgelemtdimvarb.startswith('excr'):
                                                 for q in gdat.indxrefr:
                                                     if getattr(gdat, 'crex' + strgfrst + strgseco + 'pop%dpop%dpop%d' % (q, qq, l0)) is None:
@@ -9280,12 +9556,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                 plot_elemtdim(gdat, gdatmodi, strgstat, strgmodl, strgelemtdimtype, strgelemtdimvarb, \
                                                                                             l0, strgfrst, strgseco, strgtotl, strgpdfn=strgpdfn)
         
-            if not (gdat.typedata == 'mock' and (gmod.maxmpara.numbelemtotl == 0 or gmod.maxmpara.numbelemtotl == 0)):
+            if not (gdat.typedata == 'simu' and (gmod.maxmpara.numbelemtotl == 0 or gmod.maxmpara.numbelemtotl == 0)):
                 
 
                 for q in gdat.indxrefr:
                     
-                    if strgphas == 'init' and gdat.typedata == 'mock':
+                    if strgphas == 'init' and gdat.typedata == 'simu':
                         continue
                     print('strgpdfn')
                     print(strgpdfn)
@@ -9436,7 +9712,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     plot_defl(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxdefl=k, multfact=multfact)
                 
                 # residual deflection field
-                if strgmodl == 'fitt' and gdat.typedata == 'mock':
+                if strgmodl == 'fitt' and gdat.typedata == 'simu':
                     plot_defl(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, nameparagenrelem='resi', multfact=100.)
                     if strgstat != 'pdfn':
                         for k in range(numbsingcomm):
@@ -9452,13 +9728,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
 
 def dele_rtag(rtag):
     
-    pathdata = pathpcat + '/data/outp/'
-    pathimag = pathpcat + '/imag/'
+    pathdata = pathpcat + 'data/outp/'
+    pathvisu = pathpcat + 'visuals/'
     
     cmnd = 'rm -rf %s%s' % (pathdata, rtag)
     print(cmnd)
     os.system(cmnd)
-    cmnd = 'rm -rf %s%s' % (pathimag, rtag)
+    cmnd = 'rm -rf %s%s' % (pathvisu, rtag)
     os.system(cmnd)
     print(cmnd)
 
@@ -9549,7 +9825,7 @@ def plot_infopvks(gdat, gdatprio, name, namefull, nameseco=None):
         tdpy.mcmc.plot_plot(pathpdfn, xdat, ydat, lablxdat, lablydat, scal, colr=['k', 'k'], linestyl=['-', '--'], legd=legd, titl=titl)
 
 
-def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=None, booltile=None):
+def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatsimu=None, booltile=None):
     
     if gdat.typeverb > 0:
         print('plot_finl()')
@@ -9711,7 +9987,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
     gdat.lablpmea = 'Mean'
 
     # posterior versions of the frame plots
-    plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatmock=gdatmock, booltile=booltile)
+    plot_samp(gdat, None, 'pdfn', 'fitt', 'finl', strgpdfn=strgpdfn, gdatsimu=gdatsimu, booltile=booltile)
    
     if booltile:
         return
@@ -9833,7 +10109,7 @@ def plot_finl(gdat=None, gdatprio=None, rtag=None, strgpdfn='post', gdatmock=Non
         listvarbdraw = []
         listlabldraw = []
         listcolrdraw = []
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             listvarbdraw += [getattr(gdat.true, strgpdfntemp)]
             listlabldraw += ['True model']
             listcolrdraw += [gdat.refr.colr]
@@ -9890,7 +10166,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit):
             liststrgmodl = [strgmodl]
             listgdatobjt = [gdat]
         if strgmodl == 'fitt' and (strgstat == 'this' or strgstat == 'pdfn'):
-            if gdat.typedata == 'mock':
+            if gdat.typedata == 'simu':
                 liststrgmodl = [strgmodl, 'true']
                 listgdatobjt = [gdatobjt, gdat]
             else:
@@ -10007,33 +10283,33 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit):
                 if specconvunit[0] == 'en00':
                     factener = 1.
                 if specconvunit[0] == 'en01':
-                    factener = gdat.meanpara.ener
+                    factener = gdat.bctrpara.ener
                 if specconvunit[0] == 'en02':
-                    factener = gdat.meanpara.ener**2
+                    factener = gdat.bctrpara.ener**2
                 if specconvunit[0] == 'en03':
                     # temp
                     pass
                     factener = 1.
-                    #indxenerintv = np.where((gdat.meanpara.ener < specconvunit[4]) & (gdat.meanpara.ener > specconvunit[3]))[0]
-                    #ener = np.concatenate((np.array([specconvunit[3]]), gdat.meanpara.ener[indxenerintv], np.array([specconvunit[4]])))
+                    #indxenerintv = np.where((gdat.bctrpara.ener < specconvunit[4]) & (gdat.bctrpara.ener > specconvunit[3]))[0]
+                    #ener = np.concatenate((np.array([specconvunit[3]]), gdat.bctrpara.ener[indxenerintv], np.array([specconvunit[4]])))
                     #
                     #for k in range(3):
                     #    if k == 0:
                     #        ydattemp = 
-                    #    ydatminmener = np.interp(specconvunit[3], gdat.meanpara.ener, ydat)
-                    #    ydatmaxmener = np.interp(specconvunit[4], gdat.meanpara.ener, ydat)
+                    #    ydatminmener = np.interp(specconvunit[3], gdat.bctrpara.ener, ydat)
+                    #    ydatmaxmener = np.interp(specconvunit[4], gdat.bctrpara.ener, ydat)
                     #    ydat = np.concatenate((np.array([ydatminmener]), ydat[indxenerintv], np.array([ydatmaxmener])))
-                    #    ydat = np.trapz(ydat, gdat.meanpara.ener)
+                    #    ydat = np.trapz(ydat, gdat.bctrpara.ener)
                     #
-                    #yerrminmener = np.interp(specconvunit[3], gdat.meanpara.ener, yerr, axis=1)
-                    #yerrmaxmener = np.interp(specconvunit[4], gdat.meanpara.ener, yerr, axis=1)
+                    #yerrminmener = np.interp(specconvunit[3], gdat.bctrpara.ener, yerr, axis=1)
+                    #yerrmaxmener = np.interp(specconvunit[4], gdat.bctrpara.ener, yerr, axis=1)
                     #ydat = np.stack((np.array([yerrminmener]), ydat[indxenerintv], np.array([yerrmaxmener])))
                     #
                     #
-                    #yerr = np.trapz(yerr, gdat.meanpara.ener)
+                    #yerr = np.trapz(yerr, gdat.bctrpara.ener)
 
 
-                xdat = gdat.meanpara.ener
+                xdat = gdat.bctrpara.ener
                 cntr = 0
                 
                 for k in range(listydat.shape[0]):
@@ -10175,7 +10451,7 @@ def plot_pdfntotlflux():
         axis.set_ylabel('$N_{samp}$')
         make_legd(axis)
         plt.tight_layout()
-        pathfold = os.environ["TDGU_DATA_PATH"] + '/imag/powrpdfn/'
+        pathfold = os.environ["TDGU_DATA_PATH"] + 'visuals/powrpdfn/'
         path = pathfold + 'powrpdfn%04d.%s' % (n, gdat.typefileplot)
         print('Writing to %s...' % path)
         figr.savefig(path)
@@ -10347,7 +10623,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
         xdat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgxdat, strgpdfn)
         ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, strgydat, strgpdfn)
     else:
-        xdat = getattr(gdat.meanpara, strgxdat[4:])
+        xdat = getattr(gdat.bctrpara, strgxdat[4:])
         if typehist == 'histcorrreca':
             ydat = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'histcorrreca' + strgydat[4:], strgpdfn)
         else:
@@ -10527,7 +10803,7 @@ def plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgydat, strgxdat, 
             strgtemp = strgydat[4:-8]
             if strgtemp in gmod.namepara.genrelem[int(strgydat[-5])]:
                 xdatprio = getattr(gmod, strgxdat + 'prio')
-                if gdat.typedata == 'mock' and not omittrue:
+                if gdat.typedata == 'simu' and not omittrue:
                     for q in gdat.indxrefr:
                         if gdat.refr.numbelem[q] == 0:
                             continue
@@ -10978,7 +11254,7 @@ def plot_intr(gdat):
         axis.set_axis_bgcolor('black')
         figr.set_facecolor('black')
         plt.tight_layout()
-        figr.savefig(gdat.pathimag + 'talkintr.%s' % gdat.typefileplot, facecolor=figr.get_facecolor())
+        figr.savefig(gdat.pathvisu + 'talkintr.%s' % gdat.typefileplot, facecolor=figr.get_facecolor())
         plt.close()  
         
         
@@ -11314,7 +11590,7 @@ def plot_grap(plottype, typeverb=0):
     if plottype == 'lens0001':
         nx.draw_networkx_nodes(grap, posi, ax=axis, labels=labl, nodelist=['xpos', 'ypos', 'defs', 'asca', 'acut'], node_color='g', node_size=size)
     
-    pathplot = pathpcat + '/imag/'
+    pathplot = pathpcat + 'visuals/'
     plt.tight_layout()
     figr.savefig(pathplot + 'grap%s.%s' % (plottype, gdat.typefileplot))
     plt.close(figr)
@@ -11367,7 +11643,7 @@ def plot_init(gdat):
         
     for i in gdat.indxener:
         for m in gdat.indxevtt:
-            if gdat.typedata == 'mock' and gmod.boollens:
+            if gdat.typedata == 'simu' and gmod.boollens:
                 figr, axis, path = init_figr(gdat, None, 'post', 'cntpmodlraww', 'this', 'true', i, m, -1)
                 imag = retr_imag(gdat, axis, gmod.cntpmodlraww, 'this', 'true', 'cntpdata', i, m, booltdim=True)
                 make_cbar(gdat, axis, imag, 0, tick=gdat.valutickmajrpara.cntpdata, labltotl=gdat.lablcntpdata)
@@ -11380,7 +11656,7 @@ def plot_init(gdat):
         gdat.limtexpo = [gdat.minmpara.expo, gdat.maxmpara.expo]
         if gdat.boolbinsener:
             path = gdat.pathinit + 'expototlmean.%s' % gdat.typefileplot
-            tdpy.plot_gene(path, gdat.meanpara.ener, gdat.expototlmean, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
+            tdpy.plot_gene(path, gdat.bctrpara.ener, gdat.expototlmean, scalxdat='logt', scalydat='logt', lablxdat=gdat.lablenertotl, \
                                                                                             lablydat=gdat.lablexpototl, limtydat=gdat.limtexpo)
         
         for m in gdat.indxevtt:
@@ -11482,11 +11758,13 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
     plt.close(figr)
 
 
-def init( \
+def sample( \
          
          # dictionary defining the model to sample from
-         dictmodl=None, \
+         #dictmodl=None, \
     
+         #dicttrue=None, \
+
          # user interaction
          ## type of verbosity
          typeverb=1, \
@@ -11497,19 +11775,6 @@ def init( \
          # miscelleneaous
          ## type of PDF to sample from
          strgpdfn='post', \
-
-         # data
-         ## type of data
-         ### 'mock': simulated data
-         ### 'inpt': input data
-         ### 'real': real data retrieved from databases
-         typedata=None, \
-         ## type of experiment
-         ### 'gmix': two-dimensional Gaussian Mixture Model (GMM)
-         typeexpr='gmix', \
-        
-         # Boolean flag to bin the data in energy
-         boolbinsener=None, \
 
          # diagnostics
          ## Boolean to enter the diagnostic mode
@@ -11527,10 +11792,18 @@ def init( \
          ## factor by which to thin down the data
          factthin=None, \
     
-         # reference catalog
-         ## Boolean to use the reference catalogs to associate
+         # elements
+         ## reference element catalog
+         ## Boolean flag to associate elements to those in reference element catalogs
          boolasscrefr=None, \
-        
+         
+         # name of the element feature used for selection
+         listnamefeatsele=None, \
+         
+         refrlabltotl=None, \
+         refrlablpopl=None, \
+         fittlablpopl=None, \
+    
          # sampling
          ## Boolean flag to make burn-in tempered
          boolburntmpr=False, \
@@ -11541,52 +11814,21 @@ def init( \
          ## number of initial sweeps to be burned
          numbburn=None, \
             
-         dicttrue=None, \
-
-         dictfitt=None, \
-
-         dictboth=None, \
+         # number of samples for Bootstrap
+         numbsampboot=None, \
 
          # output
-         ## Boolean to make condensed catalog
+         ## Boolean flag to make condensed catalog of elements
          boolcondcatl=True, \
-        
-         refrlabltotl=None, \
-         refrlablpopl=None, \
-         fittlablpopl=None, \
-    
-         # numpy RNG seed
+
+         # random state
+         ## seed for numpy random number generator
          seedtype=0, \
          ## Boolean flag to re-seed each chain separately
          boolseedchan=True, \
          ## optional deterministic seed for sampling element parameters
          seedelem=None, \
          
-         indxevttincl=None, \
-         indxenerincl=None, \
-        
-         listmask=None, \
-        
-         # number of samples for Bootstrap
-         numbsampboot=None, \
-
-         listnamefeatsele=None, \
-         
-         # type of mask for the exposure map
-         typemaskexpo='ignr', \
-         
-         # type of exposure
-         ## 'cons': constant
-         ## 'file': provided in a file
-         typeexpo='cons', \
-
-         # maximum spatial distance out to which element kernel will be evaluated
-         maxmangleval=None, \
-         
-         # initial state
-         initpsfprefr=False, \
-         initpsfp=None, \
-        
          namestattrue=None, \
         
          # plotting
@@ -11619,14 +11861,6 @@ def init( \
          # photometric model
         
          ## base parameters
-         ### Sersic type
-         typesers='vauc', \
-         ## transdimensional parameters (elements)
-         ### vary projected scale radius
-         variasca=True, \
-         ### vary projected cutoff radius
-         variacut=True, \
-
          # prior
          boolpenalpridiff=False, \
          priotype='logt', \
@@ -11638,8 +11872,9 @@ def init( \
         
          loadvaripara=False, \
          
-         # save the state of the MCMC
-         savestat=False, \
+         # saving and recovering the state of the sampler
+         # Boolean flag to save the state of the MCMC
+         boolsavestat=False, \
          namesavestat=None, \
          # recover the state from a previous run
          namerecostat=None, \
@@ -11654,12 +11889,9 @@ def init( \
          typeopti='none', \
          
          # modes of operation
-         ## only generate and plot mock data
-         boolmockonly=False, \
          ## perform an additional run sampling from the prior
          checprio=False, \
 
-         strgexprsbrt=None, \
          anglassc=None, \
          nameexpr=None, \
          
@@ -11759,9 +11991,6 @@ def init( \
          
          ## spectral
 
-         # lensing
-         fittrelnpowr=0., \
-
          # temp
          margfactmodl=1., \
          maxmgangdata=None, \
@@ -11777,8 +12006,6 @@ def init( \
          stdvspep=0.001, \
          stdvspmrsind=0.2, \
          varistdvlbhl=True, \
-        
-         rtagmock=None, \
         
          ## transdimensional proposal probabilities
          probtran=None, \
@@ -11809,19 +12036,9 @@ def init( \
         gdat.pathpcat += '/'
     gdat.pathdata = gdat.pathpcat + 'data/'
     gdat.pathdataopti = gdat.pathdata + 'opti/'
-    gdat.pathimag = gdat.pathpcat + 'imag/'
+    gdat.pathvisu = gdat.pathpcat + 'visuals/'
     gdat.pathoutp = gdat.pathdata + 'outp/'
     gdat.pathinpt = gdat.pathdata + 'inpt/'
-        
-    # list of parameter groups
-    # temp: check whether you need this list in addition to gdat.liststrggroppara
-    gdat.liststrggropparachec = ['genrbase', 'genrelem', 'derifixd', 'derielem', 'genrelemextd', 'derielemextd', 'kind', 'full']
-    
-    # list of parameter features to be turned into lists
-    gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name']
-    # list of parameter features
-    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'bins', 'delt', 'numb', 'indx', 'cmap', 'mean', 'tick', 'numbbins', 'valutickmajr', \
-                                                                                                            'labltickmajr', 'valutickminr', 'labltickminr']
         
     # run tag
     gdat.strgswep = '%d' % (gdat.numbswep)
@@ -11893,61 +12110,16 @@ def init( \
             fileargs.write('%20s %s\n' % (args, listargsvals[args]))
         fileargs.close()
         
-        # defaults
-        if gdat.typedata is None:
-            if gdat.strgexprsbrt is None:
-                gdat.typedata = 'mock'
-            else:
-                gdat.typedata = 'inpt'
-        print('gdat.typedata')
-        print(gdat.typedata)
-
-        # list of models
-        gdat.liststrgmodl = []
-        if gdat.typedata == 'mock':
-            gdat.liststrgmodl += ['true']
-        gdat.liststrgmodl += ['fitt']
-        
         gdat.refr = tdpy.gdatstrt()
         
-        gdat.listgmod = []
-        for strgmodl in gdat.liststrgmodl + ['refr']:
-            setattr(gdat, strgmodl, tdpy.gdatstrt())
-            gmod = getattr(gdat, strgmodl)
-            for strgstat in ['this', 'next']:
-                setattr(gmod, strgstat, tdpy.gdatstrt())
-            for strgfeatpara in gdat.liststrgfeatpara:
-                setattr(gmod, strgfeatpara + 'para', tdpy.gdatstrt())
-        
-            gdat.listgmod += [gmod]
-            
-        # copy user-provided inputs into gmod
-        if gdat.dicttrue is not None:
-            for name in gdat.dicttrue:
-                setattr(gdat.true, name, gdat.dicttrue[name])
-        if gdat.dictfitt is not None:
-            for name in gdat.dictfitt:
-                setattr(gdat.fitt, name, gdat.dictfitt[name])
-        if gdat.dictboth is not None:
-            for name in gdat.dictboth:
-                setattr(gdat.true, name, gdat.dictboth[name])
-                setattr(gdat.fitt, name, gdat.dictboth[name])
-        
-        for strgfeatpara in gdat.liststrgfeatpara:
-            setattr(gdat, strgfeatpara + 'para', tdpy.gdatstrt())
+        for strgstat in ['this', 'next']:
+            setattr(gdat, strgstat, tdpy.gdatstrt())
         
         ## number of processes
         gdat.strgproc = os.uname()[1]
         if gdat.numbproc is None:
-            if gdat.strgproc == 'fink1.rc.fas.harvard.edu' or gdat.strgproc == 'fink2.rc.fas.harvard.edu' or gdat.strgproc == 'wise':
-                gdat.numbproc = 1
-            else:
-                gdat.numbproc = 1
+            gdat.numbproc = 1
     
-        if gdat.typedata == 'inpt' and gdat.rtagmock is not None:
-            print('Will use %s to account for selection effects.' % gdat.rtagmock)
-            gdat.pathoutprtagmock = retr_pathoutprtag(gdat.pathpcat, gdat.rtagmock)
-
         ## number of burned sweeps
         if gdat.numbburn is None:
             print('gdat.numbswep')
@@ -11965,9 +12137,6 @@ def init( \
 
         print('gdat.boolpriopsfninfo')
         print(gdat.boolpriopsfninfo)
-        
-        print('gdat.typeexpr')
-        print(gdat.typeexpr)
         
         ## factor by which to thin the sweeps to get samples
         if gdat.factthin is not None and gdat.numbsamp is not None:
@@ -12004,6 +12173,9 @@ def init( \
                                                                                                     (gdat.numbswep, gdat.numbburn, gdat.factthin))
             print('The resulting chain will contain %d samples per chain and %d samples in total.' % (gdat.numbsamp, gdat.numbsamptotl))
 
+        if gdat.priofactdoff is None:
+            gdat.priofactdoff = 1.
+        
         if gdat.anlytype is None:
             if gdat.typeexpr == 'chan':
                 gdat.anlytype = 'home'
@@ -12011,9 +12183,6 @@ def init( \
                 gdat.anlytype = 'rec8pnts'
             else:
                 gdat.anlytype = 'nomi'
-        
-        if gdat.priofactdoff is None:
-            gdat.priofactdoff = 1.
         
         # experiment defaults
         if gdat.typeexpr == 'ferm':
@@ -12113,7 +12282,7 @@ def init( \
                 gdat.typepixl = 'cart'
         
         if gdat.boolbinsener:
-            gdat.meanpara.enerfull = np.sqrt(gdat.binspara.enerfull[1:] * gdat.binspara.enerfull[:-1])
+            gdat.bctrpara.enerfull = np.sqrt(gdat.binspara.enerfull[1:] * gdat.binspara.enerfull[:-1])
         
         ## Boolean flag to vary the PSF
         setp_varb(gdat, 'boolmodipsfn', valu=False, strgmodl='fitt')
@@ -12147,7 +12316,7 @@ def init( \
                 binsenerpart = np.logspace(np.log10(0.5), np.log10(10.), 6)
                 meanenerpart = np.sqrt(binsenerpart[:-1] * binsenerpart[1:])
                 meanenerparttemp = np.concatenate((np.array([0.5]), meanenerpart, np.array([10.])))
-                typebacktemp = interp(gdat.meanpara.enerfull, meanenerparttemp, sbrtparttemp)
+                typebacktemp = interp(gdat.bctrpara.enerfull, meanenerparttemp, sbrtparttemp)
             if gdat.anlytype.startswith('home') :
                 typebacktemp = 1.
                 #typebacktemp = np.array([70.04, 12.12, 15.98, 10.79, 73.59]) / 70.04
@@ -12240,7 +12409,7 @@ def init( \
 
         #setp_varb(gdat, 'colr', valu='mediumseagreen', strgmodl='refr')
         setp_varb(gdat, 'colr', valu='b', strgmodl='fitt')
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             setp_varb(gdat, 'colr', valu='g', strgmodl='true')
         
         #gdat.refr.colr = 'mediumseagreen'
@@ -12298,11 +12467,7 @@ def init( \
 
         gdat.liststrgphas = ['fram', 'finl', 'anim']
         gdat.liststrgelemtdimtype = ['bind']
-        
-        # lensing
-        ## list of strings indicating different methods of calculating the subhalo mass fraction
-        gdat.liststrgcalcmasssubh = ['delt', 'intg']
-        
+
         # input data
         if gdat.typedata == 'inpt':
             path = gdat.pathinpt + gdat.strgexprsbrt
@@ -12371,10 +12536,10 @@ def init( \
         # exposure
         gdat.boolcorrexpo = gdat.expo is not None
         if gdat.typeexpo == 'cons':
-            if gdat.typedata == 'mock':
+            if gdat.typedata == 'simu':
                 if gdat.numbsidecart is None:
                     gdat.numbsidecart = 100
-            if gdat.typedata == 'mock':
+            if gdat.typedata == 'simu':
                 if gdat.typepixl == 'heal':
                     gdat.expo = np.ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbevttfull))
                 if gdat.typepixl == 'cart':
@@ -12396,7 +12561,7 @@ def init( \
                     raise Exception('')
                 gdat.numbsidecart = int(np.sqrt(gdat.expo.shape[1]))
         
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             if gdat.typepixl == 'cart':
                 gdat.numbpixlfull = gdat.numbsidecart**2
             if gdat.typepixl == 'heal':
@@ -12551,7 +12716,7 @@ def init( \
             gdat.numbenerplot = 100
             gdat.strgener = [gdat.strgenerfull[k] for k in gdat.indxenerincl]
             gdat.binspara.ener = gdat.binspara.enerfull[gdat.indxenerinclbins]
-            gdat.meanpara.ener = np.sqrt(gdat.binspara.ener[1:] * gdat.binspara.ener[:-1])
+            gdat.bctrpara.ener = np.sqrt(gdat.binspara.ener[1:] * gdat.binspara.ener[:-1])
             gdat.deltener = gdat.binspara.ener[1:] - gdat.binspara.ener[:-1]
             gdat.minmener = gdat.binspara.ener[0]
             gdat.maxmener = gdat.binspara.ener[-1]
@@ -12560,7 +12725,7 @@ def init( \
             gdat.limtener = [np.amin(gdat.binspara.ener), np.amax(gdat.binspara.ener)] 
         if gdat.boolbinsener: 
             if gdat.numbener > 1:
-                gdat.enerpivt = gdat.meanpara.ener[gdat.indxenerpivt]
+                gdat.enerpivt = gdat.bctrpara.ener[gdat.indxenerpivt]
             # energy bin indices other than that of the pivot bin
             gdat.indxenerinde = np.setdiff1d(gdat.indxener, gdat.indxenerpivt)
         
@@ -12763,12 +12928,12 @@ def init( \
         if gdat.boolbinsspat:
             gdat.binspara.xposcart = np.linspace(gdat.minmxposdata, gdat.maxmxposdata, gdat.numbsidecart + 1)
             gdat.binspara.yposcart = np.linspace(gdat.minmyposdata, gdat.maxmyposdata, gdat.numbsidecart + 1)
-            gdat.meanpara.xposcart = (gdat.binspara.xposcart[0:-1] + gdat.binspara.xposcart[1:]) / 2.
-            gdat.meanpara.yposcart = (gdat.binspara.yposcart[0:-1] + gdat.binspara.yposcart[1:]) / 2.
+            gdat.bctrpara.xposcart = (gdat.binspara.xposcart[0:-1] + gdat.binspara.xposcart[1:]) / 2.
+            gdat.bctrpara.yposcart = (gdat.binspara.yposcart[0:-1] + gdat.binspara.yposcart[1:]) / 2.
         
         # reference elements
         gdat.numbrefr = 0
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             gdat.numbrefr = gmod.numbpopl
         if gdat.typedata == 'inpt':
             if gdat.typeexpr == 'ferm':
@@ -12797,7 +12962,7 @@ def init( \
         gdat.true.colrelem = ['darkgreen', 'olivedrab', 'mediumspringgreen']
         # temp -- this allows up to 3 reference populations
         gdat.fitt.colrelem = ['royalblue', 'dodgerblue', 'navy']
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             gdat.boolinforefr = True
             gdat.listnamerefr = ['moc%d' % l for l in gmod.indxpopl] 
             gdat.indxrefr = np.arange(gdat.numbrefr)
@@ -12883,7 +13048,7 @@ def init( \
                 gmod.minmpara.numbelem[l] = getattr(gmod.minmpara, 'numbelempop%d' % l)
                 gmod.maxmpara.numbelem[l] = getattr(gmod.maxmpara, 'numbelempop%d' % l)
     
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             setp_indxpara_finl(gdat, strgmodl='true')
                 
         for strgmodl in gdat.liststrgmodl:
@@ -13014,7 +13179,7 @@ def init( \
                 setp_varb(gdat, 'maxmdefs', valu=maxmdefs, strgmodl=strgmodl)
         
             # true model parameters
-            if gdat.typedata == 'mock':
+            if gdat.typedata == 'simu':
                 gmod.numbelem = np.zeros(gmod.numbpopl, dtype=int)
                 if gmod.typemodltran == 'pois':
                     for l in gmod.indxpopl:
@@ -13238,6 +13403,12 @@ def init( \
             if gdat.boolburntmpr:
                 print('Warning: Tempered burn-in.')
     
+        if gdat.fitt.boollens or gdat.true.boollens:
+            retr_strgcalc = pcat.lens.retr_strgcalc
+    
+        # list of names of variables to be calculated
+        retr_strgcalc(gdat)
+
         if gdat.typedata == 'inpt':
             gdat.minmpara.sind = -1.
             gdat.maxmpara.sind = 2.
@@ -13255,7 +13426,7 @@ def init( \
                     if len(refrfeat[q]) == 0 or refrfeat[q].ndim < 2:
                         raise Exception('')
         
-        if gdat.typedata != 'mock':
+        if gdat.typedata != 'simu':
             gdat.refr.numbelem = np.zeros(gdat.numbrefr, dtype=int)
         
         # set the reference model to true model
@@ -13347,7 +13518,7 @@ def init( \
         # construct the fitting model
         setp_paragenrscalbase(gdat, strgmodl='fitt')
         
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             # construct the true model
             setp_paragenrscalbase(gdat, strgmodl='true')
    
@@ -13427,7 +13598,7 @@ def init( \
         gdat.pathpixlcnvt = gdat.pathdata + 'pixlcnvt/'
         gdat.pathprox = gdat.pathdata + 'prox/'
         ## plot
-        gdat.pathplotrtag = gdat.pathimag + gdat.rtag + '/'
+        gdat.pathplotrtag = gdat.pathvisu + gdat.rtag + '/'
         gdat.pathinit = gdat.pathplotrtag + 'init/'
         gdat.pathinitintr = gdat.pathinit + 'intr/'
         
@@ -13496,7 +13667,7 @@ def init( \
         gdat.listlablchro += ['Exposure', 'Prior', 'Tertiary']
         gdat.numbchro = len(gdat.listnamechro)
         
-        if gdat.typedata != 'mock':
+        if gdat.typedata != 'simu':
             if gmod.boolelemlghtanyy and gdat.typeexpr == 'ferm' and gdat.maxmgangdata == 20. / gdat.anglfact:
                 path = gdat.pathinpt + 'sbrt0018.png'
                 gdat.sbrt0018 = sp.ndimage.imread(path, flatten=True)
@@ -13517,7 +13688,7 @@ def init( \
         # process index
         gdat.indxproc = np.arange(gdat.numbproc)
 
-        if gmod.boollens or gdat.typedata == 'mock' and gmod.boollens:
+        if gmod.boollens or gdat.typedata == 'simu' and gmod.boollens:
             retr_axis(gdat, 'mcut')
             
             # 'temp' turn these back on as necessary
@@ -13550,7 +13721,7 @@ def init( \
         
         ## label of the models
         gdat.fitt.lablmodl = 'Model'
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             gdat.refr.lablmodl = 'True'
         else:
             gdat.refr.lablmodl = 'Ref'
@@ -13564,7 +13735,7 @@ def init( \
         #            if strgfeat in gdat.refr.namepara.elem[q]:
         #                gdat.namepara.elemcomm[q][l].append(strgfeat)
         
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             gdat.refr.indxpopl = gdat.true.indxpopl
             gdat.refr.lablpopl = gdat.true.lablpopl
 
@@ -13637,7 +13808,7 @@ def init( \
 
         for strgmodl in gdat.liststrgmodl:
             gmod = getattr(gdat, strgmodl)
-            if gmod.boollens or gdat.typedata == 'mock' and gmod.boollens:
+            if gmod.boollens or gdat.typedata == 'simu' and gmod.boollens:
                 retr_axis(gdat, 'defl', strgmodl=strgmodl)
                 retr_axis(gdat, 'deflsubh', strgmodl=strgmodl)
 
@@ -13645,14 +13816,14 @@ def init( \
         ## number of deflection components to plot
 
         gdat.binspara.xposcartmesh, gdat.binspara.yposcartmesh = np.meshgrid(gdat.binspara.xposcart, gdat.binspara.yposcart, indexing='ij')
-        gdat.meanpara.xposcartmesh, gdat.meanpara.yposcartmesh = np.meshgrid(gdat.meanpara.xposcart, gdat.meanpara.yposcart, indexing='ij')
+        gdat.bctrpara.xposcartmesh, gdat.bctrpara.yposcartmesh = np.meshgrid(gdat.bctrpara.xposcart, gdat.bctrpara.yposcart, indexing='ij')
         if gdat.typepixl == 'cart':
             gdat.sizepixl = np.sqrt(gdat.apix)
             gdat.indxsidecart = np.arange(gdat.numbsidecart)
             gdat.indxpixlrofi = np.arange(gdat.numbpixlcart)
             gdat.indxsidemesh = np.meshgrid(gdat.indxsidecart, gdat.indxsidecart, indexing='ij')
-            gdat.xposgrid = gdat.meanpara.xposcart[gdat.indxsidemesh[0].flatten()]
-            gdat.yposgrid = gdat.meanpara.yposcart[gdat.indxsidemesh[1].flatten()]
+            gdat.xposgrid = gdat.bctrpara.xposcart[gdat.indxsidemesh[0].flatten()]
+            gdat.yposgrid = gdat.bctrpara.yposcart[gdat.indxsidemesh[1].flatten()]
             gdat.shapcart = (gdat.numbsidecart, gdat.numbsidecart)
             gdat.xposgridfull = np.copy(gdat.xposgrid)
             gdat.yposgridfull = np.copy(gdat.yposgrid)
@@ -13699,7 +13870,7 @@ def init( \
                 gdat.minmpara.mpolodim = 0.
                 gdat.maxmpara.mpolodim = 1. / 2. / gdat.sizepixl
 
-                if gmod.boollens or gdat.typedata == 'mock' and gmod.boollens:
+                if gmod.boollens or gdat.typedata == 'simu' and gmod.boollens:
                     # temp -- this should minima, maxima of adislens and the true metamodel into account
                     gdat.minmpara.wvecodim = gdat.minmpara.mpolodim / np.amax(gmod.adislens)
                     gdat.maxmpara.wvecodim = gdat.maxmpara.mpolodim / np.amin(gmod.adislens)
@@ -13707,10 +13878,10 @@ def init( \
                     gdat.maxmpara.wlenodim = gdat.maxmpara.anglodim * np.amax(gmod.adislens)
                     retr_axis(gdat, 'wvecodim', strgmodl=strgmodl)
                     retr_axis(gdat, 'wlenodim', strgmodl=strgmodl, boolinvr=True)
-                    gdat.meanpara.wvecxpos, gdat.meanpara.wvecypos = np.meshgrid(gdat.meanpara.wvecodim, gdat.meanpara.wvecodim, indexing='ij')
-                    gdat.meanpara.wvec = np.sqrt(gdat.meanpara.wvecxpos**2 + gdat.meanpara.wvecypos**2)
-            gdat.meanpara.mpolxpos, gdat.meanpara.mpolypos = np.meshgrid(gdat.meanpara.mpolodim, gdat.meanpara.mpolodim, indexing='ij')
-            gdat.meanpara.mpol = np.sqrt(gdat.meanpara.mpolxpos**2 + gdat.meanpara.mpolypos**2)
+                    gdat.bctrpara.wvecxpos, gdat.bctrpara.wvecypos = np.meshgrid(gdat.bctrpara.wvecodim, gdat.bctrpara.wvecodim, indexing='ij')
+                    gdat.bctrpara.wvec = np.sqrt(gdat.bctrpara.wvecxpos**2 + gdat.bctrpara.wvecypos**2)
+            gdat.bctrpara.mpolxpos, gdat.bctrpara.mpolypos = np.meshgrid(gdat.bctrpara.mpolodim, gdat.bctrpara.mpolodim, indexing='ij')
+            gdat.bctrpara.mpol = np.sqrt(gdat.bctrpara.mpolxpos**2 + gdat.bctrpara.mpolypos**2)
 
         for strgmodl in gdat.liststrgmodl:
             gmod = getattr(gdat, strgmodl)
@@ -13993,7 +14164,7 @@ def init( \
             
             # dummy pixel indices for full (nonlocal) element kernel evaluation 
             gdat.listindxpixl = []
-            if gdat.typedata == 'mock':
+            if gdat.typedata == 'simu':
                 numb = max(gdat.true.maxmpara.numbelemtotl, gdat.fitt.maxmpara.numbelemtotl)
             else:
                 numb = gdat.fitt.maxmpara.numbelemtotl
@@ -14120,7 +14291,7 @@ def init( \
         
         gmod = gdat.fitt
         # proposal scale
-        if gmod.boollens or gdat.typedata == 'mock':
+        if gmod.boollens or gdat.typedata == 'simu':
             
             gdat.stdp = 1e-4 + np.zeros(gdat.numbstdp)
             
@@ -14387,13 +14558,13 @@ def init( \
                     if strgpdfn == 'tmplgrad':
                         pdfnpriotemp = np.empty((gdat.numbsidecart + 1, gdat.numbsidecart + 1))
                         lpdfprio, lpdfprioobjt = retr_spatprio(gdat, pdfnpriotemp)
-                        lpdfpriointp = lpdfprioobjt(gdat.meanpara.yposcart, gdat.meanpara.xposcart)
+                        lpdfpriointp = lpdfprioobjt(gdat.bctrpara.yposcart, gdat.bctrpara.xposcart)
             
         gdat.indxpoplcrin = 0
         if gmod.numbpopl > 0:
-            if gdat.rtagmock is not None:
-                path = gdat.pathoutprtagmock + 'gdatfinlpost'
-                gdatmock = readfile(path)
+            if gdat.rtagsimu is not None:
+                path = gdat.pathoutprtagsimu + 'gdatfinlpost'
+                gdatsimu = readfile(path)
             gdat.liststrgvarbhist = []
             cntr = 0
             for l0 in gmod.indxpopl:
@@ -14403,11 +14574,11 @@ def init( \
                     gdat.liststrgvarbhist.append([[] for k in range(5)])
                     gdat.liststrgvarbhist[cntr][0] = 'hist' + strgfeatfrst + 'pop%d' % l
                     gdat.liststrgvarbhist[cntr][1] = strgfeatfrst
-                    if gdat.rtagmock is not None:
+                    if gdat.rtagsimu is not None:
                         # cmpl
-                        gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdatmock.indxrefr]
+                        gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdatsimu.indxrefr]
                         # fdis
-                        gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdatmock.indxrefr]
+                        gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdatsimu.indxrefr]
                         booltemp = True
                         if strgfeatfrst[-4:] in gdat.listnamerefr:
                             q = gdat.listnamerefr.index(strgfeatfrst[-4:])
@@ -14430,7 +14601,7 @@ def init( \
                         gdat.liststrgvarbhist[cntr][2] = strgfeatseco
                         gdat.liststrgvarbhist[cntr][3] = [[] for qq in gdat.indxrefr]
                         gdat.liststrgvarbhist[cntr][4] = [[] for qq in gdat.indxrefr]
-                        if gdat.rtagmock is not None:
+                        if gdat.rtagsimu is not None:
                             booltempfrst = True
                             booltempseco = True
                             if strgfeatfrst[-4:] in gdat.listnamerefr:
@@ -14439,7 +14610,7 @@ def init( \
                             if strgfeatseco[-4:] in gdat.listnamerefr:
                                 q = gdat.listnamerefr.index(strgfeatseco[-4:])
                                 booltempseco = not strgfeatseco in gdat.refr.namepara.elemonly[q][l]
-                            for qq in gdatmock.indxrefr:
+                            for qq in gdatsimu.indxrefr:
                                 if booltempfrst and booltempseco:
                                     gdat.liststrgvarbhist[cntr][3][qq] = strgfeatfrst + strgfeatseco + 'pop%dpop%d' % (l0, qq)
                                     gdat.liststrgvarbhist[cntr][4][qq] = strgfeatfrst + strgfeatseco + 'pop%dpop%d' % (qq, l0)
@@ -14457,14 +14628,14 @@ def init( \
                 gdat.numbsampboot = gdat.numbsamp
         
             gdat.boolcrex = False
-            if gdat.rtagmock is not None:
-                for qq in gdatmock.indxrefr:
+            if gdat.rtagsimu is not None:
+                for qq in gdatsimu.indxrefr:
                     for q in gdat.indxrefr:
                         for l in gmod.indxpopl:
                             for strgfeatfrst in gmod.namepara.genrelem[l]:
                                 
                                 if gdat.typeexpr == 'chan' and strgfeatfrst == 'redswo08':
-                                    crex = (1. + gdat.meanpara.redswo08)**2
+                                    crex = (1. + gdat.bctrpara.redswo08)**2
                                 else:
                                     crex = None
                                 
@@ -14478,9 +14649,9 @@ def init( \
                                     if gdat.typeexpr == 'chan' and (strgfeatfrst == 'redswo08' or strgfeatseco == 'redswo08'):
                                         crex = np.empty((gdat.numbbinsplot, gdat.numbbinsplot))
                                         if strgfeatfrst == 'redswo08':
-                                            crex[:, :] = (1. + gdat.meanpara.redswo08[:, None])**2
+                                            crex[:, :] = (1. + gdat.bctrpara.redswo08[:, None])**2
                                         else:
-                                            crex[:, :] = (1. + gdat.meanpara.redswo08[None, :])**2
+                                            crex[:, :] = (1. + gdat.bctrpara.redswo08[None, :])**2
                                     else:
                                         crex = None
                                     
@@ -14489,7 +14660,7 @@ def init( \
                 if gdat.refr.numbelemtotl > 0:
                     for listtemp in gdat.liststrgvarbhist:
                         strgvarb = listtemp[0]
-                        for qq in gdatmock.indxrefr:
+                        for qq in gdatsimu.indxrefr:
                             for q in gdat.indxrefr:
                                 nametemp = listtemp[1]
                                 if len(listtemp[2]) > 0:
@@ -14501,7 +14672,7 @@ def init( \
                                     gdat.boolcrex = True
             
             ## internal correction
-            gdat.boolcrin = gdat.typedata == 'inpt' and gdat.rtagmock is not None
+            gdat.boolcrin = gdat.typedata == 'inpt' and gdat.rtagsimu is not None
         
         if gmod.numbpopl > 0:
             # variables for which two dimensional functions will be plotted
@@ -14518,7 +14689,7 @@ def init( \
             gdat.liststrgelemtdimvarbanim = deepcopy(gdat.liststrgelemtdimvarbfram)
         
         gdat.liststrgfoldinit = ['']
-        if gmod.numbpopl > 0 or gdat.typedata == 'mock' and gmod.numbpopl > 0:
+        if gmod.numbpopl > 0 or gdat.typedata == 'simu' and gmod.numbpopl > 0:
             gdat.liststrgfoldinit += ['', 'histodim/', 'histtdim/', 'scattdim/', 'cmpltdim/']
         gdat.liststrgfoldfram = ['']
         if gmod.numbpopl > 0:
@@ -14552,19 +14723,19 @@ def init( \
                     gdat.stdp = thisfile['stdp'][()]
                 thisfile.close()
 
-        if gdat.rtagmock is not None:
+        if gdat.rtagsimu is not None:
             if gdat.typedata == 'inpt':
-                path = gdat.pathoutprtagmock + 'gdatfinlpost'
+                path = gdat.pathoutprtagsimu + 'gdatfinlpost'
                 booltemp = True
                 try:
-                    gdatmock = readfile(path)
+                    gdatsimu = readfile(path)
                 except:
                     booltemp = False
-                    gdat.rtagmock = None
+                    gdat.rtagsimu = None
 
                 if booltemp:
-                    numbparaelem = gdatmock.true.numbparaelem
-                    if gdatmock.trueindxpopl != gmod.indxpopl:
+                    numbparaelem = gdatsimu.true.numbparaelem
+                    if gdatsimu.trueindxpopl != gmod.indxpopl:
                         raise Exception('')
                     for l in gmod.indxpopl:
                         for strgfeat in gmod.namepara.genrelem[l]:
@@ -14573,12 +14744,12 @@ def init( \
 
                             if strgfeat[-4:] in gdat.listnamerefr:
                                 continue
-                            reca = getattr(gdatmock.true, 'reca' + strgfeat + 'pop%d' % l)
+                            reca = getattr(gdatsimu.true, 'reca' + strgfeat + 'pop%d' % l)
                             setattr(gdat.true, 'reca' + strgfeat + 'pop%d' % l, reca)
-                    gmod.namepara.genr.elem = gdatmock.truegmod.namepara.genr.elem
+                    gmod.namepara.genr.elem = gdatsimu.truegmod.namepara.genr.elem
         
         if gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0 or \
-                            gdat.typedata == 'mock' and gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0:
+                            gdat.typedata == 'simu' and gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0:
             gdat.numbprox = 3
             gdat.indxprox = np.arange(gdat.numbprox)
             minmparagenrscalelemampl = getattr(gdat.fitt.minmpara, gmod.nameparagenrelemampl[0])
@@ -14686,7 +14857,7 @@ def init( \
         gdat.maxmgang = np.sqrt(2.) * gdat.maxmgangdata
         
         # try to pass true metamodel minima and maxima to common minima and maxima when that feature does not exist in the fitting metamodel
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             for q in gdat.indxrefr:
                 for strgfeat in gmod.namepara.genrelem[q]:
                     booltemp = False
@@ -14720,10 +14891,10 @@ def init( \
             if gdat.enerpivt == 0.:
                 raise Exception('Pivot energy cannot be zero.')
             #if gdat.typeexpr != 'fire':
-            #    gdat.enerexpcfact = gdat.enerpivt - gdat.meanpara.ener
+            #    gdat.enerexpcfact = gdat.enerpivt - gdat.bctrpara.ener
             #if gmod.numbpopl > 0 and gdat.numbener > 1:
             #    minmsinddistmeanpop0 = getattr(gmod, 'minmsinddistmeanpop0')
-            #    factspecener = (gdat.meanpara.ener / gdat.enerpivt)**(-np.sqrt(np.amin(minmsinddistmeanpop0) * np.amax(maxmsinddistmeanpop0)))
+            #    factspecener = (gdat.bctrpara.ener / gdat.enerpivt)**(-np.sqrt(np.amin(minmsinddistmeanpop0) * np.amax(maxmsinddistmeanpop0)))
         else:
             pass
             #gdat.factspecener = np.array([1.])
@@ -14732,7 +14903,7 @@ def init( \
         if gdat.boolbinsspat:
             gdat.frambndrmodl = gdat.maxmxposdata * gdat.anglfact
         
-        if gmod.boollenshost or gdat.typedata == 'mock' and gmod.boollenshost:
+        if gmod.boollenshost or gdat.typedata == 'simu' and gmod.boollenshost:
             
             if gdat.typesers == 'intp':
                 # construct pixel-convolved Sersic surface brightness template
@@ -14784,10 +14955,10 @@ def init( \
         #    retr_ticklabl(gdat, strg)
                 
         # generate true data
-        if gdat.typedata == 'mock':
+        if gdat.typedata == 'simu':
             
             if gdat.typeverb > 0:
-                print('Generating mock data...')
+                print('Generating simulated data...')
 
             if gdat.seedtype == 'rand':
                 np.random.seed()
@@ -14837,7 +15008,7 @@ def init( \
                 if gdat.true.typeevalpsfn != 'none' and gdat.numbpixl > 1 and k in gdat.true.indxpara.psfp:
                     gdat.true.this.paragenrscalfull[k] = gdat.true.psfpexpr[k-gdat.true.indxpara.psfp[0]]
                 else:
-                    ## read input mock model parameters
+                    ## read input simulated model parameters
                     try:
                         # impose user-defined true parameter
                         gdat.true.this.paragenrscalfull[k] = getattr(gdat.true, gdat.true.namepara.genrscalfull[k])
@@ -15125,7 +15296,7 @@ def init( \
             
             ## element feature indices ordered with respect to the amplitude variable
             refrfeatsort = [[] for q in gdat.indxrefr]
-            if not (gdat.typedata == 'mock' and gmod.numbparaelem == 0):
+            if not (gdat.typedata == 'simu' and gmod.numbparaelem == 0):
                 for q in gdat.indxrefr:
                     refrparagenrscalelemampl = getattr(gdat.refr, gdat.refr.nameparagenrelemampl[q])
                     if len(refrparagenrscalelemampl[q]) > 0:
@@ -15222,7 +15393,7 @@ def init( \
         gdat.filestat.close()
         
         # exit before running the sampler
-        if gdat.boolmockonly:
+        if gdat.boolsimuonly:
             if gdat.typeverb > 0:
                 print('Mock dataset is generated. Quitting...')
             return gdat.rtag
@@ -15266,7 +15437,6 @@ def retr_dictpcatinpt():
     dictpcatinpt = dict()
     dictpcatinpt['dicttrue'] = dict()
     dictpcatinpt['dictfitt'] = dict()
-    dictpcatinpt['dictboth'] = dict()
     dictpcatinpt['dictfitt']['maxmpara'] = tdpy.gdatstrt()
     dictpcatinpt['dicttrue']['maxmpara'] = tdpy.gdatstrt()
     
@@ -15384,7 +15554,7 @@ def initarry( \
     
     print('Making plots to compare the output of different PCAT runs...')
      
-    if 'boolmockonly' in dictvarb and dictvarb['boolmockonly']:
+    if 'boolsimuonly' in dictvarb and dictvarb['boolsimuonly']:
         listgdat = retr_listgdat(listrtag, typegdat='init')
     else:
         listgdat = retr_listgdat(listrtag)
@@ -15453,7 +15623,7 @@ def initarry( \
                 gdattemp = listgdat[k]
             dictoutp[strgvarbtotl][k] = getattr(gdattemp, strgvarbtotl)
 
-    pathbase = '%s/imag/%s_%s/' % (gdat.pathpcat, strgtimestmp, inspect.stack()[1][3])
+    pathbase = '%s/visu/%s_%s/' % (gdat.pathpcat, strgtimestmp, inspect.stack()[1][3])
     cmnd = 'mkdir -p %s' % pathbase 
     os.system(cmnd)
     cmnd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%smrgd.%s' % (pathbase, gdat.typefileplot)
@@ -15787,7 +15957,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
     gdatmodi.indxprocwork = indxprocwork
     
     # find the list of variables for which the posterior will be calculated
-    if not gdat.boolmockonly:
+    if not gdat.boolsimuonly:
         
         if gdat.typeverb > 1:
             print('gdatmodi.this.paragenrunitfull')
@@ -16120,7 +16290,7 @@ def work(pathoutprtag, lock, strgpdfn, indxprocwork):
            
             initchro(gdat, gdatmodi, 'save')
         
-            if gdat.savestat:
+            if gdat.boolsavestat:
                 
                 if gdat.namesavestat is not None:
                     strgcnfg = gdat.namesavestat
