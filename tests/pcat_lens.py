@@ -1,8 +1,11 @@
-from __init__ import *
+import pcat
+import pcat.lens
+import sys
+import numpy as np
 
 def intr_lens_evalresicntp():
 
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     sizepixl = 0.05 / anglfact
     
     # name of the dataset
@@ -111,7 +114,7 @@ def pcat_lens_mock_truesgnl(strgcnfgextnexec=None):
 def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
    
     numbelem = int(25. * 10.**0.9)
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     dictpcatinpt = pcat.retr_dictpcatinpt()
     
@@ -137,6 +140,8 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     dictpcatinpt['numbswepplot'] = 5000
     dictpcatinpt['numbburn'] = 1000
     dictpcatinpt['numbsamp'] = 1000
+    
+    dictpcatinpt['plot_func'] = pcat.lens.plot_lens
 
     #dictpcatinpt['typeelem'] = []
    
@@ -167,7 +172,7 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
                                   dictpcatinpt=dictpcatinpt, \
                         
                                   boolexecpara=False, \
-
+                                  
                                   namexaxivari='trueminmdefs', \
                                   lablxaxivari=lablxaxi, \
                                   scalxaxivari=scalxaxi, \
@@ -224,7 +229,7 @@ def pcat_lens_mock_pars(strgcnfgextnexec=None):
 def pcat_lens_mock_fittnumb(strgcnfgextnexec=None):
    
     numbelem = int(25. * 10.**0.9)
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
     
@@ -273,7 +278,7 @@ def pcat_lens_mock_trueback(strgcnfgextnexec=None):
     dictargs['numbswep'] = 10000
     dictargs['numbsamp'] = 100
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     listnamecnfgextn = ['loww', 'nomi', 'high']
     dictargsvari = {}
@@ -300,7 +305,7 @@ def pcat_lens_mock_trueback(strgcnfgextnexec=None):
 
 def pcat_lens_mock_sour(strgcnfgextnexec=None):
    
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
     dictargs['typeexpr'] = 'hubb'
@@ -356,7 +361,7 @@ def test_lens_mock_sele():
     numbitermacr = 30
     numbiterelem = 10
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     dictargs = {}
     dictargs['mockonly'] = True
     dictargs['typeexpr'] = 'hubb'
@@ -486,7 +491,7 @@ def test_lens_mock_sele():
 
 def test_lens_mock_tmpr():
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     dictargs = {}
     dictargs['typeexpr'] = 'hubb'
     dictargs['burntmpr'] = True
@@ -509,7 +514,7 @@ def test_lens_mock_tmpr():
 
 def pcat_lens_mock_many(strgcnfgextnexec=None):
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
     dictargs['typeexpr'] = 'hubb'
@@ -557,7 +562,7 @@ def pcat_lens_mock_many(strgcnfgextnexec=None):
 
 def pcat_lens_mock_spmr(strgcnfgextnexec=None):
   
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
     dictargs['typeexpr'] = 'hubb'
@@ -722,7 +727,7 @@ def writ_data():
             # find the number of photons per area per time per A per solid angle
             effa = 1. / listdata[4]['PHOTFLAM'][0] # erg^-1 cm^2 A
             timeobsv = listdata[4]['EXPTIME'][0] # s
-            apix = (0.05 * pi / 3600. / 180.)**2 # sr^2
+            apix = (0.05 * np.pi / 3600. / 180.)**2 # sr^2
             expo = effa * timeobsv # erg^-1 cm^2 s A 
             sbrt = rate / effa / apix
             cntp = sbrt * expo * apix
@@ -734,7 +739,7 @@ def writ_data():
 
 def pcat_lens_inpt(strgcnfgextnexec=None):
    
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     sizepixl = 0.05 / anglfact
     
     # name of the dataset
@@ -875,7 +880,7 @@ def test_lens_mock_psfn():
     dictargs['typeelem'] = ['lens']
     dictargs['truesigcen00evt0'] = 4e-7
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     listnamecnfgextn = ['loww', 'nomi', 'high']
     dictargsvari = {}
@@ -923,7 +928,7 @@ def pcat_lens_mock_papr(strgcnfgextnexec=None):
     #dictargs['maxmnumbelempop0'] = 0
     #dictargs['numbelempop0'] = 0
     
-    anglfact = 3600. * 180. / pi
+    anglfact = 3600. * 180. / np.pi
     
     numbelem = int(25. * 10.**0.9)
 
