@@ -809,7 +809,7 @@ def cnfg_GaussianMix_unbinned():
              )
 
 
-def intr_lens_evalresicntp():
+def cnfg_lens_simu():
 
     anglfact = 3600. * 180. / np.pi
     sizepixl = 0.05 / anglfact
@@ -853,7 +853,7 @@ def intr_lens_evalresicntp():
     pcat.main.init_image( \
                          typeexpr='hubb', \
                          makeplotinit=False, \
-                         
+                         typedata='simu', \
                          dictfitt=dictfitt, \
 
                          strgexpo=strgexpo, \
