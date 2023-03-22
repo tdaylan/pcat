@@ -3665,7 +3665,7 @@ def setup_pcat(gdat):
         
     # run tag
     # list of parameter features to be turned into lists
-    gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name', 'mean', 'stdv']
+    gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'labl', 'labltotl', 'name', 'mean', 'stdv']
     
     # list of parameter features
     gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'numbbins', 'blim', 'delt', 'numb', 'indx', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
@@ -4807,7 +4807,7 @@ def init_image( \
             minm = 0.1
             maxm = 10.
             
-            #setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], strgmodl=strgmodl)
@@ -5278,14 +5278,6 @@ def init_image( \
     gdat.refr.indxpoplfittassc = gdat.fitt.indxpopl
     gdat.fitt.indxpoplrefrassc = gdat.fitt.indxpopl
 
-    # to be deleted
-    # determine total label
-    #for name in ['expo', 'numbpixl']:
-    #    lablroot = getattr(gdat.lablrootpara, name)
-    #    lablunit = getattr(gdat.lablunitpara, name)
-    #    labltotl = tdpy.retr_labltotlsing(lablroot, lablunit)
-    #    setattr(gdat.labltotlpara, name, labltotl)
-    
     print('Defining minima and maxima for derived parameters...')
     
     # derived lens parameter minima and maxima
@@ -7246,13 +7238,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         print(gmod.namepara.glob)
     
     for name in gmod.namepara.glob:
-        lablroot = getattr(gmod.lablrootpara, name)
-        if hasattr(gmod.lablunitpara, name):
-            lablunit = getattr(gmod.lablunitpara, name)
-        else:
-            lablunit = ''
-        labltotl = tdpy.retr_labltotlsing(lablroot, lablunit)
-        setattr(gmod.labltotlpara, name, labltotl)
         
         # set default scaling to 'self'
         if not hasattr(gmod.scalpara, name):
@@ -7682,6 +7667,8 @@ def setp_varb(gdat, \
             if labl is not None:
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, labl[0], 'lablrootpara')
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, labl[1], 'lablunitpara')
+                labltotl = tdpy.retr_labltotlsing(labl[0], labl[1])
+                setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, labltotl, 'labltotlpara')
             
             if numbbins is not None:
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, numbbins, 'numbbinspara')
