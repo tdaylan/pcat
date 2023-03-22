@@ -7073,27 +7073,19 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         if np.isscalar(k):
             gmod.namepara.genrbase.append(name)
     
-    print('gmod.namepara.genrbase')
-    print(gmod.namepara.genrbase)
-
+    gmod.numbparagenrbase = len(gmod.namepara.genrbase)
+    gmod.indxpara.genrbase = np.arange(gmod.numbparagenrbase)
+    
     if gdat.booldiag:
         for name in gmod.namepara.genrbase:
             if 'pop0pop0' in name:
                 raise Exception('')
 
-    gmod.numbparagenrbase = len(gmod.namepara.genrbase)
-    
-    if gdat.booldiag:
         if gmod.numbparagenrbase == 0:
             print('gmod.namepara.genrbase')
             print(gmod.namepara.genrbase)
             raise Exception('')
 
-    gmod.indxpara.genrbase = np.arange(gmod.numbparagenrbase)
-    
-    print('gmod.namepara.genrbase')
-    print(gmod.namepara.genrbase)
-    if gdat.booldiag:
         if len(gmod.namepara.genrbase) == 0:
             raise Exception('')
 
