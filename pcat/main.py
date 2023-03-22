@@ -2558,11 +2558,8 @@ def setp_indxpara_finl(gdat, strgmodl):
     if gdat.boolbindspat:
         minmgwdt = 2. * gdat.sizepixl
         maxmgwdt = gdat.maxmgangdata / 4.
-        print('minmgwdt')
-        print(minmgwdt)
-        print('gdat.maxmgangdata')
-        print(gdat.maxmgangdata)
         setp_varb(gdat, 'gwdt', minm=minmgwdt, maxm=maxmgwdt, strgmodl=strgmodl)
+    
     setp_varb(gdat, 'aerr', minm=-100, maxm=100, strgmodl=strgmodl, popl='full')
     
     if gmod.boolelemlghtanyy:
@@ -3671,7 +3668,7 @@ def setup_pcat(gdat):
     gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'stdv', 'labltotl', 'name', 'mean', 'stdv']
     
     # list of parameter features
-    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'blim', 'delt', 'numb', 'indx', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
+    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'numbbins', 'blim', 'delt', 'numb', 'indx', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
                                                                                                             'labltickmajr', 'valutickminr', 'labltickminr']
     # list of scalings
     gdat.listscaltype = ['self', 'logt', 'atan', 'gaus', 'pois', 'expo', 'drct']
@@ -3912,6 +3909,11 @@ def init_image( \
          
          # factor by which to multiply the prior for each additional degree of freedom in the model
          factpriodoff=None, \
+
+         # Boolean flag to force the posterior towards the reference
+         boolrefeforc=False, \
+         # index of the reference catalog towards which the posterior will be forced
+         indxrefrforc=None, \
 
          **dictpcat
 
@@ -4805,20 +4807,17 @@ def init_image( \
             minm = 0.1
             maxm = 10.
             
-            setp_varb(gdat, 'defl', numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'deflsubh', scal='powr', labl=['$\alpha_{s}$', ''], strgmodl=strgmodl)
-            
-            setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_s$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_c$', ''], strgmodl=strgmodl)
+            #setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], strgmodl=strgmodl)
+            
+            setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'deflsubh', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha_s$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'deflprof', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha(r)$', ''], strgmodl=strgmodl)
+            # distance to the source
             setp_varb(gdat, 'distsour', minm=minm, maxm=maxm, scal='powr', labl=['$\delta \theta_S$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'rele', minm=minm, maxm=maxm, scal='powr', labl=['$R_{%d}$', ''], strgmodl=strgmodl)
-            print('strgmodl')
-            print(strgmodl)
-            print('gmod.minmpara.defs')
-            print(gmod.minmpara.defs)
+            #setp_varb(gdat, 'rele', minm=minm, maxm=maxm, scal='powr', labl=['$R_{%d}$', ''], strgmodl=strgmodl)
             
             for l in gmod.indxpopl:
                 setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, strgmodl=strgmodl)
@@ -5113,10 +5112,10 @@ def init_image( \
             print(gmod.typeelem)
 
             if gmod.typeelem[l] == 'lens':
-                setp_varb(gdat, 'ascadistmean', valu=0.05 / gdat.anglfact, popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'ascadiststdv', valu=0.04 / gdat.anglfact, popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'acutdistmean', valu=1. / gdat.anglfact, popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'acutdiststdv', valu=0.04 / gdat.anglfact, popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'meanprioasca', valu=0.05 / gdat.anglfact, popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'stdvprioasca', valu=0.04 / gdat.anglfact, popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'meanprioacut', valu=1. / gdat.anglfact, popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'stdvprioacut', valu=0.04 / gdat.anglfact, popl=l, strgmodl=strgmodl)
             
             if gmod.typeelem[l] == 'lghtgausbgrd' or gmod.typeelem[l] == 'clusvari':
                 setp_varb(gdat, 'gwdtslop', valu=2., popl=l, strgmodl=strgmodl)
@@ -5216,17 +5215,18 @@ def init_image( \
         asca = 0.1 / gdat.anglfact
         acut = 1. / gdat.anglfact
     
-        minmmass = np.zeros((numbreds + 1, numbreds + 1))
-        maxmmass = np.zeros((numbreds + 1, numbreds + 1))
-        for k, redshost in enumerate(gmod.blimpara.redshost):
-            for n, redssour in enumerate(gmod.blimpara.redssour):
-                if redssour > redshost:
-                    adislens = gdat.adisobjt(redshost)
-                    adissour = gdat.adisobjt(redssour)
-                    adislenssour = adissour - (1. + redshost) / (1. + redssour) * adislens
-                    factmcutfromdefs = chalcedon.retr_factmcutfromdefs(adissour, adislens, adislenssour, asca, acut)
-                    minmmass[n, k] = np.log10(factmcutfromdefs * gmod.minmpara.defs)
-                    maxmmass[n, k] = np.log10(factmcutfromdefs * gmod.maxmpara.defs)
+        # to be deleted
+        #minmmass = np.zeros((numbreds + 1, numbreds + 1))
+        #maxmmass = np.zeros((numbreds + 1, numbreds + 1))
+        #for k, redshost in enumerate(gmod.blimpara.redshost):
+        #    for n, redssour in enumerate(gmod.blimpara.redssour):
+        #        if redssour > redshost:
+        #            gmod.adislens = gdat.adisobjt(redshost)
+        #            gmod.adissour = gdat.adisobjt(redssour)
+        #            gmod.adislenssour = gmod.adissour - (1. + redshost) / (1. + redssour) * gmod.adislens
+        #            factmcutfromdefs = chalcedon.retr_factmcutfromdefs(gmod.adissour, gmod.adislens, gmod.adislenssour, asca, acut)
+        #            minmmass[n, k] = np.log10(factmcutfromdefs * gmod.minmpara.defs)
+        #            maxmmass[n, k] = np.log10(factmcutfromdefs * gmod.maxmpara.defs)
         
         if gdat.boolbindspat:
             minm = -gdat.maxmgangdata
@@ -5445,15 +5445,9 @@ def init_image( \
         ##setp_varb(gdat, 'bein')
 
         ## angular deviation
-        #gdat.numbanglhalf = 10
-        #gdat.indxanglhalf = np.arange(gdat.numbanglhalf)
-        #setp_varb(gdat, 'anglhalf')
-        #gdat.numbanglfull = 1000
-        #gdat.indxanglfull = np.arange(gdat.numbanglfull)
-        #gdat.minmpara.anglfull = 0.
-        #gdat.maxmpara.anglfull = 3. * gdat.maxmgangdata
-        #setp_varb(gdat, 'anglfull')
-    
+        setp_varb(gdat, 'anglhalf', minm=0., maxm=3*gdat.maxmgangdata, numbbins=1000)
+        setp_varb(gdat, 'anglfull', minm=0., maxm=3*gdat.maxmgangdata, numbbins=1000)
+        
     # temp
     #gdat.blimpara.anglcosi = np.sort(np.cos(gdat.blimpara.angl))
     
@@ -5553,12 +5547,6 @@ def init_image( \
     gdat.blimpara.ypospntsprob = np.linspace(-gdat.maxmgangdata, gdat.maxmgangdata, gdat.numbsidepntsprob + 1)
     gdat.indxxpospntsprob = np.arange(gdat.numbxpospntsprob)
     gdat.indxypospntsprob = np.arange(gdat.numbypospntsprob)
-
-    for strgmodl in gdat.liststrgmodl:
-        gmod = getattr(gdat, strgmodl)
-        if gmod.boollens or gdat.typedata == 'simu' and gmod.boollens:
-            setp_varb(gdat, 'defl', strgmodl=strgmodl)
-            setp_varb(gdat, 'deflsubh', strgmodl=strgmodl)
 
     # lensing problem setup
     ## number of deflection components to plot
@@ -7172,12 +7160,13 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     gmod.namepara.base = gmod.namepara.genrbase + gmod.namepara.deribase
 
     # list of parameter names (derived and generative), counting label-degenerate element parameters only once, element lists flattened
-    print('gmod.namepara.base')
-    print(gmod.namepara.base)
     gmod.namepara.kind = gmod.namepara.base + gmod.namepara.genrelemflat + gmod.namepara.derielemflat
     
     if gdat.booldiag:
         if np.unique(np.array(gmod.namepara.kind)).size != len(gmod.namepara.kind):
+            print('')
+            print('')
+            print('')
             print('gmod.namepara.kind')
             print(gmod.namepara.kind)
             print('gmod.namepara.base')
@@ -7186,7 +7175,7 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
             print(gmod.namepara.genrelemflat)
             print('gmod.namepara.derielemflat')
             print(gmod.namepara.derielemflat)
-            raise Exception('')
+            raise Exception('np.unique(np.array(gmod.namepara.kind)).size != len(gmod.namepara.kind)')
 
     gmod.numbparakind = len(gmod.namepara.kind)
     gmod.indxparakind = np.arange(gmod.numbparakind)
@@ -7236,29 +7225,34 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
             raise Exception('')
 
     # determine total label
-    print('gmod.namepara.kind')
-    print(gmod.namepara.kind)
-    print('gmod.namepara.genrelemextdflat')
-    print(gmod.namepara.genrelemextdflat)
-    print('gmod.namepara.derielemextdflat')
-    print(gmod.namepara.derielemextdflat)
     gmod.namepara.glob = gmod.namepara.kind + gmod.namepara.genrelemextdflat + gmod.namepara.derielemextdflat
     gmod.namepara.glob += ['cntpmodl']
-    print('gmod.namepara.glob')
-    print(gmod.namepara.glob)
-    print('gmod.namepara.genrelem')
-    print(gmod.namepara.genrelem)
-    print('gmod.namepara.derielemodim')
-    print(gmod.namepara.derielemodim)
-    print('gmod.indxparagenrelemsing')
-    print(gmod.indxparagenrelemsing)
     for l in gmod.indxpopl:
         for g in gmod.indxparagenrelemsing[l]:
             if not gmod.namepara.genrelem[l][g] in gmod.namepara.glob:
                 gmod.namepara.glob.append(gmod.namepara.genrelem[l][g])
                 gmod.namepara.glob.append(gmod.namepara.derielemodim[l][g])
-    print('gmod.namepara.glob')
-    print(gmod.namepara.glob)
+    
+    if gdat.typeverb > 1:
+        print('gmod.namepara.base')
+        print(gmod.namepara.base)
+        print('gmod.namepara.kind')
+        print(gmod.namepara.kind)
+        print('gmod.namepara.genrelemextdflat')
+        print(gmod.namepara.genrelemextdflat)
+        print('gmod.namepara.derielemextdflat')
+        print(gmod.namepara.derielemextdflat)
+        print('gmod.namepara.glob')
+        print(gmod.namepara.glob)
+        print('gmod.namepara.genrelem')
+        print(gmod.namepara.genrelem)
+        print('gmod.namepara.derielemodim')
+        print(gmod.namepara.derielemodim)
+        print('gmod.indxparagenrelemsing')
+        print(gmod.indxparagenrelemsing)
+        print('gmod.namepara.glob')
+        print(gmod.namepara.glob)
+    
     for name in gmod.namepara.glob:
         lablroot = getattr(gmod.lablrootpara, name)
         if hasattr(gmod.lablunitpara, name):
@@ -7729,7 +7723,14 @@ def setp_varb(gdat, \
                     binsunif = np.linspace(np.log10(minm), np.log10(maxm), numbbins + 1)
                     if gdat.booldiag:
                         if minm <= 0.:
-                            raise Exception('')
+                            print('')
+                            print('')
+                            print('')
+                            print('minm')
+                            print(minm)
+                            print('scal')
+                            print(scal)
+                            raise Exception('minm <= 0 but scal == logt or scal == powr.')
                 elif scal == 'asnh':
                     binsunif = np.linspace(np.arcsinh(minm), np.arcsinh(maxm), numbbins + 1)
                 else:
@@ -7785,6 +7786,7 @@ def setp_varb(gdat, \
                 #    else:
                 #        labltick[k] = '%.3g' % valutick[k]
 
+                setattr(gmodoutp.numbbinspara, strgvarb, numbbins)
                 setattr(gmodoutp.limtpara, strgvarb, limt)
                 setattr(gmodoutp.blimpara, strgvarb, blim)
                 setattr(gmodoutp.bctrpara, strgvarb, bctr)
@@ -9263,7 +9265,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                             sbrtextsbgrd[:, listindxpixlelem[l][k], :] += gmodstat.dictelem[l]['spec'][:, k, None, None] / \
                                     2. / np.pi / gmodstat.dictelem[l]['gwdt'][k]**2 * \
                                     np.exp(-0.5 * ((gmodstat.dictelem[l]['xpos'][k] - gdat.xposgrid[None, listindxpixlelem[l][k], None])**2 + \
-                                                (gmodstat.dictelem[l]['ypos'][k] - gdat.yposgrid[None, listindxpixlelem[l][k], None])**2) / gmodstat.dictelem[l]['gwdt'][k]**2)
+                                    (gmodstat.dictelem[l]['ypos'][k] - gdat.yposgrid[None, listindxpixlelem[l][k], None])**2) / gmodstat.dictelem[l]['gwdt'][k]**2)
                 
                 setattr(gmodstat, 'sbrtextsbgrd', sbrtextsbgrd)
             sbrt['extsbgrd'] = []
@@ -9756,7 +9758,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         ### magnification
         deflsingmgtd = np.zeros((gdat.numbpixlcart, gmod.numbdeflsingplot))
         magn = 1. / retr_invm(gdat, defl) 
-        histdefl = np.histogram(defl, bins=gdat.blimpara.defl)[0]
+        histdefl = np.histogram(defl, bins=gmod.blimpara.defl)[0]
         deflsingmgtd = np.sqrt(np.sum(deflsing[...]**2, axis=1))
         if gmod.numbpopl > 0:
             if gmod.boolelemlens:
@@ -10131,7 +10133,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     gmodstat.dictelem[l]['distsour'] = retr_angldist(gdat, gmodstat.dictelem[l]['xpos'],  gmodstat.dictelem[l]['ypos'], xpossour, ypossour)
                 
                 if gmod.boollenssubh:
-                    gmodstat.dictelem[l]['deflprof'] = np.empty((gdat.numbanglfull, gmodstat.numbelem[l]))
+                    gmodstat.dictelem[l]['deflprof'] = np.empty((gdat.numbbinspara.anglfull, gmodstat.numbelem[l]))
                     gmodstat.dictelem[l]['mcut'] = np.empty(gmodstat.numbelem[l])
                     gmodstat.dictelem[l]['rele'] = np.empty(gmodstat.numbelem[l])
                     gmodstat.dictelem[l]['reln'] = np.empty(gmodstat.numbelem[l])
@@ -10154,7 +10156,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         gmodstat.dictelem[l]['deflprof'][:, k] = chalcedon.retr_deflcutf(gdat.bctrpara.anglfull, gmodstat.dictelem[l]['defs'][k], asca, acut)
          
                         ### truncated mass 
-                        gmodstat.dictelem[l]['mcut'][k] = retr_mcut(gdat, gmodstat.dictelem[l]['defs'][k], asca, acut, adislens, mdencrit)
+                        gmodstat.dictelem[l]['mcut'][k] = aspendos.retr_mcut(gdat, gmodstat.dictelem[l]['defs'][k], asca, acut, gmod.adislens, gmod.mdencrit)
 
                         #### relevance, the dot product with the source flux gradient
                         # temp -- weigh the energy and PSF bins
@@ -10296,7 +10298,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     # temp -- generalize
                     asca = gmodstat.dictelem[l]['asca']
                     acut = gmodstat.dictelem[l]['acut']
-                    factmcutfromdefs = chalcedon.retr_factmcutfromdefs(adissour, adislens, adislenssour, asca, acut) 
+                    factmcutfromdefs = chalcedon.retr_factmcutfromdefs(gmod.adissour, gmod.adislens, gmod.adislenssour, asca, acut) 
                     masssubh = np.array([np.sum(factmcutfromdefs * gmodstat.dictelem[l]['defs'])])
     
     ## derived variables as a function of other derived variables
@@ -10343,11 +10345,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 
                 if name.endswith('delt'):
                     indxpixl = np.where((gdat.blimpara.anglhalf[k] < angl) & (angl < gdat.blimpara.anglhalf[k+1]))[0]
-                    dicttert[name][k] = 1e6 * np.sum(convtemp[indxpixl]) * mdencrit * \
-                                                gdat.apix * adislens**2 / 2. / np.pi * gdat.deltanglhalf[k] / gdat.bctrpara.anglhalf[k]
+                    dicttert[name][k] = 1e6 * np.sum(convtemp[indxpixl]) * gmod.mdencrit * \
+                                                gdat.apix * gmod.adislens**2 / 2. / np.pi * gdat.deltanglhalf[k] / gdat.bctrpara.anglhalf[k]
                 if name.endswith('intg'):
                     indxpixl = np.where(angl < gdat.bctrpara.anglhalf[k])[0]
-                    dicttert[name][k] = np.sum(convtemp[indxpixl]) * mdencrit * gdat.apix * adislens**2
+                    dicttert[name][k] = np.sum(convtemp[indxpixl]) * gmod.mdencrit * gdat.apix * gmod.adislens**2
                 
                 if name[:4] == 'frac':
                     masshosttotl = 0.
@@ -14665,7 +14667,9 @@ def sample( \
          ## Boolean flag to make the frame plots short
          boolshrtfram=True, \
         
+         # Boolean flag to force the posterior towards the reference
          boolrefeforc=False, \
+         # index of the reference catalog towards which the posterior will be forced
          indxrefrforc=None, \
 
          ## Boolean to overplot the elements
