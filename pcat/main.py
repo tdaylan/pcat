@@ -2097,7 +2097,7 @@ def retr_condcatl(gdat):
                         indxstksleft.remove(indxstksthis)
             
                 # temp
-                #if gdat.makeplot:
+                #if gdat.boolmakeplot:
                 #    gdatmodi = tdpy.gdatstrt()
                 #    gdatmodi.this.indxelemfull = deepcopy(listindxelemfull[n])
                 #    for r in range(len(indxstksassc)): 
@@ -2156,7 +2156,7 @@ def retr_condcatl(gdat):
     gdat.maxmprvl = 1.
     setp_varb(gdat, 'prvl')
     gdat.histprvl = np.histogram(gdat.prvl, bins=gdat.blimpara.prvl)[0]
-    if gdat.makeplot:
+    if gdat.boolmakeplot:
         pathcond = getattr(gdat, 'path' + strgpdfn + 'finlcond')
         for k, nameparagenrelem in enumerate(gmod.namepara.elem):
             path = pathcond + 'histdist' + nameparagenrelem 
@@ -3852,6 +3852,9 @@ def init_image( \
          
          maxmangl=None, \
          
+         ## Boolean flag to make the frame plots short
+         boolmakeshrtfram=False, \
+        
          # spatial grid
          ## type of spatial pixelization
          typepixl=None, \
@@ -3865,15 +3868,20 @@ def init_image( \
          allwfixdtrue=True, \
          asscmetrtype='dist', \
 
-         makeplot=True, \
-         makeplotinit=True, \
-         makeplotfram=True, \
-         makeplotfinlprio=True, \
-         makeplotfinlpost=True, \
+         boolmakeplot=True, \
+         boolmakeplotinit=True, \
+         boolmakeplotfram=True, \
+         boolmakeplotfinlprio=True, \
+         boolmakeplotfinlpost=True, \
          
-         makeplotintr=False, \
+         ## Boolean to overplot the elements
+         boolplotelem=True, \
+         
+         boolmakeplotintr=False, \
          scalmaps='asnh', \
-         makeanim=True, \
+         
+         ## file type of the plot
+         typefileplot='png', \
          
          
          # arguments common among sample() and wrappers
@@ -5195,6 +5203,7 @@ def init_image( \
     setup_pcat_model(gdat)
 
     # set the reference model to true model
+    gdat.refr.labl = 'True'
     print('Setting the remaining few parameters in the reference model to those in the true model...')
     for strgmodl in gdat.liststrgmodl:
         if strgmodl == 'true':
@@ -5397,7 +5406,7 @@ def init_image( \
         gdat.listlablchro += ['Spectrum calculation']
     if gmod.boollens:
         gdat.listnamechro += ['deflzero', 'deflhost', 'deflextr', 'sbrtlens', 'sbrthost']
-        gdat.listlablchro += ['Array initialization', 'Host Deflection', 'External deflection', 'Lensed emission', 'Host emission']
+        gdat.listlablchro += ['Array initialization', 'Lens Host Deflection', 'External deflection', 'Lensed emission', 'Lens Host emission']
     if gmod.boolelemsbrtdfncanyy:
         gdat.listnamechro += ['elemsbrtdfnc']
         gdat.listlablchro += ['Dfnc S Brght']
@@ -5742,11 +5751,6 @@ def init_image( \
     gdat.scalconv = 'logt'
     gdat.cmapconv = 'Purples'
     
-    gdat.minmconvelem = 1e-4
-    gdat.maxmconvelem = 1e-1
-    gdat.scalconvelem = 'logt'
-    gdat.cmapconvelem = 'Purples'
-    
     gdat.minms2nr = 0.
     gdat.maxms2nr = 10.
     gmod.scals2nr = 'asnh'
@@ -5762,15 +5766,9 @@ def init_image( \
     gmod.scaldeflresiperc = 'self'
     gdat.cmapdeflresiperc = 'Oranges'
     
-    gdat.minmconvelemresi = -0.1
-    gdat.maxmconvelemresi = 0.1
-    gmod.scalconvelemresi = 'self'
-    gdat.cmapconvelemresi = 'PiYG'
-    
-    gdat.minmconvelemresiperc = -100.
-    gdat.maxmconvelemresiperc = 100.
-    gmod.scalconvelemresiperc = 'self'
-    gdat.cmapconvelemresiperc = 'PiYG'
+    setp_varb(gdat, 'convelem', minm=1e-4, maxm=1e-1, labl=['$C_{el}$', ''], cmap='Purples', scal='logt')
+    setp_varb(gdat, 'convelemresi', minm=-0.1, maxm=0.1, labl=['$C_{el} - $C_{el}$', ''], cmap='PiYG', scal='self')
+    setp_varb(gdat, 'convelemresiperc', minm=-100., maxm=100., labl=['$C_{el} - $C_{el}$', ''], cmap='PiYG', scal='self')
     
     gdat.minmmagnresi = -10.
     gdat.maxmmagnresi = 10.
@@ -6246,8 +6244,8 @@ def init_image( \
                 gmod.namepara.genr.elem = gdatsimu.truegmod.namepara.genr.elem
     
     setp_varb(gdat, 'angl', minm=0., maxm=10., numbbins=10)
-    if gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0 or \
-                        gdat.typedata == 'simu' and gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0:
+    
+    if gmod.typeelemspateval[l] == 'locl' and gmod.numbpopl > 0:
         gdat.numbprox = 3
         gdat.indxprox = np.arange(gdat.numbprox)
         minmparagenrscalelemampl = getattr(gdat.fitt.minmpara, gmod.nameparagenrelemampl[0])
@@ -6551,13 +6549,13 @@ def init_image( \
                 for l in gdat.true.indxpopl:
                     valutemp[l] = dict()
                     for nameparaelem in gdat.true.this.dictelem[l]:
-                        valutemp[l][nameparaelem] = np.zeros((3, gdat.true.this.dictelem[l][nameparaelem].size))
-                        valutemp[l][nameparaelem][0, :] = gdat.true.this.dictelem[l][nameparaelem]
+                        valutemp[l][nameparaelem] = np.zeros([3] + list(gdat.true.this.dictelem[l][nameparaelem].shape))
+                        valutemp[l][nameparaelem][0, ...] = gdat.true.this.dictelem[l][nameparaelem]
             else:
                 valutemp = valu
             setattr(gdat.refr, strg, valutemp)
         
-        if gdat.makeplot and gdat.makeplotinit:
+        if gdat.boolmakeplot and gdat.boolmakeplotinit:
             plot_samp(gdat, None, 'this', 'true', 'init')
         
     for strgmodl in gdat.liststrgmodl:
@@ -6577,10 +6575,6 @@ def init_image( \
     gmod.corrparagenrscalbase = np.empty(gmod.numbparagenrbase)
     for k in gmod.indxpara.genrbase:
         gmod.corrparagenrscalbase[k] = getattr(gdat.true, gmod.namepara.genrbase[k])
-
-
-
-
 
     dictglob = sample( \
                       **dictpcat, \
@@ -6633,30 +6627,30 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
 
     # background templates
     listlablsbrt = deepcopy(listlablback)
-    numblablsbrt = 0
+    gdat.numblablsbrt = 0
     for l in gmod.indxpopl:
         if gmod.boolelemsbrt[l]:
             listlablsbrt.append(gmod.lablpopl[l])
             listlablsbrt.append(gmod.lablpopl[l] + ' subt')
-            numblablsbrt += 2
+            gdat.numblablsbrt += 2
     if gmod.boollens:
         listlablsbrt.append('Source')
-        numblablsbrt += 1
+        gdat.numblablsbrt += 1
     if gmod.typeemishost != 'none':
         for e in gmod.indxsersfgrd:
-            listlablsbrt.append('Host %d' % e)
-            numblablsbrt += 1
+            listlablsbrt.append('Lens Host %d' % e)
+            gdat.numblablsbrt += 1
     if gmod.numbpopl > 0:
         if 'clus' in gmod.typeelem or 'clusvari' in gmod.typeelem:
             listlablsbrt.append('Uniform')
-            numblablsbrt += 1
+            gdat.numblablsbrt += 1
     
     listlablsbrtspec = ['Data']
     listlablsbrtspec += deepcopy(listlablsbrt)
     if len(listlablsbrt) > 1:
         listlablsbrtspec.append('Total Model')
     
-    numblablsbrtspec = len(listlablsbrtspec)
+    gdat.numblablsbrtspec = len(listlablsbrtspec)
     
     # number of generative parameters per element, depends on population
     #numbparaelem = gmod.numbparagenrelempopl + numbparaelemderi
@@ -8083,7 +8077,7 @@ def make_legdmaps(gdat, strgstat, strgmodl, axis, mosa=False, assc=False):
         
         if gmod.typeemishost != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                           label='%s Host' % gmod.lablmodl, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
+                                                           label='%s Lens Host' % gmod.lablmodl, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
     
     if gdat.typedata == 'simu':
         if gmod.boollens:
@@ -8092,7 +8086,7 @@ def make_legdmaps(gdat, strgstat, strgmodl, axis, mosa=False, assc=False):
         
         if gmod.typeemishost != 'none':
             axis.scatter(gdat.anglfact * gdat.maxmgangdata * 5., gdat.anglfact * gdat.maxmgangdata * 5, s=50, alpha=gdat.alphelem, facecolor='none', \
-                                                                label='%s Host' % gdat.refr.labl, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refr.colr)
+                                                                label='%s Lens Host' % gdat.refr.labl, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refr.colr)
     
     temphand, temp = axis.get_legend_handles_labels()
     numblabl = len(temp)
@@ -8158,7 +8152,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
                 xposhost = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'xposhostisf%d' % (e))]
                 yposhost = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'yposhostisf%d' % (e))]
                 axis.scatter(gdat.anglfact * xposhost, gdat.anglfact * yposhost, facecolor='none', alpha=0.7, \
-                                             label='%s Host %d' % (gdat.refr.labl, e), s=300, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refr.colr)
+                                             label='%s Lens Host %d' % (gdat.refr.labl, e), s=300, marker='D', lw=gdat.mrkrlinewdth, color=gdat.refr.colr)
         if gmod.boollens:
             ## host galaxy Einstein radius
             for e in gmod.indxsersfgrd:
@@ -8216,7 +8210,7 @@ def supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot=-1, assc=Fa
                     yposhost[e] = gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'yposhostisf%d' % (e))]
                     axis.scatter(gdat.anglfact * xposhost[e], gdat.anglfact * yposhost[e], facecolor='none', \
                                                      alpha=gdat.alphelem, \
-                                                     label='%s Host' % gmod.lablpara, s=300, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
+                                                     label='%s Lens Host' % gmod.lablpara, s=300, marker='s', lw=gdat.mrkrlinewdth, color=gmod.colr)
                     if gmod.boollens:
                         beinhost = gdatmodi.this.paragenrscalfull[getattr(gmod.indxpara, 'beinhostisf%d' % (e))]
                         axis.add_patch(plt.Circle((gdat.anglfact * xposhost[e], gdat.anglfact * yposhost[e]), \
@@ -9014,8 +9008,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 print('anglhost[e]')
                 print(anglhost[e])
 
-            print('ellphost[e]')
-            print(ellphost[e])
             deflhost[e] = chalcedon.retr_defl(gdat.xposgrid, gdat.yposgrid, indxpixlmiss, xposhost[e], yposhost[e], beinhost[e], ellp=ellphost[e], angl=anglhost[e])
              
             if gdat.booldiag:
@@ -10216,9 +10208,6 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     if not checstrgfeat(namefrst, nameseco):
                         continue
 
-                    print('gdat.blimpara')
-                    print(gdat.blimpara.__dict__.keys())
-                    
                     blimfeatseco = getattr(gdat.blimpara, nameseco)
                     histtdim = np.histogram2d(gmodstat.dictelem[l][namefrst][listindxelemfilt[0][l]], \
                                                             gmodstat.dictelem[l][nameseco][listindxelemfilt[0][l]], [blimfeatfrst, blimfeatseco])[0]
@@ -10338,7 +10327,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 if name.endswith('delt'):
                     indxpixl = np.where((gdat.blimpara.anglhalf[k] < angl) & (angl < gdat.blimpara.anglhalf[k+1]))[0]
                     dicttert[name][k] = 1e6 * np.sum(convtemp[indxpixl]) * gmod.mdencrit * \
-                                                gdat.apix * gmod.adislens**2 / 2. / np.pi * gdat.deltanglhalf[k] / gdat.bctrpara.anglhalf[k]
+                                                gdat.apix * gmod.adislens**2 / 2. / np.pi * gdat.deltpara.anglhalf[k] / gdat.bctrpara.anglhalf[k]
                 if name.endswith('intg'):
                     indxpixl = np.where(angl < gdat.bctrpara.anglhalf[k])[0]
                     dicttert[name][k] = np.sum(convtemp[indxpixl]) * gmod.mdencrit * gdat.apix * gmod.adislens**2
@@ -11452,7 +11441,7 @@ def proc_finl(gdat=None, strgcnfg=None, strgpdfn='post', listnamevarbproc=None, 
         else:
             gdatprio = None
         
-        if gdatfinl.makeplot and getattr(gdatfinl, 'makeplotfinl' + strgpdfn) or forcplot:
+        if gdatfinl.boolmakeplot and getattr(gdatfinl, 'boolmakeplotfinl' + strgpdfn) or forcplot:
             plot_finl(gdatfinl, gdatprio=gdatprio, strgpdfn=strgpdfn, gdatsimu=gdatsimu, booltile=booltile)
             filestat = open(gdatfinl.pathoutpcnfg + 'stat.txt', 'a')
             filestat.write('plotfinl%s written.\n' % strgpdfn)
@@ -11954,6 +11943,8 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
     else:
         strgswep = ''
     
+    print('Plotting routine plot_samp() called...')
+
     if not booltile:
         if gdat.numbpixl > 1:
             for i in gdat.indxener:
@@ -11976,7 +11967,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit)
     
             if gmod.boolapplpsfn:
-                plot_psfn(gdat, gdatmodi, strgstat, strgmodl)
+                for l in gmod.indxpopl:
+                    if gmod.typeelemspateval[l] == 'locl':
+                        plot_psfn(gdat, gdatmodi, strgstat, strgmodl)
     
     if gmod.numbpopl > 0:
         # element parameter histograms
@@ -11991,7 +11984,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             nameparaderielemodim == 'deltllik' or nameparaderielemodim == 'defs' or nameparaderielemodim == 'nobj'):
                         continue
                                                                               
-                    if gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt':
+                    if gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt':
                         continue
                     indxydat = [l, slice(None)]
                     
@@ -12058,7 +12051,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                 if strgmodl != 'true' and gdat.boolinforefr and gdat.boolasscrefr:
                     for strgfeat in gmod.namepara.derielemodim[l]:
                         if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
-                                                                                    (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+                                                                                    (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
                             continue
                         for q in gdat.indxrefr:
                             if not l in gdat.refrindxpoplassc[q]:
@@ -12070,7 +12063,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat)
                             plot_scatassc(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, q, l, strgfeat, plotdiff=True)
                     
-        if not (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+        if not (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
             # plots
             for i in gdat.indxener:
                 for m in gdat.indxdqlt:
@@ -12193,51 +12186,50 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     if gmod.boollenssubh:
 
                         ## deflection profiles
-                        if gdat.boolvariasca and gdat.boolvariacut:
-                            lablxdat = gdat.labltotlpara.gang
-                            if strgstat == 'pdfn':
-                                deflprof = [np.empty((gdat.numbanglfull, gdat.numbstkscond))]
-                                asca = [np.empty(gdat.numbstkscond)]
-                                acut = [np.empty(gdat.numbstkscond)]
-                                for r in gdat.indxstkscond:
-                                    deflprof[0][:, r] = gdat.dictglob['poststkscond'][r]['deflprof'][0, :]
-                                    asca[0][r] = gdat.dictglob['poststkscond'][r]['asca'][0]
-                                    acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
+                        lablxdat = gdat.labltotlpara.gang
+                        if strgstat == 'pdfn':
+                            deflprof = [np.empty((gdat.numbanglfull, gdat.numbstkscond))]
+                            asca = [np.empty(gdat.numbstkscond)]
+                            acut = [np.empty(gdat.numbstkscond)]
+                            for r in gdat.indxstkscond:
+                                deflprof[0][:, r] = gdat.dictglob['poststkscond'][r]['deflprof'][0, :]
+                                asca[0][r] = gdat.dictglob['poststkscond'][r]['asca'][0]
+                                acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
 
-                            for l in range(len(deflprof)):
-                                xdat = gdat.bctrpara.anglfull * gdat.anglfact
-                                listydat = []
-                                listvlinfrst = []
-                                listvlinseco = []
+                        for l in range(len(deflprof)):
+                            xdat = gdat.bctrpara.anglfull * gdat.anglfact
+                            listydat = []
+                            listvlinfrst = []
+                            listvlinseco = []
+                            
+                            if 'deflprof' in gmod.typeelem[l]:
+
+                                if strgmodl == 'true':
+                                    deflproftemp = deflprof[l][0, :, :]
+                                else:
+                                    deflproftemp = deflprof[l]
                                 
-                                if 'deflprof' in gmod.typeelem[l]:
-
+                                for k in range(deflprof[l].shape[-1]):
+                                    listydat.append(deflproftemp[:, k] * gdat.anglfact)
                                     if strgmodl == 'true':
-                                        deflproftemp = deflprof[l][0, :, :]
+                                        ascatemp = asca[l][0, k]
+                                        acuttemp = acut[l][0, k]
                                     else:
-                                        deflproftemp = deflprof[l]
-                                    
-                                    for k in range(deflprof[l].shape[-1]):
-                                        listydat.append(deflproftemp[:, k] * gdat.anglfact)
-                                        if strgmodl == 'true':
-                                            ascatemp = asca[l][0, k]
-                                            acuttemp = acut[l][0, k]
-                                        else:
-                                            ascatemp = asca[l][k]
-                                            acuttemp = acut[l][k]
-                                        listvlinfrst.append(ascatemp * gdat.anglfact) 
-                                        listvlinseco.append(acuttemp * gdat.anglfact)
-                                    
-                                    beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'paragenrscalfull', strgpdfn, indxvarb=gmod.indxpara.beinhost)
-                                    listydat.append(xdat * 0. + gdat.anglfact * beinhost)
-                                    
-                                    path = pathtemp + strgstat + 'deflsubhpop%d%s.%s' % (l, strgswep, gdat.typefileplot)
-                                    limtydat = [1e-3, 1.]
-                                    limtxdat = [1e-3, 1.]
-                                    tdpy.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', \
-                                                                        lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
-                                                                        limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
-                                                                        listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
+                                        ascatemp = asca[l][k]
+                                        acuttemp = acut[l][k]
+                                    listvlinfrst.append(ascatemp * gdat.anglfact) 
+                                    listvlinseco.append(acuttemp * gdat.anglfact)
+                                
+                                beinhost = retr_fromgdat(gdat, gdatmodi, strgstat, strgmodl, 'paragenrscalfull', strgpdfn, indxvarb=gmod.indxpara.beinhost)
+                                listydat.append(xdat * 0. + gdat.anglfact * beinhost)
+                                
+                                path = pathtemp + strgstat + 'deflsubhpop%d%s.%s' % (l, strgswep, gdat.typefileplot)
+                                limtydat = [1e-3, 1.]
+                                limtxdat = [1e-3, 1.]
+                                tdpy.plot_gene(path, xdat, listydat, scalxdat='logt', scalydat='logt', \
+                                                                    lablxdat=lablxdat, drawdiag=True, limtydat=limtydat, \
+                                                                    limtxdat=limtxdat, colr=colr, alph=alph, lablydat=r'$\alpha$ [$^{\prime\prime}$]', \
+                                                                    listvlinfrst=listvlinfrst, listvlinseco=listvlinseco)
                         
                 if gdat.typedata == 'simu':
                     # pulsar masses
@@ -12327,7 +12319,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                       nameinte=nameinte)
 
 
-    if not (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+    if not (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
         if gmod.numbpopl > 0:
             # element parameter correlations
             liststrgelemtdimvarb = getattr(gdat, 'liststrgelemtdimvarb' + strgphas)
@@ -12420,7 +12412,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                                         q, refrstrgfrst + 'pop%d' % l0, refrstrgseco + 'pop%d' % l0, strgtotl, strgpdfn=strgpdfn)
             
     if not booltile:
-        if not (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+        if not (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
             # data and model count scatter
             for m in gdat.indxdqltplot:
                 if gdat.numbpixl > 1:
@@ -12523,7 +12515,7 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                     for m in gdat.indxdqlt:
                         plot_defl(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, 'cntplensgrad', indxenerplot=i, indxdqltplot=m)
                 
-        if not (gdat.boolshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+        if not (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
             if gmod.boollens:
                 # overall deflection field
                 plot_defl(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, multfact=0.1)
@@ -13018,7 +13010,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit):
                     for q in gdat.indxrefr:
                         numbelemtemp += np.sum(gdat.refr.numbelem[q])
                 
-            numbplot = numblablsbrtspec + numbelemtemp
+            numbplot = gdat.numblablsbrtspec + numbelemtemp
             listydat = np.zeros((numbplot, gdat.numbener))
             listyerr = np.zeros((2, numbplot, gdat.numbener))
             
@@ -13090,7 +13082,7 @@ def plot_sbrt(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, specconvunit):
                             if k == gmodstat.numbelem[l] - 1:
                                 indxplotelemendd.append(k)
             ## total model
-            if numblablsbrt > 1:
+            if gdat.numblablsbrt > 1:
                 listydat[cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%d' % (b), strgpdfn)
                 if strgstat == 'pdfn':
                     listyerr[:, cntr, :] = retr_fromgdat(gdat, gdatmodi, strgstat, liststrgmodl[a], 'sbrtmodlmea%d' % (b), strgpdfn, strgmome='errr')
@@ -14448,7 +14440,7 @@ def plot_init(gdat):
     gmod = gdat.fitt
 
     # make initial plots
-    if gdat.makeplot:
+    if gdat.boolmakeplot:
         
         if gmod.numbpopl > 0:
             for l in gmod.indxpopl:
@@ -14564,7 +14556,7 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
     make_cbar(gdat, axis, imag, strgvarb)
     
     make_legdmaps(gdat, strgstat, strgmodl, axis)
-    if gdat.boolsuprelem:
+    if gdat.boolplotelem:
         supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot)
 
     plt.tight_layout()
@@ -14656,17 +14648,11 @@ def sample( \
          typeseedelem=None, \
          
          # plotting
-         ## Boolean flag to make the frame plots short
-         boolshrtfram=True, \
-        
          # Boolean flag to force the posterior towards the reference
          boolrefeforc=False, \
          # index of the reference catalog towards which the posterior will be forced
          indxrefrforc=None, \
 
-         ## Boolean to overplot the elements
-         boolsuprelem=True, \
-         
          # model
          ## number of spatial dimensions
          numbspatdims=2, \
@@ -15203,7 +15189,7 @@ def sample( \
         #gdat.log.close()
 
         # initial plots
-        if gdat.makeplot and gdat.makeplotinit:
+        if gdat.boolmakeplot and gdat.boolmakeplotinit:
             plot_init(gdat)
 
         if gdat.typeverb > 0:
@@ -15406,9 +15392,9 @@ def sample( \
                 #gdat.limtydathistfeat = [0.5, max(100., 10**np.ceil(np.log10(gmod.maxmpara.numbelemtotl)))]
 
         # initial plots
-        if gdat.makeplot and gdat.makeplotinit:
+        if gdat.boolmakeplot and gdat.boolmakeplotinit:
             # problem-specific plots
-            if gdat.makeplotintr:
+            if gdat.boolmakeplotintr:
                 plot_intr(gdat)
                 #plot_pert()
                 #plot_king(gdat)
@@ -15491,7 +15477,7 @@ def sample( \
 
     if gdat.typeverb > 0:
         print('The output is at ' + gdat.pathoutpcnfg)
-        if gdat.makeplot:
+        if gdat.boolmakeplot:
             print('The plots are at ' + gdat.pathplotcnfg)
         print('PCAT has run successfully. Returning to the OS...')
 
@@ -16159,7 +16145,7 @@ def work(pathoutpcnfg, lock, strgpdfn, indxprocwork):
             thisfile.create_dataset('stdp', data=gdatmodi.stdp)
             thisfile.close()
             
-            if gdat.makeplot:
+            if gdat.boolmakeplot:
                 
                 xdat = gdat.indxstdp
                 ydat = gdatmodi.stdp
@@ -16188,7 +16174,8 @@ def work(pathoutpcnfg, lock, strgpdfn, indxprocwork):
                             tdpy.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                              lablydat=r'$\sigma_{%s}$' % getattr(gmod.lablpara, nameparagenrelem), plottype=['scat', 'lghtline'])
                             #tdpy.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
-                            #                                 lablydat=r'$\sigma_{%s}$%s' % (getattr(gmod.lablpara, nameparagenrelem), getattr(gmod.lablpara, nameparagenrelem + 'unit')), plottype=['scat', 'lghtline'])
+                            #                                 lablydat=r'$\sigma_{%s}$%s' % (getattr(gmod.lablpara, nameparagenrelem), \
+                            #                                 getattr(gmod.lablpara, nameparagenrelem + 'unit')), plottype=['scat', 'lghtline'])
                             
                             tdpy.plot_gene(path, xdat, ydat, scalxdat=scalxdat, scalydat='logt', lablxdat=lablxdat, limtxdat=limtxdat, \
                                                              lablydat=r'$\sigma_{%s}$' % getattr(gmod.lablpara, nameparagenrelem), plottype=['scat', 'lghtline'])
@@ -16201,7 +16188,7 @@ def work(pathoutpcnfg, lock, strgpdfn, indxprocwork):
         # decide whether to make a frame
         thismakefram = (gdatmodi.cntrswep % gdat.numbswepplot == 0) and \
                                                 gdatmodi.indxprocwork == int(float(gdatmodi.cntrswep) / gdat.numbswep * gdat.numbproc) \
-                                                and gdat.makeplotfram and gdat.makeplot
+                                                and gdat.boolmakeplotfram and gdat.boolmakeplot
         
         # decide whether to make a log
         boollogg = False
