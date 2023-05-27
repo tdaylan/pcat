@@ -956,7 +956,7 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     dictpcatinpt['numbburn'] = 1000
     dictpcatinpt['numbsamp'] = 1000
     
-    dictpcatinpt['plot_func'] = pcat.lens.plot_lens
+    dictpcatinpt['plot_func'] = pcat.plot_lens
 
     #dictpcatinpt['typeelem'] = []
    
@@ -978,6 +978,7 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     
     #dictpcatinpt['dicttrue']['numbelempop0'] = 4
     #dictpcatinpt['dictfitt']['maxmpara'].numbelempop0 = 4
+    dictpcatinpt['dictboth'] = dict()
     dictpcatinpt['dictboth']['typeelem'] = ['lens']
 
     dictglob = pcat.main.initarry( \

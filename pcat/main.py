@@ -3668,7 +3668,12 @@ def setup_pcat(gdat):
     gdat.liststrgfeatparalist = ['minm', 'maxm', 'scal', 'lablroot', 'lablunit', 'labl', 'labltotl', 'name', 'mean', 'stdv']
     
     # list of parameter features
-    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'numbbins', 'blim', 'delt', 'numb', 'indx', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
+    gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'numbbins', 'blim', 'delt', 'indxbins', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
+                                                                                                                # index of the parameter in the parameter vector
+                                                                                                                'indx', \
+
+                                                                                                                # to be deleted
+                                                                                                                #'numb', \
                                                                                                             'labltickmajr', 'valutickminr', 'labltickminr']
     # list of scalings
     gdat.listscaltype = ['self', 'logt', 'atan', 'gaus', 'pois', 'expo', 'drct']
@@ -4508,7 +4513,7 @@ def init_image( \
             setp_varb(gdat, 'numbelem', minm=0, maxm=3, labl=['N', ''], scal='drct', popl='full', strgmodl=strgmodl)
         
         # total number of elements summed over populations
-        setp_varb(gdat, 'numbelemtotl', maxm=1000, labl=['$N_{tot}$', ''], scal='drct', strgmodl=strgmodl)
+        setp_varb(gdat, 'numbelemtotl', maxm=10, labl=['$N_{tot}$', ''], scal='drct', strgmodl=strgmodl)
 
         ## hyperparameters
         setp_varb(gdat, 'typemodltran', valu='drct', strgmodl=strgmodl)
@@ -4811,6 +4816,7 @@ def init_image( \
             setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'rele', minm=minm, maxm=maxm, scal='self', labl=['$R$', ''], strgmodl=strgmodl)
             
             setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'deflsubh', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha_s$', ''], strgmodl=strgmodl)
@@ -4823,11 +4829,11 @@ def init_image( \
                 setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, iele='full', strgmodl=strgmodl)
         
-                setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_s$', ''], popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_s$', ''], popl=l, iele='full', strgmodl=strgmodl)
+                setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], popl=l, iele='full', strgmodl=strgmodl)
         
-                setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_c$', ''], popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='powr', labl=['$\theta_c$', ''], popl=l, iele='full', strgmodl=strgmodl)
+                setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], popl=l, iele='full', strgmodl=strgmodl)
         
                 setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], popl=l, strgmodl=strgmodl, iele='full')
@@ -7673,7 +7679,7 @@ def setp_varb(gdat, \
             if numbbins is not None:
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, numbbins, 'numbbinspara')
                 
-            # create limt, bins, mean, and delt if minm, maxm, mean, and stdv are defined
+            # create limtpara, binspara, indxpara, meanpara, deltpara, etc.
             if minm is not None and maxm is not None or mean is not None and stdv is not None:
                 
                 if numbbins is None:
@@ -7737,6 +7743,8 @@ def setp_varb(gdat, \
                     blim = np.sinh(binsunif)
                     minmunif = np.arcsinh(minm)
                     maxmunif = np.arcsinh(maxm)
+                
+                indxbins = np.arange(numbbins)
 
                 delt = np.diff(blim) 
                 limt = np.array([minm, maxm]) 
@@ -7765,6 +7773,7 @@ def setp_varb(gdat, \
                 #    else:
                 #        labltick[k] = '%.3g' % valutick[k]
 
+                setattr(gmodoutp.indxbinspara, strgvarb, indxbins)
                 setattr(gmodoutp.numbbinspara, strgvarb, numbbins)
                 setattr(gmodoutp.limtpara, strgvarb, limt)
                 setattr(gmodoutp.blimpara, strgvarb, blim)
@@ -10207,6 +10216,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     if not checstrgfeat(namefrst, nameseco):
                         continue
 
+                    print('gdat.blimpara')
+                    print(gdat.blimpara.__dict__.keys())
+                    
                     blimfeatseco = getattr(gdat.blimpara, nameseco)
                     histtdim = np.histogram2d(gmodstat.dictelem[l][namefrst][listindxelemfilt[0][l]], \
                                                             gmodstat.dictelem[l][nameseco][listindxelemfilt[0][l]], [blimfeatfrst, blimfeatseco])[0]
@@ -10297,11 +10309,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         listnamevarbmassscal = []
         listnamevarbmassvect = []
         for e in gmod.indxsersfgrd:
-            if boolllenshost:
-                listnamevarbmassscal += ['masshosttotl']
-                for strgtemp in listnametemp:
-                    listnamevarbmassvect.append('masshostisf%d' % e + strgtemp)
-                    listnamevarbmassscal.append('masshostisf%d' % e + strgtemp + 'bein')
+            listnamevarbmassscal += ['masshosttotl']
+            for strgtemp in listnametemp:
+                listnamevarbmassvect.append('masshostisf%d' % e + strgtemp)
+                listnamevarbmassscal.append('masshostisf%d' % e + strgtemp + 'bein')
         if gmod.numbpopl > 0 and gmod.boollenssubh:
             listnamevarbmassscal.append('masssubhtotl')
             listnamevarbmassscal.append('fracsubhtotl')
@@ -10312,11 +10323,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 listnamevarbmassscal.append('fracsubh' + strgtemp + 'bein')
         
         for name in listnamevarbmassvect:
-            dicttert[name] = np.zeros(gdat.numbanglhalf)
+            
+            #dicttert[name] = np.zeros(gdat.numbanglhalf)
+            dicttert[name] = np.zeros(gdat.numbbinspara.anglhalf)
             if 'isf' in name:
                 indxisfrtemp = int(name.split('isf')[1][0])
             angl = np.sqrt((gdat.bctrpara.xposcartmesh - xposhost[indxisfrtemp])**2 + (gdat.bctrpara.yposcartmesh - yposhost[indxisfrtemp])**2).flatten()
-            for k in gdat.indxanglhalf:
+            for k in gdat.indxbinspara.anglhalf:
                 if name[4:8] == 'host':
                     convtemp = conv[:]
                 if name[4:8] == 'subh':
@@ -14728,9 +14741,6 @@ def sample( \
          # factor by which to multiply the prior for each additional degree of freedom in the model
          factpriodoff=None, \
 
-
-         
-        
         ):
 
     # preliminary setup
@@ -15499,7 +15509,7 @@ def retr_dictpcatinpt():
     return dictpcatinpt
 
 
-def initarry( \
+def sample_parallel( \
              dictpcatinptvari, \
              listlablcnfg, \
              forcneww=False, \
@@ -15581,11 +15591,11 @@ def initarry( \
                     listpridchld.append(prid)
                 else:
                     print('Forking a child process to run the configuration extension...')
-                    strgcnfg = init(**dictvarbtemp)
+                    strgcnfg = sample(**dictvarbtemp)
                     os._exit(0)
             else:
                 print('Calling the main PCAT function without forking a child...')
-                liststrgcnfg.append(init(**dictvarbtemp))
+                liststrgcnfg.append(sample(**dictvarbtemp))
     
     if boolexecpara and strgcnfgextnexec is None:
         for prid in listpridchld:
