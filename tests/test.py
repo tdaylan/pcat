@@ -851,7 +851,7 @@ def cnfg_lens_simu():
     dictfitt['init']['fittstdvbacpbac0en00'] = fittstdvbacpbac0en00
     dictfitt['init']['fittscalbacpbac0en00'] = fittscalbacpbac0en00
     pcat.main.init_image( \
-                         typeexpr='hubb', \
+                         typeexpr='HST_WFC3_IR', \
                          makeplotinit=False, \
                          typedata='simu', \
                          dictfitt=dictfitt, \
@@ -867,7 +867,7 @@ def cnfg_lens_simu():
 def intr_lens_evalcntpresi():
    
     pcat.main.init( \
-                   typeexpr='hubb', \
+                   typeexpr='HST_WFC3_IR', \
                    intrevalcntpresi=True, \
                    numbelempop0=1, \
                    maxmnumbelempop0=1, \
@@ -881,7 +881,7 @@ def intr_lens_evalcntpresi():
 def intr_lens_evalcntpmodl():
    
     pcat.main.init( \
-                   typeexpr='hubb', \
+                   typeexpr='HST_WFC3_IR', \
                    intrevalcntpmodl=True, \
                    numbelempop0=1, \
                    maxmnumbelempop0=1, \
@@ -896,7 +896,7 @@ def pcat_lens_mock_truesgnl(strgcnfgextnexec=None):
    
     dictargs = {}
     
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['truenumbelempop0'] = 25
     dictargs['fittmaxmnumbelempop0'] = 25
     dictargs['typeelem'] = ['lens']
@@ -944,7 +944,7 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     #dictpcatinpt['probspmr'] = 0.
     #dictpcatinpt['probspmr'] = 0.
     #dictpcatinpt['makeplot'] = False
-    dictpcatinpt['typeexpr'] = 'hubb'
+    dictpcatinpt['typeexpr'] = 'HST_WFC3_IR'
     dictpcatinpt['boolbinsener'] = False
     
     #dictpcatinpt['sqzeexpl'] = True
@@ -974,7 +974,7 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     scalxaxi = 'logt'
     #listtickxaxi = [tdpy.retr_lablmexp(anglfact * dictpcatinptvari[namecnfgextn]['dicttrue']['minmdefs']) for namecnfgextn in listnamecnfgextn] 
     
-    dictpcatinpt['typeexpr'] = 'hubb'
+    dictpcatinpt['typeexpr'] = 'HST_WFC3_IR'
     
     #dictpcatinpt['dicttrue']['numbelempop0'] = 4
     #dictpcatinpt['dictfitt']['maxmpara'].numbelempop0 = 4
@@ -1004,7 +1004,7 @@ def pcat_lens_mock_pars(strgcnfgextnexec=None):
     
     dictargs = {}
     
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['truenumbelempop0'] = 25
     dictargs['typeelem'] = ['lens']
    
@@ -1049,7 +1049,7 @@ def pcat_lens_mock_fittnumb(strgcnfgextnexec=None):
     
     dictargs = {}
     
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['truenumbelempop0'] = 25
     dictargs['typeelem'] = ['lens']
    
@@ -1087,7 +1087,7 @@ def pcat_lens_mock_fittnumb(strgcnfgextnexec=None):
 def pcat_lens_mock_trueback(strgcnfgextnexec=None):
    
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['truenumbelempop0'] = 25
     dictargs['typeelem'] = ['lens']
     
@@ -1124,7 +1124,7 @@ def pcat_lens_mock_sour(strgcnfgextnexec=None):
     anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     
     dictargs['typeelem'] = ['lens', 'lghtgausbgrd']
     dictargs['numbelempop0'] = 20
@@ -1180,7 +1180,7 @@ def test_lens_mock_sele():
     anglfact = 3600. * 180. / np.pi
     dictargs = {}
     dictargs['mockonly'] = True
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['minmdefs'] = 5e-4 / anglfact
     dictargs['numbelempop0'] = 1000
     dictargs['variasca'] = False
@@ -1309,7 +1309,7 @@ def test_lens_mock_tmpr():
     
     anglfact = 3600. * 180. / np.pi
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['burntmpr'] = True
     dictargs['maxmnumbelempop0'] = 0
     dictargs['numbelempop0'] = 0
@@ -1333,7 +1333,7 @@ def pcat_lens_mock_many(strgcnfgextnexec=None):
     anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['burntmpr'] = True
     for k in range(5):
         dictargs['maxmnumbelempop0reg%d' % k] = 0
@@ -1381,7 +1381,7 @@ def pcat_lens_mock_spmr(strgcnfgextnexec=None):
     anglfact = 3600. * 180. / np.pi
     
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['inittype'] = 'refr'
     dictargs['numbelempop0'] = 1
     dictargs['truelgalpop00000'] = 1. / anglfact
@@ -1598,7 +1598,7 @@ def pcat_lens_inpt(strgcnfgextnexec=None):
     
     dictargs = {}
     dictargs['typeelem'] = ['lens']
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['strgexpo'] = strgexpo
     dictargs['indxenerincl'] = array([0])
     dictargs['savestat'] = True
@@ -1691,7 +1691,7 @@ def pcat_lens_inpt(strgcnfgextnexec=None):
 def test_lens_mock_psfn():
    
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['truenumbelempop0'] = 25
     dictargs['typeelem'] = ['lens']
     dictargs['truesigcen00evt0'] = 4e-7
@@ -1731,7 +1731,7 @@ def test_lens_mock_psfn():
 def pcat_lens_mock_papr(strgcnfgextnexec=None):
    
     dictargs = {}
-    dictargs['typeexpr'] = 'hubb'
+    dictargs['typeexpr'] = 'HST_WFC3_IR'
     dictargs['typeelem'] = ['lens']
     dictargs['seedtype'] = 4
     dictargs['priofactdoff'] = 0.

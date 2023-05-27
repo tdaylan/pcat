@@ -2580,7 +2580,7 @@ def setp_indxpara_finl(gdat, strgmodl):
         if gdat.typeexpr == 'gmix':
             minmflux = 0.1
             maxmflux = 100.
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             minmflux = 1e-20
             maxmflux = 1e-17
         if gdat.typeexpr == 'fire':
@@ -2603,7 +2603,7 @@ def setp_indxpara_finl(gdat, strgmodl):
                 minmsind = 0.4
                 maxmsind = 2.4
                 sind = [0.4, 2.4]
-            if gdat.typeexpr == 'hubb':
+            if gdat.typeexpr.startswith('HST_WFC3'):
                 minmsind = 0.5
                 maxmsind = 2.5
                 sind = [0.4, 2.4]
@@ -2805,7 +2805,7 @@ def setp_indxpara_finl(gdat, strgmodl):
             if gdat.typeexpr == 'ferm':
                 minmsigm = 0.1
                 maxmsigm = 10.
-            if gdat.typeexpr == 'hubb':
+            if gdat.typeexpr.startswith('HST_WFC3'):
                 minmsigm = 0.01 / gdat.anglfact
                 maxmsigm = 0.1 / gdat.anglfact
             if gdat.typeexpr == 'chan':
@@ -3473,7 +3473,7 @@ def setp_indxpara_finl(gdat, strgmodl):
         raise Exception('Lensing cannot be modeled without host galaxy emission.')
     
     # collect groups of parameters
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         gmod.listnamecomplens = ['hostlght', 'hostlens', 'sour', 'extr']
         for namecomplens in gmod.listnamecomplens:
             setattr(gmod, 'liststrg' + namecomplens, [])
@@ -3497,7 +3497,7 @@ def setp_indxpara_finl(gdat, strgmodl):
         if isinstance(valu, list) or isinstance(valu, np.ndarray):
             continue
         
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             for namecomplens in gmod.listnamecomplens:
                 for strgtemp in getattr(gmod, 'liststrg' + namecomplens):
                     if strg[12:].startswith(strgtemp):
@@ -4022,19 +4022,27 @@ def init_image( \
             blim = np.logspace(np.log10(0.3), np.log10(10.), 4)
         if gdat.anlytype[4:8] == 'back':
             blim = np.logspace(np.log10(0.3), np.log10(300.), 31)
-    if gdat.typeexpr == 'chan':
+    elif gdat.typeexpr == 'chan':
         if gdat.anlytype.startswith('home'):
             blim = np.array([0.5, 0.91, 1.66, 3.02, 5.49, 10.])
         if gdat.anlytype.startswith('extr'):
             blim = np.array([0.5, 2., 8.])
         if gdat.anlytype.startswith('spec'):
             blim = np.logspace(np.log10(0.5), np.log10(10.), 21)
-    if gdat.typeexpr == 'fire':
+    elif gdat.typeexpr == 'fire':
         blim = np.logspace(np.log10(1. / 2.5e-6), np.log10(1. / 0.8e-6), 31)
-    if gdat.typeexpr == 'hubb':
+    elif gdat.typeexpr.startswith('HST_WFC3'):
         # temp
         #blim = np.array([500., 750, 1000.])
         blim = np.array([750, 1000.])
+    else:
+        print('')
+        print('')
+        print('')
+        print('gdat.typeexpr')
+        print(gdat.typeexpr)
+        raise Exception('gdat.typeexpr is not defined.')
+
     if gdat.typeexpr != 'gmix':
         setp_varb(gdat, 'enerfull', blim=blim)
     
@@ -4049,7 +4057,7 @@ def init_image( \
             gdat.strgenerfull = ['T']
         if gdat.typeexpr == 'sdss':
             gdat.strgenerfull = ['z-band', 'i-band', 'r-band', 'g-band', 'u-band']
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             #gdat.strgenerfull = ['F606W', 'F814W']
             gdat.strgenerfull = ['F814W']
         if gdat.typeexpr == 'ferm' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'fire': 
@@ -4114,7 +4122,7 @@ def init_image( \
     
     # default values for model types
     print('Starting to determine the default values for model types using setp_varbvalu()...')
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         typeemishost = 'sers'
     else:
         typeemishost = 'none'
@@ -4152,7 +4160,7 @@ def init_image( \
         else:
             typeback = [1., typebacktemp]
     
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         typeback = [1.]
     if gdat.typeexpr == 'tess':
         typeback = [1.]
@@ -4163,7 +4171,7 @@ def init_image( \
     
     setp_varb(gdat, 'typeback', valu=typeback)
     
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         numbsersfgrd = 1
     else:
         numbsersfgrd = 0
@@ -4177,7 +4185,7 @@ def init_image( \
         typeelem = ['lghtpnts']
     if gdat.typeexpr == 'chan':
         typeelem = ['lghtpnts']
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         typeelem = ['lens']
         #typeelem = ['lghtpnts', 'lens', 'lghtgausbgrd']
     if gdat.typeexpr == 'fire':
@@ -4186,7 +4194,7 @@ def init_image( \
     
     if gdat.typeexpr == 'gmix':
         legdelem = ['Cluster']
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         legdelem = ['Subhalo']
     setp_varb(gdat, 'legdelem', valu=legdelem)
 
@@ -4198,7 +4206,7 @@ def init_image( \
         typemodlpsfn = 'singking'
     if gdat.typeexpr == 'sdss':
         typemodlpsfn = 'singgaus'
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         typemodlpsfn = 'singgaus'
     if gdat.typeexpr == 'tess':
         typemodlpsfn = 'singgaus'
@@ -4259,7 +4267,7 @@ def init_image( \
             gdat.numbsidecarthalf = int(gdat.numbsidecart / 2)
             gdat.numbsideheal = int(np.sqrt(gdat.numbpixlfull / 12))
     
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         gdat.hubbexpofact = 1.63050e-19
     
     if gdat.strgexpo is None:
@@ -4282,7 +4290,7 @@ def init_image( \
             gdat.anglfact = 180. / np.pi
         if gdat.typeexpr == 'tess':
             gdat.anglfact = 60 * 180. / np.pi
-        if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'hubb':
+        if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr.startswith('HST'):
             gdat.anglfact = 3600 * 180. / np.pi
         if gdat.typeexpr == 'sche' or gdat.typeexpr == 'gmix':
             gdat.anglfact = 1.
@@ -4357,7 +4365,7 @@ def init_image( \
                 gdat.maxmgangdata = 15. / gdat.anglfact
             if gdat.typeexpr == 'tess':
                 gdat.maxmgangdata = 20. / gdat.anglfact
-            if gdat.typeexpr == 'hubb':
+            if gdat.typeexpr.startswith('HST_WFC3'):
                 gdat.maxmgangdata = 2. / gdat.anglfact
             if gdat.typeexpr == 'gmix':
                 gdat.maxmgangdata = 1. / gdat.anglfact
@@ -4369,10 +4377,14 @@ def init_image( \
     
         # pixelization
         if gdat.typepixl == 'cart':
-            gdat.apix = (2. * gdat.maxmgangdata / gdat.numbsidecart)**2
+            if gdat.typeexpr == 'HST_WFC3_UVIS':
+                gdat.sizepixl = 0.04 # [arcsec]
+            if gdat.typeexpr == 'HST_WFC3_IR':
+                gdat.sizepixl = 0.13 # [arcsec]
+            gdat.apix = gdat.sizepixl**2
         if gdat.typepixl == 'heal':
             temp, temp, temp, gdat.apix = tdpy.retr_healgrid(gdat.numbsideheal)
-        gdat.sizepixl = np.sqrt(gdat.apix)
+            gdat.sizepixl = np.sqrt(gdat.apix)
     
     # factor by which to multiply the y axis limits of the surface brightness plot
     if gdat.numbpixlfull == 1:
@@ -4420,7 +4432,7 @@ def init_image( \
                                                                                        ['en03', 'ergs', '0508', 0.5,  8.], \
                                                                                        ['en03', 'ergs', '0207',  2.,  7.], \
                                                                                        ['en03', 'ergs', '0507', 0.5,  7.]]
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         gdat.listspecconvunit = [['en03', 'ergs']]
     if gdat.typeexpr == 'fire':
         gdat.listspecconvunit = [['en00', 'imum']]
@@ -4431,7 +4443,7 @@ def init_image( \
 
     if gdat.typeexpr == 'ferm' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'fire':
         gdat.enerdiff = True
-    if gdat.typeexpr == 'hubb' or gdat.typeexpr == 'gmix' or gdat.typeexpr == 'tess':
+    if gdat.typeexpr.startswith('HST_WFC3') or gdat.typeexpr == 'gmix' or gdat.typeexpr == 'tess':
         gdat.enerdiff = False
     
     if gdat.indxenerincl is None:
@@ -4450,7 +4462,7 @@ def init_image( \
                 gdat.indxenerincl = np.arange(5)
             if gdat.anlytype.startswith('extr'):
                 gdat.indxenerincl = np.arange(2)
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.indxenerincl = np.array([0])
             #gdat.indxenerincl = np.array([1])
             #gdat.indxenerincl = np.array([0, 1])
@@ -4570,7 +4582,7 @@ def init_image( \
             gdat.strgexprname = 'Chandra'
         if gdat.typeexpr == 'ferm':
             gdat.strgexprname = 'Fermi-LAT'
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.strgexprname = 'HST'
         if gdat.typeexpr == 'sche':
             gdat.strgexprname = 'XXXXX'
@@ -4582,7 +4594,7 @@ def init_image( \
             gdat.lablgangunit = '$^o$'
         if gdat.typeexpr == 'gmix':
             gdat.lablgangunit = ''
-        if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'hubb':
+        if gdat.typeexpr == 'sdss' or gdat.typeexpr == 'chan' or gdat.typeexpr.startswith('HST'):
             gdat.lablgangunit = '$^{\prime\prime}$'
     
     if gdat.lablxpos is None:
@@ -4612,7 +4624,7 @@ def init_image( \
         if gdat.typeexpr == 'gmix':
             gdat.strgenerunit = ''
             gdat.nameenerunit = ''
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.strgenerunit = 'erg'
             gdat.nameenerunit = 'ergs'
         if gdat.typeexpr == 'fire':
@@ -4626,7 +4638,7 @@ def init_image( \
             gdat.nameexpr = 'SDSS'
         if gdat.typeexpr == 'chan':
             gdat.nameexpr = 'Chandra'
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.nameexpr = 'HST'
         if gdat.typeexpr == 'gaia':
             gdat.nameexpr = 'Gaia'
@@ -4635,7 +4647,7 @@ def init_image( \
     if gdat.radispmr is None:
         if gdat.typeexpr == 'ferm':
             gdat.radispmr = 0.6 / gdat.anglfact
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.radispmr = 0.15 / gdat.anglfact
         if gdat.typeexpr == 'tess':
             gdat.radispmr = 1. / gdat.anglfact
@@ -4671,7 +4683,7 @@ def init_image( \
                 retr_psfpferm(gmod)
             if gdat.typeexpr == 'sdss':
                 retr_psfpsdss(gmod)
-            if gdat.typeexpr == 'hubb':
+            if gdat.typeexpr.startswith('HST_WFC3'):
                 retr_psfphubb(gdat, gmod)
             if gdat.typeexpr == 'tess':
                 retr_psfptess(gmod)
@@ -4750,26 +4762,26 @@ def init_image( \
         if gdat.typeexpr == 'chan':
             retr_refrchanfinl(gdat)
     
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         boollenshost = True
     else:
         boollenshost = False
     setp_varb(gdat, 'boollenshost', valu=boollenshost)
   
     ## Boolean flag to turn on deflection due to elements
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         boollenssubh = True
     else:
         boollenssubh = False
     setp_varb(gdat, 'boollenssubh', valu=boollenssubh)
   
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         boollens = True
     else:
         boollens = False
     setp_varb(gdat, 'boollens', valu=boollens)
   
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         boolemishost = True
     else:
         boolemishost = False
@@ -4816,7 +4828,7 @@ def init_image( \
         
         gmod = getattr(gdat, strgmodl)
         
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             minm = 0.1
             maxm = 10.
             
@@ -4825,13 +4837,18 @@ def init_image( \
             setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'rele', minm=minm, maxm=maxm, scal='self', labl=['$R$', ''], strgmodl=strgmodl)
-            
-            setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'deflsubh', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha_s$', ''], strgmodl=strgmodl)
-            setp_varb(gdat, 'deflprof', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha(r)$', ''], strgmodl=strgmodl)
-            # distance to the source
+            ## distance to the source
             setp_varb(gdat, 'distsour', minm=minm, maxm=maxm, scal='powr', labl=['$\delta \theta_S$', ''], strgmodl=strgmodl)
+            ## relevance
             #setp_varb(gdat, 'rele', minm=minm, maxm=maxm, scal='powr', labl=['$R_{%d}$', ''], strgmodl=strgmodl)
+            
+            # fields defined on a specific grid
+            ## total deflection
+            setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
+            ## subhalo deflection
+            setp_varb(gdat, 'deflsubh', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha_s$', ''], strgmodl=strgmodl)
+            ## deflection profile of an individual subhalo
+            setp_varb(gdat, 'deflprof', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha(r)$', ''], strgmodl=strgmodl)
             
             for l in gmod.indxpopl:
                 setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, strgmodl=strgmodl)
@@ -4912,7 +4929,7 @@ def init_image( \
                         if 'bfun' in typeback[c]:
                             setp_varb(gdat, 'bacp', limt=[1e-10, 1e10], ener='full', back=c)
 
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             setp_varb(gdat, 'bacp', minm=1e-1, maxm=1e3, valu=1e1, labl=['$A$', ''], scal='logt', ener=0, back=0, strgmodl=strgmodl, strgstat='this')
         if gdat.typeexpr == 'gmix':
             setp_varb(gdat, 'bacp', minm=1e-1, maxm=1e3, valu=1e1, labl=['$A$', ''], scal='logt', ener=0, back=0, strgmodl=strgmodl)
@@ -4927,7 +4944,7 @@ def init_image( \
         if gmod.boollens:
             gmod.indxisfr = np.arange(1)
 
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             bacp = 2e-7
         if gdat.typeexpr == 'chan':
             bacp = 1.
@@ -5016,7 +5033,7 @@ def init_image( \
                         gangdistsexp = 5. / gdat.anglfact
                     setp_varb(gdat, 'gangdistsexp', valu=gangdistsexp, strgmodl=strgmodl, popl=l)
                 if gmod.typespatdist[l] == 'dsrcexpo':
-                    if gdat.typeexpr == 'hubb':
+                    if gdat.typeexpr.startswith('HST_WFC3'):
                         dsrcdistsexp = 0.5 / gdat.anglfact
                     setp_varb(gdat, 'dsrcdistsexp', valu=dsrcdistsexp, strgmodl=strgmodl, popl=l)
     
@@ -5037,10 +5054,10 @@ def init_image( \
         
             if gmod.boollenshost or gmod.boolemishost:
                 for e in gmod.indxsersfgrd:
-                    setp_varb(gdat, 'xposhost', labl=['$x_{H%d}$' % e, 'arcsec', ''], isfr=e)
-                    setp_varb(gdat, 'yposhost', labl=['$y_{H%d}$' % e, 'arcsec', ''], isfr=e)
-                    setp_varb(gdat, 'fluxhost', labl=['$f_{H%d}$' % e, 'erg/s', ''], isfr=e)
-                    setp_varb(gdat, 'sizehost', labl=['$R_{H%d}$' % e, 'arcsec', ''], isfr=e)
+                    setp_varb(gdat, 'xposhost', labl=['$x_{H%d}$' % e, 'arcsec'], isfr=e)
+                    setp_varb(gdat, 'yposhost', labl=['$y_{H%d}$' % e, 'arcsec'], isfr=e)
+                    setp_varb(gdat, 'fluxhost', labl=['$f_{H%d}$' % e, 'erg/s'], isfr=e)
+                    setp_varb(gdat, 'sizehost', labl=['$R_{H%d}$' % e, 'arcsec'], isfr=e)
                     setp_varb(gdat, 'beinhost', labl=['$\theta_{E,H%d}$' % e, 'arcsec'], isfr=e)
                     setp_varb(gdat, 'serihost', labl=['$n_{Ser,H%d}$' % e, ''], isfr=e)
             
@@ -5122,9 +5139,6 @@ def init_image( \
             if gmod.typeelem[l] == 'lens':
                 setp_varb(gdat, 'sloppriodefs', valu=1.9, popl=l, strgmodl=strgmodl, strgstat='this')
             
-            print('gmod.typeelem')
-            print(gmod.typeelem)
-
             if gmod.typeelem[l] == 'lens':
                 setp_varb(gdat, 'meanprioasca', valu=0.05 / gdat.anglfact, popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'stdvprioasca', valu=0.04 / gdat.anglfact, popl=l, strgmodl=strgmodl)
@@ -5138,9 +5152,9 @@ def init_image( \
                 sinddistmean = 2.15
             if gdat.typeexpr == 'chan':
                 sinddistmean = 1.
-            if gdat.typeexpr == 'hubb':
+            if gdat.typeexpr.startswith('HST_WFC3'):
                 sinddistmean = 1.
-            if gdat.typeexpr == 'ferm' or gdat.typeexpr == 'chan' or gdat.typeexpr == 'hubb':
+            if gdat.typeexpr == 'ferm' or gdat.typeexpr == 'chan' or gdat.typeexpr.startswith('HST'):
                 setp_varb(gdat, 'sinddistmean', valu=sinddistmean, popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'sinddiststdv', valu=0.5, popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'curvdistmean', valu=2., popl=l, strgmodl=strgmodl)
@@ -5247,12 +5261,22 @@ def init_image( \
             minm = -gdat.maxmgangdata
             maxm = gdat.maxmgangdata
             for l in gmod.indxpopl:
-                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=['$l$', ''], strgmodl=strgmodl)
-                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=['$b$', ''], strgmodl=strgmodl)
-                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=['$l_{gal}$', ''], popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=['$b_{gal}$', ''], popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=['$l_{gal}$', ''], popl=l, iele='full', strgmodl=strgmodl)
-                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=['$b_{gal}$', ''], popl=l, iele='full', strgmodl=strgmodl)
+                if gdat.typeexpr == 'ferm':
+                    lablxpos = '$l$'
+                    lablypos = '$b$'
+                    lablunitxpos = 'degree'
+                    lablunitypos = 'degree'
+                if gdat.typeexpr.startswith('HST_WFC3'):
+                    lablxpos = '$x$'
+                    lablypos = '$y$'
+                    lablunitxpos = 'arcsec'
+                    lablunitypos = 'arcsec'
+                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=[lablxpos, lablunitxpos], strgmodl=strgmodl)
+                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=[lablypos, lablunitypos], strgmodl=strgmodl)
+                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=[lablxpos, lablunitxpos], popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=[lablypos, lablunitypos], popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'xpos', minm=minm, maxm=maxm, labl=[lablxpos, lablunitxpos], popl=l, iele='full', strgmodl=strgmodl)
+                setp_varb(gdat, 'ypos', minm=minm, maxm=maxm, labl=[lablypos, lablunitypos], popl=l, iele='full', strgmodl=strgmodl)
         
         if gdat.typeexpr == 'gmix':
             minm = 0.1
@@ -5452,9 +5476,11 @@ def init_image( \
         ##setp_varb(gdat, 'bein')
 
         ## angular deviation
-        setp_varb(gdat, 'anglhalf', minm=0., maxm=3*gdat.maxmgangdata, numbbins=1000)
+        setp_varb(gdat, 'anglhalf', minm=0., maxm=3*gdat.maxmgangdata, labl=['$\theta$', ''], numbbins=1000)
         setp_varb(gdat, 'anglfull', minm=0., maxm=3*gdat.maxmgangdata, numbbins=1000)
         
+    setp_varb(gdat, 'anglfromhost', minm=0., maxm=3*gdat.maxmgangdata, numbbins=1000, labl=['$\theta_{\rm{0,hst}}$', ''])
+    
     # temp
     #gdat.blimpara.anglcosi = np.sort(np.cos(gdat.blimpara.angl))
     
@@ -5855,7 +5881,7 @@ def init_image( \
             gdat.maxmangl = 25. / gdat.anglfact
         if gdat.typeexpr == 'chan':
             gdat.maxmangl = 15. / gdat.anglfact
-        if gdat.typeexpr == 'hubb':
+        if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.maxmangl = 1. / gdat.anglfact
     else:
         gdat.maxmangl = gdat.maxmgangdata * np.sqrt(2.) * 2. * 1.1
@@ -6710,7 +6736,7 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         setattr(gmod.lablrootpara, 'fracsubhintgbein', r'$f_{\rm{sub,E}}$')
         setattr(gmod.lablrootpara, 'fracsubhdeltbein', r'$f_{\rho,\rm{sub,E}}$')
         for e in gmod.indxsersfgrd:
-            setattr(gmod.lablrootpara, 'masshostisf%dbein' % e, r'$M_{\rm{hst,%d,C}}$' % e)
+            setp_varb(gdat, 'masshostisf%dbein' % e, labl=[r'$M_{\rm{hst,%d,C}}$' % e, ''])
             setattr(gmod.lablrootpara, 'masshostisf%dintg' % e, r'$M_{\rm{hst,%d<}}$' % e)
             setattr(gmod.lablrootpara, 'masshostisf%ddelt' % e, r'$M_{\rm{hst,%d}}$' % e)
             setattr(gmod.lablrootpara, 'masshostisf%dintgbein' % e, r'$M_{\rm{hst,E,%d<}}$' % e)
@@ -6756,9 +6782,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     gdat.lablxposunit = gdat.lablgangunit
     gdat.lablyposunit = gdat.lablgangunit
    
-    gdat.lablanglfromhost = r'\theta_{\rm{0,hst}}'
-    gdat.lablanglfromhostunit = gdat.lablgangunit
-
     gdat.labldefs = r'\alpha_s'
     gdat.lablflux = 'f'
     gdat.lablnobj = 'p'
@@ -6990,7 +7013,7 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         else:
             gdat.minmcnts = 1.
             gdat.maxmcnts = 1e3
-    if gdat.typeexpr == 'hubb':
+    if gdat.typeexpr.startswith('HST_WFC3'):
         gdat.minmcnts = 1.
         gdat.maxmcnts = 1e3
     if gdat.typeexpr == 'fire':
@@ -7665,6 +7688,13 @@ def setp_varb(gdat, \
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, scal, 'scalpara')
                 
             if labl is not None:
+                
+                if len(labl) != 2 or not isinstance(labl[0], str) and isinstance(labl[1], str):
+                    print('')
+                    print('')
+                    print('')
+                    raise Exception('labl input to setp_varb() has an issue.')
+
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, labl[0], 'lablrootpara')
                 setp_varbcore(gdat, strgmodl, gmodoutp, strgvarb, labl[1], 'lablunitpara')
                 labltotl = tdpy.retr_labltotlsing(labl[0], labl[1])
@@ -9511,7 +9541,23 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 for m in gdat.indxdqlt:
                     cntptemp[i, j, m] = np.random.poisson(cntp['modl'][i, j, m])
         setattr(gdat, 'cntpdata', cntptemp)
-    
+        
+        if np.amax(cntptemp) == 0:
+            print('')
+            print('')
+            print('')
+            print('cntptemp')
+            summgene(cntptemp)
+            print('sbrt[modl]')
+            summgene(sbrt['modl'])
+            print('gdat.apix')
+            print(gdat.apix)
+            print('gdat.expo')
+            summgene(gdat.expo)
+            print('cntp[modl][i, j, m]')
+            summgene(cntp['modl'][i, j, m])
+            raise Exception('Generated data has zero counts everywhere.')
+
         print('Will process the true model...')
         proc_cntpdata(gdat)
     
@@ -12195,8 +12241,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                                 deflprof[0][:, r] = gdat.dictglob['poststkscond'][r]['deflprof'][0, :]
                                 asca[0][r] = gdat.dictglob['poststkscond'][r]['asca'][0]
                                 acut[0][r] = gdat.dictglob['poststkscond'][r]['acut'][0]
+                        
+                        for l in gmod.indxpopl:
+                            if strgmodl == 'true':
+                                deflprof = gdat.true.this.dictelem[l]['deflprof']
+                            else:
+                                deflprof = gmodstat.dictelem[l]['deflprof']
 
-                        for l in range(len(deflprof)):
                             xdat = gdat.bctrpara.anglfull * gdat.anglfact
                             listydat = []
                             listvlinfrst = []
@@ -12205,9 +12256,9 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             if 'deflprof' in gmod.typeelem[l]:
 
                                 if strgmodl == 'true':
-                                    deflproftemp = deflprof[l][0, :, :]
+                                    deflproftemp = deflprof[l][0, :, k]
                                 else:
-                                    deflproftemp = deflprof[l]
+                                    deflproftemp = deflprof[l][:, k]
                                 
                                 for k in range(deflprof[l].shape[-1]):
                                     listydat.append(deflproftemp[:, k] * gdat.anglfact)
@@ -12244,14 +12295,14 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
 
                     if gmod.boollens:
                         ## radial mass budget
-                        lablxdat = gdat.lablanglfromhosttotl
+                        lablxdat = gdat.labltotlpara.anglfromhost
                         for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
                             
                             # host mass
                             for e in gmod.indxsersfgrd:
                                 strgsersfgrd = 'isf%d' % e
-                                limtydat = [gdat.minmmcut, getattr(gdat, 'plotmaxmmasshost' + strgsersfgrd + strgcalcmasssubh + 'bein')]
-                                lablydat = getattr(gmod.lablpara, 'masshost' + strgsersfgrd + strgcalcmasssubh + 'totl')
+                                limtydat = [gdat.minmmcut, getattr(gdat.maxmpara, 'masshost%s%sbein' % (strgsersfgrd, strgcalcmasssubh))]
+                                lablydat = getattr(gmod.labltotlpara, 'masshost' + strgsersfgrd + strgcalcmasssubh + 'totl')
                                 name = 'masshost%s%s' % (strgsersfgrd, strgcalcmasssubh)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
                                                                           lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
