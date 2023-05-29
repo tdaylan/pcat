@@ -5323,14 +5323,40 @@ def init_image( \
     for strgmodl in gdat.liststrgmodl:
         for e in gmod.indxsersfgrd:
             strgsersfgrd = 'isf%d' % e
-            setp_varb(gdat, 'masshost' + strgsersfgrd + 'bein', limt=[1e7, 1e14], strgmodl=strgmodl)
-            for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-                setp_varb(gdat, 'masshost' + strgsersfgrd + strgcalcmasssubh + 'bein', limt=[1e7, 1e14], strgmodl=strgmodl)
-        if gmod.numbpopl > 0:
-            if gmod.boollenssubh:
-                for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-                    setp_varb(gdat, 'masssubh' + strgsersfgrd + 'bein', limt=[1e7, 1e10], strgmodl=strgmodl)
-                    setp_varb(gdat, 'fracsubh' + strgsersfgrd + 'bein', limt=[0., 1.], strgmodl=strgmodl)
+            # scalar
+            setp_varb(gdat, 'masshost%stotl' % strgsersfgrd, limt=[1e7, 1e14], strgmodl=strgmodl, labl=[r'$M_{\rm{hst,%d}}$' % e, ''])
+            setp_varb(gdat, 'masshost%sbein' % strgsersfgrd, limt=[1e7, 1e14], strgmodl=strgmodl, labl=[r'$M_{\rm{hst,E,%d}}$' % e, ''])
+            
+            # defined on a grid
+            setp_varb(gdat, 'masshost%sdelt' % strgsersfgrd, limt=[1e7, 1e14], strgmodl=strgmodl, labl=[r'$dM_{\rm{hst,%d}}$' % e, ''])
+            setp_varb(gdat, 'masshost%sintg' % strgsersfgrd, limt=[1e7, 1e14], strgmodl=strgmodl, labl=[r'$M_{\rm{hst,%d<}}$' % e, ''])
+            
+            if gmod.numbpopl > 0:
+                if gmod.boollenssubh:
+                    # to be deleted
+                    #setattr(gmod.lablrootpara, 'masssubh%sintg', r'$M_{\rm{sub}}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sdelt', r'$\rho_{\rm{sub}}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sintgbein', r'$M_{\rm{sub,E}}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sdeltbein', r'$\rho_{\rm{sub,E}}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sintgunit', '$10^9 M_{\odot}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sdeltunit', '$M_{\odot}$/kpc')
+                    #setattr(gmod.lablrootpara, 'masssubh%sintgbeinunit', '$10^9 M_{\odot}$')
+                    #setattr(gmod.lablrootpara, 'masssubh%sdeltbeinunit', '$M_{\odot}$/kpc')
+                    #setattr(gmod.lablrootpara, 'fracsubh%sintg', r'f_{\rm{sub}}')
+                    #setattr(gmod.lablrootpara, 'fracsubh%sdelt', r'f_{\rho,\rm{sub}}')
+                    #setattr(gmod.lablrootpara, 'fracsubh%sintgbein', r'$f_{\rm{sub,E}}$')
+                    #setattr(gmod.lablrootpara, 'fracsubh%sdeltbein', r'$f_{\rho,\rm{sub,E}}$')
+                    
+                    # scalar
+                    setp_varb(gdat, 'masssubh%sbein' % strgsersfgrd, limt=[1e7, 1e10], strgmodl=strgmodl, labl=[r'$M_{\rm{sub,E,%d}}$' % e, ''])
+                    setp_varb(gdat, 'fracsubh%sbein' % strgsersfgrd, limt=[0., 1.], strgmodl=strgmodl, labl=[r'$f_{\rm{sub,E,%d}}$' % e, ''])
+                   
+                    # defined on a grid
+                    setp_varb(gdat, 'masssubh%sdelt' % strgsersfgrd, limt=[1e7, 1e10], strgmodl=strgmodl, labl=[r'$dM_{\rm{sub,%d}}$' % e, ''])
+                    setp_varb(gdat, 'fracsubh%sdelt' % strgsersfgrd, limt=[0., 1.], strgmodl=strgmodl, labl=[r'$df_{\rm{sub,%d}}$' % e, ''])
+    
+                    setp_varb(gdat, 'masssubh%sintg' % strgsersfgrd, limt=[1e7, 1e10], strgmodl=strgmodl, labl=[r'$M_{\rm{sub,%d<}}$' % e, ''])
+                    setp_varb(gdat, 'fracsubh%sintg' % strgsersfgrd, limt=[0., 1.], strgmodl=strgmodl, labl=[r'$f_{\rm{sub,%d<}}$' % e, ''])
     
     gdat.typeelem = []
     gdat.typeelemspateval = []
@@ -6723,24 +6749,10 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     #
     ## labels and scales for variables
     if gmod.boollens:
-        setattr(gmod.lablrootpara, 'masssubhintg', r'$M_{\rm{sub}}$')
-        setattr(gmod.lablrootpara, 'masssubhdelt', r'$\rho_{\rm{sub}}$')
-        setattr(gmod.lablrootpara, 'masssubhintgbein', r'$M_{\rm{sub,E}}$')
-        setattr(gmod.lablrootpara, 'masssubhdeltbein', r'$\rho_{\rm{sub,E}}$')
-        setattr(gmod.lablrootpara, 'masssubhintgunit', '$10^9 M_{\odot}$')
-        setattr(gmod.lablrootpara, 'masssubhdeltunit', '$M_{\odot}$/kpc')
-        setattr(gmod.lablrootpara, 'masssubhintgbeinunit', '$10^9 M_{\odot}$')
-        setattr(gmod.lablrootpara, 'masssubhdeltbeinunit', '$M_{\odot}$/kpc')
-        setattr(gmod.lablrootpara, 'fracsubhintg', r'f_{\rm{sub}}')
-        setattr(gmod.lablrootpara, 'fracsubhdelt', r'f_{\rho,\rm{sub}}')
-        setattr(gmod.lablrootpara, 'fracsubhintgbein', r'$f_{\rm{sub,E}}$')
-        setattr(gmod.lablrootpara, 'fracsubhdeltbein', r'$f_{\rho,\rm{sub,E}}$')
         for e in gmod.indxsersfgrd:
+            # scalar
             setp_varb(gdat, 'masshostisf%dbein' % e, labl=[r'$M_{\rm{hst,%d,C}}$' % e, ''])
-            setattr(gmod.lablrootpara, 'masshostisf%dintg' % e, r'$M_{\rm{hst,%d<}}$' % e)
-            setattr(gmod.lablrootpara, 'masshostisf%ddelt' % e, r'$M_{\rm{hst,%d}}$' % e)
-            setattr(gmod.lablrootpara, 'masshostisf%dintgbein' % e, r'$M_{\rm{hst,E,%d<}}$' % e)
-            setattr(gmod.lablrootpara, 'masshostisf%ddeltbein' % e, r'$M_{\rm{hst,E,%d}}$' % e)
+            
         for namevarb in ['fracsubh', 'masssubh']:
             for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
                 for nameeval in ['', 'bein']:
@@ -7199,15 +7211,17 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     # list of parameter names (derived and generative), element lists flattened
     gmod.namepara.para = gmod.namepara.base + gmod.namepara.genrelemextdflat + gmod.namepara.derielemextdflat
     
-    for e in gmod.indxsersfgrd:
-        strgsersfgrd = 'isf%d' % e
-        gmod.namepara.scal += ['masshost' + strgsersfgrd + 'bein']
-        for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-            gmod.namepara.scal += ['masshost' + strgsersfgrd + strgcalcmasssubh + 'bein']
-    if gmod.numbpopl > 0:
-        if gmod.boollenssubh:
-            for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-                gmod.namepara.scal += ['masssubh' + strgcalcmasssubh + 'bein', 'fracsubh' + strgcalcmasssubh + 'bein'] 
+    # to be deleted
+    #for e in gmod.indxsersfgrd:
+    #    strgsersfgrd = 'isf%d' % e
+    #    gmod.namepara.scal += ['masshost' + strgsersfgrd + 'bein']
+    #    for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
+    #        gmod.namepara.scal += ['masshost' + strgsersfgrd + strgcalcmasssubh + 'bein']
+    #if gmod.numbpopl > 0:
+    #    if gmod.boollenssubh:
+    #        for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
+    #            gmod.namepara.scal += ['masssubh' + strgcalcmasssubh + 'bein', 'fracsubh' + strgcalcmasssubh + 'bein'] 
+    
     if gmod.numbpopl > 0:
         gmod.namepara.scal += ['lpripena']
     if False and gmod.boolelemsbrtdfncanyy:
@@ -12301,26 +12315,27 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
                             # host mass
                             for e in gmod.indxsersfgrd:
                                 strgsersfgrd = 'isf%d' % e
-                                limtydat = [gdat.minmmcut, getattr(gdat.maxmpara, 'masshost%s%sbein' % (strgsersfgrd, strgcalcmasssubh))]
-                                lablydat = getattr(gmod.labltotlpara, 'masshost' + strgsersfgrd + strgcalcmasssubh + 'totl')
+                                
+                                limtydat = [gdat.minmmcut, getattr(gdat.maxmpara, 'masshost%s%s' % (strgsersfgrd, strgcalcmasssubh))]
+                                lablydat = getattr(gmod.labltotlpara, 'masshost' + strgsersfgrd + strgcalcmasssubh)
                                 name = 'masshost%s%s' % (strgsersfgrd, strgcalcmasssubh)
                                 plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
                                                                           lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
                             
-                            if gmod.boolelemdeflsubhanyy:
-                                # subhalo masses
-                                limtydat = [gdat.minmmcut, getattr(gdat, 'plotmaxmmasssubh' + strgcalcmasssubh + 'bein')]
-                                lablydat = getattr(gmod.lablpara, 'masssubh' + strgcalcmasssubh + 'totl')
-                                name = 'masssubh%s' % (strgcalcmasssubh)
-                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
-                                                                          lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
+                                if gmod.boolelemdeflsubhanyy:
+                                    # subhalo masses
+                                    limtydat = [gdat.minmmcut, getattr(gdat.maxmpara, 'masssubh%s' % strgsersfgrd + strgcalcmasssubh)]
+                                    lablydat = getattr(gmod.labltotlpara, 'masssubh%s' % strgsersfgrd + strgcalcmasssubh)
+                                    name = 'masssubh%s' % (strgcalcmasssubh)
+                                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
+                                                                              lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
 
-                                # subhalo mass fraction
-                                limtydat = [1e-3, 0.1]
-                                lablydat = getattr(gmod.lablpara, 'fracsubh' + strgcalcmasssubh + 'totl')
-                                name = 'fracsubh%s' % (strgcalcmasssubh)
-                                plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
-                                                            lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
+                                    # subhalo mass fraction
+                                    limtydat = [1e-3, 0.1]
+                                    lablydat = getattr(gmod.labltotlpara, 'fracsubh%s' % strgsersfgrd + strgcalcmasssubh)
+                                    name = 'fracsubh%s' % (strgcalcmasssubh)
+                                    plot_gene(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, name, 'bctranglhalf', scalydat='logt', \
+                                                                lablxdat=lablxdat, lablydat=lablydat, limtydat=limtydat)
 
                 alph = 0.1
 
