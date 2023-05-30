@@ -5798,13 +5798,9 @@ def init_image( \
     gdat.scalpara.cntpresi = 'asnh'
     gdat.cmappara.cntpresi = make_cmapdivg('Red', 'Orange')
 
-    gdat.minmconv = 1e-2
-    gdat.maxmconv = 10.
-    gdat.scalconv = 'logt'
-    gdat.cmapconv = 'Purples'
-    
+    setp_varb(gdat, 'conv', minm=1e-2, maxm=10., labl=['$\kappa$', ''], cmap='Purples', scal='logt')
     setp_varb(gdat, 's2nr', minm=0., maxm=10., labl=['SNR', ''], cmap='magma', scal='asnh')
-    setp_varb(gdat, 'magn', minm=-1e2, maxm=1e2, labl=['$\mu$', ''], cmap='mBrBG', scal='asnh')
+    setp_varb(gdat, 'magn', minm=-1e2, maxm=1e2, labl=['$\mu$', ''], cmap='BrBG', scal='asnh')
     
     gdat.minmdeflresiperc = -100.
     gdat.maxmdeflresiperc = 100.
@@ -8980,38 +8976,38 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     
     # process a sample vector and the occupancy list to calculate secondary variables
     if gmod.boollens:
-        fluxsour = gmodstat.paragenrscalfull[gmod.indxpara.fluxsour]
+        gmodstat.fluxsour = gmodstat.paragenrscalfull[gmod.indxpara.fluxsour]
         if gdat.numbener > 1:
-            sindsour = gmodstat.paragenrscalfull[gmod.indxpara.sindsour]
-        sizesour = gmodstat.paragenrscalfull[gmod.indxpara.sizesour]
-        ellpsour = gmodstat.paragenrscalfull[gmod.indxpara.ellpsour]
-        anglsour = gmodstat.paragenrscalfull[gmod.indxpara.anglsour]
+            gmodstat.sindsour = gmodstat.paragenrscalfull[gmod.indxpara.sindsour]
+        gmodstat.sizesour = gmodstat.paragenrscalfull[gmod.indxpara.sizesour]
+        gmodstat.ellpsour = gmodstat.paragenrscalfull[gmod.indxpara.ellpsour]
+        gmodstat.anglsour = gmodstat.paragenrscalfull[gmod.indxpara.anglsour]
     if gmod.typeemishost != 'none':
-        xposhost = [[] for e in gmod.indxsersfgrd]
-        yposhost = [[] for e in gmod.indxsersfgrd]
-        fluxhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.xposhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.yposhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.fluxhost = [[] for e in gmod.indxsersfgrd]
         if gdat.numbener > 1:
-            sindhost = [[] for e in gmod.indxsersfgrd]
-        sizehost = [[] for e in gmod.indxsersfgrd]
+            gmodstat.sindhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.sizehost = [[] for e in gmod.indxsersfgrd]
         for e in gmod.indxsersfgrd:
-            xposhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'xposhostisf%d' % e)]
-            yposhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'yposhostisf%d' % e)]
-            fluxhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'fluxhostisf%d' % e)]
+            gmodstat.xposhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'xposhostisf%d' % e)]
+            gmodstat.yposhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'yposhostisf%d' % e)]
+            gmodstat.fluxhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'fluxhostisf%d' % e)]
             if gdat.numbener > 1:
-                sindhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sindhostisf%d' % e)]
-            sizehost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sizehostisf%d' % e)]
+                gmodstat.sindhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sindhostisf%d' % e)]
+            gmodstat.sizehost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sizehostisf%d' % e)]
     if gmod.boollens:
-        beinhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.beinhost = [[] for e in gmod.indxsersfgrd]
         for e in gmod.indxsersfgrd:
-            beinhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'beinhostisf%d' % e)]
+            gmodstat.beinhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'beinhostisf%d' % e)]
     if gmod.typeemishost != 'none':
-        ellphost = [[] for e in gmod.indxsersfgrd]
-        anglhost = [[] for e in gmod.indxsersfgrd]
-        serihost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.ellphost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.anglhost = [[] for e in gmod.indxsersfgrd]
+        gmodstat.serihost = [[] for e in gmod.indxsersfgrd]
         for e in gmod.indxsersfgrd:
-            ellphost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'ellphostisf%d' % e)]
-            anglhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'anglhostisf%d' % e)]
-            serihost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'serihostisf%d' % e)]
+            gmodstat.ellphost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'ellphostisf%d' % e)]
+            gmodstat.anglhost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'anglhostisf%d' % e)]
+            gmodstat.serihost[e] = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'serihostisf%d' % e)]
     if gmod.boollens:
         numbpixltemp = gdat.numbpixlcart
         defl = np.zeros((numbpixltemp, 2))
@@ -9039,17 +9035,18 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             if gdat.typeverb > 2:
                 print('Evaluating the deflection field due to host galaxy %d' % e)
                 print('xposhost[e]')
-                print(xposhost[e])
+                print(gmodstat.xposhost[e])
                 print('yposhost[e]')
-                print(yposhost[e])
+                print(gmodstat.yposhost[e])
                 print('beinhost[e]')
-                print(beinhost[e])
-                print('ellphost[e]')
-                print(ellphost[e])
-                print('anglhost[e]')
-                print(anglhost[e])
+                print(gmodstat.beinhost[e])
+                print('gmodstat.ellphost[e]')
+                print(gmodstat.ellphost[e])
+                print('gmodstat.anglhost[e]')
+                print(gmodstat.anglhost[e])
 
-            deflhost[e] = chalcedon.retr_defl(gdat.xposgrid, gdat.yposgrid, indxpixlmiss, xposhost[e], yposhost[e], beinhost[e], ellp=ellphost[e], angl=anglhost[e])
+            deflhost[e] = chalcedon.retr_defl(gdat.xposgrid, gdat.yposgrid, indxpixlmiss, gmodstat.xposhost[e], gmodstat.yposhost[e], \
+                                                                        gmodstat.beinhost[e], ellp=gmodstat.ellphost[e], angl=gmodstat.anglhost[e])
              
             if gdat.booldiag:
                 if not np.isfinite(deflhost[e]).all():
@@ -9063,15 +9060,15 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     print('indxpixlmiss')
                     summgene(indxpixlmiss)
                     print('xposhost[e]')
-                    print(xposhost[e])
+                    print(gmodstat.xposhost[e])
                     print('yposhost[e]')
-                    print(yposhost[e])
+                    print(gmodstat.yposhost[e])
                     print('beinhost[e]')
-                    print(beinhost[e])
-                    print('ellphost[e]')
-                    print(ellphost[e])
-                    print('anglhost[e]')
-                    print(anglhost[e])
+                    print(gmodstat.beinhost[e])
+                    print('gmodstat.ellphost[e]')
+                    print(gmodstat.ellphost[e])
+                    print('gmodstat.anglhost[e]')
+                    print(gmodstat.anglhost[e])
                     print('deflhost[e]')
                     print(deflhost[e])
                     summgene(deflhost[e])
@@ -9325,26 +9322,26 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             sbrt['bgrdgalx'] = []
         
         if gdat.numbener > 1:
-            specsour = retr_spec(gdat, np.array([fluxsour]), sind=np.array([sindsour]))
+            specsour = retr_spec(gdat, np.array([gmodstat.fluxsour]), sind=np.array([gmodstat.sindsour]))
             if gdat.typeverb > 2:
-                print('sindsour')
-                print(sindsour)
+                print('gmodstat.sindsour')
+                print(gmodstat.sindsour)
         else:
-            specsour = np.array([fluxsour])
+            specsour = np.array([gmodstat.fluxsour])
         
         if gdat.typeverb > 2:
             print('xpossour')
             print(xpossour)
             print('ypossour')
             print(ypossour)
-            print('sizesour')
-            print(sizesour)
-            print('ellpsour')
-            print(ellpsour)
-            print('anglsour')
-            print(anglsour)
-            print('fluxsour')
-            print(fluxsour)
+            print('gmodstat.sizesour')
+            print(gmodstat.sizesour)
+            print('gmodstat.ellpsour')
+            print(gmodstat.ellpsour)
+            print('gmodstat.anglsour')
+            print(gmodstat.anglsour)
+            print('gmodstat.fluxsour')
+            print(gmodstat.fluxsour)
             print('specsour')
             print(specsour)
 
@@ -9354,7 +9351,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 print('Interpolating the background emission...')
 
             sbrt['bgrdgalx'] = retr_sbrtsers(gdat, gdat.xposgrid[indxpixlelem[0]], gdat.yposgrid[indxpixlelem[0]], \
-                                                                            xpossour, ypossour, specsour, sizesour, ellpsour, anglsour)
+                                                                            xpossour, ypossour, specsour, gmodstat.sizesour, gmodstat.ellpsour, gmodstat.anglsour)
             
             if gdat.typeverb > 2:
                 print('sbrt[bgrdgalx]')
@@ -9379,11 +9376,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             
             sbrt['lens'] = retr_sbrtsers(gdat, gdat.xposgrid - defl[gdat.indxpixl, 0], \
                                                    gdat.yposgrid - defl[gdat.indxpixl, 1], \
-                                                   xpossour, ypossour, specsour, sizesour, ellpsour, anglsour)
+                                                   xpossour, ypossour, specsour, gmodstat.sizesour, gmodstat.ellpsour, gmodstat.anglsour)
             
             sbrt['bgrd'] = retr_sbrtsers(gdat, gdat.xposgrid, \
                                                    gdat.yposgrid, \
-                                                   xpossour, ypossour, specsour, sizesour, ellpsour, anglsour)
+                                                   xpossour, ypossour, specsour, gmodstat.sizesour, gmodstat.ellpsour, gmodstat.anglsour)
             
         setattr(gmodstat, 'sbrtlens', sbrt['lens'])
 
@@ -9407,28 +9404,28 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             if gdat.typeverb > 2:
                 print('Evaluating the host galaxy surface brightness...')
             if gdat.numbener > 1:
-                spechost = retr_spec(gdat, np.array([fluxhost[e]]), sind=np.array([sindhost[e]]))
+                spechost = retr_spec(gdat, np.array([gmodstat.fluxhost[e]]), sind=np.array([gmodstat.sindhost[e]]))
             else:
-                spechost = np.array([fluxhost[e]])
+                spechost = np.array([gmodstat.fluxhost[e]])
             
             if gdat.typeverb > 2:
                 print('xposhost[e]')
-                print(xposhost[e] * gdat.anglfact)
+                print(gmodstat.xposhost[e] * gdat.anglfact)
                 print('yposhost[e]')
-                print(yposhost[e] * gdat.anglfact)
+                print(gmodstat.yposhost[e] * gdat.anglfact)
                 print('spechost')
                 print(spechost)
-                print('sizehost[e]')
-                print(sizehost[e])
-                print('ellphost[e]')
-                print(ellphost[e])
-                print('anglhost[e]')
-                print(anglhost[e])
-                print('serihost[e]')
-                print(serihost[e])
+                print('gmodstat.sizehost[e]')
+                print(gmodstat.sizehost[e])
+                print('gmodstat.ellphost[e]')
+                print(gmodstat.ellphost[e])
+                print('gmodstat.anglhost[e]')
+                print(gmodstat.anglhost[e])
+                print('gmodstat.serihost[e]')
+                print(gmodstat.serihost[e])
             
-            sbrt['hostisf%d' % e] = retr_sbrtsers(gdat, gdat.xposgrid, gdat.yposgrid, xposhost[e], \
-                                                                        yposhost[e], spechost, sizehost[e], ellphost[e], anglhost[e], serihost[e])
+            sbrt['hostisf%d' % e] = retr_sbrtsers(gdat, gdat.xposgrid, gdat.yposgrid, gmodstat.xposhost[e], \
+                                                                        gmodstat.yposhost[e], spechost, gmodstat.sizehost[e], gmodstat.ellphost[e], gmodstat.anglhost[e], gmodstat.serihost[e])
             
             setattr(gmodstat, 'sbrthostisf%d' % e, sbrt['hostisf%d' % e])
                 
@@ -9716,7 +9713,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
         setattr(gmodstat, 'defl', defl)
         for e in gmod.indxsersfgrd:
-            masshostbein = gmod.ratimassbeinsqrd * beinhost[e]**2
+            masshostbein = gmod.ratimassbeinsqrd * gmodstat.beinhost[e]**2
             setattr(gmodstat, 'masshostisf%dbein' % e, masshostbein)
         ### sort with respect to deflection at scale radius
         if gmod.numbpopl > 0:
@@ -10374,7 +10371,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             dicttert[name] = np.zeros(gdat.numbbinspara.anglhalf)
             if 'isf' in name:
                 indxisfrtemp = int(name.split('isf')[1][0])
-            angl = np.sqrt((gdat.bctrpara.xposcartmesh - xposhost[indxisfrtemp])**2 + (gdat.bctrpara.yposcartmesh - yposhost[indxisfrtemp])**2).flatten()
+            angl = np.sqrt((gdat.bctrpara.xposcartmesh - gmodstat.xposhost[indxisfrtemp])**2 + (gdat.bctrpara.yposcartmesh - gmodstat.yposhost[indxisfrtemp])**2).flatten()
             for k in gdat.indxbinspara.anglhalf:
                 if name[4:8] == 'host':
                     convtemp = conv[:]
@@ -10398,7 +10395,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, name, dicttert[name])
             
             # interpolate the host, subhalo masses and subhalo mass fraction at the Einstein radius and save it as a scalar variable
-            dicttert[name + 'bein'] = np.interp(beinhost, gdat.bctrpara.anglhalf, dicttert[name])
+            dicttert[name + 'bein'] = np.interp(gmodstat.beinhost, gdat.bctrpara.anglhalf, dicttert[name])
             setattr(gmodstat, name + 'bein', dicttert[name + 'bein'])
         
     #if gmod.numbpopl > 0:
