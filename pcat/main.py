@@ -4832,7 +4832,7 @@ def init_image( \
             minm = 0.1
             maxm = 10.
             
-            setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=[r'$\alpha$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'mcut', minm=minm, maxm=maxm, scal='powr', labl=['$m_c$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], strgmodl=strgmodl)
             setp_varb(gdat, 'acut', minm=minm, maxm=maxm, scal='self', labl=['$\theta_c$', ''], strgmodl=strgmodl)
@@ -4844,15 +4844,15 @@ def init_image( \
             
             # fields defined on a specific grid
             ## total deflection
-            setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha$', ''], strgmodl=strgmodl)
+            setp_varb(gdat, 'defl', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=[r'$\alpha$', ''], strgmodl=strgmodl)
             ## subhalo deflection
             setp_varb(gdat, 'deflsubh', minm=gdat.maxmgangdata/1e4, maxm=gdat.maxmgangdata, numbbins=10, scal='powr', labl=['$\alpha_s$', ''], strgmodl=strgmodl)
             ## deflection profile of an individual subhalo
             setp_varb(gdat, 'deflprof', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha(r)$', ''], strgmodl=strgmodl)
             
             for l in gmod.indxpopl:
-                setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, strgmodl=strgmodl)
-                setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=['$\alpha$', ''], popl=l, iele='full', strgmodl=strgmodl)
+                setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=[r'$\alpha$', ''], popl=l, strgmodl=strgmodl)
+                setp_varb(gdat, 'defs', minm=minm, maxm=maxm, scal='powr', labl=[r'$\alpha$', ''], popl=l, iele='full', strgmodl=strgmodl)
         
                 setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'asca', minm=minm, maxm=maxm, scal='self', labl=['$\theta_s$', ''], popl=l, iele='full', strgmodl=strgmodl)
@@ -5117,7 +5117,7 @@ def init_image( \
                 stdv = None
             name = 'slopprio' + gmod.nameparagenrelemampl[l]
             
-            setp_varb(gdat, name, minm=minm, maxm=maxm, scal=scal, mean=mean, stdv=stdv, labl=['$\alpha$', ''], popl=l, strgmodl=strgmodl)
+            setp_varb(gdat, name, minm=minm, maxm=maxm, scal=scal, mean=mean, stdv=stdv, labl=[r'$\alpha$', ''], popl=l, strgmodl=strgmodl)
             
             # below this line is unnecessary to be deleted
             if gmod.typeelem[l] == 'lghtgausbgrd' or gmod.typeelem[l] == 'clusvari':
@@ -6498,6 +6498,10 @@ def init_image( \
     #for strg, valu in gmod.cmappara.__dict__.items():
     #    retr_ticklabl(gdat, strg)
             
+    # types of two dimensional distributions
+    ## 'bind' and 'scat'
+    gdat.liststrgelemtdimtype = ['bind']
+
     # generate true data
     if gdat.typedata == 'simu':
         
@@ -14971,8 +14975,6 @@ def sample( \
             gdat.liststrgpdfn = ['prio', 'post']
         else:
             gdat.liststrgpdfn = ['post']
-
-        gdat.liststrgelemtdimtype = ['bind']
 
         # initialization type
         if gdat.inittype is None:
