@@ -5803,15 +5803,8 @@ def init_image( \
     gdat.scalconv = 'logt'
     gdat.cmapconv = 'Purples'
     
-    gdat.minms2nr = 0.
-    gdat.maxms2nr = 10.
-    gmod.scals2nr = 'asnh'
-    gdat.cmaps2nr = 'magma'
-    
-    gdat.minmmagn = -1e2
-    gdat.maxmmagn = 1e2
-    gmod.scalmagn = 'asnh'
-    gdat.cmapmagn = 'BrBG'
+    setp_varb(gdat, 's2nr', minm=0., maxm=10., labl=['SNR', ''], cmap='magma', scal='asnh')
+    setp_varb(gdat, 'magn', minm=-1e2, maxm=1e2, labl=['$\mu$', ''], cmap='mBrBG', scal='asnh')
     
     gdat.minmdeflresiperc = -100.
     gdat.maxmdeflresiperc = 100.
@@ -7792,7 +7785,7 @@ def setp_varb(gdat, \
                 limt = np.array([minm, maxm]) 
                 
                 # 'self' is not yet defined
-                if (scal == 'asnh' or scal == 'logt' or scal == 'powr') and maxm / minm > 10.:
+                if (scal == 'asnh' or scal == 'logt' or scal == 'powr'):
                     listvalutickmajr, listlabltickmajr, listvalutickminr, listlabltickminr = tdpy.retr_valulabltick(minm, maxm, scal)
                     setattr(gmodoutp.labltickmajrpara, strgvarb, listlabltickmajr)
                     setattr(gmodoutp.valutickmajrpara, strgvarb, listvalutickmajr)
