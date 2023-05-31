@@ -6606,21 +6606,24 @@ def init_image( \
         
     for strgmodl in gdat.liststrgmodl:
         gmod = getattr(gdat, strgmodl)
-        print('gmod.minmpara.numbelempop0')
-        print(gmod.minmpara.numbelempop0)
-        print('gmod.minmpara.numbelem')
-        print(gmod.minmpara.numbelem)
         
-    # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
-    gmod.corr = tdpy.gdatstrt()
-    for k in gmod.indxvarbscal:
-        name = gmod.namepara.scal[k]
-        temp = getattr(gdat.true.this, name)
-        setattr(gmod.corr, name, temp)
+        print('strgmodl')
+        print(strgmodl)
+        
+        # for each parameter in the fitting model, determine if there is a corresponding parameter in the generative model
+        gmod.corr = tdpy.gdatstrt()
+        for k in gmod.indxvarbscal:
+            name = gmod.namepara.scal[k]
+            
+            if name.startswith('cmpl') or name.startswith('fdis'):
+                continue
 
-    gmod.corrparagenrscalbase = np.empty(gmod.numbparagenrbase)
-    for k in gmod.indxpara.genrbase:
-        gmod.corrparagenrscalbase[k] = getattr(gdat.true, gmod.namepara.genrbase[k])
+            temp = getattr(gdat.true.this, name)
+            setattr(gmod.corr, name, temp)
+
+        gmod.corrparagenrscalbase = np.empty(gmod.numbparagenrbase)
+        for k in gmod.indxpara.genrbase:
+            gmod.corrparagenrscalbase[k] = getattr(gdat.true.this, gmod.namepara.genrbase[k])
 
     dictglob = sample( \
                       **dictpcat, \
@@ -7097,6 +7100,11 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     gmod.numbparagenrbase = len(gmod.namepara.genrbase)
     gmod.indxpara.genrbase = np.arange(gmod.numbparagenrbase)
     
+    if strgmodl == 'fitt':
+        print('gmod.numbparagenrbase')
+        print(gmod.numbparagenrbase)
+        raise Exception('')
+
     if gdat.booldiag:
         for name in gmod.namepara.genrbase:
             if 'pop0pop0' in name:
@@ -9693,6 +9701,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         return
 
     initchro(gdat, gdatmodi, 'tert')
+    
+    for l in gmod.indxpopl:
+        strgpopl = 'pop%d' % l
+        setattr(gmodstat, 'numbelem%s' % strgpopl, gmodstat.numbelempopl[l])
     
     for name in ['fluxhost', 'sizehost', 'ellphost', 'anglhost', 'serihost', 'beinhost', 'xposhost', 'yposhost']:
         for e in gmod.indxsersfgrd:
@@ -14821,9 +14833,10 @@ def sample( \
             setattr(gdat, attr, valu)
     
     # check inputs
-    if gdat.numbburn > gdat.numbswep:
+    if gdat.numbburn is not None and gdat.numbburn > gdat.numbswep:
         raise Exception('Bad number of burn-in sweeps.')
-    if gdat.factthin > gdat.numbswep - gdat.numbburn or gdat.factthin < 1:
+    
+    if gdat.factthin is not None and (gdat.factthin > gdat.numbswep - gdat.numbburn or gdat.factthin < 1):
         raise Exception('Bad thinning factor.')
     
     setup_pcat(gdat)
@@ -14854,7 +14867,7 @@ def sample( \
     gdat.strgnumbswep = '%d' % gdat.numbswep
     
     # output paths
-    gdat.strgcnfg = '%d' % gdat.strgnumbswep
+    gdat.strgcnfg = '%s' % gdat.strgnumbswep
     gdat.pathoutpcnfg = retr_pathoutpcnfg(gdat.pathbase, gdat.strgcnfg)
 
     # physical constants
@@ -15015,18 +15028,18 @@ def sample( \
         gdat.numbprop = 5
         gdat.indxprop = np.arange(gdat.numbprop)
         
-        gdat.numbstdp = gmod.numbparagenrbase - gmod.numbpopl
+        gdat.numbstdp = gdat.fitt.numbparagenrbase - gdat.fitt.numbpopl
         cntr = 0
-        for l in gmod.indxpopl:
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
+        for l in gdat.fitt.indxpopl:
+            for nameparagenrelem in gdat.fitt.namepara.genrelem[l]:
                 #setattr(gdat.fitt.indxpara.genrelemkind, nameparagenrelem + 'pop%d' % l, gdat.numbstdp)
                 cntr += 1
         gdat.numbstdp += cntr
         
-        gdat.lablstdp = np.copy(np.array(gmod.labltotlpara.genrbase[gmod.numbpopl:]))
-        gdat.namestdp = np.copy(np.array(gmod.namepara.genrbase[gmod.numbpopl:]))
-        for l in gmod.indxpopl:
-            for nameparagenrelem in gmod.namepara.genrelem[l]:
+        gdat.lablstdp = np.copy(np.array(gdat.fitt.labltotlpara.genrbase[gdat.fitt.numbpopl:]))
+        gdat.namestdp = np.copy(np.array(gdat.fitt.namepara.genrbase[gdat.fitt.numbpopl:]))
+        for l in gdat.fitt.indxpopl:
+            for nameparagenrelem in gdat.fitt.namepara.genrelem[l]:
                 gdat.lablstdp = np.append(gdat.lablstdp, getattr(gdat.fitt.labltotlpara, nameparagenrelem))
                 gdat.namestdp = np.append(gdat.namestdp, nameparagenrelem + 'pop%d' % l)
         gdat.namestdp = gdat.namestdp.astype(object)
@@ -15035,21 +15048,21 @@ def sample( \
         gdat.indxstdpprop = gdat.indxstdp
         
         # proposal scale indices for each parameter
-        indxelemfull = [list(range(gmod.maxmpara.numbelem[l])) for l in gmod.indxpopl]
+        indxelemfull = [list(range(gdat.fitt.maxmpara.numbelem[l])) for l in gdat.fitt.indxpopl]
         gdat.fitt.this.indxparagenrfullelem = retr_indxparagenrelemfull(gdat, indxelemfull, 'fitt')
         
-        gdat.indxstdppara = np.zeros(gmod.numbparagenr, dtype=int) - 1
+        gdat.indxstdppara = np.zeros(gdat.fitt.numbparagenr, dtype=int) - 1
         cntr = 0
-        gdat.indxstdppara[gmod.numbpopl:gmod.numbparagenrbase] = gmod.indxpara.genrbase[gmod.numbpopl:] - gmod.numbpopl
-        if gmod.numbpopl > 0:
-            for l in gmod.indxpopl:
-                for k, nameparagenrelem in enumerate(gmod.namepara.genrelem[l]):
+        gdat.indxstdppara[gdat.fitt.numbpopl:gdat.fitt.numbparagenrbase] = gdat.fitt.indxpara.genrbase[gdat.fitt.numbpopl:] - gdat.fitt.numbpopl
+        if gdat.fitt.numbpopl > 0:
+            for l in gdat.fitt.indxpopl:
+                for k, nameparagenrelem in enumerate(gdat.fitt.namepara.genrelem[l]):
                     for indx in gdat.fitt.this.indxparagenrfullelem[l][nameparagenrelem]:
-                        gdat.indxstdppara[indx] = cntr + gmod.numbparagenrbase - gmod.numbpopl
+                        gdat.indxstdppara[indx] = cntr + gdat.fitt.numbparagenrbase - gdat.fitt.numbpopl
                     cntr += 1
         
         # for the fitting model, define proposal type indices
-        for name, valu in gmod.indxpara.__dict__.items():
+        for name, valu in gdat.fitt.indxpara.__dict__.items():
             if not name.startswith('numbelem') and name != 'dist':
                 if not isinstance(valu, int):
                     continue
@@ -15057,105 +15070,105 @@ def sample( \
                 setattr(gdat, 'indxstdp' + name, indxstdp)
     
 
-        gmod = gdat.fitt
+        gdat.fitt = gdat.fitt
         # proposal scale
-        if gmod.boollens or gdat.typedata == 'simu':
+        if gdat.fitt.boollens or gdat.typedata == 'simu':
             
             gdat.stdp = 1e-4 + np.zeros(gdat.numbstdp)
             
-            if gmod.typemodltran == 'pois' and gmod.numbpopl > 0:
-                if gmod.maxmpara.numbelem[0] > 0:
+            if gdat.fitt.typemodltran == 'pois' and gdat.fitt.numbpopl > 0:
+                if gdat.fitt.maxmpara.numbelem[0] > 0:
                     gdat.stdp[gdat.indxstdpmeanelempop0] = 1e-1
             
-            gdat.stdp[gdat.indxstdppara[gmod.indxpara.sigcen00evt0]] = 3e-2
-            gdat.stdp[gdat.indxstdppara[gmod.indxpara.bacpback0000en00]] = 1e-3
-            gdat.stdp[gdat.indxstdppara[gmod.indxpara.bacpback0000en00]] = 1e-1
+            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sigcen00evt0]] = 3e-2
+            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.bacpback0000en00]] = 1e-3
+            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.bacpback0000en00]] = 1e-1
             
-            if gmod.boollens:
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.xpossour]] = 1e-3
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.ypossour]] = 1e-3
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.fluxsour]] = 1e-2
+            if gdat.fitt.boollens:
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.xpossour]] = 1e-3
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.ypossour]] = 1e-3
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.fluxsour]] = 1e-2
                 if gdat.numbener > 1:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.sindsour]] = 1e-3
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.sizesour]] = 1e-1
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.ellpsour]] = 1e-1
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.anglsour]] = 1e-1
-            if gmod.typeemishost != 'none':
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.xposhostisf0]] = 3e-4
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.yposhostisf0]] = 3e-4
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.fluxhostisf0]] = 1e-3
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sindsour]] = 1e-3
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sizesour]] = 1e-1
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.ellpsour]] = 1e-1
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.anglsour]] = 1e-1
+            if gdat.fitt.typeemishost != 'none':
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.xposhostisf0]] = 3e-4
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.yposhostisf0]] = 3e-4
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.fluxhostisf0]] = 1e-3
                 if gdat.numbener > 1:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.sindhostisf0]] = 1e-3
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.sizehostisf0]] = 3e-3
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sindhostisf0]] = 1e-3
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sizehostisf0]] = 3e-3
             
-            if gmod.boollens:
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.beinhostisf0]] = 1e-3
-            if gmod.typeemishost != 'none':
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.ellphostisf0]] = 1e-2
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.anglhostisf0]] = 1e-2
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.serihostisf0]] = 1e-2
-            if gmod.boollens:
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.sherextr]] = 1e-1
-                gdat.stdp[gdat.indxstdppara[gmod.indxpara.sangextr]] = 3e-2
+            if gdat.fitt.boollens:
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.beinhostisf0]] = 1e-3
+            if gdat.fitt.typeemishost != 'none':
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.ellphostisf0]] = 1e-2
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.anglhostisf0]] = 1e-2
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.serihostisf0]] = 1e-2
+            if gdat.fitt.boollens:
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sherextr]] = 1e-1
+                gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sangextr]] = 3e-2
             
         else:
             
             if gdat.typeexpr == 'ferm':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
                 
-                if gmod.typemodltran == 'pois' and gmod.numbpopl > 0:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 4e-2
+                if gdat.fitt.typemodltran == 'pois' and gdat.fitt.numbpopl > 0:
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.meanelem]] = 4e-2
                     
-                    for l in gmod.indxpopl:
-                        if gmod.typeprioflux[l] == 'powr':
-                            gdat.stdp[gdat.indxstdppara[gmod.indxpara.sloppriofluxpop0]] = 1e-1
+                    for l in gdat.fitt.indxpopl:
+                        if gdat.fitt.typeprioflux[l] == 'powr':
+                            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sloppriofluxpop0]] = 1e-1
                         else:
-                            gdat.stdp[gdat.indxstdppara[gmod.indxpara.brekpriofluxpop0]] = 1e-1
-                            gdat.stdp[gdat.indxstdppara[gmod.indxpara.sloplowrpriofluxpop0]] = 1e-1
-                            gdat.stdp[gdat.indxstdppara[gmod.indxpara.slopupprpriofluxpop0]] = 1e-1
+                            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.brekpriofluxpop0]] = 1e-1
+                            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sloplowrpriofluxpop0]] = 1e-1
+                            gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.slopupprpriofluxpop0]] = 1e-1
                 
-                gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 5e-3
-                gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en01')]] = 1e-2
-                gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en02')]] = 3e-2
+                gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en00')]] = 5e-3
+                gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en01')]] = 1e-2
+                gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en02')]] = 3e-2
                 
-                if 'fdfm' in gmod.listnameback: 
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0001en00')]] = 8e-4
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0001en01')]] = 1e-3
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0001en02')]] = 2e-3
+                if 'fdfm' in gdat.fitt.listnameback: 
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0001en00')]] = 8e-4
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0001en01')]] = 1e-3
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0001en02')]] = 2e-3
                 
-                if 'dark' in gmod.listnameback: 
-                    gmod.indxbackdark = gmod.listnameback.index('dark')
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback%04den00' % gmod.indxbackdark)]] = 2e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback%04den01' % gmod.indxbackdark)]] = 2e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback%04den02' % gmod.indxbackdark)]] = 3e-2
+                if 'dark' in gdat.fitt.listnameback: 
+                    gdat.fitt.indxbackdark = gdat.fitt.listnameback.index('dark')
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback%04den00' % gdat.fitt.indxbackdark)]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback%04den01' % gdat.fitt.indxbackdark)]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback%04den02' % gdat.fitt.indxbackdark)]] = 3e-2
                 
-                if gmod.numbpopl > 0:
+                if gdat.fitt.numbpopl > 0:
                     gdat.stdp[gdat.indxstdppop0flux] = 8e-2
 
-                    if gmod.spectype[0] == 'colr':
+                    if gdat.fitt.spectype[0] == 'colr':
                         gdat.stdp[gdat.indxstdppop0sindcolr0001] = 8e-2
                         gdat.stdp[gdat.indxstdppop0sindcolr0002] = 2e-1
             
             if gdat.typeexpr == 'chan':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
                 
-                if gmod.typemodltran == 'pois' and gmod.numbpopl > 0:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 2e-1
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.sloppriofluxpop0]] = 2e-1
+                if gdat.fitt.typemodltran == 'pois' and gdat.fitt.numbpopl > 0:
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.meanelem]] = 2e-1
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.sloppriofluxpop0]] = 2e-1
                 
-                if gmod.numbpopl > 0 and gdat.boolbindspat:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.psfp]] = 4e-1
+                if gdat.fitt.numbpopl > 0 and gdat.boolbindspat:
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.psfp]] = 4e-1
                 
                 if gdat.indxenerincl.size == 5 and (gdat.indxenerincl == np.arange(5)).all():
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 2e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en01')]] = 3e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en02')]] = 2e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en03')]] = 2e-2
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en04')]] = 1e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en00')]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en01')]] = 3e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en02')]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en03')]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en04')]] = 1e-2
                 elif gdat.indxenerincl.size == 2 and (gdat.indxenerincl == np.array([2])).all():
-                    gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 2e-2
+                    gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en00')]] = 2e-2
                 
-                if gmod.numbpopl > 0:
+                if gdat.fitt.numbpopl > 0:
                     if gdat.boolbindspat:
                         gdat.stdp[gdat.fitt.indxpara.genrelemkind.xpospop0] = 2e-2
                         gdat.stdp[gdat.fitt.indxpara.genrelemkind.ypospop0] = 2e-2
@@ -15166,17 +15179,17 @@ def sample( \
             if gdat.typeexpr == 'gmix':
                 gdat.stdp = 1e-2 + np.zeros(gdat.numbstdp)
             
-                if gmod.typemodltran == 'pois' and gmod.numbpopl > 0:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.meanelem]] = 2e-1
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.slopprionobjpop0]] = 3e-1
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.gwdtsloppop0]] = 3e-1
+                if gdat.fitt.typemodltran == 'pois' and gdat.fitt.numbpopl > 0:
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.meanelem]] = 2e-1
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.slopprionobjpop0]] = 3e-1
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.gwdtsloppop0]] = 3e-1
 
-                if gmod.typeevalpsfn != 'none' and gdat.boolmodipsfn:
-                    gdat.stdp[gdat.indxstdppara[gmod.indxpara.psfp]] = 4e-1
+                if gdat.fitt.typeevalpsfn != 'none' and gdat.boolmodipsfn:
+                    gdat.stdp[gdat.indxstdppara[gdat.fitt.indxpara.psfp]] = 4e-1
                 
-                gdat.stdp[gdat.indxstdppara[getattr(gmod.indxpara, 'bacpback0000en00')]] = 2e-2
+                gdat.stdp[gdat.indxstdppara[getattr(gdat.fitt.indxpara, 'bacpback0000en00')]] = 2e-2
             
-                if gmod.numbpopl > 0:
+                if gdat.fitt.numbpopl > 0:
                     gdat.stdp[gdat.fitt.indxpara.genrelemkind.xpospop0] = 4e-2
                     gdat.stdp[gdat.fitt.indxpara.genrelemkind.ypospop0] = 4e-2
                     gdat.stdp[gdat.fitt.indxpara.genrelemkind.nobjpop0] = 3e-1
@@ -15221,7 +15234,7 @@ def sample( \
         #    retr_ticklabl(gdat, strgcbar)
         
         # temp
-        #for strgmodl in gdat.liststrgmodl:
+        #for strgdat.fittl in gdat.liststrgdat.fittl:
         #    for namesele in gdat.listnamesele:
         #        for namefeat in gdat.listnamefeatsele:
         #            for strglimt in gdat.liststrglimt:
@@ -15231,20 +15244,20 @@ def sample( \
         #                    setattr(gdat, strglimt + namefeat + namesele, getattr(gdat, strglimt + namefeat))
 
         # construct bins for element parameters of the fitting model
-        #for strgmodl in ['fitt']:
+        #for strgdat.fittl in ['fitt']:
         #    
-        #    gmod = getattr(gdat, strgmodl)
+        #    gdat.fitt = getattr(gdat, strgdat.fittl)
 
         #    # list of names for element parameters, concatenated across all populations
-        #    for l in gmod.indxpopl:
-        #        if gmod.maxmpara.numbelem[l] > 0:
+        #    for l in gdat.fitt.indxpopl:
+        #        if gdat.fitt.maxmpara.numbelem[l] > 0:
         #            # temp -- does not cover the case when different populations have parameters with the same name
-        #            for strgfeat in gmod.namepara.glob:
-        #            #for strgfeat in gmod.namepara.genrelem[l]:
+        #            for strgfeat in gdat.fitt.namepara.glob:
+        #            #for strgfeat in gdat.fitt.namepara.genrelem[l]:
         #                if strgfeat[:-4] == 'etag':
         #                    continue
         #                #setp_varb(gdat, strgfeat)
-        #                #if strgfeat in gmod.namepara.elem:
+        #                #if strgfeat in gdat.fitt.namepara.elem:
         #                #    setp_varb(gdat, strgfeat + 'prio')
         
         gdat.numbbinspdfn = 50
@@ -15262,7 +15275,7 @@ def sample( \
             setattr(gdat, 'maxmfracsdenmeandarkdfncsubten%02d' % i, 1.)
             setattr(gdat, 'factfracsdenmeandarkdfncsubten%02d' % i, 1.)
         
-        gmod.scalbooldfncsubt = 'self'
+        gdat.fitt.scalbooldfncsubt = 'self'
         gdat.minmbooldfncsubt = -0.5
         gdat.maxmbooldfncsubt = 1.5
         gdat.factbooldfncsubt = 1.
@@ -15287,7 +15300,7 @@ def sample( \
             ## rotate element coordinates to the ROI center
             if gdat.typepixl == 'heal' and (gdat.xposcntr != 0. or gdat.yposcntr != 0.):
                 for q in gdat.indxrefr:
-                    for l in gmod.indxpopl:
+                    for l in gdat.fitt.indxpopl:
                         rttr = hp.rotator.Rotator(rot=[rad2deg(gdat.xposcntr), rad2deg(gdat.yposcntr), 0.], deg=True, eulertype='ZYX')
                         gdat.refr.dictelem[q]['ypos'][0, :], gdat.refrxpos[0, :] = rttr(pi / 2. - gdat.refrypos[0, :], gdat.refrxpos[0, :])
                         gdat.refr.dictelem[q]['ypos'][0, :] = pi / 2. - gdat.refrypos[0, :]
@@ -15322,13 +15335,13 @@ def sample( \
         print('gdat.fitt.numbparagenrbase')
         print(gdat.fitt.numbparagenrbase)
         
-        for strgmodl in gdat.liststrgmodl:
-            for l in gmod.indxpopl:
-                for strgfeat, strgpdfn in zip(gmod.namepara.genrelemmodu[l], gmod.liststrgpdfnmodu[l]):
+        for strgdat.fittl in gdat.liststrgdat.fittl:
+            for l in gdat.fitt.indxpopl:
+                for strgfeat, strgpdfn in zip(gdat.fitt.namepara.genrelemmodu[l], gdat.fitt.liststrgpdfnmodu[l]):
                     if strgpdfn == 'tmpl':
                         if gdat.xposprio is None or gdat.yposprio is None:
-                            gdat.xposprio = np.concatenate((gmod.xpos))
-                            gdat.yposprio = np.concatenate((gmod.ypos))
+                            gdat.xposprio = np.concatenate((gdat.fitt.xpos))
+                            gdat.yposprio = np.concatenate((gdat.fitt.ypos))
                         gdat.numbspatprio = gdat.xposprio.size
         
                         # spatial template for the catalog prior
@@ -15379,7 +15392,7 @@ def sample( \
                 for q in gdat.indxrefr:
                     for strgfeat in gdat.refr.namepara.elem[q]:
                         refrfeat = getattr(gdat.refr, strgfeat)
-                        for l in gmod.indxpopl:
+                        for l in gdat.fitt.indxpopl:
                             if len(refrfeat[q]) > 0:
                                 refrfeattotl[q] = refrfeat[q]
                 setattr(gdat.refr, strgfeat + 'totl', refrfeattotl)
@@ -15430,7 +15443,7 @@ def sample( \
             
             ## element feature indices ordered with respect to the amplitude variable
             refrfeatsort = [[] for q in gdat.indxrefr]
-            if not (gdat.typedata == 'simu' and gmod.numbparaelem == 0):
+            if not (gdat.typedata == 'simu' and gdat.fitt.numbparaelem == 0):
                 for q in gdat.indxrefr:
                     refrparagenrscalelemampl = getattr(gdat.refr, gdat.refr.nameparagenrelemampl[q])
                     if len(refrparagenrscalelemampl[q]) > 0:
@@ -15466,12 +15479,12 @@ def sample( \
                                 hist = np.histogram2d(refrfeatfrst[q][0, :], refrfeatseco[q][0, :], bins=(blimfeatfrst, blimfeatseco))[0]
                                 setattr(gdat.refr, 'hist' + strgfeattdim, hist)
             
-        if gmod.numbpopl > 0:
+        if gdat.fitt.numbpopl > 0:
             # plot settings
             ## upper limit of histograms
             if gdat.limtydathistfeat is None:
                 gdat.limtydathistfeat = [0.5, max(100., 10**np.ceil(np.log10(gdat.refr.numbelemtotl)))]
-                #gdat.limtydathistfeat = [0.5, max(100., 10**np.ceil(np.log10(gmod.maxmpara.numbelemtotl)))]
+                #gdat.limtydathistfeat = [0.5, max(100., 10**np.ceil(np.log10(gdat.fitt.maxmpara.numbelemtotl)))]
 
         # initial plots
         if gdat.boolmakeplot and gdat.boolmakeplotinit:
@@ -15507,7 +15520,7 @@ def sample( \
             gdat.liststrgvarbarryswep += ['chro' + namechro]
         gdat.liststrgvarbarryswep += ['ltrp']
         if gdat.probtran > 0.:
-            for l in gmod.indxpopl:
+            for l in gdat.fitt.indxpopl:
                 gdat.liststrgvarbarryswep += ['auxiparapop%d' % l]
         gdat.liststrgvarbarryswep += ['ljcb']
     
