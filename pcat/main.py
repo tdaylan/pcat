@@ -4717,6 +4717,7 @@ def init_image( \
     print(gdat.numbrefr)
 
     gdat.indxrefr = np.arange(gdat.numbrefr)
+    # Boolean flag indicating whether each reference catalogs will be associated with the model catalog
     if gdat.boolasscrefr is None:
         gdat.boolasscrefr = [True for q in gdat.indxrefr]
     
@@ -7224,12 +7225,14 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         for i in gdat.indxener:
             gmod.namepara.scal += ['fracsdenmeandarkdfncsubten%02d' % i]
         gmod.namepara.scal += ['booldfncsubt']
-    if gmod.numbpopl > 0:
-        for q in gdat.indxrefr:
-            if gdat.boolasscrefr[q]:
-                for l in gmod.indxpopl:
-                    gmod.namepara.scal += ['cmplpop%dpop%d' % (l, q)]
-                    gmod.namepara.scal += ['fdispop%dpop%d' % (q, l)]
+    
+    if strgmodl == 'fitt':
+        if gmod.numbpopl > 0:
+            for q in gdat.indxrefr:
+                if gdat.boolasscrefr[q]:
+                    for l in gmod.indxpopl:
+                        gmod.namepara.scal += ['cmplpop%dpop%d' % (l, q)]
+                        gmod.namepara.scal += ['fdispop%dpop%d' % (q, l)]
     
     gmod.numbvarbscal = len(gmod.namepara.scal)
     gmod.indxvarbscal = np.arange(gmod.numbvarbscal)
@@ -9022,8 +9025,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     listindxpixlelem[l], listindxpixlelemconc[l] = retr_indxpixlelemconc(gdat, strgmodl, gmodstat.dictelem, l)
                     
     if gmod.boollens:
-        sherextr = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sherextr')]
-        sangextr = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sangextr')]
+        gmodstat.sherextr = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sherextr')]
+        gmodstat.sangextr = gmodstat.paragenrscalfull[getattr(gmod.indxpara, 'sangextr')]
        
         ## host halo deflection
         initchro(gdat, gdatmodi, 'deflhost')
@@ -9095,7 +9098,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         initchro(gdat, gdatmodi, 'deflextr')
         deflextr = []
         indxpixltemp = gdat.indxpixlcart
-        deflextr = retr_deflextr(gdat, indxpixltemp, sherextr, sangextr)
+        deflextr = retr_deflextr(gdat, indxpixltemp, gmodstat.sherextr, gmodstat.sangextr)
         defl += deflextr
         if gdat.typeverb > 2:
             print('After adding the external deflection...')
@@ -9400,6 +9403,8 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     # evaluate host galaxy surface brightness
     if gmod.typeemishost != 'none':
         initchro(gdat, gdatmodi, 'sbrthost')
+        
+
         for e in gmod.indxsersfgrd:
             if gdat.typeverb > 2:
                 print('Evaluating the host galaxy surface brightness...')
@@ -9425,7 +9430,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                 print(gmodstat.serihost[e])
             
             sbrt['hostisf%d' % e] = retr_sbrtsers(gdat, gdat.xposgrid, gdat.yposgrid, gmodstat.xposhost[e], \
-                                                                        gmodstat.yposhost[e], spechost, gmodstat.sizehost[e], gmodstat.ellphost[e], gmodstat.anglhost[e], gmodstat.serihost[e])
+                                                         gmodstat.yposhost[e], spechost, gmodstat.sizehost[e], gmodstat.ellphost[e], gmodstat.anglhost[e], gmodstat.serihost[e])
             
             setattr(gmodstat, 'sbrthostisf%d' % e, sbrt['hostisf%d' % e])
                 
@@ -9689,6 +9694,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
     initchro(gdat, gdatmodi, 'tert')
     
+    for name in ['fluxhost', 'sizehost', 'ellphost', 'anglhost', 'serihost', 'beinhost', 'xposhost', 'yposhost']:
+        for e in gmod.indxsersfgrd:
+            strgsersfgrd = 'isf%d' % e
+            setattr(gmodstat, name + strgsersfgrd, getattr(gmodstat, name)[e])
+
     setattr(gmodstat, 'lpri', lpri)
     
     if gmod.numbpopl > 0:
@@ -9823,11 +9833,11 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
     if gmod.numbpopl > 0:
         if strgstat == 'this' or gdat.boolrefeforc and strgmodl == 'fitt':
-            # correlate the fitting model elements with the reference elements
-            if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr:
-                indxelemrefrasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
-                indxelemfittasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
-                for q in gdat.indxrefr:
+            indxelemrefrasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
+            indxelemfittasschits = [[[] for l in gmod.indxpopl] for q in gdat.indxrefr]
+            for q in gdat.indxrefr:
+                # correlate the fitting model elements with the reference elements
+                if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr[q]:
                     for l in gmod.indxpopl:
                         if gdat.refr.numbelem[q] == 0:
                             continue
@@ -10509,10 +10519,24 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     
     if gmod.numbpopl > 0:
     
-        # correlate the catalog sample with the reference catalog
-        if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr:
+        print('gdat.boolinforefr')
+        print(gdat.boolinforefr)
+        print('gdat.boolasscrefr')
+        print(gdat.boolasscrefr)
+        print('strgmodl')
+        print(strgmodl)
+        print('gdat.typedata')
+        print(gdat.typedata)
+
+        for q in gdat.indxrefr:
             
-            for q in gdat.indxrefr:
+            print('hey')
+            # correlate the catalog sample with the reference catalog
+            if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr[q]:
+            
+                print('mey')
+                raise Exception('')
+
                 for l in gmod.indxpopl:
                     if gdat.refr.numbelem[q] > 0:
                         cmpl = np.array([float(len(indxelemrefrasschits[q][l])) / gdat.refr.numbelem[q]])
@@ -10612,7 +10636,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             
             # false discovery rate
             for l in gmod.indxpopl:
-                q = gmod.indxpoplrefrassc[l]
+                q = gdat.fitt.indxpoplrefrassc[l]
                 
                 for nameparaelemfrst in gmod.namepara.elem[l]:
                     
@@ -12102,12 +12126,12 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
         if gmod.numbpopl > 0:
             # element parameter correlations
             for l in gmod.indxpopl:
-                if strgmodl != 'true' and gdat.boolinforefr and gdat.boolasscrefr:
-                    for strgfeat in gmod.namepara.derielemodim[l]:
-                        if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
-                                                                                    (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
-                            continue
-                        for q in gdat.indxrefr:
+                for strgfeat in gmod.namepara.derielemodim[l]:
+                    if not (strgfeat == 'flux' or strgfeat == 'mass' or strgfeat == 'deltllik' or strgfeat == 'nobj') and \
+                                                                                (gdat.boolmakeshrtfram and strgstat == 'this' and strgmodl == 'fitt'):
+                        continue
+                    for q in gdat.indxrefr:
+                        if strgmodl != 'true' and gdat.boolinforefr and gdat.boolasscrefr[q]:
                             if not l in gdat.refrindxpoplassc[q]:
                                 continue
                             if gdat.refr.numbelem[q] == 0:
@@ -12145,13 +12169,13 @@ def plot_samp(gdat, gdatmodi, strgstat, strgmodl, strgphas, strgpdfn='post', gda
             ## highest amplitude element
             # temp
             if gmod.numbpopl > 0:
-                # completeness and false discovery rate
-                if strgmodl != 'true' and gdat.boolasscrefr:
-                    for strgclas in ['cmpl', 'fdis']:
-                        nameinte = strgclas + 'odim/'
-                        limtydat = [getattr(gdat, 'minm' + strgclas), getattr(gdat, 'maxm' + strgclas)]
-                        for l in gmod.indxpopl:
-                            for q in gdat.indxrefr:
+                for q in gdat.indxrefr:
+                    # completeness and false discovery rate
+                    if strgmodl != 'true' and gdat.boolasscrefr[q]:
+                        for strgclas in ['cmpl', 'fdis']:
+                            nameinte = strgclas + 'odim/'
+                            limtydat = [getattr(gdat, 'minm' + strgclas), getattr(gdat, 'maxm' + strgclas)]
+                            for l in gmod.indxpopl:
                                 if not l in gdat.refrindxpoplassc[q]:
                                     continue
                                 if gdat.refr.numbelem[q] == 0 and strgclas == 'cmpl' or gmod.numbparaelem == 0 and strgclas == 'fdis':
@@ -16640,7 +16664,7 @@ def work(pathoutpcnfg, lock, strgpdfn, indxprocwork):
                 for l in gmod.indxpopl:
                     if gdat.fitt.this.numbelem[l] == 0:
                         continue
-                    q = gmod.indxpoplrefrassc[l]
+                    q = gdat.fitt.indxpoplrefrassc[l]
                     print('Fitting population %d, Reference Population %d' % (l, q))
                     #print('Total:')
                     #print(getattr(gdatmodi.this, 'fdis' + namevarb))
