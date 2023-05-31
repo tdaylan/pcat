@@ -401,7 +401,6 @@ def pcat_perf(strgcnfgextnexec=None):
     
     dictargs['numbswep'] = 1000000
     dictargs['numbsamp'] = 1000
-    dictargs['boolmakeplot'] = False
     
     listnamecnfgextn = ['sigcloww', 'sigcnomi', 'sigchigh']
     dictargsvari = {}
@@ -530,7 +529,6 @@ def pcat_anglassc(strgcnfgextnexec=None):
     
     dictargs['numbswep'] = 100000
     dictargs['inittype'] = 'refr'
-    #dictargs['boolmakeplotfinlpost'] = False
     dictargs['numbsamp'] = 1000
     
     listnamecnfgextn = ['vlow', 'loww', 'nomi', 'high', 'vhig']
@@ -574,7 +572,6 @@ def pcat_errr(strgcnfgextnexec=None):
     # temp
     dictargs['numbswep'] = 1000000
     dictargs['numbsamp'] = 1000
-    dictargs['boolmakeplot'] = False
     
     listnamecnfgextn = ['nomi', 'loww', 'high']
     dictargsvari = {}
@@ -852,7 +849,6 @@ def cnfg_lens_simu():
     dictfitt['init']['fittscalbacpbac0en00'] = fittscalbacpbac0en00
     pcat.main.init_image( \
                          typeexpr='HST_WFC3_IR', \
-                         boolmakeplotinit=False, \
                          typedata='simu', \
                          dictfitt=dictfitt, \
 
@@ -943,7 +939,6 @@ def pcat_lens_mock_trueminmdefs(strgcnfgextnexec=None):
     #dictpcatinpt['probtran'] = 0.
     #dictpcatinpt['probspmr'] = 0.
     #dictpcatinpt['probspmr'] = 0.
-    #dictpcatinpt['boolmakeplot'] = False
     dictpcatinpt['typeexpr'] = 'HST_WFC3_IR'
     dictpcatinpt['boolbinsener'] = False
     

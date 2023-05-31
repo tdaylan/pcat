@@ -668,10 +668,23 @@ def retr_indxpixl(gdat, ypos, xpos):
 ## obtain count maps
 def retr_cntp(gdat, sbrt):
    
+    print('Computing the counts per pixel...')
+    print('sbrt')
+    summgene(sbrt)
+    print('gdat.expo')
+    summgene(gdat.expo)
+    print('gdat.apix')
+    print(gdat.apix)
+
     cntp = sbrt * gdat.expo * gdat.apix
     if gdat.enerdiff:
+        print('gdat.deltener')
+        print(gdat.deltener)
         cntp *= gdat.deltener[:, None, None] 
-        
+    
+    print('cntp')
+    summgene(cntp)
+
     return cntp
 
 
@@ -2096,21 +2109,20 @@ def retr_condcatl(gdat):
                         indxstksassc[cntr].append(indxstksthis)
                         indxstksleft.remove(indxstksthis)
             
-                # temp
-                #if gdat.boolmakeplot:
-                #    gdatmodi = tdpy.gdatstrt()
-                #    gdatmodi.this.indxelemfull = deepcopy(listindxelemfull[n])
-                #    for r in range(len(indxstksassc)): 
-                #        calc_poststkscond(gdat, indxstksassc)
-                #    gdatmodi.this.indxelemfull = [[] for l in gmod.indxpopl]
-                #    for indxstkstemp in indxstksleft:
-                #        indxsamptotlcntr = indxtupl[indxstkstemp][0]
-                #        indxpoplcntr = indxtupl[indxstkstemp][1]
-                #        indxelemcntr = indxtupl[indxstkstemp][2]
-                #        gdatmodi.this.paragenrscalfull = gdat.listparagenrscalfull[indxsamptotlcntr, :]
-                #        gdatmodi.this.indxelemfull[].append()
+                if gdat.boolmakeplot:
+                    gdatmodi = tdpy.gdatstrt()
+                    gdatmodi.this.indxelemfull = deepcopy(listindxelemfull[n])
+                    for r in range(len(indxstksassc)): 
+                        calc_poststkscond(gdat, indxstksassc)
+                    gdatmodi.this.indxelemfull = [[] for l in gmod.indxpopl]
+                    for indxstkstemp in indxstksleft:
+                        indxsamptotlcntr = indxtupl[indxstkstemp][0]
+                        indxpoplcntr = indxtupl[indxstkstemp][1]
+                        indxelemcntr = indxtupl[indxstkstemp][2]
+                        gdatmodi.this.paragenrscalfull = gdat.listparagenrscalfull[indxsamptotlcntr, :]
+                        gdatmodi.this.indxelemfull.append()
 
-                #    plot_genemaps(gdat, gdatmodi, 'this', 'cntpdata', strgpdfn, indxenerplot=0, indxdqltplot=0, cond=True)
+                    plot_genemaps(gdat, gdatmodi, 'this', 'cntpdata', strgpdfn, indxenerplot=0, indxdqltplot=0, cond=True)
                 
             cntr += 1
         
@@ -3905,9 +3917,12 @@ def init_image( \
          ### 'real': real data retrieved from databases
          typedata=None, \
          
-         # user interaction
-         ## type of verbosity
-         typeverb=1, \
+         # type of verbosity
+         ## -1: absolutely no text
+         ##  0: no text output except critical warnings
+         ##  1: minimal description of the execution
+         ##  2: detailed description of the execution
+         typeverb=2, \
 
          ## base path where visuals and data will be written
          pathbase=None, \
@@ -4017,6 +4032,7 @@ def init_image( \
     if gdat.typeexpr == 'fire':
         gdat.lablenerunit = '$\mu$m^{-1}'
     
+    # energy axis
     if gdat.typeexpr == 'ferm':
         if gdat.anlytype[4:8] == 'pnts':
             blim = np.logspace(np.log10(0.3), np.log10(10.), 4)
@@ -4168,9 +4184,9 @@ def init_image( \
         typeback = [1.]
     if gdat.typeexpr == 'fire':
         typeback = [1.]
-    
     setp_varb(gdat, 'typeback', valu=typeback)
     
+    # number of Sersic components for the lensing galaxy
     if gdat.typeexpr.startswith('HST_WFC3'):
         numbsersfgrd = 1
     else:
@@ -4267,9 +4283,6 @@ def init_image( \
             gdat.numbsidecarthalf = int(gdat.numbsidecart / 2)
             gdat.numbsideheal = int(np.sqrt(gdat.numbpixlfull / 12))
     
-    if gdat.typeexpr.startswith('HST_WFC3'):
-        gdat.hubbexpofact = 1.63050e-19
-    
     if gdat.strgexpo is None:
         if gdat.typeexpr == 'ferm':
             gdat.strgexpo = 'expofermrec8pntsigal0256.fits'
@@ -4302,7 +4315,7 @@ def init_image( \
         if gdat.numbsidecart is None:
             gdat.numbsidecart = 100
     
-    # exposure
+    # exposure time
     gdat.boolcorrexpo = gdat.expo is not None
     if gdat.typeexpo == 'cons':
         if gdat.typedata == 'simu':
@@ -4313,6 +4326,9 @@ def init_image( \
                 gdat.expo = np.ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbdqltfull))
             if gdat.typepixl == 'cart':
                 gdat.expo = np.ones((gdat.numbenerfull, gdat.numbsidecart**2, gdat.numbdqltfull))
+                if gdat.typeexpr.startswith('HST'):
+                    gdat.expo *= 420. # [seconds]
+
         if gdat.typedata == 'inpt':
             gdat.expo = np.ones((gdat.numbenerfull, gdat.numbpixlfull, gdat.numbdqltfull))
     if gdat.typeexpo == 'file':
@@ -4464,8 +4480,6 @@ def init_image( \
                 gdat.indxenerincl = np.arange(2)
         if gdat.typeexpr.startswith('HST_WFC3'):
             gdat.indxenerincl = np.array([0])
-            #gdat.indxenerincl = np.array([1])
-            #gdat.indxenerincl = np.array([0, 1])
         if gdat.typeexpr == 'gmix':
             gdat.indxenerincl = np.array([0])
     
@@ -4577,6 +4591,7 @@ def init_image( \
                 typeprioflux[l] = None
         setp_varb(gdat, 'typeprioflux', valu=typeprioflux, strgmodl=strgmodl)
     
+    # name of the experiment
     if gdat.strgexprname is None:
         if gdat.typeexpr == 'chan':
             gdat.strgexprname = 'Chandra'
@@ -4931,22 +4946,18 @@ def init_image( \
                             setp_varb(gdat, 'bacp', limt=[1e-10, 1e10], ener='full', back=c)
 
         if gdat.typeexpr.startswith('HST_WFC3'):
-            setp_varb(gdat, 'bacp', minm=1e-1, maxm=1e3, valu=1e1, labl=['$A$', ''], scal='logt', ener=0, back=0, strgmodl=strgmodl, strgstat='this')
+            setp_varb(gdat, 'bacp', minm=1e0, maxm=1e2, valu=1e1, labl=['$A$', ''], scal='logt', ener=0, back=0, strgmodl=strgmodl, strgstat='this')
+        
         if gdat.typeexpr == 'gmix':
             setp_varb(gdat, 'bacp', minm=1e-1, maxm=1e3, valu=1e1, labl=['$A$', ''], scal='logt', ener=0, back=0, strgmodl=strgmodl)
         
         if gdat.typeexpr == 'fire':
             bacp = [1e-1, 1e1]
+        
         if gdat.typeexpr == 'tess':
             bacp = [1e-1, 1e1]
             setp_varb(gdat, 'bacp', limt=bacp, ener='full', back=0)
         
-        # temp
-        if gmod.boollens:
-            gmod.indxisfr = np.arange(1)
-
-        if gdat.typeexpr.startswith('HST_WFC3'):
-            bacp = 2e-7
         if gdat.typeexpr == 'chan':
             bacp = 1.
             if gdat.numbpixlfull == 1:
@@ -4959,14 +4970,18 @@ def init_image( \
                     bacp = 70.04
                     setp_varb(gdat, 'bacp', valu=bacp, back=1)
                 
-                # particle background
                 #if gdat.typeexpr == 'chan':
                 #    if gdat.anlytype == 'spec':
                 #        bacp = [1e-8, 1e-6]
                 #    else:
                 #        bacp = [1e-1, 1e2]
                 #    setp_varb(gdat, 'bacp', limt=bacp, back=1)
-            
+        
+
+        # temp
+        if gmod.boollens:
+            gmod.indxisfr = np.arange(1)
+
         ### element parameter boundaries
         #### spatial
         if gdat.boolbindspat:
@@ -7100,10 +7115,11 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     gmod.numbparagenrbase = len(gmod.namepara.genrbase)
     gmod.indxpara.genrbase = np.arange(gmod.numbparagenrbase)
     
+    # to be deleted
     if strgmodl == 'fitt':
         print('gmod.numbparagenrbase')
         print(gmod.numbparagenrbase)
-        raise Exception('')
+        #raise Exception('')
 
     if gdat.booldiag:
         for name in gmod.namepara.genrbase:
@@ -7793,7 +7809,28 @@ def setp_varb(gdat, \
                 
                 # 'self' is not yet defined
                 if (scal == 'asnh' or scal == 'logt' or scal == 'powr'):
+                    
+                    if gdat.typeverb > 1:
+                        print('Setting the tick labels for the non-linear axis for %s' % strgvarb)
+                        print('minm')
+                        print(minm)
+                        print('maxm')
+                        print(maxm)
+                        print('scal')
+                        print(scal)
+
                     listvalutickmajr, listlabltickmajr, listvalutickminr, listlabltickminr = tdpy.retr_valulabltick(minm, maxm, scal)
+                    
+                    if gdat.typeverb > 1:
+                        print('listlabltickmajr')
+                        print(listlabltickmajr)
+                        print('listvalutickmajr')
+                        print(listvalutickmajr)
+                        print('listlabltickminr')
+                        print(listlabltickminr)
+                        print('listvalutickminr')
+                        print(listvalutickminr)
+
                     setattr(gmodoutp.labltickmajrpara, strgvarb, listlabltickmajr)
                     setattr(gmodoutp.valutickmajrpara, strgvarb, listvalutickmajr)
                     setattr(gmodoutp.labltickminrpara, strgvarb, listlabltickminr)
@@ -8860,7 +8897,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                         raise Exception('')
     
         if gdat.boolbinsener:
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Calculating element spectra...')
             initchro(gdat, gdatmodi, 'spec')
             for l in gmod.indxpopl:
@@ -8881,7 +8918,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
             stopchro(gdat, gdatmodi, 'spec')
         
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Element features:')
             for l in gmod.indxpopl:
                 print('l')
@@ -8982,7 +9019,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         xpossour = gmodstat.paragenrscalfull[gmod.indxpara.xpossour]
         ypossour = gmodstat.paragenrscalfull[gmod.indxpara.ypossour]
     
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('Evaluating the likelihood...')
     
     # process a sample vector and the occupancy list to calculate secondary variables
@@ -9043,7 +9080,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         indxpixlmiss = gdat.indxpixlcart
 
         for e in gmod.indxsersfgrd:
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Evaluating the deflection field due to host galaxy %d' % e)
                 print('xposhost[e]')
                 print(gmodstat.xposhost[e])
@@ -9090,12 +9127,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             
             setattr(gmodstat, 'deflhostisf%d' % e, deflhost[e])
        
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('deflhost[e]')
                 summgene(deflhost[e])
                 
             defl += deflhost[e]
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('After adding the host deflection...')
                 print('defl')
                 summgene(defl)
@@ -9108,7 +9145,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         indxpixltemp = gdat.indxpixlcart
         deflextr = retr_deflextr(gdat, indxpixltemp, gmodstat.sherextr, gmodstat.sangextr)
         defl += deflextr
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('After adding the external deflection...')
             print('defl')
             summgene(defl)
@@ -9123,7 +9160,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     # get the convolution object
     if boolneedpsfnconv and boolcalcpsfnconv:
         initchro(gdat, gdatmodi, 'psfnconv')
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Evaluating the PSF convolution kernel...')
         psfnconv = [[[] for i in gdat.indxener] for m in gdat.indxdqlt]
         if gdat.typepixl == 'cart':
@@ -9248,7 +9285,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
         if gmod.boolelemdeflsubhanyy:
             initchro(gdat, gdatmodi, 'elemdeflsubh')
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Perturbing subhalo deflection field')
             for l in gmod.indxpopl:
                 if gmod.typeelem[l] == 'lens':
@@ -9268,7 +9305,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     #    indxpixlpnts = retr_indxpixl(gdat, gmodstat.dictelem[l]['ypos'][kk], gmodstat.dictelem[l]['xpos'][kk])
                     #    if deflsubh[listindxpixlelem[l][kk], :]
             
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('deflsubh')
                 summgene(deflsubh)
             setattr(gmodstat, 'deflsubh', deflsubh)
@@ -9278,7 +9315,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     raise Exception('Element deflection is not finite.')
 
             defl += deflsubh
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('After adding subhalo deflection to the total deflection')
                 print('defl')
                 summgene(defl)
@@ -9307,7 +9344,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
             stopchro(gdat, gdatmodi, 'elemsbrtextsbgrd')
     
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Element related state variables after perturbations...')
             if gmod.boolelemsbrtdfncanyy:
                 print('sbrtdfnc')
@@ -9324,7 +9361,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         # lensed surface brightness
         initchro(gdat, gdatmodi, 'sbrtlens')
         
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Evaluating lensed surface brightness...')
         
         if strgstat == 'this' or gmod.numbpopl > 0 and gmod.boolelemsbrtextsbgrdanyy:
@@ -9334,13 +9371,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
         if gdat.numbener > 1:
             specsour = retr_spec(gdat, np.array([gmodstat.fluxsour]), sind=np.array([gmodstat.sindsour]))
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('gmodstat.sindsour')
                 print(gmodstat.sindsour)
         else:
             specsour = np.array([gmodstat.fluxsour])
         
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('xpossour')
             print(xpossour)
             print('ypossour')
@@ -9358,13 +9395,13 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
         if gmod.numbpopl > 0 and gmod.boolelemsbrtextsbgrdanyy:
         
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Interpolating the background emission...')
 
             sbrt['bgrdgalx'] = retr_sbrtsers(gdat, gdat.xposgrid[indxpixlelem[0]], gdat.yposgrid[indxpixlelem[0]], \
                                                                             xpossour, ypossour, specsour, gmodstat.sizesour, gmodstat.ellpsour, gmodstat.anglsour)
             
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('sbrt[bgrdgalx]')
                 summgene(sbrt['bgrdgalx'])
                 print('sbrtextsbgrd')
@@ -9382,7 +9419,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     # temp -- T?
                     sbrt['lens'][ii, :, m] = sbrtbgrdobjt(yposprim, xposprim, grid=False).flatten()
         else:
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Not interpolating the background emission...')
             
             sbrt['lens'] = retr_sbrtsers(gdat, gdat.xposgrid - defl[gdat.indxpixl, 0], \
@@ -9414,14 +9451,14 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         
 
         for e in gmod.indxsersfgrd:
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('Evaluating the host galaxy surface brightness...')
             if gdat.numbener > 1:
                 spechost = retr_spec(gdat, np.array([gmodstat.fluxhost[e]]), sind=np.array([gmodstat.sindhost[e]]))
             else:
                 spechost = np.array([gmodstat.fluxhost[e]])
             
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('xposhost[e]')
                 print(gmodstat.xposhost[e] * gdat.anglfact)
                 print('yposhost[e]')
@@ -9443,7 +9480,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             setattr(gmodstat, 'sbrthostisf%d' % e, sbrt['hostisf%d' % e])
                 
         #sbrthost = sbrt['host']
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             for e in gmod.indxsersfgrd:
                 print('e')
                 print(e)
@@ -9453,7 +9490,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     
     ## model emission
     initchro(gdat, gdatmodi, 'sbrtmodl')
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('Summing up the model emission...')
     
     sbrt['modlraww'] = np.zeros((gdat.numbener, gdat.numbpixlcart, gdat.numbdqlt))
@@ -9476,12 +9513,12 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             if np.amax(sbrttemp) == 0.:
                 raise Exception('')
 
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('name')
             print(name)
             print('sbrt[name]')
             summgene(sbrt[name])
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         for ii, i in enumerate(gdat.indxener):
             print('ii, i')
             print(ii, i)
@@ -9495,7 +9532,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     if gmod.convdiffanyy and (gmod.typeevalpsfn == 'full' or gmod.typeevalpsfn == 'conv'):
         sbrt['modlconv'] = []
         # temp -- isotropic background proposals are unnecessarily entering this clause
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Convolving the model image with the PSF...') 
         sbrt['modlconv'] = np.zeros((gdat.numbener, gdat.numbpixl, gdat.numbdqlt))
         for ii, i in enumerate(gdat.indxener):
@@ -9522,24 +9559,24 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
         # temp -- this could be made faster -- need the copy() statement because sbrtdfnc gets added to sbrtmodl afterwards
         sbrt['modl'] = np.copy(sbrt['modlconv'])
     else:
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Skipping PSF convolution of the model...')
         sbrt['modl'] = np.copy(sbrt['modlraww'])
     
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('sbrt[modl]')
         summgene(sbrt['modl'])
 
     ## add PSF-convolved delta functions to the model
     if gmod.numbpopl > 0 and gmod.boolelemsbrtdfncanyy:
-        if gdat.typeverb > 2:
+        if gdat.typeverb > 1:
             print('Adding delta functions into the model...')
             print('sbrt[dfnc]')
             summgene(sbrt['dfnc'])
         sbrt['modl'] += sbrt['dfnc']
     stopchro(gdat, gdatmodi, 'sbrtmodl')
     
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('sbrt[modl]')
         summgene(sbrt['modl'])
 
@@ -9596,7 +9633,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
     # log-prior
     initchro(gdat, gdatmodi, 'lpri')
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('Evaluating the prior...')
         
     lpri = np.zeros(gmod.numblpri)
@@ -9650,7 +9687,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     initchro(gdat, gdatmodi, 'llik')
     llik = retr_llik_bind(gdat, strgmodl, cntp['modl'])
     
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('cntp[modl]')
         summgene(cntp['modl'])
         print('np.sum(cntp[modl], (1, 2))')
@@ -9678,7 +9715,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     setattr(gmodstat, 'llikmean', gmodstat.lliktotl / gdat.numbdata) 
     setattr(gmodstat, 'llikcmea', gmodstat.lliktotl / (gdat.numbdata - numbdoff)) 
 
-    if gdat.typeverb > 2:
+    if gdat.typeverb > 1:
         print('llik')
         summgene(llik)
     if gdat.typeverb > 1:
@@ -9982,7 +10019,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             if gmod.typeelem[l] == 'lghtpntspuls':
                 gmodstat.dictelem[l]['mass'] = full([numbelem[l]], 3.)
 
-            if gdat.typeverb > 2:
+            if gdat.typeverb > 1:
                 print('l')
                 print(l)
             if gdat.boolbindspat:
@@ -10000,7 +10037,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
             #### delta log-likelihood
             gmodstat.dictelem[l]['deltllik'] = np.zeros(gmodstat.numbelem[l])
             if not (strgmodl == 'true' and gdat.checprio): 
-                if gdat.typeverb > 2:
+                if gdat.typeverb > 1:
                     print('Calculating log-likelihood differences when removing elements from the model.')
                 for k in range(gmodstat.numbelem[l]):
                     
@@ -10028,7 +10065,7 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
                     nextlliktotl = gdatobjttemp.next.lliktotl
                     gmodstat.dictelem[l]['deltllik'][k] = gmodstat.lliktotl - nextlliktotl
                     
-                if gdat.typeverb > 2:
+                if gdat.typeverb > 1:
                     print('deltllik calculation ended.')
     
     # more derived parameters
@@ -10093,6 +10130,10 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
     #### count maps
     cntp = dict()
     for name in gmod.listnamegcom:
+        
+        if gdat.typeverb > 1:
+            print('Computing the count map for %s...' % name)
+        
         cntp[name] = retr_cntp(gdat, sbrt[name])
         setattr(gmodstat, 'cntp' + name, cntp[name])
     
@@ -10542,13 +10583,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, fast=False, boolinit=False):
 
         for q in gdat.indxrefr:
             
-            print('hey')
             # correlate the catalog sample with the reference catalog
             if gdat.boolinforefr and not (strgmodl == 'true' and gdat.typedata == 'simu') and gdat.boolasscrefr[q]:
             
-                print('mey')
-                raise Exception('')
-
                 for l in gmod.indxpopl:
                     if gdat.refr.numbelem[q] > 0:
                         cmpl = np.array([float(len(indxelemrefrasschits[q][l])) / gdat.refr.numbelem[q]])
@@ -14805,9 +14842,12 @@ def sample( \
          ### 'real': real data retrieved from databases
          typedata=None, \
          
-         # user interaction
-         ## type of verbosity
-         typeverb=1, \
+         # type of verbosity
+         ## -1: absolutely no text
+         ##  0: no text output except critical warnings
+         ##  1: minimal description of the execution
+         ##  2: detailed description of the execution
+         typeverb=2, \
 
          ## base path where visuals and data will be written
          pathbase=None, \
