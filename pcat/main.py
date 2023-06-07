@@ -15061,9 +15061,6 @@ def sample( \
                     gdat.stdp = thisfile['stdp'][()]
                 thisfile.close()
 
-        
-        
-
         # turn off relevant proposal types
         gdat.numbprop = 5
         gdat.indxprop = np.arange(gdat.numbprop)
