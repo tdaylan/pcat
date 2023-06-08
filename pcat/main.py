@@ -3763,6 +3763,9 @@ def init_image( \
          ## Boolean to turn on diagnostic mode
          booldiag=True, \
          
+         # Boolean flag to perform inference
+         boolinfe=True, \
+
          # Boolean flag to make the frame plots only for the central energy and PSF bin
          boolmakeframcent=True, \
          
@@ -6639,10 +6642,13 @@ def init_image( \
         gmod.corrparagenrscalbase = np.empty(gmod.numbparagenrbase)
         for k in gmod.indxpara.genrbase:
             gmod.corrparagenrscalbase[k] = getattr(gdat.true.this, gmod.namepara.genrbase[k])
-
-    dictglob = sample( \
-                      **dictpcat, \
-                     )
+    
+    dictpcat['gdat'] = gdat
+    
+    if gdat.boolinfe:
+        dictglob = sample( \
+                          **dictpcat, \
+                         )
 
 
 
@@ -14716,6 +14722,8 @@ def defn_tdim(gdat):
 
 def sample( \
          
+         gdat, \
+
          # dictionary defining the model to sample from
          #dictmodl=None, \
     
@@ -14724,7 +14732,7 @@ def sample( \
          # miscelleneaous
          ## type of PDF to sample from
          strgpdfn='post', \
-
+        
          # diagnostics
          ## Boolean to turn on diagnostic mode
          booldiag=True, \
@@ -14867,7 +14875,9 @@ def sample( \
 
     # preliminary setup
     # construct the global object 
-    gdat = tdpy.gdatstrt()
+    if gdat is None:
+        gdat = tdpy.gdatstrt()
+    
     for attr, valu in locals().items():
         if '__' not in attr and attr != 'gdat':
             setattr(gdat, attr, valu)
@@ -14880,14 +14890,13 @@ def sample( \
         raise Exception('Bad thinning factor.')
     
     setup_pcat(gdat)
-
-    gdat.fitt = tdpy.gdatstrt()
     
-    print('gdat.liststrgfeatpara')
-    print(gdat.liststrgfeatpara)
-    for strgfeatpara in gdat.liststrgfeatpara:
-        setattr(gdat.fitt, strgfeatpara + 'para', tdpy.gdatstrt())
-        setattr(gdat, strgfeatpara + 'para', tdpy.gdatstrt())
+    # to be deleted?
+    #print('gdat.liststrgfeatpara')
+    #print(gdat.liststrgfeatpara)
+    #for strgfeatpara in gdat.liststrgfeatpara:
+    #    setattr(gdat.fitt, strgfeatpara + 'para', tdpy.gdatstrt())
+    #    setattr(gdat, strgfeatpara + 'para', tdpy.gdatstrt())
     
     gdat.strgswep = '%d' % (gdat.numbswep)
     

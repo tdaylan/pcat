@@ -835,6 +835,8 @@ def cnfg_lens_simu():
         fittstdvbacpbac0en00 = None
         fittscalbacpbac0en00 = None
     
+    boolinfe = False
+
     maxmnumbelem = np.array([0])
 
     dictfitt = dict()
@@ -857,6 +859,8 @@ def cnfg_lens_simu():
                          namerecostat='pcat_lens_inpt', \
                          maxmgangdata=maxmgangdata, \
                          strgexprsbrt=strgexprsbrt, \
+                         boolinfe=boolinfe, \
+
                         )
     
 
