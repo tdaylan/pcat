@@ -8116,11 +8116,11 @@ def make_cbar(gdat, axis, imag, strgvarb):
     # make a color bar
     cbar = plt.colorbar(imag, ax=axis, fraction=0.05, aspect=15)
     
-    if hasattr(gdat.valutickmajrpara, strgvarb):
-        valutickmajr = getattr(gdat.valutickmajrpara, strgvarb)
-        labltickmajr = getattr(gdat.labltickmajrpara, strgvarb)
-        cbar.set_ticks(valutickmajr)
-        cbar.set_ticklabels(labltickmajr)
+    #if hasattr(gdat.valutickmajrpara, strgvarb):
+    #    valutickmajr = getattr(gdat.valutickmajrpara, strgvarb)
+    #    labltickmajr = getattr(gdat.labltickmajrpara, strgvarb)
+    #    cbar.set_ticks(valutickmajr)
+    #    cbar.set_ticklabels(labltickmajr)
     
     #print('valutickmajr')
     #print(valutickmajr)
@@ -14692,9 +14692,13 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
     
     imag = retr_imag(gdat, axis, maps, strgstat, strgmodl, strgcbar, indxenerplot, indxdqltplot, booltdim=booltdim)
     
+    # make a color bar
     make_cbar(gdat, axis, imag, strgvarb)
     
+    # make legend
     make_legdmaps(gdat, strgstat, strgmodl, axis)
+    
+    # superimpose the markers
     if gdat.boolplotelem:
         supr_fram(gdat, gdatmodi, strgstat, strgmodl, axis, indxpoplplot)
 
