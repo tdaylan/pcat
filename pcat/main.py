@@ -14695,6 +14695,11 @@ def plot_genemaps(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, strgvarb, indxen
     # make a color bar
     make_cbar(gdat, axis, imag, strgvarb)
     
+    print('strgvarb')
+    print(strgvarb)
+    print('maps')
+    summgene(maps)
+    
     # make legend
     make_legdmaps(gdat, strgstat, strgmodl, axis)
     
