@@ -8862,6 +8862,181 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
         # Boolean flag to indicate that the object to interpolate the PSF will be computed
         boolcalcpsfnintp = strgmodl == 'true' or boolinit or gdat.boolmodipsfn
 
+    # next 157 lines got stripped of gmod and gmodstat by mistake...
+    if numbpopl > 0:
+        
+        # check if all active generative parameters are finite
+        if gdat.booldiag:
+            indxparatemp = []
+            for l in indxpopl:
+                indxparatemp.append(indxparagenrelemfull[l]['full'])
+            indxparatemp.append(indxpara.genrbase)
+            indxpara.genrfull = np.concatenate(indxparatemp)
+            if not np.isfinite(paragenr[indxpara.genrfull]).all():
+                print('')
+                print('')
+                print('')
+                raise Exception('')
+
+        numbelem = np.empty(numbpopl, dtype=int)
+        indxelem = [[] for l in indxpopl]
+        for l in indxpopl:
+            numbelem[l] = paragenr[indxpara.numbelem[l]].astype(int)
+            indxelem[l] = np.arange(numbelem[l])
+            numbelem[l] = np.sum(numbelem[l])
+        
+        numbelemtotl = np.sum(numbelem) 
+
+        dictelem = [[] for l in indxpopl]
+        for l in indxpopl:
+            dictelem[l] = dict()
+            for strgfeat in namepara.genrelemdefa:
+                dictelem[l][strgfeat] = []
+            for nameparagenrelem in namepara.genrelem[l]:
+                dictelem[l][nameparagenrelem] = paragenr[indxparagenrelemfull[l][nameparagenrelem]]
+                if gdat.booldiag:
+                    if ((abs(paragenr[indxparagenrelemfull[l][nameparagenrelem]]) < 1e-100 ) & \
+                        (abs(paragenr[indxparagenrelemfull[l][nameparagenrelem]]) > 0.)).any():
+                        raise Exception('')
+
+                    if numbelem[l] != len(dictelem[l][nameparagenrelem]):
+                        print('l')
+                        print(l)
+                        print('numbelem[l]')
+                        print(numbelem[l])
+                        print('dictelem[l]')
+                        print(dictelem[l])
+                        print('dictelem[l][nameparagenrelem]')
+                        print(dictelem[l][nameparagenrelem])
+                        print('nameparagenrelem')
+                        print(nameparagenrelem)
+                        raise Exception('')
+    
+        if gdat.boolbinsener:
+            if gdat.typeverb > 1:
+                print('Calculating element spectra...')
+            tdpy.initchro(gdat, gdatmodi, 'spec')
+            for l in indxpopl:
+                if typeelem[l].startswith('lght'):
+                    for strgfeat in namepara.genrelem[l]:
+                        sindcolr = [dictelem[l]['sindcolr%04d' % i] for i in gdat.indxenerinde]
+                        dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], \
+                                                    sind=dictelem[l]['sind'], curv=dictelem[l]['curv'], \
+                                                    expc=dictelem[l]['expc'], sindcolr=sindcolr, spectype=spectype[l])
+                        if typeelem[l].startswith('lghtline'):
+                            if typeelem[l] == 'lghtlinevoig':
+                                dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], \
+                                                                                elin=dictelem[l]['elin'], sigm=dictelem[l]['sigm'], \
+                                                                                gamm=dictelem[l]['gamm'], spectype=spectype[l])
+                            else:
+                                dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], elin=dictelem[l]['elin'], \
+                                                                                                edisintp=gdat.edisintp, spectype=spectype[l])
+
+            stopchro(gdat, gdatmodi, 'spec')
+        
+        if gdat.booldiag:
+            for l in indxpopl:
+                for g, nameparagenrelem in enumerate(namepara.genrelem[l]):
+                    if (scalpara.genrelem[l][g] != 'gaus' and not scalpara.genrelem[l][g].startswith('lnor')) and  \
+                       (scalpara.genrelem[l][g] != 'expo' and (dictelem[l][nameparagenrelem] < getattr(minmpara, nameparagenrelem)).any()) or \
+                                        (dictelem[l][nameparagenrelem] > getattr(maxmpara, nameparagenrelem)).any():
+                        
+                        print('')
+                        print('')
+                        print('')
+                        print('l, g')
+                        print(l, g)
+                        print('nameparagenrelem')
+                        print(nameparagenrelem)
+                        print('dictelem[l][nameparagenrelem]')
+                        summgene(dictelem[l][nameparagenrelem])
+                        print('getattr(gmod, minm + nameparagenrelem)')
+                        print(getattr(minmpara, nameparagenrelem))
+                        print('getattr(gmod, maxm + nameparagenrelem)')
+                        print(getattr(maxmpara, nameparagenrelem))
+                        print('scalpara.genrelem[l][g]')
+                        print(scalpara.genrelem[l][g])
+                        raise Exception('')
+           
+            for l in indxpopl:
+                if typeelem[l] == 'lens':
+                    if gdat.variasca:
+                        indx = np.where(paragenr[indxparagenrelemfull[l]['acut']] < 0.)[0]
+                        if indx.size > 0:
+                            raise Exception('')
+                    if gdat.variacut:
+                        indx = np.where(paragenr[indxparagenrelemfull[l]['asca']] < 0.)[0]
+                        if indx.size > 0:
+                            raise Exception('')
+    
+        # calculate element spectra
+        for l in indxpopl:
+            if typeelem[l].startswith('lght'):
+                    
+                # evaluate horizontal and vertical position for elements whose position is a power law in image-centric radius
+                if typespatdist[l] == 'glc3':
+                    dictelem[l]['dlos'], dictelem[l]['xpos'], dictelem[l]['ypos'] = retr_glc3(dictelem[l]['dglc'], \
+                                                                                                        dictelem[l]['thet'], dictelem[l]['phii'])
+                
+                if typespatdist[l] == 'gangexpo':
+                    dictelem[l]['xpos'], dictelem[l]['ypos'], = retr_xposypos(dictelem[l]['gang'], \
+                                                                                                        dictelem[l]['aang'])
+                    
+                    if gdat.booldiag:
+                        if numbelem[l] > 0:
+                            if np.amin(dictelem[l]['xpos']) < minmxpos or \
+                               np.amax(dictelem[l]['xpos']) > maxmxpos or \
+                               np.amin(dictelem[l]['ypos']) < minmypos or \
+                               np.amax(dictelem[l]['ypos']) > maxmypos:
+                                raise Exception('Bad coordinates!')
+
+                if typespatdist[l] == 'los3':
+                    dictelem[l]['dglc'], dictelem[l]['thet'], dictelem[l]['phii'] = retr_los3(dictelem[l]['dlos'], \
+                                                                                                        dictelem[l]['xpos'], dictelem[l]['ypos'])
+
+                # evaluate flux for pulsars
+                if typeelem[l] == 'lghtpntspuls':
+                    dictelem[l]['lumi'] = retr_lumipuls(dictelem[l]['geff'], dictelem[l]['magf'], dictelem[l]['per0'])
+                if typeelem[l] == 'lghtpntsagnntrue':
+                    dictelem[l]['reds'] = gdat.redsfromdlosobjt(dictelem[l]['dlos'])
+                    dictelem[l]['lumi'] = dictelem[l]['lum0'] * (1. + dictelem[l]['reds'])**4
+                if typeelem[l] == 'lghtpntspuls' or typeelem[l] == 'lghtpntsagnntrue':
+                    dictelem[l]['flux'] = retr_flux(gdat, dictelem[l]['lumi'], dictelem[l]['dlos'])
+                # evaluate spectra
+                if typeelem[l].startswith('lghtline'):
+                    if typeelem[l] == 'lghtlinevoig':
+                        dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], elin=dictelem[l]['elin'], sigm=dictelem[l]['sigm'], \
+                                                                                                          gamm=dictelem[l]['gamm'], spectype=spectype[l])
+                    else:
+                        dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], \
+                                                                                            elin=dictelem[l]['elin'], edisintp=gdat.edisintp, spectype=spectype[l])
+                else:
+                    sindcolr = [dictelem[l]['sindcolr%04d' % i] for i in gdat.indxenerinde]
+                    dictelem[l]['spec'] = retr_spec(gdat, dictelem[l]['flux'], sind=dictelem[l]['sind'], curv=dictelem[l]['curv'], \
+                                                                                                expc=dictelem[l]['expc'], sindcolr=sindcolr, spectype=spectype[l])
+
+    # determine the indices of the pixels over which element kernels will be evaluated
+    if gdat.boolbindspat:
+        if numbpopl > 0:
+            listindxpixlelem = [[] for l in indxpopl]
+            listindxpixlelemconc = [[] for l in indxpopl]
+            for l in indxpopl:
+                if numbelem[l] > 0:
+                    listindxpixlelem[l], listindxpixlelemconc[l] = retr_indxpixlelemconc(gdat, strgmodl, dictelem, l)
+                    
+    stopchro(gdat, gdatmodi, 'elem')
+    
+    ### evaluate the model
+    tdpy.initchro(gdat, gdatmodi, 'modl')
+    
+
+
+
+
+
+    indxparagenrelemfull = retr_indxparagenrelemfull(gdat, indxelemfull, strgmodl)
+    if gmod.boollens:
+        dictchaloutp = chalcedon.eval_emislens(gdat, boolcalcpsfnconv, boolcalcpsfnintp)
     eval_modl(gdat, gdatmodi, strgstat, strgmodl, boolcalcpsfnconv, boolcalcpsfnintp)
 
     ### count map
