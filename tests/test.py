@@ -791,8 +791,9 @@ def cnfg_GaussianMix():
     '''
     Gaussian Mixture
     '''
-    
+    dictglob = dict()
     pcat.init( \
+              dictglob, \
              )
 
 
