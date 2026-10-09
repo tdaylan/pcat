@@ -76,8 +76,12 @@ def sample_fixed_chains(state, log_likelihood, log_prior, names, scales, minima,
             numbburn=burn_count, numbsamp=sample_count, pathbase=root,
             strgcnfg='fixed_' + uuid4().hex[:16], typeverb=typeverb, **dictpcat,
         )
-        chain = np.asarray(result.listpostparagenrscalbase).reshape(chain_count, sample_count, -1)
-        logprob = np.asarray(result.listpostlpostotl).reshape(chain_count, sample_count)
+        chain = np.asarray(result.listpostparagenrscalbase).reshape(
+            sample_count, chain_count, -1
+        ).transpose(1, 0, 2)
+        logprob = np.asarray(result.listpostlpostotl).reshape(
+            sample_count, chain_count
+        ).T
         outputs = (chain, logprob)
         if estimate_log_evidence:
             evidence = estimate_evidence(
@@ -140,13 +144,16 @@ def sample_allesfitter_pcat(datadir):
         if bound[0] == 'uniform':
             initial[index] = np.clip(initial[index], np.nextafter(bound[1], bound[2]),
                                      np.nextafter(bound[2], bound[1]))
-    chain, logprob = sample_fixed_chains(
+    chain, logprob, result = sample_fixed_chains(
         datadir, _allesfitter_likelihood, None,
         ['parameter_%d' % index for index in range(len(bounds))], prior_types,
         np.asarray(minima), np.asarray(maxima), np.asarray(means), np.asarray(stdvs),
         initial[None, :], walker_count, step_count,
-        0, datadir, 0,
+        0, datadir, 0, return_state=True,
     )
+    accepted = np.asarray(result.listpostboolpropaccp, dtype=bool).reshape(
+        -1, walker_count
+    ).sum(axis=0)
     path = Path(basement.outdir) / 'mcmc_save.h5'
     path.parent.mkdir(parents=True, exist_ok=True)
     print('Writing to %s...' % path)
@@ -156,7 +163,7 @@ def sample_allesfitter_pcat(datadir):
                            ndim=len(bounds), has_blobs=False, iteration=step_count)
         group.create_dataset('chain', data=chain.transpose(1, 0, 2), maxshape=(None, walker_count, len(bounds)))
         group.create_dataset('log_prob', data=logprob.T, maxshape=(None, walker_count))
-        group.create_dataset('accepted', data=np.zeros(walker_count))
+        group.create_dataset('accepted', data=accepted)
     return path
 
 

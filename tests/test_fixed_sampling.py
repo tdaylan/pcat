@@ -75,11 +75,45 @@ def test_fixed_chains_estimate_constant_likelihood_evidence(tmp_path):
     assert abs(evidence['log_evidence'] - np.log(3.)) < 4 * evidence['relative_error']
 
 
+def test_fixed_chains_preserve_worker_and_sweep_order(tmp_path, monkeypatch):
+    import types
+    import pcat.fixed as fixed
+
+    parameter_samples = np.array([[10., 20.], [11., 21.], [12., 22.]])[:, :, None]
+    log_probability = np.array([[100., 200.], [101., 201.], [102., 202.]])
+    monkeypatch.setattr(fixed, 'sample_fixed', lambda **kwargs: types.SimpleNamespace(
+        listpostparagenrscalbase=parameter_samples,
+        listpostlpostotl=log_probability,
+    ))
+
+    chains, logprob = sample_fixed_chains(
+        None, constant_legacy_likelihood, None, ('x',), ('self',),
+        (0.,), (30.,), None, None, np.array([[0.]]),
+        2, 3, 0, pathbase=str(tmp_path),
+    )
+
+    np.testing.assert_array_equal(chains[:, :, 0], [[10., 11., 12.], [20., 21., 22.]])
+    np.testing.assert_array_equal(logprob, [[100., 101., 102.], [200., 201., 202.]])
+
+
 @pytest.mark.parametrize('initial_value', [0.0, 1.0])
 def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_value):
     import sys
     import types
     import h5py
+    import pcat.fixed as fixed
+
+    original_sample_fixed_chains = fixed.sample_fixed_chains
+    recorded_acceptances = {}
+
+    def capture_acceptances(*args, **kwargs):
+        chain, logprob, result = original_sample_fixed_chains(*args, **kwargs)
+        recorded_acceptances['counts'] = np.asarray(
+            result.listpostboolpropaccp, dtype=bool
+        ).reshape(-1, 1).sum(axis=0)
+        return chain, logprob, result
+
+    monkeypatch.setattr(fixed, 'sample_fixed_chains', capture_acceptances)
 
     config = types.ModuleType('allesfitter.config')
     config.init = lambda path: setattr(config, 'BASEMENT', types.SimpleNamespace(
@@ -100,6 +134,7 @@ def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_val
     with h5py.File(path, 'r') as saved:
         assert saved['mcmc/chain'].shape == (8, 1, 1)
         assert np.all(np.isfinite(saved['mcmc/log_prob'][:]))
+        np.testing.assert_array_equal(saved['mcmc/accepted'][:], recorded_acceptances['counts'])
 
 
 def test_generic_model_uses_main_sampling_pipeline(tmp_path):

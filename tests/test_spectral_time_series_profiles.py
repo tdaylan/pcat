@@ -14,6 +14,7 @@ from pcat.time_series import (
     flare_profile_parameters,
     rotating_spot_parameters,
 )
+from pcat.demo import write_time_series_fits
 
 
 @pytest.mark.parametrize(
@@ -116,3 +117,20 @@ def test_native_parameter_sets_are_profile_specific():
     assert spectral_profile_parameters("pvoi") == ("flux", "elin", "sigm", "gamm", "frac")
     assert spectral_profile_parameters("skew") == ("flux", "elin", "sigm", "skew")
     assert flare_profile_parameters("flarfred") == ("flux", "elin", "scalrise", "scalfall")
+
+
+def test_time_series_fits_use_each_bin_width_and_return_baseline(tmp_path):
+    from astropy.io import fits
+
+    edges = np.array([1.0, 1.1, 1.4])
+    counts = np.array([12.0, 24.0])
+    baseline = write_time_series_fits(tmp_path, edges, counts, 5.0)
+
+    np.testing.assert_array_equal(fits.getdata(tmp_path / "sbrt.fits").ravel(), counts)
+    np.testing.assert_allclose(fits.getdata(tmp_path / "expo.fits").ravel(), [10.0, 1.0 / 0.3])
+    np.testing.assert_array_equal(baseline[:, 0, 0], [5.0, 5.0])
+
+
+def test_time_series_fits_reject_nonincreasing_bin_edges(tmp_path):
+    with pytest.raises(ValueError, match="strictly increasing"):
+        write_time_series_fits(tmp_path, [1.0, 1.2, 1.2], [3.0, 4.0], 2.0)

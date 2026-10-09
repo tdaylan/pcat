@@ -7,17 +7,18 @@ import argparse
 from pathlib import Path
 import shutil
 
-import astropy.io.fits
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pcat import sampling
+from pcat.demo import write_time_series_fits
 from pcat.plotting import animation_phase_label, animation_states
 from pcat.time_series import evaluate_rotating_spot_profile, retr_dictpropelemtmpl
 
 
 EXAMPLE_PATH = Path(__file__).resolve().parent
 RUN_NAME = EXAMPLE_PATH.name
+PATH_INPT = EXAMPLE_PATH / "data" / "inpt"
 TIME_OFFSET_DAYS = 1.0  # [day]
 DURATION_DAYS = 25.6  # [day]
 CADENCE_DAYS = 0.1  # [day]
@@ -55,22 +56,6 @@ def simulate_light_curve(seed=12):
     expected_counts = BASELINE_COUNTS + spot_model.sum(axis=1)
     observed_counts = random.poisson(expected_counts).astype(float)
     return edges, time_days, observed_counts, expected_counts
-
-
-def write_pcat_inputs(edges, observed_counts):
-    """Write simulated Poisson counts and exposure for PCAT's input-data path."""
-
-    input_path = EXAMPLE_PATH / "data" / "inpt"
-    input_path.mkdir(parents=True, exist_ok=True)
-    exposure = np.full(observed_counts.size, 1.0 / CADENCE_DAYS)
-    for name, values in (
-        ("sbrt.fits", observed_counts[:, None, None, None]),
-        ("expo.fits", exposure[:, None, None]),
-    ):
-        path = input_path / name
-        print(f"Writing to {path}...")
-        astropy.io.fits.writeto(path, values, overwrite=True)
-    return np.full((edges.size - 1, 1, 1), BASELINE_COUNTS)
 
 
 def build_birth_proposal(time_days, observed_counts):
@@ -214,7 +199,7 @@ def run_example(number_sweeps=100000, seed=12):
     """Simulate rotating dark spots and fit a variable-size spot catalog."""
 
     edges, time_days, observed_counts, _ = simulate_light_curve(seed)
-    template = write_pcat_inputs(edges, observed_counts)
+    template = write_time_series_fits(PATH_INPT, edges, observed_counts, BASELINE_COUNTS)
     run_pcat(edges, template, number_sweeps, build_birth_proposal(time_days, observed_counts))
     posterior = read_posterior()
     frames = render_spot_posterior_frames(time_days, observed_counts, posterior)

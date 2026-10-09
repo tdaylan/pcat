@@ -20,12 +20,16 @@ from tdpy.cli import add_plot_arguments
 import shutil
 from pathlib import Path
 
-import astropy.io.fits
 import matplotlib.pyplot as plt
 import numpy as np
 import tdpy
 from nicomedia import retr_lcurmodl_flarsing
-from pcat.demo import configure_example_style, load_example_posterior, save_example_figure
+from pcat.demo import (
+    configure_example_style,
+    load_example_posterior,
+    save_example_figure,
+    write_time_series_fits,
+)
 from pcat.time_series import evaluate_flare_profile, retr_dictpropelemtmpl
 from pcat.plotting import animation_phase_label, animation_states
 
@@ -78,20 +82,6 @@ def simulate_light_curve(catalog, rng):
     expcnts = relflux * BASELINE_COUNT_RATE
     obsvcnts = rng.poisson(expcnts).astype(float)
     return edges, meantime, obsvcnts, expcnts
-
-
-def write_pcat_inputs(edges, obsvcnts):
-    """Write the observed counts and the constant exposure PCAT needs to recover them exactly."""
-    width = np.diff(edges)  # [day]
-    exposure = 1.0 / width  # so that counts = sbrt * expo * width recovers obsvcnts exactly
-
-    PATH_INPT.mkdir(parents=True, exist_ok=True)
-    for name, array in [("sbrt.fits", obsvcnts[:, None, None, None]), ("expo.fits", exposure[:, None, None])]:
-        path = PATH_INPT / name
-        print(f"Writing to {path}...")
-        astropy.io.fits.writeto(path, array, overwrite=True)
-    template = np.full((edges.size - 1, 1, 1), BASELINE_COUNT_RATE)
-    return template
 
 
 def build_birth_proposal(edges, observed_counts):
@@ -259,7 +249,7 @@ def main():
     rng = np.random.default_rng(0)
     catalog = simulate_flare_catalog(rng)
     edges, meantime, obsvcnts, expcnts = simulate_light_curve(catalog, rng)
-    template = write_pcat_inputs(edges, obsvcnts)
+    template = write_time_series_fits(PATH_INPT, edges, obsvcnts, BASELINE_COUNT_RATE)
     if not arguments.skip_sampling:
         run_pcat(edges, template, numbswep, build_birth_proposal(edges, obsvcnts))
     posterior = load_example_posterior(

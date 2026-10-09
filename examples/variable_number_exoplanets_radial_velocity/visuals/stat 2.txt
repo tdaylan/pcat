@@ -1,0 +1,1 @@
+/Users/tdaylan/Documents/work/git/pcat/examples/variable_number_exoplanets_radial_velocity/data/outp/variable_number_exoplanets_radial_velocity/stat.txt

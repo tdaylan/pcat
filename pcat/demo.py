@@ -47,6 +47,33 @@ def run_pipeline_demo(output_root: Path, **configuration: object) -> None:
     print(f"PCAT wrote outputs under {output_root}")
 
 
+def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, baseline_counts):
+    """Write a one-dimensional count series in PCAT's FITS input convention."""
+    import astropy.io.fits
+    import numpy as np
+
+    bin_edges = np.asarray(bin_edges, dtype=float)
+    observed_counts = np.asarray(observed_counts, dtype=float)
+    if (bin_edges.ndim != 1 or observed_counts.ndim != 1
+            or bin_edges.size != observed_counts.size + 1
+            or not np.isfinite(bin_edges).all() or np.any(np.diff(bin_edges) <= 0.0)):
+        raise ValueError("bin edges must be finite, strictly increasing, and bracket every count")
+    if not np.isfinite(observed_counts).all():
+        raise ValueError("observed counts must be finite")
+
+    input_directory = Path(input_directory)
+    input_directory.mkdir(parents=True, exist_ok=True)
+    exposure = 1.0 / np.diff(bin_edges)  # [inverse time unit]
+    for name, values in (
+        ("sbrt.fits", observed_counts[:, None, None, None]),
+        ("expo.fits", exposure[:, None, None]),
+    ):
+        path = input_directory / name
+        print(f"Writing to {path}...")
+        astropy.io.fits.writeto(path, values, overwrite=True)
+    return np.full((observed_counts.size, 1, 1), baseline_counts, dtype=float)
+
+
 def configure_example_style(typeplotback: str = "white") -> str:
     """Apply the shared light or dark theme and return its foreground color."""
     colrfore = "white" if typeplotback == "dark" else "black"

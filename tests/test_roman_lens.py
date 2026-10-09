@@ -76,6 +76,27 @@ def test_simulated_roman_source_produces_bright_einstein_arc():
     assert image[(radius > 0.8) & (radius < 1.2)].mean() > 3 * image[radius < 0.2].mean()
 
 
+def test_elliptical_psf_render_preserves_flux_and_uses_orientation():
+    circular_config = RomanLensConfig(
+        number_side=64, pixel_scale=0.08, psf_fwhm=0.16, source_counts=1.0
+    )
+    elliptical_config = RomanLensConfig(
+        number_side=64,
+        pixel_scale=0.08,
+        psf_fwhm=0.16,
+        psf_fwhm_minor=0.10,
+        psf_angle=np.pi / 4,
+        source_counts=1.0,
+    )
+    parameters = (1.2, 0.0, 0.0, 0.12, 0.65, 0.3)
+
+    circular = render_lens(circular_config, *parameters)
+    elliptical = render_lens(elliptical_config, *parameters)
+
+    assert np.isclose(elliptical.sum(), circular.sum(), rtol=1e-3)
+    assert not np.allclose(elliptical, circular)
+
+
 def test_gaussian_lens_likelihood_uses_variance_and_ignores_invalid_pixels():
     config = RomanLensConfig(number_side=24, background=0.0)
     true_parameters = np.array((0.9, 0.04, -0.03))  # [arcsec]

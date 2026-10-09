@@ -7,7 +7,7 @@ from pathlib import Path
 
 import chalcedon
 import numpy as np
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import convolve, gaussian_filter
 
 from .diagnostics import binomial_wilson_interval
 
@@ -19,6 +19,8 @@ class RomanLensConfig:
     number_side: int = 31
     pixel_scale: float = 0.11  # [arcsec pixel^-1]
     psf_fwhm: float = 0.105  # [arcsec]
+    psf_fwhm_minor: float | None = None  # [arcsec]
+    psf_angle: float = 0.0  # [rad counterclockwise from the positive x pixel axis]
     background: float = 30.0  # [electron pixel^-1]
     read_noise: float = 6.0  # [electron pixel^-1]
     source_counts: float = 8.0e4  # [electron]
@@ -92,7 +94,25 @@ def render_lens(
     profile = profile.reshape(side, sampling, side, sampling).mean(axis=(1, 3))
     profile *= config.source_counts / profile.sum()
     psf_sigma = config.psf_fwhm / (2.355 * config.pixel_scale)  # [pixel]
-    return gaussian_filter(profile, psf_sigma, mode="constant")
+    if config.psf_fwhm_minor is None:
+        return gaussian_filter(profile, psf_sigma, mode="constant")
+
+    minor_fwhm = config.psf_fwhm_minor
+    if minor_fwhm <= 0.0 or config.psf_fwhm <= 0.0:
+        raise ValueError("Elliptical PSF FWHM values must be positive.")
+    sigma_minor = minor_fwhm / (2.355 * config.pixel_scale)  # [pixel]
+    radius = max(1, int(np.ceil(4.0 * max(psf_sigma, sigma_minor))))  # [pixel]
+    coordinate = np.arange(-radius, radius + 1)
+    x_grid, y_grid = np.meshgrid(coordinate, coordinate, indexing="xy")
+    cosine = np.cos(config.psf_angle)
+    sine = np.sin(config.psf_angle)
+    major_coordinate = x_grid * cosine + y_grid * sine  # [pixel]
+    minor_coordinate = -x_grid * sine + y_grid * cosine  # [pixel]
+    kernel = np.exp(
+        -0.5 * ((major_coordinate / psf_sigma) ** 2 + (minor_coordinate / sigma_minor) ** 2)
+    )
+    kernel /= kernel.sum()
+    return convolve(profile, kernel, mode="constant", cval=0.0)
 
 
 def render_lens_counts(
