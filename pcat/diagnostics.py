@@ -59,6 +59,71 @@ def autocorrelation_time(samples, typeverb=0, atcrtype='maxm', verbtype=None):
     return correlations.reshape(parameter_shape + (lag_count,)), times.reshape(parameter_shape)
 
 
+def estimate_kl_divergence(samples, log_density_p, log_density_q):
+    """Estimate forward ``D_KL(P || Q)`` from normalized log densities and draws from P.
+
+    ``samples`` has shape ``(draws, parameters)`` or
+    ``(chains, draws, parameters)``. Both callbacks accept a matrix of draws and
+    return one normalized log density per row. The estimate is the sample mean
+    of ``log p - log q``. Its Monte Carlo standard error accounts for within-chain
+    autocorrelation and variation between independent chains. Finite-sample
+    estimates are not clipped at zero.
+    """
+    values = np.asarray(samples, dtype=float)
+    if values.ndim == 2:
+        chains = values[None, :, :]
+    elif values.ndim == 3:
+        chains = values
+    else:
+        raise ValueError("samples must be draws-by-parameters or chains-by-draws-by-parameters")
+    if min(chains.shape) < 1 or chains.shape[1] < 2 or not np.isfinite(chains).all():
+        raise ValueError("samples must contain at least two finite draws per chain")
+
+    chain_count, draw_count, parameter_count = chains.shape
+    flat_samples = chains.reshape(-1, parameter_count)
+    logprobp = np.asarray(log_density_p(flat_samples), dtype=float)
+    logprobq = np.asarray(log_density_q(flat_samples), dtype=float)
+    expected_shape = (chain_count * draw_count,)
+    if logprobp.shape != expected_shape or logprobq.shape != expected_shape:
+        raise ValueError("log-density callbacks must return one value per draw")
+    if (not np.isfinite(logprobp).all() or np.isnan(logprobq).any()
+            or np.isposinf(logprobq).any()):
+        raise ValueError("log p must be finite and log q must not be NaN or positive infinity")
+    if np.isneginf(logprobq).any():
+        return {
+            "kl_divergence": float("inf"),
+            "standard_error": float("inf"),
+            "effective_sample_size": 0.0,
+        }
+
+    logratio = (logprobp - logprobq).reshape(chain_count, draw_count)
+    divergence = float(np.mean(logratio))
+    means = np.mean(logratio, axis=1)
+    variance_mean = 0.0
+    effective_sample_size = 0.0
+    for chain in logratio:
+        variance = float(np.var(chain, ddof=1))
+        if variance == 0.0:
+            timecorr = 1.0
+        else:
+            _, times = autocorrelation_time(chain[:, None])
+            timecorr = float(np.ravel(times)[0])
+            if not np.isfinite(timecorr):
+                timecorr = 1.0
+            timecorr = max(timecorr, 1.0)
+        variance_mean += variance * timecorr / (chain_count**2 * draw_count)
+        effective_sample_size += draw_count / timecorr
+
+    if chain_count > 1:
+        between_chain_variance = float(np.var(means, ddof=1)) / chain_count
+        variance_mean = max(variance_mean, between_chain_variance)
+    return {
+        "kl_divergence": divergence,
+        "standard_error": float(np.sqrt(variance_mean)),
+        "effective_sample_size": float(effective_sample_size),
+    }
+
+
 def catalog_count_transitions(chains):
     """Count within-chain catalog-size transitions; input is samples by chains."""
 

@@ -16,7 +16,7 @@ if not hasattr(tdpy, 'retr_labltotlsing') and hasattr(tdpy, 'retr_labltotl'):
 from .main import *
 from .fixed import sample_fixed, sample_fixed_chains, sample_allesfitter_pcat, sample_posterior
 from .associate import associate_catalogs
-from .diagnostics import binomial_wilson_interval, posterior_convergence
+from .diagnostics import binomial_wilson_interval, estimate_kl_divergence, posterior_convergence
 from .image import forward_model_image
 from .paths import get_data_path, get_repository_path, get_visuals_path
 from .plotting import plot_grid

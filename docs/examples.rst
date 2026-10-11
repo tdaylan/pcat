@@ -224,7 +224,16 @@ Publication and instrument examples
    .. image:: ../examples/mismodeling_flare_catalog/visuals/mismodeling_catalog_size.png
       :alt: Posterior number of flares for correct and misspecified forward models
       :width: 720px
+
+   .. image:: ../examples/mismodeling_flare_catalog/visuals/mismodeling_residual_chi2_shapes.png
+      :alt: Pearson residual and posterior-predictive chi-squared distributions with Gaussian references
+      :width: 720px
       :align: center
+
+   The shape comparison overlays a standard Gaussian on the observed Pearson
+   residuals and a moment-matched Gaussian on total chi-squared values from
+   posterior-predictive Poisson replications. This preview was generated in
+   smoke mode and demonstrates the diagnostic, not chain convergence.
 
 ``fermi_lat_pg1553_event_filter``
    Fermi Large Area Telescope event-filter configuration for PG 1553+113. This
@@ -252,6 +261,20 @@ Publication and instrument examples
 
 Analysis utilities
 ------------------
+
+``kl_divergence_gaussian``
+   PCAT samples a conjugate Gaussian posterior and estimates the forward KL
+   divergence to its Gaussian prior. The example compares the Monte Carlo
+   estimate and its autocorrelation-aware uncertainty with the analytic value.
+
+   .. code-block:: bash
+
+      python examples/kl_divergence_gaussian/kl_divergence_gaussian.py --smoke
+
+   .. image:: ../examples/kl_divergence_gaussian/visuals/kl_divergence_gaussian.png
+      :alt: PCAT posterior-to-prior KL estimate and the analytic Gaussian value
+      :width: 640px
+      :align: center
 
 ``sampler_comparison_emcee_dynesty``
    Controlled simulated radial-velocity comparison of PCAT, emcee, and dynesty.

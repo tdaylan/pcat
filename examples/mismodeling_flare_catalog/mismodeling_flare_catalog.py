@@ -216,18 +216,24 @@ def plot_residual_chi2_shapes(summary: dict, typefileplot: str) -> Path:
         axis.plot(chi2_grid, gaussian_density(chi2_grid, chi2_mean, chi2_stdv),
                   color="#A51C30", ls="--", label="Gaussian approximation")
         axis.axvline(chi2_total, color="black", lw=1.2,
-                     label=f"Observed $\\chi^2$/bin={result['chi2_per_bin']:.2f}")
+                     label="Observed total $\\chi^2$")
         axis.set_xlabel(r"Total Pearson $\chi^2$")
         axis.set_ylabel("Density")
         axis.text(0.98, 0.92, f"upper-tail fraction="
                   f"{result['chi2_upper_tail_fraction']:.3f}",
                   transform=axis.transAxes, ha="right", va="top", fontsize=8)
 
-    axes[0, 0].legend(fontsize=7)
-    axes[0, 1].legend(fontsize=7)
+    handles = []
+    labels = []
+    for axis in axes[0]:
+        axis_handles, axis_labels = axis.get_legend_handles_labels()
+        handles.extend(axis_handles)
+        labels.extend(axis_labels)
+    figure.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.995),
+                  ncol=3, fontsize=7)
     for axis in axes.flat:
         axis.grid(False)
-    figure.tight_layout()
+    figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.94))
     return save(figure, "mismodeling_residual_chi2_shapes", typefileplot)
 
 

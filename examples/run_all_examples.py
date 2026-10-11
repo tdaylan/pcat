@@ -162,6 +162,10 @@ UTILITY_EXAMPLES = [
         ROOT / "burn_in_strategies" / "visuals" / "burn_in_performance_comparison.png",
     ),
     (
+        ROOT / "kl_divergence_gaussian" / "kl_divergence_gaussian.py",
+        ROOT / "kl_divergence_gaussian" / "visuals" / "kl_divergence_gaussian.png",
+    ),
+    (
         ROOT / "mejiro_roman_strong_lens" / "mejiro_roman_strong_lens.py",
         ROOT / "mejiro_roman_strong_lens" / "visuals" / "mejiro_roman_lens_image_fit.png",
     ),

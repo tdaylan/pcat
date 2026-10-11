@@ -209,6 +209,15 @@ inspect mixing; the run is too short to establish convergence.
 
 ![Variable planet-count posterior trace from simulated radial velocities](examples/variable_number_exoplanets_radial_velocity/visuals/element_count_trace.png)
 
+### KL divergence estimates
+
+Call ``pcat.diagnostics.estimate_kl_divergence`` when a forward KL estimate is
+needed. It computes the sample mean of ``log p - log q`` from PCAT draws from
+``P`` and normalized log-density callbacks for ``P`` and ``Q``. Its reported
+Monte Carlo error accounts for chain autocorrelation; finite-sample estimates
+are not clipped at zero. The ``kl_divergence_gaussian`` example compares a PCAT
+posterior-to-prior estimate with the exact Gaussian value.
+
 ### Burn-in strategies
 
 `numbburn` sets the initial sweeps excluded from posterior products. PCAT offers

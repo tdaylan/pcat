@@ -52,6 +52,7 @@ def test_documented_example_commands_resolve():
         "examples/voigt_spectral_line_catalog/voigt_spectral_line_catalog.py",
         "examples/roman_strong_lens_perturber_catalog/roman_strong_lens_perturber_catalog.py",
         "examples/catalog_association_completeness_purity/catalog_association_completeness_purity.py",
+        "examples/kl_divergence_gaussian/kl_divergence_gaussian.py",
     ]
 
     for relative_path in relative_paths:
@@ -93,6 +94,7 @@ def test_figure_examples_display_visuals_in_notebooks():
         "butler+2022_spire_sz_component_separation/butler+2022_spire_sz_component_separation",
         "feder+2023_point_diffuse_spire/feder+2023_point_diffuse_spire",
         "hall+2026_herschel_dsfg_multiplicity/hall+2026_herschel_dsfg_multiplicity",
+        "kl_divergence_gaussian/kl_divergence_gaussian",
     )
     for name in figure_examples:
         notebook = examples / f"{name}.ipynb"
@@ -245,14 +247,17 @@ def test_documentation_separates_likelihoods_from_catalog_products():
     capabilities = (DOCS_ROOT / "capabilities.rst").read_text()
     likelihoods = (DOCS_ROOT / "likelihoods.rst").read_text()
 
-    assert "Point sources, extended emission, foreground light, and gravitational lenses" in capabilities
-    assert "Unbinned event-level custom likelihoods" in capabilities
+    assert "Unified Poisson imaging likelihood" in capabilities
+    assert "strong-lens reconstructions" in capabilities
+    assert "not separate likelihood" in capabilities
+    assert "Unbinned Gaussian-mixture likelihood" in capabilities
     assert "fixed Gaussian" in capabilities
     assert inspect.signature(sampling.init).parameters["boolcondcatl"].default is True
     assert "default ``boolcondcatl=True``" in capabilities
     assert re.search(r"Set\s+``boolcondcatl=False``", likelihoods)
     assert "does\nnot condense one-dimensional line, flare, or Keplerian catalogs" in likelihoods
-    assert "Neither\ncondensation nor catalog association is a likelihood" in likelihoods
+    assert "Every transdimensional model produces a catalog" in likelihoods
+    assert "Condensation and either kind of association are posterior" in likelihoods
     assert "The maintained" in likelihoods
     assert "unbinned_gaussian_mixture" in likelihoods
     assert "PCAT does not currently provide a built-in unbinned" in likelihoods
@@ -312,6 +317,7 @@ def test_documentation_lists_stable_public_helpers():
         "sample_allesfitter_pcat",
         "plot_population_grid",
         "binomial_wilson_interval",
+        "estimate_kl_divergence",
     ):
         assert name in api
 

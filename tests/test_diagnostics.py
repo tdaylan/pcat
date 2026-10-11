@@ -11,6 +11,7 @@ from pcat.diagnostics import (
     autocorrelation_time,
     binomial_wilson_interval,
     catalog_count_transitions,
+    estimate_kl_divergence,
     gelman_rubin,
 )
 from pcat.main import (
@@ -171,6 +172,62 @@ def test_binomial_wilson_interval_has_finite_boundary_uncertainty():
     assert full_lower < 1.0
     assert full_upper == 1.0
     assert np.isclose(half_lower, 1.0 - half_upper)
+
+
+def test_kl_divergence_matches_analytic_gaussian_forward_value():
+    from scipy.stats import multivariate_normal
+
+    rng = np.random.default_rng(412)
+    mean_p = np.array([0.6, -0.3])
+    covariance_p = np.array([[0.8, 0.15], [0.15, 1.1]])
+    mean_q = np.array([-0.2, 0.5])
+    covariance_q = np.array([[1.4, 0.25], [0.25, 0.7]])
+    chains = rng.multivariate_normal(mean_p, covariance_p, size=(3, 2500))
+    density_p = multivariate_normal(mean=mean_p, cov=covariance_p)
+    density_q = multivariate_normal(mean=mean_q, cov=covariance_q)
+
+    result = estimate_kl_divergence(chains, density_p.logpdf, density_q.logpdf)
+    difference = mean_q - mean_p
+    sign_p, logdet_p = np.linalg.slogdet(covariance_p)
+    sign_q, logdet_q = np.linalg.slogdet(covariance_q)
+    analytic = 0.5 * (
+        np.trace(np.linalg.solve(covariance_q, covariance_p))
+        + difference @ np.linalg.solve(covariance_q, difference)
+        - mean_p.size + logdet_q - logdet_p
+    )
+
+    assert sign_p == sign_q == 1
+    assert abs(result["kl_divergence"] - analytic) < 4.0 * result["standard_error"]
+    assert result["standard_error"] > 0.0
+    assert 0.0 < result["effective_sample_size"] <= chains.shape[0] * chains.shape[1]
+
+
+def test_kl_divergence_does_not_clip_negative_finite_sample_estimates():
+    from scipy.stats import norm
+
+    samples = np.ones((1, 2, 1))
+    result = estimate_kl_divergence(
+        samples,
+        lambda values: norm.logpdf(values[:, 0], loc=0.0, scale=1.0),
+        lambda values: norm.logpdf(values[:, 0], loc=1.0, scale=1.0),
+    )
+
+    assert result["kl_divergence"] == pytest.approx(-0.5)
+
+
+def test_kl_divergence_reports_infinity_when_reference_has_zero_support():
+    samples = np.zeros((2, 4, 1))
+    result = estimate_kl_divergence(
+        samples,
+        lambda values: np.zeros(values.shape[0]),
+        lambda values: np.full(values.shape[0], -np.inf),
+    )
+
+    assert result == {
+        "kl_divergence": np.inf,
+        "standard_error": np.inf,
+        "effective_sample_size": 0.0,
+    }
 
 
 def test_autocorrelation_distinguishes_independent_draws_and_random_walk():

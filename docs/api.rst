@@ -365,6 +365,16 @@ Catalog analysis
    independent defensive importance draws. The result includes the log
    evidence, relative error estimate, and importance effective sample size.
 
+.. py:function:: pcat.diagnostics.estimate_kl_divergence(samples, log_density_p, log_density_q)
+
+   Estimate forward ``D_KL(P || Q)`` as the Monte Carlo mean of
+   ``log_density_p - log_density_q`` for draws from ``P``. Both callbacks must
+   return normalized log densities and accept a matrix of draws. Samples may
+   have shape ``(draws, parameters)`` or ``(chains, draws, parameters)``. The
+   result includes an autocorrelation-aware standard error and effective sample
+   size. A finite-sample estimate is not clipped at zero; if ``Q`` has zero
+   density at any draw from ``P``, the estimated divergence is infinite.
+
 Roman lens benchmark
 --------------------
 
