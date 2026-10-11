@@ -10,7 +10,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ephesos import evaluate_sinusoidal_ttv
 from pcat.fixed import sample_fixed_chains
 from pcat.plotting import animation_phase_label, animation_states
 from pcat.time_series import log_likelihood_transit_times
@@ -26,9 +25,10 @@ TRUE_PERIOD = 3.0  # [day]
 def predict_transit_times(parameters, transit_epoch):
     """Return linear transit times plus a periodic timing residual [day]."""
     epoch_time, period_days, amplitude_days, phase = parameters
-    return epoch_time + period_days * transit_epoch + evaluate_sinusoidal_ttv(
-        transit_epoch, 0.0, phase, amplitude_days, TT_VARIATION_PERIOD
+    timing_variation = amplitude_days * np.sin(
+        phase + 2.0 * np.pi * transit_epoch / TT_VARIATION_PERIOD
     )
+    return epoch_time + period_days * transit_epoch + timing_variation
 
 
 def simulate_transits():

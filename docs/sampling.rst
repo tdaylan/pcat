@@ -94,6 +94,23 @@ probabilities and the split Jacobian. For a prior-redraw jump, the element
 prior cancels its proposal density, leaving the likelihood change plus any
 Hastings correction for a data-informed draw.
 
+.. list-table:: Proposal-specific terms added to the posterior change
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Move
+     - Additional log-ratio terms
+   * - Within-model Gaussian, differential-evolution, Student-t, or correlated block
+     - None for these symmetric proposals; their log proposal ratio and Jacobian are zero.
+   * - Birth or death
+     - Model-count and move-selection corrections, the auxiliary element draw density when it does not cancel against the prior, and any configured dimension-prior offset such as ``factpriodoff``.
+   * - Split
+     - Reverse merge-selection probability, auxiliary-variable density, and the positive split Jacobian. For the amplitude-fraction split below, ``log|J| = log(F)``.
+   * - Merge
+     - Reverse split-selection probability, reverse auxiliary-variable density, and the negative split Jacobian, ``-log(F)`` for the transform below.
+   * - Prior-redraw jump
+     - The element prior cancels its proposal density. The remaining target change is the likelihood ratio; a data-informed draw adds its Hastings correction.
+
 The final state stores per-sweep proposal IDs in ``listpostindxproptype``,
 accept/reject flags in ``listpostboolpropaccp``, and acceptance probabilities in
 ``listpostaccpprob``. The unclipped log acceptance ratio is stored in
@@ -121,6 +138,18 @@ This is an algebraic comparison of the same proposals, not a second MCMC chain.
   The right panel shows the acceptance curve with the median Jacobian from the
   run and its no-Jacobian counterfactual.
 
+The same example also animates jumps between equivalent one-parameter models
+using linear amplitude ``A`` and log amplitude ``eta = log(A)``. The target
+density ratio contributes ``A`` in the forward direction, while the Jacobian
+contributes ``1/A``. Including both gives unit acceptance in either direction.
+Without the Jacobian, reverse jumps accept with probability ``1/A``, producing
+biased occupancy of the two parameterizations.
+
+.. figure:: ../examples/proposal_state_animation/visuals/parameterization_jacobian_jumps.gif
+  :alt: Same-dimensional jumps between linear and logarithmic amplitude parameterizations, with and without the Jacobian
+  :width: 100%
+  :align: center
+
 .. figure:: ../examples/proposal_profiling/visuals/proposal_acceptance_and_cost.png
    :alt: Acceptance fraction and computational cost by PCAT proposal type
    :width: 100%
@@ -128,6 +157,18 @@ This is an algebraic comparison of the same proposals, not a second MCMC chain.
 
    Proposal acceptance and evaluation cost in the simulated Voigt-line
    profiling example. The values depend on the model, prior, data, and tuning.
+
+The proposal ledger illustrates the observed acceptance of each move type
+through burn-in and sampling. Within-model subproposals such as Student-t and
+differential-evolution are pooled under the within-model identifier.
+
+.. figure:: _static/gallery/proposal_ledger.png
+  :alt: Proposal attempts and acceptance by move type through burn-in and sampling
+  :width: 100%
+  :align: center
+
+  Acceptance fractions are tuning summaries for diagnosing movement, not
+  objectives to maximize.
 
 Tuning proposals
 ----------------
@@ -212,20 +253,41 @@ gradient descent or optimize the initial state. PCAT currently provides no
 gradient-descent burn-in mode.
 
 The :doc:`examples` page links ``burn_in_strategies``, which compares fixed,
-adaptive, and tempered plus adaptive burn-in on correlated and bimodal
-simulated targets.
+adaptive, tempered plus adaptive burn-in, and adaptive Student-t within-model
+proposals on correlated and bimodal simulated targets. The figures below show
+retained states, effective-sample performance, target-summary error, runtime,
+and the tempered likelihood schedule. Their results are illustrative and
+target-specific.
+
+.. figure:: ../examples/burn_in_strategies/visuals/burn_in_posterior_comparison.png
+  :alt: Posterior samples from fixed, adaptive, tempered, and Student-t strategies
+  :width: 100%
+  :align: center
+
+.. figure:: ../examples/burn_in_strategies/visuals/burn_in_performance_comparison.png
+  :alt: Acceptance, effective sampling rate, target error, and runtime by strategy
+  :width: 100%
+  :align: center
+
+.. figure:: ../examples/burn_in_strategies/visuals/burn_in_temperature_schedule.png
+  :alt: Inverse likelihood temperature over fixed, adaptive, tempered, and Student-t runs
+  :width: 85%
+  :align: center
 
 Automatic convergence monitoring
 --------------------------------
 
-By default PCAT stops after the configured sweep count. Set
-``boolcheckconv=True`` to stop after repeated convergence checks. The defaults
-are ``numbsampconvmin=1000`` retained samples before the first check,
+By default PCAT stops after repeated convergence checks, subject to the
+configured sweep count as a hard maximum. Set ``boolcheckconv=False`` to use a
+fixed sweep count. The defaults are ``numbsampconvmin=500`` retained samples before the first check,
 ``numbsampconvcheck=250`` samples between checks, ``maxmconvrhat=1.01``,
 ``numbsampconveffc=200``, and ``numbconvpass=2`` consecutive passing checks.
 For one worker PCAT estimates R-hat by splitting the chain in half. With several
 workers, it calculates convergence across independent worker chains and stops
 them together after they all observe the shared stop signal.
+
+If the criterion is not met by ``numbswep``, the run stops at that cap and
+records that convergence was not reached.
 
 Convergence is assessed using log posterior, element count, persistent element
 parameters, or modeled data pixels when no persistent element parameter is
@@ -243,6 +305,19 @@ feature without assigning identities to elements across birth or death moves.
 The approximate effective sample size uses a bounded autocorrelation window;
 short runs can yield unstable estimates. A single worker has no cross-worker
 R-hat, which is shown as unavailable rather than assigned a value.
+
+These figures show examples of the fixed-parameter ESS/R-hat summary and the
+catalog-size transitions used to inspect transdimensional mixing.
+
+.. figure:: _static/gallery/convergence_fixed/fixed_parameter_mixing.png
+  :alt: Fixed-parameter effective sample sizes and cross-chain R-hat
+  :width: 80%
+  :align: center
+
+.. figure:: _static/gallery/convergence_transdimensional/element_count_transitions.png
+  :alt: Catalog-size transition matrix for independent worker chains
+  :width: 65%
+  :align: center
 
 To create the figures from a saved posterior without rerunning inference, call
 ``pcat.plotting.plot_posterior_convergence(state, output_directory)`` after

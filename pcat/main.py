@@ -1731,6 +1731,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         thisindxparagenrfullelem = None
     
     gdatmodi.this.boolpropfilt = True 
+    if getattr(gdat, 'boolmakeanimprop', False):
+        gdatmodi.this.strgproposalsubtype = 'Gaussian random walk'
     # log density [unit-cube] of an optional data-informed element proposal; zero when elements are drawn from the prior
     gdatmodi.this.lpdfpropelem = 0.
 
@@ -1899,6 +1901,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
                 ]
                 if valid_blocks:
                     thisindxsampfull = valid_blocks[np.random.randint(len(valid_blocks))]
+                    if getattr(gdat, 'boolmakeanimprop', False):
+                        gdatmodi.this.strgproposalsubtype = 'Correlated Gaussian block'
             else:
                 thisindxsampfull = np.array([np.random.choice(thisindxsampfull)], dtype=int)
         
@@ -1988,6 +1992,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             vecta = gdatmodi.dequedemchist[indxa][thisindxsampfull]
             vectb = gdatmodi.dequedemchist[indxb][thisindxsampfull]
             diffparagenrunitfull = factdemcgamma * (vecta - vectb) + 1e-6 * np.random.normal(size=thisindxsampfull.size)
+            if getattr(gdat, 'boolmakeanimprop', False):
+                gdatmodi.this.strgproposalsubtype = 'Differential evolution'
         elif probstud > 0. and (
                 randproptype < probdemc + probstud if booldemc else randproptype < probstud):
             # Independent Student-t(5) steps remain symmetric after per-coordinate reflection.
@@ -1996,6 +2002,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
                 np.random.standard_t(degrstud, size=thisindxsampfull.size)
                 * np.sqrt((degrstud - 2.) / degrstud) * thisstdp
             )
+            if getattr(gdat, 'boolmakeanimprop', False):
+                gdatmodi.this.strgproposalsubtype = 'Student-t(5)'
         elif gdat.typeexpr == 'gener' and hasattr(gdat, 'proposal_correlation'):
             correlation = gdat.proposal_correlation[
                 np.ix_(thisindxsampfull, thisindxsampfull)
@@ -2005,6 +2013,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             diffparagenrunitfull = np.random.multivariate_normal(
                 np.zeros(thisindxsampfull.size), covariance
             )
+            if getattr(gdat, 'boolmakeanimprop', False) and thisindxsampfull.size > 1:
+                gdatmodi.this.strgproposalsubtype = 'Correlated Gaussian block'
         else:
             diffparagenrunitfull = np.random.normal(size=thisindxsampfull.size) * thisstdp
         gmodnext.paragenrunitfull[thisindxsampfull] = gmodthis.paragenrunitfull[thisindxsampfull] + diffparagenrunitfull
@@ -9567,6 +9577,9 @@ def proc_samp(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
     sbrt['modl'], cntp['modl'] = _rescale_hst_mock_model(
         gdat, strgmodl, strgstat, sbrt['modl'], cntp['modl']
     )
+    if (strgstat == 'next' and getattr(gdat, 'boolmakeanimprop', False)
+            and getattr(gdatmodi, 'indxprocwork', 0) == 0):
+        gmodstat.cntpmodl = np.copy(cntp['modl'])
     if gdat.booldiag:
         setattr(gmodstat, 'cntpmodl', cntp['modl'])
     stopchro(gdat, gdatmodi, 'modl')
@@ -13310,7 +13323,10 @@ def _proposal_model_array(gdat, state):
         return None
     values = np.asarray(state.cntpmodl, dtype=float)
     if values.ndim == 3:
-        values = values[0, :, 0]
+        if int(getattr(gdat, 'numbpixl', 0)) == 1 and int(getattr(gdat, 'numbener', 1)) > 1:
+            values = values[:, 0, 0]
+        else:
+            values = values[0, :, 0]
     values = np.squeeze(values)
     if values.ndim == 1:
         numbside = int(getattr(gdat, 'numbsidecart', 0) or 0)
@@ -13324,7 +13340,10 @@ def _proposal_data_array(gdat):
 
     values = np.asarray(getattr(gdat, 'cntpdata', np.ones(1)), dtype=float)
     if values.ndim == 3:
-        values = values[0, :, 0]
+        if int(getattr(gdat, 'numbpixl', 0)) == 1 and int(getattr(gdat, 'numbener', 1)) > 1:
+            values = values[:, 0, 0]
+        else:
+            values = values[0, :, 0]
     values = np.squeeze(values)
     if values.ndim == 1:
         numbside = int(getattr(gdat, 'numbsidecart', 0) or 0)
@@ -13344,6 +13363,31 @@ def _align_proposal_model(values, data):
     if values.size == data.size:
         return values.reshape(data.shape)
     return None
+
+
+def _proposal_residual_limit(gdat, data):
+    """Return one fixed residual-panel limit for all candidate frames in a run."""
+    residual_limit = getattr(gdat, 'proposal_residual_limit', None)
+    if residual_limit is not None:
+        return float(residual_limit)
+
+    variance = getattr(gdat, 'varidata', None)
+    if variance is None:
+        variance = np.maximum(data, 1.)
+    else:
+        variance = np.asarray(variance, dtype=float).squeeze()
+        if variance.shape != data.shape:
+            if variance.size == data.size:
+                variance = variance.reshape(data.shape)
+            else:
+                variance = np.maximum(data, 1.)
+    finite_variance = variance[np.isfinite(variance) & (variance > 0.)]
+    if finite_variance.size == 0:
+        finite_variance = np.maximum(data[np.isfinite(data)], 1.)
+    sigma = np.sqrt(finite_variance) if finite_variance.size else np.array([1.])
+    residual_limit = max(1., 5. * float(np.percentile(sigma, 99.5)))
+    gdat.proposal_residual_limit = residual_limit
+    return residual_limit
 
 
 def _proposal_contour_levels(values):
@@ -13437,7 +13481,9 @@ def _draw_proposal_data_panel(axis, data, current_model, candidate_model, valid,
                   color=candidate_color)
 
 
-def _draw_proposal_residual_panel(axis, data, current_model, candidate_model, valid):
+def _draw_proposal_residual_panel(
+    axis, data, current_model, candidate_model, valid, residual_limit
+):
     """Compare current and proposed residuals in a shared panel."""
 
     current_color = '#0072B2'
@@ -13451,9 +13497,8 @@ def _draw_proposal_residual_panel(axis, data, current_model, candidate_model, va
         residual = candidate_residual if candidate_residual is not None else current_residual
         if residual is None:
             residual = np.zeros_like(data)
-        finite = np.abs(residual[np.isfinite(residual)])
-        limit = max(1., float(np.percentile(finite, 99.5))) if finite.size else 1.
-        axis.imshow(residual, origin='lower', cmap='coolwarm', vmin=-limit, vmax=limit,
+        axis.imshow(residual, origin='lower', cmap='coolwarm',
+                    vmin=-residual_limit, vmax=residual_limit,
                     interpolation='nearest')
         for values, color, style in (
             (current_residual, current_color, 'dashed'),
@@ -13477,6 +13522,7 @@ def _draw_proposal_residual_panel(axis, data, current_model, candidate_model, va
                       label='Proposed residual')
         axis.set_xlabel('Data bin')
         axis.set_ylabel('Residual counts')
+        axis.set_ylim(-residual_limit, residual_limit)
         axis.legend(loc='upper right', frameon=True, fancybox=True, framealpha=1.0, fontsize=8)
 
     if data.ndim == 2:
@@ -13505,20 +13551,36 @@ def _write_proposal_candidate_frame(gdat, gdatmodi, accepted, pathout):
     data_limit = max(1., 1.2 * np.percentile(finite_data, 99.5)) if finite_data.size else 1.
     current_model = _align_proposal_model(_proposal_model_array(gdat, current), data)
     candidate_model = _align_proposal_model(_proposal_model_array(gdat, candidate), data) if valid else None
+    residual_limit = _proposal_residual_limit(gdat, data)
 
     figure = plt.figure(figsize=(10.0, 4.8), facecolor='white')
     grid = figure.add_gridspec(1, 2, left=0.07, right=0.98, bottom=0.18, top=0.80, wspace=0.22)
     axis_data = figure.add_subplot(grid[0, 0])
     axis_residual = figure.add_subplot(grid[0, 1])
     _draw_proposal_data_panel(axis_data, data, current_model, candidate_model, valid, data_limit)
-    _draw_proposal_residual_panel(axis_residual, data, current_model, candidate_model, valid)
+    _draw_proposal_residual_panel(
+        axis_residual, data, current_model, candidate_model, valid, residual_limit
+    )
 
     proposal_index = int(np.asarray(getattr(current, 'indxproptype', 0)).reshape(-1)[0])
     labels = [str(label) for label in getattr(gdat, 'lablproptype', [])]
     proposal_label = labels[proposal_index] if 0 <= proposal_index < len(labels) else 'Proposal %d' % proposal_index
+    if proposal_index == 0:
+        subtype = getattr(current, 'strgproposalsubtype', None)
+        if subtype:
+            proposal_label += ' (%s)' % subtype
+    listlabel = list(labels)
+    if labels:
+        listlabel.extend(
+            '%s (%s)' % (labels[0], subtype)
+            for subtype in (
+                'Gaussian random walk', 'Differential evolution',
+                'Student-t(5)', 'Correlated Gaussian block',
+            )
+        )
     proposal_label = _pad_animation_text(
         proposal_label,
-        max([len(label) for label in labels] + [len(proposal_label)]),
+        max([len(label) for label in listlabel] + [len(proposal_label)]),
     )
     acceptance_probability = float(np.asarray(getattr(current, 'accpprob', [0.])).reshape(-1)[0])
     status = 'ACCEPTED' if accepted else 'REJECTED'
@@ -13593,11 +13655,16 @@ def proc_anim(strgcnfg, pathbase=None):
 
         proposal_sequence = None
         if strgpdfn == 'post' and gdatfinlpost is not None:
-            listsequence = [
-                (key, sorted(listfram))
-                for key, listfram in dictpathfram.items()
-                if len(listfram) > 1 and key[1] != 'proposal_candidates'
-            ]
+            listsequence = []
+            numbburn = int(getattr(gdat, 'numbburn', 0))
+            for key, listfram in dictpathfram.items():
+                if len(listfram) < 2 or key[1] == 'proposal_candidates':
+                    continue
+                frames_posterior = [
+                    frame for frame in sorted(listfram) if frame[0] >= numbburn
+                ]
+                if len(frames_posterior) > 1:
+                    listsequence.append((key, frames_posterior))
             if listsequence:
                 proposal_sequence = max(
                     listsequence,
@@ -15859,8 +15926,14 @@ def plot_scatcntp(gdat, gdatmodi, strgstat, strgmodl, strgpdfn, indxdqltplot, in
         axis.set_ylabel('Counts per spectral bin')
         if strgstat == 'this' and gdatmodi is not None and hasattr(gdatmodi, 'cntrswep'):
             from .plotting import animation_phase_label
-            axis.set_title(animation_phase_label(dict(cntrswep=gdatmodi.cntrswep,
-                                                      boolburn=gdatmodi.cntrswep < gdat.numbburn)))
+            axis.set_title(
+                animation_phase_label(
+                    dict(cntrswep=gdatmodi.cntrswep,
+                         boolburn=gdatmodi.cntrswep < gdat.numbburn),
+                    maximum_sweeps=gdat.numbswep,
+                ),
+                loc='left',
+            )
         # fixed, data-based limits keep animation frames comparable from the prior draw onward
         rangdata = np.ptp(cntpdata)
         axis.set_ylim(min(0., np.amin(cntpdata)) - 0.03 * rangdata, np.amax(cntpdata) + 0.12 * rangdata)
@@ -16894,10 +16967,10 @@ def init( \
          numbsamp=None, \
          ## number of initial sweeps to be burned
          numbburn=None, \
-         ## dynamically stop a single chain after repeated convergence checks
-         boolcheckconv=False, \
+         ## dynamically stop chains after repeated convergence checks
+         boolcheckconv=True, \
          ## minimum retained samples before checking convergence
-         numbsampconvmin=1000, \
+         numbsampconvmin=500, \
          ## retained samples between convergence checks
          numbsampconvcheck=250, \
          ## minimum effective sample size for every convergence observable

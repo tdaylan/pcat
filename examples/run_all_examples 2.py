@@ -15,7 +15,14 @@ ROOT = Path(__file__).resolve().parent
 PIPELINE_EXAMPLES = [
     (ROOT / "gaussian_mixture_catalog" / "generate_demo.py", (), ROOT / "gaussian_mixture_catalog", "gaussian_mixture_catalog", True, True),
     (ROOT / "chandra_point_source_catalog" / "generate_demo.py", (), ROOT / "chandra_point_source_catalog", "chandra_point_source_catalog", True, False),
-    (ROOT / "daylan_2017_fermi_point_sources" / "generate_reproduction.py", ("--smoke",), ROOT / "daylan_2017_fermi_point_sources", "daylan2017_mock", True, True),
+    (
+        ROOT / "daylan+2017_fermi_point_sources" / "daylan+2017_fermi_point_sources.py",
+        ("--smoke",),
+        ROOT / "daylan+2017_fermi_point_sources" / "pcat_runs" / "daylan2017_mock",
+        "daylan2017_mock",
+        True,
+        True,
+    ),
     (ROOT / "simulated_hst_strong_lens" / "generate_demo.py", (), ROOT / "simulated_hst_strong_lens", "simulated_hst_strong_lens", True, True),
     (ROOT / "voigt_spectral_line_catalog" / "pcat_voigt_profile_detection.py", ("--smoke",), ROOT / "voigt_spectral_line_catalog", "voigt_nomi", False, True),
 ]

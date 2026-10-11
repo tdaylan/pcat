@@ -34,6 +34,21 @@ def test_generic_run_records_snapshots_from_a_prior_draw(tmp_path):
     assert animation_phase_label(snapshots[-1]).startswith("Posterior sample")
 
 
+def test_animation_phase_labels_reserve_width_for_every_frame():
+    snapshots = [
+        {"cntrswep": 0, "boolburn": True},
+        {"cntrswep": 950, "boolburn": True},
+        {"cntrswep": 1000, "boolburn": False},
+    ]
+
+    labels = [animation_phase_label(snapshot, maximum_sweeps=10000) for snapshot in snapshots]
+
+    assert len({len(label) for label in labels}) == 1
+    assert labels[0].rstrip() == "Initial random draw from the prior"
+    assert labels[1].rstrip() == "Burn-in, sweep 950"
+    assert labels[2].rstrip() == "Posterior sample, sweep 1,000"
+
+
 def test_animation_states_require_snapshots():
     with pytest.raises(ValueError, match="numbframanim"):
         animation_states(SimpleNamespace())

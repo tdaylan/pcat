@@ -68,13 +68,23 @@ def test_collage_rejects_frozen_source_sequence(tmp_path):
         _animation_frame_paths(panel, tmp_path)
 
 
-def test_collage_places_spectral_fit_logo_and_spots_in_requested_panels():
+def test_collage_places_spectral_fit_logo_and_variable_starspots_in_requested_panels():
     panels = POSTERIOR_ANIMATION_PANELS
 
     assert len(panels) == 9
-    assert "Voigt lines" in panels[2].label
-    assert "rotating starspots" in panels[3].label
+    assert "Unbinned Gaussian mixture" in panels[0].label
+    assert "Daylan+2017 NG cap mock" in panels[1].label
+    assert "Fermi-LAT point sources" in panels[1].label
+    assert "JWST/MIRI NGC 7027" in panels[2].label
+    assert panels[2].pattern == "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_swep*.png"
+    assert "variable-count rotating starspots" in panels[3].label
     assert panels[4].static_image == "docs/_static/pcat_logo.png"
+    assert panels[4].pattern is None
+    assert "Roman/WFI detector image" in panels[5].label
+    assert "strong-lens arcs" in panels[5].label
+    assert "PCAT flare catalog" in panels[6].label
+    assert "variable-number exoplanets" in panels[7].label
+    assert "transit-time series" in panels[8].label
     assert all("deflection" not in panel.label.lower() for panel in panels)
 
 
@@ -96,6 +106,22 @@ def test_changing_animation_text_is_padded_to_a_fixed_width():
 
     assert len(padded[0]) == len(padded[1]) == width
     assert [label.rstrip() for label in padded] == labels
+
+
+def test_animation_states_can_omit_empty_catalogs():
+    from types import SimpleNamespace
+    from pcat.plotting import animation_states
+
+    state = SimpleNamespace(listanimstate=[
+        {"cntrswep": 4, "numbelem": np.array([0])},
+        {"cntrswep": 0, "numbelem": np.array([0])},
+        {"cntrswep": 8, "numbelem": np.array([2])},
+        {"cntrswep": 12, "numbelem": np.array([1])},
+    ])
+
+    snapshots = animation_states(state, require_nonzero_catalog=True)
+
+    assert [snapshot["cntrswep"] for snapshot in snapshots] == [8, 12]
 
 
 def test_histogram_frame_limits_cover_full_fitted_catalog():
@@ -142,31 +168,61 @@ def test_make_image_sequence_animation_includes_every_cutout(tmp_path):
         assert animation.info["duration"] == 120
 
 
+def test_make_image_sequence_animation_uses_one_shared_intensity_stretch(tmp_path):
+    low_range = np.tile(np.linspace(0.0, 100.0, 100), (100, 1))
+    high_range = np.tile(np.linspace(0.0, 1000.0, 100), (100, 1))
+    low_range[50, 50] = 50.0
+    high_range[50, 50] = 50.0
+    output_path = tmp_path / "shared_stretch.gif"
+
+    make_image_sequence_animation(
+        [low_range, high_range],
+        ["low range", "high range"],
+        output_path,
+        image_size=100,
+        title="",
+    )
+
+    with Image.open(output_path) as animation:
+        animation.seek(0)
+        first_pixel = animation.convert("RGB").getpixel((50, 108))
+        animation.seek(1)
+        second_pixel = animation.convert("RGB").getpixel((50, 108))
+    assert first_pixel == second_pixel
+
+
 def test_readme_embeds_multiframe_collage():
     readme_path = EXAMPLES_ROOT.parent / "README.md"
     readme = readme_path.read_text()
     assert DEFAULT_POSTERIOR_COLLAGE.is_file()
-    assert "![PCAT runs in eight changing inference views, from a random prior draw through burn-in to posterior samples]" in readme
+    assert "![Eight changing PCAT inference views and the centered PCAT logo]" in readme
     assert str(DEFAULT_POSTERIOR_COLLAGE.relative_to(EXAMPLES_ROOT.parent)) in readme
     with Image.open(DEFAULT_POSTERIOR_COLLAGE) as animation:
-        assert animation.n_frames >= 16
-        assert animation.info["duration"] <= 150
-        assert animation.width >= 1700
-        frames = []
+        assert animation.n_frames >= 24
+        assert animation.info["duration"] <= 80
+        assert animation.width >= 2200
+        assert animation.height >= 2400
+        frame_signatures = [[] for _ in POSTERIOR_ANIMATION_PANELS]
+        panel_size = 720
+        margin = 20
+        title_height = 66
+        label_height = 42
+        palettes = []
         for frame_index in range(animation.n_frames):
             animation.seek(frame_index)
-            frames.append(animation.convert("RGB"))
-    panel_size = 560
-    margin = 20
-    title_height = 66
-    label_height = 42
-    for panel_index, panel in enumerate(POSTERIOR_ANIMATION_PANELS):
-        row, column = divmod(panel_index, 3)
-        x = margin + column * (panel_size + margin)
-        y = title_height + margin + row * (panel_size + label_height + margin)
-        crops = [frame.crop((x, y, x + panel_size, y + panel_size)).tobytes() for frame in frames]
-        if panel.static_image is not None:
-            assert len(set(crops)) == 1, panel.label
-            assert crops[0] != Image.new("RGB", (panel_size, panel_size), "white").tobytes()
-        else:
-            assert len(set(crops)) > 1, panel.label
+            palettes.append(tuple(animation.getpalette() or ()))
+            frame = animation.convert("RGB")
+            for panel_index, panel in enumerate(POSTERIOR_ANIMATION_PANELS):
+                row, column = divmod(panel_index, 3)
+                x = margin + column * (panel_size + margin)
+                y = title_height + margin + row * (panel_size + label_height + margin)
+                crop = frame.crop((x, y, x + panel_size, y + panel_size))
+                frame_signatures[panel_index].append(crop.resize((32, 32)).tobytes())
+        for panel, signatures in zip(POSTERIOR_ANIMATION_PANELS, frame_signatures):
+            if panel.static_image is not None:
+                assert len(set(signatures)) == 1, panel.label
+                assert signatures[0] != Image.new("RGB", (32, 32), "white").tobytes(), panel.label
+            else:
+                assert len(set(signatures)) > 1, panel.label
+        assert palettes[0]
+        assert all(not palette or palette == palettes[0] for palette in palettes)

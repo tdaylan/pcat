@@ -57,8 +57,8 @@ def synthetic_state(chain_count=2, sweep_count=600, sample_count=50, seed=3):
 
 def test_sampler_overview_writes_every_applicable_view(tmp_path):
     paths = plot_sampler_overview(synthetic_state(), tmp_path)
-    assert set(paths) == {"proposal_ledger", "acceptance_decomposition", "compute_budget",
-                          "catalog_trace", "posterior_predictive"}
+    assert set(paths) == {"proposal_ledger", "sampler_trajectory", "acceptance_decomposition",
+                          "compute_budget", "catalog_trace", "posterior_predictive"}
     for path in paths.values():
         print(f"Reading from {path}...")
         with Image.open(path) as image:

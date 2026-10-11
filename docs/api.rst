@@ -147,6 +147,9 @@ returned by :func:`pcat.sampling.sample` or read with
 sweep-major across chains; per-sample arrays such as ``listpostnumbelem`` hold
 retained samples ordered sample-major across chains.
 
+The :doc:`plotting gallery <gallery>` shows rendered output for every
+figure-producing routine documented below.
+
 Sampler operation
 ~~~~~~~~~~~~~~~~~
 
@@ -156,7 +159,16 @@ Sampler operation
    ``state`` and return a dictionary from view name to path. :func:`pcat.sampling.sample`
    calls it for each run with final plots enabled and writes to
    ``visuals/post/operation``. ``catalog_options`` are passed to
-   :func:`pcat.plotting.plot_catalog_trace`.
+   :func:`pcat.plotting.plot_catalog_trace`. Its returned ``sampler_trajectory``
+   view aligns proposal-level acceptance terms and likelihood temperature.
+
+.. py:function:: pcat.plotting.plot_sampler_trajectory(state, output_path, typefileplot="png")
+
+   Plot the signed log-compressed log-acceptance ratio for every evaluated
+   proposal, colored by move type and marked as accepted or rejected. Filtered
+   proposals appear along the panel baseline; the lower panel shows the
+   likelihood inverse temperature by sweep. The shaded interval marks burn-in.
+   See the :ref:`rendered sampler trajectory <sampler-trajectory-example>`.
 
 .. py:function:: pcat.plotting.plot_proposal_ledger(state, output_path, typefileplot="png", number_windows=120)
 
@@ -283,7 +295,7 @@ Animations
    stretch (1st to 99.5th percentile of all finite pixels), ``title`` above
    and each label below its image.
 
-.. py:function:: pcat.plotting.make_posterior_animation_collage(output_path=DEFAULT_POSTERIOR_COLLAGE, examples_root=EXAMPLES_ROOT, panels=POSTERIOR_ANIMATION_PANELS, frame_count=16, duration_ms=120, panel_size=560)
+.. py:function:: pcat.plotting.make_posterior_animation_collage(output_path=DEFAULT_POSTERIOR_COLLAGE, examples_root=EXAMPLES_ROOT, panels=POSTERIOR_ANIMATION_PANELS, frame_count=24, duration_ms=80, panel_size=720)
 
    Combine posterior frame sequences of several examples into one synchronized
    GIF, as in ``examples/pcat_posterior_samples.gif``. Each

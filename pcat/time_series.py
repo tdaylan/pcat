@@ -156,7 +156,13 @@ def retr_dictpropelemtmpl(residual, variance, templates, flux_minimum, flux_maxi
     if not 0.0 < fraction_uniform <= 1.0 or not 0.0 <= fraction_gaussian <= 1.0:
         raise ValueError("proposal mixture fractions must lie in the unit interval")
     norm = templates**2 @ weight
-    amplitude = (templates @ (weight * residual)) / norm  # [same unit as residual]
+    numerator = templates @ (weight * residual)
+    amplitude = np.divide(
+        numerator,
+        norm,
+        out=np.zeros_like(numerator),
+        where=np.isfinite(norm) & (norm > np.finfo(float).tiny),
+    )  # [same unit as residual]
     delta_chi2 = np.maximum(amplitude, 0.0) ** 2 * norm
     score = delta_chi2**exponent
     density = fraction_uniform + (1.0 - fraction_uniform) * score / max(np.mean(score), 1e-300)

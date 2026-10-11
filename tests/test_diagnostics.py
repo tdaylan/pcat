@@ -528,6 +528,162 @@ def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_p
     assert output_path.is_file()
 
 
+def test_candidate_residual_scales_are_fixed_for_1d_and_2d_frames(tmp_path, monkeypatch):
+    figures = []
+    make_figure = pcat_main.plt.figure
+
+    def capture_figure(*args, **kwargs):
+        figure = make_figure(*args, **kwargs)
+        figures.append(figure)
+        return figure
+
+    monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
+    data_series = np.array([10., 16., 24., 35.])
+    variance_series = np.array([1., 4., 9., 16.])
+    state_series = SimpleNamespace(
+        cntpdata=data_series,
+        varidata=variance_series,
+        lablproptype=["Within-model proposal"],
+        numbswep=2,
+    )
+    for sweep, candidate_series in enumerate((data_series + 1., data_series + 20.)):
+        current = SimpleNamespace(
+            boolpropfilt=True, cntpmodl=data_series, indxproptype=np.array([0]),
+            accpprob=np.array([0.5]), lpostotl=-1., ltrp=np.array([0.]), ljcb=np.array([0.]),
+        )
+        candidate = SimpleNamespace(cntpmodl=candidate_series, lpostotl=-1.1)
+        pcat_main._write_proposal_candidate_frame(
+            state_series, SimpleNamespace(this=current, next=candidate, cntrswep=sweep),
+            True, tmp_path / f"series_{sweep}.png",
+        )
+    expected_series_limit = 5. * np.percentile(np.sqrt(variance_series), 99.5)
+    np.testing.assert_allclose(figures[0].axes[1].get_ylim(),
+                               (-expected_series_limit, expected_series_limit))
+    assert figures[0].axes[1].get_ylim() == figures[1].axes[1].get_ylim()
+
+    figures.clear()
+    data_image = np.full((4, 4), 100.)
+    variance_image = np.full((4, 4), 25.)
+    state_image = SimpleNamespace(
+        cntpdata=data_image,
+        varidata=variance_image,
+        lablproptype=["Within-model proposal"],
+        numbswep=2,
+    )
+    for sweep, candidate_image in enumerate((data_image + 1., data_image + 50.)):
+        current = SimpleNamespace(
+            boolpropfilt=True, cntpmodl=data_image, indxproptype=np.array([0]),
+            accpprob=np.array([0.5]), lpostotl=-1., ltrp=np.array([0.]), ljcb=np.array([0.]),
+        )
+        candidate = SimpleNamespace(cntpmodl=candidate_image, lpostotl=-1.1)
+        pcat_main._write_proposal_candidate_frame(
+            state_image, SimpleNamespace(this=current, next=candidate, cntrswep=sweep),
+            True, tmp_path / f"image_{sweep}.png",
+        )
+    expected_image_limit = 5. * np.percentile(np.sqrt(variance_image), 99.5)
+    np.testing.assert_allclose(figures[0].axes[1].images[0].get_clim(),
+                               (-expected_image_limit, expected_image_limit))
+    assert figures[0].axes[1].images[0].get_clim() == figures[1].axes[1].images[0].get_clim()
+
+
+def test_proposal_frame_arrays_preserve_spectral_bins():
+    from pcat.main import _proposal_data_array, _proposal_model_array
+
+    state = SimpleNamespace(
+        numbener=30,
+        numbpixl=1,
+        cntpdata=np.arange(30, dtype=float)[:, None, None],
+    )
+    model_state = SimpleNamespace(cntpmodl=(100. + np.arange(30))[:, None, None])
+
+    np.testing.assert_array_equal(_proposal_data_array(state), np.arange(30))
+    np.testing.assert_array_equal(
+        _proposal_model_array(state, model_state), 100. + np.arange(30)
+    )
+
+
+def test_spectral_chain_frames_keep_y_limits_fixed_to_observed_data(tmp_path, monkeypatch):
+    data = np.array([100., 130., 115., 150., 125.])[:, None, None]
+    models = [
+        np.array([90., 120., 110., 140., 120.]),
+        np.array([80., 140., 100., 170., 115.]),
+    ]
+    state = SimpleNamespace(
+        cntpdata=data,
+        numbener=data.shape[0],
+        numbpixl=1,
+        boolbinsener=False,
+        typeexpr="fire",
+        typedata="inpt",
+        plotsize=4.0,
+        bctrpara=SimpleNamespace(ener=np.linspace(1.0, 5.0, data.shape[0])),
+        lablener="Wavenumber",
+        strgenerunit="m^-1",
+        fitt=SimpleNamespace(colr="C0"),
+    )
+    figures = []
+    make_subplots = pcat_main.plt.subplots
+
+    def capture_subplots(*args, **kwargs):
+        figure, axes = make_subplots(*args, **kwargs)
+        figures.append(figure)
+        return figure, axes
+
+    monkeypatch.setattr(
+        pcat_main,
+        "retr_fromgdat",
+        lambda *args, **kwargs: models.pop(0)[:, None, None],
+    )
+    monkeypatch.setattr(pcat_main, "retr_plotpath", lambda *args, **kwargs: str(tmp_path / "frame.png"))
+    monkeypatch.setattr(pcat_main, "savefigr", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pcat_main.plt, "subplots", capture_subplots)
+
+    for _ in range(len(models)):
+        pcat_main.plot_scatcntp(state, None, "this", "fitt", "post", 0)
+
+    expected_range = np.ptp(data[:, 0, 0])
+    expected_limits = (
+        min(0.0, np.min(data)) - 0.03 * expected_range,
+        np.max(data) + 0.12 * expected_range,
+    )
+    assert figures[0].axes[0].get_ylim() == figures[1].axes[0].get_ylim()
+    np.testing.assert_allclose(figures[0].axes[0].get_ylim(), expected_limits)
+
+
+def test_image_chain_frames_keep_color_limits_fixed_for_one_run():
+    figure, axis = pcat_main.plt.subplots()
+    state = SimpleNamespace(
+        frambndrmodl=1.0,
+        frambndrdata=1.0,
+        numbpixlfull=4,
+        numbpixl=4,
+        numbsidecart=2,
+        exttrofi=(0.0, 2.0, 0.0, 2.0),
+        alphmaps=1.0,
+        alphbndr=0.0,
+        typeexpr="gmix",
+        typepixl="cart",
+        scalpara=SimpleNamespace(),
+        cmappara=SimpleNamespace(),
+        minmpara=SimpleNamespace(),
+        maxmpara=SimpleNamespace(),
+        fitt=SimpleNamespace(),
+    )
+    first_map = np.array([[0.0, 1.0], [2.0, 3.0]])
+    later_map = np.array([[0.0, 100.0], [200.0, 300.0]])
+
+    image = pcat_main.retr_imag(
+        state, axis, first_map, "this", "fitt", "cntpmodl"
+    )
+    fixed_limits = image.get_clim()
+    pcat_main.retr_imag(
+        state, axis, later_map, "this", "fitt", "cntpmodl", imag=image
+    )
+
+    assert image.get_clim() == fixed_limits
+    pcat_main.plt.close(figure)
+
+
 def test_candidate_animation_text_width_is_stable_across_sweeps(tmp_path, monkeypatch):
     labels = ["Within-model proposal", "A much longer transdimensional proposal"]
     figures = []
@@ -539,9 +695,12 @@ def test_candidate_animation_text_width_is_stable_across_sweeps(tmp_path, monkey
         return figure
 
     monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
-    for sweep, proposal, accepted, posterior in (
-        (0, 0, True, -10.0),
-        (119, 1, False, -125.0),
+    for sweep, proposal, subtype, accepted, posterior in (
+        (0, 0, "Gaussian random walk", True, -10.0),
+        (30, 0, "Differential evolution", False, -40.0),
+        (60, 0, "Student-t(5)", True, -70.0),
+        (90, 0, "Correlated Gaussian block", False, -100.0),
+        (119, 1, None, False, -125.0),
     ):
         current = SimpleNamespace(
             cntpmodl=np.array([1.0, 2.0, 3.0]),
@@ -550,6 +709,7 @@ def test_candidate_animation_text_width_is_stable_across_sweeps(tmp_path, monkey
             lpostotl=posterior,
             ltrp=np.array([0.1]),
             ljcb=np.array([0.0]),
+            strgproposalsubtype=subtype,
         )
         candidate = SimpleNamespace(cntpmodl=np.array([1.1, 2.1, 2.9]), lpostotl=posterior - 1)
         state = SimpleNamespace(cntpdata=np.array([[[1.0], [2.0], [3.0]]]), lablproptype=labels,
@@ -561,8 +721,16 @@ def test_candidate_animation_text_width_is_stable_across_sweeps(tmp_path, monkey
 
     titles = [figure._suptitle.get_text() for figure in figures]
     footers = [figure.texts[-1].get_text() for figure in figures]
-    assert len(titles[0]) == len(titles[1])
-    assert len(footers[0]) == len(footers[1])
+    for title, subtype in zip(
+        titles,
+        (
+            "Gaussian random walk", "Differential evolution", "Student-t(5)",
+            "Correlated Gaussian block", "A much longer transdimensional proposal",
+        ),
+    ):
+        assert subtype in title
+    assert len({len(title) for title in titles}) == 1
+    assert len({len(footer) for footer in footers}) == 1
 
 
 def test_element_parameter_labels_are_descriptive():

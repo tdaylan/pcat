@@ -142,6 +142,10 @@ COLLAGE_EXAMPLES = (
 
 UTILITY_EXAMPLES = [
     (
+        ROOT / "image_forward_model" / "image_forward_model.py",
+        ROOT / "image_forward_model" / "visuals" / "pcat_image_forward_model.png",
+    ),
+    (
         ROOT / "catalog_association_completeness_purity" / "catalog_association_completeness_purity.py",
         ROOT / "catalog_association_completeness_purity" / "visuals" / "catalog_association_completeness_purity.png",
     ),

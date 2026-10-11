@@ -15,8 +15,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -94,12 +94,12 @@ application to strongly lensed systems is <a class="reference external" href="ht
 applications include <a class="reference external" href="https://doi.org/10.3847/1538-3881/aa8565">Portillo et al. (2017)</a>, <a class="reference external" href="https://doi.org/10.3847/1538-3881/ab74cf">Feder et al. (2020)</a>, <a class="reference external" href="https://doi.org/10.3847/1538-4357/ac6c04">Butler et al. (2022)</a>, <a class="reference external" href="https://doi.org/10.3847/1538-3881/ace69b">Feder et al. (2023)</a>, and <a class="reference external" href="https://doi.org/10.3847/1538-4357/ae1e7a">Hall et al. (2026)</a>.</p>
 <p>PCAT supports arbitrary user-supplied likelihood functions, a unified Poisson
 image likelihood with point, extended, and lensed components, spectral-line
-models, time-series flare catalogs, and Keplerian radial-velocity catalogs. It
-also runs fixed-dimensional models through the same sampler and persistence
-pipeline. Its transdimensional models infer the number and parameters of
-catalog elements jointly. Simulated and supplied data, population-level priors,
-posterior catalog summaries, convergence diagnostics, static figures, and
-posterior animations use a shared pipeline.</p>
+models, time-series flare catalogs, Keplerian radial-velocity catalogs, and a
+transit-timing likelihood. It also runs fixed-dimensional models through the
+same sampler and persistence pipeline. Its transdimensional models infer the
+number and parameters of catalog elements jointly. Simulated and supplied data,
+population-level priors, posterior catalog summaries, convergence diagnostics,
+static figures, and posterior animations use a shared pipeline.</p>
 <a class="reference internal image-reference" href="_images/pcat_posterior_samples.gif"><img alt="Posterior samples for Gaussian mixtures, point sources, strong lenses, and spectral lines" class="align-center" src="_images/pcat_posterior_samples.gif" style="width: 760px;" />
 </a>
 <p>The animation shows nine changing inference views, including unbinned mixtures,
@@ -135,11 +135,13 @@ shared color palette. Only the JWST/MIRI spectrum uses observed data.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="likelihoods.html">Likelihood configurations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#poisson-image-likelihood">Poisson image likelihood</a></li>
-<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#unbinned-gaussian-mixture-likelihood">Unbinned Gaussian-mixture likelihood</a></li>
-<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#spectral-and-time-series-likelihood">Spectral and time-series likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#image-likelihoods">Image likelihoods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#unbinned-event-level-likelihood">Unbinned event-level likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#spectral-line-likelihood">Spectral-line likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#binned-photometric-time-series-likelihood">Binned photometric time-series likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#radial-velocity-likelihood">Radial-velocity likelihood</a></li>
 <li class="toctree-l2"><a class="reference internal" href="likelihoods.html#transit-timing-likelihood">Transit-timing likelihood</a></li>
-<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#user-supplied-likelihood">User-supplied likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="likelihoods.html#generic-user-supplied-likelihood">Generic user-supplied likelihood</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling, proposals, and convergence</a><ul>
@@ -165,6 +167,7 @@ shared color palette. Only the JWST/MIRI spectrum uses observed data.</p>
 <li class="toctree-l2"><a class="reference internal" href="outputs.html#visual-products">Visual products</a></li>
 <li class="toctree-l2"><a class="reference internal" href="outputs.html#condensed-catalogs-and-association">Condensed catalogs and association</a></li>
 <li class="toctree-l2"><a class="reference internal" href="outputs.html#convergence-and-interpretation">Convergence and interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html#animation-output">Animation output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="outputs.html#reproducibility-checklist">Reproducibility checklist</a></li>
 </ul>
 </li>

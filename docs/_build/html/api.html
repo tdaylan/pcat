@@ -15,8 +15,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -112,6 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pcat.spectral.apply_gaussian_resolving_power"><code class="docutils literal notranslate"><span class="pre">pcat.spectral.apply_gaussian_resolving_power()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pcat.spectral.apply_line_spread_function"><code class="docutils literal notranslate"><span class="pre">pcat.spectral.apply_line_spread_function()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pcat.time_series.evaluate_flare_profile"><code class="docutils literal notranslate"><span class="pre">pcat.time_series.evaluate_flare_profile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pcat.time_series.log_likelihood_transit_times"><code class="docutils literal notranslate"><span class="pre">pcat.time_series.log_likelihood_transit_times()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pcat.psf_poly_fit"><code class="docutils literal notranslate"><span class="pre">pcat.psf_poly_fit()</span></code></a></li>
 </ul>
 </li>
@@ -125,6 +126,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pcat.associate_catalogs"><code class="docutils literal notranslate"><span class="pre">pcat.associate_catalogs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pcat.posterior_convergence"><code class="docutils literal notranslate"><span class="pre">pcat.posterior_convergence()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pcat.diagnostics.estimate_evidence"><code class="docutils literal notranslate"><span class="pre">pcat.diagnostics.estimate_evidence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pcat.diagnostics.estimate_kl_divergence"><code class="docutils literal notranslate"><span class="pre">pcat.diagnostics.estimate_kl_divergence()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#roman-lens-benchmark">Roman lens benchmark</a><ul>
@@ -335,10 +337,11 @@ source scene and background use the same image units.</p>
 </section>
 <section id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading"></a></h2>
-<p>Every routine below writes PNG (300 dpi) or PDF files, logs <code class="docutils literal notranslate"><span class="pre">Writing</span> <span class="pre">to</span>
-<span class="pre">PATH...</span></code>, and returns the written path or a dictionary of paths. The
-<a class="reference internal" href="gallery.html"><span class="doc">Plotting gallery</span></a> shows an example output of each one, produced by
-<code class="docutils literal notranslate"><span class="pre">docs/make_plot_gallery.py</span></code> from real PCAT runs.</p>
+<p>Static figure-writing routines support PNG or PDF output and log their output
+paths. Animation and state helpers may instead return snapshots or write GIFs;
+their return values and products are described individually below. The
+<a class="reference internal" href="gallery.html"><span class="doc">Plotting gallery</span></a> shows representative outputs produced by
+<code class="docutils literal notranslate"><span class="pre">docs/make_plot_gallery.py</span></code> from PCAT runs.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> argument of the sampler views is the final posterior object
 returned by <a class="reference internal" href="#pcat.sampling.sample" title="pcat.sampling.sample"><code class="xref py py-func docutils literal notranslate"><span class="pre">pcat.sampling.sample()</span></code></a> or read with
 <a class="reference internal" href="#pcat.main.readfile" title="pcat.main.readfile"><code class="xref py py-func docutils literal notranslate"><span class="pre">pcat.main.readfile()</span></code></a> from <code class="docutils literal notranslate"><span class="pre">gdatfinlpost</span></code>. Per-proposal arrays such as
@@ -516,7 +519,7 @@ and each label below its image.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pcat.plotting.make_posterior_animation_collage">
-<span class="sig-prename descclassname"><span class="pre">pcat.plotting.</span></span><span class="sig-name descname"><span class="pre">make_posterior_animation_collage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_POSTERIOR_COLLAGE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">EXAMPLES_ROOT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">POSTERIOR_ANIMATION_PANELS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">560</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.plotting.make_posterior_animation_collage" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pcat.plotting.</span></span><span class="sig-name descname"><span class="pre">make_posterior_animation_collage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_POSTERIOR_COLLAGE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">EXAMPLES_ROOT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">POSTERIOR_ANIMATION_PANELS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">720</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.plotting.make_posterior_animation_collage" title="Link to this definition"></a></dt>
 <dd><p>Combine posterior frame sequences of several examples into one synchronized
 GIF, as in <code class="docutils literal notranslate"><span class="pre">examples/pcat_posterior_samples.gif</span></code>. Each
 <code class="xref py py-class docutils literal notranslate"><span class="pre">pcat.plotting.PosteriorAnimationPanel</span></code> names a label and either a
@@ -555,6 +558,15 @@ preserving each column’s sampled flux.</p>
 <span class="sig-prename descclassname"><span class="pre">pcat.time_series.</span></span><span class="sig-name descname"><span class="pre">evaluate_flare_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rise_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.time_series.evaluate_flare_profile" title="Link to this definition"></a></dt>
 <dd><p>Evaluate peak-normalized Gaussian, one-sided exponential-decay, FRED, or
 Davenport empirical flare profiles.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pcat.time_series.log_likelihood_transit_times">
+<span class="sig-prename descclassname"><span class="pre">pcat.time_series.</span></span><span class="sig-name descname"><span class="pre">log_likelihood_transit_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observed_times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timing_errors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.time_series.log_likelihood_transit_times" title="Link to this definition"></a></dt>
+<dd><p>Return the uncertainty-weighted Gaussian log likelihood of matching
+one-dimensional transit-time arrays, up to a parameter-independent
+normalization constant. Timing errors must be positive; nonfinite predicted
+times return negative infinity.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -612,6 +624,18 @@ sizes for a completed posterior state, including a combined pass flag.</p>
 <dd><p>Estimate normalized evidence for fixed-dimensional posterior samples using
 independent defensive importance draws. The result includes the log
 evidence, relative error estimate, and importance effective sample size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pcat.diagnostics.estimate_kl_divergence">
+<span class="sig-prename descclassname"><span class="pre">pcat.diagnostics.</span></span><span class="sig-name descname"><span class="pre">estimate_kl_divergence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_density_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_density_q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pcat.diagnostics.estimate_kl_divergence" title="Link to this definition"></a></dt>
+<dd><p>Estimate forward <code class="docutils literal notranslate"><span class="pre">D_KL(P</span> <span class="pre">||</span> <span class="pre">Q)</span></code> as the Monte Carlo mean of
+<code class="docutils literal notranslate"><span class="pre">log_density_p</span> <span class="pre">-</span> <span class="pre">log_density_q</span></code> for draws from <code class="docutils literal notranslate"><span class="pre">P</span></code>. Both callbacks must
+return normalized log densities and accept a matrix of draws. Samples may
+have shape <code class="docutils literal notranslate"><span class="pre">(draws,</span> <span class="pre">parameters)</span></code> or <code class="docutils literal notranslate"><span class="pre">(chains,</span> <span class="pre">draws,</span> <span class="pre">parameters)</span></code>. The
+result includes an autocorrelation-aware standard error and effective sample
+size. A finite-sample estimate is not clipped at zero; if <code class="docutils literal notranslate"><span class="pre">Q</span></code> has zero
+density at any draw from <code class="docutils literal notranslate"><span class="pre">P</span></code>, the estimated divergence is infinite.</p>
 </dd></dl>
 
 </section>

@@ -125,6 +125,46 @@ acceptance-term decomposition, the compute budget, the catalog trace, and, for
 one-dimensional data, the posterior predictive check. The :doc:`gallery` shows
 examples of each.
 
+Animation output
+----------------
+
+After building a model-specific ``configuration``, enable both retained-state
+and proposal-candidate animations. ``makeanim`` assembles the retained-state
+GIF from saved chain frames at ``numbswepplot`` cadence. ``boolmakeanimprop`` records one
+current-versus-candidate frame per sweep on worker zero before each proposal is
+accepted or rejected; it also enables ``makeanim``. Candidate recording must be
+enabled during sampling because the proposed states cannot be recovered from
+the final posterior alone.
+
+.. code-block:: python
+
+   from pcat import sampling
+
+   configuration.update(
+       boolmakeplotfram=True,
+       makeanim=True,
+       boolmakeanimprop=True,
+   )
+   result = sampling.sample(**configuration)
+
+After a completed, converged run, ``proposal_sequence.gif`` contains the saved
+retained states from sweeps at or after ``numbburn``. It is a visualization of
+the post-burn-in chain, not a claim that correlated states are independent.
+``proposal_candidates.gif`` contains every recorded worker-zero proposal,
+including rejected candidates and burn-in transitions. Both files are written
+under ``<run>/visuals/post/anim/``. The maintained
+``examples/proposal_state_animation/`` run enables both and displays both GIFs.
+
+If the GIFs are absent but the run still has ``gdatinit``, ``gdatfinlpost``,
+and its saved frame images, call :func:`pcat.main.proc_anim` with the run tag
+and project root to assemble them again:
+
+.. code-block:: python
+
+    from pcat.main import proc_anim
+
+    proc_anim(configuration["strgcnfg"], pathbase=configuration["pathbase"])
+
 Reproducibility checklist
 -------------------------
 

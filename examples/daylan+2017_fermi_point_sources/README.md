@@ -33,8 +33,11 @@ The paper used Pass 7 exposure from weeks 9--217 and the Fermi diffuse template.
 Those inputs and its exact source realization are not included here. This
 example uses constant exposure and a deterministic spatial template, so its
 posterior values are not measurements from Fermi-LAT and are not expected to
-match the paper's results. The quick run is intended for visualization rather
-than convergence claims.
+match the paper's results. The published probabilistic catalog is available
+from [Harvard Dataverse, DOI 10.7910/DVN/WTVSWG](https://doi.org/10.7910/DVN/WTVSWG).
+Reproducing the real-data figures requires the Pass 7 inputs and analysis
+templates, which are not included here. The quick run is intended for
+visualization rather than convergence claims.
 
 The notebook runs PCAT, loads that run's finalized posterior and injected
 catalog, then creates figure-style comparisons from the actual samples. Its

@@ -227,6 +227,7 @@ def plot_posterior_convergence(state, output_directory: Path, typefileplot: str 
 
     def save(figure, name):
         path = output_directory / f"{name}.{typefileplot}"
+        figure.tight_layout()
         print(f"Writing to {path}...")
         figure.savefig(path, dpi=300 if typefileplot == "png" else None,
                        bbox_inches="tight", facecolor="white")
@@ -386,19 +387,19 @@ POSTERIOR_ANIMATION_PANELS = (
         "daylan+2017_fermi_point_sources/visuals/fermi_ngpc_sources_swep*.png",
     ),
     PosteriorAnimationPanel(
-        "Voigt lines | spectral model",
-        "voigt_spectral_line_catalog/pcat_runs/voigt_nomi/visuals/post/fram/thisscatcntpevt0_swep*.png",
+        "JWST/MIRI NGC 7027 | observed spectral fit",
+        "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_swep*.png",
     ),
     PosteriorAnimationPanel(
-        "Simulated photometry | rotating starspots",
+        "Stellar light curve | variable-count rotating starspots",
         "variable_number_stellar_spots/visuals/stellar_spot_photometry_swep*.png",
     ),
     PosteriorAnimationPanel(
-        "PCAT | transdimensional inference",
+        "PCAT logo",
         static_image="docs/_static/pcat_logo.png",
     ),
     PosteriorAnimationPanel(
-        "Roman/WFI | simulated strong-lens arcs",
+        "Roman/WFI detector image | simulated strong-lens arcs",
         "roman_strong_lens_perturber_catalog/visuals/roman_wfi_lensed_posterior_swep*.png",
     ),
     PosteriorAnimationPanel(
@@ -577,9 +578,9 @@ def make_posterior_animation_collage(
     output_path: Path = DEFAULT_POSTERIOR_COLLAGE,
     examples_root: Path = EXAMPLES_ROOT,
     panels: tuple[PosteriorAnimationPanel, ...] = POSTERIOR_ANIMATION_PANELS,
-    frame_count: int = 16,
-    duration_ms: int = 120,
-    panel_size: int = 560,
+    frame_count: int = 24,
+    duration_ms: int = 80,
+    panel_size: int = 720,
 ) -> Path:
     """Write a synchronized, high-resolution collage of posterior frame sequences."""
     if frame_count < 2:
@@ -605,7 +606,7 @@ def make_posterior_animation_collage(
     for frame_index in range(frame_count):
         canvas = Image.new("RGB", canvas_size, "white")
         draw = ImageDraw.Draw(canvas)
-        draw.text((margin, margin), "PCAT: from a prior draw to posterior samples", fill="black",
+        draw.text((margin, margin), "PCAT: nonempty catalogs through burn-in and posterior sampling", fill="black",
                   font=title_font)
         # panel frames follow PCAT's animation schedule, which spends the first third in burn-in
         phase = "burn-in" if frame_index < frame_count / 3 else "posterior samples"
@@ -843,20 +844,37 @@ def plot_grid(
     return output_path
 
 
-def animation_states(state):
-    """Return the chain-0 snapshots PCAT recorded for ``numbframanim``, ordered by sweep."""
+def animation_states(state, require_nonzero_catalog=False):
+    """Return ordered chain-0 snapshots, optionally omitting empty catalogs."""
     snapshots = list(getattr(state, "listanimstate", []) or [])
     if len(snapshots) < 2:
         raise ValueError("Run PCAT with numbframanim >= 2 to record animation snapshots")
-    return sorted(snapshots, key=lambda snapshot: snapshot["cntrswep"])
+    snapshots = sorted(snapshots, key=lambda snapshot: snapshot["cntrswep"])
+    if require_nonzero_catalog:
+        if any("numbelem" not in snapshot for snapshot in snapshots):
+            raise ValueError("Every snapshot needs numbelem to filter empty catalogs")
+        snapshots = [snapshot for snapshot in snapshots
+                     if np.sum(np.asarray(snapshot["numbelem"], dtype=int)) > 0]
+        if len(snapshots) < 2:
+            raise ValueError("At least two nonempty catalog snapshots are required")
+    return snapshots
 
 
-def animation_phase_label(snapshot):
+def animation_phase_label(snapshot, maximum_sweeps=None):
     """Describe a snapshot as the initial prior draw, a burn-in state, or a posterior sample."""
     if snapshot["cntrswep"] == 0:
-        return "Initial random draw from the prior"
-    phase = "Burn-in" if snapshot["boolburn"] else "Posterior sample"
-    return f"{phase}, sweep {snapshot['cntrswep']:,}"
+        label = "Initial random draw from the prior"
+    else:
+        phase = "Burn-in" if snapshot["boolburn"] else "Posterior sample"
+        label = f"{phase}, sweep {snapshot['cntrswep']:,}"
+    if maximum_sweeps is not None:
+        label_width = max(
+            len("Initial random draw from the prior"),
+            len(f"Burn-in, sweep {maximum_sweeps:,}"),
+            len(f"Posterior sample, sweep {maximum_sweeps:,}"),
+        )
+        label = _pad_animation_text(label, label_width)
+    return label
 
 
 MOVE_LABELS = {"with": "Within-model", "brth": "Birth", "deth": "Death", "splt": "Split",
@@ -893,6 +911,72 @@ def _proposal_record(state):
     # proposals are stored sweep-major across chains
     sweep = np.arange(move_index.size) // chain_count
     return names, move_index, accepted, evaluated, sweep, chain_count
+
+
+def plot_sampler_trajectory(state, output_path, typefileplot="png"):
+    """Show proposal log ratios and likelihood inverse temperature by sweep.
+
+    Evaluated proposals are colored by move type, with accepted and rejected
+    proposals distinguished by marker. Proposals filtered before likelihood
+    evaluation are shown at the bottom of the first panel.
+    """
+    names, move_index, accepted, evaluated, sweep, chain_count = _proposal_record(state)
+    log_ratio = np.asarray(getattr(state, "listpostaccplprb", []), dtype=float).ravel()
+    if log_ratio.size != move_index.size:
+        raise ValueError("Log-acceptance values must have one entry per proposal")
+    keep = evaluated & np.isfinite(log_ratio)
+    if not np.any(keep):
+        raise ValueError("No finite evaluated proposal log-acceptance values are available")
+
+    signed_ratio = _signed_log(log_ratio)
+    finite_ratio = signed_ratio[keep]
+    lower, upper = finite_ratio.min(), finite_ratio.max()
+    span = max(upper - lower, 1.0)
+    filtered_y = lower - 0.12 * span
+    x = sweep + (np.arange(sweep.size) % chain_count + 0.5) / chain_count
+    burn_count = int(getattr(state, "numbburn", 0) or 0)
+    figure, axes = plt.subplots(2, 1, figsize=(11, 6), sharex=True, facecolor="white",
+                                gridspec_kw={"height_ratios": (3.0, 1.0)})
+    axis = axes[0]
+    if burn_count > 0:
+        axis.axvspan(0, burn_count, color="0.92", label="Burn-in")
+    for index in range(names.size):
+        move = move_index == index
+        for did_accept, marker in ((True, "o"), (False, "x")):
+            chosen = keep & move & (accepted == did_accept)
+            if np.any(chosen):
+                axis.scatter(x[chosen], signed_ratio[chosen], s=7, marker=marker,
+                             color=MOVE_COLORS.get(str(names[index]), "black"), alpha=0.65,
+                             label=MOVE_LABELS.get(str(names[index]), str(names[index]))
+                             if did_accept else None)
+    filtered = ~evaluated
+    if np.any(filtered):
+        axis.scatter(x[filtered], np.full(np.sum(filtered), filtered_y), marker="|", s=24,
+                     color="0.35", label="Filtered before likelihood")
+    axis.scatter([], [], marker="o", color="0.25", label="Accepted")
+    axis.scatter([], [], marker="x", color="0.25", label="Rejected")
+    axis.set_ylim(filtered_y - 0.08 * span, upper + 0.08 * span)
+    axis.set(ylabel=r"Signed $\log_{10}(1+|\log \alpha|)$",
+             title="Proposal trajectory: acceptance terms and annealing")
+    axis.legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=5, fontsize="small",
+                markerscale=0.75, labelspacing=0.3, columnspacing=0.8, **LEGEND_STYLE)
+
+    axis = axes[1]
+    temperature = np.asarray(getattr(state, "listpostfacttmpr", []), dtype=float).ravel()
+    if temperature.size == move_index.size:
+        by_sweep = temperature.reshape(-1, chain_count).mean(axis=1)
+        axis.step(np.arange(by_sweep.size) + 0.5, by_sweep, where="mid", color="#2166AC", lw=1.4)
+        axis.set_ylim(-0.05, 1.05)
+    else:
+        axis.text(0.5, 0.5, "Temperature history unavailable", ha="center", va="center",
+                  transform=axis.transAxes)
+    if burn_count > 0:
+        axis.axvspan(0, burn_count, color="0.92", zorder=-1)
+    axis.set(xlabel="Sweep", ylabel=r"Likelihood $\beta$", xlim=(0, sweep[-1] + 1))
+    for axis in axes:
+        axis.grid(False)
+    figure.tight_layout()
+    return _save_view(figure, output_path, typefileplot)
 
 
 def has_proposal_record(state):
@@ -1235,6 +1319,8 @@ def plot_sampler_overview(state, output_directory, typefileplot="png", **catalog
         paths["proposal_ledger"] = plot_proposal_ledger(
             state, output_directory / "proposal_ledger", typefileplot)
         if np.size(getattr(state, "listpostaccplprb", [])) == np.size(state.listpostindxproptype):
+            paths["sampler_trajectory"] = plot_sampler_trajectory(
+                state, output_directory / "sampler_trajectory", typefileplot)
             paths["acceptance_decomposition"] = plot_acceptance_decomposition(
                 state, output_directory / "acceptance_decomposition", typefileplot)
         if np.size(getattr(state, "listpostchrototl", [])) == np.size(state.listpostindxproptype):

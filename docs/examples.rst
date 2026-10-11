@@ -63,18 +63,18 @@ transit-timing series, the public JWST/MIRI spectrum, the proposal profiler,
 and the sampler comparison. The JWST example may retrieve public MAST data.
 Notebooks requiring authenticated services or interactive inspection are excluded.
 
-Eight changing inference views are synchronized below. Each starts from a
-random draw from the prior, follows burn-in for the first third of the
-animation, and shows posterior samples for the remaining two thirds.
-The panels show a genuinely unbinned Gaussian mixture, point sources in a
-simulated Daylan et al. (2017) Fermi-LAT northern Galactic cap, transdimensional
-Voigt-line fitting, a variable catalog of rotating starspots, simulated
-Roman/WFI lensed arcs, stellar flares, radial velocities, and transit times.
-The time-series and histogram axes remain fixed; the GIF uses one shared color
-palette.
+Eight changing inference views are synchronized around the PCAT logo. Each data
+view starts from a nonempty catalog, follows burn-in for the first third of the
+animation, and shows posterior samples for the remaining two thirds. The views
+show an unbinned Gaussian mixture, point sources in a simulated Daylan et al.
+(2017) Fermi-LAT northern Galactic cap, the observed JWST/MIRI NGC 7027
+spectral fit, a stellar light curve with a variable number of rotating
+starspots, simulated Roman/WFI lensed arcs, stellar flares, radial velocities,
+and transit times. Time-series and spectral axes remain fixed; the GIF uses one
+shared color palette.
 
 .. image:: ../examples/pcat_posterior_samples.gif
-   :alt: Eight changing PCAT inference views from a prior draw to posterior samples
+   :alt: Eight changing PCAT inference views and the centered PCAT logo
    :width: 760px
    :align: center
 
@@ -135,14 +135,31 @@ Publication and instrument examples
 
 ``variable_number_exoplanets_radial_velocity``
    Simulated six-year, two-instrument radial-velocity series containing three
-   injected planets. PCAT samples a variable catalog of Keplerian signals while
-   marginalizing instrument offsets and stellar jitter. The default 100,000
-   sweeps are intended for the full demonstration; ``--smoke`` provides a short
-   pipeline check.
+   injected planets. PCAT samples a catalog with zero to five Keplerian signals,
+   using periodogram-weighted birth and jump proposals with Hastings
+   corrections. Instrument offsets are marginalized analytically and stellar
+   jitter on a 24-point log grid. All data are simulated. The full run uses
+   100,000 sweeps; ``--smoke`` runs 1,000 sweeps as a pipeline check, not a
+   convergence test.
 
    .. code-block:: bash
 
+      python examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py --numbswep 100000
       python examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py --smoke
+
+   .. image:: ../examples/variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_count_posterior.png
+      :alt: Posterior probability for the number of simulated planets
+      :width: 520px
+      :align: center
+
+   .. image:: ../examples/variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_phase_folded.png
+      :alt: Phase-folded radial velocities and PCAT posterior models for each planet
+      :width: 720px
+
+   .. image:: ../examples/variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_catalog_samples.png
+      :alt: Period and semi-amplitude samples across the PCAT planet catalogs
+      :width: 720px
+      :align: center
 
 ``variable_number_stellar_flares``
    Simulated one-day, TESS-like light curve with fast-rise, exponential-decay
@@ -292,6 +309,21 @@ Publication and instrument examples
 Analysis utilities
 ------------------
 
+``image_forward_model``
+   Deterministic image formation with a normalized Gaussian point-spread
+   function and uniform background. The explicitly simulated two-source scene
+   is not observed data; this utility does not run inference or draw Poisson
+   noise.
+
+   .. code-block:: bash
+
+      python examples/image_forward_model/image_forward_model.py --typefileplot png
+
+   .. image:: ../examples/image_forward_model/visuals/pcat_image_forward_model.png
+      :alt: Simulated source scene, normalized Gaussian PSF, and predicted detector image
+      :width: 720px
+      :align: center
+
 ``kl_divergence_gaussian``
    PCAT samples a conjugate Gaussian posterior and estimates the forward KL
    divergence to its Gaussian prior. The example compares the Monte Carlo
@@ -308,14 +340,41 @@ Analysis utilities
 
 ``sampler_comparison_emcee_dynesty``
    Controlled simulated radial-velocity comparison of PCAT, emcee, and dynesty.
-   The fixed-dimensional comparison uses the same likelihood and priors for all
-   samplers. The variable-dimensional comparison contrasts one PCAT catalog run
-   with separate dynesty evidence calculations for each planet count; emcee is
-   excluded from that portion because it does not compare dimensions.
+   The fixed-dimensional sinusoid uses the same likelihood and priors for all
+   three, and compares posterior agreement, mode recovery, effective sampling
+   rate, likelihood calls, and evidence. The variable-dimensional two-planet
+   experiment compares one PCAT run over zero to three planets with separate
+   dynesty evidence calculations per count. emcee is excluded there because it
+   cannot compare dimensions. Count-posterior agreement, period recovery, and
+   computational costs make PCAT's transdimensional capability explicit
+   without claiming that one sampler is universally faster.
 
    .. code-block:: bash
 
-      python examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynesty.py --part fixed
+      python examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynesty.py --part both
+
+   .. image:: ../examples/sampler_comparison_emcee_dynesty/visuals/sampler_comparison_marginal_posteriors.png
+      :alt: Fixed-dimensional posterior marginals from PCAT, emcee, and dynesty
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/sampler_comparison_emcee_dynesty/visuals/sampler_comparison_efficiency.png
+      :alt: Fixed-dimensional mode recovery and sampling efficiency comparison
+      :width: 720px
+
+   .. image:: ../examples/sampler_comparison_emcee_dynesty/visuals/sampler_comparison_planet_count_posterior.png
+      :alt: Posterior probability for the number of planets from PCAT and dynesty
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/sampler_comparison_emcee_dynesty/visuals/sampler_comparison_planet_count_cost.png
+      :alt: Likelihood evaluations and runtime for transdimensional inference
+      :width: 720px
+
+   .. image:: ../examples/sampler_comparison_emcee_dynesty/visuals/sampler_comparison_two_planet_periods.png
+      :alt: Period posterior comparison for a two-planet model
+      :width: 720px
+      :align: center
 
 ``proposal_profiling``
    Simulated Voigt-line run reporting proposal attempts, acceptance fractions,
@@ -327,12 +386,26 @@ Analysis utilities
 
 ``proposal_state_animation``
    Short simulated Voigt-line run producing two complementary animations. The
-   retained-state sequence follows the configured plotting cadence, while the
-   candidate sequence shows every attempted move before acceptance or rejection.
+   retained-state sequence follows the configured plotting cadence. The
+   every-candidate sequence labels within-model Gaussian, DE-MC, and Student-t
+   steps as well as birth, death, split, merge, and jump moves before the
+   accept/reject decision. The run reports proposal counts and is long enough to
+   exercise the complete categorical move roster. The retained-state animation
+   starts after burn-in; the candidate animation includes all 120 sweeps.
 
    .. code-block:: bash
 
-      python examples/proposal_state_animation/proposal_state_animation.py --numbswep 24
+      python examples/proposal_state_animation/proposal_state_animation.py --numbswep 120
+
+   .. image:: ../examples/proposal_state_animation/visuals/post/anim/proposal_sequence.gif
+      :alt: Retained PCAT chain states after burn-in at the configured plotting cadence
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/proposal_state_animation/visuals/post/anim/proposal_candidates.gif
+      :alt: Every current and proposed PCAT state, including rejected proposals
+      :width: 720px
+      :align: center
 
 ``burn_in_strategies``
    Seeded comparison of fixed and adaptive Gaussian steps, likelihood-tempered

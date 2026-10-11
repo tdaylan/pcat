@@ -275,6 +275,65 @@ def test_proc_anim_preserves_numeric_sweep_order(tmp_path, monkeypatch):
         assert animation.convert("RGB").getpixel((0, 0)) == (0, 0, 255)
 
 
+def test_proc_anim_separates_posterior_states_from_all_proposals(tmp_path, monkeypatch):
+    from PIL import Image
+
+    run_root = tmp_path / "pcat_runs" / "demo"
+    output_path = run_root / "data" / "outp" / "demo"
+    frame_path = run_root / "visuals" / "post" / "fram"
+    output_path.mkdir(parents=True)
+    frame_path.mkdir(parents=True)
+    for sweep in range(5):
+        color = (sweep * 40, 0, 0)
+        Image.new("RGB", (4, 4), color).save(
+            frame_path / f"thiscntpmodl_swep{sweep:09d}.png"
+        )
+        Image.new("RGB", (4, 4), color).save(
+            frame_path / f"proposal_candidates_swep{sweep:09d}.png"
+        )
+    (output_path / "gdatfinlpost.p").touch()
+    (output_path / "gdatfinlpost.h5").touch()
+
+    posterior = SimpleNamespace(
+        listpostindxproptype=np.arange(5),
+        listpostboolpropaccp=np.array([True, False, True, False, True]),
+        lablproptype=["Within", "Birth", "Death", "Split", "Merge"],
+    )
+    monkeypatch.setattr(
+        pcat_main,
+        "retr_pathoutpcnfg",
+        lambda pathbase, run_name: str(output_path) + "/",
+    )
+    monkeypatch.setattr(
+        pcat_main,
+        "retr_pathplotcnfg",
+        lambda pathbase, run_name: str(run_root / "visuals") + "/",
+    )
+    monkeypatch.setattr(
+        pcat_main,
+        "readfile",
+        lambda path: (
+            SimpleNamespace(
+                liststrgpdfn=["post"],
+                liststrgfoldanim=[],
+                typefileplot="png",
+                numbburn=2,
+            )
+            if path.endswith("gdatinit")
+            else posterior
+        ),
+    )
+    monkeypatch.setattr(pcat_main, "open_narr", lambda path, mode: io.StringIO())
+
+    pcat_main.proc_anim("demo", pathbase=tmp_path)
+
+    animation_root = run_root / "visuals" / "post" / "anim"
+    with Image.open(animation_root / "proposal_sequence.gif") as animation:
+        assert animation.n_frames == 3
+    with Image.open(animation_root / "proposal_candidates.gif") as animation:
+        assert animation.n_frames == 5
+
+
 @pytest.mark.parametrize("typeexpr", ["chan", "ferm", "fire", "gmix", "HST_WFC3_IR"])
 def test_sample_routes_image_experiments_through_image_initialization(
     typeexpr, monkeypatch

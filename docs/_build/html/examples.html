@@ -15,8 +15,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -125,8 +125,10 @@ posterior parameter distributions. It does not analyze Rubin observations.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">rubin_dp1_confirmed_strong_lenses</span></code></dt><dd><p>Rubin Science Platform notebook for real Data Preview 1 imaging. It queries
 confirmed SIMBAD lens-system classifications, checks exact DP1 image
 footprints, retrieves every resulting deep-coadd cutout, displays the full
-matched sample, and passes each usable cutout to PCAT. DP1 requires Rubin
-data rights, and SIMBAD does not constitute a complete census of lenses.</p>
+matched sample and a separate multiband figure for each lens system, and
+passes each usable cutout to PCAT. It also compares the posterior Einstein
+radii from every successful fit in one figure. DP1 requires Rubin data
+rights, and SIMBAD does not constitute a complete census of lenses.</p>
 </dd>
 </dl>
 <p>Run the maintained local smoke suite with:</p>
@@ -139,16 +141,16 @@ simulated Roman strong-lens posterior images, simulated radial-velocity and
 transit-timing series, the public JWST/MIRI spectrum, the proposal profiler,
 and the sampler comparison. The JWST example may retrieve public MAST data.
 Notebooks requiring authenticated services or interactive inspection are excluded.</p>
-<p>Eight changing inference views are synchronized below. Each starts from a
-random draw from the prior, follows burn-in for the first third of the
-animation, and shows posterior samples for the remaining two thirds.
-The panels show a genuinely unbinned Gaussian mixture, point sources in a
-simulated Daylan et al. (2017) Fermi-LAT northern Galactic cap, transdimensional
-Voigt-line fitting, a variable catalog of rotating starspots, simulated
-Roman/WFI lensed arcs, stellar flares, radial velocities, and transit times.
-The time-series and histogram axes remain fixed; the GIF uses one shared color
-palette.</p>
-<a class="reference internal image-reference" href="_images/pcat_posterior_samples.gif"><img alt="Eight changing PCAT inference views from a prior draw to posterior samples" class="align-center" src="_images/pcat_posterior_samples.gif" style="width: 760px;" />
+<p>Eight changing inference views are synchronized around the PCAT logo. Each data
+view starts from a nonempty catalog, follows burn-in for the first third of the
+animation, and shows posterior samples for the remaining two thirds. The views
+show an unbinned Gaussian mixture, point sources in a simulated Daylan et al.
+(2017) Fermi-LAT northern Galactic cap, the observed JWST/MIRI NGC 7027
+spectral fit, a stellar light curve with a variable number of rotating
+starspots, simulated Roman/WFI lensed arcs, stellar flares, radial velocities,
+and transit times. Time-series and spectral axes remain fixed; the GIF uses one
+shared color palette.</p>
+<a class="reference internal image-reference" href="_images/pcat_posterior_samples.gif"><img alt="Eight changing PCAT inference views and the centered PCAT logo" class="align-center" src="_images/pcat_posterior_samples.gif" style="width: 760px;" />
 </a>
 </section>
 <section id="publication-and-instrument-examples">
@@ -157,14 +159,14 @@ palette.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">daylan+2017_fermi_point_sources</span></code></dt><dd><p>Scaled mock-catalog reproduction of Daylan, Portillo, and Finkbeiner (2017).
 The smoke mode preserves the inference pattern while reducing the source
 count and chain length.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span><span class="s1">&#39;examples/daylan+2017_fermi_point_sources/daylan+2017_fermi_point_sources.py&#39;</span><span class="w"> </span>--smoke<span class="w"> </span>--fresh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span><span class="s1">'examples/daylan+2017_fermi_point_sources/daylan+2017_fermi_point_sources.py'</span><span class="w"> </span>--smoke<span class="w"> </span>--fresh
 </pre></div>
 </div>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">daylan+2018_strong_lens_subhalos</span></code></dt><dd><p>Simulated Hubble Space Telescope Wide Field Camera 3 strong-lens analysis
 comparing a variable subhalo catalog with a fixed one-subhalo fit.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span><span class="s1">&#39;examples/daylan+2018_strong_lens_subhalos/daylan+2018_strong_lens_subhalos.py&#39;</span><span class="w"> </span>--smoke
-python<span class="w"> </span><span class="s1">&#39;examples/daylan+2018_strong_lens_subhalos/daylan+2018_strong_lens_subhalos.py&#39;</span><span class="w"> </span>--smoke<span class="w"> </span>--one-subhalo
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span><span class="s1">'examples/daylan+2018_strong_lens_subhalos/daylan+2018_strong_lens_subhalos.py'</span><span class="w"> </span>--smoke
+python<span class="w"> </span><span class="s1">'examples/daylan+2018_strong_lens_subhalos/daylan+2018_strong_lens_subhalos.py'</span><span class="w"> </span>--smoke<span class="w"> </span>--one-subhalo
 </pre></div>
 </div>
 </dd>
@@ -182,15 +184,30 @@ effective Poisson counts, and fits a line catalog over 5.30–5.535 microns.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py<span class="w"> </span>--numbswep<span class="w"> </span><span class="m">200000</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/jwst_miri_ngc7027_spectrum_fit.png"><img alt="Real JWST MIRI spectrum of NGC 7027 with the PCAT median model and residuals" class="align-center" src="_images/jwst_miri_ngc7027_spectrum_fit.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/jwst_miri_ngc7027_line_catalog_samples.png"><img alt="Posterior line wavelengths and integrated fluxes from the JWST spectrum" class="align-center" src="_images/jwst_miri_ngc7027_line_catalog_samples.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/jwst_miri_ngc7027_line_count_posterior.png"><img alt="Posterior probability for the number of emission lines in NGC 7027" class="align-center" src="_images/jwst_miri_ngc7027_line_count_posterior.png" style="width: 520px;" />
+</a>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">variable_number_exoplanets_radial_velocity</span></code></dt><dd><p>Simulated six-year, two-instrument radial-velocity series containing three
-injected planets. PCAT samples a variable catalog of Keplerian signals while
-marginalizing instrument offsets and stellar jitter. The default 100,000
-sweeps are intended for the full demonstration; <code class="docutils literal notranslate"><span class="pre">--smoke</span></code> provides a short
-pipeline check.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py<span class="w"> </span>--smoke
+injected planets. PCAT samples a catalog with zero to five Keplerian signals,
+using periodogram-weighted birth and jump proposals with Hastings
+corrections. Instrument offsets are marginalized analytically and stellar
+jitter on a 24-point log grid. All data are simulated. The full run uses
+100,000 sweeps; <code class="docutils literal notranslate"><span class="pre">--smoke</span></code> runs 1,000 sweeps as a pipeline check, not a
+convergence test.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py<span class="w"> </span>--numbswep<span class="w"> </span><span class="m">100000</span>
+python<span class="w"> </span>examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py<span class="w"> </span>--smoke
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/variable_number_exoplanets_rv_count_posterior.png"><img alt="Posterior probability for the number of simulated planets" class="align-center" src="_images/variable_number_exoplanets_rv_count_posterior.png" style="width: 520px;" />
+</a>
+<a class="reference internal image-reference" href="_images/variable_number_exoplanets_rv_phase_folded.png"><img alt="Phase-folded radial velocities and PCAT posterior models for each planet" src="_images/variable_number_exoplanets_rv_phase_folded.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/variable_number_exoplanets_rv_catalog_samples.png"><img alt="Period and semi-amplitude samples across the PCAT planet catalogs" class="align-center" src="_images/variable_number_exoplanets_rv_catalog_samples.png" style="width: 720px;" />
+</a>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">variable_number_stellar_flares</span></code></dt><dd><p>Simulated one-day, TESS-like light curve with fast-rise, exponential-decay
 flares. PCAT fits a variable catalog of native FRED bursts with independent
@@ -198,6 +215,12 @@ peak amplitude, peak time, rise time, and decay time.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/variable_number_stellar_flares/variable_number_stellar_flares.py<span class="w"> </span>--smoke
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/variable_number_stellar_flares_light_curve_fit.png"><img alt="Simulated photometry, PCAT flare model, and standardized residuals" class="align-center" src="_images/variable_number_stellar_flares_light_curve_fit.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/variable_number_stellar_flares_catalog_samples.png"><img alt="Posterior samples of flare peak times and excess counts" class="align-center" src="_images/variable_number_stellar_flares_catalog_samples.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/variable_number_stellar_flares_count_posterior.png"><img alt="Posterior probability for the number of simulated stellar flares" class="align-center" src="_images/variable_number_stellar_flares_count_posterior.png" style="width: 520px;" />
+</a>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">variable_number_stellar_spots</span></code></dt><dd><p>Simulated rotating-star photometry with three injected dark spots. PCAT fits
 a zero-to-five-spot catalog using a fixed 3.2-day rotation period while
@@ -246,14 +269,24 @@ samplers. The correct fits recover four flares with a posterior probability
 of at least 0.94. Symmetric Gaussian flares need about 15 components to
 reproduce the asymmetric decays, with a residual consistent with noise. A
 constant quiescent level turns the modulation into about 6.5 flares. Both
-misspecified posteriors are narrow and exclude the injected number.</p>
+misspecified posteriors are narrow and exclude the injected number. The
+example also compares standardized Pearson-residual distributions with a
+standard Gaussian and total chi-squared values from posterior-predictive
+Poisson replicates with a Gaussian approximation. The displayed upper-tail
+fraction is a descriptive reference, not a formal p-value.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/mismodeling_flare_catalog/mismodeling_flare_catalog.py
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/mismodeling_profile_light_curve.png"><img alt="Flare light curve fit with FRED and Gaussian flare profiles, with residuals" class="align-center" src="_images/mismodeling_profile_light_curve.png" style="width: 720px;" />
 </a>
-<a class="reference internal image-reference" href="_images/mismodeling_catalog_size.png"><img alt="Posterior number of flares for correct and misspecified forward models" class="align-center" src="_images/mismodeling_catalog_size.png" style="width: 720px;" />
+<a class="reference internal image-reference" href="_images/mismodeling_catalog_size.png"><img alt="Posterior number of flares for correct and misspecified forward models" src="_images/mismodeling_catalog_size.png" style="width: 720px;" />
 </a>
+<a class="reference internal image-reference" href="_images/mismodeling_residual_chi2_shapes.png"><img alt="Pearson residual and posterior-predictive chi-squared distributions with Gaussian references" class="align-center" src="_images/mismodeling_residual_chi2_shapes.png" style="width: 720px;" />
+</a>
+<p>The shape comparison overlays a standard Gaussian on the observed Pearson
+residuals and a moment-matched Gaussian on total chi-squared values from
+posterior-predictive Poisson replications. This preview was generated in
+smoke mode and demonstrates the diagnostic, not chain convergence.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">fermi_lat_pg1553_event_filter</span></code></dt><dd><p>Fermi Large Area Telescope event-filter configuration for PG 1553+113. This
 utility requires the Fermi Science Tools and local mission data.</p>
@@ -278,14 +311,47 @@ after Hall et al. (2026).</p>
 <section id="analysis-utilities">
 <h2>Analysis utilities<a class="headerlink" href="#analysis-utilities" title="Link to this heading"></a></h2>
 <dl>
-<dt><code class="docutils literal notranslate"><span class="pre">sampler_comparison_emcee_dynesty</span></code></dt><dd><p>Controlled simulated radial-velocity comparison of PCAT, emcee, and dynesty.
-The fixed-dimensional comparison uses the same likelihood and priors for all
-samplers. The variable-dimensional comparison contrasts one PCAT catalog run
-with separate dynesty evidence calculations for each planet count; emcee is
-excluded from that portion because it does not compare dimensions.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynesty.py<span class="w"> </span>--part<span class="w"> </span>fixed
+<dt><code class="docutils literal notranslate"><span class="pre">image_forward_model</span></code></dt><dd><p>Deterministic image formation with a normalized Gaussian point-spread
+function and uniform background. The explicitly simulated two-source scene
+is not observed data; this utility does not run inference or draw Poisson
+noise.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/image_forward_model/image_forward_model.py<span class="w"> </span>--typefileplot<span class="w"> </span>png
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/pcat_image_forward_model.png"><img alt="Simulated source scene, normalized Gaussian PSF, and predicted detector image" class="align-center" src="_images/pcat_image_forward_model.png" style="width: 720px;" />
+</a>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">kl_divergence_gaussian</span></code></dt><dd><p>PCAT samples a conjugate Gaussian posterior and estimates the forward KL
+divergence to its Gaussian prior. The example compares the Monte Carlo
+estimate and its autocorrelation-aware uncertainty with the analytic value.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/kl_divergence_gaussian/kl_divergence_gaussian.py<span class="w"> </span>--smoke
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/kl_divergence_gaussian.png"><img alt="PCAT posterior-to-prior KL estimate and the analytic Gaussian value" class="align-center" src="_images/kl_divergence_gaussian.png" style="width: 640px;" />
+</a>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">sampler_comparison_emcee_dynesty</span></code></dt><dd><p>Controlled simulated radial-velocity comparison of PCAT, emcee, and dynesty.
+The fixed-dimensional sinusoid uses the same likelihood and priors for all
+three, and compares posterior agreement, mode recovery, effective sampling
+rate, likelihood calls, and evidence. The variable-dimensional two-planet
+experiment compares one PCAT run over zero to three planets with separate
+dynesty evidence calculations per count. emcee is excluded there because it
+cannot compare dimensions. Count-posterior agreement, period recovery, and
+computational costs make PCAT’s transdimensional capability explicit
+without claiming that one sampler is universally faster.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynesty.py<span class="w"> </span>--part<span class="w"> </span>both
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/sampler_comparison_marginal_posteriors.png"><img alt="Fixed-dimensional posterior marginals from PCAT, emcee, and dynesty" class="align-center" src="_images/sampler_comparison_marginal_posteriors.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/sampler_comparison_efficiency.png"><img alt="Fixed-dimensional mode recovery and sampling efficiency comparison" src="_images/sampler_comparison_efficiency.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/sampler_comparison_planet_count_posterior.png"><img alt="Posterior probability for the number of planets from PCAT and dynesty" class="align-center" src="_images/sampler_comparison_planet_count_posterior.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/sampler_comparison_planet_count_cost.png"><img alt="Likelihood evaluations and runtime for transdimensional inference" src="_images/sampler_comparison_planet_count_cost.png" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/sampler_comparison_two_planet_periods.png"><img alt="Period posterior comparison for a two-planet model" class="align-center" src="_images/sampler_comparison_two_planet_periods.png" style="width: 720px;" />
+</a>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">proposal_profiling</span></code></dt><dd><p>Simulated Voigt-line run reporting proposal attempts, acceptance fractions,
 time per sweep, and the recorded timing breakdown for major pipeline phases.</p>
@@ -294,17 +360,27 @@ time per sweep, and the recorded timing breakdown for major pipeline phases.</p>
 </div>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">proposal_state_animation</span></code></dt><dd><p>Short simulated Voigt-line run producing two complementary animations. The
-retained-state sequence follows the configured plotting cadence, while the
-candidate sequence shows every attempted move before acceptance or rejection.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/proposal_state_animation/proposal_state_animation.py<span class="w"> </span>--numbswep<span class="w"> </span><span class="m">24</span>
+retained-state sequence follows the configured plotting cadence. The
+every-candidate sequence labels within-model Gaussian, DE-MC, and Student-t
+steps as well as birth, death, split, merge, and jump moves before the
+accept/reject decision. The run reports proposal counts and is long enough to
+exercise the complete categorical move roster. The retained-state animation
+starts after burn-in; the candidate animation includes all 120 sweeps.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/proposal_state_animation/proposal_state_animation.py<span class="w"> </span>--numbswep<span class="w"> </span><span class="m">120</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/proposal_sequence.gif"><img alt="Retained PCAT chain states after burn-in at the configured plotting cadence" class="align-center" src="_images/proposal_sequence.gif" style="width: 720px;" />
+</a>
+<a class="reference internal image-reference" href="_images/proposal_candidates.gif"><img alt="Every current and proposed PCAT state, including rejected proposals" class="align-center" src="_images/proposal_candidates.gif" style="width: 720px;" />
+</a>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">burn_in_strategies</span></code></dt><dd><p>Seeded comparison of fixed proposal scales, adaptive proposal scales, and
-likelihood-tempered plus adaptive burn-in on correlated-Gaussian and
-equal-weight bimodal posterior targets. The figures report retained samples,
-acceptance, effective sample rate, target-summary error, runtime, and the
-recorded inverse-temperature schedule.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">burn_in_strategies</span></code></dt><dd><p>Seeded comparison of fixed and adaptive Gaussian steps, likelihood-tempered
+burn-in, and an adaptive Student-t within-model proposal on correlated-
+Gaussian and equal-weight bimodal targets. The figures report retained
+samples, acceptance, effective sample rate, target-summary error, runtime,
+and the recorded inverse-temperature schedule. Student-t steps cross the
+modes more often in the bimodal target but are not more efficient on every
+target.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/burn_in_strategies/burn_in_strategies.py<span class="w"> </span>--numbswep<span class="w"> </span><span class="m">1200</span>
 </pre></div>
 </div>

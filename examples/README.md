@@ -2,9 +2,19 @@
 
 These notebooks apply probabilistic cataloging to point-source images, Gaussian mixtures, strong gravitational lenses, diffuse emission, and Voigt spectral lines. They also demonstrate catalog association. Open a notebook in each directory and run its code cells to see selected data, model, residual, and posterior figures inline. The matching Python scripts remain available for command-line automation and existing tests. The Fermi-LAT filter and manual batch-command notebooks have no generated figures to display.
 
+Each maintained publication notebook runs PCAT, reloads the finalized object, and plots posterior diagnostics alongside model views. Synthetic analogs are not numerical reproductions of the papers.
+
 Sampler runs write a `proposal_activity.gif` with cumulative attempt and acceptance counts for each move type. Runs with model frames also write a `proposal_sequence.gif` that labels each frame with its proposal and acceptance status.
 
-Set `boolmakeanimprop=True` for a third product, `proposal_candidates.gif`, which shows every candidate before the accept/reject decision. One panel overlays current and proposed models on the data; the other compares their residuals. Colors and arrows identify the proposed transition. The animation includes rejected candidates, which are proposals rather than posterior samples. The `proposal_state_animation/` notebook runs 120 sweeps of a simulated Voigt-line example and displays the retained-state and every-candidate animations together. It also compares PCAT's split/merge acceptance probabilities with same-proposal counterfactuals that omit only the Jacobian.
+Set `makeanim=True` to save retained chain states after burn-in at the configured plotting cadence in `proposal_sequence.gif`. Set `boolmakeanimprop=True` to also record every worker-zero proposal, including rejected candidates, before the accept/reject decision. Candidate frames compare current and proposed models and residuals, and label the move and acceptance terms. PCAT assembles them into `proposal_candidates.gif` under `visuals/post/anim/`. Candidate frames must be recorded during sampling and cannot be reconstructed from the final posterior alone.
+
+The `proposal_state_animation/` example runs 120 sweeps of a simulated Voigt-line catalog, mixing Gaussian, DE-MC, and Student-t within-model proposals with birth, death, split, merge, and jump moves. It displays both GIFs, reports counts to confirm that the complete move roster was exercised, and compares split/merge acceptance probabilities with same-proposal counterfactuals that omit only the Jacobian.
+
+Run it from the repository root:
+
+```bash
+python examples/proposal_state_animation/proposal_state_animation.py --numbswep 120
+```
 
 ## Publication coverage
 
@@ -38,6 +48,7 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `simulated_rubin_cluster_lens/`: a synthetic Rubin-like cluster-scale lens fitted with PCAT's Poisson image sampler
 - `rubin_dp1_confirmed_strong_lenses/`: an RSP-only workflow that crossmatches confirmed SIMBAD lens systems to real Rubin DP1 imaging, retrieves all catalog-footprint matches, plots every lens-band cutout in a complete collage and per-system multiband figures, runs demonstration PCAT fits, and compares all fitted Einstein radii in one posterior summary figure
 - `catalog_association_completeness_purity/`: completeness and purity across catalog-matching radii
+- `image_forward_model/`: deterministic Gaussian-PSF forward modeling of an explicitly simulated two-source image with `pcat.image.forward_model_image`
 - `voigt_spectral_line_catalog/`: nominal and high-signal Voigt-profile line detection in simulated spectra
 - `jwst_miri_ngc7027_line_catalog/`: transdimensional emission-line catalog of the planetary nebula NGC 7027 from a real JWST MIRI MRS spectrum
 - `variable_number_stellar_flares/`: transdimensional catalog of a variable number of stellar flares in a simulated photometric time series
@@ -82,6 +93,36 @@ Omit `--smoke` for the default 100,000-sweep run. Sampling replaces the example'
 
 ![Posterior of the number of flares](variable_number_stellar_flares/visuals/variable_number_stellar_flares_count_posterior.png)
 
+## Variable-number exoplanet radial velocities
+
+This controlled simulation contains 120 irregular observations spanning six
+years, with seasonal gaps and two spectrographs that have different velocity
+zero points. Three Keplerian planets are injected with periods 5.77, 42.1, and
+410 days and semi-amplitudes 12, 4, and 2.5 m/s. The reported uncertainty is
+1.5 m/s, with 2 m/s of additional white stellar jitter. PCAT samples catalogs
+with zero to five planets. Instrument offsets are marginalized analytically,
+and jitter is marginalized on a 24-point log grid. The periodogram-weighted
+birth and jump proposals include their Hastings correction.
+
+Run the 100,000-sweep demonstration or the 1,000-sweep pipeline check from the
+repository root:
+
+```bash
+python examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py --numbswep 100000
+python examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.py --smoke
+```
+
+The full run takes about 1.5 minutes on the documented machine. In the recorded
+run the injected three-planet model receives 92% posterior probability. This is
+a simulated-data example, and the smoke configuration is not a convergence
+claim.
+
+![Posterior probability for the number of planets](variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_count_posterior.png)
+
+![Phase-folded posterior radial velocities](variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_phase_folded.png)
+
+![Planet signals across posterior catalogs](variable_number_exoplanets_radial_velocity/visuals/variable_number_exoplanets_rv_catalog_samples.png)
+
 ## Proposal profiling
 
 PCAT stores the wall-clock time and proposal type of every sweep, as well as a breakdown of that time into internal pipeline phases. The maintained [profiling script](proposal_profiling/proposal_profiling.py) enables within-model, birth, death, split, merge, and jump moves and reports total sampler wall time, per-sweep timing, acceptance, and runtime share. In one 20,000-sweep, one-process run on the simulated Voigt spectrum, the recorded sweep time summed to 25.4 s (1.27 ms per sweep). Median sweep times were 0.36 ms for within-model, 0.46 ms for birth, 0.40 ms for death, 0.47 ms for split, 0.61 ms for merge, and 0.55 ms for jump proposals. Their respective shares of recorded sweep time were 25.7%, 0.9%, 42.4%, 0.3%, 21.0%, and 9.6%. These timings are specific to this run and machine.
@@ -109,6 +150,25 @@ The data are simulated: 40 epochs over 30 d of a 5 m/s sinusoid with a 3.7 d per
 ![Marginal posteriors](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_marginal_posteriors.png)
 
 ![Sampling efficiency](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_efficiency.png)
+
+The same script also compares transdimensional model selection on 60 simulated
+radial-velocity epochs containing two planets. PCAT samples zero through three
+planets in one run. dynesty requires a separate evidence calculation for each
+planet count, and emcee cannot vary the number of planets. The count posterior,
+two-planet periods, likelihood-call total, and runtime show both the agreement
+and cost of these different approaches.
+
+Run both experiments from the repository root:
+
+```bash
+python examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynesty.py --part both
+```
+
+![Posterior probability for the number of planets](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_planet_count_posterior.png)
+
+![Likelihood-call and runtime comparison](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_planet_count_cost.png)
+
+![Two-planet period posteriors](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_two_planet_periods.png)
 
 ## Running
 

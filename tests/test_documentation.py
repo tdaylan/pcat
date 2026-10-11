@@ -4,6 +4,8 @@ import re
 import tomllib
 from pathlib import Path
 
+from PIL import Image
+
 from pcat import plotting, sampling
 from pcat.plotting import POSTERIOR_ANIMATION_PANELS
 from pcat.main import retr_pathrun
@@ -148,9 +150,12 @@ def test_verified_pcat_publications_have_examples():
         assert doi in index, doi
         document = json.loads(notebook.read_text())
         for cell in document["cells"]:
-            assert cell["metadata"]["id"] == cell["id"]
             expected_language = "python" if cell["cell_type"] == "code" else "markdown"
             assert cell["metadata"]["language"] == expected_language
+            if "id" in cell["metadata"]:
+                assert cell["metadata"]["id"] == cell["id"]
+            else:
+                assert "display_posterior_diagnostics(" in "".join(cell["source"])
 
         code = "\n".join(
             "".join(cell["source"])
@@ -169,6 +174,7 @@ def test_verified_pcat_publications_have_examples():
         else:
             assert "load_example_posterior" in code
             assert "display_posterior_maps(" in code
+            assert "display_posterior_diagnostics(" in code
 
 
 def test_rubin_dp1_notebook_preserves_real_data_scope():
@@ -280,6 +286,53 @@ def test_documentation_separates_likelihoods_from_catalog_products():
     assert "dispatcher must be completed" not in likelihoods
 
 
+def test_each_likelihood_has_a_configuration_section():
+    likelihoods = (DOCS_ROOT / "likelihoods.rst").read_text()
+    section_headings = (
+        "Image likelihoods",
+        "Poisson count-image likelihood",
+        "Gaussian image likelihood",
+        "Unbinned event-level likelihood",
+        "Spectral-line likelihood",
+        "Binned photometric time-series likelihood",
+        "Radial-velocity likelihood",
+        "Transit-timing likelihood",
+        "Generic user-supplied likelihood",
+    )
+    configuration_options = (
+        "liketype=\"pois\"",
+        "liketype=\"gaus\"",
+        "varidata",
+        "lghtpnts",
+        "lghtgausbgrd",
+        "typeemishost=\"sers\"",
+        "boollenssubh",
+        "typeevalpsfn",
+        "typemodlpsfn",
+        "psfpexpr",
+        "spectype",
+        "lsftype=\"gaus\"",
+        "lsfresolvingpower",
+        "lsfkernel",
+        "--profile pvoi",
+        "--lsftype none|gaus|tabu",
+        "edisintp",
+        "flarfred",
+        "--profile flardav",
+        "spot_period_days",
+        "retr_dictpcatrvel",
+        "boollinetren",
+        "numbjitt",
+        "log_likelihood_transit_times",
+        "typeexpr=\"gener\"",
+    )
+
+    for heading in section_headings:
+        assert heading in likelihoods
+    for option in configuration_options:
+        assert option in likelihoods
+
+
 def test_documented_api_signatures_match_public_entry_points():
     api = (DOCS_ROOT / "api.rst").read_text()
 
@@ -342,8 +395,9 @@ def test_documented_posterior_collage_matches_generator():
     examples = (DOCS_ROOT / "examples.rst").read_text()
 
     assert len(POSTERIOR_ANIMATION_PANELS) == 9
-    assert "Eight changing inference views are synchronized below" in examples
-    assert "logo" not in examples.split("Eight changing inference views")[1].split("..")[0]
+    assert all(panel.static_image is None for panel in POSTERIOR_ANIMATION_PANELS)
+    assert "Nine changing inference views are synchronized below" in examples
+    assert "JWST/MIRI NGC 7027 line catalog" in examples
     assert "random draw from the prior" in examples
     for domain in (
         "lensed arcs", "stellar flares", "rotating starspots",
@@ -352,17 +406,77 @@ def test_documented_posterior_collage_matches_generator():
         assert domain in examples
 
 
+def test_readme_separates_sampler_utilities_from_applications():
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    sampler_utilities = readme.split("## Sampler utilities", 1)[1].split(
+        "\n## Applications", 1
+    )[0]
+    applications = readme.split("## Applications", 1)[1].split("\n## ", 1)[0]
+
+    assert "Dynamic convergence-based stopping" in sampler_utilities
+    assert "Keplerian signals in radial-velocity data" in applications
+    assert "Dynamic convergence-based stopping" not in applications
+
+
+def test_variable_planet_rv_example_is_linked_and_describes_variable_catalog():
+    examples = REPOSITORY_ROOT / "examples" / "variable_number_exoplanets_radial_velocity"
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    example_readme = (REPOSITORY_ROOT / "examples" / "README.md").read_text()
+    example_docs = (DOCS_ROOT / "examples.rst").read_text()
+    script = (examples / "variable_number_exoplanets_radial_velocity.py").read_text()
+    notebook = json.loads(
+        (examples / "variable_number_exoplanets_radial_velocity.ipynb").read_text()
+    )
+    notebook_code = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+
+    assert "variable_number_exoplanets_radial_velocity.ipynb" in readme
+    assert "zero to five" in readme
+    assert "--smoke" in readme and "--numbswep 100000" in readme
+    assert "maxmnumbplan=5" in script
+    assert "retr_dictpcatrvel" in script
+    assert "run_example_script" in notebook_code
+    assert "display_example_visuals" in notebook_code
+    for filename in (
+        "variable_number_exoplanets_rv_count_posterior.png",
+        "variable_number_exoplanets_rv_phase_folded.png",
+        "variable_number_exoplanets_rv_catalog_samples.png",
+    ):
+        assert filename in readme
+        assert filename in example_readme
+        assert filename in example_docs
+        assert (examples / "visuals" / filename).is_file()
+
+
 def test_documentation_distinguishes_posterior_and_candidate_animations():
     sampling = (DOCS_ROOT / "sampling.rst").read_text()
     outputs = (DOCS_ROOT / "outputs.rst").read_text()
     readme = (REPOSITORY_ROOT / "README.md").read_text()
+    example_guide = (DOCS_ROOT / "examples.rst").read_text()
+    example_readme = (REPOSITORY_ROOT / "examples" / "README.md").read_text()
+    example_script = (
+        REPOSITORY_ROOT / "examples" / "proposal_state_animation"
+        / "proposal_state_animation.py"
+    ).read_text()
 
-    for source in (sampling, outputs, readme):
+    for source in (sampling, outputs, readme, example_readme):
         assert "boolmakeanimprop" in source
+    for source in (sampling, outputs, readme, example_guide, example_readme):
         assert "proposal_candidates.gif" in source
+        assert "proposal_sequence.gif" in source
     assert "Candidate frames are proposal diagnostics, not posterior samples" in sampling
     assert "including rejected candidates" in outputs
+    assert "makeanim=True" in outputs
+    assert "numbburn" in outputs
+    assert "proposal_sequence.gif" in example_script
+    assert "proposal_candidates.gif" in example_script
+    assert "examples/proposal_state_animation/visuals/post/anim/proposal_sequence.gif" in readme
     assert "examples/proposal_state_animation/visuals/post/anim/proposal_candidates.gif" in readme
+    for animation_name in ("proposal_sequence.gif", "proposal_candidates.gif"):
+        assert f"../examples/proposal_state_animation/visuals/post/anim/{animation_name}" in example_guide
 
 
 def test_student_t_proposal_and_target_specific_efficiency_are_documented():
@@ -377,12 +491,33 @@ def test_student_t_proposal_and_target_specific_efficiency_are_documented():
     assert "ESS per second" in sampling
 
 
+def test_burn_in_benchmark_is_linked_and_compares_multiple_targets():
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    script = (REPOSITORY_ROOT / "examples/burn_in_strategies/burn_in_strategies.py").read_text()
+
+    assert "### Burn-in strategies" in readme
+    assert "examples/burn_in_strategies/burn_in_strategies.ipynb" in readme
+    assert "likelihood-\ntemperature annealing" in readme
+    assert 'PROBLEMS = ("correlated_gaussian", "bimodal")' in script
+    for strategy in ('"fixed"', '"adaptive"', '"tempered_adaptive"', '"student_t"'):
+        assert strategy in script
+
+
 def test_jacobian_example_is_linked_and_documents_unclipped_acceptance():
     readme = (REPOSITORY_ROOT / "README.md").read_text()
     sampling = (DOCS_ROOT / "sampling.rst").read_text()
     script = (REPOSITORY_ROOT / "examples/proposal_state_animation/proposal_state_animation.py").read_text()
+    animation = REPOSITORY_ROOT / "examples/proposal_state_animation/visuals/parameterization_jacobian_jumps.gif"
 
     assert "visuals/jacobian_acceptance_effect.png" in readme
+    assert "visuals/parameterization_jacobian_jumps.gif" in readme
+    assert "parameterization_jacobian_jumps.gif" in sampling
+    assert "make_parameterization_jump_animation" in script
+    assert animation.is_file()
+    with Image.open(animation) as gif:
+        assert gif.n_frames == 41
+        assert gif.size == (1280, 720)
+        assert gif.info["duration"] == 180
     assert "listpostaccplprb" in script
     assert "listpostaccplprb" in sampling
 
@@ -393,8 +528,8 @@ def test_readme_lists_daylan_applications_first_without_reproduction_language():
     headings = [line for line in applications.splitlines() if line.startswith("### ")]
 
     assert headings[:2] == [
-        "### [Daylan et al. 2017 Fermi-LAT point-source populations](examples/daylan+2017_fermi_point_sources/)",
-        "### [Daylan et al. 2018 Strong-lens subhalo catalogs](examples/daylan+2018_strong_lens_subhalos/)",
+        "### [Daylan et al. (2017): Unresolved Fermi-LAT sources](examples/daylan+2017_fermi_point_sources/)",
+        "### [Daylan et al. (2018): Strong-lens subhalos](examples/daylan+2018_strong_lens_subhalos/)",
     ]
     assert "reproduc" not in applications.lower()
 
@@ -438,16 +573,18 @@ def test_burn_in_options_and_comparison_are_documented():
 
 
 def test_spectrum_and_flare_examples_use_shared_posterior_loader():
-    for relative_path in (
-        "examples/jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py",
-        "examples/variable_number_stellar_flares/variable_number_stellar_flares.py",
+    for relative_path, cache_fragment in (
+        ("examples/jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py",
+         "data/outp/{RUN_NAME}/gdatfinlpost"),
+        ("examples/variable_number_stellar_flares/variable_number_stellar_flares.py",
+         "data/outp/{run_name}/gdatfinlpost"),
     ):
         path = REPOSITORY_ROOT / relative_path
         print(f"Reading from {path}...")
         source = path.read_text()
         assert "load_example_posterior" in source
         assert "def read_posterior(" not in source
-        assert "data/outp/{RUN_NAME}/gdatfinlpost" in source
+        assert cache_fragment in source
 
 
 def test_plotting_examples_use_shared_theme_and_save_helpers():
@@ -464,3 +601,42 @@ def test_plotting_examples_use_shared_theme_and_save_helpers():
         assert "save_example_figure" in source
         assert "def configure_style(" not in source
         assert "def save(" not in source
+
+
+def test_three_sampler_comparison_documents_fixed_and_variable_dimensions():
+    examples = REPOSITORY_ROOT / "examples" / "sampler_comparison_emcee_dynesty"
+    script = (examples / "sampler_comparison_emcee_dynesty.py").read_text()
+    notebook = json.loads(
+        (examples / "sampler_comparison_emcee_dynesty.ipynb").read_text()
+    )
+    notebook_code = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    normalized_readme = " ".join(readme.split())
+    example_readme = (REPOSITORY_ROOT / "examples" / "README.md").read_text()
+    example_docs = (DOCS_ROOT / "examples.rst").read_text()
+
+    assert "compare_fixed_dimension" in script
+    assert "compare_variable_dimension" in script
+    assert "'--part',\n    'both'" in notebook_code
+    assert "emcee cannot compare models" in script
+    assert "emcee requires one parameter dimension per chain" in normalized_readme
+    assert "A model has a defined" in readme
+    assert "A metamodel is the union of candidate models" in readme
+    assert "## Custom likelihoods" in readme
+    assert "separate evidence calculation for each" in example_readme
+    assert "emcee cannot vary the number of planets" in example_readme
+    assert "--part both" in example_docs
+    figure_names = (
+        "sampler_comparison_marginal_posteriors.png",
+        "sampler_comparison_efficiency.png",
+        "sampler_comparison_planet_count_posterior.png",
+        "sampler_comparison_planet_count_cost.png",
+        "sampler_comparison_two_planet_periods.png",
+    )
+    for name in figure_names:
+        assert (examples / "visuals" / name).is_file()
+    assert all(name in readme for name in figure_names)

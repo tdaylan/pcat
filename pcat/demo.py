@@ -222,3 +222,109 @@ def display_posterior_maps(
         plt.close(figure)
         output_paths.append(output_path)
     return output_paths
+
+
+def display_posterior_diagnostics(
+    posterior: object,
+    relative_directory: str,
+    filename_prefix: str,
+    parameter_name: str | None = None,
+) -> Path:
+    """Show catalog-size, likelihood, and pooled component-parameter posteriors."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from IPython.display import display
+
+    count_samples = np.asarray(posterior.listpostnumbelem, dtype=float)
+    if count_samples.ndim == 1:
+        number_elements = count_samples
+    else:
+        number_elements = np.nansum(
+            count_samples.reshape(count_samples.shape[0], -1), axis=1
+        )
+    number_elements = np.rint(number_elements).astype(int)
+    log_likelihood = np.asarray(posterior.listpostlliktotl, dtype=float)
+    if log_likelihood.ndim > 1:
+        log_likelihood = np.nanmean(
+            log_likelihood.reshape(log_likelihood.shape[0], -1), axis=1
+        )
+    if number_elements.size == 0 or log_likelihood.size != number_elements.size:
+        raise ValueError(
+            "posterior count and likelihood arrays must have matching samples"
+        )
+
+    catalogs = posterior.listpostdictelem
+    if len(catalogs) != number_elements.size:
+        raise ValueError("posterior catalog draws must match the count and likelihood samples")
+    available_names = {
+        name
+        for sample in catalogs
+        for population in sample
+        for name in population
+    }
+    if parameter_name is None:
+        parameter_name = next(
+            (name for name in ("flux", "defs", "mass", "xpos", "ypos") if name in available_names),
+            None,
+        )
+    parameter_values = []
+    if parameter_name is not None:
+        for sample in catalogs:
+            for population in sample:
+                if parameter_name in population:
+                    values = np.asarray(population[parameter_name], dtype=float).reshape(-1)
+                    parameter_values.extend(values[np.isfinite(values)])
+
+    figure, axes = plt.subplots(2, 2, figsize=(10.0, 7.0), constrained_layout=True)
+    sample_indices = np.arange(number_elements.size)
+    axes[0, 0].step(sample_indices, number_elements, where="mid", color="C0")
+    axes[0, 0].set(
+        title="Catalog size by retained draw",
+        xlabel="Retained draw",
+        ylabel="Components",
+    )
+    unique_counts, count_frequencies = np.unique(number_elements, return_counts=True)
+    axes[0, 1].bar(
+        unique_counts,
+        count_frequencies / count_frequencies.sum(),
+        width=0.8,
+        color="C0",
+    )
+    axes[0, 1].set(
+        title="Posterior catalog-size probability",
+        xlabel="Components",
+        ylabel="Probability",
+    )
+    axes[1, 0].plot(sample_indices, log_likelihood, color="C1", linewidth=0.8)
+    axes[1, 0].set(
+        title="Log-likelihood by retained draw",
+        xlabel="Retained draw",
+        ylabel="Log likelihood",
+    )
+    if parameter_values:
+        parameter_values = np.asarray(parameter_values)
+        bins = "auto"
+        if np.all(parameter_values > 0.0) and parameter_values.min() < parameter_values.max():
+            bin_count = min(31, max(6, int(np.sqrt(parameter_values.size)) + 1))
+            bins = np.geomspace(parameter_values.min(), parameter_values.max(), bin_count)
+        axes[1, 1].hist(parameter_values, bins=bins, color="C2", alpha=0.8)
+        axes[1, 1].set(
+            title=f"Pooled component draws: {parameter_name}",
+            xlabel=parameter_name,
+            ylabel="Draws",
+        )
+        if np.all(parameter_values > 0.0):
+            axes[1, 1].set_xscale("log")
+    else:
+        axes[1, 1].set_visible(False)
+    for axis in axes.flat:
+        axis.grid(False)
+
+    example_root = Path(__file__).resolve().parents[1] / "examples" / relative_directory
+    output_path = example_root / "visuals" / f"{filename_prefix}_posterior_diagnostics.png"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Writing to {output_path}...")
+    figure.savefig(output_path, dpi=300, bbox_inches="tight")
+    display(figure)
+    plt.close(figure)
+    return output_path

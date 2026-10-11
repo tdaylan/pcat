@@ -146,12 +146,16 @@ def render_line_histogram_frames(posterior):
     for index in indices:
         wavenumber = np.asarray(posterior.listpostdictelem[index][0]["elin"])
         wavelengths = 1e6 / wavenumber  # [um]
-        histograms.append(np.histogram(wavelengths, bins=edges)[0])
-    upper = max(1, *(int(histogram.max()) for histogram in histograms)) * 1.15
+        histogram = np.histogram(wavelengths, bins=edges)[0]
+        if np.any(histogram):
+            histograms.append((index, histogram))
+    if len(histograms) < 2:
+        raise ValueError("At least two sampled catalogs must contain a line in the plotted wavelength range")
+    upper = max(1, *(int(histogram.max()) for _, histogram in histograms)) * 1.15
     visual_root = EXAMPLE_PATH / "visuals"
     visual_root.mkdir(parents=True, exist_ok=True)
     paths = []
-    for index, histogram in zip(indices, histograms):
+    for index, histogram in histograms:
         figure, axis = plt.subplots(figsize=(6.0, 4.3), facecolor="white")
         axis.bar(edges[:-1], histogram, width=np.diff(edges), align="edge", color="#347F72",
                  edgecolor="white", linewidth=0.5, label="PCAT line centers")

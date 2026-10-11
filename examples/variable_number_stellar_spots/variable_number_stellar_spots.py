@@ -147,7 +147,7 @@ def read_posterior():
 def render_spot_posterior_frames(time_days, observed_counts, posterior):
     """Render spot fits from the initial prior draw through burn-in to posterior samples."""
 
-    snapshots = animation_states(posterior)
+    snapshots = animation_states(posterior, require_nonzero_catalog=True)
     models = np.array([np.asarray(snapshot["cntpmodl"], dtype=float)[:, 0, 0] for snapshot in snapshots])
     hours = (time_days - TIME_OFFSET_DAYS) * 24.0  # [hour]
     # data-based limits remove unused space; early burn-in models may leave the axes

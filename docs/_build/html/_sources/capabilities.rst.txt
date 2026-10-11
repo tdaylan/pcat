@@ -13,25 +13,29 @@ Maintained workflows include:
 
 * **Arbitrary likelihoods.** User callbacks with fixed-dimensional scalar or
   correlated proposals. The ``typeexpr="gener"`` example is described below.
-* **Poisson image likelihood.** Point sources, extended emission, and lensed
-  sources are element populations in one image model with backgrounds,
-  exposure, and point-spread functions. The Chandra, Fermi-LAT, Hubble Space
-  Telescope (HST), and Roman examples exercise different combinations of
-  these components.
-* **Unbinned Gaussian-mixture likelihood.** A distinct likelihood class models
-  observed coordinates directly as draws from a variable-component mixture,
-  without first accumulating them into image pixels. The current public
-  ``gaussian_mixture_catalog`` example remains a binned Poisson image workflow
-  until the unbinned dispatcher is completed.
+* **Unified Poisson imaging likelihood.** For count images, one Poisson
+  likelihood scores the predicted pixel map. Its element populations can
+  contain point sources, lens deflectors, lensed source components, foreground
+  light, or other extended emission, with backgrounds, exposure, and the PSF
+  in the same image model. Point-source catalogs and strong-lens reconstructions
+  are applications of this shared imaging likelihood, not separate likelihood
+  families.
+* **Unbinned Gaussian-mixture likelihood.** The
+  ``unbinned_gaussian_mixture`` example uses
+  :func:`pcat.fixed.sample_fixed_chains` with a callback that scores individual
+  event coordinates directly, without spatial bins. It fits two fixed Gaussian
+  components. The native ``typeexpr="gmix"`` workflow is the distinct binned
+  Poisson count-map model.
 * **Spectral and time-series likelihoods.** Variable-count spectral lines with
   eight intrinsic profile choices, instrument line-spread convolution, four
-  flare profiles, and Keplerian radial-velocity models.
-* **Transdimensional catalog products.** Every transdimensional likelihood
-  produces samples of catalogs. By default, final processing condenses those
-  samples into a catalog before optional association with a reference catalog
-  when the elements have supported two-dimensional spatial coordinates. Set
-  ``boolcondcatl=False`` to skip this potentially expensive summary. Catalog
-  association is a posterior product rather than a likelihood family.
+  flare profiles, Keplerian radial-velocity models, and a fixed-dimensional
+  transit-timing likelihood.
+* **Transdimensional catalog postprocessing.** Every transdimensional model
+  produces catalog samples. By default, final processing creates a condensed
+  catalog by associating recurrent supported spatial elements across those
+  samples. This posterior summary is not a likelihood. Optional matching to an
+  external reference catalog uses the condensed product and is also
+  postprocessing. Set ``boolcondcatl=False`` to skip condensation.
 
 Inference and proposal engine
 -----------------------------

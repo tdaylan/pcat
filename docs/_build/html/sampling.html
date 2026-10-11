@@ -15,9 +15,9 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -117,7 +117,10 @@ acceptance probability, and accept/reject result are recorded for every sweep.</
 <td><p>Updates existing parameters without changing the number of elements.
 It is the only proposal used by default for fixed-dimensional models.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stdvpropbase</span></code> and <code class="docutils literal notranslate"><span class="pre">stdvpropelemfire</span></code> set unit-coordinate step
-scales. <code class="docutils literal notranslate"><span class="pre">booladaptstdp=True</span></code> adapts these scales during burn-in.</p></td>
+scales. <code class="docutils literal notranslate"><span class="pre">booladaptstdp=True</span></code> adapts these scales during burn-in.
+<code class="docutils literal notranslate"><span class="pre">probdemc</span></code> mixes in differential-evolution steps and <code class="docutils literal notranslate"><span class="pre">probstud</span></code>
+mixes in factorized Student-t(5) steps; both default to zero and their
+probabilities must sum to at most one.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Birth</p></td>
 <td><p>Adds an element drawn from its prior or a configured data-informed
@@ -179,13 +182,45 @@ ratio is</p>
 <code class="docutils literal notranslate"><span class="pre">J</span></code> is the reversible-jump Jacobian. PCAT accepts with probability</p>
 <div class="math notranslate nohighlight">
 \[\alpha = \min(1, \exp(\log r)).\]</div>
-<p>The within-model random walk and differential-evolution proposals are
-symmetric, so their proposal-density ratio is one and their Jacobian is one.
-Birth and death moves include model-count and auxiliary-parameter corrections.
-Split and merge moves include reverse-move probabilities and the split
-Jacobian. For a prior-redraw jump, the element prior cancels its proposal
-density, leaving the likelihood change plus any Hastings correction for a
-data-informed draw.</p>
+<p>The reflected within-model Gaussian random walk, differential-evolution
+proposal, and factorized Student-t proposal are symmetric in unit-prior
+coordinates, so their proposal-density ratio is one and their Jacobian is one.
+The Student-t(5) increments are scaled to have the same variance as the
+Gaussian step; they are independent by coordinate, including when a correlated
+block is selected. Birth and death moves include model-count and
+auxiliary-parameter corrections. Split and merge moves include reverse-move
+probabilities and the split Jacobian. For a prior-redraw jump, the element
+prior cancels its proposal density, leaving the likelihood change plus any
+Hastings correction for a data-informed draw.</p>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Proposal-specific terms added to the posterior change</span><a class="headerlink" href="#id2" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 76.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Move</p></th>
+<th class="head"><p>Additional log-ratio terms</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Within-model Gaussian, differential-evolution, Student-t, or correlated block</p></td>
+<td><p>None for these symmetric proposals; their log proposal ratio and Jacobian are zero.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Birth or death</p></td>
+<td><p>Model-count and move-selection corrections, the auxiliary element draw density when it does not cancel against the prior, and any configured dimension-prior offset such as <code class="docutils literal notranslate"><span class="pre">factpriodoff</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Split</p></td>
+<td><p>Reverse merge-selection probability, auxiliary-variable density, and the positive split Jacobian. For the amplitude-fraction split below, <code class="docutils literal notranslate"><span class="pre">log|J|</span> <span class="pre">=</span> <span class="pre">log(F)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Merge</p></td>
+<td><p>Reverse split-selection probability, reverse auxiliary-variable density, and the negative split Jacobian, <code class="docutils literal notranslate"><span class="pre">-log(F)</span></code> for the transform below.</p></td>
+</tr>
+<tr class="row-even"><td><p>Prior-redraw jump</p></td>
+<td><p>The element prior cancels its proposal density. The remaining target change is the likelihood ratio; a data-informed draw adds its Hastings correction.</p></td>
+</tr>
+</tbody>
+</table>
 <p>The final state stores per-sweep proposal IDs in <code class="docutils literal notranslate"><span class="pre">listpostindxproptype</span></code>,
 accept/reject flags in <code class="docutils literal notranslate"><span class="pre">listpostboolpropaccp</span></code>, and acceptance probabilities in
 <code class="docutils literal notranslate"><span class="pre">listpostaccpprob</span></code>. The unclipped log acceptance ratio is stored in
@@ -202,21 +237,42 @@ show the Jacobian correction. Splitting parent amplitude <code class="docutils l
 figure compares each valid proposal’s acceptance probability with a
 counterfactual that holds every other term fixed and removes only <code class="docutils literal notranslate"><span class="pre">log|J|</span></code>.
 This is an algebraic comparison of the same proposals, not a second MCMC chain.</p>
-<figure class="align-center" id="id2">
+<figure class="align-center" id="id3">
 <a class="reference internal image-reference" href="_images/jacobian_acceptance_effect.png"><img alt="Split and merge acceptance changes from the Jacobian correction" src="_images/jacobian_acceptance_effect.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-text">The left panel shows the log-acceptance-ratio shift for each valid proposal.
 The right panel shows the acceptance curve with the median Jacobian from the
-run and its no-Jacobian counterfactual.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+run and its no-Jacobian counterfactual.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id3">
+<p>The same example also animates jumps between equivalent one-parameter models
+using linear amplitude <code class="docutils literal notranslate"><span class="pre">A</span></code> and log amplitude <code class="docutils literal notranslate"><span class="pre">eta</span> <span class="pre">=</span> <span class="pre">log(A)</span></code>. The target
+density ratio contributes <code class="docutils literal notranslate"><span class="pre">A</span></code> in the forward direction, while the Jacobian
+contributes <code class="docutils literal notranslate"><span class="pre">1/A</span></code>. Including both gives unit acceptance in either direction.
+Without the Jacobian, reverse jumps accept with probability <code class="docutils literal notranslate"><span class="pre">1/A</span></code>, producing
+biased occupancy of the two parameterizations.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/parameterization_jacobian_jumps.gif"><img alt="Same-dimensional jumps between linear and logarithmic amplitude parameterizations, with and without the Jacobian" src="_images/parameterization_jacobian_jumps.gif" style="width: 100%;" />
+</a>
+</figure>
+<figure class="align-center" id="id4">
 <a class="reference internal image-reference" href="_images/proposal_acceptance_and_cost.png"><img alt="Acceptance fraction and computational cost by PCAT proposal type" src="_images/proposal_acceptance_and_cost.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-text">Proposal acceptance and evaluation cost in the simulated Voigt-line
-profiling example. The values depend on the model, prior, data, and tuning.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+profiling example. The values depend on the model, prior, data, and tuning.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The proposal ledger illustrates the observed acceptance of each move type
+through burn-in and sampling. Within-model subproposals such as Student-t and
+differential-evolution are pooled under the within-model identifier.</p>
+<figure class="align-center" id="id5">
+<a class="reference internal image-reference" href="_images/proposal_ledger.png"><img alt="Proposal attempts and acceptance by move type through burn-in and sampling" src="_images/proposal_ledger.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Acceptance fractions are tuning summaries for diagnosing movement, not
+objectives to maximize.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -230,7 +286,15 @@ is allocated to birth and death. Split and merge directions are balanced when
 both are available, with boundary restrictions taking precedence.
 <code class="docutils literal notranslate"><span class="pre">probjump</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">0.1</span></code> when a variable population is present, so
 catalog runs propose within-model, birth, death, split, merge, and jump moves
-by default. <code class="docutils literal notranslate"><span class="pre">probdemc</span></code> defaults to zero and must be enabled explicitly.
+by default. <code class="docutils literal notranslate"><span class="pre">probdemc</span></code> and <code class="docutils literal notranslate"><span class="pre">probstud</span></code> default to zero and must be enabled
+explicitly; their sum must not exceed one. <code class="docutils literal notranslate"><span class="pre">probstud</span></code> mixes in independent,
+variance-matched Student-t(5) increments for the currently selected
+within-model parameters. The heavy tails can help traverse separated modes but
+can reduce efficiency on a locally Gaussian target. In a seeded 8,000-sweep
+comparison on the bimodal example, the Student-t mixture increased mode switches
+from 5 to 17 and ESS per second from 0.2 to 1.8, while on the correlated
+Gaussian it reduced ESS per second from 3.9 to 2.2. These short-run results are
+problem-specific, not a universal ranking.
 <code class="docutils literal notranslate"><span class="pre">booladaptstdp</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>: within-model step sizes adapt toward
 their target acceptance during burn-in only, so the retained chain is an
 ordinary Metropolis-Hastings chain. The <a class="reference internal" href="api.html#pcat.plotting.plot_proposal_ledger" title="pcat.plotting.plot_proposal_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">pcat.plotting.plot_proposal_ledger()</span></code></a>
@@ -242,6 +306,7 @@ calling the sampler:</p>
     <span class="n">probspmr</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
     <span class="n">probjump</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="n">probdemc</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+   <span class="n">probstud</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">numbdemchist</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">booladaptstdp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
@@ -282,19 +347,36 @@ finite-difference curvature to initialize proposal scales; it does not perform
 gradient descent or optimize the initial state. PCAT currently provides no
 gradient-descent burn-in mode.</p>
 <p>The <a class="reference internal" href="examples.html"><span class="doc">Examples</span></a> page links <code class="docutils literal notranslate"><span class="pre">burn_in_strategies</span></code>, which compares fixed,
-adaptive, and tempered plus adaptive burn-in on correlated and bimodal
-simulated targets.</p>
+adaptive, tempered plus adaptive burn-in, and adaptive Student-t within-model
+proposals on correlated and bimodal simulated targets. The figures below show
+retained states, effective-sample performance, target-summary error, runtime,
+and the tempered likelihood schedule. Their results are illustrative and
+target-specific.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/burn_in_posterior_comparison.png"><img alt="Posterior samples from fixed, adaptive, tempered, and Student-t strategies" src="_images/burn_in_posterior_comparison.png" style="width: 100%;" />
+</a>
+</figure>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/burn_in_performance_comparison.png"><img alt="Acceptance, effective sampling rate, target error, and runtime by strategy" src="_images/burn_in_performance_comparison.png" style="width: 100%;" />
+</a>
+</figure>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/burn_in_temperature_schedule.png"><img alt="Inverse likelihood temperature over fixed, adaptive, tempered, and Student-t runs" src="_images/burn_in_temperature_schedule.png" style="width: 85%;" />
+</a>
+</figure>
 </section>
 <section id="automatic-convergence-monitoring">
 <h2>Automatic convergence monitoring<a class="headerlink" href="#automatic-convergence-monitoring" title="Link to this heading"></a></h2>
-<p>By default PCAT stops after the configured sweep count. Set
-<code class="docutils literal notranslate"><span class="pre">boolcheckconv=True</span></code> to stop after repeated convergence checks. The defaults
-are <code class="docutils literal notranslate"><span class="pre">numbsampconvmin=1000</span></code> retained samples before the first check,
+<p>By default PCAT stops after repeated convergence checks, subject to the
+configured sweep count as a hard maximum. Set <code class="docutils literal notranslate"><span class="pre">boolcheckconv=False</span></code> to use a
+fixed sweep count. The defaults are <code class="docutils literal notranslate"><span class="pre">numbsampconvmin=500</span></code> retained samples before the first check,
 <code class="docutils literal notranslate"><span class="pre">numbsampconvcheck=250</span></code> samples between checks, <code class="docutils literal notranslate"><span class="pre">maxmconvrhat=1.01</span></code>,
 <code class="docutils literal notranslate"><span class="pre">numbsampconveffc=200</span></code>, and <code class="docutils literal notranslate"><span class="pre">numbconvpass=2</span></code> consecutive passing checks.
 For one worker PCAT estimates R-hat by splitting the chain in half. With several
 workers, it calculates convergence across independent worker chains and stops
 them together after they all observe the shared stop signal.</p>
+<p>If the criterion is not met by <code class="docutils literal notranslate"><span class="pre">numbswep</span></code>, the run stops at that cap and
+records that convergence was not reached.</p>
 <p>Convergence is assessed using log posterior, element count, persistent element
 parameters, or modeled data pixels when no persistent element parameter is
 available. Inspect the values saved in <code class="docutils literal notranslate"><span class="pre">gdatfinlpost</span></code> and the convergence
@@ -310,6 +392,16 @@ feature without assigning identities to elements across birth or death moves.
 The approximate effective sample size uses a bounded autocorrelation window;
 short runs can yield unstable estimates. A single worker has no cross-worker
 R-hat, which is shown as unavailable rather than assigned a value.</p>
+<p>These figures show examples of the fixed-parameter ESS/R-hat summary and the
+catalog-size transitions used to inspect transdimensional mixing.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/fixed_parameter_mixing.png"><img alt="Fixed-parameter effective sample sizes and cross-chain R-hat" src="_images/fixed_parameter_mixing.png" style="width: 80%;" />
+</a>
+</figure>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/element_count_transitions.png"><img alt="Catalog-size transition matrix for independent worker chains" src="_images/element_count_transitions.png" style="width: 65%;" />
+</a>
+</figure>
 <p>To create the figures from a saved posterior without rerunning inference, call
 <code class="docutils literal notranslate"><span class="pre">pcat.plotting.plot_posterior_convergence(state,</span> <span class="pre">output_directory)</span></code> after
 loading <code class="docutils literal notranslate"><span class="pre">gdatfinlpost</span></code> with <code class="docutils literal notranslate"><span class="pre">pcat.main.readfile</span></code>. The figures support

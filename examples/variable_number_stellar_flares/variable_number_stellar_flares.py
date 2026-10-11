@@ -30,7 +30,12 @@ from pcat.demo import (
     save_example_figure,
     write_time_series_fits,
 )
-from pcat.time_series import evaluate_flare_profile, retr_dictpropelemtmpl
+from pcat.time_series import (
+    FLARE_PROFILE_PARAMETERS,
+    evaluate_flare_profile,
+    flare_profile_parameters,
+    retr_dictpropelemtmpl,
+)
 from pcat.plotting import animation_phase_label, animation_states
 
 EXAMPLE_PATH = Path(__file__).resolve().parent
@@ -54,7 +59,22 @@ LIMITS = {
     "scalfall": (MINM_RATI_FALL_RISE * MINM_SCAL_RISE / 1440.0,
                  MAXM_RATI_FALL_RISE * MAXM_SCAL_RISE / 1440.0),  # [day]
 }
+FLARE_WIDTH_BOUNDS = {
+    "flargauss": {"fwhm": (4.0 / 1440.0, 180.0 / 1440.0)},
+    "flarexpd": {"scalfall": (5.0 / 1440.0, 240.0 / 1440.0)},
+    "flarfred": {"scalrise": LIMITS["scalrise"], "scalfall": LIMITS["scalfall"]},
+    "flardav": {"fwhm": (5.0 / 1440.0, 180.0 / 1440.0)},
+}
+FLARE_PARAMETER_SCALES = {"flux": 0.01, "elin": 1.0e-3, "fwhm": 0.02,
+                          "scalrise": 0.02, "scalfall": 0.02}
 NUMBER_CHAINS = 12
+
+
+def flare_profile_configuration(flare_profile):
+    """Return bounds and proposal scales for one supported flare profile."""
+    parameters = flare_profile_parameters(flare_profile)
+    limits = {"flux": LIMITS["flux"], **FLARE_WIDTH_BOUNDS[flare_profile]}
+    return limits, [FLARE_PARAMETER_SCALES[name] for name in parameters]
 
 
 def simulate_flare_catalog(rng):
@@ -84,29 +104,41 @@ def simulate_light_curve(catalog, rng):
     return edges, meantime, obsvcnts, expcnts
 
 
-def build_birth_proposal(edges, observed_counts):
+def build_birth_proposal(edges, observed_counts, flare_profile="flarfred"):
     """Return a matched-filter flare birth density on PCAT's log-uniform peak-time grid."""
     meantime = 0.5 * (edges[1:] + edges[:-1])  # [day]
     minimum, maximum = edges[0], edges[-1]  # [day]
     peak_times = minimum * (maximum / minimum) ** ((np.arange(1000) + 0.5) / 1000)  # [day]
     ones = np.ones(peak_times.size)
-    templates = evaluate_flare_profile(
-        meantime, "flarfred", ones, peak_times, rise_time=6.0 / 1440.0 * ones,
-        decay_time=30.0 / 1440.0 * ones,
-    ).T
+    if flare_profile == "flargauss":
+        shape_parameters = {"fwhm": 30.0 / 1440.0 * ones}
+    elif flare_profile == "flarexpd":
+        shape_parameters = {"decay_time": 30.0 / 1440.0 * ones}
+    elif flare_profile == "flarfred":
+        shape_parameters = {"rise_time": 6.0 / 1440.0 * ones, "decay_time": 30.0 / 1440.0 * ones}
+    elif flare_profile == "flardav":
+        shape_parameters = {"fwhm": 30.0 / 1440.0 * ones}
+    else:
+        flare_profile_parameters(flare_profile)
+        raise AssertionError("unreachable")
+    templates = evaluate_flare_profile(meantime, flare_profile, ones, peak_times, **shape_parameters).T
+    limits, _ = flare_profile_configuration(flare_profile)
     return retr_dictpropelemtmpl(
         observed_counts - BASELINE_COUNT_RATE, np.maximum(observed_counts, 1.0), templates,
-        *LIMITS["flux"], index_position=1, index_flux=0, number_parameters=4,
+        *limits["flux"], index_position=1, index_flux=0,
+        number_parameters=len(flare_profile_parameters(flare_profile)),
     )
 
 
-def run_pcat(edges, template, numbswep, proposal):
+def run_pcat(edges, template, numbswep, proposal, flare_profile="flarfred"):
     from pcat import sampling
 
-    path_cache = EXAMPLE_PATH / "data" / "outp" / RUN_NAME
+    run_name = RUN_NAME if flare_profile == "flarfred" else f"{RUN_NAME}_{flare_profile}"
+    path_cache = EXAMPLE_PATH / "data" / "outp" / run_name
     if path_cache.exists():
         print(f"Removing cached PCAT state {path_cache}...")
         shutil.rmtree(path_cache)
+    limits, proposal_scales = flare_profile_configuration(flare_profile)
     return sampling.sample(
         typeexpr="fire",
         typedata="inpt",
@@ -114,13 +146,13 @@ def run_pcat(edges, template, numbswep, proposal):
         typeexpo="file",
         strgexpo="expo.fits",
         binsenerfull=edges,
-        spectype=["flarfred"],
+        spectype=[flare_profile],
         spatdisttype=["line"],
         typeelem=["lghtlinevoig"],
-        dictfitt={"typeelem": ["lghtlinevoig"], "spectype": ["flarfred"], "sbrtbacknorm": [template],
+        dictfitt={"typeelem": ["lghtlinevoig"], "spectype": [flare_profile], "sbrtbacknorm": [template],
                   "listnamediff": ["back0000"]},
         # peak excess counts [counts per bin] and rise/fall time scales [day]
-        limtparaelem=LIMITS,
+        limtparaelem=limits,
         maxmgangdata=100.0 / (3600.0 * 180.0 / np.pi),  # [rad], unused for non-spatial data
         anlytype="spec",
         fittminmnumbelempop0=0,
@@ -133,7 +165,7 @@ def run_pcat(edges, template, numbswep, proposal):
         probspmr=0.3,
         probjump=0.3,
         radispmr=0.01,  # [day]
-        stdvpropelemfire=[0.01, 1.0e-3, 0.02, 0.02],
+        stdvpropelemfire=proposal_scales,
         booladaptstdp=True,
         boolburntmpr=True,
         factburntmpr=0.9,
@@ -147,7 +179,7 @@ def run_pcat(edges, template, numbswep, proposal):
         booldiag=False,
         typeverb=0,
         pathbase=str(EXAMPLE_PATH),
-        strgcnfg=RUN_NAME,
+        strgcnfg=run_name,
     )
 
 
@@ -175,7 +207,7 @@ def plot_light_curve_fit(meantime, obsvcnts, catalog, posterior, typefileplot, c
 
 def render_flare_posterior_frames(meantime, observed_counts, posterior):
     """Render simulated photometry and PCAT flare models from the prior draw to posterior samples."""
-    snapshots = animation_states(posterior)
+    snapshots = animation_states(posterior, require_nonzero_catalog=True)
     models = np.array([np.asarray(snapshot["cntpmodl"], dtype=float)[:, 0, 0] for snapshot in snapshots])
     # data-based limits; early burn-in models may leave the axes
     span = float(np.ptp(observed_counts))
@@ -239,6 +271,7 @@ def plot_flare_count_posterior(catalog, posterior, typefileplot, colrfore):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--numbswep", type=int, default=100_000)
+    parser.add_argument("--profile", choices=tuple(FLARE_PROFILE_PARAMETERS), default="flarfred")
     parser.add_argument("--smoke", action="store_true", help="Run a short pipeline check.")
     add_plot_arguments(parser)
     parser.add_argument("--typeplotback", choices=("white", "dark"), default="white")
@@ -251,9 +284,11 @@ def main():
     edges, meantime, obsvcnts, expcnts = simulate_light_curve(catalog, rng)
     template = write_time_series_fits(PATH_INPT, edges, obsvcnts, BASELINE_COUNT_RATE)
     if not arguments.skip_sampling:
-        run_pcat(edges, template, numbswep, build_birth_proposal(edges, obsvcnts))
+        run_pcat(edges, template, numbswep, build_birth_proposal(edges, obsvcnts, arguments.profile),
+                 arguments.profile)
+    run_name = RUN_NAME if arguments.profile == "flarfred" else f"{RUN_NAME}_{arguments.profile}"
     posterior = load_example_posterior(
-        f"{EXAMPLE_PATH.name}/data/outp/{RUN_NAME}/gdatfinlpost"
+        f"{EXAMPLE_PATH.name}/data/outp/{run_name}/gdatfinlpost"
     )
     colrfore = configure_example_style(arguments.typeplotback)
     render_flare_posterior_frames(meantime, obsvcnts, posterior)

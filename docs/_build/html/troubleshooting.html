@@ -15,8 +15,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -47,6 +47,7 @@
               <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">How PCAT works</a></li>
 <li class="toctree-l1"><a class="reference internal" href="capabilities.html">Capabilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="likelihoods.html">Likelihood configurations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling, proposals, and convergence</a></li>
@@ -94,12 +95,10 @@
 <h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
 <section id="output-path-errors">
 <h2>Output path errors<a class="headerlink" href="#output-path-errors" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">output</span> <span class="pre">data</span> <span class="pre">path</span> <span class="pre">is</span> <span class="pre">configured</span></code> means neither <code class="docutils literal notranslate"><span class="pre">pathbase</span></code> nor a supported
-environment variable was provided. Pass <code class="docutils literal notranslate"><span class="pre">pathbase</span></code> explicitly or set
-<code class="docutils literal notranslate"><span class="pre">PCAT_DATA_PATH</span></code>. <code class="docutils literal notranslate"><span class="pre">PCAT_PATH</span></code> identifies the repository for local utilities
-and does not select a sampler output directory.</p>
-<p>If final processing or animation reports that <code class="docutils literal notranslate"><span class="pre">PCAT_DATA_PATH</span></code> is not set,
-pass the same <code class="docutils literal notranslate"><span class="pre">pathbase</span></code> used for sampling. A run cannot be reconstructed from
+<p><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">output</span> <span class="pre">data</span> <span class="pre">path</span> <span class="pre">is</span> <span class="pre">configured</span></code> means neither <code class="docutils literal notranslate"><span class="pre">pathbase</span></code> nor
+<code class="docutils literal notranslate"><span class="pre">PCAT_PATH</span></code> was provided. Pass <code class="docutils literal notranslate"><span class="pre">pathbase</span></code> explicitly or set <code class="docutils literal notranslate"><span class="pre">PCAT_PATH</span></code>.</p>
+<p>If final processing or animation cannot find a run, pass the same <code class="docutils literal notranslate"><span class="pre">pathbase</span></code>
+used for sampling. A run cannot be reconstructed from
 <code class="docutils literal notranslate"><span class="pre">visuals/</span></code> alone because final processing reads serialized states under
 <code class="docutils literal notranslate"><span class="pre">pcat_runs/&lt;run</span> <span class="pre">tag&gt;/data/outp/&lt;run</span> <span class="pre">tag&gt;/</span></code>.</p>
 </section>

@@ -135,7 +135,7 @@ def render_rv_posterior_frames(time, rvel, stdv, indxinst, timerefr, posterior):
     """Show fixed-scale simulated RV data against PCAT catalogs from the prior draw to posterior samples."""
     from pcat.plotting import animation_phase_label, animation_states
 
-    snapshots = animation_states(posterior)
+    snapshots = animation_states(posterior, require_nonzero_catalog=True)
     model_time = np.linspace(time.min(), time.max(), 450)  # [day]
     catalogs = [np.column_stack([np.asarray(snapshot['dictelem'][0][name])
                                  for name in ('elin', 'flux', 'ecce', 'argp', 'phas')]) for snapshot in snapshots]

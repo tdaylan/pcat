@@ -173,7 +173,7 @@ def render_source_frames(posterior: object) -> list[Path]:
         print(f"Removing previous frame {old_frame}...")
         old_frame.unlink()
     paths = []
-    snapshots = animation_states(posterior)
+    snapshots = animation_states(posterior, require_nonzero_catalog=True)
     fluxes = np.concatenate([np.asarray(snapshot["dictelem"][0]["flux"]) for snapshot in snapshots])
     low, high = np.log10(fluxes.min()), np.log10(fluxes.max())
     for snapshot in snapshots:
@@ -207,13 +207,10 @@ def main() -> int:
     add_plot_arguments(parser)
     arguments = parser.parse_args()
     if arguments.fresh:
-        for path in (
-            OUTPUT_ROOT / "pcat_runs" / RUN_NAME / "data" / "outp" / RUN_NAME,
-            OUTPUT_ROOT / "visuals",
-        ):
-            if path.exists():
-                print(f"Removing cached output {path}...")
-                shutil.rmtree(path)
+        path = OUTPUT_ROOT / "pcat_runs" / RUN_NAME / "data" / "outp" / RUN_NAME
+        if path.exists():
+            print(f"Removing cached output {path}...")
+            shutil.rmtree(path)
     run = run_reproduction(arguments.smoke, arguments.typefileplot, arguments.quick)
     render_source_frames(read_posterior(run))
     print(f"PCAT wrote outputs under {OUTPUT_ROOT}")

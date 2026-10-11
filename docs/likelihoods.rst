@@ -11,8 +11,8 @@ products, not likelihoods. Set ``boolcondcatl=False`` to skip condensation.
 The current implementation does not spatially condense one-dimensional line,
 flare, or Keplerian catalogs.
 
-Poisson image likelihood
-------------------------
+Image likelihoods
+-----------------
 
 The image workflow predicts counts in pixels from a source model, exposure,
 background emission, and instrument response. Point sources, extended emission,
@@ -35,6 +35,9 @@ coordinates are supplied directly. ``typepixl="heal"`` selects HEALPix data
 and uses ``numbsideheal`` for its resolution. Fermi-LAT defaults to HEALPix;
 other image experiments default to Cartesian pixels.
 
+Poisson count-image likelihood
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ``liketype="pois"`` is the default for count data. Omitting the data-only
 factorial, its log likelihood is
 
@@ -43,9 +46,12 @@ factorial, its log likelihood is
    \log L_{\mathrm{Pois}} = \sum_i D_i \log M_i - M_i,
 
 where ``D`` is the observed count map and ``M`` is the predicted count map.
-Set ``liketype="gaus"`` for the built-in Gaussian residual likelihood, which
-uses ``varidata`` (by default, the observed counts with a floor of one) as its
-per-pixel variance:
+Gaussian image likelihood
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Set ``liketype="gaus"`` for the built-in Gaussian residual likelihood. Supply
+``varidata`` as a per-pixel variance map; if omitted, PCAT uses the observed
+counts with a floor of one:
 
 .. math::
 
@@ -105,8 +111,8 @@ fit. Fermi-LAT can also use its energy- and event-class-dependent PSF scale
 ``fermscalfact``. PSF and source-kernel options depend on pixelization and
 element type; unsupported combinations should use ``typeevalpsfn="none"``.
 
-Unbinned event-level likelihoods
---------------------------------
+Unbinned event-level likelihood
+-------------------------------
 
 PCAT can sample an unbinned likelihood through a user callback. The maintained
 ``unbinned_gaussian_mixture`` example passes the 140 simulated event coordinates
@@ -122,14 +128,16 @@ are fit to an 8-by-8 count grid. ``boolbinsener=False`` only indicates that this
 example has no energy axis. PCAT does not currently provide a built-in unbinned
 ``typeexpr="gmix"`` dispatcher for variable-count mixture components.
 
-Spectral and time-series likelihood
------------------------------------
+Spectral-line likelihood
+------------------------
 
 The one-dimensional ``typeexpr="fire"`` workflow uses ``anlytype="spec"`` for
-spectral bins. Set ``binsenerfull`` to the axis edges and use
-``typedata="inpt"``, ``strgexprsbrt``, ``typeexpo``, and ``strgexpo`` for
-supplied spectra and exposure. A continuum or background template can be
-provided through ``dictfitt["sbrtbacknorm"]`` and activated with
+spectral bins. Set ``binsenerfull`` to the monotonically increasing spectral
+axis edges and use ``typedata="inpt"``, ``strgexprsbrt``, ``typeexpo``, and
+``strgexpo`` for supplied data and exposure. The built-in count likelihood is
+Poisson by default; ``liketype="gaus"`` selects the Gaussian residual
+likelihood when ``varidata`` is supplied. A continuum or background template
+can be provided through ``dictfitt["sbrtbacknorm"]`` and activated with
 ``dictfitt["listnamediff"]``.
 
 The ``spectype`` setting selects an analytic spectral shape:
@@ -153,21 +161,79 @@ profiles add ``gamm``. Voigt profiles use both widths. Pseudo-Voigt profiles
 also use ``frac``. Set parameter bounds with ``limtparaelem`` and proposal
 scales with ``stdvpropelemfire``.
 
+Line-spread function
+~~~~~~~~~~~~~~~~~~~~
+
 Set ``lsftype="gaus"`` and ``lsfresolvingpower`` to convolve each line at a
 constant instrument resolving power. Set ``lsftype="tabu"`` and pass an
 odd-length, nonnegative ``lsfkernel`` for a measured line-spread function.
 Both paths preserve sampled line flux. The default ``lsftype="none"`` leaves
-the intrinsic profiles unchanged.
+the intrinsic profiles unchanged. Parameter bounds are supplied through
+``limtparaelem`` and within-model step scales through ``stdvpropelemfire``.
 
-The same one-dimensional machinery can model time-binned data by treating time
-as the axis. ``flargauss`` uses peak amplitude ``flux``, peak time ``elin``,
-and full width at half maximum ``fwhm``. ``flarexpd`` adds a one-sided decay
-time ``scalfall``. ``flarfred`` uses independent ``scalrise`` and ``scalfall``
-for a fast-rise, exponential-decay profile. ``flardav`` uses ``fwhm`` for the
-empirical Davenport flare template. The maintained stellar-flare example fits
-native ``flarfred`` elements. Radial-velocity models use Keplerian
-``lghtlinekepl`` elements and their dedicated likelihood in
-:mod:`pcat.radial_velocity`.
+The ``voigt_spectral_line_catalog`` example demonstrates the built-in Voigt
+profile on simulated spectra. ``jwst_miri_ngc7027_line_catalog`` applies the
+same binned count likelihood to measured MIRI flux converted to effective
+Poisson counts using its uncertainties and calibration floor.
+The simulated example also accepts ``--profile`` for intrinsic line shapes and
+``--lsftype none|gaus|tabu`` for instrument broadening. For example,
+``--profile pvoi --lsftype gaus --lsf-resolving-power 3000`` fits a
+pseudo-Voigt line catalog with constant-resolving-power broadening. The
+response-dependent ``edis`` profile is selected through the Python
+configuration API with an instrument ``edisintp`` callable.
+
+Binned photometric time-series likelihood
+------------------------------------------
+
+Use ``typeexpr="fire"`` and ``anlytype="spec"`` for a time-binned photometric
+series, with time-bin edges in ``binsenerfull`` and observed counts/exposure
+configured as for other supplied one-dimensional data. This is the same
+one-dimensional binned likelihood used for spectra; flare and spot profiles
+are alternative element models, not separate likelihoods. Fixed baselines can
+be supplied with ``dictfitt["sbrtbacknorm"]`` and enabled with
+``dictfitt["listnamediff"]``.
+
+Flare ``spectype`` options are ``"flargauss"``, ``"flarexpd"``,
+``"flarfred"``, and ``"flardav"``. They sample peak amplitude ``flux``, peak
+time ``elin``, and profile-specific widths: ``fwhm`` for Gaussian and
+Davenport profiles, ``scalfall`` for one-sided exponential decay, and
+independent ``scalrise``/``scalfall`` for FRED. Set physical bounds with
+``limtparaelem`` and proposal scales with ``stdvpropelemfire``. The
+``variable_number_stellar_flares`` example accepts ``--profile`` with any of
+these four models; for example, ``--profile flardav`` selects the Davenport
+template. The generated time series remains FRED-injected, so alternate fits
+compare model misspecification against the same data.
+
+Periodic Gaussian spot dips use ``spectype=["spotrot"]`` with the
+``lghtlinevoig`` element container, plus ``spot_period_days`` and
+``spot_reference_time_days``. Spot depth, phase epoch, and width use the
+element parameters ``flux``, ``elin``, and ``fwhm``. The rotation period is
+fixed. See ``variable_number_stellar_spots`` for a complete simulated example.
+
+Radial-velocity likelihood
+--------------------------
+
+``pcat.radial_velocity.retr_dictpcatrvel`` configures the dedicated Gaussian
+likelihood for irregular stellar RV observations. Pass observation times
+``time`` in BJD minus the stated offset [day], velocities ``rvel`` [m/s],
+reported uncertainties ``stdvrvel`` [m/s], and integer instrument labels
+``indxinst``. The helper sorts observations, removes duplicate epochs, builds
+time-bin edges, and returns configuration for a variable catalog of
+``lghtlinekepl`` Keplerian elements. Each planet uses ``flux`` for semi-amplitude
+``K``, ``elin`` for period, ``phas`` for mean anomaly, ``ecce`` for eccentricity,
+and ``argp`` for argument of periastron.
+
+Set ``maxmnumbplan`` for the catalog-size limit, ``minmrvsa``/``maxmrvsa`` and
+``minmperi``/``maxmperi`` for amplitude and period bounds, and ``maxmecce`` for
+the eccentricity ceiling. Per-instrument velocity offsets and an optional
+linear trend are marginalized analytically; enable the trend with
+``boollinetren=True``. Stellar jitter is marginalized on the log-uniform grid
+``listjittrvel``, configured through ``minmjitt``, ``maxmjitt``, and
+``numbjitt``. The helper also supplies a data-informed period/amplitude/phase
+birth density and its matching Hastings correction. Its proposal can be tuned
+with ``numbperi``, ``expodchi``, ``fracunif``, ``fracgaus``, ``stdvlogtrvsa``,
+and ``stdvphas``. See
+``variable_number_exoplanets_radial_velocity`` for a multi-instrument example.
 
 Transit-timing likelihood
 -------------------------
@@ -183,8 +249,8 @@ parameter priors and posterior sampling through ``sample_fixed`` or
 ``sample_fixed_chains``. The predictor must align observed transit epochs with
 model epochs before evaluating this likelihood.
 
-User-supplied likelihood
-------------------------
+Generic user-supplied likelihood
+--------------------------------
 
 Use ``typeexpr="gener"`` for a fixed-dimensional custom likelihood. The
 ``retr_llik(gdat, strgmodl, values)`` callback returns one log-likelihood value

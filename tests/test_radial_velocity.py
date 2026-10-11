@@ -74,7 +74,7 @@ def test_number_of_planets_follows_its_uniform_prior_when_the_likelihood_is_flat
     dictpcat = retr_dictpcatrvel(time, rvel, np.full(time.size, 2.), np.zeros(time.size, int), str(tmp_path), 'flat',
                                  maxmnumbplan=3, retr_llik=retr_llik_flat, factpriodoff=0., probjump=0.2,
                                  numbswep=30000, numbsamp=3000, boolmakeplot=False, boolmakeplotinit=False,
-                                 typeverb=0, inittype='rand', typeseed=1)
+                                 boolcheckconv=False, typeverb=0, inittype='rand', typeseed=1)
     sampling.sample(**dictpcat)
     posterior = readfile(str(tmp_path / 'pcat_runs' / 'flat' / 'data' / 'outp' / 'flat' / 'gdatfinlpost'))
     frac = np.bincount(np.asarray(posterior.listpostnumbelem).astype(int).ravel(), minlength=4) / 3000.

@@ -84,6 +84,24 @@ def test_publication_examples_use_proposal_rich_animated_runs(tmp_path, monkeypa
         assert configuration["numbswepplot"] > 1
 
 
+def test_daylan_2017_mock_configuration_matches_paper_axes_and_population():
+    script = (
+        REPOSITORY_ROOT / "examples" / "daylan+2017_fermi_point_sources"
+        / "daylan+2017_fermi_point_sources.py"
+    )
+    module = load_example_module("pcat_daylan_2017_configuration", script)
+    configuration = module.build_configuration(quick=True)
+
+    assert configuration["truenumbelempop0"] == 300
+    assert configuration["truefluxdistslop"] == pytest.approx(-1.8)
+    assert configuration["indxenerincl"].tolist() == [0, 1, 2]
+    assert configuration["indxdqltfull"].tolist() == [0, 1]
+    assert configuration["maxmgangdata"] == pytest.approx(np.deg2rad(20.0))
+    assert configuration["typeexpr"] == "ferm"
+    assert configuration["typedata"] == "simu"
+    assert configuration["numbswep"] == 10_000
+
+
 def test_notebook_example_launcher_restores_arguments(monkeypatch):
     captured = {}
     original_arguments = list(os.sys.argv)
@@ -151,6 +169,29 @@ def test_notebook_posterior_maps_use_state_and_write_to_example_visuals(tmp_path
     ]
     assert all(path.parent == tmp_path / "examples" / "mock" / "visuals" for path in paths)
     assert all(path.is_file() for path in paths)
+
+
+def test_notebook_posterior_diagnostics_plot_loaded_catalog_samples(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    import IPython.display
+
+    monkeypatch.setattr(demo, "__file__", str(tmp_path / "pcat" / "demo.py"))
+    monkeypatch.setattr(IPython.display, "display", lambda figure: None)
+    posterior = SimpleNamespace(
+        listpostnumbelem=np.array([[1], [2], [1]]),
+        listpostlliktotl=np.array([[-12.0], [-9.0], [-10.0]]),
+        listpostdictelem=[
+            [{"flux": np.array([2.0])}],
+            [{"flux": np.array([1.0, 3.0])}],
+            [{"flux": np.array([2.5])}],
+        ],
+    )
+
+    path = demo.display_posterior_diagnostics(posterior, "mock", "mock")
+
+    assert path == tmp_path / "examples" / "mock" / "visuals" / "mock_posterior_diagnostics.png"
+    assert path.is_file()
 
 
 @pytest.mark.parametrize(
@@ -332,6 +373,63 @@ def test_split_merge_jacobian_changes_counterfactual_acceptance_probability():
     assert summary["split"]["without_jacobian"].tolist() == pytest.approx([0.1, 0.9])
     assert summary["merge"]["actual"].tolist() == pytest.approx([0.2, 1.0])
     assert summary["merge"]["without_jacobian"].tolist() == pytest.approx([0.4, 1.0])
+
+
+def test_same_dimension_parameterization_jumps_show_jacobian_acceptance_effect(tmp_path):
+    script = (
+        REPOSITORY_ROOT / "examples" / "proposal_state_animation"
+        / "proposal_state_animation.py"
+    )
+    module = load_example_module("pcat_parameterization_jacobian_example", script)
+    summary = module.simulate_parameterization_jumps(number_jumps=32, amplitude=2.0, seed=9)
+
+    assert all(
+        attempt["log_target_ratio"] + attempt["log_jacobian"] == pytest.approx(0.0)
+        for attempt in summary["attempts"]
+    )
+    assert all(attempt["probability_with_jacobian"] == pytest.approx(1.0)
+               for attempt in summary["attempts"])
+    reverse_no_jacobian = [
+        attempt["probability_without_jacobian"]
+        for attempt in summary["attempts"]
+        if attempt["from_without_jacobian"] == 1
+    ]
+    assert reverse_no_jacobian
+    assert all(value == pytest.approx(0.5) for value in reverse_no_jacobian)
+    assert summary["states_with_jacobian"].tolist() == [index % 2 for index in range(33)]
+    assert len(set(summary["states_without_jacobian"])) == 2
+    assert np.mean(summary["states_without_jacobian"]) > 0.5
+
+    animation_path, _ = module.make_parameterization_jump_animation(
+        tmp_path / "parameterization_jacobian.gif", number_jumps=8, seed=9
+    )
+    with Image.open(animation_path) as animation:
+        assert animation.n_frames == 9
+        assert animation.size == (1280, 720)
+
+
+def test_proposal_state_animation_counts_every_categorical_move():
+    from types import SimpleNamespace
+
+    script = (
+        REPOSITORY_ROOT / "examples" / "proposal_state_animation"
+        / "proposal_state_animation.py"
+    )
+    module = load_example_module("pcat_proposal_coverage_example", script)
+    worker = SimpleNamespace(
+        listpostindxproptype=np.array([0, 1, 2, 3, 4, 5, 0, 3]),
+    )
+
+    counts = module.summarize_proposal_types(worker)
+
+    assert counts == {
+        "Within-model proposal": 2,
+        "Birth proposal": 1,
+        "Death proposal": 1,
+        "Split proposal": 2,
+        "Merge proposal": 1,
+        "Jump proposal": 1,
+    }
 
 
 def test_log_acceptance_trace_is_not_summarized_as_a_posterior_parameter():

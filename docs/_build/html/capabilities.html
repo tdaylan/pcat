@@ -15,13 +15,13 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=01f34227"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Likelihood configurations" href="likelihoods.html" />
-    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+    <link rel="prev" title="How PCAT works" href="architecture.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,6 +47,7 @@
               <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">How PCAT works</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Capabilities</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#functionality-overview">Functionality overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#inference-and-proposal-engine">Inference and proposal engine</a></li>
@@ -107,25 +108,29 @@ elements, or both.</p>
 <ul class="simple">
 <li><p><strong>Arbitrary likelihoods.</strong> User callbacks with fixed-dimensional scalar or
 correlated proposals. The <code class="docutils literal notranslate"><span class="pre">typeexpr=&quot;gener&quot;</span></code> example is described below.</p></li>
-<li><p><strong>Poisson image likelihood.</strong> Point sources, extended emission, and lensed
-sources are element populations in one image model with backgrounds,
-exposure, and point-spread functions. The Chandra, Fermi-LAT, Hubble Space
-Telescope (HST), and Roman examples exercise different combinations of
-these components.</p></li>
-<li><p><strong>Unbinned Gaussian-mixture likelihood.</strong> A distinct likelihood class models
-observed coordinates directly as draws from a variable-component mixture,
-without first accumulating them into image pixels. The current public
-<code class="docutils literal notranslate"><span class="pre">gaussian_mixture_catalog</span></code> example remains a binned Poisson image workflow
-until the unbinned dispatcher is completed.</p></li>
+<li><p><strong>Unified Poisson imaging likelihood.</strong> For count images, one Poisson
+likelihood scores the predicted pixel map. Its element populations can
+contain point sources, lens deflectors, lensed source components, foreground
+light, or other extended emission, with backgrounds, exposure, and the PSF
+in the same image model. Point-source catalogs and strong-lens reconstructions
+are applications of this shared imaging likelihood, not separate likelihood
+families.</p></li>
+<li><p><strong>Unbinned Gaussian-mixture likelihood.</strong> The
+<code class="docutils literal notranslate"><span class="pre">unbinned_gaussian_mixture</span></code> example uses
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pcat.fixed.sample_fixed_chains()</span></code> with a callback that scores individual
+event coordinates directly, without spatial bins. It fits two fixed Gaussian
+components. The native <code class="docutils literal notranslate"><span class="pre">typeexpr=&quot;gmix&quot;</span></code> workflow is the distinct binned
+Poisson count-map model.</p></li>
 <li><p><strong>Spectral and time-series likelihoods.</strong> Variable-count spectral lines with
 eight intrinsic profile choices, instrument line-spread convolution, four
-flare profiles, and Keplerian radial-velocity models.</p></li>
-<li><p><strong>Transdimensional catalog products.</strong> Every transdimensional likelihood
-produces samples of catalogs. By default, final processing condenses those
-samples into a catalog before optional association with a reference catalog
-when the elements have supported two-dimensional spatial coordinates. Set
-<code class="docutils literal notranslate"><span class="pre">boolcondcatl=False</span></code> to skip this potentially expensive summary. Catalog
-association is a posterior product rather than a likelihood family.</p></li>
+flare profiles, Keplerian radial-velocity models, and a fixed-dimensional
+transit-timing likelihood.</p></li>
+<li><p><strong>Transdimensional catalog postprocessing.</strong> Every transdimensional model
+produces catalog samples. By default, final processing creates a condensed
+catalog by associating recurrent supported spatial elements across those
+samples. This posterior summary is not a likelihood. Optional matching to an
+external reference catalog uses the condensed product and is also
+postprocessing. Set <code class="docutils literal notranslate"><span class="pre">boolcondcatl=False</span></code> to skip condensation.</p></li>
 </ul>
 </section>
 <section id="inference-and-proposal-engine">
@@ -159,15 +164,15 @@ likelihood:</p>
     <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">residual</span> <span class="o">@</span> <span class="n">residual</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
-    <span class="n">typeexpr</span><span class="o">=</span><span class="s2">&quot;gener&quot;</span><span class="p">,</span>
+    <span class="n">typeexpr</span><span class="o">=</span><span class="s2">"gener"</span><span class="p">,</span>
     <span class="n">retr_llik</span><span class="o">=</span><span class="n">log_likelihood</span><span class="p">,</span>
-    <span class="n">parameter_names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">),</span>
-    <span class="n">prior_types</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;self&quot;</span><span class="p">,</span> <span class="s2">&quot;self&quot;</span><span class="p">),</span>
+    <span class="n">parameter_names</span><span class="o">=</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">),</span>
+    <span class="n">prior_types</span><span class="o">=</span><span class="p">(</span><span class="s2">"self"</span><span class="p">,</span> <span class="s2">"self"</span><span class="p">),</span>
     <span class="n">prior_minima</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">),</span>
     <span class="n">prior_maxima</span><span class="o">=</span><span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
     <span class="n">proposal_scales</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span>
-    <span class="n">pathbase</span><span class="o">=</span><span class="s2">&quot;analysis/custom_likelihood&quot;</span><span class="p">,</span>
-    <span class="n">strgcnfg</span><span class="o">=</span><span class="s2">&quot;custom_likelihood&quot;</span><span class="p">,</span>
+    <span class="n">pathbase</span><span class="o">=</span><span class="s2">"analysis/custom_likelihood"</span><span class="p">,</span>
+    <span class="n">strgcnfg</span><span class="o">=</span><span class="s2">"custom_likelihood"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -300,7 +305,7 @@ directory layout and <a class="reference internal" href="api.html"><span class="
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="architecture.html" class="btn btn-neutral float-left" title="How PCAT works" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="likelihoods.html" class="btn btn-neutral float-right" title="Likelihood configurations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

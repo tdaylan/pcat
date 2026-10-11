@@ -155,6 +155,7 @@ def test_generic_model_uses_main_sampling_pipeline(tmp_path):
         numbswep=1500,
         numbburn=500,
         numbsamp=1000,
+        boolcheckconv=False,
         booladaptstdp=True,
         typeverb=-1,
     )
@@ -253,12 +254,10 @@ def test_dynamic_convergence_stops_sampling_early_single_process(tmp_path):
         numbproc=1,
         numbswep=200_000,
         numbburn=100,
-        numbsampconvmin=200,
         numbsampconvcheck=50,
         maxmconvrhat=1.2,
         numbsampconveffc=20.,
         numbconvpass=2,
-        boolcheckconv=True,
         typeverb=-1,
     )
 

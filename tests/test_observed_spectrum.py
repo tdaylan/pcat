@@ -3,6 +3,7 @@ import h5py
 import numpy as np
 
 from pcat import sampling
+import pcat.main as pcat_main
 
 
 def test_observed_spectrum_uses_input_counts_bins_and_continuum_template(tmp_path):
@@ -37,3 +38,45 @@ def test_observed_spectrum_uses_input_counts_bins_and_continuum_template(tmp_pat
     # the continuum template enters the model with its input normalization
     np.testing.assert_allclose(background[-1].ravel(), 1000., rtol=1e-6)
     assert np.all(np.isfinite(llik))
+
+
+def test_proposal_candidate_animation_receives_spectral_model(tmp_path, monkeypatch):
+    edges = np.linspace(1.8e5, 1.82e5, 17)
+    width = np.diff(edges)
+    centers = 0.5 * (edges[1:] + edges[:-1])
+    counts = np.round(1000. + 800. * np.exp(-0.5 * ((centers - 1.81e5) / 60.)**2))
+    path_inpt = tmp_path / 'proposal_spectrum' / 'data' / 'inpt'
+    path_inpt.mkdir(parents=True)
+    astropy.io.fits.writeto(path_inpt / 'sbrt.fits', counts[:, None, None, None].astype(float))
+    astropy.io.fits.writeto(path_inpt / 'expo.fits', (1. / width)[:, None, None])
+    candidate_models = []
+    render_candidate = pcat_main._write_proposal_candidate_frame
+
+    def capture_candidate(gdat, gdatmodi, accepted, path):
+        candidate = getattr(gdatmodi.next, 'cntpmodl', None)
+        if candidate is not None:
+            candidate_models.append(np.asarray(candidate).copy())
+        return render_candidate(gdat, gdatmodi, accepted, path)
+
+    monkeypatch.setattr(pcat_main, '_write_proposal_candidate_frame', capture_candidate)
+    sampling.sample(
+        typeexpr='fire', typedata='inpt', strgexprsbrt='sbrt.fits', typeexpo='file', strgexpo='expo.fits',
+        binsenerfull=edges, spectype=['voig'], spatdisttype=['line'], typeelem=['lghtlinevoig'],
+        dictfitt={'typeelem': ['lghtlinevoig'], 'spectype': ['voig'],
+                  'sbrtbacknorm': [np.full((edges.size - 1, 1, 1), 1000.)], 'listnamediff': ['back0000']},
+        limtparaelem={'flux': (1e3, 1e6), 'sigm': (20., 200.), 'gamm': (1., 50.)},
+        maxmgangdata=1e-4, anlytype='spec', fittminmnumbelempop0=0, fittmaxmnumbelempop0=2,
+        inittype='rand', typeseed=3, numbproc=1, numbswep=16, numbburn=4, numbsamp=4,
+        numbswepplot=16, boolmakeanimprop=True, boolmakeplot=False, boolmakeplotinit=False,
+        booldiag=False, typeverb=0, pathbase=str(tmp_path / 'proposal_spectrum'),
+        strgcnfg='proposal_spectrum',
+    )
+
+    assert candidate_models
+    assert all(model.shape == (edges.size - 1, 1, 1) for model in candidate_models)
+    candidate_frames = list(
+        (tmp_path / 'proposal_spectrum' / 'visuals' / 'post' / 'fram').glob(
+            'proposal_candidates_swep*.png'
+        )
+    )
+    assert len(candidate_frames) == 16
