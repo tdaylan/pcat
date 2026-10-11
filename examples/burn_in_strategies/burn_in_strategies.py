@@ -3,7 +3,8 @@
 
 The correlated Gaussian tests proposal-scale tuning. The equal-weight bimodal
 target tests whether burn-in explores both modes when initialized in one mode.
-No observational data or fabricated scientific measurements are used.
+The Student-t mixture adds symmetric heavy-tailed within-model steps. No
+observational data or fabricated scientific measurements are used.
 """
 
 from __future__ import annotations
@@ -35,8 +36,19 @@ STRATEGIES = {
         "booladaptstdp": True,
         "boolburntmpr": True,
     },
+    "student_t": {
+        "label": "Student-t mixture",
+        "booladaptstdp": True,
+        "boolburntmpr": False,
+        "probstud": 0.5,
+    },
 }
-COLORS = {"fixed": "#555555", "adaptive": "#007360", "tempered_adaptive": "#A51C30"}
+COLORS = {
+    "fixed": "#555555",
+    "adaptive": "#007360",
+    "tempered_adaptive": "#A51C30",
+    "student_t": "#3274A1",
+}
 
 
 def benchmark_log_likelihood(gdat, model_name, values):
@@ -112,7 +124,7 @@ def run_benchmark(number_sweeps=1200, burn_fraction=0.25):
                 makeanim=False,
                 typeverb=0,
                 **configuration,
-                **{name: value for name, value in options.items() if name.startswith("bool")},
+                **options,
             )
             elapsed_seconds = time.perf_counter() - start  # [s]
             samples = np.asarray(posterior.listpostparagenrscalbase)

@@ -26,7 +26,7 @@ def test_jump_proposal_redraws_element_without_changing_dimension(tmp_path):
                   'sbrtbacknorm': [np.full((edges.size - 1, 1, 1), 1000.)], 'listnamediff': ['back0000']},
         limtparaelem={'flux': (1e3, 1e6), 'sigm': (20., 200.), 'gamm': (1., 50.)},
         maxmgangdata=1e-4, anlytype='spec', fittminmnumbelempop0=0, fittmaxmnumbelempop0=3,
-        inittype='rand', typeseed=0, numbproc=1, probjump=0.3,
+        inittype='rand', typeseed=0, numbproc=1, probjump=0.3, probstud=0.2,
         numbswep=3000, numbsamp=300, boolmakeplot=False, boolmakeplotinit=False,
         booldiag=False, typeverb=0, pathbase=str(tmp_path / 'jump_proposal'), strgcnfg='jump_proposal',
     )

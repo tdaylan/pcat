@@ -508,9 +508,14 @@ def _configure_proposal_types(gdat, gmod):
         gdat.probjump = 0.1 if gmod.numbpopl > 0 else 0.
     if getattr(gdat, 'probdemc', None) is None:
         gdat.probdemc = 0.
+    if getattr(gdat, 'probstud', None) is None:
+        gdat.probstud = 0.
     if getattr(gdat, 'numbdemchist', None) is None:
         gdat.numbdemchist = 1000
-    if not 0. <= gdat.probtran <= 1. or not 0. <= gdat.probspmr <= 1. or not 0. <= gdat.probjump <= 1. or not 0. <= gdat.probdemc <= 1.:
+    if (not 0. <= gdat.probtran <= 1. or not 0. <= gdat.probspmr <= 1.
+            or not 0. <= gdat.probjump <= 1. or not 0. <= gdat.probdemc <= 1.
+            or not 0. <= gdat.probstud <= 1.
+            or gdat.probdemc + gdat.probstud > 1.):
         raise ValueError('Proposal probabilities must be between zero and one.')
     gdat.nameproptype = ['with']
     if gmod.numbpopl > 0:
@@ -1969,7 +1974,11 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         
         ## propose a step
         numbdemchist = len(getattr(gdatmodi, 'dequedemchist', ()))
-        if getattr(gdat, 'probdemc', 0.) > 0. and numbdemchist >= 10 and np.random.rand() < gdat.probdemc:
+        probdemc = float(getattr(gdat, 'probdemc', 0.))
+        probstud = float(getattr(gdat, 'probstud', 0.))
+        booldemc = probdemc > 0. and numbdemchist >= 10
+        randproptype = np.random.rand() if booldemc or probstud > 0. else None
+        if booldemc and randproptype < probdemc:
             # differential-evolution jump using two random past visited states (ter Braak 2006);
             # this proposal is symmetric, so it leaves the standard Metropolis acceptance ratio unchanged
             factdemcgamma = getattr(gdat, 'factdemcgamma', None)
@@ -1979,6 +1988,14 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             vecta = gdatmodi.dequedemchist[indxa][thisindxsampfull]
             vectb = gdatmodi.dequedemchist[indxb][thisindxsampfull]
             diffparagenrunitfull = factdemcgamma * (vecta - vectb) + 1e-6 * np.random.normal(size=thisindxsampfull.size)
+        elif probstud > 0. and (
+                randproptype < probdemc + probstud if booldemc else randproptype < probstud):
+            # Independent Student-t(5) steps remain symmetric after per-coordinate reflection.
+            degrstud = 5.
+            diffparagenrunitfull = (
+                np.random.standard_t(degrstud, size=thisindxsampfull.size)
+                * np.sqrt((degrstud - 2.) / degrstud) * thisstdp
+            )
         elif gdat.typeexpr == 'gener' and hasattr(gdat, 'proposal_correlation'):
             correlation = gdat.proposal_correlation[
                 np.ix_(thisindxsampfull, thisindxsampfull)

@@ -335,6 +335,36 @@ def test_demc_proposal_recovers_gaussian_posterior_without_bias(tmp_path):
     )
 
 
+def test_student_t_within_model_mix_recovers_gaussian_posterior(tmp_path):
+    result = sample(
+        typeexpr='gener',
+        retr_llik=gaussian_log_likelihood,
+        parameter_names=('x', 'y'),
+        prior_types=('self', 'self'),
+        prior_minima=(-5.0, -7.0),
+        prior_maxima=(5.0, 7.0),
+        initial_values=(0.0, 0.0),
+        proposal_scales=(0.08, 0.08),
+        proposal_correlation=((1.0, 0.6 / np.sqrt(2.0)), (0.6 / np.sqrt(2.0), 1.0)),
+        propwithsing=False,
+        probstud=0.5,
+        pathbase=str(tmp_path),
+        strgcnfg='student_t_gaussian',
+        numbproc=2,
+        numbswep=1800,
+        numbburn=600,
+        numbsamp=1200,
+        typeverb=-1,
+    )
+
+    samples = np.asarray(result.listpostparagenrscalbase)
+    assert np.all(result.listpostindxproptype == 0)
+    np.testing.assert_allclose(np.mean(samples, axis=0), np.zeros(2), atol=0.2)
+    np.testing.assert_allclose(
+        np.cov(samples, rowvar=False), np.array([[1.0, 0.6], [0.6, 2.0]]), atol=0.35
+    )
+
+
 def test_generic_model_honors_explicit_plot_settings(tmp_path, monkeypatch):
     import tdpy
 

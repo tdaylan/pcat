@@ -43,7 +43,7 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `variable_number_stellar_flares/`: transdimensional catalog of a variable number of stellar flares in a simulated photometric time series
 - `proposal_profiling/`: per-sweep execution time, acceptance, and runtime share for all six proposal types, plus pipeline-phase timings on the simulated Voigt spectrum
 - `proposal_state_animation/`: retained states, every Voigt-line proposal, and a split/merge Jacobian acceptance comparison
-- `burn_in_strategies/`: fixed, adaptive, and likelihood-tempered burn-in on correlated and bimodal simulated targets
+- `burn_in_strategies/`: fixed, adaptive, likelihood-tempered, and Student-t within-model proposals on correlated and bimodal simulated targets
 - `kl_divergence_gaussian/`: PCAT's posterior-to-prior forward KL estimate on a conjugate Gaussian target, checked against its analytic value
 - `sampler_comparison_emcee_dynesty/`: PCAT, emcee, and dynesty on one simulated sinusoid posterior
 - `population_grid/`: corner, histogram, and pair plots of two simulated sample populations

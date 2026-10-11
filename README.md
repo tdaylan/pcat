@@ -166,6 +166,16 @@ or transition-probability term. This can help the sampler escape local optima
 in element parameters (e.g. near-degenerate positions) that birth, death,
 split, and merge moves reach only indirectly.
 
+Within-model updates can also mix in ``probstud`` Student-t(5) steps. These
+independent, variance-matched increments have heavier tails than the default
+Gaussian random walk and use the same symmetric Metropolis acceptance. They
+apply to fixed-dimensional parameters and existing catalog elements without
+changing catalog size; ``probdemc + probstud`` must be at most one. In a seeded
+8,000-sweep comparison on the bimodal target, the Student-t mixture improved
+mode switches from 5 to 17 and ESS per second from 0.2 to 1.8. On the correlated
+Gaussian target it reduced ESS per second from 3.9 to 2.2, so it is a targeted
+option rather than a universal replacement.
+
 ### Dynamic convergence-based stopping
 
 By default PCAT samples for a fixed number of sweeps (``numbswep``). Set
@@ -218,7 +228,7 @@ Monte Carlo error accounts for chain autocorrelation; finite-sample estimates
 are not clipped at zero. The ``kl_divergence_gaussian`` example compares a PCAT
 posterior-to-prior estimate with the exact Gaussian value.
 
-### Burn-in strategies
+### Burn-in and proposal strategies
 
 `numbburn` sets the initial sweeps excluded from posterior products. PCAT offers
 two complementary burn-in controls through the same sampler pipeline:
@@ -229,15 +239,15 @@ two complementary burn-in controls through the same sampler pipeline:
 	`factburntmpr` fraction of burn-in. The inverse likelihood temperature rises
 	quartically from near zero to one while the prior remains untempered.
 
-The maintained comparison runs fixed scales, adaptive scales, and tempered plus
-adaptive burn-in on a seeded correlated Gaussian and an equal-weight bimodal
-target:
+The maintained comparison runs fixed scales, adaptive scales, tempered plus
+adaptive burn-in, and adaptive Student-t within-model proposals on a seeded
+correlated Gaussian and an equal-weight bimodal target:
 
 ```bash
 python examples/burn_in_strategies/burn_in_strategies.py --numbswep 1200
 ```
 
-![PCAT burn-in posterior comparison](examples/burn_in_strategies/visuals/burn_in_posterior_comparison.png)
+![PCAT burn-in and proposal comparison](examples/burn_in_strategies/visuals/burn_in_posterior_comparison.png)
 
 ![PCAT burn-in performance comparison](examples/burn_in_strategies/visuals/burn_in_performance_comparison.png)
 
@@ -245,10 +255,8 @@ python examples/burn_in_strategies/burn_in_strategies.py --numbswep 1200
 
 For the intentionally underscaled correlated-Gaussian proposals, tempered plus
 adaptive burn-in raises the effective sample size from 4.5 to 11.4 and reduces
-the retained-mean error from 0.97 to 0.24. For the bimodal target initialized in
-one mode, fixed and adaptive runs remain trapped, while tempering reduces the
-positive-mode weight error from 0.50 to 0.009. Its local effective sample size
-is lower, illustrating that mode discovery and local mixing are distinct.
+the retained-mean error from 0.97 to 0.24. The Student-t mixture also reaches
+the second mode more often, but is less efficient on the correlated Gaussian.
 These values describe short controlled simulations, not universal rankings.
 
 `typeopti="hess"` is an experimental finite-difference Hessian initializer for

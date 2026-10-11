@@ -390,6 +390,7 @@ def test_proposal_defaults_enable_transdimensional_moves():
     _configure_proposal_types(state, model)
 
     assert state.probtran == pytest.approx(0.4)
+    assert state.probstud == 0.0
     assert state.nameproptype.tolist() == [
         "with",
         "brth",
@@ -399,6 +400,18 @@ def test_proposal_defaults_enable_transdimensional_moves():
         "jump",
     ]
     assert state.lablproptype[1] == "Birth proposal"
+
+
+def test_differential_evolution_and_student_proposal_mixture_is_validated():
+    state = SimpleNamespace(probtran=0.0, probspmr=0.0, probdemc=0.6, probstud=0.4)
+    _configure_proposal_types(state, SimpleNamespace(numbpopl=0))
+
+    assert state.probdemc + state.probstud == pytest.approx(1.0)
+    with pytest.raises(ValueError, match="Proposal probabilities"):
+        _configure_proposal_types(
+            SimpleNamespace(probtran=0.0, probspmr=0.0, probdemc=0.7, probstud=0.4),
+            SimpleNamespace(numbpopl=0),
+        )
 
 
 def test_proposal_labels_support_legacy_saved_identifiers():

@@ -43,6 +43,22 @@ def test_documentation_pages_are_in_the_toctree():
         assert f"   {page}\n" in index
 
 
+def test_readthedocs_examples_show_real_spectrum_and_flare_results():
+    page = (DOCS_ROOT / "examples.rst").read_text()
+    relative_images = (
+        "jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_spectrum_fit.png",
+        "jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_line_catalog_samples.png",
+        "jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_line_count_posterior.png",
+        "variable_number_stellar_flares/visuals/variable_number_stellar_flares_light_curve_fit.png",
+        "variable_number_stellar_flares/visuals/variable_number_stellar_flares_catalog_samples.png",
+        "variable_number_stellar_flares/visuals/variable_number_stellar_flares_count_posterior.png",
+    )
+
+    for relative_image in relative_images:
+        assert f"../examples/{relative_image}" in page
+        assert (REPOSITORY_ROOT / "examples" / relative_image).is_file()
+
+
 def test_documented_example_commands_resolve():
     relative_paths = [
         "examples/chandra_point_source_catalog/chandra_point_source_catalog.py",
@@ -347,6 +363,18 @@ def test_documentation_distinguishes_posterior_and_candidate_animations():
     assert "Candidate frames are proposal diagnostics, not posterior samples" in sampling
     assert "including rejected candidates" in outputs
     assert "examples/proposal_state_animation/visuals/post/anim/proposal_candidates.gif" in readme
+
+
+def test_student_t_proposal_and_target_specific_efficiency_are_documented():
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    sampling = (DOCS_ROOT / "sampling.rst").read_text()
+    example = (REPOSITORY_ROOT / "examples/burn_in_strategies/burn_in_strategies.py").read_text()
+
+    assert "probstud" in readme
+    assert "probdemc" in sampling and "probstud" in sampling
+    assert "their sum must not exceed one" in sampling
+    assert "student_t" in example
+    assert "ESS per second" in sampling
 
 
 def test_jacobian_example_is_linked_and_documents_unclipped_acceptance():

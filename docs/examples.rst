@@ -118,6 +118,21 @@ Publication and instrument examples
 
       python examples/jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py --numbswep 200000
 
+   .. image:: ../examples/jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_spectrum_fit.png
+      :alt: Real JWST MIRI spectrum of NGC 7027 with the PCAT median model and residuals
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_line_catalog_samples.png
+      :alt: Posterior line wavelengths and integrated fluxes from the JWST spectrum
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/jwst_miri_ngc7027_line_catalog/visuals/jwst_miri_ngc7027_line_count_posterior.png
+      :alt: Posterior probability for the number of emission lines in NGC 7027
+      :width: 520px
+      :align: center
+
 ``variable_number_exoplanets_radial_velocity``
    Simulated six-year, two-instrument radial-velocity series containing three
    injected planets. PCAT samples a variable catalog of Keplerian signals while
@@ -137,6 +152,21 @@ Publication and instrument examples
    .. code-block:: bash
 
       python examples/variable_number_stellar_flares/variable_number_stellar_flares.py --smoke
+
+   .. image:: ../examples/variable_number_stellar_flares/visuals/variable_number_stellar_flares_light_curve_fit.png
+      :alt: Simulated photometry, PCAT flare model, and standardized residuals
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/variable_number_stellar_flares/visuals/variable_number_stellar_flares_catalog_samples.png
+      :alt: Posterior samples of flare peak times and excess counts
+      :width: 720px
+      :align: center
+
+   .. image:: ../examples/variable_number_stellar_flares/visuals/variable_number_stellar_flares_count_posterior.png
+      :alt: Posterior probability for the number of simulated stellar flares
+      :width: 520px
+      :align: center
 
 ``variable_number_stellar_spots``
    Simulated rotating-star photometry with three injected dark spots. PCAT fits
@@ -305,11 +335,13 @@ Analysis utilities
       python examples/proposal_state_animation/proposal_state_animation.py --numbswep 24
 
 ``burn_in_strategies``
-   Seeded comparison of fixed proposal scales, adaptive proposal scales, and
-   likelihood-tempered plus adaptive burn-in on correlated-Gaussian and
-   equal-weight bimodal posterior targets. The figures report retained samples,
-   acceptance, effective sample rate, target-summary error, runtime, and the
-   recorded inverse-temperature schedule.
+   Seeded comparison of fixed and adaptive Gaussian steps, likelihood-tempered
+   burn-in, and an adaptive Student-t within-model proposal on correlated-
+   Gaussian and equal-weight bimodal targets. The figures report retained
+   samples, acceptance, effective sample rate, target-summary error, runtime,
+   and the recorded inverse-temperature schedule. Student-t steps cross the
+   modes more often in the bimodal target but are not more efficient on every
+   target.
 
    .. code-block:: bash
 

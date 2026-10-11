@@ -39,4 +39,4 @@ examples/daylan+2017_fermi_point_sources/visuals/*
 CODING_STANDARDS.md
 REFACTORING_PROGRESS.md
 examples/*/visuals/*/
-examples/*/visuals/stat.txt
+examples/*/visuals/stat*.txt
