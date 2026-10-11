@@ -1,6 +1,6 @@
 # Split/merge Jacobian example
 
-This example runs PCAT on a seeded simulated spectrum with two Voigt lines and a one-to-three-line metamodel. The 120-sweep run exercises within-model, birth, death, split, and merge proposals. It is a short demonstration, not a converged posterior analysis.
+This short PCAT run makes the split/merge Jacobian visible. It uses a seeded simulated spectrum with two Voigt lines and a one-to-three-line metamodel, then exercises within-model, birth, death, split, and merge proposals over 120 sweeps. The run demonstrates the calculation; it does not establish posterior convergence.
 
 A split maps a parent line's amplitude-coordinate value $F$ to $rF$ and $(1-r)F$, while the proposal auxiliary variables describe the displacement and split fraction. For this amplitude-fraction transform, PCAT adds $\log|J|=\log F$ to the split log acceptance ratio. A reverse merge uses the negative term. More generally,
 

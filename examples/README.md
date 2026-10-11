@@ -1,14 +1,14 @@
 # PCAT example figures
 
-These notebooks apply probabilistic cataloging to point-source images, Gaussian mixtures, strong gravitational lenses, diffuse emission, and Voigt spectral lines. They also demonstrate catalog association. Open a notebook in each directory and run its code cells to see selected data, model, residual, and posterior figures inline. The matching Python scripts remain available for command-line automation and existing tests. The Fermi-LAT filter and manual batch-command notebooks have no generated figures to display.
+These notebooks show PCAT at work on point-source images, Gaussian mixtures, strong lenses, diffuse emission, and Voigt spectral lines. Open one and run its cells to compare the data, model, residuals, and posterior samples directly. The matching Python scripts are there for command-line runs and tests. The Fermi-LAT filter and manual batch-command notebooks are text-only, so they have no figure gallery.
 
-Each maintained publication notebook runs PCAT, reloads the finalized object, and plots posterior diagnostics alongside model views. Synthetic analogs are not numerical reproductions of the papers.
+Each maintained publication notebook runs PCAT, reloads the finalized object, and plots posterior results alongside model views. Synthetic analogs do not reproduce the papers' numerical results.
 
 Sampler runs write a `proposal_activity.gif` with cumulative attempt and acceptance counts for each move type. Runs with model frames also write a `proposal_sequence.gif` that labels each frame with its proposal and acceptance status.
 
 Set `makeanim=True` to save retained chain states after burn-in at the configured plotting cadence in `proposal_sequence.gif`. Set `boolmakeanimprop=True` to also record every worker-zero proposal, including rejected candidates, before the accept/reject decision. Candidate frames compare current and proposed models and residuals, and label the move and acceptance terms. PCAT assembles them into `proposal_candidates.gif` under `visuals/post/anim/`. Candidate frames must be recorded during sampling and cannot be reconstructed from the final posterior alone.
 
-The `proposal_state_animation/` example runs 120 sweeps of a simulated Voigt-line catalog, mixing Gaussian, DE-MC, and Student-t within-model proposals with birth, death, split, merge, and jump moves. It displays both GIFs, reports counts to confirm that the complete move roster was exercised, and compares split/merge acceptance probabilities with same-proposal counterfactuals that omit only the Jacobian.
+The `proposal_state_animation/` example runs 120 sweeps of a simulated Voigt-line catalog, mixing Gaussian, DE-MC, and Student-t within-model proposals with birth, death, split, merge, and jump moves. It displays both GIFs, reports counts to confirm that every move type ran, and compares split/merge acceptance probabilities for the same proposals with and without the Jacobian.
 
 Run it from the repository root:
 
@@ -42,7 +42,7 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `feder+2023_point_diffuse_spire/`: three-band point-plus-diffuse inference inspired by Feder et al. (2023)
 - `hall+2026_herschel_dsfg_multiplicity/`: crowded three-band source multiplicity inspired by Hall et al. (2026)
 - `simulated_hst_strong_lens/`: catalog inference in a simulated Hubble Space Telescope lens image
-- `roman_strong_lens_perturber_catalog/`: a seeded Roman strong-lens benchmark and its generated diagnostic
+- `roman_strong_lens_perturber_catalog/`: a seeded Roman strong-lens benchmark and its generated figures
 - `mejiro_roman_strong_lens/`: PCAT inference of the lens and source of a Roman F129 exposure simulated by mejiro, and the parameter bias caused by a PSF 30% too wide
 - `mismodeling_flare_catalog/`: correct and misspecified fits of the same flare light curves, with residual and posterior-predictive chi-squared shape comparisons beyond the per-bin chi-squared value
 - `simulated_rubin_cluster_lens/`: a synthetic Rubin-like cluster-scale lens fitted with PCAT's Poisson image sampler
@@ -179,7 +179,7 @@ cd /path/to/pcat
 python examples/run_all_examples.py
 ```
 
-The aggregate script replaces cached figure outputs for the included analyses. It evaluates the image analyses, the Roman strong-lens benchmark, the two utility examples, and the reduced Voigt configuration. The output includes static posterior diagnostics and posterior animations.
+The aggregate script replaces cached figure outputs for the included analyses. It evaluates the image analyses, the Roman strong-lens benchmark, the two utility examples, and the reduced Voigt configuration. The output includes posterior plots and animations.
 
 Run either Voigt configuration at its full sampling depth with:
 

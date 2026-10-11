@@ -4,7 +4,8 @@
 
 ## Purpose
 
-PCAT is a hierarchical Bayesian inference framework. A model has a defined
+PCAT asks how many sources or other components crowded data support, and what
+their properties are. In each model, the parameter dimension is defined.
 parameter dimension. A metamodel is the union of candidate models that may have
 different parameter dimensions. PCAT supports inference within one model, where
 the parameter dimension stays constant, and inference over a metamodel, where
@@ -19,7 +20,7 @@ PCAT supports two complementary inference modes:
 - inference over metamodels whose candidate models can have different
 	parameter dimensions
 
-Scientific applications include
+Applications include
 
 - probabilistic source catalogs from images and photon-count data
 - crowded-field detection and membership uncertainty
