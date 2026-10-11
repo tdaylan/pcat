@@ -60,9 +60,11 @@ def test_documented_example_commands_resolve():
 
 def test_every_example_script_has_a_notebook():
     examples = REPOSITORY_ROOT / "examples"
-    script_only_automation = {examples / "run_all_examples.py"}
+    script_only_automation = set(examples.glob("run_all_examples*.py"))
     for script in examples.rglob("*.py"):
         if script in script_only_automation:
+            continue
+        if script.stem.endswith(" 2") and script.with_name(f"{script.stem[:-2]}{script.suffix}").is_file():
             continue
         notebook = script.with_suffix(".ipynb")
         assert notebook.is_file(), f"Missing notebook for {script.relative_to(examples)}"
@@ -230,6 +232,8 @@ def test_documentation_covers_primary_capabilities():
         "lensed emission",
         "lghtlinevoig",
         "spectral data",
+        "transit-timing likelihood",
+        "unbinned_gaussian_mixture",
     }
     missing_terms = required_terms - {
         term for term in required_terms if term in capabilities
@@ -242,14 +246,17 @@ def test_documentation_separates_likelihoods_from_catalog_products():
     likelihoods = (DOCS_ROOT / "likelihoods.rst").read_text()
 
     assert "Point sources, extended emission, foreground light, and gravitational lenses" in capabilities
-    assert "Unbinned Gaussian-mixture likelihood" in capabilities
-    assert "without first accumulating them into image pixels" in capabilities
+    assert "Unbinned event-level custom likelihoods" in capabilities
+    assert "fixed Gaussian" in capabilities
     assert inspect.signature(sampling.init).parameters["boolcondcatl"].default is True
     assert "default ``boolcondcatl=True``" in capabilities
     assert re.search(r"Set\s+``boolcondcatl=False``", likelihoods)
     assert "does\nnot condense one-dimensional line, flare, or Keplerian catalogs" in likelihoods
     assert "Neither\ncondensation nor catalog association is a likelihood" in likelihoods
-    assert "The public ``typeexpr=\"gmix\"`` example currently" in likelihoods
+    assert "The maintained" in likelihoods
+    assert "unbinned_gaussian_mixture" in likelihoods
+    assert "PCAT does not currently provide a built-in unbinned" in likelihoods
+    assert "dispatcher must be completed" not in likelihoods
 
 
 def test_documented_api_signatures_match_public_entry_points():

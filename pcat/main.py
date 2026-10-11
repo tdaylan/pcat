@@ -5026,19 +5026,6 @@ def init_image( \
                 setp_varb(gdat, 'lum0sloplowr', valu=0.5, popl=l, strgmodl=strgmodl)
                 setp_varb(gdat, 'lum0slopuppr', valu=1.5, popl=l, strgmodl=strgmodl)
             
-    # copy the true model to the fitting model if the fitting model parameter has not been specified
-    #temp = deepcopy(gdat.__dict__)
-    #for strg, valu in temp.items():
-    #    if strg.startswith('true') and not strg[4:].startswith('indx'):
-    #        try:
-    #            valumodl = getattr(gdat.fitt, strg[4:])
-    #            if valumodl is None:
-    #                raise
-    #            if gdat.typeverb > 1:
-    #                print 'Received custom input for ' + strg[4:]
-    #        except:
-    #            setattr(gdat.fitt, strg[4:], getattr(gdat, strg))
-    
     # check inputs
     if gdat.typepixl == 'heal' and gdat.numbspatdims > 2:
         raise Exception('More than 2 spatial dimensions require Cartesian binning.')

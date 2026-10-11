@@ -134,10 +134,11 @@ Image formation
 Plotting
 --------
 
-Every routine below writes PNG (300 dpi) or PDF files, logs ``Writing to
-PATH...``, and returns the written path or a dictionary of paths. The
-:doc:`gallery` shows an example output of each one, produced by
-``docs/make_plot_gallery.py`` from real PCAT runs.
+Static figure-writing routines support PNG or PDF output and log their output
+paths. Animation and state helpers may instead return snapshots or write GIFs;
+their return values and products are described individually below. The
+:doc:`gallery` shows representative outputs produced by
+``docs/make_plot_gallery.py`` from PCAT runs.
 
 The ``state`` argument of the sampler views is the final posterior object
 returned by :func:`pcat.sampling.sample` or read with
@@ -313,6 +314,13 @@ Instrument response
 
    Evaluate peak-normalized Gaussian, one-sided exponential-decay, FRED, or
    Davenport empirical flare profiles.
+
+.. py:function:: pcat.time_series.log_likelihood_transit_times(observed_times, predicted_times, timing_errors)
+
+   Return the uncertainty-weighted Gaussian log likelihood of matching
+   one-dimensional transit-time arrays, up to a parameter-independent
+   normalization constant. Timing errors must be positive; nonfinite predicted
+   times return negative infinity.
 
 .. py:function:: pcat.psf_poly_fit(gdat, psfnusam, factusam)
 

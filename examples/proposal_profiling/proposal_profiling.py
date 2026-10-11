@@ -12,9 +12,11 @@ summarizes both.
 from tdpy.verbosity import print
 
 import argparse
+import builtins
 from tdpy.cli import add_plot_arguments
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import h5py
@@ -27,7 +29,7 @@ RUN_NAME = EXAMPLE_PATH.name
 sys.path.insert(0, str(EXAMPLE_PATH.parent / "voigt_spectral_line_catalog"))
 
 # proposal-type order used by PCAT (gdat.nameproptype)
-LABELS = ["Within-model", "Birth", "Death", "Split", "Merge"]
+LABELS = ["Within-model", "Birth", "Death", "Split", "Merge", "Jump"]
 
 # descriptive labels for PCAT's per-sweep pipeline phase timers (gdat.listnamechro/listlablchro)
 PHASE_LABELS = {
@@ -63,7 +65,9 @@ def run_sampler(numbswep):
         # fraction of transdimensional proposals that are split or merge
         probspmr=0.3,
         probtran=0.7,
+        probjump=0.1,
         numbswep=numbswep,
+        numbburn=min(configuration["numbburn"], numbswep // 2),
         numbsamp=numbswep // 10,
         numbswepplot=max(numbswep // 40, 1),
         boolcheckconv=False,
@@ -74,7 +78,9 @@ def run_sampler(numbswep):
         numbproc=1,
         typeverb=0,
     )
+    time_start = time.perf_counter()
     sampling.sample(**configuration)
+    return time.perf_counter() - time_start
 
 
 def read_chain():
@@ -146,7 +152,8 @@ def plot_time_breakdown_by_phase(chain, typefileplot):
                 label=f"Total sweep, mean {chain['time'].mean():.3f} ms")
     if "tert" in meantime:
         axis.axvline(meantime["tert"], color="0.4", ls=":", lw=1.2,
-                    label=f"Tertiary bookkeeping (outside the sweep), mean {meantime['tert']:.3f} ms")
+                    label=f"Tertiary bookkeeping (outside the sweep), "
+                          f"mean {meantime['tert']:.3f} ms")
     axis.set_xlabel("Mean wall-clock time per sweep [ms]")
     axis.legend(loc="lower right", fontsize=8)
     save_example_figure(figure, EXAMPLE_PATH, "proposal_time_breakdown_by_phase", typefileplot)
@@ -160,18 +167,29 @@ def main():
     parser.add_argument("--skip-sampling", action="store_true",
                         help="Replot from an existing chain without sampling again.")
     arguments = parser.parse_args()
+    time_sampler = None
     if not arguments.skip_sampling:
-        run_sampler(arguments.numbswep)
+        time_sampler = run_sampler(arguments.numbswep)
     chain = read_chain()
     configure_example_style(arguments.typeplotback)
     plot_time_per_proposal(chain, arguments.typefileplot)
     plot_acceptance_and_cost(chain, arguments.typefileplot)
     plot_time_breakdown_by_phase(chain, arguments.typefileplot)
+    timetotl = chain["time"].sum()
+    builtins.print(f"Recorded sweep time: {timetotl / 1e3:.2f} s across "
+                    f"{chain['time'].size} sweeps ({chain['time'].mean():.3f} ms/sweep, "
+                    f"{1e3 / chain['time'].mean():.0f} sweeps/s)")
+    if time_sampler is not None:
+        builtins.print(f"PCAT sampler wall time: {time_sampler:.2f} s")
+    builtins.print("Proposal             Sweeps  Acceptance  Median [ms]  Runtime share")
     for k, label in enumerate(LABELS):
         indx = chain["type"] == k
         if indx.any():
-            print(f"{label}: N={indx.sum()}, acceptance {chain['accp'][indx].mean():.3f}, "
-                  f"median time {np.median(chain['time'][indx]):.3f} ms")
+            timeprop = chain["time"][indx]
+            fracruntime = timeprop.sum() / timetotl
+            builtins.print(f"{label:<20} {indx.sum():>6}  "
+                        f"{chain['accp'][indx].mean():>10.3f}  "
+                        f"{np.median(timeprop):>11.3f}  {fracruntime:>12.1%}")
 
 
 if __name__ == "__main__":

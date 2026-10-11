@@ -36,3 +36,25 @@ def test_misspecified_profile_fit_samples_gaussian_flares(tmp_path, monkeypatch)
     assert np.all((number >= 0) & (number <= example.MAXIMUM_NUMBER))
     model = np.asarray(posterior.listpostcntpmodl)[:, :, 0, 0]
     assert model.shape[1] == light_curves["time"].size and np.isfinite(model).all()
+
+
+def test_residual_and_predictive_chi_squared_shape_diagnostics(tmp_path, monkeypatch):
+    rng = np.random.default_rng(41)
+    model = np.full(500, 1000.0)
+    counts = rng.poisson(model)
+    posterior_models = np.tile(model, (16, 1))
+    diagnostics = example.calculate_residual_diagnostics(
+        counts, posterior_models, np.random.default_rng(52), number_replicates=300
+    )
+
+    assert abs(diagnostics["residual"].mean()) < 0.2
+    assert abs(diagnostics["residual"].std(ddof=1) - 1.0) < 0.1
+    assert diagnostics["chi2_predictive"].shape == (300,)
+    assert abs(diagnostics["chi2_predictive"].mean() - counts.size) < 20.0
+    assert 0.0 <= diagnostics["chi2_upper_tail_fraction"] <= 1.0
+
+    monkeypatch.setattr(example, "VISUAL_PATH", tmp_path)
+    summary = {row[0]: diagnostics for row in example.FITS}
+    figure_path = example.plot_residual_chi2_shapes(summary, "png")
+    assert figure_path.is_file()
+    assert figure_path.stat().st_size > 10_000

@@ -34,14 +34,14 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `simulated_hst_strong_lens/`: catalog inference in a simulated Hubble Space Telescope lens image
 - `roman_strong_lens_perturber_catalog/`: a seeded Roman strong-lens benchmark and its generated diagnostic
 - `mejiro_roman_strong_lens/`: PCAT inference of the lens and source of a Roman F129 exposure simulated by mejiro, and the parameter bias caused by a PSF 30% too wide
-- `mismodeling_flare_catalog/`: correct and misspecified fits of the same flare light curves, showing catalogs inflated by a wrong flare profile or an unmodeled stellar modulation
+- `mismodeling_flare_catalog/`: correct and misspecified fits of the same flare light curves, with residual and posterior-predictive chi-squared shape comparisons beyond the per-bin chi-squared value
 - `simulated_rubin_cluster_lens/`: a synthetic Rubin-like cluster-scale lens fitted with PCAT's Poisson image sampler
 - `rubin_dp1_confirmed_strong_lenses/`: an RSP-only workflow that crossmatches confirmed SIMBAD lens systems to real Rubin DP1 imaging, retrieves all catalog-footprint matches, plots every lens-band cutout in a complete collage and per-system multiband figures, runs demonstration PCAT fits, and compares all fitted Einstein radii in one posterior summary figure
 - `catalog_association_completeness_purity/`: completeness and purity across catalog-matching radii
 - `voigt_spectral_line_catalog/`: nominal and high-signal Voigt-profile line detection in simulated spectra
 - `jwst_miri_ngc7027_line_catalog/`: transdimensional emission-line catalog of the planetary nebula NGC 7027 from a real JWST MIRI MRS spectrum
 - `variable_number_stellar_flares/`: transdimensional catalog of a variable number of stellar flares in a simulated photometric time series
-- `proposal_profiling/`: execution time, prior-support fraction, and acceptance of each proposal type on the simulated Voigt spectrum
+- `proposal_profiling/`: per-sweep execution time, acceptance, and runtime share for all six proposal types, plus pipeline-phase timings on the simulated Voigt spectrum
 - `proposal_state_animation/`: retained states, every Voigt-line proposal, and a split/merge Jacobian acceptance comparison
 - `burn_in_strategies/`: fixed, adaptive, and likelihood-tempered burn-in on correlated and bimodal simulated targets
 - `sampler_comparison_emcee_dynesty/`: PCAT, emcee, and dynesty on one simulated sinusoid posterior
@@ -66,6 +66,15 @@ The data are simulated: a quiescent star observed at a TESS-like 2 minute cadenc
 
 The inference model therefore represents the injected asymmetry directly. The catalog posterior jointly constrains the number of flares, their peak times and excess counts, and their separate rise and decay scales.
 
+Install the optional example dependencies and run the 4,000-sweep-per-chain smoke check from the repository root with:
+
+```bash
+python -m pip install -e '.[examples]'
+python examples/variable_number_stellar_flares/variable_number_stellar_flares.py --smoke
+```
+
+Omit `--smoke` for the default 100,000-sweep run. Sampling replaces the example's generated output state; use `--skip-sampling` to rebuild figures from the existing posterior instead.
+
 ![Simulated light curve and PCAT model](variable_number_stellar_flares/visuals/variable_number_stellar_flares_light_curve_fit.png)
 
 ![Posterior flare catalog samples](variable_number_stellar_flares/visuals/variable_number_stellar_flares_catalog_samples.png)
@@ -74,9 +83,17 @@ The inference model therefore represents the injected asymmetry directly. The ca
 
 ## Proposal profiling
 
-PCAT stores the wall-clock time and proposal type of every sweep, as well as a breakdown of that time into internal pipeline phases (proposal, likelihood, model evaluation, prior, etc.). On the simulated Voigt spectrum with split and merge moves enabled (20,000 sweeps, one process, about 20 s), a within-model, birth, or death sweep takes a median of 0.28 ms, a split 0.32 ms, and a merge 0.37 ms. Acceptance is 1% for within-model, 30% for birth, 0.2% for death, 33% for split, and 5% for merge moves. The chain stays near the three-line upper bound of the fitting model although the simulation contains two lines, so death and merge proposals dominate the sweep count.
+PCAT stores the wall-clock time and proposal type of every sweep, as well as a breakdown of that time into internal pipeline phases. The maintained [profiling script](proposal_profiling/proposal_profiling.py) enables within-model, birth, death, split, merge, and jump moves and reports total sampler wall time, per-sweep timing, acceptance, and runtime share. In one 20,000-sweep, one-process run on the simulated Voigt spectrum, the recorded sweep time summed to 25.4 s (1.27 ms per sweep). Median sweep times were 0.36 ms for within-model, 0.46 ms for birth, 0.40 ms for death, 0.47 ms for split, 0.61 ms for merge, and 0.55 ms for jump proposals. Their respective shares of recorded sweep time were 25.7%, 0.9%, 42.4%, 0.3%, 21.0%, and 9.6%. These timings are specific to this run and machine.
 
-Most of the mean 0.67 ms per sweep goes to bookkeeping around the proposal (process, propose, parse, and save the state), not the physics evaluation itself (model, spectrum, and likelihood together take under 0.03 ms). A separate, tertiary bookkeeping step that runs after each sweep (not counted in the sweep total) costs 1.47 ms on average, more than twice the sweep itself, and is the clearest target for future speedups.
+Run the profile from the repository root with:
+
+```bash
+python examples/proposal_profiling/proposal_profiling.py --numbswep 20000
+```
+
+Use `--skip-sampling` to regenerate figures and the timing table from an existing chain.
+
+Most of the mean sweep time goes to bookkeeping around proposals (process, propose, parse, and save the state), not model evaluation, spectrum calculation, and likelihood together (0.075 ms per sweep in this run). A separate tertiary bookkeeping step that runs after each sweep, outside the recorded sweep total, costs 2.59 ms on average, about twice the mean sweep time, and remains a clear target for future speedups.
 
 ![Time per sweep by proposal type](proposal_profiling/visuals/proposal_time_per_sweep.png)
 
@@ -110,7 +127,13 @@ python examples/voigt_spectral_line_catalog/voigt_spectral_line_catalog.py --con
 python examples/voigt_spectral_line_catalog/voigt_spectral_line_catalog.py --configuration s2nrhigh
 ```
 
-The JWST example needs network access to MAST on its first run and `astroquery`:
+Install the optional example dependencies from the repository root:
+
+```bash
+python -m pip install -e '.[examples]'
+```
+
+The JWST example downloads its real MIRI spectrum from MAST on first run, so it needs network access:
 
 ```bash
 python examples/jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py

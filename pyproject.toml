@@ -33,6 +33,7 @@ docs = [
   "sphinx-rtd-theme>=3",
 ]
 examples = [
+  "astroquery",
   "dynesty",
   "emcee",
   "nicomedia",

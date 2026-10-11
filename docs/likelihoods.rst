@@ -106,21 +106,22 @@ fit. Fermi-LAT can also use its energy- and event-class-dependent PSF scale
 ``fermscalfact``. PSF and source-kernel options depend on pixelization and
 element type; unsupported combinations should use ``typeevalpsfn="none"``.
 
-Unbinned Gaussian-mixture likelihood
-------------------------------------
+Unbinned event-level likelihoods
+--------------------------------
 
-An unbinned Gaussian-mixture likelihood evaluates the mixture density at every
-observed coordinate. Its data are a list of events rather than an image, and
-its transdimensional elements are Gaussian components with inferred positions,
-widths, amplitudes, and population size. This likelihood is distinct from the
-Poisson image likelihood because it does not accumulate events into pixels.
+PCAT can sample an unbinned likelihood through a user callback. The maintained
+``unbinned_gaussian_mixture`` example passes the 140 simulated event coordinates
+directly to ``pcat.fixed.sample_fixed_chains`` and sums their Gaussian-mixture
+log densities with no spatial bins or count map. It samples the four center
+coordinates of two equal-weight Gaussian components; the component count and
+width are fixed. This is a fixed-dimensional custom-likelihood demonstration,
+not a native transdimensional Gaussian-mixture likelihood.
 
-The public ``typeexpr="gmix"`` example currently uses variable-width Gaussian
-elements (``typeelem=["clusvari"]``) on an 8-by-8 spatial grid and evaluates
-binned Poisson counts. ``boolbinsener=False`` only indicates that the example
-has no energy axis. It does not make the spatial likelihood unbinned. The
-unbinned Gaussian-mixture dispatcher must be completed and tested before this
-example can represent the unbinned likelihood described above.
+The native ``typeexpr="gmix"`` experiment remains the binned Poisson workflow
+shown in ``gaussian_mixture_catalog``. Its variable-width ``clusvari`` elements
+are fit to an 8-by-8 count grid. ``boolbinsener=False`` only indicates that this
+example has no energy axis. PCAT does not currently provide a built-in unbinned
+``typeexpr="gmix"`` dispatcher for variable-count mixture components.
 
 Spectral and time-series likelihood
 -----------------------------------

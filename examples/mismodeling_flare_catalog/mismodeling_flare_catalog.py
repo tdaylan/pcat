@@ -62,6 +62,7 @@ FITS = (
     ("fit_baseline_wrong", "B", "flarfred", "constant", "Constant baseline (misspecified)"),
 )
 NUMBER_CHAINS = 4
+NUMBER_PREDICTIVE_REPLICATES = 1000
 # prior upper limit on the number of flares, high enough that misspecified fits do not pile up against it
 MAXIMUM_NUMBER = 24
 
@@ -120,22 +121,114 @@ def run_fit(light_curves: dict, run_name: str, light_curve: str, profile: str, b
     return readfile(str(cached_state / "gdatfinlpost"))
 
 
+def calculate_residual_diagnostics(counts, posterior_models, rng, number_replicates):
+    """Compare Pearson residual and total chi-squared shapes with Gaussian references."""
+    counts = np.asarray(counts, dtype=float)
+    posterior_models = np.asarray(posterior_models, dtype=float)
+    if counts.ndim != 1 or posterior_models.ndim != 2 or posterior_models.shape[1] != counts.size:
+        raise ValueError("counts and posterior models must have matching one-dimensional bins")
+    if (posterior_models.shape[0] == 0 or not np.isfinite(counts).all()
+            or not np.isfinite(posterior_models).all() or np.any(posterior_models < 0.0)):
+        raise ValueError("counts and posterior model draws must be finite and nonnegative")
+    if number_replicates < 2:
+        raise ValueError("at least two predictive replicates are required")
+
+    model = np.median(posterior_models, axis=0)
+    variance = np.maximum(model, 1.0)
+    residual = (counts - model) / np.sqrt(variance)
+    chi2_total = float(np.sum(residual**2))
+    index = rng.integers(posterior_models.shape[0], size=number_replicates)
+    predictive_model = posterior_models[index]
+    predictive_counts = rng.poisson(predictive_model)
+    chi2_predictive = np.sum(
+        (predictive_counts - model[None, :])**2 / variance[None, :], axis=1
+    )
+    return {
+        "model": model,
+        "residual": residual,
+        "chi2_total": chi2_total,
+        "chi2_per_bin": chi2_total / counts.size,
+        "chi2_predictive": chi2_predictive,
+        "chi2_upper_tail_fraction": float(
+            (1 + np.count_nonzero(chi2_predictive >= chi2_total))
+            / (number_replicates + 1)
+        ),
+    }
+
+
 def summarize(light_curves: dict, posteriors: dict) -> dict:
-    """Return the catalog size and residual statistics of every fit."""
+    """Return catalog-size and residual-shape statistics for every fit."""
     summary = {}
+    rng = np.random.default_rng(0)
     for run_name, light_curve, *_ in FITS:
         posterior = posteriors[run_name]
         counts = light_curves["counts"][light_curve]
-        model = np.median(np.asarray(posterior.listpostcntpmodl)[:, :, 0, 0], axis=0)  # [counts per bin]
+        models = np.asarray(posterior.listpostcntpmodl)[:, :, 0, 0]  # [counts per bin]
+        diagnostics = calculate_residual_diagnostics(
+            counts, models, rng, NUMBER_PREDICTIVE_REPLICATES
+        )
         number = np.asarray(posterior.listpostnumbelem).ravel()
         summary[run_name] = {
             "mean_number": float(number.mean()),
             "probability_injected_number": float(np.mean(number == INJECTED["elin"].size)),
-            # Poisson chi-squared per bin of the posterior-median model
-            "chi2_per_bin": float(np.mean((counts - model) ** 2 / np.maximum(model, 1.0))),
-            "model": model,
+            **diagnostics,
         }
     return summary
+
+
+def gaussian_density(values, mean, standard_deviation):
+    """Evaluate a Gaussian probability density on ``values``."""
+    standard_deviation = max(float(standard_deviation), 1e-12)
+    standardized = (values - mean) / standard_deviation
+    return np.exp(-0.5 * standardized**2) / (standard_deviation * np.sqrt(2.0 * np.pi))
+
+
+def plot_residual_chi2_shapes(summary: dict, typefileplot: str) -> Path:
+    """Compare residual histograms and predictive total chi-squared with Gaussians."""
+    figure, axes = plt.subplots(len(FITS), 2, figsize=(8.2, 9.0))
+    for row, (run_name, _, _, _, label) in enumerate(FITS):
+        result = summary[run_name]
+        residual = result["residual"]
+        resid_mean = float(np.mean(residual))
+        resid_stdv = float(np.std(residual, ddof=1))
+        resid_grid = np.linspace(float(residual.min()), float(residual.max()), 300)
+        axis = axes[row, 0]
+        axis.hist(residual, bins=30, density=True, color="#007360", alpha=0.55,
+                  label="Observed Pearson residuals")
+        axis.plot(resid_grid, gaussian_density(resid_grid, 0.0, 1.0), color="black",
+                  ls="--", label="Standard Gaussian")
+        axis.plot(resid_grid, gaussian_density(resid_grid, resid_mean, resid_stdv),
+                  color="#A51C30", label="Gaussian fit")
+        axis.set_title(label, loc="left", fontsize=9)
+        axis.set_xlabel("Pearson residual")
+        axis.set_ylabel("Density")
+        axis.text(0.98, 0.92, f"mean={resid_mean:.2f}, sd={resid_stdv:.2f}",
+                  transform=axis.transAxes, ha="right", va="top", fontsize=8)
+
+        chi2_predictive = result["chi2_predictive"]
+        chi2_mean = float(np.mean(chi2_predictive))
+        chi2_stdv = float(np.std(chi2_predictive, ddof=1))
+        chi2_total = result["chi2_total"]
+        chi2_grid = np.linspace(0.0, max(float(chi2_predictive.max()), chi2_total) * 1.05, 300)
+        axis = axes[row, 1]
+        axis.hist(chi2_predictive, bins=30, density=True, color="#347F72", alpha=0.55,
+                  label="Posterior-predictive $\\chi^2$")
+        axis.plot(chi2_grid, gaussian_density(chi2_grid, chi2_mean, chi2_stdv),
+                  color="#A51C30", ls="--", label="Gaussian approximation")
+        axis.axvline(chi2_total, color="black", lw=1.2,
+                     label=f"Observed $\\chi^2$/bin={result['chi2_per_bin']:.2f}")
+        axis.set_xlabel(r"Total Pearson $\chi^2$")
+        axis.set_ylabel("Density")
+        axis.text(0.98, 0.92, f"upper-tail fraction="
+                  f"{result['chi2_upper_tail_fraction']:.3f}",
+                  transform=axis.transAxes, ha="right", va="top", fontsize=8)
+
+    axes[0, 0].legend(fontsize=7)
+    axes[0, 1].legend(fontsize=7)
+    for axis in axes.flat:
+        axis.grid(False)
+    figure.tight_layout()
+    return save(figure, "mismodeling_residual_chi2_shapes", typefileplot)
 
 
 def plot_light_curve_fits(light_curves: dict, summary: dict, light_curve: str, typefileplot: str) -> Path:
@@ -243,6 +336,7 @@ def run_example(numbswep: int = 40000, typefileplot: str = "png") -> dict:
         plot_light_curve_fits(light_curves, summary, "B", typefileplot),
         plot_catalogs(light_curves, posteriors, typefileplot),
         plot_catalog_size(posteriors, typefileplot),
+        plot_residual_chi2_shapes(summary, typefileplot),
     ]
     return summary
 
@@ -258,7 +352,11 @@ def main() -> int:
         result = summary[run_name]
         print(f"{label}: mean number of flares {result['mean_number']:.2f}, "
               f"P(N = {INJECTED['elin'].size}) = {result['probability_injected_number']:.2f}, "
-              f"chi-squared per bin {result['chi2_per_bin']:.2f}")
+              f"chi-squared per bin {result['chi2_per_bin']:.2f}, "
+              f"residual mean {result['residual'].mean():.2f}, "
+              f"residual standard deviation {result['residual'].std(ddof=1):.2f}, "
+              f"predictive chi-squared upper-tail fraction "
+              f"{result['chi2_upper_tail_fraction']:.3f}")
     return 0
 
 

@@ -206,7 +206,11 @@ Publication and instrument examples
    of at least 0.94. Symmetric Gaussian flares need about 15 components to
    reproduce the asymmetric decays, with a residual consistent with noise. A
    constant quiescent level turns the modulation into about 6.5 flares. Both
-   misspecified posteriors are narrow and exclude the injected number.
+   misspecified posteriors are narrow and exclude the injected number. The
+   example also compares standardized Pearson-residual distributions with a
+   standard Gaussian and total chi-squared values from posterior-predictive
+   Poisson replicates with a Gaussian approximation. The displayed upper-tail
+   fraction is a descriptive reference, not a formal p-value.
 
    .. code-block:: bash
 

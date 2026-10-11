@@ -21,12 +21,12 @@ applications include `Portillo et al. (2017)
 
 PCAT supports arbitrary user-supplied likelihood functions, a unified Poisson
 image likelihood with point, extended, and lensed components, spectral-line
-models, time-series flare catalogs, and Keplerian radial-velocity catalogs. It
-also runs fixed-dimensional models through the same sampler and persistence
-pipeline. Its transdimensional models infer the number and parameters of
-catalog elements jointly. Simulated and supplied data, population-level priors,
-posterior catalog summaries, convergence diagnostics, static figures, and
-posterior animations use a shared pipeline.
+models, time-series flare catalogs, Keplerian radial-velocity catalogs, and a
+transit-timing likelihood. It also runs fixed-dimensional models through the
+same sampler and persistence pipeline. Its transdimensional models infer the
+number and parameters of catalog elements jointly. Simulated and supplied data,
+population-level priors, posterior catalog summaries, convergence diagnostics,
+static figures, and posterior animations use a shared pipeline.
 
 .. image:: ../examples/pcat_posterior_samples.gif
    :alt: Posterior samples for Gaussian mixtures, point sources, strong lenses, and spectral lines

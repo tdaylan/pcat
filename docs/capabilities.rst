@@ -18,14 +18,16 @@ Maintained workflows include:
   exposure, and point-spread functions. The Chandra, Fermi-LAT, Hubble Space
   Telescope (HST), and Roman examples exercise different combinations of
   these components.
-* **Unbinned Gaussian-mixture likelihood.** A distinct likelihood class models
-  observed coordinates directly as draws from a variable-component mixture,
-  without first accumulating them into image pixels. The current public
-  ``gaussian_mixture_catalog`` example remains a binned Poisson image workflow
-  until the unbinned dispatcher is completed.
+* **Unbinned event-level custom likelihoods.** The
+  ``unbinned_gaussian_mixture`` example uses
+  :func:`pcat.fixed.sample_fixed_chains` with a callback that scores individual
+  event coordinates directly, without spatial bins. It fits two fixed Gaussian
+  components. The native ``typeexpr="gmix"`` workflow remains a binned Poisson
+  count-map model.
 * **Spectral and time-series likelihoods.** Variable-count spectral lines with
   eight intrinsic profile choices, instrument line-spread convolution, four
-  flare profiles, and Keplerian radial-velocity models.
+  flare profiles, Keplerian radial-velocity models, and a fixed-dimensional
+  transit-timing likelihood.
 * **Transdimensional catalog products.** Every transdimensional likelihood
   produces samples of catalogs. By default, final processing condenses those
   samples into a catalog before optional association with a reference catalog
