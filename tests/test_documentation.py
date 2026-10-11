@@ -255,7 +255,7 @@ def test_documentation_separates_likelihoods_from_catalog_products():
     assert inspect.signature(sampling.init).parameters["boolcondcatl"].default is True
     assert "default ``boolcondcatl=True``" in capabilities
     assert re.search(r"Set\s+``boolcondcatl=False``", likelihoods)
-    assert "does\nnot condense one-dimensional line, flare, or Keplerian catalogs" in likelihoods
+    assert "does not spatially condense one-dimensional line,\nflare, or Keplerian catalogs" in likelihoods
     assert "Every transdimensional model produces a catalog" in likelihoods
     assert "Condensation and either kind of association are posterior" in likelihoods
     assert "The maintained" in likelihoods
