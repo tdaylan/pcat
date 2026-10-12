@@ -37,6 +37,19 @@ from pcat.main import (
 from pcat.plotting import plot_posterior_convergence
 
 
+def _capture_figures(monkeypatch):
+    figures = []
+    make_figure = pcat_main.plt.figure
+
+    def capture_figure(*args, **kwargs):
+        figure = make_figure(*args, **kwargs)
+        figures.append(figure)
+        return figure
+
+    monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
+    return figures
+
+
 def test_posterior_convergence_plots_fixed_and_transdimensional_chains(tmp_path):
     rng = np.random.default_rng(31)
     state = SimpleNamespace(
@@ -470,15 +483,7 @@ def test_rejected_proposal_candidate_frame_shows_data_and_residual_panels(
     )
     worker = SimpleNamespace(this=current, next=candidate, cntrswep=3)
     output_path = tmp_path / "proposal_candidates_swep000000003.png"
-    figures = []
-    make_figure = pcat_main.plt.figure
-
-    def capture_figure(*args, **kwargs):
-        figure = make_figure(*args, **kwargs)
-        figures.append(figure)
-        return figure
-
-    monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
+    figures = _capture_figures(monkeypatch)
 
     assert _write_proposal_candidate_frame(state, worker, False, output_path) == str(output_path)
     assert len(figures) == 1
@@ -529,15 +534,7 @@ def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_p
 
 
 def test_candidate_residual_scales_are_fixed_for_1d_and_2d_frames(tmp_path, monkeypatch):
-    figures = []
-    make_figure = pcat_main.plt.figure
-
-    def capture_figure(*args, **kwargs):
-        figure = make_figure(*args, **kwargs)
-        figures.append(figure)
-        return figure
-
-    monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
+    figures = _capture_figures(monkeypatch)
     data_series = np.array([10., 16., 24., 35.])
     variance_series = np.array([1., 4., 9., 16.])
     state_series = SimpleNamespace(
@@ -686,15 +683,7 @@ def test_image_chain_frames_keep_color_limits_fixed_for_one_run():
 
 def test_candidate_animation_text_width_is_stable_across_sweeps(tmp_path, monkeypatch):
     labels = ["Within-model proposal", "A much longer transdimensional proposal"]
-    figures = []
-    make_figure = pcat_main.plt.figure
-
-    def capture_figure(*args, **kwargs):
-        figure = make_figure(*args, **kwargs)
-        figures.append(figure)
-        return figure
-
-    monkeypatch.setattr(pcat_main.plt, "figure", capture_figure)
+    figures = _capture_figures(monkeypatch)
     for sweep, proposal, subtype, accepted, posterior in (
         (0, 0, "Gaussian random walk", True, -10.0),
         (30, 0, "Differential evolution", False, -40.0),

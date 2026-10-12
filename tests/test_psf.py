@@ -30,3 +30,24 @@ def test_psf_poly_fit_reconstructs_cubic_profile():
 def test_psf_poly_fit_rejects_invalid_oversampling(factusam):
 	with pytest.raises(ValueError):
 		psf_poly_fit(SimpleNamespace(), np.ones(12), factusam)
+
+
+def test_psf_width_compatibility_wrapper_uses_shared_tdpy_interpolation():
+	from pcat.main import retr_psfnwdth
+	import tdpy
+
+	angles = np.linspace(0.0, 4.0, 401)
+	sigmas = np.array([[0.5, 1.0], [1.5, 2.0]])
+	profiles = np.exp(-angles[None, :, None] ** 2 / (2.0 * sigmas[:, None, :] ** 2))
+	state = SimpleNamespace(
+		numbener=2,
+		numbdqlt=2,
+		indxener=np.arange(2),
+		indxdqlt=np.arange(2),
+		blimpara=SimpleNamespace(angl=angles),
+	)
+
+	np.testing.assert_array_equal(
+		retr_psfnwdth(state, profiles, 0.5),
+		tdpy.retr_psfnwdth(profiles, angles, 0.5),
+	)

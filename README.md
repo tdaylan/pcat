@@ -5,9 +5,9 @@
 ## Purpose
 
 PCAT asks how many sources or other components crowded data support, and what
-their properties are. In each model, the parameter dimension is defined.
-parameter dimension. A metamodel is the union of candidate models that may have
-different parameter dimensions. PCAT supports inference within one model, where
+their properties are. Each model fixes its parameter dimension. A metamodel
+combines candidate models with different dimensions. PCAT supports inference
+within one model, where
 the parameter dimension stays constant, and inference over a metamodel, where
 the sampler jointly explores the selected model and its parameters. Catalogs
 are one application of metamodel inference; their variable-size populations

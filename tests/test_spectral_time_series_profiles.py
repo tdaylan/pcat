@@ -1,12 +1,18 @@
 import numpy as np
 import pytest
+from types import SimpleNamespace
 
+from pcat.main import retr_spec as pcat_retr_spec
 from pcat.spectral import (
     apply_gaussian_resolving_power,
     apply_line_spread_function,
     evaluate_line_profile,
     gaussian_lsf_kernel,
     spectral_profile_parameters,
+)
+from tdpy.spectral import (
+    evaluate_continuum_spectrum,
+    evaluate_line_profile as evaluate_line_profile_shared,
 )
 from pcat.time_series import (
     evaluate_flare_profile,
@@ -15,6 +21,45 @@ from pcat.time_series import (
     rotating_spot_parameters,
 )
 from pcat.demo import write_time_series_fits
+
+
+def test_pcat_reexports_shared_tdpy_line_profile():
+    assert evaluate_line_profile is evaluate_line_profile_shared
+
+
+@pytest.mark.parametrize(
+    ("profile", "parameters"),
+    (
+        ("powr", {}),
+        ("curv", {"curv": np.array([0.1, 0.2])}),
+        ("expc", {"expc": np.array([0.8, 1.2])}),
+    ),
+)
+def test_pcat_continuum_models_use_tdpy_spectrum_kernel(profile, parameters):
+    energy = np.linspace(0.1, 1.0, 21)
+    flux = np.array([2.0, 3.0])
+    spectral_index = np.array([1.0, 2.0])
+    state = SimpleNamespace(
+        numbener=energy.size,
+        bctrpara=SimpleNamespace(ener=energy, enerplot=energy),
+        enerpivt=0.5,
+        factlogtenerpivt=np.log(energy / 0.5),
+    )
+    actual = pcat_retr_spec(
+        state, flux, spectype=profile, sind=spectral_index, **parameters
+    )
+    expected = evaluate_continuum_spectrum(
+        energy,
+        flux,
+        profile,
+        0.5,
+        spectral_index,
+        curvature=parameters.get("curv"),
+        cutoff_energy=parameters.get("expc"),
+        log_energy_ratio=state.factlogtenerpivt,
+    )
+
+    np.testing.assert_allclose(actual, expected, rtol=1e-14, atol=0.0)
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.special import ndtr, wofz
+from tdpy.spectral import evaluate_line_profile
 
 
 LINE_PROFILE_PARAMETERS = {
@@ -26,68 +26,6 @@ def spectral_profile_parameters(profile: str) -> tuple[str, ...]:
         raise ValueError(
             f"Unknown line profile {profile!r}; choose from {tuple(LINE_PROFILE_PARAMETERS)}."
         ) from exception
-
-
-def evaluate_line_profile(
-    axis,
-    profile: str,
-    flux,
-    center,
-    gaussian_width=None,
-    lorentz_width=None,
-    mixing_fraction=None,
-    skewness=None,
-):
-    """Return integrated-flux-normalized line profiles on a one-dimensional axis."""
-    axis = np.asarray(axis, dtype=float).reshape(-1, 1)
-    flux = np.atleast_1d(np.asarray(flux, dtype=float))
-    center = np.atleast_1d(np.asarray(center, dtype=float))
-    if axis.size == 0 or flux.size != center.size or not np.isfinite(axis).all():
-        raise ValueError("axis must be finite and flux/center arrays must have equal nonzero length")
-    if not np.isfinite(flux).all() or not np.isfinite(center).all():
-        raise ValueError("line fluxes and centers must be finite")
-    offset = axis - center[None, :]
-
-    def positive(values, name):
-        values = np.atleast_1d(np.asarray(values, dtype=float))
-        if values.size != flux.size or not np.isfinite(values).all() or np.any(values <= 0.0):
-            raise ValueError(f"{name} must contain one finite positive value per line")
-        return values
-
-    if profile in ("gaus", "voig", "pvoi", "sinc", "skew", "toph", "edis"):
-        gaussian_width = positive(gaussian_width, "gaussian_width")
-    if profile in ("lore", "voig", "pvoi"):
-        lorentz_width = positive(lorentz_width, "lorentz_width")
-
-    if profile in ("gaus", "edis"):
-        shape = np.exp(-0.5 * (offset / gaussian_width) ** 2) / (gaussian_width * np.sqrt(2.0 * np.pi))
-    elif profile == "lore":
-        shape = lorentz_width / (np.pi * (offset**2 + lorentz_width**2))
-    elif profile == "voig":
-        argument = (offset + 1j * lorentz_width) / (np.sqrt(2.0) * gaussian_width)
-        shape = np.real(wofz(argument)) / (gaussian_width * np.sqrt(2.0 * np.pi))
-    elif profile == "pvoi":
-        fraction = np.atleast_1d(np.asarray(mixing_fraction, dtype=float))
-        if fraction.size != flux.size or np.any((fraction < 0.0) | (fraction > 1.0)):
-            raise ValueError("mixing_fraction must lie between zero and one for every line")
-        gaussian = np.exp(-0.5 * (offset / gaussian_width) ** 2) / (gaussian_width * np.sqrt(2.0 * np.pi))
-        lorentzian = lorentz_width / (np.pi * (offset**2 + lorentz_width**2))
-        shape = (1.0 - fraction) * gaussian + fraction * lorentzian
-    elif profile == "sinc":
-        shape = np.sinc(offset / gaussian_width) ** 2 / gaussian_width
-    elif profile == "skew":
-        skewness = np.atleast_1d(np.asarray(skewness, dtype=float))
-        if skewness.size != flux.size or not np.isfinite(skewness).all():
-            raise ValueError("skewness must contain one finite value per line")
-        standardized = offset / gaussian_width
-        gaussian = np.exp(-0.5 * standardized**2) / (gaussian_width * np.sqrt(2.0 * np.pi))
-        shape = 2.0 * gaussian * ndtr(skewness * standardized)
-    elif profile == "toph":
-        shape = (np.abs(offset) <= 0.5 * gaussian_width) / gaussian_width
-    else:
-        spectral_profile_parameters(profile)
-        raise AssertionError("unreachable")
-    return flux[None, :] * shape
 
 
 def gaussian_lsf_kernel(sigma_samples: float, truncate: float = 4.0) -> np.ndarray:

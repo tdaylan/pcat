@@ -394,17 +394,24 @@ def test_documentation_lists_stable_public_helpers():
 
 def test_documented_posterior_collage_matches_generator():
     examples = (DOCS_ROOT / "examples.rst").read_text()
+    normalized_examples = " ".join(examples.split())
 
     assert len(POSTERIOR_ANIMATION_PANELS) == 9
-    assert all(panel.static_image is None for panel in POSTERIOR_ANIMATION_PANELS)
-    assert "Nine changing inference views are synchronized below" in examples
-    assert "JWST/MIRI NGC 7027 line catalog" in examples
-    assert "random draw from the prior" in examples
+    static_panels = [
+        panel for panel in POSTERIOR_ANIMATION_PANELS if panel.static_image is not None
+    ]
+    assert len(static_panels) == 1
+    assert static_panels[0].static_image == "docs/_static/pcat_logo.png"
+    assert "Eight changing inference views are synchronized" in examples
+    assert "static PCAT logo panel" in examples
+    assert "observed JWST/MIRI NGC 7027 spectral fit" in normalized_examples
+    assert "starts from a nonempty catalog" in normalized_examples
+    assert "follows burn-in for the first third" in normalized_examples
     for domain in (
         "lensed arcs", "stellar flares", "rotating starspots",
         "radial velocities", "transit times",
     ):
-        assert domain in examples
+        assert domain in normalized_examples
 
 
 def test_readme_separates_sampler_utilities_from_applications():
@@ -625,8 +632,8 @@ def test_three_sampler_comparison_documents_fixed_and_variable_dimensions():
     assert "'--part',\n    'both'" in notebook_code
     assert "emcee cannot compare models" in script
     assert "emcee requires one parameter dimension per chain" in normalized_readme
-    assert "A model has a defined" in readme
-    assert "A metamodel is the union of candidate models" in readme
+    assert "Each model fixes its parameter dimension." in normalized_readme
+    assert "A metamodel combines candidate models with different dimensions." in normalized_readme
     assert "## Custom likelihoods" in readme
     assert "separate evidence calculation for each" in example_readme
     assert "emcee cannot vary the number of planets" in example_readme

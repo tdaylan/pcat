@@ -1,1 +1,0 @@
-/Users/tdaylan/Documents/work/git/pcat/examples/variable_number_stellar_flares/data/outp/variable_number_stellar_flares/stat.txt

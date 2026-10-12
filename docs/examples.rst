@@ -63,7 +63,7 @@ transit-timing series, the public JWST/MIRI spectrum, the proposal profiler,
 and the sampler comparison. The JWST example may retrieve public MAST data.
 Notebooks requiring authenticated services or interactive inspection are excluded.
 
-Eight changing inference views are synchronized around the PCAT logo. Each data
+Eight changing inference views are synchronized with a static PCAT logo panel. Each data
 view starts from a nonempty catalog, follows burn-in for the first third of the
 animation, and shows posterior samples for the remaining two thirds. The views
 show an unbinned Gaussian mixture, point sources in a simulated Daylan et al.

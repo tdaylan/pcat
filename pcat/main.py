@@ -64,6 +64,7 @@ import h5py
 import tdpy
 import tdpy.util as tdpy_util
 from tdpy.paths import make_directory, make_symlink, open_narr
+from tdpy.spectral import evaluate_continuum_spectrum
 from tdpy.util import summgene
 from .paths import get_repository_path, get_visuals_path
 
@@ -110,11 +111,17 @@ def retr_spec(gdat, flux, sind=None, curv=None, expc=None, sindcolr=None,
                     indxcolr = len(sindcolr) - 1
                 spec[i] = flux * (meanener[i] / gdat.enerpivt)**(-sindcolr[indxcolr])
         return spec
-    if spectype == 'curv':
-        return flux[None, :] * meanener[:, None]**(-sind[None, :] - gdat.factlogtenerpivt[:, None] * curv[None, :])
-    if spectype == 'expc':
-        return flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :]) * np.exp(-(meanener - gdat.enerpivt)[:, None] / expc[None, :])
-    return flux[None, :] * (meanener / gdat.enerpivt)[:, None]**(-sind[None, :])
+    profile = spectype if spectype in ('curv', 'expc') else 'powr'
+    return evaluate_continuum_spectrum(
+        meanener,
+        flux,
+        profile,
+        gdat.enerpivt,
+        sind,
+        curvature=curv,
+        cutoff_energy=expc,
+        log_energy_ratio=getattr(gdat, 'factlogtenerpivt', None),
+    )
 
 
 def retr_elem_spec(gdat, typeelem, spectype, dictelem):
@@ -715,18 +722,9 @@ class PointSpreadFunction:
 
 
 def retr_psfnwdth(gdat, psfn, frac):
-    """Return the radial PSF width at a fraction of its peak."""
-    wdth = np.zeros((gdat.numbener, gdat.numbdqlt))
-    for i in gdat.indxener:
-        for m in gdat.indxdqlt:
-            psfntemp = psfn[i, :, m]
-            indxangl = np.argsort(psfntemp)
-            intpwdth = max(frac * np.amax(psfntemp), np.amin(psfntemp))
-            if np.amin(psfntemp[indxangl]) <= intpwdth <= np.amax(psfntemp[indxangl]):
-                wdth[i, m] = sp.interpolate.interp1d(
-                    psfntemp[indxangl], gdat.blimpara.angl[indxangl], fill_value='extrapolate'
-                )(intpwdth)
-    return wdth
+    """Return PCAT's PSF widths through TDpy's shared interpolation helper."""
+
+    return tdpy.retr_psfnwdth(psfn, gdat.blimpara.angl, frac)
 
 
 def pdfn_expo(xdat, maxm, scal):
@@ -803,11 +801,7 @@ def pdfn_gaus(xdat, mean, stdv):
     return pdfn
 
 
-def pdfn_lgau(xdat, mean, stdv):
-    
-    pdfn = pdfn_gaus(np.log(xdat), np.log(mean), stdv)
-
-    return pdfn
+pdfn_lgau = pdfn_lnor
 
 
 def pdfn_atan(para, minmpara, maxmpara):
@@ -3440,9 +3434,6 @@ def setup_pcat(gdat):
     gdat.liststrgfeatpara = gdat.liststrgfeatparalist + ['limt', 'numbbins', 'blim', 'delt', 'indxbins', 'cmap', 'bctr', 'tick', 'numbbins', 'valutickmajr', \
                                                                                                                 # index of the parameter in the parameter vector
                                                                                                                 'indx', \
-
-                                                                                                                # to be deleted
-                                                                                                                #'numb', \
                                                                                                             'labltickmajr', 'valutickminr', 'labltickminr']
     # list of scalings
     gdat.listscaltype = ['self', 'logt', 'atan', 'gaus', 'pois', 'expo', 'drct']
@@ -5326,20 +5317,6 @@ def setp_modlemis_finl(gdat, strgmodl='fitt'):
             
             if gmod.numbpopl > 0:
                 if gmod.boollenssubh:
-                    # to be deleted
-                    #setattr(gmod.lablrootpara, 'masssubh%sintg', r'$M_{\rm{sub}}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sdelt', r'$\rho_{\rm{sub}}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sintgbein', r'$M_{\rm{sub,E}}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sdeltbein', r'$\rho_{\rm{sub,E}}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sintgunit', '$10^9 M_{\odot}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sdeltunit', '$M_{\odot}$/kpc')
-                    #setattr(gmod.lablrootpara, 'masssubh%sintgbeinunit', '$10^9 M_{\odot}$')
-                    #setattr(gmod.lablrootpara, 'masssubh%sdeltbeinunit', '$M_{\odot}$/kpc')
-                    #setattr(gmod.lablrootpara, 'fracsubh%sintg', r'f_{\rm{sub}}')
-                    #setattr(gmod.lablrootpara, 'fracsubh%sdelt', r'f_{\rho,\rm{sub}}')
-                    #setattr(gmod.lablrootpara, 'fracsubh%sintgbein', r'$f_{\rm{sub,E}}$')
-                    #setattr(gmod.lablrootpara, 'fracsubh%sdeltbein', r'$f_{\rho,\rm{sub,E}}$')
-                    
                     # scalar
                     setp_varb(gdat, 'masssubh%sbein' % strgsersfgrd, limt=[1e7, 1e10], strgmodl=strgmodl, labl=[r'$M_{\rm{sub,E,%d}}$' % e, ''])
                     setp_varb(gdat, 'fracsubh%sbein' % strgsersfgrd, limt=[0., 1.], strgmodl=strgmodl, labl=[r'$f_{\rm{sub,E,%d}}$' % e, ''])
@@ -7389,12 +7366,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
             raise Exception('')
 
     # list of element parameter names (derived and generative), counting label-degenerate element parameters only once 
-    # to be deleted
-    #gmod.namepara.elem = [[] for l in gmod.indxpopl]
-    #for l in gmod.indxpopl:
-    #    gmod.namepara.genr.elem[l].extend(gmod.namepara.genrelem[l])
-    #    gmod.namepara.deri.elem[l].extend(gmod.namepara.derielemodim[l])
-    
     gmod.namepara.elemflat = []
     for l in gmod.indxpopl:
         gmod.namepara.elemflat.extend(gmod.namepara.elem[l])
@@ -7454,17 +7425,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     
     # list of parameter names (derived and generative), element lists flattened
     gmod.namepara.para = _dedup_names(gmod.namepara.base + gmod.namepara.genrelemextdflat + gmod.namepara.derielemextdflat)
-    
-    # to be deleted
-    #for e in gmod.indxsersfgrd:
-    #    strgsersfgrd = 'isf%d' % e
-    #    gmod.namepara.scal += ['masshost' + strgsersfgrd + 'bein']
-    #    for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-    #        gmod.namepara.scal += ['masshost' + strgsersfgrd + strgcalcmasssubh + 'bein']
-    #if gmod.numbpopl > 0:
-    #    if gmod.boollenssubh:
-    #        for strgcalcmasssubh in gdat.liststrgcalcmasssubh:
-    #            gmod.namepara.scal += ['masssubh' + strgcalcmasssubh + 'bein', 'fracsubh' + strgcalcmasssubh + 'bein'] 
     
     if gmod.numbpopl > 0:
         gmod.namepara.scal += ['lpripena']
@@ -7530,26 +7490,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
         # set default number of bins to 10
         if not hasattr(gmod.numbbinspara, name):
             setattr(gmod.numbbinspara, name, 10)
-        
-    # define fact
-    # to be deleted
-    #for l in gmod.indxpopl:
-    #    for k in gmod.indxparakind:
-    #        name = gmod.namepara.kind[k]
-    #        scal = getattr(gmod.scalpara, name)
-    #        if scal == 'self' or scal == 'logt':
-    #            minm = getattr(gmod.minmpara, name)
-    #            maxm = getattr(gmod.maxmpara, name)
-    #            if scal == 'self':
-    #                fact = maxm - minm
-    #            if scal == 'logt':
-    #                fact = np.log(maxm / minm)
-    #            
-    #            if fact == 0:
-    #                print('name')
-    #                print(name)
-    #                raise Exception('')
-    #            setattr(gmod.factpara, name, fact)
 
     if not hasattr(gmod.indxpara, 'genrelem'):
         gmod.indxpara.genrelem = np.arange(0, dtype=int)
@@ -11064,24 +11004,24 @@ def eval_modl(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
     initchro(gdat, gdatmodi, 'modl')
     
     # process a sample vector and the occupancy list to calculate secondary variables
-    if gmod.boollens:
-        def _retr_base_from_indx(name, default):
-            if hasattr(gmod.indxpara, name):
-                indx = getattr(gmod.indxpara, name)
-                if isinstance(indx, (int, np.integer)) and 0 <= indx < gmodstat.paragenrscalfull.size:
-                    return gmodstat.paragenrscalfull[indx]
-            if hasattr(gmodstat, name):
-                return getattr(gmodstat, name)
-            if hasattr(gdat, 'true') and hasattr(gdat.true, 'this'):
-                truethis = gdat.true.this
-                if hasattr(gdat.true, 'indxpara') and hasattr(gdat.true.indxpara, name):
-                    indxtrue = getattr(gdat.true.indxpara, name)
-                    if isinstance(indxtrue, (int, np.integer)) and hasattr(truethis, 'paragenrscalfull') and 0 <= indxtrue < truethis.paragenrscalfull.size:
-                        return truethis.paragenrscalfull[indxtrue]
-                if hasattr(truethis, name):
-                    return getattr(truethis, name)
-            return default
+    def _retr_base_from_indx(name, default):
+        if hasattr(gmod.indxpara, name):
+            indx = getattr(gmod.indxpara, name)
+            if isinstance(indx, (int, np.integer)) and 0 <= indx < gmodstat.paragenrscalfull.size:
+                return gmodstat.paragenrscalfull[indx]
+        if hasattr(gmodstat, name):
+            return getattr(gmodstat, name)
+        if hasattr(gdat, 'true') and hasattr(gdat.true, 'this'):
+            truethis = gdat.true.this
+            if hasattr(gdat.true, 'indxpara') and hasattr(gdat.true.indxpara, name):
+                indxtrue = getattr(gdat.true.indxpara, name)
+                if isinstance(indxtrue, (int, np.integer)) and hasattr(truethis, 'paragenrscalfull') and 0 <= indxtrue < truethis.paragenrscalfull.size:
+                    return truethis.paragenrscalfull[indxtrue]
+            if hasattr(truethis, name):
+                return getattr(truethis, name)
+        return default
 
+    if gmod.boollens:
         xpossour = _retr_base_from_indx('xpossour', 0.)
         ypossour = _retr_base_from_indx('ypossour', 0.)
     
@@ -11095,10 +11035,7 @@ def eval_modl(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
         gmodstat.beinhost = [[] for e in gmod.indxsersfgrd]
         for e in gmod.indxsersfgrd:
             gmodstat.beinhost[e] = _retr_base_from_indx('beinhostisf%d' % e, 1.5 / max(getattr(gdat, 'anglfact', 1.), 1.))
-    
-        # maybe to be deleted
-        #defl = np.zeros((gdat.numbpixlcart, 2))
-        
+
     if gmod.typeemishost != 'none':
         gmodstat.xposhost = [[] for e in gmod.indxsersfgrd]
         gmodstat.yposhost = [[] for e in gmod.indxsersfgrd]
@@ -11153,22 +11090,6 @@ def eval_modl(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
         xposgrid = gdat.__dict__.get('xposgrid')
         yposgrid = gdat.__dict__.get('yposgrid')
         defl = np.zeros((getattr(gdat, 'numbpixlcart', len(xposgrid)), 2))
-        def _retr_base_from_indx(name, default):
-            if hasattr(gmod.indxpara, name):
-                indx = getattr(gmod.indxpara, name)
-                if isinstance(indx, (int, np.integer)) and 0 <= indx < gmodstat.paragenrscalfull.size:
-                    return gmodstat.paragenrscalfull[indx]
-            if hasattr(gmodstat, name):
-                return getattr(gmodstat, name)
-            if hasattr(gdat, 'true') and hasattr(gdat.true, 'this'):
-                truethis = gdat.true.this
-                if hasattr(gdat.true, 'indxpara') and hasattr(gdat.true.indxpara, name):
-                    indxtrue = getattr(gdat.true.indxpara, name)
-                    if isinstance(indxtrue, (int, np.integer)) and hasattr(truethis, 'paragenrscalfull') and 0 <= indxtrue < truethis.paragenrscalfull.size:
-                        return truethis.paragenrscalfull[indxtrue]
-                if hasattr(truethis, name):
-                    return getattr(truethis, name)
-            return default
 
         xpossour = _retr_base_from_indx('xpossour', 0.)
         ypossour = _retr_base_from_indx('ypossour', 0.)
@@ -17392,13 +17313,6 @@ def init( \
         setp_modlemis_init(gdat, strgmodl=strgmodl)
     setp_modlemis_finl(gdat, strgmodl='fitt')
     _configure_proposal_types(gdat, gdat.fitt)
-    
-    # to be deleted?
-    #print('gdat.liststrgfeatpara')
-    #print(gdat.liststrgfeatpara)
-    #for strgfeatpara in gdat.liststrgfeatpara:
-    #    setattr(gdat.fitt, strgfeatpara + 'para', tdpy.gdatstrt())
-    #    setattr(gdat, strgfeatpara + 'para', tdpy.gdatstrt())
 
     gdat.strgswep = '%d' % (gdat.numbswep)
     
