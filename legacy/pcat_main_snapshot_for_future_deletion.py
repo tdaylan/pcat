@@ -1,3 +1,10 @@
+"""Historical duplicate of PCAT's main module, retained only for provenance.
+
+Supported imports and current behavior live in :mod:`pcat.main`. This snapshot
+is not imported by package entry points and can be removed after historical
+comparisons are no longer needed.
+"""
+
 # plotting
 import matplotlib as mpl
 mpl.use('agg')

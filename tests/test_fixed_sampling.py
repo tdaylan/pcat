@@ -6,7 +6,10 @@ import pytest
 from pcat.diagnostics import posterior_convergence
 from pcat.fixed import sample_allesfitter_pcat, sample_fixed_chains
 from pcat.main import readfile, sample
-from pcat.time_series import log_likelihood_transit_times
+from pcat.time_series import (
+    log_likelihood_transit_times,
+    make_transit_time_likelihood,
+)
 
 
 def test_transit_timing_likelihood_uses_uncertainty_weighted_residuals():
@@ -20,6 +23,30 @@ def test_transit_timing_likelihood_uses_uncertainty_weighted_residuals():
         log_likelihood_transit_times([1.0], [1.0], [0.0])
     with pytest.raises(ValueError, match="matching"):
         log_likelihood_transit_times([1.0], [1.0, 2.0], [1.0])
+
+
+def test_transit_time_likelihood_factory_uses_forward_predictor():
+    transit_epochs = np.array([0.0, 1.0, 2.0])
+    observed_times = np.array([1.0, 3.1, 5.0])
+    timing_errors = np.array([0.1, 0.2, 0.1])
+    predictor_calls = []
+
+    def predictor(parameters, epochs):
+        predictor_calls.append(tuple(parameters))
+        return parameters[0] + parameters[1] * epochs
+
+    likelihood = make_transit_time_likelihood(predictor)
+    parameters = np.array([1.0, 2.0])
+
+    actual = likelihood(parameters, (transit_epochs, observed_times, timing_errors))
+    expected = log_likelihood_transit_times(
+        observed_times,
+        predictor(parameters, transit_epochs),
+        timing_errors,
+    )
+
+    assert actual == expected
+    assert predictor_calls[0] == predictor_calls[1] == tuple(parameters)
 
 
 def gaussian_log_likelihood(gdat, strgmodl, values):

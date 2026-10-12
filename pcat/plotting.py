@@ -412,7 +412,7 @@ POSTERIOR_ANIMATION_PANELS = (
     ),
     PosteriorAnimationPanel(
         "Simulated TTV | transit-time series",
-        "transit_timing_variations/visuals/ttv_posterior_swep*.png",
+        "transit_timing_variations/visuals/ttv_posterior_*/ttv_posterior_swep*.png",
     ),
 )
 

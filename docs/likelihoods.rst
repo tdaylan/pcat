@@ -239,15 +239,16 @@ Transit-timing likelihood
 -------------------------
 
 For transit-time data, use ``pcat.time_series.log_likelihood_transit_times``
-inside a fixed-dimensional PCAT likelihood callback. Pass observed transit
-times, predicted transit times from Ephesos, and positive timing errors in the
-same units. The function returns the uncertainty-weighted Gaussian log
-likelihood up to a parameter-independent normalization constant; it returns
-negative infinity for nonfinite model times. Ephesos supplies linear,
-sinusoidal-residual, and optional N-body time predictions. PCAT handles the
+inside a fixed-dimensional PCAT likelihood callback. The
+``pcat.time_series.make_transit_time_likelihood`` factory connects a forward
+predictor to PCAT's ``(parameters, data)`` callback; data contains transit
+epochs, observed times, and positive timing errors. The Gaussian likelihood is
+uncertainty-weighted, up to a parameter-independent normalization constant, and
+returns negative infinity for nonfinite model times. Ephesos supplies linear,
+combined sinusoidal-TTV, and optional N-body time predictions. PCAT handles
 parameter priors and posterior sampling through ``sample_fixed`` or
-``sample_fixed_chains``. The predictor must align observed transit epochs with
-model epochs before evaluating this likelihood.
+``sample_fixed_chains``. The predictor must align observed epochs with model
+epochs. See ``transit_timing_variations`` for a posterior-sampling example.
 
 Generic user-supplied likelihood
 --------------------------------

@@ -3,6 +3,7 @@
 from tdpy.verbosity import print
 
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
 import matplotlib
@@ -12,7 +13,7 @@ import numpy as np
 
 from pcat.fixed import sample_fixed_chains
 from pcat.plotting import animation_phase_label, animation_states
-from pcat.time_series import log_likelihood_transit_times
+from pcat.time_series import make_transit_time_likelihood
 
 
 ROOT = Path(__file__).resolve().parent
@@ -23,12 +24,19 @@ TRUE_PERIOD = 3.0  # [day]
 
 
 def predict_transit_times(parameters, transit_epoch):
-    """Return linear transit times plus a periodic timing residual [day]."""
+    """Use Ephesos to predict a linear ephemeris plus sinusoidal TTVs."""
+
+    import ephesos
+
     epoch_time, period_days, amplitude_days, phase = parameters
-    timing_variation = amplitude_days * np.sin(
-        phase + 2.0 * np.pi * transit_epoch / TT_VARIATION_PERIOD
+    return ephesos.evaluate_sinusoidal_transit_times(
+        transit_epoch,
+        epoch_time_days=epoch_time,
+        orbital_period_days=period_days,
+        ttv_period_epochs=TT_VARIATION_PERIOD,
+        ttv_amplitude_days=amplitude_days,
+        ttv_phase_radians=phase,
     )
-    return epoch_time + period_days * transit_epoch + timing_variation
 
 
 def simulate_transits():
@@ -41,15 +49,10 @@ def simulate_transits():
     return transit_epoch, times, stdv_days
 
 
-def timing_likelihood(parameters, data):
-    """Evaluate PCAT's Gaussian likelihood on the original, unbinned transit times."""
-    transit_epoch, observed_times, timing_errors = data
-    return log_likelihood_transit_times(
-        observed_times, predict_transit_times(parameters, transit_epoch), timing_errors
-    )
+timing_likelihood = make_transit_time_likelihood(predict_transit_times)
 
 
-def render_ttv_posterior_frames(data, snapshots):
+def render_ttv_posterior_frames(data, snapshots, run_tag):
     """Plot the measured-minus-linear timing series and PCAT models from the prior draw onward."""
     transit_epoch, observed_times, errors = data
     linear = TRUE_EPOCH + TRUE_PERIOD * transit_epoch  # [day]
@@ -58,11 +61,8 @@ def render_ttv_posterior_frames(data, snapshots):
               for snapshot in snapshots]
     # data-based limits keep the axis fixed even when early burn-in models lie far off
     maximum_minutes = 1.6 * np.max(np.abs(measured_minutes) + errors * MINUTES_PER_DAY)  # [minute]
-    output = ROOT / "visuals"
+    output = ROOT / "visuals" / f"ttv_posterior_{run_tag}"
     output.mkdir(parents=True, exist_ok=True)
-    for old_frame in output.glob("ttv_posterior_swep*.png"):
-        print(f"Removing previous frame {old_frame}...")
-        old_frame.unlink()
     paths = []
     for snapshot, curve in zip(snapshots, curves):
         figure, axis = plt.subplots(figsize=(5.8, 4.3), facecolor="white")
@@ -84,6 +84,7 @@ def render_ttv_posterior_frames(data, snapshots):
 
 def run_example(smoke: bool = False):
     """Fit simulated transit times with PCAT and return evolving model figures."""
+    run_tag = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     data = simulate_transits()
     sample_count, burn_count = (200, 100) if smoke else (2000, 1000)
     chain, _, state = sample_fixed_chains(
@@ -97,12 +98,16 @@ def run_example(smoke: bool = False):
         boolmakeplotinit=False, boolmakeplotfram=False, makeanim=False,
         numbframanim=24, return_state=True,
     )
-    posterior_path = ROOT / "data" / "ttv_posterior.npz"
+    posterior_path = ROOT / "data" / f"ttv_posterior_{run_tag}.npz"
     posterior_path.parent.mkdir(parents=True, exist_ok=True)
     print(f"Writing to {posterior_path}...")
     np.savez_compressed(posterior_path, transit_epoch=data[0], observed_times=data[1],
                         timing_errors=data[2], chain=chain)
-    return data, chain, render_ttv_posterior_frames(data, animation_states(state))
+    return data, chain, render_ttv_posterior_frames(
+        data,
+        animation_states(state),
+        run_tag,
+    )
 
 
 def main():

@@ -114,6 +114,13 @@ decomposed into smaller modules.
 Image formation
 ---------------
 
+.. py:function:: pcat.image.make_gaussian_scene(image_shape, source_parameters, intrinsic_sigma_pixels)
+
+   Render a two-dimensional scene from finite Gaussian sources. Each source is
+   given by ``(x_pixel, y_pixel, flux)`` with coordinates inside the image;
+   every sampled profile is normalized to its requested in-frame flux. The
+   returned array uses the caller's flux units.
+
 .. py:function:: pcat.image.forward_model_image(source_image, psf_sigma_pixels, background=0.0)
 
    Convolve a finite two-dimensional source scene with a normalized circular

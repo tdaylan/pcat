@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import numpy as np
+
+
+TransitTimePredictor = Callable[[np.ndarray, np.ndarray], np.ndarray]
 
 
 def log_likelihood_transit_times(observed_times, predicted_times, timing_errors):
@@ -18,6 +23,30 @@ def log_likelihood_transit_times(observed_times, predicted_times, timing_errors)
     if not np.isfinite(predicted).all():
         return -np.inf
     return float(-0.5 * np.sum(((observed - predicted) / errors) ** 2))
+
+
+def make_transit_time_likelihood(
+    transit_time_predictor: TransitTimePredictor,
+) -> Callable[[np.ndarray, tuple[np.ndarray, np.ndarray, np.ndarray]], float]:
+    """Build a PCAT callback for unbinned observed and predicted transit times."""
+
+    if not callable(transit_time_predictor):
+        raise TypeError("transit_time_predictor must be callable")
+
+    def likelihood(parameters, data) -> float:
+        if not isinstance(data, (tuple, list)) or len(data) != 3:
+            raise ValueError(
+                "TTV data must contain epochs, observed times, and timing errors"
+            )
+        transit_epochs, observed_times, timing_errors = data
+        predicted_times = transit_time_predictor(parameters, transit_epochs)
+        return log_likelihood_transit_times(
+            observed_times,
+            predicted_times,
+            timing_errors,
+        )
+
+    return likelihood
 
 
 FLARE_PROFILE_PARAMETERS = {
@@ -223,6 +252,7 @@ __all__ = [
     "evaluate_flare_profile",
     "evaluate_rotating_spot_profile",
     "flare_profile_parameters",
+    "make_transit_time_likelihood",
     "rotating_spot_parameters",
     "log_likelihood_transit_times",
     "retr_dictpropelemtmpl",

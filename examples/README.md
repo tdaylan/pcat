@@ -52,6 +52,7 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `voigt_spectral_line_catalog/`: nominal and high-signal Voigt-profile line detection in simulated spectra
 - `jwst_miri_ngc7027_line_catalog/`: transdimensional emission-line catalog of the planetary nebula NGC 7027 from a real JWST MIRI MRS spectrum
 - `variable_number_stellar_flares/`: transdimensional catalog of a variable number of stellar flares in a simulated photometric time series
+- `transit_timing_variations/`: fixed-dimensional posterior sampling of simulated transit times with PCAT's likelihood and Ephesos's forward model
 - `proposal_profiling/`: per-sweep execution time, acceptance, and runtime share for all six proposal types, plus pipeline-phase timings on the simulated Voigt spectrum
 - `proposal_state_animation/`: retained states, every Voigt-line proposal, and a split/merge Jacobian acceptance comparison
 - `burn_in_strategies/`: fixed, adaptive, likelihood-tempered, and Student-t within-model proposals on correlated and bimodal simulated targets

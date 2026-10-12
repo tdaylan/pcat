@@ -140,6 +140,7 @@ def test_unbinned_mixture_scores_individual_events_without_bins():
 
 
 def test_ttv_example_scores_simulated_transit_times():
+    pytest.importorskip("ephesos")
     example = load_example_namespace("transit_timing_variations/transit_timing_variations.py")
     data = example["simulate_transits"]()
     likelihood = example["timing_likelihood"]

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from types import SimpleNamespace
 
-from pcat import forward_model_image
+from pcat import forward_model_image, make_gaussian_scene
 from pcat import main
 
 
@@ -56,6 +56,24 @@ def test_forward_model_image_conserves_centered_source_flux():
     assert np.unravel_index(
         np.argmax(products["observed_image"]), source_image.shape
     ) == (25, 25)
+
+
+def test_make_gaussian_scene_preserves_requested_source_flux():
+    scene = make_gaussian_scene(
+        (51, 51),
+        ((24.0, 25.0, 1000.0), (28.0, 25.0, 650.0)),
+        intrinsic_sigma_pixels=0.35,
+    )
+
+    assert scene.shape == (51, 51)
+    np.testing.assert_allclose(scene.sum(), 1650.0)
+
+
+def test_make_gaussian_scene_rejects_invalid_sources():
+    with pytest.raises(ValueError, match="source_parameters"):
+        make_gaussian_scene((21, 21), (), intrinsic_sigma_pixels=1.0)
+    with pytest.raises(ValueError, match="in-frame"):
+        make_gaussian_scene((21, 21), ((21.0, 10.0, 1.0),), intrinsic_sigma_pixels=1.0)
 
 
 def test_forward_model_image_adds_uniform_background():

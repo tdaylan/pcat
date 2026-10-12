@@ -324,6 +324,7 @@ def test_each_likelihood_has_a_configuration_section():
         "boollinetren",
         "numbjitt",
         "log_likelihood_transit_times",
+        "make_transit_time_likelihood",
         "typeexpr=\"gener\"",
     )
 

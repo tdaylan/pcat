@@ -11,7 +11,7 @@ import numpy as np
 from tdpy.cli import add_plot_arguments
 
 from pcat.demo import configure_example_style, save_example_figure
-from pcat.image import forward_model_image
+from pcat.image import forward_model_image, make_gaussian_scene
 
 EXAMPLE_PATH = Path(__file__).resolve().parent
 IMAGE_SIZE_PIXELS = 51
@@ -21,19 +21,11 @@ BACKGROUND_RATE = 5.0  # [electron s^-1 pixel^-1]
 
 def create_simulated_scene():
     """Return an explicitly assumed two-source scene [electron s^-1 pixel^-1]."""
-    coordinate = np.arange(IMAGE_SIZE_PIXELS)
-    x_grid, y_grid = np.meshgrid(coordinate, coordinate)
-    source_image = np.zeros((IMAGE_SIZE_PIXELS, IMAGE_SIZE_PIXELS))
-    source_parameters = ((24.0, 25.0, 1000.0), (28.0, 25.0, 650.0))
-    intrinsic_sigma_pixels = 0.35
-    for x_position, y_position, flux_rate in source_parameters:
-        profile = np.exp(
-            -0.5
-            * ((x_grid - x_position) ** 2 + (y_grid - y_position) ** 2)
-            / intrinsic_sigma_pixels**2
-        )
-        source_image += flux_rate * profile / profile.sum()
-    return source_image
+    return make_gaussian_scene(
+        (IMAGE_SIZE_PIXELS, IMAGE_SIZE_PIXELS),
+        ((24.0, 25.0, 1000.0), (28.0, 25.0, 650.0)),
+        intrinsic_sigma_pixels=0.35,
+    )
 
 
 def run_example(typefileplot="png", typeplotback="white"):
