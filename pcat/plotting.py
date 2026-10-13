@@ -56,12 +56,7 @@ def plot_lens_image_fit(
         axis.set_ylabel("Offset [arcsec]")
         axis.grid(False)
         figure.colorbar(shown, ax=axis, label=colorbar_label, shrink=0.8)
-    output_path = Path(output_path).with_suffix(f".{typefileplot}")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Writing to {output_path}...")
-    figure.savefig(output_path, dpi=300 if typefileplot == "png" else None, bbox_inches="tight")
-    plt.close(figure)
-    return output_path
+    return Path(save_figure(figure, output_path, typefileplot=typefileplot, close_figure=True))
 
 
 def plot_lens_parameter_recovery(
@@ -91,12 +86,7 @@ def plot_lens_parameter_recovery(
     for axis in axes.flat[len(labels):]:
         axis.set_visible(False)
     axes[0, 0].legend(loc="upper left", frameon=True, fancybox=True, framealpha=1.0, fontsize=8)
-    output_path = Path(output_path).with_suffix(f".{typefileplot}")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Writing to {output_path}...")
-    figure.savefig(output_path, dpi=300 if typefileplot == "png" else None, bbox_inches="tight")
-    plt.close(figure)
-    return output_path
+    return Path(save_figure(figure, output_path, typefileplot=typefileplot, close_figure=True))
 
 
 def plot_detection_diagnostic(
@@ -178,11 +168,14 @@ def plot_detection_diagnostic(
     )
     figure.suptitle("Simulated Roman strong-lens catalog inference")
     figure.tight_layout()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Writing to {output_path}...")
-    figure.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.close(figure)
-    return output_path
+    return Path(
+        save_figure(
+            figure,
+            output_path,
+            typefileplot=output_path.suffix.lstrip("."),
+            close_figure=True,
+        )
+    )
 
 
 @dataclass(frozen=True)

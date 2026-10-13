@@ -26,10 +26,10 @@ TRUE_PERIOD = 3.0  # [day]
 def predict_transit_times(parameters, transit_epoch):
     """Use Ephesos to predict a linear ephemeris plus sinusoidal TTVs."""
 
-    import ephesos
+    from ephesos.models import evaluate_sinusoidal_transit_times
 
     epoch_time, period_days, amplitude_days, phase = parameters
-    return ephesos.evaluate_sinusoidal_transit_times(
+    return evaluate_sinusoidal_transit_times(
         transit_epoch,
         epoch_time_days=epoch_time,
         orbital_period_days=period_days,

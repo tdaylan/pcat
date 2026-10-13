@@ -11,9 +11,6 @@ from pcat.time_series import FLARE_PROFILE_PARAMETERS
 
 
 def _load_flare_example(monkeypatch):
-    nicomedia = ModuleType("nicomedia")
-    nicomedia.retr_lcurmodl_flarsing = lambda time, peak, amplitude, rise, fall: np.zeros_like(time)
-    monkeypatch.setitem(sys.modules, "nicomedia", nicomedia)
     script = Path(__file__).resolve().parents[1] / "examples" / "variable_number_stellar_flares" / "variable_number_stellar_flares.py"
     specification = importlib.util.spec_from_file_location("pcat_flare_profile_example", script)
     module = importlib.util.module_from_spec(specification)

@@ -7310,12 +7310,6 @@ def setp_paragenrscalbase(gdat, strgmodl='fitt'):
     numbelemindx = np.atleast_1d(numbelemindx) if np.isscalar(numbelemindx) or isinstance(numbelemindx, list) else numbelemindx
     if 'numbelem' not in gmod.indxpara.__dict__ or len(numbelemindx) != gmod.numbpopl:
         gmod.indxpara.numbelem = np.arange(gmod.numbpopl, dtype=int)
-    
-    # to be deleted
-    if strgmodl == 'fitt':
-        print('gmod.numbparagenrbase')
-        print(gmod.numbparagenrbase)
-        #raise Exception('')
 
     if gdat.booldiag:
         for name in gmod.namepara.genrbase:
@@ -8614,14 +8608,8 @@ def retr_angldist(gdat, xposfrst, yposfrst, xposseco, yposseco):
     return angldist
 
 
-def retr_gang(xpos, ypos):
-
-    return np.sqrt(xpos**2 + ypos**2)
-
-
-def retr_aang(xpos, ypos):
-
-    return np.mod(np.arctan2(ypos, xpos), 2. * np.pi)
+retr_gang = tdpy.retr_gang
+retr_aang = tdpy.retr_aang
 
 
 def _narrate_io(path, mode):

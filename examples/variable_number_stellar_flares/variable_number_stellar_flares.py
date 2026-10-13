@@ -23,7 +23,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import tdpy
-from nicomedia import retr_lcurmodl_flarsing
+from tdpy import retr_lcurmodl_flarsing
 from pcat.demo import (
     configure_example_style,
     load_example_posterior,
