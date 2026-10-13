@@ -142,12 +142,10 @@ def run_benchmark(number_sweeps=1200, burn_fraction=0.25):
 
 
 def _save_figure(figure, name, typefileplot):
+    from tdpy.plotting import save_figure as tdpy_save_figure
+
     VISUAL_PATH.mkdir(parents=True, exist_ok=True)
-    path = VISUAL_PATH / f"{name}.{typefileplot}"
-    print(f"Writing to {path}...")
-    figure.savefig(path, dpi=300 if typefileplot == "png" else None, bbox_inches="tight")
-    plt.close(figure)
-    return path
+    return Path(tdpy_save_figure(figure, VISUAL_PATH / name, typefileplot=typefileplot, close_figure=True))
 
 
 def plot_posterior_comparison(results, typefileplot="png"):
