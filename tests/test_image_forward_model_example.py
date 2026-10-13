@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 SCRIPT = (
@@ -31,3 +32,21 @@ def test_pcat_image_forward_model_example_preserves_scene_and_writes_figure(tmp_
     assert figure_path.is_file()
     with Image.open(figure_path) as image:
         assert image.width > 1000 and image.height > 300
+
+
+def test_pcat_image_forward_model_writes_interactive_bokeh_html(tmp_path):
+    pytest.importorskip("bokeh")
+    from pcat.image import forward_model_image
+
+    products = forward_model_image(
+        example.create_simulated_scene(),
+        psf_sigma_pixels=example.PSF_SIGMA_PIXELS,
+        background=example.BACKGROUND_RATE,
+    )
+    output_path = example.run_bokeh_example(products, tmp_path / "pcat_image_forward_model.html")
+
+    assert output_path.is_file()
+    html = output_path.read_text(encoding="utf-8")
+    assert "Intrinsic source scene" in html
+    assert "Normalized Gaussian PSF" in html
+    assert "Predicted detector image" in html

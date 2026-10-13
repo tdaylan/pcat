@@ -3,7 +3,7 @@
 
 Data: simulated (not real observations). A quiescent star is observed at a TESS-like 2 minute
 cadence for 1 day. A random number of flares (3 to 6, drawn uniformly) is injected using the
-fast-rise, exponential-decay (FRED) template from nicomedia.retr_lcurmodl_flarsing, with peak
+fast-rise, exponential-decay (FRED) template from tdpy.retr_lcurmodl_flarsing, with peak
 times, amplitudes, and rise/decay time scales drawn from simple illustrative distributions (not
 fit to any specific stellar sample). Photon counts are then drawn from a Poisson distribution
 around the expected count rate, matching PCAT's own likelihood.

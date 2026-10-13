@@ -34,8 +34,8 @@ These examples showcase the PCAT model families used by the papers. They do not 
 
 - `gaussian_mixture_catalog/`: transdimensional inference of a compact Gaussian mixture
 - `chandra_point_source_catalog/`: point-source inference in a simulated Chandra-style image
-- `daylan+2017_fermi_point_sources/`: a 300-source synthetic analog of the mock analysis in our 2017 paper
-- `daylan+2018_strong_lens_subhalos/`: a simulated HST strong-lens catalog and one-subhalo comparison inspired by our 2018 paper
+- `daylan+2017_fermi_point_sources/`: a 300-source synthetic analog of the mock analysis in the 2017 paper
+- `daylan+2018_strong_lens_subhalos/`: a simulated HST strong-lens catalog and one-subhalo comparison inspired by the 2018 paper
 - `portillo+2017_crowded_sdss_m2/`: a scaled crowded-field SDSS catalog analysis inspired by Portillo et al. (2017)
 - `feder+2020_multiband_sdss_deblending/`: five-band SDSS probabilistic deblending inspired by Feder et al. (2020)
 - `butler+2022_spire_sz_component_separation/`: point-source and diffuse-template separation inspired by Butler et al. (2022)
@@ -75,7 +75,7 @@ The chain shown has 19 (+1/&minus;2) lines. Six lines appear in every sampled ca
 
 ## Variable number of stellar flares
 
-The data are simulated: a quiescent star observed at a TESS-like 2 minute cadence for 1 day, with 3 to 6 injected fast-rise, exponential-decay (FRED) flares (`nicomedia.retr_lcurmodl_flarsing`) at random peak times, amplitudes, and rise/decay time scales, and Poisson counts drawn around the expected count rate. PCAT reuses its one-dimensional element machinery for this time series. Time plays the role of the energy axis, and each flare is a native FRED component with a peak amplitude and independent rise and decay time scales on top of a fixed, flat quiescent baseline.
+The data are simulated: a quiescent star observed at a TESS-like 2 minute cadence for 1 day, with 3 to 6 injected fast-rise, exponential-decay (FRED) flares (`tdpy.retr_lcurmodl_flarsing`) at random peak times, amplitudes, and rise/decay time scales, and Poisson counts drawn around the expected count rate. PCAT reuses its one-dimensional element machinery for this time series. Time plays the role of the energy axis, and each flare is a native FRED component with a peak amplitude and independent rise and decay time scales on top of a fixed, flat quiescent baseline.
 
 The inference model therefore represents the injected asymmetry directly. The catalog posterior jointly constrains the number of flares, their peak times and excess counts, and their separate rise and decay scales.
 

@@ -1,9 +1,9 @@
 # Daylan et al. 2018 strong-lens mock
 
 This example runs PCAT's simulated HST/WFC3 UVIS lens model to explore the
-variable-subhalo-catalog and one-subhalo comparison from our paper
-[Daylan et al. (2018)](https://doi.org/10.3847/1538-4357/aaaa1e),
-ApJ 854, 141. In our paper, we injected 25 subhalos into a mock photon-count
+variable-subhalo-catalog and one-subhalo comparison from Daylan et al. (2018),
+[ApJ 854, 141](https://doi.org/10.3847/1538-4357/aaaa1e). The published study
+injected 25 subhalos into a mock photon-count
 image with 0.04 arcsec pixels. The example uses PCAT's built-in simulated lens
 and writes image, residual, deflection, convergence, and parameter plots.
 
@@ -20,8 +20,8 @@ and `examples/daylan+2018_strong_lens_subhalos/daylan2018_one_subhalo/`. A full 
 time; inspect chain convergence before interpreting its posterior figures.
 
 The built-in simulation uses a different random seed and instrument/background
-defaults from the realization in our paper. The run therefore recreates the
-transdimensional versus fixed-catalog *analysis*, not our paper's numerical
+defaults from the published realization. The run therefore recreates the
+transdimensional versus fixed-catalog *analysis*, not the paper's numerical
 posterior values or its exact Figures 5-19. PCAT currently skips some
 specialized final lens posterior products, including the mass-function and
 mass-fraction figures, when the required derived quantities are unavailable.

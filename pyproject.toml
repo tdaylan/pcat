@@ -28,6 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+bokeh = ["bokeh>=3.4"]
 docs = [
   "sphinx>=8",
   "sphinx-rtd-theme>=3",
@@ -37,7 +38,6 @@ examples = [
   "dynesty",
   "ephesos",
   "emcee",
-  "nicomedia",
 ]
 
 [tool.setuptools]

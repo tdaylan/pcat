@@ -65,12 +65,68 @@ def run_example(typefileplot="png", typeplotback="white"):
     return products, path
 
 
+def run_bokeh_example(products, output_path):
+    """Write the scene, PSF, and detector image as linked interactive panels."""
+    from bokeh.layouts import row
+    from bokeh.models import ColorBar, LinearColorMapper
+    from bokeh.palettes import Magma256
+    from bokeh.plotting import figure
+
+    from tdpy.plotting import save_bokeh_html
+
+    scene_slice = slice(17, 35)
+    kernel_half_width = products["psf_kernel"].shape[0] / 2.0
+    panels = (
+        (products["source_image"][scene_slice, scene_slice], "Intrinsic source scene",
+         (16.5, 34.5, 16.5, 34.5)),
+        (products["psf_kernel"], "Normalized Gaussian PSF",
+         (-kernel_half_width, kernel_half_width, -kernel_half_width, kernel_half_width)),
+        (products["observed_image"][scene_slice, scene_slice], "Predicted detector image",
+         (16.5, 34.5, 16.5, 34.5)),
+    )
+    plots = []
+    for image, title, extent in panels:
+        low = 0.0
+        high = max(float(np.max(image)), np.finfo(float).eps)
+        color_mapper = LinearColorMapper(palette=Magma256, low=low, high=high)
+        plot = figure(
+            title=title,
+            width=360,
+            height=340,
+            x_range=(extent[0], extent[1]),
+            y_range=(extent[2], extent[3]),
+            match_aspect=True,
+            tools="pan,wheel_zoom,box_zoom,reset,save",
+        )
+        plot.image(
+            image=[image],
+            x=extent[0],
+            y=extent[2],
+            dw=extent[1] - extent[0],
+            dh=extent[3] - extent[2],
+            color_mapper=color_mapper,
+        )
+        plot.add_layout(ColorBar(color_mapper=color_mapper, title="Image value"), "right")
+        plot.xaxis.axis_label = "x [pixel]"
+        plot.yaxis.axis_label = "y [pixel]"
+        plot.grid.visible = False
+        plots.append(plot)
+    return save_bokeh_html(
+        row(*plots, sizing_mode="stretch_width"),
+        output_path,
+        title="PCAT deterministic image formation",
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     add_plot_arguments(parser)
     parser.add_argument("--typeplotback", choices=("white", "dark"), default="white")
+    parser.add_argument("--bokeh", action="store_true", help="also write an interactive HTML version")
     arguments = parser.parse_args()
-    run_example(arguments.typefileplot, arguments.typeplotback)
+    products, _ = run_example(arguments.typefileplot, arguments.typeplotback)
+    if arguments.bokeh:
+        run_bokeh_example(products, EXAMPLE_PATH / "visuals" / "pcat_image_forward_model.html")
 
 
 if __name__ == "__main__":

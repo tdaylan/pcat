@@ -1,10 +1,10 @@
 # Daylan et al. 2017 point-source mock analysis
 
-This synthetic analysis follows the mock-run setup from our paper
-with Portillo and Finkbeiner ([Daylan, Portillo, and Finkbeiner (2017)](https://doi.org/10.3847/1538-4357/aa679e)),
+This synthetic analysis follows the mock-run setup in Daylan, Portillo, and Finkbeiner
+([2017](https://doi.org/10.3847/1538-4357/aa679e)),
 ApJ 839, 4. It samples a 300-source population with flux-distribution slope
 $-1.8$ in a $40^\circ\times40^\circ$ field around the North Galactic Pole,
-using the three energy bins and two conversion classes from our paper. PCAT jointly
+using the three energy bins and two conversion classes from that analysis. PCAT jointly
 samples source catalogs and produces mock count maps, a posterior flux
 distribution, and the posterior source-count distribution.
 
@@ -29,11 +29,11 @@ available with:
 python 'examples/daylan+2017_fermi_point_sources/daylan+2017_fermi_point_sources.py' --smoke --fresh
 ```
 
-Our analysis used Pass 7 exposure from weeks 9--217 and the Fermi diffuse template.
+The published analysis used Pass 7 exposure from weeks 9--217 and the Fermi diffuse template.
 Those inputs and the exact source realization are not included here. This
 example uses constant exposure and a deterministic spatial template, so its
 posterior values are not measurements from Fermi-LAT and are not expected to
-match our paper's results. The published probabilistic catalog is available
+match the published results. The probabilistic catalog is available
 from [Harvard Dataverse, DOI 10.7910/DVN/WTVSWG](https://doi.org/10.7910/DVN/WTVSWG).
 Reproducing the real-data figures requires the Pass 7 inputs and analysis
 templates, which are not included here. The quick run is intended for
@@ -42,7 +42,7 @@ visualization rather than convergence claims.
 The notebook runs PCAT, loads that run's finalized posterior and injected
 catalog, then creates figure-style comparisons from the actual samples. Its
 three figures follow the data/model/residual, source-flux distribution, and
-source-count summaries in Figures 5, 7, and 11 of our paper. They use synthetic
+source-count summaries in Figures 5, 7, and 11 of Daylan et al. (2017). They use synthetic
 data and do not reproduce the published numerical results.
 
 ![Mock counts, a posterior catalog draw, and residual](visuals/fermi_mock_figure5_style.png)

@@ -7,7 +7,7 @@ Requirements
 PCAT requires Python 3.10 or newer. Its runtime dependencies are declared in
 ``pyproject.toml`` and include NumPy, SciPy, Astropy, Matplotlib, h5py, Numba,
 Pillow, Seaborn, cloudpickle, Chalcedon, and TDpy. The optional ``examples``
-dependency group adds Astroquery, Ephesos, dynesty, emcee, and Nicomedia.
+dependency group adds Astroquery, Ephesos, dynesty, and emcee.
 Ephesos supplies the transit-time forward model used by the TTV posterior
 example. Astroquery downloads the public JWST spectrum from MAST; the other
 packages support sampler-comparison, TTV, and stellar-flare workflows.

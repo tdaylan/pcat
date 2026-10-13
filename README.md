@@ -120,9 +120,12 @@ drawing noise. Run the explicitly simulated two-source example with:
 
 ```bash
 python examples/image_forward_model/image_forward_model.py --typefileplot png
+python examples/image_forward_model/image_forward_model.py --typefileplot png --bokeh
 ```
 
 ![Simulated source scene, Gaussian PSF, and predicted detector image](examples/image_forward_model/visuals/pcat_image_forward_model.png)
+
+Install `python -m pip install -e '.[bokeh]'` to create the interactive companion at `examples/image_forward_model/visuals/pcat_image_forward_model.html`.
 
 ## Inference methods
 
@@ -454,10 +457,12 @@ export PCAT_PATH=/path/to/pcat
 
 `PCAT_PATH` identifies the Git repository root. Its `data/` and `visuals/` directories are ignored by Git. PCAT stores run inputs and outputs under `data/pcat_runs/` and run figures under `data/pcat_runs/<run>/visuals/`.
 
-This repository expects the shared library `tdpy` to be installed in the same Python environment. For local development, this is usually easiest with:
+The package declares `tdpy` and `chalcedon` as shared runtime dependencies. For local development against this workspace, install both libraries from source before PCAT:
 
 ```bash
 cd /path/to/tdpy
+pip install -e .
+cd /path/to/chalcedon
 pip install -e .
 cd /path/to/pcat
 pip install -e .
@@ -504,8 +509,11 @@ plot_population_grid(
 )
 ```
 
-priors. It fits a proposal to posterior draws and evaluates the likelihood on
-independent draws from a mixture of that proposal and the prior:
+## Evidence estimation
+
+For normalized bounded or Gaussian priors, `estimate_evidence` fits a proposal
+to posterior draws and evaluates the likelihood on independent draws from a
+mixture of that proposal and the prior:
 
 ```python
 from pcat.diagnostics import estimate_evidence
