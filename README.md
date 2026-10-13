@@ -4,13 +4,16 @@
 
 ## Purpose
 
-PCAT asks how many sources or other components crowded data support, and what
-their properties are. Each model fixes its parameter dimension. A metamodel
+I use PCAT when the number of sources or other components is part of the
+question. How many do the data support, and what can I infer about each one?
+In a crowded field, even the membership of the catalog can be uncertain.
+
+Each model fixes its parameter dimension. A metamodel
 combines candidate models with different dimensions. PCAT supports inference
 within one model, where
 the parameter dimension stays constant, and inference over a metamodel, where
 the sampler jointly explores the selected model and its parameters. Catalogs
-are one application of metamodel inference; their variable-size populations
+are one application of metamodel inference. Their variable-size populations
 can be inferred alongside shared parameters such as backgrounds and population
 hyperparameters.
 

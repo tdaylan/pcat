@@ -35,6 +35,7 @@ import multiprocessing as mp
 from collections import deque
 from copy import deepcopy
 from pathlib import Path
+from .likelihood import poisson_log_likelihood
 
 # utilities
 import os, time, sys, glob, fnmatch, inspect, traceback, functools, shutil, re
@@ -1464,7 +1465,8 @@ def retr_refrfermfinl(gdat):
                                                         fgl3['Unc_Flux10000_100000']))[gdat.indxenerincl, :, :] / gdat.deltener[:, None, None] 
     gdat.refrspec[0][1, :, :] = gdat.refrspec[0][0, :, :] + fgl3specstdvtemp[:, :, 0]
     gdat.refrspec[0][2, :, :] = gdat.refrspec[0][0, :, :] + fgl3specstdvtemp[:, :, 1]
-    gdat.refrspec[0][np.where(np.isfinite(gdat.refrspec[0]) == False)] = 0.
+    if not np.isfinite(gdat.refrspec[0]).all():
+        raise ValueError('The Fermi reference catalog contains non-finite spectra; refusing to replace them with zero flux')
     
     gdat.refrflux[0] = gdat.refrspec[0][:, gdat.indxenerpivt, :]
     gdat.refrsindcolr0001[0] = -np.log(gdat.refrspec[0][:, 1, :] / gdat.refrflux[0]) / np.log(gdat.bctrpara.ener[1] / gdat.enerpivt)
@@ -2157,11 +2159,13 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         if probcand.size == indxelemfulltemp.size:
             probcand = np.delete(probcand, gdatmodi.indxelemfullmergfrst)
         elif probcand.size != indxelemfullcand.size:
-            probcand = np.ones(indxelemfullcand.size, dtype=float)
-        probcand = np.where(np.isfinite(probcand) & (probcand >= 0.), probcand, 0.)
-        if np.sum(probcand) <= 0.:
-            probcand = np.ones(indxelemfullcand.size, dtype=float)
-        probcand /= np.sum(probcand)
+            raise ValueError('Merge proposal weights do not match the candidate elements')
+        if not np.isfinite(probcand).all() or (probcand < 0.).any():
+            raise FloatingPointError('Merge proposal weights must be finite and nonnegative')
+        probcand_sum = np.sum(probcand)
+        if not np.isfinite(probcand_sum) or probcand_sum <= 0.:
+            raise FloatingPointError('Merge proposal weights have no positive finite total')
+        probcand /= probcand_sum
         gdatmodi.indxelemfullmergseco = np.random.choice(indxelemfullcand, p=probcand)
         gdatmodi.indxelemfullmodi = np.sort(np.array([gdatmodi.indxelemfullmergfrst, gdatmodi.indxelemfullmergseco]))
         
@@ -3011,9 +3015,9 @@ def retr_negalogt(varb):
 
 def retr_gradmaps(gdat, maps):
     
-    # Vanishing-exposure pixels can make the input map non-finite (division by zero exposure upstream);
-    # zero-fill them so the gradient stays finite and those pixels contribute no relevance signal.
-    maps = np.where(np.isfinite(maps), maps, 0.)
+    maps = np.asarray(maps)
+    if not np.isfinite(maps).all():
+        raise ValueError('Relevance-gradient input contains non-finite pixels; refusing to assign them zero signal')
     maps = maps.reshape((gdat.numbsidecart, gdat.numbsidecart))
     grad = np.dstack((np.gradient(maps, gdat.sizepixl, axis=0), np.gradient(maps, gdat.sizepixl, axis=1))).reshape((gdat.numbsidecart, gdat.numbsidecart, 2))
     grad = grad.reshape((gdat.numbpixlcart, 2))
@@ -12219,8 +12223,7 @@ def retr_llik_unbd(gdat, strgmodl, cntpmodl):
 def retr_llik_bind(gdat, strgmodl, cntpmodl):
    
     if gdat.liketype == 'pois':
-        cntpmodlsafe = np.maximum(cntpmodl, 1e-300)
-        llik = gdat.cntpdata * np.log(cntpmodlsafe) - cntpmodlsafe
+        llik = poisson_log_likelihood(gdat.cntpdata, cntpmodl)
     if gdat.liketype == 'gaus':
         llik = -0.5 * (gdat.cntpdata - cntpmodl)**2 / gdat.varidata
      
@@ -18896,9 +18899,11 @@ def work(pathoutpcnfg, lock, strgpdfn, indxprocwork, convshare=None):
                         raise Exception('thissbrtdfnc went negative by %.3g percent.' % (100. * frac))
                     
             # check the population index
-            if (gdatmodi.this.cntpmodl <= 0.).any() or not (np.isfinite(gdatmodi.this.cntpmodl)).all():
-                  print('Warning: current flux model has non-positive/non-finite entries; applying a tiny floor and continuing.')
-                  gdatmodi.this.cntpmodl = np.where(np.isfinite(gdatmodi.this.cntpmodl) & (gdatmodi.this.cntpmodl > 0.), gdatmodi.this.cntpmodl, 1e-12)
+            invalid_model = ~np.isfinite(gdatmodi.this.cntpmodl) | (gdatmodi.this.cntpmodl <= 0.)
+            if invalid_model.any():
+                raise FloatingPointError(
+                    'Current flux model has non-positive or non-finite entries; refusing to alter the inference state.'
+                )
 
             if gmod.numbpopl > 0:
                 for l in gmod.indxpopl:

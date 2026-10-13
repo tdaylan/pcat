@@ -12,6 +12,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import numpy as np
+from .likelihood import poisson_log_likelihood
 
 # sampled parameters, as (name, kwargs list, component index, kwargs key, prior minimum, prior maximum, proposal scale)
 PARAMETERS = (
@@ -137,9 +138,9 @@ def render_mejiro_counts(specification: dict, parameters: np.ndarray) -> np.ndar
 
 def mejiro_lens_log_likelihood(state: object, model_name: str, parameters: np.ndarray) -> float:
     """Evaluate the Poisson log likelihood of the mejiro exposure, up to data-only terms."""
-    model_counts = np.maximum(render_mejiro_counts(state.mejiro_specification, parameters), 1e-12)
+    model_counts = render_mejiro_counts(state.mejiro_specification, parameters)
     observed_counts = state.mejiro_specification["observed_counts"]
-    return float(np.sum(observed_counts * np.log(model_counts) - model_counts))
+    return float(np.sum(poisson_log_likelihood(observed_counts, model_counts)))
 
 
 def run_mejiro_lens_inference(

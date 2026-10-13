@@ -10,6 +10,7 @@ from pcat.mejiro_lens import (  # noqa: E402
     LABELS, PARAMETERS, mejiro_lens_log_likelihood, render_mejiro_counts,
     run_mejiro_lens_inference, simulate_mejiro_exposure,
 )
+from pcat import mejiro_lens as mejiro_lens_module  # noqa: E402
 from pcat.plotting import plot_lens_parameter_recovery  # noqa: E402
 
 
@@ -35,6 +36,35 @@ def test_likelihood_prefers_injected_lens(specification):
     shifted = truth.copy()
     shifted[0] += 0.05  # [arcsec], Einstein radius
     assert mejiro_lens_log_likelihood(State, "fitt", truth) > mejiro_lens_log_likelihood(State, "fitt", shifted)
+
+
+def test_likelihood_keeps_zero_expected_counts_exact(monkeypatch):
+    class State:
+        mejiro_specification = {"observed_counts": np.array([0.0, 1.0])}
+
+    monkeypatch.setattr(
+        mejiro_lens_module,
+        "render_mejiro_counts",
+        lambda specification, parameters: np.array([0.0, 0.0]),
+    )
+
+    result = mejiro_lens_log_likelihood(State, "fitt", np.array([]))
+
+    assert result == -np.inf
+
+
+def test_likelihood_rejects_negative_expected_counts(monkeypatch):
+    class State:
+        mejiro_specification = {"observed_counts": np.array([1.0])}
+
+    monkeypatch.setattr(
+        mejiro_lens_module,
+        "render_mejiro_counts",
+        lambda specification, parameters: np.array([-1.0]),
+    )
+
+    with pytest.raises(ValueError, match="nonnegative"):
+        mejiro_lens_log_likelihood(State, "fitt", np.array([]))
 
 
 def test_pcat_samples_mejiro_exposure(specification, tmp_path):

@@ -80,9 +80,18 @@ def write_pcat_inputs(wavelength, flux, error, continuum):
     width = np.diff(edges)  # [m^-1]
     flux, error, continuum = flux[::-1], error[::-1], continuum[::-1]
 
+    if (not np.isfinite(flux).all() or not np.isfinite(error).all()
+            or not np.isfinite(continuum).all() or np.any(error <= 0.0)
+            or np.any(continuum <= 0.0)):
+        raise ValueError("PCAT input flux, uncertainty, and continuum must be finite with positive uncertainty and continuum")
+    if np.any(flux < 0.0):
+        raise ValueError(
+            "The Poisson PCAT input cannot preserve negative measured flux; use an observation model that supports signed flux values"
+        )
+
     sigma = np.sqrt(error**2 + (FRACTIONAL_ERROR_FLOOR * continuum)**2)  # [Jy]
     countsperjansky = continuum / sigma**2  # [Jy^-1]
-    counts = np.round(np.clip(flux, 0.0, None) * countsperjansky)
+    counts = np.round(flux * countsperjansky)
     exposure = countsperjansky / width  # [Jy^-1 m]
     sbrt = counts / (exposure * width)  # [Jy]
 
