@@ -13,6 +13,21 @@ from pcat.radial_velocity import (
 from tdpy import gdatstrt
 
 
+def test_radial_velocity_bin_edges_reuse_upstream_midpoints(monkeypatch):
+    from importlib import import_module
+    from unittest.mock import Mock
+    from tdpy.numerics import midpoint_bin_edges
+
+    radial_velocity = import_module("pcat.radial_velocity")
+    shared_edges = Mock(wraps=midpoint_bin_edges)
+    monkeypatch.setattr(radial_velocity, "midpoint_bin_edges", shared_edges)
+    time = np.array([1.0, 2.0, 6.0])  # [day]
+    edges = radial_velocity.retr_binstime(time=time)
+    np.testing.assert_array_equal(edges, [0.5, 1.5, 4.0, 8.0])
+    shared_edges.assert_called_once()
+    np.testing.assert_array_equal(shared_edges.call_args.args[0], time)
+
+
 def test_marginal_likelihood_matches_numerical_integration_over_the_offset():
     rng = np.random.default_rng(0)
     resi = rng.normal(3., 2., 15)  # [m/s]

@@ -19,6 +19,7 @@ import astropy.io.fits
 import numpy as np
 import scipy.stats
 from scipy.special import logsumexp
+from tdpy.numerics import midpoint_bin_edges
 
 from .main import retr_pathrun
 
@@ -63,11 +64,7 @@ def retr_llik_rvel(gdat, strgmodl, cntpmodl):
 
 def retr_binstime(time):
     """Return strictly increasing bin edges [day] that contain one observation each."""
-    edges = np.empty(time.size + 1)
-    edges[1:-1] = 0.5 * (time[1:] + time[:-1])
-    edges[0] = time[0] - 0.5 * (time[1] - time[0])
-    edges[-1] = time[-1] + 0.5 * (time[-1] - time[-2])
-    return edges
+    return midpoint_bin_edges(time)
 
 
 def retr_perdcirc(time, rvel, stdv, matrdesi, peri, timerefr, jitt=2.):

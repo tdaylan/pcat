@@ -380,6 +380,33 @@ def test_documentation_lists_every_maintained_example():
         assert directory in examples_page, directory
 
 
+def test_legacy_command_notebook_is_self_contained_and_only_prints_commands():
+    import ast
+    from contextlib import redirect_stdout
+    import io
+    import json
+
+    notebook = json.loads(
+        (REPOSITORY_ROOT / "examples" / "legacy_external_analysis_commands.ipynb").read_text()
+    )
+    output = io.StringIO()
+    namespace = {}
+    with redirect_stdout(output):
+        for cell in notebook["cells"]:
+            if cell["cell_type"] != "code":
+                continue
+            tree = ast.parse("".join(cell["source"]))
+            assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) for node in ast.walk(tree))
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+            assert all(isinstance(node.func, ast.Name) and node.func.id == "print" for node in calls)
+            exec(compile(tree, "<command-reference>", "exec"), namespace)
+    commands = output.getvalue().splitlines()
+    assert len(commands) == 21
+    assert all(command.startswith("python $") for command in commands)
+    assert commands[0].endswith("pcat_lens_mock")
+    assert commands[-1].endswith("test_psfn")
+
+
 def test_documentation_lists_stable_public_helpers():
     api = (DOCS_ROOT / "api.rst").read_text()
 

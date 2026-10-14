@@ -164,18 +164,30 @@ def test_native_parameter_sets_are_profile_specific():
     assert flare_profile_parameters("flarfred") == ("flux", "elin", "scalrise", "scalfall")
 
 
-def test_time_series_fits_use_each_bin_width_and_return_baseline(tmp_path):
+@pytest.mark.parametrize("baseline_counts", [5.0, [5.0, 7.0], np.array([[[5.0]], [[7.0]]])])
+def test_time_series_fits_use_each_bin_width_and_return_baseline(tmp_path, baseline_counts):
     from astropy.io import fits
 
     edges = np.array([1.0, 1.1, 1.4])
     counts = np.array([12.0, 24.0])
-    baseline = write_time_series_fits(tmp_path, edges, counts, 5.0)
+    baseline = write_time_series_fits(tmp_path, edges, counts, baseline_counts)
 
     np.testing.assert_array_equal(fits.getdata(tmp_path / "sbrt.fits").ravel(), counts)
     np.testing.assert_allclose(fits.getdata(tmp_path / "expo.fits").ravel(), [10.0, 1.0 / 0.3])
-    np.testing.assert_array_equal(baseline[:, 0, 0], [5.0, 5.0])
+    expected = [5.0, 5.0] if np.ndim(baseline_counts) == 0 else np.asarray(baseline_counts).ravel()
+    np.testing.assert_array_equal(baseline[:, 0, 0], expected)
+    assert baseline.shape == (2, 1, 1)
+    if isinstance(baseline_counts, np.ndarray):
+        assert not np.shares_memory(baseline, baseline_counts)
 
 
 def test_time_series_fits_reject_nonincreasing_bin_edges(tmp_path):
     with pytest.raises(ValueError, match="strictly increasing"):
         write_time_series_fits(tmp_path, [1.0, 1.2, 1.2], [3.0, 4.0], 2.0)
+
+
+@pytest.mark.parametrize("baseline", [[1.0, 2.0, 3.0], np.nan, [1.0, np.inf]])
+def test_time_series_fits_validate_baseline_before_writing(tmp_path, baseline):
+    with pytest.raises(ValueError, match="baseline counts"):
+        write_time_series_fits(tmp_path, [1.0, 1.2, 1.4], [3.0, 4.0], baseline)
+    assert not any(tmp_path.iterdir())

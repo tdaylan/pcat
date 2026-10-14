@@ -48,7 +48,11 @@ def run_pipeline_demo(output_root: Path, **configuration: object) -> None:
 
 
 def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, baseline_counts):
-    """Write a one-dimensional count series in PCAT's FITS input convention."""
+    """Write a count series and return its (bins, 1, 1) baseline template.
+
+    Baselines may be scalar, one value per bin, or already broadcastable to
+    the template shape. Time edges use the caller's time units.
+    """
     import astropy.io.fits
     import numpy as np
 
@@ -61,6 +65,16 @@ def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, ba
     if not np.isfinite(observed_counts).all():
         raise ValueError("observed counts must be finite")
 
+    baseline = np.asarray(baseline_counts, dtype=float)
+    if baseline.ndim == 1 and baseline.size == observed_counts.size:
+        baseline = baseline[:, None, None]
+    try:
+        baseline = np.broadcast_to(baseline, (observed_counts.size, 1, 1)).copy()
+    except ValueError as error:
+        raise ValueError("baseline counts must provide a scalar or one value per bin") from error
+    if not np.isfinite(baseline).all():
+        raise ValueError("baseline counts must be finite")
+
     input_directory = Path(input_directory)
     input_directory.mkdir(parents=True, exist_ok=True)
     exposure = 1.0 / np.diff(bin_edges)  # [inverse time unit]
@@ -71,7 +85,7 @@ def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, ba
         path = input_directory / name
         print(f"Writing to {path}...")
         astropy.io.fits.writeto(path, values, overwrite=True)
-    return np.full((observed_counts.size, 1, 1), baseline_counts, dtype=float)
+    return baseline
 
 
 def configure_example_style(typeplotback: str = "white") -> str:

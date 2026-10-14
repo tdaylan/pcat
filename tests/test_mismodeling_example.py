@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 SCRIPT = (Path(__file__).resolve().parents[1] / "examples" / "mismodeling_flare_catalog"
           / "mismodeling_flare_catalog.py")
@@ -23,6 +24,37 @@ def test_each_light_curve_has_a_correct_and_a_misspecified_fit():
         assert {(row[2], row[3]) for row in fits} != {fits[0][2:4]}
     # run names differ from the folder name, so cache cleanup cannot delete the example folder
     assert all(row[0] != SCRIPT.parent.name for row in example.FITS)
+
+
+@pytest.mark.parametrize("baseline_kind", ["constant", "modulated"])
+def test_example_reuses_shared_fits_writer_and_preserves_baseline_template(tmp_path, monkeypatch, baseline_kind):
+    from unittest.mock import Mock
+    from astropy.io import fits
+    from pcat import sampling
+    from pcat.demo import write_time_series_fits
+
+    assert example.write_time_series_fits is write_time_series_fits
+    writer = Mock(wraps=write_time_series_fits)
+    monkeypatch.setattr(example, "write_time_series_fits", writer)
+    monkeypatch.setattr(example, "EXAMPLE_PATH", tmp_path)
+    captured = {}
+    def sample(**configuration):
+        captured.update(configuration)
+    monkeypatch.setattr(sampling, "sample", sample)
+    posterior = object()
+    monkeypatch.setattr(example, "readfile", lambda path: posterior)
+    light_curves = example.simulate_light_curves()
+    result = example.run_fit(light_curves, "writer_test", "B", "flarfred", baseline_kind, numbswep=300)
+    assert result is posterior
+    writer.assert_called_once()
+    input_path = Path(example.retr_pathrun(tmp_path, "writer_test")) / "data" / "inpt"
+    observed = fits.getdata(input_path / "sbrt.fits")
+    exposure = fits.getdata(input_path / "expo.fits")
+    np.testing.assert_array_equal(observed[:, 0, 0, 0], light_curves["counts"]["B"])
+    np.testing.assert_allclose(exposure[:, 0, 0] * np.diff(light_curves["edges"]), 1.0)
+    np.testing.assert_array_equal(
+        captured["dictfitt"]["sbrtbacknorm"][0][:, 0, 0], light_curves["baselines"][baseline_kind],
+    )
 
 
 def test_misspecified_profile_fit_samples_gaussian_flares(tmp_path, monkeypatch):

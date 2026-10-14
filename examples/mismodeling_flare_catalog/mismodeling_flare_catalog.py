@@ -25,11 +25,11 @@ import argparse
 import shutil
 from pathlib import Path
 
-import astropy.io.fits
 import matplotlib.pyplot as plt
 import numpy as np
 from tdpy.cli import add_plot_arguments
 
+from pcat.demo import write_time_series_fits
 from pcat.main import readfile, retr_pathrun
 from pcat.time_series import evaluate_flare_profile
 
@@ -93,20 +93,18 @@ def run_fit(light_curves: dict, run_name: str, light_curve: str, profile: str, b
     if cached_state.exists():
         print(f"Removing cached PCAT state {cached_state}...")
         shutil.rmtree(cached_state)
-    # counts = sbrt * expo * width, so unit-per-width exposure makes PCAT read the counts unchanged
     input_path = run_root / "data" / "inpt"
-    input_path.mkdir(parents=True, exist_ok=True)
-    for name, values in (("sbrt.fits", light_curves["counts"][light_curve][:, None, None, None]),
-                         ("expo.fits", (1.0 / np.diff(light_curves["edges"]))[:, None, None])):
-        print(f"Writing to {input_path / name}...")
-        astropy.io.fits.writeto(input_path / name, values, overwrite=True)
+    baseline_template = write_time_series_fits(
+        input_path, light_curves["edges"], light_curves["counts"][light_curve],
+        light_curves["baselines"][baseline],
+    )
     shape_names = ("scalrise", "scalfall") if profile == "flarfred" else ("fwhm",)
     sampling.sample(
         typeexpr="fire", typedata="inpt", strgexprsbrt="sbrt.fits", typeexpo="file", strgexpo="expo.fits",
         binsenerfull=light_curves["edges"], spectype=[profile], spatdisttype=["line"], typeelem=["lghtlinevoig"],
         # the quiescent level is a fixed template, so a wrong template cannot be absorbed by a normalization
         dictfitt={"typeelem": ["lghtlinevoig"], "spectype": [profile], "listnamediff": ["back0000"],
-                  "sbrtbacknorm": [light_curves["baselines"][baseline][:, None, None]]},
+                  "sbrtbacknorm": [baseline_template]},
         limtparaelem={name: LIMITS[name] for name in ("flux", *shape_names)},
         maxmgangdata=100.0 / (3600.0 * 180.0 / np.pi),  # [rad], unused for non-spatial data
         anlytype="spec", fittminmnumbelempop0=0, fittmaxmnumbelempop0=MAXIMUM_NUMBER,
