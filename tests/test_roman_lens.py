@@ -68,6 +68,27 @@ def test_cluster_poisson_likelihood_prefers_the_injected_lens():
     assert pickle.loads(pickle.dumps(poisson_lens_log_likelihood)) is poisson_lens_log_likelihood
 
 
+def test_roman_poisson_likelihood_retains_omitted_constants_and_zero_pixels(monkeypatch):
+    import pcat.roman_lens as roman_lens
+    from scipy.special import gammaln
+    from scipy.stats import poisson
+
+    model = np.array([[0.0, 2.0], [3.0, 7.0]])
+    observed = np.array([[0.0, 1.0], [4.0, 9.0]])
+    monkeypatch.setattr(roman_lens, "render_lens_counts", lambda *args: model)
+    state = SimpleNamespace(
+        lens_config=None, lens_observed_counts=observed,
+        lens_source_size=0.3, lens_source_axis_ratio=0.7, lens_source_angle=0.4,
+    )
+    expected = np.sum(poisson.logpmf(observed, model) + gammaln(observed + 1.0))
+    assert poisson_lens_log_likelihood(state, "fitt", np.array([])) == pytest.approx(expected, rel=1e-14)
+    observed[0, 0] = 1.0
+    assert np.isneginf(poisson_lens_log_likelihood(state, "fitt", np.array([])))
+    model[0, 0] = -1.0
+    with pytest.raises(ValueError, match="nonnegative"):
+        poisson_lens_log_likelihood(state, "fitt", np.array([]))
+
+
 def test_simulated_roman_source_produces_bright_einstein_arc():
     config = RomanLensConfig()
     image = render_lens(config, 0.9, 0.06, -0.04, 0.09, 0.8, 0.35)
@@ -129,6 +150,24 @@ def test_injected_perturber_raises_catalog_probability():
 
     assert np.isfinite(perturbed_probability)
     assert perturbed_probability > null_probability
+
+
+@pytest.mark.parametrize('signal', [-4.0, 0.0, 1.0, 10.0, 1e4])
+def test_catalog_probability_preserves_penalties_amplitude_and_clipping(signal):
+    data = np.full((2, 2), signal)
+    templates = np.stack((np.ones((2, 2)), np.eye(2)))
+    amplitude = max(signal, 0.0)
+    log_odds = 0.5 * (4.0 * amplitude**2 - 3.0 * np.log(4.0) - 2.0 * np.log(2.0))
+    expected = 1.0 / (1.0 + np.exp(-np.clip(log_odds, -40.0, 40.0)))
+
+    probability, best_index, fitted_amplitude = infer_catalog_probability(
+        data, np.zeros_like(data), templates, np.ones_like(data),
+    )
+
+    assert type(probability) is float
+    assert probability == pytest.approx(expected, rel=1e-14)
+    assert best_index == 0
+    assert fitted_amplitude == amplitude
 
 
 def test_zero_information_template_has_finite_catalog_probability():

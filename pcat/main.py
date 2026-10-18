@@ -608,10 +608,9 @@ def samp_xposyposfromtmpl(gdat, probtmpl):
 ## custom random variables, pdfs, cdfs and icdfs
 ### probability distribution functions
 def retr_lprbpois(data, modl):
-    
-    lprb = data * np.log(modl) - modl - sp.special.gammaln(data + 1)
-    
-    return lprb
+    """Return normalized Poisson log probabilities for broadcastable inputs."""
+    data, modl = np.broadcast_arrays(data, modl)
+    return poisson_log_likelihood(data, modl, include_constant=True)
     
         
 ### probability density functions
@@ -1843,24 +1842,6 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             gmodnext.indxelemfull = deepcopy(gmodthis.indxelemfull)
     
     if gdatmodi.this.indxproptype == 0:
-        
-        ## proposal scale
-        if False:
-            # amplitude-dependent proposal scale
-            for l in gmod.indxpopl:
-                thiscompampl = gmodthis.paragenrscalfull[thisindxparagenrfullelem[indxelemfull][gmod.nameparagenrelemampl[l]][l]]
-                compampl = gmodnext.paragenrscalfull[thisindxparagenrfullelem[gmod.nameparagenrelemampl[l]][l][indxelemfull]]
-                minmcompampl = getattr(gmod.minmpara, gmod.nameparagenrelemampl[l])
-                thiscompunit = gmodthis.paragenrscalfull[thisindxparagenrfullelem[gmod.nameparagenrelemampl[l]][l][indxelemfull]]
-                compunit = gmodnext.paragenrscalfull[thisindxparagenrfullelem[gmod.nameparagenrelemampl[l]][l][indxelemfull]]
-                if nameparagenrelem == gmod.nameparagenrelemampl[l]:
-                    # Limitation: this proposal-scale rescaling assumes a power-law amplitude prior;
-                    # other amplitude priors (e.g. igam) get an unscaled stdp/stdv from stdpcomp.
-                    gdatmodi.this.stdp = stdpcomp / (thiscompampl / minmcompampl)**2.
-                    gdatmodi.this.stdv = stdpcomp / (compampl / minmcompampl)**2.
-                    gdatmodi.this.ltrp += np.sum(0.5 * (nextcompunit - thiscompunit)**2 * (1. / gdatmodi.this.stdv**2 - 1. / gdatmodi.this.stdv**2))
-                else:
-                    gdatmodi.this.stdp = stdpcomp / (np.minimum(thiscompampl, compampl) / minmcompampl)**0.5
         
         ## propose a step
         numbdemchist = len(getattr(gdatmodi, 'dequedemchist', ()))
@@ -4883,7 +4864,6 @@ def init_image( \
             
             setp_varb(gdat, name, minm=minm, maxm=maxm, scal=scal, mean=mean, stdv=stdv, labl=[r'$\alpha$', ''], popl=l, strgmodl=strgmodl)
             
-            # below this line is unnecessary to be deleted
             if gmod.typeelem[l] == 'lghtgausbgrd' or gmod.typeelem[l] == 'clusvari':
                 setp_varb(gdat, 'gwdtslop', limt=[0.5, 4.], scal='logt', popl=l, strgmodl=strgmodl)
     

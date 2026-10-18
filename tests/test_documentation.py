@@ -15,6 +15,42 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DOCS_ROOT = REPOSITORY_ROOT / "docs"
 
 
+def test_pyproject_build_metadata_preserves_declared_requirements(tmp_path, monkeypatch):
+    from email.parser import Parser
+    import shutil
+    from packaging.requirements import Requirement
+    from setuptools import build_meta
+
+    for name in ("pyproject.toml", "README.md", "LICENSE"):
+        source = REPOSITORY_ROOT / name
+        print(f"Reading from {source}...")
+        print(f"Writing to {tmp_path / name}...")
+        shutil.copy2(source, tmp_path / name)
+    print(f"Reading from {REPOSITORY_ROOT / 'pcat'}...")
+    print(f"Writing to {tmp_path / 'pcat'}...")
+    shutil.copytree(REPOSITORY_ROOT / "pcat", tmp_path / "pcat", ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.chdir(tmp_path)
+    metadata_path = tmp_path / "metadata"
+    metadata_path.mkdir()
+    directory = build_meta.prepare_metadata_for_build_wheel(str(metadata_path))
+    path = metadata_path / directory / "METADATA"
+    print(f"Reading from {path}...")
+    generated = Parser().parsestr(path.read_text())
+    path = tmp_path / "pyproject.toml"
+    print(f"Reading from {path}...")
+    project = tomllib.loads(path.read_text())["project"]
+    assert generated["Name"] == project["name"]
+    assert generated["Version"] == project["version"]
+    assert generated["Summary"] == project["description"]
+    assert generated["Requires-Python"] == project["requires-python"]
+    expected = {str(Requirement(value)) for value in project["dependencies"]}
+    for extra, requirements in project["optional-dependencies"].items():
+        expected.update(str(Requirement(f'{value}; extra == "{extra}"')) for value in requirements)
+    actual = {str(Requirement(value)) for value in generated.get_all("Requires-Dist", [])}
+    assert actual == expected
+    assert set(generated.get_all("Provides-Extra", [])) == set(project["optional-dependencies"])
+
+
 def test_readme_local_images_exist():
     readme_path = REPOSITORY_ROOT / "README.md"
     print(f"Reading from {readme_path}...")

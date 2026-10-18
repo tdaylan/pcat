@@ -39,6 +39,23 @@ def test_marginal_likelihood_matches_numerical_integration_over_the_offset():
     assert llik == pytest.approx(np.log(trapezoid(np.exp(lliknumb), offs)), abs=1e-6)
 
 
+def test_jitter_marginalization_averages_likelihoods_not_log_likelihoods():
+    from scipy.special import logsumexp
+
+    residual = np.array([1.0, 2.0, -1.0, 3.0])  # [m/s]
+    uncertainty = np.array([0.3, 0.5, 0.8, 0.4])  # [m/s]
+    jitter = np.array([0.1, 1.0, 4.0])  # [m/s]
+    design = np.ones((4, 1))
+    per_jitter = np.array([
+        retr_llik_rvelmarg(residual, uncertainty, design, np.array([value]))
+        for value in jitter
+    ])
+    expected = logsumexp(per_jitter) - np.log(jitter.size)
+    actual = retr_llik_rvelmarg(residual, uncertainty, design, jitter)
+    assert actual == pytest.approx(expected, rel=1e-14)
+    assert not np.isclose(actual, np.mean(per_jitter))
+
+
 def test_data_informed_element_proposal_is_a_normalized_density_on_the_unit_cube():
     rng = np.random.default_rng(1)
     time = np.sort(rng.uniform(0., 500., 60))  # [day]

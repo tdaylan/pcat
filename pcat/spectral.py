@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+from tdpy.numerics import gaussian_sigma_from_fwhm
 from tdpy.spectral import evaluate_line_profile
 
 
@@ -76,7 +77,7 @@ def apply_gaussian_resolving_power(axis, spectrum, centers, resolving_power: flo
         raise ValueError("resolving_power must be finite and positive")
     output = np.empty_like(values)
     for index, center in enumerate(centers):
-        sigma_samples = center / (2.0 * np.sqrt(2.0 * np.log(2.0)) * resolving_power * spacing)
+        sigma_samples = gaussian_sigma_from_fwhm(center / resolving_power) / spacing
         output[:, index] = apply_line_spread_function(values[:, index], gaussian_lsf_kernel(sigma_samples))
     return output
 

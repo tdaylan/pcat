@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
+from tdpy.numerics import gaussian_sigma_from_fwhm
 
 
 TransitTimePredictor = Callable[[np.ndarray, np.ndarray], np.ndarray]
@@ -110,7 +111,7 @@ def evaluate_rotating_spot_profile(
         time_days - reference_time_days - phase_epoch_days[None, :] + 0.5 * period_days,
         period_days,
     ) - 0.5 * period_days
-    sigma_days = fwhm_days / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # [day]
+    sigma_days = gaussian_sigma_from_fwhm(fwhm_days)  # [day]
     profile = np.exp(-0.5 * (phase_offset_days / sigma_days[None, :]) ** 2)
     return -depth_counts[None, :] * profile
 
@@ -142,7 +143,7 @@ def evaluate_flare_profile(
 
     if profile == "flargauss":
         fwhm = positive(fwhm, "fwhm")
-        sigma = fwhm / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+        sigma = gaussian_sigma_from_fwhm(fwhm)
         shape = np.exp(-0.5 * (offset / sigma) ** 2)
     elif profile == "flarexpd":
         decay_time = positive(decay_time, "decay_time")

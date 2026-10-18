@@ -2,6 +2,7 @@ import numpy as np
 from types import SimpleNamespace
 
 import pytest
+from scipy.integrate import trapezoid
 
 from pcat.main import PointSpreadFunction, retr_indxswepanim
 from pcat.plotting import animation_phase_label, animation_states
@@ -59,11 +60,12 @@ def test_animation_states_require_snapshots():
     ("singking", [0.01, 2.5]),
     ("doubking", [0.01, 2.5, 0.03, 2.2, 0.8]),
 ])
-def test_point_spread_functions_integrate_to_one(profile, parameters):
+def test_point_spread_functions_integrate_to_one(profile, parameters, monkeypatch):
+    monkeypatch.delattr(np, 'trapz', raising=False)
     state = SimpleNamespace(numbener=1, numbdqlt=1, typeexpr="chan", indxenerincl=None, indxdqltincl=None)
     angle = np.linspace(0.0, 2.0, 200001)  # [rad]
     density = PointSpreadFunction(state, parameters, profile)(angle)[0, :, 0]  # [sr^-1]
-    assert np.trapz(2 * np.pi * angle * density, angle) == pytest.approx(1.0, rel=2e-3)
+    assert trapezoid(2 * np.pi * angle * density, angle) == pytest.approx(1.0, rel=2e-3)
 
 
 def test_lens_image_has_no_central_image_and_conserves_counts():

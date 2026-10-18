@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.special import logsumexp
 from scipy.stats import multivariate_normal, norm
+from tdpy.numerics import logmeanexp
 
 
 def binomial_wilson_interval(successes, trials, z_score=1.0):
@@ -222,7 +223,7 @@ def estimate_evidence(posterior, log_likelihood, prior_types, prior_minima,
         raise ValueError('Likelihood produced an invalid importance weight.')
     if not np.any(np.isfinite(log_weights)):
         raise ValueError('All evidence importance weights are zero.')
-    log_evidence = logsumexp(log_weights) - np.log(sample_count)
+    log_evidence = logmeanexp(log_weights)
     effective_sample_size = np.exp(2 * logsumexp(log_weights) - logsumexp(2 * log_weights))
     relative_error = np.sqrt(max(sample_count / effective_sample_size - 1, 0) / (sample_count - 1))
     return {'log_evidence': float(log_evidence), 'relative_error': float(relative_error),

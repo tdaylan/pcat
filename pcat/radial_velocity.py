@@ -18,8 +18,7 @@ import shutil
 import astropy.io.fits
 import numpy as np
 import scipy.stats
-from scipy.special import logsumexp
-from tdpy.numerics import midpoint_bin_edges
+from tdpy.numerics import logmeanexp, midpoint_bin_edges
 
 from .main import retr_pathrun
 
@@ -53,7 +52,7 @@ def retr_llik_rvelmarg(resi, stdv, matrdesi, listjitt):
     llik = -0.5 * chsqredu - 0.5 * logdfish + 0.5 * np.sum(np.log(weig), axis=1) - \
            0.5 * (resi.size - numbline) * np.log(2. * np.pi)
     # log-uniform prior over the jitter grid
-    return logsumexp(llik) - np.log(listjitt.size)
+    return logmeanexp(llik)
 
 
 def retr_llik_rvel(gdat, strgmodl, cntpmodl):

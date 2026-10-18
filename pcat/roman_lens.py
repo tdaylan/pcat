@@ -8,8 +8,10 @@ from pathlib import Path
 import chalcedon
 import numpy as np
 from scipy.ndimage import convolve, gaussian_filter
+from scipy.special import expit
 
 from .diagnostics import binomial_wilson_interval
+from .likelihood import poisson_log_likelihood
 
 
 @dataclass(frozen=True)
@@ -138,7 +140,7 @@ def poisson_lens_log_likelihood(state: object, model_name: str, parameters: np.n
         state.lens_source_angle,
     )
     observed_counts = state.lens_observed_counts
-    return float(np.sum(observed_counts * np.log(model_counts) - model_counts))
+    return float(np.sum(poisson_log_likelihood(observed_counts, model_counts)))
 
 
 def gaussian_lens_log_likelihood(state: object, model_name: str, parameters: np.ndarray) -> float:
@@ -269,7 +271,7 @@ def infer_catalog_probability(
     parameter_penalty = 3.0 * np.log(data.size)
     look_elsewhere_penalty = 2.0 * np.log(templates.shape[0])
     log_odds = 0.5 * (delta_chi_squared[best_index] - parameter_penalty - look_elsewhere_penalty)
-    probability = float(1.0 / (1.0 + np.exp(-np.clip(log_odds, -40.0, 40.0))))
+    probability = float(expit(np.clip(log_odds, -40.0, 40.0)))
     return probability, best_index, float(amplitudes[best_index])
 
 

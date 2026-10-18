@@ -53,8 +53,8 @@ def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, ba
     Baselines may be scalar, one value per bin, or already broadcastable to
     the template shape. Time edges use the caller's time units.
     """
-    import astropy.io.fits
     import numpy as np
+    from tdpy.serialization import write_fits
 
     bin_edges = np.asarray(bin_edges, dtype=float)
     observed_counts = np.asarray(observed_counts, dtype=float)
@@ -83,8 +83,7 @@ def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, ba
         ("expo.fits", exposure[:, None, None]),
     ):
         path = input_directory / name
-        print(f"Writing to {path}...")
-        astropy.io.fits.writeto(path, values, overwrite=True)
+        write_fits(path, values, overwrite=True)
     return baseline
 
 

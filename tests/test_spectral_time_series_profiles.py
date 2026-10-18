@@ -91,6 +91,9 @@ def test_fixed_and_resolving_power_lsf_preserve_sampled_flux():
     spectrum = evaluate_line_profile(axis, "gaus", [2.0], [1.5], gaussian_width=[0.01])
     fixed = apply_line_spread_function(spectrum, gaussian_lsf_kernel(3.0))
     resolving = apply_gaussian_resolving_power(axis, spectrum, [1.5], 500.0)
+    sigma = 1.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)) * 500.0 * np.median(np.diff(axis)))
+    expected = apply_line_spread_function(spectrum, gaussian_lsf_kernel(sigma))
+    np.testing.assert_allclose(resolving, expected, rtol=1e-13, atol=1e-15)
     assert np.sum(fixed) == pytest.approx(np.sum(spectrum))
     assert np.sum(resolving) == pytest.approx(np.sum(spectrum))
     assert np.max(resolving) < np.max(spectrum)
@@ -117,6 +120,21 @@ def test_flare_profiles_are_nonnegative_and_peak_normalized(profile, parameters)
     values = evaluate_flare_profile(time, profile, [3.0], [0.0], **parameters)[:, 0]
     assert np.all(values >= 0.0)
     assert values[np.argmin(np.abs(time))] == pytest.approx(3.0, rel=0.02)
+
+
+@pytest.mark.parametrize("profile", ["flare", "spot"])
+def test_gaussian_transients_preserve_original_widths(profile):
+    time = np.array([-0.4, -0.2, 0.0, 0.2, 0.4])  # [day]
+    widths = np.array([0.4, 0.8])  # [day]
+    amplitudes = np.array([3.0, 5.0])  # [count]
+    sigma = widths / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # [day]
+    expected = amplitudes * np.exp(-0.5 * (time[:, None] / sigma)**2)
+    if profile == "flare":
+        actual = evaluate_flare_profile(time, "flargauss", amplitudes, [0.0, 0.0], fwhm=widths)
+    else:
+        actual = evaluate_rotating_spot_profile(time, amplitudes, [0.0, 0.0], widths, period_days=5.0)
+        expected = -expected
+    np.testing.assert_allclose(actual, expected, rtol=1e-13)
 
 
 def test_fred_has_independent_rise_and_decay_times():
@@ -179,6 +197,37 @@ def test_time_series_fits_use_each_bin_width_and_return_baseline(tmp_path, basel
     assert baseline.shape == (2, 1, 1)
     if isinstance(baseline_counts, np.ndarray):
         assert not np.shares_memory(baseline, baseline_counts)
+
+
+def test_time_series_fits_delegate_overwrite_and_narration(tmp_path, monkeypatch, capsys):
+    from astropy.io import fits
+    from unittest.mock import Mock
+    import tdpy.serialization
+
+    monkeypatch.setenv('TDPY_VERBOSITY', '1')
+    writer = Mock(wraps=tdpy.serialization.write_fits)
+    monkeypatch.setattr(tdpy.serialization, 'write_fits', writer)
+    directory = tmp_path / 'nested'
+    edges = np.array([1.0, 1.1, 1.4])
+    for counts in (np.array([12.0, 24.0]), np.array([30.0, 40.0])):
+        baseline = write_time_series_fits(directory, edges, counts, 5.0)
+
+        assert capsys.readouterr().out == ''.join(
+            f'Writing to {directory / name}...\n' for name in ('sbrt.fits', 'expo.fits')
+        )
+        print(f'Reading from {directory / "sbrt.fits"}...')
+        brightness = fits.getdata(directory / 'sbrt.fits')
+        print(f'Reading from {directory / "expo.fits"}...')
+        exposure = fits.getdata(directory / 'expo.fits')
+        assert brightness.shape == (2, 1, 1, 1)
+        assert exposure.shape == (2, 1, 1)
+        np.testing.assert_array_equal(brightness[:, 0, 0, 0], counts)
+        np.testing.assert_allclose(exposure[:, 0, 0], 1.0 / np.diff(edges))
+        np.testing.assert_array_equal(baseline[:, 0, 0], [5.0, 5.0])
+        capsys.readouterr()
+
+    assert writer.call_count == 4
+    assert all(call.kwargs == {'overwrite': True} for call in writer.call_args_list)
 
 
 def test_time_series_fits_reject_nonincreasing_bin_edges(tmp_path):

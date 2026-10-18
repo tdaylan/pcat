@@ -551,3 +551,4 @@ python -m sphinx -E -a -W --keep-going -b html docs docs/_build/html
 ## References
 
 - [Daylan, Portillo, and Finkbeiner (2017)](https://doi.org/10.3847/1538-4357/aa679e), *Inference of Unresolved Point Sources at High Galactic Latitudes Using Probabilistic Catalogs*, The Astrophysical Journal, 839, 4
+- Daylan (in preparation), *Neural-network proposals for transdimensional Bayesian inference with PCAT*. This forthcoming methods paper describes PCAT's sampler and its neural-proposal transition interface.

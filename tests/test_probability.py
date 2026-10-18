@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from pcat.main import pdfn_gaus, retr_gradmaps, retr_llik_bind, retr_llik_eval, retr_lpostotl, retr_lprielem
+from pcat.likelihood import poisson_log_likelihood
 
 
 def test_pdfn_gaus_is_finite_at_mean():
@@ -57,6 +58,32 @@ def test_poisson_likelihood_preserves_zero_model_rates():
 
     assert result[0] == 0.0
     assert np.isneginf(result[1])
+
+
+@pytest.mark.parametrize("include_constant", [False, True])
+def test_shared_poisson_likelihood_preserves_normalization_and_zero_rates(include_constant):
+    from scipy.special import gammaln
+    from scipy.stats import poisson
+
+    counts = np.array([0.0, 1.0, 4.0, 8.0])
+    rates = np.array([0.0, 0.0, 2.5, 9.0])
+    expected = poisson.logpmf(counts, rates)
+    if not include_constant:
+        expected += gammaln(counts + 1.0)
+    actual = poisson_log_likelihood(counts, rates, include_constant=include_constant)
+    np.testing.assert_allclose(actual, expected, rtol=1e-14)
+    assert actual[0] == 0.0 and np.isneginf(actual[1])
+
+
+def test_poisson_count_prior_wrapper_preserves_broadcasting():
+    from scipy.stats import poisson
+    from pcat.main import retr_lprbpois
+
+    counts = np.array([0.0, 1.0, 8.0])[:, None]
+    rates = np.array([0.0, 0.5, 9.0])
+    np.testing.assert_allclose(retr_lprbpois(counts, rates), poisson.logpmf(counts, rates), rtol=1e-14)
+    assert retr_lprbpois(0, 0.0) == 0.0
+    assert np.isneginf(retr_lprbpois(1, 0.0))
 
 
 def test_poisson_likelihood_rejects_invalid_model_counts():
